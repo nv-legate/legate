@@ -54,7 +54,7 @@ void LegateTaskRegistrar::record_variant(TaskID tid,
   registrar.set_idempotent(idempotent);
 }
 
-void LegateTaskRegistrar::register_all_tasks(Runtime* runtime, LibraryContext& context)
+void LegateTaskRegistrar::register_all_tasks(Legion::Runtime* runtime, LibraryContext& context)
 {
   // Do all our registrations
   for (auto& task : pending_task_variants_) {

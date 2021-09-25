@@ -40,4 +40,49 @@ class Core {
 #endif
 };
 
+class ResourceConfig;
+class LibraryContext;
+
+class Runtime {
+ public:
+  using MainFnPtr = void (*)(int32_t, char**, Runtime*);
+
+ public:
+  Runtime();
+  ~Runtime();
+
+ public:
+  friend void initialize(int32_t argc, char** argv);
+  friend void set_main_function(MainFnPtr p_main);
+  friend int32_t start(int32_t argc, char** argv);
+
+ public:
+  void set_main_function(MainFnPtr main_fn);
+  MainFnPtr get_main_function() const;
+
+ public:
+  LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
+  LibraryContext* create_library(const std::string& library_name, const ResourceConfig& config);
+
+ public:
+  static void initialize(int32_t argc, char** argv);
+  static int32_t start(int32_t argc, char** argv);
+  static Runtime* get_runtime();
+
+ private:
+  static Runtime* runtime_;
+
+ private:
+  std::map<std::string, LibraryContext*> libraries_;
+
+ private:
+  MainFnPtr main_fn_{nullptr};
+};
+
+void initialize(int32_t argc, char** argv);
+
+void set_main_function(Runtime::MainFnPtr p_main);
+
+int32_t start(int32_t argc, char** argv);
+
 }  // namespace legate

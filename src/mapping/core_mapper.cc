@@ -200,7 +200,8 @@ Mapper::MapperSyncModel CoreMapper::get_mapper_sync_model(void) const
 void CoreMapper::select_task_options(const MapperContext ctx, const Task& task, TaskOptions& output)
 {
   assert(context.valid_task_id(task.task_id));
-  if (task.tag == LEGATE_CPU_VARIANT) {
+  if (task.tag == LEGATE_CPU_VARIANT ||
+      context.get_local_task_id(task.task_id) == LEGATE_CORE_TOPLEVEL_TASK_ID) {
     assert(!local_cpus.empty());
     output.initial_proc = local_cpus.front();
   } else {
@@ -277,7 +278,10 @@ void CoreMapper::map_task(const MapperContext ctx,
   assert(context.valid_task_id(task.task_id));
   // Just put our target proc in the target processors for now
   output.target_procs.push_back(task.target_proc);
-  output.chosen_variant = task.tag;
+  if (context.get_local_task_id(task.task_id) == LEGATE_CORE_TOPLEVEL_TASK_ID)
+    output.chosen_variant = LEGATE_CPU_VARIANT;
+  else
+    output.chosen_variant = task.tag;
 }
 
 void CoreMapper::select_sharding_functor(const MapperContext ctx,
@@ -368,7 +372,9 @@ void CoreMapper::select_tunable_value(const MapperContext ctx,
   LEGATE_ABORT
 }
 
-void register_legate_core_mapper(Machine machine, Runtime* runtime, const LibraryContext& context)
+void register_legate_core_mapper(Machine machine,
+                                 Legion::Runtime* runtime,
+                                 const LibraryContext& context)
 {
   // Replace all the default mappers with our custom mapper for the Legate
   // top-level task and init task
