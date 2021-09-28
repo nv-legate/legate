@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "legion.h"
 
 #include "utilities/typedefs.h"
@@ -41,7 +43,42 @@ class Core {
 };
 
 class ResourceConfig;
+class Runtime;
 class LibraryContext;
+class LogicalRegionField;
+class LogicalStore;
+
+class RegionManager {
+ public:
+  RegionManager(Runtime* runtime, const Legion::Domain& shape);
+
+ private:
+  Legion::LogicalRegion active_region() const;
+  bool has_space() const;
+  void create_region();
+
+ public:
+  std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(size_t field_size);
+
+ private:
+  Runtime* runtime_;
+  Legion::Domain shape_;
+  std::vector<Legion::LogicalRegion> regions_{};
+};
+
+class FieldManager {
+ public:
+  FieldManager(Runtime* runtime, const Legion::Domain& shape, LegateTypeCode code);
+
+ public:
+  std::shared_ptr<LogicalRegionField> allocate_field();
+
+ private:
+  Runtime* runtime_;
+  Legion::Domain shape_;
+  LegateTypeCode code_;
+  size_t field_size_;
+};
 
 class Runtime {
  public:
@@ -65,12 +102,44 @@ class Runtime {
   LibraryContext* create_library(const std::string& library_name, const ResourceConfig& config);
 
  public:
+  void set_legion_runtime(Legion::Runtime* legion_runtime);
+  void set_legion_context(Legion::Context legion_context);
+
+ public:
+  std::shared_ptr<LogicalStore> create_store(std::vector<int64_t> extents, LegateTypeCode code);
+  std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<int64_t>& extents,
+                                                          LegateTypeCode code);
+
+ public:
+  RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
+  FieldManager* find_or_create_field_manager(const Legion::Domain& shape, LegateTypeCode code);
+
+ public:
+  Legion::IndexSpace find_or_create_index_space(const Legion::Domain& shape);
+  Legion::FieldSpace create_field_space();
+  Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
+                                      const Legion::FieldSpace& field_space);
+  Legion::FieldID allocate_field(const Legion::FieldSpace& field_space, size_t field_size);
+  Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
+
+ public:
   static void initialize(int32_t argc, char** argv);
   static int32_t start(int32_t argc, char** argv);
   static Runtime* get_runtime();
 
  private:
   static Runtime* runtime_;
+
+ private:
+  Legion::Runtime* legion_runtime_{nullptr};
+  Legion::Context legion_context_{nullptr};
+
+ private:
+  std::map<std::pair<Legion::Domain, LegateTypeCode>, FieldManager*> field_managers_;
+  std::map<Legion::Domain, RegionManager*> region_managers_;
+
+ private:
+  std::map<Legion::Domain, Legion::IndexSpace> index_spaces_;
 
  private:
   std::map<std::string, LibraryContext*> libraries_;

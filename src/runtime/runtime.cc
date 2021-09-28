@@ -14,6 +14,7 @@
  *
  */
 
+#include "data/logical_store.h"
 #include "legate.h"
 #include "mapping/core_mapper.h"
 #include "runtime/context.h"
@@ -99,10 +100,10 @@ static void toplevel_task(const Task* task,
                           Legion::Runtime* legion_runtime)
 {
   auto runtime = Runtime::get_runtime();
-  auto main    = runtime->get_main_function();
+  runtime->set_legion_context(ctx);
 
+  auto main = runtime->get_main_function();
   auto args = Legion::Runtime::get_input_args();
-
   main(args.argc, args.argv, runtime);
 }
 
@@ -271,11 +272,73 @@ void register_legate_core_tasks(Machine machine,
 {
   core_library_registration_callback(machine, legion_runtime, local_procs);
 
-  auto runtime  = Runtime::get_runtime();
+  auto runtime = Runtime::get_runtime();
+  runtime->set_legion_runtime(legion_runtime);
+
   auto core_lib = runtime->find_library(core_library_name);
   legion_runtime->set_top_level_task_id(core_lib->get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID));
   legion_runtime->set_top_level_task_mapper_id(core_lib->get_mapper_id(0));
 }
+
+////////////////////////////////////////////////////
+// legate::RegionManager
+////////////////////////////////////////////////////
+
+RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
+  : runtime_(runtime), shape_(shape)
+{
+}
+
+LogicalRegion RegionManager::active_region() const { return regions_.back(); }
+
+bool RegionManager::has_space() const { return regions_.size() > 0; }
+
+void RegionManager::create_region()
+{
+  auto is = runtime_->find_or_create_index_space(shape_);
+  auto fs = runtime_->create_field_space();
+  regions_.push_back(runtime_->create_region(is, fs));
+}
+
+std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(size_t field_size)
+{
+  if (!has_space()) create_region();
+  auto lr  = active_region();
+  auto fid = runtime_->allocate_field(lr.get_field_space(), field_size);
+  return std::make_pair(lr, fid);
+}
+
+////////////////////////////////////////////////////
+// legate::FieldManager
+////////////////////////////////////////////////////
+
+struct field_size_fn {
+  template <LegateTypeCode CODE>
+  size_t operator()()
+  {
+    return sizeof(legate_type_of<CODE>);
+  }
+};
+
+static size_t get_field_size(LegateTypeCode code) { return type_dispatch(code, field_size_fn{}); }
+
+FieldManager::FieldManager(Runtime* runtime, const Legion::Domain& shape, LegateTypeCode code)
+  : runtime_(runtime), shape_(shape), code_(code), field_size_(get_field_size(code))
+{
+}
+
+std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
+{
+  auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
+  LogicalRegion lr;
+  FieldID fid;
+  std::tie(lr, fid) = rgn_mgr->allocate_field(field_size_);
+  return std::make_shared<LogicalRegionField>(runtime_, lr, fid);
+}
+
+////////////////////////////////////////////////////
+// legate::Runtime
+////////////////////////////////////////////////////
 
 /*static*/ Runtime* Runtime::runtime_;
 
@@ -316,6 +379,94 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
   auto context = new LibraryContext(Legion::Runtime::get_runtime(), library_name, config);
   libraries_[library_name] = context;
   return context;
+}
+
+void Runtime::set_legion_runtime(Legion::Runtime* legion_runtime)
+{
+  legion_runtime_ = legion_runtime;
+}
+
+void Runtime::set_legion_context(Legion::Context legion_context)
+{
+  legion_context_ = legion_context;
+}
+
+std::shared_ptr<LogicalStore> Runtime::create_store(std::vector<int64_t> extents,
+                                                    LegateTypeCode code)
+{
+  return std::make_shared<LogicalStore>(this, code, extents);
+}
+
+std::shared_ptr<LogicalRegionField> Runtime::create_region_field(
+  const std::vector<int64_t>& extents, LegateTypeCode code)
+{
+  DomainPoint lo, hi;
+  hi.dim = lo.dim = static_cast<int32_t>(extents.size());
+  assert(lo.dim <= LEGION_MAX_DIM);
+  for (int32_t dim = 0; dim < lo.dim; ++dim) lo[dim] = 0;
+  for (int32_t dim = 0; dim < lo.dim; ++dim) hi[dim] = extents[dim] - 1;
+
+  Domain shape(lo, hi);
+  auto fld_mgr = runtime_->find_or_create_field_manager(shape, code);
+  return fld_mgr->allocate_field();
+}
+
+RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
+{
+  auto finder = region_managers_.find(shape);
+  if (finder != region_managers_.end())
+    return finder->second;
+  else {
+    auto rgn_mgr            = new RegionManager(this, shape);
+    region_managers_[shape] = rgn_mgr;
+    return rgn_mgr;
+  }
+}
+
+FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, LegateTypeCode code)
+{
+  auto key    = std::make_pair(shape, code);
+  auto finder = field_managers_.find(key);
+  if (finder != field_managers_.end())
+    return finder->second;
+  else {
+    auto fld_mgr         = new FieldManager(this, shape, code);
+    field_managers_[key] = fld_mgr;
+    return fld_mgr;
+  }
+}
+
+IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
+{
+  auto finder = index_spaces_.find(shape);
+  if (finder != index_spaces_.end())
+    return finder->second;
+  else {
+    auto is              = legion_runtime_->create_index_space(legion_context_, shape);
+    index_spaces_[shape] = is;
+    return is;
+  }
+}
+
+FieldSpace Runtime::create_field_space()
+{
+  return legion_runtime_->create_field_space(legion_context_);
+}
+
+LogicalRegion Runtime::create_region(const IndexSpace& index_space, const FieldSpace& field_space)
+{
+  return legion_runtime_->create_logical_region(legion_context_, index_space, field_space);
+}
+
+FieldID Runtime::allocate_field(const FieldSpace& field_space, size_t field_size)
+{
+  auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
+  return allocator.allocate_field(field_size);
+}
+
+Domain Runtime::get_index_space_domain(const IndexSpace& index_space) const
+{
+  return legion_runtime_->get_index_space_domain(legion_context_, index_space);
 }
 
 /*static*/ void Runtime::initialize(int32_t argc, char** argv)

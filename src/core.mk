@@ -16,6 +16,7 @@
 
 # General source files
 GEN_CPU_SRC	= legate_c.cc                 \
+							data/logical_store.cc       \
 							data/scalar.cc              \
 							data/store.cc               \
 							data/transform.cc           \
@@ -50,6 +51,7 @@ INSTALL_HEADERS = legate.h                   \
 									legate_defines.h           \
 									legate_preamble.h          \
 									data/buffer.h              \
+									data/logical_store.h       \
 									data/scalar.h              \
 									data/scalar.inl            \
 									data/store.h               \
