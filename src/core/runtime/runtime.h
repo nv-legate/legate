@@ -36,6 +36,7 @@ class Core {
  public:
   // Configuration settings
   static bool show_progress;
+  static LegateMainFnPtr main_fn;
 #ifdef LEGATE_USE_CUDA
  public:
   static cublasContext* get_cublas(void);
@@ -84,20 +85,13 @@ class FieldManager {
 
 class Runtime {
  public:
-  using MainFnPtr = void (*)(int32_t, char**, Runtime*);
-
  public:
   Runtime(Legion::Runtime* legion_runtime);
   ~Runtime();
 
  public:
   friend void initialize(int32_t argc, char** argv);
-  friend void set_main_function(MainFnPtr p_main);
   friend int32_t start(int32_t argc, char** argv);
-
- public:
-  void set_main_function(MainFnPtr main_fn);
-  MainFnPtr get_main_function() const;
 
  public:
   LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
@@ -154,14 +148,11 @@ class Runtime {
 
  private:
   std::map<std::string, LibraryContext*> libraries_;
-
- private:
-  MainFnPtr main_fn_{nullptr};
 };
 
 void initialize(int32_t argc, char** argv);
 
-void set_main_function(Runtime::MainFnPtr p_main);
+void set_main_function(LegateMainFnPtr p_main);
 
 int32_t start(int32_t argc, char** argv);
 

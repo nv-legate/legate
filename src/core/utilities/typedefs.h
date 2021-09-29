@@ -51,5 +51,6 @@ using LegateVariantCode = legate_core_variant_t;
 using LegateTypeCode    = legate_core_type_code_t;
 using LegateResource    = legate_core_resource_t;
 using LegateMappingTag  = legate_core_mapping_tag_t;
+using LegateMainFnPtr   = void (*)(int32_t, char**);
 
 }  // namespace legate

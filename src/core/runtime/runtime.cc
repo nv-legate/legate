@@ -37,6 +37,8 @@ static const char* const core_library_name = "legate.core";
 
 /*static*/ bool Core::show_progress = false;
 
+/*static*/ LegateMainFnPtr Core::main_fn = nullptr;
+
 /*static*/ void Core::parse_config(void)
 {
 #ifndef LEGATE_USE_CUDA
@@ -102,9 +104,14 @@ static void toplevel_task(const Legion::Task* task,
   auto runtime = Runtime::get_runtime();
   runtime->set_legion_context(ctx);
 
-  auto main = runtime->get_main_function();
+  if (nullptr == Core::main_fn) {
+    log_legate.error(
+      "No main function was provided. Please register one with 'legate::set_main_function'.");
+    LEGATE_ABORT
+  }
+
   auto args = Legion::Runtime::get_input_args();
-  main(args.argc, args.argv, runtime);
+  Core::main_fn(args.argc, args.argv);
 }
 
 static void initialize_cpu_resource_task(const Legion::Task* task,
@@ -357,10 +364,6 @@ Runtime::~Runtime()
   for (auto& pair : libraries_) delete pair.second;
 }
 
-void Runtime::set_main_function(MainFnPtr main_fn) { main_fn_ = main_fn; }
-
-Runtime::MainFnPtr Runtime::get_main_function() const { return main_fn_; }
-
 LibraryContext* Runtime::find_library(const std::string& library_name,
                                       bool can_fail /*=false*/) const
 {
@@ -518,10 +521,7 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(TaskLauncher* launcher)
 
 void initialize(int32_t argc, char** argv) { Runtime::initialize(argc, argv); }
 
-void set_main_function(Runtime::MainFnPtr main_fn)
-{
-  Runtime::get_runtime()->set_main_function(main_fn);
-}
+void set_main_function(LegateMainFnPtr main_fn) { Core::main_fn = main_fn; }
 
 int32_t start(int32_t argc, char** argv) { return Runtime::start(argc, argv); }
 
