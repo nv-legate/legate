@@ -18,6 +18,7 @@
 #include "legate.h"
 #include "mapping/core_mapper.h"
 #include "runtime/context.h"
+#include "runtime/operation.h"
 #include "runtime/projection.h"
 #include "runtime/shard.h"
 #include "utilities/deserializer.h"
@@ -94,7 +95,7 @@ static CUDALibraries& get_cuda_libraries(Processor proc, bool check)
 }
 #endif
 
-static void toplevel_task(const Task* task,
+static void toplevel_task(const Legion::Task* task,
                           const std::vector<PhysicalRegion>& regions,
                           Context ctx,
                           Legion::Runtime* legion_runtime)
@@ -107,7 +108,7 @@ static void toplevel_task(const Task* task,
   main(args.argc, args.argv, runtime);
 }
 
-static void initialize_cpu_resource_task(const Task* task,
+static void initialize_cpu_resource_task(const Legion::Task* task,
                                          const std::vector<PhysicalRegion>& regions,
                                          Context ctx,
                                          Legion::Runtime* runtime)
@@ -115,7 +116,7 @@ static void initialize_cpu_resource_task(const Task* task,
   // Nothing to do here yet...
 }
 
-static void finalize_cpu_resource_task(const Task* task,
+static void finalize_cpu_resource_task(const Legion::Task* task,
                                        const std::vector<PhysicalRegion>& regions,
                                        Context ctx,
                                        Legion::Runtime* runtime)
@@ -123,7 +124,7 @@ static void finalize_cpu_resource_task(const Task* task,
   // Nothing to do here yet...
 }
 
-static ReturnValues extract_scalar_task(const Task* task,
+static ReturnValues extract_scalar_task(const Legion::Task* task,
                                         const std::vector<PhysicalRegion>& regions,
                                         Context legion_context,
                                         Legion::Runtime* runtime)
@@ -135,7 +136,7 @@ static ReturnValues extract_scalar_task(const Task* task,
 }
 
 #ifdef LEGATE_USE_CUDA
-static void initialize_gpu_resource_task(const Task* task,
+static void initialize_gpu_resource_task(const Legion::Task* task,
                                          const std::vector<PhysicalRegion>& regions,
                                          Context ctx,
                                          Legion::Runtime* runtime)
@@ -155,7 +156,7 @@ static void initialize_gpu_resource_task(const Task* task,
   }
 }
 
-static void finalize_gpu_resource_task(const Task* task,
+static void finalize_gpu_resource_task(const Legion::Task* task,
                                        const std::vector<PhysicalRegion>& regions,
                                        Context ctx,
                                        Legion::Runtime* runtime)
@@ -204,7 +205,12 @@ void register_legate_core_tasks(Machine machine,
 
   // Register the task variant for both CPUs and GPUs
   {
-    auto registrar = make_registrar(toplevel_task_id, toplevel_task_name, Processor::LOC_PROC);
+    TaskVariantRegistrar registrar(toplevel_task_id, toplevel_task_name);
+    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    registrar.set_leaf(false);
+    registrar.set_inner(true);
+    registrar.set_replicable(true);
+    registrar.global_registration = false;
     runtime->register_task_variant<toplevel_task>(registrar, LEGATE_CPU_VARIANT);
   }
   {
@@ -278,6 +284,8 @@ void register_legate_core_tasks(Machine machine,
   auto core_lib = runtime->find_library(core_library_name);
   legion_runtime->set_top_level_task_id(core_lib->get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID));
   legion_runtime->set_top_level_task_mapper_id(core_lib->get_mapper_id(0));
+
+  Core::parse_config();
 }
 
 ////////////////////////////////////////////////////
@@ -391,6 +399,20 @@ void Runtime::set_legion_context(Legion::Context legion_context)
   legion_context_ = legion_context;
 }
 
+// This function should be moved to the library context
+std::unique_ptr<Task> Runtime::create_task(LibraryContext* library,
+                                           int64_t task_id,
+                                           int64_t mapper_id /*=0*/)
+{
+  return std::make_unique<Task>(this, library, task_id, mapper_id);
+}
+
+void Runtime::submit(std::unique_ptr<Operation> op)
+{
+  // TODO: We need to build a lazy evaluation pipeline here
+  op->launch();
+}
+
 std::shared_ptr<LogicalStore> Runtime::create_store(std::vector<int64_t> extents,
                                                     LegateTypeCode code)
 {
@@ -467,6 +489,12 @@ FieldID Runtime::allocate_field(const FieldSpace& field_space, size_t field_size
 Domain Runtime::get_index_space_domain(const IndexSpace& index_space) const
 {
   return legion_runtime_->get_index_space_domain(legion_context_, index_space);
+}
+
+std::shared_ptr<LogicalStore> Runtime::dispatch(TaskLauncher* launcher)
+{
+  legion_runtime_->execute_task(legion_context_, *launcher);
+  return nullptr;
 }
 
 /*static*/ void Runtime::initialize(int32_t argc, char** argv)

@@ -44,6 +44,8 @@ class Core {
 
 class ResourceConfig;
 class Runtime;
+class Operation;
+class Task;
 class LibraryContext;
 class LogicalRegionField;
 class LogicalStore;
@@ -106,6 +108,12 @@ class Runtime {
   void set_legion_context(Legion::Context legion_context);
 
  public:
+  std::unique_ptr<Task> create_task(LibraryContext* library,
+                                    int64_t task_id,
+                                    int64_t mapper_id = 0);
+  void submit(std::unique_ptr<Operation> op);
+
+ public:
   std::shared_ptr<LogicalStore> create_store(std::vector<int64_t> extents, LegateTypeCode code);
   std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<int64_t>& extents,
                                                           LegateTypeCode code);
@@ -121,6 +129,9 @@ class Runtime {
                                       const Legion::FieldSpace& field_space);
   Legion::FieldID allocate_field(const Legion::FieldSpace& field_space, size_t field_size);
   Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
+
+ public:
+  std::shared_ptr<LogicalStore> dispatch(Legion::TaskLauncher* launcher);
 
  public:
   static void initialize(int32_t argc, char** argv);

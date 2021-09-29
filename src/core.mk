@@ -26,6 +26,8 @@ GEN_CPU_SRC	= legate_c.cc                 \
 							mapping/mapping.cc          \
 							mapping/task.cc             \
 							runtime/context.cc          \
+							runtime/launcher.cc         \
+							runtime/operation.cc        \
 							runtime/projection.cc       \
 							runtime/runtime.cc          \
 							runtime/shard.cc            \
@@ -62,6 +64,7 @@ INSTALL_HEADERS = legate.h                   \
 									mapping/task.h             \
 									mapping/task.inl           \
 									runtime/context.h          \
+									runtime/operation.h        \
 									runtime/runtime.h          \
 									task/return.h              \
 									task/task.h                \

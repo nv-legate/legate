@@ -22,6 +22,7 @@
 #include "data/store.h"
 #include "legate_c.h"
 #include "legate_defines.h"
+#include "runtime/operation.h"
 #include "runtime/runtime.h"
 #include "task/task.h"
 #include "utilities/deserializer.h"

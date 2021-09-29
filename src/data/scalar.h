@@ -37,6 +37,7 @@ class Scalar {
 
  public:
   bool is_tuple() const { return tuple_; }
+  LegateTypeCode code() const { return code_; }
   size_t size() const;
 
  public:
