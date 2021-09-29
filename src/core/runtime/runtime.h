@@ -87,7 +87,7 @@ class Runtime {
   using MainFnPtr = void (*)(int32_t, char**, Runtime*);
 
  public:
-  Runtime();
+  Runtime(Legion::Runtime* legion_runtime);
   ~Runtime();
 
  public:
@@ -104,7 +104,6 @@ class Runtime {
   LibraryContext* create_library(const std::string& library_name, const ResourceConfig& config);
 
  public:
-  void set_legion_runtime(Legion::Runtime* legion_runtime);
   void set_legion_context(Legion::Context legion_context);
 
  public:
@@ -137,12 +136,13 @@ class Runtime {
   static void initialize(int32_t argc, char** argv);
   static int32_t start(int32_t argc, char** argv);
   static Runtime* get_runtime();
+  static void create_runtime(Legion::Runtime* legion_runtime);
 
  private:
   static Runtime* runtime_;
 
  private:
-  Legion::Runtime* legion_runtime_{nullptr};
+  Legion::Runtime* legion_runtime_;
   Legion::Context legion_context_{nullptr};
 
  private:

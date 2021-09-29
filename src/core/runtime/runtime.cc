@@ -253,6 +253,8 @@ void register_legate_core_tasks(Machine machine,
                                                    Legion::Runtime* legion_runtime,
                                                    const std::set<Processor>& local_procs)
 {
+  Runtime::create_runtime(legion_runtime);
+
   ResourceConfig config;
   config.max_tasks       = LEGATE_CORE_NUM_TASK_IDS;
   config.max_projections = LEGATE_CORE_MAX_FUNCTOR_ID;
@@ -278,7 +280,6 @@ void register_legate_core_tasks(Machine machine,
   core_library_registration_callback(machine, legion_runtime, local_procs);
 
   auto runtime = Runtime::get_runtime();
-  runtime->set_legion_runtime(legion_runtime);
 
   auto core_lib = runtime->find_library(core_library_name);
   legion_runtime->set_top_level_task_id(core_lib->get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID));
@@ -349,7 +350,7 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
 
 /*static*/ Runtime* Runtime::runtime_;
 
-Runtime::Runtime() {}
+Runtime::Runtime(Legion::Runtime* legion_runtime) : legion_runtime_(legion_runtime) {}
 
 Runtime::~Runtime()
 {
@@ -386,11 +387,6 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
   auto context = new LibraryContext(Legion::Runtime::get_runtime(), library_name, config);
   libraries_[library_name] = context;
   return context;
-}
-
-void Runtime::set_legion_runtime(Legion::Runtime* legion_runtime)
-{
-  legion_runtime_ = legion_runtime;
 }
 
 void Runtime::set_legion_context(Legion::Context legion_context)
@@ -459,6 +455,7 @@ FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, LegateT
 
 IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
 {
+  assert(nullptr != legion_context_);
   auto finder = index_spaces_.find(shape);
   if (finder != index_spaces_.end())
     return finder->second;
@@ -471,27 +468,32 @@ IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
 
 FieldSpace Runtime::create_field_space()
 {
+  assert(nullptr != legion_context_);
   return legion_runtime_->create_field_space(legion_context_);
 }
 
 LogicalRegion Runtime::create_region(const IndexSpace& index_space, const FieldSpace& field_space)
 {
+  assert(nullptr != legion_context_);
   return legion_runtime_->create_logical_region(legion_context_, index_space, field_space);
 }
 
 FieldID Runtime::allocate_field(const FieldSpace& field_space, size_t field_size)
 {
+  assert(nullptr != legion_context_);
   auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
   return allocator.allocate_field(field_size);
 }
 
 Domain Runtime::get_index_space_domain(const IndexSpace& index_space) const
 {
+  assert(nullptr != legion_context_);
   return legion_runtime_->get_index_space_domain(legion_context_, index_space);
 }
 
 std::shared_ptr<LogicalStore> Runtime::dispatch(TaskLauncher* launcher)
 {
+  assert(nullptr != legion_context_);
   legion_runtime_->execute_task(legion_context_, *launcher);
   return nullptr;
 }
@@ -499,9 +501,7 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(TaskLauncher* launcher)
 /*static*/ void Runtime::initialize(int32_t argc, char** argv)
 {
   Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);
-  Legion::Runtime::perform_registration_callback(legate::core_library_bootstrapping_callback,
-                                                 true /*global*/);
-  runtime_ = new Runtime();
+  Legion::Runtime::add_registration_callback(legate::core_library_bootstrapping_callback);
 }
 
 /*static*/ int32_t Runtime::start(int32_t argc, char** argv)
@@ -510,6 +510,11 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(TaskLauncher* launcher)
 }
 
 /*static*/ Runtime* Runtime::get_runtime() { return Runtime::runtime_; }
+
+/*static*/ void Runtime::create_runtime(Legion::Runtime* legion_runtime)
+{
+  runtime_ = new Runtime(legion_runtime);
+}
 
 void initialize(int32_t argc, char** argv) { Runtime::initialize(argc, argv); }
 
