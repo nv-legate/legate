@@ -14,9 +14,9 @@
  *
  */
 
-#include "data/logical_store.h"
+#include "core/data/logical_store.h"
 
-#include "runtime/runtime.h"
+#include "core/runtime/runtime.h"
 
 using namespace Legion;
 

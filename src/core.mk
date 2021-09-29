@@ -16,18 +16,18 @@
 
 # General source files
 GEN_CPU_SRC	= core/legate_c.cc                 \
+							core/data/logical_store.cc       \
 							core/data/scalar.cc              \
 							core/data/store.cc               \
 							core/data/transform.cc           \
-							data/logical_store.cc            \
 							core/mapping/base_mapper.cc      \
 							core/mapping/core_mapper.cc      \
 							core/mapping/instance_manager.cc \
 							core/mapping/mapping.cc          \
 							core/mapping/task.cc             \
 							core/runtime/context.cc          \
-							runtime/launcher.cc              \
-							runtime/operation.cc             \
+							core/runtime/launcher.cc         \
+							core/runtime/operation.cc        \
 							core/runtime/projection.cc       \
 							core/runtime/runtime.cc          \
 							core/runtime/shard.cc            \
@@ -53,7 +53,7 @@ INSTALL_HEADERS = legate.h                        \
 									legate_preamble.h               \
 									core/legate_c.h                 \
 									core/data/buffer.h              \
-									data/logical_store.h            \
+									core/data/logical_store.h       \
 									core/data/scalar.h              \
 									core/data/scalar.inl            \
 									core/data/store.h               \
@@ -64,7 +64,7 @@ INSTALL_HEADERS = legate.h                        \
 									core/mapping/task.h             \
 									core/mapping/task.inl           \
 									core/runtime/context.h          \
-									runtime/operation.h             \
+									core/runtime/operation.h        \
 									core/runtime/runtime.h          \
 									core/task/return.h              \
 									core/task/task.h                \

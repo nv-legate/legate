@@ -14,12 +14,12 @@
  *
  */
 
-#include "runtime/operation.h"
-#include "data/logical_store.h"
-#include "data/scalar.h"
-#include "runtime/context.h"
-#include "runtime/launcher.h"
-#include "runtime/runtime.h"
+#include "core/runtime/operation.h"
+#include "core/data/logical_store.h"
+#include "core/data/scalar.h"
+#include "core/runtime/context.h"
+#include "core/runtime/launcher.h"
+#include "core/runtime/runtime.h"
 
 namespace legate {
 

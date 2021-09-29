@@ -20,8 +20,8 @@
 
 #include "legion.h"
 
-#include "data/transform.h"
-#include "utilities/typedefs.h"
+#include "core/data/transform.h"
+#include "core/utilities/typedefs.h"
 
 namespace legate {
 

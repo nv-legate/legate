@@ -14,12 +14,12 @@
  *
  */
 
+#include "core/data/logical_store.h"
 #include "core/mapping/core_mapper.h"
 #include "core/runtime/context.h"
 #include "core/runtime/projection.h"
 #include "core/runtime/shard.h"
 #include "core/utilities/deserializer.h"
-#include "data/logical_store.h"
 #include "legate.h"
 #ifdef LEGATE_USE_CUDA
 #include "core/gpu/cudalibs.h"
