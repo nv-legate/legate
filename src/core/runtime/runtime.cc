@@ -214,7 +214,7 @@ void register_legate_core_tasks(Machine machine,
     TaskVariantRegistrar registrar(toplevel_task_id, toplevel_task_name);
     registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf(false);
-    registrar.set_inner(true);
+    registrar.set_inner(false);
     registrar.set_replicable(true);
     registrar.global_registration = false;
     runtime->register_task_variant<toplevel_task>(registrar, LEGATE_CPU_VARIANT);
@@ -429,6 +429,22 @@ std::shared_ptr<LogicalRegionField> Runtime::create_region_field(
   Domain shape(lo, hi);
   auto fld_mgr = runtime_->find_or_create_field_manager(shape, code);
   return fld_mgr->allocate_field();
+}
+
+RegionField Runtime::map_region_field(LibraryContext* context,
+                                      std::shared_ptr<LogicalRegionField> rf)
+{
+  auto region   = rf->region();
+  auto field_id = rf->field_id();
+
+  RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
+  req.add_field(field_id);
+
+  auto mapper_id = context->get_mapper_id(0);
+  // TODO: We need to pass the metadata about logical store
+  InlineLauncher launcher(req, mapper_id);
+  auto pr = legion_runtime_->map_region(legion_context_, launcher);
+  return RegionField(rf->dim(), pr, field_id);
 }
 
 RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
