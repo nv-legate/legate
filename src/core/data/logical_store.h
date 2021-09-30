@@ -26,6 +26,8 @@
 namespace legate {
 
 class Runtime;
+class Store;
+class LibraryContext;
 
 class LogicalRegionField {
  public:
@@ -74,8 +76,6 @@ class LogicalStore {
  public:
   int32_t dim() const;
   LegateTypeCode code() const { return code_; }
-
- public:
   Legion::Domain domain() const;
 
  public:
@@ -85,12 +85,16 @@ class LogicalStore {
  private:
   void create_storage();
 
+ public:
+  std::shared_ptr<Store> get_physical_store(LibraryContext* context);
+
  private:
   Runtime* runtime_{nullptr};
   LegateTypeCode code_{MAX_TYPE_NUMBER};
   std::vector<int64_t> extents_;
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};
   std::shared_ptr<StoreTransform> transform_{nullptr};
+  std::shared_ptr<Store> mapped_{nullptr};
 };
 
 }  // namespace legate

@@ -20,6 +20,7 @@
 
 #include "legion.h"
 
+#include "core/data/store.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate {
@@ -110,6 +111,8 @@ class Runtime {
   std::shared_ptr<LogicalStore> create_store(std::vector<int64_t> extents, LegateTypeCode code);
   std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<int64_t>& extents,
                                                           LegateTypeCode code);
+  RegionField map_region_field(LibraryContext* context,
+                               std::shared_ptr<LogicalRegionField> region_field);
 
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);

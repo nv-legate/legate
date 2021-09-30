@@ -15,7 +15,7 @@
  */
 
 #include "core/data/logical_store.h"
-
+#include "core/data/store.h"
 #include "core/runtime/runtime.h"
 
 using namespace Legion;
@@ -59,6 +59,14 @@ std::shared_ptr<LogicalRegionField> LogicalStore::get_storage()
 void LogicalStore::create_storage()
 {
   region_field_ = runtime_->create_region_field(extents_, code_);
+}
+
+std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
+{
+  if (nullptr != mapped_) return mapped_;
+  auto rf = runtime_->map_region_field(context, region_field_);
+  mapped_ = std::make_shared<Store>(dim(), code_, -1, std::move(rf), transform_);
+  return mapped_;
 }
 
 }  // namespace legate

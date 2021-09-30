@@ -18,6 +18,7 @@
 
 #include "legion.h"
 // legion.h has to go before these
+#include "core/data/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/data/store.h"
 #include "core/legate_c.h"
