@@ -52,38 +52,8 @@ class LibraryContext;
 class LogicalRegionField;
 class LogicalStore;
 class PartitioningFunctor;
-
-class RegionManager {
- public:
-  RegionManager(Runtime* runtime, const Legion::Domain& shape);
-
- private:
-  Legion::LogicalRegion active_region() const;
-  bool has_space() const;
-  void create_region();
-
- public:
-  std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(size_t field_size);
-
- private:
-  Runtime* runtime_;
-  Legion::Domain shape_;
-  std::vector<Legion::LogicalRegion> regions_{};
-};
-
-class FieldManager {
- public:
-  FieldManager(Runtime* runtime, const Legion::Domain& shape, LegateTypeCode code);
-
- public:
-  std::shared_ptr<LogicalRegionField> allocate_field();
-
- private:
-  Runtime* runtime_;
-  Legion::Domain shape_;
-  LegateTypeCode code_;
-  size_t field_size_;
-};
+class RegionManager;
+class FieldManager;
 
 class Runtime {
  public:
