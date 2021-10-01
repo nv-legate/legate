@@ -39,9 +39,6 @@ class BufferBuilder {
 };
 
 class RequirementAnalyzer {
- private:
-  using SingleTask = Legion::TaskLauncher*;
-
  public:
   ~RequirementAnalyzer();
 
@@ -51,7 +48,8 @@ class RequirementAnalyzer {
 
  public:
   void analyze_requirements();
-  void populate_launcher(SingleTask task) const;
+  template <typename Task>
+  void populate_launcher(Task* task) const;
 
  private:
   std::map<RegionReq*, uint32_t> req_indices_;
@@ -154,12 +152,13 @@ uint32_t RequirementAnalyzer::get_requirement_index(RegionReq* req, Legion::Fiel
 
 void RequirementAnalyzer::analyze_requirements() {}
 
-void RequirementAnalyzer::populate_launcher(SingleTask task) const
+template <typename Task>
+void RequirementAnalyzer::populate_launcher(Task* task) const
 {
   for (auto& pair : requirements_) {
     auto& req    = pair.first;
     auto& fields = pair.second;
-    req->proj->add(task, *req, fields);
+    req->proj->populate_launcher(task, *req, fields);
   }
 }
 
@@ -203,12 +202,18 @@ Projection::Projection(Legion::ReductionOpID r) : redop(std::make_unique<Legion:
 {
 }
 
+void Projection::set_reduction_op(Legion::ReductionOpID r)
+{
+  redop = std::make_unique<Legion::ReductionOpID>(r);
+}
+
 Broadcast::Broadcast() : Projection() {}
 
 Broadcast::Broadcast(Legion::ReductionOpID redop) : Projection(redop) {}
-void Broadcast::add(SingleTask task,
-                    const RegionReq& req,
-                    const std::vector<Legion::FieldID>& fields) const
+
+void Broadcast::populate_launcher(Legion::TaskLauncher* task,
+                                  const RegionReq& req,
+                                  const std::vector<Legion::FieldID>& fields) const
 {
   if (req.priv == REDUCE) {
     Legion::RegionRequirement legion_req(req.region, *redop, EXCLUSIVE, req.region, req.tag);
@@ -216,6 +221,65 @@ void Broadcast::add(SingleTask task,
     task->add_region_requirement(legion_req);
   } else {
     Legion::RegionRequirement legion_req(req.region, req.priv, EXCLUSIVE, req.region, req.tag);
+    legion_req.add_fields(fields);
+    task->add_region_requirement(legion_req);
+  }
+}
+
+void Broadcast::populate_launcher(Legion::IndexTaskLauncher* task,
+                                  const RegionReq& req,
+                                  const std::vector<Legion::FieldID>& fields) const
+{
+  if (req.priv == REDUCE) {
+    Legion::RegionRequirement legion_req(req.region, *redop, EXCLUSIVE, req.region, req.tag);
+    legion_req.add_fields(fields);
+    task->add_region_requirement(legion_req);
+  } else {
+    Legion::RegionRequirement legion_req(req.region, req.priv, EXCLUSIVE, req.region, req.tag);
+    legion_req.add_fields(fields);
+    task->add_region_requirement(legion_req);
+  }
+}
+
+MapPartition::MapPartition(Legion::LogicalPartition partition, Legion::ProjectionID proj_id)
+  : Projection(), partition_(partition), proj_id_(proj_id)
+{
+}
+
+MapPartition::MapPartition(Legion::LogicalPartition partition,
+                           Legion::ProjectionID proj_id,
+                           Legion::ReductionOpID redop)
+  : Projection(redop), partition_(partition), proj_id_(proj_id)
+{
+}
+
+void MapPartition::populate_launcher(Legion::TaskLauncher* task,
+                                     const RegionReq& req,
+                                     const std::vector<Legion::FieldID>& fields) const
+{
+  if (req.priv == REDUCE) {
+    Legion::RegionRequirement legion_req(req.region, *redop, EXCLUSIVE, req.region, req.tag);
+    legion_req.add_fields(fields);
+    task->add_region_requirement(legion_req);
+  } else {
+    Legion::RegionRequirement legion_req(req.region, req.priv, EXCLUSIVE, req.region, req.tag);
+    legion_req.add_fields(fields);
+    task->add_region_requirement(legion_req);
+  }
+}
+
+void MapPartition::populate_launcher(Legion::IndexTaskLauncher* task,
+                                     const RegionReq& req,
+                                     const std::vector<Legion::FieldID>& fields) const
+{
+  if (req.priv == REDUCE) {
+    Legion::RegionRequirement legion_req(
+      partition_, proj_id_, *redop, EXCLUSIVE, req.region, req.tag);
+    legion_req.add_fields(fields);
+    task->add_region_requirement(legion_req);
+  } else {
+    Legion::RegionRequirement legion_req(
+      partition_, proj_id_, req.priv, EXCLUSIVE, req.region, req.tag);
     legion_req.add_fields(fields);
     task->add_region_requirement(legion_req);
   }
@@ -279,6 +343,13 @@ void TaskLauncher::add_reduction(LogicalStoreP store,
   add_store(reductions_, std::move(store), std::move(proj), REDUCE, tag);
 }
 
+void TaskLauncher::execute(const Legion::Domain& launch_domain)
+{
+  auto legion_launcher = build_index_task(launch_domain);
+  runtime_->dispatch(legion_launcher);
+  delete legion_launcher;
+}
+
 void TaskLauncher::execute_single()
 {
   auto legion_launcher = build_single_task();
@@ -310,7 +381,7 @@ void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
   for (auto& arg : args) arg->pack(*buffer_);
 }
 
-TaskLauncher::SingleTask TaskLauncher::build_single_task()
+Legion::TaskLauncher* TaskLauncher::build_single_task()
 {
   pack_args(inputs_);
   pack_args(outputs_);
@@ -326,6 +397,27 @@ TaskLauncher::SingleTask TaskLauncher::build_single_task()
   req_analyzer_->populate_launcher(single_task);
 
   return single_task;
+}
+
+Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& launch_domain)
+{
+  pack_args(inputs_);
+  pack_args(outputs_);
+  pack_args(reductions_);
+  pack_args(scalars_);
+
+  auto index_task = new Legion::IndexTaskLauncher(legion_task_id(),
+                                                  launch_domain,
+                                                  buffer_->to_legion_buffer(),
+                                                  Legion::ArgumentMap(),
+                                                  Legion::Predicate::TRUE_PRED,
+                                                  false /*must*/,
+                                                  legion_mapper_id(),
+                                                  tag_);
+
+  req_analyzer_->populate_launcher(index_task);
+
+  return index_task;
 }
 
 }  // namespace legate

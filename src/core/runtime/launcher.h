@@ -35,9 +35,6 @@ class LibraryContext;
 
 class Projection {
  protected:
-  using SingleTask = Legion::TaskLauncher*;
-
- protected:
   Projection() {}
   Projection(Legion::ReductionOpID redop);
 
@@ -45,9 +42,15 @@ class Projection {
   virtual ~Projection() {}
 
  public:
-  virtual void add(SingleTask task,
-                   const RegionReq& req,
-                   const std::vector<Legion::FieldID>& fields) const = 0;
+  virtual void populate_launcher(Legion::TaskLauncher* task,
+                                 const RegionReq& req,
+                                 const std::vector<Legion::FieldID>& fields) const = 0;
+  virtual void populate_launcher(Legion::IndexTaskLauncher* task,
+                                 const RegionReq& req,
+                                 const std::vector<Legion::FieldID>& fields) const = 0;
+
+ public:
+  void set_reduction_op(Legion::ReductionOpID redop);
 
  public:
   std::unique_ptr<Legion::ReductionOpID> redop{nullptr};
@@ -62,9 +65,35 @@ class Broadcast : public Projection {
   virtual ~Broadcast() {}
 
  public:
-  virtual void add(SingleTask task,
-                   const RegionReq& req,
-                   const std::vector<Legion::FieldID>& fields) const override;
+  virtual void populate_launcher(Legion::TaskLauncher* task,
+                                 const RegionReq& req,
+                                 const std::vector<Legion::FieldID>& fields) const override;
+  virtual void populate_launcher(Legion::IndexTaskLauncher* task,
+                                 const RegionReq& req,
+                                 const std::vector<Legion::FieldID>& fields) const override;
+};
+
+class MapPartition : public Projection {
+ public:
+  MapPartition(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
+  MapPartition(Legion::LogicalPartition partition,
+               Legion::ProjectionID proj_id,
+               Legion::ReductionOpID redop);
+
+ public:
+  virtual ~MapPartition() {}
+
+ public:
+  virtual void populate_launcher(Legion::TaskLauncher* task,
+                                 const RegionReq& req,
+                                 const std::vector<Legion::FieldID>& fields) const override;
+  virtual void populate_launcher(Legion::IndexTaskLauncher* task,
+                                 const RegionReq& req,
+                                 const std::vector<Legion::FieldID>& fields) const override;
+
+ private:
+  Legion::LogicalPartition partition_;
+  Legion::ProjectionID proj_id_;
 };
 
 class RegionReq {
@@ -88,7 +117,6 @@ class TaskLauncher {
  private:
   using LogicalStoreP = std::shared_ptr<LogicalStore>;
   using ProjectionP   = std::unique_ptr<Projection>;
-  using SingleTask    = Legion::TaskLauncher*;
 
  public:
   TaskLauncher(Runtime* runtime,
@@ -119,11 +147,13 @@ class TaskLauncher {
                  uint64_t tag);
 
  public:
+  void execute(const Legion::Domain& launch_domain);
   void execute_single();
 
  private:
   void pack_args(const std::vector<ArgWrapper*>& args);
-  SingleTask build_single_task();
+  Legion::IndexTaskLauncher* build_index_task(const Legion::Domain& launch_domain);
+  Legion::TaskLauncher* build_single_task();
 
  private:
   Runtime* runtime_;

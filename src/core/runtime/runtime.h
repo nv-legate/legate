@@ -51,6 +51,7 @@ class Task;
 class LibraryContext;
 class LogicalRegionField;
 class LogicalStore;
+class PartitioningFunctor;
 
 class RegionManager {
  public:
@@ -120,14 +121,24 @@ class Runtime {
 
  public:
   Legion::IndexSpace find_or_create_index_space(const Legion::Domain& shape);
+  Legion::IndexPartition create_index_partition(const Legion::IndexSpace& index_space,
+                                                const Legion::IndexSpace& color_space,
+                                                Legion::PartitionKind kind,
+                                                const PartitioningFunctor* functor);
   Legion::FieldSpace create_field_space();
   Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
                                       const Legion::FieldSpace& field_space);
+  Legion::LogicalPartition create_logical_partition(const Legion::LogicalRegion& logical_region,
+                                                    const Legion::IndexPartition& index_partition);
   Legion::FieldID allocate_field(const Legion::FieldSpace& field_space, size_t field_size);
   Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
 
  public:
   std::shared_ptr<LogicalStore> dispatch(Legion::TaskLauncher* launcher);
+  std::shared_ptr<LogicalStore> dispatch(Legion::IndexTaskLauncher* launcher);
+
+ private:
+  void schedule(std::vector<std::unique_ptr<Operation>> operations);
 
  public:
   static void initialize(int32_t argc, char** argv);
@@ -148,6 +159,10 @@ class Runtime {
 
  private:
   std::map<Legion::Domain, Legion::IndexSpace> index_spaces_;
+
+ private:
+  std::vector<std::unique_ptr<Operation>> operations_;
+  size_t window_size_{1};
 
  private:
   std::map<std::string, LibraryContext*> libraries_;

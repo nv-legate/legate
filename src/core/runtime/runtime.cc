@@ -16,6 +16,8 @@
 
 #include "core/data/logical_store.h"
 #include "core/mapping/core_mapper.h"
+#include "core/partitioning/partition.h"
+#include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
 #include "core/runtime/projection.h"
 #include "core/runtime/shard.h"
@@ -407,8 +409,24 @@ std::unique_ptr<Task> Runtime::create_task(LibraryContext* library,
 
 void Runtime::submit(std::unique_ptr<Operation> op)
 {
-  // TODO: We need to build a lazy evaluation pipeline here
-  op->launch();
+  operations_.push_back(std::move(op));
+  if (operations_.size() >= window_size_) {
+    std::vector<std::unique_ptr<Operation>> to_schedule;
+    to_schedule.swap(operations_);
+    schedule(std::move(to_schedule));
+  }
+}
+
+void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
+{
+  std::vector<const Operation*> op_pointers{};
+  op_pointers.reserve(operations.size());
+  for (auto& op : operations) op_pointers.push_back(op.get());
+
+  Partitioner partitioner(this, std::move(op_pointers));
+  auto strategy = partitioner.partition_stores();
+
+  for (auto& op : operations) op->launch(strategy.get());
 }
 
 std::shared_ptr<LogicalStore> Runtime::create_store(std::vector<int64_t> extents,
@@ -485,6 +503,14 @@ IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
   }
 }
 
+Legion::IndexPartition Runtime::create_index_partition(const Legion::IndexSpace& index_space,
+                                                       const Legion::IndexSpace& color_space,
+                                                       Legion::PartitionKind kind,
+                                                       const PartitioningFunctor* functor)
+{
+  return functor->construct(legion_runtime_, legion_context_, index_space, color_space, kind);
+}
+
 FieldSpace Runtime::create_field_space()
 {
   assert(nullptr != legion_context_);
@@ -495,6 +521,13 @@ LogicalRegion Runtime::create_region(const IndexSpace& index_space, const FieldS
 {
   assert(nullptr != legion_context_);
   return legion_runtime_->create_logical_region(legion_context_, index_space, field_space);
+}
+
+Legion::LogicalPartition Runtime::create_logical_partition(
+  const Legion::LogicalRegion& logical_region, const Legion::IndexPartition& index_partition)
+{
+  assert(nullptr != legion_context_);
+  return legion_runtime_->get_logical_partition(legion_context_, logical_region, index_partition);
 }
 
 FieldID Runtime::allocate_field(const FieldSpace& field_space, size_t field_size)
@@ -514,6 +547,13 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(TaskLauncher* launcher)
 {
   assert(nullptr != legion_context_);
   legion_runtime_->execute_task(legion_context_, *launcher);
+  return nullptr;
+}
+
+std::shared_ptr<LogicalStore> Runtime::dispatch(IndexTaskLauncher* launcher)
+{
+  assert(nullptr != legion_context_);
+  legion_runtime_->execute_index_space(legion_context_, *launcher);
   return nullptr;
 }
 

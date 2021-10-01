@@ -16,6 +16,8 @@
 
 #include "core/data/logical_store.h"
 #include "core/data/store.h"
+#include "core/partitioning/partition.h"
+#include "core/runtime/launcher.h"
 #include "core/runtime/runtime.h"
 
 using namespace Legion;
@@ -56,6 +58,11 @@ std::shared_ptr<LogicalRegionField> LogicalStore::get_storage()
   return region_field_;
 }
 
+std::shared_ptr<LogicalRegionField> LogicalStore::get_storage_unsafe() const
+{
+  return region_field_;
+}
+
 void LogicalStore::create_storage()
 {
   region_field_ = runtime_->create_region_field(extents_, code_);
@@ -67,6 +74,13 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
   auto rf = runtime_->map_region_field(context, region_field_);
   mapped_ = std::make_shared<Store>(dim(), code_, -1, std::move(rf), transform_);
   return mapped_;
+}
+
+std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
+{
+  auto lp =
+    partition->construct(this, partition->is_disjoint_for(this), partition->is_complete_for(this));
+  return std::make_unique<MapPartition>(lp, 0);
 }
 
 }  // namespace legate

@@ -14,11 +14,14 @@
  *
  */
 
-#include "core/runtime/operation.h"
+#include <unordered_set>
+
 #include "core/data/logical_store.h"
 #include "core/data/scalar.h"
+#include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
 #include "core/runtime/launcher.h"
+#include "core/runtime/operation.h"
 #include "core/runtime/runtime.h"
 
 namespace legate {
@@ -37,6 +40,35 @@ void Operation::add_reduction(LogicalStoreP store, Legion::ReductionOpID redop)
   reductions_.push_back(Reduction(store, redop));
 }
 
+std::vector<const LogicalStore*> Operation::all_stores() const
+{
+  std::vector<const LogicalStore*> result;
+  std::unordered_set<const LogicalStore*> added;
+
+  auto add_all = [&](auto& stores) {
+    for (auto& store : stores) {
+      auto p_store = store.get();
+      if (added.find(p_store) == added.end()) {
+        result.push_back(p_store);
+        added.insert(p_store);
+      }
+    }
+  };
+
+  add_all(inputs_);
+  add_all(outputs_);
+  for (auto& reduction : reductions_) {
+    auto& store  = reduction.first;
+    auto p_store = store.get();
+    if (added.find(p_store) == added.end()) {
+      result.push_back(p_store);
+      added.insert(p_store);
+    }
+  }
+
+  return std::move(result);
+}
+
 Task::Task(Runtime* runtime, LibraryContext* library, int64_t task_id, int64_t mapper_id /*=0*/)
   : Operation(runtime, library, mapper_id), task_id_(task_id)
 {
@@ -44,17 +76,23 @@ Task::Task(Runtime* runtime, LibraryContext* library, int64_t task_id, int64_t m
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 
-void Task::launch() const
+void Task::launch(Strategy* strategy) const
 {
   TaskLauncher launcher(runtime_, library_, task_id_, mapper_id_);
 
-  for (auto& input : inputs_) launcher.add_input(input, std::make_unique<Broadcast>());
-  for (auto& output : outputs_) launcher.add_output(output, std::make_unique<Broadcast>());
-  for (auto& pair : reductions_)
-    launcher.add_reduction(pair.first, std::make_unique<Broadcast>(pair.second));
+  for (auto& input : inputs_) launcher.add_input(input, strategy->get_projection(input.get()));
+  for (auto& output : outputs_) launcher.add_output(output, strategy->get_projection(output.get()));
+  for (auto& pair : reductions_) {
+    auto projection = strategy->get_projection(pair.first.get());
+    projection->set_reduction_op(pair.second);
+    launcher.add_reduction(pair.first, std::move(projection));
+  }
   for (auto& scalar : scalars_) launcher.add_scalar(scalar);
 
-  launcher.execute_single();
+  if (strategy->parallel())
+    launcher.execute(strategy->launch_domain());
+  else
+    launcher.execute_single();
 }
 
 }  // namespace legate

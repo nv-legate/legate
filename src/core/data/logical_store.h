@@ -28,6 +28,8 @@ namespace legate {
 class Runtime;
 class Store;
 class LibraryContext;
+class Partition;
+class Projection;
 
 class LogicalRegionField {
  public:
@@ -81,12 +83,16 @@ class LogicalStore {
  public:
   bool has_storage() const { return nullptr != region_field_; }
   std::shared_ptr<LogicalRegionField> get_storage();
+  std::shared_ptr<LogicalRegionField> get_storage_unsafe() const;
 
  private:
   void create_storage();
 
  public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
+
+ public:
+  std::unique_ptr<Projection> find_or_create_partition(const Partition* partition);
 
  private:
   Runtime* runtime_{nullptr};

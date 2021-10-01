@@ -26,6 +26,7 @@ class LogicalStore;
 class Scalar;
 class Runtime;
 class LibraryContext;
+class Strategy;
 
 class Operation {
  private:
@@ -41,7 +42,10 @@ class Operation {
   void add_reduction(LogicalStoreP store, Legion::ReductionOpID redop);
 
  public:
-  virtual void launch() const = 0;
+  std::vector<const LogicalStore*> all_stores() const;
+
+ public:
+  virtual void launch(Strategy* strategy) const = 0;
 
  protected:
   Runtime* runtime_;
@@ -62,7 +66,7 @@ class Task : public Operation {
   void add_scalar_arg(const Scalar& scalar);
 
  public:
-  virtual void launch() const override;
+  virtual void launch(Strategy* strategy) const override;
 
  private:
   int64_t task_id_;

@@ -25,6 +25,8 @@ GEN_CPU_SRC	= core/legate_c.cc                 \
 							core/mapping/instance_manager.cc \
 							core/mapping/mapping.cc          \
 							core/mapping/task.cc             \
+							core/partitioning/partition.cc   \
+							core/partitioning/partitioner.cc \
 							core/runtime/context.cc          \
 							core/runtime/launcher.cc         \
 							core/runtime/operation.cc        \
