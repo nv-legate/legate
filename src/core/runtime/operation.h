@@ -42,7 +42,7 @@ class Operation {
   void add_reduction(LogicalStoreP store, Legion::ReductionOpID redop);
 
  public:
-  std::vector<const LogicalStore*> all_stores() const;
+  std::vector<LogicalStore*> all_stores();
 
  public:
   virtual void launch(Strategy* strategy) const = 0;

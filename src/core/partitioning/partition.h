@@ -28,12 +28,18 @@ class Runtime;
 
 struct Partition {
  public:
-  virtual bool is_complete_for(const LogicalStore* store) const                 = 0;
-  virtual bool is_disjoint_for(const LogicalStore* store) const                 = 0;
+  virtual bool is_complete_for(const LogicalStore* store) const = 0;
+  virtual bool is_disjoint_for(const LogicalStore* store) const = 0;
+
+ public:
   virtual Legion::LogicalPartition construct(const LogicalStore* store,
                                              bool disjoint = false,
                                              bool complete = false) const       = 0;
   virtual std::unique_ptr<Projection> get_projection(LogicalStore* store) const = 0;
+
+ public:
+  virtual bool has_launch_domain() const       = 0;
+  virtual Legion::Domain launch_domain() const = 0;
 };
 
 struct PartitioningFunctor {

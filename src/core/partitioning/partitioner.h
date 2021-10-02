@@ -32,12 +32,11 @@ class Projection;
 class Strategy {
  public:
   Strategy();
-  Strategy(const Legion::Domain& launch_domain);
 
  public:
-  bool parallel() const;
-  Legion::Domain launch_domain() const;
-  void set_launch_domain(const Legion::Domain& launch_domain);
+  bool parallel(const Operation* op) const;
+  Legion::Domain launch_domain(const Operation* op) const;
+  void set_launch_domain(const Operation* op, const Legion::Domain& launch_domain);
 
  public:
   void insert(const LogicalStore* store, std::shared_ptr<Partition> partition);
@@ -47,20 +46,20 @@ class Strategy {
   std::unique_ptr<Projection> get_projection(LogicalStore* store) const;
 
  private:
-  std::unique_ptr<Legion::Domain> launch_domain_;
   std::unordered_map<const LogicalStore*, std::shared_ptr<Partition>> assignments_;
+  std::unordered_map<const Operation*, Legion::Domain> launch_domains_;
 };
 
 class Partitioner {
  public:
-  Partitioner(Runtime* runtime, std::vector<const Operation*>&& operations);
+  Partitioner(Runtime* runtime, std::vector<Operation*>&& operations);
 
  public:
   std::unique_ptr<Strategy> partition_stores();
 
  private:
   Runtime* runtime_;
-  std::vector<const Operation*> operations_;
+  std::vector<Operation*> operations_;
 };
 
 }  // namespace legate

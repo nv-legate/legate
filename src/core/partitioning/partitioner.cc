@@ -15,6 +15,7 @@
  */
 
 #include "core/partitioning/partitioner.h"
+#include "core/data/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
@@ -23,20 +24,24 @@
 
 namespace legate {
 
-Strategy::Strategy() : launch_domain_(nullptr) {}
+Strategy::Strategy() {}
 
-Strategy::Strategy(const Legion::Domain& launch_domain)
-  : launch_domain_(std::make_unique<Legion::Domain>(launch_domain))
+bool Strategy::parallel(const Operation* op) const
 {
+  auto finder = launch_domains_.find(op);
+  return finder != launch_domains_.end();
 }
 
-bool Strategy::parallel() const { return nullptr != launch_domain_; }
-
-Legion::Domain Strategy::launch_domain() const { return *launch_domain_; }
-
-void Strategy::set_launch_domain(const Legion::Domain& launch_domain)
+Legion::Domain Strategy::launch_domain(const Operation* op) const
 {
-  launch_domain_ = std::make_unique<Legion::Domain>(launch_domain);
+  auto finder = launch_domains_.find(op);
+  assert(finder != launch_domains_.end());
+  return finder->second;
+}
+
+void Strategy::set_launch_domain(const Operation* op, const Legion::Domain& launch_domain)
+{
+  launch_domains_[op] = launch_domain;
 }
 
 void Strategy::insert(const LogicalStore* store, std::shared_ptr<Partition> partition)
@@ -58,8 +63,8 @@ std::unique_ptr<Projection> Strategy::get_projection(LogicalStore* store) const
   return partition->get_projection(store);
 }
 
-Partitioner::Partitioner(Runtime* runtime, std::vector<const Operation*>&& operations)
-  : runtime_(runtime), operations_(std::forward<std::vector<const Operation*>>(operations))
+Partitioner::Partitioner(Runtime* runtime, std::vector<Operation*>&& operations)
+  : runtime_(runtime), operations_(std::forward<std::vector<Operation*>>(operations))
 {
 }
 
@@ -68,8 +73,17 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
   auto strategy = std::make_unique<Strategy>();
 
   for (auto op : operations_) {
-    auto all_stores = op->all_stores();
-    for (auto store : all_stores) strategy->insert(store, create_no_partition(runtime_));
+    bool determined_launch_domain = false;
+    auto all_stores               = op->all_stores();
+    for (auto store : all_stores) {
+      auto key_partition = store->find_or_create_key_partition();
+      if (!determined_launch_domain) {
+        determined_launch_domain = true;
+        if (key_partition->has_launch_domain())
+          strategy->set_launch_domain(op, key_partition->launch_domain());
+      }
+      strategy->insert(store, std::move(key_partition));
+    }
   }
 
   return std::move(strategy);

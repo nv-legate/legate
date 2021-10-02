@@ -37,6 +37,10 @@ class NoPartition : public Partition {
                                              bool complete) const override;
   virtual std::unique_ptr<Projection> get_projection(LogicalStore* store) const override;
 
+ public:
+  virtual bool has_launch_domain() const override;
+  virtual Legion::Domain launch_domain() const override;
+
  private:
   Runtime* runtime_;
 };
@@ -54,6 +58,10 @@ class Tiling : public Partition {
                                              bool disjoint,
                                              bool complete) const override;
   virtual std::unique_ptr<Projection> get_projection(LogicalStore* store) const override;
+
+ public:
+  virtual bool has_launch_domain() const override;
+  virtual Legion::Domain launch_domain() const override;
 
  private:
   Runtime* runtime_;
@@ -84,6 +92,10 @@ Tiling::Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&
     color_shape_(std::forward<Shape>(color_shape)),
     offsets_(std::forward<Shape>(offsets))
 {
+  if (offsets_.empty())
+    for (auto _ : tile_shape_) offsets_.push_back(0);
+  assert(tile_shape_.size() == color_shape_.size());
+  assert(tile_shape_.size() == offsets_.size());
 }
 
 NoPartition::NoPartition(Runtime* runtime) : runtime_(runtime) {}
@@ -104,7 +116,15 @@ std::unique_ptr<Projection> NoPartition::get_projection(LogicalStore* store) con
   return std::make_unique<Broadcast>();
 }
 
-bool Tiling::is_complete_for(const LogicalStore* store) const {}
+bool NoPartition::has_launch_domain() const { return false; }
+
+Legion::Domain NoPartition::launch_domain() const
+{
+  assert(false);
+  return Legion::Domain();
+}
+
+bool Tiling::is_complete_for(const LogicalStore* store) const { return false; }
 
 bool Tiling::is_disjoint_for(const LogicalStore* store) const { return true; }
 
@@ -112,10 +132,27 @@ Legion::LogicalPartition Tiling::construct(const LogicalStore* store,
                                            bool disjoint,
                                            bool complete) const
 {
+  auto ndim = static_cast<int32_t>(tile_shape_.size());
+
   Legion::DomainTransform transform;
+  transform.m = ndim;
+  transform.n = ndim;
+  for (int32_t idx = 0; idx < ndim * ndim; ++idx) transform.matrix[idx] = 0;
+  for (int32_t idx = 0; idx < ndim; ++idx) transform.matrix[ndim * idx + idx] = tile_shape_[idx];
+
   Legion::Domain extent;
+  extent.dim = ndim;
+  for (int32_t idx = 0; idx < ndim; ++idx) {
+    extent.rect_data[idx]        = offsets_[idx];
+    extent.rect_data[idx + ndim] = tile_shape_[idx] - 1 + offsets_[idx];
+  }
 
   Legion::Domain color_domain;
+  color_domain.dim = ndim;
+  for (int32_t idx = 0; idx < ndim; ++idx) {
+    color_domain.rect_data[idx]        = 0;
+    color_domain.rect_data[idx + ndim] = color_shape_[idx] - 1;
+  }
 
   auto region      = store->get_storage_unsafe()->region();
   auto color_space = runtime_->find_or_create_index_space(color_domain);
@@ -132,6 +169,20 @@ Legion::LogicalPartition Tiling::construct(const LogicalStore* store,
 std::unique_ptr<Projection> Tiling::get_projection(LogicalStore* store) const
 {
   return store->find_or_create_partition(this);
+}
+
+bool Tiling::has_launch_domain() const { return true; }
+
+Legion::Domain Tiling::launch_domain() const
+{
+  Legion::Domain launch_domain;
+  int32_t ndim      = static_cast<int32_t>(color_shape_.size());
+  launch_domain.dim = ndim;
+  for (int32_t idx = 0; idx < ndim; ++idx) {
+    launch_domain.rect_data[idx]        = 0;
+    launch_domain.rect_data[idx + ndim] = color_shape_[idx] - 1;
+  }
+  return launch_domain;
 }
 
 PartitionByRestriction::PartitionByRestriction(Legion::DomainTransform transform,

@@ -38,7 +38,7 @@ Domain LogicalRegionField::domain() const
 
 LogicalStore::LogicalStore(Runtime* runtime,
                            LegateTypeCode code,
-                           std::vector<int64_t> extents,
+                           std::vector<size_t> extents,
                            std::shared_ptr<StoreTransform> transform /*= nullptr*/)
   : runtime_(runtime), code_(code), extents_(std::move(extents)), transform_(std::move(transform))
 {
@@ -50,6 +50,13 @@ Domain LogicalStore::domain() const
 {
   assert(nullptr != region_field_);
   return region_field_->domain();
+}
+
+size_t LogicalStore::volume() const
+{
+  size_t vol = 1;
+  for (auto extent : extents_) vol *= extent;
+  return vol;
 }
 
 std::shared_ptr<LogicalRegionField> LogicalStore::get_storage()
@@ -78,9 +85,24 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 
 std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
 {
+  // We're about to create a legion partition for this store, so the store should have its region
+  // created.
+  if (!has_storage()) create_storage();
   auto lp =
     partition->construct(this, partition->is_disjoint_for(this), partition->is_complete_for(this));
   return std::make_unique<MapPartition>(lp, 0);
+}
+
+std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
+{
+  auto part_mgr     = runtime_->get_partition_manager();
+  auto launch_shape = part_mgr->compute_launch_shape(this);
+  if (launch_shape.empty())
+    return create_no_partition(runtime_);
+  else {
+    auto tile_shape = part_mgr->compute_tile_shape(extents_, launch_shape);
+    return create_tiling(runtime_, std::move(tile_shape), std::move(launch_shape));
+  }
 }
 
 }  // namespace legate

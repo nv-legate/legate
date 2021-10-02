@@ -40,10 +40,10 @@ void Operation::add_reduction(LogicalStoreP store, Legion::ReductionOpID redop)
   reductions_.push_back(Reduction(store, redop));
 }
 
-std::vector<const LogicalStore*> Operation::all_stores() const
+std::vector<LogicalStore*> Operation::all_stores()
 {
-  std::vector<const LogicalStore*> result;
-  std::unordered_set<const LogicalStore*> added;
+  std::vector<LogicalStore*> result;
+  std::unordered_set<LogicalStore*> added;
 
   auto add_all = [&](auto& stores) {
     for (auto& store : stores) {
@@ -89,8 +89,8 @@ void Task::launch(Strategy* strategy) const
   }
   for (auto& scalar : scalars_) launcher.add_scalar(scalar);
 
-  if (strategy->parallel())
-    launcher.execute(strategy->launch_domain());
+  if (strategy->parallel(this))
+    launcher.execute(strategy->launch_domain(this));
   else
     launcher.execute_single();
 }

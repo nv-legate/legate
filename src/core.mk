@@ -68,6 +68,7 @@ INSTALL_HEADERS = legate.h                        \
 									core/runtime/context.h          \
 									core/runtime/operation.h        \
 									core/runtime/runtime.h          \
+									core/runtime/runtime.inl        \
 									core/task/return.h              \
 									core/task/task.h                \
 									core/utilities/deserializer.h   \

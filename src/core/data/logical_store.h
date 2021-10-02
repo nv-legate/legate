@@ -64,7 +64,7 @@ class LogicalStore {
   LogicalStore() {}
   LogicalStore(Runtime* runtime,
                LegateTypeCode code,
-               std::vector<int64_t> extents,
+               std::vector<size_t> extents,
                std::shared_ptr<StoreTransform> transform = nullptr);
 
  public:
@@ -79,6 +79,8 @@ class LogicalStore {
   int32_t dim() const;
   LegateTypeCode code() const { return code_; }
   Legion::Domain domain() const;
+  const std::vector<size_t>& extents() const { return extents_; }
+  size_t volume() const;
 
  public:
   bool has_storage() const { return nullptr != region_field_; }
@@ -93,11 +95,12 @@ class LogicalStore {
 
  public:
   std::unique_ptr<Projection> find_or_create_partition(const Partition* partition);
+  std::unique_ptr<Partition> find_or_create_key_partition();
 
  private:
   Runtime* runtime_{nullptr};
   LegateTypeCode code_{MAX_TYPE_NUMBER};
-  std::vector<int64_t> extents_;
+  std::vector<size_t> extents_;
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};
   std::shared_ptr<StoreTransform> transform_{nullptr};
   std::shared_ptr<Store> mapped_{nullptr};

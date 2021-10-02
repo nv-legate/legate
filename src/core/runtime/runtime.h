@@ -21,6 +21,7 @@
 #include "legion.h"
 
 #include "core/data/store.h"
+#include "core/runtime/context.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate {
@@ -48,12 +49,26 @@ class ResourceConfig;
 class Runtime;
 class Operation;
 class Task;
-class LibraryContext;
 class LogicalRegionField;
 class LogicalStore;
 class PartitioningFunctor;
 class RegionManager;
 class FieldManager;
+
+class PartitionManager {
+ public:
+  PartitionManager(Runtime* runtime, const LibraryContext* context);
+
+ public:
+  std::vector<size_t> compute_launch_shape(const LogicalStore* store);
+  std::vector<size_t> compute_tile_shape(const std::vector<size_t>& extents,
+                                         const std::vector<size_t>& launch_shape);
+
+ private:
+  int32_t num_pieces_;
+  int32_t min_shard_volume_;
+  std::vector<size_t> piece_factors_;
+};
 
 class Runtime {
  public:
@@ -70,7 +85,11 @@ class Runtime {
   LibraryContext* create_library(const std::string& library_name, const ResourceConfig& config);
 
  public:
-  void set_legion_context(Legion::Context legion_context);
+  void post_startup_initialization(Legion::Context legion_context);
+
+ public:
+  template <typename T>
+  T get_tunable(const LibraryContext* context, int64_t tunable_id, int64_t mapper_id = 0);
 
  public:
   std::unique_ptr<Task> create_task(LibraryContext* library,
@@ -79,8 +98,8 @@ class Runtime {
   void submit(std::unique_ptr<Operation> op);
 
  public:
-  std::shared_ptr<LogicalStore> create_store(std::vector<int64_t> extents, LegateTypeCode code);
-  std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<int64_t>& extents,
+  std::shared_ptr<LogicalStore> create_store(std::vector<size_t> extents, LegateTypeCode code);
+  std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<size_t>& extents,
                                                           LegateTypeCode code);
   RegionField map_region_field(LibraryContext* context,
                                std::shared_ptr<LogicalRegionField> region_field);
@@ -88,6 +107,7 @@ class Runtime {
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
   FieldManager* find_or_create_field_manager(const Legion::Domain& shape, LegateTypeCode code);
+  PartitionManager* get_partition_manager();
 
  public:
   Legion::IndexSpace find_or_create_index_space(const Legion::Domain& shape);
@@ -122,10 +142,12 @@ class Runtime {
  private:
   Legion::Runtime* legion_runtime_;
   Legion::Context legion_context_{nullptr};
+  LibraryContext* core_context_{nullptr};
 
  private:
   std::map<std::pair<Legion::Domain, LegateTypeCode>, FieldManager*> field_managers_;
   std::map<Legion::Domain, RegionManager*> region_managers_;
+  PartitionManager* partition_manager_{nullptr};
 
  private:
   std::map<Legion::Domain, Legion::IndexSpace> index_spaces_;
@@ -145,3 +167,5 @@ void set_main_function(LegateMainFnPtr p_main);
 int32_t start(int32_t argc, char** argv);
 
 }  // namespace legate
+
+#include "core/runtime/runtime.inl"

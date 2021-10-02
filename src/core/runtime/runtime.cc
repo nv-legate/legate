@@ -104,7 +104,7 @@ static void toplevel_task(const Legion::Task* task,
                           Legion::Runtime* legion_runtime)
 {
   auto runtime = Runtime::get_runtime();
-  runtime->set_legion_context(ctx);
+  runtime->post_startup_initialization(ctx);
 
   if (nullptr == Core::main_fn) {
     log_legate.error(
@@ -386,6 +386,52 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
 }
 
 ////////////////////////////////////////////////////
+// legate::PartitionManager
+////////////////////////////////////////////////////
+
+PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* context)
+{
+  num_pieces_       = runtime->get_tunable<int32_t>(context, LEGATE_CORE_TUNABLE_NUM_PIECES);
+  min_shard_volume_ = runtime->get_tunable<int32_t>(context, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
+
+  int32_t remaining_pieces = num_pieces_;
+  auto push_factors        = [&](auto prime) {
+    while (remaining_pieces % prime == 0) {
+      piece_factors_.push_back(prime);
+      remaining_pieces /= prime;
+    }
+  };
+
+  push_factors(11);
+  push_factors(7);
+  push_factors(5);
+  push_factors(3);
+  push_factors(2);
+}
+
+std::vector<size_t> PartitionManager::compute_launch_shape(const LogicalStore* store)
+{
+  assert(store->dim() == 1);
+  size_t max_pieces = (store->volume() + min_shard_volume_ - 1) / min_shard_volume_;
+  std::vector<size_t> launch_shape;
+  if (max_pieces > 1) launch_shape.push_back(std::max<size_t>(1, max_pieces));
+  return std::move(launch_shape);
+}
+
+std::vector<size_t> PartitionManager::compute_tile_shape(const std::vector<size_t>& extents,
+                                                         const std::vector<size_t>& launch_shape)
+{
+  assert(extents.size() == launch_shape.size());
+  std::vector<size_t> tile_shape;
+  for (uint32_t idx = 0; idx < extents.size(); ++idx) {
+    auto x = extents[idx];
+    auto y = launch_shape[idx];
+    tile_shape.push_back((x + y - 1) / y);
+  }
+  return std::move(tile_shape);
+}
+
+////////////////////////////////////////////////////
 // legate::Runtime
 ////////////////////////////////////////////////////
 
@@ -426,9 +472,11 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
   return context;
 }
 
-void Runtime::set_legion_context(Legion::Context legion_context)
+void Runtime::post_startup_initialization(Legion::Context legion_context)
 {
-  legion_context_ = legion_context;
+  legion_context_    = legion_context;
+  core_context_      = find_library(core_library_name);
+  partition_manager_ = new PartitionManager(this, core_context_);
 }
 
 // This function should be moved to the library context
@@ -451,7 +499,7 @@ void Runtime::submit(std::unique_ptr<Operation> op)
 
 void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
 {
-  std::vector<const Operation*> op_pointers{};
+  std::vector<Operation*> op_pointers{};
   op_pointers.reserve(operations.size());
   for (auto& op : operations) op_pointers.push_back(op.get());
 
@@ -461,14 +509,14 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op->launch(strategy.get());
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(std::vector<int64_t> extents,
+std::shared_ptr<LogicalStore> Runtime::create_store(std::vector<size_t> extents,
                                                     LegateTypeCode code)
 {
   return std::make_shared<LogicalStore>(this, code, extents);
 }
 
-std::shared_ptr<LogicalRegionField> Runtime::create_region_field(
-  const std::vector<int64_t>& extents, LegateTypeCode code)
+std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const std::vector<size_t>& extents,
+                                                                 LegateTypeCode code)
 {
   DomainPoint lo, hi;
   hi.dim = lo.dim = static_cast<int32_t>(extents.size());
@@ -521,6 +569,8 @@ FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, LegateT
     return fld_mgr;
   }
 }
+
+PartitionManager* Runtime::get_partition_manager() { return partition_manager_; }
 
 IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
 {
