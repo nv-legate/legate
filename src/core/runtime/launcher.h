@@ -22,16 +22,14 @@
 
 namespace legate {
 
+class ArgWrapper;
 class BufferBuilder;
+class LibraryContext;
+class LogicalStore;
 class RegionReq;
 class RequirementAnalyzer;
-class ArgWrapper;
-
-class LogicalStore;
-class Scalar;
-
 class Runtime;
-class LibraryContext;
+class Scalar;
 
 class Projection {
  protected:

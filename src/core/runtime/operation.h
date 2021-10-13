@@ -22,10 +22,10 @@
 
 namespace legate {
 
-class LogicalStore;
-class Scalar;
-class Runtime;
 class LibraryContext;
+class LogicalStore;
+class Runtime;
+class Scalar;
 class Strategy;
 
 class Operation {

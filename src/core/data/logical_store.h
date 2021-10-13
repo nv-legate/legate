@@ -25,11 +25,11 @@
 
 namespace legate {
 
-class Runtime;
-class Store;
 class LibraryContext;
 class Partition;
 class Projection;
+class Runtime;
+class Store;
 
 class LogicalRegionField {
  public:

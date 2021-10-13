@@ -23,11 +23,11 @@
 
 namespace legate {
 
-class Operation;
-class Runtime;
 class LogicalStore;
+class Operation;
 class Partition;
 class Projection;
+class Runtime;
 
 class Strategy {
  public:

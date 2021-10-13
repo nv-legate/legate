@@ -45,15 +45,15 @@ class Core {
 #endif
 };
 
-class ResourceConfig;
-class Runtime;
-class Operation;
-class Task;
+class FieldManager;
 class LogicalRegionField;
 class LogicalStore;
+class Operation;
 class PartitioningFunctor;
 class RegionManager;
-class FieldManager;
+class ResourceConfig;
+class Runtime;
+class Task;
 
 class PartitionManager {
  public:

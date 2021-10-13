@@ -22,8 +22,8 @@
 
 namespace legate {
 
-class Store;
 class Scalar;
+class Store;
 
 struct ResourceConfig {
   int64_t max_tasks{1000000};
