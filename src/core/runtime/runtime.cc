@@ -14,6 +14,9 @@
  *
  */
 
+#include <algorithm>
+#include <cmath>
+
 #include "core/data/logical_store.h"
 #include "core/mapping/core_mapper.h"
 #include "core/partitioning/partition.h"
@@ -394,6 +397,9 @@ PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* conte
   num_pieces_       = runtime->get_tunable<int32_t>(context, LEGATE_CORE_TUNABLE_NUM_PIECES);
   min_shard_volume_ = runtime->get_tunable<int32_t>(context, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
+  assert(num_pieces_ > 0);
+  assert(min_shard_volume_ > 0);
+
   int32_t remaining_pieces = num_pieces_;
   auto push_factors        = [&](auto prime) {
     while (remaining_pieces % prime == 0) {
@@ -411,11 +417,128 @@ PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* conte
 
 std::vector<size_t> PartitionManager::compute_launch_shape(const LogicalStore* store)
 {
-  assert(store->dim() == 1);
-  size_t max_pieces = (store->volume() + min_shard_volume_ - 1) / min_shard_volume_;
-  std::vector<size_t> launch_shape;
-  if (max_pieces > 1) launch_shape.push_back(std::max<size_t>(1, max_pieces));
-  return std::move(launch_shape);
+  // Easy case if we only have one piece: no parallel launch space
+  if (num_pieces_ == 1) return {};
+
+  // If we only have one point then we never do parallel launches
+  auto& shape = store->extents();
+  if (std::all_of(shape.begin(), shape.end(), [](auto extent) { return 1 == extent; })) return {};
+
+  // Prune out any dimensions that are 1
+  std::vector<size_t> temp_shape{};
+  std::vector<uint32_t> temp_dims{};
+  int64_t volume = 1;
+  for (uint32_t dim = 0; dim < shape.size(); ++dim) {
+    auto extent = shape[dim];
+    if (1 == extent) continue;
+    temp_shape.push_back(extent);
+    temp_dims.push_back(dim);
+    volume *= extent;
+  }
+
+  // Figure out how many shards we can make with this array
+  int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
+  assert(max_pieces > 0);
+  // If we can only make one piece return that now
+  if (1 == max_pieces) return {};
+
+  // Otherwise we need to compute it ourselves
+  // TODO: a better heuristic here.
+  //       For now if we can make at least two pieces then we will make N pieces.
+  max_pieces = num_pieces_;
+
+  // First compute the N-th root of the number of pieces
+  uint32_t ndim = temp_shape.size();
+  assert(ndim > 0);
+  std::vector<size_t> temp_result{};
+
+  if (1 == ndim) {
+    // Easy one dimensional case
+    temp_result.push_back(std::min<size_t>(temp_shape.front(), static_cast<size_t>(max_pieces)));
+  } else if (2 == ndim) {
+    if (volume < max_pieces) {
+      // TBD: Once the max_pieces heuristic is fixed, this should never happen
+      temp_result.swap(temp_shape);
+    } else {
+      // Two dimensional so we can use square root to try and generate as square a pieces
+      // as possible since most often we will be doing matrix operations with these
+      auto nx   = temp_shape[0];
+      auto ny   = temp_shape[1];
+      auto swap = nx > ny;
+      if (swap) std::swap(nx, ny);
+      auto n = std::sqrt(static_cast<double>(max_pieces) * nx / ny);
+
+      // Need to constraint n to be an integer with numpcs % n == 0
+      // try rounding n both up and down
+      auto n1 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n + 1e-12)));
+      while (max_pieces % n1 != 0) --n1;
+      auto n2 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n - 1e-12)));
+      while (max_pieces % n2 != 0) ++n2;
+
+      // pick whichever of n1 and n2 gives blocks closest to square
+      // i.e. gives the shortest long side
+      auto side1 = std::max(nx / n1, ny / (max_pieces / n1));
+      auto side2 = std::max(nx / n2, ny / (max_pieces / n2));
+      auto px    = static_cast<size_t>(side1 <= side2 ? n1 : n2);
+      auto py    = static_cast<size_t>(max_pieces / px);
+
+      // we need to trim launch space if it is larger than the
+      // original shape in one of the dimensions (can happen in
+      // testing)
+      if (swap) {
+        temp_result.push_back(std::min(py, temp_shape[0]));
+        temp_result.push_back(std::min(px, temp_shape[1]));
+      } else {
+        temp_result.push_back(std::min(px, temp_shape[1]));
+        temp_result.push_back(std::min(py, temp_shape[0]));
+      }
+    }
+  } else {
+    // For higher dimensions we care less about "square"-ness and more about evenly dividing
+    // things, compute the prime factors for our number of pieces and then round-robin them
+    // onto the shape, with the goal being to keep the last dimension >= 32 for good memory
+    // performance on the GPU
+    temp_result.resize(ndim);
+    std::fill(temp_result.begin(), temp_result.end(), 1);
+    size_t factor_prod = 1;
+    for (auto factor : piece_factors_) {
+      // Avoid exceeding the maximum number of pieces
+      if (factor * factor_prod > max_pieces) break;
+
+      factor_prod *= factor;
+
+      std::vector<size_t> remaining;
+      for (uint32_t idx = 0; idx < temp_shape.size(); ++idx)
+        remaining.push_back((temp_shape[idx] + temp_result[idx] - 1) / temp_result[idx]);
+      uint32_t big_dim = std::max_element(remaining.begin(), remaining.end()) - remaining.begin();
+      if (big_dim < ndim - 1) {
+        // Not the last dimension, so do it
+        temp_result[big_dim] *= factor;
+      } else {
+        // Last dim so see if it still bigger than 32
+        if (remaining[big_dim] / factor >= 32) {
+          // go ahead and do it
+          temp_result[big_dim] *= factor;
+        } else {
+          // Won't be see if we can do it with one of the other dimensions
+          uint32_t next_big_dim =
+            std::max_element(remaining.begin(), remaining.end() - 1) - remaining.begin();
+          if (remaining[next_big_dim] / factor > 0)
+            temp_result[next_big_dim] *= factor;
+          else
+            // Fine just do it on the last dimension
+            temp_result[big_dim] *= factor;
+        }
+      }
+    }
+  }
+
+  // Project back onto the original number of dimensions
+  assert(temp_result.size() == ndim);
+  std::vector<size_t> result(shape.size(), 1);
+  for (uint32_t idx = 0; idx < ndim; ++idx) result[temp_dims[idx]] = temp_result[idx];
+
+  return std::move(result);
 }
 
 std::vector<size_t> PartitionManager::compute_tile_shape(const std::vector<size_t>& extents,
