@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <unordered_map>
+
 #include "legion.h"
 
 #include "core/task/return.h"
@@ -94,6 +96,10 @@ class LibraryContext {
   bool valid_projection_id(Legion::ProjectionID proj_id) const;
   bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
+ public:
+  void record_task_name(int64_t local_task_id, const std::string& task_name);
+  const std::string& get_task_name(int64_t local_task_id) const;
+
  private:
   const std::string library_name_;
   ResourceScope task_scope_;
@@ -101,6 +107,7 @@ class LibraryContext {
   ResourceScope redop_scope_;
   ResourceScope proj_scope_;
   ResourceScope shard_scope_;
+  std::unordered_map<int64_t, std::string> task_names_;
 };
 
 // A thin context layer on top of the Legion runtime, primarily designed to hide verbosity

@@ -23,6 +23,7 @@
 
 namespace legate {
 
+class Expr;
 class LogicalStore;
 class Operation;
 class Partition;
@@ -35,19 +36,18 @@ class Strategy {
 
  public:
   bool parallel(const Operation* op) const;
+  bool has_launch_domain(const Operation* op) const;
   Legion::Domain launch_domain(const Operation* op) const;
+  void set_single_launch(const Operation* op);
   void set_launch_domain(const Operation* op, const Legion::Domain& launch_domain);
 
  public:
-  void insert(const LogicalStore* store, std::shared_ptr<Partition> partition);
-  std::shared_ptr<Partition> find(const LogicalStore* store) const;
-
- public:
-  std::unique_ptr<Projection> get_projection(LogicalStore* store) const;
+  void insert(const Expr* variable, std::shared_ptr<Partition> partition);
+  std::shared_ptr<Partition> operator[](const std::shared_ptr<Expr>& variable) const;
 
  private:
-  std::unordered_map<const LogicalStore*, std::shared_ptr<Partition>> assignments_;
-  std::unordered_map<const Operation*, Legion::Domain> launch_domains_;
+  std::unordered_map<const Expr*, std::shared_ptr<Partition>> assignments_;
+  std::unordered_map<const Operation*, std::unique_ptr<Legion::Domain>> launch_domains_;
 };
 
 class Partitioner {
@@ -55,7 +55,7 @@ class Partitioner {
   Partitioner(Runtime* runtime, std::vector<Operation*>&& operations);
 
  public:
-  std::unique_ptr<Strategy> partition_stores();
+  std::unique_ptr<Strategy> solve();
 
  private:
   Runtime* runtime_;

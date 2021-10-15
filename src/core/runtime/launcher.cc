@@ -207,11 +207,11 @@ void Projection::set_reduction_op(Legion::ReductionOpID r)
   redop = std::make_unique<Legion::ReductionOpID>(r);
 }
 
-Broadcast::Broadcast() : Projection() {}
+Replicate::Replicate() : Projection() {}
 
-Broadcast::Broadcast(Legion::ReductionOpID redop) : Projection(redop) {}
+Replicate::Replicate(Legion::ReductionOpID redop) : Projection(redop) {}
 
-void Broadcast::populate_launcher(Legion::TaskLauncher* task,
+void Replicate::populate_launcher(Legion::TaskLauncher* task,
                                   const RegionReq& req,
                                   const std::vector<Legion::FieldID>& fields) const
 {
@@ -226,7 +226,7 @@ void Broadcast::populate_launcher(Legion::TaskLauncher* task,
   }
 }
 
-void Broadcast::populate_launcher(Legion::IndexTaskLauncher* task,
+void Replicate::populate_launcher(Legion::IndexTaskLauncher* task,
                                   const RegionReq& req,
                                   const std::vector<Legion::FieldID>& fields) const
 {

@@ -14,10 +14,14 @@
  *
  */
 
+#include <sstream>
 #include <unordered_set>
 
 #include "core/data/logical_store.h"
 #include "core/data/scalar.h"
+#include "core/partitioning/constraint.h"
+#include "core/partitioning/constraint_graph.h"
+#include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
 #include "core/runtime/launcher.h"
@@ -26,73 +30,110 @@
 
 namespace legate {
 
-Operation::Operation(Runtime* runtime, LibraryContext* library, int64_t mapper_id)
-  : runtime_(runtime), library_(library), mapper_id_(mapper_id)
+Operation::Operation(Runtime* runtime,
+                     LibraryContext* library,
+                     uint64_t unique_id,
+                     int64_t mapper_id)
+  : runtime_(runtime),
+    library_(library),
+    unique_id_(unique_id),
+    mapper_id_(mapper_id),
+    constraints_(std::make_shared<ConstraintGraph>())
 {
 }
 
-void Operation::add_input(LogicalStoreP store) { inputs_.push_back(store); }
-
-void Operation::add_output(LogicalStoreP store) { outputs_.push_back(store); }
-
-void Operation::add_reduction(LogicalStoreP store, Legion::ReductionOpID redop)
+void Operation::add_input(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition)
 {
-  reductions_.push_back(Reduction(store, redop));
+  constraints_->add_variable(partition);
+  inputs_.push_back(Store(std::move(store), std::move(partition)));
 }
 
-std::vector<LogicalStore*> Operation::all_stores()
+void Operation::add_output(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition)
 {
-  std::vector<LogicalStore*> result;
-  std::unordered_set<LogicalStore*> added;
-
-  auto add_all = [&](auto& stores) {
-    for (auto& store : stores) {
-      auto p_store = store.get();
-      if (added.find(p_store) == added.end()) {
-        result.push_back(p_store);
-        added.insert(p_store);
-      }
-    }
-  };
-
-  add_all(inputs_);
-  add_all(outputs_);
-  for (auto& reduction : reductions_) {
-    auto& store  = reduction.first;
-    auto p_store = store.get();
-    if (added.find(p_store) == added.end()) {
-      result.push_back(p_store);
-      added.insert(p_store);
-    }
-  }
-
-  return std::move(result);
+  constraints_->add_variable(partition);
+  outputs_.push_back(Store(std::move(store), std::move(partition)));
 }
 
-Task::Task(Runtime* runtime, LibraryContext* library, int64_t task_id, int64_t mapper_id /*=0*/)
-  : Operation(runtime, library, mapper_id), task_id_(task_id)
+void Operation::add_reduction(std::shared_ptr<LogicalStore> store,
+                              Legion::ReductionOpID redop,
+                              std::shared_ptr<Variable> partition)
+{
+  constraints_->add_variable(partition);
+  reductions_.push_back(Store(std::move(store), std::move(partition)));
+  reduction_ops_.push_back(redop);
+}
+
+std::shared_ptr<Variable> Operation::declare_partition(std::shared_ptr<LogicalStore> store)
+{
+  auto variable             = std::make_shared<Variable>(this, store, next_part_id_++);
+  store_mappings_[variable] = std::move(store);
+  return std::move(variable);
+}
+
+std::shared_ptr<LogicalStore> Operation::find_store(std::shared_ptr<Variable> variable) const
+{
+  auto finder = store_mappings_.find(variable);
+  assert(store_mappings_.end() != finder);
+  return finder->second;
+}
+
+void Operation::add_constraint(std::shared_ptr<Constraint> constraint)
+{
+  constraints_->add_constraint(constraint);
+}
+
+std::shared_ptr<ConstraintGraph> Operation::constraints() const { return constraints_; }
+
+Task::Task(Runtime* runtime,
+           LibraryContext* library,
+           int64_t task_id,
+           uint64_t unique_id,
+           int64_t mapper_id /*=0*/)
+  : Operation(runtime, library, unique_id, mapper_id), task_id_(task_id)
 {
 }
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 
-void Task::launch(Strategy* strategy) const
+void Task::launch(Strategy* p_strategy) const
 {
+  auto& strategy = *p_strategy;
   TaskLauncher launcher(runtime_, library_, task_id_, mapper_id_);
 
-  for (auto& input : inputs_) launcher.add_input(input, strategy->get_projection(input.get()));
-  for (auto& output : outputs_) launcher.add_output(output, strategy->get_projection(output.get()));
+  for (auto& pair : inputs_) {
+    auto& store = pair.first;
+    auto& var   = pair.second;
+    auto proj   = strategy[var]->get_projection(store.get());
+    launcher.add_input(store, std::move(proj));
+  }
+  for (auto& pair : outputs_) {
+    auto& store = pair.first;
+    auto& var   = pair.second;
+    auto proj   = strategy[var]->get_projection(store.get());
+    launcher.add_output(store, std::move(proj));
+  }
+  uint32_t idx = 0;
   for (auto& pair : reductions_) {
-    auto projection = strategy->get_projection(pair.first.get());
-    projection->set_reduction_op(pair.second);
-    launcher.add_reduction(pair.first, std::move(projection));
+    auto& store = pair.first;
+    auto& var   = pair.second;
+    auto proj   = strategy[var]->get_projection(store.get());
+    auto redop  = reduction_ops_[idx++];
+    proj->set_reduction_op(redop);
+    launcher.add_reduction(store, std::move(proj));
   }
   for (auto& scalar : scalars_) launcher.add_scalar(scalar);
 
-  if (strategy->parallel(this))
-    launcher.execute(strategy->launch_domain(this));
+  if (strategy.parallel(this))
+    launcher.execute(strategy.launch_domain(this));
   else
     launcher.execute_single();
+}
+
+std::string Task::to_string() const
+{
+  std::stringstream ss;
+  ss << library_->get_task_name(task_id_) << ":" << unique_id_;
+  return ss.str();
 }
 
 }  // namespace legate

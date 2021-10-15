@@ -54,13 +54,13 @@ class Projection {
   std::unique_ptr<Legion::ReductionOpID> redop{nullptr};
 };
 
-class Broadcast : public Projection {
+class Replicate : public Projection {
  public:
-  Broadcast();
-  Broadcast(Legion::ReductionOpID redop);
+  Replicate();
+  Replicate(Legion::ReductionOpID redop);
 
  public:
-  virtual ~Broadcast() {}
+  virtual ~Replicate() {}
 
  public:
   virtual void populate_launcher(Legion::TaskLauncher* task,

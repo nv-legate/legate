@@ -17,56 +17,83 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include "legion.h"
 
 namespace legate {
 
+class Constraint;
+class ConstraintGraph;
 class LibraryContext;
 class LogicalStore;
 class Runtime;
 class Scalar;
 class Strategy;
+class Variable;
 
 class Operation {
- private:
-  using LogicalStoreP = std::shared_ptr<LogicalStore>;
-  using Reduction     = std::pair<LogicalStoreP, Legion::ReductionOpID>;
+ public:
+  Operation(Runtime* runtime, LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
 
  public:
-  Operation(Runtime* runtime, LibraryContext* library, int64_t mapper_id);
+  void add_input(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition);
+  void add_output(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition);
+  void add_reduction(std::shared_ptr<LogicalStore> store,
+                     Legion::ReductionOpID redop,
+                     std::shared_ptr<Variable> partition);
 
  public:
-  void add_input(LogicalStoreP store);
-  void add_output(LogicalStoreP store);
-  void add_reduction(LogicalStoreP store, Legion::ReductionOpID redop);
-
- public:
-  std::vector<LogicalStore*> all_stores();
+  std::shared_ptr<Variable> declare_partition(std::shared_ptr<LogicalStore> store);
+  std::shared_ptr<LogicalStore> find_store(std::shared_ptr<Variable> variable) const;
+  void add_constraint(std::shared_ptr<Constraint> constraint);
+  std::shared_ptr<ConstraintGraph> constraints() const;
 
  public:
   virtual void launch(Strategy* strategy) const = 0;
 
+ public:
+  virtual std::string to_string() const = 0;
+
  protected:
   Runtime* runtime_;
   LibraryContext* library_;
+  uint64_t unique_id_;
   int64_t mapper_id_;
 
  protected:
-  std::vector<LogicalStoreP> inputs_;
-  std::vector<LogicalStoreP> outputs_;
-  std::vector<Reduction> reductions_;
+  using Store = std::pair<std::shared_ptr<LogicalStore>, std::shared_ptr<Variable>>;
+
+ protected:
+  std::vector<Store> inputs_{};
+  std::vector<Store> outputs_{};
+  std::vector<Store> reductions_{};
+  std::vector<Legion::ReductionOpID> reduction_ops_{};
+
+ private:
+  uint32_t next_part_id_{0};
+
+ private:
+  std::unordered_map<std::shared_ptr<Variable>, std::shared_ptr<LogicalStore>> store_mappings_;
+  std::shared_ptr<ConstraintGraph> constraints_;
 };
 
 class Task : public Operation {
  public:
-  Task(Runtime* runtime, LibraryContext* library, int64_t task_id, int64_t mapper_id = 0);
+  Task(Runtime* runtime,
+       LibraryContext* library,
+       int64_t task_id,
+       uint64_t unique_id,
+       int64_t mapper_id = 0);
 
  public:
   void add_scalar_arg(const Scalar& scalar);
 
  public:
   virtual void launch(Strategy* strategy) const override;
+
+ public:
+  virtual std::string to_string() const override;
 
  private:
   int64_t task_id_;

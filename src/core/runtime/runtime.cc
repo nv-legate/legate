@@ -607,7 +607,7 @@ std::unique_ptr<Task> Runtime::create_task(LibraryContext* library,
                                            int64_t task_id,
                                            int64_t mapper_id /*=0*/)
 {
-  return std::make_unique<Task>(this, library, task_id, mapper_id);
+  return std::make_unique<Task>(this, library, task_id, next_unique_id_++, mapper_id);
 }
 
 void Runtime::submit(std::unique_ptr<Operation> op)
@@ -627,7 +627,7 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op_pointers.push_back(op.get());
 
   Partitioner partitioner(this, std::move(op_pointers));
-  auto strategy = partitioner.partition_stores();
+  auto strategy = partitioner.solve();
 
   for (auto& op : operations) op->launch(strategy.get());
 }

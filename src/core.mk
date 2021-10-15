@@ -15,28 +15,30 @@
 
 
 # General source files
-GEN_CPU_SRC	= core/legate_c.cc                 \
-							core/data/logical_store.cc       \
-							core/data/scalar.cc              \
-							core/data/store.cc               \
-							core/data/transform.cc           \
-							core/mapping/base_mapper.cc      \
-							core/mapping/core_mapper.cc      \
-							core/mapping/instance_manager.cc \
-							core/mapping/mapping.cc          \
-							core/mapping/task.cc             \
-							core/partitioning/partition.cc   \
-							core/partitioning/partitioner.cc \
-							core/runtime/context.cc          \
-							core/runtime/launcher.cc         \
-							core/runtime/operation.cc        \
-							core/runtime/projection.cc       \
-							core/runtime/runtime.cc          \
-							core/runtime/shard.cc            \
-							core/task/return.cc              \
-							core/task/task.cc                \
-							core/utilities/deserializer.cc   \
-							core/utilities/machine.cc        \
+GEN_CPU_SRC	= core/legate_c.cc                      \
+							core/data/logical_store.cc            \
+							core/data/scalar.cc                   \
+							core/data/store.cc                    \
+							core/data/transform.cc                \
+							core/mapping/base_mapper.cc           \
+							core/mapping/core_mapper.cc           \
+							core/mapping/instance_manager.cc      \
+							core/mapping/mapping.cc               \
+							core/mapping/task.cc                  \
+							core/partitioning/constraint.cc       \
+							core/partitioning/constraint_graph.cc \
+							core/partitioning/partition.cc        \
+							core/partitioning/partitioner.cc      \
+							core/runtime/context.cc               \
+							core/runtime/launcher.cc              \
+							core/runtime/operation.cc             \
+							core/runtime/projection.cc            \
+							core/runtime/runtime.cc               \
+							core/runtime/shard.cc                 \
+							core/task/return.cc                   \
+							core/task/task.cc                     \
+							core/utilities/deserializer.cc        \
+							core/utilities/machine.cc             \
 							core/utilities/linearize.cc
 
 ifeq ($(strip $(USE_CUDA)),1)
@@ -59,6 +61,7 @@ INSTALL_HEADERS = legate.h                        \
 									core/mapping/mapping.h          \
 									core/mapping/task.h             \
 									core/mapping/task.inl           \
+									core/partitioning/constraint.h  \
 									core/runtime/context.h          \
 									core/runtime/operation.h        \
 									core/runtime/runtime.h          \

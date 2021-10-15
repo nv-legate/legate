@@ -14,14 +14,25 @@
  *
  */
 
-#include "core/partitioning/partition.h"
+#include <sstream>
+
 #include "core/data/logical_store.h"
+#include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/runtime.h"
 
 namespace legate {
 
 using Shape = std::vector<size_t>;
+
+std::string to_string(const Shape& shape)
+{
+  std::stringstream ss;
+  ss << "(";
+  for (auto extent : shape) ss << extent << ",";
+  ss << ")";
+  return ss.str();
+}
 
 class NoPartition : public Partition {
  public:
@@ -40,6 +51,9 @@ class NoPartition : public Partition {
  public:
   virtual bool has_launch_domain() const override;
   virtual Legion::Domain launch_domain() const override;
+
+ public:
+  virtual std::string to_string() const override;
 
  private:
   Runtime* runtime_;
@@ -62,6 +76,9 @@ class Tiling : public Partition {
  public:
   virtual bool has_launch_domain() const override;
   virtual Legion::Domain launch_domain() const override;
+
+ public:
+  virtual std::string to_string() const override;
 
  private:
   Runtime* runtime_;
@@ -113,7 +130,7 @@ Legion::LogicalPartition NoPartition::construct(const LogicalStore* store,
 
 std::unique_ptr<Projection> NoPartition::get_projection(LogicalStore* store) const
 {
-  return std::make_unique<Broadcast>();
+  return std::make_unique<Replicate>();
 }
 
 bool NoPartition::has_launch_domain() const { return false; }
@@ -123,6 +140,8 @@ Legion::Domain NoPartition::launch_domain() const
   assert(false);
   return Legion::Domain();
 }
+
+std::string NoPartition::to_string() const { return "NoPartition"; }
 
 bool Tiling::is_complete_for(const LogicalStore* store) const { return false; }
 
@@ -183,6 +202,15 @@ Legion::Domain Tiling::launch_domain() const
     launch_domain.rect_data[idx + ndim] = color_shape_[idx] - 1;
   }
   return launch_domain;
+}
+
+std::string Tiling::to_string() const
+{
+  std::stringstream ss;
+  ss << "Tiling(tile:" << legate::to_string(tile_shape_)
+     << ",colors:" << legate::to_string(color_shape_) << ",offset:" << legate::to_string(offsets_)
+     << ")";
+  return ss.str();
 }
 
 PartitionByRestriction::PartitionByRestriction(Legion::DomainTransform transform,

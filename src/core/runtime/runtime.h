@@ -155,6 +155,7 @@ class Runtime {
  private:
   std::vector<std::unique_ptr<Operation>> operations_;
   size_t window_size_{1};
+  uint64_t next_unique_id_{0};
 
  private:
   std::map<std::string, LibraryContext*> libraries_;

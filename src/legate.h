@@ -22,6 +22,7 @@
 #include "core/data/scalar.h"
 #include "core/data/store.h"
 #include "core/legate_c.h"
+#include "core/partitioning/constraint.h"
 #include "core/runtime/operation.h"
 #include "core/runtime/runtime.h"
 #include "core/task/task.h"

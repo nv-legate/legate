@@ -139,6 +139,18 @@ bool LibraryContext::valid_sharding_id(Legion::ShardingID shard_id) const
   return shard_scope_.in_scope(shard_id);
 }
 
+void LibraryContext::record_task_name(int64_t local_task_id, const std::string& task_name)
+{
+  task_names_[local_task_id] = task_name;
+}
+
+const std::string& LibraryContext::get_task_name(int64_t local_task_id) const
+{
+  auto finder = task_names_.find(local_task_id);
+  assert(task_names_.end() != finder);
+  return finder->second;
+}
+
 TaskContext::TaskContext(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& regions,
                          Legion::Context context,

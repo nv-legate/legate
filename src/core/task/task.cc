@@ -58,6 +58,7 @@ void LegateTaskRegistrar::register_all_tasks(Legion::Runtime* runtime, LibraryCo
 {
   // Do all our registrations
   for (auto& task : pending_task_variants_) {
+    context.record_task_name(task.task_id, task.task_name);
     task.task_id =
       context.get_task_id(task.task_id);  // Convert a task local task id to a global id
     // Attach the task name too for debugging
