@@ -395,7 +395,7 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
 PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* context)
 {
   num_pieces_       = runtime->get_tunable<int32_t>(context, LEGATE_CORE_TUNABLE_NUM_PIECES);
-  min_shard_volume_ = runtime->get_tunable<int32_t>(context, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
+  min_shard_volume_ = runtime->get_tunable<int64_t>(context, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
   assert(num_pieces_ > 0);
   assert(min_shard_volume_ > 0);

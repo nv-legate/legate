@@ -66,7 +66,7 @@ class PartitionManager {
 
  private:
   int32_t num_pieces_;
-  int32_t min_shard_volume_;
+  int64_t min_shard_volume_;
   std::vector<size_t> piece_factors_;
 };
 
