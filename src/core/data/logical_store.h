@@ -74,6 +74,9 @@ class LogicalStore {
                LogicalStore parent                       = LogicalStore(),
                std::shared_ptr<StoreTransform> transform = nullptr);
 
+ private:
+  LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
+
  public:
   LogicalStore(const LogicalStore& other) = default;
   LogicalStore& operator=(const LogicalStore& other) = default;
@@ -92,6 +95,9 @@ class LogicalStore {
  public:
   bool has_storage() const;
   std::shared_ptr<LogicalRegionField> get_storage();
+
+ public:
+  LogicalStore promote(int32_t extra_dim, size_t dim_size) const;
 
  public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);

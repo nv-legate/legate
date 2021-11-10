@@ -50,6 +50,9 @@ class LogicalStore {
                std::shared_ptr<LogicalStore> parent,
                std::shared_ptr<StoreTransform> transform);
 
+ private:
+  LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
+
  public:
   LogicalStore(const LogicalStore& other) = default;
   LogicalStore& operator=(const LogicalStore& other) = default;
@@ -73,6 +76,11 @@ class LogicalStore {
   void create_storage();
 
  public:
+  std::shared_ptr<LogicalStore> promote(int32_t extra_dim,
+                                        size_t dim_size,
+                                        std::shared_ptr<LogicalStore> parent) const;
+
+ public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
 
  public:
@@ -94,7 +102,11 @@ LogicalStore::LogicalStore(Runtime* runtime,
                            std::vector<size_t> extents,
                            std::shared_ptr<LogicalStore> parent,
                            std::shared_ptr<StoreTransform> transform)
-  : runtime_(runtime), code_(code), extents_(std::move(extents)), transform_(std::move(transform))
+  : runtime_(runtime),
+    code_(code),
+    extents_(std::move(extents)),
+    parent_(std::move(parent)),
+    transform_(std::move(transform))
 {
 }
 
@@ -121,13 +133,36 @@ bool LogicalStore::has_storage() const { return nullptr != region_field_; }
 
 std::shared_ptr<LogicalRegionField> LogicalStore::get_storage()
 {
-  if (!has_storage()) create_storage();
-  return region_field_;
+  if (nullptr == parent_) {
+    if (!has_storage()) create_storage();
+    return region_field_;
+  } else
+    return parent_->get_storage();
 }
 
 void LogicalStore::create_storage()
 {
   region_field_ = runtime_->create_region_field(extents_, code_);
+}
+
+std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
+                                                    size_t dim_size,
+                                                    std::shared_ptr<LogicalStore> parent) const
+{
+  if (extra_dim < 0 || static_cast<size_t>(extra_dim) > extents_.size()) {
+    log_legate.error(
+      "Invalid promotion on dimension %d for a %zd-D store", extra_dim, extents_.size());
+    LEGATE_ABORT
+  }
+  std::vector<size_t> new_extents;
+  for (int32_t dim = 0; dim < extra_dim; ++dim) new_extents.push_back(extents_[dim]);
+  new_extents.push_back(dim_size);
+  for (int32_t dim = extra_dim; dim < static_cast<int32_t>(extents_.size()); ++dim)
+    new_extents.push_back(extents_[dim]);
+
+  auto transform = std::make_shared<Promote>(extra_dim, dim_size);
+  return std::make_shared<LogicalStore>(
+    runtime_, code_, std::move(new_extents), std::move(parent), std::move(transform));
 }
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
@@ -174,6 +209,8 @@ LogicalStore::LogicalStore(Runtime* runtime,
 {
 }
 
+LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore> impl) : impl_(std::move(impl)) {}
+
 int32_t LogicalStore::dim() const { return impl_->dim(); }
 
 LegateTypeCode LogicalStore::code() const { return impl_->code(); }
@@ -185,6 +222,11 @@ const std::vector<size_t>& LogicalStore::extents() const { return impl_->extents
 size_t LogicalStore::volume() const { return impl_->volume(); }
 
 std::shared_ptr<LogicalRegionField> LogicalStore::get_storage() { return impl_->get_storage(); }
+
+LogicalStore LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
+{
+  return LogicalStore(impl_->promote(extra_dim, dim_size, impl_));
+}
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 {
