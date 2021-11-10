@@ -19,27 +19,10 @@
 #include "core/data/scalar.h"
 #include "core/runtime/context.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"
 
 namespace legate {
-
-class BufferBuilder {
- public:
-  BufferBuilder();
-
- public:
-  template <typename T>
-  void pack(const T& value);
-  template <typename T>
-  void pack(const std::vector<T>& values);
-  void pack_buffer(const void* buffer, size_t size);
-
- public:
-  Legion::UntypedBuffer to_legion_buffer() const;
-
- private:
-  std::vector<int8_t> buffer_;
-};
 
 class RequirementAnalyzer {
  public:
@@ -119,38 +102,6 @@ struct FutureStoreArg : public ArgWrapper {
   bool read_only_;
 };
 
-BufferBuilder::BufferBuilder()
-{
-  // Reserve 4KB to minimize resizing while packing the arguments.
-  buffer_.reserve(4096);
-}
-
-template <typename T>
-void BufferBuilder::pack(const T& value)
-{
-  pack_buffer(reinterpret_cast<const int8_t*>(&value), sizeof(T));
-}
-
-template <typename T>
-void BufferBuilder::pack(const std::vector<T>& values)
-{
-  uint32_t size = values.size();
-  pack(size);
-  pack_buffer(values.data(), size * sizeof(T));
-}
-
-void BufferBuilder::pack_buffer(const void* src, size_t size)
-{
-  auto tgt = buffer_.data() + buffer_.size();
-  buffer_.resize(buffer_.size() + size);
-  memcpy(tgt, src, size);
-}
-
-Legion::UntypedBuffer BufferBuilder::to_legion_buffer() const
-{
-  return Legion::UntypedBuffer(buffer_.data(), buffer_.size());
-}
-
 RequirementAnalyzer::~RequirementAnalyzer()
 {
   for (auto& pair : requirements_) delete pair.first;
@@ -212,10 +163,7 @@ RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
 
 void RegionFieldArg::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<bool>(false);
-  buffer.pack<int32_t>(store_.dim());
-  buffer.pack<int32_t>(store_.code());
-  buffer.pack<int32_t>(-1);
+  store_.pack(buffer);
 
   buffer.pack<int32_t>(redop_);
   buffer.pack<int32_t>(dim_);
@@ -238,10 +186,7 @@ struct datalen_fn {
 
 void FutureStoreArg::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<bool>(true);
-  buffer.pack<int32_t>(store_.dim());
-  buffer.pack<int32_t>(store_.code());
-  buffer.pack<int32_t>(-1);
+  store_.pack(buffer);
 
   buffer.pack<bool>(read_only_);
   buffer.pack<bool>(true);

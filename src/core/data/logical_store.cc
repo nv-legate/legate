@@ -19,6 +19,7 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/type_traits.h"
 #include "legate_defines.h"
@@ -91,6 +92,12 @@ class LogicalStore {
  public:
   std::unique_ptr<Projection> find_or_create_partition(const Partition* partition);
   std::unique_ptr<Partition> find_or_create_key_partition();
+
+ public:
+  void pack(BufferBuilder& buffer) const;
+
+ private:
+  void pack_transform(BufferBuilder& buffer) const;
 
  private:
   bool scalar_{false};
@@ -235,6 +242,24 @@ std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
   }
 }
 
+void LogicalStore::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<bool>(scalar_);
+  buffer.pack<int32_t>(dim());
+  buffer.pack<int32_t>(code_);
+  pack_transform(buffer);
+}
+
+void LogicalStore::pack_transform(BufferBuilder& buffer) const
+{
+  if (nullptr == parent_)
+    buffer.pack<int32_t>(-1);
+  else {
+    transform_->pack(buffer);
+    parent_->pack_transform(buffer);
+  }
+}
+
 }  // namespace detail
 
 LogicalStore::LogicalStore() {}
@@ -291,5 +316,7 @@ std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
 {
   return impl_->find_or_create_key_partition();
 }
+
+void LogicalStore::pack(BufferBuilder& buffer) const { impl_->pack(buffer); }
 
 }  // namespace legate

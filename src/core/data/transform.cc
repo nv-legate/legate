@@ -15,6 +15,8 @@
  */
 
 #include "core/data/transform.h"
+#include "core/legate_c.h"
+#include "core/utilities/buffer_builder.h"
 
 namespace legate {
 
@@ -78,6 +80,13 @@ DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
     return combine(parent, result);
   } else
     return result;
+}
+
+void Shift::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_SHIFT);
+  buffer.pack<int32_t>(dim_);
+  buffer.pack<int64_t>(offset_);
 }
 
 void Shift::print(std::ostream& out) const
@@ -148,6 +157,13 @@ DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
     return result;
 }
 
+void Promote::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_PROMOTE);
+  buffer.pack<int32_t>(extra_dim_);
+  buffer.pack<int64_t>(dim_size_);
+}
+
 void Promote::print(std::ostream& out) const
 {
   out << "Promote(";
@@ -214,6 +230,13 @@ DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
     return combine(parent, result);
   } else
     return result;
+}
+
+void Project::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_PROJECT);
+  buffer.pack<int32_t>(dim_);
+  buffer.pack<int64_t>(coord_);
 }
 
 void Project::print(std::ostream& out) const
@@ -290,6 +313,13 @@ void print_vector(std::ostream& out, const std::vector<T>& vec)
   out << "]";
 }
 }  // anonymous namespace
+
+void Transpose::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_TRANSPOSE);
+  buffer.pack<uint32_t>(axes_.size());
+  for (auto axis : axes_) buffer.pack<int32_t>(axis);
+}
 
 void Transpose::print(std::ostream& out) const
 {
@@ -372,6 +402,14 @@ DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) const
     return combine(parent, result);
   } else
     return result;
+}
+
+void Delinearize::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_DELINEARIZE);
+  buffer.pack<int32_t>(dim_);
+  buffer.pack<uint32_t>(sizes_.size());
+  for (auto extent : sizes_) buffer.pack<int64_t>(extent);
 }
 
 void Delinearize::print(std::ostream& out) const

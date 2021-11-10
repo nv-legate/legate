@@ -22,6 +22,8 @@
 
 namespace legate {
 
+class BufferBuilder;
+
 class StoreTransform {
  public:
   StoreTransform() {}
@@ -31,6 +33,7 @@ class StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& input) const           = 0;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const = 0;
+  virtual void pack(BufferBuilder& buffer) const                                = 0;
   virtual void print(std::ostream& out) const                                   = 0;
 
  protected:
@@ -47,6 +50,7 @@ class Shift : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
  private:
@@ -62,6 +66,7 @@ class Promote : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
  private:
@@ -77,6 +82,7 @@ class Project : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
  private:
@@ -92,6 +98,7 @@ class Transpose : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
  private:
@@ -108,6 +115,7 @@ class Delinearize : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
  private:

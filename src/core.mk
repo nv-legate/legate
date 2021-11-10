@@ -37,6 +37,7 @@ GEN_CPU_SRC	= core/legate_c.cc                      \
 							core/runtime/shard.cc                 \
 							core/task/return.cc                   \
 							core/task/task.cc                     \
+							core/utilities/buffer_builder.cc      \
 							core/utilities/deserializer.cc        \
 							core/utilities/machine.cc             \
 							core/utilities/linearize.cc

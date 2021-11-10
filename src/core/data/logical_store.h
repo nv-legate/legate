@@ -31,6 +31,7 @@ class LogicalStore;
 
 }  // namespace detail
 
+class BufferBuilder;
 class LibraryContext;
 class Partition;
 class Projection;
@@ -109,6 +110,9 @@ class LogicalStore {
  public:
   std::unique_ptr<Projection> find_or_create_partition(const Partition* partition);
   std::unique_ptr<Partition> find_or_create_key_partition();
+
+ public:
+  void pack(BufferBuilder& buffer) const;
 
  private:
   std::shared_ptr<detail::LogicalStore> impl_{nullptr};
