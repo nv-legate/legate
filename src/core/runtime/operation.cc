@@ -17,7 +17,6 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "core/data/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_graph.h"
@@ -42,19 +41,19 @@ Operation::Operation(Runtime* runtime,
 {
 }
 
-void Operation::add_input(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition)
+void Operation::add_input(LogicalStore store, std::shared_ptr<Variable> partition)
 {
   constraints_->add_variable(partition);
   inputs_.push_back(Store(std::move(store), std::move(partition)));
 }
 
-void Operation::add_output(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition)
+void Operation::add_output(LogicalStore store, std::shared_ptr<Variable> partition)
 {
   constraints_->add_variable(partition);
   outputs_.push_back(Store(std::move(store), std::move(partition)));
 }
 
-void Operation::add_reduction(std::shared_ptr<LogicalStore> store,
+void Operation::add_reduction(LogicalStore store,
                               Legion::ReductionOpID redop,
                               std::shared_ptr<Variable> partition)
 {
@@ -63,14 +62,14 @@ void Operation::add_reduction(std::shared_ptr<LogicalStore> store,
   reduction_ops_.push_back(redop);
 }
 
-std::shared_ptr<Variable> Operation::declare_partition(std::shared_ptr<LogicalStore> store)
+std::shared_ptr<Variable> Operation::declare_partition(LogicalStore store)
 {
-  auto variable             = std::make_shared<Variable>(this, store, next_part_id_++);
+  auto variable             = std::make_shared<Variable>(this, next_part_id_++);
   store_mappings_[variable] = std::move(store);
   return std::move(variable);
 }
 
-std::shared_ptr<LogicalStore> Operation::find_store(std::shared_ptr<Variable> variable) const
+LogicalStore Operation::find_store(std::shared_ptr<Variable> variable) const
 {
   auto finder = store_mappings_.find(variable);
   assert(store_mappings_.end() != finder);
@@ -95,7 +94,7 @@ Task::Task(Runtime* runtime,
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 
-void Task::launch(Strategy* p_strategy) const
+void Task::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
   TaskLauncher launcher(runtime_, library_, task_id_, mapper_id_);
@@ -103,20 +102,20 @@ void Task::launch(Strategy* p_strategy) const
   for (auto& pair : inputs_) {
     auto& store = pair.first;
     auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store.get());
+    auto proj   = strategy[var]->get_projection(store);
     launcher.add_input(store, std::move(proj));
   }
   for (auto& pair : outputs_) {
     auto& store = pair.first;
     auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store.get());
+    auto proj   = strategy[var]->get_projection(store);
     launcher.add_output(store, std::move(proj));
   }
   uint32_t idx = 0;
   for (auto& pair : reductions_) {
     auto& store = pair.first;
     auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store.get());
+    auto proj   = strategy[var]->get_projection(store);
     auto redop  = reduction_ops_[idx++];
     proj->set_reduction_op(redop);
     launcher.add_reduction(store, std::move(proj));

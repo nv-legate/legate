@@ -84,12 +84,9 @@ struct UntypedScalarArg : public ArgWrapper {
 };
 
 struct RegionFieldArg : public ArgWrapper {
- private:
-  using LogicalStoreP = std::shared_ptr<LogicalStore>;
-
  public:
   RegionFieldArg(RequirementAnalyzer* analyzer,
-                 LogicalStoreP store,
+                 LogicalStore store,
                  int32_t dim,
                  RegionReq* req,
                  Legion::FieldID field_id,
@@ -100,7 +97,7 @@ struct RegionFieldArg : public ArgWrapper {
 
  private:
   RequirementAnalyzer* analyzer_;
-  LogicalStoreP store_;
+  LogicalStore store_;
   int32_t dim_;
   RegionReq* req_;
   Legion::FieldID field_id_;
@@ -176,7 +173,7 @@ void UntypedScalarArg::pack(BufferBuilder& buffer) const
 }
 
 RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
-                               LogicalStoreP store,
+                               LogicalStore store,
                                int32_t dim,
                                RegionReq* req,
                                Legion::FieldID field_id,
@@ -188,8 +185,8 @@ RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
 void RegionFieldArg::pack(BufferBuilder& buffer) const
 {
   buffer.pack<bool>(false);
-  buffer.pack<int32_t>(store_->dim());
-  buffer.pack<int32_t>(store_->code());
+  buffer.pack<int32_t>(store_.dim());
+  buffer.pack<int32_t>(store_.code());
   buffer.pack<int32_t>(-1);
 
   buffer.pack<int32_t>(redop_);
@@ -324,17 +321,17 @@ void TaskLauncher::add_scalar(const Scalar& scalar)
   scalars_.push_back(new UntypedScalarArg(scalar));
 }
 
-void TaskLauncher::add_input(LogicalStoreP store, ProjectionP proj, uint64_t tag /*= 0*/)
+void TaskLauncher::add_input(LogicalStore store, ProjectionP proj, uint64_t tag /*= 0*/)
 {
   add_store(inputs_, std::move(store), std::move(proj), READ_ONLY, tag);
 }
 
-void TaskLauncher::add_output(LogicalStoreP store, ProjectionP proj, uint64_t tag /*= 0*/)
+void TaskLauncher::add_output(LogicalStore store, ProjectionP proj, uint64_t tag /*= 0*/)
 {
   add_store(outputs_, std::move(store), std::move(proj), WRITE_ONLY, tag);
 }
 
-void TaskLauncher::add_reduction(LogicalStoreP store,
+void TaskLauncher::add_reduction(LogicalStore store,
                                  ProjectionP proj,
                                  uint64_t tag /*= 0*/,
                                  bool read_write /*= false*/)
@@ -358,12 +355,12 @@ void TaskLauncher::execute_single()
 }
 
 void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
-                             LogicalStoreP store,
+                             LogicalStore store,
                              ProjectionP proj,
                              Legion::PrivilegeMode privilege,
                              uint64_t tag)
 {
-  auto storage  = store->get_storage();
+  auto storage  = store.get_storage();
   auto region   = storage->region();
   auto field_id = storage->field_id();
 

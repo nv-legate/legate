@@ -43,10 +43,10 @@ class NoPartition : public Partition {
   virtual bool is_disjoint_for(const LogicalStore* store) const override;
 
  public:
-  virtual Legion::LogicalPartition construct(const LogicalStore* store,
+  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint,
                                              bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore* store) const override;
+  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
 
  public:
   virtual bool has_launch_domain() const override;
@@ -68,10 +68,10 @@ class Tiling : public Partition {
   virtual bool is_disjoint_for(const LogicalStore* store) const override;
 
  public:
-  virtual Legion::LogicalPartition construct(const LogicalStore* store,
+  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint,
                                              bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore* store) const override;
+  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
 
  public:
   virtual bool has_launch_domain() const override;
@@ -121,14 +121,14 @@ bool NoPartition::is_complete_for(const LogicalStore* store) const { return fals
 
 bool NoPartition::is_disjoint_for(const LogicalStore* store) const { return false; }
 
-Legion::LogicalPartition NoPartition::construct(const LogicalStore* store,
+Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region,
                                                 bool disjoint,
                                                 bool complete) const
 {
   return Legion::LogicalPartition::NO_PART;
 }
 
-std::unique_ptr<Projection> NoPartition::get_projection(LogicalStore* store) const
+std::unique_ptr<Projection> NoPartition::get_projection(LogicalStore store) const
 {
   return std::make_unique<Replicate>();
 }
@@ -147,7 +147,7 @@ bool Tiling::is_complete_for(const LogicalStore* store) const { return false; }
 
 bool Tiling::is_disjoint_for(const LogicalStore* store) const { return true; }
 
-Legion::LogicalPartition Tiling::construct(const LogicalStore* store,
+Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
                                            bool disjoint,
                                            bool complete) const
 {
@@ -173,7 +173,6 @@ Legion::LogicalPartition Tiling::construct(const LogicalStore* store,
     color_domain.rect_data[idx + ndim] = color_shape_[idx] - 1;
   }
 
-  auto region      = store->get_storage_unsafe()->region();
   auto color_space = runtime_->find_or_create_index_space(color_domain);
   auto index_space = region.get_index_space();
 
@@ -185,9 +184,9 @@ Legion::LogicalPartition Tiling::construct(const LogicalStore* store,
   return runtime_->create_logical_partition(region, index_partition);
 }
 
-std::unique_ptr<Projection> Tiling::get_projection(LogicalStore* store) const
+std::unique_ptr<Projection> Tiling::get_projection(LogicalStore store) const
 {
-  return store->find_or_create_partition(this);
+  return store.find_or_create_partition(this);
 }
 
 bool Tiling::has_launch_domain() const { return true; }

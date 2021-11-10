@@ -24,7 +24,6 @@ namespace legate {
 
 struct Constraint;
 struct Literal;
-struct LogicalStore;
 struct Operation;
 struct Partition;
 struct Variable;
@@ -67,7 +66,7 @@ struct Literal : public Expr {
 
 struct Variable : public Expr {
  public:
-  Variable(const Operation* op, std::shared_ptr<LogicalStore> store, int32_t id);
+  Variable(const Operation* op, int32_t id);
 
  public:
   Variable(const Variable&) = default;

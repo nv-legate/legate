@@ -25,6 +25,12 @@
 
 namespace legate {
 
+namespace detail {
+
+class LogicalStore;
+
+}  // namespace detail
+
 class LibraryContext;
 class Partition;
 class Projection;
@@ -61,10 +67,11 @@ class LogicalRegionField {
 
 class LogicalStore {
  public:
-  LogicalStore() {}
+  LogicalStore();
   LogicalStore(Runtime* runtime,
                LegateTypeCode code,
                std::vector<size_t> extents,
+               LogicalStore parent                       = LogicalStore(),
                std::shared_ptr<StoreTransform> transform = nullptr);
 
  public:
@@ -77,18 +84,14 @@ class LogicalStore {
 
  public:
   int32_t dim() const;
-  LegateTypeCode code() const { return code_; }
+  LegateTypeCode code() const;
   Legion::Domain domain() const;
-  const std::vector<size_t>& extents() const { return extents_; }
+  const std::vector<size_t>& extents() const;
   size_t volume() const;
 
  public:
-  bool has_storage() const { return nullptr != region_field_; }
+  bool has_storage() const;
   std::shared_ptr<LogicalRegionField> get_storage();
-  std::shared_ptr<LogicalRegionField> get_storage_unsafe() const;
-
- private:
-  void create_storage();
 
  public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
@@ -98,12 +101,7 @@ class LogicalStore {
   std::unique_ptr<Partition> find_or_create_key_partition();
 
  private:
-  Runtime* runtime_{nullptr};
-  LegateTypeCode code_{MAX_TYPE_NUMBER};
-  std::vector<size_t> extents_;
-  std::shared_ptr<LogicalRegionField> region_field_{nullptr};
-  std::shared_ptr<StoreTransform> transform_{nullptr};
-  std::shared_ptr<Store> mapped_{nullptr};
+  std::shared_ptr<detail::LogicalStore> impl_{nullptr};
 };
 
 }  // namespace legate

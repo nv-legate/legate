@@ -35,10 +35,10 @@ struct Partition {
   virtual bool is_disjoint_for(const LogicalStore* store) const = 0;
 
  public:
-  virtual Legion::LogicalPartition construct(const LogicalStore* store,
+  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint = false,
-                                             bool complete = false) const       = 0;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore* store) const = 0;
+                                             bool complete = false) const      = 0;
+  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const = 0;
 
  public:
   virtual bool has_launch_domain() const       = 0;

@@ -60,7 +60,7 @@ class PartitionManager {
   PartitionManager(Runtime* runtime, const LibraryContext* context);
 
  public:
-  std::vector<size_t> compute_launch_shape(const LogicalStore* store);
+  std::vector<size_t> compute_launch_shape(const std::vector<size_t>& shape);
   std::vector<size_t> compute_tile_shape(const std::vector<size_t>& extents,
                                          const std::vector<size_t>& launch_shape);
 
@@ -98,7 +98,7 @@ class Runtime {
   void submit(std::unique_ptr<Operation> op);
 
  public:
-  std::shared_ptr<LogicalStore> create_store(std::vector<size_t> extents, LegateTypeCode code);
+  LogicalStore create_store(std::vector<size_t> extents, LegateTypeCode code);
   std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<size_t>& extents,
                                                           LegateTypeCode code);
   RegionField map_region_field(LibraryContext* context,

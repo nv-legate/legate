@@ -113,8 +113,7 @@ class RegionReq {
 
 class TaskLauncher {
  private:
-  using LogicalStoreP = std::shared_ptr<LogicalStore>;
-  using ProjectionP   = std::unique_ptr<Projection>;
+  using ProjectionP = std::unique_ptr<Projection>;
 
  public:
   TaskLauncher(Runtime* runtime,
@@ -130,16 +129,16 @@ class TaskLauncher {
 
  public:
   void add_scalar(const Scalar& scalar);
-  void add_input(LogicalStoreP store, ProjectionP proj, uint64_t tag = 0);
-  void add_output(LogicalStoreP store, ProjectionP proj, uint64_t tag = 0);
-  void add_reduction(LogicalStoreP store,
+  void add_input(LogicalStore store, ProjectionP proj, uint64_t tag = 0);
+  void add_output(LogicalStore store, ProjectionP proj, uint64_t tag = 0);
+  void add_reduction(LogicalStore store,
                      ProjectionP proj,
                      uint64_t tag    = 0,
                      bool read_write = false);
 
  private:
   void add_store(std::vector<ArgWrapper*>& args,
-                 LogicalStoreP store,
+                 LogicalStore store,
                  ProjectionP proj,
                  Legion::PrivilegeMode privilege,
                  uint64_t tag);

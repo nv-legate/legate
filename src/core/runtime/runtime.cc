@@ -415,13 +415,12 @@ PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* conte
   push_factors(2);
 }
 
-std::vector<size_t> PartitionManager::compute_launch_shape(const LogicalStore* store)
+std::vector<size_t> PartitionManager::compute_launch_shape(const std::vector<size_t>& shape)
 {
   // Easy case if we only have one piece: no parallel launch space
   if (num_pieces_ == 1) return {};
 
   // If we only have one point then we never do parallel launches
-  auto& shape = store->extents();
   if (std::all_of(shape.begin(), shape.end(), [](auto extent) { return 1 == extent; })) return {};
 
   // Prune out any dimensions that are 1
@@ -632,10 +631,9 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op->launch(strategy.get());
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(std::vector<size_t> extents,
-                                                    LegateTypeCode code)
+LogicalStore Runtime::create_store(std::vector<size_t> extents, LegateTypeCode code)
 {
-  return std::make_shared<LogicalStore>(this, code, extents);
+  return LogicalStore(this, code, extents);
 }
 
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const std::vector<size_t>& extents,

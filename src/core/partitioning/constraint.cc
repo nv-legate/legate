@@ -27,10 +27,7 @@ Literal::Literal(const std::shared_ptr<Partition>& partition) : partition_(parti
 
 std::string Literal::to_string() const { return partition_->to_string(); }
 
-Variable::Variable(const Operation* op, std::shared_ptr<LogicalStore> store, int32_t id)
-  : op_(op), id_(id)
-{
-}
+Variable::Variable(const Operation* op, int32_t id) : op_(op), id_(id) {}
 
 bool operator<(const Variable& lhs, const Variable& rhs)
 {

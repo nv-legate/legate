@@ -19,6 +19,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "core/data/logical_store.h"
 #include "legion.h"
 
 namespace legate {
@@ -26,7 +27,6 @@ namespace legate {
 class Constraint;
 class ConstraintGraph;
 class LibraryContext;
-class LogicalStore;
 class Runtime;
 class Scalar;
 class Strategy;
@@ -37,20 +37,20 @@ class Operation {
   Operation(Runtime* runtime, LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
 
  public:
-  void add_input(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition);
-  void add_output(std::shared_ptr<LogicalStore> store, std::shared_ptr<Variable> partition);
-  void add_reduction(std::shared_ptr<LogicalStore> store,
+  void add_input(LogicalStore store, std::shared_ptr<Variable> partition);
+  void add_output(LogicalStore store, std::shared_ptr<Variable> partition);
+  void add_reduction(LogicalStore store,
                      Legion::ReductionOpID redop,
                      std::shared_ptr<Variable> partition);
 
  public:
-  std::shared_ptr<Variable> declare_partition(std::shared_ptr<LogicalStore> store);
-  std::shared_ptr<LogicalStore> find_store(std::shared_ptr<Variable> variable) const;
+  std::shared_ptr<Variable> declare_partition(LogicalStore store);
+  LogicalStore find_store(std::shared_ptr<Variable> variable) const;
   void add_constraint(std::shared_ptr<Constraint> constraint);
   std::shared_ptr<ConstraintGraph> constraints() const;
 
  public:
-  virtual void launch(Strategy* strategy) const = 0;
+  virtual void launch(Strategy* strategy) = 0;
 
  public:
   virtual std::string to_string() const = 0;
@@ -62,7 +62,7 @@ class Operation {
   int64_t mapper_id_;
 
  protected:
-  using Store = std::pair<std::shared_ptr<LogicalStore>, std::shared_ptr<Variable>>;
+  using Store = std::pair<LogicalStore, std::shared_ptr<Variable>>;
 
  protected:
   std::vector<Store> inputs_{};
@@ -74,7 +74,7 @@ class Operation {
   uint32_t next_part_id_{0};
 
  private:
-  std::unordered_map<std::shared_ptr<Variable>, std::shared_ptr<LogicalStore>> store_mappings_;
+  std::unordered_map<std::shared_ptr<Variable>, LogicalStore> store_mappings_;
   std::shared_ptr<ConstraintGraph> constraints_;
 };
 
@@ -90,7 +90,7 @@ class Task : public Operation {
   void add_scalar_arg(const Scalar& scalar);
 
  public:
-  virtual void launch(Strategy* strategy) const override;
+  virtual void launch(Strategy* strategy) override;
 
  public:
   virtual std::string to_string() const override;
