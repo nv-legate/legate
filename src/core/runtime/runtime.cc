@@ -636,6 +636,11 @@ LogicalStore Runtime::create_store(std::vector<size_t> extents, LegateTypeCode c
   return LogicalStore(this, code, extents);
 }
 
+LogicalStore Runtime::create_store(const Scalar& scalar)
+{
+  return LogicalStore(this, scalar.code(), scalar.ptr());
+}
+
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const std::vector<size_t>& extents,
                                                                  LegateTypeCode code)
 {
@@ -731,6 +736,11 @@ Legion::LogicalPartition Runtime::create_logical_partition(
 {
   assert(nullptr != legion_context_);
   return legion_runtime_->get_logical_partition(legion_context_, logical_region, index_partition);
+}
+
+Legion::Future Runtime::create_future(const void* data, size_t datalen) const
+{
+  return Legion::Future::from_untyped_pointer(legion_runtime_, data, datalen);
 }
 
 FieldID Runtime::allocate_field(const FieldSpace& field_space, size_t field_size)

@@ -99,6 +99,7 @@ class Runtime {
 
  public:
   LogicalStore create_store(std::vector<size_t> extents, LegateTypeCode code);
+  LogicalStore create_store(const Scalar& scalar);
   std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<size_t>& extents,
                                                           LegateTypeCode code);
   RegionField map_region_field(LibraryContext* context,
@@ -120,6 +121,7 @@ class Runtime {
                                       const Legion::FieldSpace& field_space);
   Legion::LogicalPartition create_logical_partition(const Legion::LogicalRegion& logical_region,
                                                     const Legion::IndexPartition& index_partition);
+  Legion::Future create_future(const void* data, size_t datalen) const;
   Legion::FieldID allocate_field(const Legion::FieldSpace& field_space, size_t field_size);
   Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
 

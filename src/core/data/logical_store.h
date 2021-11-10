@@ -73,6 +73,8 @@ class LogicalStore {
                std::vector<size_t> extents,
                LogicalStore parent                       = LogicalStore(),
                std::shared_ptr<StoreTransform> transform = nullptr);
+  // Creates a read-only store from a scalar
+  LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
 
  private:
   LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
@@ -86,6 +88,7 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) = default;
 
  public:
+  bool scalar() const;
   int32_t dim() const;
   LegateTypeCode code() const;
   Legion::Domain domain() const;
@@ -95,6 +98,7 @@ class LogicalStore {
  public:
   bool has_storage() const;
   std::shared_ptr<LogicalRegionField> get_storage();
+  Legion::Future get_future();
 
  public:
   LogicalStore promote(int32_t extra_dim, size_t dim_size) const;

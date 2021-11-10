@@ -19,6 +19,7 @@
 #include "core/data/scalar.h"
 #include "core/runtime/context.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/dispatch.h"
 
 namespace legate {
 
@@ -29,6 +30,8 @@ class BufferBuilder {
  public:
   template <typename T>
   void pack(const T& value);
+  template <typename T>
+  void pack(const std::vector<T>& values);
   void pack_buffer(const void* buffer, size_t size);
 
  public:
@@ -104,6 +107,18 @@ struct RegionFieldArg : public ArgWrapper {
   Legion::ReductionOpID redop_;
 };
 
+struct FutureStoreArg : public ArgWrapper {
+ public:
+  FutureStoreArg(LogicalStore store, bool read_only);
+
+ public:
+  virtual void pack(BufferBuilder& buffer) const override;
+
+ private:
+  LogicalStore store_;
+  bool read_only_;
+};
+
 BufferBuilder::BufferBuilder()
 {
   // Reserve 4KB to minimize resizing while packing the arguments.
@@ -114,6 +129,14 @@ template <typename T>
 void BufferBuilder::pack(const T& value)
 {
   pack_buffer(reinterpret_cast<const int8_t*>(&value), sizeof(T));
+}
+
+template <typename T>
+void BufferBuilder::pack(const std::vector<T>& values)
+{
+  uint32_t size = values.size();
+  pack(size);
+  pack_buffer(values.data(), size * sizeof(T));
 }
 
 void BufferBuilder::pack_buffer(const void* src, size_t size)
@@ -178,7 +201,12 @@ RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
                                RegionReq* req,
                                Legion::FieldID field_id,
                                Legion::ReductionOpID redop)
-  : analyzer_(analyzer), store_(store), dim_(dim), req_(req), field_id_(field_id), redop_(redop)
+  : analyzer_(analyzer),
+    store_(std::move(store)),
+    dim_(dim),
+    req_(req),
+    field_id_(field_id),
+    redop_(redop)
 {
 }
 
@@ -193,6 +221,32 @@ void RegionFieldArg::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(dim_);
   buffer.pack<uint32_t>(analyzer_->get_requirement_index(req_, field_id_));
   buffer.pack<uint32_t>(field_id_);
+}
+
+FutureStoreArg::FutureStoreArg(LogicalStore store, bool read_only)
+  : store_(std::move(store)), read_only_(read_only)
+{
+}
+
+struct datalen_fn {
+  template <LegateTypeCode CODE>
+  size_t operator()()
+  {
+    return sizeof(legate_type_of<CODE>);
+  }
+};
+
+void FutureStoreArg::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<bool>(true);
+  buffer.pack<int32_t>(store_.dim());
+  buffer.pack<int32_t>(store_.code());
+  buffer.pack<int32_t>(-1);
+
+  buffer.pack<bool>(read_only_);
+  buffer.pack<bool>(true);
+  buffer.pack<int32_t>(type_dispatch(store_.code(), datalen_fn{}));
+  buffer.pack<size_t>(store_.extents());
 }
 
 Projection::Projection(Legion::ReductionOpID r) : redop(std::make_unique<Legion::ReductionOpID>(r))
@@ -360,16 +414,22 @@ void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
                              Legion::PrivilegeMode privilege,
                              uint64_t tag)
 {
-  auto storage  = store.get_storage();
-  auto region   = storage->region();
-  auto field_id = storage->field_id();
+  if (store.scalar()) {
+    futures_.push_back(store.get_future());
+    auto read_only = privilege == READ_ONLY;
+    args.push_back(new FutureStoreArg(std::move(store), read_only));
+  } else {
+    auto storage  = store.get_storage();
+    auto region   = storage->region();
+    auto field_id = storage->field_id();
 
-  auto redop = nullptr != proj->redop ? *proj->redop : -1;
-  auto req   = new RegionReq(region, privilege, std::move(proj), tag);
+    auto redop = nullptr != proj->redop ? *proj->redop : -1;
+    auto req   = new RegionReq(region, privilege, std::move(proj), tag);
 
-  req_analyzer_->insert(req, field_id);
-  args.push_back(
-    new RegionFieldArg(req_analyzer_, std::move(store), region.get_dim(), req, field_id, redop));
+    req_analyzer_->insert(req, field_id);
+    args.push_back(
+      new RegionFieldArg(req_analyzer_, std::move(store), region.get_dim(), req, field_id, redop));
+  }
 }
 
 void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
@@ -390,6 +450,7 @@ Legion::TaskLauncher* TaskLauncher::build_single_task()
                                               Legion::Predicate::TRUE_PRED,
                                               legion_mapper_id(),
                                               tag_);
+  for (auto& future_ : futures_) single_task->add_future(future_);
 
   req_analyzer_->populate_launcher(single_task);
 
@@ -411,6 +472,7 @@ Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& 
                                                   false /*must*/,
                                                   legion_mapper_id(),
                                                   tag_);
+  for (auto& future_ : futures_) index_task->add_future(future_);
 
   req_analyzer_->populate_launcher(index_task);
 

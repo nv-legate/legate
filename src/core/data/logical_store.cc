@@ -19,6 +19,8 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/dispatch.h"
+#include "core/utilities/type_traits.h"
 #include "legate_defines.h"
 
 using namespace Legion;
@@ -49,6 +51,7 @@ class LogicalStore {
                std::vector<size_t> extents,
                std::shared_ptr<LogicalStore> parent,
                std::shared_ptr<StoreTransform> transform);
+  LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
 
  private:
   LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
@@ -62,6 +65,7 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) = default;
 
  public:
+  bool scalar() const;
   int32_t dim() const;
   LegateTypeCode code() const;
   Legion::Domain domain() const;
@@ -71,6 +75,7 @@ class LogicalStore {
  public:
   bool has_storage() const;
   std::shared_ptr<LogicalRegionField> get_storage();
+  Legion::Future get_future();
 
  private:
   void create_storage();
@@ -88,10 +93,12 @@ class LogicalStore {
   std::unique_ptr<Partition> find_or_create_key_partition();
 
  private:
+  bool scalar_{false};
   Runtime* runtime_{nullptr};
   LegateTypeCode code_{MAX_TYPE_NUMBER};
   std::vector<size_t> extents_;
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};
+  Legion::Future future_{};
   std::shared_ptr<LogicalStore> parent_{nullptr};
   std::shared_ptr<StoreTransform> transform_{nullptr};
   std::shared_ptr<Store> mapped_{nullptr};
@@ -109,6 +116,23 @@ LogicalStore::LogicalStore(Runtime* runtime,
     transform_(std::move(transform))
 {
 }
+
+struct datalen_fn {
+  template <LegateTypeCode CODE>
+  size_t operator()()
+  {
+    return sizeof(legate_type_of<CODE>);
+  }
+};
+
+LogicalStore::LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data)
+  : scalar_(true), runtime_(runtime), code_(code), extents_({1})
+{
+  auto datalen = type_dispatch(code, datalen_fn{});
+  future_      = runtime_->create_future(data, datalen);
+}
+
+bool LogicalStore::scalar() const { return scalar_; }
 
 int32_t LogicalStore::dim() const { return static_cast<int32_t>(extents_.size()); }
 
@@ -133,11 +157,21 @@ bool LogicalStore::has_storage() const { return nullptr != region_field_; }
 
 std::shared_ptr<LogicalRegionField> LogicalStore::get_storage()
 {
+  assert(!scalar_);
   if (nullptr == parent_) {
     if (!has_storage()) create_storage();
     return region_field_;
   } else
     return parent_->get_storage();
+}
+
+Legion::Future LogicalStore::get_future()
+{
+  assert(scalar_);
+  if (nullptr == parent_) {
+    return future_;
+  } else
+    return parent_->get_future();
 }
 
 void LogicalStore::create_storage()
@@ -167,6 +201,8 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 {
+  // TODO: Need to support inline mapping for scalars
+  assert(!scalar_);
   if (nullptr != mapped_) return mapped_;
   auto rf = runtime_->map_region_field(context, region_field_);
   mapped_ = std::make_shared<Store>(dim(), code_, -1, std::move(rf), transform_);
@@ -175,6 +211,8 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 
 std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
 {
+  if (scalar_) return std::make_unique<Replicate>();
+
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
   auto lr = get_storage()->region();
@@ -185,6 +223,8 @@ std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partiti
 
 std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
 {
+  if (scalar_) return create_no_partition(runtime_);
+
   auto part_mgr     = runtime_->get_partition_manager();
   auto launch_shape = part_mgr->compute_launch_shape(extents());
   if (launch_shape.empty())
@@ -209,7 +249,14 @@ LogicalStore::LogicalStore(Runtime* runtime,
 {
 }
 
+LogicalStore::LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data)
+  : impl_(std::make_shared<detail::LogicalStore>(runtime, code, data))
+{
+}
+
 LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore> impl) : impl_(std::move(impl)) {}
+
+bool LogicalStore::scalar() const { return impl_->scalar(); }
 
 int32_t LogicalStore::dim() const { return impl_->dim(); }
 
@@ -222,6 +269,8 @@ const std::vector<size_t>& LogicalStore::extents() const { return impl_->extents
 size_t LogicalStore::volume() const { return impl_->volume(); }
 
 std::shared_ptr<LogicalRegionField> LogicalStore::get_storage() { return impl_->get_storage(); }
+
+Legion::Future LogicalStore::get_future() { return impl_->get_future(); }
 
 LogicalStore LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
 {

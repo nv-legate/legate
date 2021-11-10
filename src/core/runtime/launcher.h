@@ -164,6 +164,7 @@ class TaskLauncher {
   std::vector<ArgWrapper*> outputs_;
   std::vector<ArgWrapper*> reductions_;
   std::vector<ArgWrapper*> scalars_;
+  std::vector<Legion::Future> futures_;
 
  private:
   RequirementAnalyzer* req_analyzer_;
