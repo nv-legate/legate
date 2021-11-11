@@ -14,6 +14,8 @@
  *
  */
 
+#include <numeric>
+
 #include "core/data/logical_store.h"
 #include "core/data/store.h"
 #include "core/partitioning/partition.h"
@@ -92,6 +94,11 @@ class LogicalStore {
  public:
   std::unique_ptr<Projection> find_or_create_partition(const Partition* partition);
   std::unique_ptr<Partition> find_or_create_key_partition();
+
+ private:
+  std::unique_ptr<Partition> invert_partition(const Partition* partition) const;
+  void invert_dimensions(std::vector<int32_t>& dims) const;
+  Legion::ProjectionID compute_projection() const;
 
  public:
   void pack(BufferBuilder& buffer) const;
@@ -216,16 +223,67 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
   return mapped_;
 }
 
+std::unique_ptr<Partition> LogicalStore::invert_partition(const Partition* partition) const
+{
+  if (nullptr == parent_) {
+    switch (partition->kind()) {
+      case Partition::Kind::NO_PARTITION: {
+        return create_no_partition(runtime_);
+      }
+      case Partition::Kind::TILING: {
+        auto tiling       = static_cast<const Tiling*>(partition);
+        Shape tile_shape  = tiling->tile_shape();
+        Shape color_shape = tiling->color_shape();
+        Shape offsets     = tiling->offsets();
+        return create_tiling(
+          runtime_, std::move(tile_shape), std::move(color_shape), std::move(offsets));
+      }
+    }
+  } else {
+    auto inverted = transform_->invert_partition(partition);
+    return parent_->invert_partition(inverted.get());
+  }
+  assert(false);
+  return nullptr;
+}
+
+void LogicalStore::invert_dimensions(std::vector<int32_t>& dims) const
+{
+  if (nullptr == parent_) return;
+  transform_->invert_dimensions(dims);
+  parent_->invert_dimensions(dims);
+}
+
+Legion::ProjectionID LogicalStore::compute_projection() const
+{
+  auto ndim = dim();
+  std::vector<int32_t> dims(ndim);
+  std::iota(dims.begin(), dims.end(), 0);
+  invert_dimensions(dims);
+
+  bool identity_mapping = dims.size() == ndim;
+  for (int32_t dim = 0; dim < ndim && identity_mapping; ++dim)
+    if (dims[dim] != dim) identity_mapping = false;
+
+  if (identity_mapping)
+    return 0;
+  else
+    return runtime_->get_projection(ndim, dims);
+}
+
 std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
 {
   if (scalar_) return std::make_unique<Replicate>();
 
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
+  auto proj     = compute_projection();
+  auto inverted = invert_partition(partition);
+
   auto lr = get_storage()->region();
-  auto lp = partition->construct(
-    lr, partition->is_disjoint_for(nullptr), partition->is_complete_for(nullptr));
-  return std::make_unique<MapPartition>(lp, 0);
+  auto lp =
+    inverted->construct(lr, inverted->is_disjoint_for(nullptr), inverted->is_complete_for(nullptr));
+  return std::make_unique<MapPartition>(lp, proj);
 }
 
 std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()

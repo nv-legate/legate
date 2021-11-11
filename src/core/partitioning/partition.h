@@ -26,9 +26,21 @@ class LogicalStore;
 class Projection;
 class Runtime;
 
+using Shape = std::vector<size_t>;
+
 struct Partition {
  public:
+  enum class Kind : int32_t {
+    NO_PARTITION = 0,
+    TILING       = 1,
+  };
+
+ public:
+  Partition(Runtime* runtime);
   virtual ~Partition() {}
+
+ public:
+  virtual Kind kind() const = 0;
 
  public:
   virtual bool is_complete_for(const LogicalStore* store) const = 0;
@@ -45,7 +57,11 @@ struct Partition {
   virtual Legion::Domain launch_domain() const = 0;
 
  public:
+  Runtime* runtime() const { return runtime_; }
   virtual std::string to_string() const = 0;
+
+ protected:
+  Runtime* runtime_;
 };
 
 struct PartitioningFunctor {
@@ -55,6 +71,69 @@ struct PartitioningFunctor {
                                            const Legion::IndexSpace& parent,
                                            const Legion::IndexSpace& color_space,
                                            Legion::PartitionKind kind) const = 0;
+};
+
+class NoPartition : public Partition {
+ public:
+  NoPartition(Runtime* runtime);
+
+ public:
+  virtual Kind kind() const override { return Kind::NO_PARTITION; }
+
+ public:
+  virtual bool is_complete_for(const LogicalStore* store) const override;
+  virtual bool is_disjoint_for(const LogicalStore* store) const override;
+
+ public:
+  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
+                                             bool disjoint,
+                                             bool complete) const override;
+  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
+
+ public:
+  virtual bool has_launch_domain() const override;
+  virtual Legion::Domain launch_domain() const override;
+
+ public:
+  virtual std::string to_string() const override;
+
+ private:
+  Runtime* runtime_;
+};
+
+class Tiling : public Partition {
+ public:
+  Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&& offsets);
+
+ public:
+  virtual Kind kind() const override { return Kind::TILING; }
+
+ public:
+  virtual bool is_complete_for(const LogicalStore* store) const override;
+  virtual bool is_disjoint_for(const LogicalStore* store) const override;
+
+ public:
+  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
+                                             bool disjoint,
+                                             bool complete) const override;
+  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
+
+ public:
+  virtual bool has_launch_domain() const override;
+  virtual Legion::Domain launch_domain() const override;
+
+ public:
+  virtual std::string to_string() const override;
+
+ public:
+  const Shape& tile_shape() const { return tile_shape_; }
+  const Shape& color_shape() const { return color_shape_; }
+  const Shape& offsets() const { return offsets_; }
+
+ private:
+  Shape tile_shape_;
+  Shape color_shape_;
+  Shape offsets_;
 };
 
 std::unique_ptr<Partition> create_no_partition(Runtime* runtime);

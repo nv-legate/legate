@@ -770,6 +770,20 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(IndexTaskLauncher* launcher)
   return nullptr;
 }
 
+Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const std::vector<int32_t>& dims)
+{
+  ProjectionDesc key(src_ndim, dims);
+  auto finder = registered_projections_.find(key);
+  if (registered_projections_.end() != finder) return finder->second;
+
+  auto proj_id = core_context_->get_projection_id(next_projection_id_++);
+  legate_register_projection_functor(
+    src_ndim, static_cast<int32_t>(dims.size()), dims.data(), proj_id);
+  registered_projections_[key] = proj_id;
+
+  return proj_id;
+}
+
 /*static*/ void Runtime::initialize(int32_t argc, char** argv)
 {
   Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);

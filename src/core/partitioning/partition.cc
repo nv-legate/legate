@@ -23,8 +23,6 @@
 
 namespace legate {
 
-using Shape = std::vector<size_t>;
-
 std::string to_string(const Shape& shape)
 {
   std::stringstream ss;
@@ -33,59 +31,6 @@ std::string to_string(const Shape& shape)
   ss << ")";
   return ss.str();
 }
-
-class NoPartition : public Partition {
- public:
-  NoPartition(Runtime* runtime);
-
- public:
-  virtual bool is_complete_for(const LogicalStore* store) const override;
-  virtual bool is_disjoint_for(const LogicalStore* store) const override;
-
- public:
-  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                             bool disjoint,
-                                             bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
-
- public:
-  virtual bool has_launch_domain() const override;
-  virtual Legion::Domain launch_domain() const override;
-
- public:
-  virtual std::string to_string() const override;
-
- private:
-  Runtime* runtime_;
-};
-
-class Tiling : public Partition {
- public:
-  Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&& offsets);
-
- public:
-  virtual bool is_complete_for(const LogicalStore* store) const override;
-  virtual bool is_disjoint_for(const LogicalStore* store) const override;
-
- public:
-  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                             bool disjoint,
-                                             bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
-
- public:
-  virtual bool has_launch_domain() const override;
-  virtual Legion::Domain launch_domain() const override;
-
- public:
-  virtual std::string to_string() const override;
-
- private:
-  Runtime* runtime_;
-  Shape tile_shape_;
-  Shape color_shape_;
-  Shape offsets_;
-};
 
 struct PartitionByRestriction : public PartitioningFunctor {
  public:
@@ -103,19 +48,9 @@ struct PartitionByRestriction : public PartitioningFunctor {
   Legion::Domain extent_;
 };
 
-Tiling::Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
-  : runtime_(runtime),
-    tile_shape_(std::forward<Shape>(tile_shape)),
-    color_shape_(std::forward<Shape>(color_shape)),
-    offsets_(std::forward<Shape>(offsets))
-{
-  if (offsets_.empty())
-    for (auto _ : tile_shape_) offsets_.push_back(0);
-  assert(tile_shape_.size() == color_shape_.size());
-  assert(tile_shape_.size() == offsets_.size());
-}
+Partition::Partition(Runtime* runtime) : runtime_(runtime) {}
 
-NoPartition::NoPartition(Runtime* runtime) : runtime_(runtime) {}
+NoPartition::NoPartition(Runtime* runtime) : Partition(runtime) {}
 
 bool NoPartition::is_complete_for(const LogicalStore* store) const { return false; }
 
@@ -142,6 +77,18 @@ Legion::Domain NoPartition::launch_domain() const
 }
 
 std::string NoPartition::to_string() const { return "NoPartition"; }
+
+Tiling::Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
+  : Partition(runtime),
+    tile_shape_(std::forward<Shape>(tile_shape)),
+    color_shape_(std::forward<Shape>(color_shape)),
+    offsets_(std::forward<Shape>(offsets))
+{
+  if (offsets_.empty())
+    for (auto _ : tile_shape_) offsets_.push_back(0);
+  assert(tile_shape_.size() == color_shape_.size());
+  assert(tile_shape_.size() == offsets_.size());
+}
 
 bool Tiling::is_complete_for(const LogicalStore* store) const { return false; }
 

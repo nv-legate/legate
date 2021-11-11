@@ -1419,7 +1419,7 @@ void BaseMapper::select_sharding_functor(const MapperContext ctx,
 }
 
 void BaseMapper::select_partition_projection(const MapperContext ctx,
-                                             const Partition& partition,
+                                             const Legion::Partition& partition,
                                              const SelectPartitionProjectionInput& input,
                                              SelectPartitionProjectionOutput& output)
 {
@@ -1431,7 +1431,7 @@ void BaseMapper::select_partition_projection(const MapperContext ctx,
 }
 
 void BaseMapper::map_partition(const MapperContext ctx,
-                               const Partition& partition,
+                               const Legion::Partition& partition,
                                const MapPartitionInput& input,
                                MapPartitionOutput& output)
 {
@@ -1487,7 +1487,7 @@ void BaseMapper::map_partition(const MapperContext ctx,
 }
 
 void BaseMapper::select_partition_sources(const MapperContext ctx,
-                                          const Partition& partition,
+                                          const Legion::Partition& partition,
                                           const SelectPartitionSrcInput& input,
                                           SelectPartitionSrcOutput& output)
 {
@@ -1495,7 +1495,7 @@ void BaseMapper::select_partition_sources(const MapperContext ctx,
 }
 
 void BaseMapper::report_profiling(const MapperContext ctx,
-                                  const Partition& partition,
+                                  const Legion::Partition& partition,
                                   const PartitionProfilingInfo& input)
 {
   // No profiling yet
@@ -1503,7 +1503,7 @@ void BaseMapper::report_profiling(const MapperContext ctx,
 }
 
 void BaseMapper::select_sharding_functor(const MapperContext ctx,
-                                         const Partition& partition,
+                                         const Legion::Partition& partition,
                                          const SelectShardingFunctorInput& input,
                                          SelectShardingFunctorOutput& output)
 {

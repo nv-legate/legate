@@ -98,7 +98,7 @@ LogicalRegion LegateProjectionFunctor::project(LogicalPartition upper_bound,
 template <int32_t SRC_DIM, int32_t TGT_DIM>
 class ReductionFunctor : public LegateProjectionFunctor {
  public:
-  ReductionFunctor(Runtime* runtime, int32_t* dims);
+  ReductionFunctor(Runtime* runtime, const int32_t* dims);
 
  public:
   virtual DomainPoint project_point(const DomainPoint& point,
@@ -108,21 +108,21 @@ class ReductionFunctor : public LegateProjectionFunctor {
   }
 
  public:
-  static Transform<TGT_DIM, SRC_DIM> create_transform(int32_t* dims);
+  static Transform<TGT_DIM, SRC_DIM> create_transform(const int32_t* dims);
 
  private:
   const Transform<TGT_DIM, SRC_DIM> transform_;
 };
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
-ReductionFunctor<SRC_DIM, TGT_DIM>::ReductionFunctor(Runtime* runtime, int32_t* dims)
+ReductionFunctor<SRC_DIM, TGT_DIM>::ReductionFunctor(Runtime* runtime, const int32_t* dims)
   : LegateProjectionFunctor(runtime), transform_(create_transform(dims))
 {
 }
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
 /*static*/ Transform<TGT_DIM, SRC_DIM> ReductionFunctor<SRC_DIM, TGT_DIM>::create_transform(
-  int32_t* dims)
+  const int32_t* dims)
 {
   Transform<TGT_DIM, SRC_DIM> transform;
 
@@ -142,7 +142,7 @@ static std::mutex functor_table_lock;
 
 struct create_reduction_functor_fn {
   template <int32_t SRC_DIM, int32_t TGT_DIM>
-  void operator()(Runtime* runtime, int32_t* dims, ProjectionID proj_id)
+  void operator()(Runtime* runtime, const int32_t* dims, ProjectionID proj_id)
   {
     auto functor = new ReductionFunctor<SRC_DIM, TGT_DIM>(runtime, dims);
     runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
@@ -165,7 +165,7 @@ extern "C" {
 
 void legate_register_projection_functor(int32_t src_ndim,
                                         int32_t tgt_ndim,
-                                        int32_t* dims,
+                                        const int32_t* dims,
                                         legion_projection_id_t proj_id)
 {
   auto runtime = Runtime::get_runtime();

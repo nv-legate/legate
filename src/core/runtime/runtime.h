@@ -21,6 +21,7 @@
 #include "legion.h"
 
 #include "core/data/store.h"
+#include "core/legate_c.h"
 #include "core/runtime/context.h"
 #include "core/utilities/typedefs.h"
 
@@ -71,7 +72,6 @@ class PartitionManager {
 };
 
 class Runtime {
- public:
  public:
   Runtime(Legion::Runtime* legion_runtime);
   ~Runtime();
@@ -129,6 +129,9 @@ class Runtime {
   std::shared_ptr<LogicalStore> dispatch(Legion::TaskLauncher* launcher);
   std::shared_ptr<LogicalStore> dispatch(Legion::IndexTaskLauncher* launcher);
 
+ public:
+  Legion::ProjectionID get_projection(int32_t src_ndim, const std::vector<int32_t>& dims);
+
  private:
   void schedule(std::vector<std::unique_ptr<Operation>> operations);
 
@@ -153,6 +156,11 @@ class Runtime {
 
  private:
   std::map<Legion::Domain, Legion::IndexSpace> index_spaces_;
+
+ private:
+  using ProjectionDesc = std::pair<int32_t, std::vector<int32_t>>;
+  int64_t next_projection_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
+  std::map<ProjectionDesc, Legion::ProjectionID> registered_projections_;
 
  private:
   std::vector<std::unique_ptr<Operation>> operations_;

@@ -16,6 +16,7 @@
 
 #include "core/data/transform.h"
 #include "core/legate_c.h"
+#include "core/partitioning/partition.h"
 #include "core/utilities/buffer_builder.h"
 
 namespace legate {
@@ -81,6 +82,13 @@ DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   } else
     return result;
 }
+
+std::unique_ptr<Partition> Shift::invert_partition(const Partition* partition) const
+{
+  return nullptr;
+}
+
+void Shift::invert_dimensions(std::vector<int32_t>& dims) const {}
 
 void Shift::pack(BufferBuilder& buffer) const
 {
@@ -155,6 +163,40 @@ DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
     return combine(parent, result);
   } else
     return result;
+}
+
+static Shape remove(const Shape& shape, int32_t to_remove)
+{
+  Shape new_shape;
+
+  for (int32_t idx = 0; idx < to_remove; ++idx) new_shape.push_back(shape[idx]);
+  for (int32_t idx = to_remove + 1; idx < static_cast<int32_t>(shape.size()); ++idx)
+    new_shape.push_back(shape[idx]);
+
+  return std::move(new_shape);
+}
+
+std::unique_ptr<Partition> Promote::invert_partition(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition(partition->runtime());
+    }
+    case Partition::Kind::TILING: {
+      auto tiling = static_cast<const Tiling*>(partition);
+      return create_tiling(tiling->runtime(),
+                           remove(tiling->tile_shape(), extra_dim_),
+                           remove(tiling->color_shape(), extra_dim_),
+                           remove(tiling->offsets(), extra_dim_));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
+
+void Promote::invert_dimensions(std::vector<int32_t>& dims) const
+{
+  dims.erase(dims.begin() + extra_dim_);
 }
 
 void Promote::pack(BufferBuilder& buffer) const
@@ -232,6 +274,13 @@ DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
     return result;
 }
 
+std::unique_ptr<Partition> Project::invert_partition(const Partition* partition) const
+{
+  return nullptr;
+}
+
+void Project::invert_dimensions(std::vector<int32_t>& dims) const {}
+
 void Project::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_PROJECT);
@@ -295,6 +344,13 @@ DomainAffineTransform Transpose::inverse_transform(int32_t in_dim) const
   } else
     return result;
 }
+
+std::unique_ptr<Partition> Transpose::invert_partition(const Partition* partition) const
+{
+  return nullptr;
+}
+
+void Transpose::invert_dimensions(std::vector<int32_t>& dims) const {}
 
 namespace {  // anonymous
 template <typename T>
@@ -403,6 +459,13 @@ DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) const
   } else
     return result;
 }
+
+std::unique_ptr<Partition> Delinearize::invert_partition(const Partition* partition) const
+{
+  return nullptr;
+}
+
+void Delinearize::invert_dimensions(std::vector<int32_t>& dims) const {}
 
 void Delinearize::pack(BufferBuilder& buffer) const
 {
