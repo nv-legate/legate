@@ -51,7 +51,7 @@ class LogicalStore {
   LogicalStore();
   LogicalStore(Runtime* runtime,
                LegateTypeCode code,
-               std::vector<size_t> extents,
+               tuple<size_t> extents,
                std::shared_ptr<LogicalStore> parent,
                std::shared_ptr<StoreTransform> transform);
   LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
@@ -97,7 +97,7 @@ class LogicalStore {
 
  private:
   std::unique_ptr<Partition> invert_partition(const Partition* partition) const;
-  void invert_dimensions(std::vector<int32_t>& dims) const;
+  void invert_dimensions(tuple<int32_t>& dims) const;
   Legion::ProjectionID compute_projection() const;
 
  public:
@@ -110,7 +110,7 @@ class LogicalStore {
   bool scalar_{false};
   Runtime* runtime_{nullptr};
   LegateTypeCode code_{MAX_TYPE_NUMBER};
-  std::vector<size_t> extents_;
+  tuple<size_t> extents_;
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};
   Legion::Future future_{};
   std::shared_ptr<LogicalStore> parent_{nullptr};
@@ -120,7 +120,7 @@ class LogicalStore {
 
 LogicalStore::LogicalStore(Runtime* runtime,
                            LegateTypeCode code,
-                           std::vector<size_t> extents,
+                           tuple<size_t> extents,
                            std::shared_ptr<LogicalStore> parent,
                            std::shared_ptr<StoreTransform> transform)
   : runtime_(runtime),
@@ -158,14 +158,9 @@ Domain LogicalStore::domain() const
   return region_field_->domain();
 }
 
-const std::vector<size_t>& LogicalStore::extents() const { return extents_; }
+const std::vector<size_t>& LogicalStore::extents() const { return extents_.data(); }
 
-size_t LogicalStore::volume() const
-{
-  size_t vol = 1;
-  for (auto extent : extents_) vol *= extent;
-  return vol;
-}
+size_t LogicalStore::volume() const { return extents_.volume(); }
 
 bool LogicalStore::has_storage() const { return nullptr != region_field_; }
 
@@ -202,13 +197,9 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
       "Invalid promotion on dimension %d for a %zd-D store", extra_dim, extents_.size());
     LEGATE_ABORT
   }
-  std::vector<size_t> new_extents;
-  for (int32_t dim = 0; dim < extra_dim; ++dim) new_extents.push_back(extents_[dim]);
-  new_extents.push_back(dim_size);
-  for (int32_t dim = extra_dim; dim < static_cast<int32_t>(extents_.size()); ++dim)
-    new_extents.push_back(extents_[dim]);
 
-  auto transform = std::make_shared<Promote>(extra_dim, dim_size);
+  auto new_extents = extents_.insert(extra_dim, dim_size);
+  auto transform   = std::make_shared<Promote>(extra_dim, dim_size);
   return std::make_shared<LogicalStore>(
     runtime_, code_, std::move(new_extents), std::move(parent), std::move(transform));
 }
@@ -247,7 +238,7 @@ std::unique_ptr<Partition> LogicalStore::invert_partition(const Partition* parti
   return nullptr;
 }
 
-void LogicalStore::invert_dimensions(std::vector<int32_t>& dims) const
+void LogicalStore::invert_dimensions(tuple<int32_t>& dims) const
 {
   if (nullptr == parent_) return;
   transform_->invert_dimensions(dims);
@@ -257,8 +248,7 @@ void LogicalStore::invert_dimensions(std::vector<int32_t>& dims) const
 Legion::ProjectionID LogicalStore::compute_projection() const
 {
   auto ndim = dim();
-  std::vector<int32_t> dims(ndim);
-  std::iota(dims.begin(), dims.end(), 0);
+  auto dims = from_range(ndim);
   invert_dimensions(dims);
 
   bool identity_mapping = dims.size() == ndim;
@@ -324,7 +314,7 @@ LogicalStore::LogicalStore() {}
 
 LogicalStore::LogicalStore(Runtime* runtime,
                            LegateTypeCode code,
-                           std::vector<size_t> extents,
+                           tuple<size_t> extents,
                            LogicalStore parent, /* = LogicalStore() */
                            std::shared_ptr<StoreTransform> transform /*= nullptr*/)
   : impl_(std::make_shared<detail::LogicalStore>(

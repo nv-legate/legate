@@ -71,7 +71,7 @@ class LogicalStore {
   LogicalStore();
   LogicalStore(Runtime* runtime,
                LegateTypeCode code,
-               std::vector<size_t> extents,
+               tuple<size_t> extents,
                LogicalStore parent                       = LogicalStore(),
                std::shared_ptr<StoreTransform> transform = nullptr);
   // Creates a read-only store from a scalar

@@ -74,5 +74,7 @@ INSTALL_HEADERS = legate.h                        \
 									core/utilities/dispatch.h       \
 									core/utilities/machine.h        \
 									core/utilities/span.h           \
+									core/utilities/tuple.inl        \
+									core/utilities/tuple.h          \
 									core/utilities/type_traits.h    \
 									core/utilities/typedefs.h

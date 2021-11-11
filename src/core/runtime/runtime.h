@@ -23,6 +23,7 @@
 #include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/runtime/context.h"
+#include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate {
@@ -61,9 +62,8 @@ class PartitionManager {
   PartitionManager(Runtime* runtime, const LibraryContext* context);
 
  public:
-  std::vector<size_t> compute_launch_shape(const std::vector<size_t>& shape);
-  std::vector<size_t> compute_tile_shape(const std::vector<size_t>& extents,
-                                         const std::vector<size_t>& launch_shape);
+  tuple<size_t> compute_launch_shape(const tuple<size_t>& shape);
+  tuple<size_t> compute_tile_shape(const tuple<size_t>& extents, const tuple<size_t>& launch_shape);
 
  private:
   int32_t num_pieces_;
@@ -100,7 +100,7 @@ class Runtime {
  public:
   LogicalStore create_store(std::vector<size_t> extents, LegateTypeCode code);
   LogicalStore create_store(const Scalar& scalar);
-  std::shared_ptr<LogicalRegionField> create_region_field(const std::vector<size_t>& extents,
+  std::shared_ptr<LogicalRegionField> create_region_field(const tuple<size_t>& extents,
                                                           LegateTypeCode code);
   RegionField map_region_field(LibraryContext* context,
                                std::shared_ptr<LogicalRegionField> region_field);
@@ -130,7 +130,7 @@ class Runtime {
   std::shared_ptr<LogicalStore> dispatch(Legion::IndexTaskLauncher* launcher);
 
  public:
-  Legion::ProjectionID get_projection(int32_t src_ndim, const std::vector<int32_t>& dims);
+  Legion::ProjectionID get_projection(int32_t src_ndim, const tuple<int32_t>& dims);
 
  private:
   void schedule(std::vector<std::unique_ptr<Operation>> operations);

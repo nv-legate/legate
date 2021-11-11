@@ -415,13 +415,13 @@ PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* conte
   push_factors(2);
 }
 
-std::vector<size_t> PartitionManager::compute_launch_shape(const std::vector<size_t>& shape)
+tuple<size_t> PartitionManager::compute_launch_shape(const tuple<size_t>& shape)
 {
   // Easy case if we only have one piece: no parallel launch space
   if (num_pieces_ == 1) return {};
 
   // If we only have one point then we never do parallel launches
-  if (std::all_of(shape.begin(), shape.end(), [](auto extent) { return 1 == extent; })) return {};
+  if (shape.all([](auto extent) { return 1 == extent; })) return {};
 
   // Prune out any dimensions that are 1
   std::vector<size_t> temp_shape{};
@@ -537,18 +537,18 @@ std::vector<size_t> PartitionManager::compute_launch_shape(const std::vector<siz
   std::vector<size_t> result(shape.size(), 1);
   for (uint32_t idx = 0; idx < ndim; ++idx) result[temp_dims[idx]] = temp_result[idx];
 
-  return std::move(result);
+  return tuple<size_t>(std::move(result));
 }
 
-std::vector<size_t> PartitionManager::compute_tile_shape(const std::vector<size_t>& extents,
-                                                         const std::vector<size_t>& launch_shape)
+tuple<size_t> PartitionManager::compute_tile_shape(const tuple<size_t>& extents,
+                                                   const tuple<size_t>& launch_shape)
 {
   assert(extents.size() == launch_shape.size());
-  std::vector<size_t> tile_shape;
+  tuple<size_t> tile_shape;
   for (uint32_t idx = 0; idx < extents.size(); ++idx) {
     auto x = extents[idx];
     auto y = launch_shape[idx];
-    tile_shape.push_back((x + y - 1) / y);
+    tile_shape.append_inplace((x + y - 1) / y);
   }
   return std::move(tile_shape);
 }
@@ -641,7 +641,7 @@ LogicalStore Runtime::create_store(const Scalar& scalar)
   return LogicalStore(this, scalar.code(), scalar.ptr());
 }
 
-std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const std::vector<size_t>& extents,
+std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const tuple<size_t>& extents,
                                                                  LegateTypeCode code)
 {
   DomainPoint lo, hi;
@@ -770,15 +770,15 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(IndexTaskLauncher* launcher)
   return nullptr;
 }
 
-Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const std::vector<int32_t>& dims)
+Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const tuple<int32_t>& dims)
 {
-  ProjectionDesc key(src_ndim, dims);
+  ProjectionDesc key(src_ndim, dims.data());
   auto finder = registered_projections_.find(key);
   if (registered_projections_.end() != finder) return finder->second;
 
   auto proj_id = core_context_->get_projection_id(next_projection_id_++);
   legate_register_projection_functor(
-    src_ndim, static_cast<int32_t>(dims.size()), dims.data(), proj_id);
+    src_ndim, static_cast<int32_t>(dims.size()), key.second.data(), proj_id);
   registered_projections_[key] = proj_id;
 
   return proj_id;

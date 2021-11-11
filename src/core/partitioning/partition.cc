@@ -23,15 +23,6 @@
 
 namespace legate {
 
-std::string to_string(const Shape& shape)
-{
-  std::stringstream ss;
-  ss << "(";
-  for (auto extent : shape) ss << extent << ",";
-  ss << ")";
-  return ss.str();
-}
-
 struct PartitionByRestriction : public PartitioningFunctor {
  public:
   PartitionByRestriction(Legion::DomainTransform transform, Legion::Domain extent);
@@ -84,8 +75,7 @@ Tiling::Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&
     color_shape_(std::forward<Shape>(color_shape)),
     offsets_(std::forward<Shape>(offsets))
 {
-  if (offsets_.empty())
-    for (auto _ : tile_shape_) offsets_.push_back(0);
+  if (offsets_.empty()) offsets_ = tuple<size_t>(tile_shape_.size(), 0);
   assert(tile_shape_.size() == color_shape_.size());
   assert(tile_shape_.size() == offsets_.size());
 }
@@ -153,8 +143,7 @@ Legion::Domain Tiling::launch_domain() const
 std::string Tiling::to_string() const
 {
   std::stringstream ss;
-  ss << "Tiling(tile:" << legate::to_string(tile_shape_)
-     << ",colors:" << legate::to_string(color_shape_) << ",offset:" << legate::to_string(offsets_)
+  ss << "Tiling(tile:" << tile_shape_ << ",colors:" << color_shape_ << ",offset:" << offsets_
      << ")";
   return ss.str();
 }

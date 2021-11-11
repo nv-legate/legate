@@ -88,7 +88,7 @@ std::unique_ptr<Partition> Shift::invert_partition(const Partition* partition) c
   return nullptr;
 }
 
-void Shift::invert_dimensions(std::vector<int32_t>& dims) const {}
+void Shift::invert_dimensions(tuple<int32_t>& dims) const {}
 
 void Shift::pack(BufferBuilder& buffer) const
 {
@@ -165,17 +165,6 @@ DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
     return result;
 }
 
-static Shape remove(const Shape& shape, int32_t to_remove)
-{
-  Shape new_shape;
-
-  for (int32_t idx = 0; idx < to_remove; ++idx) new_shape.push_back(shape[idx]);
-  for (int32_t idx = to_remove + 1; idx < static_cast<int32_t>(shape.size()); ++idx)
-    new_shape.push_back(shape[idx]);
-
-  return std::move(new_shape);
-}
-
 std::unique_ptr<Partition> Promote::invert_partition(const Partition* partition) const
 {
   switch (partition->kind()) {
@@ -185,19 +174,16 @@ std::unique_ptr<Partition> Promote::invert_partition(const Partition* partition)
     case Partition::Kind::TILING: {
       auto tiling = static_cast<const Tiling*>(partition);
       return create_tiling(tiling->runtime(),
-                           remove(tiling->tile_shape(), extra_dim_),
-                           remove(tiling->color_shape(), extra_dim_),
-                           remove(tiling->offsets(), extra_dim_));
+                           tiling->tile_shape().remove(extra_dim_),
+                           tiling->color_shape().remove(extra_dim_),
+                           tiling->offsets().remove(extra_dim_));
     }
   }
   assert(false);
   return nullptr;
 }
 
-void Promote::invert_dimensions(std::vector<int32_t>& dims) const
-{
-  dims.erase(dims.begin() + extra_dim_);
-}
+void Promote::invert_dimensions(tuple<int32_t>& dims) const { dims.remove_inplace(extra_dim_); }
 
 void Promote::pack(BufferBuilder& buffer) const
 {
@@ -279,7 +265,7 @@ std::unique_ptr<Partition> Project::invert_partition(const Partition* partition)
   return nullptr;
 }
 
-void Project::invert_dimensions(std::vector<int32_t>& dims) const {}
+void Project::invert_dimensions(tuple<int32_t>& dims) const {}
 
 void Project::pack(BufferBuilder& buffer) const
 {
@@ -350,7 +336,7 @@ std::unique_ptr<Partition> Transpose::invert_partition(const Partition* partitio
   return nullptr;
 }
 
-void Transpose::invert_dimensions(std::vector<int32_t>& dims) const {}
+void Transpose::invert_dimensions(tuple<int32_t>& dims) const {}
 
 namespace {  // anonymous
 template <typename T>
@@ -465,7 +451,7 @@ std::unique_ptr<Partition> Delinearize::invert_partition(const Partition* partit
   return nullptr;
 }
 
-void Delinearize::invert_dimensions(std::vector<int32_t>& dims) const {}
+void Delinearize::invert_dimensions(tuple<int32_t>& dims) const {}
 
 void Delinearize::pack(BufferBuilder& buffer) const
 {

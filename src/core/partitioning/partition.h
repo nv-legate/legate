@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "core/utilities/tuple.h"
 #include "legion.h"
 
 namespace legate {
@@ -26,7 +27,7 @@ class LogicalStore;
 class Projection;
 class Runtime;
 
-using Shape = std::vector<size_t>;
+using Shape = tuple<size_t>;
 
 struct Partition {
  public:
@@ -139,8 +140,8 @@ class Tiling : public Partition {
 std::unique_ptr<Partition> create_no_partition(Runtime* runtime);
 
 std::unique_ptr<Partition> create_tiling(Runtime* runtime,
-                                         std::vector<size_t>&& tile_shape,
-                                         std::vector<size_t>&& color_shape,
-                                         std::vector<size_t>&& offsets = {});
+                                         Shape&& tile_shape,
+                                         Shape&& color_shape,
+                                         Shape&& offsets = {});
 
 }  // namespace legate
