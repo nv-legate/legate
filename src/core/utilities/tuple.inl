@@ -106,7 +106,7 @@ void tuple<T>::insert_inplace(int32_t pos, const T& value)
   auto oldlen = static_cast<int32_t>(data_.size());
   data_.resize(oldlen + 1);
 
-  for (int32_t idx = oldlen; idx > pos; --idx) data_[idx + 1] = data[idx];
+  for (int32_t idx = oldlen; idx > pos; --idx) data_[idx + 1] = data_[idx];
   data_[pos] = value;
 }
 
