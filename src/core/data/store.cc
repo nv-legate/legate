@@ -15,6 +15,7 @@
  */
 
 #include "core/data/store.h"
+#include "core/runtime/runtime.h"
 #include "core/utilities/dispatch.h"
 
 namespace legate {
@@ -52,6 +53,8 @@ RegionField& RegionField::operator=(RegionField&& other) noexcept
 }
 
 Domain RegionField::domain() const { return dim_dispatch(dim_, get_domain_fn{}, pr_); }
+
+void RegionField::unmap() { Runtime::get_runtime()->unmap_physical_region(pr_); }
 
 OutputRegionField::OutputRegionField(const OutputRegion& out, FieldID fid) : out_(out), fid_(fid) {}
 
@@ -216,6 +219,12 @@ Domain Store::domain() const
   if (nullptr != transform_) result = transform_->transform(result);
   assert(result.dim == dim_);
   return result;
+}
+
+void Store::unmap()
+{
+  if (is_future_ || is_output_store_) return;
+  region_field_.unmap();
 }
 
 }  // namespace legate

@@ -104,6 +104,7 @@ class Runtime {
                                                           LegateTypeCode code);
   RegionField map_region_field(LibraryContext* context,
                                std::shared_ptr<LogicalRegionField> region_field);
+  void unmap_physical_region(Legion::PhysicalRegion pr);
 
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);

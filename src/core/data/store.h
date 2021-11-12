@@ -141,6 +141,9 @@ class RegionField {
   Legion::Domain domain() const;
 
  public:
+  void unmap();
+
+ public:
   bool is_readable() const { return readable_; }
   bool is_writable() const { return writable_; }
   bool is_reducible() const { return reducible_; }
@@ -292,6 +295,9 @@ class Store {
   template <int32_t DIM>
   Legion::Rect<DIM> shape() const;
   Legion::Domain domain() const;
+
+ public:
+  void unmap();
 
  public:
   bool is_readable() const { return readable_; }

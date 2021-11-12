@@ -56,6 +56,9 @@ class LogicalStore {
                std::shared_ptr<StoreTransform> transform);
   LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
 
+ public:
+  ~LogicalStore();
+
  private:
   LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
 
@@ -144,6 +147,11 @@ LogicalStore::LogicalStore(Runtime* runtime, LegateTypeCode code, const void* da
 {
   auto datalen = type_dispatch(code, datalen_fn{});
   future_      = runtime_->create_future(data, datalen);
+}
+
+LogicalStore::~LogicalStore()
+{
+  if (mapped_ != nullptr) mapped_->unmap();
 }
 
 bool LogicalStore::scalar() const { return scalar_; }

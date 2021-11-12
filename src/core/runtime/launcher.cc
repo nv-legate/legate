@@ -43,6 +43,7 @@ class RequirementAnalyzer {
 };
 
 struct ArgWrapper {
+  virtual ~ArgWrapper() {}
   virtual void pack(BufferBuilder& buffer) const = 0;
 };
 
@@ -50,6 +51,9 @@ template <typename T>
 struct ScalarArg : public ArgWrapper {
  public:
   ScalarArg(const T& value) : value_(value) {}
+
+ public:
+  virtual ~ScalarArg() {}
 
  public:
   virtual void pack(BufferBuilder& buffer) const override;
@@ -61,6 +65,9 @@ struct ScalarArg : public ArgWrapper {
 struct UntypedScalarArg : public ArgWrapper {
  public:
   UntypedScalarArg(const Scalar& scalar) : scalar_(scalar) {}
+
+ public:
+  virtual ~UntypedScalarArg() {}
 
  public:
   virtual void pack(BufferBuilder& buffer) const override;
@@ -81,6 +88,9 @@ struct RegionFieldArg : public ArgWrapper {
  public:
   virtual void pack(BufferBuilder& buffer) const override;
 
+ public:
+  virtual ~RegionFieldArg() {}
+
  private:
   RequirementAnalyzer* analyzer_;
   LogicalStore store_;
@@ -93,6 +103,9 @@ struct RegionFieldArg : public ArgWrapper {
 struct FutureStoreArg : public ArgWrapper {
  public:
   FutureStoreArg(LogicalStore store, bool read_only);
+
+ public:
+  virtual ~FutureStoreArg() {}
 
  public:
   virtual void pack(BufferBuilder& buffer) const override;

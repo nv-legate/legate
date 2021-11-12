@@ -52,12 +52,7 @@ class LogicalRegionField {
   Legion::LogicalRegion region() const { return lr_; }
   Legion::FieldID field_id() const { return fid_; }
 
-  // public:
-  // RegionField map();
-
  public:
-  // template <int32_t DIM>
-  // Legion::Rect<DIM> shape() const;
   Legion::Domain domain() const;
 
  private:

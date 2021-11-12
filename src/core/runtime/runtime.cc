@@ -362,6 +362,10 @@ class FieldManager {
   Legion::Domain shape_;
   LegateTypeCode code_;
   size_t field_size_;
+
+ private:
+  using FreeField = std::pair<Legion::LogicalRegion, Legion::FieldID>;
+  std::deque<FreeField> free_fields_;
 };
 
 struct field_size_fn {
@@ -381,11 +385,26 @@ FieldManager::FieldManager(Runtime* runtime, const Legion::Domain& shape, Legate
 
 std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
 {
-  auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
-  LogicalRegion lr;
-  FieldID fid;
-  std::tie(lr, fid) = rgn_mgr->allocate_field(field_size_);
-  return std::make_shared<LogicalRegionField>(runtime_, lr, fid);
+  LogicalRegionField* rf = nullptr;
+  if (!free_fields_.empty()) {
+    auto field = free_fields_.front();
+    log_legate.debug("Field %u recycled in field manager %p", field.second, this);
+    free_fields_.pop_front();
+    rf = new LogicalRegionField(runtime_, field.first, field.second);
+  } else {
+    auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
+    LogicalRegion lr;
+    FieldID fid;
+    std::tie(lr, fid) = rgn_mgr->allocate_field(field_size_);
+    rf                = new LogicalRegionField(runtime_, lr, fid);
+    log_legate.debug("Field %u created in field manager %p", fid, this);
+  }
+  assert(rf != nullptr);
+  return std::shared_ptr<LogicalRegionField>(rf, [this](auto* field) {
+    log_legate.debug("Field %u freed in field manager %p", field->field_id(), this);
+    this->free_fields_.push_back(FreeField(field->region(), field->field_id()));
+    delete field;
+  });
 }
 
 ////////////////////////////////////////////////////
@@ -669,6 +688,11 @@ RegionField Runtime::map_region_field(LibraryContext* context,
   InlineLauncher launcher(req, mapper_id);
   auto pr = legion_runtime_->map_region(legion_context_, launcher);
   return RegionField(rf->dim(), pr, field_id);
+}
+
+void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
+{
+  legion_runtime_->unmap_region(legion_context_, pr);
 }
 
 RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
