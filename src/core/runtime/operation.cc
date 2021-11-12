@@ -41,6 +41,10 @@ Operation::Operation(Runtime* runtime,
 {
 }
 
+Operation::~Operation()
+{
+}
+
 void Operation::add_input(LogicalStore store, std::shared_ptr<Variable> partition)
 {
   constraints_->add_variable(partition);
@@ -89,6 +93,10 @@ Task::Task(Runtime* runtime,
            uint64_t unique_id,
            int64_t mapper_id /*=0*/)
   : Operation(runtime, library, unique_id, mapper_id), task_id_(task_id)
+{
+}
+
+Task::~Task()
 {
 }
 

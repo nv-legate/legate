@@ -37,6 +37,9 @@ class Operation {
   Operation(Runtime* runtime, LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
 
  public:
+  virtual ~Operation();
+
+ public:
   void add_input(LogicalStore store, std::shared_ptr<Variable> partition);
   void add_output(LogicalStore store, std::shared_ptr<Variable> partition);
   void add_reduction(LogicalStore store,
@@ -85,6 +88,9 @@ class Task : public Operation {
        int64_t task_id,
        uint64_t unique_id,
        int64_t mapper_id = 0);
+
+ public:
+  ~Task();
 
  public:
   void add_scalar_arg(const Scalar& scalar);
