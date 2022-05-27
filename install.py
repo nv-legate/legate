@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2021 NVIDIA Corporation
+# Copyright 2021-2022 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,12 +25,20 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from distutils import sysconfig
+
+import setuptools
 
 # Flush output on newlines
 sys.stdout.reconfigure(line_buffering=True)
 
 os_name = platform.system()
+
+# Work around breaking change in setuptools 60
+setup_py_flags = []
+if int(setuptools.__version__.split(".")[0]) >= 60:
+    setup_py_flags = ["--single-version-externally-managed", "--root=/"]
 
 
 class BooleanFlag(argparse.Action):
@@ -104,7 +112,7 @@ def find_active_python_version_and_path():
     paths = [os.path.join(cv[p], cv["LDLIBRARY"]) for p in ("LIBDIR", "LIBPL")]
     # ensure that static libraries are replaced with the dynamic version
     paths = [
-        p.replace(".a", ".dylib" if os_name == "Darwin" else ".so")
+        os.path.splitext(p)[0] + (".dylib" if os_name == "Darwin" else ".so")
         for p in paths
     ]
     paths = [p for p in paths if os.path.isfile(p)]
@@ -125,6 +133,7 @@ def git_clone(repo_dir, url, branch=None, tag=None, commit=None):
         verbose_check_call(
             ["git", "submodule", "update", "--init"], cwd=repo_dir
         )
+        git_reset(repo_dir, commit)
     else:
         verbose_check_call(
             [
@@ -145,10 +154,14 @@ def git_reset(repo_dir, refspec):
     verbose_check_call(["git", "reset", "--hard", refspec], cwd=repo_dir)
 
 
-def git_update(repo_dir, branch=None):
+def git_update(repo_dir, branch=None, tag=None, commit=None):
     if branch is not None:
+        verbose_check_call(["git", "fetch"], cwd=repo_dir)
         verbose_check_call(["git", "checkout", branch], cwd=repo_dir)
-    verbose_check_call(["git", "pull", "--ff-only"], cwd=repo_dir)
+        verbose_check_call(["git", "pull", "--ff-only"], cwd=repo_dir)
+    else:
+        verbose_check_call(["git", "fetch"], cwd=repo_dir)
+        verbose_check_call(["git", "checkout", commit or tag], cwd=repo_dir)
 
 
 def load_json_config(filename):
@@ -192,13 +205,14 @@ def install_gasnet(gasnet_dir, conduit, thread_count):
     shutil.rmtree(temp_dir)
 
 
-def install_legion(legion_src_dir, branch):
+def install_legion(legion_src_dir, branch, commit=None):
     print("Legate is installing Legion into a local directory...")
     # For now all we have to do is clone legion since we build it with Legate
     git_clone(
         legion_src_dir,
         url="https://gitlab.com/StanfordLegion/legion.git",
         branch=branch,
+        commit=commit,
     )
 
 
@@ -211,9 +225,9 @@ def install_thrust(thrust_dir):
     )
 
 
-def update_legion(legion_src_dir, branch):
+def update_legion(legion_src_dir, branch, commit=None):
     # Make sure we are on the right branch for single/multi-node
-    git_update(legion_src_dir, branch=branch)
+    git_update(legion_src_dir, branch=branch, commit=commit)
 
 
 def build_legion(
@@ -228,13 +242,13 @@ def build_legion(
     cuda,
     arch,
     openmp,
+    march,
     llvm,
     hdf,
     spy,
     gasnet,
     gasnet_dir,
     conduit,
-    no_hijack,
     pyversion,
     pylib_name,
     maxdim,
@@ -244,12 +258,20 @@ def build_legion(
     thread_count,
     verbose,
 ):
-    if no_hijack and cmake:
+    no_hijack = True
+
+    if cuda and os.environ.get("USE_CUDART_HIJACK", "0") == "1":
         print(
-            "Warning: CMake build does not support no-hijack mode. Falling "
-            "back to GNU make build."
+            """
+#####################################################################
+Warning: Realm's CUDA runtime hijack is incompatible with NCCL.
+Please note that your code will crash catastrophically as soon as it
+calls into NCCL either directly or through some other Legate library.
+#####################################################################
+            """
         )
-        cmake = False
+        time.sleep(10)
+        no_hijack = False
 
     if cmake:
         build_dir = os.path.join(legion_src_dir, "build")
@@ -274,6 +296,7 @@ def build_legion(
                 "-DLegion_USE_CUDA=%s" % ("ON" if cuda else "OFF"),
                 "-DLegion_GPU_ARCH=%s" % arch,
                 "-DLegion_USE_OpenMP=%s" % ("ON" if openmp else "OFF"),
+                "-DBUILD_MARCH=%s" % march,
                 "-DLegion_USE_LLVM=%s" % ("ON" if llvm else "OFF"),
                 "-DLegion_USE_GASNet=%s" % ("ON" if gasnet else "OFF"),
                 "-DLegion_USE_HDF5=%s" % ("ON" if hdf else "OFF"),
@@ -353,6 +376,7 @@ def build_legion(
                 "USE_CUDA=%s" % (1 if cuda else 0),
                 "GPU_ARCH=%s" % arch,
                 "USE_OPENMP=%s" % (1 if openmp else 0),
+                "MARCH=%s" % march,
                 "USE_LLVM=%s" % (1 if llvm else 0),
                 "USE_GASNET=%s" % (1 if gasnet else 0),
                 "USE_HDF=%s" % (1 if hdf else 0),
@@ -378,9 +402,13 @@ def build_legion(
             verbose_check_call(
                 ["make"] + flags + ["clean"], cwd=legion_python_dir
             )
+        # Explicitly ask for C++17, otherwise the Legion build will use C++11.
+        env = dict(os.environ.items())
+        env["CXXFLAGS"] = "-std=c++17 " + env.get("CXXFLAGS", "")
         verbose_check_call(
             ["make"] + flags + ["-j", str(thread_count), "install"],
             cwd=legion_python_dir,
+            env=env,
         )
         verbose_check_call(
             [
@@ -389,9 +417,18 @@ def build_legion(
                 "install",
                 "--prefix",
                 str(os.path.realpath(install_dir)),
-            ],
+            ]
+            + setup_py_flags,
             cwd=legion_python_dir,
         )
+    verbose_check_call(
+        [
+            "cp",
+            "legion_c_util.h",
+            os.path.join(install_dir, "include", "legion", "legion_c_util.h"),
+        ],
+        cwd=os.path.join(legion_src_dir, "runtime", "legion"),
+    )
     verbose_check_call(
         [
             "cp",
@@ -448,11 +485,13 @@ def build_legate_core(
     cmake,
     cmake_exe,
     cuda_dir,
+    nccl_dir,
     debug,
     debug_release,
     cuda,
     arch,
     openmp,
+    march,
     spy,
     gasnet,
     clean_first,
@@ -471,9 +510,11 @@ def build_legate_core(
         "DEBUG_RELEASE=%s" % (1 if debug_release else 0),
         "USE_CUDA=%s" % (1 if cuda else 0),
         "USE_OPENMP=%s" % (1 if openmp else 0),
+        "MARCH=%s" % march,
         "GPU_ARCH=%s" % arch,
         "PREFIX=%s" % str(install_dir),
         "USE_GASNET=%s" % (1 if gasnet else 0),
+        "NCCL_DIR=%s" % nccl_dir,
     ] + (["CUDA=%s" % cuda_dir] if cuda_dir is not None else [])
     if clean_first:
         verbose_check_call(["make"] + make_flags + ["clean"], cwd=src_dir)
@@ -491,6 +532,7 @@ def build_legate_core(
         arch=(arch if arch is not None else ""),
         cuda_dir=(cuda_dir if cuda_dir is not None else ""),
         openmp=repr(1 if openmp else 0),
+        march=march,
         gasnet=repr(1 if gasnet else 0),
     )
     with open(os.path.join(src_dir, "config.mk"), "wb") as f:
@@ -498,7 +540,12 @@ def build_legate_core(
     cmd = ["cp", "config.mk", os.path.join(install_dir, "share", "legate")]
     verbose_check_call(cmd, cwd=src_dir)
     # Then run setup.py
-    cmd = [sys.executable, "setup.py", "install", "--recurse"]
+    cmd = [
+        sys.executable,
+        "setup.py",
+        "install",
+        "--recurse",
+    ] + setup_py_flags
     if unknown is not None:
         try:
             prefix_loc = unknown.index("--prefix")
@@ -515,11 +562,12 @@ def install(
     cuda,
     arch,
     openmp,
+    march,
     hdf,
     llvm,
     spy,
     conduit,
-    no_hijack,
+    nccl_dir,
     cmake,
     cmake_exe,
     install_dir,
@@ -572,15 +620,11 @@ def install(
     # Save the maxdim config
     maxdim_config = os.path.join(legate_core_dir, ".maxdim.json")
     # Check the max dimensions
-    # Legion could actually go up to 9 dimensions, but we leave an extra
-    # free dimension for libraries to use as a free dimension
-    if maxdim < 1 or maxdim > 8:
+    if maxdim < 1 or maxdim > 9:
         raise Exception(
-            "The maximum number of Legate dimensions must be between 1 and 8 "
+            "The maximum number of Legate dimensions must be between 1 and 9 "
             "inclusive"
         )
-    # Convert back to legion max dimensions
-    maxdim += 1
     dump_json_config(maxdim_config, str(maxdim))
 
     # Save the maxfields config
@@ -628,6 +672,36 @@ def install(
                 )
         dump_json_config(cuda_config, cuda_dir)
 
+        arch_config = os.path.join(legate_core_dir, ".arch.json")
+        if arch is None:
+            arch = load_json_config(arch_config)
+            if arch is None:
+                try:
+                    import pynvml
+
+                    pynvml.nvmlInit()
+                    major, minor = pynvml.nvmlDeviceGetCudaComputeCapability(
+                        pynvml.nvmlDeviceGetHandleByIndex(0)
+                    )
+                    arch = f"{major}{minor}"
+                    pynvml.nvmlShutdown()
+                except Exception as exc:
+                    raise Exception(
+                        "Could not auto-detect CUDA GPU architecture, please "
+                        "specify the target architecture using --arch"
+                    ) from exc
+        dump_json_config(arch_config, arch)
+
+        nccl_config = os.path.join(legate_core_dir, ".nccl.json")
+        if nccl_dir is None:
+            nccl_dir = load_json_config(nccl_config)
+            if nccl_dir is None:
+                raise Exception(
+                    "The first time you use CUDA you need to tell Legate "
+                    'where NCCL is installed with the "--with-nccl" flag.'
+                )
+        dump_json_config(nccl_config, nccl_dir)
+
     # install a stable version of Thrust
     thrust_config = os.path.join(legate_core_dir, ".thrust.json")
     if thrust_dir is None:
@@ -661,13 +735,13 @@ def install(
         cuda,
         arch,
         openmp,
+        march,
         llvm,
         hdf,
         spy,
         gasnet,
         gasnet_dir,
         conduit,
-        no_hijack,
         pyversion,
         pylib_name,
         maxdim,
@@ -684,11 +758,13 @@ def install(
         cmake,
         cmake_exe,
         cuda_dir,
+        nccl_dir,
         debug,
         debug_release,
         cuda,
         arch,
         openmp,
+        march,
         spy,
         gasnet,
         clean_first,
@@ -699,6 +775,14 @@ def install(
     # Copy any executables that we need for legate functionality
     verbose_check_call(
         ["cp", "legate.py", os.path.join(install_dir, "bin", "legate")],
+        cwd=legate_core_dir,
+    )
+    verbose_check_call(
+        [
+            "cp",
+            "scripts/lgpatch.py",
+            os.path.join(install_dir, "bin", "lgpatch"),
+        ],
         cwd=legate_core_dir,
     )
     verbose_check_call(
@@ -715,6 +799,18 @@ def install(
             ],
             cwd=legate_core_dir,
         )
+
+        # Record the path to NCCL that was used in this build
+        libs_path = os.path.join(install_dir, "share", ".legate-libs.json")
+        try:
+            with open(libs_path, "r") as f:
+                libs_config = json.load(f)
+        except (FileNotFoundError, IOError, json.JSONDecodeError):
+            libs_config = {}
+        libs_config["nccl"] = nccl_dir
+        with open(libs_path, "w") as f:
+            json.dump(libs_config, f)
+
     # Copy thrust configuration
     verbose_check_call(
         [
@@ -765,8 +861,7 @@ def driver():
         "--max-dim",
         dest="maxdim",
         type=int,
-        # One less than Legion's max dim, default 3
-        default=int(os.environ.get("LEGION_MAX_DIM", 4)) - 1,
+        default=int(os.environ.get("LEGION_MAX_DIM", 4)),
         help="Maximum number of dimensions that Legate will support",
     )
     parser.add_argument(
@@ -811,7 +906,7 @@ def driver():
         dest="arch",
         action="store",
         required=False,
-        default="volta",
+        default=None,
         help="Specify the target GPU architecture.",
     )
     parser.add_argument(
@@ -819,6 +914,13 @@ def driver():
         action=BooleanFlag,
         default=os.environ.get("USE_OPENMP", "0") == "1",
         help="Build Legate with OpenMP support.",
+    )
+    parser.add_argument(
+        "--march",
+        dest="march",
+        required=False,
+        default="native",
+        help="Specify the target CPU architecture.",
     )
     parser.add_argument(
         "--llvm",
@@ -855,15 +957,12 @@ def driver():
         help="Build Legate with specified GASNet conduit.",
     )
     parser.add_argument(
-        "--with-hijack",
-        dest="no_hijack",
-        action="store_false",
+        "--with-nccl",
+        dest="nccl_dir",
+        metavar="DIR",
         required=False,
-        default=True,
-        help=(
-            "Activate the CUDA hijack in Realm "
-            "(incompatible with Legate Pandas)."
-        ),
+        default=os.environ.get("NCCL_PATH"),
+        help="Path to NCCL installation directory.",
     )
     parser.add_argument(
         "--python-lib",

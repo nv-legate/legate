@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 #include "legion.h"
 
+#include "core/comm/communicator.h"
 #include "core/task/return.h"
 
 namespace legate {
@@ -124,6 +125,12 @@ class TaskContext {
   std::vector<Store>& outputs() { return outputs_; }
   std::vector<Store>& reductions() { return reductions_; }
   std::vector<Scalar>& scalars() { return scalars_; }
+  std::vector<comm::Communicator>& communicators() { return comms_; }
+
+ public:
+  bool is_single_task() const;
+  Legion::DomainPoint get_task_index() const;
+  Legion::Domain get_launch_domain() const;
 
  public:
   ReturnValues pack_return_values() const;
@@ -137,6 +144,7 @@ class TaskContext {
  private:
   std::vector<Store> inputs_, outputs_, reductions_;
   std::vector<Scalar> scalars_;
+  std::vector<comm::Communicator> comms_;
 };
 
 }  // namespace legate

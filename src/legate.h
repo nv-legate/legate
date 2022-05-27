@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 #include "legion.h"
 // legion.h has to go before these
+#include "core/data/allocator.h"
 #include "core/data/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/data/store.h"

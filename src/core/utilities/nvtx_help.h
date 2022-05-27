@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,25 @@
 
 #pragma once
 
-//#include <cublas_v2.h>
-// We can't include cublas_v2.h because it sucks in half precision
-// types into our CPU code which then conflict with legion's half
-// precision types, so we mirror the cublas initialization code here
-struct cublasContext;
+#include "legate.h"
+
+#ifdef LEGATE_USE_CUDA
+
+#include <nvtx3/nvToolsExt.h>
 
 namespace legate {
+namespace nvtx {
 
-struct CUDALibraries {
+class Range {
  public:
-  CUDALibraries(void);
-  ~CUDALibraries(void);
+  Range(const char* message) { range_ = nvtxRangeStartA(message); }
+  ~Range() { nvtxRangeEnd(range_); }
 
  private:
-  // Prevent copying and overwriting
-  CUDALibraries(const CUDALibraries& rhs);
-  CUDALibraries& operator=(const CUDALibraries& rhs);
-
- public:
-  void finalize(void);
-  cublasContext* get_cublas(void);
-
- protected:
-  cublasContext* cublas;  // this is synonymous with cublasHandle_t
+  nvtxRangeId_t range_;
 };
 
+}  // namespace nvtx
 }  // namespace legate
+
+#endif

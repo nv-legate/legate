@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 #include "legion.h"
 
+#include "core/comm/communicator.h"
 #include "core/data/scalar.h"
 #include "core/data/store.h"
 #include "core/mapping/task.h"
@@ -87,6 +88,8 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   void _unpack(FutureWrapper& value);
   void _unpack(RegionField& value);
   void _unpack(OutputRegionField& value);
+  void _unpack(comm::Communicator& value);
+  void _unpack(Legion::PhaseBarrier& barrier);
 
  private:
   Span<const Legion::Future> futures_;
@@ -113,6 +116,7 @@ class MapperDeserializer : public BaseDeserializer<MapperDeserializer> {
  private:
   Legion::Mapping::MapperRuntime* runtime_;
   Legion::Mapping::MapperContext context_;
+  uint32_t future_index_;
 };
 
 }  // namespace mapping

@@ -1,4 +1,4 @@
-# Copyright 2021 NVIDIA Corporation
+# Copyright 2021-2022 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,17 @@ ifndef LEGATE_DIR
 $(error LEGATE_DIR variable is not defined, aborting build)
 endif
 
+# We also need cuda init for runs with GPUs
+ifeq ($(strip $(USE_CUDA)),1)
+ifndef CUDA
+$(error CUDA variable is not defined, aborting build)
+endif
+
+ifndef NCCL_DIR
+$(error NCCL_DIR variable is not defined, aborting build)
+endif
+endif
+
 # Flags for directing the runtime makefile what to include
 DEBUG    ?= 0  # Include debugging symbols
 GPU_ARCH ?= volta
@@ -33,12 +44,12 @@ NVCC_FLAGS ?=
 
 LD_FLAGS ?=
 
-# We also need cuda init for runs with GPUs
 ifeq ($(strip $(USE_CUDA)),1)
-ifndef CUDA
-$(error CUDA variable is not defined, aborting build)
-endif
-LD_FLAGS	+= -lcublas
+
+NVCC_FLAGS += -I$(NCCL_DIR)/include
+
+LD_FLAGS += -L$(NCCL_DIR)/lib -lnccl -lcuda
+
 endif
 
 BOOTSTRAP = 1

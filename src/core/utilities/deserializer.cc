@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@
 #include "core/data/scalar.h"
 #include "core/data/store.h"
 #include "core/mapping/task.h"
+#include "core/utilities/machine.h"
+
+#include "legion/legion_c.h"
+#include "legion/legion_c_util.h"
 
 using LegionTask = Legion::Task;
 
@@ -42,16 +46,19 @@ TaskDeserializer::TaskDeserializer(const LegionTask* task,
 
 void TaskDeserializer::_unpack(Store& value)
 {
-  auto is_future = unpack<bool>();
-  auto dim       = unpack<int32_t>();
-  auto code      = unpack<LegateTypeCode>();
+  auto is_future        = unpack<bool>();
+  auto is_output_region = unpack<bool>();
+  auto dim              = unpack<int32_t>();
+  auto code             = unpack<LegateTypeCode>();
 
   auto transform = unpack_transform();
 
   if (is_future) {
-    auto fut = unpack<FutureWrapper>();
-    value    = Store(dim, code, fut, transform);
-  } else if (dim >= 0) {
+    auto redop_id = unpack<int32_t>();
+    auto fut      = unpack<FutureWrapper>();
+    if (redop_id != -1 && !first_task_) fut.initialize_with_identity(redop_id);
+    value = Store(dim, code, redop_id, fut, transform);
+  } else if (!is_output_region) {
     auto redop_id = unpack<int32_t>();
     auto rf       = unpack<RegionField>();
     value         = Store(dim, code, redop_id, std::move(rf), std::move(transform));
@@ -98,11 +105,25 @@ void TaskDeserializer::_unpack(RegionField& value)
 void TaskDeserializer::_unpack(OutputRegionField& value)
 {
   auto dim = unpack<int32_t>();
-  assert(dim == 1);
   auto idx = unpack<uint32_t>();
   auto fid = unpack<int32_t>();
 
   value = OutputRegionField(outputs_[idx], fid);
+}
+
+void TaskDeserializer::_unpack(comm::Communicator& value)
+{
+  auto future = futures_[0];
+  futures_    = futures_.subspan(1);
+  value       = comm::Communicator(future);
+}
+
+void TaskDeserializer::_unpack(Legion::PhaseBarrier& barrier)
+{
+  auto future   = futures_[0];
+  futures_      = futures_.subspan(1);
+  auto barrier_ = future.get_result<legion_phase_barrier_t>();
+  barrier       = CObjectWrapper::unwrap(barrier_);
 }
 
 namespace mapping {
@@ -110,25 +131,27 @@ namespace mapping {
 MapperDeserializer::MapperDeserializer(const LegionTask* task,
                                        MapperRuntime* runtime,
                                        MapperContext context)
-  : BaseDeserializer(task), runtime_(runtime), context_(context)
+  : BaseDeserializer(task), runtime_(runtime), context_(context), future_index_(0)
 {
   first_task_ = false;
 }
 
 void MapperDeserializer::_unpack(Store& value)
 {
-  auto is_future = unpack<bool>();
-  auto dim       = unpack<int32_t>();
-  auto code      = unpack<LegateTypeCode>();
+  auto is_future        = unpack<bool>();
+  auto is_output_region = unpack<bool>();
+  auto dim              = unpack<int32_t>();
+  auto code             = unpack<LegateTypeCode>();
 
   auto transform = unpack_transform();
 
   if (is_future) {
+    // We still need to parse the reduction op
+    unpack<int32_t>();
     auto fut = unpack<FutureWrapper>();
     value    = Store(dim, code, fut, std::move(transform));
   } else {
-    auto is_output_region = dim < 0;
-    auto redop_id         = unpack<int32_t>();
+    auto redop_id = unpack<int32_t>();
     RegionField rf;
     _unpack(rf, is_output_region);
     value =
@@ -151,7 +174,7 @@ void MapperDeserializer::_unpack(FutureWrapper& value)
     domain.rect_data[idx + domain.dim] = point[idx] - 1;
   }
 
-  value = FutureWrapper(domain);
+  value = FutureWrapper(future_index_++, domain);
 }
 
 void MapperDeserializer::_unpack(RegionField& value, bool is_output_region)

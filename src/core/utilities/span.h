@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,8 @@ struct Span {
     assert(pos < size_);
     return data_[pos];
   }
+  const T* begin() const { return &data_[0]; }
+  const T* end() const { return &data_[size_]; }
 
  public:
   decltype(auto) subspan(size_t off)

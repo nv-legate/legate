@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -156,9 +156,7 @@ AccessorWO<T, DIM> FutureWrapper::write_accessor() const
 {
   assert(sizeof(T) == field_size_);
   assert(!read_only_);
-  auto acc = AccessorWO<T, DIM>(buffer_);
-  if (nullptr == rawptr_) rawptr_ = acc.ptr(Legion::Point<DIM>::ZEROES());
-  return acc;
+  return AccessorWO<T, DIM>(buffer_);
 }
 
 template <typename T, int DIM>
@@ -166,9 +164,7 @@ AccessorRW<T, DIM> FutureWrapper::read_write_accessor() const
 {
   assert(sizeof(T) == field_size_);
   assert(!read_only_);
-  auto acc = AccessorRW<T, DIM>(buffer_);
-  if (nullptr == rawptr_) rawptr_ = acc.ptr(Legion::Point<DIM>::ZEROES());
-  return acc;
+  return AccessorRW<T, DIM>(buffer_);
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM>
@@ -176,18 +172,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> FutureWrapper::reduce_accessor(int32_t redop_id) 
 {
   assert(sizeof(typename OP::LHS) == field_size_);
   assert(!read_only_);
-  auto acc = AccessorRD<OP, EXCLUSIVE, DIM>(buffer_);
-  if (nullptr == rawptr_) {
-    auto p  = Legion::Point<DIM>::ZEROES();
-    rawptr_ = acc.ptr(p);
-
-    if (uninitialized_) {
-      auto identity = OP::identity;
-      memcpy(rawptr_, &identity, field_size_);
-      uninitialized_ = false;
-    }
-  }
-  return acc;
+  return AccessorRD<OP, EXCLUSIVE, DIM>(buffer_);
 }
 
 template <typename T, int DIM>
@@ -206,9 +191,7 @@ AccessorWO<T, DIM> FutureWrapper::write_accessor(const Legion::Rect<DIM>& bounds
 {
   assert(sizeof(T) == field_size_);
   assert(!read_only_);
-  auto acc = AccessorWO<T, DIM>(buffer_, bounds);
-  if (nullptr == rawptr_) rawptr_ = acc.ptr(bounds.lo);
-  return acc;
+  return AccessorWO<T, DIM>(buffer_, bounds);
 }
 
 template <typename T, int DIM>
@@ -216,9 +199,7 @@ AccessorRW<T, DIM> FutureWrapper::read_write_accessor(const Legion::Rect<DIM>& b
 {
   assert(sizeof(T) == field_size_);
   assert(!read_only_);
-  auto acc = AccessorRW<T, DIM>(buffer_, bounds);
-  if (nullptr == rawptr_) rawptr_ = acc.ptr(bounds.lo);
-  return acc;
+  return AccessorRW<T, DIM>(buffer_, bounds);
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM>
@@ -227,18 +208,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> FutureWrapper::reduce_accessor(int32_t redop_id,
 {
   assert(sizeof(typename OP::LHS) == field_size_);
   assert(!read_only_);
-  auto acc = AccessorRD<OP, EXCLUSIVE, DIM>(buffer_, bounds);
-  if (nullptr == rawptr_) {
-    auto& p = bounds.lo;
-    rawptr_ = acc.ptr(p);
-
-    if (uninitialized_) {
-      auto identity = OP::identity;
-      memcpy(rawptr_, &identity, field_size_);
-      uninitialized_ = false;
-    }
-  }
-  return acc;
+  return AccessorRD<OP, EXCLUSIVE, DIM>(buffer_, bounds);
 }
 
 template <int32_t DIM>
@@ -257,11 +227,22 @@ VAL FutureWrapper::scalar() const
     return future_.get_result<VAL>();
 }
 
-template <typename VAL>
-void OutputRegionField::return_data(Buffer<VAL>& buffer, size_t num_elements)
+template <typename T, int32_t DIM>
+Buffer<T, DIM> OutputRegionField::create_output_buffer(const Legion::Point<DIM>& extents,
+                                                       bool return_buffer)
+{
+  // We will use this value only when the unbound store is 1D
+  num_elements_[0] = extents[0];
+  return out_.create_buffer<T, DIM>(extents, fid_, nullptr, return_buffer);
+}
+
+template <typename T, int32_t DIM>
+void OutputRegionField::return_data(Buffer<T, DIM>& buffer, const Legion::Point<DIM>& extents)
 {
   assert(!bound_);
-  out_.return_data(fid_, buffer, &num_elements);
+  out_.return_data(extents, fid_, buffer);
+  // We will use this value only when the unbound store is 1D
+  num_elements_[0] = extents[0];
 }
 
 template <typename T, int DIM>
@@ -368,6 +349,14 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Legion::Rect<DIM>& b
   return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, bounds);
 }
 
+template <typename T, int32_t DIM>
+Buffer<T, DIM> Store::create_output_buffer(const Legion::Point<DIM>& extents,
+                                           bool return_buffer /*= false*/)
+{
+  assert(is_output_store_);
+  return output_field_.create_output_buffer<T, DIM>(extents, return_buffer);
+}
+
 template <int32_t DIM>
 Legion::Rect<DIM> Store::shape() const
 {
@@ -387,11 +376,11 @@ VAL Store::scalar() const
   return future_.scalar<VAL>();
 }
 
-template <typename VAL>
-void Store::return_data(Buffer<VAL>& buffer, size_t num_elements)
+template <typename T, int32_t DIM>
+void Store::return_data(Buffer<T, DIM>& buffer, const Legion::Point<DIM>& extents)
 {
   assert(is_output_store_);
-  output_field_.return_data(buffer, num_elements);
+  output_field_.return_data(buffer, extents);
 }
 
 }  // namespace legate

@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,15 @@ template <typename VAL>
 VAL Scalar::value() const
 {
   return *static_cast<const VAL*>(data_);
+}
+
+template <>
+inline std::string Scalar::value() const
+{
+  // Getting a span of a temporary scalar is illegal in general,
+  // but we know this is safe as the span's pointer is held by this object.
+  auto span = Scalar(true, LegateTypeCode::INT8_LT, data_).values<char>();
+  return std::string(span.begin(), span.end());
 }
 
 template <typename VAL>

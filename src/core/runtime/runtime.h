@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,15 +36,17 @@ class Core {
  public:
   static void parse_config(void);
   static void shutdown(void);
+  static void show_progress(const Legion::Task* task,
+                            Legion::Context ctx,
+                            Legion::Runtime* runtime,
+                            const char* task_name);
 
  public:
   // Configuration settings
-  static bool show_progress;
+  static bool show_progress_requested;
+  static bool use_empty_task;
+  static bool synchronize_stream_view;
   static LegateMainFnPtr main_fn;
-#ifdef LEGATE_USE_CUDA
- public:
-  static cublasContext* get_cublas(void);
-#endif
 };
 
 class FieldManager;

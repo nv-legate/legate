@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2021 NVIDIA Corporation
+# Copyright 2021-2022 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
-
 import argparse
 import json
 import os
@@ -24,7 +22,6 @@ import platform
 import shlex
 import subprocess
 import sys
-from distutils.spawn import find_executable
 
 _version = sys.version_info.major
 
@@ -97,13 +94,6 @@ def find_python_module(legate_dir):
     return python_lib
 
 
-def find_python_home(python_cmd):
-    path_str = find_executable(python_cmd)
-    if path_str is None:
-        return None
-    return os.path.dirname(os.path.dirname(os.path.normpath(path_str)))
-
-
 def run_legate(
     ranks,
     ranks_per_node,
@@ -123,12 +113,16 @@ def run_legate(
     event,
     log_dir,
     user_logging_levels,
+    log_to_file,
+    keep_logs,
     gdb,
     cuda_gdb,
     memcheck,
     module,
     nvprof,
     nsys,
+    nsys_targets,
+    nsys_extra,
     progress,
     freeze_on_error,
     no_tensor_cores,
@@ -184,21 +178,18 @@ def run_legate(
     else:
         cmd_env["PYTHONPATH"] = ""
     cmd_env["PYTHONPATH"] += os.pathsep + find_python_module(legate_dir)
-    # Find the right Python installation if the user hasn't given one.
-    # TODO: We need to make sure that the version of the Python used by Realm
-    #       is the same as that we find below. The Python version better be
-    #       exposed in realm_defines.h so that we do not need to second-guess.
-    if os_name == "Darwin":
-        if "PYTHONHOME" not in cmd_env:
-            # We first check if python3 is available
-            python_home = find_python_home("python3")
-            # Otherwise, we fall back to python. If Python 2 is installed in
-            # /usr, which is the case with the default Python 2 on Mac, we will
-            # be in trouble.
-            if python_home is None:
-                python_home = find_python_home("python")
-            assert python_home is not None
-            cmd_env["PYTHONHOME"] = python_home
+    # Make sure the version of Python used by Realm is the same as what the
+    # user is using currently.
+    curr_pyhome = os.path.dirname(os.path.dirname(sys.executable))
+    realm_defines = os.path.join(legate_dir, "include", "realm_defines.h")
+    realm_pylib = read_c_define(realm_defines, "REALM_PYTHON_LIB")
+    realm_pyhome = os.path.dirname(os.path.dirname(realm_pylib.strip()[1:-1]))
+    if curr_pyhome != realm_pyhome:
+        print(
+            "WARNING: Legate was compiled against the Python installation at "
+            f"{realm_pyhome}, but you are currently using the Python "
+            f"installation at {curr_pyhome}"
+        )
     # If using NCCL prefer parallel launch mode over cooperative groups, as the
     # former plays better with Realm.
     cmd_env["NCCL_LAUNCH_MODE"] = "PARALLEL"
@@ -280,7 +271,8 @@ def run_legate(
         ]
         for var in cmd_env:
             if (
-                var == LIB_PATH
+                var.endswith("PATH")
+                or var.startswith("CONDA_")
                 or var.startswith("LEGATE_")
                 or var.startswith("LEGION_")
                 or var.startswith("LG_")
@@ -289,7 +281,8 @@ def run_legate(
                 or var.startswith("PYTHON")
                 or var.startswith("UCX_")
                 or var.startswith("NCCL_")
-                or var.startswith("NUMPY")
+                or var.startswith("CUNUMERIC_")
+                or var.startswith("NVIDIA_")
             ):
                 cmd += ["-x", var]
     elif launcher == "jsrun":
@@ -306,8 +299,6 @@ def run_legate(
             "ALL_CPUS",
             "-g",
             "ALL_GPUS",
-            "-m",
-            "ALL_MEM",
             "-b",
             "none",
         ]
@@ -403,12 +394,12 @@ def run_legate(
             "nsys",
             "profile",
             "-t",
-            "cublas,cuda,cudnn,nvtx",
-            "-s",
-            "none",
+            nsys_targets,
             "-o",
             os.path.join(log_dir, "legate_%s" % rank_id),
-        ]
+        ] + nsys_extra
+        if "-s" not in nsys_extra:
+            cmd += ["-s", "none"]
     # Add memcheck right before the binary
     if memcheck:
         cmd += ["cuda-memcheck"]
@@ -476,16 +467,22 @@ def run_legate(
     if gpus > 0:
         logging_levels.append("gpu=5")
     if dataflow or event:
-        cmd += [
-            "-lg:spy",
-            "-logfile",
-            os.path.join(log_dir, "legate_%.spy"),
-        ]
+        cmd += ["-lg:spy"]
         logging_levels.append("legion_spy=2")
+        # Spy output is dumped to the same place as other logging, so we must
+        # redirect all logging to a file, even if the user didn't ask for it.
+        if user_logging_levels is not None and not log_to_file:
+            print(
+                "WARNING: Logging output is being redirected to a file in "
+                f"directory {log_dir}"
+            )
+        log_to_file = True
     logging_levels = ",".join(logging_levels)
     if user_logging_levels is not None:
         logging_levels += "," + user_logging_levels
     cmd += ["-level", logging_levels]
+    if log_to_file:
+        cmd += ["-logfile", os.path.join(log_dir, "legate_%.log")]
     if gdb and os_name == "Darwin":
         print(
             "WARNING: You must start the debugging session with the following "
@@ -513,6 +510,8 @@ def run_legate(
     if opts:
         cmd += opts
 
+    # Create output directory
+    os.makedirs(log_dir, exist_ok=True)
     # Launch the child process
     if verbose and (launcher != "none" or rank_id == "0"):
         print(
@@ -537,6 +536,7 @@ def run_legate(
                 + " ".join([shlex.quote(t) for t in prof_cmd]),
                 flush=True,
             )
+            keep_logs = True
         else:
             if verbose:
                 print(
@@ -544,6 +544,7 @@ def run_legate(
                     flush=True,
                 )
             subprocess.check_call(prof_cmd, cwd=log_dir)
+        if not keep_logs:
             # Clean up our mess of Legion Prof files
             for n in range(ranks):
                 os.remove(os.path.join(log_dir, "legate_" + str(n) + ".prof"))
@@ -559,7 +560,7 @@ def run_legate(
         else:
             spy_cmd += ["-e"]
         for n in range(ranks):
-            spy_cmd += ["legate_" + str(n) + ".spy"]
+            spy_cmd += ["legate_" + str(n) + ".log"]
         if ranks // ranks_per_node > 4:
             print(
                 "Skipping the processing of spy output, to avoid wasting "
@@ -567,6 +568,7 @@ def run_legate(
                 + " ".join([shlex.quote(t) for t in spy_cmd]),
                 flush=True,
             )
+            keep_logs = True
         else:
             if verbose:
                 print(
@@ -574,9 +576,12 @@ def run_legate(
                     flush=True,
                 )
             subprocess.check_call(spy_cmd, cwd=log_dir)
-            # Clean up our mess of Legion Spy files
+        if user_logging_levels is None and not keep_logs:
+            # Clean up our mess of Legion Spy files, unless the user is doing
+            # some extra logging, in which case theirs and Spy's logs will be
+            # in the same file.
             for n in range(ranks):
-                os.remove(os.path.join(log_dir, "legate_" + str(n) + ".spy"))
+                os.remove(os.path.join(log_dir, "legate_" + str(n) + ".log"))
     return result
 
 
@@ -714,7 +719,8 @@ def driver():
         type=str,
         default=os.getcwd(),
         dest="logdir",
-        help="Directory for Legate log files (defaults to current directory)",
+        help="Directory for Legate log files (automatically created if it "
+        "doesn't exist; defaults to current directory)",
     )
     parser.add_argument(
         "--logging",
@@ -722,6 +728,20 @@ def driver():
         default=None,
         dest="user_logging_levels",
         help="extra loggers to turn on",
+    )
+    parser.add_argument(
+        "--log-to-file",
+        dest="log_to_file",
+        action="store_true",
+        required=False,
+        help="redirect logging output to a file inside --logdir",
+    )
+    parser.add_argument(
+        "--keep-logs",
+        dest="keep_logs",
+        action="store_true",
+        required=False,
+        help="don't delete profiler & spy dumps after processing",
     )
     parser.add_argument(
         "--gdb",
@@ -763,7 +783,22 @@ def driver():
         dest="nsys",
         action="store_true",
         required=False,
-        help="run Legate with nsys",
+        help="run Legate with Nsight Systems",
+    )
+    parser.add_argument(
+        "--nsys-targets",
+        dest="nsys_targets",
+        default="cublas,cuda,cudnn,nvtx,ucx",
+        required=False,
+        help="Specify profiling targets for Nsight Systems",
+    )
+    parser.add_argument(
+        "--nsys-extra",
+        dest="nsys_extra",
+        action="append",
+        default=[],
+        required=False,
+        help="Specify extra flags for Nsight Systems",
     )
     parser.add_argument(
         "--progress",
@@ -883,12 +918,16 @@ def driver():
         args.event,
         args.logdir,
         args.user_logging_levels,
+        args.log_to_file,
+        args.keep_logs,
         args.gdb,
         args.cuda_gdb,
         args.memcheck,
         args.module,
         args.nvprof,
         args.nsys,
+        args.nsys_targets,
+        args.nsys_extra,
         args.progress,
         args.freeze_on_error,
         args.no_tensor_cores,

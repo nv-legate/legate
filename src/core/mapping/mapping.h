@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,11 +56,11 @@ struct DimOrdering {
   DimOrdering() {}
 
  public:
-  DimOrdering(const DimOrdering&) = default;
+  DimOrdering(const DimOrdering&)            = default;
   DimOrdering& operator=(const DimOrdering&) = default;
 
  public:
-  DimOrdering(DimOrdering&&) = default;
+  DimOrdering(DimOrdering&&)            = default;
   DimOrdering& operator=(DimOrdering&&) = default;
 
  public:
@@ -69,6 +69,11 @@ struct DimOrdering {
  public:
   void populate_dimension_ordering(const Store& store,
                                    std::vector<Legion::DimensionKind>& ordering) const;
+
+ public:
+  void c_order();
+  void fortran_order();
+  void custom_order(std::vector<int32_t>&& dims);
 
  public:
   Kind kind{Kind::C};
@@ -92,11 +97,11 @@ struct InstanceMappingPolicy {
   InstanceMappingPolicy() {}
 
  public:
-  InstanceMappingPolicy(const InstanceMappingPolicy&) = default;
+  InstanceMappingPolicy(const InstanceMappingPolicy&)            = default;
   InstanceMappingPolicy& operator=(const InstanceMappingPolicy&) = default;
 
  public:
-  InstanceMappingPolicy(InstanceMappingPolicy&&) = default;
+  InstanceMappingPolicy(InstanceMappingPolicy&&)            = default;
   InstanceMappingPolicy& operator=(InstanceMappingPolicy&&) = default;
 
  public:
@@ -120,11 +125,11 @@ struct StoreMapping {
   StoreMapping() {}
 
  public:
-  StoreMapping(const StoreMapping&) = default;
+  StoreMapping(const StoreMapping&)            = default;
   StoreMapping& operator=(const StoreMapping&) = default;
 
  public:
-  StoreMapping(StoreMapping&&) = default;
+  StoreMapping(StoreMapping&&)            = default;
   StoreMapping& operator=(StoreMapping&&) = default;
 
  public:

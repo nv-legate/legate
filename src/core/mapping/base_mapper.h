@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,13 +38,11 @@ enum class Strictness : bool {
 
 class BaseMapper : public Legion::Mapping::Mapper, public LegateMapper {
  public:
-  BaseMapper(Legion::Mapping::MapperRuntime* rt,
-             Legion::Machine machine,
-             const LibraryContext& context);
+  BaseMapper(Legion::Runtime* rt, Legion::Machine machine, const LibraryContext& context);
   virtual ~BaseMapper(void);
 
  private:
-  BaseMapper(const BaseMapper& rhs) = delete;
+  BaseMapper(const BaseMapper& rhs)            = delete;
   BaseMapper& operator=(const BaseMapper& rhs) = delete;
 
  protected:
@@ -290,12 +288,34 @@ class BaseMapper : public Legion::Mapping::Mapper, public LegateMapper {
                              const Legion::Mapping::PhysicalInstance& target,
                              const std::vector<Legion::Mapping::PhysicalInstance>& sources,
                              std::deque<Legion::Mapping::PhysicalInstance>& ranking);
+
+ protected:
   bool has_variant(const Legion::Mapping::MapperContext ctx,
                    const Legion::Task& task,
                    Legion::Processor::Kind kind);
   Legion::VariantID find_variant(const Legion::Mapping::MapperContext ctx,
                                  const Legion::Task& task,
                                  Legion::Processor::Kind kind);
+
+ private:
+  void generate_prime_factors();
+  void generate_prime_factor(const std::vector<Legion::Processor>& processors,
+                             Legion::Processor::Kind kind);
+
+ protected:
+  const std::vector<int32_t> get_processor_grid(Legion::Processor::Kind kind, int32_t ndim);
+  void slice_auto_task(const Legion::Mapping::MapperContext ctx,
+                       const Legion::Task& task,
+                       const SliceTaskInput& input,
+                       SliceTaskOutput& output);
+  void slice_manual_task(const Legion::Mapping::MapperContext ctx,
+                         const Legion::Task& task,
+                         const SliceTaskInput& input,
+                         SliceTaskOutput& output);
+  void slice_round_robin_task(const Legion::Mapping::MapperContext ctx,
+                              const Legion::Task& task,
+                              const SliceTaskInput& input,
+                              SliceTaskOutput& output);
 
  protected:
   static inline bool physical_sort_func(
@@ -307,6 +327,7 @@ class BaseMapper : public Legion::Mapping::Mapper, public LegateMapper {
   // NumPyOpCode decode_task_id(Legion::TaskID tid);
 
  public:
+  Legion::Runtime* const legion_runtime;
   const Legion::Machine machine;
   const LibraryContext context;
   const Legion::AddressSpace local_node;
@@ -330,6 +351,11 @@ class BaseMapper : public Legion::Mapping::Mapper, public LegateMapper {
 
  protected:
   std::unique_ptr<InstanceManager> local_instances;
+
+ protected:
+  // Used for n-D cyclic distribution
+  std::map<Legion::Processor::Kind, std::vector<int32_t>> all_factors;
+  std::map<std::pair<Legion::Processor::Kind, int32_t>, std::vector<int32_t>> proc_grids;
 
  protected:
   // These are used for computing sharding functions

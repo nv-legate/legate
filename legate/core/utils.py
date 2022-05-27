@@ -1,4 +1,4 @@
-# Copyright 2021 NVIDIA Corporation
+# Copyright 2021-2022 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import annotations
 
-from collections.abc import MutableSet
+from typing import (
+    Any,
+    Hashable,
+    Iterable,
+    Iterator,
+    MutableSet,
+    Optional,
+    TypeVar,
+)
+
+T = TypeVar("T", bound="Hashable")
 
 
-class OrderedSet(MutableSet):
+class OrderedSet(MutableSet[T]):
     """
     A set() variant whose iterator returns elements in insertion order.
 
@@ -26,31 +37,34 @@ class OrderedSet(MutableSet):
     shards in a replicated context.
     """
 
-    def __init__(self, copy_from=None):
-        self._dict = {}
+    def __init__(self, copy_from: Optional[Iterable[T]] = None) -> None:
+        self._dict: dict[T, None] = {}
         if copy_from is not None:
             for obj in copy_from:
                 self.add(obj)
 
-    def add(self, obj):
+    def add(self, obj: T) -> None:
         self._dict[obj] = None
 
-    def update(self, other):
+    def update(self, other: Iterable[T]) -> None:
         for obj in other:
             self.add(obj)
 
-    def discard(self, obj):
+    def discard(self, obj: T) -> None:
         self._dict.pop(obj, None)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dict)
 
-    def __contains__(self, obj):
+    def __contains__(self, obj: object) -> bool:
         return obj in self._dict
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[T]:
         return iter(self._dict)
 
+    def remove_all(self, other: OrderedSet[T]) -> OrderedSet[T]:
+        return OrderedSet(obj for obj in self if obj not in other)
 
-def cast_tuple(value):
+
+def cast_tuple(value: Any) -> tuple[Any, ...]:
     return value if isinstance(value, tuple) else tuple(value)

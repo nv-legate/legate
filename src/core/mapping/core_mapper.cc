@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@
 #include "legate.h"
 
 #include "core/mapping/core_mapper.h"
+#ifdef LEGATE_USE_CUDA
+#include "core/comm/comm_nccl.h"
+#endif
 
 namespace legate {
 
@@ -285,7 +288,7 @@ void CoreMapper::slice_task(const MapperContext ctx,
         }
         break;
       }
-      default: LEGATE_ABORT
+      default: LEGATE_ABORT;
     }
   }
 }
@@ -415,9 +418,17 @@ void CoreMapper::select_tunable_value(const MapperContext ctx,
       pack_tunable<uint32_t>(field_reuse_freq, output);
       return;
     }
+    case LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER: {
+#ifdef LEGATE_USE_CUDA
+      pack_tunable<bool>(local_gpus.empty() ? false : comm::nccl::needs_barrier(), output);
+#else
+      pack_tunable<bool>(false, output);
+#endif
+      return;
+    }
   }
   // Illegal tunable variable
-  LEGATE_ABORT
+  LEGATE_ABORT;
 }
 
 void register_legate_core_mapper(Machine machine,

@@ -1,4 +1,4 @@
-# Copyright 2021 NVIDIA Corporation
+# Copyright 2021-2022 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,42 +12,50 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from __future__ import annotations
 
 from enum import IntEnum, unique
+from typing import Any, Union
 
 import pyarrow as pa
 
-from legion_cffi import lib as legion
+from . import legion
+from .corelib import core_library
+
+DTType = Union[bool, pa.lib.DataType]
 
 
 class Complex64Dtype(pa.ExtensionType):
-    def __init__(self):
+    def __init__(self) -> None:
         pa.ExtensionType.__init__(self, pa.binary(8), "complex64")
 
-    def __arrow_ext_serialize__(self):
+    def __arrow_ext_serialize__(self) -> bytes:
         return b""
 
     @classmethod
-    def __arrow_ext_deserialize__(self, storage_type, serialized):
+    def __arrow_ext_deserialize__(
+        self, storage_type: pa.lib.DataType, serialized: str
+    ) -> Complex64Dtype:
         return Complex64Dtype()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__class__)
 
 
 class Complex128Dtype(pa.ExtensionType):
-    def __init__(self):
+    def __init__(self) -> None:
         pa.ExtensionType.__init__(self, pa.binary(16), "complex128")
 
-    def __arrow_ext_serialize__(self):
+    def __arrow_ext_serialize__(self) -> bytes:
         return b""
 
     @classmethod
-    def __arrow_ext_deserialize__(self, storage_type, serialized):
+    def __arrow_ext_deserialize__(
+        self, storage_type: pa.lib.DataType, serialized: str
+    ) -> Complex128Dtype:
         return Complex128Dtype()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__class__)
 
 
@@ -65,49 +73,54 @@ float32 = pa.float32()
 float64 = pa.float64()
 complex64 = Complex64Dtype()
 complex128 = Complex128Dtype()
+string = pa.string()
 
 
-class _Dtype(object):
-    def __init__(self, dtype, size_in_bytes, code):
+class _Dtype:
+    def __init__(self, dtype: Any, size_in_bytes: int, code: int) -> None:
         self._dtype = dtype
         self._size_in_bytes = size_in_bytes
         self._code = code
-        self._redop_ids = {}
+        self._redop_ids: dict[int, int] = {}
 
     @property
-    def type(self):
+    def type(self) -> Any:
         return self._dtype
 
     @property
-    def size(self):
+    def size(self) -> int:
         return self._size_in_bytes
 
     @property
-    def code(self):
+    def code(self) -> int:
         return self._code
 
-    def reduction_op_id(self, op):
+    @property
+    def variable_size(self) -> bool:
+        return self._size_in_bytes < 0
+
+    def reduction_op_id(self, op: int) -> int:
         if op not in self._redop_ids:
             raise KeyError(
                 f"{str(op)} is not a valid reduction op for type {self}"
             )
         return self._redop_ids[op]
 
-    def register_reduction_op(self, op, redop_id):
+    def register_reduction_op(self, op: int, redop_id: int) -> None:
         if op in self._redop_ids:
             raise KeyError(
                 f"reduction op {str(op)} is already registered to type {self}"
             )
         self._redop_ids[op] = redop_id
 
-    def copy_all_reduction_ops(self, other):
+    def copy_all_reduction_ops(self, other: _Dtype) -> None:
         for op, redop_id in self._redop_ids.items():
             other.register_reduction_op(op, redop_id)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._dtype)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, _Dtype):
             return (
                 self._dtype == other._dtype
@@ -117,11 +130,17 @@ class _Dtype(object):
         else:
             return self._dtype == other
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._dtype)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"_Dtype({self._dtype}, {self.size}, {self.code})"
+
+
+corelib = core_library._lib
+
+
+# TODO: We should redefine these in Legate and use them instead
 
 
 @unique
@@ -136,6 +155,8 @@ class ReductionOp(IntEnum):
     AND = legion.LEGION_REDOP_KIND_AND
     XOR = legion.LEGION_REDOP_KIND_XOR
 
+
+# TODO: These should use the enum in legate_c.h
 
 _CORE_DTYPES = [
     _Dtype(bool, 1, legion.LEGION_TYPE_BOOL),
@@ -153,6 +174,7 @@ _CORE_DTYPES = [
     _Dtype(float64, 8, legion.LEGION_TYPE_FLOAT64),
     _Dtype(complex64, 8, legion.LEGION_TYPE_COMPLEX64),
     _Dtype(complex128, 16, legion.LEGION_TYPE_COMPLEX128),
+    _Dtype(string, -1, legion.LEGION_TYPE_COMPLEX128 + 1),
 ]
 
 
@@ -168,26 +190,29 @@ for dtype in _CORE_DTYPE_MAP.values():
         dtype.register_reduction_op(op, redop_id)
 
 
-class TypeSystem(object):
-    def __init__(self, inherit_core_types=True):
+class TypeSystem:
+    def __init__(self, inherit_core_types: bool = True) -> None:
         self._types = _CORE_DTYPE_MAP.copy() if inherit_core_types else {}
 
-    def __contains__(self, ty):
+    # ty should hashable
+    def __contains__(self, ty: Any) -> bool:
         return ty in self._types
 
-    def __getitem__(self, ty):
+    def __getitem__(self, ty: Any) -> _Dtype:
         if ty not in self._types:
             raise KeyError(f"{ty} is not a valid type in this type system")
         return self._types[ty]
 
-    def add_type(self, ty, size_in_bytes, code):
+    def add_type(self, ty: Any, size_in_bytes: int, code: int) -> _Dtype:
         if ty in self._types:
             raise KeyError(f"{ty} is already in this type system")
         dtype = _Dtype(ty, size_in_bytes, code)
         self._types[dtype] = dtype
         return dtype
 
-    def make_alias(self, alias, src_type, copy_reduction_ops=True):
+    def make_alias(
+        self, alias: Any, src_type: _Dtype, copy_reduction_ops: bool = True
+    ) -> _Dtype:
         dtype = self[src_type]
         copy = _Dtype(alias, dtype.size, dtype.code)
         if copy_reduction_ops:
@@ -195,5 +220,5 @@ class TypeSystem(object):
         self._types[alias] = copy
         return copy
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self._types)

@@ -1,4 +1,4 @@
-# Copyright 2021 NVIDIA Corporation
+# Copyright 2021-2022 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ endif
 RM	:= rm
 
 CC_FLAGS ?=
-CC_FLAGS += -std=c++14 -Wfatal-errors
+CC_FLAGS += -std=c++17 -Wfatal-errors
 CC_FLAGS += -I$(LEGATE_DIR)/include
 
 ifneq ($(strip $(BOOTSTRAP)), 1)
@@ -55,8 +55,11 @@ endif
 endif
 
 NVCC_FLAGS ?=
-NVCC_FLAGS += -std=c++14 --expt-relaxed-constexpr --expt-extended-lambda -ccbin=$(CXX)
+NVCC_FLAGS += -std=c++17 --expt-relaxed-constexpr --expt-extended-lambda -ccbin=$(CXX)
 NVCC_FLAGS += -I$(LEGATE_DIR)/include
+
+DEVICE_LD_FLAGS ?=
+DEVICE_LD_FLAGS += -ccbin=$(CXX) --compiler-options -fPIC
 
 ifeq ($(strip $(DEBUG)),1)
 ifeq ($(strip $(DARWIN)),1)
@@ -81,6 +84,35 @@ else
 CC_FLAGS   += -ggdb #-ggdb -Wall
 endif
 NVCC_FLAGS += -g
+endif
+
+ifeq ($(strip $(DEBUG)),1)
+
+CC_FLAGS += -DDEBUG_LEGATE
+
+NVCC_FLAGS += -DDEBUG_LEGATE
+
+endif
+
+# machine architecture (generally "native" unless cross-compiling)
+MARCH ?= native
+
+ifneq (${MARCH},)
+  # Summit/Summitdev are strange and want to have this specified via -mcpu
+  # instead of -march. Unclear if this is true in general for PPC.
+  ifeq ($(findstring ppc64le,$(shell uname -p)),ppc64le)
+    ifeq ($(strip $(USE_PGI)),0)
+      CC_FLAGS += -mcpu=${MARCH} -maltivec -mabi=altivec -mvsx
+    else
+      $(error PGI compilers do not currently support the PowerPC architecture)
+    endif
+  else
+    ifeq ($(strip $(USE_PGI)),0)
+      CC_FLAGS += -march=${MARCH}
+    else
+      CC_FLAGS += -tp=${MARCH}
+    endif
+  endif
 endif
 
 ifeq ($(strip $(USE_CUDA)),1)
@@ -123,24 +155,33 @@ NVCC_FLAGS	+= -DAMPERE_ARCH
 endif
 
 COMMA=,
-NVCC_FLAGS += $(foreach X,$(subst $(COMMA), ,$(GPU_ARCH)),-gencode arch=compute_$(X)$(COMMA)code=sm_$(X))
+ARCH_FLAGS = $(foreach X,$(subst $(COMMA), ,$(GPU_ARCH)),-gencode arch=compute_$(X)$(COMMA)code=sm_$(X))
+NVCC_FLAGS += $(ARCH_FLAGS)
 CC_FLAGS	+= -DLEGATE_USE_CUDA -I$(CUDA)/include
 NVCC_FLAGS	+= -DLEGATE_USE_CUDA -I$(CUDA)/include
-LD_FLAGS	+= -lcublas -L$(CUDA)/lib -L$(CUDA)/lib64
+LD_FLAGS	+= -L$(CUDA)/lib -L$(CUDA)/lib64
 endif
 
 GEN_SRC		?=
 GEN_CPU_SRC	?=
 GEN_CPU_SRC	+= $(GEN_SRC)
 
+GEN_GPU_SRC	?=
+
+GEN_DEVICE_SRC ?=
+
 GEN_CPU_DEPS	:= $(GEN_CPU_SRC:.cc=.cc.d)
 GEN_CPU_OBJS	:= $(GEN_CPU_SRC:.cc=.cc.o)
 ifeq ($(strip $(USE_CUDA)),1)
-GEN_GPU_DEPS	:= $(GEN_GPU_SRC:.cu=.cu.d)
+GEN_GPU_DEPS	:= $(GEN_GPU_SRC:.cu=.cu.d) $(GEN_DEVICE_SRC:.cu=.cu.d)
 GEN_GPU_OBJS	:= $(GEN_GPU_SRC:.cu=.cu.o)
+GEN_DEVICE_OBJS	:= $(GEN_DEVICE_SRC:.cu=.cu.o)
+GEN_DEVICE_LINK_OBJS	:= $(GEN_DEVICE_SRC:.cu=.cu.dlink.o)
 else
 GEN_GPU_DEPS	:=
 GEN_GPU_OBJS	:=
+GEN_DEVICE_OBJS	:=
+GEN_DEVICE_LINK_OBJS	:=
 endif
 
 CC_FLAGS += -fPIC
@@ -190,7 +231,7 @@ install:
 	$(error Must specify PREFIX for installation)
 endif
 
-$(DLIB) : $(GEN_CPU_OBJS) $(GEN_GPU_OBJS)
+$(DLIB) : $(GEN_CPU_OBJS) $(GEN_GPU_OBJS) $(GEN_DEVICE_OBJS) $(GEN_DEVICE_LINK_OBJS)
 	@echo "---> Linking objects into one library: $(DLIB)"
 	$(CXX) -o $(DLIB) $^ $(LD_FLAGS)
 
@@ -202,11 +243,18 @@ $(GEN_CPU_OBJS) : %.cc.o : %.cc $(LEGION_DEFINES_HEADER) $(REALM_DEFINES_HEADER)
 -include $(GEN_GPU_DEPS)
 
 $(GEN_GPU_OBJS) : %.cu.o : %.cu $(LEGION_DEFINES_HEADER) $(REALM_DEFINES_HEADER)
-	$(NVCC) -o $<.d -M $< $(INC_FLAGS) $(NVCC_FLAGS)
+	$(NVCC) -o $<.d -M -MT $@ $< $(INC_FLAGS) $(NVCC_FLAGS)
 	$(NVCC) -o $@ -c $< $(INC_FLAGS) $(NVCC_FLAGS)
 
+$(GEN_DEVICE_OBJS) : %.cu.o : %.cu $(LEGION_DEFINES_HEADER) $(REALM_DEFINES_HEADER)
+	$(NVCC) -o $<.d -M -MT $@ $< $(INC_FLAGS) $(NVCC_FLAGS)
+	$(NVCC) -o $<.o -dc $< $(INC_FLAGS) $(NVCC_FLAGS)
+
+$(GEN_DEVICE_LINK_OBJS) : %.cu.dlink.o : %.cu.o
+	$(NVCC) -o $@ $< -dlink $(ARCH_FLAGS) $(DEVICE_LD_FLAGS)
+
 clean:
-	$(RM) -f $(DLIB) $(GEN_CPU_DEPS) $(GEN_CPU_OBJS) $(GEN_GPU_DEPS) $(GEN_GPU_OBJS)
+	$(RM) -f $(DLIB) $(GEN_CPU_DEPS) $(GEN_CPU_OBJS) $(GEN_GPU_DEPS) $(GEN_GPU_OBJS) $(GEN_DEVICE_OBJS) $(GEN_DEVICE_LINK_OBJS)
 
 # disable gmake's default rule for building % from %.o
 % : %.o

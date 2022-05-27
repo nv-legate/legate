@@ -63,11 +63,11 @@ class LogicalStore {
   LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
 
  public:
-  LogicalStore(const LogicalStore& other) = default;
+  LogicalStore(const LogicalStore& other)            = default;
   LogicalStore& operator=(const LogicalStore& other) = default;
 
  public:
-  LogicalStore(LogicalStore&& other) = default;
+  LogicalStore(LogicalStore&& other)            = default;
   LogicalStore& operator=(LogicalStore&& other) = default;
 
  public:
@@ -203,7 +203,7 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
   if (extra_dim < 0 || static_cast<size_t>(extra_dim) > extents_.size()) {
     log_legate.error(
       "Invalid promotion on dimension %d for a %zd-D store", extra_dim, extents_.size());
-    LEGATE_ABORT
+    LEGATE_ABORT;
   }
 
   auto new_extents = extents_.insert(extra_dim, dim_size);

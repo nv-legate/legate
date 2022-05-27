@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ IndexSpace RegionField::get_index_space() const
   return get_requirement().region.get_index_space();
 }
 
-FutureWrapper::FutureWrapper(const Domain& domain) : domain_(domain) {}
+FutureWrapper::FutureWrapper(uint32_t idx, const Domain& domain) : idx_(idx), domain_(domain) {}
 
 Domain FutureWrapper::domain() const { return domain_; }
 
@@ -103,6 +103,12 @@ const RegionField& Store::region_field() const
 {
   assert(!is_future());
   return region_field_;
+}
+
+const FutureWrapper& Store::future() const
+{
+  assert(is_future());
+  return future_;
 }
 
 Domain Store::domain() const

@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,11 @@ struct ReturnValues {
   ReturnValues(std::vector<ReturnValue>&& return_values);
 
  public:
-  ReturnValues(const ReturnValues&) = default;
+  ReturnValues(const ReturnValues&)            = default;
   ReturnValues& operator=(const ReturnValues&) = default;
 
  public:
-  ReturnValues(ReturnValues&&) = default;
+  ReturnValues(ReturnValues&&)            = default;
   ReturnValues& operator=(ReturnValues&&) = default;
 
  public:

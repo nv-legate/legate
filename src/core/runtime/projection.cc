@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,33 +96,38 @@ LogicalRegion LegateProjectionFunctor::project(LogicalPartition upper_bound,
 }
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
-class ReductionFunctor : public LegateProjectionFunctor {
+class AffineFunctor : public LegateProjectionFunctor {
  public:
-  ReductionFunctor(Runtime* runtime, const int32_t* dims);
+  AffineFunctor(Runtime* runtime, int32_t* dims, int32_t* weights, int32_t* offsets);
 
  public:
   virtual DomainPoint project_point(const DomainPoint& point,
                                     const Domain& launch_domain) const override
   {
-    return DomainPoint(transform_ * Point<SRC_DIM>(point));
+    return DomainPoint(transform_ * Point<SRC_DIM>(point) + offsets_);
   }
 
  public:
-  static Transform<TGT_DIM, SRC_DIM> create_transform(const int32_t* dims);
+  static Transform<TGT_DIM, SRC_DIM> create_transform(int32_t* dims, int32_t* weights);
 
  private:
   const Transform<TGT_DIM, SRC_DIM> transform_;
+  Point<TGT_DIM> offsets_;
 };
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
-ReductionFunctor<SRC_DIM, TGT_DIM>::ReductionFunctor(Runtime* runtime, const int32_t* dims)
-  : LegateProjectionFunctor(runtime), transform_(create_transform(dims))
+AffineFunctor<SRC_DIM, TGT_DIM>::AffineFunctor(Runtime* runtime,
+                                               int32_t* dims,
+                                               int32_t* weights,
+                                               int32_t* offsets)
+  : LegateProjectionFunctor(runtime), transform_(create_transform(dims, weights))
 {
+  for (int32_t dim = 0; dim < TGT_DIM; ++dim) offsets_[dim] = offsets[dim];
 }
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
-/*static*/ Transform<TGT_DIM, SRC_DIM> ReductionFunctor<SRC_DIM, TGT_DIM>::create_transform(
-  const int32_t* dims)
+/*static*/ Transform<TGT_DIM, SRC_DIM> AffineFunctor<SRC_DIM, TGT_DIM>::create_transform(
+  int32_t* dims, int32_t* weights)
 {
   Transform<TGT_DIM, SRC_DIM> transform;
 
@@ -131,7 +136,7 @@ template <int32_t SRC_DIM, int32_t TGT_DIM>
 
   for (int32_t tgt_dim = 0; tgt_dim < TGT_DIM; ++tgt_dim) {
     int32_t src_dim = dims[tgt_dim];
-    if (src_dim != -1) transform[tgt_dim][src_dim] = 1;
+    if (src_dim != -1) transform[tgt_dim][src_dim] = weights[tgt_dim];
   }
 
   return transform;
@@ -140,11 +145,12 @@ template <int32_t SRC_DIM, int32_t TGT_DIM>
 static std::unordered_map<ProjectionID, LegateProjectionFunctor*> functor_table;
 static std::mutex functor_table_lock;
 
-struct create_reduction_functor_fn {
+struct create_affine_functor_fn {
   template <int32_t SRC_DIM, int32_t TGT_DIM>
-  void operator()(Runtime* runtime, const int32_t* dims, ProjectionID proj_id)
+  void operator()(
+    Runtime* runtime, int32_t* dims, int32_t* weights, int32_t* offsets, ProjectionID proj_id)
   {
-    auto functor = new ReductionFunctor<SRC_DIM, TGT_DIM>(runtime, dims);
+    auto functor = new AffineFunctor<SRC_DIM, TGT_DIM>(runtime, dims, weights, offsets);
     runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
 
     const std::lock_guard<std::mutex> lock(functor_table_lock);
@@ -159,17 +165,77 @@ LegateProjectionFunctor* find_legate_projection_functor(ProjectionID proj_id)
   return functor_table[proj_id];
 }
 
+DomainPoint delinearize_future_map_domain(const DomainPoint& point,
+                                          const Domain& domain,
+                                          const Domain& range)
+{
+  int32_t ndim = range.dim;
+
+  DomainPoint result;
+  result.dim = ndim;
+
+  auto lo = range.lo();
+  auto hi = range.hi();
+
+  int64_t idx = point[0];
+  for (int32_t dim = ndim - 1; dim >= 0; --dim) {
+    int64_t extent = hi[dim] - lo[dim] + 1;
+    result[dim]    = idx % extent;
+    idx            = idx / extent;
+  }
+
+  return result;
+}
+
+struct LinearizingPointTransformFunctor : public PointTransformFunctor {
+  // This is actually an invertible functor, but we will not use this for inversion
+  virtual bool is_invertible(void) const { return false; }
+
+  virtual DomainPoint transform_point(const DomainPoint& point,
+                                      const Domain& domain,
+                                      const Domain& range)
+  {
+    assert(range.dim == 1);
+    DomainPoint result;
+    result.dim = 1;
+
+    int32_t ndim = domain.dim;
+    int64_t idx  = point[0];
+    for (int32_t dim = 1; dim < ndim; ++dim) {
+      int64_t extent = domain.rect_data[dim + ndim] - domain.rect_data[dim] + 1;
+      idx            = idx * extent + point[dim];
+    }
+    result[0] = idx;
+    return result;
+  }
+};
+
+static auto* linearizing_point_transform_functor = new LinearizingPointTransformFunctor();
+
 }  // namespace legate
 
 extern "C" {
 
-void legate_register_projection_functor(int32_t src_ndim,
-                                        int32_t tgt_ndim,
-                                        const int32_t* dims,
-                                        legion_projection_id_t proj_id)
+void legate_register_affine_projection_functor(int32_t src_ndim,
+                                               int32_t tgt_ndim,
+                                               int32_t* dims,
+                                               int32_t* weights,
+                                               int32_t* offsets,
+                                               legion_projection_id_t proj_id)
 {
   auto runtime = Runtime::get_runtime();
-  legate::double_dispatch(
-    src_ndim, tgt_ndim, legate::create_reduction_functor_fn{}, runtime, dims, proj_id);
+  legate::double_dispatch(src_ndim,
+                          tgt_ndim,
+                          legate::create_affine_functor_fn{},
+                          runtime,
+                          dims,
+                          weights,
+                          offsets,
+                          proj_id);
+}
+
+void* legate_linearizing_point_transform_functor()
+{
+  return legate::linearizing_point_transform_functor;
 }
 }

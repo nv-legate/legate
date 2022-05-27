@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2022 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include "core/data/store.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/dispatch.h"
+#include "core/utilities/machine.h"
 
 namespace legate {
 
@@ -52,40 +53,52 @@ RegionField& RegionField::operator=(RegionField&& other) noexcept
   return *this;
 }
 
+bool RegionField::valid() const { return pr_.get_logical_region() != LogicalRegion::NO_REGION; }
+
 Domain RegionField::domain() const { return dim_dispatch(dim_, get_domain_fn{}, pr_); }
 
 void RegionField::unmap() { Runtime::get_runtime()->unmap_physical_region(pr_); }
 
-OutputRegionField::OutputRegionField(const OutputRegion& out, FieldID fid) : out_(out), fid_(fid) {}
+OutputRegionField::OutputRegionField(const OutputRegion& out, FieldID fid)
+  : out_(out),
+    fid_(fid),
+    num_elements_(
+      DeferredBuffer<size_t, 1>(Rect<1>(0, 0), find_memory_kind_for_executing_processor()))
+{
+}
 
 OutputRegionField::OutputRegionField(OutputRegionField&& other) noexcept
-  : bound_(other.bound_), out_(other.out_), fid_(other.fid_)
+  : bound_(other.bound_), out_(other.out_), fid_(other.fid_), num_elements_(other.num_elements_)
 {
-  other.bound_ = false;
-  other.out_   = OutputRegion();
-  other.fid_   = -1;
+  other.bound_        = false;
+  other.out_          = OutputRegion();
+  other.fid_          = -1;
+  other.num_elements_ = DeferredBuffer<size_t, 1>();
 }
 
 OutputRegionField& OutputRegionField::operator=(OutputRegionField&& other) noexcept
 {
-  bound_ = other.bound_;
-  out_   = other.out_;
-  fid_   = other.fid_;
+  bound_        = other.bound_;
+  out_          = other.out_;
+  fid_          = other.fid_;
+  num_elements_ = other.num_elements_;
 
-  other.bound_ = false;
-  other.out_   = OutputRegion();
-  other.fid_   = -1;
+  other.bound_        = false;
+  other.out_          = OutputRegion();
+  other.fid_          = -1;
+  other.num_elements_ = DeferredBuffer<size_t, 1>();
 
   return *this;
 }
 
+ReturnValue OutputRegionField::pack_weight() const
+{
+  return ReturnValue(num_elements_.ptr(0), sizeof(size_t));
+}
+
 FutureWrapper::FutureWrapper(
   bool read_only, int32_t field_size, Domain domain, Future future, bool initialize /*= false*/)
-  : read_only_(read_only),
-    field_size_(field_size),
-    domain_(domain),
-    future_(future),
-    uninitialized_(!initialize)
+  : read_only_(read_only), field_size_(field_size), domain_(domain), future_(future)
 {
   assert(field_size > 0);
   if (!read_only) {
@@ -101,44 +114,50 @@ FutureWrapper::FutureWrapper(const FutureWrapper& other) noexcept
     field_size_(other.field_size_),
     domain_(other.domain_),
     future_(other.future_),
-    buffer_(other.buffer_),
-    uninitialized_(other.uninitialized_),
-    rawptr_(other.rawptr_)
+    buffer_(other.buffer_)
 {
 }
 
 FutureWrapper& FutureWrapper::operator=(const FutureWrapper& other) noexcept
 {
-  read_only_     = other.read_only_;
-  field_size_    = other.field_size_;
-  domain_        = other.domain_;
-  future_        = other.future_;
-  buffer_        = other.buffer_;
-  uninitialized_ = other.uninitialized_;
-  rawptr_        = other.rawptr_;
+  read_only_  = other.read_only_;
+  field_size_ = other.field_size_;
+  domain_     = other.domain_;
+  future_     = other.future_;
+  buffer_     = other.buffer_;
   return *this;
 }
 
 Domain FutureWrapper::domain() const { return domain_; }
 
+void FutureWrapper::initialize_with_identity(int32_t redop_id)
+{
+  auto untyped_acc = AccessorWO<int8_t, 1>(buffer_, field_size_);
+  auto ptr         = untyped_acc.ptr(0);
+
+  auto redop = Legion::Runtime::get_reduction_op(redop_id);
+  assert(redop->sizeof_lhs == field_size_);
+  auto identity = redop->identity;
+  memcpy(ptr, identity, field_size_);
+}
+
 ReturnValue FutureWrapper::pack() const
 {
-  if (nullptr == rawptr_) {
-    fprintf(stderr, "Found an uninitialized Legate store\n");
-    assert(false);
-  }
-  return ReturnValue(rawptr_, field_size_);
+  auto untyped_acc = AccessorRO<int8_t, 1>(buffer_, field_size_);
+  auto ptr         = untyped_acc.ptr(0);
+  return ReturnValue(ptr, field_size_);
 }
 
 Store::Store(int32_t dim,
-             LegateTypeCode code,
+             int32_t code,
+             int32_t redop_id,
              FutureWrapper future,
              std::shared_ptr<StoreTransform> transform)
   : is_future_(true),
     is_output_store_(false),
     dim_(dim),
     code_(code),
-    redop_id_(-1),
+    redop_id_(redop_id),
     future_(future),
     transform_(std::move(transform)),
     readable_(true)
@@ -146,7 +165,7 @@ Store::Store(int32_t dim,
 }
 
 Store::Store(int32_t dim,
-             LegateTypeCode code,
+             int32_t code,
              int32_t redop_id,
              RegionField&& region_field,
              std::shared_ptr<StoreTransform> transform)
@@ -163,9 +182,7 @@ Store::Store(int32_t dim,
   reducible_ = region_field_.is_reducible();
 }
 
-Store::Store(LegateTypeCode code,
-             OutputRegionField&& output,
-             std::shared_ptr<StoreTransform> transform)
+Store::Store(int32_t code, OutputRegionField&& output, std::shared_ptr<StoreTransform> transform)
   : is_future_(false),
     is_output_store_(true),
     dim_(-1),
@@ -211,6 +228,8 @@ Store& Store::operator=(Store&& other) noexcept
   reducible_ = other.reducible_;
   return *this;
 }
+
+bool Store::valid() const { return is_future_ || is_output_store_ || region_field_.valid(); }
 
 Domain Store::domain() const
 {
