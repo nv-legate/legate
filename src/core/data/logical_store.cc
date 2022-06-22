@@ -301,6 +301,7 @@ std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
 void LogicalStore::pack(BufferBuilder& buffer) const
 {
   buffer.pack<bool>(scalar_);
+  buffer.pack<bool>(false);
   buffer.pack<int32_t>(dim());
   buffer.pack<int32_t>(code_);
   pack_transform(buffer);

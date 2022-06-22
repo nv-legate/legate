@@ -102,7 +102,7 @@ struct RegionFieldArg : public ArgWrapper {
 
 struct FutureStoreArg : public ArgWrapper {
  public:
-  FutureStoreArg(LogicalStore store, bool read_only);
+  FutureStoreArg(LogicalStore store, bool read_only, bool has_storage, Legion::ReductionOpID redop);
 
  public:
   virtual ~FutureStoreArg() {}
@@ -113,6 +113,8 @@ struct FutureStoreArg : public ArgWrapper {
  private:
   LogicalStore store_;
   bool read_only_;
+  bool has_storage_;
+  Legion::ReductionOpID redop_;
 };
 
 RequirementAnalyzer::~RequirementAnalyzer()
@@ -184,8 +186,11 @@ void RegionFieldArg::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(field_id_);
 }
 
-FutureStoreArg::FutureStoreArg(LogicalStore store, bool read_only)
-  : store_(std::move(store)), read_only_(read_only)
+FutureStoreArg::FutureStoreArg(LogicalStore store,
+                               bool read_only,
+                               bool has_storage,
+                               Legion::ReductionOpID redop)
+  : store_(std::move(store)), read_only_(read_only), has_storage_(has_storage), redop_(redop)
 {
 }
 
@@ -201,8 +206,9 @@ void FutureStoreArg::pack(BufferBuilder& buffer) const
 {
   store_.pack(buffer);
 
+  buffer.pack<int32_t>(redop_);
   buffer.pack<bool>(read_only_);
-  buffer.pack<bool>(true);
+  buffer.pack<bool>(has_storage_);
   buffer.pack<int32_t>(type_dispatch(store_.code(), datalen_fn{}));
   buffer.pack<size_t>(store_.extents());
 }
@@ -372,17 +378,19 @@ void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
                              Legion::PrivilegeMode privilege,
                              uint64_t tag)
 {
+  auto redop = nullptr != proj->redop ? *proj->redop : -1;
+
   if (store.scalar()) {
-    futures_.push_back(store.get_future());
-    auto read_only = privilege == READ_ONLY;
-    args.push_back(new FutureStoreArg(std::move(store), read_only));
+    auto has_storage = privilege != WRITE_ONLY;
+    auto read_only   = privilege == READ_ONLY;
+    if (has_storage) futures_.push_back(store.get_future());
+    args.push_back(new FutureStoreArg(std::move(store), read_only, has_storage, redop));
   } else {
     auto storage  = store.get_storage();
     auto region   = storage->region();
     auto field_id = storage->field_id();
 
-    auto redop = nullptr != proj->redop ? *proj->redop : -1;
-    auto req   = new RegionReq(region, privilege, std::move(proj), tag);
+    auto req = new RegionReq(region, privilege, std::move(proj), tag);
 
     req_analyzer_->insert(req, field_id);
     args.push_back(
@@ -402,6 +410,9 @@ Legion::TaskLauncher* TaskLauncher::build_single_task()
   pack_args(outputs_);
   pack_args(reductions_);
   pack_args(scalars_);
+  buffer_->pack<bool>(false);
+  buffer_->pack<bool>(false);
+  buffer_->pack<uint32_t>(0);
 
   auto single_task = new Legion::TaskLauncher(legion_task_id(),
                                               buffer_->to_legion_buffer(),
@@ -421,6 +432,9 @@ Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& 
   pack_args(outputs_);
   pack_args(reductions_);
   pack_args(scalars_);
+  buffer_->pack<bool>(false);
+  buffer_->pack<bool>(false);
+  buffer_->pack<uint32_t>(0);
 
   auto index_task = new Legion::IndexTaskLauncher(legion_task_id(),
                                                   launch_domain,
