@@ -29,6 +29,10 @@ typedef enum legate_core_task_id_t {
   LEGATE_CORE_INIT_NCCL_ID_TASK_ID,
   LEGATE_CORE_INIT_NCCL_TASK_ID,
   LEGATE_CORE_FINALIZE_NCCL_TASK_ID,
+  LEGATE_CORE_INIT_CPUCOLL_ID_TASK_ID,
+  LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID,
+  LEGATE_CORE_INIT_CPUCOLL_TASK_ID,
+  LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID,
   LEGATE_CORE_NUM_TASK_IDS,  // must be last
 } legate_core_task_id_t;
 
@@ -53,6 +57,8 @@ typedef enum legate_core_tunable_t {
   LEGATE_CORE_TUNABLE_NUM_PIECES,
   LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME,
   LEGATE_CORE_TUNABLE_WINDOW_SIZE,
+  LEGATE_CORE_TUNABLE_MAX_PENDING_EXCEPTIONS,
+  LEGATE_CORE_TUNABLE_PRECISE_EXCEPTION_TRACE,
   LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE,
   LEGATE_CORE_TUNABLE_FIELD_REUSE_FREQUENCY,
   LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER,
@@ -99,6 +105,11 @@ typedef enum legate_core_mapping_tag_t {
   LEGATE_CORE_TREE_REDUCE_TAG            = 3,
 } legate_core_mapping_tag_t;
 
+typedef enum legate_core_reduction_op_id_t {
+  LEGATE_CORE_JOIN_EXCEPTION_OP   = 0,
+  LEGATE_CORE_MAX_REDUCTION_OP_ID = 1,
+} legate_core_reduction_op_id_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -115,6 +126,8 @@ void legate_create_sharding_functor_using_projection(legion_sharding_id_t, legio
 
 // TODO: the return type should be legion_point_transform_functor_t
 void* legate_linearizing_point_transform_functor();
+
+void legate_cpucoll_finalize(void);
 
 #ifdef __cplusplus
 }

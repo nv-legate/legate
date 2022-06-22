@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright 2021-2022 NVIDIA Corporation
 #
@@ -109,7 +109,16 @@ def find_active_python_version_and_path():
         + str(sys.version_info.micro)
     )
     cv = sysconfig.get_config_vars()
-    paths = [os.path.join(cv[p], cv["LDLIBRARY"]) for p in ("LIBDIR", "LIBPL")]
+    # Homebrew or pkg mgr installations may give bad values for LDLIBRARY.
+    # Uses a fallback default path in case LDLIBRARY fails.
+    default_libname = "libpython" + cv["LDVERSION"] + ".a"
+    libdirs = [cv["LIBDIR"], cv["LIBPL"]]
+    libnames = [cv["LDLIBRARY"], default_libname]
+    paths = [
+        os.path.join(libdir, libname)
+        for libdir in libdirs
+        for libname in libnames
+    ]
     # ensure that static libraries are replaced with the dynamic version
     paths = [
         os.path.splitext(p)[0] + (".dylib" if os_name == "Darwin" else ".so")
@@ -421,14 +430,12 @@ calls into NCCL either directly or through some other Legate library.
             + setup_py_flags,
             cwd=legion_python_dir,
         )
-    verbose_check_call(
-        [
-            "cp",
-            "legion_c_util.h",
-            os.path.join(install_dir, "include", "legion", "legion_c_util.h"),
-        ],
-        cwd=os.path.join(legion_src_dir, "runtime", "legion"),
-    )
+    src = os.path.join(legion_src_dir, "runtime", "legion", "legion_c_util.h")
+    dst = os.path.join(install_dir, "include", "legion", "legion_c_util.h")
+    if not os.path.exists(dst) or os.path.getmtime(dst) < os.path.getmtime(
+        src
+    ):
+        verbose_check_call(["cp", src, dst])
     verbose_check_call(
         [
             "cp",

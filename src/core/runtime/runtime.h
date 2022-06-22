@@ -23,6 +23,7 @@
 #include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/runtime/context.h"
+#include "core/task/exception.h"
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
@@ -40,6 +41,7 @@ class Core {
                             Legion::Context ctx,
                             Legion::Runtime* runtime,
                             const char* task_name);
+  static void report_unexpected_exception(const char* task_name, const legate::TaskException& e);
 
  public:
   // Configuration settings

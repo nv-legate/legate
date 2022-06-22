@@ -25,6 +25,7 @@
 #include "core/runtime/context.h"
 #include "core/runtime/projection.h"
 #include "core/runtime/shard.h"
+#include "core/task/exception.h"
 #include "core/utilities/deserializer.h"
 #include "legate.h"
 
@@ -144,6 +145,18 @@ static ReturnValues extract_scalar_task(const Legion::Task* task,
                    exec_proc.id);
 }
 
+/*static*/ void Core::report_unexpected_exception(const char* task_name,
+                                                  const legate::TaskException& e)
+{
+  log_legate.error(
+    "Task %s threw an exception \"%s\", but the task did not declare any exception. "
+    "Please specify a Python exception that you want this exception to be re-thrown with "
+    "using 'throws_exception'.",
+    task_name,
+    e.error_message().c_str());
+  LEGATE_ABORT;
+}
+
 void register_legate_core_tasks(Machine machine,
                                 Legion::Runtime* runtime,
                                 const LibraryContext& context)
@@ -185,6 +198,9 @@ void register_legate_core_tasks(Machine machine,
   comm::register_tasks(machine, runtime, context);
 }
 
+extern void register_exception_reduction_op(Legion::Runtime* runtime,
+                                            const LibraryContext& context);
+
 /*static*/ void core_library_registration_callback(Machine machine,
                                                    Legion::Runtime* legion_runtime,
                                                    const std::set<Processor>& local_procs)
@@ -195,7 +211,9 @@ void register_legate_core_tasks(Machine machine,
   config.max_tasks       = LEGATE_CORE_NUM_TASK_IDS;
   config.max_projections = LEGATE_CORE_MAX_FUNCTOR_ID;
   // We register one sharding functor for each new projection functor
-  config.max_shardings = LEGATE_CORE_MAX_FUNCTOR_ID;
+  config.max_shardings     = LEGATE_CORE_MAX_FUNCTOR_ID;
+  config.max_reduction_ops = LEGATE_CORE_MAX_REDUCTION_OP_ID;
+  LibraryContext context(legion_runtime, core_library_name, config);
 
   auto runtime  = Runtime::get_runtime();
   auto core_lib = runtime->create_library(core_library_name, config);
@@ -203,6 +221,8 @@ void register_legate_core_tasks(Machine machine,
   register_legate_core_tasks(machine, legion_runtime, *core_lib);
 
   register_legate_core_mapper(machine, legion_runtime, *core_lib);
+
+  register_exception_reduction_op(legion_runtime, context);
 
   register_legate_core_projection_functors(legion_runtime, *core_lib);
 

@@ -182,6 +182,7 @@ class OutputRegionField {
  public:
   template <typename T, int32_t DIM>
   void return_data(Buffer<T, DIM>& buffer, const Legion::Point<DIM>& extents);
+  void make_empty(int32_t dim);
 
  public:
   ReturnValue pack_weight() const;
@@ -266,7 +267,8 @@ class Store {
         int32_t redop_id,
         RegionField&& region_field,
         std::shared_ptr<StoreTransform> transform = nullptr);
-  Store(int32_t code,
+  Store(int32_t dim,
+        int32_t code,
         OutputRegionField&& output,
         std::shared_ptr<StoreTransform> transform = nullptr);
 
@@ -335,6 +337,7 @@ class Store {
  public:
   template <typename T, int32_t DIM>
   void return_data(Buffer<T, DIM>& buffer, const Legion::Point<DIM>& extents);
+  void make_empty();
 
  public:
   bool is_future() const { return is_future_; }

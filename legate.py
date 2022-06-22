@@ -23,13 +23,6 @@ import shlex
 import subprocess
 import sys
 
-_version = sys.version_info.major
-
-try:
-    _input = raw_input  # Python 2.x:
-except NameError:
-    _input = input  # Python 3.x:
-
 os_name = platform.system()
 
 if os_name == "Linux":
@@ -193,6 +186,9 @@ def run_legate(
     # If using NCCL prefer parallel launch mode over cooperative groups, as the
     # former plays better with Realm.
     cmd_env["NCCL_LAUNCH_MODE"] = "PARALLEL"
+    # Make sure GASNet initializes MPI with the right level of
+    # threading support
+    cmd_env["GASNET_MPI_THREAD"] = "MPI_THREAD_MULTIPLE"
     # Set some environment variables depending on our configuration that we
     # will check in the Legate binary to ensure that it is properly configured
     # Always make sure we include the Legion library
