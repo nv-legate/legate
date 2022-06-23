@@ -738,15 +738,25 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(IndexTaskLauncher* launcher)
   return nullptr;
 }
 
-Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const tuple<int32_t>& dims)
+Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::SymbolicPoint& point)
 {
-  ProjectionDesc key(src_ndim, dims.data());
+  ProjectionDesc key(src_ndim, point);
   auto finder = registered_projections_.find(key);
   if (registered_projections_.end() != finder) return finder->second;
 
   auto proj_id = core_context_->get_projection_id(next_projection_id_++);
+
+  auto ndim = point.size();
+  std::vector<int32_t> dims;
+  std::vector<int32_t> weights;
+  std::vector<int32_t> offsets;
+  for (auto& expr : point.data()) {
+    dims.push_back(expr.dim());
+    weights.push_back(expr.weight());
+    offsets.push_back(expr.offset());
+  }
   legate_register_affine_projection_functor(
-    src_ndim, static_cast<int32_t>(dims.size()), key.second.data(), nullptr, nullptr, proj_id);
+    src_ndim, ndim, dims.data(), weights.data(), offsets.data(), proj_id);
   registered_projections_[key] = proj_id;
 
   return proj_id;

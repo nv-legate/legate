@@ -100,7 +100,7 @@ class LogicalStore {
 
  private:
   std::unique_ptr<Partition> invert_partition(const Partition* partition) const;
-  void invert_dimensions(tuple<int32_t>& dims) const;
+  proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const;
   Legion::ProjectionID compute_projection() const;
 
  public:
@@ -246,27 +246,27 @@ std::unique_ptr<Partition> LogicalStore::invert_partition(const Partition* parti
   return nullptr;
 }
 
-void LogicalStore::invert_dimensions(tuple<int32_t>& dims) const
+proj::SymbolicPoint LogicalStore::invert(const proj::SymbolicPoint& point) const
 {
-  if (nullptr == parent_) return;
-  transform_->invert_dimensions(dims);
-  parent_->invert_dimensions(dims);
+  if (nullptr == parent_) return point;
+  return parent_->invert(transform_->invert(point));
 }
 
 Legion::ProjectionID LogicalStore::compute_projection() const
 {
   auto ndim = dim();
-  auto dims = from_range(ndim);
-  invert_dimensions(dims);
+  std::vector<proj::SymbolicExpr> exprs;
+  for (int32_t dim = 0; dim < ndim; ++dim) exprs.push_back(proj::SymbolicExpr(dim));
+  auto point = invert(proj::SymbolicPoint(std::move(exprs)));
 
-  bool identity_mapping = dims.size() == ndim;
-  for (int32_t dim = 0; dim < ndim && identity_mapping; ++dim)
-    if (dims[dim] != dim) identity_mapping = false;
+  bool identity_mapping = true;
+  for (int32_t dim = 0; dim < ndim; ++dim)
+    identity_mapping = identity_mapping && point[dim].is_identity(dim);
 
   if (identity_mapping)
     return 0;
   else
-    return runtime_->get_projection(ndim, dims);
+    return runtime_->get_projection(ndim, point);
 }
 
 std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)

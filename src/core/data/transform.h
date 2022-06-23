@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "core/utilities/tuple.h"
+#include "core/runtime/projection.h"
 #include "legion.h"
 
 namespace legate {
@@ -36,7 +36,7 @@ class StoreTransform {
   virtual Legion::Domain transform(const Legion::Domain& input) const                   = 0;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const         = 0;
   virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const = 0;
-  virtual void invert_dimensions(tuple<int32_t>& dims) const                            = 0;
+  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const            = 0;
   virtual void pack(BufferBuilder& buffer) const                                        = 0;
   virtual void print(std::ostream& out) const                                           = 0;
 
@@ -55,7 +55,7 @@ class Shift : public StoreTransform {
   virtual Legion::Domain transform(const Legion::Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
-  virtual void invert_dimensions(tuple<int32_t>& dims) const override;
+  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -73,7 +73,7 @@ class Promote : public StoreTransform {
   virtual Legion::Domain transform(const Legion::Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
-  virtual void invert_dimensions(tuple<int32_t>& dims) const override;
+  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -91,7 +91,7 @@ class Project : public StoreTransform {
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
-  virtual void invert_dimensions(tuple<int32_t>& dims) const override;
+  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -109,12 +109,13 @@ class Transpose : public StoreTransform {
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
-  virtual void invert_dimensions(tuple<int32_t>& dims) const override;
+  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
  private:
   std::vector<int32_t> axes_;
+  std::vector<int32_t> inverse_;
 };
 
 class Delinearize : public StoreTransform {
@@ -128,7 +129,7 @@ class Delinearize : public StoreTransform {
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
-  virtual void invert_dimensions(tuple<int32_t>& dims) const override;
+  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 

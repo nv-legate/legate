@@ -87,6 +87,7 @@ INSTALL_HEADERS = legate.h                        \
 									core/partitioning/constraint.h  \
 									core/runtime/context.h          \
 									core/runtime/operation.h        \
+									core/runtime/projection.h       \
 									core/runtime/runtime.h          \
 									core/runtime/runtime.inl        \
 									core/task/exception.h           \

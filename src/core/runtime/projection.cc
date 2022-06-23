@@ -27,6 +27,67 @@ using namespace Legion;
 
 namespace legate {
 
+namespace proj {
+
+SymbolicExpr::SymbolicExpr(int32_t dim, int32_t weight, int32_t offset)
+  : dim_(dim), weight_(weight), offset_(offset)
+{
+}
+
+bool SymbolicExpr::is_identity(int32_t dim) const
+{
+  return dim_ == dim && weight_ == 1 && offset_ == 0;
+}
+
+bool SymbolicExpr::operator==(const SymbolicExpr& other) const
+{
+  return dim_ == other.dim_ && weight_ == other.weight_ && offset_ == other.offset_;
+}
+
+bool SymbolicExpr::operator<(const SymbolicExpr& other) const
+{
+  if (dim_ < other.dim_)
+    return true;
+  else if (dim_ > other.dim_)
+    return false;
+  if (weight_ < other.weight_)
+    return true;
+  else if (weight_ > other.weight_)
+    return false;
+  if (offset_ < other.offset_) return true;
+  return false;
+}
+
+SymbolicExpr SymbolicExpr::operator*(int32_t other) const
+{
+  return SymbolicExpr(dim_, weight_ * other, offset_ * other);
+}
+
+SymbolicExpr SymbolicExpr::operator+(int32_t other) const
+{
+  return SymbolicExpr(dim_, weight_, offset_ + other);
+}
+
+std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
+{
+  auto weight = expr.weight();
+  auto offset = expr.offset();
+
+  if (weight != 0) {
+    if (weight != 1) out << weight << "*";
+    out << "COORD" << expr.dim();
+  }
+  if (offset != 0) {
+    if (offset > 0)
+      out << "+" << offset;
+    else
+      out << "-" << -offset;
+  }
+  return out;
+}
+
+}  // namespace proj
+
 class DelinearizationFunctor : public ProjectionFunctor {
  public:
   DelinearizationFunctor(Runtime* runtime);

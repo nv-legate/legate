@@ -58,6 +58,18 @@ T& tuple<T>::operator[](uint32_t idx)
 }
 
 template <typename T>
+bool tuple<T>::operator==(const tuple& other) const
+{
+  return data_ == other.data_;
+}
+
+template <typename T>
+bool tuple<T>::operator<(const tuple& other) const
+{
+  return data_ < other.data_;
+}
+
+template <typename T>
 bool tuple<T>::empty() const
 {
   return data_.empty();

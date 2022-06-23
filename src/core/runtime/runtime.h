@@ -135,7 +135,7 @@ class Runtime {
   std::shared_ptr<LogicalStore> dispatch(Legion::IndexTaskLauncher* launcher);
 
  public:
-  Legion::ProjectionID get_projection(int32_t src_ndim, const tuple<int32_t>& dims);
+  Legion::ProjectionID get_projection(int32_t src_ndim, const proj::SymbolicPoint& point);
 
  private:
   void schedule(std::vector<std::unique_ptr<Operation>> operations);
@@ -163,7 +163,7 @@ class Runtime {
   std::map<Legion::Domain, Legion::IndexSpace> index_spaces_;
 
  private:
-  using ProjectionDesc = std::pair<int32_t, std::vector<int32_t>>;
+  using ProjectionDesc = std::pair<int32_t, proj::SymbolicPoint>;
   int64_t next_projection_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
   std::map<ProjectionDesc, Legion::ProjectionID> registered_projections_;
 

@@ -37,14 +37,18 @@ class tuple {
   tuple(size_t size, T init);
 
  public:
-  tuple(const tuple&) = default;
-  tuple(tuple&&)      = default;
+  tuple(const tuple&)            = default;
+  tuple(tuple&&)                 = default;
   tuple& operator=(const tuple&) = default;
-  tuple& operator=(tuple&&) = default;
+  tuple& operator=(tuple&&)      = default;
 
  public:
   const T& operator[](uint32_t idx) const;
   T& operator[](uint32_t idx);
+
+ public:
+  bool operator==(const tuple& other) const;
+  bool operator<(const tuple& other) const;
 
  public:
   bool empty() const;

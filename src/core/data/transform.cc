@@ -88,7 +88,8 @@ std::unique_ptr<Partition> Shift::invert_partition(const Partition* partition) c
   return nullptr;
 }
 
-void Shift::invert_dimensions(tuple<int32_t>& dims) const {}
+// the shift transform makes no change on the store's dimensions
+proj::SymbolicPoint Shift::invert(const proj::SymbolicPoint& point) const { return point; }
 
 void Shift::pack(BufferBuilder& buffer) const
 {
@@ -184,7 +185,10 @@ std::unique_ptr<Partition> Promote::invert_partition(const Partition* partition)
   return nullptr;
 }
 
-void Promote::invert_dimensions(tuple<int32_t>& dims) const { dims.remove_inplace(extra_dim_); }
+proj::SymbolicPoint Promote::invert(const proj::SymbolicPoint& point) const
+{
+  return point.remove(extra_dim_);
+}
 
 void Promote::pack(BufferBuilder& buffer) const
 {
@@ -266,7 +270,10 @@ std::unique_ptr<Partition> Project::invert_partition(const Partition* partition)
   return nullptr;
 }
 
-void Project::invert_dimensions(tuple<int32_t>& dims) const {}
+proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
+{
+  return point.insert(dim_, proj::SymbolicExpr());
+}
 
 void Project::pack(BufferBuilder& buffer) const
 {
@@ -289,6 +296,11 @@ void Project::print(std::ostream& out) const
 Transpose::Transpose(std::vector<int32_t>&& axes, StoreTransformP parent)
   : StoreTransform(std::forward<StoreTransformP>(parent)), axes_(std::move(axes))
 {
+  inverse_.resize(axes_.size());
+  std::iota(inverse_.begin(), inverse_.end(), 0);
+  std::sort(inverse_.begin(), inverse_.end(), [&](const int32_t& idx1, const int32_t& idx2) {
+    return axes_[idx1] < axes_[idx2];
+  });
 }
 
 Domain Transpose::transform(const Domain& input) const
@@ -337,7 +349,16 @@ std::unique_ptr<Partition> Transpose::invert_partition(const Partition* partitio
   return nullptr;
 }
 
-void Transpose::invert_dimensions(tuple<int32_t>& dims) const {}
+proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
+{
+  std::vector<proj::SymbolicExpr> exprs;
+  std::transform(
+    point.data().begin(), point.data().end(), exprs.end(), [&](const proj::SymbolicExpr& expr) {
+      auto dim = inverse_[expr.dim()];
+      return proj::SymbolicExpr(dim, expr.weight(), expr.offset());
+    });
+  return proj::SymbolicPoint(std::move(exprs));
+}
 
 namespace {  // anonymous
 template <typename T>
@@ -452,7 +473,13 @@ std::unique_ptr<Partition> Delinearize::invert_partition(const Partition* partit
   return nullptr;
 }
 
-void Delinearize::invert_dimensions(tuple<int32_t>& dims) const {}
+proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
+{
+  std::vector<proj::SymbolicExpr> exprs;
+  for (int32_t dim = 0; dim < dim_ + 1; ++dim) exprs.push_back(point[dim]);
+  for (int32_t dim = dim_ + sizes_.size(); dim < point.size(); ++dim) exprs.push_back(point[dim]);
+  return proj::SymbolicPoint(std::move(exprs));
+}
 
 void Delinearize::pack(BufferBuilder& buffer) const
 {

@@ -19,8 +19,44 @@
 #include "legion.h"
 
 #include "core/runtime/context.h"
+#include "core/utilities/tuple.h"
 
 namespace legate {
+
+namespace proj {
+
+class SymbolicExpr {
+ public:
+  SymbolicExpr(int32_t dim = -1, int32_t weight = 1, int32_t offset = 0);
+
+ public:
+  int32_t dim() const { return dim_; }
+  int32_t weight() const { return weight_; }
+  int32_t offset() const { return offset_; }
+
+ public:
+  bool is_identity(int32_t dim) const;
+
+ public:
+  bool operator==(const SymbolicExpr& other) const;
+  bool operator<(const SymbolicExpr& other) const;
+
+ public:
+  SymbolicExpr operator*(int32_t other) const;
+  SymbolicExpr operator+(int32_t other) const;
+
+ private:
+  int32_t dim_{-1};
+  int32_t weight_{1};
+  int32_t offset_{0};
+};
+
+std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
+
+using SymbolicPoint   = tuple<SymbolicExpr>;
+using SymbolicFunctor = SymbolicPoint (*)(const SymbolicPoint&);
+
+}  // namespace proj
 
 // Interface for Legate projection functors
 class LegateProjectionFunctor : public Legion::ProjectionFunctor {
