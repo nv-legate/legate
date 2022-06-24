@@ -51,7 +51,7 @@ class Projection {
   void set_reduction_op(Legion::ReductionOpID redop);
 
  public:
-  std::unique_ptr<Legion::ReductionOpID> redop{nullptr};
+  Legion::ReductionOpID redop{-1};
 };
 
 class Replicate : public Projection {
