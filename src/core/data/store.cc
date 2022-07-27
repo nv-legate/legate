@@ -161,14 +161,14 @@ Store::Store(int32_t dim,
              int32_t code,
              int32_t redop_id,
              FutureWrapper future,
-             std::shared_ptr<StoreTransform> transform)
+             std::shared_ptr<TransformStack>&& transform)
   : is_future_(true),
     is_output_store_(false),
     dim_(dim),
     code_(code),
     redop_id_(redop_id),
     future_(future),
-    transform_(std::move(transform)),
+    transform_(std::forward<decltype(transform)>(transform)),
     readable_(true)
 {
 }
@@ -177,14 +177,14 @@ Store::Store(int32_t dim,
              int32_t code,
              int32_t redop_id,
              RegionField&& region_field,
-             std::shared_ptr<StoreTransform> transform)
+             std::shared_ptr<TransformStack>&& transform)
   : is_future_(false),
     is_output_store_(false),
     dim_(dim),
     code_(code),
     redop_id_(redop_id),
     region_field_(std::forward<RegionField>(region_field)),
-    transform_(std::move(transform))
+    transform_(std::forward<decltype(transform)>(transform))
 {
   readable_  = region_field_.is_readable();
   writable_  = region_field_.is_writable();
@@ -194,14 +194,14 @@ Store::Store(int32_t dim,
 Store::Store(int32_t dim,
              int32_t code,
              OutputRegionField&& output,
-             std::shared_ptr<StoreTransform> transform)
+             std::shared_ptr<TransformStack>&& transform)
   : is_future_(false),
     is_output_store_(true),
     dim_(dim),
     code_(code),
     redop_id_(-1),
     output_field_(std::forward<OutputRegionField>(output)),
-    transform_(std::move(transform))
+    transform_(std::forward<decltype(transform)>(transform))
 {
 }
 
@@ -262,6 +262,14 @@ void Store::make_empty()
 {
   assert(is_output_store_);
   output_field_.make_empty(dim_);
+}
+
+void Store::remove_transform()
+{
+  assert(is_transformed());
+  auto result = transform_->pop();
+  if (transform_->empty()) transform_ = nullptr;
+  dim_ = result->target_ndim(dim_);
 }
 
 }  // namespace legate
