@@ -35,8 +35,10 @@ GEN_CPU_SRC	= core/legate_c.cc                      \
 							core/partitioning/partitioner.cc      \
 							core/runtime/context.cc               \
 							core/runtime/launcher.cc              \
+							core/runtime/launcher_arg.cc          \
 							core/runtime/operation.cc             \
 							core/runtime/projection.cc            \
+							core/runtime/req_analyzer.cc          \
 							core/runtime/runtime.cc               \
 							core/runtime/shard.cc                 \
 							core/task/return.cc                   \
