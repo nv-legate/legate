@@ -53,7 +53,7 @@ class LogicalStore {
                LegateTypeCode code,
                tuple<size_t> extents,
                std::shared_ptr<LogicalStore> parent,
-               std::shared_ptr<StoreTransform> transform);
+               std::shared_ptr<TransformStack> transform);
   LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
 
  public:
@@ -117,7 +117,7 @@ class LogicalStore {
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};
   Legion::Future future_{};
   std::shared_ptr<LogicalStore> parent_{nullptr};
-  std::shared_ptr<StoreTransform> transform_{nullptr};
+  std::shared_ptr<TransformStack> transform_{nullptr};
   std::shared_ptr<Store> mapped_{nullptr};
 };
 
@@ -125,7 +125,7 @@ LogicalStore::LogicalStore(Runtime* runtime,
                            LegateTypeCode code,
                            tuple<size_t> extents,
                            std::shared_ptr<LogicalStore> parent,
-                           std::shared_ptr<StoreTransform> transform)
+                           std::shared_ptr<TransformStack> transform)
   : runtime_(runtime),
     code_(code),
     extents_(std::move(extents)),
@@ -207,7 +207,14 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
   }
 
   auto new_extents = extents_.insert(extra_dim, dim_size);
-  auto transform   = std::make_shared<Promote>(extra_dim, dim_size);
+  // TODO: Move this push operation to TransformStack.
+  //       Two prerequisites:
+  //         1) make members of TransformStack read only (i.e., by adding const)
+  //         2) make TransformStack inherit std::enable_shared_from_this.
+  //       Then we can add a const push method to TransformStack that returns
+  //       a fresh shared_ptr of TransformStack with a transform put on top.
+  auto transform =
+    std::make_shared<TransformStack>(std::make_unique<Promote>(extra_dim, dim_size), transform_);
   return std::make_shared<LogicalStore>(
     runtime_, code_, std::move(new_extents), std::move(parent), std::move(transform));
 }
@@ -304,7 +311,8 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(false);
   buffer.pack<int32_t>(dim());
   buffer.pack<int32_t>(code_);
-  pack_transform(buffer);
+  if (transform_ != nullptr) transform_->pack(buffer);
+  buffer.pack<int32_t>(-1);
 }
 
 void LogicalStore::pack_transform(BufferBuilder& buffer) const
@@ -325,7 +333,7 @@ LogicalStore::LogicalStore(Runtime* runtime,
                            LegateTypeCode code,
                            tuple<size_t> extents,
                            LogicalStore parent, /* = LogicalStore() */
-                           std::shared_ptr<StoreTransform> transform /*= nullptr*/)
+                           std::shared_ptr<TransformStack> transform /*= nullptr*/)
   : impl_(std::make_shared<detail::LogicalStore>(
       runtime, code, std::move(extents), parent.impl_, std::move(transform)))
 {

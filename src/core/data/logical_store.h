@@ -44,7 +44,7 @@ class LogicalRegionField {
   LogicalRegionField(Runtime* runtime, const Legion::LogicalRegion& lr, Legion::FieldID fid);
 
  public:
-  LogicalRegionField(const LogicalRegionField& other) = default;
+  LogicalRegionField(const LogicalRegionField& other)            = default;
   LogicalRegionField& operator=(const LogicalRegionField& other) = default;
 
  public:
@@ -68,7 +68,7 @@ class LogicalStore {
                LegateTypeCode code,
                tuple<size_t> extents,
                LogicalStore parent                       = LogicalStore(),
-               std::shared_ptr<StoreTransform> transform = nullptr);
+               std::shared_ptr<TransformStack> transform = nullptr);
   // Creates a read-only store from a scalar
   LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
 
@@ -76,11 +76,11 @@ class LogicalStore {
   LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
 
  public:
-  LogicalStore(const LogicalStore& other) = default;
+  LogicalStore(const LogicalStore& other)            = default;
   LogicalStore& operator=(const LogicalStore& other) = default;
 
  public:
-  LogicalStore(LogicalStore&& other) = default;
+  LogicalStore(LogicalStore&& other)            = default;
   LogicalStore& operator=(LogicalStore&& other) = default;
 
  public:

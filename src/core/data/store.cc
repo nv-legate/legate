@@ -205,6 +205,24 @@ Store::Store(int32_t dim,
 {
 }
 
+Store::Store(int32_t dim,
+             int32_t code,
+             int32_t redop_id,
+             RegionField&& region_field,
+             const std::shared_ptr<TransformStack>& transform)
+  : is_future_(false),
+    is_output_store_(false),
+    dim_(dim),
+    code_(code),
+    redop_id_(redop_id),
+    region_field_(std::forward<RegionField>(region_field)),
+    transform_(transform)
+{
+  readable_  = region_field_.is_readable();
+  writable_  = region_field_.is_writable();
+  reducible_ = region_field_.is_reducible();
+}
+
 Store::Store(Store&& other) noexcept
   : is_future_(other.is_future_),
     is_output_store_(other.is_output_store_),

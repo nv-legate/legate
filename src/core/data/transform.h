@@ -42,6 +42,9 @@ struct StoreTransform : public Transform {
 
 struct TransformStack : public Transform {
  public:
+  // TODO: this constructor will be gone once we move the push method to this class
+  TransformStack(std::unique_ptr<StoreTransform>&& transform,
+                 const std::shared_ptr<TransformStack>& parent);
   TransformStack(std::unique_ptr<StoreTransform>&& transform,
                  std::shared_ptr<TransformStack>&& parent);
 

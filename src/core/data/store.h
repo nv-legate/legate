@@ -271,6 +271,11 @@ class Store {
         int32_t code,
         OutputRegionField&& output,
         std::shared_ptr<TransformStack>&& transform = nullptr);
+  Store(int32_t dim,
+        int32_t code,
+        int32_t redop_id,
+        RegionField&& region_field,
+        const std::shared_ptr<TransformStack>& transform);
 
  public:
   Store(Store&& other) noexcept;

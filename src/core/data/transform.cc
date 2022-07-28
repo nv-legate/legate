@@ -34,10 +34,34 @@ DomainAffineTransform combine(const DomainAffineTransform& lhs, const DomainAffi
 }
 
 TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
+                               const std::shared_ptr<TransformStack>& parent)
+  : transform_(std::forward<decltype(transform)>(transform)), parent_(parent)
+{
+}
+
+TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
                                std::shared_ptr<TransformStack>&& parent)
   : transform_(std::forward<decltype(transform)>(transform)),
     parent_(std::forward<decltype(parent)>(parent))
 {
+}
+
+std::unique_ptr<Partition> TransformStack::invert_partition(const Partition* partition) const
+{
+  auto result = transform_->invert_partition(partition);
+  return parent_ != nullptr ? parent_->invert_partition(result.get()) : std::move(result);
+}
+
+proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) const
+{
+  auto result = transform_->invert(point);
+  return parent_ != nullptr ? parent_->invert(result) : result;
+}
+
+void TransformStack::pack(BufferBuilder& buffer) const
+{
+  transform_->pack(buffer);
+  if (parent_ != nullptr) parent_->pack(buffer);
 }
 
 Legion::Domain TransformStack::transform(const Legion::Domain& input) const
