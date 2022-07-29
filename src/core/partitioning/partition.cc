@@ -19,6 +19,7 @@
 #include "core/data/logical_store.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
+#include "core/runtime/req_analyzer.h"
 #include "core/runtime/runtime.h"
 
 namespace legate {
@@ -56,7 +57,7 @@ Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region,
 
 std::unique_ptr<Projection> NoPartition::get_projection(LogicalStore store) const
 {
-  return std::make_unique<Replicate>();
+  return std::make_unique<Projection>();
 }
 
 bool NoPartition::has_launch_domain() const { return false; }

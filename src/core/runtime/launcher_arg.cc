@@ -29,26 +29,24 @@ void UntypedScalarArg::pack(BufferBuilder& buffer) const
 
 RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
                                LogicalStore store,
-                               int32_t dim,
-                               RegionReq* req,
                                Legion::FieldID field_id,
-                               Legion::ReductionOpID redop)
+                               Legion::PrivilegeMode privilege,
+                               const ProjectionInfo* proj_info)
   : analyzer_(analyzer),
     store_(std::move(store)),
-    dim_(dim),
-    req_(req),
+    region_(store_.get_storage()->region()),
     field_id_(field_id),
-    redop_(redop)
+    privilege_(privilege),
+    proj_info_(proj_info)
 {
 }
 
 void RegionFieldArg::pack(BufferBuilder& buffer) const
 {
   store_.pack(buffer);
-
-  buffer.pack<int32_t>(redop_);
-  buffer.pack<int32_t>(dim_);
-  buffer.pack<uint32_t>(analyzer_->get_requirement_index(req_, field_id_));
+  buffer.pack<int32_t>(proj_info_->redop);
+  buffer.pack<int32_t>(region_.get_dim());
+  buffer.pack<uint32_t>(analyzer_->get_requirement_index(region_, privilege_, proj_info_));
   buffer.pack<uint32_t>(field_id_);
 }
 

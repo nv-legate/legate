@@ -19,7 +19,7 @@
 #include "core/data/logical_store.h"
 #include "core/data/store.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/launcher.h"
+#include "core/runtime/req_analyzer.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"
@@ -278,7 +278,7 @@ Legion::ProjectionID LogicalStore::compute_projection() const
 
 std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
 {
-  if (scalar_) return std::make_unique<Replicate>();
+  if (scalar_) return std::make_unique<Projection>();
 
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
@@ -288,7 +288,7 @@ std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partiti
   auto lr = get_storage()->region();
   auto lp =
     inverted->construct(lr, inverted->is_disjoint_for(nullptr), inverted->is_complete_for(nullptr));
-  return std::make_unique<MapPartition>(lp, proj);
+  return std::make_unique<Projection>(lp, proj);
 }
 
 std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()

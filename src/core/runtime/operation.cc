@@ -25,6 +25,7 @@
 #include "core/runtime/context.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/operation.h"
+#include "core/runtime/req_analyzer.h"
 #include "core/runtime/runtime.h"
 
 namespace legate {
@@ -41,9 +42,7 @@ Operation::Operation(Runtime* runtime,
 {
 }
 
-Operation::~Operation()
-{
-}
+Operation::~Operation() {}
 
 void Operation::add_input(LogicalStore store, std::shared_ptr<Variable> partition)
 {
@@ -96,9 +95,7 @@ Task::Task(Runtime* runtime,
 {
 }
 
-Task::~Task()
-{
-}
+Task::~Task() {}
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 

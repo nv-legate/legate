@@ -49,7 +49,7 @@ class LogicalRegionField {
 
  public:
   int32_t dim() const;
-  Legion::LogicalRegion region() const { return lr_; }
+  const Legion::LogicalRegion& region() const { return lr_; }
   Legion::FieldID field_id() const { return fid_; }
 
  public:

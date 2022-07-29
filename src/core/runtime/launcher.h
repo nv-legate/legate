@@ -26,95 +26,12 @@ class ArgWrapper;
 class BufferBuilder;
 class LibraryContext;
 class LogicalStore;
-class RegionReq;
+class Projection;
 class RequirementAnalyzer;
 class Runtime;
 class Scalar;
 
-class Projection {
- protected:
-  Projection() {}
-  Projection(Legion::ReductionOpID redop);
-
- public:
-  virtual ~Projection() {}
-
- public:
-  virtual void populate_launcher(Legion::TaskLauncher* task,
-                                 const RegionReq& req,
-                                 const std::vector<Legion::FieldID>& fields) const = 0;
-  virtual void populate_launcher(Legion::IndexTaskLauncher* task,
-                                 const RegionReq& req,
-                                 const std::vector<Legion::FieldID>& fields) const = 0;
-
- public:
-  void set_reduction_op(Legion::ReductionOpID redop);
-
- public:
-  Legion::ReductionOpID redop{-1};
-};
-
-class Replicate : public Projection {
- public:
-  Replicate();
-  Replicate(Legion::ReductionOpID redop);
-
- public:
-  virtual ~Replicate() {}
-
- public:
-  virtual void populate_launcher(Legion::TaskLauncher* task,
-                                 const RegionReq& req,
-                                 const std::vector<Legion::FieldID>& fields) const override;
-  virtual void populate_launcher(Legion::IndexTaskLauncher* task,
-                                 const RegionReq& req,
-                                 const std::vector<Legion::FieldID>& fields) const override;
-};
-
-class MapPartition : public Projection {
- public:
-  MapPartition(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
-  MapPartition(Legion::LogicalPartition partition,
-               Legion::ProjectionID proj_id,
-               Legion::ReductionOpID redop);
-
- public:
-  virtual ~MapPartition() {}
-
- public:
-  virtual void populate_launcher(Legion::TaskLauncher* task,
-                                 const RegionReq& req,
-                                 const std::vector<Legion::FieldID>& fields) const override;
-  virtual void populate_launcher(Legion::IndexTaskLauncher* task,
-                                 const RegionReq& req,
-                                 const std::vector<Legion::FieldID>& fields) const override;
-
- private:
-  Legion::LogicalPartition partition_;
-  Legion::ProjectionID proj_id_;
-};
-
-class RegionReq {
- private:
-  using ProjectionP = std::unique_ptr<Projection>;
-
- public:
-  RegionReq(Legion::LogicalRegion region,
-            Legion::PrivilegeMode priv,
-            ProjectionP proj,
-            int64_t tag);
-
- public:
-  Legion::LogicalRegion region;
-  Legion::PrivilegeMode priv;
-  ProjectionP proj;
-  int64_t tag;
-};
-
 class TaskLauncher {
- private:
-  using ProjectionP = std::unique_ptr<Projection>;
-
  public:
   TaskLauncher(Runtime* runtime,
                LibraryContext* library,
@@ -129,19 +46,27 @@ class TaskLauncher {
 
  public:
   void add_scalar(const Scalar& scalar);
-  void add_input(LogicalStore store, ProjectionP proj, uint64_t tag = 0);
-  void add_output(LogicalStore store, ProjectionP proj, uint64_t tag = 0);
+  void add_input(LogicalStore store,
+                 std::unique_ptr<Projection> proj,
+                 Legion::MappingTagID tag  = 0,
+                 Legion::RegionFlags flags = LEGION_NO_FLAG);
+  void add_output(LogicalStore store,
+                  std::unique_ptr<Projection> proj,
+                  Legion::MappingTagID tag  = 0,
+                  Legion::RegionFlags flags = LEGION_NO_FLAG);
   void add_reduction(LogicalStore store,
-                     ProjectionP proj,
-                     uint64_t tag    = 0,
-                     bool read_write = false);
+                     std::unique_ptr<Projection> proj,
+                     Legion::MappingTagID tag  = 0,
+                     Legion::RegionFlags flags = LEGION_NO_FLAG,
+                     bool read_write           = false);
 
  private:
   void add_store(std::vector<ArgWrapper*>& args,
                  LogicalStore store,
-                 ProjectionP proj,
+                 std::unique_ptr<Projection> proj,
                  Legion::PrivilegeMode privilege,
-                 uint64_t tag);
+                 Legion::MappingTagID tag,
+                 Legion::RegionFlags flags);
 
  public:
   void execute(const Legion::Domain& launch_domain);

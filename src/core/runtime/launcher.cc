@@ -26,108 +26,6 @@
 
 namespace legate {
 
-Projection::Projection(Legion::ReductionOpID r) : redop(r) {}
-
-void Projection::set_reduction_op(Legion::ReductionOpID r) { redop = r; }
-
-Replicate::Replicate() : Projection() {}
-
-Replicate::Replicate(Legion::ReductionOpID redop) : Projection(redop) {}
-
-void Replicate::populate_launcher(Legion::TaskLauncher* task,
-                                  const RegionReq& req,
-                                  const std::vector<Legion::FieldID>& fields) const
-{
-  if (req.priv == REDUCE) {
-#ifdef DEBUG_LEGATE
-    assert(redop != -1);
-#endif
-    Legion::RegionRequirement legion_req(req.region, redop, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  } else {
-    Legion::RegionRequirement legion_req(req.region, req.priv, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  }
-}
-
-void Replicate::populate_launcher(Legion::IndexTaskLauncher* task,
-                                  const RegionReq& req,
-                                  const std::vector<Legion::FieldID>& fields) const
-{
-  if (req.priv == REDUCE) {
-#ifdef DEBUG_LEGATE
-    assert(redop != -1);
-#endif
-    Legion::RegionRequirement legion_req(req.region, redop, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  } else {
-    Legion::RegionRequirement legion_req(req.region, req.priv, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  }
-}
-
-MapPartition::MapPartition(Legion::LogicalPartition partition, Legion::ProjectionID proj_id)
-  : Projection(), partition_(partition), proj_id_(proj_id)
-{
-}
-
-MapPartition::MapPartition(Legion::LogicalPartition partition,
-                           Legion::ProjectionID proj_id,
-                           Legion::ReductionOpID redop)
-  : Projection(redop), partition_(partition), proj_id_(proj_id)
-{
-}
-
-void MapPartition::populate_launcher(Legion::TaskLauncher* task,
-                                     const RegionReq& req,
-                                     const std::vector<Legion::FieldID>& fields) const
-{
-  if (req.priv == REDUCE) {
-#ifdef DEBUG_LEGATE
-    assert(redop != -1);
-#endif
-    Legion::RegionRequirement legion_req(req.region, redop, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  } else {
-    Legion::RegionRequirement legion_req(req.region, req.priv, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  }
-}
-
-void MapPartition::populate_launcher(Legion::IndexTaskLauncher* task,
-                                     const RegionReq& req,
-                                     const std::vector<Legion::FieldID>& fields) const
-{
-  if (req.priv == REDUCE) {
-#ifdef DEBUG_LEGATE
-    assert(redop != -1);
-#endif
-    Legion::RegionRequirement legion_req(
-      partition_, proj_id_, redop, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  } else {
-    Legion::RegionRequirement legion_req(
-      partition_, proj_id_, req.priv, EXCLUSIVE, req.region, req.tag);
-    legion_req.add_fields(fields);
-    task->add_region_requirement(legion_req);
-  }
-}
-
-RegionReq::RegionReq(Legion::LogicalRegion _region,
-                     Legion::PrivilegeMode _priv,
-                     ProjectionP _proj,
-                     int64_t _tag)
-  : region(_region), priv(_priv), proj(std::move(_proj)), tag(_tag)
-{
-}
-
 TaskLauncher::TaskLauncher(Runtime* runtime,
                            LibraryContext* library,
                            int64_t task_id,
@@ -159,23 +57,30 @@ void TaskLauncher::add_scalar(const Scalar& scalar)
   scalars_.push_back(new UntypedScalarArg(scalar));
 }
 
-void TaskLauncher::add_input(LogicalStore store, ProjectionP proj, uint64_t tag /*= 0*/)
+void TaskLauncher::add_input(LogicalStore store,
+                             std::unique_ptr<Projection> proj,
+                             Legion::MappingTagID tag,
+                             Legion::RegionFlags flags)
 {
-  add_store(inputs_, std::move(store), std::move(proj), READ_ONLY, tag);
+  add_store(inputs_, std::move(store), std::move(proj), READ_ONLY, tag, flags);
 }
 
-void TaskLauncher::add_output(LogicalStore store, ProjectionP proj, uint64_t tag /*= 0*/)
+void TaskLauncher::add_output(LogicalStore store,
+                              std::unique_ptr<Projection> proj,
+                              Legion::MappingTagID tag,
+                              Legion::RegionFlags flags)
 {
-  add_store(outputs_, std::move(store), std::move(proj), WRITE_ONLY, tag);
+  add_store(outputs_, std::move(store), std::move(proj), WRITE_ONLY, tag, flags);
 }
 
 void TaskLauncher::add_reduction(LogicalStore store,
-                                 ProjectionP proj,
-                                 uint64_t tag /*= 0*/,
+                                 std::unique_ptr<Projection> proj,
+                                 Legion::MappingTagID tag,
+                                 Legion::RegionFlags flags,
                                  bool read_write /*= false*/)
 {
   assert(!read_write);
-  add_store(reductions_, std::move(store), std::move(proj), REDUCE, tag);
+  add_store(reductions_, std::move(store), std::move(proj), REDUCE, tag, flags);
 }
 
 void TaskLauncher::execute(const Legion::Domain& launch_domain)
@@ -194,9 +99,10 @@ void TaskLauncher::execute_single()
 
 void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
                              LogicalStore store,
-                             ProjectionP proj,
+                             std::unique_ptr<Projection> proj,
                              Legion::PrivilegeMode privilege,
-                             uint64_t tag)
+                             Legion::MappingTagID tag,
+                             Legion::RegionFlags flags)
 {
   auto redop = proj->redop;
 
@@ -210,11 +116,11 @@ void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
     auto region   = storage->region();
     auto field_id = storage->field_id();
 
-    auto req = new RegionReq(region, privilege, std::move(proj), tag);
+    auto proj_info = new ProjectionInfo(proj.get(), tag, flags);
 
-    req_analyzer_->insert(req, field_id);
+    req_analyzer_->insert(region, field_id, privilege, proj_info);
     args.push_back(
-      new RegionFieldArg(req_analyzer_, std::move(store), region.get_dim(), req, field_id, redop));
+      new RegionFieldArg(req_analyzer_, std::move(store), field_id, privilege, proj_info));
   }
 }
 
@@ -226,6 +132,10 @@ void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
 
 Legion::TaskLauncher* TaskLauncher::build_single_task()
 {
+  // Coalesce region requirements before packing task arguments
+  // as the latter requires requirement indices to be finalized
+  req_analyzer_->analyze_requirements();
+
   pack_args(inputs_);
   pack_args(outputs_);
   pack_args(reductions_);
@@ -248,6 +158,10 @@ Legion::TaskLauncher* TaskLauncher::build_single_task()
 
 Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& launch_domain)
 {
+  // Coalesce region requirements before packing task arguments
+  // as the latter requires requirement indices to be finalized
+  req_analyzer_->analyze_requirements();
+
   pack_args(inputs_);
   pack_args(outputs_);
   pack_args(reductions_);

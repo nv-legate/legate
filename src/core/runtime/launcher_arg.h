@@ -22,7 +22,7 @@
 
 namespace legate {
 
-class RegionReq;
+class ProjectionInfo;
 class RequirementAnalyzer;
 
 struct ArgWrapper {
@@ -63,10 +63,9 @@ struct RegionFieldArg : public ArgWrapper {
  public:
   RegionFieldArg(RequirementAnalyzer* analyzer,
                  LogicalStore store,
-                 int32_t dim,
-                 RegionReq* req,
                  Legion::FieldID field_id,
-                 Legion::ReductionOpID redop);
+                 Legion::PrivilegeMode privilege,
+                 const ProjectionInfo* proj_info);
 
  public:
   virtual void pack(BufferBuilder& buffer) const override;
@@ -77,10 +76,10 @@ struct RegionFieldArg : public ArgWrapper {
  private:
   RequirementAnalyzer* analyzer_;
   LogicalStore store_;
-  int32_t dim_;
-  RegionReq* req_;
+  Legion::LogicalRegion region_;
   Legion::FieldID field_id_;
-  Legion::ReductionOpID redop_;
+  Legion::PrivilegeMode privilege_;
+  const ProjectionInfo* proj_info_;
 };
 
 struct FutureStoreArg : public ArgWrapper {
