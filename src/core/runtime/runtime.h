@@ -60,6 +60,7 @@ class RegionManager;
 class ResourceConfig;
 class Runtime;
 class Task;
+class Tiling;
 
 class PartitionManager {
  public:
@@ -69,10 +70,21 @@ class PartitionManager {
   tuple<size_t> compute_launch_shape(const tuple<size_t>& shape);
   tuple<size_t> compute_tile_shape(const tuple<size_t>& extents, const tuple<size_t>& launch_shape);
 
+ public:
+  Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
+                                              const Tiling& tiling) const;
+  void record_index_partition(const Legion::IndexSpace& index_space,
+                              const Tiling& tiling,
+                              const Legion::IndexPartition& index_partition);
+
  private:
   int32_t num_pieces_;
   int64_t min_shard_volume_;
   std::vector<size_t> piece_factors_;
+
+ private:
+  using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
+  std::map<TilingCacheKey, Legion::IndexPartition> tiling_cache_;
 };
 
 class Runtime {
@@ -113,14 +125,15 @@ class Runtime {
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
   FieldManager* find_or_create_field_manager(const Legion::Domain& shape, LegateTypeCode code);
-  PartitionManager* get_partition_manager();
+  PartitionManager* partition_manager() const;
 
  public:
   Legion::IndexSpace find_or_create_index_space(const Legion::Domain& shape);
-  Legion::IndexPartition create_index_partition(const Legion::IndexSpace& index_space,
-                                                const Legion::IndexSpace& color_space,
-                                                Legion::PartitionKind kind,
-                                                const PartitioningFunctor* functor);
+  Legion::IndexPartition create_restricted_partition(const Legion::IndexSpace& index_space,
+                                                     const Legion::IndexSpace& color_space,
+                                                     Legion::PartitionKind kind,
+                                                     const Legion::DomainTransform& transform,
+                                                     const Legion::Domain& extent);
   Legion::FieldSpace create_field_space();
   Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
                                       const Legion::FieldSpace& field_space);

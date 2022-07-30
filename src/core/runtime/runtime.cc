@@ -516,6 +516,23 @@ tuple<size_t> PartitionManager::compute_tile_shape(const tuple<size_t>& extents,
   return std::move(tile_shape);
 }
 
+Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
+                                                              const Tiling& tiling) const
+{
+  auto finder = tiling_cache_.find(std::make_pair(index_space, tiling));
+  if (finder != tiling_cache_.end())
+    return finder->second;
+  else
+    return Legion::IndexPartition::NO_PART;
+}
+
+void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
+                                              const Tiling& tiling,
+                                              const Legion::IndexPartition& index_partition)
+{
+  tiling_cache_[std::make_pair(index_space, tiling)] = index_partition;
+}
+
 ////////////////////////////////////////////////////
 // legate::Runtime
 ////////////////////////////////////////////////////
@@ -664,7 +681,7 @@ FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, LegateT
   }
 }
 
-PartitionManager* Runtime::get_partition_manager() { return partition_manager_; }
+PartitionManager* Runtime::partition_manager() const { return partition_manager_; }
 
 IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
 {
@@ -679,12 +696,15 @@ IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
   }
 }
 
-Legion::IndexPartition Runtime::create_index_partition(const Legion::IndexSpace& index_space,
-                                                       const Legion::IndexSpace& color_space,
-                                                       Legion::PartitionKind kind,
-                                                       const PartitioningFunctor* functor)
+Legion::IndexPartition Runtime::create_restricted_partition(
+  const Legion::IndexSpace& index_space,
+  const Legion::IndexSpace& color_space,
+  Legion::PartitionKind kind,
+  const Legion::DomainTransform& transform,
+  const Legion::Domain& extent)
 {
-  return functor->construct(legion_runtime_, legion_context_, index_space, color_space, kind);
+  return legion_runtime_->create_partition_by_restriction(
+    legion_context_, index_space, color_space, transform, extent, kind);
 }
 
 FieldSpace Runtime::create_field_space()

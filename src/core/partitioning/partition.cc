@@ -24,22 +24,6 @@
 
 namespace legate {
 
-struct PartitionByRestriction : public PartitioningFunctor {
- public:
-  PartitionByRestriction(Legion::DomainTransform transform, Legion::Domain extent);
-
- public:
-  virtual Legion::IndexPartition construct(Legion::Runtime* legion_runtime,
-                                           Legion::Context legion_context,
-                                           const Legion::IndexSpace& parent,
-                                           const Legion::IndexSpace& color_space,
-                                           Legion::PartitionKind kind) const override;
-
- private:
-  Legion::DomainTransform transform_;
-  Legion::Domain extent_;
-};
-
 Partition::Partition(Runtime* runtime) : runtime_(runtime) {}
 
 NoPartition::NoPartition(Runtime* runtime) : Partition(runtime) {}
@@ -81,6 +65,28 @@ Tiling::Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&
   assert(tile_shape_.size() == offsets_.size());
 }
 
+bool Tiling::operator==(const Tiling& other) const
+{
+  return tile_shape_ == other.tile_shape_ && color_shape_ == other.color_shape_ &&
+         offsets_ == other.offsets_;
+}
+
+bool Tiling::operator<(const Tiling& other) const
+{
+  if (tile_shape_ < other.tile_shape_)
+    return true;
+  else if (other.tile_shape_ < tile_shape_)
+    return false;
+  if (color_shape_ < other.color_shape_)
+    return true;
+  else if (other.color_shape_ < color_shape_)
+    return false;
+  if (offsets_ < other.offsets_)
+    return true;
+  else
+    return false;
+}
+
 bool Tiling::is_complete_for(const LogicalStore* store) const { return false; }
 
 bool Tiling::is_disjoint_for(const LogicalStore* store) const { return true; }
@@ -89,6 +95,11 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
                                            bool disjoint,
                                            bool complete) const
 {
+  auto index_space     = region.get_index_space();
+  auto index_partition = runtime_->partition_manager()->find_index_partition(index_space, *this);
+  if (index_partition != Legion::IndexPartition::NO_PART)
+    return runtime_->create_logical_partition(region, index_partition);
+
   auto ndim = static_cast<int32_t>(tile_shape_.size());
 
   Legion::DomainTransform transform;
@@ -112,13 +123,13 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
   }
 
   auto color_space = runtime_->find_or_create_index_space(color_domain);
-  auto index_space = region.get_index_space();
 
   auto kind = complete ? (disjoint ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_ALIASED_COMPLETE_KIND)
                        : (disjoint ? LEGION_DISJOINT_KIND : LEGION_ALIASED_KIND);
 
-  PartitionByRestriction functor(transform, extent);
-  auto index_partition = runtime_->create_index_partition(index_space, color_space, kind, &functor);
+  index_partition =
+    runtime_->create_restricted_partition(index_space, color_space, kind, transform, extent);
+  runtime_->partition_manager()->record_index_partition(index_space, *this, index_partition);
   return runtime_->create_logical_partition(region, index_partition);
 }
 
@@ -147,22 +158,6 @@ std::string Tiling::to_string() const
   ss << "Tiling(tile:" << tile_shape_ << ",colors:" << color_shape_ << ",offset:" << offsets_
      << ")";
   return ss.str();
-}
-
-PartitionByRestriction::PartitionByRestriction(Legion::DomainTransform transform,
-                                               Legion::Domain extent)
-  : transform_(transform), extent_(extent)
-{
-}
-
-Legion::IndexPartition PartitionByRestriction::construct(Legion::Runtime* legion_runtime,
-                                                         Legion::Context legion_context,
-                                                         const Legion::IndexSpace& parent,
-                                                         const Legion::IndexSpace& color_space,
-                                                         Legion::PartitionKind kind) const
-{
-  return legion_runtime->create_partition_by_restriction(
-    legion_context, parent, color_space, transform_, extent_, kind);
 }
 
 std::unique_ptr<Partition> create_tiling(Runtime* runtime,

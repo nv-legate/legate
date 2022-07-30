@@ -295,7 +295,7 @@ std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
 {
   if (scalar_) return create_no_partition(runtime_);
 
-  auto part_mgr     = runtime_->get_partition_manager();
+  auto part_mgr     = runtime_->partition_manager();
   auto launch_shape = part_mgr->compute_launch_shape(extents());
   if (launch_shape.empty())
     return create_no_partition(runtime_);

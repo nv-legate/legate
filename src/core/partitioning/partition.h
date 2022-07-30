@@ -65,15 +65,6 @@ struct Partition {
   Runtime* runtime_;
 };
 
-struct PartitioningFunctor {
- public:
-  virtual Legion::IndexPartition construct(Legion::Runtime* legion_runtime,
-                                           Legion::Context legion_context,
-                                           const Legion::IndexSpace& parent,
-                                           const Legion::IndexSpace& color_space,
-                                           Legion::PartitionKind kind) const = 0;
-};
-
 class NoPartition : public Partition {
  public:
   NoPartition(Runtime* runtime);
@@ -105,6 +96,10 @@ class NoPartition : public Partition {
 class Tiling : public Partition {
  public:
   Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&& offsets);
+
+ public:
+  bool operator==(const Tiling& other) const;
+  bool operator<(const Tiling& other) const;
 
  public:
   virtual Kind kind() const override { return Kind::TILING; }
