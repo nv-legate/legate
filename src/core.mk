@@ -72,6 +72,7 @@ INSTALL_HEADERS = legate.h                        \
 									core/legate_c.h                 \
 									core/comm/communicator.h        \
 									core/comm/coll.h                \
+									core/comm/pthread_barrier.h     \
 									core/cuda/cuda_help.h           \
 									core/cuda/stream_pool.h         \
 									core/data/allocator.h           \
