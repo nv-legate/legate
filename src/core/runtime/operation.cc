@@ -67,8 +67,8 @@ void Operation::add_reduction(LogicalStore store,
 
 std::shared_ptr<Variable> Operation::declare_partition(LogicalStore store)
 {
-  auto variable             = std::make_shared<Variable>(this, next_part_id_++);
-  store_mappings_[variable] = std::move(store);
+  auto variable = std::make_shared<Variable>(this, next_part_id_++);
+  store_mappings_.emplace(std::make_pair(variable, std::move(store)));
   return std::move(variable);
 }
 

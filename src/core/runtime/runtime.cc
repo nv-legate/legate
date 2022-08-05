@@ -20,6 +20,7 @@
 #include "core/comm/comm.h"
 #include "core/data/logical_region_field.h"
 #include "core/data/logical_store.h"
+#include "core/data/logical_store_detail.h"
 #include "core/mapping/core_mapper.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
@@ -614,12 +615,12 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
 
 LogicalStore Runtime::create_store(std::vector<size_t> extents, LegateTypeCode code)
 {
-  return LogicalStore(this, code, extents);
+  return LogicalStore(std::make_shared<detail::LogicalStore>(this, code, extents));
 }
 
 LogicalStore Runtime::create_store(const Scalar& scalar)
 {
-  return LogicalStore(this, scalar.code(), scalar.ptr());
+  return LogicalStore(std::make_shared<detail::LogicalStore>(this, scalar.code(), scalar.ptr()));
 }
 
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const tuple<size_t>& extents,

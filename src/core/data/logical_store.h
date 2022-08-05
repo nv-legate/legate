@@ -40,19 +40,9 @@ class Runtime;
 class Store;
 
 class LogicalStore {
- public:
-  LogicalStore();
-  LogicalStore(Runtime* runtime, LegateTypeCode code, tuple<size_t> extents);
-  LogicalStore(Runtime* runtime,
-               LegateTypeCode code,
-               tuple<size_t> extents,
-               LogicalStore parent,
-               std::shared_ptr<TransformStack> transform);
-  // Creates a read-only store from a scalar
-  LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
-
  private:
-  LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
+  friend class Runtime;
+  LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl);
 
  public:
   LogicalStore(const LogicalStore& other)            = default;
