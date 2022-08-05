@@ -40,10 +40,9 @@ struct StoreTransform : public Transform {
   virtual int32_t target_ndim(int32_t source_ndim) const = 0;
 };
 
-struct TransformStack : public Transform {
+struct TransformStack : public Transform, std::enable_shared_from_this<TransformStack> {
  public:
   TransformStack() {}
-  // TODO: this constructor will be gone once we move the push method to this class
   TransformStack(std::unique_ptr<StoreTransform>&& transform,
                  const std::shared_ptr<TransformStack>& parent);
   TransformStack(std::unique_ptr<StoreTransform>&& transform,
@@ -59,6 +58,7 @@ struct TransformStack : public Transform {
 
  public:
   std::unique_ptr<StoreTransform> pop();
+  std::shared_ptr<TransformStack> push(std::unique_ptr<StoreTransform>&& transform);
   bool identity() const { return nullptr == transform_; }
 
  public:

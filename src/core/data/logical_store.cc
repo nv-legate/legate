@@ -211,14 +211,7 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
   }
 
   auto new_extents = extents_.insert(extra_dim, dim_size);
-  // TODO: Move this push operation to TransformStack.
-  //       Two prerequisites:
-  //         1) make members of TransformStack read only (i.e., by adding const)
-  //         2) make TransformStack inherit std::enable_shared_from_this.
-  //       Then we can add a const push method to TransformStack that returns
-  //       a fresh shared_ptr of TransformStack with a transform put on top.
-  auto transform =
-    std::make_shared<TransformStack>(std::make_unique<Promote>(extra_dim, dim_size), transform_);
+  auto transform   = transform_->push(std::make_unique<Promote>(extra_dim, dim_size));
   return std::make_shared<LogicalStore>(
     runtime_, code_, std::move(new_extents), std::move(parent), std::move(transform));
 }

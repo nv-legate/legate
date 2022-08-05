@@ -117,6 +117,12 @@ std::unique_ptr<StoreTransform> TransformStack::pop()
   return std::move(result);
 }
 
+std::shared_ptr<TransformStack> TransformStack::push(std::unique_ptr<StoreTransform>&& transform)
+{
+  return std::make_shared<TransformStack>(std::forward<decltype(transform)>(transform),
+                                          shared_from_this());
+}
+
 void TransformStack::dump() const { std::cerr << *this << std::endl; }
 
 Shift::Shift(int32_t dim, int64_t offset) : dim_(dim), offset_(offset) {}
