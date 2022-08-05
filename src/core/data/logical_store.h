@@ -64,11 +64,12 @@ class LogicalRegionField {
 class LogicalStore {
  public:
   LogicalStore();
+  LogicalStore(Runtime* runtime, LegateTypeCode code, tuple<size_t> extents);
   LogicalStore(Runtime* runtime,
                LegateTypeCode code,
                tuple<size_t> extents,
-               LogicalStore parent                       = LogicalStore(),
-               std::shared_ptr<TransformStack> transform = nullptr);
+               LogicalStore parent,
+               std::shared_ptr<TransformStack> transform);
   // Creates a read-only store from a scalar
   LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
 

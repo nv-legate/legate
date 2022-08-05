@@ -143,7 +143,11 @@ struct datalen_fn {
 };
 
 LogicalStore::LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data)
-  : scalar_(true), runtime_(runtime), code_(code), extents_({1})
+  : scalar_(true),
+    runtime_(runtime),
+    code_(code),
+    extents_({1}),
+    transform_(std::make_shared<TransformStack>())
 {
   auto datalen = type_dispatch(code, datalen_fn{});
   future_      = runtime_->create_future(data, datalen);
@@ -311,8 +315,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(false);
   buffer.pack<int32_t>(dim());
   buffer.pack<int32_t>(code_);
-  if (transform_ != nullptr) transform_->pack(buffer);
-  buffer.pack<int32_t>(-1);
+  transform_->pack(buffer);
 }
 
 void LogicalStore::pack_transform(BufferBuilder& buffer) const
@@ -329,11 +332,17 @@ void LogicalStore::pack_transform(BufferBuilder& buffer) const
 
 LogicalStore::LogicalStore() {}
 
+LogicalStore::LogicalStore(Runtime* runtime, LegateTypeCode code, tuple<size_t> extents)
+  : impl_(std::make_shared<detail::LogicalStore>(
+      runtime, code, std::move(extents), nullptr, std::make_shared<TransformStack>()))
+{
+}
+
 LogicalStore::LogicalStore(Runtime* runtime,
                            LegateTypeCode code,
                            tuple<size_t> extents,
-                           LogicalStore parent, /* = LogicalStore() */
-                           std::shared_ptr<TransformStack> transform /*= nullptr*/)
+                           LogicalStore parent,
+                           std::shared_ptr<TransformStack> transform)
   : impl_(std::make_shared<detail::LogicalStore>(
       runtime, code, std::move(extents), parent.impl_, std::move(transform)))
 {

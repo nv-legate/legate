@@ -49,19 +49,23 @@ TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
 std::unique_ptr<Partition> TransformStack::invert_partition(const Partition* partition) const
 {
   auto result = transform_->invert_partition(partition);
-  return parent_ != nullptr ? parent_->invert_partition(result.get()) : std::move(result);
+  return parent_->identity() ? std::move(result) : parent_->invert_partition(result.get());
 }
 
 proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) const
 {
   auto result = transform_->invert(point);
-  return parent_ != nullptr ? parent_->invert(result) : result;
+  return parent_->identity() ? result : parent_->invert(result);
 }
 
 void TransformStack::pack(BufferBuilder& buffer) const
 {
-  transform_->pack(buffer);
-  if (parent_ != nullptr) parent_->pack(buffer);
+  if (identity())
+    buffer.pack<int32_t>(-1);
+  else {
+    transform_->pack(buffer);
+    parent_->pack(buffer);
+  }
 }
 
 Legion::Domain TransformStack::transform(const Legion::Domain& input) const
