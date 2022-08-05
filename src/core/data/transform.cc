@@ -46,10 +46,10 @@ TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
 {
 }
 
-std::unique_ptr<Partition> TransformStack::invert_partition(const Partition* partition) const
+std::unique_ptr<Partition> TransformStack::invert(const Partition* partition) const
 {
-  auto result = transform_->invert_partition(partition);
-  return parent_->identity() ? std::move(result) : parent_->invert_partition(result.get());
+  auto result = transform_->invert(partition);
+  return parent_->identity() ? std::move(result) : parent_->invert(result.get());
 }
 
 proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) const
@@ -157,10 +157,7 @@ DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Shift::invert_partition(const Partition* partition) const
-{
-  return nullptr;
-}
+std::unique_ptr<Partition> Shift::invert(const Partition* partition) const { return nullptr; }
 
 // the shift transform makes no change on the store's dimensions
 proj::SymbolicPoint Shift::invert(const proj::SymbolicPoint& point) const { return point; }
@@ -227,7 +224,7 @@ DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Promote::invert_partition(const Partition* partition) const
+std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
 {
   switch (partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
@@ -311,10 +308,7 @@ DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Project::invert_partition(const Partition* partition) const
-{
-  return nullptr;
-}
+std::unique_ptr<Partition> Project::invert(const Partition* partition) const { return nullptr; }
 
 proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
 {
@@ -378,10 +372,7 @@ DomainAffineTransform Transpose::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Transpose::invert_partition(const Partition* partition) const
-{
-  return nullptr;
-}
+std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const { return nullptr; }
 
 proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
 {
@@ -490,10 +481,7 @@ DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Delinearize::invert_partition(const Partition* partition) const
-{
-  return nullptr;
-}
+std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const { return nullptr; }
 
 proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
 {

@@ -243,7 +243,7 @@ std::unique_ptr<Partition> LogicalStore::invert_partition(const Partition* parti
       }
     }
   } else {
-    auto inverted = transform_->invert_partition(partition);
+    auto inverted = transform_->invert(partition);
     return parent_->invert_partition(inverted.get());
   }
   assert(false);

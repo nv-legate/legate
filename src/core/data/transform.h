@@ -27,12 +27,12 @@ class BufferBuilder;
 class Partition;
 
 struct Transform {
-  virtual Legion::Domain transform(const Legion::Domain& input) const                   = 0;
-  virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const         = 0;
-  virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const = 0;
-  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const            = 0;
-  virtual void pack(BufferBuilder& buffer) const                                        = 0;
-  virtual void print(std::ostream& out) const                                           = 0;
+  virtual Legion::Domain transform(const Legion::Domain& input) const           = 0;
+  virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const = 0;
+  virtual std::unique_ptr<Partition> invert(const Partition* partition) const   = 0;
+  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const    = 0;
+  virtual void pack(BufferBuilder& buffer) const                                = 0;
+  virtual void print(std::ostream& out) const                                   = 0;
 };
 
 struct StoreTransform : public Transform {
@@ -51,7 +51,7 @@ struct TransformStack : public Transform, std::enable_shared_from_this<Transform
  public:
   virtual Legion::Domain transform(const Legion::Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
+  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
@@ -76,7 +76,7 @@ class Shift : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
+  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
@@ -96,7 +96,7 @@ class Promote : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
+  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
@@ -117,7 +117,7 @@ class Project : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
+  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
@@ -137,7 +137,7 @@ class Transpose : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
+  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
@@ -157,7 +157,7 @@ class Delinearize : public StoreTransform {
  public:
   virtual Legion::Domain transform(const Legion::Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> invert_partition(const Partition* partition) const override;
+  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
