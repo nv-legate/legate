@@ -33,33 +33,11 @@ class LogicalStore;
 
 class BufferBuilder;
 class LibraryContext;
+class LogicalRegionField;
 class Partition;
 class Projection;
 class Runtime;
 class Store;
-
-class LogicalRegionField {
- public:
-  LogicalRegionField() {}
-  LogicalRegionField(Runtime* runtime, const Legion::LogicalRegion& lr, Legion::FieldID fid);
-
- public:
-  LogicalRegionField(const LogicalRegionField& other)            = default;
-  LogicalRegionField& operator=(const LogicalRegionField& other) = default;
-
- public:
-  int32_t dim() const;
-  const Legion::LogicalRegion& region() const { return lr_; }
-  Legion::FieldID field_id() const { return fid_; }
-
- public:
-  Legion::Domain domain() const;
-
- private:
-  Runtime* runtime_{nullptr};
-  Legion::LogicalRegion lr_{};
-  Legion::FieldID fid_{-1U};
-};
 
 class LogicalStore {
  public:

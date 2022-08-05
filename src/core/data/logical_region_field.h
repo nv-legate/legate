@@ -1,0 +1,48 @@
+/* Copyright 2022 NVIDIA Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+#pragma once
+
+#include "legion.h"
+
+#include "core/runtime/runtime.h"
+
+namespace legate {
+
+class LogicalRegionField {
+ public:
+  LogicalRegionField() {}
+  LogicalRegionField(Runtime* runtime, const Legion::LogicalRegion& lr, Legion::FieldID fid);
+
+ public:
+  LogicalRegionField(const LogicalRegionField& other)            = default;
+  LogicalRegionField& operator=(const LogicalRegionField& other) = default;
+
+ public:
+  int32_t dim() const;
+  const Legion::LogicalRegion& region() const { return lr_; }
+  Legion::FieldID field_id() const { return fid_; }
+
+ public:
+  Legion::Domain domain() const;
+
+ private:
+  Runtime* runtime_{nullptr};
+  Legion::LogicalRegion lr_{};
+  Legion::FieldID fid_{-1U};
+};
+
+}  // namespace legate

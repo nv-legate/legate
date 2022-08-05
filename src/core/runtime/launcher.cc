@@ -15,6 +15,7 @@
  */
 
 #include "core/runtime/launcher.h"
+#include "core/data/logical_region_field.h"
 #include "core/data/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/runtime/context.h"

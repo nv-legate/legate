@@ -18,6 +18,7 @@
 #include <cmath>
 
 #include "core/comm/comm.h"
+#include "core/data/logical_region_field.h"
 #include "core/data/logical_store.h"
 #include "core/mapping/core_mapper.h"
 #include "core/partitioning/partition.h"

@@ -15,6 +15,7 @@
  */
 
 #include "core/runtime/launcher_arg.h"
+#include "core/data/logical_region_field.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/req_analyzer.h"
 

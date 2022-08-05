@@ -16,6 +16,7 @@
 
 #include <numeric>
 
+#include "core/data/logical_region_field.h"
 #include "core/data/logical_store.h"
 #include "core/data/store.h"
 #include "core/partitioning/partition.h"
