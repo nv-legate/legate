@@ -25,7 +25,6 @@ namespace detail {
 
 class LogicalStore {
  public:
-  LogicalStore();
   LogicalStore(LegateTypeCode code, tuple<size_t> extents);
   LogicalStore(LegateTypeCode code,
                tuple<size_t> extents,
