@@ -23,9 +23,14 @@
 
 namespace legate {
 
-class LogicalStore;
 class Projection;
 class Runtime;
+
+namespace detail {
+
+class LogicalStore;
+
+}  // namespace detail
 
 using Shape = tuple<size_t>;
 
@@ -44,14 +49,14 @@ struct Partition {
   virtual Kind kind() const = 0;
 
  public:
-  virtual bool is_complete_for(const LogicalStore* store) const = 0;
-  virtual bool is_disjoint_for(const LogicalStore* store) const = 0;
+  virtual bool is_complete_for(const detail::LogicalStore* store) const = 0;
+  virtual bool is_disjoint_for(const detail::LogicalStore* store) const = 0;
 
  public:
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint = false,
-                                             bool complete = false) const      = 0;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const = 0;
+                                             bool complete = false) const               = 0;
+  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store) const = 0;
 
  public:
   virtual bool has_launch_domain() const       = 0;
@@ -73,14 +78,14 @@ class NoPartition : public Partition {
   virtual Kind kind() const override { return Kind::NO_PARTITION; }
 
  public:
-  virtual bool is_complete_for(const LogicalStore* store) const override;
-  virtual bool is_disjoint_for(const LogicalStore* store) const override;
+  virtual bool is_complete_for(const detail::LogicalStore* store) const override;
+  virtual bool is_disjoint_for(const detail::LogicalStore* store) const override;
 
  public:
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint,
                                              bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
+  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store) const override;
 
  public:
   virtual bool has_launch_domain() const override;
@@ -105,14 +110,14 @@ class Tiling : public Partition {
   virtual Kind kind() const override { return Kind::TILING; }
 
  public:
-  virtual bool is_complete_for(const LogicalStore* store) const override;
-  virtual bool is_disjoint_for(const LogicalStore* store) const override;
+  virtual bool is_complete_for(const detail::LogicalStore* store) const override;
+  virtual bool is_disjoint_for(const detail::LogicalStore* store) const override;
 
  public:
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint,
                                              bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(LogicalStore store) const override;
+  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store) const override;
 
  public:
   virtual bool has_launch_domain() const override;

@@ -16,6 +16,7 @@
 
 #include "core/partitioning/partitioner.h"
 #include "core/data/logical_store.h"
+#include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_graph.h"
@@ -104,7 +105,7 @@ std::unique_ptr<Strategy> Partitioner::solve()
   for (auto& variable : variables) {
     auto* op       = variable->operation();
     auto store     = op->find_store(variable);
-    auto partition = store.find_or_create_key_partition();
+    auto partition = store->find_or_create_key_partition();
     if (!strategy->has_launch_domain(op)) {
       if (partition->has_launch_domain())
         strategy->set_launch_domain(op, partition->launch_domain());

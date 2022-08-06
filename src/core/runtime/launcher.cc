@@ -17,6 +17,7 @@
 #include "core/runtime/launcher.h"
 #include "core/data/logical_region_field.h"
 #include "core/data/logical_store.h"
+#include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
 #include "core/runtime/context.h"
 #include "core/runtime/launcher_arg.h"
@@ -58,30 +59,30 @@ void TaskLauncher::add_scalar(const Scalar& scalar)
   scalars_.push_back(new UntypedScalarArg(scalar));
 }
 
-void TaskLauncher::add_input(LogicalStore store,
+void TaskLauncher::add_input(detail::LogicalStore* store,
                              std::unique_ptr<Projection> proj,
                              Legion::MappingTagID tag,
                              Legion::RegionFlags flags)
 {
-  add_store(inputs_, std::move(store), std::move(proj), READ_ONLY, tag, flags);
+  add_store(inputs_, store, std::move(proj), READ_ONLY, tag, flags);
 }
 
-void TaskLauncher::add_output(LogicalStore store,
+void TaskLauncher::add_output(detail::LogicalStore* store,
                               std::unique_ptr<Projection> proj,
                               Legion::MappingTagID tag,
                               Legion::RegionFlags flags)
 {
-  add_store(outputs_, std::move(store), std::move(proj), WRITE_ONLY, tag, flags);
+  add_store(outputs_, store, std::move(proj), WRITE_ONLY, tag, flags);
 }
 
-void TaskLauncher::add_reduction(LogicalStore store,
+void TaskLauncher::add_reduction(detail::LogicalStore* store,
                                  std::unique_ptr<Projection> proj,
                                  Legion::MappingTagID tag,
                                  Legion::RegionFlags flags,
                                  bool read_write /*= false*/)
 {
   assert(!read_write);
-  add_store(reductions_, std::move(store), std::move(proj), REDUCE, tag, flags);
+  add_store(reductions_, store, std::move(proj), REDUCE, tag, flags);
 }
 
 void TaskLauncher::execute(const Legion::Domain& launch_domain)
@@ -99,7 +100,7 @@ void TaskLauncher::execute_single()
 }
 
 void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
-                             LogicalStore store,
+                             detail::LogicalStore* store,
                              std::unique_ptr<Projection> proj,
                              Legion::PrivilegeMode privilege,
                              Legion::MappingTagID tag,
@@ -107,21 +108,20 @@ void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
 {
   auto redop = proj->redop;
 
-  if (store.scalar()) {
+  if (store->scalar()) {
     auto has_storage = privilege != WRITE_ONLY;
     auto read_only   = privilege == READ_ONLY;
-    if (has_storage) futures_.push_back(store.get_future());
-    args.push_back(new FutureStoreArg(std::move(store), read_only, has_storage, redop));
+    if (has_storage) futures_.push_back(store->get_future());
+    args.push_back(new FutureStoreArg(store, read_only, has_storage, redop));
   } else {
-    auto storage  = store.get_storage();
+    auto storage  = store->get_storage();
     auto region   = storage->region();
     auto field_id = storage->field_id();
 
     auto proj_info = new ProjectionInfo(proj.get(), tag, flags);
 
     req_analyzer_->insert(region, field_id, privilege, proj_info);
-    args.push_back(
-      new RegionFieldArg(req_analyzer_, std::move(store), field_id, privilege, proj_info));
+    args.push_back(new RegionFieldArg(req_analyzer_, store, field_id, privilege, proj_info));
   }
 }
 

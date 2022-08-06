@@ -25,12 +25,6 @@
 
 namespace legate {
 
-namespace detail {
-
-class LogicalStore;
-
-}  // namespace detail
-
 class BufferBuilder;
 class LibraryContext;
 class LogicalRegionField;
@@ -38,6 +32,12 @@ class Partition;
 class Projection;
 class Runtime;
 class Store;
+
+namespace detail {
+
+class LogicalStore;
+
+}  // namespace detail
 
 class LogicalStore {
  private:
@@ -61,22 +61,13 @@ class LogicalStore {
   size_t volume() const;
 
  public:
-  bool has_storage() const;
-  std::shared_ptr<LogicalRegionField> get_storage();
-  Legion::Future get_future();
-
- public:
   LogicalStore promote(int32_t extra_dim, size_t dim_size) const;
 
  public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
 
  public:
-  std::unique_ptr<Projection> find_or_create_partition(const Partition* partition);
-  std::unique_ptr<Partition> find_or_create_key_partition();
-
- public:
-  void pack(BufferBuilder& buffer) const;
+  std::shared_ptr<detail::LogicalStore> impl() const { return impl_; }
 
  private:
   std::shared_ptr<detail::LogicalStore> impl_{nullptr};

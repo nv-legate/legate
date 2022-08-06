@@ -276,10 +276,6 @@ const std::vector<size_t>& LogicalStore::extents() const { return impl_->extents
 
 size_t LogicalStore::volume() const { return impl_->volume(); }
 
-std::shared_ptr<LogicalRegionField> LogicalStore::get_storage() { return impl_->get_storage(); }
-
-Legion::Future LogicalStore::get_future() { return impl_->get_future(); }
-
 LogicalStore LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
 {
   return LogicalStore(impl_->promote(extra_dim, dim_size, impl_));
@@ -289,17 +285,5 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 {
   return impl_->get_physical_store(context);
 }
-
-std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
-{
-  return impl_->find_or_create_partition(partition);
-}
-
-std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
-{
-  return impl_->find_or_create_key_partition();
-}
-
-void LogicalStore::pack(BufferBuilder& buffer) const { impl_->pack(buffer); }
 
 }  // namespace legate

@@ -46,33 +46,43 @@ Operation::~Operation() {}
 
 void Operation::add_input(LogicalStore store, std::shared_ptr<Variable> partition)
 {
+  auto p_store = store.impl();
   constraints_->add_variable(partition);
-  inputs_.push_back(Store(std::move(store), std::move(partition)));
+  inputs_.push_back(Store(p_store.get(), std::move(partition)));
+  all_stores_.insert(std::move(p_store));
 }
 
 void Operation::add_output(LogicalStore store, std::shared_ptr<Variable> partition)
 {
+  auto p_store = store.impl();
   constraints_->add_variable(partition);
-  outputs_.push_back(Store(std::move(store), std::move(partition)));
+  outputs_.push_back(Store(p_store.get(), std::move(partition)));
+  all_stores_.insert(std::move(p_store));
 }
 
 void Operation::add_reduction(LogicalStore store,
                               Legion::ReductionOpID redop,
                               std::shared_ptr<Variable> partition)
 {
+  auto p_store = store.impl();
   constraints_->add_variable(partition);
-  reductions_.push_back(Store(std::move(store), std::move(partition)));
+  reductions_.push_back(Store(p_store.get(), std::move(partition)));
   reduction_ops_.push_back(redop);
+  all_stores_.insert(std::move(p_store));
 }
 
 std::shared_ptr<Variable> Operation::declare_partition(LogicalStore store)
 {
+  // TODO: Variable doesn't need a store to be created, so there's some redundancy in this function.
+  // Will clean it up once the refactoring for logical store is done
+  auto p_store  = store.impl();
   auto variable = std::make_shared<Variable>(this, next_part_id_++);
-  store_mappings_.emplace(std::make_pair(variable, std::move(store)));
+  store_mappings_.emplace(std::make_pair(variable, p_store.get()));
+  all_stores_.insert(std::move(p_store));
   return std::move(variable);
 }
 
-LogicalStore Operation::find_store(std::shared_ptr<Variable> variable) const
+detail::LogicalStore* Operation::find_store(std::shared_ptr<Variable> variable) const
 {
   auto finder = store_mappings_.find(variable);
   assert(store_mappings_.end() != finder);

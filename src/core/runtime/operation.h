@@ -32,6 +32,12 @@ class Scalar;
 class Strategy;
 class Variable;
 
+namespace detail {
+
+class LogicalStore;
+
+}  // namespace detail
+
 class Operation {
  public:
   Operation(Runtime* runtime, LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
@@ -48,7 +54,7 @@ class Operation {
 
  public:
   std::shared_ptr<Variable> declare_partition(LogicalStore store);
-  LogicalStore find_store(std::shared_ptr<Variable> variable) const;
+  detail::LogicalStore* find_store(std::shared_ptr<Variable> variable) const;
   void add_constraint(std::shared_ptr<Constraint> constraint);
   std::shared_ptr<ConstraintGraph> constraints() const;
 
@@ -65,9 +71,10 @@ class Operation {
   int64_t mapper_id_;
 
  protected:
-  using Store = std::pair<LogicalStore, std::shared_ptr<Variable>>;
+  using Store = std::pair<detail::LogicalStore*, std::shared_ptr<Variable>>;
 
  protected:
+  std::set<std::shared_ptr<detail::LogicalStore>> all_stores_;
   std::vector<Store> inputs_{};
   std::vector<Store> outputs_{};
   std::vector<Store> reductions_{};
@@ -77,7 +84,7 @@ class Operation {
   uint32_t next_part_id_{0};
 
  private:
-  std::unordered_map<std::shared_ptr<Variable>, LogicalStore> store_mappings_;
+  std::unordered_map<std::shared_ptr<Variable>, detail::LogicalStore*> store_mappings_;
   std::shared_ptr<ConstraintGraph> constraints_;
 };
 

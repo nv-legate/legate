@@ -31,6 +31,12 @@ class RequirementAnalyzer;
 class Runtime;
 class Scalar;
 
+namespace detail {
+
+class LogicalStore;
+
+}  // namespace detail
+
 class TaskLauncher {
  public:
   TaskLauncher(Runtime* runtime,
@@ -46,15 +52,15 @@ class TaskLauncher {
 
  public:
   void add_scalar(const Scalar& scalar);
-  void add_input(LogicalStore store,
+  void add_input(detail::LogicalStore* store,
                  std::unique_ptr<Projection> proj,
                  Legion::MappingTagID tag  = 0,
                  Legion::RegionFlags flags = LEGION_NO_FLAG);
-  void add_output(LogicalStore store,
+  void add_output(detail::LogicalStore* store,
                   std::unique_ptr<Projection> proj,
                   Legion::MappingTagID tag  = 0,
                   Legion::RegionFlags flags = LEGION_NO_FLAG);
-  void add_reduction(LogicalStore store,
+  void add_reduction(detail::LogicalStore* store,
                      std::unique_ptr<Projection> proj,
                      Legion::MappingTagID tag  = 0,
                      Legion::RegionFlags flags = LEGION_NO_FLAG,
@@ -62,7 +68,7 @@ class TaskLauncher {
 
  private:
   void add_store(std::vector<ArgWrapper*>& args,
-                 LogicalStore store,
+                 detail::LogicalStore* store,
                  std::unique_ptr<Projection> proj,
                  Legion::PrivilegeMode privilege,
                  Legion::MappingTagID tag,

@@ -29,13 +29,13 @@ void UntypedScalarArg::pack(BufferBuilder& buffer) const
 }
 
 RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
-                               LogicalStore store,
+                               detail::LogicalStore* store,
                                Legion::FieldID field_id,
                                Legion::PrivilegeMode privilege,
                                const ProjectionInfo* proj_info)
   : analyzer_(analyzer),
-    store_(std::move(store)),
-    region_(store_.get_storage()->region()),
+    store_(store),
+    region_(store_->get_storage()->region()),
     field_id_(field_id),
     privilege_(privilege),
     proj_info_(proj_info)
@@ -44,18 +44,19 @@ RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
 
 void RegionFieldArg::pack(BufferBuilder& buffer) const
 {
-  store_.pack(buffer);
+  store_->pack(buffer);
+
   buffer.pack<int32_t>(proj_info_->redop);
   buffer.pack<int32_t>(region_.get_dim());
   buffer.pack<uint32_t>(analyzer_->get_requirement_index(region_, privilege_, proj_info_));
   buffer.pack<uint32_t>(field_id_);
 }
 
-FutureStoreArg::FutureStoreArg(LogicalStore store,
+FutureStoreArg::FutureStoreArg(detail::LogicalStore* store,
                                bool read_only,
                                bool has_storage,
                                Legion::ReductionOpID redop)
-  : store_(std::move(store)), read_only_(read_only), has_storage_(has_storage), redop_(redop)
+  : store_(store), read_only_(read_only), has_storage_(has_storage), redop_(redop)
 {
 }
 
@@ -69,13 +70,13 @@ struct datalen_fn {
 
 void FutureStoreArg::pack(BufferBuilder& buffer) const
 {
-  store_.pack(buffer);
+  store_->pack(buffer);
 
   buffer.pack<int32_t>(redop_);
   buffer.pack<bool>(read_only_);
   buffer.pack<bool>(has_storage_);
-  buffer.pack<int32_t>(type_dispatch(store_.code(), datalen_fn{}));
-  buffer.pack<size_t>(store_.extents());
+  buffer.pack<int32_t>(type_dispatch(store_->code(), datalen_fn{}));
+  buffer.pack<size_t>(store_->extents());
 }
 
 }  // namespace legate

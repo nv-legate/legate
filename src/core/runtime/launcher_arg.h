@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "core/data/logical_store.h"
+#include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
 #include "core/utilities/buffer_builder.h"
 
@@ -62,7 +62,7 @@ struct UntypedScalarArg : public ArgWrapper {
 struct RegionFieldArg : public ArgWrapper {
  public:
   RegionFieldArg(RequirementAnalyzer* analyzer,
-                 LogicalStore store,
+                 detail::LogicalStore* store,
                  Legion::FieldID field_id,
                  Legion::PrivilegeMode privilege,
                  const ProjectionInfo* proj_info);
@@ -75,7 +75,7 @@ struct RegionFieldArg : public ArgWrapper {
 
  private:
   RequirementAnalyzer* analyzer_;
-  LogicalStore store_;
+  detail::LogicalStore* store_;
   Legion::LogicalRegion region_;
   Legion::FieldID field_id_;
   Legion::PrivilegeMode privilege_;
@@ -84,7 +84,10 @@ struct RegionFieldArg : public ArgWrapper {
 
 struct FutureStoreArg : public ArgWrapper {
  public:
-  FutureStoreArg(LogicalStore store, bool read_only, bool has_storage, Legion::ReductionOpID redop);
+  FutureStoreArg(detail::LogicalStore* store,
+                 bool read_only,
+                 bool has_storage,
+                 Legion::ReductionOpID redop);
 
  public:
   virtual ~FutureStoreArg() {}
@@ -93,7 +96,7 @@ struct FutureStoreArg : public ArgWrapper {
   virtual void pack(BufferBuilder& buffer) const override;
 
  private:
-  LogicalStore store_;
+  detail::LogicalStore* store_;
   bool read_only_;
   bool has_storage_;
   Legion::ReductionOpID redop_;

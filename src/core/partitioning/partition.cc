@@ -16,7 +16,7 @@
 
 #include <sstream>
 
-#include "core/data/logical_store.h"
+#include "core/data/logical_store_detail.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/req_analyzer.h"
@@ -28,9 +28,9 @@ Partition::Partition(Runtime* runtime) : runtime_(runtime) {}
 
 NoPartition::NoPartition(Runtime* runtime) : Partition(runtime) {}
 
-bool NoPartition::is_complete_for(const LogicalStore* store) const { return false; }
+bool NoPartition::is_complete_for(const detail::LogicalStore* store) const { return false; }
 
-bool NoPartition::is_disjoint_for(const LogicalStore* store) const { return false; }
+bool NoPartition::is_disjoint_for(const detail::LogicalStore* store) const { return false; }
 
 Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region,
                                                 bool disjoint,
@@ -39,7 +39,7 @@ Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region,
   return Legion::LogicalPartition::NO_PART;
 }
 
-std::unique_ptr<Projection> NoPartition::get_projection(LogicalStore store) const
+std::unique_ptr<Projection> NoPartition::get_projection(detail::LogicalStore* store) const
 {
   return std::make_unique<Projection>();
 }
@@ -87,9 +87,9 @@ bool Tiling::operator<(const Tiling& other) const
     return false;
 }
 
-bool Tiling::is_complete_for(const LogicalStore* store) const { return false; }
+bool Tiling::is_complete_for(const detail::LogicalStore* store) const { return false; }
 
-bool Tiling::is_disjoint_for(const LogicalStore* store) const { return true; }
+bool Tiling::is_disjoint_for(const detail::LogicalStore* store) const { return true; }
 
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
                                            bool disjoint,
@@ -133,9 +133,9 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
   return runtime_->create_logical_partition(region, index_partition);
 }
 
-std::unique_ptr<Projection> Tiling::get_projection(LogicalStore store) const
+std::unique_ptr<Projection> Tiling::get_projection(detail::LogicalStore* store) const
 {
-  return store.find_or_create_partition(this);
+  return store->find_or_create_partition(this);
 }
 
 bool Tiling::has_launch_domain() const { return true; }
