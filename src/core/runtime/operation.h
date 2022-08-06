@@ -27,7 +27,6 @@ namespace legate {
 class Constraint;
 class ConstraintGraph;
 class LibraryContext;
-class Runtime;
 class Scalar;
 class Strategy;
 class Variable;
@@ -40,7 +39,7 @@ class LogicalStore;
 
 class Operation {
  public:
-  Operation(Runtime* runtime, LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
+  Operation(LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
 
  public:
   virtual ~Operation();
@@ -65,7 +64,6 @@ class Operation {
   virtual std::string to_string() const = 0;
 
  protected:
-  Runtime* runtime_;
   LibraryContext* library_;
   uint64_t unique_id_;
   int64_t mapper_id_;
@@ -90,11 +88,7 @@ class Operation {
 
 class Task : public Operation {
  public:
-  Task(Runtime* runtime,
-       LibraryContext* library,
-       int64_t task_id,
-       uint64_t unique_id,
-       int64_t mapper_id = 0);
+  Task(LibraryContext* library, int64_t task_id, uint64_t unique_id, int64_t mapper_id = 0);
 
  public:
   ~Task();

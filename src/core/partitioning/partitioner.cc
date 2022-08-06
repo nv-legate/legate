@@ -67,8 +67,8 @@ std::shared_ptr<Partition> Strategy::operator[](const std::shared_ptr<Expr>& var
   return finder->second;
 }
 
-Partitioner::Partitioner(Runtime* runtime, std::vector<Operation*>&& operations)
-  : runtime_(runtime), operations_(std::forward<std::vector<Operation*>>(operations))
+Partitioner::Partitioner(std::vector<Operation*>&& operations)
+  : operations_(std::forward<std::vector<Operation*>>(operations))
 {
 }
 

@@ -34,36 +34,30 @@ namespace legate {
 
 extern Logger log_legate;
 
-LogicalRegionField::LogicalRegionField(Runtime* runtime, const LogicalRegion& lr, FieldID fid)
-  : runtime_(runtime), lr_(lr), fid_(fid)
-{
-}
+LogicalRegionField::LogicalRegionField(const LogicalRegion& lr, FieldID fid) : lr_(lr), fid_(fid) {}
 
 int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
 
 Domain LogicalRegionField::domain() const
 {
-  return runtime_->get_index_space_domain(lr_.get_index_space());
+  return Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
 }
 
 namespace detail {
 
-LogicalStore::LogicalStore(Runtime* runtime, LegateTypeCode code, tuple<size_t> extents)
-  : runtime_(runtime),
-    code_(code),
+LogicalStore::LogicalStore(LegateTypeCode code, tuple<size_t> extents)
+  : code_(code),
     extents_(std::move(extents)),
     parent_(nullptr),
     transform_(std::make_shared<TransformStack>())
 {
 }
 
-LogicalStore::LogicalStore(Runtime* runtime,
-                           LegateTypeCode code,
+LogicalStore::LogicalStore(LegateTypeCode code,
                            tuple<size_t> extents,
                            std::shared_ptr<LogicalStore> parent,
                            std::shared_ptr<TransformStack> transform)
-  : runtime_(runtime),
-    code_(code),
+  : code_(code),
     extents_(std::move(extents)),
     parent_(std::move(parent)),
     transform_(std::move(transform))
@@ -78,15 +72,11 @@ struct datalen_fn {
   }
 };
 
-LogicalStore::LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data)
-  : scalar_(true),
-    runtime_(runtime),
-    code_(code),
-    extents_({1}),
-    transform_(std::make_shared<TransformStack>())
+LogicalStore::LogicalStore(LegateTypeCode code, const void* data)
+  : scalar_(true), code_(code), extents_({1}), transform_(std::make_shared<TransformStack>())
 {
   auto datalen = type_dispatch(code, datalen_fn{});
-  future_      = runtime_->create_future(data, datalen);
+  future_      = Runtime::get_runtime()->create_future(data, datalen);
 }
 
 LogicalStore::~LogicalStore()
@@ -133,7 +123,7 @@ Legion::Future LogicalStore::get_future()
 
 void LogicalStore::create_storage()
 {
-  region_field_ = runtime_->create_region_field(extents_, code_);
+  region_field_ = Runtime::get_runtime()->create_region_field(extents_, code_);
 }
 
 std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
@@ -149,7 +139,7 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
   auto new_extents = extents_.insert(extra_dim, dim_size);
   auto transform   = transform_->push(std::make_unique<Promote>(extra_dim, dim_size));
   return std::make_shared<LogicalStore>(
-    runtime_, code_, std::move(new_extents), std::move(parent), std::move(transform));
+    code_, std::move(new_extents), std::move(parent), std::move(transform));
 }
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
@@ -157,7 +147,7 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
   // TODO: Need to support inline mapping for scalars
   assert(!scalar_);
   if (nullptr != mapped_) return mapped_;
-  auto rf = runtime_->map_region_field(context, region_field_);
+  auto rf = Runtime::get_runtime()->map_region_field(context, region_field_);
   mapped_ = std::make_shared<Store>(dim(), code_, -1, std::move(rf), transform_);
   return mapped_;
 }
@@ -167,15 +157,14 @@ std::unique_ptr<Partition> LogicalStore::invert_partition(const Partition* parti
   if (nullptr == parent_) {
     switch (partition->kind()) {
       case Partition::Kind::NO_PARTITION: {
-        return create_no_partition(runtime_);
+        return create_no_partition();
       }
       case Partition::Kind::TILING: {
         auto tiling       = static_cast<const Tiling*>(partition);
         Shape tile_shape  = tiling->tile_shape();
         Shape color_shape = tiling->color_shape();
         Shape offsets     = tiling->offsets();
-        return create_tiling(
-          runtime_, std::move(tile_shape), std::move(color_shape), std::move(offsets));
+        return create_tiling(std::move(tile_shape), std::move(color_shape), std::move(offsets));
       }
     }
   } else {
@@ -206,7 +195,7 @@ Legion::ProjectionID LogicalStore::compute_projection() const
   if (identity_mapping)
     return 0;
   else
-    return runtime_->get_projection(ndim, point);
+    return Runtime::get_runtime()->get_projection(ndim, point);
 }
 
 std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
@@ -226,15 +215,15 @@ std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partiti
 
 std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
 {
-  if (scalar_) return create_no_partition(runtime_);
+  if (scalar_) return create_no_partition();
 
-  auto part_mgr     = runtime_->partition_manager();
+  auto part_mgr     = Runtime::get_runtime()->partition_manager();
   auto launch_shape = part_mgr->compute_launch_shape(extents());
   if (launch_shape.empty())
-    return create_no_partition(runtime_);
+    return create_no_partition();
   else {
     auto tile_shape = part_mgr->compute_tile_shape(extents_, launch_shape);
-    return create_tiling(runtime_, std::move(tile_shape), std::move(launch_shape));
+    return create_tiling(std::move(tile_shape), std::move(launch_shape));
   }
 }
 

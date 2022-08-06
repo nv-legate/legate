@@ -26,13 +26,12 @@ namespace detail {
 class LogicalStore {
  public:
   LogicalStore();
-  LogicalStore(Runtime* runtime, LegateTypeCode code, tuple<size_t> extents);
-  LogicalStore(Runtime* runtime,
-               LegateTypeCode code,
+  LogicalStore(LegateTypeCode code, tuple<size_t> extents);
+  LogicalStore(LegateTypeCode code,
                tuple<size_t> extents,
                std::shared_ptr<LogicalStore> parent,
                std::shared_ptr<TransformStack> transform);
-  LogicalStore(Runtime* runtime, LegateTypeCode code, const void* data);
+  LogicalStore(LegateTypeCode code, const void* data);
 
  public:
   ~LogicalStore();
@@ -89,7 +88,6 @@ class LogicalStore {
 
  private:
   bool scalar_{false};
-  Runtime* runtime_{nullptr};
   LegateTypeCode code_{MAX_TYPE_NUMBER};
   tuple<size_t> extents_;
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};

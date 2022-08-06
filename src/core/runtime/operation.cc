@@ -30,12 +30,8 @@
 
 namespace legate {
 
-Operation::Operation(Runtime* runtime,
-                     LibraryContext* library,
-                     uint64_t unique_id,
-                     int64_t mapper_id)
-  : runtime_(runtime),
-    library_(library),
+Operation::Operation(LibraryContext* library, uint64_t unique_id, int64_t mapper_id)
+  : library_(library),
     unique_id_(unique_id),
     mapper_id_(mapper_id),
     constraints_(std::make_shared<ConstraintGraph>())
@@ -96,12 +92,8 @@ void Operation::add_constraint(std::shared_ptr<Constraint> constraint)
 
 std::shared_ptr<ConstraintGraph> Operation::constraints() const { return constraints_; }
 
-Task::Task(Runtime* runtime,
-           LibraryContext* library,
-           int64_t task_id,
-           uint64_t unique_id,
-           int64_t mapper_id /*=0*/)
-  : Operation(runtime, library, unique_id, mapper_id), task_id_(task_id)
+Task::Task(LibraryContext* library, int64_t task_id, uint64_t unique_id, int64_t mapper_id /*=0*/)
+  : Operation(library, unique_id, mapper_id), task_id_(task_id)
 {
 }
 
@@ -112,7 +104,7 @@ void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 void Task::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
-  TaskLauncher launcher(runtime_, library_, task_id_, mapper_id_);
+  TaskLauncher launcher(library_, task_id_, mapper_id_);
 
   for (auto& pair : inputs_) {
     auto& store = pair.first;

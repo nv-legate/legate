@@ -25,7 +25,7 @@ namespace legate {
 class LogicalRegionField {
  public:
   LogicalRegionField() {}
-  LogicalRegionField(Runtime* runtime, const Legion::LogicalRegion& lr, Legion::FieldID fid);
+  LogicalRegionField(const Legion::LogicalRegion& lr, Legion::FieldID fid);
 
  public:
   LogicalRegionField(const LogicalRegionField& other)            = default;
@@ -40,7 +40,6 @@ class LogicalRegionField {
   Legion::Domain domain() const;
 
  private:
-  Runtime* runtime_{nullptr};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{-1U};
 };

@@ -228,12 +228,11 @@ std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
 {
   switch (partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
-      return create_no_partition(partition->runtime());
+      return create_no_partition();
     }
     case Partition::Kind::TILING: {
       auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tiling->runtime(),
-                           tiling->tile_shape().remove(extra_dim_),
+      return create_tiling(tiling->tile_shape().remove(extra_dim_),
                            tiling->color_shape().remove(extra_dim_),
                            tiling->offsets().remove(extra_dim_));
     }

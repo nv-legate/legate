@@ -336,13 +336,13 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
     auto field = free_fields_.front();
     log_legate.debug("Field %u recycled in field manager %p", field.second, this);
     free_fields_.pop_front();
-    rf = new LogicalRegionField(runtime_, field.first, field.second);
+    rf = new LogicalRegionField(field.first, field.second);
   } else {
     auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
     LogicalRegion lr;
     FieldID fid;
     std::tie(lr, fid) = rgn_mgr->allocate_field(field_size_);
-    rf                = new LogicalRegionField(runtime_, lr, fid);
+    rf                = new LogicalRegionField(lr, fid);
     log_legate.debug("Field %u created in field manager %p", fid, this);
   }
   assert(rf != nullptr);
@@ -588,7 +588,7 @@ std::unique_ptr<Task> Runtime::create_task(LibraryContext* library,
                                            int64_t task_id,
                                            int64_t mapper_id /*=0*/)
 {
-  return std::make_unique<Task>(this, library, task_id, next_unique_id_++, mapper_id);
+  return std::make_unique<Task>(library, task_id, next_unique_id_++, mapper_id);
 }
 
 void Runtime::submit(std::unique_ptr<Operation> op)
@@ -607,7 +607,7 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   op_pointers.reserve(operations.size());
   for (auto& op : operations) op_pointers.push_back(op.get());
 
-  Partitioner partitioner(this, std::move(op_pointers));
+  Partitioner partitioner(std::move(op_pointers));
   auto strategy = partitioner.solve();
 
   for (auto& op : operations) op->launch(strategy.get());
@@ -615,12 +615,12 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
 
 LogicalStore Runtime::create_store(std::vector<size_t> extents, LegateTypeCode code)
 {
-  return LogicalStore(std::make_shared<detail::LogicalStore>(this, code, extents));
+  return LogicalStore(std::make_shared<detail::LogicalStore>(code, extents));
 }
 
 LogicalStore Runtime::create_store(const Scalar& scalar)
 {
-  return LogicalStore(std::make_shared<detail::LogicalStore>(this, scalar.code(), scalar.ptr()));
+  return LogicalStore(std::make_shared<detail::LogicalStore>(scalar.code(), scalar.ptr()));
 }
 
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const tuple<size_t>& extents,

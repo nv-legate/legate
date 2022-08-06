@@ -28,7 +28,6 @@ class LibraryContext;
 class LogicalStore;
 class Projection;
 class RequirementAnalyzer;
-class Runtime;
 class Scalar;
 
 namespace detail {
@@ -39,11 +38,7 @@ class LogicalStore;
 
 class TaskLauncher {
  public:
-  TaskLauncher(Runtime* runtime,
-               LibraryContext* library,
-               int64_t task_id,
-               int64_t mapper_id = 0,
-               int64_t tag       = 0);
+  TaskLauncher(LibraryContext* library, int64_t task_id, int64_t mapper_id = 0, int64_t tag = 0);
   ~TaskLauncher();
 
  public:
@@ -84,7 +79,6 @@ class TaskLauncher {
   Legion::TaskLauncher* build_single_task();
 
  private:
-  Runtime* runtime_;
   LibraryContext* library_;
   int64_t task_id_;
   int64_t mapper_id_;

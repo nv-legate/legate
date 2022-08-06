@@ -24,9 +24,7 @@
 
 namespace legate {
 
-Partition::Partition(Runtime* runtime) : runtime_(runtime) {}
-
-NoPartition::NoPartition(Runtime* runtime) : Partition(runtime) {}
+NoPartition::NoPartition() : Partition() {}
 
 bool NoPartition::is_complete_for(const detail::LogicalStore* store) const { return false; }
 
@@ -54,8 +52,8 @@ Legion::Domain NoPartition::launch_domain() const
 
 std::string NoPartition::to_string() const { return "NoPartition"; }
 
-Tiling::Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
-  : Partition(runtime),
+Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
+  : Partition(),
     tile_shape_(std::forward<Shape>(tile_shape)),
     color_shape_(std::forward<Shape>(color_shape)),
     offsets_(std::forward<Shape>(offsets))
@@ -96,9 +94,11 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
                                            bool complete) const
 {
   auto index_space     = region.get_index_space();
-  auto index_partition = runtime_->partition_manager()->find_index_partition(index_space, *this);
+  auto runtime         = Runtime::get_runtime();
+  auto part_mgr        = runtime->partition_manager();
+  auto index_partition = part_mgr->find_index_partition(index_space, *this);
   if (index_partition != Legion::IndexPartition::NO_PART)
-    return runtime_->create_logical_partition(region, index_partition);
+    return runtime->create_logical_partition(region, index_partition);
 
   auto ndim = static_cast<int32_t>(tile_shape_.size());
 
@@ -122,15 +122,15 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
     color_domain.rect_data[idx + ndim] = color_shape_[idx] - 1;
   }
 
-  auto color_space = runtime_->find_or_create_index_space(color_domain);
+  auto color_space = runtime->find_or_create_index_space(color_domain);
 
   auto kind = complete ? (disjoint ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_ALIASED_COMPLETE_KIND)
                        : (disjoint ? LEGION_DISJOINT_KIND : LEGION_ALIASED_KIND);
 
   index_partition =
-    runtime_->create_restricted_partition(index_space, color_space, kind, transform, extent);
-  runtime_->partition_manager()->record_index_partition(index_space, *this, index_partition);
-  return runtime_->create_logical_partition(region, index_partition);
+    runtime->create_restricted_partition(index_space, color_space, kind, transform, extent);
+  part_mgr->record_index_partition(index_space, *this, index_partition);
+  return runtime->create_logical_partition(region, index_partition);
 }
 
 std::unique_ptr<Projection> Tiling::get_projection(detail::LogicalStore* store) const
@@ -160,20 +160,15 @@ std::string Tiling::to_string() const
   return ss.str();
 }
 
-std::unique_ptr<Partition> create_tiling(Runtime* runtime,
-                                         Shape&& tile_shape,
+std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                          Shape&& color_shape,
                                          Shape&& offsets /*= {}*/)
 {
-  return std::make_unique<Tiling>(runtime,
-                                  std::forward<Shape>(tile_shape),
+  return std::make_unique<Tiling>(std::forward<Shape>(tile_shape),
                                   std::forward<Shape>(color_shape),
                                   std::forward<Shape>(offsets));
 }
 
-std::unique_ptr<Partition> create_no_partition(Runtime* runtime)
-{
-  return std::make_unique<NoPartition>(runtime);
-}
+std::unique_ptr<Partition> create_no_partition() { return std::make_unique<NoPartition>(); }
 
 }  // namespace legate

@@ -24,7 +24,6 @@
 namespace legate {
 
 class Projection;
-class Runtime;
 
 namespace detail {
 
@@ -42,7 +41,7 @@ struct Partition {
   };
 
  public:
-  Partition(Runtime* runtime);
+  Partition() {}
   virtual ~Partition() {}
 
  public:
@@ -63,16 +62,12 @@ struct Partition {
   virtual Legion::Domain launch_domain() const = 0;
 
  public:
-  Runtime* runtime() const { return runtime_; }
   virtual std::string to_string() const = 0;
-
- protected:
-  Runtime* runtime_;
 };
 
 class NoPartition : public Partition {
  public:
-  NoPartition(Runtime* runtime);
+  NoPartition();
 
  public:
   virtual Kind kind() const override { return Kind::NO_PARTITION; }
@@ -93,14 +88,11 @@ class NoPartition : public Partition {
 
  public:
   virtual std::string to_string() const override;
-
- private:
-  Runtime* runtime_;
 };
 
 class Tiling : public Partition {
  public:
-  Tiling(Runtime* runtime, Shape&& tile_shape, Shape&& color_shape, Shape&& offsets);
+  Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets);
 
  public:
   bool operator==(const Tiling& other) const;
@@ -137,10 +129,9 @@ class Tiling : public Partition {
   Shape offsets_;
 };
 
-std::unique_ptr<Partition> create_no_partition(Runtime* runtime);
+std::unique_ptr<Partition> create_no_partition();
 
-std::unique_ptr<Partition> create_tiling(Runtime* runtime,
-                                         Shape&& tile_shape,
+std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                          Shape&& color_shape,
                                          Shape&& offsets = {});
 

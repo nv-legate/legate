@@ -28,7 +28,6 @@ class LogicalStore;
 class Operation;
 class Partition;
 class Projection;
-class Runtime;
 
 class Strategy {
  public:
@@ -52,13 +51,12 @@ class Strategy {
 
 class Partitioner {
  public:
-  Partitioner(Runtime* runtime, std::vector<Operation*>&& operations);
+  Partitioner(std::vector<Operation*>&& operations);
 
  public:
   std::unique_ptr<Strategy> solve();
 
  private:
-  Runtime* runtime_;
   std::vector<Operation*> operations_;
 };
 

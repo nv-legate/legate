@@ -28,12 +28,11 @@
 
 namespace legate {
 
-TaskLauncher::TaskLauncher(Runtime* runtime,
-                           LibraryContext* library,
+TaskLauncher::TaskLauncher(LibraryContext* library,
                            int64_t task_id,
                            int64_t mapper_id /*= 0*/,
                            int64_t tag /*= 0*/)
-  : runtime_(runtime), library_(library), task_id_(task_id), mapper_id_(mapper_id), tag_(tag)
+  : library_(library), task_id_(task_id), mapper_id_(mapper_id), tag_(tag)
 {
   req_analyzer_ = new RequirementAnalyzer();
   buffer_       = new BufferBuilder();
@@ -88,14 +87,14 @@ void TaskLauncher::add_reduction(detail::LogicalStore* store,
 void TaskLauncher::execute(const Legion::Domain& launch_domain)
 {
   auto legion_launcher = build_index_task(launch_domain);
-  runtime_->dispatch(legion_launcher);
+  Runtime::get_runtime()->dispatch(legion_launcher);
   delete legion_launcher;
 }
 
 void TaskLauncher::execute_single()
 {
   auto legion_launcher = build_single_task();
-  runtime_->dispatch(legion_launcher);
+  Runtime::get_runtime()->dispatch(legion_launcher);
   delete legion_launcher;
 }
 
