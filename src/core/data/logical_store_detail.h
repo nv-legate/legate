@@ -71,7 +71,7 @@ class LogicalStore {
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
 
  public:
-  std::unique_ptr<Projection> find_or_create_partition(const Partition* partition);
+  std::unique_ptr<Projection> create_projection(const Partition* partition);
   std::unique_ptr<Partition> find_or_create_key_partition();
 
  private:

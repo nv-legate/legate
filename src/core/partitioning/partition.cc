@@ -135,7 +135,7 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
 
 std::unique_ptr<Projection> Tiling::get_projection(detail::LogicalStore* store) const
 {
-  return store->find_or_create_partition(this);
+  return store->create_projection(this);
 }
 
 bool Tiling::has_launch_domain() const { return true; }

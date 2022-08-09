@@ -198,7 +198,7 @@ Legion::ProjectionID LogicalStore::compute_projection() const
     return Runtime::get_runtime()->get_projection(ndim, point);
 }
 
-std::unique_ptr<Projection> LogicalStore::find_or_create_partition(const Partition* partition)
+std::unique_ptr<Projection> LogicalStore::create_projection(const Partition* partition)
 {
   if (scalar_) return std::make_unique<Projection>();
 
