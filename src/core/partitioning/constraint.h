@@ -33,6 +33,9 @@ struct Expr {
   virtual ~Expr() {}
 
  public:
+  virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
+
+ public:
   virtual bool closed() const           = 0;
   virtual std::string to_string() const = 0;
 
@@ -46,8 +49,12 @@ struct Literal : public Expr {
   Literal(const std::shared_ptr<Partition>& partition);
 
  public:
-  Literal(const Literal&) = default;
+  Literal(const Literal&)            = default;
   Literal& operator=(const Literal&) = default;
+
+ public:
+  virtual void find_partition_symbols(
+    std::vector<const Variable*>& partition_symbols) const override;
 
  public:
   virtual bool closed() const override { return true; }
@@ -69,19 +76,23 @@ struct Variable : public Expr {
   Variable(const Operation* op, int32_t id);
 
  public:
-  Variable(const Variable&) = default;
+  Variable(const Variable&)            = default;
   Variable& operator=(const Variable&) = default;
 
  public:
   friend bool operator<(const Variable& lhs, const Variable& rhs);
 
  public:
-  virtual const Literal* as_literal() const override { return nullptr; }
-  virtual const Variable* as_variable() const override { return this; }
+  virtual void find_partition_symbols(
+    std::vector<const Variable*>& partition_symbols) const override;
 
  public:
   virtual bool closed() const override { return false; }
   virtual std::string to_string() const override;
+
+ public:
+  virtual const Literal* as_literal() const override { return nullptr; }
+  virtual const Variable* as_variable() const override { return this; }
 
  public:
   const Operation* operation() const { return op_; }
@@ -96,9 +107,12 @@ struct Constraint {
   virtual ~Constraint() {}
 
  public:
+  virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
+
+ public:
   virtual std::string to_string() const = 0;
 };
 
-std::shared_ptr<Constraint> align(std::shared_ptr<Variable> lhs, std::shared_ptr<Variable> rhs);
+std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs);
 
 }  // namespace legate

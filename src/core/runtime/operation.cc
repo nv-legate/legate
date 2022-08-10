@@ -31,66 +31,67 @@
 namespace legate {
 
 Operation::Operation(LibraryContext* library, uint64_t unique_id, int64_t mapper_id)
-  : library_(library),
-    unique_id_(unique_id),
-    mapper_id_(mapper_id),
-    constraints_(std::make_shared<ConstraintGraph>())
+  : library_(library), unique_id_(unique_id), mapper_id_(mapper_id)
 {
 }
 
 Operation::~Operation() {}
 
-void Operation::add_input(LogicalStore store, std::shared_ptr<Variable> partition)
+void Operation::add_input(LogicalStore store, const Variable* partition_symbol)
 {
-  auto p_store = store.impl();
-  constraints_->add_variable(partition);
-  inputs_.push_back(Store(p_store.get(), std::move(partition)));
-  all_stores_.insert(std::move(p_store));
+  add_store(inputs_, store, partition_symbol);
 }
 
-void Operation::add_output(LogicalStore store, std::shared_ptr<Variable> partition)
+void Operation::add_output(LogicalStore store, const Variable* partition_symbol)
 {
-  auto p_store = store.impl();
-  constraints_->add_variable(partition);
-  outputs_.push_back(Store(p_store.get(), std::move(partition)));
-  all_stores_.insert(std::move(p_store));
+  add_store(outputs_, store, partition_symbol);
 }
 
 void Operation::add_reduction(LogicalStore store,
                               Legion::ReductionOpID redop,
-                              std::shared_ptr<Variable> partition)
+                              const Variable* partition_symbol)
 {
-  auto p_store = store.impl();
-  constraints_->add_variable(partition);
-  reductions_.push_back(Store(p_store.get(), std::move(partition)));
+  add_store(reductions_, store, partition_symbol);
   reduction_ops_.push_back(redop);
-  all_stores_.insert(std::move(p_store));
 }
 
-std::shared_ptr<Variable> Operation::declare_partition(LogicalStore store)
+void Operation::add_store(std::vector<StoreArg>& store_args,
+                          LogicalStore& store,
+                          const Variable* partition_symbol)
 {
-  // TODO: Variable doesn't need a store to be created, so there's some redundancy in this function.
-  // Will clean it up once the refactoring for logical store is done
-  auto p_store  = store.impl();
-  auto variable = std::make_shared<Variable>(this, next_part_id_++);
-  store_mappings_.emplace(std::make_pair(variable, p_store.get()));
-  all_stores_.insert(std::move(p_store));
-  return std::move(variable);
+  auto store_impl = store.impl();
+  store_args.push_back(StoreArg(store_impl.get(), partition_symbol));
+  store_mappings_[*partition_symbol] = store_impl.get();
+  all_stores_.insert(std::move(store_impl));
 }
 
-detail::LogicalStore* Operation::find_store(std::shared_ptr<Variable> variable) const
+const Variable* Operation::declare_partition()
 {
-  auto finder = store_mappings_.find(variable);
+  partition_symbols_.emplace_back(new Variable(this, next_part_id_++));
+  return partition_symbols_.back().get();
+}
+
+detail::LogicalStore* Operation::find_store(const Variable* part_symb) const
+{
+  auto finder = store_mappings_.find(*part_symb);
+#ifdef DEBUG_LEGATE
   assert(store_mappings_.end() != finder);
+#endif
   return finder->second;
 }
 
-void Operation::add_constraint(std::shared_ptr<Constraint> constraint)
+void Operation::add_constraint(std::unique_ptr<Constraint> constraint)
 {
-  constraints_->add_constraint(constraint);
+  constraints_.push_back(std::move(constraint));
 }
 
-std::shared_ptr<ConstraintGraph> Operation::constraints() const { return constraints_; }
+void Operation::add_to_constraint_graph(ConstraintGraph& constraint_graph) const
+{
+  for (auto& pair : inputs_) constraint_graph.add_partition_symbol(pair.second);
+  for (auto& pair : outputs_) constraint_graph.add_partition_symbol(pair.second);
+  for (auto& pair : reductions_) constraint_graph.add_partition_symbol(pair.second);
+  for (auto& constraint : constraints_) constraint_graph.add_constraint(constraint.get());
+}
 
 Task::Task(LibraryContext* library, int64_t task_id, uint64_t unique_id, int64_t mapper_id /*=0*/)
   : Operation(library, unique_id, mapper_id), task_id_(task_id)

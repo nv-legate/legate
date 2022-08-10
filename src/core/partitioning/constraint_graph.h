@@ -27,22 +27,19 @@ struct Variable;
 
 struct ConstraintGraph {
  public:
-  void add_variable(std::shared_ptr<Variable> variable);
-  void add_constraint(std::shared_ptr<Constraint> constraint);
-
- public:
-  void join(const ConstraintGraph& other);
+  void add_partition_symbol(const Variable* partition_symbol);
+  void add_constraint(const Constraint* constraint);
 
  public:
   void dump();
 
  public:
-  const std::vector<std::shared_ptr<Variable>>& variables() const;
-  const std::vector<std::shared_ptr<Constraint>>& constraints() const;
+  const std::vector<const Variable*>& partition_symbols() const;
+  const std::vector<const Constraint*>& constraints() const;
 
  private:
-  std::vector<std::shared_ptr<Variable>> variables_;
-  std::vector<std::shared_ptr<Constraint>> constraints_;
+  std::vector<const Variable*> partition_symbols_;
+  std::vector<const Constraint*> constraints_;
 };
 
 }  // namespace legate

@@ -27,15 +27,15 @@ Literal::Literal(const std::shared_ptr<Partition>& partition) : partition_(parti
 
 std::string Literal::to_string() const { return partition_->to_string(); }
 
+void Literal::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const {}
+
 Variable::Variable(const Operation* op, int32_t id) : op_(op), id_(id) {}
 
-bool operator<(const Variable& lhs, const Variable& rhs)
+bool operator<(const Variable& lhs, const Variable& rhs) { return lhs.id_ < rhs.id_; }
+
+void Variable::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
 {
-  if (lhs.op_ > rhs.op_)
-    return false;
-  else if (lhs.op_ < rhs.op_)
-    return true;
-  return lhs.id_ < rhs.id_;
+  partition_symbols.push_back(this);
 }
 
 std::string Variable::to_string() const
@@ -45,21 +45,32 @@ std::string Variable::to_string() const
   return ss.str();
 }
 
+// Constraint AST nodes own their child nodes
 struct Alignment : public Constraint {
  public:
-  Alignment(std::shared_ptr<Expr> lhs, std::shared_ptr<Expr> rhs);
+  Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs);
+
+ public:
+  virtual void find_partition_symbols(
+    std::vector<const Variable*>& partition_symbols) const override;
 
  public:
   virtual std::string to_string() const override;
 
  private:
-  std::shared_ptr<Expr> lhs_;
-  std::shared_ptr<Expr> rhs_;
+  std::unique_ptr<Expr> lhs_;
+  std::unique_ptr<Expr> rhs_;
 };
 
-Alignment::Alignment(std::shared_ptr<Expr> lhs, std::shared_ptr<Expr> rhs)
-  : lhs_(std::move(lhs)), rhs_(std::move(rhs))
+Alignment::Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs)
+  : lhs_(std::forward<decltype(lhs_)>(lhs)), rhs_(std::forward<decltype(rhs_)>(rhs))
 {
+}
+
+void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+{
+  lhs_->find_partition_symbols(partition_symbols);
+  rhs_->find_partition_symbols(partition_symbols);
 }
 
 std::string Alignment::to_string() const
@@ -69,9 +80,11 @@ std::string Alignment::to_string() const
   return ss.str();
 }
 
-std::shared_ptr<Constraint> align(std::shared_ptr<Variable> lhs, std::shared_ptr<Variable> rhs)
+std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs)
 {
-  return std::make_shared<Alignment>(std::move(lhs), std::move(rhs));
+  // Since an Alignment object owns child nodes, inputs need to be copied
+  return std::make_unique<Alignment>(std::make_unique<Variable>(*lhs),
+                                     std::make_unique<Variable>(*rhs));
 }
 
 }  // namespace legate

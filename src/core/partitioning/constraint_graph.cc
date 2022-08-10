@@ -25,23 +25,14 @@ namespace legate {
 
 extern Legion::Logger log_legate;
 
-void ConstraintGraph::add_variable(std::shared_ptr<Variable> variable)
+void ConstraintGraph::add_partition_symbol(const Variable* partition_symbol)
 {
-  variables_.push_back(std::move(variable));
+  partition_symbols_.push_back(partition_symbol);
 }
 
-void ConstraintGraph::add_constraint(std::shared_ptr<Constraint> constraint)
+void ConstraintGraph::add_constraint(const Constraint* constraint)
 {
-  constraints_.push_back(std::move(constraint));
-}
-
-void ConstraintGraph::join(const ConstraintGraph& other)
-{
-  auto& other_variables   = other.variables();
-  auto& other_constraints = other.constraints();
-
-  for (auto& other_variable : other_variables) variables_.push_back(other_variable);
-  for (auto& other_constraint : other_constraints) constraints_.push_back(other_constraint);
+  constraints_.push_back(constraint);
 }
 
 void ConstraintGraph::dump()
@@ -49,14 +40,11 @@ void ConstraintGraph::dump()
   for (auto& constraint : constraints_) log_legate.debug("%s", constraint->to_string().c_str());
 }
 
-const std::vector<std::shared_ptr<Variable>>& ConstraintGraph::variables() const
+const std::vector<const Variable*>& ConstraintGraph::partition_symbols() const
 {
-  return variables_;
+  return partition_symbols_;
 }
 
-const std::vector<std::shared_ptr<Constraint>>& ConstraintGraph::constraints() const
-{
-  return constraints_;
-}
+const std::vector<const Constraint*>& ConstraintGraph::constraints() const { return constraints_; }
 
 }  // namespace legate

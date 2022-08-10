@@ -19,11 +19,11 @@
 #include <memory>
 #include <unordered_map>
 
+#include "core/partitioning/constraint.h"
 #include "legion.h"
 
 namespace legate {
 
-class Expr;
 class LogicalStore;
 class Operation;
 class Partition;
@@ -41,12 +41,13 @@ class Strategy {
   void set_launch_domain(const Operation* op, const Legion::Domain& launch_domain);
 
  public:
-  void insert(const Expr* variable, std::shared_ptr<Partition> partition);
-  std::shared_ptr<Partition> operator[](const std::shared_ptr<Expr>& variable) const;
+  void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);
+  bool has_assignment(const Variable* partition_symbol) const;
+  std::shared_ptr<Partition> operator[](const Variable* partition_symbol) const;
 
  private:
-  std::unordered_map<const Expr*, std::shared_ptr<Partition>> assignments_;
-  std::unordered_map<const Operation*, std::unique_ptr<Legion::Domain>> launch_domains_;
+  std::map<const Variable, std::shared_ptr<Partition>> assignments_{};
+  std::map<const Operation*, std::unique_ptr<Legion::Domain>> launch_domains_{};
 };
 
 class Partitioner {

@@ -27,6 +27,10 @@
 
 namespace legate {
 
+////////////////////////////////////////////////////
+// legate::Strategy
+////////////////////////////////////////////////////
+
 Strategy::Strategy() {}
 
 bool Strategy::parallel(const Operation* op) const
@@ -54,18 +58,31 @@ void Strategy::set_launch_domain(const Operation* op, const Legion::Domain& laun
   launch_domains_[op] = std::make_unique<Legion::Domain>(launch_domain);
 }
 
-void Strategy::insert(const Expr* variable, std::shared_ptr<Partition> partition)
+void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition)
 {
-  assert(assignments_.find(variable) == assignments_.end());
-  assignments_[variable] = std::move(partition);
+#ifdef DEBUG_LEGATE
+  assert(assignments_.find(*partition_symbol) == assignments_.end());
+#endif
+  assignments_.insert({*partition_symbol, std::move(partition)});
 }
 
-std::shared_ptr<Partition> Strategy::operator[](const std::shared_ptr<Expr>& variable) const
+bool Strategy::has_assignment(const Variable* partition_symbol) const
 {
-  auto finder = assignments_.find(variable.get());
+  return assignments_.find(*partition_symbol) != assignments_.end();
+}
+
+std::shared_ptr<Partition> Strategy::operator[](const Variable* partition_symbol) const
+{
+  auto finder = assignments_.find(*partition_symbol);
+#ifdef DEBUG_LEGATE
   assert(finder != assignments_.end());
+#endif
   return finder->second;
 }
+
+////////////////////////////////////////////////////
+// legate::Partitioner
+////////////////////////////////////////////////////
 
 Partitioner::Partitioner(std::vector<Operation*>&& operations)
   : operations_(std::forward<std::vector<Operation*>>(operations))
@@ -76,7 +93,7 @@ std::unique_ptr<Strategy> Partitioner::solve()
 {
   ConstraintGraph constraints;
 
-  for (auto op : operations_) constraints.join(*op->constraints());
+  for (auto op : operations_) op->add_to_constraint_graph(constraints);
 
   constraints.dump();
 
@@ -99,12 +116,12 @@ std::unique_ptr<Strategy> Partitioner::solve()
   //  }
   //}
 
-  auto strategy   = std::make_unique<Strategy>();
-  auto& variables = constraints.variables();
+  auto strategy           = std::make_unique<Strategy>();
+  auto& partition_symbols = constraints.partition_symbols();
 
-  for (auto& variable : variables) {
-    auto* op       = variable->operation();
-    auto store     = op->find_store(variable);
+  for (auto& part_symb : partition_symbols) {
+    auto* op       = part_symb->operation();
+    auto store     = op->find_store(part_symb);
     auto partition = store->find_or_create_key_partition();
     if (!strategy->has_launch_domain(op)) {
       if (partition->has_launch_domain())
@@ -112,7 +129,7 @@ std::unique_ptr<Strategy> Partitioner::solve()
       else
         strategy->set_single_launch(op);
     }
-    strategy->insert(variable.get(), std::move(partition));
+    strategy->insert(part_symb, std::move(partition));
   }
 
   return std::move(strategy);

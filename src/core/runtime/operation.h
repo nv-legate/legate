@@ -20,6 +20,7 @@
 #include <unordered_map>
 
 #include "core/data/logical_store.h"
+#include "core/partitioning/constraint.h"
 #include "legion.h"
 
 namespace legate {
@@ -29,7 +30,6 @@ class ConstraintGraph;
 class LibraryContext;
 class Scalar;
 class Strategy;
-class Variable;
 
 namespace detail {
 
@@ -38,6 +38,9 @@ class LogicalStore;
 }  // namespace detail
 
 class Operation {
+ protected:
+  using StoreArg = std::pair<detail::LogicalStore*, const Variable*>;
+
  public:
   Operation(LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
 
@@ -45,17 +48,22 @@ class Operation {
   virtual ~Operation();
 
  public:
-  void add_input(LogicalStore store, std::shared_ptr<Variable> partition);
-  void add_output(LogicalStore store, std::shared_ptr<Variable> partition);
+  void add_input(LogicalStore store, const Variable* partition_symbol);
+  void add_output(LogicalStore store, const Variable* partition_symbol);
   void add_reduction(LogicalStore store,
                      Legion::ReductionOpID redop,
-                     std::shared_ptr<Variable> partition);
+                     const Variable* partition_symbol);
+
+ private:
+  void add_store(std::vector<StoreArg>& store_args,
+                 LogicalStore& store,
+                 const Variable* partition_symbol);
 
  public:
-  std::shared_ptr<Variable> declare_partition(LogicalStore store);
-  detail::LogicalStore* find_store(std::shared_ptr<Variable> variable) const;
-  void add_constraint(std::shared_ptr<Constraint> constraint);
-  std::shared_ptr<ConstraintGraph> constraints() const;
+  const Variable* declare_partition();
+  detail::LogicalStore* find_store(const Variable* variable) const;
+  void add_constraint(std::unique_ptr<Constraint> constraint);
+  void add_to_constraint_graph(ConstraintGraph& constraint_graph) const;
 
  public:
   virtual void launch(Strategy* strategy) = 0;
@@ -69,21 +77,19 @@ class Operation {
   int64_t mapper_id_;
 
  protected:
-  using Store = std::pair<detail::LogicalStore*, std::shared_ptr<Variable>>;
-
- protected:
-  std::set<std::shared_ptr<detail::LogicalStore>> all_stores_;
-  std::vector<Store> inputs_{};
-  std::vector<Store> outputs_{};
-  std::vector<Store> reductions_{};
+  std::set<std::shared_ptr<detail::LogicalStore>> all_stores_{};
+  std::vector<StoreArg> inputs_{};
+  std::vector<StoreArg> outputs_{};
+  std::vector<StoreArg> reductions_{};
   std::vector<Legion::ReductionOpID> reduction_ops_{};
 
  private:
   uint32_t next_part_id_{0};
+  std::vector<std::unique_ptr<Variable>> partition_symbols_{};
 
  private:
-  std::unordered_map<std::shared_ptr<Variable>, detail::LogicalStore*> store_mappings_;
-  std::shared_ptr<ConstraintGraph> constraints_;
+  std::map<const Variable, detail::LogicalStore*> store_mappings_{};
+  std::vector<std::unique_ptr<Constraint>> constraints_{};
 };
 
 class Task : public Operation {
