@@ -18,6 +18,8 @@
 
 #include "legion.h"
 
+#include "core/utilities/tuple.h"
+
 namespace legate {
 
 class BufferBuilder {
@@ -29,6 +31,8 @@ class BufferBuilder {
   void pack(const T& value);
   template <typename T>
   void pack(const std::vector<T>& values);
+  template <typename T>
+  void pack(const tuple<T>& values);
   void pack_buffer(const void* buffer, size_t size);
 
  public:

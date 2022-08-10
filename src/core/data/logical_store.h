@@ -53,11 +53,9 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) = default;
 
  public:
-  bool scalar() const;
   int32_t dim() const;
   LegateTypeCode code() const;
-  Legion::Domain domain() const;
-  const std::vector<size_t>& extents() const;
+  const tuple<size_t>& extents() const;
   size_t volume() const;
 
  public:

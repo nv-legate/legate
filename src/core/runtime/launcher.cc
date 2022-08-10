@@ -113,9 +113,9 @@ void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
     if (has_storage) futures_.push_back(store->get_future());
     args.push_back(new FutureStoreArg(store, read_only, has_storage, redop));
   } else {
-    auto storage  = store->get_storage();
-    auto region   = storage->region();
-    auto field_id = storage->field_id();
+    auto region_field = store->get_region_field();
+    auto region       = region_field->region();
+    auto field_id     = region_field->field_id();
 
     auto proj_info = new ProjectionInfo(proj.get(), tag, flags);
 

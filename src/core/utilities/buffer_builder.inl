@@ -30,4 +30,10 @@ void BufferBuilder::pack(const std::vector<T>& values)
   pack_buffer(values.data(), size * sizeof(T));
 }
 
+template <typename T>
+void BufferBuilder::pack(const tuple<T>& values)
+{
+  pack(values.data());
+}
+
 }  // namespace legate

@@ -135,4 +135,6 @@ std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                          Shape&& color_shape,
                                          Shape&& offsets = {});
 
+std::ostream& operator<<(std::ostream& out, const Partition& partition);
+
 }  // namespace legate

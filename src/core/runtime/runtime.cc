@@ -615,13 +615,19 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
 
 LogicalStore Runtime::create_store(std::vector<size_t> extents, LegateTypeCode code)
 {
-  return LogicalStore(std::make_shared<detail::LogicalStore>(code, extents));
+  auto storage = std::make_shared<detail::Storage>(extents, code);
+  return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
 LogicalStore Runtime::create_store(const Scalar& scalar)
 {
-  return LogicalStore(std::make_shared<detail::LogicalStore>(scalar.code(), scalar.ptr()));
+  tuple<size_t> extents{1};
+  auto future  = create_future(scalar.ptr(), scalar.size());
+  auto storage = std::make_shared<detail::Storage>(extents, scalar.code(), future);
+  return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
+
+uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const tuple<size_t>& extents,
                                                                  LegateTypeCode code)
@@ -637,19 +643,26 @@ std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const tuple<siz
   return fld_mgr->allocate_field();
 }
 
-RegionField Runtime::map_region_field(LibraryContext* context,
-                                      std::shared_ptr<LogicalRegionField> rf)
+RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegionField* rf)
 {
   auto region   = rf->region();
   auto field_id = rf->field_id();
 
-  RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
-  req.add_field(field_id);
+  PhysicalRegion pr;
 
-  auto mapper_id = context->get_mapper_id(0);
-  // TODO: We need to pass the metadata about logical store
-  InlineLauncher launcher(req, mapper_id);
-  auto pr = legion_runtime_->map_region(legion_context_, launcher);
+  RegionFieldID key(region, field_id);
+  auto finder = inline_mapped_.find(key);
+  if (inline_mapped_.end() == finder) {
+    RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
+    req.add_field(field_id);
+
+    auto mapper_id = context->get_mapper_id(0);
+    // TODO: We need to pass the metadata about logical store
+    InlineLauncher launcher(req, mapper_id);
+    pr = legion_runtime_->map_region(legion_context_, launcher);
+    inline_mapped_.insert({key, pr});
+  } else
+    pr = finder->second;
   return RegionField(rf->dim(), pr, field_id);
 }
 
@@ -762,6 +775,18 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(IndexTaskLauncher* launcher)
 
 Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::SymbolicPoint& point)
 {
+#ifdef DEBUG_LEGATE
+  log_legate.debug() << "Query projection {src_ndim: " << src_ndim << ", point: " << point << "}";
+#endif
+
+  if (is_identity(src_ndim, point)) {
+#ifdef DEBUG_LEGATE
+    log_legate.debug() << "Identity projection {src_ndim: " << src_ndim << ", point: " << point
+                       << "}";
+#endif
+    return 0;
+  }
+
   ProjectionDesc key(src_ndim, point);
   auto finder = registered_projections_.find(key);
   if (registered_projections_.end() != finder) return finder->second;
@@ -780,6 +805,11 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
   legate_register_affine_projection_functor(
     src_ndim, ndim, dims.data(), weights.data(), offsets.data(), proj_id);
   registered_projections_[key] = proj_id;
+
+#ifdef DEBUG_LEGATE
+  log_legate.debug() << "Register projection " << proj_id << " {src_ndim: " << src_ndim
+                     << ", point: " << point << "}";
+#endif
 
   return proj_id;
 }

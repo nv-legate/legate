@@ -86,6 +86,23 @@ std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
   return out;
 }
 
+SymbolicPoint create_symbolic_point(int32_t ndim)
+{
+  std::vector<SymbolicExpr> exprs;
+  exprs.resize(ndim);
+  for (int32_t dim = 0; dim < ndim; ++dim) exprs[dim] = proj::SymbolicExpr(dim);
+  return SymbolicPoint(std::move(exprs));
+}
+
+bool is_identity(int32_t src_ndim, const SymbolicPoint& point)
+{
+  auto ndim = static_cast<int32_t>(point.size());
+  if (src_ndim != ndim) return false;
+  for (int32_t dim = 0; dim < ndim; ++dim)
+    if (!point[dim].is_identity(dim)) return false;
+  return true;
+}
+
 }  // namespace proj
 
 class DelinearizationFunctor : public ProjectionFunctor {

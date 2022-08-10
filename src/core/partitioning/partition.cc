@@ -171,4 +171,10 @@ std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
 
 std::unique_ptr<Partition> create_no_partition() { return std::make_unique<NoPartition>(); }
 
+std::ostream& operator<<(std::ostream& out, const Partition& partition)
+{
+  out << partition.to_string();
+  return out;
+}
+
 }  // namespace legate

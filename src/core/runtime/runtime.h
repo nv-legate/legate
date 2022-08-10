@@ -116,10 +116,12 @@ class Runtime {
  public:
   LogicalStore create_store(std::vector<size_t> extents, LegateTypeCode code);
   LogicalStore create_store(const Scalar& scalar);
+  uint64_t get_unique_store_id();
+
+ public:
   std::shared_ptr<LogicalRegionField> create_region_field(const tuple<size_t>& extents,
                                                           LegateTypeCode code);
-  RegionField map_region_field(LibraryContext* context,
-                               std::shared_ptr<LogicalRegionField> region_field);
+  RegionField map_region_field(LibraryContext* context, const LogicalRegionField* region_field);
   void unmap_physical_region(Legion::PhysicalRegion pr);
 
  public:
@@ -184,6 +186,11 @@ class Runtime {
   std::vector<std::unique_ptr<Operation>> operations_;
   size_t window_size_{1};
   uint64_t next_unique_id_{0};
+
+ private:
+  using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
+  std::map<RegionFieldID, Legion::PhysicalRegion> inline_mapped_;
+  uint64_t next_store_id_{1};
 
  private:
   std::map<std::string, LibraryContext*> libraries_;

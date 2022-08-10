@@ -56,6 +56,10 @@ std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
 using SymbolicPoint   = tuple<SymbolicExpr>;
 using SymbolicFunctor = SymbolicPoint (*)(const SymbolicPoint&);
 
+SymbolicPoint create_symbolic_point(int32_t ndim);
+
+bool is_identity(int32_t ndim, const SymbolicPoint& point);
+
 }  // namespace proj
 
 // Interface for Legate projection functors

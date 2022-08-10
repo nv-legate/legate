@@ -21,6 +21,7 @@ GEN_CPU_SRC	= core/legate_c.cc                      \
 							core/comm/coll.cc                     \
 							core/data/allocator.cc                \
 							core/data/logical_store.cc            \
+							core/data/logical_store_detail.cc     \
 							core/data/scalar.cc                   \
 							core/data/store.cc                    \
 							core/data/transform.cc                \

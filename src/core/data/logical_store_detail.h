@@ -23,14 +23,57 @@
 namespace legate {
 namespace detail {
 
+class Storage {
+ public:
+  enum class Kind : int32_t {
+    REGION_FIELD = 0,
+    FUTURE       = 1,
+  };
+
+ public:
+  // Create a RegionField-backed storage. Initialized lazily.
+  Storage(tuple<size_t> extents, LegateTypeCode code);
+  // Create a Future-backed storage. Initialized eagerly.
+  Storage(tuple<size_t> extents, LegateTypeCode code, const Legion::Future& future);
+
+ public:
+  const tuple<size_t>& extents() const { return extents_; }
+  size_t volume() const { return volume_; }
+  int32_t dim();
+  LegateTypeCode code() const { return code_; }
+  Kind kind() const { return kind_; }
+
+ public:
+  LogicalRegionField* get_region_field();
+  Legion::Future get_future() const;
+
+ public:
+  RegionField map(LibraryContext* context);
+
+ public:
+  Partition* find_key_partition() const;
+  void set_key_partition(std::unique_ptr<Partition>&& key_partition);
+  void reset_key_partition();
+  Legion::LogicalPartition find_or_create_legion_partition(const Partition* partition);
+
+ private:
+  tuple<size_t> extents_;
+  size_t volume_;
+  LegateTypeCode code_{MAX_TYPE_NUMBER};
+  Kind kind_{Kind::REGION_FIELD};
+  std::shared_ptr<LogicalRegionField> region_field_{nullptr};
+  Legion::Future future_{};
+
+ private:
+  std::unique_ptr<Partition> key_partition_{nullptr};
+};
+
 class LogicalStore {
  public:
-  LogicalStore(LegateTypeCode code, tuple<size_t> extents);
-  LogicalStore(LegateTypeCode code,
-               tuple<size_t> extents,
-               std::shared_ptr<LogicalStore> parent,
-               std::shared_ptr<TransformStack> transform);
-  LogicalStore(LegateTypeCode code, const void* data);
+  LogicalStore(std::shared_ptr<Storage>&& storage);
+  LogicalStore(tuple<size_t>&& extents,
+               const std::shared_ptr<Storage>& storage,
+               std::shared_ptr<TransformStack>&& transform);
 
  public:
   ~LogicalStore();
@@ -47,16 +90,14 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) = default;
 
  public:
-  bool scalar() const;
-  int32_t dim() const;
-  LegateTypeCode code() const;
-  Legion::Domain domain() const;
-  const std::vector<size_t>& extents() const;
+  const tuple<size_t>& extents() const;
   size_t volume() const;
+  int32_t dim() const;
+  bool scalar() const;
+  LegateTypeCode code() const;
 
  public:
-  bool has_storage() const;
-  std::shared_ptr<LogicalRegionField> get_storage();
+  LogicalRegionField* get_region_field();
   Legion::Future get_future();
 
  private:
@@ -75,24 +116,16 @@ class LogicalStore {
   std::unique_ptr<Partition> find_or_create_key_partition();
 
  private:
-  std::unique_ptr<Partition> invert_partition(const Partition* partition) const;
-  proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const;
   Legion::ProjectionID compute_projection() const;
 
  public:
   void pack(BufferBuilder& buffer) const;
 
  private:
-  void pack_transform(BufferBuilder& buffer) const;
-
- private:
-  bool scalar_{false};
-  LegateTypeCode code_{MAX_TYPE_NUMBER};
+  uint64_t store_id_;
   tuple<size_t> extents_;
-  std::shared_ptr<LogicalRegionField> region_field_{nullptr};
-  Legion::Future future_{};
-  std::shared_ptr<LogicalStore> parent_{nullptr};
-  std::shared_ptr<TransformStack> transform_{nullptr};
+  std::shared_ptr<Storage> storage_;
+  std::shared_ptr<TransformStack> transform_;
   std::shared_ptr<Store> mapped_{nullptr};
 };
 

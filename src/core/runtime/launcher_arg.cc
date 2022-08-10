@@ -35,7 +35,7 @@ RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
                                const ProjectionInfo* proj_info)
   : analyzer_(analyzer),
     store_(store),
-    region_(store_->get_storage()->region()),
+    region_(store_->get_region_field()->region()),
     field_id_(field_id),
     privilege_(privilege),
     proj_info_(proj_info)
@@ -76,7 +76,7 @@ void FutureStoreArg::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(read_only_);
   buffer.pack<bool>(has_storage_);
   buffer.pack<int32_t>(type_dispatch(store_->code(), datalen_fn{}));
-  buffer.pack<size_t>(store_->extents());
+  buffer.pack<size_t>(store_->extents().data());
 }
 
 }  // namespace legate
