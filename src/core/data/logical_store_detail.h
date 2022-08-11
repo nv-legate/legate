@@ -116,6 +116,8 @@ class LogicalStore {
  public:
   std::unique_ptr<Projection> create_projection(const Partition* partition);
   std::shared_ptr<Partition> find_or_create_key_partition();
+  void set_key_partition(const Partition* partition);
+  void reset_key_partition();
 
  private:
   Legion::ProjectionID compute_projection() const;

@@ -242,6 +242,14 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition()
   return key_partition_;
 }
 
+void LogicalStore::set_key_partition(const Partition* partition)
+{
+  auto inverted = transform_->invert(partition);
+  storage_->set_key_partition(std::move(inverted));
+}
+
+void LogicalStore::reset_key_partition() { storage_->reset_key_partition(); }
+
 void LogicalStore::pack(BufferBuilder& buffer) const
 {
   buffer.pack<bool>(scalar());

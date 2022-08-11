@@ -43,7 +43,7 @@ class Strategy {
  public:
   void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);
   bool has_assignment(const Variable* partition_symbol) const;
-  std::shared_ptr<Partition> operator[](const Variable* partition_symbol) const;
+  const std::shared_ptr<Partition>& operator[](const Variable* partition_symbol) const;
 
  private:
   std::map<const Variable, std::shared_ptr<Partition>> assignments_{};

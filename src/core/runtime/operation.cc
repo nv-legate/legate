@@ -14,9 +14,12 @@
  *
  */
 
+#include "core/runtime/operation.h"
+
 #include <sstream>
 #include <unordered_set>
 
+#include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_graph.h"
@@ -24,7 +27,6 @@
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
 #include "core/runtime/launcher.h"
-#include "core/runtime/operation.h"
 #include "core/runtime/req_analyzer.h"
 #include "core/runtime/runtime.h"
 
@@ -116,8 +118,10 @@ void Task::launch(Strategy* p_strategy)
   for (auto& pair : outputs_) {
     auto& store = pair.first;
     auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store);
+    auto part   = strategy[var];
+    auto proj   = part->get_projection(store);
     launcher.add_output(store, std::move(proj));
+    store->set_key_partition(part.get());
   }
   uint32_t idx = 0;
   for (auto& pair : reductions_) {
