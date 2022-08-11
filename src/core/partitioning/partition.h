@@ -62,6 +62,9 @@ struct Partition {
   virtual Legion::Domain launch_domain() const = 0;
 
  public:
+  virtual std::unique_ptr<Partition> clone() const = 0;
+
+ public:
   virtual std::string to_string() const = 0;
 };
 
@@ -87,12 +90,18 @@ class NoPartition : public Partition {
   virtual Legion::Domain launch_domain() const override;
 
  public:
+  virtual std::unique_ptr<Partition> clone() const override;
+
+ public:
   virtual std::string to_string() const override;
 };
 
 class Tiling : public Partition {
  public:
   Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets);
+
+ public:
+  Tiling(const Tiling&) = default;
 
  public:
   bool operator==(const Tiling& other) const;
@@ -114,6 +123,9 @@ class Tiling : public Partition {
  public:
   virtual bool has_launch_domain() const override;
   virtual Legion::Domain launch_domain() const override;
+
+ public:
+  virtual std::unique_ptr<Partition> clone() const override;
 
  public:
   virtual std::string to_string() const override;

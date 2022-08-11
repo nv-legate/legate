@@ -46,8 +46,22 @@ TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
 {
 }
 
+std::unique_ptr<Partition> TransformStack::convert(const Partition* partition) const
+{
+  if (identity()) return partition->clone();
+
+  if (parent_->identity())
+    return transform_->convert(partition);
+  else {
+    auto result = parent_->convert(partition);
+    return transform_->convert(result.get());
+  }
+}
+
 std::unique_ptr<Partition> TransformStack::invert(const Partition* partition) const
 {
+  if (identity()) return partition->clone();
+
   auto result = transform_->invert(partition);
   return parent_->identity() ? std::move(result) : parent_->invert(result.get());
 }
@@ -157,6 +171,8 @@ DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   return result;
 }
 
+std::unique_ptr<Partition> Shift::convert(const Partition* partition) const { return nullptr; }
+
 std::unique_ptr<Partition> Shift::invert(const Partition* partition) const { return nullptr; }
 
 // the shift transform makes no change on the store's dimensions
@@ -222,6 +238,23 @@ DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
   result.transform = transform;
   result.offset    = offset;
   return result;
+}
+
+std::unique_ptr<Partition> Promote::convert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling = static_cast<const Tiling*>(partition);
+      return create_tiling(tiling->tile_shape().insert(extra_dim_, dim_size_),
+                           tiling->color_shape().insert(extra_dim_, 1),
+                           tiling->offsets().insert(extra_dim_, 0));
+    }
+  }
+  assert(false);
+  return nullptr;
 }
 
 std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
@@ -307,6 +340,8 @@ DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
   return result;
 }
 
+std::unique_ptr<Partition> Project::convert(const Partition* partition) const { return nullptr; }
+
 std::unique_ptr<Partition> Project::invert(const Partition* partition) const { return nullptr; }
 
 proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
@@ -370,6 +405,8 @@ DomainAffineTransform Transpose::inverse_transform(int32_t in_dim) const
   result.offset    = offset;
   return result;
 }
+
+std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const { return nullptr; }
 
 std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const { return nullptr; }
 
@@ -478,6 +515,11 @@ DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) const
   result.transform = transform;
   result.offset    = offset;
   return result;
+}
+
+std::unique_ptr<Partition> Delinearize::convert(const Partition* partition) const
+{
+  return nullptr;
 }
 
 std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const { return nullptr; }

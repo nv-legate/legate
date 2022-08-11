@@ -51,7 +51,7 @@ class Storage {
   RegionField map(LibraryContext* context);
 
  public:
-  Partition* find_key_partition() const;
+  Partition* find_or_create_key_partition();
   void set_key_partition(std::unique_ptr<Partition>&& key_partition);
   void reset_key_partition();
   Legion::LogicalPartition find_or_create_legion_partition(const Partition* partition);
@@ -115,7 +115,7 @@ class LogicalStore {
 
  public:
   std::unique_ptr<Projection> create_projection(const Partition* partition);
-  std::unique_ptr<Partition> find_or_create_key_partition();
+  std::shared_ptr<Partition> find_or_create_key_partition();
 
  private:
   Legion::ProjectionID compute_projection() const;
@@ -131,6 +131,9 @@ class LogicalStore {
   tuple<size_t> extents_;
   std::shared_ptr<Storage> storage_;
   std::shared_ptr<TransformStack> transform_;
+
+ private:
+  std::shared_ptr<Partition> key_partition_;
   std::shared_ptr<Store> mapped_{nullptr};
 };
 

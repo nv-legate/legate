@@ -50,6 +50,8 @@ Legion::Domain NoPartition::launch_domain() const
   return Legion::Domain();
 }
 
+std::unique_ptr<Partition> NoPartition::clone() const { return create_no_partition(); }
+
 std::string NoPartition::to_string() const { return "NoPartition"; }
 
 Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
@@ -152,6 +154,8 @@ Legion::Domain Tiling::launch_domain() const
   return launch_domain;
 }
 
+std::unique_ptr<Partition> Tiling::clone() const { return std::make_unique<Tiling>(*this); }
+
 std::string Tiling::to_string() const
 {
   std::stringstream ss;
@@ -159,6 +163,8 @@ std::string Tiling::to_string() const
      << ")";
   return ss.str();
 }
+
+std::unique_ptr<Partition> create_no_partition() { return std::make_unique<NoPartition>(); }
 
 std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                          Shape&& color_shape,
@@ -168,8 +174,6 @@ std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                   std::forward<Shape>(color_shape),
                                   std::forward<Shape>(offsets));
 }
-
-std::unique_ptr<Partition> create_no_partition() { return std::make_unique<NoPartition>(); }
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition)
 {

@@ -70,7 +70,21 @@ RegionField Storage::map(LibraryContext* context)
   return Runtime::get_runtime()->map_region_field(context, region_field_.get());
 }
 
-Partition* Storage::find_key_partition() const { return key_partition_.get(); }
+Partition* Storage::find_or_create_key_partition()
+{
+  if (key_partition_ != nullptr) return key_partition_.get();
+
+  auto part_mgr     = Runtime::get_runtime()->partition_manager();
+  auto launch_shape = part_mgr->compute_launch_shape(extents_);
+  if (launch_shape.empty())
+    key_partition_ = create_no_partition();
+  else {
+    auto tile_shape = part_mgr->compute_tile_shape(extents_, launch_shape);
+    key_partition_  = create_tiling(std::move(tile_shape), std::move(launch_shape));
+  }
+
+  return key_partition_.get();
+}
 
 void Storage::set_key_partition(std::unique_ptr<Partition>&& key_partition)
 {
@@ -213,18 +227,19 @@ std::unique_ptr<Projection> LogicalStore::create_projection(const Partition* par
   return std::make_unique<Projection>(legion_partition, proj_id);
 }
 
-std::unique_ptr<Partition> LogicalStore::find_or_create_key_partition()
+std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition()
 {
-  if (scalar()) return create_no_partition();
+  if (key_partition_ != nullptr) return key_partition_;
 
-  auto part_mgr     = Runtime::get_runtime()->partition_manager();
-  auto launch_shape = part_mgr->compute_launch_shape(extents_);
-  if (launch_shape.empty())
-    return create_no_partition();
-  else {
-    auto tile_shape = part_mgr->compute_tile_shape(extents_, launch_shape);
-    return create_tiling(std::move(tile_shape), std::move(launch_shape));
+  if (scalar()) {
+    key_partition_ = create_no_partition();
+    return key_partition_;
   }
+
+  Partition* storage_part = storage_->find_or_create_key_partition();
+  auto store_part         = transform_->convert(storage_part);
+  key_partition_          = std::move(store_part);
+  return key_partition_;
 }
 
 void LogicalStore::pack(BufferBuilder& buffer) const

@@ -120,7 +120,7 @@ std::unique_ptr<Strategy> Partitioner::solve()
 
     auto* op       = part_symb->operation();
     auto store     = op->find_store(part_symb);
-    auto partition = store->find_or_create_key_partition().release();
+    auto partition = store->find_or_create_key_partition();
     if (!strategy->has_launch_domain(op)) {
       if (partition->has_launch_domain())
         strategy->set_launch_domain(op, partition->launch_domain());
@@ -131,8 +131,7 @@ std::unique_ptr<Strategy> Partitioner::solve()
     std::vector<const Variable*> equiv_class;
     constraints.find_equivalence_class(part_symb, equiv_class);
 
-    std::shared_ptr<Partition> solution(partition);
-    for (auto symb : equiv_class) strategy->insert(symb, solution);
+    for (auto symb : equiv_class) strategy->insert(symb, partition);
   }
 
   return std::move(strategy);
