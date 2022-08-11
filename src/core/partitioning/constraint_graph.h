@@ -16,15 +16,34 @@
 
 #pragma once
 
+#include <list>
 #include <map>
 #include <memory>
 #include <vector>
+#include "core/partitioning/constraint.h"
 #include "core/utilities/ordered_set.h"
 
 namespace legate {
 
-struct Constraint;
-struct Variable;
+struct EquivClass {
+  EquivClass(const Variable* symb) : partition_symbol(symb), next(nullptr), size(1) {}
+
+  EquivClass* unify(EquivClass* other)
+  {
+    EquivClass* self = this;
+    if (self->size < other->size) std::swap(self, other);
+
+    auto end = self;
+    while (end->next != nullptr) end = end->next;
+    end->next = other;
+    end->size += other->size;
+    return self;
+  }
+
+  const Variable* partition_symbol;
+  EquivClass* next;
+  size_t size;
+};
 
 struct ConstraintGraph {
  public:
@@ -38,9 +57,18 @@ struct ConstraintGraph {
   const std::vector<const Variable*>& partition_symbols() const;
   const std::vector<const Constraint*>& constraints() const;
 
+ public:
+  void compute_equivalence_classes();
+  void find_equivalence_class(const Variable* partition_symbol,
+                              std::vector<const Variable*>& out_equiv_class) const;
+
  private:
   ordered_set<const Variable*> partition_symbols_;
   std::vector<const Constraint*> constraints_;
+
+ private:
+  std::map<const Variable, EquivClass*> equiv_classes_;
+  std::vector<std::unique_ptr<EquivClass>> all_equiv_class_entries_;
 };
 
 }  // namespace legate

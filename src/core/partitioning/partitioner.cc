@@ -95,28 +95,11 @@ std::unique_ptr<Strategy> Partitioner::solve()
 
   for (auto op : operations_) op->add_to_constraint_graph(constraints);
 
+  constraints.compute_equivalence_classes();
+
 #ifdef DEBUG_LEGATE
   constraints.dump();
 #endif
-
-  // We need to find a mapping from every partition variable to a concrete partition
-  // Substitution mapping;
-  // for (auto& expr : all_symbols) {
-  //  auto* var = expr->as_variable();
-  //  assert(nullptr != sym);
-  //  if (mapping.find(var) != mapping.end()) continue;
-
-  //  auto store     = store_mapping[expr];
-  //  auto partition = store->find_or_create_key_partition();
-  //  mapping[sym]   = std::move(partition);
-
-  //  std::vector<std::shared_ptr<Constraint>> next_constraints;
-  //  for (auto& constraint : all_constraints) {
-  //    auto substituted = constraint.subst(mapping);
-  //    bool resolved    = substituted.resolve(mapping);
-  //    if (!resolved) next_constraints.push_back(std::move(substituted));
-  //  }
-  //}
 
   auto strategy = std::make_unique<Strategy>();
 
@@ -133,16 +116,23 @@ std::unique_ptr<Strategy> Partitioner::solve()
                    });
 
   for (auto& part_symb : partition_symbols) {
+    if (strategy->has_assignment(part_symb)) continue;
+
     auto* op       = part_symb->operation();
     auto store     = op->find_store(part_symb);
-    auto partition = store->find_or_create_key_partition();
+    auto partition = store->find_or_create_key_partition().release();
     if (!strategy->has_launch_domain(op)) {
       if (partition->has_launch_domain())
         strategy->set_launch_domain(op, partition->launch_domain());
       else
         strategy->set_single_launch(op);
     }
-    strategy->insert(part_symb, std::move(partition));
+
+    std::vector<const Variable*> equiv_class;
+    constraints.find_equivalence_class(part_symb, equiv_class);
+
+    std::shared_ptr<Partition> solution(partition);
+    for (auto symb : equiv_class) strategy->insert(symb, solution);
   }
 
   return std::move(strategy);

@@ -22,6 +22,7 @@
 
 namespace legate {
 
+struct Alignment;
 struct Constraint;
 struct Literal;
 struct Operation;
@@ -80,6 +81,7 @@ struct Variable : public Expr {
   Variable& operator=(const Variable&) = default;
 
  public:
+  friend bool operator==(const Variable& lhs, const Variable& rhs);
   friend bool operator<(const Variable& lhs, const Variable& rhs);
 
  public:
@@ -111,6 +113,33 @@ struct Constraint {
 
  public:
   virtual std::string to_string() const = 0;
+
+ public:
+  virtual const Alignment* as_alignment() const = 0;
+};
+
+// Constraint AST nodes own their child nodes
+struct Alignment : public Constraint {
+ public:
+  Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs);
+
+ public:
+  virtual void find_partition_symbols(
+    std::vector<const Variable*>& partition_symbols) const override;
+
+ public:
+  virtual std::string to_string() const override;
+
+ public:
+  virtual const Alignment* as_alignment() const override { return this; }
+
+ public:
+  const Expr* lhs() const { return lhs_.get(); }
+  const Expr* rhs() const { return rhs_.get(); }
+
+ private:
+  std::unique_ptr<Expr> lhs_;
+  std::unique_ptr<Expr> rhs_;
 };
 
 std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs);

@@ -31,6 +31,11 @@ void Literal::find_partition_symbols(std::vector<const Variable*>& partition_sym
 
 Variable::Variable(const Operation* op, int32_t id) : op_(op), id_(id) {}
 
+bool operator==(const Variable& lhs, const Variable& rhs)
+{
+  return lhs.op_ == rhs.op_ && lhs.id_ == rhs.id_;
+}
+
 bool operator<(const Variable& lhs, const Variable& rhs) { return lhs.id_ < rhs.id_; }
 
 void Variable::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
@@ -44,23 +49,6 @@ std::string Variable::to_string() const
   ss << "X" << id_ << "{" << op_->to_string() << "}";
   return ss.str();
 }
-
-// Constraint AST nodes own their child nodes
-struct Alignment : public Constraint {
- public:
-  Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs);
-
- public:
-  virtual void find_partition_symbols(
-    std::vector<const Variable*>& partition_symbols) const override;
-
- public:
-  virtual std::string to_string() const override;
-
- private:
-  std::unique_ptr<Expr> lhs_;
-  std::unique_ptr<Expr> rhs_;
-};
 
 Alignment::Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs)
   : lhs_(std::forward<decltype(lhs_)>(lhs)), rhs_(std::forward<decltype(rhs_)>(rhs))
