@@ -92,6 +92,8 @@ class LogicalStore {
  public:
   const tuple<size_t>& extents() const;
   size_t volume() const;
+  // Size of the backing storage
+  size_t storage_size() const;
   int32_t dim() const;
   bool scalar() const;
   LegateTypeCode code() const;
@@ -120,6 +122,9 @@ class LogicalStore {
 
  public:
   void pack(BufferBuilder& buffer) const;
+
+ public:
+  std::string to_string() const;
 
  private:
   uint64_t store_id_;

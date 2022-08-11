@@ -139,7 +139,7 @@ template <typename FUNC>
 T tuple<T>::reduce(FUNC func, const T& init) const
 {
   T agg{init};
-  for (auto value : data_) func(agg, value);
+  for (auto value : data_) agg = func(agg, value);
   return agg;
 }
 

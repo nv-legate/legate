@@ -102,7 +102,7 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
 #ifdef DEBUG_LEGATE
   assert(transform_ != nullptr);
 
-  log_legate.debug() << "Create Store(" << store_id_ << ") {shape: " << extents_ << "}";
+  log_legate.debug() << "Create " << to_string();
 #endif
 }
 
@@ -117,8 +117,7 @@ LogicalStore::LogicalStore(tuple<size_t>&& extents,
 #ifdef DEBUG_LEGATE
   assert(transform_ != nullptr);
 
-  log_legate.debug() << "Create Store(" << store_id_ << ") {shape: " << extents_
-                     << ", transform: " << *transform_ << "}";
+  log_legate.debug() << "Create " << to_string();
 #endif
 }
 
@@ -130,6 +129,20 @@ LogicalStore::~LogicalStore()
 const tuple<size_t>& LogicalStore::extents() const { return extents_; }
 
 size_t LogicalStore::volume() const { return extents_.volume(); }
+
+struct elem_size_fn {
+  template <LegateTypeCode CODE>
+  size_t operator()()
+  {
+    return sizeof(legate_type_of<CODE>);
+  }
+};
+
+size_t LogicalStore::storage_size() const
+{
+  auto elem_size = type_dispatch(code(), elem_size_fn{});
+  return storage_->volume() * elem_size;
+}
 
 int32_t LogicalStore::dim() const { return static_cast<int32_t>(extents_.size()); }
 
@@ -221,6 +234,17 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(dim());
   buffer.pack<int32_t>(code());
   transform_->pack(buffer);
+}
+
+std::string LogicalStore::to_string() const
+{
+  std::stringstream ss;
+  ss << "Store(" << store_id_ << ") {shape: " << extents_;
+  if (!transform_->identity())
+    ss << ", transform: " << *transform_ << "}";
+  else
+    ss << "}";
+  return ss.str();
 }
 
 }  // namespace detail

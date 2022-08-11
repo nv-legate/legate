@@ -118,8 +118,19 @@ std::unique_ptr<Strategy> Partitioner::solve()
   //  }
   //}
 
-  auto strategy           = std::make_unique<Strategy>();
-  auto& partition_symbols = constraints.partition_symbols();
+  auto strategy = std::make_unique<Strategy>();
+
+  // Copy the list of partition symbols as we will sort them inplace
+  std::vector<const Variable*> partition_symbols(constraints.partition_symbols());
+  std::stable_sort(partition_symbols.begin(),
+                   partition_symbols.end(),
+                   [](const auto& part_symb_a, const auto& part_symb_b) {
+                     auto get_storage_size = [](const auto& part_symb) {
+                       auto* op = part_symb->operation();
+                       return op->find_store(part_symb)->storage_size();
+                     };
+                     return get_storage_size(part_symb_a) > get_storage_size(part_symb_b);
+                   });
 
   for (auto& part_symb : partition_symbols) {
     auto* op       = part_symb->operation();
