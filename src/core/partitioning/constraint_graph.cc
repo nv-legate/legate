@@ -27,7 +27,7 @@ extern Legion::Logger log_legate;
 
 void ConstraintGraph::add_partition_symbol(const Variable* partition_symbol)
 {
-  partition_symbols_.push_back(partition_symbol);
+  partition_symbols_.insert(partition_symbol);
 }
 
 void ConstraintGraph::add_constraint(const Constraint* constraint)
@@ -37,12 +37,18 @@ void ConstraintGraph::add_constraint(const Constraint* constraint)
 
 void ConstraintGraph::dump()
 {
-  for (auto& constraint : constraints_) log_legate.debug("%s", constraint->to_string().c_str());
+  log_legate.debug("===== Constraint Graph =====");
+  log_legate.debug() << "Variables:";
+  for (auto& symbol : partition_symbols_.elements())
+    log_legate.debug() << "  " << symbol->to_string();
+  log_legate.debug() << "Constraints:";
+  for (auto& constraint : constraints_) log_legate.debug() << "  " << constraint->to_string();
+  log_legate.debug("============================");
 }
 
 const std::vector<const Variable*>& ConstraintGraph::partition_symbols() const
 {
-  return partition_symbols_;
+  return partition_symbols_.elements();
 }
 
 const std::vector<const Constraint*>& ConstraintGraph::constraints() const { return constraints_; }

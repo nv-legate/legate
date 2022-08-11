@@ -16,31 +16,34 @@
 
 #pragma once
 
-#include <map>
-#include <memory>
+#include <unordered_set>
 #include <vector>
-#include "core/utilities/ordered_set.h"
 
 namespace legate {
 
-struct Constraint;
-struct Variable;
+// A set implementation that keeps the elements in the order in which they are inserted.
+// Internally it uses a vector and a set, the latter of which is used for deduplication.
+// This container is not very efficient if used with non-pointer data types
 
-struct ConstraintGraph {
+template <typename T>
+class ordered_set {
  public:
-  void add_partition_symbol(const Variable* partition_symbol);
-  void add_constraint(const Constraint* constraint);
-
- public:
-  void dump();
+  ordered_set() {}
 
  public:
-  const std::vector<const Variable*>& partition_symbols() const;
-  const std::vector<const Constraint*>& constraints() const;
+  void insert(const T& value)
+  {
+    if (element_set_.find(value) != element_set_.end()) return;
+    elements_.push_back(value);
+    element_set_.insert(value);
+  }
+
+ public:
+  const std::vector<T>& elements() const { return elements_; }
 
  private:
-  ordered_set<const Variable*> partition_symbols_;
-  std::vector<const Constraint*> constraints_;
+  std::vector<T> elements_{};
+  std::unordered_set<T> element_set_{};
 };
 
 }  // namespace legate

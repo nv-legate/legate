@@ -95,7 +95,9 @@ std::unique_ptr<Strategy> Partitioner::solve()
 
   for (auto op : operations_) op->add_to_constraint_graph(constraints);
 
+#ifdef DEBUG_LEGATE
   constraints.dump();
+#endif
 
   // We need to find a mapping from every partition variable to a concrete partition
   // Substitution mapping;
