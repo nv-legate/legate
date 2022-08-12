@@ -106,9 +106,8 @@ class LogicalStore {
   void create_storage();
 
  public:
-  std::shared_ptr<LogicalStore> promote(int32_t extra_dim,
-                                        size_t dim_size,
-                                        std::shared_ptr<LogicalStore> parent) const;
+  std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size) const;
+  std::shared_ptr<LogicalStore> project(int32_t dim, int64_t index) const;
 
  public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);

@@ -168,9 +168,7 @@ LogicalRegionField* LogicalStore::get_region_field() { return storage_->get_regi
 
 Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
 
-std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
-                                                    size_t dim_size,
-                                                    std::shared_ptr<LogicalStore> parent) const
+std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
 {
   if (extra_dim < 0 || extra_dim > dim()) {
     log_legate.error("Invalid promotion on dimension %d for a %d-D store", extra_dim, dim());
@@ -179,6 +177,20 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim,
 
   auto new_extents = extents_.insert(extra_dim, dim_size);
   auto transform   = transform_->push(std::make_unique<Promote>(extra_dim, dim_size));
+  return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+}
+
+std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index) const
+{
+  if (d < 0 || d >= dim()) {
+    log_legate.error("Invalid projection on dimension %d for a %d-D store", d, dim());
+    LEGATE_ABORT;
+  } else if (index < 0 || index >= extents_[d]) {
+    log_legate.error("Projection index %ld is out of bounds [0, %zd)", index, extents_[d]);
+  }
+
+  auto new_extents = extents_.remove(d);
+  auto transform   = transform_->push(std::make_unique<Project>(d, index));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 

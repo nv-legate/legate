@@ -340,9 +340,39 @@ DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Project::convert(const Partition* partition) const { return nullptr; }
+std::unique_ptr<Partition> Project::convert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling = static_cast<const Tiling*>(partition);
+      return create_tiling(tiling->tile_shape().remove(dim_),
+                           tiling->color_shape().remove(dim_),
+                           tiling->offsets().remove(dim_));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
 
-std::unique_ptr<Partition> Project::invert(const Partition* partition) const { return nullptr; }
+std::unique_ptr<Partition> Project::invert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling = static_cast<const Tiling*>(partition);
+      return create_tiling(tiling->tile_shape().insert(dim_, 1),
+                           tiling->color_shape().insert(dim_, 1),
+                           tiling->offsets().insert(dim_, coord_));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
 
 proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
 {

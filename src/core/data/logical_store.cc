@@ -58,7 +58,12 @@ size_t LogicalStore::volume() const { return impl_->volume(); }
 
 LogicalStore LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
 {
-  return LogicalStore(impl_->promote(extra_dim, dim_size, impl_));
+  return LogicalStore(impl_->promote(extra_dim, dim_size));
+}
+
+LogicalStore LogicalStore::project(int32_t dim, int64_t index) const
+{
+  return LogicalStore(impl_->project(dim, index));
 }
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
