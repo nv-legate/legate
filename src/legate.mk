@@ -223,12 +223,21 @@ endif
 
 CC_FLAGS += -fPIC
 NVCC_FLAGS += --compiler-options '-fPIC'
+ifeq ($(strip $(BUILD_EXECUTABLE)),1)
+ifeq ($(shell uname), Darwin)
+	DLIB = $(LIBNAME)
+	LD_FLAGS += -fPIC
+else
+	DLIB = $(LIBNAME)
+endif
+else
 ifeq ($(shell uname), Darwin)
 	DLIB = $(LIBNAME).dylib
 	LD_FLAGS += -dynamiclib -fPIC -install_name @rpath/$(DLIB)
 else
 	DLIB = $(LIBNAME).so
 	LD_FLAGS += -shared
+endif
 endif
 
 OMP_FLAGS ?=
