@@ -156,6 +156,7 @@ uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
                                          const ProjectionInfo* proj_info) const
 {
   auto finder = req_indices_.find(Key(privilege, *proj_info));
+  if (req_indices_.end() == finder) finder = req_indices_.find(Key(LEGION_READ_WRITE, *proj_info));
 #ifdef DEBUG_LEGATE
   assert(finder != req_indices_.end());
 #endif
