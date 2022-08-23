@@ -102,9 +102,6 @@ class LogicalStore {
   LogicalRegionField* get_region_field();
   Legion::Future get_future();
 
- private:
-  void create_storage();
-
  public:
   std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size) const;
   std::shared_ptr<LogicalStore> project(int32_t dim, int64_t index) const;

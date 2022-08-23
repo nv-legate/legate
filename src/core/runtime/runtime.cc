@@ -743,7 +743,7 @@ Legion::LogicalPartition Runtime::create_logical_partition(
 
 Legion::Future Runtime::create_future(const void* data, size_t datalen) const
 {
-  return Legion::Future::from_untyped_pointer(legion_runtime_, data, datalen);
+  return Legion::Future::from_untyped_pointer(data, datalen);
 }
 
 FieldID Runtime::allocate_field(const FieldSpace& field_space, size_t field_size)
