@@ -22,6 +22,7 @@
 
 namespace legate {
 
+class OutputRequirementAnalyzer;
 class ProjectionInfo;
 class RequirementAnalyzer;
 
@@ -80,6 +81,33 @@ struct RegionFieldArg : public ArgWrapper {
   Legion::FieldID field_id_;
   Legion::PrivilegeMode privilege_;
   const ProjectionInfo* proj_info_;
+};
+
+struct OutputRegionArg : public ArgWrapper {
+ public:
+  OutputRegionArg(OutputRequirementAnalyzer* analyzer,
+                  detail::LogicalStore* store,
+                  Legion::FieldSpace field_space,
+                  Legion::FieldID field_id);
+
+ public:
+  virtual void pack(BufferBuilder& buffer) const override;
+
+ public:
+  virtual ~OutputRegionArg() {}
+
+ public:
+  detail::LogicalStore* store() const { return store_; }
+  const Legion::FieldSpace& field_space() const { return field_space_; }
+  Legion::FieldID field_id() const { return field_id_; }
+  uint32_t requirement_index() const { return requirement_index_; }
+
+ private:
+  OutputRequirementAnalyzer* analyzer_;
+  detail::LogicalStore* store_;
+  Legion::FieldSpace field_space_;
+  Legion::FieldID field_id_;
+  mutable uint32_t requirement_index_{-1U};
 };
 
 struct FutureStoreArg : public ArgWrapper {

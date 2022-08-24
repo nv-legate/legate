@@ -104,8 +104,18 @@ Task::~Task() {}
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 
+struct field_size_fn {
+  template <LegateTypeCode CODE>
+  size_t operator()()
+  {
+    return sizeof(legate_type_of<CODE>);
+  }
+};
+
 void Task::launch(Strategy* p_strategy)
 {
+  auto* runtime = Runtime::get_runtime();
+
   auto& strategy = *p_strategy;
   TaskLauncher launcher(library_, task_id_, mapper_id_);
 
@@ -117,9 +127,10 @@ void Task::launch(Strategy* p_strategy)
   }
   for (auto& pair : outputs_) {
     auto& store = pair.first;
-    auto& var   = pair.second;
-    auto part   = strategy[var];
-    auto proj   = part->get_projection(store);
+    if (store->unbound()) continue;
+    auto& var = pair.second;
+    auto part = strategy[var];
+    auto proj = part->get_projection(store);
     launcher.add_output(store, std::move(proj));
     store->set_key_partition(part.get());
   }
@@ -131,6 +142,16 @@ void Task::launch(Strategy* p_strategy)
     auto redop  = reduction_ops_[idx++];
     proj->set_reduction_op(redop);
     launcher.add_reduction(store, std::move(proj));
+  }
+  for (auto& pair : outputs_) {
+    auto& store = pair.first;
+    if (!store->unbound()) continue;
+    auto& var        = pair.second;
+    auto field_space = strategy.find_field_space(var);
+    // TODO: We should reuse field ids here
+    auto field_size = type_dispatch(store->code(), field_size_fn{});
+    auto field_id   = runtime->allocate_field(field_space, field_size);
+    launcher.add_unbound_output(store, field_space, field_id);
   }
   for (auto& scalar : scalars_) launcher.add_scalar(scalar);
 

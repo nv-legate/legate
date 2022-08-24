@@ -27,6 +27,8 @@ class BufferBuilder;
 class LibraryContext;
 class LogicalStore;
 class Projection;
+class OutputRegionArg;
+class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
 class Scalar;
 
@@ -60,6 +62,9 @@ class TaskLauncher {
                      Legion::MappingTagID tag  = 0,
                      Legion::RegionFlags flags = LEGION_NO_FLAG,
                      bool read_write           = false);
+  void add_unbound_output(detail::LogicalStore* store,
+                          Legion::FieldSpace field_space,
+                          Legion::FieldID field_id);
 
  private:
   void add_store(std::vector<ArgWrapper*>& args,
@@ -77,6 +82,7 @@ class TaskLauncher {
   void pack_args(const std::vector<ArgWrapper*>& args);
   Legion::IndexTaskLauncher* build_index_task(const Legion::Domain& launch_domain);
   Legion::TaskLauncher* build_single_task();
+  void bind_region_fields_to_unbound_stores();
 
  private:
   LibraryContext* library_;
@@ -90,10 +96,13 @@ class TaskLauncher {
   std::vector<ArgWrapper*> reductions_;
   std::vector<ArgWrapper*> scalars_;
   std::vector<Legion::Future> futures_;
+  std::vector<OutputRegionArg*> unbound_stores_;
 
  private:
   RequirementAnalyzer* req_analyzer_;
+  OutputRequirementAnalyzer* out_analyzer_;
   BufferBuilder* buffer_;
+  std::vector<Legion::OutputRequirement> output_requirements_;
 };
 
 }  // namespace legate

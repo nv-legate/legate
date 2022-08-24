@@ -114,12 +114,16 @@ class Runtime {
   void submit(std::unique_ptr<Operation> op);
 
  public:
+  LogicalStore create_store(LegateTypeCode code, int32_t dim = 1);
   LogicalStore create_store(std::vector<size_t> extents, LegateTypeCode code);
   LogicalStore create_store(const Scalar& scalar);
   uint64_t get_unique_store_id();
 
  public:
   std::shared_ptr<LogicalRegionField> create_region_field(const tuple<size_t>& extents,
+                                                          LegateTypeCode code);
+  std::shared_ptr<LogicalRegionField> import_region_field(Legion::LogicalRegion region,
+                                                          Legion::FieldID field_id,
                                                           LegateTypeCode code);
   RegionField map_region_field(LibraryContext* context, const LogicalRegionField* region_field);
   void unmap_physical_region(Legion::PhysicalRegion pr);
@@ -146,8 +150,12 @@ class Runtime {
   Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
 
  public:
-  std::shared_ptr<LogicalStore> dispatch(Legion::TaskLauncher* launcher);
-  std::shared_ptr<LogicalStore> dispatch(Legion::IndexTaskLauncher* launcher);
+  std::shared_ptr<LogicalStore> dispatch(
+    Legion::TaskLauncher* launcher,
+    std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
+  std::shared_ptr<LogicalStore> dispatch(
+    Legion::IndexTaskLauncher* launcher,
+    std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
 
  public:
   Legion::ProjectionID get_projection(int32_t src_ndim, const proj::SymbolicPoint& point);

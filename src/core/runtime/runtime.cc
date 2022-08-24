@@ -256,11 +256,12 @@ class RegionManager {
 
  private:
   Legion::LogicalRegion active_region() const;
-  bool has_space() const;
   void create_region();
 
  public:
+  bool has_space() const;
   std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(size_t field_size);
+  void import_region(const Legion::LogicalRegion& region);
 
  private:
   Runtime* runtime_;
@@ -275,8 +276,6 @@ RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
 
 LogicalRegion RegionManager::active_region() const { return regions_.back(); }
 
-bool RegionManager::has_space() const { return regions_.size() > 0; }
-
 void RegionManager::create_region()
 {
   auto is = runtime_->find_or_create_index_space(shape_);
@@ -284,12 +283,19 @@ void RegionManager::create_region()
   regions_.push_back(runtime_->create_region(is, fs));
 }
 
+bool RegionManager::has_space() const { return regions_.size() > 0; }
+
 std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(size_t field_size)
 {
   if (!has_space()) create_region();
   auto lr  = active_region();
   auto fid = runtime_->allocate_field(lr.get_field_space(), field_size);
   return std::make_pair(lr, fid);
+}
+
+void RegionManager::import_region(const Legion::LogicalRegion& region)
+{
+  regions_.push_back(region);
 }
 
 ////////////////////////////////////////////////////
@@ -302,6 +308,8 @@ class FieldManager {
 
  public:
   std::shared_ptr<LogicalRegionField> allocate_field();
+  std::shared_ptr<LogicalRegionField> import_field(const Legion::LogicalRegion& region,
+                                                   Legion::FieldID field_id);
 
  private:
   Runtime* runtime_;
@@ -346,6 +354,23 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
     log_legate.debug("Field %u created in field manager %p", fid, this);
   }
   assert(rf != nullptr);
+  return std::shared_ptr<LogicalRegionField>(rf, [this](auto* field) {
+    log_legate.debug("Field %u freed in field manager %p", field->field_id(), this);
+    this->free_fields_.push_back(FreeField(field->region(), field->field_id()));
+    delete field;
+  });
+}
+
+std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::LogicalRegion& region,
+                                                               Legion::FieldID field_id)
+{
+  // Import the region only if the region manager is created fresh
+  auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
+  if (!rgn_mgr->has_space()) rgn_mgr->import_region(region);
+
+  log_legate.debug("Field %u imported in field manager %p", field_id, this);
+
+  auto* rf = new LogicalRegionField(region, field_id);
   return std::shared_ptr<LogicalRegionField>(rf, [this](auto* field) {
     log_legate.debug("Field %u freed in field manager %p", field->field_id(), this);
     this->free_fields_.push_back(FreeField(field->region(), field->field_id()));
@@ -613,6 +638,12 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op->launch(strategy.get());
 }
 
+LogicalStore Runtime::create_store(LegateTypeCode code, int32_t dim)
+{
+  auto storage = std::make_shared<detail::Storage>(dim, code);
+  return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
+}
+
 LogicalStore Runtime::create_store(std::vector<size_t> extents, LegateTypeCode code)
 {
   auto storage = std::make_shared<detail::Storage>(extents, code);
@@ -641,6 +672,17 @@ std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const tuple<siz
   Domain shape(lo, hi);
   auto fld_mgr = runtime_->find_or_create_field_manager(shape, code);
   return fld_mgr->allocate_field();
+}
+
+std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::LogicalRegion region,
+                                                                 Legion::FieldID field_id,
+                                                                 LegateTypeCode code)
+{
+  // TODO: This is a blocking operation. We should instead use index sapces as keys to field
+  // managers
+  auto shape   = legion_runtime_->get_index_space_domain(legion_context_, region.get_index_space());
+  auto fld_mgr = runtime_->find_or_create_field_manager(shape, code);
+  return fld_mgr->import_field(region, field_id);
 }
 
 RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegionField* rf)
@@ -759,17 +801,19 @@ Domain Runtime::get_index_space_domain(const IndexSpace& index_space) const
   return legion_runtime_->get_index_space_domain(legion_context_, index_space);
 }
 
-std::shared_ptr<LogicalStore> Runtime::dispatch(TaskLauncher* launcher)
+std::shared_ptr<LogicalStore> Runtime::dispatch(
+  TaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
 {
   assert(nullptr != legion_context_);
-  legion_runtime_->execute_task(legion_context_, *launcher);
+  legion_runtime_->execute_task(legion_context_, *launcher, output_requirements);
   return nullptr;
 }
 
-std::shared_ptr<LogicalStore> Runtime::dispatch(IndexTaskLauncher* launcher)
+std::shared_ptr<LogicalStore> Runtime::dispatch(
+  IndexTaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
 {
   assert(nullptr != legion_context_);
-  legion_runtime_->execute_index_space(legion_context_, *launcher);
+  legion_runtime_->execute_index_space(legion_context_, *launcher, output_requirements);
   return nullptr;
 }
 

@@ -123,4 +123,26 @@ class RequirementAnalyzer {
   std::map<Legion::LogicalRegion, std::pair<FieldSet, uint32_t>> field_sets_;
 };
 
+class OutputRequirementAnalyzer {
+ public:
+  ~OutputRequirementAnalyzer();
+
+ public:
+  void insert(int32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
+  uint32_t get_requirement_index(const Legion::FieldSpace& field_space,
+                                 Legion::FieldID field_id) const;
+
+ public:
+  void analyze_requirements();
+  void populate_output_requirements(std::vector<Legion::OutputRequirement>& out_reqs) const;
+
+ private:
+  struct ReqInfo {
+    int32_t dim{-1};
+    uint32_t req_idx{0};
+  };
+  std::map<Legion::FieldSpace, std::set<Legion::FieldID>> field_groups_;
+  std::map<Legion::FieldSpace, ReqInfo> req_infos_;
+};
+
 }  // namespace legate

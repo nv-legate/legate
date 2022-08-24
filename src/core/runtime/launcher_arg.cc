@@ -52,6 +52,26 @@ void RegionFieldArg::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(field_id_);
 }
 
+OutputRegionArg::OutputRegionArg(OutputRequirementAnalyzer* analyzer,
+                                 detail::LogicalStore* store,
+                                 Legion::FieldSpace field_space,
+                                 Legion::FieldID field_id)
+  : analyzer_(analyzer), store_(store), field_space_(field_space), field_id_(field_id)
+{
+}
+
+void OutputRegionArg::pack(BufferBuilder& buffer) const
+{
+  store_->pack(buffer);
+
+  requirement_index_ = analyzer_->get_requirement_index(field_space_, field_id_);
+
+  buffer.pack<int32_t>(-1);
+  buffer.pack<int32_t>(store_->dim());
+  buffer.pack<uint32_t>(requirement_index_);
+  buffer.pack<uint32_t>(field_id_);
+}
+
 FutureStoreArg::FutureStoreArg(detail::LogicalStore* store,
                                bool read_only,
                                bool has_storage,

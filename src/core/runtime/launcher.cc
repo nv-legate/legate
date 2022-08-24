@@ -35,6 +35,7 @@ TaskLauncher::TaskLauncher(LibraryContext* library,
   : library_(library), task_id_(task_id), mapper_id_(mapper_id), tag_(tag)
 {
   req_analyzer_ = new RequirementAnalyzer();
+  out_analyzer_ = new OutputRequirementAnalyzer();
   buffer_       = new BufferBuilder();
 }
 
@@ -84,17 +85,37 @@ void TaskLauncher::add_reduction(detail::LogicalStore* store,
   add_store(reductions_, store, std::move(proj), REDUCE, tag, flags);
 }
 
+void TaskLauncher::add_unbound_output(detail::LogicalStore* store,
+                                      Legion::FieldSpace field_space,
+                                      Legion::FieldID field_id)
+{
+  out_analyzer_->insert(store->dim(), field_space, field_id);
+  auto arg = new OutputRegionArg(out_analyzer_, store, field_space, field_id);
+  outputs_.push_back(arg);
+  unbound_stores_.push_back(arg);
+}
+
 void TaskLauncher::execute(const Legion::Domain& launch_domain)
 {
   auto legion_launcher = build_index_task(launch_domain);
-  Runtime::get_runtime()->dispatch(legion_launcher);
+  if (output_requirements_.empty())
+    Runtime::get_runtime()->dispatch(legion_launcher);
+  else {
+    Runtime::get_runtime()->dispatch(legion_launcher, &output_requirements_);
+    bind_region_fields_to_unbound_stores();
+  }
   delete legion_launcher;
 }
 
 void TaskLauncher::execute_single()
 {
   auto legion_launcher = build_single_task();
-  Runtime::get_runtime()->dispatch(legion_launcher);
+  if (output_requirements_.empty())
+    Runtime::get_runtime()->dispatch(legion_launcher);
+  else {
+    Runtime::get_runtime()->dispatch(legion_launcher, &output_requirements_);
+    bind_region_fields_to_unbound_stores();
+  }
   delete legion_launcher;
 }
 
@@ -135,6 +156,7 @@ Legion::TaskLauncher* TaskLauncher::build_single_task()
   // Coalesce region requirements before packing task arguments
   // as the latter requires requirement indices to be finalized
   req_analyzer_->analyze_requirements();
+  out_analyzer_->analyze_requirements();
 
   pack_args(inputs_);
   pack_args(outputs_);
@@ -152,6 +174,7 @@ Legion::TaskLauncher* TaskLauncher::build_single_task()
   for (auto& future_ : futures_) single_task->add_future(future_);
 
   req_analyzer_->populate_launcher(single_task);
+  out_analyzer_->populate_output_requirements(output_requirements_);
 
   return single_task;
 }
@@ -161,6 +184,7 @@ Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& 
   // Coalesce region requirements before packing task arguments
   // as the latter requires requirement indices to be finalized
   req_analyzer_->analyze_requirements();
+  out_analyzer_->analyze_requirements();
 
   pack_args(inputs_);
   pack_args(outputs_);
@@ -181,8 +205,24 @@ Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& 
   for (auto& future_ : futures_) index_task->add_future(future_);
 
   req_analyzer_->populate_launcher(index_task);
+  out_analyzer_->populate_output_requirements(output_requirements_);
 
   return index_task;
+}
+
+void TaskLauncher::bind_region_fields_to_unbound_stores()
+{
+  auto* runtime = Runtime::get_runtime();
+
+  for (auto& arg : unbound_stores_) {
+#ifdef DEBUG_LEGATE
+    assert(arg->requirement_index() != -1U);
+#endif
+    auto* store       = arg->store();
+    auto& req         = output_requirements_[arg->requirement_index()];
+    auto region_field = runtime->import_region_field(req.region, arg->field_id(), store->code());
+    store->set_region_field(std::move(region_field));
+  }
 }
 
 }  // namespace legate

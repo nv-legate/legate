@@ -66,6 +66,17 @@ void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partitio
   assignments_.insert({*partition_symbol, std::move(partition)});
 }
 
+void Strategy::insert(const Variable* partition_symbol,
+                      std::shared_ptr<Partition> partition,
+                      Legion::FieldSpace field_space)
+{
+#ifdef DEBUG_LEGATE
+  assert(field_spaces_.find(*partition_symbol) == field_spaces_.end());
+#endif
+  field_spaces_.insert({*partition_symbol, field_space});
+  insert(partition_symbol, std::move(partition));
+}
+
 bool Strategy::has_assignment(const Variable* partition_symbol) const
 {
   return assignments_.find(*partition_symbol) != assignments_.end();
@@ -76,6 +87,15 @@ const std::shared_ptr<Partition>& Strategy::operator[](const Variable* partition
   auto finder = assignments_.find(*partition_symbol);
 #ifdef DEBUG_LEGATE
   assert(finder != assignments_.end());
+#endif
+  return finder->second;
+}
+
+const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_symbol) const
+{
+  auto finder = field_spaces_.find(*partition_symbol);
+#ifdef DEBUG_LEGATE
+  assert(finder != field_spaces_.end());
 #endif
   return finder->second;
 }
@@ -105,12 +125,19 @@ std::unique_ptr<Strategy> Partitioner::solve()
 
   // Copy the list of partition symbols as we will sort them inplace
   std::vector<const Variable*> partition_symbols(constraints.partition_symbols());
+
+  solve_for_unbound_stores(partition_symbols, strategy.get(), constraints);
+
   std::stable_sort(partition_symbols.begin(),
                    partition_symbols.end(),
                    [](const auto& part_symb_a, const auto& part_symb_b) {
                      auto get_storage_size = [](const auto& part_symb) {
-                       auto* op = part_symb->operation();
-                       return op->find_store(part_symb)->storage_size();
+                       auto* op    = part_symb->operation();
+                       auto* store = op->find_store(part_symb);
+#ifdef DEBUG_LEGATE
+                       assert(!store->unbound());
+#endif
+                       return store->storage_size();
                      };
                      return get_storage_size(part_symb_a) > get_storage_size(part_symb_b);
                    });
@@ -135,6 +162,35 @@ std::unique_ptr<Strategy> Partitioner::solve()
   }
 
   return std::move(strategy);
+}
+
+void Partitioner::solve_for_unbound_stores(std::vector<const Variable*>& partition_symbols,
+                                           Strategy* strategy,
+                                           const ConstraintGraph& constraints)
+{
+  auto runtime = Runtime::get_runtime();
+
+  std::vector<const Variable*> filtered;
+  filtered.reserve(partition_symbols.size());
+
+  for (auto* part_symb : partition_symbols) {
+    auto* op   = part_symb->operation();
+    auto store = op->find_store(part_symb);
+
+    if (!store->unbound()) {
+      filtered.push_back(part_symb);
+      continue;
+    }
+
+    std::vector<const Variable*> equiv_class;
+    constraints.find_equivalence_class(part_symb, equiv_class);
+    std::shared_ptr<Partition> partition(create_no_partition());
+    auto field_space = runtime->create_field_space();
+
+    for (auto symb : equiv_class) strategy->insert(symb, partition, field_space);
+  }
+
+  partition_symbols.swap(filtered);
 }
 
 }  // namespace legate

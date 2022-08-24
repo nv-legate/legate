@@ -24,6 +24,7 @@
 
 namespace legate {
 
+class ConstraintGraph;
 class LogicalStore;
 class Operation;
 class Partition;
@@ -42,11 +43,16 @@ class Strategy {
 
  public:
   void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);
+  void insert(const Variable* partition_symbol,
+              std::shared_ptr<Partition> partition,
+              Legion::FieldSpace field_space);
   bool has_assignment(const Variable* partition_symbol) const;
   const std::shared_ptr<Partition>& operator[](const Variable* partition_symbol) const;
+  const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
 
  private:
   std::map<const Variable, std::shared_ptr<Partition>> assignments_{};
+  std::map<const Variable, Legion::FieldSpace> field_spaces_{};
   std::map<const Operation*, std::unique_ptr<Legion::Domain>> launch_domains_{};
 };
 
@@ -56,6 +62,11 @@ class Partitioner {
 
  public:
   std::unique_ptr<Strategy> solve();
+
+ private:
+  void solve_for_unbound_stores(std::vector<const Variable*>& partition_symbols,
+                                Strategy* strategy,
+                                const ConstraintGraph& constraints);
 
  private:
   std::vector<Operation*> operations_;

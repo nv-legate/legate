@@ -252,4 +252,51 @@ void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher* task) const
   }
 }
 
+////////////////////////////
+// OutputRequirementAnalyzer
+////////////////////////////
+
+OutputRequirementAnalyzer::~OutputRequirementAnalyzer() {}
+
+void OutputRequirementAnalyzer::insert(int32_t dim,
+                                       const Legion::FieldSpace& field_space,
+                                       Legion::FieldID field_id)
+{
+  auto& req_info = req_infos_[field_space];
+#ifdef DEBUG_LEGATE
+  // TODO: This should be checked when alignment constraints are set on unbound stores
+  assert(-1 == req_info.dim || req_info.dim == dim);
+#endif
+  req_info.dim = dim;
+  field_groups_[field_space].insert(field_id);
+}
+
+uint32_t OutputRequirementAnalyzer::get_requirement_index(const Legion::FieldSpace& field_space,
+                                                          Legion::FieldID field_id) const
+{
+  auto finder = req_infos_.find(field_space);
+#ifdef DEBUG_LEGATE
+  assert(finder != req_infos_.end());
+#endif
+  return finder->second.req_idx;
+}
+
+void OutputRequirementAnalyzer::analyze_requirements()
+{
+  uint32_t idx = 0;
+  for (auto& entry : field_groups_) req_infos_[entry.first].req_idx = idx++;
+}
+
+void OutputRequirementAnalyzer::populate_output_requirements(
+  std::vector<Legion::OutputRequirement>& out_reqs) const
+{
+  for (auto& entry : field_groups_) {
+    auto finder = req_infos_.find(entry.first);
+#ifdef DEBUG_LEGATE
+    assert(finder != req_infos_.end());
+#endif
+    out_reqs.emplace_back(entry.first, entry.second, finder->second.dim, true);
+  }
+}
+
 }  // namespace legate

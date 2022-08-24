@@ -31,12 +31,15 @@ class Storage {
   };
 
  public:
+  // Create a RegionField-backed storage whose size is unbound. Initialized lazily.
+  Storage(int32_t dim, LegateTypeCode code);
   // Create a RegionField-backed storage. Initialized lazily.
   Storage(tuple<size_t> extents, LegateTypeCode code);
   // Create a Future-backed storage. Initialized eagerly.
   Storage(tuple<size_t> extents, LegateTypeCode code, const Legion::Future& future);
 
  public:
+  bool unbound() const { return unbound_; }
   const tuple<size_t>& extents() const { return extents_; }
   size_t volume() const { return volume_; }
   int32_t dim();
@@ -46,6 +49,7 @@ class Storage {
  public:
   LogicalRegionField* get_region_field();
   Legion::Future get_future() const;
+  void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
 
  public:
   RegionField map(LibraryContext* context);
@@ -57,6 +61,8 @@ class Storage {
   Legion::LogicalPartition find_or_create_legion_partition(const Partition* partition);
 
  private:
+  bool unbound_{false};
+  int32_t dim_{-1};
   tuple<size_t> extents_;
   size_t volume_;
   LegateTypeCode code_{MAX_TYPE_NUMBER};
@@ -90,6 +96,7 @@ class LogicalStore {
   LogicalStore& operator=(LogicalStore&& other) = default;
 
  public:
+  bool unbound() const;
   const tuple<size_t>& extents() const;
   size_t volume() const;
   // Size of the backing storage
@@ -101,6 +108,7 @@ class LogicalStore {
  public:
   LogicalRegionField* get_region_field();
   Legion::Future get_future();
+  void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
 
  public:
   std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size) const;

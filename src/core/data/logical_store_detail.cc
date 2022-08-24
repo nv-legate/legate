@@ -32,17 +32,24 @@ namespace detail {
 // legate::detail::Storage
 ////////////////////////////////////////////////////
 
+Storage::Storage(int32_t dim, LegateTypeCode code) : unbound_(true), dim_(dim), code_(code) {}
+
 Storage::Storage(tuple<size_t> extents, LegateTypeCode code)
-  : extents_(extents), code_(code), volume_(extents.volume())
+  : dim_(extents.size()), extents_(extents), code_(code), volume_(extents.volume())
 {
 }
 
 Storage::Storage(tuple<size_t> extents, LegateTypeCode code, const Legion::Future& future)
-  : extents_(extents), code_(code), kind_(Kind::FUTURE), future_(future), volume_(extents.volume())
+  : dim_(extents.size()),
+    extents_(extents),
+    code_(code),
+    kind_(Kind::FUTURE),
+    future_(future),
+    volume_(extents.volume())
 {
 }
 
-int32_t Storage::dim() { return static_cast<int32_t>(extents_.size()); }
+int32_t Storage::dim() { return dim_; }
 
 LogicalRegionField* Storage::get_region_field()
 {
@@ -60,6 +67,20 @@ Legion::Future Storage::get_future() const
   assert(Kind::FUTURE == kind_);
 #endif
   return future_;
+}
+
+void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
+{
+  unbound_      = false;
+  region_field_ = std::move(region_field);
+
+  // TODO: this is a blocking operator
+  auto domain = region_field_->domain();
+  auto lo     = domain.lo();
+  auto hi     = domain.hi();
+  std::vector<size_t> extents;
+  for (int32_t idx = 0; idx < lo.dim; ++idx) extents.push_back(hi[idx] - lo[idx]);
+  extents_ = extents;
 }
 
 RegionField Storage::map(LibraryContext* context)
@@ -109,7 +130,6 @@ Legion::LogicalPartition Storage::find_or_create_legion_partition(const Partitio
 
 LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
   : store_id_(Runtime::get_runtime()->get_unique_store_id()),
-    extents_(storage->extents()),
     storage_(std::forward<decltype(storage_)>(storage)),
     transform_(std::make_shared<TransformStack>())
 {
@@ -118,6 +138,7 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
 
   log_legate.debug() << "Create " << to_string();
 #endif
+  if (!unbound()) extents_ = storage_->extents();
 }
 
 LogicalStore::LogicalStore(tuple<size_t>&& extents,
@@ -140,6 +161,8 @@ LogicalStore::~LogicalStore()
   if (mapped_ != nullptr) mapped_->unmap();
 }
 
+bool LogicalStore::unbound() const { return storage_->unbound(); }
+
 const tuple<size_t>& LogicalStore::extents() const { return extents_; }
 
 size_t LogicalStore::volume() const { return extents_.volume(); }
@@ -158,7 +181,10 @@ size_t LogicalStore::storage_size() const
   return storage_->volume() * elem_size;
 }
 
-int32_t LogicalStore::dim() const { return static_cast<int32_t>(extents_.size()); }
+int32_t LogicalStore::dim() const
+{
+  return unbound() ? storage_->dim() : static_cast<int32_t>(extents_.size());
+}
 
 bool LogicalStore::scalar() const { return storage_->kind() == Storage::Kind::FUTURE; }
 
@@ -167,6 +193,12 @@ LegateTypeCode LogicalStore::code() const { return storage_->code(); }
 LogicalRegionField* LogicalStore::get_region_field() { return storage_->get_region_field(); }
 
 Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
+
+void LogicalStore::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
+{
+  storage_->set_region_field(std::move(region_field));
+  extents_ = storage_->extents();
+}
 
 std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
 {
@@ -265,7 +297,7 @@ void LogicalStore::reset_key_partition() { storage_->reset_key_partition(); }
 void LogicalStore::pack(BufferBuilder& buffer) const
 {
   buffer.pack<bool>(scalar());
-  buffer.pack<bool>(false);
+  buffer.pack<bool>(unbound());
   buffer.pack<int32_t>(dim());
   buffer.pack<int32_t>(code());
   transform_->pack(buffer);

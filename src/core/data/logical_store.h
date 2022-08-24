@@ -27,7 +27,6 @@ namespace legate {
 
 class BufferBuilder;
 class LibraryContext;
-class LogicalRegionField;
 class Partition;
 class Projection;
 class Runtime;
