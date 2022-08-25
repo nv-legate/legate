@@ -236,22 +236,32 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
   return std::move(mapped_);
 }
 
-Legion::ProjectionID LogicalStore::compute_projection() const
+Legion::ProjectionID LogicalStore::compute_projection(int32_t launch_ndim) const
 {
-  if (transform_->identity()) return 0;
+  if (transform_->identity()) {
+    if (launch_ndim != dim())
+      return Runtime::get_runtime()->get_delinearizing_projection();
+    else
+      return 0;
+  }
 
   auto ndim  = dim();
   auto point = transform_->invert(proj::create_symbolic_point(ndim));
+  // TODO: We can't currently mix affine projections with delinearizing projections
+#ifdef DEBUG_LEGATE
+  assert(ndim == launch_ndim);
+#endif
   return Runtime::get_runtime()->get_projection(ndim, point);
 }
 
-std::unique_ptr<Projection> LogicalStore::create_projection(const Partition* partition)
+std::unique_ptr<Projection> LogicalStore::create_projection(const Partition* partition,
+                                                            int32_t launch_ndim)
 {
   if (scalar()) return std::make_unique<Projection>();
 
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
-  auto proj_id                        = compute_projection();
+  auto proj_id                        = compute_projection(launch_ndim);
   auto* orig_partition                = partition;
   std::unique_ptr<Partition> inverted = nullptr;
   if (!transform_->identity()) {

@@ -28,6 +28,71 @@
 namespace legate {
 
 ////////////////////////////////////////////////////
+// legate::LaunchDomainResolver
+////////////////////////////////////////////////////
+
+class LaunchDomainResolver {
+ private:
+  static constexpr int32_t UNSET = -1;
+
+ public:
+  void record_launch_domain(const Legion::Domain& launch_domain);
+  void record_unbound_store(int32_t unbound_dim);
+
+ public:
+  std::unique_ptr<Legion::Domain> resolve_launch_domain() const;
+
+ private:
+  bool must_be_sequential_{false};
+  bool must_be_1d_{false};
+  int32_t unbound_dim_{UNSET};
+  std::set<Legion::Domain> launch_domains_;
+  std::set<int64_t> launch_volumes_;
+};
+
+void LaunchDomainResolver::record_launch_domain(const Legion::Domain& launch_domain)
+{
+  launch_domains_.insert(launch_domain);
+  launch_volumes_.insert(launch_domain.get_volume());
+  if (launch_domains_.size() > 1) must_be_1d_ = true;
+  if (launch_volumes_.size() > 1) must_be_sequential_ = true;
+}
+
+void LaunchDomainResolver::record_unbound_store(int32_t unbound_dim)
+{
+  if (unbound_dim_ != UNSET && unbound_dim_ != unbound_dim)
+    must_be_sequential_ = true;
+  else
+    unbound_dim_ = unbound_dim;
+}
+
+std::unique_ptr<Legion::Domain> LaunchDomainResolver::resolve_launch_domain() const
+{
+  if (must_be_sequential_) return nullptr;
+  if (must_be_1d_) {
+    if (unbound_dim_ != UNSET && unbound_dim_ > 1)
+      return nullptr;
+    else {
+#ifdef DEBUG_LEGATE
+      assert(launch_volumes_.size() == 1);
+#endif
+      int64_t volume = *launch_volumes_.begin();
+      return std::make_unique<Legion::Domain>(0, volume - 1);
+    }
+  } else {
+#ifdef DEBUG_LEGATE
+    assert(launch_domains_.size() == 1);
+#endif
+    auto& launch_domain = *launch_domains_.begin();
+    if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) {
+      int64_t volume = *launch_volumes_.begin();
+      return std::make_unique<Legion::Domain>(0, volume - 1);
+    }
+    return std::make_unique<Legion::Domain>(launch_domain);
+  }
+}
+
+////////////////////////////////////////////////////
 // legate::Strategy
 ////////////////////////////////////////////////////
 
@@ -36,26 +101,13 @@ Strategy::Strategy() {}
 bool Strategy::parallel(const Operation* op) const
 {
   auto finder = launch_domains_.find(op);
-  return (launch_domains_.end() != finder) && (nullptr != finder->second);
+  return finder != launch_domains_.end() && finder->second != nullptr;
 }
 
-bool Strategy::has_launch_domain(const Operation* op) const
-{
-  return launch_domains_.find(op) != launch_domains_.end();
-}
-
-Legion::Domain Strategy::launch_domain(const Operation* op) const
+const Legion::Domain* Strategy::launch_domain(const Operation* op) const
 {
   auto finder = launch_domains_.find(op);
-  assert(finder != launch_domains_.end());
-  return *finder->second;
-}
-
-void Strategy::set_single_launch(const Operation* op) { launch_domains_[op] = nullptr; }
-
-void Strategy::set_launch_domain(const Operation* op, const Legion::Domain& launch_domain)
-{
-  launch_domains_[op] = std::make_unique<Legion::Domain>(launch_domain);
+  return finder != launch_domains_.end() ? finder->second.get() : nullptr;
 }
 
 void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition)
@@ -98,6 +150,29 @@ const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_s
   assert(finder != field_spaces_.end());
 #endif
   return finder->second;
+}
+
+void Strategy::compute_launch_domains()
+{
+  std::map<const Operation*, LaunchDomainResolver> domain_resolvers;
+
+  for (auto& assignment : assignments_) {
+    auto& part_symb = assignment.first;
+    auto& partition = assignment.second;
+    auto* op        = part_symb.operation();
+
+    if (partition->has_launch_domain()) {
+      domain_resolvers[op].record_launch_domain(partition->launch_domain());
+      continue;
+    }
+
+    auto store = op->find_store(&part_symb);
+
+    if (store->unbound()) domain_resolvers[op].record_unbound_store(store->dim());
+  }
+
+  for (auto& pair : domain_resolvers)
+    launch_domains_[pair.first] = pair.second.resolve_launch_domain();
 }
 
 ////////////////////////////////////////////////////
@@ -148,18 +223,14 @@ std::unique_ptr<Strategy> Partitioner::solve()
     auto* op       = part_symb->operation();
     auto store     = op->find_store(part_symb);
     auto partition = store->find_or_create_key_partition();
-    if (!strategy->has_launch_domain(op)) {
-      if (partition->has_launch_domain())
-        strategy->set_launch_domain(op, partition->launch_domain());
-      else
-        strategy->set_single_launch(op);
-    }
 
     std::vector<const Variable*> equiv_class;
     constraints.find_equivalence_class(part_symb, equiv_class);
 
     for (auto symb : equiv_class) strategy->insert(symb, partition);
   }
+
+  strategy->compute_launch_domains();
 
   return std::move(strategy);
 }

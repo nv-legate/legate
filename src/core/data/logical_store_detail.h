@@ -118,13 +118,13 @@ class LogicalStore {
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
 
  public:
-  std::unique_ptr<Projection> create_projection(const Partition* partition);
+  std::unique_ptr<Projection> create_projection(const Partition* partition, int32_t launch_ndim);
   std::shared_ptr<Partition> find_or_create_key_partition();
   void set_key_partition(const Partition* partition);
   void reset_key_partition();
 
  private:
-  Legion::ProjectionID compute_projection() const;
+  Legion::ProjectionID compute_projection(int32_t launch_ndim) const;
 
  public:
   void pack(BufferBuilder& buffer) const;

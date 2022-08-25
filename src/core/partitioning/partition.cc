@@ -37,7 +37,8 @@ Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region,
   return Legion::LogicalPartition::NO_PART;
 }
 
-std::unique_ptr<Projection> NoPartition::get_projection(detail::LogicalStore* store) const
+std::unique_ptr<Projection> NoPartition::get_projection(detail::LogicalStore* store,
+                                                        int32_t launch_ndim) const
 {
   return std::make_unique<Projection>();
 }
@@ -135,9 +136,10 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
   return runtime->create_logical_partition(region, index_partition);
 }
 
-std::unique_ptr<Projection> Tiling::get_projection(detail::LogicalStore* store) const
+std::unique_ptr<Projection> Tiling::get_projection(detail::LogicalStore* store,
+                                                   int32_t launch_ndim) const
 {
-  return store->create_projection(this);
+  return store->create_projection(this, launch_ndim);
 }
 
 bool Tiling::has_launch_domain() const { return true; }

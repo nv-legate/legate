@@ -858,6 +858,11 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
   return proj_id;
 }
 
+Legion::ProjectionID Runtime::get_delinearizing_projection()
+{
+  return core_context_->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
+}
+
 /*static*/ void Runtime::initialize(int32_t argc, char** argv)
 {
   Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);

@@ -159,6 +159,7 @@ class Runtime {
 
  public:
   Legion::ProjectionID get_projection(int32_t src_ndim, const proj::SymbolicPoint& point);
+  Legion::ProjectionID get_delinearizing_projection();
 
  private:
   void schedule(std::vector<std::unique_ptr<Operation>> operations);

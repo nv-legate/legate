@@ -54,8 +54,9 @@ struct Partition {
  public:
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint = false,
-                                             bool complete = false) const               = 0;
-  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store) const = 0;
+                                             bool complete = false) const       = 0;
+  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store,
+                                                     int32_t launch_ndim) const = 0;
 
  public:
   virtual bool has_launch_domain() const       = 0;
@@ -83,7 +84,8 @@ class NoPartition : public Partition {
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint,
                                              bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store) const override;
+  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store,
+                                                     int32_t launch_ndim) const override;
 
  public:
   virtual bool has_launch_domain() const override;
@@ -118,7 +120,8 @@ class Tiling : public Partition {
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                              bool disjoint,
                                              bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store) const override;
+  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store,
+                                                     int32_t launch_ndim) const override;
 
  public:
   virtual bool has_launch_domain() const override;

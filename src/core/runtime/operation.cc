@@ -118,11 +118,13 @@ void Task::launch(Strategy* p_strategy)
 
   auto& strategy = *p_strategy;
   TaskLauncher launcher(library_, task_id_, mapper_id_);
+  auto launch_domain = strategy.launch_domain(this);
+  auto launch_ndim   = launch_domain != nullptr ? launch_domain->dim : 0;
 
   for (auto& pair : inputs_) {
     auto& store = pair.first;
     auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store);
+    auto proj   = strategy[var]->get_projection(store, launch_ndim);
     launcher.add_input(store, std::move(proj));
   }
   for (auto& pair : outputs_) {
@@ -130,7 +132,7 @@ void Task::launch(Strategy* p_strategy)
     if (store->unbound()) continue;
     auto& var = pair.second;
     auto part = strategy[var];
-    auto proj = part->get_projection(store);
+    auto proj = part->get_projection(store, launch_ndim);
     launcher.add_output(store, std::move(proj));
     store->set_key_partition(part.get());
   }
@@ -138,7 +140,7 @@ void Task::launch(Strategy* p_strategy)
   for (auto& pair : reductions_) {
     auto& store = pair.first;
     auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store);
+    auto proj   = strategy[var]->get_projection(store, launch_ndim);
     auto redop  = reduction_ops_[idx++];
     proj->set_reduction_op(redop);
     launcher.add_reduction(store, std::move(proj));
@@ -155,8 +157,8 @@ void Task::launch(Strategy* p_strategy)
   }
   for (auto& scalar : scalars_) launcher.add_scalar(scalar);
 
-  if (strategy.parallel(this))
-    launcher.execute(strategy.launch_domain(this));
+  if (launch_domain != nullptr)
+    launcher.execute(*launch_domain);
   else
     launcher.execute_single();
 }

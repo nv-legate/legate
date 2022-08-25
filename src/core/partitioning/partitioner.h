@@ -28,18 +28,18 @@ class ConstraintGraph;
 class LogicalStore;
 class Operation;
 class Partition;
+class Partitioner;
 class Projection;
 
 class Strategy {
+  friend class Partitioner;
+
  public:
   Strategy();
 
  public:
   bool parallel(const Operation* op) const;
-  bool has_launch_domain(const Operation* op) const;
-  Legion::Domain launch_domain(const Operation* op) const;
-  void set_single_launch(const Operation* op);
-  void set_launch_domain(const Operation* op, const Legion::Domain& launch_domain);
+  const Legion::Domain* launch_domain(const Operation* op) const;
 
  public:
   void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);
@@ -49,6 +49,9 @@ class Strategy {
   bool has_assignment(const Variable* partition_symbol) const;
   const std::shared_ptr<Partition>& operator[](const Variable* partition_symbol) const;
   const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
+
+ private:
+  void compute_launch_domains();
 
  private:
   std::map<const Variable, std::shared_ptr<Partition>> assignments_{};

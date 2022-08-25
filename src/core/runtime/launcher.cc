@@ -220,7 +220,7 @@ void TaskLauncher::bind_region_fields_to_unbound_stores()
 #endif
     auto* store       = arg->store();
     auto& req         = output_requirements_[arg->requirement_index()];
-    auto region_field = runtime->import_region_field(req.region, arg->field_id(), store->code());
+    auto region_field = runtime->import_region_field(req.parent, arg->field_id(), store->code());
     store->set_region_field(std::move(region_field));
   }
 }
