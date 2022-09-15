@@ -158,6 +158,9 @@ class Runtime {
     std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
 
  public:
+  void issue_execution_fence(bool block = false);
+
+ public:
   Legion::ProjectionID get_projection(int32_t src_ndim, const proj::SymbolicPoint& point);
   Legion::ProjectionID get_delinearizing_projection();
 

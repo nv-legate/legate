@@ -817,6 +817,12 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(
   return nullptr;
 }
 
+void Runtime::issue_execution_fence(bool block /*=false*/)
+{
+  auto future = legion_runtime_->issue_execution_fence(legion_context_);
+  if (block) future.wait();
+}
+
 Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::SymbolicPoint& point)
 {
 #ifdef DEBUG_LEGATE
