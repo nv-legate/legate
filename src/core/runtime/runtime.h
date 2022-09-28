@@ -48,6 +48,7 @@ class Core {
   static bool show_progress_requested;
   static bool use_empty_task;
   static bool synchronize_stream_view;
+  static bool log_mapping_decisions;
   static LegateMainFnPtr main_fn;
 };
 

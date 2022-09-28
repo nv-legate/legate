@@ -22,6 +22,11 @@
 #include "core/utilities/machine.h"
 #include "legate_defines.h"
 
+#ifdef LEGATE_USE_CUDA
+#include "core/cuda/cuda_help.h"
+#include "core/cuda/stream_pool.h"
+#endif
+
 namespace legate {
 
 using namespace Legion;
@@ -65,8 +70,7 @@ void RegionField::unmap() { Runtime::get_runtime()->unmap_physical_region(pr_); 
 OutputRegionField::OutputRegionField(const OutputRegion& out, FieldID fid)
   : out_(out),
     fid_(fid),
-    num_elements_(
-      DeferredBuffer<size_t, 1>(Rect<1>(0, 0), find_memory_kind_for_executing_processor()))
+    num_elements_(UntypedDeferredValue(sizeof(size_t), find_memory_kind_for_executing_processor()))
 {
 }
 
@@ -76,7 +80,7 @@ OutputRegionField::OutputRegionField(OutputRegionField&& other) noexcept
   other.bound_        = false;
   other.out_          = OutputRegion();
   other.fid_          = -1;
-  other.num_elements_ = DeferredBuffer<size_t, 1>();
+  other.num_elements_ = UntypedDeferredValue();
 }
 
 OutputRegionField& OutputRegionField::operator=(OutputRegionField&& other) noexcept
@@ -89,14 +93,14 @@ OutputRegionField& OutputRegionField::operator=(OutputRegionField&& other) noexc
   other.bound_        = false;
   other.out_          = OutputRegion();
   other.fid_          = -1;
-  other.num_elements_ = DeferredBuffer<size_t, 1>();
+  other.num_elements_ = UntypedDeferredValue();
 
   return *this;
 }
 
 void OutputRegionField::make_empty(int32_t ndim)
 {
-  num_elements_[0] = 0;
+  update_num_elements(0);
   DomainPoint extents;
   extents.dim = ndim;
   for (int32_t dim = 0; dim < ndim; ++dim) extents[dim] = 0;
@@ -115,7 +119,13 @@ ReturnValue OutputRegionField::pack_weight() const
     LEGATE_ABORT;
   }
 #endif
-  return ReturnValue(num_elements_.ptr(0), sizeof(size_t));
+  return ReturnValue(num_elements_, sizeof(size_t));
+}
+
+void OutputRegionField::update_num_elements(size_t num_elements)
+{
+  AccessorWO<size_t, 1> acc(num_elements_, sizeof(size_t), false);
+  acc[0] = num_elements;
 }
 
 FutureWrapper::FutureWrapper(
@@ -126,12 +136,27 @@ FutureWrapper::FutureWrapper(
   assert(field_size > 0);
 #endif
   if (!read_only) {
-    auto mem_kind = find_memory_kind_for_executing_processor();
 #ifdef DEBUG_LEGATE
     assert(!initialize || future_.get_untyped_size() == field_size);
 #endif
-    auto p_init_value = initialize ? future_.get_buffer(mem_kind) : nullptr;
-    buffer_           = UntypedDeferredValue(field_size, mem_kind, p_init_value);
+    auto proc     = Processor::get_executing_processor();
+    auto mem_kind = proc.kind() == Processor::Kind::TOC_PROC ? Memory::Kind::GPU_FB_MEM
+                                                             : Memory::Kind::SYSTEM_MEM;
+    if (initialize) {
+      auto p_init_value = future_.get_buffer(mem_kind);
+#ifdef LEGATE_USE_CUDA
+      if (mem_kind == Memory::Kind::GPU_FB_MEM) {
+        // TODO: This should be done by Legion
+        buffer_ = UntypedDeferredValue(field_size, mem_kind);
+        AccessorWO<int8_t, 1> acc(buffer_, field_size, false);
+        auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+        CHECK_CUDA(
+          cudaMemcpyAsync(acc.ptr(0), p_init_value, field_size, cudaMemcpyDeviceToDevice, stream));
+      } else
+#endif
+        buffer_ = UntypedDeferredValue(field_size, mem_kind, p_init_value);
+    } else
+      buffer_ = UntypedDeferredValue(field_size, mem_kind);
   }
 }
 
@@ -166,15 +191,16 @@ void FutureWrapper::initialize_with_identity(int32_t redop_id)
   assert(redop->sizeof_lhs == field_size_);
 #endif
   auto identity = redop->identity;
-  memcpy(ptr, identity, field_size_);
+#ifdef LEGATE_USE_CUDA
+  if (buffer_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM) {
+    auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+    CHECK_CUDA(cudaMemcpyAsync(ptr, identity, field_size_, cudaMemcpyHostToDevice, stream));
+  } else
+#endif
+    memcpy(ptr, identity, field_size_);
 }
 
-ReturnValue FutureWrapper::pack() const
-{
-  auto untyped_acc = AccessorRO<int8_t, 1>(buffer_, field_size_);
-  auto ptr         = untyped_acc.ptr(0);
-  return ReturnValue(ptr, field_size_);
-}
+ReturnValue FutureWrapper::pack() const { return ReturnValue(buffer_, field_size_); }
 
 Store::Store(int32_t dim,
              int32_t code,

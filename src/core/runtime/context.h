@@ -25,6 +25,12 @@
 
 namespace legate {
 
+namespace mapping {
+
+class BaseMapper;
+
+}  // namespace mapping
+
 class Scalar;
 class Store;
 
@@ -100,8 +106,10 @@ class LibraryContext {
  public:
   void record_task_name(int64_t local_task_id, const std::string& task_name);
   const std::string& get_task_name(int64_t local_task_id) const;
+  void register_mapper(mapping::BaseMapper* mapper, int64_t local_mapper_id = 0) const;
 
  private:
+  Legion::Runtime* runtime_;
   const std::string library_name_;
   ResourceScope task_scope_;
   ResourceScope mapper_scope_;

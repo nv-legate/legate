@@ -44,14 +44,14 @@ template <typename T, int DIM>
 AccessorRO<T, DIM> RegionField::read_accessor(const Legion::DomainAffineTransform& transform) const
 {
   using ACC = AccessorRO<T, DIM>;
-  return dim_dispatch(transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, transform);
+  return dim_dispatch(transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform);
 }
 
 template <typename T, int DIM>
 AccessorWO<T, DIM> RegionField::write_accessor(const Legion::DomainAffineTransform& transform) const
 {
   using ACC = AccessorWO<T, DIM>;
-  return dim_dispatch(transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, transform);
+  return dim_dispatch(transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform);
 }
 
 template <typename T, int DIM>
@@ -59,7 +59,7 @@ AccessorRW<T, DIM> RegionField::read_write_accessor(
   const Legion::DomainAffineTransform& transform) const
 {
   using ACC = AccessorRW<T, DIM>;
-  return dim_dispatch(transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, transform);
+  return dim_dispatch(transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform);
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM>
@@ -68,7 +68,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> RegionField::reduce_accessor(
 {
   using ACC = AccessorRD<OP, EXCLUSIVE, DIM>;
   return dim_dispatch(
-    transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, redop_id, transform);
+    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, redop_id, transform);
 }
 
 template <typename T, int DIM>
@@ -102,7 +102,7 @@ AccessorRO<T, DIM> RegionField::read_accessor(const Legion::Rect<DIM>& bounds,
 {
   using ACC = AccessorRO<T, DIM>;
   return dim_dispatch(
-    transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
+    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
 }
 
 template <typename T, int32_t DIM>
@@ -111,7 +111,7 @@ AccessorWO<T, DIM> RegionField::write_accessor(const Legion::Rect<DIM>& bounds,
 {
   using ACC = AccessorWO<T, DIM>;
   return dim_dispatch(
-    transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
+    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
 }
 
 template <typename T, int32_t DIM>
@@ -120,7 +120,7 @@ AccessorRW<T, DIM> RegionField::read_write_accessor(
 {
   using ACC = AccessorRW<T, DIM>;
   return dim_dispatch(
-    transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
+    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM>
@@ -131,7 +131,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> RegionField::reduce_accessor(
 {
   using ACC = AccessorRD<OP, EXCLUSIVE, DIM>;
   return dim_dispatch(
-    transform.transform.m, trans_accesor_fn<ACC, DIM>{}, pr_, fid_, redop_id, transform, bounds);
+    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, redop_id, transform, bounds);
 }
 
 template <int32_t DIM>
@@ -254,8 +254,8 @@ Buffer<T, DIM> OutputRegionField::create_output_buffer(const Legion::Point<DIM>&
     assert(!bound_);
 #endif
     // We will use this value only when the unbound store is 1D
-    num_elements_[0] = extents[0];
-    bound_           = true;
+    update_num_elements(extents[0]);
+    bound_ = true;
   }
   return out_.create_buffer<T, DIM>(extents, fid_, nullptr, return_buffer);
 }
@@ -268,8 +268,8 @@ void OutputRegionField::return_data(Buffer<T, DIM>& buffer, const Legion::Point<
 #endif
   out_.return_data(extents, fid_, buffer);
   // We will use this value only when the unbound store is 1D
-  num_elements_[0] = extents[0];
-  bound_           = true;
+  update_num_elements(extents[0]);
+  bound_ = true;
 }
 
 template <typename T, int DIM>
@@ -330,7 +330,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor() const
   if (is_future_) return future_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, shape<DIM>());
 
   if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(DIM);
+    auto transform = transform_->inverse_transform(dim_);
     return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, shape<DIM>(), transform);
   }
   return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, shape<DIM>());
@@ -346,7 +346,7 @@ AccessorRO<T, DIM> Store::read_accessor(const Legion::Rect<DIM>& bounds) const
   if (is_future_) return future_.read_accessor<T, DIM>(bounds);
 
   if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(DIM);
+    auto transform = transform_->inverse_transform(dim_);
     return region_field_.read_accessor<T, DIM>(bounds, transform);
   }
   return region_field_.read_accessor<T, DIM>(bounds);
@@ -362,7 +362,7 @@ AccessorWO<T, DIM> Store::write_accessor(const Legion::Rect<DIM>& bounds) const
   if (is_future_) return future_.write_accessor<T, DIM>(bounds);
 
   if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(DIM);
+    auto transform = transform_->inverse_transform(dim_);
     return region_field_.write_accessor<T, DIM>(bounds, transform);
   }
   return region_field_.write_accessor<T, DIM>(bounds);
@@ -378,7 +378,7 @@ AccessorRW<T, DIM> Store::read_write_accessor(const Legion::Rect<DIM>& bounds) c
   if (is_future_) return future_.read_write_accessor<T, DIM>(bounds);
 
   if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(DIM);
+    auto transform = transform_->inverse_transform(dim_);
     return region_field_.read_write_accessor<T, DIM>(bounds, transform);
   }
   return region_field_.read_write_accessor<T, DIM>(bounds);
@@ -394,7 +394,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Legion::Rect<DIM>& b
   if (is_future_) return future_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, bounds);
 
   if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(DIM);
+    auto transform = transform_->inverse_transform(dim_);
     return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, bounds, transform);
   }
   return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, bounds);
