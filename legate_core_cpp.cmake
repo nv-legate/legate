@@ -189,6 +189,8 @@ list(APPEND legate_core_SOURCES
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
   src/core/data/allocator.cc
+  src/core/data/logical_store.cc
+  src/core/data/logical_store_detail.cc
   src/core/data/scalar.cc
   src/core/data/store.cc
   src/core/data/transform.cc
@@ -197,12 +199,21 @@ list(APPEND legate_core_SOURCES
   src/core/mapping/instance_manager.cc
   src/core/mapping/mapping.cc
   src/core/mapping/task.cc
+  src/core/partitioning/constraint.cc
+  src/core/partitioning/constraint_graph.cc
+  src/core/partitioning/partition.cc
+  src/core/partitioning/partitioner.cc
   src/core/runtime/context.cc
+  src/core/runtime/launcher_arg.cc
+  src/core/runtime/launcher.cc
+  src/core/runtime/operation.cc
   src/core/runtime/projection.cc
+  src/core/runtime/req_analyzer.cc
   src/core/runtime/runtime.cc
   src/core/runtime/shard.cc
   src/core/task/return.cc
   src/core/task/task.cc
+  src/core/utilities/buffer_builder.cc
   src/core/utilities/debug.cc
   src/core/utilities/deserializer.cc
   src/core/utilities/machine.cc
@@ -333,6 +344,7 @@ install(
 install(
   FILES src/core/data/allocator.h
         src/core/data/buffer.h
+        src/core/data/logical_store.h
         src/core/data/scalar.h
         src/core/data/scalar.inl
         src/core/data/store.h
@@ -348,8 +360,15 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/mapping)
 
 install(
+  FILES src/core/partitioning/constraint.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/partitioning)
+
+install(
   FILES src/core/runtime/context.h
+        src/core/runtime/operation.h
+        src/core/runtime/projection.h
         src/core/runtime/runtime.h
+        src/core/runtime/runtime.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/runtime)
 
 install(
@@ -366,6 +385,8 @@ install(
         src/core/utilities/machine.h
         src/core/utilities/nvtx_help.h
         src/core/utilities/span.h
+        src/core/utilities/tuple.inl
+        src/core/utilities/tuple.h
         src/core/utilities/type_traits.h
         src/core/utilities/typedefs.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
