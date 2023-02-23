@@ -53,6 +53,8 @@ static const char* const core_library_name = "legate.core";
 
 /*static*/ bool Core::has_socket_mem = false;
 
+/*static*/ bool Core::standalone = false;
+
 /*static*/ LegateMainFnPtr Core::main_fn = nullptr;
 
 /*static*/ void Core::parse_config(void)
@@ -174,6 +176,15 @@ static void extract_scalar_task(
   LEGATE_ABORT;
 }
 
+/*static*/ void Core::retrieve_tunable(Legion::Context legion_context,
+                                       Legion::Runtime* legion_runtime,
+                                       LibraryContext* context)
+{
+  auto fut = legion_runtime->select_tunable_value(
+    legion_context, LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM, context->get_mapper_id(0));
+  Core::has_socket_mem = fut.get_result<bool>();
+}
+
 void register_legate_core_tasks(Machine machine,
                                 Legion::Runtime* runtime,
                                 const LibraryContext& context)
@@ -252,15 +263,16 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
 
   register_legate_core_sharding_functors(legion_runtime, *core_lib);
 
-  auto fut = legion_runtime->select_tunable_value(
-    Legion::Runtime::get_context(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM, core_lib->get_mapper_id(0));
-  Core::has_socket_mem = fut.get_result<bool>();
+  if (!Core::standalone)
+    Core::retrieve_tunable(Legion::Runtime::get_context(), legion_runtime, core_lib);
 }
 
 /*static*/ void core_library_bootstrapping_callback(Machine machine,
                                                     Legion::Runtime* legion_runtime,
                                                     const std::set<Processor>& local_procs)
 {
+  Core::standalone = true;
+
   core_library_registration_callback(machine, legion_runtime, local_procs);
 
   auto runtime = Runtime::get_runtime();
@@ -632,6 +644,7 @@ void Runtime::post_startup_initialization(Legion::Context legion_context)
   legion_context_    = legion_context;
   core_context_      = find_library(core_library_name);
   partition_manager_ = new PartitionManager(this, core_context_);
+  Core::retrieve_tunable(legion_context_, legion_runtime_, core_context_);
 }
 
 // This function should be moved to the library context

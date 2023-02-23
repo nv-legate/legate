@@ -42,6 +42,9 @@ class Core {
                             Legion::Runtime* runtime,
                             const char* task_name);
   static void report_unexpected_exception(const char* task_name, const legate::TaskException& e);
+  static void retrieve_tunable(Legion::Context legion_context,
+                               Legion::Runtime* legion_runtime,
+                               LibraryContext* context);
 
  public:
   // Configuration settings
@@ -50,6 +53,7 @@ class Core {
   static bool synchronize_stream_view;
   static bool log_mapping_decisions;
   static bool has_socket_mem;
+  static bool standalone;
   static LegateMainFnPtr main_fn;
 };
 
