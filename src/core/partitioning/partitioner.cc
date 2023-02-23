@@ -68,7 +68,7 @@ void LaunchDomainResolver::record_unbound_store(int32_t unbound_dim)
 
 std::unique_ptr<Legion::Domain> LaunchDomainResolver::resolve_launch_domain() const
 {
-  if (must_be_sequential_) return nullptr;
+  if (must_be_sequential_ || launch_domains_.empty()) return nullptr;
   if (must_be_1d_) {
     if (unbound_dim_ != UNSET && unbound_dim_ > 1)
       return nullptr;
