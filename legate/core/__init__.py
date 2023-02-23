@@ -14,11 +14,27 @@
 #
 from __future__ import annotations
 
-from ..rc import check_legion, parse_command_args
+from legion_cffi import is_legion_python, ffi, lib as legion
 
-check_legion()
+if is_legion_python == False:
+    from legion_top import (
+        legion_canonical_python_main,
+        legion_canonical_python_cleanup,
+    )
+    from ..driver.main import prepare_driver, CanonicalDriver
+    import atexit, os, shlex, sys
 
-from legion_cffi import ffi, lib as legion
+    argv = ["legate"] + shlex.split(os.environ.get("LEGATE_CONFIG", ""))
+
+    driver = prepare_driver(argv, CanonicalDriver)
+
+    if driver.dry_run:
+        sys.exit(0)
+
+    os.environ.update(driver.env)
+
+    legion_canonical_python_main(driver.cmd)
+    atexit.register(legion_canonical_python_cleanup)
 
 from ._legion import (
     LEGATE_MAX_DIM,
@@ -68,7 +84,7 @@ from ._legion import (
 
 # Import select types for Legate library construction
 from .allocation import DistributedAllocation
-from .context import track_provenance
+from .context import Annotation, track_provenance
 from .legate import (
     Array,
     Library,

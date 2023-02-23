@@ -30,6 +30,7 @@
 #include "core/task/exception.h"
 #include "core/task/task.h"
 #include "core/utilities/deserializer.h"
+#include "core/utilities/machine.h"
 #include "legate.h"
 
 namespace legate {
@@ -49,6 +50,8 @@ static const char* const core_library_name = "legate.core";
 /*static*/ bool Core::synchronize_stream_view = false;
 
 /*static*/ bool Core::log_mapping_decisions = false;
+
+/*static*/ bool Core::has_socket_mem = false;
 
 /*static*/ LegateMainFnPtr Core::main_fn = nullptr;
 
@@ -123,11 +126,11 @@ static void extract_scalar_task(
   Core::show_progress(task, legion_context, runtime, task->get_task_name());
 
   TaskContext context(task, *regions, legion_context, runtime);
-  auto values = task->futures[0].get_result<ReturnValues>();
-  auto idx    = context.scalars()[0].value<int32_t>();
+  auto idx            = context.scalars()[0].value<int32_t>();
+  auto value_and_size = ReturnValues::extract(task->futures[0], idx);
 
   // Legion postamble
-  ReturnValues({values[idx]}).finalize(legion_context);
+  value_and_size.finalize(legion_context);
 }
 
 /*static*/ void Core::shutdown(void)
@@ -151,9 +154,10 @@ static void extract_scalar_task(
   point_str << point[0];
   for (int32_t dim = 1; dim < task->index_point.dim; ++dim) point_str << "," << point[dim];
 
-  log_legate.print("%s %s task, pt = (%s), proc = " IDFMT,
+  log_legate.print("%s %s task [%s], pt = (%s), proc = " IDFMT,
                    task_name,
                    proc_kind_str,
+                   task->get_provenance_string().c_str(),
                    point_str.str().c_str(),
                    exec_proc.id);
 }
@@ -202,13 +206,20 @@ void register_legate_core_tasks(Machine machine,
     registrar.global_registration = false;
     runtime->register_task_variant<toplevel_task>(registrar, LEGATE_CPU_VARIANT);
   }
-  {
-    auto registrar =
-      make_registrar(extract_scalar_task_id, extract_scalar_task_name, Processor::LOC_PROC);
+  // Register the task variants
+  auto register_extract_scalar = [&](auto proc_kind, auto variant_id) {
+    auto registrar = make_registrar(extract_scalar_task_id, extract_scalar_task_name, proc_kind);
     Legion::CodeDescriptor desc(extract_scalar_task);
     runtime->register_task_variant(
-      registrar, desc, nullptr, 0, LEGATE_MAX_SIZE_SCALAR_RETURN, LEGATE_CPU_VARIANT);
-  }
+      registrar, desc, nullptr, 0, LEGATE_MAX_SIZE_SCALAR_RETURN, variant_id);
+  };
+  register_extract_scalar(Processor::LOC_PROC, LEGATE_CPU_VARIANT);
+#ifdef LEGATE_USE_CUDA
+  register_extract_scalar(Processor::TOC_PROC, LEGATE_GPU_VARIANT);
+#endif
+#ifdef LEGATE_USE_OPENMP
+  register_extract_scalar(Processor::OMP_PROC, LEGATE_OMP_VARIANT);
+#endif
   comm::register_tasks(machine, runtime, context);
 }
 
@@ -227,7 +238,6 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
   // We register one sharding functor for each new projection functor
   config.max_shardings     = LEGATE_CORE_MAX_FUNCTOR_ID;
   config.max_reduction_ops = LEGATE_CORE_MAX_REDUCTION_OP_ID;
-  LibraryContext context(legion_runtime, core_library_name, config);
 
   auto runtime  = Runtime::get_runtime();
   auto core_lib = runtime->create_library(core_library_name, config);
@@ -236,11 +246,15 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
 
   register_legate_core_mapper(machine, legion_runtime, *core_lib);
 
-  register_exception_reduction_op(legion_runtime, context);
+  register_exception_reduction_op(legion_runtime, *core_lib);
 
   register_legate_core_projection_functors(legion_runtime, *core_lib);
 
   register_legate_core_sharding_functors(legion_runtime, *core_lib);
+
+  auto fut = legion_runtime->select_tunable_value(
+    Legion::Runtime::get_context(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM, core_lib->get_mapper_id(0));
+  Core::has_socket_mem = fut.get_result<bool>();
 }
 
 /*static*/ void core_library_bootstrapping_callback(Machine machine,

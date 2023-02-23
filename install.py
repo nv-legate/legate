@@ -19,7 +19,6 @@ import argparse
 import multiprocessing
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
@@ -145,26 +144,26 @@ def was_previously_built_with_different_build_isolation(
     return False
 
 
-def get_install_dir_or_default(install_dir):
-    # If no install dir was passed on the command line, infer the location
-    # of where to install the Legion Python bindings, otherwise they'll only
-    # be installed into the local scikit-build cmake-install dir
-    if install_dir is None:
-        # Install into conda prefix if defined
-        if "CONDA_PREFIX" in os.environ:
-            install_dir = os.environ["CONDA_PREFIX"]
-        else:
-            import site
+def get_install_dir():
+    # Infer the location where to install the Legion Python bindings,
+    # otherwise they'll only be installed into the local scikit-build
+    # cmake-install dir
 
-            # Try to install into user site packages first?
-            if site.ENABLE_USER_SITE and os.path.exists(
-                site_pkgs := site.getusersitepackages()
-            ):
-                install_dir = site_pkgs
-            # Otherwise fallback to regular site-packages?
-            elif os.path.exists(site_pkgs := site.getsitepackages()):
-                install_dir = site_pkgs
-    return install_dir
+    # Install into conda prefix if defined
+    if "CONDA_PREFIX" in os.environ:
+        return os.environ["CONDA_PREFIX"]
+
+    import site
+
+    # Try to install into user site packages first?
+    if site.ENABLE_USER_SITE and os.path.exists(
+        user_site_pkgs := site.getusersitepackages()
+    ):
+        return user_site_pkgs
+
+    # Otherwise fallback to regular site-packages?
+    if os.path.exists(site_pkgs := site.getsitepackages()):
+        return site_pkgs
 
 
 def install_legion_python_bindings(
@@ -246,9 +245,8 @@ def install(
     nccl_dir,
     cmake_exe,
     cmake_generator,
-    install_dir,
     gasnet_dir,
-    pylib_name,
+    ucx_dir,
     cuda_dir,
     maxdim,
     maxfields,
@@ -277,6 +275,9 @@ def install(
     if clean_first is None:
         clean_first = not editable
 
+    if legion_dir is not None and legion_src_dir is not None:
+        sys.exit("Cannot specify both --legion-dir and --legion-src-dir")
+
     print("Verbose build is ", "on" if verbose else "off")
     if verbose:
         print("networks:", networks)
@@ -291,9 +292,8 @@ def install(
         print("nccl_dir:", nccl_dir)
         print("cmake_exe:", cmake_exe)
         print("cmake_generator:", cmake_generator)
-        print("install_dir:", install_dir)
         print("gasnet_dir:", gasnet_dir)
-        print("pylib_name:", pylib_name)
+        print("ucx_dir:", ucx_dir)
         print("cuda_dir:", cuda_dir)
         print("maxdim:", maxdim)
         print("maxfields:", maxfields)
@@ -311,6 +311,7 @@ def install(
         print("legion_src_dir:", legion_src_dir)
         print("legion_url:", legion_url)
         print("legion_branch:", legion_branch)
+        print("unknown:", str(unknown))
 
     join = os.path.join
     exists = os.path.exists
@@ -319,29 +320,25 @@ def install(
 
     legate_core_dir = dirname(realpath(__file__))
 
-    if pylib_name is None:
-        pyversion, pylib_name = find_active_python_version_and_path()
-    else:
-        f_name = os.path.split(pylib_name)[-1]
-        match = re.match(r"^libpython(\d\d?\.\d\d?)", f_name)
-        e = "Unable to get version from library name {}".format(pylib_name)
-        assert match, e
-        pyversion = match.group(1)
+    pyversion, pylib_name = find_active_python_version_and_path()
     print("Using python lib and version: {}, {}".format(pylib_name, pyversion))
 
     def validate_path(path):
-        if path is not None and (path := str(path)) != "":
-            if not os.path.isabs(path):
-                path = join(legate_core_dir, path)
-            if exists(path := realpath(path)):
-                return path
-        return None
+        if path is None or (path := str(path)) == "":
+            return None
+        if not os.path.isabs(path):
+            path = join(legate_core_dir, path)
+        if not exists(path := realpath(path)):
+            print(f"Error: path does not exist: {path}")
+            sys.exit(1)
+        return path
 
     cuda_dir = validate_path(cuda_dir)
     nccl_dir = validate_path(nccl_dir)
     legion_dir = validate_path(legion_dir)
     legion_src_dir = validate_path(legion_src_dir)
     gasnet_dir = validate_path(gasnet_dir)
+    ucx_dir = validate_path(ucx_dir)
     thrust_dir = validate_path(thrust_dir)
 
     if verbose:
@@ -351,6 +348,7 @@ def install(
         print("legion_dir: ", legion_dir)
         print("legion_src_dir: ", legion_src_dir)
         print("gasnet_dir: ", gasnet_dir)
+        print("ucx_dir: ", ucx_dir)
         print("thrust_dir: ", thrust_dir)
 
     if thread_count is None:
@@ -388,7 +386,7 @@ def install(
         except Exception:
             pass
 
-    install_dir = get_install_dir_or_default(validate_path(install_dir))
+    install_dir = get_install_dir()
 
     if verbose:
         print("install_dir: ", install_dir)
@@ -405,18 +403,19 @@ def install(
             pip_install_cmd += ["--no-deps", "--no-build-isolation"]
         pip_install_cmd += ["--upgrade"]
 
+    if unknown is not None:
+        pip_install_cmd += unknown
+
     pip_install_cmd += ["."]
 
     if verbose:
         pip_install_cmd += ["-vv"]
 
-    cmake_flags = []
-
-    if cmake_generator:
-        cmake_flags += [f"-G{cmake_generator}"]
+    # Also use preexisting CMAKE_ARGS from conda if set
+    cmake_flags = cmd_env.get("CMAKE_ARGS", "").split(" ")
 
     if debug or verbose:
-        cmake_flags += ["--log-level=%s" % ("DEBUG" if debug else "VERBOSE")]
+        cmake_flags += [f"--log-level={'DEBUG' if debug else 'VERBOSE'}"]
 
     cmake_flags += f"""\
 -DCMAKE_BUILD_TYPE={(
@@ -440,32 +439,45 @@ def install(
 -DLegion_REDOP_HALF=ON
 -DLegion_BUILD_BINDINGS=ON
 -DLegion_BUILD_JUPYTER=ON
+-DLegion_EMBED_GASNet_CONFIGURE_ARGS="--with-ibv-max-hcas=8"
 """.splitlines()
 
     if nccl_dir:
-        cmake_flags += ["-DNCCL_DIR=%s" % nccl_dir]
+        cmake_flags += [f"-DNCCL_DIR={nccl_dir}"]
     if gasnet_dir:
-        cmake_flags += ["-DGASNet_ROOT_DIR=%s" % gasnet_dir]
+        cmake_flags += [f"-DGASNet_ROOT_DIR={gasnet_dir}"]
+    if ucx_dir:
+        cmake_flags += [f"-DUCX_ROOT={ucx_dir}"]
     if conduit:
-        cmake_flags += ["-DGASNet_CONDUIT=%s" % conduit]
+        cmake_flags += [f"-DGASNet_CONDUIT={conduit}"]
     if cuda_dir:
-        cmake_flags += ["-DCUDA_TOOLKIT_ROOT_DIR=%s" % cuda_dir]
+        cmake_flags += [f"-DCUDA_TOOLKIT_ROOT_DIR={cuda_dir}"]
     if thrust_dir:
-        cmake_flags += ["-DThrust_ROOT=%s" % thrust_dir]
+        cmake_flags += [f"-DThrust_ROOT={thrust_dir}"]
     if legion_dir:
-        cmake_flags += ["-DLegion_ROOT=%s" % legion_dir]
-    if legion_src_dir:
-        cmake_flags += ["-DCPM_Legion_SOURCE=%s" % legion_src_dir]
+        cmake_flags += [f"-DLegion_ROOT={legion_dir}"]
+    elif legion_src_dir:
+        cmake_flags += [f"-DCPM_Legion_SOURCE={legion_src_dir}"]
+    else:
+        cmake_flags += ["-DCPM_DOWNLOAD_Legion=ON"]
     if legion_url:
-        cmake_flags += ["-Dlegate_core_LEGION_REPOSITORY=%s" % legion_url]
+        cmake_flags += [f"-Dlegate_core_LEGION_REPOSITORY={legion_url}"]
     if legion_branch:
-        cmake_flags += ["-Dlegate_core_LEGION_BRANCH=%s" % legion_branch]
+        cmake_flags += [f"-Dlegate_core_LEGION_BRANCH={legion_branch}"]
 
     cmake_flags += extra_flags
+    build_flags = [f"-j{str(thread_count)}"]
+    if verbose:
+        if cmake_generator == "Unix Makefiles":
+            build_flags += ["VERBOSE=1"]
+        else:
+            build_flags += ["--verbose"]
+
     cmd_env.update(
         {
-            "SKBUILD_BUILD_OPTIONS": f"-j{str(thread_count)}",
-            "SKBUILD_CONFIGURE_OPTIONS": "\n".join(cmake_flags),
+            "CMAKE_ARGS": " ".join(cmake_flags),
+            "CMAKE_GENERATOR": cmake_generator,
+            "SKBUILD_BUILD_OPTIONS": " ".join(build_flags),
         }
     )
 
@@ -483,14 +495,6 @@ def install(
 
 def driver():
     parser = argparse.ArgumentParser(description="Install Legate front end.")
-    parser.add_argument(
-        "--install-dir",
-        dest="install_dir",
-        metavar="DIR",
-        required=False,
-        default=None,
-        help="Path to install all Legate-related software",
-    )
     parser.add_argument(
         "--debug",
         dest="debug",
@@ -536,7 +540,7 @@ def driver():
         dest="networks",
         action="append",
         required=False,
-        choices=["gasnet1", "gasnetex", "mpi"],
+        choices=["gasnet1", "gasnetex", "ucx", "mpi"],
         default=[],
         help="Realm networking backend to use for multi-node execution.",
     )
@@ -547,6 +551,14 @@ def driver():
         required=False,
         default=os.environ.get("GASNET"),
         help="Path to GASNet installation directory.",
+    )
+    parser.add_argument(
+        "--with-ucx",
+        dest="ucx_dir",
+        metavar="DIR",
+        required=False,
+        default=os.environ.get("UCX_ROOT"),
+        help="Path to UCX installation directory.",
     )
     parser.add_argument(
         "--cuda",
@@ -580,7 +592,7 @@ def driver():
         "--march",
         dest="march",
         required=False,
-        default="native",
+        default=("haswell" if platform.machine() == "x86_64" else "native"),
         help="Specify the target CPU architecture.",
     )
     parser.add_argument(
@@ -629,18 +641,6 @@ def driver():
         help="Path to NCCL installation directory.",
     )
     parser.add_argument(
-        "--python-lib",
-        dest="pylib_name",
-        action="store",
-        required=False,
-        default=None,
-        help=(
-            "Build Legate against the specified Python shared library. "
-            "Default is to use the Python library currently executing this "
-            "install script."
-        ),
-    )
-    parser.add_argument(
         "--with-cmake",
         dest="cmake_exe",
         metavar="EXE",
@@ -652,8 +652,11 @@ def driver():
         "--cmake-generator",
         dest="cmake_generator",
         required=False,
-        default="Ninja",
-        choices=["Ninja", "Unix Makefiles"],
+        default=os.environ.get(
+            "CMAKE_GENERATOR",
+            "Unix Makefiles" if shutil.which("ninja") is None else "Ninja",
+        ),
+        choices=["Ninja", "Unix Makefiles", None],
         help="The CMake makefiles generator",
     )
     parser.add_argument(
@@ -760,7 +763,7 @@ def driver():
         )
         print("to specify the CMake executable if it is not on PATH.")
         print()
-        print("Attempted to execute: %s" % args.cmake_exe)
+        print(f"Attempted to execute: {args.cmake_exe}")
         sys.exit(1)
 
     install(unknown=unknown, **vars(args))

@@ -49,6 +49,7 @@ class Core {
   static bool use_empty_task;
   static bool synchronize_stream_view;
   static bool log_mapping_decisions;
+  static bool has_socket_mem;
   static LegateMainFnPtr main_fn;
 };
 
