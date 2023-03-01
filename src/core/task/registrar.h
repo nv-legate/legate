@@ -40,7 +40,7 @@ class TaskRegistrar {
                       const VariantOptions& options);
 
  public:
-  void register_all_tasks(const LibraryContext& context);
+  void register_all_tasks(LibraryContext& context);
 
  private:
   std::vector<PendingTaskVariant*> pending_task_variants_;

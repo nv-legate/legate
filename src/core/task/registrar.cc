@@ -81,11 +81,12 @@ void TaskRegistrar::record_variant(Legion::TaskID tid,
   pending_task_variants_.push_back(registrar);
 }
 
-void TaskRegistrar::register_all_tasks(const LibraryContext& context)
+void TaskRegistrar::register_all_tasks(LibraryContext& context)
 {
   auto runtime = Legion::Runtime::get_runtime();
   // Do all our registrations
   for (auto& task : pending_task_variants_) {
+    context.record_task_name(task->task_id, task->task_name);
     task->task_id =
       context.get_task_id(task->task_id);  // Convert a task local task id to a global id
     // Attach the task name too for debugging
