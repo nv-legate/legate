@@ -29,9 +29,7 @@
 
 namespace legate {
 
-using namespace Legion;
-
-RegionField::RegionField(int32_t dim, const PhysicalRegion& pr, FieldID fid)
+RegionField::RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid)
   : dim_(dim), pr_(pr), fid_(fid)
 {
   auto priv  = pr.get_privilege();
@@ -61,16 +59,20 @@ RegionField& RegionField::operator=(RegionField&& other) noexcept
   return *this;
 }
 
-bool RegionField::valid() const { return pr_.get_logical_region() != LogicalRegion::NO_REGION; }
+bool RegionField::valid() const
+{
+  return pr_.get_logical_region() != Legion::LogicalRegion::NO_REGION;
+}
 
 Domain RegionField::domain() const { return dim_dispatch(dim_, get_domain_fn{}, pr_); }
 
 void RegionField::unmap() { Runtime::get_runtime()->unmap_physical_region(pr_); }
 
-OutputRegionField::OutputRegionField(const OutputRegion& out, FieldID fid)
+OutputRegionField::OutputRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
   : out_(out),
     fid_(fid),
-    num_elements_(UntypedDeferredValue(sizeof(size_t), find_memory_kind_for_executing_processor()))
+    num_elements_(
+      Legion::UntypedDeferredValue(sizeof(size_t), find_memory_kind_for_executing_processor()))
 {
 }
 
@@ -78,9 +80,9 @@ OutputRegionField::OutputRegionField(OutputRegionField&& other) noexcept
   : bound_(other.bound_), out_(other.out_), fid_(other.fid_), num_elements_(other.num_elements_)
 {
   other.bound_        = false;
-  other.out_          = OutputRegion();
+  other.out_          = Legion::OutputRegion();
   other.fid_          = -1;
-  other.num_elements_ = UntypedDeferredValue();
+  other.num_elements_ = Legion::UntypedDeferredValue();
 }
 
 OutputRegionField& OutputRegionField::operator=(OutputRegionField&& other) noexcept
@@ -91,9 +93,9 @@ OutputRegionField& OutputRegionField::operator=(OutputRegionField&& other) noexc
   num_elements_ = other.num_elements_;
 
   other.bound_        = false;
-  other.out_          = OutputRegion();
+  other.out_          = Legion::OutputRegion();
   other.fid_          = -1;
-  other.num_elements_ = UntypedDeferredValue();
+  other.num_elements_ = Legion::UntypedDeferredValue();
 
   return *this;
 }
@@ -128,8 +130,11 @@ void OutputRegionField::update_num_elements(size_t num_elements)
   acc[0] = num_elements;
 }
 
-FutureWrapper::FutureWrapper(
-  bool read_only, int32_t field_size, Domain domain, Future future, bool initialize /*= false*/)
+FutureWrapper::FutureWrapper(bool read_only,
+                             int32_t field_size,
+                             Domain domain,
+                             Legion::Future future,
+                             bool initialize /*= false*/)
   : read_only_(read_only), field_size_(field_size), domain_(domain), future_(future)
 {
 #ifdef DEBUG_LEGATE
@@ -151,16 +156,16 @@ FutureWrapper::FutureWrapper(
 #ifdef LEGATE_USE_CUDA
       if (mem_kind == Memory::Kind::GPU_FB_MEM) {
         // TODO: This should be done by Legion
-        buffer_ = UntypedDeferredValue(field_size, mem_kind);
+        buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
         AccessorWO<int8_t, 1> acc(buffer_, field_size, false);
         auto stream = cuda::StreamPool::get_stream_pool().get_stream();
         CHECK_CUDA(
           cudaMemcpyAsync(acc.ptr(0), p_init_value, field_size, cudaMemcpyDeviceToDevice, stream));
       } else
 #endif
-        buffer_ = UntypedDeferredValue(field_size, mem_kind, p_init_value);
+        buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind, p_init_value);
     } else
-      buffer_ = UntypedDeferredValue(field_size, mem_kind);
+      buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
   }
 }
 

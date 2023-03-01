@@ -26,6 +26,7 @@
 #include "core/partitioning/constraint.h"
 #include "core/runtime/operation.h"
 #include "core/runtime/runtime.h"
+#include "core/task/registrar.h"
 #include "core/task/task.h"
 #include "core/utilities/deserializer.h"
 #include "core/utilities/dispatch.h"

@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "core/runtime/projection.h"
-#include "legion.h"
+#include "core/utilities/typedefs.h"
 
 namespace legate {
 
@@ -27,7 +27,7 @@ class BufferBuilder;
 class Partition;
 
 struct Transform {
-  virtual Legion::Domain transform(const Legion::Domain& input) const           = 0;
+  virtual Domain transform(const Domain& input) const                           = 0;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const = 0;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const  = 0;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const   = 0;
@@ -50,7 +50,7 @@ struct TransformStack : public Transform, std::enable_shared_from_this<Transform
                  std::shared_ptr<TransformStack>&& parent);
 
  public:
-  virtual Legion::Domain transform(const Legion::Domain& input) const override;
+  virtual Domain transform(const Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
@@ -76,7 +76,7 @@ class Shift : public StoreTransform {
   Shift(int32_t dim, int64_t offset);
 
  public:
-  virtual Legion::Domain transform(const Legion::Domain& input) const override;
+  virtual Domain transform(const Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
@@ -97,7 +97,7 @@ class Promote : public StoreTransform {
   Promote(int32_t extra_dim, int64_t dim_size);
 
  public:
-  virtual Legion::Domain transform(const Legion::Domain& input) const override;
+  virtual Domain transform(const Domain& input) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
@@ -119,7 +119,7 @@ class Project : public StoreTransform {
   virtual ~Project() {}
 
  public:
-  virtual Legion::Domain transform(const Legion::Domain& domain) const override;
+  virtual Domain transform(const Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
@@ -140,7 +140,7 @@ class Transpose : public StoreTransform {
   Transpose(std::vector<int32_t>&& axes);
 
  public:
-  virtual Legion::Domain transform(const Legion::Domain& domain) const override;
+  virtual Domain transform(const Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
@@ -161,7 +161,7 @@ class Delinearize : public StoreTransform {
   Delinearize(int32_t dim, std::vector<int64_t>&& sizes);
 
  public:
-  virtual Legion::Domain transform(const Legion::Domain& domain) const override;
+  virtual Domain transform(const Domain& domain) const override;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;

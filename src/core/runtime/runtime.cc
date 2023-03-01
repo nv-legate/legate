@@ -31,11 +31,10 @@
 #include "core/task/task.h"
 #include "core/utilities/deserializer.h"
 #include "core/utilities/machine.h"
+#include "core/utilities/nvtx_help.h"
 #include "legate.h"
 
 namespace legate {
-
-using namespace Legion;
 
 Logger log_legate("legate");
 
@@ -98,8 +97,8 @@ static const char* const core_library_name = "legate.core";
 }
 
 static void toplevel_task(const Legion::Task* task,
-                          const std::vector<PhysicalRegion>& regions,
-                          Context ctx,
+                          const std::vector<Legion::PhysicalRegion>& regions,
+                          Legion::Context ctx,
                           Legion::Runtime* legion_runtime)
 {
   auto runtime = Runtime::get_runtime();
@@ -125,7 +124,7 @@ static void extract_scalar_task(
   Legion::Runtime* runtime;
   Legion::Runtime::legion_task_preamble(args, arglen, p, task, regions, legion_context, runtime);
 
-  Core::show_progress(task, legion_context, runtime, task->get_task_name());
+  Core::show_progress(task, legion_context, runtime);
 
   TaskContext context(task, *regions, legion_context, runtime);
   auto idx            = context.scalars()[0].value<int32_t>();
@@ -142,36 +141,35 @@ static void extract_scalar_task(
 
 /*static*/ void Core::show_progress(const Legion::Task* task,
                                     Legion::Context ctx,
-                                    Legion::Runtime* runtime,
-                                    const char* task_name)
+                                    Legion::Runtime* runtime)
 {
   if (!Core::show_progress_requested) return;
   const auto exec_proc     = runtime->get_executing_processor(ctx);
-  const auto proc_kind_str = (exec_proc.kind() == Legion::Processor::LOC_PROC)   ? "CPU"
-                             : (exec_proc.kind() == Legion::Processor::TOC_PROC) ? "GPU"
-                                                                                 : "OpenMP";
+  const auto proc_kind_str = (exec_proc.kind() == Processor::LOC_PROC)   ? "CPU"
+                             : (exec_proc.kind() == Processor::TOC_PROC) ? "GPU"
+                                                                         : "OpenMP";
 
   std::stringstream point_str;
   const auto& point = task->index_point;
   point_str << point[0];
-  for (int32_t dim = 1; dim < task->index_point.dim; ++dim) point_str << "," << point[dim];
+  for (int32_t dim = 1; dim < point.dim; ++dim) point_str << "," << point[dim];
 
   log_legate.print("%s %s task [%s], pt = (%s), proc = " IDFMT,
-                   task_name,
+                   task->get_task_name(),
                    proc_kind_str,
                    task->get_provenance_string().c_str(),
                    point_str.str().c_str(),
                    exec_proc.id);
 }
 
-/*static*/ void Core::report_unexpected_exception(const char* task_name,
+/*static*/ void Core::report_unexpected_exception(const Legion::Task* task,
                                                   const legate::TaskException& e)
 {
   log_legate.error(
     "Task %s threw an exception \"%s\", but the task did not declare any exception. "
     "Please specify a Python exception that you want this exception to be re-thrown with "
     "using 'throws_exception'.",
-    task_name,
+    task->get_task_name(),
     e.error_message().c_str());
   LEGATE_ABORT;
 }
@@ -185,23 +183,45 @@ static void extract_scalar_task(
   Core::has_socket_mem = fut.get_result<bool>();
 }
 
-void register_legate_core_tasks(Machine machine,
+namespace detail {
+
+struct RegistrationCallbackArgs {
+  Core::RegistrationCallback callback;
+};
+
+static void invoke_legate_registration_callback(const Legion::RegistrationCallbackArgs& args)
+{
+  auto p_args = static_cast<RegistrationCallbackArgs*>(args.buffer.get_ptr());
+  p_args->callback();
+};
+
+}  // namespace detail
+
+/*static*/ void Core::perform_registration(RegistrationCallback callback)
+{
+  legate::detail::RegistrationCallbackArgs args{callback};
+  Legion::UntypedBuffer buffer(&args, sizeof(args));
+  Legion::Runtime::perform_registration_callback(
+    detail::invoke_legate_registration_callback, buffer, true /*global*/);
+}
+
+void register_legate_core_tasks(Legion::Machine machine,
                                 Legion::Runtime* runtime,
                                 const LibraryContext& context)
 {
-  const TaskID toplevel_task_id  = context.get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID);
+  auto toplevel_task_id          = context.get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID);
   const char* toplevel_task_name = "Legate Core Toplevel Task";
   runtime->attach_name(
     toplevel_task_id, toplevel_task_name, false /*mutable*/, true /*local only*/);
 
-  const TaskID extract_scalar_task_id  = context.get_task_id(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID);
+  auto extract_scalar_task_id          = context.get_task_id(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID);
   const char* extract_scalar_task_name = "core::extract_scalar";
   runtime->attach_name(
     extract_scalar_task_id, extract_scalar_task_name, false /*mutable*/, true /*local only*/);
 
   auto make_registrar = [&](auto task_id, auto* task_name, auto proc_kind) {
-    TaskVariantRegistrar registrar(task_id, task_name);
-    registrar.add_constraint(ProcessorConstraint(proc_kind));
+    Legion::TaskVariantRegistrar registrar(task_id, task_name);
+    registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
     registrar.set_leaf(true);
     registrar.global_registration = false;
     return registrar;
@@ -209,8 +229,8 @@ void register_legate_core_tasks(Machine machine,
 
   // Register the task variant for both CPUs and GPUs
   {
-    TaskVariantRegistrar registrar(toplevel_task_id, toplevel_task_name);
-    registrar.add_constraint(ProcessorConstraint(Processor::LOC_PROC));
+    Legion::TaskVariantRegistrar registrar(toplevel_task_id, toplevel_task_name);
+    registrar.add_constraint(Legion::ProcessorConstraint(Processor::LOC_PROC));
     registrar.set_leaf(false);
     registrar.set_inner(false);
     registrar.set_replicable(true);
@@ -237,7 +257,7 @@ void register_legate_core_tasks(Machine machine,
 extern void register_exception_reduction_op(Legion::Runtime* runtime,
                                             const LibraryContext& context);
 
-/*static*/ void core_library_registration_callback(Machine machine,
+/*static*/ void core_library_registration_callback(Legion::Machine machine,
                                                    Legion::Runtime* legion_runtime,
                                                    const std::set<Processor>& local_procs)
 {
@@ -267,7 +287,7 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
     Core::retrieve_tunable(Legion::Runtime::get_context(), legion_runtime, core_lib);
 }
 
-/*static*/ void core_library_bootstrapping_callback(Machine machine,
+/*static*/ void core_library_bootstrapping_callback(Legion::Machine machine,
                                                     Legion::Runtime* legion_runtime,
                                                     const std::set<Processor>& local_procs)
 {
@@ -290,7 +310,7 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
 
 class RegionManager {
  public:
-  RegionManager(Runtime* runtime, const Legion::Domain& shape);
+  RegionManager(Runtime* runtime, const Domain& shape);
 
  private:
   Legion::LogicalRegion active_region() const;
@@ -303,7 +323,7 @@ class RegionManager {
 
  private:
   Runtime* runtime_;
-  Legion::Domain shape_;
+  Domain shape_;
   std::vector<Legion::LogicalRegion> regions_{};
 };
 
@@ -312,7 +332,7 @@ RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
 {
 }
 
-LogicalRegion RegionManager::active_region() const { return regions_.back(); }
+Legion::LogicalRegion RegionManager::active_region() const { return regions_.back(); }
 
 void RegionManager::create_region()
 {
@@ -342,7 +362,7 @@ void RegionManager::import_region(const Legion::LogicalRegion& region)
 
 class FieldManager {
  public:
-  FieldManager(Runtime* runtime, const Legion::Domain& shape, LegateTypeCode code);
+  FieldManager(Runtime* runtime, const Domain& shape, LegateTypeCode code);
 
  public:
   std::shared_ptr<LogicalRegionField> allocate_field();
@@ -351,7 +371,7 @@ class FieldManager {
 
  private:
   Runtime* runtime_;
-  Legion::Domain shape_;
+  Domain shape_;
   LegateTypeCode code_;
   size_t field_size_;
 
@@ -370,7 +390,7 @@ struct field_size_fn {
 
 static size_t get_field_size(LegateTypeCode code) { return type_dispatch(code, field_size_fn{}); }
 
-FieldManager::FieldManager(Runtime* runtime, const Legion::Domain& shape, LegateTypeCode code)
+FieldManager::FieldManager(Runtime* runtime, const Domain& shape, LegateTypeCode code)
   : runtime_(runtime), shape_(shape), code_(code), field_size_(get_field_size(code))
 {
 }
@@ -385,8 +405,8 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
     rf = new LogicalRegionField(field.first, field.second);
   } else {
     auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
-    LogicalRegion lr;
-    FieldID fid;
+    Legion::LogicalRegion lr;
+    Legion::FieldID fid;
     std::tie(lr, fid) = rgn_mgr->allocate_field(field_size_);
     rf                = new LogicalRegionField(lr, fid);
     log_legate.debug("Field %u created in field manager %p", fid, this);
@@ -634,7 +654,7 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
   }
 
   log_legate.debug("Library %s is created", library_name.c_str());
-  auto context = new LibraryContext(Legion::Runtime::get_runtime(), library_name, config);
+  auto context             = new LibraryContext(library_name, config);
   libraries_[library_name] = context;
   return context;
 }
@@ -729,17 +749,17 @@ RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegi
   auto region   = rf->region();
   auto field_id = rf->field_id();
 
-  PhysicalRegion pr;
+  Legion::PhysicalRegion pr;
 
   RegionFieldID key(region, field_id);
   auto finder = inline_mapped_.find(key);
   if (inline_mapped_.end() == finder) {
-    RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
+    Legion::RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
     req.add_field(field_id);
 
     auto mapper_id = context->get_mapper_id(0);
     // TODO: We need to pass the metadata about logical store
-    InlineLauncher launcher(req, mapper_id);
+    Legion::InlineLauncher launcher(req, mapper_id);
     pr = legion_runtime_->map_region(legion_context_, launcher);
     inline_mapped_.insert({key, pr});
   } else
@@ -779,7 +799,7 @@ FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, LegateT
 
 PartitionManager* Runtime::partition_manager() const { return partition_manager_; }
 
-IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
+Legion::IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
 {
   assert(nullptr != legion_context_);
   auto finder = index_spaces_.find(shape);
@@ -797,19 +817,20 @@ Legion::IndexPartition Runtime::create_restricted_partition(
   const Legion::IndexSpace& color_space,
   Legion::PartitionKind kind,
   const Legion::DomainTransform& transform,
-  const Legion::Domain& extent)
+  const Domain& extent)
 {
   return legion_runtime_->create_partition_by_restriction(
     legion_context_, index_space, color_space, transform, extent, kind);
 }
 
-FieldSpace Runtime::create_field_space()
+Legion::FieldSpace Runtime::create_field_space()
 {
   assert(nullptr != legion_context_);
   return legion_runtime_->create_field_space(legion_context_);
 }
 
-LogicalRegion Runtime::create_region(const IndexSpace& index_space, const FieldSpace& field_space)
+Legion::LogicalRegion Runtime::create_region(const Legion::IndexSpace& index_space,
+                                             const Legion::FieldSpace& field_space)
 {
   assert(nullptr != legion_context_);
   return legion_runtime_->create_logical_region(legion_context_, index_space, field_space);
@@ -827,21 +848,21 @@ Legion::Future Runtime::create_future(const void* data, size_t datalen) const
   return Legion::Future::from_untyped_pointer(data, datalen);
 }
 
-FieldID Runtime::allocate_field(const FieldSpace& field_space, size_t field_size)
+Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space, size_t field_size)
 {
   assert(nullptr != legion_context_);
   auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
   return allocator.allocate_field(field_size);
 }
 
-Domain Runtime::get_index_space_domain(const IndexSpace& index_space) const
+Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space) const
 {
   assert(nullptr != legion_context_);
   return legion_runtime_->get_index_space_domain(legion_context_, index_space);
 }
 
 std::shared_ptr<LogicalStore> Runtime::dispatch(
-  TaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
+  Legion::TaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
 {
   assert(nullptr != legion_context_);
   legion_runtime_->execute_task(legion_context_, *launcher, output_requirements);
@@ -849,7 +870,7 @@ std::shared_ptr<LogicalStore> Runtime::dispatch(
 }
 
 std::shared_ptr<LogicalStore> Runtime::dispatch(
-  IndexTaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
+  Legion::IndexTaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
 {
   assert(nullptr != legion_context_);
   legion_runtime_->execute_index_space(legion_context_, *launcher, output_requirements);
