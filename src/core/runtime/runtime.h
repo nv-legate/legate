@@ -27,12 +27,19 @@
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
+/** @defgroup runtime Runtime and library contexts
+ */
+
 namespace legate {
 
 extern uint32_t extract_env(const char* env_name,
                             const uint32_t default_value,
                             const uint32_t test_value);
 
+/**
+ * @ingroup runtime
+ * @brief A utility class that collects static members shared by all Legate libraries
+ */
 struct Core {
  public:
   static void parse_config(void);
@@ -46,8 +53,19 @@ struct Core {
                                LibraryContext* context);
 
  public:
+  /**
+   * @brief Type signature for registration callbacks
+   */
   using RegistrationCallback = void (*)();
-  static void perform_registration(RegistrationCallback callback);
+
+  /**
+   * @brief Performs a registration callback. Libraries must perform
+   * registration of tasks and other components through this function.
+   *
+   * @tparam CALLBACK Registration callback to perform
+   */
+  template <RegistrationCallback CALLBACK>
+  static void perform_registration();
 
  public:
   // Configuration settings

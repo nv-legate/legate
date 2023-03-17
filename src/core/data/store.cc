@@ -68,7 +68,7 @@ Domain RegionField::domain() const { return dim_dispatch(dim_, get_domain_fn{}, 
 
 void RegionField::unmap() { Runtime::get_runtime()->unmap_physical_region(pr_); }
 
-OutputRegionField::OutputRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
+UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
   : out_(out),
     fid_(fid),
     num_elements_(
@@ -76,7 +76,7 @@ OutputRegionField::OutputRegionField(const Legion::OutputRegion& out, Legion::Fi
 {
 }
 
-OutputRegionField::OutputRegionField(OutputRegionField&& other) noexcept
+UnboundRegionField::UnboundRegionField(UnboundRegionField&& other) noexcept
   : bound_(other.bound_), out_(other.out_), fid_(other.fid_), num_elements_(other.num_elements_)
 {
   other.bound_        = false;
@@ -85,7 +85,7 @@ OutputRegionField::OutputRegionField(OutputRegionField&& other) noexcept
   other.num_elements_ = Legion::UntypedDeferredValue();
 }
 
-OutputRegionField& OutputRegionField::operator=(OutputRegionField&& other) noexcept
+UnboundRegionField& UnboundRegionField::operator=(UnboundRegionField&& other) noexcept
 {
   bound_        = other.bound_;
   out_          = other.out_;
@@ -100,7 +100,7 @@ OutputRegionField& OutputRegionField::operator=(OutputRegionField&& other) noexc
   return *this;
 }
 
-void OutputRegionField::make_empty(int32_t ndim)
+void UnboundRegionField::bind_empty_data(int32_t ndim)
 {
   update_num_elements(0);
   DomainPoint extents;
@@ -111,7 +111,7 @@ void OutputRegionField::make_empty(int32_t ndim)
   bound_ = true;
 }
 
-ReturnValue OutputRegionField::pack_weight() const
+ReturnValue UnboundRegionField::pack_weight() const
 {
 #ifdef DEBUG_LEGATE
   if (!bound_) {
@@ -124,7 +124,7 @@ ReturnValue OutputRegionField::pack_weight() const
   return ReturnValue(num_elements_, sizeof(size_t));
 }
 
-void OutputRegionField::update_num_elements(size_t num_elements)
+void UnboundRegionField::update_num_elements(size_t num_elements)
 {
   AccessorWO<size_t, 1> acc(num_elements_, sizeof(size_t), false);
   acc[0] = num_elements;
@@ -217,7 +217,7 @@ Store::Store(int32_t dim,
              FutureWrapper future,
              std::shared_ptr<TransformStack>&& transform)
   : is_future_(true),
-    is_output_store_(false),
+    is_unbound_store_(false),
     dim_(dim),
     code_(code),
     redop_id_(redop_id),
@@ -233,7 +233,7 @@ Store::Store(int32_t dim,
              RegionField&& region_field,
              std::shared_ptr<TransformStack>&& transform)
   : is_future_(false),
-    is_output_store_(false),
+    is_unbound_store_(false),
     dim_(dim),
     code_(code),
     redop_id_(redop_id),
@@ -247,14 +247,14 @@ Store::Store(int32_t dim,
 
 Store::Store(int32_t dim,
              int32_t code,
-             OutputRegionField&& output,
+             UnboundRegionField&& unbound_field,
              std::shared_ptr<TransformStack>&& transform)
   : is_future_(false),
-    is_output_store_(true),
+    is_unbound_store_(true),
     dim_(dim),
     code_(code),
     redop_id_(-1),
-    output_field_(std::forward<OutputRegionField>(output)),
+    unbound_field_(std::forward<UnboundRegionField>(unbound_field)),
     transform_(std::forward<decltype(transform)>(transform))
 {
 }
@@ -265,7 +265,7 @@ Store::Store(int32_t dim,
              RegionField&& region_field,
              const std::shared_ptr<TransformStack>& transform)
   : is_future_(false),
-    is_output_store_(false),
+    is_unbound_store_(false),
     dim_(dim),
     code_(code),
     redop_id_(redop_id),
@@ -279,13 +279,13 @@ Store::Store(int32_t dim,
 
 Store::Store(Store&& other) noexcept
   : is_future_(other.is_future_),
-    is_output_store_(other.is_output_store_),
+    is_unbound_store_(other.is_unbound_store_),
     dim_(other.dim_),
     code_(other.code_),
     redop_id_(other.redop_id_),
     future_(other.future_),
     region_field_(std::forward<RegionField>(other.region_field_)),
-    output_field_(std::forward<OutputRegionField>(other.output_field_)),
+    unbound_field_(std::forward<UnboundRegionField>(other.unbound_field_)),
     transform_(std::move(other.transform_)),
     readable_(other.readable_),
     writable_(other.writable_),
@@ -295,15 +295,15 @@ Store::Store(Store&& other) noexcept
 
 Store& Store::operator=(Store&& other) noexcept
 {
-  is_future_       = other.is_future_;
-  is_output_store_ = other.is_output_store_;
-  dim_             = other.dim_;
-  code_            = other.code_;
-  redop_id_        = other.redop_id_;
+  is_future_        = other.is_future_;
+  is_unbound_store_ = other.is_unbound_store_;
+  dim_              = other.dim_;
+  code_             = other.code_;
+  redop_id_         = other.redop_id_;
   if (is_future_)
     future_ = other.future_;
-  else if (is_output_store_)
-    output_field_ = std::move(other.output_field_);
+  else if (is_unbound_store_)
+    unbound_field_ = std::move(other.unbound_field_);
   else
     region_field_ = std::move(other.region_field_);
   transform_ = std::move(other.transform_);
@@ -313,12 +313,12 @@ Store& Store::operator=(Store&& other) noexcept
   return *this;
 }
 
-bool Store::valid() const { return is_future_ || is_output_store_ || region_field_.valid(); }
+bool Store::valid() const { return is_future_ || is_unbound_store_ || region_field_.valid(); }
 
 Domain Store::domain() const
 {
 #ifdef DEBUG_LEGATE
-  assert(!is_output_store_);
+  assert(!is_unbound_store_);
 #endif
   auto result = is_future_ ? future_.domain() : region_field_.domain();
   if (!transform_->identity()) result = transform_->transform(result);
@@ -330,16 +330,16 @@ Domain Store::domain() const
 
 void Store::unmap()
 {
-  if (is_future_ || is_output_store_) return;
+  if (is_future_ || is_unbound_store_) return;
   region_field_.unmap();
 }
 
-void Store::make_empty()
+void Store::bind_empty_data()
 {
 #ifdef DEBUG_LEGATE
   check_valid_return();
 #endif
-  output_field_.make_empty(dim_);
+  unbound_field_.bind_empty_data(dim_);
 }
 
 void Store::remove_transform()
@@ -352,11 +352,11 @@ void Store::remove_transform()
 
 void Store::check_valid_return() const
 {
-  if (!is_output_store_) {
+  if (!is_unbound_store_) {
     log_legate.error("Invalid to return a buffer to a bound store");
     LEGATE_ABORT;
   }
-  if (output_field_.bound()) {
+  if (unbound_field_.bound()) {
     log_legate.error("Invalid to return more than one buffer to an unbound store");
     LEGATE_ABORT;
   }

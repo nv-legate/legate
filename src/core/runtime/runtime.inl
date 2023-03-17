@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
  *
  */
 
+#pragma once
+
+#include "core/runtime/runtime.h"
+
 namespace legate {
 
 template <typename T>
@@ -22,6 +26,25 @@ T Runtime::get_tunable(const LibraryContext* context, int64_t tunable_id, int64_
   Legion::TunableLauncher launcher(tunable_id, context->get_mapper_id(mapper_id), 0, sizeof(T));
   auto future = legion_runtime_->select_tunable_value(legion_context_, launcher);
   return future.get_result<T>();
+}
+
+namespace detail {
+
+template <Core::RegistrationCallback CALLBACK>
+void invoke_legate_registration_callback(Legion::Machine,
+                                         Legion::Runtime*,
+                                         const std::set<Processor>&)
+{
+  CALLBACK();
+};
+
+}  // namespace detail
+
+template <Core::RegistrationCallback CALLBACK>
+/*static*/ void Core::perform_registration()
+{
+  Legion::Runtime::perform_registration_callback(
+    detail::invoke_legate_registration_callback<CALLBACK>, true /*global*/);
 }
 
 }  // namespace legate
