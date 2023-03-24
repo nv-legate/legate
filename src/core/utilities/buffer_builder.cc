@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2021-2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,9 @@ BufferBuilder::BufferBuilder()
 
 void BufferBuilder::pack_buffer(const void* src, size_t size)
 {
-  auto tgt = buffer_.data() + buffer_.size();
+  auto off = buffer_.size();
   buffer_.resize(buffer_.size() + size);
+  auto tgt = buffer_.data() + off;
   memcpy(tgt, src, size);
 }
 
