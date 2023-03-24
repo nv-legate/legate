@@ -1,4 +1,3 @@
-#=============================================================================
 # Copyright 2023 NVIDIA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#=============================================================================
+#
+""" """
 
-# We abuse find package for testing purposes here to
-# 'find' the current build tree to test package builds
-set(legate_core_ROOT ${CMAKE_BINARY_DIR})
+from .. import install_info as info
 
-add_subdirectory(hello)
-add_subdirectory(io)
+
+def print_build_info() -> None:
+    print(
+        f"""Legate build configuration:
+  build_type : {info.build_type}
+  use_openmp : {info.use_openmp}
+  use_cuda   : {info.use_cuda}
+  networks   : {','.join(info.networks) if info.networks else ''}
+  conduit    : {info.conduit}
+"""
+    )
