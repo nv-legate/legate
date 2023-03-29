@@ -290,6 +290,11 @@ class Store {
   Store(int32_t dim,
         int32_t code,
         int32_t redop_id,
+        FutureWrapper future,
+        const std::shared_ptr<TransformStack>& transform);
+  Store(int32_t dim,
+        int32_t code,
+        int32_t redop_id,
         RegionField&& region_field,
         const std::shared_ptr<TransformStack>& transform);
 

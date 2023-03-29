@@ -19,6 +19,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "core/data/shape.h"
 #include "core/partitioning/constraint.h"
 #include "legion.h"
 
@@ -40,6 +41,7 @@ class Strategy {
  public:
   bool parallel(const Operation* op) const;
   const Legion::Domain* launch_domain(const Operation* op) const;
+  void set_launch_shape(const Operation* op, const Shape& shape);
 
  public:
   void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);

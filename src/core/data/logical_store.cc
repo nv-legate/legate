@@ -52,7 +52,7 @@ int32_t LogicalStore::dim() const { return impl_->dim(); }
 
 LegateTypeCode LogicalStore::code() const { return impl_->code(); }
 
-const tuple<size_t>& LogicalStore::extents() const { return impl_->extents(); }
+const Shape& LogicalStore::extents() const { return impl_->extents(); }
 
 size_t LogicalStore::volume() const { return impl_->volume(); }
 
@@ -66,9 +66,26 @@ LogicalStore LogicalStore::project(int32_t dim, int64_t index) const
   return LogicalStore(impl_->project(dim, index));
 }
 
+LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<size_t> tile_shape) const
+{
+  return LogicalStorePartition(impl_->partition_by_tiling(Shape(std::move(tile_shape))));
+}
+
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 {
   return impl_->get_physical_store(context);
+}
+
+LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl)
+  : impl_(std::forward<decltype(impl_)>(impl))
+{
+}
+
+LogicalStore LogicalStorePartition::store() const { return LogicalStore(impl_->store()); }
+
+std::shared_ptr<Partition> LogicalStorePartition::partition() const
+{
+  return impl_->storage_partition()->partition();
 }
 
 }  // namespace legate

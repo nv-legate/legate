@@ -66,6 +66,10 @@ class TaskLauncher {
                           Legion::FieldSpace field_space,
                           Legion::FieldID field_id);
 
+ public:
+  void add_future(const Legion::Future& future);
+  void add_future_map(const Legion::FutureMap& future_map);
+
  private:
   void add_store(std::vector<ArgWrapper*>& args,
                  detail::LogicalStore* store,
@@ -75,13 +79,13 @@ class TaskLauncher {
                  Legion::RegionFlags flags);
 
  public:
-  void execute(const Legion::Domain& launch_domain);
-  void execute_single();
+  Legion::FutureMap execute(const Legion::Domain& launch_domain);
+  Legion::Future execute_single();
 
  private:
   void pack_args(const std::vector<ArgWrapper*>& args);
-  Legion::IndexTaskLauncher* build_index_task(const Legion::Domain& launch_domain);
-  Legion::TaskLauncher* build_single_task();
+  std::unique_ptr<Legion::IndexTaskLauncher> build_index_task(const Legion::Domain& launch_domain);
+  std::unique_ptr<Legion::TaskLauncher> build_single_task();
   void bind_region_fields_to_unbound_stores();
 
  private:
@@ -97,6 +101,7 @@ class TaskLauncher {
   std::vector<ArgWrapper*> scalars_;
   std::vector<Legion::Future> futures_;
   std::vector<OutputRegionArg*> unbound_stores_;
+  std::vector<Legion::FutureMap> future_maps_;
 
  private:
   RequirementAnalyzer* req_analyzer_;

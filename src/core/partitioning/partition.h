@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "core/utilities/tuple.h"
+#include "core/data/shape.h"
 #include "legion.h"
 
 namespace legate {
@@ -30,8 +30,6 @@ namespace detail {
 class LogicalStore;
 
 }  // namespace detail
-
-using Shape = tuple<size_t>;
 
 struct Partition {
  public:

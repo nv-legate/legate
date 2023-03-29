@@ -34,12 +34,13 @@ namespace detail {
 
 Storage::Storage(int32_t dim, LegateTypeCode code) : unbound_(true), dim_(dim), code_(code) {}
 
-Storage::Storage(tuple<size_t> extents, LegateTypeCode code)
+Storage::Storage(Shape extents, LegateTypeCode code, bool optimize_scalar)
   : dim_(extents.size()), extents_(extents), code_(code), volume_(extents.volume())
 {
+  if (optimize_scalar && volume_ == 1) kind_ = Kind::FUTURE;
 }
 
-Storage::Storage(tuple<size_t> extents, LegateTypeCode code, const Legion::Future& future)
+Storage::Storage(Shape extents, LegateTypeCode code, const Legion::Future& future)
   : dim_(extents.size()),
     extents_(extents),
     code_(code),
@@ -74,7 +75,7 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
   unbound_      = false;
   region_field_ = std::move(region_field);
 
-  // TODO: this is a blocking operator
+  // TODO: this is a blocking operation
   auto domain = region_field_->domain();
   auto lo     = domain.lo();
   auto hi     = domain.hi();
@@ -82,6 +83,8 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
   for (int32_t idx = 0; idx < lo.dim; ++idx) extents.push_back(hi[idx] - lo[idx]);
   extents_ = extents;
 }
+
+void Storage::set_future(Legion::Future future) { future_ = future; }
 
 RegionField Storage::map(LibraryContext* context)
 {
@@ -124,6 +127,21 @@ Legion::LogicalPartition Storage::find_or_create_legion_partition(const Partitio
     region, partition->is_disjoint_for(nullptr), partition->is_complete_for(nullptr));
 }
 
+std::shared_ptr<StoragePartition> Storage::create_partition(std::shared_ptr<Partition> partition)
+{
+  return std::make_shared<StoragePartition>(shared_from_this(), std::move(partition));
+}
+
+////////////////////////////////////////////////////
+// legate::detail::StoragePartition
+////////////////////////////////////////////////////
+
+StoragePartition::StoragePartition(std::shared_ptr<Storage> parent,
+                                   std::shared_ptr<Partition> partition)
+  : parent_(std::move(parent)), partition_(std::move(partition))
+{
+}
+
 ////////////////////////////////////////////////////
 // legate::detail::LogicalStore
 ////////////////////////////////////////////////////
@@ -141,7 +159,7 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
   if (!unbound()) extents_ = storage_->extents();
 }
 
-LogicalStore::LogicalStore(tuple<size_t>&& extents,
+LogicalStore::LogicalStore(Shape&& extents,
                            const std::shared_ptr<Storage>& storage,
                            std::shared_ptr<TransformStack>&& transform)
   : store_id_(Runtime::get_runtime()->get_unique_store_id()),
@@ -163,7 +181,7 @@ LogicalStore::~LogicalStore()
 
 bool LogicalStore::unbound() const { return storage_->unbound(); }
 
-const tuple<size_t>& LogicalStore::extents() const { return extents_; }
+const Shape& LogicalStore::extents() const { return extents_; }
 
 size_t LogicalStore::volume() const { return extents_.volume(); }
 
@@ -196,8 +214,19 @@ Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
 
 void LogicalStore::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
 {
+#ifdef DEBUG_LEGATE
+  assert(!scalar());
+#endif
   storage_->set_region_field(std::move(region_field));
   extents_ = storage_->extents();
+}
+
+void LogicalStore::set_future(Legion::Future future)
+{
+#ifdef DEBUG_LEGATE
+  assert(scalar());
+#endif
+  storage_->set_future(future);
 }
 
 std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
@@ -226,14 +255,45 @@ std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index) co
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
+std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(Shape tile_shape)
+{
+  if (tile_shape.size() != extents_.size()) {
+    log_legate.error("Incompatible tile shape: expected a %zd-tuple, got a %zd-tuple",
+                     extents_.size(),
+                     tile_shape.size());
+    LEGATE_ABORT;
+  }
+  Shape color_shape(extents_);
+  // TODO: This better use std::transform
+  for (size_t idx = 0; idx < tile_shape.size(); ++idx)
+    color_shape[idx] = (color_shape[idx] + tile_shape[idx] - 1) / tile_shape[idx];
+  auto partition = create_tiling(std::move(tile_shape), std::move(color_shape));
+  return create_partition(std::move(partition));
+}
+
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 {
-  // TODO: Need to support inline mapping for scalars
-  assert(storage_->kind() == Storage::Kind::REGION_FIELD);
+  if (unbound()) {
+    log_legate.error("Unbound store cannot be inlined mapped");
+    LEGATE_ABORT;
+  }
   if (nullptr != mapped_) return mapped_;
+  if (storage_->kind() == Storage::Kind::FUTURE) {
+    // TODO: future wrappers from inline mappings are read-only for now
+    auto field_size = type_dispatch(code(), elem_size_fn{});
+    auto domain     = to_domain(storage_->extents());
+    FutureWrapper future(true, field_size, domain, storage_->get_future());
+    // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
+    // remapped to reflect changes by the runtime.
+    return std::make_shared<Store>(dim(), code(), -1, future, transform_);
+  }
+
+#ifdef DEBUG_LEGATE
+  assert(storage_->kind() == Storage::Kind::REGION_FIELD);
+#endif
   auto region_field = storage_->map(context);
   mapped_ = std::make_shared<Store>(dim(), code(), -1, std::move(region_field), transform_);
-  return std::move(mapped_);
+  return mapped_;
 }
 
 Legion::ProjectionID LogicalStore::compute_projection(int32_t launch_ndim) const
@@ -304,6 +364,18 @@ void LogicalStore::set_key_partition(const Partition* partition)
 
 void LogicalStore::reset_key_partition() { storage_->reset_key_partition(); }
 
+std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
+  std::shared_ptr<Partition> partition)
+{
+  if (unbound()) {
+    log_legate.error("Unbound store cannot be manually partitioned");
+    LEGATE_ABORT;
+  }
+  // TODO: the partition here should be inverted by the transform
+  auto storage_partition = storage_->create_partition(partition);
+  return std::make_shared<LogicalStorePartition>(std::move(storage_partition), shared_from_this());
+}
+
 void LogicalStore::pack(BufferBuilder& buffer) const
 {
   buffer.pack<bool>(scalar());
@@ -322,6 +394,15 @@ std::string LogicalStore::to_string() const
   else
     ss << "}";
   return ss.str();
+}
+
+////////////////////////////////////////////////////
+// legate::detail::LogicalStorePartition
+////////////////////////////////////////////////////
+LogicalStorePartition::LogicalStorePartition(std::shared_ptr<StoragePartition> storage_partition,
+                                             std::shared_ptr<LogicalStore> store)
+  : storage_partition_(std::move(storage_partition)), store_(std::move(store))
+{
 }
 
 }  // namespace detail

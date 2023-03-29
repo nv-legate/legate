@@ -262,6 +262,22 @@ Store::Store(int32_t dim,
 Store::Store(int32_t dim,
              int32_t code,
              int32_t redop_id,
+             FutureWrapper future,
+             const std::shared_ptr<TransformStack>& transform)
+  : is_future_(true),
+    is_unbound_store_(false),
+    dim_(dim),
+    code_(code),
+    redop_id_(redop_id),
+    future_(future),
+    transform_(transform),
+    readable_(true)
+{
+}
+
+Store::Store(int32_t dim,
+             int32_t code,
+             int32_t redop_id,
              RegionField&& region_field,
              const std::shared_ptr<TransformStack>& transform)
   : is_future_(false),

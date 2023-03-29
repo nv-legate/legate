@@ -20,6 +20,7 @@
 
 #include "legion.h"
 
+#include "core/data/shape.h"
 #include "core/data/transform.h"
 #include "core/utilities/typedefs.h"
 
@@ -27,6 +28,7 @@ namespace legate {
 
 class BufferBuilder;
 class LibraryContext;
+class LogicalStorePartition;
 class Partition;
 class Projection;
 class Runtime;
@@ -35,12 +37,14 @@ class Store;
 namespace detail {
 
 class LogicalStore;
+class LogicalStorePartition;
 
 }  // namespace detail
 
 class LogicalStore {
  private:
   friend class Runtime;
+  friend class LogicalStorePartition;
   LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl);
 
  public:
@@ -54,12 +58,15 @@ class LogicalStore {
  public:
   int32_t dim() const;
   LegateTypeCode code() const;
-  const tuple<size_t>& extents() const;
+  const Shape& extents() const;
   size_t volume() const;
 
  public:
   LogicalStore promote(int32_t extra_dim, size_t dim_size) const;
   LogicalStore project(int32_t dim, int64_t index) const;
+
+ public:
+  LogicalStorePartition partition_by_tiling(std::vector<size_t> tile_shape) const;
 
  public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
@@ -69,6 +76,19 @@ class LogicalStore {
 
  private:
   std::shared_ptr<detail::LogicalStore> impl_{nullptr};
+};
+
+class LogicalStorePartition {
+ private:
+  friend class LogicalStore;
+  LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl);
+
+ public:
+  LogicalStore store() const;
+  std::shared_ptr<Partition> partition() const;
+
+ private:
+  std::shared_ptr<detail::LogicalStorePartition> impl_{nullptr};
 };
 
 }  // namespace legate

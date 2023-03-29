@@ -20,11 +20,11 @@
 
 #include "legion.h"
 
+#include "core/data/shape.h"
 #include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/runtime/context.h"
 #include "core/task/exception.h"
-#include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
 /** @defgroup runtime Runtime and library contexts
@@ -78,15 +78,16 @@ struct Core {
   static LegateMainFnPtr main_fn;
 };
 
+class AutoTask;
 class FieldManager;
 class LogicalRegionField;
 class LogicalStore;
+class ManualTask;
 class Operation;
 class PartitioningFunctor;
 class RegionManager;
 class ResourceConfig;
 class Runtime;
-class Task;
 class Tiling;
 
 class PartitionManager {
@@ -94,8 +95,8 @@ class PartitionManager {
   PartitionManager(Runtime* runtime, const LibraryContext* context);
 
  public:
-  tuple<size_t> compute_launch_shape(const tuple<size_t>& shape);
-  tuple<size_t> compute_tile_shape(const tuple<size_t>& extents, const tuple<size_t>& launch_shape);
+  Shape compute_launch_shape(const Shape& shape);
+  Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
 
  public:
   Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
@@ -135,19 +136,25 @@ class Runtime {
   T get_tunable(const LibraryContext* context, int64_t tunable_id, int64_t mapper_id = 0);
 
  public:
-  std::unique_ptr<Task> create_task(LibraryContext* library,
-                                    int64_t task_id,
-                                    int64_t mapper_id = 0);
+  std::unique_ptr<AutoTask> create_task(LibraryContext* library,
+                                        int64_t task_id,
+                                        int64_t mapper_id = 0);
+  std::unique_ptr<ManualTask> create_task(LibraryContext* library,
+                                          int64_t task_id,
+                                          const Shape& launch_shape,
+                                          int64_t mapper_id = 0);
   void submit(std::unique_ptr<Operation> op);
 
  public:
   LogicalStore create_store(LegateTypeCode code, int32_t dim = 1);
-  LogicalStore create_store(std::vector<size_t> extents, LegateTypeCode code);
+  LogicalStore create_store(std::vector<size_t> extents,
+                            LegateTypeCode code,
+                            bool optimize_scalar = false);
   LogicalStore create_store(const Scalar& scalar);
   uint64_t get_unique_store_id();
 
  public:
-  std::shared_ptr<LogicalRegionField> create_region_field(const tuple<size_t>& extents,
+  std::shared_ptr<LogicalRegionField> create_region_field(const Shape& extents,
                                                           LegateTypeCode code);
   std::shared_ptr<LogicalRegionField> import_region_field(Legion::LogicalRegion region,
                                                           Legion::FieldID field_id,
@@ -177,12 +184,17 @@ class Runtime {
   Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
 
  public:
-  std::shared_ptr<LogicalStore> dispatch(
-    Legion::TaskLauncher* launcher,
-    std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
-  std::shared_ptr<LogicalStore> dispatch(
-    Legion::IndexTaskLauncher* launcher,
-    std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
+  Legion::Future dispatch(Legion::TaskLauncher* launcher,
+                          std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
+  Legion::FutureMap dispatch(Legion::IndexTaskLauncher* launcher,
+                             std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
+
+ public:
+  Legion::Future extract_scalar(const Legion::Future& result, uint32_t idx) const;
+  Legion::FutureMap extract_scalar(const Legion::FutureMap& result,
+                                   uint32_t idx,
+                                   const Legion::Domain& launch_domain) const;
+  Legion::Future reduce_future_map(const Legion::FutureMap& future_map, int32_t reduction_op) const;
 
  public:
   void issue_execution_fence(bool block = false);

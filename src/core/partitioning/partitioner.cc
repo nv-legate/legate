@@ -110,6 +110,14 @@ const Legion::Domain* Strategy::launch_domain(const Operation* op) const
   return finder != launch_domains_.end() ? finder->second.get() : nullptr;
 }
 
+void Strategy::set_launch_shape(const Operation* op, const Shape& shape)
+{
+#ifdef DEBUG_LEGATE
+  assert(launch_domains_.find(op) == launch_domains_.end());
+#endif
+  launch_domains_.insert({op, std::make_unique<Legion::Domain>(to_domain(shape))});
+}
+
 void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition)
 {
 #ifdef DEBUG_LEGATE

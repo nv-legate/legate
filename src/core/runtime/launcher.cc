@@ -95,28 +95,37 @@ void TaskLauncher::add_unbound_output(detail::LogicalStore* store,
   unbound_stores_.push_back(arg);
 }
 
-void TaskLauncher::execute(const Legion::Domain& launch_domain)
+void TaskLauncher::add_future(const Legion::Future& future)
 {
-  auto legion_launcher = build_index_task(launch_domain);
-  if (output_requirements_.empty())
-    Runtime::get_runtime()->dispatch(legion_launcher);
-  else {
-    Runtime::get_runtime()->dispatch(legion_launcher, &output_requirements_);
-    bind_region_fields_to_unbound_stores();
-  }
-  delete legion_launcher;
+  // FIXME: Futures that are directly added by this function are incompatible with those
+  // from scalar stores. We need to separate the two sets.
+  futures_.push_back(future);
 }
 
-void TaskLauncher::execute_single()
+void TaskLauncher::add_future_map(const Legion::FutureMap& future_map)
+{
+  future_maps_.push_back(future_map);
+}
+
+Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
+{
+  auto legion_launcher = build_index_task(launch_domain);
+
+  if (output_requirements_.empty()) return Runtime::get_runtime()->dispatch(legion_launcher.get());
+
+  auto result = Runtime::get_runtime()->dispatch(legion_launcher.get(), &output_requirements_);
+  bind_region_fields_to_unbound_stores();
+  return result;
+}
+
+Legion::Future TaskLauncher::execute_single()
 {
   auto legion_launcher = build_single_task();
-  if (output_requirements_.empty())
-    Runtime::get_runtime()->dispatch(legion_launcher);
-  else {
-    Runtime::get_runtime()->dispatch(legion_launcher, &output_requirements_);
-    bind_region_fields_to_unbound_stores();
-  }
-  delete legion_launcher;
+
+  if (output_requirements_.empty()) return Runtime::get_runtime()->dispatch(legion_launcher.get());
+  auto result = Runtime::get_runtime()->dispatch(legion_launcher.get(), &output_requirements_);
+  bind_region_fields_to_unbound_stores();
+  return result;
 }
 
 void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
@@ -151,7 +160,7 @@ void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
   for (auto& arg : args) arg->pack(*buffer_);
 }
 
-Legion::TaskLauncher* TaskLauncher::build_single_task()
+std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
 {
   // Coalesce region requirements before packing task arguments
   // as the latter requires requirement indices to be finalized
@@ -166,20 +175,21 @@ Legion::TaskLauncher* TaskLauncher::build_single_task()
   buffer_->pack<bool>(false);
   buffer_->pack<uint32_t>(0);
 
-  auto single_task = new Legion::TaskLauncher(legion_task_id(),
-                                              buffer_->to_legion_buffer(),
-                                              Legion::Predicate::TRUE_PRED,
-                                              legion_mapper_id(),
-                                              tag_);
-  for (auto& future_ : futures_) single_task->add_future(future_);
+  auto single_task = std::make_unique<Legion::TaskLauncher>(legion_task_id(),
+                                                            buffer_->to_legion_buffer(),
+                                                            Legion::Predicate::TRUE_PRED,
+                                                            legion_mapper_id(),
+                                                            tag_);
+  for (auto& future : futures_) single_task->add_future(future);
 
-  req_analyzer_->populate_launcher(single_task);
+  req_analyzer_->populate_launcher(single_task.get());
   out_analyzer_->populate_output_requirements(output_requirements_);
 
-  return single_task;
+  return std::move(single_task);
 }
 
-Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& launch_domain)
+std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
+  const Legion::Domain& launch_domain)
 {
   // Coalesce region requirements before packing task arguments
   // as the latter requires requirement indices to be finalized
@@ -194,20 +204,21 @@ Legion::IndexTaskLauncher* TaskLauncher::build_index_task(const Legion::Domain& 
   buffer_->pack<bool>(false);
   buffer_->pack<uint32_t>(0);
 
-  auto index_task = new Legion::IndexTaskLauncher(legion_task_id(),
-                                                  launch_domain,
-                                                  buffer_->to_legion_buffer(),
-                                                  Legion::ArgumentMap(),
-                                                  Legion::Predicate::TRUE_PRED,
-                                                  false /*must*/,
-                                                  legion_mapper_id(),
-                                                  tag_);
-  for (auto& future_ : futures_) index_task->add_future(future_);
+  auto index_task = std::make_unique<Legion::IndexTaskLauncher>(legion_task_id(),
+                                                                launch_domain,
+                                                                buffer_->to_legion_buffer(),
+                                                                Legion::ArgumentMap(),
+                                                                Legion::Predicate::TRUE_PRED,
+                                                                false /*must*/,
+                                                                legion_mapper_id(),
+                                                                tag_);
+  for (auto& future : futures_) index_task->add_future(future);
+  for (auto& future_map : future_maps_) index_task->point_futures.push_back(future_map);
 
-  req_analyzer_->populate_launcher(index_task);
+  req_analyzer_->populate_launcher(index_task.get());
   out_analyzer_->populate_output_requirements(output_requirements_);
 
-  return index_task;
+  return std::move(index_task);
 }
 
 void TaskLauncher::bind_region_fields_to_unbound_stores()

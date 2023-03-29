@@ -196,6 +196,7 @@ list(APPEND legate_core_SOURCES
   src/core/data/logical_store.cc
   src/core/data/logical_store_detail.cc
   src/core/data/scalar.cc
+  src/core/data/shape.cc
   src/core/data/store.cc
   src/core/data/transform.cc
   src/core/mapping/base_mapper.cc

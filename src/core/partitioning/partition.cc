@@ -61,7 +61,7 @@ Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
     color_shape_(std::forward<Shape>(color_shape)),
     offsets_(std::forward<Shape>(offsets))
 {
-  if (offsets_.empty()) offsets_ = tuple<size_t>(tile_shape_.size(), 0);
+  if (offsets_.empty()) offsets_ = Shape(tile_shape_.size(), 0);
   assert(tile_shape_.size() == color_shape_.size());
   assert(tile_shape_.size() == offsets_.size());
 }
@@ -111,21 +111,14 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
   for (int32_t idx = 0; idx < ndim * ndim; ++idx) transform.matrix[idx] = 0;
   for (int32_t idx = 0; idx < ndim; ++idx) transform.matrix[ndim * idx + idx] = tile_shape_[idx];
 
-  Legion::Domain extent;
-  extent.dim = ndim;
+  auto extent = to_domain(tile_shape_);
   for (int32_t idx = 0; idx < ndim; ++idx) {
-    extent.rect_data[idx]        = offsets_[idx];
-    extent.rect_data[idx + ndim] = tile_shape_[idx] - 1 + offsets_[idx];
+    extent.rect_data[idx] += offsets_[idx];
+    extent.rect_data[idx + ndim] += offsets_[idx];
   }
 
-  Legion::Domain color_domain;
-  color_domain.dim = ndim;
-  for (int32_t idx = 0; idx < ndim; ++idx) {
-    color_domain.rect_data[idx]        = 0;
-    color_domain.rect_data[idx + ndim] = color_shape_[idx] - 1;
-  }
-
-  auto color_space = runtime->find_or_create_index_space(color_domain);
+  auto color_domain = to_domain(color_shape_);
+  auto color_space  = runtime->find_or_create_index_space(color_domain);
 
   auto kind = complete ? (disjoint ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_ALIASED_COMPLETE_KIND)
                        : (disjoint ? LEGION_DISJOINT_KIND : LEGION_ALIASED_KIND);
@@ -144,17 +137,7 @@ std::unique_ptr<Projection> Tiling::get_projection(detail::LogicalStore* store,
 
 bool Tiling::has_launch_domain() const { return true; }
 
-Legion::Domain Tiling::launch_domain() const
-{
-  Legion::Domain launch_domain;
-  int32_t ndim      = static_cast<int32_t>(color_shape_.size());
-  launch_domain.dim = ndim;
-  for (int32_t idx = 0; idx < ndim; ++idx) {
-    launch_domain.rect_data[idx]        = 0;
-    launch_domain.rect_data[idx + ndim] = color_shape_[idx] - 1;
-  }
-  return launch_domain;
-}
+Legion::Domain Tiling::launch_domain() const { return to_domain(color_shape_); }
 
 std::unique_ptr<Partition> Tiling::clone() const { return std::make_unique<Tiling>(*this); }
 

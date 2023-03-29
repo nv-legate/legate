@@ -25,6 +25,7 @@
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
+#include "core/runtime/launcher.h"
 #include "core/runtime/projection.h"
 #include "core/runtime/shard.h"
 #include "core/task/exception.h"
@@ -441,7 +442,7 @@ PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* conte
   push_factors(2);
 }
 
-tuple<size_t> PartitionManager::compute_launch_shape(const tuple<size_t>& shape)
+Shape PartitionManager::compute_launch_shape(const Shape& shape)
 {
   // Easy case if we only have one piece: no parallel launch space
   if (num_pieces_ == 1) return {};
@@ -563,14 +564,13 @@ tuple<size_t> PartitionManager::compute_launch_shape(const tuple<size_t>& shape)
   std::vector<size_t> result(shape.size(), 1);
   for (uint32_t idx = 0; idx < ndim; ++idx) result[temp_dims[idx]] = temp_result[idx];
 
-  return tuple<size_t>(std::move(result));
+  return Shape(std::move(result));
 }
 
-tuple<size_t> PartitionManager::compute_tile_shape(const tuple<size_t>& extents,
-                                                   const tuple<size_t>& launch_shape)
+Shape PartitionManager::compute_tile_shape(const Shape& extents, const Shape& launch_shape)
 {
   assert(extents.size() == launch_shape.size());
-  tuple<size_t> tile_shape;
+  Shape tile_shape;
   for (uint32_t idx = 0; idx < extents.size(); ++idx) {
     auto x = extents[idx];
     auto y = launch_shape[idx];
@@ -646,11 +646,21 @@ void Runtime::post_startup_initialization(Legion::Context legion_context)
 }
 
 // This function should be moved to the library context
-std::unique_ptr<Task> Runtime::create_task(LibraryContext* library,
-                                           int64_t task_id,
-                                           int64_t mapper_id /*=0*/)
+std::unique_ptr<AutoTask> Runtime::create_task(LibraryContext* library,
+                                               int64_t task_id,
+                                               int64_t mapper_id /*=0*/)
 {
-  return std::make_unique<Task>(library, task_id, next_unique_id_++, mapper_id);
+  auto task = new AutoTask(library, task_id, next_unique_id_++, mapper_id);
+  return std::unique_ptr<AutoTask>(task);
+}
+
+std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
+                                                 int64_t task_id,
+                                                 const Shape& launch_shape,
+                                                 int64_t mapper_id /*=0*/)
+{
+  auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++, mapper_id);
+  return std::unique_ptr<ManualTask>(task);
 }
 
 void Runtime::submit(std::unique_ptr<Operation> op)
@@ -681,15 +691,17 @@ LogicalStore Runtime::create_store(LegateTypeCode code, int32_t dim)
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
-LogicalStore Runtime::create_store(std::vector<size_t> extents, LegateTypeCode code)
+LogicalStore Runtime::create_store(std::vector<size_t> extents,
+                                   LegateTypeCode code,
+                                   bool optimize_scalar /*=false*/)
 {
-  auto storage = std::make_shared<detail::Storage>(extents, code);
+  auto storage = std::make_shared<detail::Storage>(extents, code, optimize_scalar);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
 LogicalStore Runtime::create_store(const Scalar& scalar)
 {
-  tuple<size_t> extents{1};
+  Shape extents{1};
   auto future  = create_future(scalar.ptr(), scalar.size());
   auto storage = std::make_shared<detail::Storage>(extents, scalar.code(), future);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
@@ -697,7 +709,7 @@ LogicalStore Runtime::create_store(const Scalar& scalar)
 
 uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
-std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const tuple<size_t>& extents,
+std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& extents,
                                                                  LegateTypeCode code)
 {
   DomainPoint lo, hi;
@@ -839,20 +851,54 @@ Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space) co
   return legion_runtime_->get_index_space_domain(legion_context_, index_space);
 }
 
-std::shared_ptr<LogicalStore> Runtime::dispatch(
-  Legion::TaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
+Legion::Future Runtime::dispatch(Legion::TaskLauncher* launcher,
+                                 std::vector<Legion::OutputRequirement>* output_requirements)
 {
   assert(nullptr != legion_context_);
-  legion_runtime_->execute_task(legion_context_, *launcher, output_requirements);
-  return nullptr;
+  return legion_runtime_->execute_task(legion_context_, *launcher, output_requirements);
 }
 
-std::shared_ptr<LogicalStore> Runtime::dispatch(
-  Legion::IndexTaskLauncher* launcher, std::vector<Legion::OutputRequirement>* output_requirements)
+Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher* launcher,
+                                    std::vector<Legion::OutputRequirement>* output_requirements)
 {
   assert(nullptr != legion_context_);
-  legion_runtime_->execute_index_space(legion_context_, *launcher, output_requirements);
-  return nullptr;
+  return legion_runtime_->execute_index_space(legion_context_, *launcher, output_requirements);
+}
+
+Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t idx) const
+{
+  // FIXME: One of two things should happen:
+  //   1) the variant should be picked based on available processor kinds
+  //   2) the variant should be picked by the core mapper
+  TaskLauncher launcher(
+    core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, 0 /*mapper_id*/, LEGATE_CPU_VARIANT);
+  launcher.add_future(result);
+  launcher.add_scalar(Scalar(idx));
+  return launcher.execute_single();
+}
+
+Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
+                                          uint32_t idx,
+                                          const Legion::Domain& launch_domain) const
+{
+  // FIXME: One of two things should happen:
+  //   1) the variant should be picked based on available processor kinds
+  //   2) the variant should be picked by the core mapper
+  TaskLauncher launcher(
+    core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, 0 /*mapper_id*/, LEGATE_CPU_VARIANT);
+  launcher.add_future_map(result);
+  launcher.add_scalar(Scalar(idx));
+  return launcher.execute(launch_domain);
+}
+
+Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
+                                          int32_t reduction_op) const
+{
+  return legion_runtime_->reduce_future_map(legion_context_,
+                                            future_map,
+                                            reduction_op,
+                                            false /*deterministic*/,
+                                            core_context_->get_mapper_id(0));
 }
 
 void Runtime::issue_execution_fence(bool block /*=false*/)

@@ -23,7 +23,10 @@
 namespace legate {
 namespace detail {
 
-class Storage {
+class StoragePartition;
+class LogicalStorePartition;
+
+class Storage : public std::enable_shared_from_this<Storage> {
  public:
   enum class Kind : int32_t {
     REGION_FIELD = 0,
@@ -33,14 +36,14 @@ class Storage {
  public:
   // Create a RegionField-backed storage whose size is unbound. Initialized lazily.
   Storage(int32_t dim, LegateTypeCode code);
-  // Create a RegionField-backed storage. Initialized lazily.
-  Storage(tuple<size_t> extents, LegateTypeCode code);
+  // Create a RegionField-backed or a Future-backedstorage. Initialized lazily.
+  Storage(Shape extents, LegateTypeCode code, bool optimize_scalar);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(tuple<size_t> extents, LegateTypeCode code, const Legion::Future& future);
+  Storage(Shape extents, LegateTypeCode code, const Legion::Future& future);
 
  public:
   bool unbound() const { return unbound_; }
-  const tuple<size_t>& extents() const { return extents_; }
+  const Shape& extents() const { return extents_; }
   size_t volume() const { return volume_; }
   int32_t dim();
   LegateTypeCode code() const { return code_; }
@@ -50,6 +53,7 @@ class Storage {
   LogicalRegionField* get_region_field();
   Legion::Future get_future() const;
   void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
+  void set_future(Legion::Future future);
 
  public:
   RegionField map(LibraryContext* context);
@@ -60,10 +64,13 @@ class Storage {
   void reset_key_partition();
   Legion::LogicalPartition find_or_create_legion_partition(const Partition* partition);
 
+ public:
+  std::shared_ptr<StoragePartition> create_partition(std::shared_ptr<Partition> partition);
+
  private:
   bool unbound_{false};
   int32_t dim_{-1};
-  tuple<size_t> extents_;
+  Shape extents_;
   size_t volume_;
   LegateTypeCode code_{MAX_TYPE_NUMBER};
   Kind kind_{Kind::REGION_FIELD};
@@ -74,10 +81,22 @@ class Storage {
   std::unique_ptr<Partition> key_partition_{nullptr};
 };
 
-class LogicalStore {
+class StoragePartition {
+ public:
+  StoragePartition(std::shared_ptr<Storage> parent, std::shared_ptr<Partition> partition);
+
+ public:
+  std::shared_ptr<Partition> partition() const { return partition_; }
+
+ private:
+  std::shared_ptr<Storage> parent_;
+  std::shared_ptr<Partition> partition_;
+};
+
+class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
  public:
   LogicalStore(std::shared_ptr<Storage>&& storage);
-  LogicalStore(tuple<size_t>&& extents,
+  LogicalStore(Shape&& extents,
                const std::shared_ptr<Storage>& storage,
                std::shared_ptr<TransformStack>&& transform);
 
@@ -97,7 +116,7 @@ class LogicalStore {
 
  public:
   bool unbound() const;
-  const tuple<size_t>& extents() const;
+  const Shape& extents() const;
   size_t volume() const;
   // Size of the backing storage
   size_t storage_size() const;
@@ -109,10 +128,14 @@ class LogicalStore {
   LogicalRegionField* get_region_field();
   Legion::Future get_future();
   void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
+  void set_future(Legion::Future future);
 
  public:
   std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size) const;
   std::shared_ptr<LogicalStore> project(int32_t dim, int64_t index) const;
+
+ public:
+  std::shared_ptr<LogicalStorePartition> partition_by_tiling(Shape tile_shape);
 
  public:
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
@@ -122,6 +145,9 @@ class LogicalStore {
   std::shared_ptr<Partition> find_or_create_key_partition();
   void set_key_partition(const Partition* partition);
   void reset_key_partition();
+
+ private:
+  std::shared_ptr<LogicalStorePartition> create_partition(std::shared_ptr<Partition> partition);
 
  private:
   Legion::ProjectionID compute_projection(int32_t launch_ndim) const;
@@ -134,13 +160,27 @@ class LogicalStore {
 
  private:
   uint64_t store_id_;
-  tuple<size_t> extents_;
+  Shape extents_;
   std::shared_ptr<Storage> storage_;
   std::shared_ptr<TransformStack> transform_;
 
  private:
   std::shared_ptr<Partition> key_partition_;
   std::shared_ptr<Store> mapped_{nullptr};
+};
+
+class LogicalStorePartition {
+ public:
+  LogicalStorePartition(std::shared_ptr<StoragePartition> storage_partition,
+                        std::shared_ptr<LogicalStore> store);
+
+ public:
+  std::shared_ptr<StoragePartition> storage_partition() const { return storage_partition_; }
+  std::shared_ptr<LogicalStore> store() const { return store_; }
+
+ private:
+  std::shared_ptr<StoragePartition> storage_partition_;
+  std::shared_ptr<LogicalStore> store_;
 };
 
 }  // namespace detail
