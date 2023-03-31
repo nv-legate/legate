@@ -208,6 +208,8 @@ bool LogicalStore::scalar() const { return storage_->kind() == Storage::Kind::FU
 
 LegateTypeCode LogicalStore::code() const { return storage_->code(); }
 
+bool LogicalStore::transformed() const { return !transform_->identity(); }
+
 LogicalRegionField* LogicalStore::get_region_field() { return storage_->get_region_field(); }
 
 Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
@@ -269,6 +271,25 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(Shape t
     color_shape[idx] = (color_shape[idx] + tile_shape[idx] - 1) / tile_shape[idx];
   auto partition = create_tiling(std::move(tile_shape), std::move(color_shape));
   return create_partition(std::move(partition));
+}
+
+std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, std::slice sl) const
+{
+  log_legate.error("Slice not implemented");
+  return nullptr;
+}
+
+std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axes) const
+{
+  log_legate.error("Transpose not implemented");
+  return nullptr;
+}
+
+std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim,
+                                                        std::vector<int64_t>&& sizes) const
+{
+  log_legate.error("Delinearize not implemented");
+  return nullptr;
 }
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)

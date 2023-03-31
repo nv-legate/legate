@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <valarray>
+
 #include "core/data/logical_region_field.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/runtime.h"
@@ -123,6 +125,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   int32_t dim() const;
   bool scalar() const;
   LegateTypeCode code() const;
+  bool transformed() const;
 
  public:
   LogicalRegionField* get_region_field();
@@ -133,6 +136,9 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
  public:
   std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size) const;
   std::shared_ptr<LogicalStore> project(int32_t dim, int64_t index) const;
+  std::shared_ptr<LogicalStore> slice(int32_t dim, std::slice sl) const;
+  std::shared_ptr<LogicalStore> transpose(std::vector<int32_t>&& axes) const;
+  std::shared_ptr<LogicalStore> delinearize(int32_t dim, std::vector<int64_t>&& sizes) const;
 
  public:
   std::shared_ptr<LogicalStorePartition> partition_by_tiling(Shape tile_shape);

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <valarray>
 
 #include "legion.h"
 
@@ -60,10 +61,15 @@ class LogicalStore {
   LegateTypeCode code() const;
   const Shape& extents() const;
   size_t volume() const;
+  bool unbound() const;
+  bool transformed() const;
 
  public:
   LogicalStore promote(int32_t extra_dim, size_t dim_size) const;
   LogicalStore project(int32_t dim, int64_t index) const;
+  LogicalStore slice(int32_t dim, std::slice sl) const;
+  LogicalStore transpose(std::vector<int32_t>&& axes) const;
+  LogicalStore delinearize(int32_t dim, std::vector<int64_t>&& sizes) const;
 
  public:
   LogicalStorePartition partition_by_tiling(std::vector<size_t> tile_shape) const;
