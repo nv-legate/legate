@@ -16,16 +16,33 @@
 
 cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
-project(manual_simple VERSION 0.1 LANGUAGES C CXX)
+project(cpp_tests VERSION 0.1 LANGUAGES C CXX)
 
 if (NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip
+)
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
 find_package(legate_core REQUIRED)
 
-add_executable(manual_simple manual_simple.cc)
+enable_testing()
 
-target_link_libraries(manual_simple PRIVATE legate::core)
+file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
+file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
 
-install(TARGETS manual_simple DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/cmake-install")
+add_executable(cpp_tests ${integration_SRC} ${unit_SRC})
+
+target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(cpp_tests)
+
+install(TARGETS cpp_tests DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/cmake-install")

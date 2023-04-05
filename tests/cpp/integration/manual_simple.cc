@@ -14,10 +14,12 @@
  *
  */
 
+#include <gtest/gtest.h>
+
 #include "core/mapping/mapping.h"
 #include "legate.h"
 
-namespace example {
+namespace manualsimple {
 
 static const char* library_name = "manual";
 static legate::Logger logger(library_name);
@@ -41,7 +43,7 @@ struct Registrar {
 
 template <typename T>
 struct BaseTask : public legate::LegateTask<T> {
-  using Registrar = example::Registrar;
+  using Registrar = manualsimple::Registrar;
 };
 
 struct HelloTask : public BaseTask<HelloTask> {
@@ -130,13 +132,11 @@ void legate_main(int32_t argc, char** argv)
   print_store(context, store);
 }
 
-}  // namespace example
+}  // namespace manualsimple
 
-int main(int argc, char** argv)
+TEST(Integration, ManualSimple)
 {
-  legate::initialize(argc, argv);
-
-  legate::set_main_function(example::legate_main);
-
-  return legate::start(argc, argv);
+  legate::initialize(0, NULL);
+  legate::set_main_function(manualsimple::legate_main);
+  legate::start(0, NULL);
 }

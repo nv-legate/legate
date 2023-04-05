@@ -14,10 +14,12 @@
  *
  */
 
+#include <gtest/gtest.h>
+
 #include "core/mapping/mapping.h"
 #include "legate.h"
 
-namespace example {
+namespace multiscalarout {
 
 static const char* library_name = "multi_scalar";
 static legate::Logger logger(library_name);
@@ -42,7 +44,7 @@ struct Registrar {
 
 template <typename T>
 struct BaseTask : public legate::LegateTask<T> {
-  using Registrar = example::Registrar;
+  using Registrar = multiscalarout::Registrar;
 };
 
 struct WriterTask : public BaseTask<WriterTask> {
@@ -182,13 +184,11 @@ void legate_main(int32_t argc, char** argv)
   print_stores(context, scalar1, scalar2);
 }
 
-}  // namespace example
+}  // namespace multiscalarout
 
-int main(int argc, char** argv)
+TEST(Integration, ManualScalarOut)
 {
-  legate::initialize(argc, argv);
-
-  legate::set_main_function(example::legate_main);
-
-  return legate::start(argc, argv);
+  legate::initialize(0, NULL);
+  legate::set_main_function(multiscalarout::legate_main);
+  legate::start(0, NULL);
 }
