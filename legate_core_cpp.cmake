@@ -409,6 +409,7 @@ install(
         src/core/data/logical_store.h
         src/core/data/scalar.h
         src/core/data/scalar.inl
+        src/core/data/shape.h
         src/core/data/store.h
         src/core/data/store.inl
         src/core/data/transform.h
