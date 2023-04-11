@@ -204,7 +204,7 @@ int32_t LogicalStore::dim() const
   return unbound() ? storage_->dim() : static_cast<int32_t>(extents_.size());
 }
 
-bool LogicalStore::scalar() const { return storage_->kind() == Storage::Kind::FUTURE; }
+bool LogicalStore::has_scalar_storage() const { return storage_->kind() == Storage::Kind::FUTURE; }
 
 LegateTypeCode LogicalStore::code() const { return storage_->code(); }
 
@@ -217,7 +217,7 @@ Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
 void LogicalStore::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
 {
 #ifdef DEBUG_LEGATE
-  assert(!scalar());
+  assert(!has_scalar_storage());
 #endif
   storage_->set_region_field(std::move(region_field));
   extents_ = storage_->extents();
@@ -226,7 +226,7 @@ void LogicalStore::set_region_field(std::shared_ptr<LogicalRegionField>&& region
 void LogicalStore::set_future(Legion::Future future)
 {
 #ifdef DEBUG_LEGATE
-  assert(scalar());
+  assert(has_scalar_storage());
 #endif
   storage_->set_future(future);
 }
@@ -338,7 +338,7 @@ Legion::ProjectionID LogicalStore::compute_projection(int32_t launch_ndim) const
 std::unique_ptr<Projection> LogicalStore::create_projection(const Partition* partition,
                                                             int32_t launch_ndim)
 {
-  if (scalar()) return std::make_unique<Projection>();
+  if (has_scalar_storage()) return std::make_unique<Projection>();
 
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
@@ -366,7 +366,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition()
 {
   if (key_partition_ != nullptr) return key_partition_;
 
-  if (scalar()) {
+  if (has_scalar_storage()) {
     key_partition_ = create_no_partition();
     return key_partition_;
   }
@@ -399,7 +399,7 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
 
 void LogicalStore::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<bool>(scalar());
+  buffer.pack<bool>(has_scalar_storage());
   buffer.pack<bool>(unbound());
   buffer.pack<int32_t>(dim());
   buffer.pack<int32_t>(code());

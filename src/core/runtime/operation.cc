@@ -211,7 +211,7 @@ void AutoTask::add_input(LogicalStore store, const Variable* partition_symbol)
 
 void AutoTask::add_output(LogicalStore store, const Variable* partition_symbol)
 {
-  if (store.impl()->scalar()) scalar_outputs_.push_back(outputs_.size());
+  if (store.impl()->has_scalar_storage()) scalar_outputs_.push_back(outputs_.size());
   add_store(outputs_, store, partition_symbol);
 }
 
@@ -219,7 +219,7 @@ void AutoTask::add_reduction(LogicalStore store,
                              Legion::ReductionOpID redop,
                              const Variable* partition_symbol)
 {
-  if (store.impl()->scalar()) scalar_reductions_.push_back(reductions_.size());
+  if (store.impl()->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, store, partition_symbol);
   reduction_ops_.push_back(redop);
 }
@@ -267,13 +267,13 @@ void ManualTask::add_input(LogicalStore store) { add_store(inputs_, store, creat
 
 void ManualTask::add_output(LogicalStore store)
 {
-  if (store.impl()->scalar()) scalar_outputs_.push_back(outputs_.size());
+  if (store.impl()->has_scalar_storage()) scalar_outputs_.push_back(outputs_.size());
   add_store(outputs_, store, create_no_partition());
 }
 
 void ManualTask::add_reduction(LogicalStore store, Legion::ReductionOpID redop)
 {
-  if (store.impl()->scalar()) scalar_reductions_.push_back(reductions_.size());
+  if (store.impl()->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, store, create_no_partition());
   reduction_ops_.push_back(redop);
 }
@@ -285,13 +285,15 @@ void ManualTask::add_input(LogicalStorePartition store_partition)
 
 void ManualTask::add_output(LogicalStorePartition store_partition)
 {
-  if (store_partition.store().impl()->scalar()) scalar_outputs_.push_back(outputs_.size());
+  if (store_partition.store().impl()->has_scalar_storage())
+    scalar_outputs_.push_back(outputs_.size());
   add_store(outputs_, store_partition.store(), store_partition.partition());
 }
 
 void ManualTask::add_reduction(LogicalStorePartition store_partition, Legion::ReductionOpID redop)
 {
-  if (store_partition.store().impl()->scalar()) scalar_reductions_.push_back(reductions_.size());
+  if (store_partition.store().impl()->has_scalar_storage())
+    scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, store_partition.store(), store_partition.partition());
   reduction_ops_.push_back(redop);
 }

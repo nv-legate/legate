@@ -137,7 +137,7 @@ void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
 {
   auto redop = proj->redop;
 
-  if (store->scalar()) {
+  if (store->has_scalar_storage()) {
     auto has_storage = privilege != WRITE_ONLY;
     auto read_only   = privilege == READ_ONLY;
     if (has_storage) futures_.push_back(store->get_future());

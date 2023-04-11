@@ -123,7 +123,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   // Size of the backing storage
   size_t storage_size() const;
   int32_t dim() const;
-  bool scalar() const;
+  bool has_scalar_storage() const;
   LegateTypeCode code() const;
   bool transformed() const;
 
