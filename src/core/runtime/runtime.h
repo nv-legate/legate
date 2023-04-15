@@ -144,13 +144,10 @@ class Runtime {
   T get_tunable(const LibraryContext* context, int64_t tunable_id);
 
  public:
-  std::unique_ptr<AutoTask> create_task(LibraryContext* library,
-                                        int64_t task_id,
-                                        int64_t mapper_id = 0);
+  std::unique_ptr<AutoTask> create_task(LibraryContext* library, int64_t task_id);
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
-                                          const Shape& launch_shape,
-                                          int64_t mapper_id = 0);
+                                          const Shape& launch_shape);
   void submit(std::unique_ptr<Operation> op);
 
  public:

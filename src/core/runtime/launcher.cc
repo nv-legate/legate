@@ -28,11 +28,8 @@
 
 namespace legate {
 
-TaskLauncher::TaskLauncher(LibraryContext* library,
-                           int64_t task_id,
-                           int64_t mapper_id /*= 0*/,
-                           int64_t tag /*= 0*/)
-  : library_(library), task_id_(task_id), mapper_id_(mapper_id), tag_(tag)
+TaskLauncher::TaskLauncher(LibraryContext* library, int64_t task_id, int64_t tag /*= 0*/)
+  : library_(library), task_id_(task_id), tag_(tag)
 {
   req_analyzer_ = new RequirementAnalyzer();
   out_analyzer_ = new OutputRequirementAnalyzer();

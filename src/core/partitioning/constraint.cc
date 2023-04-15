@@ -47,7 +47,7 @@ std::string Variable::to_string() const
 {
   std::stringstream ss;
   ss << "X" << id_ << "{" << op_->to_string() << "}";
-  return ss.str();
+  return std::move(ss).str();
 }
 
 Alignment::Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs)
@@ -65,7 +65,7 @@ std::string Alignment::to_string() const
 {
   std::stringstream ss;
   ss << "Align(" << lhs_->to_string() << ", " << rhs_->to_string() << ")";
-  return ss.str();
+  return std::move(ss).str();
 }
 
 std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs)

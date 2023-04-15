@@ -41,7 +41,7 @@ class LogicalStore;
 class Operation {
  protected:
   using StoreArg = std::pair<detail::LogicalStore*, const Variable*>;
-  Operation(LibraryContext* library, uint64_t unique_id, int64_t mapper_id);
+  Operation(LibraryContext* library, uint64_t unique_id);
 
  public:
   virtual ~Operation() {}
@@ -58,7 +58,6 @@ class Operation {
  protected:
   LibraryContext* library_;
   uint64_t unique_id_;
-  int64_t mapper_id_;
 
  protected:
   std::set<std::shared_ptr<detail::LogicalStore>> all_stores_{};
@@ -75,7 +74,7 @@ class Operation {
 
 class Task : public Operation {
  protected:
-  Task(LibraryContext* library, int64_t task_id, uint64_t unique_id, int64_t mapper_id);
+  Task(LibraryContext* library, int64_t task_id, uint64_t unique_id);
 
  public:
   virtual ~Task() {}
@@ -103,7 +102,7 @@ class Task : public Operation {
 class AutoTask : public Task {
  public:
   friend class Runtime;
-  AutoTask(LibraryContext* library, int64_t task_id, uint64_t unique_id, int64_t mapper_id);
+  AutoTask(LibraryContext* library, int64_t task_id, uint64_t unique_id);
 
  public:
   ~AutoTask() {}
@@ -134,8 +133,7 @@ class ManualTask : public Task {
   ManualTask(LibraryContext* library,
              int64_t task_id,
              const Shape& launch_shape,
-             uint64_t unique_id,
-             int64_t mapper_id);
+             uint64_t unique_id);
 
  public:
   ~ManualTask();

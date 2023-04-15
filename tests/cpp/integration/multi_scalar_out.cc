@@ -29,59 +29,22 @@ enum TaskIDs {
   REDUCER = 1,
 };
 
-struct Registrar {
-  template <typename... Args>
-  static void record_variant(Args&&... args)
-  {
-    get_registrar().record_variant(std::forward<Args>(args)...);
-  }
-  static legate::TaskRegistrar& get_registrar()
-  {
-    static legate::TaskRegistrar registrar;
-    return registrar;
-  }
-};
-
-template <typename T>
-struct BaseTask : public legate::LegateTask<T> {
-  using Registrar = multiscalarout::Registrar;
-};
-
-struct WriterTask : public BaseTask<WriterTask> {
+struct WriterTask : public legate::LegateTask<WriterTask> {
   static const int32_t TASK_ID = WRITER;
   static void cpu_variant(legate::TaskContext& context);
 };
 
-struct ReducerTask : public BaseTask<ReducerTask> {
+struct ReducerTask : public legate::LegateTask<ReducerTask> {
   static const int32_t TASK_ID = REDUCER;
   static void cpu_variant(legate::TaskContext& context);
-};
-
-struct Mapper : public legate::mapping::LegateMapper {
-  void set_machine(const legate::mapping::MachineQueryInterface* machine) override {}
-  legate::mapping::TaskTarget task_target(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::TaskTarget>& options) override
-  {
-    return options.front();
-  }
-  std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
-  {
-    return {};
-  }
-  legate::Scalar tunable_value(legate::TunableID tunable_id) override { return legate::Scalar(); }
 };
 
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name, legate::ResourceConfig());
-  WriterTask::register_variants();
-  ReducerTask::register_variants();
-  Registrar::get_registrar().register_all_tasks(*context);
-  context->register_mapper(std::make_unique<Mapper>());
+  auto context = runtime->create_library(library_name);
+  WriterTask::register_variants(*context);
+  ReducerTask::register_variants(*context);
 }
 
 /*static*/ void WriterTask::cpu_variant(legate::TaskContext& context)

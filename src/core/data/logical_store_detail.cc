@@ -414,7 +414,7 @@ std::string LogicalStore::to_string() const
     ss << ", transform: " << *transform_ << "}";
   else
     ss << "}";
-  return ss.str();
+  return std::move(ss).str();
 }
 
 ////////////////////////////////////////////////////

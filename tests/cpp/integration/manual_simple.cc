@@ -28,53 +28,16 @@ enum TaskIDs {
   HELLO = 0,
 };
 
-struct Registrar {
-  template <typename... Args>
-  static void record_variant(Args&&... args)
-  {
-    get_registrar().record_variant(std::forward<Args>(args)...);
-  }
-  static legate::TaskRegistrar& get_registrar()
-  {
-    static legate::TaskRegistrar registrar;
-    return registrar;
-  }
-};
-
-template <typename T>
-struct BaseTask : public legate::LegateTask<T> {
-  using Registrar = manualsimple::Registrar;
-};
-
-struct HelloTask : public BaseTask<HelloTask> {
+struct HelloTask : public legate::LegateTask<HelloTask> {
   static const int32_t TASK_ID = HELLO;
   static void cpu_variant(legate::TaskContext& context);
-};
-
-struct Mapper : public legate::mapping::LegateMapper {
-  void set_machine(const legate::mapping::MachineQueryInterface* machine) override {}
-  legate::mapping::TaskTarget task_target(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::TaskTarget>& options) override
-  {
-    return options.front();
-  }
-  std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
-  {
-    return {};
-  }
-  legate::Scalar tunable_value(legate::TunableID tunable_id) override { return legate::Scalar(); }
 };
 
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name, legate::ResourceConfig());
-  HelloTask::register_variants();
-  Registrar::get_registrar().register_all_tasks(*context);
-  context->register_mapper(std::make_unique<Mapper>());
+  auto context = runtime->create_library(library_name);
+  HelloTask::register_variants(*context);
 }
 
 /*static*/ void HelloTask::cpu_variant(legate::TaskContext& context)

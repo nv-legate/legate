@@ -62,7 +62,7 @@ void task_wrapper(VariantImpl variant_impl,
   std::stringstream ss;
   ss << task_name;
   if (!task->get_provenance_string().empty()) ss << " @ " + task->get_provenance_string();
-  std::string msg = ss.str();
+  std::string msg = std::move(ss).str();
   nvtx::Range auto_range(msg.c_str());
 #endif
 

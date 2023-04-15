@@ -146,7 +146,7 @@ std::string Tiling::to_string() const
   std::stringstream ss;
   ss << "Tiling(tile:" << tile_shape_ << ",colors:" << color_shape_ << ",offset:" << offsets_
      << ")";
-  return ss.str();
+  return std::move(ss).str();
 }
 
 std::unique_ptr<Partition> create_no_partition() { return std::make_unique<NoPartition>(); }

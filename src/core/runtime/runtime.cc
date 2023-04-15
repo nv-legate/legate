@@ -647,20 +647,17 @@ void Runtime::post_startup_initialization(Legion::Context legion_context)
 }
 
 // This function should be moved to the library context
-std::unique_ptr<AutoTask> Runtime::create_task(LibraryContext* library,
-                                               int64_t task_id,
-                                               int64_t mapper_id /*=0*/)
+std::unique_ptr<AutoTask> Runtime::create_task(LibraryContext* library, int64_t task_id)
 {
-  auto task = new AutoTask(library, task_id, next_unique_id_++, mapper_id);
+  auto task = new AutoTask(library, task_id, next_unique_id_++);
   return std::unique_ptr<AutoTask>(task);
 }
 
 std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
                                                  int64_t task_id,
-                                                 const Shape& launch_shape,
-                                                 int64_t mapper_id /*=0*/)
+                                                 const Shape& launch_shape)
 {
-  auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++, mapper_id);
+  auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++);
   return std::unique_ptr<ManualTask>(task);
 }
 
@@ -871,8 +868,7 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t id
   // FIXME: One of two things should happen:
   //   1) the variant should be picked based on available processor kinds
   //   2) the variant should be picked by the core mapper
-  TaskLauncher launcher(
-    core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, 0 /*mapper_id*/, LEGATE_CPU_VARIANT);
+  TaskLauncher launcher(core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, LEGATE_CPU_VARIANT);
   launcher.add_future(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute_single();
@@ -885,8 +881,7 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
   // FIXME: One of two things should happen:
   //   1) the variant should be picked based on available processor kinds
   //   2) the variant should be picked by the core mapper
-  TaskLauncher launcher(
-    core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, 0 /*mapper_id*/, LEGATE_CPU_VARIANT);
+  TaskLauncher launcher(core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, LEGATE_CPU_VARIANT);
   launcher.add_future_map(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute(launch_domain);

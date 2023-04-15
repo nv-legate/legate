@@ -40,7 +40,7 @@ class LogicalStore;
 
 class TaskLauncher {
  public:
-  TaskLauncher(LibraryContext* library, int64_t task_id, int64_t mapper_id = 0, int64_t tag = 0);
+  TaskLauncher(LibraryContext* library, int64_t task_id, int64_t tag = 0);
   ~TaskLauncher();
 
  public:
@@ -91,7 +91,6 @@ class TaskLauncher {
  private:
   LibraryContext* library_;
   int64_t task_id_;
-  int64_t mapper_id_;
   int64_t tag_;
 
  private:
