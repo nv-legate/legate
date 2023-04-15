@@ -21,9 +21,9 @@
 namespace legate {
 
 template <typename T>
-T Runtime::get_tunable(const LibraryContext* context, int64_t tunable_id, int64_t mapper_id /*= 0*/)
+T Runtime::get_tunable(const LibraryContext* context, int64_t tunable_id)
 {
-  Legion::TunableLauncher launcher(tunable_id, context->get_mapper_id(mapper_id), 0, sizeof(T));
+  Legion::TunableLauncher launcher(tunable_id, context->get_mapper_id(), 0, sizeof(T));
   auto future = legion_runtime_->select_tunable_value(legion_context_, launcher);
   return future.get_result<T>();
 }

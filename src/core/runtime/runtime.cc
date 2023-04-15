@@ -22,6 +22,7 @@
 #include "core/data/logical_store.h"
 #include "core/data/logical_store_detail.h"
 #include "core/mapping/core_mapper.h"
+#include "core/mapping/default_mapper.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
@@ -180,7 +181,7 @@ static void extract_scalar_task(
                                        LibraryContext* context)
 {
   auto fut = legion_runtime->select_tunable_value(
-    legion_context, LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM, context->get_mapper_id(0));
+    legion_context, LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM, context->get_mapper_id());
   Core::has_socket_mem = fut.get_result<bool>();
 }
 
@@ -254,7 +255,7 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
 
   register_legate_core_tasks(machine, legion_runtime, *core_lib);
 
-  register_legate_core_mapper(machine, legion_runtime, *core_lib);
+  register_legate_core_mapper(machine, legion_runtime, core_lib);
 
   register_exception_reduction_op(legion_runtime, *core_lib);
 
@@ -278,7 +279,7 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
 
   auto core_lib = runtime->find_library(core_library_name);
   legion_runtime->set_top_level_task_id(core_lib->get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID));
-  legion_runtime->set_top_level_task_mapper_id(core_lib->get_mapper_id(0));
+  legion_runtime->set_top_level_task_mapper_id(core_lib->get_mapper_id());
 
   Core::parse_config();
 }
@@ -604,10 +605,7 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
 
 Runtime::Runtime(Legion::Runtime* legion_runtime) : legion_runtime_(legion_runtime) {}
 
-Runtime::~Runtime()
-{
-  for (auto& pair : libraries_) delete pair.second;
-}
+Runtime::~Runtime() {}
 
 LibraryContext* Runtime::find_library(const std::string& library_name,
                                       bool can_fail /*=false*/) const
@@ -620,11 +618,12 @@ LibraryContext* Runtime::find_library(const std::string& library_name,
     } else
       return nullptr;
   }
-  return finder->second;
+  return finder->second.get();
 }
 
 LibraryContext* Runtime::create_library(const std::string& library_name,
-                                        const ResourceConfig& config)
+                                        const ResourceConfig& config,
+                                        std::unique_ptr<mapping::Mapper> mapper)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
     log_legate.error("Library %s already exists", library_name.c_str());
@@ -632,9 +631,11 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
   }
 
   log_legate.debug("Library %s is created", library_name.c_str());
-  auto context             = new LibraryContext(library_name, config);
-  libraries_[library_name] = context;
-  return context;
+  if (nullptr == mapper) mapper = std::make_unique<mapping::DefaultMapper>();
+  auto context     = std::make_unique<LibraryContext>(library_name, config, std::move(mapper));
+  auto raw_context = context.get();
+  libraries_[library_name] = std::move(context);
+  return raw_context;
 }
 
 void Runtime::post_startup_initialization(Legion::Context legion_context)
@@ -747,7 +748,7 @@ RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegi
     Legion::RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
     req.add_field(field_id);
 
-    auto mapper_id = context->get_mapper_id(0);
+    auto mapper_id = context->get_mapper_id();
     // TODO: We need to pass the metadata about logical store
     Legion::InlineLauncher launcher(req, mapper_id);
     pr = legion_runtime_->map_region(legion_context_, launcher);
@@ -898,7 +899,7 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
                                             future_map,
                                             reduction_op,
                                             false /*deterministic*/,
-                                            core_context_->get_mapper_id(0));
+                                            core_context_->get_mapper_id());
 }
 
 void Runtime::issue_execution_fence(bool block /*=false*/)

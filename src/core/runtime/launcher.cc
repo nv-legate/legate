@@ -52,7 +52,7 @@ TaskLauncher::~TaskLauncher()
 
 int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
 
-int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(mapper_id_); }
+int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
 
 void TaskLauncher::add_scalar(const Scalar& scalar)
 {

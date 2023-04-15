@@ -32,6 +32,12 @@
 
 namespace legate {
 
+namespace mapping {
+
+class Mapper;
+
+}  // namespace mapping
+
 extern uint32_t extract_env(const char* env_name,
                             const uint32_t default_value,
                             const uint32_t test_value);
@@ -126,14 +132,16 @@ class Runtime {
 
  public:
   LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
-  LibraryContext* create_library(const std::string& library_name, const ResourceConfig& config);
+  LibraryContext* create_library(const std::string& library_name,
+                                 const ResourceConfig& config            = ResourceConfig{},
+                                 std::unique_ptr<mapping::Mapper> mapper = nullptr);
 
  public:
   void post_startup_initialization(Legion::Context legion_context);
 
  public:
   template <typename T>
-  T get_tunable(const LibraryContext* context, int64_t tunable_id, int64_t mapper_id = 0);
+  T get_tunable(const LibraryContext* context, int64_t tunable_id);
 
  public:
   std::unique_ptr<AutoTask> create_task(LibraryContext* library,
@@ -244,7 +252,7 @@ class Runtime {
   uint64_t next_store_id_{1};
 
  private:
-  std::map<std::string, LibraryContext*> libraries_;
+  std::map<std::string, std::unique_ptr<LibraryContext>> libraries_{};
 };
 
 void initialize(int32_t argc, char** argv);
