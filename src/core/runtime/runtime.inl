@@ -21,9 +21,9 @@
 namespace legate {
 
 template <typename T>
-T Runtime::get_tunable(const LibraryContext* context, int64_t tunable_id)
+T Runtime::get_tunable(Legion::MapperID mapper_id, int64_t tunable_id)
 {
-  Legion::TunableLauncher launcher(tunable_id, context->get_mapper_id(), 0, sizeof(T));
+  Legion::TunableLauncher launcher(tunable_id, mapper_id, 0, sizeof(T));
   auto future = legion_runtime_->select_tunable_value(legion_context_, launcher);
   return future.get_result<T>();
 }
@@ -43,8 +43,15 @@ void invoke_legate_registration_callback(Legion::Machine,
 template <Core::RegistrationCallback CALLBACK>
 /*static*/ void Core::perform_registration()
 {
-  Legion::Runtime::perform_registration_callback(
-    detail::invoke_legate_registration_callback<CALLBACK>, true /*global*/);
+  auto runtime = Runtime::get_runtime();
+  if (runtime->is_in_callback())
+    CALLBACK();
+  else {
+    runtime->enter_callback();
+    Legion::Runtime::perform_registration_callback(
+      detail::invoke_legate_registration_callback<CALLBACK>, true /*global*/);
+    runtime->exit_callback();
+  }
 }
 
 }  // namespace legate

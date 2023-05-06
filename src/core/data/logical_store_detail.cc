@@ -17,9 +17,9 @@
 #include "core/data/logical_store_detail.h"
 
 #include "core/runtime/req_analyzer.h"
+#include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"
-#include "core/utilities/type_traits.h"
 #include "legate_defines.h"
 
 namespace legate {
@@ -32,15 +32,15 @@ namespace detail {
 // legate::detail::Storage
 ////////////////////////////////////////////////////
 
-Storage::Storage(int32_t dim, LegateTypeCode code) : unbound_(true), dim_(dim), code_(code) {}
+Storage::Storage(int32_t dim, Type::Code code) : unbound_(true), dim_(dim), code_(code) {}
 
-Storage::Storage(Shape extents, LegateTypeCode code, bool optimize_scalar)
+Storage::Storage(Shape extents, Type::Code code, bool optimize_scalar)
   : dim_(extents.size()), extents_(extents), code_(code), volume_(extents.volume())
 {
   if (optimize_scalar && volume_ == 1) kind_ = Kind::FUTURE;
 }
 
-Storage::Storage(Shape extents, LegateTypeCode code, const Legion::Future& future)
+Storage::Storage(Shape extents, Type::Code code, const Legion::Future& future)
   : dim_(extents.size()),
     extents_(extents),
     code_(code),
@@ -186,7 +186,7 @@ const Shape& LogicalStore::extents() const { return extents_; }
 size_t LogicalStore::volume() const { return extents_.volume(); }
 
 struct elem_size_fn {
-  template <LegateTypeCode CODE>
+  template <Type::Code CODE>
   size_t operator()()
   {
     return sizeof(legate_type_of<CODE>);
@@ -206,7 +206,7 @@ int32_t LogicalStore::dim() const
 
 bool LogicalStore::has_scalar_storage() const { return storage_->kind() == Storage::Kind::FUTURE; }
 
-LegateTypeCode LogicalStore::code() const { return storage_->code(); }
+Type::Code LogicalStore::code() const { return storage_->code(); }
 
 bool LogicalStore::transformed() const { return !transform_->identity(); }
 
@@ -306,14 +306,17 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
     FutureWrapper future(true, field_size, domain, storage_->get_future());
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    return std::make_shared<Store>(dim(), code(), -1, future, transform_);
+    // FIXME: Need to catch up the type system change
+    return nullptr;  // std::make_shared<Store>(dim(), code(), -1, future, transform_);
   }
 
 #ifdef DEBUG_LEGATE
   assert(storage_->kind() == Storage::Kind::REGION_FIELD);
 #endif
   auto region_field = storage_->map(context);
-  mapped_ = std::make_shared<Store>(dim(), code(), -1, std::move(region_field), transform_);
+  // FIXME: Need to catch up the type system change
+  mapped_ =
+    nullptr;  // std::make_shared<Store>(dim(), code(), -1, std::move(region_field), transform_);
   return mapped_;
 }
 
@@ -402,7 +405,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(has_scalar_storage());
   buffer.pack<bool>(unbound());
   buffer.pack<int32_t>(dim());
-  buffer.pack<int32_t>(code());
+  buffer.pack<int32_t>(static_cast<int32_t>(code()));
   transform_->pack(buffer);
 }
 

@@ -20,10 +20,13 @@
 
 #include "legion.h"
 
+#include <memory>
+
+#include "core/data/scalar.h"
 #include "core/data/shape.h"
 #include "core/data/store.h"
 #include "core/legate_c.h"
-#include "core/runtime/context.h"
+#include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/utilities/typedefs.h"
 
@@ -31,6 +34,8 @@
  */
 
 namespace legate {
+
+class LibraryContext;
 
 namespace mapping {
 
@@ -137,11 +142,21 @@ class Runtime {
                                  std::unique_ptr<mapping::Mapper> mapper = nullptr);
 
  public:
+  uint32_t get_type_uid();
+  void record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id);
+  int32_t find_reduction_operator(int32_t type_uid, int32_t op_kind) const;
+
+ public:
+  void enter_callback();
+  void exit_callback();
+  bool is_in_callback() const;
+
+ public:
   void post_startup_initialization(Legion::Context legion_context);
 
  public:
   template <typename T>
-  T get_tunable(const LibraryContext* context, int64_t tunable_id);
+  T get_tunable(Legion::MapperID mapper_id, int64_t tunable_id);
 
  public:
   std::unique_ptr<AutoTask> create_task(LibraryContext* library, int64_t task_id);
@@ -151,25 +166,24 @@ class Runtime {
   void submit(std::unique_ptr<Operation> op);
 
  public:
-  LogicalStore create_store(LegateTypeCode code, int32_t dim = 1);
+  LogicalStore create_store(Type::Code code, int32_t dim = 1);
   LogicalStore create_store(std::vector<size_t> extents,
-                            LegateTypeCode code,
+                            Type::Code code,
                             bool optimize_scalar = false);
   LogicalStore create_store(const Scalar& scalar);
   uint64_t get_unique_store_id();
 
  public:
-  std::shared_ptr<LogicalRegionField> create_region_field(const Shape& extents,
-                                                          LegateTypeCode code);
+  std::shared_ptr<LogicalRegionField> create_region_field(const Shape& extents, Type::Code code);
   std::shared_ptr<LogicalRegionField> import_region_field(Legion::LogicalRegion region,
                                                           Legion::FieldID field_id,
-                                                          LegateTypeCode code);
+                                                          Type::Code code);
   RegionField map_region_field(LibraryContext* context, const LogicalRegionField* region_field);
   void unmap_physical_region(Legion::PhysicalRegion pr);
 
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
-  FieldManager* find_or_create_field_manager(const Legion::Domain& shape, LegateTypeCode code);
+  FieldManager* find_or_create_field_manager(const Legion::Domain& shape, Type::Code code);
   PartitionManager* partition_manager() const;
 
  public:
@@ -214,6 +228,8 @@ class Runtime {
  public:
   static void initialize(int32_t argc, char** argv);
   static int32_t start(int32_t argc, char** argv);
+
+ public:
   static Runtime* get_runtime();
   static void create_runtime(Legion::Runtime* legion_runtime);
 
@@ -226,7 +242,7 @@ class Runtime {
   LibraryContext* core_context_{nullptr};
 
  private:
-  std::map<std::pair<Legion::Domain, LegateTypeCode>, FieldManager*> field_managers_;
+  std::map<std::pair<Legion::Domain, Type::Code>, FieldManager*> field_managers_;
   std::map<Legion::Domain, RegionManager*> region_managers_;
   PartitionManager* partition_manager_{nullptr};
 
@@ -249,7 +265,14 @@ class Runtime {
   uint64_t next_store_id_{1};
 
  private:
-  std::map<std::string, std::unique_ptr<LibraryContext>> libraries_{};
+  bool in_callback_{false};
+
+ private:
+  std::map<std::string, LibraryContext*> libraries_{};
+
+ private:
+  uint32_t next_type_uid_;
+  std::map<std::pair<int32_t, int32_t>, int32_t> reduction_ops_{};
 };
 
 void initialize(int32_t argc, char** argv);

@@ -31,6 +31,7 @@
 #include "core/runtime/shard.h"
 #include "core/task/exception.h"
 #include "core/task/task.h"
+#include "core/type/type_info.h"
 #include "core/utilities/deserializer.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/nvtx_help.h"
@@ -187,14 +188,14 @@ static void extract_scalar_task(
 
 void register_legate_core_tasks(Legion::Machine machine,
                                 Legion::Runtime* runtime,
-                                const LibraryContext& context)
+                                const LibraryContext* context)
 {
-  auto toplevel_task_id          = context.get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID);
+  auto toplevel_task_id          = context->get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID);
   const char* toplevel_task_name = "Legate Core Toplevel Task";
   runtime->attach_name(
     toplevel_task_id, toplevel_task_name, false /*mutable*/, true /*local only*/);
 
-  auto extract_scalar_task_id          = context.get_task_id(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID);
+  auto extract_scalar_task_id          = context->get_task_id(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID);
   const char* extract_scalar_task_name = "core::extract_scalar";
   runtime->attach_name(
     extract_scalar_task_id, extract_scalar_task_name, false /*mutable*/, true /*local only*/);
@@ -235,7 +236,55 @@ void register_legate_core_tasks(Legion::Machine machine,
 }
 
 extern void register_exception_reduction_op(Legion::Runtime* runtime,
-                                            const LibraryContext& context);
+                                            const LibraryContext* context);
+
+#define BUILTIN_REDOP_ID(OP, TYPE_CODE) \
+  (LEGION_REDOP_BASE + (OP)*LEGION_TYPE_TOTAL + (static_cast<int32_t>(TYPE_CODE)))
+
+#define RECORD(OP, TYPE_CODE) \
+  PrimitiveType(TYPE_CODE).record_reduction_operator(OP, BUILTIN_REDOP_ID(OP, TYPE_CODE));
+
+#define RECORD_INT(OP)           \
+  RECORD(OP, Type::Code::BOOL)   \
+  RECORD(OP, Type::Code::INT8)   \
+  RECORD(OP, Type::Code::INT16)  \
+  RECORD(OP, Type::Code::INT32)  \
+  RECORD(OP, Type::Code::INT64)  \
+  RECORD(OP, Type::Code::UINT8)  \
+  RECORD(OP, Type::Code::UINT16) \
+  RECORD(OP, Type::Code::UINT32) \
+  RECORD(OP, Type::Code::UINT64)
+
+#define RECORD_FLOAT(OP)          \
+  RECORD(OP, Type::Code::FLOAT16) \
+  RECORD(OP, Type::Code::FLOAT32) \
+  RECORD(OP, Type::Code::FLOAT64)
+
+#define RECORD_COMPLEX(OP) RECORD(OP, Type::Code::COMPLEX64)
+
+#define RECORD_ALL(OP) \
+  RECORD_INT(OP)       \
+  RECORD_FLOAT(OP)     \
+  RECORD_COMPLEX(OP)
+
+void register_builtin_reduction_ops()
+{
+  RECORD_ALL(ADD_LT)
+  RECORD(ADD_LT, Type::Code::COMPLEX128)
+  RECORD_ALL(SUB_LT)
+  RECORD_ALL(MUL_LT)
+  RECORD_ALL(DIV_LT)
+
+  RECORD_INT(MAX_LT)
+  RECORD_FLOAT(MAX_LT)
+
+  RECORD_INT(MIN_LT)
+  RECORD_FLOAT(MIN_LT)
+
+  RECORD_INT(OR_LT)
+  RECORD_INT(AND_LT)
+  RECORD_INT(XOR_LT)
+}
 
 /*static*/ void core_library_registration_callback(Legion::Machine machine,
                                                    Legion::Runtime* legion_runtime,
@@ -253,15 +302,17 @@ extern void register_exception_reduction_op(Legion::Runtime* runtime,
   auto runtime  = Runtime::get_runtime();
   auto core_lib = runtime->create_library(core_library_name, config);
 
-  register_legate_core_tasks(machine, legion_runtime, *core_lib);
+  register_legate_core_tasks(machine, legion_runtime, core_lib);
 
   register_legate_core_mapper(machine, legion_runtime, core_lib);
 
-  register_exception_reduction_op(legion_runtime, *core_lib);
+  register_builtin_reduction_ops();
 
-  register_legate_core_projection_functors(legion_runtime, *core_lib);
+  register_exception_reduction_op(legion_runtime, core_lib);
 
-  register_legate_core_sharding_functors(legion_runtime, *core_lib);
+  register_legate_core_projection_functors(legion_runtime, core_lib);
+
+  register_legate_core_sharding_functors(legion_runtime, core_lib);
 
   if (!Core::standalone)
     Core::retrieve_tunable(Legion::Runtime::get_context(), legion_runtime, core_lib);
@@ -342,7 +393,7 @@ void RegionManager::import_region(const Legion::LogicalRegion& region)
 
 class FieldManager {
  public:
-  FieldManager(Runtime* runtime, const Domain& shape, LegateTypeCode code);
+  FieldManager(Runtime* runtime, const Domain& shape, Type::Code code);
 
  public:
   std::shared_ptr<LogicalRegionField> allocate_field();
@@ -352,7 +403,7 @@ class FieldManager {
  private:
   Runtime* runtime_;
   Domain shape_;
-  LegateTypeCode code_;
+  Type::Code code_;
   size_t field_size_;
 
  private:
@@ -361,16 +412,16 @@ class FieldManager {
 };
 
 struct field_size_fn {
-  template <LegateTypeCode CODE>
+  template <Type::Code CODE>
   size_t operator()()
   {
     return sizeof(legate_type_of<CODE>);
   }
 };
 
-static size_t get_field_size(LegateTypeCode code) { return type_dispatch(code, field_size_fn{}); }
+static size_t get_field_size(Type::Code code) { return type_dispatch(code, field_size_fn{}); }
 
-FieldManager::FieldManager(Runtime* runtime, const Domain& shape, LegateTypeCode code)
+FieldManager::FieldManager(Runtime* runtime, const Domain& shape, Type::Code code)
   : runtime_(runtime), shape_(shape), code_(code), field_size_(get_field_size(code))
 {
 }
@@ -422,8 +473,10 @@ std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::Log
 
 PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* context)
 {
-  num_pieces_       = runtime->get_tunable<int32_t>(context, LEGATE_CORE_TUNABLE_NUM_PIECES);
-  min_shard_volume_ = runtime->get_tunable<int64_t>(context, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
+  auto mapper_id = context->get_mapper_id();
+  num_pieces_    = runtime->get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_PIECES);
+  min_shard_volume_ =
+    runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
   assert(num_pieces_ > 0);
   assert(min_shard_volume_ > 0);
@@ -603,9 +656,21 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
 
 /*static*/ Runtime* Runtime::runtime_;
 
-Runtime::Runtime(Legion::Runtime* legion_runtime) : legion_runtime_(legion_runtime) {}
+namespace {
 
-Runtime::~Runtime() {}
+constexpr uint32_t CUSTOM_TYPE_UID_BASE = 1000;
+
+}  // namespace
+
+Runtime::Runtime(Legion::Runtime* legion_runtime)
+  : legion_runtime_(legion_runtime), next_type_uid_(CUSTOM_TYPE_UID_BASE)
+{
+}
+
+Runtime::~Runtime()
+{
+  for (auto& [_, context] : libraries_) delete context;
+}
 
 LibraryContext* Runtime::find_library(const std::string& library_name,
                                       bool can_fail /*=false*/) const
@@ -618,7 +683,7 @@ LibraryContext* Runtime::find_library(const std::string& library_name,
     } else
       return nullptr;
   }
-  return finder->second.get();
+  return finder->second;
 }
 
 LibraryContext* Runtime::create_library(const std::string& library_name,
@@ -632,11 +697,55 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
 
   log_legate.debug("Library %s is created", library_name.c_str());
   if (nullptr == mapper) mapper = std::make_unique<mapping::DefaultMapper>();
-  auto context     = std::make_unique<LibraryContext>(library_name, config, std::move(mapper));
-  auto raw_context = context.get();
-  libraries_[library_name] = std::move(context);
-  return raw_context;
+  auto context             = new LibraryContext(library_name, config, std::move(mapper));
+  libraries_[library_name] = context;
+  return context;
 }
+
+uint32_t Runtime::get_type_uid() { return next_type_uid_++; }
+
+void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id)
+{
+#ifdef DEBUG_LEGATE
+  log_legate.debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %d)",
+                   type_uid,
+                   op_kind,
+                   legion_op_id);
+#endif
+  auto key    = std::make_pair(type_uid, op_kind);
+  auto finder = reduction_ops_.find(key);
+  if (finder != reduction_ops_.end()) {
+    std::stringstream ss;
+    ss << "Reduction op " << op_kind << " already exists for type " << type_uid;
+    throw std::invalid_argument(std::move(ss).str());
+  }
+  reduction_ops_.emplace(std::make_pair(key, legion_op_id));
+}
+
+int32_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) const
+{
+  auto key    = std::make_pair(type_uid, op_kind);
+  auto finder = reduction_ops_.find(key);
+  if (reduction_ops_.end() == finder) {
+#ifdef DEBUG_LEGATE
+    log_legate.debug("Can't find reduction op (type_uid: %d, op_kind: %d)", type_uid, op_kind);
+#endif
+    std::stringstream ss;
+    ss << "Reduction op " << op_kind << " does not exist for type " << type_uid;
+    throw std::invalid_argument(std::move(ss).str());
+  }
+#ifdef DEBUG_LEGATE
+  log_legate.debug(
+    "Found reduction op %d (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
+#endif
+  return finder->second;
+}
+
+void Runtime::enter_callback() { in_callback_ = true; }
+
+void Runtime::exit_callback() { in_callback_ = false; }
+
+bool Runtime::is_in_callback() const { return in_callback_; }
 
 void Runtime::post_startup_initialization(Legion::Context legion_context)
 {
@@ -683,14 +792,14 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op->launch(strategy.get());
 }
 
-LogicalStore Runtime::create_store(LegateTypeCode code, int32_t dim)
+LogicalStore Runtime::create_store(Type::Code code, int32_t dim)
 {
   auto storage = std::make_shared<detail::Storage>(dim, code);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
 LogicalStore Runtime::create_store(std::vector<size_t> extents,
-                                   LegateTypeCode code,
+                                   Type::Code code,
                                    bool optimize_scalar /*=false*/)
 {
   auto storage = std::make_shared<detail::Storage>(extents, code, optimize_scalar);
@@ -701,14 +810,14 @@ LogicalStore Runtime::create_store(const Scalar& scalar)
 {
   Shape extents{1};
   auto future  = create_future(scalar.ptr(), scalar.size());
-  auto storage = std::make_shared<detail::Storage>(extents, scalar.code(), future);
+  auto storage = std::make_shared<detail::Storage>(extents, scalar.type().code, future);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
 uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& extents,
-                                                                 LegateTypeCode code)
+                                                                 Type::Code code)
 {
   DomainPoint lo, hi;
   hi.dim = lo.dim = static_cast<int32_t>(extents.size());
@@ -723,7 +832,7 @@ std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& ex
 
 std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::LogicalRegion region,
                                                                  Legion::FieldID field_id,
-                                                                 LegateTypeCode code)
+                                                                 Type::Code code)
 {
   // TODO: This is a blocking operation. We should instead use index sapces as keys to field
   // managers
@@ -772,7 +881,7 @@ RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
   }
 }
 
-FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, LegateTypeCode code)
+FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, Type::Code code)
 {
   auto key    = std::make_pair(shape, code);
   auto finder = field_managers_.find(key);

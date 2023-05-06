@@ -203,8 +203,10 @@ list(APPEND legate_core_SOURCES
   src/core/mapping/core_mapper.cc
   src/core/mapping/default_mapper.cc
   src/core/mapping/instance_manager.cc
+  src/core/mapping/machine.cc
   src/core/mapping/mapping.cc
   src/core/mapping/operation.cc
+  src/core/mapping/store.cc
   src/core/partitioning/constraint.cc
   src/core/partitioning/constraint_graph.cc
   src/core/partitioning/partition.cc
@@ -222,6 +224,7 @@ list(APPEND legate_core_SOURCES
   src/core/task/task.cc
   src/core/task/task_info.cc
   src/core/task/variant_options.cc
+  src/core/type/type_info.cc
   src/core/utilities/buffer_builder.cc
   src/core/utilities/debug.cc
   src/core/utilities/deserializer.cc
@@ -327,6 +330,8 @@ if (legate_core_BUILD_DOCS)
   if(Doxygen_FOUND)
     set(legate_core_DOC_SOURCES "")
     list(APPEND legate_core_DOC_SOURCES
+      # type
+      src/core/type/type_info.h
       # task
       src/core/task/task.h
       src/core/task/registrar.h
@@ -419,9 +424,11 @@ install(
 
 install(
   FILES src/core/mapping/base_mapper.h
+        src/core/mapping/machine.h
         src/core/mapping/mapping.h
         src/core/mapping/operation.h
         src/core/mapping/operation.inl
+        src/core/mapping/store.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/mapping)
 
 install(
@@ -432,6 +439,7 @@ install(
   FILES src/core/runtime/context.h
         src/core/runtime/context.inl
         src/core/runtime/operation.h
+        src/core/runtime/resource.h
         src/core/runtime/projection.h
         src/core/runtime/runtime.h
         src/core/runtime/runtime.inl
@@ -449,6 +457,10 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/task)
 
 install(
+  FILES src/core/type/type_info.h
+        src/core/type/type_traits.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/type)
+install(
   FILES src/core/utilities/debug.h
         src/core/utilities/deserializer.h
         src/core/utilities/deserializer.inl
@@ -458,7 +470,6 @@ install(
         src/core/utilities/span.h
         src/core/utilities/tuple.inl
         src/core/utilities/tuple.h
-        src/core/utilities/type_traits.h
         src/core/utilities/typedefs.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
@@ -523,6 +534,7 @@ rapids_export(
   LANGUAGES ${ENABLED_LANGUAES}
 )
 option(legate_core_EXAMPLE_BUILD_TESTS OFF)
+include(cmake/legate_helper_functions.cmake)
 if (legate_core_EXAMPLE_BUILD_TESTS)
   set(legate_core_ROOT ${CMAKE_CURRENT_BINARY_DIR})
   add_subdirectory(examples)

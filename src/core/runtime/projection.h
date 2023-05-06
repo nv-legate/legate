@@ -18,11 +18,12 @@
 
 #include "legion.h"
 
-#include "core/runtime/context.h"
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate {
+
+class LibraryContext;
 
 namespace proj {
 
@@ -91,7 +92,7 @@ class LegateProjectionFunctor : public Legion::ProjectionFunctor {
 };
 
 void register_legate_core_projection_functors(Legion::Runtime* runtime,
-                                              const LibraryContext& context);
+                                              const LibraryContext* context);
 
 LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID proj_id,
                                                         bool allow_missing = false);

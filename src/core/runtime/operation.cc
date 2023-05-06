@@ -67,14 +67,6 @@ Task::Task(LibraryContext* library, int64_t task_id, uint64_t unique_id)
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 
-struct field_size_fn {
-  template <LegateTypeCode CODE>
-  size_t operator()()
-  {
-    return sizeof(legate_type_of<CODE>);
-  }
-};
-
 void Task::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
@@ -114,7 +106,8 @@ void Task::launch(Strategy* p_strategy)
     auto& var        = pair.second;
     auto field_space = strategy.find_field_space(var);
     // TODO: We should reuse field ids here
-    auto field_size = type_dispatch(store->code(), field_size_fn{});
+    // FIXME: Need to catch up the type system change
+    auto field_size = 0;  // store->type().size();
     auto field_id   = runtime->allocate_field(field_space, field_size);
     launcher.add_unbound_output(store, field_space, field_id);
   }

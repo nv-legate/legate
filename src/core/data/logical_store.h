@@ -23,6 +23,7 @@
 
 #include "core/data/shape.h"
 #include "core/data/transform.h"
+#include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate {
@@ -58,7 +59,7 @@ class LogicalStore {
 
  public:
   int32_t dim() const;
-  LegateTypeCode code() const;
+  Type::Code code() const;
   const Shape& extents() const;
   size_t volume() const;
   bool unbound() const;

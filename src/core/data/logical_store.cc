@@ -23,9 +23,9 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/req_analyzer.h"
 #include "core/runtime/runtime.h"
+#include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"
-#include "core/utilities/type_traits.h"
 #include "legate_defines.h"
 
 using namespace Legion;
@@ -50,7 +50,7 @@ LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl)
 
 int32_t LogicalStore::dim() const { return impl_->dim(); }
 
-LegateTypeCode LogicalStore::code() const { return impl_->code(); }
+Type::Code LogicalStore::code() const { return impl_->code(); }
 
 const Shape& LogicalStore::extents() const { return impl_->extents(); }
 

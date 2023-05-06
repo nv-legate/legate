@@ -23,8 +23,9 @@ namespace legate {
 
 void UntypedScalarArg::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<bool>(scalar_.is_tuple());
-  buffer.pack<int32_t>(scalar_.code());
+  // FIXME: Need to catch up the type system change
+  // buffer.pack<bool>(scalar_.is_tuple());
+  buffer.pack<int32_t>(static_cast<int32_t>(scalar_.type().code));
   buffer.pack_buffer(scalar_.ptr(), scalar_.size());
 }
 
@@ -80,14 +81,6 @@ FutureStoreArg::FutureStoreArg(detail::LogicalStore* store,
 {
 }
 
-struct datalen_fn {
-  template <LegateTypeCode CODE>
-  size_t operator()()
-  {
-    return sizeof(legate_type_of<CODE>);
-  }
-};
-
 void FutureStoreArg::pack(BufferBuilder& buffer) const
 {
   store_->pack(buffer);
@@ -95,7 +88,7 @@ void FutureStoreArg::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(redop_);
   buffer.pack<bool>(read_only_);
   buffer.pack<bool>(has_storage_);
-  buffer.pack<int32_t>(type_dispatch(store_->code(), datalen_fn{}));
+  buffer.pack<uint32_t>(static_cast<int32_t>(store_->code()));
   buffer.pack<size_t>(store_->extents().data());
 }
 
