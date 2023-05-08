@@ -21,13 +21,7 @@
 
 namespace legate {
 
-void UntypedScalarArg::pack(BufferBuilder& buffer) const
-{
-  // FIXME: Need to catch up the type system change
-  // buffer.pack<bool>(scalar_.is_tuple());
-  buffer.pack<int32_t>(static_cast<int32_t>(scalar_.type().code));
-  buffer.pack_buffer(scalar_.ptr(), scalar_.size());
-}
+void UntypedScalarArg::pack(BufferBuilder& buffer) const { scalar_.pack(buffer); }
 
 RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
                                detail::LogicalStore* store,

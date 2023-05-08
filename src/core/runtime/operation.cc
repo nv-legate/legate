@@ -106,8 +106,7 @@ void Task::launch(Strategy* p_strategy)
     auto& var        = pair.second;
     auto field_space = strategy.find_field_space(var);
     // TODO: We should reuse field ids here
-    // FIXME: Need to catch up the type system change
-    auto field_size = 0;  // store->type().size();
+    auto field_size = store->type().size();
     auto field_id   = runtime->allocate_field(field_space, field_size);
     launcher.add_unbound_output(store, field_space, field_id);
   }

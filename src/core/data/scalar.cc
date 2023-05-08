@@ -15,7 +15,7 @@
  */
 
 #include "core/data/scalar.h"
-#include "core/utilities/dispatch.h"
+#include "core/utilities/buffer_builder.h"
 
 namespace legate {
 
@@ -57,6 +57,12 @@ size_t Scalar::size() const
     return *static_cast<const uint32_t*>(data_) + sizeof(uint32_t);
   else
     return type_->size();
+}
+
+void Scalar::pack(BufferBuilder& buffer) const
+{
+  type_->pack(buffer);
+  buffer.pack_buffer(data_, size());
 }
 
 }  // namespace legate

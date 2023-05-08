@@ -27,6 +27,8 @@
 
 namespace legate {
 
+class BufferBuilder;
+
 /**
  * @ingroup data
  * @brief A type-erased container for scalars and tuples of scalars.
@@ -119,6 +121,14 @@ class Scalar {
    * @return A raw pointer to the `Scalar`'s data
    */
   const void* ptr() const { return data_; }
+
+ public:
+  /**
+   * @brief Serializes the scalar into a buffer
+   *
+   * @param buffer A BufferBuilder into which the scalar needs to be serialized
+   */
+  void pack(BufferBuilder& buffer) const;
 
  private:
   bool own_{false};
