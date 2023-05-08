@@ -23,6 +23,7 @@
 #include "core/data/logical_store_detail.h"
 #include "core/mapping/core_mapper.h"
 #include "core/mapping/default_mapper.h"
+#include "core/mapping/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
@@ -314,8 +315,10 @@ void register_builtin_reduction_ops()
 
   register_legate_core_sharding_functors(legion_runtime, core_lib);
 
-  if (!Core::standalone)
+  if (!Core::standalone) {
     Core::retrieve_tunable(Legion::Runtime::get_context(), legion_runtime, core_lib);
+    Runtime::get_runtime()->initialize_toplevel_machine();
+  }
 }
 
 /*static*/ void core_library_bootstrapping_callback(Legion::Machine machine,
@@ -393,7 +396,7 @@ void RegionManager::import_region(const Legion::LogicalRegion& region)
 
 class FieldManager {
  public:
-  FieldManager(Runtime* runtime, const Domain& shape, Type::Code code);
+  FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
 
  public:
   std::shared_ptr<LogicalRegionField> allocate_field();
@@ -403,26 +406,15 @@ class FieldManager {
  private:
   Runtime* runtime_;
   Domain shape_;
-  Type::Code code_;
-  size_t field_size_;
+  uint32_t field_size_;
 
  private:
   using FreeField = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::deque<FreeField> free_fields_;
 };
 
-struct field_size_fn {
-  template <Type::Code CODE>
-  size_t operator()()
-  {
-    return sizeof(legate_type_of<CODE>);
-  }
-};
-
-static size_t get_field_size(Type::Code code) { return type_dispatch(code, field_size_fn{}); }
-
-FieldManager::FieldManager(Runtime* runtime, const Domain& shape, Type::Code code)
-  : runtime_(runtime), shape_(shape), code_(code), field_size_(get_field_size(code))
+FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
+  : runtime_(runtime), shape_(shape), field_size_(field_size)
 {
 }
 
@@ -753,6 +745,7 @@ void Runtime::post_startup_initialization(Legion::Context legion_context)
   core_context_      = find_library(core_library_name);
   partition_manager_ = new PartitionManager(this, core_context_);
   Core::retrieve_tunable(legion_context_, legion_runtime_, core_context_);
+  initialize_toplevel_machine();
 }
 
 // This function should be moved to the library context
@@ -792,17 +785,17 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op->launch(strategy.get());
 }
 
-LogicalStore Runtime::create_store(Type::Code code, int32_t dim)
+LogicalStore Runtime::create_store(std::unique_ptr<Type> type, int32_t dim)
 {
-  auto storage = std::make_shared<detail::Storage>(dim, code);
+  auto storage = std::make_shared<detail::Storage>(dim, std::move(type));
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
 LogicalStore Runtime::create_store(std::vector<size_t> extents,
-                                   Type::Code code,
+                                   std::unique_ptr<Type> type,
                                    bool optimize_scalar /*=false*/)
 {
-  auto storage = std::make_shared<detail::Storage>(extents, code, optimize_scalar);
+  auto storage = std::make_shared<detail::Storage>(extents, std::move(type), optimize_scalar);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
@@ -810,14 +803,14 @@ LogicalStore Runtime::create_store(const Scalar& scalar)
 {
   Shape extents{1};
   auto future  = create_future(scalar.ptr(), scalar.size());
-  auto storage = std::make_shared<detail::Storage>(extents, scalar.type().code, future);
+  auto storage = std::make_shared<detail::Storage>(extents, scalar.type().clone(), future);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
 uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& extents,
-                                                                 Type::Code code)
+                                                                 uint32_t field_size)
 {
   DomainPoint lo, hi;
   hi.dim = lo.dim = static_cast<int32_t>(extents.size());
@@ -826,18 +819,18 @@ std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& ex
   for (int32_t dim = 0; dim < lo.dim; ++dim) hi[dim] = extents[dim] - 1;
 
   Domain shape(lo, hi);
-  auto fld_mgr = runtime_->find_or_create_field_manager(shape, code);
+  auto fld_mgr = runtime_->find_or_create_field_manager(shape, field_size);
   return fld_mgr->allocate_field();
 }
 
 std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::LogicalRegion region,
                                                                  Legion::FieldID field_id,
-                                                                 Type::Code code)
+                                                                 uint32_t field_size)
 {
   // TODO: This is a blocking operation. We should instead use index sapces as keys to field
   // managers
   auto shape   = legion_runtime_->get_index_space_domain(legion_context_, region.get_index_space());
-  auto fld_mgr = runtime_->find_or_create_field_manager(shape, code);
+  auto fld_mgr = runtime_->find_or_create_field_manager(shape, field_size);
   return fld_mgr->import_field(region, field_id);
 }
 
@@ -881,14 +874,14 @@ RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
   }
 }
 
-FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, Type::Code code)
+FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, uint32_t field_size)
 {
-  auto key    = std::make_pair(shape, code);
+  auto key    = FieldManagerKey(shape, field_size);
   auto finder = field_managers_.find(key);
   if (finder != field_managers_.end())
     return finder->second;
   else {
-    auto fld_mgr         = new FieldManager(this, shape, code);
+    auto fld_mgr         = new FieldManager(this, shape, field_size);
     field_managers_[key] = fld_mgr;
     return fld_mgr;
   }
@@ -1010,6 +1003,34 @@ void Runtime::issue_execution_fence(bool block /*=false*/)
 {
   auto future = legion_runtime_->issue_execution_fence(legion_context_);
   if (block) future.wait();
+}
+
+void Runtime::initialize_toplevel_machine()
+{
+  auto mapper_id = core_context_->get_mapper_id();
+  auto num_nodes = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_NODES);
+
+  auto num_gpus = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_GPUS);
+  auto num_omps = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_OMPS);
+  auto num_cpus = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_CPUS);
+
+  auto create_range = [&num_nodes](int32_t num_procs) {
+    auto per_node_count = num_procs / num_nodes;
+    return mapping::ProcessorRange(0, num_procs, per_node_count);
+  };
+
+  auto machine = new mapping::MachineDesc({{mapping::TaskTarget::GPU, create_range(num_gpus)},
+                                           {mapping::TaskTarget::OMP, create_range(num_omps)},
+                                           {mapping::TaskTarget::CPU, create_range(num_cpus)}});
+  machine_.reset(machine);
+}
+
+const mapping::MachineDesc& Runtime::get_machine() const
+{
+#ifdef DEBUG_LEGATE
+  assert(machine_ != nullptr);
+#endif
+  return *machine_;
 }
 
 Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::SymbolicPoint& point)

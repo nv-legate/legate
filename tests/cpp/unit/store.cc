@@ -13,21 +13,21 @@ void store_creation(int32_t argc, char** argv)
   // Bound
   {
     auto runtime = legate::Runtime::get_runtime();
-    auto store   = runtime->create_store({4, 4}, legate::LegateTypeCode::INT64_LT);
+    auto store   = runtime->create_store({4, 4}, legate::int64());
     EXPECT_FALSE(store.unbound());
     EXPECT_EQ(store.dim(), 2);
     EXPECT_EQ(store.extents(), (std::vector<size_t>{4, 4}));
-    EXPECT_EQ(store.code(), legate::LegateTypeCode::INT64_LT);
+    EXPECT_EQ(store.type(), *legate::int64());
     EXPECT_FALSE(store.transformed());
   }
 
   // Unbound
   {
     auto runtime = legate::Runtime::get_runtime();
-    auto store   = runtime->create_store(legate::LegateTypeCode::INT64_LT);
+    auto store   = runtime->create_store(legate::int64());
     EXPECT_TRUE(store.unbound());
     EXPECT_EQ(store.dim(), 1);
-    EXPECT_EQ(store.code(), legate::LegateTypeCode::INT64_LT);
+    EXPECT_EQ(store.type(), *legate::int64());
     EXPECT_FALSE(store.transformed());
     EXPECT_THROW(store.extents(), std::invalid_argument);
   }
@@ -37,7 +37,7 @@ void store_valid_transform(int32_t argc, char** argv)
 {
   // Bound
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store({4, 3}, legate::LegateTypeCode::INT64_LT);
+  auto store   = runtime->create_store({4, 3}, legate::int64());
 
   auto promoted = store.promote(0, 5);
   EXPECT_EQ(promoted.extents(), (std::vector<size_t>{5, 4, 3}));
@@ -68,7 +68,7 @@ void store_invalid_transform(int32_t argc, char** argv)
   // Bound
   {
     auto runtime = legate::Runtime::get_runtime();
-    auto store   = runtime->create_store({4, 3}, legate::LegateTypeCode::INT64_LT);
+    auto store   = runtime->create_store({4, 3}, legate::int64());
 
     EXPECT_THROW(store.promote(3, 5), std::invalid_argument);
     EXPECT_THROW(store.promote(-3, 5), std::invalid_argument);
@@ -95,7 +95,7 @@ void store_invalid_transform(int32_t argc, char** argv)
   // Unbound
   {
     auto runtime = legate::Runtime::get_runtime();
-    auto store   = runtime->create_store(legate::LegateTypeCode::INT64_LT);
+    auto store   = runtime->create_store(legate::int64());
     EXPECT_THROW(store.promote(1, 1), std::invalid_argument);
   }
 }

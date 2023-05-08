@@ -37,7 +37,7 @@ void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
-  HelloTask::register_variants(*context);
+  HelloTask::register_variants(context);
 }
 
 /*static*/ void HelloTask::cpu_variant(legate::TaskContext& context)
@@ -88,7 +88,7 @@ void legate_main(int32_t argc, char** argv)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto store = runtime->create_store({5, 5}, legate::LegateTypeCode::INT64_LT);
+  auto store = runtime->create_store({5, 5}, legate::int64());
   test_auto_task(context, store);
   print_store(context, store);
   test_manual_task(context, store);

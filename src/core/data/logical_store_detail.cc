@@ -32,18 +32,21 @@ namespace detail {
 // legate::detail::Storage
 ////////////////////////////////////////////////////
 
-Storage::Storage(int32_t dim, Type::Code code) : unbound_(true), dim_(dim), code_(code) {}
+Storage::Storage(int32_t dim, std::unique_ptr<Type> type)
+  : unbound_(true), dim_(dim), type_(std::move(type))
+{
+}
 
-Storage::Storage(Shape extents, Type::Code code, bool optimize_scalar)
-  : dim_(extents.size()), extents_(extents), code_(code), volume_(extents.volume())
+Storage::Storage(Shape extents, std::unique_ptr<Type> type, bool optimize_scalar)
+  : dim_(extents.size()), extents_(extents), type_(std::move(type)), volume_(extents.volume())
 {
   if (optimize_scalar && volume_ == 1) kind_ = Kind::FUTURE;
 }
 
-Storage::Storage(Shape extents, Type::Code code, const Legion::Future& future)
+Storage::Storage(Shape extents, std::unique_ptr<Type> type, const Legion::Future& future)
   : dim_(extents.size()),
     extents_(extents),
-    code_(code),
+    type_(std::move(type)),
     kind_(Kind::FUTURE),
     future_(future),
     volume_(extents.volume())
@@ -58,7 +61,7 @@ LogicalRegionField* Storage::get_region_field()
   assert(Kind::REGION_FIELD == kind_);
 #endif
   if (nullptr == region_field_)
-    region_field_ = Runtime::get_runtime()->create_region_field(extents_, code_);
+    region_field_ = Runtime::get_runtime()->create_region_field(extents_, type_->size());
   return region_field_.get();
 }
 
@@ -185,19 +188,7 @@ const Shape& LogicalStore::extents() const { return extents_; }
 
 size_t LogicalStore::volume() const { return extents_.volume(); }
 
-struct elem_size_fn {
-  template <Type::Code CODE>
-  size_t operator()()
-  {
-    return sizeof(legate_type_of<CODE>);
-  }
-};
-
-size_t LogicalStore::storage_size() const
-{
-  auto elem_size = type_dispatch(code(), elem_size_fn{});
-  return storage_->volume() * elem_size;
-}
+size_t LogicalStore::storage_size() const { return storage_->volume() * type().size(); }
 
 int32_t LogicalStore::dim() const
 {
@@ -206,7 +197,7 @@ int32_t LogicalStore::dim() const
 
 bool LogicalStore::has_scalar_storage() const { return storage_->kind() == Storage::Kind::FUTURE; }
 
-Type::Code LogicalStore::code() const { return storage_->code(); }
+const Type& LogicalStore::type() const { return storage_->type(); }
 
 bool LogicalStore::transformed() const { return !transform_->identity(); }
 
@@ -301,22 +292,18 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
   if (nullptr != mapped_) return mapped_;
   if (storage_->kind() == Storage::Kind::FUTURE) {
     // TODO: future wrappers from inline mappings are read-only for now
-    auto field_size = type_dispatch(code(), elem_size_fn{});
-    auto domain     = to_domain(storage_->extents());
-    FutureWrapper future(true, field_size, domain, storage_->get_future());
+    auto domain = to_domain(storage_->extents());
+    FutureWrapper future(true, type().size(), domain, storage_->get_future());
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    // FIXME: Need to catch up the type system change
-    return nullptr;  // std::make_shared<Store>(dim(), code(), -1, future, transform_);
+    return std::make_shared<Store>(dim(), type().clone(), -1, future, transform_);
   }
 
 #ifdef DEBUG_LEGATE
   assert(storage_->kind() == Storage::Kind::REGION_FIELD);
 #endif
   auto region_field = storage_->map(context);
-  // FIXME: Need to catch up the type system change
-  mapped_ =
-    nullptr;  // std::make_shared<Store>(dim(), code(), -1, std::move(region_field), transform_);
+  mapped_ = std::make_shared<Store>(dim(), type().clone(), -1, std::move(region_field), transform_);
   return mapped_;
 }
 
@@ -405,7 +392,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(has_scalar_storage());
   buffer.pack<bool>(unbound());
   buffer.pack<int32_t>(dim());
-  buffer.pack<int32_t>(static_cast<int32_t>(code()));
+  type().pack(buffer);
   transform_->pack(buffer);
 }
 

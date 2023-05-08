@@ -131,15 +131,12 @@ void UnboundRegionField::update_num_elements(size_t num_elements)
 }
 
 FutureWrapper::FutureWrapper(bool read_only,
-                             int32_t field_size,
+                             uint32_t field_size,
                              Domain domain,
                              Legion::Future future,
                              bool initialize /*= false*/)
   : read_only_(read_only), field_size_(field_size), domain_(domain), future_(future)
 {
-#ifdef DEBUG_LEGATE
-  assert(field_size > 0);
-#endif
   if (!read_only) {
 #ifdef DEBUG_LEGATE
     assert(!initialize || future_.get_untyped_size() == field_size);
@@ -260,15 +257,14 @@ Store::Store(int32_t dim,
 }
 
 Store::Store(int32_t dim,
-             int32_t code,
+             std::unique_ptr<Type> type,
              int32_t redop_id,
              FutureWrapper future,
              const std::shared_ptr<TransformStack>& transform)
   : is_future_(true),
     is_unbound_store_(false),
     dim_(dim),
-    // FIXME: Need to catch up the type system change
-    // code_(code),
+    type_(std::move(type)),
     redop_id_(redop_id),
     future_(future),
     transform_(transform),
@@ -277,15 +273,14 @@ Store::Store(int32_t dim,
 }
 
 Store::Store(int32_t dim,
-             int32_t code,
+             std::unique_ptr<Type> type,
              int32_t redop_id,
              RegionField&& region_field,
              const std::shared_ptr<TransformStack>& transform)
   : is_future_(false),
     is_unbound_store_(false),
     dim_(dim),
-    // FIXME: Need to catch up the type system change
-    // code_(code),
+    type_(std::move(type)),
     redop_id_(redop_id),
     region_field_(std::forward<RegionField>(region_field)),
     transform_(transform)

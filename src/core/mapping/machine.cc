@@ -15,6 +15,7 @@
  */
 
 #include "core/mapping/machine.h"
+#include "core/utilities/buffer_builder.h"
 
 namespace legate {
 namespace mapping {
@@ -88,6 +89,33 @@ std::string ProcessorRange::to_string() const
   std::stringstream ss;
   ss << "Proc([" << low << "," << high << "], " << per_node_count << " per node)";
   return ss.str();
+}
+
+void ProcessorRange::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<uint32_t>(low);
+  buffer.pack<uint32_t>(high);
+  buffer.pack<uint32_t>(per_node_count);
+}
+
+MachineDesc::MachineDesc(const std::map<TaskTarget, ProcessorRange>& ranges)
+  : processor_ranges(ranges)
+{
+  for (auto& [target, processor_range] : processor_ranges)
+    if (!processor_range.empty()) {
+      preferred_target = target;
+      break;
+    }
+}
+
+void MachineDesc::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(static_cast<int32_t>(preferred_target));
+  buffer.pack<uint32_t>(processor_ranges.size());
+  for (auto& [target, processor_range] : processor_ranges) {
+    buffer.pack<int32_t>(static_cast<int32_t>(target));
+    processor_range.pack(buffer);
+  }
 }
 
 ProcessorRange MachineDesc::processor_range() const

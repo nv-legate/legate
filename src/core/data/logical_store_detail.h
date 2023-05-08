@@ -37,18 +37,18 @@ class Storage : public std::enable_shared_from_this<Storage> {
 
  public:
   // Create a RegionField-backed storage whose size is unbound. Initialized lazily.
-  Storage(int32_t dim, Type::Code code);
+  Storage(int32_t dim, std::unique_ptr<Type> type);
   // Create a RegionField-backed or a Future-backedstorage. Initialized lazily.
-  Storage(Shape extents, Type::Code code, bool optimize_scalar);
+  Storage(Shape extents, std::unique_ptr<Type> type, bool optimize_scalar);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(Shape extents, Type::Code code, const Legion::Future& future);
+  Storage(Shape extents, std::unique_ptr<Type> type, const Legion::Future& future);
 
  public:
   bool unbound() const { return unbound_; }
   const Shape& extents() const { return extents_; }
   size_t volume() const { return volume_; }
   int32_t dim();
-  Type::Code code() const { return code_; }
+  const Type& type() const { return *type_; }
   Kind kind() const { return kind_; }
 
  public:
@@ -74,7 +74,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   int32_t dim_{-1};
   Shape extents_;
   size_t volume_;
-  Type::Code code_{Type::Code::INVALID};
+  std::unique_ptr<Type> type_{nullptr};
   Kind kind_{Kind::REGION_FIELD};
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};
   Legion::Future future_{};
@@ -124,7 +124,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   size_t storage_size() const;
   int32_t dim() const;
   bool has_scalar_storage() const;
-  Type::Code code() const;
+  const Type& type() const;
   bool transformed() const;
 
  public:

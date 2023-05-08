@@ -20,6 +20,7 @@
 #include "core/runtime/runtime.h"
 #include "core/type/type_info.h"
 #include "core/type/type_traits.h"
+#include "core/utilities/buffer_builder.h"
 
 namespace legate {
 
@@ -75,6 +76,13 @@ int32_t Type::find_reduction_operator(int32_t op_kind) const
   return Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
 }
 
+int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
+{
+  return find_reduction_operator(static_cast<int32_t>(op_kind));
+}
+
+bool Type::operator==(const Type& other) const { return equal(other); }
+
 PrimitiveType::PrimitiveType(Code code) : Type(code), size_(SIZEOF.at(code)) {}
 
 int32_t PrimitiveType::uid() const { return static_cast<int32_t>(code); }
@@ -82,6 +90,13 @@ int32_t PrimitiveType::uid() const { return static_cast<int32_t>(code); }
 std::unique_ptr<Type> PrimitiveType::clone() const { return std::make_unique<PrimitiveType>(code); }
 
 std::string PrimitiveType::to_string() const { return TYPE_NAMES.at(code); }
+
+void PrimitiveType::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(static_cast<int32_t>(code));
+}
+
+bool PrimitiveType::equal(const Type& other) const { return code == other.code; }
 
 ExtensionType::ExtensionType(int32_t uid, Type::Code code) : Type(code), uid_(uid) {}
 
@@ -106,6 +121,28 @@ std::string FixedArrayType::to_string() const
   std::stringstream ss;
   ss << element_type_->to_string() << "[" << N_ << "]";
   return std::move(ss).str();
+}
+
+void FixedArrayType::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(static_cast<int32_t>(code));
+  buffer.pack<uint32_t>(uid_);
+  buffer.pack<uint32_t>(N_);
+  element_type_->pack(buffer);
+}
+
+bool FixedArrayType::equal(const Type& other) const
+{
+  if (code != other.code) return false;
+  auto& casted = static_cast<const FixedArrayType&>(other);
+
+#ifdef DEBUG_LEGATE
+  // Do a structural check in debug mode
+  return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
+#else
+  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+  return uid_ == casted.uid_;
+#endif
 }
 
 StructType::StructType(int32_t uid,
@@ -161,6 +198,34 @@ std::string StructType::to_string() const
   return std::move(ss).str();
 }
 
+void StructType::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(static_cast<int32_t>(code));
+  buffer.pack<uint32_t>(uid_);
+  buffer.pack<uint32_t>(field_types_.size());
+  for (auto& field_type : field_types_) field_type->pack(buffer);
+  buffer.pack<bool>(aligned_);
+}
+
+bool StructType::equal(const Type& other) const
+{
+  if (code != other.code) return false;
+  auto& casted = static_cast<const StructType&>(other);
+
+#ifdef DEBUG_LEGATE
+  // Do a structural check in debug mode
+  if (uid_ != casted.uid_) return false;
+  uint32_t nf = num_fields();
+  if (nf != casted.num_fields()) return false;
+  for (uint32_t idx = 0; idx < nf; ++idx)
+    if (field_type(idx) != casted.field_type(idx)) return false;
+  return true;
+#else
+  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+  return uid_ == casted.uid_;
+#endif
+}
+
 const Type& StructType::field_type(uint32_t field_idx) const { return *field_types_.at(field_idx); }
 
 StringType::StringType() : Type(Type::Code::STRING) {}
@@ -170,6 +235,13 @@ int32_t StringType::uid() const { return static_cast<int32_t>(code); }
 std::unique_ptr<Type> StringType::clone() const { return string_type(); }
 
 std::string StringType::to_string() const { return "string"; }
+
+void StringType::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(static_cast<int32_t>(code));
+}
+
+bool StringType::equal(const Type& other) const { return code == other.code; }
 
 std::unique_ptr<Type> primitive_type(Type::Code code)
 {
@@ -204,5 +276,33 @@ std::ostream& operator<<(std::ostream& ostream, const Type& type)
   ostream << type.to_string();
   return ostream;
 }
+
+std::unique_ptr<Type> bool_() { return primitive_type(Type::Code::BOOL); }
+
+std::unique_ptr<Type> int8() { return primitive_type(Type::Code::INT8); }
+
+std::unique_ptr<Type> int16() { return primitive_type(Type::Code::INT16); }
+
+std::unique_ptr<Type> int32() { return primitive_type(Type::Code::INT32); }
+
+std::unique_ptr<Type> int64() { return primitive_type(Type::Code::INT64); }
+
+std::unique_ptr<Type> uint8() { return primitive_type(Type::Code::UINT8); }
+
+std::unique_ptr<Type> uint16() { return primitive_type(Type::Code::UINT16); }
+
+std::unique_ptr<Type> uint32() { return primitive_type(Type::Code::UINT32); }
+
+std::unique_ptr<Type> uint64() { return primitive_type(Type::Code::UINT64); }
+
+std::unique_ptr<Type> float16() { return primitive_type(Type::Code::FLOAT16); }
+
+std::unique_ptr<Type> float32() { return primitive_type(Type::Code::FLOAT32); }
+
+std::unique_ptr<Type> float64() { return primitive_type(Type::Code::FLOAT64); }
+
+std::unique_ptr<Type> complex64() { return primitive_type(Type::Code::COMPLEX64); }
+
+std::unique_ptr<Type> complex128() { return primitive_type(Type::Code::COMPLEX128); }
 
 }  // namespace legate

@@ -212,7 +212,7 @@ class FutureWrapper {
  public:
   FutureWrapper() {}
   FutureWrapper(bool read_only,
-                int32_t field_size,
+                uint32_t field_size,
                 Domain domain,
                 Legion::Future future,
                 bool initialize = false);
@@ -261,7 +261,7 @@ class FutureWrapper {
 
  private:
   bool read_only_{true};
-  size_t field_size_{0};
+  uint32_t field_size_{0};
   Domain domain_{};
   Legion::Future future_{};
   Legion::UntypedDeferredValue buffer_{};
@@ -289,12 +289,12 @@ class Store {
         UnboundRegionField&& unbound_field,
         std::shared_ptr<TransformStack>&& transform = nullptr);
   Store(int32_t dim,
-        int32_t code,
+        std::unique_ptr<Type> type,
         int32_t redop_id,
         FutureWrapper future,
         const std::shared_ptr<TransformStack>& transform);
   Store(int32_t dim,
-        int32_t code,
+        std::unique_ptr<Type> type,
         int32_t redop_id,
         RegionField&& region_field,
         const std::shared_ptr<TransformStack>& transform);

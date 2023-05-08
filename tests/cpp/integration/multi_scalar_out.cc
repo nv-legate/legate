@@ -43,8 +43,8 @@ void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
-  WriterTask::register_variants(*context);
-  ReducerTask::register_variants(*context);
+  WriterTask::register_variants(context);
+  ReducerTask::register_variants(context);
 }
 
 /*static*/ void WriterTask::cpu_variant(legate::TaskContext& context)
@@ -94,8 +94,8 @@ void test_reducer_auto(legate::LibraryContext* context,
   auto part1   = task->declare_partition();
   auto part2   = task->declare_partition();
   auto part3   = task->declare_partition();
-  auto redop1  = LEGION_REDOP_BASE + LEGION_TYPE_TOTAL * LEGION_REDOP_KIND_SUM + scalar1.code();
-  auto redop2  = LEGION_REDOP_BASE + LEGION_TYPE_TOTAL * LEGION_REDOP_KIND_PROD + scalar2.code();
+  auto redop1  = scalar1.type().find_reduction_operator(legate::ReductionOpKind::ADD);
+  auto redop2  = scalar1.type().find_reduction_operator(legate::ReductionOpKind::MUL);
   task->add_reduction(scalar1, redop1, part1);
   task->add_reduction(scalar2, redop2, part2);
   task->add_output(store, part3);
@@ -108,8 +108,8 @@ void test_reducer_manual(legate::LibraryContext* context,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(context, REDUCER, legate::Shape({2}));
-  auto redop1  = LEGION_REDOP_BASE + LEGION_TYPE_TOTAL * LEGION_REDOP_KIND_SUM + scalar1.code();
-  auto redop2  = LEGION_REDOP_BASE + LEGION_TYPE_TOTAL * LEGION_REDOP_KIND_PROD + scalar2.code();
+  auto redop1  = scalar1.type().find_reduction_operator(legate::ReductionOpKind::ADD);
+  auto redop2  = scalar2.type().find_reduction_operator(legate::ReductionOpKind::MUL);
   task->add_reduction(scalar1, redop1);
   task->add_reduction(scalar2, redop2);
   runtime->submit(std::move(task));
@@ -136,9 +136,9 @@ void legate_main(int32_t argc, char** argv)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto scalar1 = runtime->create_store({1, 1}, legate::LegateTypeCode::INT8_LT, true);
-  auto scalar2 = runtime->create_store({1, 1, 1}, legate::LegateTypeCode::INT32_LT, true);
-  auto store   = runtime->create_store({10}, legate::LegateTypeCode::INT64_LT);
+  auto scalar1 = runtime->create_store({1, 1}, legate::int8(), true);
+  auto scalar2 = runtime->create_store({1, 1, 1}, legate::int32(), true);
+  auto store   = runtime->create_store({10}, legate::int64());
   test_writer_auto(context, scalar1, scalar2);
   print_stores(context, scalar1, scalar2);
   test_reducer_auto(context, scalar1, scalar2, store);

@@ -38,19 +38,26 @@ struct ProcessorRange {
   bool empty() const;
   std::string to_string() const;
 
+  void pack(BufferBuilder& buffer) const;
+
   uint32_t low{0};
   uint32_t high{0};
   uint32_t per_node_count{1};
 };
 
 struct MachineDesc {
-  TaskTarget preferred_target;
-  std::map<TaskTarget, ProcessorRange> processor_ranges;
+  MachineDesc() {}
+  MachineDesc(const std::map<TaskTarget, ProcessorRange>& processor_ranges);
+
+  TaskTarget preferred_target{TaskTarget::CPU};
+  std::map<TaskTarget, ProcessorRange> processor_ranges{};
 
   ProcessorRange processor_range() const;
   std::vector<TaskTarget> valid_targets() const;
   std::vector<TaskTarget> valid_targets_except(std::set<TaskTarget>&& to_exclude) const;
   std::string to_string() const;
+
+  void pack(BufferBuilder& buffer) const;
 };
 
 std::ostream& operator<<(std::ostream& stream, const MachineDesc& info);

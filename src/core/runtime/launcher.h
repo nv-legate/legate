@@ -84,6 +84,7 @@ class TaskLauncher {
 
  private:
   void pack_args(const std::vector<ArgWrapper*>& args);
+  void pack_mapper_arg();
   std::unique_ptr<Legion::IndexTaskLauncher> build_index_task(const Legion::Domain& launch_domain);
   std::unique_ptr<Legion::TaskLauncher> build_single_task();
   void bind_region_fields_to_unbound_stores();
@@ -106,6 +107,7 @@ class TaskLauncher {
   RequirementAnalyzer* req_analyzer_;
   OutputRequirementAnalyzer* out_analyzer_;
   BufferBuilder* buffer_;
+  BufferBuilder* mapper_arg_;
   std::vector<Legion::OutputRequirement> output_requirements_;
 };
 

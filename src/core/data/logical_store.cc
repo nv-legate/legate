@@ -50,7 +50,7 @@ LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl)
 
 int32_t LogicalStore::dim() const { return impl_->dim(); }
 
-Type::Code LogicalStore::code() const { return impl_->code(); }
+const Type& LogicalStore::type() const { return impl_->type(); }
 
 const Shape& LogicalStore::extents() const { return impl_->extents(); }
 

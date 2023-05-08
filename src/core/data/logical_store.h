@@ -59,7 +59,7 @@ class LogicalStore {
 
  public:
   int32_t dim() const;
-  Type::Code code() const;
+  const Type& type() const;
   const Shape& extents() const;
   size_t volume() const;
   bool unbound() const;

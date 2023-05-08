@@ -88,7 +88,7 @@ void FutureStoreArg::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(redop_);
   buffer.pack<bool>(read_only_);
   buffer.pack<bool>(has_storage_);
-  buffer.pack<uint32_t>(static_cast<int32_t>(store_->code()));
+  buffer.pack<uint32_t>(store_->type().size());
   buffer.pack<size_t>(store_->extents().data());
 }
 

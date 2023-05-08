@@ -16,6 +16,7 @@
 
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
+#include "core/mapping/machine.h"
 #include "core/runtime/runtime.h"
 
 namespace legate {

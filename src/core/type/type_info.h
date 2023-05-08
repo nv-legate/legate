@@ -26,6 +26,8 @@
 
 namespace legate {
 
+class BufferBuilder;
+
 /**
  * @ingroup types
  * @brief Enum for reduction operator kinds
@@ -76,6 +78,8 @@ class Type {
  protected:
   Type(Code code);
 
+  virtual bool equal(const Type& other) const = 0;
+
  public:
   virtual ~Type() {}
 
@@ -123,6 +127,13 @@ class Type {
   virtual std::string to_string() const = 0;
 
   /**
+   * @brief Serializes the type into a buffer
+   *
+   * @param buffer A BufferBuilder object to serialize the type into
+   */
+  virtual void pack(BufferBuilder& buffer) const = 0;
+
+  /**
    * @brief Records a reduction operator.
    *
    * The global ID of the reduction operator is issued when that operator is registered
@@ -143,6 +154,31 @@ class Type {
    * @return Global reduction operator ID
    */
   int32_t find_reduction_operator(int32_t op_kind) const;
+
+  /**
+   * @brief Finds the global operator ID for a given reduction operator kind.
+   *
+   * Raises an exception if no reduction operator has been registered for the kind.
+   *
+   * @param op_kind Reduction operator kind
+   *
+   * @return Global reduction operator ID
+   */
+  int32_t find_reduction_operator(ReductionOpKind op_kind) const;
+
+  /**
+   * @brief Equality check between types
+   *
+   * Note that type checks are name-based; two isomorphic fixed-size array types are considered
+   * different if their uids are different (the same applies to struct types).
+   *
+   * @param other Type to compare
+   *
+   * @return true Types are equal
+   * @return false Types are different
+   */
+  bool operator==(const Type& other) const;
+  bool operator!=(const Type& other) const { return !operator==(other); }
 
   const Code code;
 };
@@ -165,6 +201,10 @@ class PrimitiveType : public Type {
   bool variable_size() const override { return false; }
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
+  void pack(BufferBuilder& buffer) const override;
+
+ private:
+  bool equal(const Type& other) const override;
 
  private:
   const uint32_t size_;
@@ -183,6 +223,10 @@ class StringType : public Type {
   int32_t uid() const override;
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
+  void pack(BufferBuilder& buffer) const override;
+
+ private:
+  bool equal(const Type& other) const override;
 };
 
 /**
@@ -217,6 +261,8 @@ class FixedArrayType : public ExtensionType {
   bool variable_size() const override { return false; }
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
+  void pack(BufferBuilder& buffer) const override;
+
   /**
    * @brief Returns the number of elements
    *
@@ -229,6 +275,9 @@ class FixedArrayType : public ExtensionType {
    * @return Element type
    */
   const Type& element_type() const { return *element_type_; }
+
+ private:
+  bool equal(const Type& other) const override;
 
  private:
   const std::unique_ptr<Type> element_type_;
@@ -258,6 +307,8 @@ class StructType : public ExtensionType {
   bool variable_size() const override { return false; }
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
+  void pack(BufferBuilder& buffer) const override;
+
   /**
    * @brief Returns the number of fields
    *
@@ -279,6 +330,9 @@ class StructType : public ExtensionType {
    * @return false Fields are compact
    */
   bool aligned() const { return aligned_; }
+
+ private:
+  bool equal(const Type& other) const override;
 
  private:
   bool aligned_;
@@ -334,5 +388,117 @@ std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_typ
 std::ostream& operator<<(std::ostream&, const Type::Code&);
 
 std::ostream& operator<<(std::ostream&, const Type&);
+
+/**
+ * @ingroup types
+ * @brief Creates a boolean type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> bool_();
+
+/**
+ * @ingroup types
+ * @brief Creates a 8-bit signed integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> int8();
+
+/**
+ * @ingroup types
+ * @brief Creates a 16-bit signed integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> int16();
+
+/**
+ * @ingroup types
+ * @brief Creates a 32-bit signed integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> int32();
+
+/**
+ * @ingroup types
+ * @brief Creates a 64-bit signed integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> int64();
+
+/**
+ * @ingroup types
+ * @brief Creates a 8-bit unsigned integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> uint8();
+
+/**
+ * @ingroup types
+ * @brief Creates a 16-bit unsigned integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> uint16();
+
+/**
+ * @ingroup types
+ * @brief Creates a 32-bit unsigned integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> uint32();
+
+/**
+ * @ingroup types
+ * @brief Creates a 64-bit unsigned integer type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> uint64();
+
+/**
+ * @ingroup types
+ * @brief Creates a half-precision floating point type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> float16();
+
+/**
+ * @ingroup types
+ * @brief Creates a single-precision floating point type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> float32();
+
+/**
+ * @ingroup types
+ * @brief Creates a double-precision floating point type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> float64();
+
+/**
+ * @ingroup types
+ * @brief Creates a single-precision complex number type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> complex64();
+
+/**
+ * @ingroup types
+ * @brief Creates a double-precision complex number type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> complex128();
 
 }  // namespace legate

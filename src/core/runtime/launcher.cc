@@ -34,6 +34,7 @@ TaskLauncher::TaskLauncher(LibraryContext* library, int64_t task_id, int64_t tag
   req_analyzer_ = new RequirementAnalyzer();
   out_analyzer_ = new OutputRequirementAnalyzer();
   buffer_       = new BufferBuilder();
+  mapper_arg_   = new BufferBuilder();
 }
 
 TaskLauncher::~TaskLauncher()
@@ -45,6 +46,7 @@ TaskLauncher::~TaskLauncher()
 
   delete req_analyzer_;
   delete buffer_;
+  delete mapper_arg_;
 }
 
 int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
@@ -157,6 +159,13 @@ void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
   for (auto& arg : args) arg->pack(*buffer_);
 }
 
+void TaskLauncher::pack_mapper_arg()
+{
+  Runtime::get_runtime()->get_machine().pack(*mapper_arg_);
+  // TODO: Generate the right sharding functor id
+  mapper_arg_->pack<uint32_t>(0);
+}
+
 std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
 {
   // Coalesce region requirements before packing task arguments
@@ -168,15 +177,21 @@ std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
   pack_args(outputs_);
   pack_args(reductions_);
   pack_args(scalars_);
+  // can_raise_exception
   buffer_->pack<bool>(false);
+  // insert_barrier
   buffer_->pack<bool>(false);
+  // # communicators
   buffer_->pack<uint32_t>(0);
+
+  pack_mapper_arg();
 
   auto single_task = std::make_unique<Legion::TaskLauncher>(legion_task_id(),
                                                             buffer_->to_legion_buffer(),
                                                             Legion::Predicate::TRUE_PRED,
                                                             legion_mapper_id(),
-                                                            tag_);
+                                                            tag_,
+                                                            mapper_arg_->to_legion_buffer());
   for (auto& future : futures_) single_task->add_future(future);
 
   req_analyzer_->populate_launcher(single_task.get());
@@ -197,9 +212,14 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
   pack_args(outputs_);
   pack_args(reductions_);
   pack_args(scalars_);
+  // can_raise_exception
   buffer_->pack<bool>(false);
+  // insert_barrier
   buffer_->pack<bool>(false);
+  // # communicators
   buffer_->pack<uint32_t>(0);
+
+  pack_mapper_arg();
 
   auto index_task = std::make_unique<Legion::IndexTaskLauncher>(legion_task_id(),
                                                                 launch_domain,
@@ -208,7 +228,8 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
                                                                 Legion::Predicate::TRUE_PRED,
                                                                 false /*must*/,
                                                                 legion_mapper_id(),
-                                                                tag_);
+                                                                tag_,
+                                                                mapper_arg_->to_legion_buffer());
   for (auto& future : futures_) index_task->add_future(future);
   for (auto& future_map : future_maps_) index_task->point_futures.push_back(future_map);
 
@@ -226,9 +247,10 @@ void TaskLauncher::bind_region_fields_to_unbound_stores()
 #ifdef DEBUG_LEGATE
     assert(arg->requirement_index() != -1U);
 #endif
-    auto* store       = arg->store();
-    auto& req         = output_requirements_[arg->requirement_index()];
-    auto region_field = runtime->import_region_field(req.parent, arg->field_id(), store->code());
+    auto* store = arg->store();
+    auto& req   = output_requirements_[arg->requirement_index()];
+    auto region_field =
+      runtime->import_region_field(req.parent, arg->field_id(), store->type().size());
     store->set_region_field(std::move(region_field));
   }
 }
