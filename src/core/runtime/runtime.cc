@@ -315,10 +315,8 @@ void register_builtin_reduction_ops()
 
   register_legate_core_sharding_functors(legion_runtime, core_lib);
 
-  if (!Core::standalone) {
-    Core::retrieve_tunable(Legion::Runtime::get_context(), legion_runtime, core_lib);
-    Runtime::get_runtime()->initialize_toplevel_machine();
-  }
+  if (!Core::standalone)
+    Runtime::get_runtime()->post_startup_initialization(Legion::Runtime::get_context());
 }
 
 /*static*/ void core_library_bootstrapping_callback(Legion::Machine machine,
