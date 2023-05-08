@@ -296,8 +296,12 @@ void ManualTask::add_store(std::vector<StoreArg>& store_args,
   auto store_impl       = store.impl();
   auto partition_symbol = declare_partition();
   store_args.push_back(StoreArg(store_impl.get(), partition_symbol));
-  strategy_->insert(partition_symbol, std::move(partition));
   all_stores_.insert(std::move(store_impl));
+  if (store.unbound()) {
+    auto field_space = Runtime::get_runtime()->create_field_space();
+    strategy_->insert(partition_symbol, std::move(partition), field_space);
+  } else
+    strategy_->insert(partition_symbol, std::move(partition));
 }
 
 void ManualTask::launch(Strategy*) { Task::launch(strategy_.get()); }
