@@ -203,6 +203,9 @@ class Runtime {
                                                     const Legion::IndexPartition& index_partition);
   Legion::Future create_future(const void* data, size_t datalen) const;
   Legion::FieldID allocate_field(const Legion::FieldSpace& field_space, size_t field_size);
+  Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
+                                 Legion::FieldID field_id,
+                                 size_t field_size);
   Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
 
  public:

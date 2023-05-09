@@ -341,12 +341,29 @@ void register_builtin_reduction_ops()
 ////////////////////////////////////////////////////
 
 class RegionManager {
+ private:
+  struct ManagerEntry {
+    static constexpr Legion::FieldID FIELD_ID_BASE = 10000;
+    static constexpr int32_t MAX_NUM_FIELDS = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
+
+    ManagerEntry(const Legion::LogicalRegion& _region)
+      : region(_region), next_field_id(FIELD_ID_BASE)
+    {
+    }
+    bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
+    Legion::FieldID get_next_field_id() { return next_field_id++; }
+
+    Legion::LogicalRegion region;
+    Legion::FieldID next_field_id;
+  };
+
  public:
   RegionManager(Runtime* runtime, const Domain& shape);
 
  private:
-  Legion::LogicalRegion active_region() const;
-  void create_region();
+  const ManagerEntry& active_entry() const { return entries_.back(); }
+  ManagerEntry& active_entry() { return entries_.back(); }
+  void push_entry();
 
  public:
   bool has_space() const;
@@ -356,7 +373,7 @@ class RegionManager {
  private:
   Runtime* runtime_;
   Domain shape_;
-  std::vector<Legion::LogicalRegion> regions_{};
+  std::vector<ManagerEntry> entries_{};
 };
 
 RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
@@ -364,28 +381,27 @@ RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
 {
 }
 
-Legion::LogicalRegion RegionManager::active_region() const { return regions_.back(); }
-
-void RegionManager::create_region()
+void RegionManager::push_entry()
 {
   auto is = runtime_->find_or_create_index_space(shape_);
   auto fs = runtime_->create_field_space();
-  regions_.push_back(runtime_->create_region(is, fs));
+  entries_.emplace_back(runtime_->create_region(is, fs));
 }
 
-bool RegionManager::has_space() const { return regions_.size() > 0; }
+bool RegionManager::has_space() const { return !entries_.empty() && active_entry().has_space(); }
 
 std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(size_t field_size)
 {
-  if (!has_space()) create_region();
-  auto lr  = active_region();
-  auto fid = runtime_->allocate_field(lr.get_field_space(), field_size);
-  return std::make_pair(lr, fid);
+  if (!has_space()) push_entry();
+  auto& entry = active_entry();
+  auto fid =
+    runtime_->allocate_field(entry.region.get_field_space(), entry.get_next_field_id(), field_size);
+  return std::make_pair(entry.region, fid);
 }
 
 void RegionManager::import_region(const Legion::LogicalRegion& region)
 {
-  regions_.push_back(region);
+  entries_.emplace_back(region);
 }
 
 ////////////////////////////////////////////////////
@@ -425,11 +441,9 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
     free_fields_.pop_front();
     rf = new LogicalRegionField(field.first, field.second);
   } else {
-    auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
-    Legion::LogicalRegion lr;
-    Legion::FieldID fid;
-    std::tie(lr, fid) = rgn_mgr->allocate_field(field_size_);
-    rf                = new LogicalRegionField(lr, fid);
+    auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_);
+    auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
+    rf             = new LogicalRegionField(lr, fid);
     log_legate.debug("Field %u created in field manager %p", fid, this);
   }
   assert(rf != nullptr);
@@ -941,6 +955,15 @@ Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space, s
   assert(nullptr != legion_context_);
   auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
   return allocator.allocate_field(field_size);
+}
+
+Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space,
+                                        Legion::FieldID field_id,
+                                        size_t field_size)
+{
+  assert(nullptr != legion_context_);
+  auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
+  return allocator.allocate_field(field_size, field_id);
 }
 
 Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space) const
