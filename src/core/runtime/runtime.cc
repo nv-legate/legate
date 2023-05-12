@@ -56,10 +56,6 @@ static const char* const core_library_name = "legate.core";
 
 /*static*/ bool Core::has_socket_mem = false;
 
-/*static*/ bool Core::standalone = false;
-
-/*static*/ LegateMainFnPtr Core::main_fn = nullptr;
-
 static const std::string EMPTY_STRING = "";
 
 /*static*/ void Core::parse_config(void)
@@ -100,24 +96,6 @@ static const std::string EMPTY_STRING = "";
   parse_variable("LEGATE_EMPTY_TASK", use_empty_task);
   parse_variable("LEGATE_SYNC_STREAM_VIEW", synchronize_stream_view);
   parse_variable("LEGATE_LOG_MAPPING", log_mapping_decisions);
-}
-
-static void toplevel_task(const Legion::Task* task,
-                          const std::vector<Legion::PhysicalRegion>& regions,
-                          Legion::Context ctx,
-                          Legion::Runtime* legion_runtime)
-{
-  auto runtime = Runtime::get_runtime();
-  runtime->post_startup_initialization(ctx);
-
-  if (nullptr == Core::main_fn) {
-    log_legate.error(
-      "No main function was provided. Please register one with 'legate::set_main_function'.");
-    LEGATE_ABORT;
-  }
-
-  auto args = Legion::Runtime::get_input_args();
-  Core::main_fn(args.argc, args.argv);
 }
 
 static void extract_scalar_task(
@@ -193,11 +171,6 @@ void register_legate_core_tasks(Legion::Machine machine,
                                 Legion::Runtime* runtime,
                                 const LibraryContext* context)
 {
-  auto toplevel_task_id          = context->get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID);
-  const char* toplevel_task_name = "Legate Core Toplevel Task";
-  runtime->attach_name(
-    toplevel_task_id, toplevel_task_name, false /*mutable*/, true /*local only*/);
-
   auto extract_scalar_task_id          = context->get_task_id(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID);
   const char* extract_scalar_task_name = "core::extract_scalar";
   runtime->attach_name(
@@ -211,16 +184,6 @@ void register_legate_core_tasks(Legion::Machine machine,
     return registrar;
   };
 
-  // Register the task variant for both CPUs and GPUs
-  {
-    Legion::TaskVariantRegistrar registrar(toplevel_task_id, toplevel_task_name);
-    registrar.add_constraint(Legion::ProcessorConstraint(Processor::LOC_PROC));
-    registrar.set_leaf(false);
-    registrar.set_inner(false);
-    registrar.set_replicable(true);
-    registrar.global_registration = false;
-    runtime->register_task_variant<toplevel_task>(registrar, LEGATE_CPU_VARIANT);
-  }
   // Register the task variants
   auto register_extract_scalar = [&](auto proc_kind, auto variant_id) {
     auto registrar = make_registrar(extract_scalar_task_id, extract_scalar_task_name, proc_kind);
@@ -289,9 +252,9 @@ void register_builtin_reduction_ops()
   RECORD_INT(XOR_LT)
 }
 
-/*static*/ void core_library_registration_callback(Legion::Machine machine,
-                                                   Legion::Runtime* legion_runtime,
-                                                   const std::set<Processor>& local_procs)
+/*static*/ void core_library_registration(Legion::Machine machine,
+                                          Legion::Runtime* legion_runtime,
+                                          const std::set<Processor>& local_procs)
 {
   Runtime::create_runtime(legion_runtime);
 
@@ -316,24 +279,22 @@ void register_builtin_reduction_ops()
   register_legate_core_projection_functors(legion_runtime, core_lib);
 
   register_legate_core_sharding_functors(legion_runtime, core_lib);
+}
 
-  if (!Core::standalone)
-    Runtime::get_runtime()->post_startup_initialization(Legion::Runtime::get_context());
+/*static*/ void core_library_registration_callback(Legion::Machine machine,
+                                                   Legion::Runtime* legion_runtime,
+                                                   const std::set<Processor>& local_procs)
+{
+  core_library_registration(machine, legion_runtime, local_procs);
+
+  Runtime::get_runtime()->post_startup_initialization(Legion::Runtime::get_context());
 }
 
 /*static*/ void core_library_bootstrapping_callback(Legion::Machine machine,
                                                     Legion::Runtime* legion_runtime,
                                                     const std::set<Processor>& local_procs)
 {
-  Core::standalone = true;
-
-  core_library_registration_callback(machine, legion_runtime, local_procs);
-
-  auto runtime = Runtime::get_runtime();
-
-  auto core_lib = runtime->find_library(core_library_name);
-  legion_runtime->set_top_level_task_id(core_lib->get_task_id(LEGATE_CORE_TOPLEVEL_TASK_ID));
-  legion_runtime->set_top_level_task_mapper_id(core_lib->get_mapper_id());
+  core_library_registration(machine, legion_runtime, local_procs);
 
   Core::parse_config();
 }
@@ -1113,7 +1074,36 @@ Legion::ProjectionID Runtime::get_delinearizing_projection()
 
 /*static*/ int32_t Runtime::start(int32_t argc, char** argv)
 {
-  return Legion::Runtime::start(argc, argv);
+  auto result = Legion::Runtime::start(argc, argv, true);
+  if (result != 0) {
+    log_legate.error("Legion Runtime failed to start.");
+    return result;
+  }
+
+  // Get the runtime now that we've started it
+  auto runtime = Legion::Runtime::get_runtime();
+
+  // Then we can make this thread into an implicit top-level task
+  const char* toplevel_task_name = "Legate Core Toplevel Task";
+  auto ctx                       = runtime->begin_implicit_task(LEGATE_CORE_TOPLEVEL_TASK_ID,
+                                          0 /*mapper id*/,
+                                          Processor::LOC_PROC,
+                                          toplevel_task_name,
+                                          true /*control replicable*/);
+  Runtime::get_runtime()->post_startup_initialization(ctx);
+
+  return result;
+}
+
+int32_t Runtime::wait_for_shutdown()
+{
+  // Mark that we are done excecuting the top-level task
+  // After this call the context is no longer valid
+  Legion::Runtime::get_runtime()->finish_implicit_task(legion_context_);
+
+  // The previous call is asynchronous so we still need to
+  // wait for the shutdown of the runtime to complete
+  return Legion::Runtime::wait_for_shutdown();
 }
 
 /*static*/ Runtime* Runtime::get_runtime() { return Runtime::runtime_; }
@@ -1125,9 +1115,9 @@ Legion::ProjectionID Runtime::get_delinearizing_projection()
 
 void initialize(int32_t argc, char** argv) { Runtime::initialize(argc, argv); }
 
-void set_main_function(LegateMainFnPtr main_fn) { Core::main_fn = main_fn; }
-
 int32_t start(int32_t argc, char** argv) { return Runtime::start(argc, argv); }
+
+int32_t wait_for_shutdown() { return Runtime::get_runtime()->wait_for_shutdown(); }
 
 ProvenanceManager::ProvenanceManager() { provenance_.push_back(EMPTY_STRING); }
 

@@ -38,7 +38,7 @@ void prepare()
 
 }  // namespace
 
-void test_region_manager(int32_t argc, char** argv)
+TEST(Integration, RegionManager)
 {
   legate::Core::perform_registration<prepare>();
 
@@ -57,10 +57,3 @@ void test_region_manager(int32_t argc, char** argv)
 }
 
 }  // namespace region_manager
-
-TEST(Integration, RegionManager)
-{
-  legate::initialize(0, NULL);
-  legate::set_main_function(region_manager::test_region_manager);
-  legate::start(0, NULL);
-}

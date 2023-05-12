@@ -129,7 +129,7 @@ void print_stores(legate::LibraryContext* context,
   logger.print() << ss.str();
 }
 
-void legate_main(int32_t argc, char** argv)
+TEST(Integration, ManualScalarOut)
 {
   legate::Core::perform_registration<register_tasks>();
 
@@ -148,10 +148,3 @@ void legate_main(int32_t argc, char** argv)
 }
 
 }  // namespace multiscalarout
-
-TEST(Integration, ManualScalarOut)
-{
-  legate::initialize(0, NULL);
-  legate::set_main_function(multiscalarout::legate_main);
-  legate::start(0, NULL);
-}

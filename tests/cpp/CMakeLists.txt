@@ -35,12 +35,13 @@ find_package(legate_core REQUIRED)
 
 enable_testing()
 
+file(GLOB main_SRC ${PROJECT_SOURCE_DIR}/main.cc)
 file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
 file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
 
-add_executable(cpp_tests ${integration_SRC} ${unit_SRC})
+add_executable(cpp_tests ${main_SRC} ${integration_SRC} ${unit_SRC})
 
-target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest_main)
+target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest)
 
 include(GoogleTest)
 gtest_discover_tests(cpp_tests)

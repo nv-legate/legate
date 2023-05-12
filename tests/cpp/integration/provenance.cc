@@ -130,7 +130,7 @@ void test_manual_tracker(legate::LibraryContext* context)
   runtime->submit(std::move(task));
 }
 
-void legate_main(int32_t argc, char** argv)
+TEST(Integration, Provenance)
 {
   legate::Core::perform_registration<register_tasks>();
 
@@ -148,10 +148,3 @@ void legate_main(int32_t argc, char** argv)
 }
 
 }  // namespace provenance
-
-TEST(Integration, Provenance)
-{
-  legate::initialize(0, NULL);
-  legate::set_main_function(provenance::legate_main);
-  legate::start(0, NULL);
-}

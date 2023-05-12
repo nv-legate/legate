@@ -87,8 +87,6 @@ struct Core {
   static bool synchronize_stream_view;
   static bool log_mapping_decisions;
   static bool has_socket_mem;
-  static bool standalone;
-  static LegateMainFnPtr main_fn;
 };
 
 class AutoTask;
@@ -264,6 +262,7 @@ class Runtime {
  public:
   static Runtime* get_runtime();
   static void create_runtime(Legion::Runtime* legion_runtime);
+  int32_t wait_for_shutdown();
 
  private:
   static Runtime* runtime_;
@@ -314,9 +313,9 @@ class Runtime {
 
 void initialize(int32_t argc, char** argv);
 
-void set_main_function(LegateMainFnPtr p_main);
-
 int32_t start(int32_t argc, char** argv);
+
+int32_t wait_for_shutdown();
 
 struct ProvenanceTracker {
   ProvenanceTracker(const std::string& p);

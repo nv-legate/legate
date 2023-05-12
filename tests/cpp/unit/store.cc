@@ -8,7 +8,7 @@
 
 namespace unit {
 
-void store_creation(int32_t argc, char** argv)
+TEST(Store, Creation)
 {
   // Bound
   {
@@ -33,7 +33,7 @@ void store_creation(int32_t argc, char** argv)
   }
 }
 
-void store_valid_transform(int32_t argc, char** argv)
+TEST(Store, Transform)
 {
   // Bound
   auto runtime = legate::Runtime::get_runtime();
@@ -63,7 +63,7 @@ void store_valid_transform(int32_t argc, char** argv)
   EXPECT_TRUE(delinearized.transformed());
 }
 
-void store_invalid_transform(int32_t argc, char** argv)
+TEST(Store, InvalidTransform)
 {
   // Bound
   {
@@ -101,24 +101,3 @@ void store_invalid_transform(int32_t argc, char** argv)
 }
 
 }  // namespace unit
-
-TEST(Store, Creation)
-{
-  legate::initialize(0, NULL);
-  legate::set_main_function(unit::store_creation);
-  legate::start(0, NULL);
-}
-
-TEST(Store, Transform)
-{
-  legate::initialize(0, NULL);
-  legate::set_main_function(unit::store_valid_transform);
-  legate::start(0, NULL);
-}
-
-TEST(Store, InvalidTransform)
-{
-  legate::initialize(0, NULL);
-  legate::set_main_function(unit::store_invalid_transform);
-  legate::start(0, NULL);
-}

@@ -81,7 +81,7 @@ void print_store(legate::LibraryContext* context, legate::LogicalStore store)
   logger.print() << ss.str();
 }
 
-void legate_main(int32_t argc, char** argv)
+TEST(Integration, ManualSimple)
 {
   legate::Core::perform_registration<register_tasks>();
 
@@ -96,10 +96,3 @@ void legate_main(int32_t argc, char** argv)
 }
 
 }  // namespace manualsimple
-
-TEST(Integration, ManualSimple)
-{
-  legate::initialize(0, NULL);
-  legate::set_main_function(manualsimple::legate_main);
-  legate::start(0, NULL);
-}
