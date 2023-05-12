@@ -739,14 +739,19 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
   return std::unique_ptr<ManualTask>(task);
 }
 
+void Runtime::flush_scheduling_window()
+{
+  if (operations_.size() == 0) return;
+
+  std::vector<std::unique_ptr<Operation>> to_schedule;
+  to_schedule.swap(operations_);
+  schedule(std::move(to_schedule));
+}
+
 void Runtime::submit(std::unique_ptr<Operation> op)
 {
   operations_.push_back(std::move(op));
-  if (operations_.size() >= window_size_) {
-    std::vector<std::unique_ptr<Operation>> to_schedule;
-    to_schedule.swap(operations_);
-    schedule(std::move(to_schedule));
-  }
+  if (operations_.size() >= window_size_) { flush_scheduling_window(); }
 }
 
 void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)

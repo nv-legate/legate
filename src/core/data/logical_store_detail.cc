@@ -184,15 +184,24 @@ LogicalStore::~LogicalStore()
 
 bool LogicalStore::unbound() const { return storage_->unbound(); }
 
-const Shape& LogicalStore::extents() const { return extents_; }
+const Shape& LogicalStore::extents() const
+{
+  if (extents_.empty()) {
+    Runtime::get_runtime()->flush_scheduling_window();
+    if (extents_.empty()) {
+      throw std::invalid_argument("Illegal to access an uninitialized unbound store");
+    }
+  }
+  return extents_;
+}
 
-size_t LogicalStore::volume() const { return extents_.volume(); }
+size_t LogicalStore::volume() const { return extents().volume(); }
 
 size_t LogicalStore::storage_size() const { return storage_->volume() * type().size(); }
 
 int32_t LogicalStore::dim() const
 {
-  return unbound() ? storage_->dim() : static_cast<int32_t>(extents_.size());
+  return unbound() ? storage_->dim() : static_cast<int32_t>(extents().size());
 }
 
 bool LogicalStore::has_scalar_storage() const { return storage_->kind() == Storage::Kind::FUTURE; }
@@ -225,11 +234,11 @@ void LogicalStore::set_future(Legion::Future future)
 std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
 {
   if (extra_dim < 0 || extra_dim > dim()) {
-    log_legate.error("Invalid promotion on dimension %d for a %d-D store", extra_dim, dim());
-    LEGATE_ABORT;
+    throw std::invalid_argument("Invalid promotion on dimension " + std::to_string(extra_dim) +
+                                " for a " + std::to_string(dim()) + "-D store");
   }
 
-  auto new_extents = extents_.insert(extra_dim, dim_size);
+  auto new_extents = extents().insert(extra_dim, dim_size);
   auto transform   = transform_->push(std::make_unique<Promote>(extra_dim, dim_size));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
@@ -237,26 +246,26 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t di
 std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index) const
 {
   if (d < 0 || d >= dim()) {
-    log_legate.error("Invalid projection on dimension %d for a %d-D store", d, dim());
-    LEGATE_ABORT;
-  } else if (index < 0 || index >= extents_[d]) {
-    log_legate.error("Projection index %ld is out of bounds [0, %zd)", index, extents_[d]);
+    throw std::invalid_argument("Invalid projection on dimension " + std::to_string(d) + " for a " +
+                                std::to_string(dim()) + "-D store");
+  } else if (index < 0 || index >= extents()[d]) {
+    throw std::invalid_argument("Projection index " + std::to_string(index) +
+                                " is out of bounds [0, " + std::to_string(extents()[d]) + ")");
   }
 
-  auto new_extents = extents_.remove(d);
+  auto new_extents = extents().remove(d);
   auto transform   = transform_->push(std::make_unique<Project>(d, index));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
 std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(Shape tile_shape)
 {
-  if (tile_shape.size() != extents_.size()) {
-    log_legate.error("Incompatible tile shape: expected a %zd-tuple, got a %zd-tuple",
-                     extents_.size(),
-                     tile_shape.size());
-    LEGATE_ABORT;
+  if (tile_shape.size() != extents().size()) {
+    throw std::invalid_argument("Incompatible tile shape: expected a " +
+                                std::to_string(extents().size()) + "-tuple, got a " +
+                                std::to_string(tile_shape.size()) + "-tuple");
   }
-  Shape color_shape(extents_);
+  Shape color_shape(extents());
   // TODO: This better use std::transform
   for (size_t idx = 0; idx < tile_shape.size(); ++idx)
     color_shape[idx] = (color_shape[idx] + tile_shape[idx] - 1) / tile_shape[idx];
@@ -264,31 +273,93 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(Shape t
   return create_partition(std::move(partition));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, std::slice sl) const
+std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t idx, std::slice sl) const
 {
-  log_legate.error("Slice not implemented");
-  return nullptr;
+  if (idx < 0 || idx >= dim()) {
+    throw std::invalid_argument("Invalid slicing of dimension " + std::to_string(idx) + " for a " +
+                                std::to_string(dim()) + "-D store");
+  }
+
+  auto start = sl.start();
+  auto stop  = sl.size();
+  auto step  = sl.stride();
+  auto size  = extents()[idx];
+  if (start < 0) { start = start + size; }
+  if (stop < 0) { start = start + size; }
+
+  if (step != 1) {
+    throw std::invalid_argument("Unsupported slicing step: " + std::to_string(step));
+  } else if (start >= size || stop > size) {
+    throw std::invalid_argument("Out-of-bounds slicing on dimension " + std::to_string(idx) +
+                                " for a store");
+  }
+
+  auto old_extents = extents();
+  auto new_extents = Shape();
+  for (int i = 0; i < idx; i++) { new_extents.append_inplace(old_extents[i]); }
+  new_extents.append_inplace(stop - start);
+  for (int i = idx + 1; i < old_extents.size(); i++) { new_extents.append_inplace(old_extents[i]); }
+
+  auto transform =
+    (start == 0) ? transform_ : transform_->push(std::make_unique<Shift>(idx, -start));
+  return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
 std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axes) const
 {
-  log_legate.error("Transpose not implemented");
-  return nullptr;
+  if (axes.size() != dim()) {
+    throw std::invalid_argument("Dimension Mismatch: expected " + std::to_string(dim()) +
+                                " axes, but got " + std::to_string(axes.size()));
+  } else if (axes.size() != (std::set<int32_t>(axes.begin(), axes.end())).size()) {
+    throw std::invalid_argument("Duplicate axes found");
+  }
+
+  for (int i = 0; i < axes.size(); i++) {
+    if (axes[i] < 0 || axes[i] >= dim()) {
+      throw std::invalid_argument("Invalid axis " + std::to_string(axes[i]) + " for a " +
+                                  std::to_string(dim()) + "-D store");
+    }
+  }
+
+  auto old_extents = extents();
+  auto new_extents = Shape();
+  for (int i = 0; i < axes.size(); i++) { new_extents.append_inplace(old_extents[axes[i]]); }
+
+  auto transform = transform_->push(std::make_unique<Transpose>(std::move(axes)));
+  return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim,
+std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t idx,
                                                         std::vector<int64_t>&& sizes) const
 {
-  log_legate.error("Delinearize not implemented");
-  return nullptr;
+  if (idx < 0 || idx >= dim()) {
+    throw std::invalid_argument("Invalid delinearization on dimension " + std::to_string(idx) +
+                                " for a " + std::to_string(dim()) + "-D store");
+  }
+
+  auto old_shape = extents();
+  int64_t volume = 1;
+  for (int i = 0; i < sizes.size(); i++) { volume *= sizes[i]; }
+
+  if (old_shape[idx] != volume) {
+    throw std::invalid_argument("Dimension of size " + std::to_string(old_shape[idx]) +
+                                " cannot be delinearized into shape with volume " +
+                                std::to_string(volume));
+  }
+
+  auto old_extents = extents();
+  auto new_extents = Shape();
+  for (int i = 0; i < idx; i++) { new_extents.append_inplace(old_extents[i]); }
+  for (int i = 0; i < sizes.size(); i++) { new_extents.append_inplace(sizes[i]); }
+  for (int i = idx + 1; i < old_extents.size(); i++) { new_extents.append_inplace(old_extents[i]); }
+
+  auto transform = transform_->push(std::make_unique<Delinearize>(idx, std::move(sizes)));
+  return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 {
-  if (unbound()) {
-    log_legate.error("Unbound store cannot be inlined mapped");
-    LEGATE_ABORT;
-  }
+  if (unbound()) { throw std::invalid_argument("Unbound store cannot be inlined mapped"); }
   if (nullptr != mapped_) return mapped_;
   if (storage_->kind() == Storage::Kind::FUTURE) {
     // TODO: future wrappers from inline mappings are read-only for now
@@ -378,10 +449,7 @@ void LogicalStore::reset_key_partition() { storage_->reset_key_partition(); }
 std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
   std::shared_ptr<Partition> partition)
 {
-  if (unbound()) {
-    log_legate.error("Unbound store cannot be manually partitioned");
-    LEGATE_ABORT;
-  }
+  if (unbound()) { throw std::invalid_argument("Unbound store cannot be manually partitioned"); }
   // TODO: the partition here should be inverted by the transform
   auto storage_partition = storage_->create_partition(partition);
   return std::make_shared<LogicalStorePartition>(std::move(storage_partition), shared_from_this());
@@ -399,7 +467,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
 std::string LogicalStore::to_string() const
 {
   std::stringstream ss;
-  ss << "Store(" << store_id_ << ") {shape: " << extents_;
+  ss << "Store(" << store_id_ << ") {shape: " << extents();
   if (!transform_->identity())
     ss << ", transform: " << *transform_ << "}";
   else

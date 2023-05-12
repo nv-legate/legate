@@ -184,6 +184,7 @@ class Runtime {
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
+  void flush_scheduling_window();
   void submit(std::unique_ptr<Operation> op);
 
  public:

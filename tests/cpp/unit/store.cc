@@ -58,7 +58,7 @@ TEST(Store, Transform)
   EXPECT_EQ(transposed.extents(), (std::vector<size_t>{3, 4}));
   EXPECT_TRUE(transposed.transformed());
 
-  auto delinearized = store.delinearize(0, {2, 2});
+  auto delinearized = store.delinearize(0, (std::vector<int64_t>{2, 2}));
   EXPECT_EQ(delinearized.extents(), (std::vector<size_t>{2, 2, 3}));
   EXPECT_TRUE(delinearized.transformed());
 }
