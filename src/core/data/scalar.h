@@ -68,6 +68,14 @@ class Scalar {
   template <typename T>
   Scalar(T value);
   /**
+   * @brief Creates an owned scalar from a string. The value from the
+   * original string will be copied.
+   *
+   * @param string A string to create a `Scalar` with
+   */
+  Scalar(const std::string& string);
+
+  /**
    * @brief Creates an owned scalar from a tuple of scalars. The values in the input vector
    * will be copied.
    *

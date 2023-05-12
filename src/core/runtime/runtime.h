@@ -103,6 +103,27 @@ class ResourceConfig;
 class Runtime;
 class Tiling;
 
+class ProvenanceManager {
+ public:
+  ProvenanceManager();
+
+ public:
+  const std::string& get_provenance();
+
+  void set_provenance(const std::string& p);
+
+  void reset_provenance();
+
+  void push_provenance(const std::string& p);
+
+  void pop_provenance();
+
+  void clear_all();
+
+ private:
+  std::vector<std::string> provenance_;
+};
+
 class PartitionManager {
  public:
   PartitionManager(Runtime* runtime, const LibraryContext* context);
@@ -188,6 +209,7 @@ class Runtime {
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
   FieldManager* find_or_create_field_manager(const Legion::Domain& shape, uint32_t field_size);
   PartitionManager* partition_manager() const;
+  ProvenanceManager* provenance_manager() const;
 
  public:
   Legion::IndexSpace find_or_create_index_space(const Legion::Domain& shape);
@@ -256,6 +278,7 @@ class Runtime {
   std::map<FieldManagerKey, FieldManager*> field_managers_;
   std::map<Legion::Domain, RegionManager*> region_managers_;
   PartitionManager* partition_manager_{nullptr};
+  ProvenanceManager* provenance_manager_{nullptr};
 
  private:
   std::map<Legion::Domain, Legion::IndexSpace> index_spaces_;
@@ -295,6 +318,18 @@ void set_main_function(LegateMainFnPtr p_main);
 
 int32_t start(int32_t argc, char** argv);
 
+struct ProvenanceTracker {
+  ProvenanceTracker(const std::string& p);
+  ~ProvenanceTracker();
+  const std::string& get_current_provenance() const;
+};
+
 }  // namespace legate
+
+#define TRACK_PROVENANCE(STMT)                                                               \
+  do {                                                                                       \
+    legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__)); \
+    STMT;                                                                                    \
+  } while (false)
 
 #include "core/runtime/runtime.inl"

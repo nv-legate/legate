@@ -285,6 +285,9 @@ class TaskContext {
   ReturnValues pack_return_values_with_exception(int32_t index,
                                                  const std::string& error_message) const;
 
+ public:
+  const std::string& get_provenance() const;
+
  private:
   std::vector<ReturnValue> get_return_values() const;
 

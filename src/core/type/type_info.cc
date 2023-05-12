@@ -58,6 +58,7 @@ const std::unordered_map<Type::Code, std::string> TYPE_NAMES = {
   {Type::Code::FLOAT64, "float64"},
   {Type::Code::COMPLEX64, "complex64"},
   {Type::Code::COMPLEX128, "complex128"},
+  {Type::Code::STRING, "string"},
 };
 
 const char* _VARIABLE_SIZE_ERROR_MESSAGE = "Variable-size element type cannot be used";
@@ -304,5 +305,7 @@ std::unique_ptr<Type> float64() { return primitive_type(Type::Code::FLOAT64); }
 std::unique_ptr<Type> complex64() { return primitive_type(Type::Code::COMPLEX64); }
 
 std::unique_ptr<Type> complex128() { return primitive_type(Type::Code::COMPLEX128); }
+
+std::unique_ptr<Type> string() { return string_type(); }
 
 }  // namespace legate

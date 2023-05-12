@@ -79,6 +79,8 @@ template <>
 PREFIX constexpr Type::Code legate_type_code_of<complex<float>> = Type::Code::COMPLEX64;
 template <>
 PREFIX constexpr Type::Code legate_type_code_of<complex<double>> = Type::Code::COMPLEX128;
+template <>
+PREFIX constexpr Type::Code legate_type_code_of<std::string> = Type::Code::STRING;
 
 #undef PREFIX
 
@@ -141,6 +143,10 @@ struct LegateTypeOf<Type::Code::COMPLEX64> {
 template <>
 struct LegateTypeOf<Type::Code::COMPLEX128> {
   using type = complex<double>;
+};
+template <>
+struct LegateTypeOf<Type::Code::STRING> {
+  using type = std::string;
 };
 
 /**

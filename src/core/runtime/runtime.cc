@@ -60,6 +60,8 @@ static const char* const core_library_name = "legate.core";
 
 /*static*/ LegateMainFnPtr Core::main_fn = nullptr;
 
+static const std::string EMPTY_STRING = "";
+
 /*static*/ void Core::parse_config(void)
 {
 #ifndef LEGATE_USE_CUDA
@@ -753,9 +755,10 @@ bool Runtime::is_in_callback() const { return in_callback_; }
 
 void Runtime::post_startup_initialization(Legion::Context legion_context)
 {
-  legion_context_    = legion_context;
-  core_context_      = find_library(core_library_name);
-  partition_manager_ = new PartitionManager(this, core_context_);
+  legion_context_     = legion_context;
+  core_context_       = find_library(core_library_name);
+  partition_manager_  = new PartitionManager(this, core_context_);
+  provenance_manager_ = new ProvenanceManager();
   Core::retrieve_tunable(legion_context_, legion_runtime_, core_context_);
   initialize_toplevel_machine();
 }
@@ -900,6 +903,8 @@ FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, uint32_
 }
 
 PartitionManager* Runtime::partition_manager() const { return partition_manager_; }
+
+ProvenanceManager* Runtime::provenance_manager() const { return provenance_manager_; }
 
 Legion::IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
 {
@@ -1123,6 +1128,65 @@ void initialize(int32_t argc, char** argv) { Runtime::initialize(argc, argv); }
 void set_main_function(LegateMainFnPtr main_fn) { Core::main_fn = main_fn; }
 
 int32_t start(int32_t argc, char** argv) { return Runtime::start(argc, argv); }
+
+ProvenanceManager::ProvenanceManager() { provenance_.push_back(EMPTY_STRING); }
+
+const std::string& ProvenanceManager::get_provenance()
+{
+#ifdef DEBUG_LEGATE
+  assert(provenance_.size() > 0);
+#endif
+  return provenance_.back();
+}
+
+void ProvenanceManager::set_provenance(const std::string& p)
+{
+#ifdef DEBUG_LEGATE
+  assert(provenance_.size() > 0);
+#endif
+  provenance_.back() = p;
+}
+
+void ProvenanceManager::reset_provenance()
+{
+#ifdef DEBUG_LEGATE
+  assert(provenance_.size() > 0);
+#endif
+  provenance_.back() = EMPTY_STRING;
+}
+
+void ProvenanceManager::push_provenance(const std::string& p) { provenance_.push_back(p); }
+
+void ProvenanceManager::pop_provenance()
+{
+  if (provenance_.size() <= 1) {
+    throw std::underflow_error("can't pop from an empty provenance stack");
+  }
+  provenance_.pop_back();
+}
+
+void ProvenanceManager::clear_all()
+{
+  provenance_.clear();
+  provenance_.push_back(EMPTY_STRING);
+}
+
+ProvenanceTracker::ProvenanceTracker(const std::string& p)
+{
+  auto* runtime = Runtime::get_runtime();
+  runtime->provenance_manager()->push_provenance(p);
+}
+
+ProvenanceTracker::~ProvenanceTracker()
+{
+  auto* runtime = Runtime::get_runtime();
+  runtime->provenance_manager()->pop_provenance();
+}
+
+const std::string& ProvenanceTracker::get_current_provenance() const
+{
+  return Runtime::get_runtime()->provenance_manager()->get_provenance();
+}
 
 }  // namespace legate
 

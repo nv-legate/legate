@@ -501,4 +501,12 @@ std::unique_ptr<Type> complex64();
  */
 std::unique_ptr<Type> complex128();
 
+/**
+ * @ingroup types
+ * @brief Creates a string type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> string();
+
 }  // namespace legate

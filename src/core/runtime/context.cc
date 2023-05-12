@@ -296,4 +296,6 @@ std::vector<ReturnValue> TaskContext::get_return_values() const
   return std::move(return_values);
 }
 
+const std::string& TaskContext::get_provenance() const { return task_->get_provenance_string(); }
+
 }  // namespace legate

@@ -25,6 +25,15 @@ Scalar::Scalar(std::unique_ptr<Type> type, const void* data) : type_(std::move(t
 {
 }
 
+Scalar::Scalar(const std::string& string) : own_(true), type_(string_type())
+{
+  auto data_size                  = sizeof(char) * string.size();
+  auto buffer                     = malloc(sizeof(uint32_t) + data_size);
+  *static_cast<uint32_t*>(buffer) = string.size();
+  memcpy(static_cast<int8_t*>(buffer) + sizeof(uint32_t), string.data(), data_size);
+  data_ = buffer;
+}
+
 Scalar::~Scalar()
 {
   if (own_)
