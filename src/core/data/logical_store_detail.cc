@@ -154,12 +154,12 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
     storage_(std::forward<decltype(storage_)>(storage)),
     transform_(std::make_shared<TransformStack>())
 {
+  if (!unbound()) extents_ = storage_->extents();
 #ifdef DEBUG_LEGATE
   assert(transform_ != nullptr);
 
   log_legate.debug() << "Create " << to_string();
 #endif
-  if (!unbound()) extents_ = storage_->extents();
 }
 
 LogicalStore::LogicalStore(Shape&& extents,
