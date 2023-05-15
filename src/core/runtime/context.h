@@ -114,6 +114,9 @@ class LibraryContext {
   bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
  public:
+  int64_t get_new_task_id() { return task_scope_.generate_id(); }
+
+ public:
   void record_task_name(int64_t local_task_id, const std::string& task_name);
   /**
    * @brief Returns the name of a task

@@ -50,6 +50,11 @@ class ResourceIdScope {
     assert(in_scope(resource_id));
     return resource_id - base_;
   }
+  int64_t generate_id()
+  {
+    if (next_ == size_) throw std::overflow_error("The scope ran out of IDs");
+    return next_++;
+  }
 
  public:
   bool valid() const { return base_ != -1; }
@@ -62,6 +67,7 @@ class ResourceIdScope {
  private:
   int64_t base_{-1};
   int64_t size_{-1};
+  int64_t next_{0};
 };
 
 }  // namespace legate
