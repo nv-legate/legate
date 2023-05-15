@@ -44,6 +44,18 @@ Processor::Kind to_kind(TaskTarget target)
   return Processor::Kind::LOC_PROC;
 }
 
+LegateVariantCode to_task_variant(TaskTarget target)
+{
+  switch (target) {
+    case TaskTarget::GPU: return LEGATE_GPU_VARIANT;
+    case TaskTarget::OMP: return LEGATE_OMP_VARIANT;
+    case TaskTarget::CPU: return LEGATE_CPU_VARIANT;
+    default: LEGATE_ABORT;
+  }
+  assert(false);
+  return LEGATE_CPU_VARIANT;
+}
+
 std::ostream& operator<<(std::ostream& stream, const TaskTarget& target)
 {
   switch (target) {
@@ -63,6 +75,10 @@ std::ostream& operator<<(std::ostream& stream, const TaskTarget& target)
   return stream;
 }
 
+/////////////////////////////////////
+// legate::mapping::ProcessorRange
+/////////////////////////////////////
+
 ProcessorRange::ProcessorRange(uint32_t _low, uint32_t _high, uint32_t _per_node_count)
   : low(_low), high(_high), per_node_count(_per_node_count)
 {
@@ -80,6 +96,13 @@ ProcessorRange ProcessorRange::operator&(const ProcessorRange& other) const
   return ProcessorRange(std::max(low, other.low), std::min(high, other.high), per_node_count);
 }
 
+bool ProcessorRange::operator==(const ProcessorRange& other) const
+{
+  return other.low == low && other.high == high && other.per_node_count == per_node_count;
+}
+
+bool ProcessorRange::operator!=(const ProcessorRange& other) const { return !operator==(other); }
+
 uint32_t ProcessorRange::count() const { return high - low; }
 
 bool ProcessorRange::empty() const { return high <= low; }
@@ -91,12 +114,29 @@ std::string ProcessorRange::to_string() const
   return ss.str();
 }
 
+std::pair<uint32_t, uint32_t> ProcessorRange::get_node_range() const
+{
+  if (empty()) throw std::runtime_error("Illegal to get a node range of an empty processor range");
+  return std::make_pair(low / per_node_count, high / per_node_count);
+}
+
+ProcessorRange ProcessorRange::slice(const uint32_t& from, const uint32_t& to) const
+{
+  uint32_t new_low  = std::min<uint32_t>(low + from, high);
+  uint32_t new_high = std::min<uint32_t>(low + to, high);
+  return ProcessorRange(new_low, new_high, per_node_count);
+}
+
 void ProcessorRange::pack(BufferBuilder& buffer) const
 {
   buffer.pack<uint32_t>(low);
   buffer.pack<uint32_t>(high);
   buffer.pack<uint32_t>(per_node_count);
 }
+
+///////////////////////////////////////////
+// legate::mapping::MachineDesc
+//////////////////////////////////////////
 
 MachineDesc::MachineDesc(const std::map<TaskTarget, ProcessorRange>& ranges)
   : processor_ranges(ranges)
@@ -106,6 +146,56 @@ MachineDesc::MachineDesc(const std::map<TaskTarget, ProcessorRange>& ranges)
       preferred_target = target;
       break;
     }
+}
+
+const ProcessorRange& MachineDesc::processor_range() const
+{
+  return processor_range(preferred_target);
+}
+static const ProcessorRange empty_processor_range = {0, 0, 1};
+
+const ProcessorRange& MachineDesc::processor_range(const TaskTarget& target) const
+{
+  auto finder = processor_ranges.find(target);
+  if (finder == processor_ranges.end()) { return empty_processor_range; }
+  return finder->second;
+}
+
+std::vector<TaskTarget> MachineDesc::valid_targets() const
+{
+  std::vector<TaskTarget> result;
+  for (auto& [target, _] : processor_ranges) result.push_back(target);
+  return std::move(result);
+}
+
+std::vector<TaskTarget> MachineDesc::valid_targets_except(
+  const std::set<TaskTarget>& to_exclude) const
+{
+  std::vector<TaskTarget> result;
+  for (auto& [target, _] : processor_ranges)
+    if (to_exclude.find(target) == to_exclude.end()) result.push_back(target);
+  return std::move(result);
+}
+
+size_t MachineDesc::count() const { return count(preferred_target); }
+
+size_t MachineDesc::count(const TaskTarget& target) const
+{
+  auto finder = processor_ranges.find(target);
+  if (finder == processor_ranges.end()) {
+    throw std::runtime_error(
+      "There is no requested target in the MachineDesc or MachineDesc is empty");
+  }
+  return finder->second.count();
+}
+
+std::string MachineDesc::to_string() const
+{
+  std::stringstream ss;
+  ss << "Machine(preferred_target: " << preferred_target;
+  for (auto& [kind, range] : processor_ranges) ss << ", " << kind << ": " << range.to_string();
+  ss << ")";
+  return ss.str();
 }
 
 void MachineDesc::pack(BufferBuilder& buffer) const
@@ -118,38 +208,69 @@ void MachineDesc::pack(BufferBuilder& buffer) const
   }
 }
 
-ProcessorRange MachineDesc::processor_range() const
+MachineDesc MachineDesc::only(const TaskTarget& target) const { return only(std::set({target})); }
+
+MachineDesc MachineDesc::only(const std::set<TaskTarget>& targets) const
 {
-  auto finder = processor_ranges.find(preferred_target);
-#ifdef DEBUG_LEGATE
-  assert(finder != processor_ranges.end());
-#endif
-  return finder->second;
+  std::map<TaskTarget, ProcessorRange> new_processor_ranges;
+  for (auto t : targets) new_processor_ranges.insert({t, processor_range(t)});
+
+  return MachineDesc(new_processor_ranges);
 }
 
-std::vector<TaskTarget> MachineDesc::valid_targets() const
+MachineDesc MachineDesc::slice(const uint32_t& from,
+                               const uint32_t& to,
+                               const TaskTarget& target) const
 {
-  std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges) result.push_back(target);
-  return std::move(result);
+  return MachineDesc({{target, processor_range(target).slice(from, to)}});
 }
 
-std::vector<TaskTarget> MachineDesc::valid_targets_except(std::set<TaskTarget>&& to_exclude) const
+MachineDesc MachineDesc::slice(const uint32_t& from, const uint32_t& to) const
 {
-  std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges)
-    if (to_exclude.find(target) == to_exclude.end()) result.push_back(target);
-  return std::move(result);
+  if (processor_ranges.size() > 1)
+    throw std::runtime_error(
+      "Ambiguous slicing: slicing is not allowed on a machine with more than one processor kind");
+
+  return slice(from, to, preferred_target);
 }
 
-std::string MachineDesc::to_string() const
+MachineDesc MachineDesc::operator[](const TaskTarget& target) const { return only(target); }
+
+bool MachineDesc::operator==(const MachineDesc& other) const
 {
-  std::stringstream ss;
-  ss << "Machine(preferred_kind: " << preferred_target;
-  for (auto& [kind, range] : processor_ranges) ss << ", " << kind << ": " << range.to_string();
-  ss << ")";
-  return ss.str();
+  if (preferred_target != other.preferred_target) return false;
+  if (processor_ranges.size() != other.processor_ranges.size()) return false;
+  for (auto const& r : processor_ranges) {
+    auto finder = other.processor_ranges.find(r.first);
+    if (finder == other.processor_ranges.end() || r.second != finder->second) return false;
+  }
+  return true;
 }
+
+bool MachineDesc::operator!=(const MachineDesc& other) const { return !(*this == other); }
+
+MachineDesc MachineDesc::operator&(const MachineDesc& other) const
+{
+  std::map<TaskTarget, ProcessorRange> new_processor_ranges;
+  for (const auto& [target, range] : processor_ranges) {
+    auto finder = other.processor_ranges.find(target);
+    if (finder != other.processor_ranges.end()) {
+      new_processor_ranges[target] = finder->second & range;
+    }
+  }
+  return MachineDesc(new_processor_ranges);
+}
+
+bool MachineDesc::empty() const
+{
+  for (const auto& r : processor_ranges)
+    if (!r.second.empty()) return false;
+  return true;
+}
+
+////////////////////////////////////////
+// legate::mapping::LocalProcessorRange
+/////////////////////////////////////////
 
 LocalProcessorRange::LocalProcessorRange() : offset_(0), total_proc_count_(0), procs_() {}
 
@@ -175,6 +296,9 @@ const Processor& LocalProcessorRange::operator[](uint32_t idx) const
   return procs_[local_idx];
 }
 
+//////////////////////////////
+// legate::mapping::Machine
+//////////////////////////////
 Machine::Machine(Legion::Machine legion_machine)
   : local_node(Processor::get_executing_processor().address_space()),
     total_nodes(legion_machine.get_address_space_count())

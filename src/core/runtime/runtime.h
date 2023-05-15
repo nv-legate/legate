@@ -26,6 +26,7 @@
 #include "core/data/shape.h"
 #include "core/data/store.h"
 #include "core/legate_c.h"
+#include "core/mapping/machine.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/type/type_info.h"
@@ -147,6 +148,29 @@ class PartitionManager {
   std::map<TilingCacheKey, Legion::IndexPartition> tiling_cache_;
 };
 
+class MachineManager {
+ public:
+  MachineManager(){};
+
+ public:
+  const mapping::MachineDesc& get_machine() const;
+
+  void push_machine(const mapping::MachineDesc& m);
+
+  void pop_machine();
+
+ private:
+  std::vector<mapping::MachineDesc> machines_;
+};
+
+struct MachineTracker {
+  MachineTracker(const mapping::MachineDesc& m);
+
+  ~MachineTracker();
+
+  const mapping::MachineDesc& get_current_machine() const;
+};
+
 class Runtime {
  public:
   Runtime(Legion::Runtime* legion_runtime);
@@ -180,6 +204,7 @@ class Runtime {
   T get_tunable(Legion::MapperID mapper_id, int64_t tunable_id);
 
  public:
+  mapping::MachineDesc slice_machine_for_task(LibraryContext* library, int64_t task_id);
   std::unique_ptr<AutoTask> create_task(LibraryContext* library, int64_t task_id);
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
@@ -309,7 +334,10 @@ class Runtime {
   std::map<std::pair<int32_t, int32_t>, int32_t> reduction_ops_{};
 
  private:
-  std::unique_ptr<mapping::MachineDesc> machine_{nullptr};
+  MachineManager* machine_manager_{nullptr};
+
+ public:
+  MachineManager* machine_manager() const;
 };
 
 void initialize(int32_t argc, char** argv);

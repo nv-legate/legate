@@ -617,6 +617,48 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
   tiling_cache_[std::make_pair(index_space, tiling)] = index_partition;
 }
 
+////////////////////////////////////////////
+// legate::MachineManager
+////////////////////////////////////////////
+const mapping::MachineDesc& MachineManager::get_machine() const
+{
+#ifdef DEBUG_LEGATE
+  assert(machines_.size() > 0);
+#endif
+  return machines_.back();
+}
+
+void MachineManager::push_machine(const mapping::MachineDesc& m) { machines_.push_back(m); }
+
+void MachineManager::pop_machine()
+{
+  if (machines_.size() <= 1) throw std::underflow_error("can't pop from the empty machine stack");
+  machines_.pop_back();
+}
+
+////////////////////////////////////////////
+// legate::MachineTracker
+////////////////////////////////////////////
+
+MachineTracker::MachineTracker(const mapping::MachineDesc& m)
+{
+  auto* runtime = Runtime::get_runtime();
+  auto machine  = m & Runtime::get_runtime()->get_machine();
+  if (machine.count() == 0) throw std::runtime_error("Runtime can not use an empty machine");
+  runtime->machine_manager()->push_machine(machine);
+}
+
+MachineTracker::~MachineTracker()
+{
+  auto* runtime = Runtime::get_runtime();
+  runtime->machine_manager()->pop_machine();
+}
+
+const mapping::MachineDesc& MachineTracker::get_current_machine() const
+{
+  return Runtime::get_runtime()->get_machine();
+}
+
 ////////////////////////////////////////////////////
 // legate::Runtime
 ////////////////////////////////////////////////////
@@ -719,14 +761,39 @@ void Runtime::post_startup_initialization(Legion::Context legion_context)
   legion_context_     = legion_context;
   core_context_       = find_library(core_library_name);
   partition_manager_  = new PartitionManager(this, core_context_);
+  machine_manager_    = new MachineManager();
   provenance_manager_ = new ProvenanceManager();
   Core::retrieve_tunable(legion_context_, legion_runtime_, core_context_);
   initialize_toplevel_machine();
 }
 
+mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, int64_t task_id)
+{
+  auto task_info = library->find_task(task_id);
+#ifdef DEBUG_LEGATE
+  assert(task_info != nullptr);
+#endif
+  std::set<mapping::TaskTarget> task_targets;
+  auto& machine = machine_manager_->get_machine();
+  for (const auto& t : machine.valid_targets()) {
+    auto variant = mapping::to_task_variant(t);
+    if (task_info->has_variant(variant)) task_targets.insert(t);
+  }
+
+  auto new_machine = machine.only(task_targets);
+  if (new_machine.empty()) {
+    std::stringstream ss;
+    ss << "Task " << task_id << " " << task_info->name() << " does not have any valid variant for "
+       << "the current machine configuration.";
+    std::runtime_error(ss.str());
+  }
+  return new_machine;
+}
+
 // This function should be moved to the library context
 std::unique_ptr<AutoTask> Runtime::create_task(LibraryContext* library, int64_t task_id)
 {
+  MachineTracker track(slice_machine_for_task(library, task_id));
   auto task = new AutoTask(library, task_id, next_unique_id_++);
   return std::unique_ptr<AutoTask>(task);
 }
@@ -735,6 +802,7 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
                                                  int64_t task_id,
                                                  const Shape& launch_shape)
 {
+  MachineTracker track(slice_machine_for_task(library, task_id));
   auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++);
   return std::unique_ptr<ManualTask>(task);
 }
@@ -1014,15 +1082,19 @@ void Runtime::initialize_toplevel_machine()
   auto machine = new mapping::MachineDesc({{mapping::TaskTarget::GPU, create_range(num_gpus)},
                                            {mapping::TaskTarget::OMP, create_range(num_omps)},
                                            {mapping::TaskTarget::CPU, create_range(num_cpus)}});
-  machine_.reset(machine);
+#ifdef DEBUG_LEGATE
+  assert(machine_manager_ != nullptr);
+#endif
+
+  machine_manager_->push_machine(*machine);
 }
 
 const mapping::MachineDesc& Runtime::get_machine() const
 {
 #ifdef DEBUG_LEGATE
-  assert(machine_ != nullptr);
+  assert(machine_manager_ != nullptr);
 #endif
-  return *machine_;
+  return machine_manager_->get_machine();
 }
 
 Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::SymbolicPoint& point)
@@ -1070,6 +1142,8 @@ Legion::ProjectionID Runtime::get_delinearizing_projection()
 {
   return core_context_->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
 }
+
+MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 
 /*static*/ void Runtime::initialize(int32_t argc, char** argv)
 {
@@ -1124,6 +1198,10 @@ int32_t start(int32_t argc, char** argv) { return Runtime::start(argc, argv); }
 
 int32_t wait_for_shutdown() { return Runtime::get_runtime()->wait_for_shutdown(); }
 
+//////////////////////////////////////////////
+//  ProvenanceManager
+//////////////////////////////////////////////
+
 ProvenanceManager::ProvenanceManager() { provenance_.push_back(EMPTY_STRING); }
 
 const std::string& ProvenanceManager::get_provenance()
@@ -1165,6 +1243,10 @@ void ProvenanceManager::clear_all()
   provenance_.clear();
   provenance_.push_back(EMPTY_STRING);
 }
+
+//////////////////////////////////////
+//  ProvenanceTracker
+//////////////////////////////////////
 
 ProvenanceTracker::ProvenanceTracker(const std::string& p)
 {

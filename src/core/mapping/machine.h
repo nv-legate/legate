@@ -30,14 +30,19 @@ TaskTarget to_target(Processor::Kind kind);
 
 Processor::Kind to_kind(TaskTarget target);
 
+LegateVariantCode to_task_variant(TaskTarget target);
+
 struct ProcessorRange {
   ProcessorRange() {}
   ProcessorRange(uint32_t low, uint32_t high, uint32_t per_node_count);
   ProcessorRange operator&(const ProcessorRange&) const;
+  bool operator==(const ProcessorRange&) const;
+  bool operator!=(const ProcessorRange&) const;
   uint32_t count() const;
   bool empty() const;
   std::string to_string() const;
-
+  std::pair<uint32_t, uint32_t> get_node_range() const;
+  ProcessorRange slice(const uint32_t& lo, const uint32_t& hi) const;
   void pack(BufferBuilder& buffer) const;
 
   uint32_t low{0};
@@ -49,15 +54,33 @@ struct MachineDesc {
   MachineDesc() {}
   MachineDesc(const std::map<TaskTarget, ProcessorRange>& processor_ranges);
 
-  TaskTarget preferred_target{TaskTarget::CPU};
-  std::map<TaskTarget, ProcessorRange> processor_ranges{};
+  const ProcessorRange& processor_range() const;
+  const ProcessorRange& processor_range(const TaskTarget& target) const;
 
-  ProcessorRange processor_range() const;
   std::vector<TaskTarget> valid_targets() const;
-  std::vector<TaskTarget> valid_targets_except(std::set<TaskTarget>&& to_exclude) const;
+  std::vector<TaskTarget> valid_targets_except(const std::set<TaskTarget>& to_exclude) const;
+
+  size_t count() const;
+  size_t count(const TaskTarget& target) const;
+
   std::string to_string() const;
 
   void pack(BufferBuilder& buffer) const;
+
+  MachineDesc only(const TaskTarget& target) const;
+  MachineDesc only(const std::set<TaskTarget>& target) const;
+  MachineDesc slice(const uint32_t& lo, const uint32_t& hi, const TaskTarget& target) const;
+  MachineDesc slice(const uint32_t& lo, const uint32_t& hi) const;
+
+  MachineDesc operator[](const TaskTarget& target) const;
+  bool operator==(const MachineDesc& other) const;
+  bool operator!=(const MachineDesc& other) const;
+  MachineDesc operator&(const MachineDesc& other) const;
+
+  bool empty() const;
+
+  TaskTarget preferred_target{TaskTarget::CPU};
+  std::map<TaskTarget, ProcessorRange> processor_ranges{};
 };
 
 std::ostream& operator<<(std::ostream& stream, const MachineDesc& info);
