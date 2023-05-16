@@ -230,7 +230,7 @@ std::unique_ptr<Strategy> Partitioner::solve()
 
     auto* op       = part_symb->operation();
     auto store     = op->find_store(part_symb);
-    auto partition = store->find_or_create_key_partition();
+    auto partition = store->find_or_create_key_partition(op->machine());
 
     std::vector<const Variable*> equiv_class;
     constraints.find_equivalence_class(part_symb, equiv_class);

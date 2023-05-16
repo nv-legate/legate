@@ -32,6 +32,12 @@ class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
 class Scalar;
 
+namespace mapping {
+
+class MachineDesc;
+
+}  // namespace mapping
+
 namespace detail {
 
 class LogicalStore;
@@ -40,7 +46,10 @@ class LogicalStore;
 
 class TaskLauncher {
  public:
-  TaskLauncher(LibraryContext* library, int64_t task_id, int64_t tag = 0);
+  TaskLauncher(LibraryContext* library,
+               const mapping::MachineDesc& machine,
+               int64_t task_id,
+               int64_t tag = 0);
   ~TaskLauncher();
 
  public:
@@ -84,7 +93,7 @@ class TaskLauncher {
 
  private:
   void pack_args(const std::vector<ArgWrapper*>& args);
-  void pack_mapper_arg();
+  void pack_sharding_functor_id();
   std::unique_ptr<Legion::IndexTaskLauncher> build_index_task(const Legion::Domain& launch_domain);
   std::unique_ptr<Legion::TaskLauncher> build_single_task();
   void bind_region_fields_to_unbound_stores();

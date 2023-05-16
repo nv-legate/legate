@@ -30,7 +30,7 @@ TaskTarget to_target(Processor::Kind kind);
 
 Processor::Kind to_kind(TaskTarget target);
 
-LegateVariantCode to_task_variant(TaskTarget target);
+LegateVariantCode to_variant_code(TaskTarget target);
 
 struct ProcessorRange {
   ProcessorRange() {}
@@ -53,6 +53,12 @@ struct ProcessorRange {
 struct MachineDesc {
   MachineDesc() {}
   MachineDesc(const std::map<TaskTarget, ProcessorRange>& processor_ranges);
+
+  MachineDesc(const MachineDesc&)            = default;
+  MachineDesc& operator=(const MachineDesc&) = default;
+
+  MachineDesc(MachineDesc&&)            = default;
+  MachineDesc& operator=(MachineDesc&&) = default;
 
   const ProcessorRange& processor_range() const;
   const ProcessorRange& processor_range(const TaskTarget& target) const;

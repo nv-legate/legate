@@ -20,6 +20,7 @@
 #include <unordered_map>
 
 #include "core/data/logical_store.h"
+#include "core/mapping/machine.h"
 #include "core/partitioning/constraint.h"
 #include "legion.h"
 
@@ -41,7 +42,7 @@ class LogicalStore;
 class Operation {
  protected:
   using StoreArg = std::pair<detail::LogicalStore*, const Variable*>;
-  Operation(LibraryContext* library, uint64_t unique_id);
+  Operation(LibraryContext* library, uint64_t unique_id, mapping::MachineDesc&& machine);
 
  public:
   virtual ~Operation() {}
@@ -54,6 +55,9 @@ class Operation {
  public:
   const Variable* declare_partition();
   detail::LogicalStore* find_store(const Variable* variable) const;
+
+ public:
+  const mapping::MachineDesc& machine() const { return machine_; }
 
  protected:
   LibraryContext* library_;
@@ -70,11 +74,15 @@ class Operation {
   uint32_t next_part_id_{0};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
   std::map<const Variable, detail::LogicalStore*> store_mappings_{};
+  mapping::MachineDesc machine_;
 };
 
 class Task : public Operation {
  protected:
-  Task(LibraryContext* library, int64_t task_id, uint64_t unique_id);
+  Task(LibraryContext* library,
+       int64_t task_id,
+       uint64_t unique_id,
+       mapping::MachineDesc&& machine);
 
  public:
   virtual ~Task() {}
@@ -102,7 +110,10 @@ class Task : public Operation {
 class AutoTask : public Task {
  public:
   friend class Runtime;
-  AutoTask(LibraryContext* library, int64_t task_id, uint64_t unique_id);
+  AutoTask(LibraryContext* library,
+           int64_t task_id,
+           uint64_t unique_id,
+           mapping::MachineDesc&& machine);
 
  public:
   ~AutoTask() {}
@@ -133,7 +144,8 @@ class ManualTask : public Task {
   ManualTask(LibraryContext* library,
              int64_t task_id,
              const Shape& launch_shape,
-             uint64_t unique_id);
+             uint64_t unique_id,
+             mapping::MachineDesc&& machine);
 
  public:
   ~ManualTask();

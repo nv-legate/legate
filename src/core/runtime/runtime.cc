@@ -441,32 +441,42 @@ std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::Log
 PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* context)
 {
   auto mapper_id = context->get_mapper_id();
-  num_pieces_    = runtime->get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_PIECES);
   min_shard_volume_ =
     runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
-  assert(num_pieces_ > 0);
+#ifdef DEBUG_LEGATE
   assert(min_shard_volume_ > 0);
-
-  int32_t remaining_pieces = num_pieces_;
-  auto push_factors        = [&](auto prime) {
-    while (remaining_pieces % prime == 0) {
-      piece_factors_.push_back(prime);
-      remaining_pieces /= prime;
-    }
-  };
-
-  push_factors(11);
-  push_factors(7);
-  push_factors(5);
-  push_factors(3);
-  push_factors(2);
+#endif
 }
 
-Shape PartitionManager::compute_launch_shape(const Shape& shape)
+const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::MachineDesc& machine)
 {
+  uint32_t curr_num_pieces = machine.count();
+
+  auto finder = all_factors_.find(curr_num_pieces);
+  if (all_factors_.end() == finder) {
+    uint32_t remaining_pieces = curr_num_pieces;
+    std::vector<uint32_t> factors;
+    auto push_factors = [&factors, &remaining_pieces](uint32_t prime) {
+      while (remaining_pieces % prime == 0) {
+        factors.push_back(prime);
+        remaining_pieces /= prime;
+      }
+    };
+    for (uint32_t factor : {11, 7, 5, 3, 2}) push_factors(factor);
+    all_factors_.insert({curr_num_pieces, std::move(factors)});
+    finder = all_factors_.find(curr_num_pieces);
+  }
+
+  return finder->second;
+}
+
+Shape PartitionManager::compute_launch_shape(const mapping::MachineDesc& machine,
+                                             const Shape& shape)
+{
+  uint32_t curr_num_pieces = machine.count();
   // Easy case if we only have one piece: no parallel launch space
-  if (num_pieces_ == 1) return {};
+  if (1 == curr_num_pieces) return {};
 
   // If we only have one point then we never do parallel launches
   if (shape.all([](auto extent) { return 1 == extent; })) return {};
@@ -492,7 +502,7 @@ Shape PartitionManager::compute_launch_shape(const Shape& shape)
   // Otherwise we need to compute it ourselves
   // TODO: a better heuristic here.
   //       For now if we can make at least two pieces then we will make N pieces.
-  max_pieces = num_pieces_;
+  max_pieces = curr_num_pieces;
 
   // First compute the N-th root of the number of pieces
   uint32_t ndim = temp_shape.size();
@@ -548,7 +558,7 @@ Shape PartitionManager::compute_launch_shape(const Shape& shape)
     temp_result.resize(ndim);
     std::fill(temp_result.begin(), temp_result.end(), 1);
     size_t factor_prod = 1;
-    for (auto factor : piece_factors_) {
+    for (auto factor : get_factors(machine)) {
       // Avoid exceeding the maximum number of pieces
       if (factor * factor_prod > max_pieces) break;
 
@@ -628,7 +638,15 @@ const mapping::MachineDesc& MachineManager::get_machine() const
   return machines_.back();
 }
 
-void MachineManager::push_machine(const mapping::MachineDesc& m) { machines_.push_back(m); }
+void MachineManager::push_machine(const mapping::MachineDesc& machine)
+{
+  machines_.push_back(machine);
+}
+
+void MachineManager::push_machine(mapping::MachineDesc&& machine)
+{
+  machines_.emplace_back(machine);
+}
 
 void MachineManager::pop_machine()
 {
@@ -640,12 +658,13 @@ void MachineManager::pop_machine()
 // legate::MachineTracker
 ////////////////////////////////////////////
 
-MachineTracker::MachineTracker(const mapping::MachineDesc& m)
+MachineTracker::MachineTracker(const mapping::MachineDesc& machine)
 {
   auto* runtime = Runtime::get_runtime();
-  auto machine  = m & Runtime::get_runtime()->get_machine();
-  if (machine.count() == 0) throw std::runtime_error("Runtime can not use an empty machine");
-  runtime->machine_manager()->push_machine(machine);
+  auto result   = machine & Runtime::get_runtime()->get_machine();
+  if (result.count() == 0)
+    throw std::runtime_error("Empty machines cannot be used for resource scoping");
+  runtime->machine_manager()->push_machine(std::move(result));
 }
 
 MachineTracker::~MachineTracker()
@@ -770,31 +789,35 @@ void Runtime::post_startup_initialization(Legion::Context legion_context)
 mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, int64_t task_id)
 {
   auto task_info = library->find_task(task_id);
-#ifdef DEBUG_LEGATE
-  assert(task_info != nullptr);
-#endif
+  if (nullptr == task_info) {
+    std::stringstream ss;
+    ss << "Library " << library->get_library_name() << " does not have task " << task_id;
+    throw std::invalid_argument(std::move(ss).str());
+  }
+
   std::set<mapping::TaskTarget> task_targets;
   auto& machine = machine_manager_->get_machine();
   for (const auto& t : machine.valid_targets()) {
-    auto variant = mapping::to_task_variant(t);
+    auto variant = mapping::to_variant_code(t);
     if (task_info->has_variant(variant)) task_targets.insert(t);
   }
 
-  auto new_machine = machine.only(task_targets);
-  if (new_machine.empty()) {
+  auto sliced = machine.only(task_targets);
+  if (sliced.empty()) {
     std::stringstream ss;
-    ss << "Task " << task_id << " " << task_info->name() << " does not have any valid variant for "
+    ss << "Task " << task_id << " (" << task_info->name() << ") of library "
+       << library->get_library_name() << " does not have any valid variant for "
        << "the current machine configuration.";
-    std::runtime_error(ss.str());
+    throw std::invalid_argument(ss.str());
   }
-  return new_machine;
+  return std::move(sliced);
 }
 
 // This function should be moved to the library context
 std::unique_ptr<AutoTask> Runtime::create_task(LibraryContext* library, int64_t task_id)
 {
-  MachineTracker track(slice_machine_for_task(library, task_id));
-  auto task = new AutoTask(library, task_id, next_unique_id_++);
+  auto machine = slice_machine_for_task(library, task_id);
+  auto task    = new AutoTask(library, task_id, next_unique_id_++, std::move(machine));
   return std::unique_ptr<AutoTask>(task);
 }
 
@@ -802,8 +825,8 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
                                                  int64_t task_id,
                                                  const Shape& launch_shape)
 {
-  MachineTracker track(slice_machine_for_task(library, task_id));
-  auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++);
+  auto machine = slice_machine_for_task(library, task_id);
+  auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++, std::move(machine));
   return std::unique_ptr<ManualTask>(task);
 }
 
@@ -1027,10 +1050,9 @@ Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher* launcher,
 
 Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t idx) const
 {
-  // FIXME: One of two things should happen:
-  //   1) the variant should be picked based on available processor kinds
-  //   2) the variant should be picked by the core mapper
-  TaskLauncher launcher(core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, LEGATE_CPU_VARIANT);
+  auto& machine = get_machine();
+  auto variant  = mapping::to_variant_code(machine.preferred_target);
+  TaskLauncher launcher(core_context_, machine, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
   launcher.add_future(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute_single();
@@ -1040,10 +1062,9 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
                                           uint32_t idx,
                                           const Legion::Domain& launch_domain) const
 {
-  // FIXME: One of two things should happen:
-  //   1) the variant should be picked based on available processor kinds
-  //   2) the variant should be picked by the core mapper
-  TaskLauncher launcher(core_context_, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, LEGATE_CPU_VARIANT);
+  auto& machine = get_machine();
+  auto variant  = mapping::to_variant_code(machine.preferred_target);
+  TaskLauncher launcher(core_context_, machine, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
   launcher.add_future_map(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute(launch_domain);
@@ -1079,14 +1100,14 @@ void Runtime::initialize_toplevel_machine()
     return mapping::ProcessorRange(0, num_procs, per_node_count);
   };
 
-  auto machine = new mapping::MachineDesc({{mapping::TaskTarget::GPU, create_range(num_gpus)},
-                                           {mapping::TaskTarget::OMP, create_range(num_omps)},
-                                           {mapping::TaskTarget::CPU, create_range(num_cpus)}});
+  mapping::MachineDesc machine({{mapping::TaskTarget::GPU, create_range(num_gpus)},
+                                {mapping::TaskTarget::OMP, create_range(num_omps)},
+                                {mapping::TaskTarget::CPU, create_range(num_cpus)}});
 #ifdef DEBUG_LEGATE
   assert(machine_manager_ != nullptr);
 #endif
 
-  machine_manager_->push_machine(*machine);
+  machine_manager_->push_machine(std::move(machine));
 }
 
 const mapping::MachineDesc& Runtime::get_machine() const

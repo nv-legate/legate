@@ -44,7 +44,7 @@ Processor::Kind to_kind(TaskTarget target)
   return Processor::Kind::LOC_PROC;
 }
 
-LegateVariantCode to_task_variant(TaskTarget target)
+LegateVariantCode to_variant_code(TaskTarget target)
 {
   switch (target) {
     case TaskTarget::GPU: return LEGATE_GPU_VARIANT;

@@ -41,7 +41,6 @@ class LibraryContext;
 
 namespace mapping {
 
-class MachineDesc;
 class Mapper;
 
 }  // namespace mapping
@@ -128,7 +127,10 @@ class PartitionManager {
   PartitionManager(Runtime* runtime, const LibraryContext* context);
 
  public:
-  Shape compute_launch_shape(const Shape& shape);
+  const std::vector<uint32_t>& get_factors(const mapping::MachineDesc& machine);
+
+ public:
+  Shape compute_launch_shape(const mapping::MachineDesc& machine, const Shape& shape);
   Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
 
  public:
@@ -139,9 +141,8 @@ class PartitionManager {
                               const Legion::IndexPartition& index_partition);
 
  private:
-  int32_t num_pieces_;
   int64_t min_shard_volume_;
-  std::vector<size_t> piece_factors_;
+  std::unordered_map<uint32_t, std::vector<uint32_t>> all_factors_;
 
  private:
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
@@ -155,7 +156,8 @@ class MachineManager {
  public:
   const mapping::MachineDesc& get_machine() const;
 
-  void push_machine(const mapping::MachineDesc& m);
+  void push_machine(const mapping::MachineDesc& machine);
+  void push_machine(mapping::MachineDesc&& machine);
 
   void pop_machine();
 
@@ -164,7 +166,7 @@ class MachineManager {
 };
 
 struct MachineTracker {
-  MachineTracker(const mapping::MachineDesc& m);
+  MachineTracker(const mapping::MachineDesc& machine);
 
   ~MachineTracker();
 

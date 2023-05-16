@@ -16,6 +16,7 @@
 
 #include "core/data/logical_store_detail.h"
 
+#include "core/mapping/machine.h"
 #include "core/runtime/req_analyzer.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"
@@ -97,12 +98,14 @@ RegionField Storage::map(LibraryContext* context)
   return Runtime::get_runtime()->map_region_field(context, region_field_.get());
 }
 
-Partition* Storage::find_or_create_key_partition()
+Partition* Storage::find_or_create_key_partition(const mapping::MachineDesc& machine)
 {
-  if (key_partition_ != nullptr) return key_partition_.get();
+  uint32_t new_num_pieces = machine.count();
+  if (num_pieces_ == new_num_pieces && key_partition_ != nullptr) return key_partition_.get();
 
   auto part_mgr     = Runtime::get_runtime()->partition_manager();
-  auto launch_shape = part_mgr->compute_launch_shape(extents_);
+  auto launch_shape = part_mgr->compute_launch_shape(machine, extents_);
+  num_pieces_       = new_num_pieces;
   if (launch_shape.empty())
     key_partition_ = create_no_partition();
   else {
@@ -423,17 +426,21 @@ std::unique_ptr<Projection> LogicalStore::create_projection(const Partition* par
   return std::make_unique<Projection>(legion_partition, proj_id);
 }
 
-std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition()
+std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
+  const mapping::MachineDesc& machine)
 {
-  if (key_partition_ != nullptr) return key_partition_;
+  uint32_t new_num_pieces = machine.count();
+  if (num_pieces_ == new_num_pieces && key_partition_ != nullptr) return key_partition_;
 
   if (has_scalar_storage()) {
+    num_pieces_    = new_num_pieces;
     key_partition_ = create_no_partition();
     return key_partition_;
   }
 
-  Partition* storage_part = storage_->find_or_create_key_partition();
+  Partition* storage_part = storage_->find_or_create_key_partition(machine);
   auto store_part         = transform_->convert(storage_part);
+  num_pieces_             = new_num_pieces;
   key_partition_          = std::move(store_part);
   return key_partition_;
 }
@@ -467,7 +474,11 @@ void LogicalStore::pack(BufferBuilder& buffer) const
 std::string LogicalStore::to_string() const
 {
   std::stringstream ss;
-  ss << "Store(" << store_id_ << ") {shape: " << extents();
+  ss << "Store(" << store_id_ << ") {shape: ";
+  if (unbound())
+    ss << "(unbound)";
+  else
+    ss << extents();
   if (!transform_->identity())
     ss << ", transform: " << *transform_ << "}";
   else

@@ -19,6 +19,7 @@
 #include "core/data/logical_store.h"
 #include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
+#include "core/mapping/machine.h"
 #include "core/runtime/context.h"
 #include "core/runtime/launcher_arg.h"
 #include "core/runtime/req_analyzer.h"
@@ -28,13 +29,17 @@
 
 namespace legate {
 
-TaskLauncher::TaskLauncher(LibraryContext* library, int64_t task_id, int64_t tag /*= 0*/)
+TaskLauncher::TaskLauncher(LibraryContext* library,
+                           const mapping::MachineDesc& machine,
+                           int64_t task_id,
+                           int64_t tag /*= 0*/)
   : library_(library), task_id_(task_id), tag_(tag)
 {
   req_analyzer_ = new RequirementAnalyzer();
   out_analyzer_ = new OutputRequirementAnalyzer();
   buffer_       = new BufferBuilder();
   mapper_arg_   = new BufferBuilder();
+  machine.pack(*mapper_arg_);
 }
 
 TaskLauncher::~TaskLauncher()
@@ -159,9 +164,8 @@ void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
   for (auto& arg : args) arg->pack(*buffer_);
 }
 
-void TaskLauncher::pack_mapper_arg()
+void TaskLauncher::pack_sharding_functor_id()
 {
-  Runtime::get_runtime()->get_machine().pack(*mapper_arg_);
   // TODO: Generate the right sharding functor id
   mapper_arg_->pack<uint32_t>(0);
 }
@@ -184,7 +188,7 @@ std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
   // # communicators
   buffer_->pack<uint32_t>(0);
 
-  pack_mapper_arg();
+  pack_sharding_functor_id();
   auto* runtime    = Runtime::get_runtime();
   auto& provenance = runtime->provenance_manager()->get_provenance();
 
@@ -222,7 +226,7 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
   // # communicators
   buffer_->pack<uint32_t>(0);
 
-  pack_mapper_arg();
+  pack_sharding_functor_id();
   auto* runtime    = Runtime::get_runtime();
   auto& provenance = runtime->provenance_manager()->get_provenance();
 

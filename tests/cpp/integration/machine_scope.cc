@@ -35,7 +35,7 @@ void validate(legate::TaskContext& context)
 
   int32_t num_tasks = context.get_launch_domain().get_volume();
   auto to_compare   = context.scalars().at(0).value<int32_t>();
-  assert(to_compare == num_tasks);
+  EXPECT_EQ(to_compare, num_tasks);
 }
 
 struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
@@ -110,7 +110,7 @@ void test_cpu_only(legate::LibraryContext* context)
   auto task    = runtime->create_task(context, CPU_VARIANT);
   auto part    = task->declare_partition();
   task->add_output(store, part);
-  task->add_scalar_arg(machine.count());
+  task->add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
   runtime->submit(std::move(task));
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
@@ -132,7 +132,7 @@ void test_cpu_only(legate::LibraryContext* context)
   // check `slice_machine_for_task` logic
   if (machine.count(legate::mapping::TaskTarget::GPU) > 0) {
     legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
-    EXPECT_THROW(runtime->create_task(context, CPU_VARIANT), std::runtime_error);
+    EXPECT_THROW(runtime->create_task(context, CPU_VARIANT), std::invalid_argument);
   }
 }
 

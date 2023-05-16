@@ -36,8 +36,8 @@ namespace legate {
 // legate::Operation
 ////////////////////////////////////////////////////
 
-Operation::Operation(LibraryContext* library, uint64_t unique_id)
-  : library_(library), unique_id_(unique_id)
+Operation::Operation(LibraryContext* library, uint64_t unique_id, mapping::MachineDesc&& machine)
+  : library_(library), unique_id_(unique_id), machine_(std::forward<decltype(machine)>(machine))
 {
 }
 
@@ -60,8 +60,11 @@ detail::LogicalStore* Operation::find_store(const Variable* part_symb) const
 // legate::Task
 ////////////////////////////////////////////////////
 
-Task::Task(LibraryContext* library, int64_t task_id, uint64_t unique_id)
-  : Operation(library, unique_id), task_id_(task_id)
+Task::Task(LibraryContext* library,
+           int64_t task_id,
+           uint64_t unique_id,
+           mapping::MachineDesc&& machine)
+  : Operation(library, unique_id, std::forward<decltype(machine)>(machine)), task_id_(task_id)
 {
 }
 
@@ -70,7 +73,7 @@ void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 void Task::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
-  TaskLauncher launcher(library_, task_id_);
+  TaskLauncher launcher(library_, machine_, task_id_);
   auto launch_domain = strategy.launch_domain(this);
   auto launch_ndim   = launch_domain != nullptr ? launch_domain->dim : 0;
 
@@ -191,8 +194,11 @@ std::string Task::to_string() const
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-AutoTask::AutoTask(LibraryContext* library, int64_t task_id, uint64_t unique_id)
-  : Task(library, task_id, unique_id)
+AutoTask::AutoTask(LibraryContext* library,
+                   int64_t task_id,
+                   uint64_t unique_id,
+                   mapping::MachineDesc&& machine)
+  : Task(library, task_id, unique_id, std::forward<decltype(machine)>(machine))
 {
 }
 
@@ -248,8 +254,10 @@ ManualTask::~ManualTask() {}
 ManualTask::ManualTask(LibraryContext* library,
                        int64_t task_id,
                        const Shape& launch_shape,
-                       uint64_t unique_id)
-  : Task(library, task_id, unique_id), strategy_(std::make_unique<Strategy>())
+                       uint64_t unique_id,
+                       mapping::MachineDesc&& machine)
+  : Task(library, task_id, unique_id, std::forward<decltype(machine)>(machine)),
+    strategy_(std::make_unique<Strategy>())
 {
   strategy_->set_launch_shape(this, launch_shape);
 }
