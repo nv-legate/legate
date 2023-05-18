@@ -98,14 +98,17 @@ RegionField Storage::map(LibraryContext* context)
   return Runtime::get_runtime()->map_region_field(context, region_field_.get());
 }
 
-Partition* Storage::find_or_create_key_partition(const mapping::MachineDesc& machine)
+Partition* Storage::find_or_create_key_partition(const mapping::MachineDesc& machine,
+                                                 const Restrictions& restrictions)
 {
   uint32_t new_num_pieces = machine.count();
-  if (num_pieces_ == new_num_pieces && key_partition_ != nullptr) return key_partition_.get();
+  if (num_pieces_ == new_num_pieces && key_partition_ != nullptr && restrictions_ == restrictions)
+    return key_partition_.get();
 
   auto part_mgr     = Runtime::get_runtime()->partition_manager();
-  auto launch_shape = part_mgr->compute_launch_shape(machine, extents_);
+  auto launch_shape = part_mgr->compute_launch_shape(machine, restrictions, extents_);
   num_pieces_       = new_num_pieces;
+  restrictions_     = restrictions;
   if (launch_shape.empty())
     key_partition_ = create_no_partition();
   else {
@@ -427,21 +430,25 @@ std::unique_ptr<Projection> LogicalStore::create_projection(const Partition* par
 }
 
 std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
-  const mapping::MachineDesc& machine)
+  const mapping::MachineDesc& machine, const Restrictions& restrictions)
 {
   uint32_t new_num_pieces = machine.count();
-  if (num_pieces_ == new_num_pieces && key_partition_ != nullptr) return key_partition_;
+  if (num_pieces_ == new_num_pieces && key_partition_ != nullptr && restrictions_ == restrictions)
+    return key_partition_;
 
   if (has_scalar_storage()) {
     num_pieces_    = new_num_pieces;
+    restrictions_  = restrictions;
     key_partition_ = create_no_partition();
     return key_partition_;
   }
 
-  Partition* storage_part = storage_->find_or_create_key_partition(machine);
-  auto store_part         = transform_->convert(storage_part);
-  num_pieces_             = new_num_pieces;
-  key_partition_          = std::move(store_part);
+  Partition* storage_part =
+    storage_->find_or_create_key_partition(machine, transform_->invert(restrictions));
+  auto store_part = transform_->convert(storage_part);
+  num_pieces_     = new_num_pieces;
+  restrictions_   = restrictions;
+  key_partition_  = std::move(store_part);
   return key_partition_;
 }
 

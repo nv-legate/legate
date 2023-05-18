@@ -228,12 +228,12 @@ std::unique_ptr<Strategy> Partitioner::solve()
   for (auto& part_symb : partition_symbols) {
     if (strategy->has_assignment(part_symb)) continue;
 
+    auto equiv_class  = constraints.find_equivalence_class(part_symb);
+    auto restrictions = constraints.find_restrictions(part_symb);
+
     auto* op       = part_symb->operation();
     auto store     = op->find_store(part_symb);
-    auto partition = store->find_or_create_key_partition(op->machine());
-
-    std::vector<const Variable*> equiv_class;
-    constraints.find_equivalence_class(part_symb, equiv_class);
+    auto partition = store->find_or_create_key_partition(op->machine(), restrictions);
 
     for (auto symb : equiv_class) strategy->insert(symb, partition);
   }
@@ -261,8 +261,7 @@ void Partitioner::solve_for_unbound_stores(std::vector<const Variable*>& partiti
       continue;
     }
 
-    std::vector<const Variable*> equiv_class;
-    constraints.find_equivalence_class(part_symb, equiv_class);
+    auto equiv_class = constraints.find_equivalence_class(part_symb);
     std::shared_ptr<Partition> partition(create_no_partition());
     auto field_space = runtime->create_field_space();
 

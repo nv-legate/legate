@@ -20,9 +20,12 @@
 #include <memory>
 #include <vector>
 
+#include "core/utilities/tuple.h"
+
 namespace legate {
 
 struct Alignment;
+struct Broadcast;
 struct Constraint;
 struct Literal;
 struct Operation;
@@ -105,33 +108,40 @@ struct Variable : public Expr {
 };
 
 struct Constraint {
- public:
+  enum class Kind : int32_t {
+    ALIGNMENT = 0,
+    BROADCAST = 1,
+  };
+
   virtual ~Constraint() {}
 
- public:
+  virtual Kind kind() const = 0;
+
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
 
- public:
   virtual std::string to_string() const = 0;
 
- public:
   virtual const Alignment* as_alignment() const = 0;
+  virtual const Broadcast* as_broadcast() const = 0;
 };
 
 // Constraint AST nodes own their child nodes
-struct Alignment : public Constraint {
+class Alignment : public Constraint {
  public:
   Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs);
 
  public:
-  virtual void find_partition_symbols(
-    std::vector<const Variable*>& partition_symbols) const override;
+  Kind kind() const override { return Kind::ALIGNMENT; }
 
  public:
-  virtual std::string to_string() const override;
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
  public:
-  virtual const Alignment* as_alignment() const override { return this; }
+  std::string to_string() const override;
+
+ public:
+  const Alignment* as_alignment() const override { return this; }
+  const Broadcast* as_broadcast() const override { return nullptr; }
 
  public:
   const Expr* lhs() const { return lhs_.get(); }
@@ -142,6 +152,36 @@ struct Alignment : public Constraint {
   std::unique_ptr<Expr> rhs_;
 };
 
+class Broadcast : public Constraint {
+ public:
+  Broadcast(std::unique_ptr<Variable> variable, tuple<int32_t>&& axes);
+
+ public:
+  Kind kind() const override { return Kind::BROADCAST; }
+
+ public:
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+
+ public:
+  std::string to_string() const override;
+
+ public:
+  const Alignment* as_alignment() const override { return nullptr; }
+  const Broadcast* as_broadcast() const override { return this; }
+
+ public:
+  const Variable* variable() const { return variable_.get(); }
+  const tuple<int32_t>& axes() const { return axes_; }
+
+ private:
+  std::unique_ptr<Variable> variable_;
+  tuple<int32_t> axes_;
+};
+
 std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs);
+
+std::unique_ptr<Constraint> broadcast(const Variable* variable, const tuple<int32_t>& axes);
+
+std::unique_ptr<Constraint> broadcast(const Variable* variable, tuple<int32_t>&& axes);
 
 }  // namespace legate

@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "core/partitioning/restriction.h"
 #include "core/runtime/projection.h"
 #include "core/utilities/typedefs.h"
 
@@ -32,6 +33,7 @@ struct Transform {
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const  = 0;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const   = 0;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const    = 0;
+  virtual Restrictions invert(const Restrictions& restrictions) const           = 0;
   virtual void pack(BufferBuilder& buffer) const                                = 0;
   virtual void print(std::ostream& out) const                                   = 0;
 };
@@ -55,6 +57,7 @@ struct TransformStack : public Transform, std::enable_shared_from_this<Transform
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  virtual Restrictions invert(const Restrictions& restrictions) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -81,6 +84,7 @@ class Shift : public StoreTransform {
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  virtual Restrictions invert(const Restrictions& restrictions) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -102,6 +106,7 @@ class Promote : public StoreTransform {
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  virtual Restrictions invert(const Restrictions& restrictions) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -124,6 +129,7 @@ class Project : public StoreTransform {
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  virtual Restrictions invert(const Restrictions& restrictions) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -145,6 +151,7 @@ class Transpose : public StoreTransform {
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  virtual Restrictions invert(const Restrictions& restrictions) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -166,6 +173,7 @@ class Delinearize : public StoreTransform {
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
   virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
   virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  virtual Restrictions invert(const Restrictions& restrictions) const override;
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 

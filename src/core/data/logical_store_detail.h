@@ -20,6 +20,7 @@
 
 #include "core/data/logical_region_field.h"
 #include "core/partitioning/partition.h"
+#include "core/partitioning/restriction.h"
 #include "core/runtime/runtime.h"
 
 namespace legate {
@@ -66,7 +67,8 @@ class Storage : public std::enable_shared_from_this<Storage> {
   RegionField map(LibraryContext* context);
 
  public:
-  Partition* find_or_create_key_partition(const mapping::MachineDesc& machine);
+  Partition* find_or_create_key_partition(const mapping::MachineDesc& machine,
+                                          const Restrictions& restrictions);
   void set_key_partition(std::unique_ptr<Partition>&& key_partition);
   void reset_key_partition();
   Legion::LogicalPartition find_or_create_legion_partition(const Partition* partition);
@@ -86,6 +88,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
 
  private:
   uint32_t num_pieces_{0};
+  Restrictions restrictions_{};
   std::unique_ptr<Partition> key_partition_{nullptr};
 };
 
@@ -154,7 +157,8 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  public:
   std::unique_ptr<Projection> create_projection(const Partition* partition, int32_t launch_ndim);
-  std::shared_ptr<Partition> find_or_create_key_partition(const mapping::MachineDesc& machine);
+  std::shared_ptr<Partition> find_or_create_key_partition(const mapping::MachineDesc& machine,
+                                                          const Restrictions& restrictions);
   void set_key_partition(const Partition* partition);
   void reset_key_partition();
 
@@ -178,6 +182,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  private:
   uint32_t num_pieces_;
+  Restrictions restrictions_{};
   std::shared_ptr<Partition> key_partition_;
   std::shared_ptr<Store> mapped_{nullptr};
 };

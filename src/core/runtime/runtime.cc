@@ -472,6 +472,7 @@ const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::Machin
 }
 
 Shape PartitionManager::compute_launch_shape(const mapping::MachineDesc& machine,
+                                             const Restrictions& restrictions,
                                              const Shape& shape)
 {
   uint32_t curr_num_pieces = machine.count();
@@ -487,7 +488,7 @@ Shape PartitionManager::compute_launch_shape(const mapping::MachineDesc& machine
   int64_t volume = 1;
   for (uint32_t dim = 0; dim < shape.size(); ++dim) {
     auto extent = shape[dim];
-    if (1 == extent) continue;
+    if (1 == extent || restrictions[dim] == Restriction::FORBID) continue;
     temp_shape.push_back(extent);
     temp_dims.push_back(dim);
     volume *= extent;

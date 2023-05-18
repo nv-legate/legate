@@ -67,8 +67,18 @@ std::unique_ptr<Partition> TransformStack::invert(const Partition* partition) co
 
 proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) const
 {
+  if (identity()) return point;
+
   auto result = transform_->invert(point);
   return parent_->identity() ? result : parent_->invert(result);
+}
+
+Restrictions TransformStack::invert(const Restrictions& restrictions) const
+{
+  if (identity()) return restrictions;
+
+  auto result = transform_->invert(restrictions);
+  return parent_->identity() ? std::move(result) : parent_->invert(result);
 }
 
 void TransformStack::pack(BufferBuilder& buffer) const
@@ -179,6 +189,8 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const { ret
 // the shift transform makes no change on the store's dimensions
 proj::SymbolicPoint Shift::invert(const proj::SymbolicPoint& point) const { return point; }
 
+Restrictions Shift::invert(const Restrictions& restrictions) const { return restrictions; }
+
 void Shift::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_SHIFT);
@@ -278,6 +290,11 @@ std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
 proj::SymbolicPoint Promote::invert(const proj::SymbolicPoint& point) const
 {
   return point.remove(extra_dim_);
+}
+
+Restrictions Promote::invert(const Restrictions& restrictions) const
+{
+  return restrictions.remove(extra_dim_);
 }
 
 void Promote::pack(BufferBuilder& buffer) const
@@ -380,6 +397,11 @@ proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
   return point.insert(dim_, proj::SymbolicExpr());
 }
 
+Restrictions Project::invert(const Restrictions& restrictions) const
+{
+  return restrictions.insert(dim_, Restriction::ALLOW);
+}
+
 void Project::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_PROJECT);
@@ -450,6 +472,13 @@ proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
       return proj::SymbolicExpr(dim, expr.weight(), expr.offset());
     });
   return proj::SymbolicPoint(std::move(exprs));
+}
+
+Restrictions Transpose::invert(const Restrictions& restrictions) const
+{
+  std::vector<Restriction> result;
+  for (int32_t dim : inverse_) result.push_back(restrictions[dim]);
+  return Restrictions(std::move(result));
 }
 
 namespace {  // anonymous
@@ -561,6 +590,13 @@ proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
   for (int32_t dim = 0; dim < dim_ + 1; ++dim) exprs.push_back(point[dim]);
   for (int32_t dim = dim_ + sizes_.size(); dim < point.size(); ++dim) exprs.push_back(point[dim]);
   return proj::SymbolicPoint(std::move(exprs));
+}
+
+Restrictions Delinearize::invert(const Restrictions& restrictions) const
+{
+  auto result = restrictions;
+  for (uint32_t dim = 1; dim < sizes_.size(); ++dim) result.remove_inplace(dim + 1);
+  return std::move(result);
 }
 
 void Delinearize::pack(BufferBuilder& buffer) const

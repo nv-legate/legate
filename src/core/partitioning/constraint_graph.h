@@ -21,12 +21,16 @@
 #include <memory>
 #include <vector>
 #include "core/partitioning/constraint.h"
+#include "core/partitioning/restriction.h"
 #include "core/utilities/ordered_set.h"
 
 namespace legate {
 
 struct EquivClass {
-  EquivClass(const Variable* symb) : partition_symbol(symb), next(nullptr), size(1) {}
+  EquivClass(const Variable* symb, int32_t ndim)
+    : partition_symbol(symb), next(nullptr), size(1), restrictions(ndim, Restriction::ALLOW)
+  {
+  }
 
   EquivClass* unify(EquivClass* other)
   {
@@ -43,6 +47,7 @@ struct EquivClass {
   const Variable* partition_symbol;
   EquivClass* next;
   size_t size;
+  Restrictions restrictions;
 };
 
 struct ConstraintGraph {
@@ -59,8 +64,8 @@ struct ConstraintGraph {
 
  public:
   void compute_equivalence_classes();
-  void find_equivalence_class(const Variable* partition_symbol,
-                              std::vector<const Variable*>& out_equiv_class) const;
+  std::vector<const Variable*> find_equivalence_class(const Variable* partition_symbol) const;
+  Restrictions find_restrictions(const Variable* partition_symbol) const;
 
  private:
   ordered_set<const Variable*> partition_symbols_;

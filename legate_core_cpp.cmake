@@ -211,6 +211,7 @@ list(APPEND legate_core_SOURCES
   src/core/partitioning/constraint_graph.cc
   src/core/partitioning/partition.cc
   src/core/partitioning/partitioner.cc
+  src/core/partitioning/restriction.cc
   src/core/runtime/context.cc
   src/core/runtime/launcher_arg.cc
   src/core/runtime/launcher.cc

@@ -68,11 +68,39 @@ std::string Alignment::to_string() const
   return std::move(ss).str();
 }
 
+Broadcast::Broadcast(std::unique_ptr<Variable> variable, tuple<int32_t>&& axes)
+  : variable_(std::move(variable)), axes_(std::forward<tuple<int32_t>>(axes))
+{
+}
+
+void Broadcast::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+{
+  partition_symbols.push_back(variable_.get());
+}
+
+std::string Broadcast::to_string() const
+{
+  std::stringstream ss;
+  ss << "Broadcast(" << variable_->to_string() << ", " << axes_.to_string() << ")";
+  return std::move(ss).str();
+}
+
 std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs)
 {
   // Since an Alignment object owns child nodes, inputs need to be copied
   return std::make_unique<Alignment>(std::make_unique<Variable>(*lhs),
                                      std::make_unique<Variable>(*rhs));
+}
+
+std::unique_ptr<Constraint> broadcast(const Variable* variable, const tuple<int32_t>& axes)
+{
+  return broadcast(variable, tuple<int32_t>(axes));
+}
+
+std::unique_ptr<Constraint> broadcast(const Variable* variable, tuple<int32_t>&& axes)
+{
+  return std::make_unique<Broadcast>(std::make_unique<Variable>(*variable),
+                                     std::forward<tuple<int32_t>>(axes));
 }
 
 }  // namespace legate

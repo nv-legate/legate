@@ -27,6 +27,7 @@
 #include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/mapping/machine.h"
+#include "core/partitioning/restriction.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/type/type_info.h"
@@ -130,7 +131,9 @@ class PartitionManager {
   const std::vector<uint32_t>& get_factors(const mapping::MachineDesc& machine);
 
  public:
-  Shape compute_launch_shape(const mapping::MachineDesc& machine, const Shape& shape);
+  Shape compute_launch_shape(const mapping::MachineDesc& machine,
+                             const Restrictions& restrictions,
+                             const Shape& shape);
   Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
 
  public:
