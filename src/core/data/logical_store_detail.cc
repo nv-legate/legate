@@ -84,7 +84,7 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
   auto lo     = domain.lo();
   auto hi     = domain.hi();
   std::vector<size_t> extents;
-  for (int32_t idx = 0; idx < lo.dim; ++idx) extents.push_back(hi[idx] - lo[idx]);
+  for (int32_t idx = 0; idx < lo.dim; ++idx) extents.push_back(hi[idx] - lo[idx] + 1);
   extents_ = extents;
 }
 
