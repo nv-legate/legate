@@ -19,3 +19,4 @@
 
 add_subdirectory(registry)
 add_subdirectory(scoping)
+add_subdirectory(tree_reduce)
