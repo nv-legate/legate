@@ -434,6 +434,7 @@ install(
 
 install(
   FILES src/core/partitioning/constraint.h
+        src/core/partitioning/restriction.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/partitioning)
 
 install(
