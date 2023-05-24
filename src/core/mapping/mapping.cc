@@ -25,7 +25,7 @@ namespace legate {
 namespace mapping {
 
 DimOrdering::DimOrdering(Kind _kind, std::vector<int32_t>&& _dims)
-  : kind(_kind), dims(std::forward<decltype(dims)>(_dims))
+  : kind(_kind), dims(std::move(_dims))
 {
 }
 
@@ -35,7 +35,7 @@ DimOrdering::DimOrdering(Kind _kind, std::vector<int32_t>&& _dims)
 
 /*static*/ DimOrdering DimOrdering::custom_order(std::vector<int32_t>&& dims)
 {
-  return DimOrdering(Kind::CUSTOM, std::forward<decltype(dims)>(dims));
+  return DimOrdering(Kind::CUSTOM, std::move(dims));
 }
 
 Memory::Kind get_memory_kind(StoreTarget target)
@@ -88,7 +88,7 @@ void DimOrdering::set_fortran_order() { kind = Kind::FORTRAN; }
 void DimOrdering::set_custom_order(std::vector<int32_t>&& dims)
 {
   kind = Kind::CUSTOM;
-  dims = std::forward<std::vector<int32_t>&&>(dims);
+  dims = std::move(dims);
 }
 
 bool InstanceMappingPolicy::operator==(const InstanceMappingPolicy& other) const
@@ -130,7 +130,7 @@ void InstanceMappingPolicy::populate_layout_constraints(
   InstanceMappingPolicy policy{};
   policy.target = target;
   policy.exact  = exact;
-  return std::move(policy);
+  return policy;
 }
 
 bool StoreMapping::for_future() const
@@ -180,7 +180,7 @@ std::set<uint32_t> StoreMapping::requirement_indices() const
     if (store.get().is_future()) continue;
     indices.insert(store.get().region_field().index());
   }
-  return std::move(indices);
+  return indices;
 }
 
 std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
@@ -192,7 +192,7 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
     if (!req->region.exists()) continue;
     reqs.insert(req);
   }
-  return std::move(reqs);
+  return reqs;
 }
 
 void StoreMapping::populate_layout_constraints(
@@ -223,7 +223,7 @@ void StoreMapping::populate_layout_constraints(
   StoreMapping mapping{};
   mapping.policy = InstanceMappingPolicy::default_policy(target, exact);
   mapping.stores.emplace_back(store);
-  return std::move(mapping);
+  return mapping;
 }
 
 }  // namespace mapping

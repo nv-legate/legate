@@ -122,7 +122,7 @@ Partition* Storage::find_or_create_key_partition(const mapping::MachineDesc& mac
 
 void Storage::set_key_partition(std::unique_ptr<Partition>&& key_partition)
 {
-  key_partition_ = std::forward<decltype(key_partition_)>(key_partition);
+  key_partition_ = std::move(key_partition);
 }
 
 void Storage::reset_key_partition() { key_partition_ = nullptr; }
@@ -158,7 +158,7 @@ StoragePartition::StoragePartition(std::shared_ptr<Storage> parent,
 
 LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
   : store_id_(Runtime::get_runtime()->get_unique_store_id()),
-    storage_(std::forward<decltype(storage_)>(storage)),
+    storage_(std::move(storage)),
     transform_(std::make_shared<TransformStack>())
 {
   if (!unbound()) extents_ = storage_->extents();
@@ -173,9 +173,9 @@ LogicalStore::LogicalStore(Shape&& extents,
                            const std::shared_ptr<Storage>& storage,
                            std::shared_ptr<TransformStack>&& transform)
   : store_id_(Runtime::get_runtime()->get_unique_store_id()),
-    extents_(std::forward<decltype(extents_)>(extents)),
+    extents_(std::move(extents)),
     storage_(storage),
-    transform_(std::forward<decltype(transform_)>(transform))
+    transform_(std::move(transform))
 {
 #ifdef DEBUG_LEGATE
   assert(transform_ != nullptr);

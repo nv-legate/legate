@@ -43,10 +43,7 @@ Domain LogicalRegionField::domain() const
   return Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
 }
 
-LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl)
-  : impl_(std::forward<decltype(impl)>(impl))
-{
-}
+LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl) : impl_(std::move(impl)) {}
 
 int32_t LogicalStore::dim() const { return impl_->dim(); }
 
@@ -82,12 +79,12 @@ LogicalStore LogicalStore::slice(int32_t dim, std::slice sl) const
 
 LogicalStore LogicalStore::transpose(std::vector<int32_t>&& axes) const
 {
-  return LogicalStore(impl_->transpose(std::forward<decltype(axes)>(axes)));
+  return LogicalStore(impl_->transpose(std::move(axes)));
 }
 
 LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes) const
 {
-  return LogicalStore(impl_->delinearize(dim, std::forward<decltype(sizes)>(sizes)));
+  return LogicalStore(impl_->delinearize(dim, std::move(sizes)));
 }
 
 std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
@@ -101,7 +98,7 @@ void LogicalStore::set_key_partition(const Partition* partition)
 }
 
 LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl)
-  : impl_(std::forward<decltype(impl_)>(impl))
+  : impl_(std::move(impl))
 {
 }
 

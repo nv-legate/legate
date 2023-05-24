@@ -115,7 +115,7 @@ std::vector<const Variable*> ConstraintGraph::find_equivalence_class(
     result.push_back(equiv_class->partition_symbol);
     equiv_class = equiv_class->next;
   }
-  return std::move(result);
+  return result;
 }
 
 Restrictions ConstraintGraph::find_restrictions(const Variable* partition_symbol) const
@@ -127,7 +127,7 @@ Restrictions ConstraintGraph::find_restrictions(const Variable* partition_symbol
     join_inplace(result, equiv_class->restrictions);
     equiv_class = equiv_class->next;
   }
-  return std::move(result);
+  return result;
 }
 
 void ConstraintGraph::dump()

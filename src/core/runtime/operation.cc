@@ -39,7 +39,7 @@ namespace legate {
 Operation::Operation(LibraryContext* library, uint64_t unique_id, mapping::MachineDesc&& machine)
   : library_(library),
     unique_id_(unique_id),
-    machine_(std::forward<decltype(machine)>(machine)),
+    machine_(std::move(machine)),
     provenance_(Runtime::get_runtime()->provenance_manager()->get_provenance())
 {
 }
@@ -67,7 +67,7 @@ Task::Task(LibraryContext* library,
            int64_t task_id,
            uint64_t unique_id,
            mapping::MachineDesc&& machine)
-  : Operation(library, unique_id, std::forward<decltype(machine)>(machine)), task_id_(task_id)
+  : Operation(library, unique_id, std::move(machine)), task_id_(task_id)
 {
 }
 
@@ -201,7 +201,7 @@ AutoTask::AutoTask(LibraryContext* library,
                    int64_t task_id,
                    uint64_t unique_id,
                    mapping::MachineDesc&& machine)
-  : Task(library, task_id, unique_id, std::forward<decltype(machine)>(machine))
+  : Task(library, task_id, unique_id, std::move(machine))
 {
 }
 
@@ -259,8 +259,7 @@ ManualTask::ManualTask(LibraryContext* library,
                        const Shape& launch_shape,
                        uint64_t unique_id,
                        mapping::MachineDesc&& machine)
-  : Task(library, task_id, unique_id, std::forward<decltype(machine)>(machine)),
-    strategy_(std::make_unique<Strategy>())
+  : Task(library, task_id, unique_id, std::move(machine)), strategy_(std::make_unique<Strategy>())
 {
   strategy_->set_launch_shape(this, launch_shape);
 }

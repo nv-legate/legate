@@ -153,7 +153,7 @@ StructType::StructType(int32_t uid,
     aligned_(align),
     alignment_(1),
     size_(0),
-    field_types_(std::forward<decltype(field_types_)>(field_types))
+    field_types_(std::move(field_types))
 {
   offsets_.reserve(field_types_.size());
   if (aligned_) {
@@ -261,9 +261,8 @@ std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
 std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_types,
                                   bool align) noexcept(false)
 {
-  return std::make_unique<StructType>(Runtime::get_runtime()->get_type_uid(),
-                                      std::forward<std::vector<std::unique_ptr<Type>>>(field_types),
-                                      align);
+  return std::make_unique<StructType>(
+    Runtime::get_runtime()->get_type_uid(), std::move(field_types), align);
 }
 
 std::ostream& operator<<(std::ostream& ostream, const Type::Code& code)

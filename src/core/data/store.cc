@@ -219,7 +219,7 @@ Store::Store(int32_t dim,
     type_(std::move(type)),
     redop_id_(redop_id),
     future_(future),
-    transform_(std::forward<decltype(transform)>(transform)),
+    transform_(std::move(transform)),
     readable_(true)
 {
 }
@@ -234,8 +234,8 @@ Store::Store(int32_t dim,
     dim_(dim),
     type_(std::move(type)),
     redop_id_(redop_id),
-    region_field_(std::forward<RegionField>(region_field)),
-    transform_(std::forward<decltype(transform)>(transform))
+    region_field_(std::move(region_field)),
+    transform_(std::move(transform))
 {
   readable_  = region_field_.is_readable();
   writable_  = region_field_.is_writable();
@@ -251,8 +251,8 @@ Store::Store(int32_t dim,
     dim_(dim),
     type_(std::move(type)),
     redop_id_(-1),
-    unbound_field_(std::forward<UnboundRegionField>(unbound_field)),
-    transform_(std::forward<decltype(transform)>(transform))
+    unbound_field_(std::move(unbound_field)),
+    transform_(std::move(transform))
 {
 }
 
@@ -282,7 +282,7 @@ Store::Store(int32_t dim,
     dim_(dim),
     type_(std::move(type)),
     redop_id_(redop_id),
-    region_field_(std::forward<RegionField>(region_field)),
+    region_field_(std::move(region_field)),
     transform_(transform)
 {
   readable_  = region_field_.is_readable();
@@ -297,8 +297,8 @@ Store::Store(Store&& other) noexcept
     type_(std::move(other.type_)),
     redop_id_(other.redop_id_),
     future_(other.future_),
-    region_field_(std::forward<RegionField>(other.region_field_)),
-    unbound_field_(std::forward<UnboundRegionField>(other.unbound_field_)),
+    region_field_(std::move(other.region_field_)),
+    unbound_field_(std::move(other.unbound_field_)),
     transform_(std::move(other.transform_)),
     readable_(other.readable_),
     writable_(other.writable_),

@@ -24,7 +24,7 @@ tuple<Restriction> join(const tuple<Restriction>& lhs, const tuple<Restriction>&
 {
   auto result = lhs;
   join_inplace(result, rhs);
-  return std::move(result);
+  return result;
 }
 
 void join_inplace(Restrictions& lhs, const Restrictions& rhs)

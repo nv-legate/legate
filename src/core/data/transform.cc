@@ -34,14 +34,13 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
 
 TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
                                const std::shared_ptr<TransformStack>& parent)
-  : transform_(std::forward<decltype(transform)>(transform)), parent_(parent)
+  : transform_(std::move(transform)), parent_(parent)
 {
 }
 
 TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
                                std::shared_ptr<TransformStack>&& parent)
-  : transform_(std::forward<decltype(transform)>(transform)),
-    parent_(std::forward<decltype(parent)>(parent))
+  : transform_(std::move(transform)), parent_(std::move(parent))
 {
 }
 
@@ -139,13 +138,12 @@ std::unique_ptr<StoreTransform> TransformStack::pop()
     transform_ = std::move(parent_->transform_);
     parent_    = std::move(parent_->parent_);
   }
-  return std::move(result);
+  return result;
 }
 
 std::shared_ptr<TransformStack> TransformStack::push(std::unique_ptr<StoreTransform>&& transform)
 {
-  return std::make_shared<TransformStack>(std::forward<decltype(transform)>(transform),
-                                          shared_from_this());
+  return std::make_shared<TransformStack>(std::move(transform), shared_from_this());
 }
 
 void TransformStack::dump() const { std::cerr << *this << std::endl; }
@@ -596,7 +594,7 @@ Restrictions Delinearize::invert(const Restrictions& restrictions) const
 {
   auto result = restrictions;
   for (uint32_t dim = 1; dim < sizes_.size(); ++dim) result.remove_inplace(dim + 1);
-  return std::move(result);
+  return result;
 }
 
 void Delinearize::pack(BufferBuilder& buffer) const

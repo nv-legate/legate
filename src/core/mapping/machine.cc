@@ -175,7 +175,7 @@ std::vector<TaskTarget> MachineDesc::valid_targets() const
 {
   std::vector<TaskTarget> result;
   for (auto& [target, _] : processor_ranges) result.push_back(target);
-  return std::move(result);
+  return result;
 }
 
 std::vector<TaskTarget> MachineDesc::valid_targets_except(
@@ -184,7 +184,7 @@ std::vector<TaskTarget> MachineDesc::valid_targets_except(
   std::vector<TaskTarget> result;
   for (auto& [target, _] : processor_ranges)
     if (to_exclude.find(target) == to_exclude.end()) result.push_back(target);
-  return std::move(result);
+  return result;
 }
 
 size_t MachineDesc::count() const { return count(preferred_target); }

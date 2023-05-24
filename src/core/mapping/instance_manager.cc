@@ -30,7 +30,7 @@ RegionGroup::RegionGroup(const std::set<Region>& rs, const Domain bound)
 }
 
 RegionGroup::RegionGroup(std::set<Region>&& rs, const Domain bound)
-  : regions(std::forward<decltype(regions)>(rs)), bounding_box(bound)
+  : regions(std::move(rs)), bounding_box(bound)
 {
 }
 
@@ -38,7 +38,7 @@ std::vector<RegionGroup::Region> RegionGroup::get_regions() const
 {
   std::vector<Region> result;
   result.insert(result.end(), regions.begin(), regions.end());
-  return std::move(result);
+  return result;
 }
 
 bool RegionGroup::subsumes(const RegionGroup* other)
@@ -233,7 +233,7 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(RegionGroupP group,
   dump_and_sanity_check();
 #endif
 
-  return std::move(replaced);
+  return replaced;
 }
 
 bool InstanceSet::erase(Instance inst)
@@ -372,7 +372,7 @@ RegionGroupP InstanceManager::find_region_group(const Region& region,
                       << memory << "," << exact << ") ~> " << *result;
 #endif
 
-  return std::move(result);
+  return result;
 }
 
 std::set<InstanceManager::Instance> InstanceManager::record_instance(

@@ -51,7 +51,7 @@ std::string Variable::to_string() const
 }
 
 Alignment::Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs)
-  : lhs_(std::forward<decltype(lhs_)>(lhs)), rhs_(std::forward<decltype(rhs_)>(rhs))
+  : lhs_(std::move(lhs)), rhs_(std::move(rhs))
 {
 }
 
@@ -69,7 +69,7 @@ std::string Alignment::to_string() const
 }
 
 Broadcast::Broadcast(std::unique_ptr<Variable> variable, tuple<int32_t>&& axes)
-  : variable_(std::move(variable)), axes_(std::forward<tuple<int32_t>>(axes))
+  : variable_(std::move(variable)), axes_(std::move(axes))
 {
 }
 
@@ -99,8 +99,7 @@ std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32
 
 std::unique_ptr<Broadcast> broadcast(const Variable* variable, tuple<int32_t>&& axes)
 {
-  return std::make_unique<Broadcast>(std::make_unique<Variable>(*variable),
-                                     std::forward<tuple<int32_t>>(axes));
+  return std::make_unique<Broadcast>(std::make_unique<Variable>(*variable), std::move(axes));
 }
 
 }  // namespace legate

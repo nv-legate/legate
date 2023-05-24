@@ -187,8 +187,7 @@ void Strategy::compute_launch_domains()
 // legate::Partitioner
 ////////////////////////////////////////////////////
 
-Partitioner::Partitioner(std::vector<Operation*>&& operations)
-  : operations_(std::forward<std::vector<Operation*>>(operations))
+Partitioner::Partitioner(std::vector<Operation*>&& operations) : operations_(std::move(operations))
 {
 }
 
@@ -240,7 +239,7 @@ std::unique_ptr<Strategy> Partitioner::solve()
 
   strategy->compute_launch_domains();
 
-  return std::move(strategy);
+  return strategy;
 }
 
 void Partitioner::solve_for_unbound_stores(std::vector<const Variable*>& partition_symbols,

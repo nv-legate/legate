@@ -56,7 +56,7 @@ Store::Store(int32_t dim,
     type_(std::move(type)),
     redop_id_(-1),
     future_(future),
-    transform_(std::forward<decltype(transform)>(transform))
+    transform_(std::move(transform))
 {
 }
 
@@ -74,7 +74,7 @@ Store::Store(Legion::Mapping::MapperRuntime* runtime,
     type_(std::move(type)),
     redop_id_(redop_id),
     region_field_(region_field),
-    transform_(std::forward<decltype(transform)>(transform)),
+    transform_(std::move(transform)),
     runtime_(runtime),
     context_(context)
 {

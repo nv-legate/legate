@@ -204,7 +204,7 @@ std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
   req_analyzer_->populate_launcher(single_task.get());
   out_analyzer_->populate_output_requirements(output_requirements_);
 
-  return std::move(single_task);
+  return single_task;
 }
 
 std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
@@ -245,7 +245,7 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
   req_analyzer_->populate_launcher(index_task.get());
   out_analyzer_->populate_output_requirements(output_requirements_);
 
-  return std::move(index_task);
+  return index_task;
 }
 
 void TaskLauncher::bind_region_fields_to_unbound_stores()

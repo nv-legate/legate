@@ -31,7 +31,7 @@ tuple<T>::tuple(const std::vector<T>& values) : data_(values)
 }
 
 template <typename T>
-tuple<T>::tuple(std::vector<T>&& values) : data_(std::forward<std::vector<T>>(values))
+tuple<T>::tuple(std::vector<T>&& values) : data_(std::move(values))
 {
 }
 

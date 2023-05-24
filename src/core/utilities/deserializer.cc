@@ -202,7 +202,7 @@ CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
                                    Legion::Mapping::MapperRuntime* runtime,
                                    Legion::Mapping::MapperContext context)
   : BaseDeserializer(copy->mapper_data, copy->mapper_data_size),
-    all_reqs_(std::forward<std::vector<ReqsRef>>(all_requirements)),
+    all_reqs_(std::move(all_requirements)),
     curr_reqs_(all_reqs_.begin()),
     runtime_(runtime),
     context_(context),

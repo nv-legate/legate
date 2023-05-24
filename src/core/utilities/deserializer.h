@@ -43,7 +43,7 @@ class BaseDeserializer {
   {
     T value;
     static_cast<Deserializer*>(this)->_unpack(value);
-    return std::move(value);
+    return value;
   }
 
  public:

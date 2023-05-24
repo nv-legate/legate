@@ -58,9 +58,9 @@ std::string NoPartition::to_string() const { return "NoPartition"; }
 
 Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
   : Partition(),
-    tile_shape_(std::forward<Shape>(tile_shape)),
-    color_shape_(std::forward<Shape>(color_shape)),
-    offsets_(std::forward<Shape>(offsets))
+    tile_shape_(std::move(tile_shape)),
+    color_shape_(std::move(color_shape)),
+    offsets_(std::move(offsets))
 {
   if (offsets_.empty()) offsets_ = Shape(tile_shape_.size(), 0);
   assert(tile_shape_.size() == color_shape_.size());
@@ -156,9 +156,8 @@ std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                          Shape&& color_shape,
                                          Shape&& offsets /*= {}*/)
 {
-  return std::make_unique<Tiling>(std::forward<Shape>(tile_shape),
-                                  std::forward<Shape>(color_shape),
-                                  std::forward<Shape>(offsets));
+  return std::make_unique<Tiling>(
+    std::move(tile_shape), std::move(color_shape), std::move(offsets));
 }
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition)
