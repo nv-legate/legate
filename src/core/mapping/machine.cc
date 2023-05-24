@@ -117,10 +117,10 @@ std::string ProcessorRange::to_string() const
 std::pair<uint32_t, uint32_t> ProcessorRange::get_node_range() const
 {
   if (empty()) throw std::runtime_error("Illegal to get a node range of an empty processor range");
-  return std::make_pair(low / per_node_count, high / per_node_count);
+  return std::make_pair(low / per_node_count, (high + per_node_count - 1) / per_node_count);
 }
 
-ProcessorRange ProcessorRange::slice(const uint32_t& from, const uint32_t& to) const
+ProcessorRange ProcessorRange::slice(uint32_t from, uint32_t to) const
 {
   uint32_t new_low  = std::min<uint32_t>(low + from, high);
   uint32_t new_high = std::min<uint32_t>(low + to, high);
@@ -144,7 +144,17 @@ MachineDesc::MachineDesc(const std::map<TaskTarget, ProcessorRange>& ranges)
   for (auto& [target, processor_range] : processor_ranges)
     if (!processor_range.empty()) {
       preferred_target = target;
-      break;
+      return;
+    }
+}
+
+MachineDesc::MachineDesc(std::map<TaskTarget, ProcessorRange>&& ranges)
+  : processor_ranges(std::move(ranges))
+{
+  for (auto& [target, processor_range] : processor_ranges)
+    if (!processor_range.empty()) {
+      preferred_target = target;
+      return;
     }
 }
 
@@ -152,12 +162,12 @@ const ProcessorRange& MachineDesc::processor_range() const
 {
   return processor_range(preferred_target);
 }
-static const ProcessorRange empty_processor_range = {0, 0, 1};
+static const ProcessorRange EMPTY_RANGE{};
 
-const ProcessorRange& MachineDesc::processor_range(const TaskTarget& target) const
+const ProcessorRange& MachineDesc::processor_range(TaskTarget target) const
 {
   auto finder = processor_ranges.find(target);
-  if (finder == processor_ranges.end()) { return empty_processor_range; }
+  if (finder == processor_ranges.end()) { return EMPTY_RANGE; }
   return finder->second;
 }
 
@@ -179,15 +189,7 @@ std::vector<TaskTarget> MachineDesc::valid_targets_except(
 
 size_t MachineDesc::count() const { return count(preferred_target); }
 
-size_t MachineDesc::count(const TaskTarget& target) const
-{
-  auto finder = processor_ranges.find(target);
-  if (finder == processor_ranges.end()) {
-    throw std::runtime_error(
-      "There is no requested target in the MachineDesc or MachineDesc is empty");
-  }
-  return finder->second.count();
-}
+size_t MachineDesc::count(TaskTarget target) const { return processor_range(target).count(); }
 
 std::string MachineDesc::to_string() const
 {
@@ -208,9 +210,9 @@ void MachineDesc::pack(BufferBuilder& buffer) const
   }
 }
 
-MachineDesc MachineDesc::only(const TaskTarget& target) const { return only(std::set({target})); }
+MachineDesc MachineDesc::only(TaskTarget target) const { return only(std::vector({target})); }
 
-MachineDesc MachineDesc::only(const std::set<TaskTarget>& targets) const
+MachineDesc MachineDesc::only(const std::vector<TaskTarget>& targets) const
 {
   std::map<TaskTarget, ProcessorRange> new_processor_ranges;
   for (auto t : targets) new_processor_ranges.insert({t, processor_range(t)});
@@ -218,23 +220,22 @@ MachineDesc MachineDesc::only(const std::set<TaskTarget>& targets) const
   return MachineDesc(new_processor_ranges);
 }
 
-MachineDesc MachineDesc::slice(const uint32_t& from,
-                               const uint32_t& to,
-                               const TaskTarget& target) const
+MachineDesc MachineDesc::slice(uint32_t from, uint32_t to, TaskTarget target) const
 {
   return MachineDesc({{target, processor_range(target).slice(from, to)}});
 }
 
-MachineDesc MachineDesc::slice(const uint32_t& from, const uint32_t& to) const
+MachineDesc MachineDesc::slice(uint32_t from, uint32_t to) const
 {
-  if (processor_ranges.size() > 1)
-    throw std::runtime_error(
-      "Ambiguous slicing: slicing is not allowed on a machine with more than one processor kind");
-
   return slice(from, to, preferred_target);
 }
 
-MachineDesc MachineDesc::operator[](const TaskTarget& target) const { return only(target); }
+MachineDesc MachineDesc::operator[](TaskTarget target) const { return only(target); }
+
+MachineDesc MachineDesc::operator[](const std::vector<TaskTarget>& targets) const
+{
+  return only(targets);
+}
 
 bool MachineDesc::operator==(const MachineDesc& other) const
 {

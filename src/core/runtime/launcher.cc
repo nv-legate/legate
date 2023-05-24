@@ -31,9 +31,10 @@ namespace legate {
 
 TaskLauncher::TaskLauncher(LibraryContext* library,
                            const mapping::MachineDesc& machine,
+                           const std::string& provenance,
                            int64_t task_id,
                            int64_t tag /*= 0*/)
-  : library_(library), task_id_(task_id), tag_(tag)
+  : library_(library), task_id_(task_id), tag_(tag), provenance_(provenance)
 {
   req_analyzer_ = new RequirementAnalyzer();
   out_analyzer_ = new OutputRequirementAnalyzer();
@@ -189,8 +190,7 @@ std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
   buffer_->pack<uint32_t>(0);
 
   pack_sharding_functor_id();
-  auto* runtime    = Runtime::get_runtime();
-  auto& provenance = runtime->provenance_manager()->get_provenance();
+  auto* runtime = Runtime::get_runtime();
 
   auto single_task = std::make_unique<Legion::TaskLauncher>(legion_task_id(),
                                                             buffer_->to_legion_buffer(),
@@ -198,7 +198,7 @@ std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
                                                             legion_mapper_id(),
                                                             tag_,
                                                             mapper_arg_->to_legion_buffer(),
-                                                            provenance.c_str());
+                                                            provenance_.c_str());
   for (auto& future : futures_) single_task->add_future(future);
 
   req_analyzer_->populate_launcher(single_task.get());
@@ -227,8 +227,7 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
   buffer_->pack<uint32_t>(0);
 
   pack_sharding_functor_id();
-  auto* runtime    = Runtime::get_runtime();
-  auto& provenance = runtime->provenance_manager()->get_provenance();
+  auto* runtime = Runtime::get_runtime();
 
   auto index_task = std::make_unique<Legion::IndexTaskLauncher>(legion_task_id(),
                                                                 launch_domain,
@@ -239,7 +238,7 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
                                                                 legion_mapper_id(),
                                                                 tag_,
                                                                 mapper_arg_->to_legion_buffer(),
-                                                                provenance.c_str());
+                                                                provenance_.c_str());
   for (auto& future : futures_) index_task->add_future(future);
   for (auto& future_map : future_maps_) index_task->point_futures.push_back(future_map);
 

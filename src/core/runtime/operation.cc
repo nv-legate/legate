@@ -37,7 +37,10 @@ namespace legate {
 ////////////////////////////////////////////////////
 
 Operation::Operation(LibraryContext* library, uint64_t unique_id, mapping::MachineDesc&& machine)
-  : library_(library), unique_id_(unique_id), machine_(std::forward<decltype(machine)>(machine))
+  : library_(library),
+    unique_id_(unique_id),
+    machine_(std::forward<decltype(machine)>(machine)),
+    provenance_(Runtime::get_runtime()->provenance_manager()->get_provenance())
 {
 }
 
@@ -73,7 +76,7 @@ void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 void Task::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
-  TaskLauncher launcher(library_, machine_, task_id_);
+  TaskLauncher launcher(library_, machine_, provenance_, task_id_);
   auto launch_domain = strategy.launch_domain(this);
   auto launch_ndim   = launch_domain != nullptr ? launch_domain->dim : 0;
 

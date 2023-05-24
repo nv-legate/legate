@@ -17,6 +17,7 @@
 #include "core/data/logical_store_detail.h"
 
 #include "core/mapping/machine.h"
+#include "core/runtime/partition_manager.h"
 #include "core/runtime/req_analyzer.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"

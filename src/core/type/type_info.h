@@ -346,9 +346,7 @@ class StructType : public ExtensionType {
  * @ingroup types
  * @brief Creates a metadata object for a primitive type
  *
- * @param uid Unique ID
- * @param element_type Type of the array elements
- * @param N Size of the array
+ * @param code Type code
  *
  * @return Type object
  */
@@ -379,6 +377,7 @@ std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
  * @brief Creates a metadata object for a struct type
  *
  * @param field_types A vector of field types
+ * @param align If true, fields in the struct are aligned
  *
  * @return Type object
  */

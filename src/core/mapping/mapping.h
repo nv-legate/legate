@@ -39,6 +39,9 @@ class Task;
 /**
  * @ingroup mapping
  * @brief An enum class for task targets
+ *
+ * The enumerators of `TaskTarget` are ordered by their precedence; i.e., `GPU`, if available, is
+ * chosen over `OMP` or `CPU, `OMP`, if available, is chosen over `CPU`.
  */
 enum class TaskTarget : int32_t {
   /**

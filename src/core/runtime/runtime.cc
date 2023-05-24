@@ -27,8 +27,13 @@
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
+#include "core/runtime/field_manager.h"
 #include "core/runtime/launcher.h"
+#include "core/runtime/machine_manager.h"
+#include "core/runtime/partition_manager.h"
 #include "core/runtime/projection.h"
+#include "core/runtime/provenance_manager.h"
+#include "core/runtime/region_manager.h"
 #include "core/runtime/shard.h"
 #include "core/task/exception.h"
 #include "core/task/task.h"
@@ -55,8 +60,6 @@ static const char* const core_library_name = "legate.core";
 /*static*/ bool Core::log_mapping_decisions = false;
 
 /*static*/ bool Core::has_socket_mem = false;
-
-static const std::string EMPTY_STRING = "";
 
 /*static*/ void Core::parse_config(void)
 {
@@ -300,386 +303,6 @@ void register_builtin_reduction_ops()
 }
 
 ////////////////////////////////////////////////////
-// legate::RegionManager
-////////////////////////////////////////////////////
-
-class RegionManager {
- private:
-  struct ManagerEntry {
-    static constexpr Legion::FieldID FIELD_ID_BASE = 10000;
-    static constexpr int32_t MAX_NUM_FIELDS = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
-
-    ManagerEntry(const Legion::LogicalRegion& _region)
-      : region(_region), next_field_id(FIELD_ID_BASE)
-    {
-    }
-    bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
-    Legion::FieldID get_next_field_id() { return next_field_id++; }
-
-    Legion::LogicalRegion region;
-    Legion::FieldID next_field_id;
-  };
-
- public:
-  RegionManager(Runtime* runtime, const Domain& shape);
-
- private:
-  const ManagerEntry& active_entry() const { return entries_.back(); }
-  ManagerEntry& active_entry() { return entries_.back(); }
-  void push_entry();
-
- public:
-  bool has_space() const;
-  std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(size_t field_size);
-  void import_region(const Legion::LogicalRegion& region);
-
- private:
-  Runtime* runtime_;
-  Domain shape_;
-  std::vector<ManagerEntry> entries_{};
-};
-
-RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
-  : runtime_(runtime), shape_(shape)
-{
-}
-
-void RegionManager::push_entry()
-{
-  auto is = runtime_->find_or_create_index_space(shape_);
-  auto fs = runtime_->create_field_space();
-  entries_.emplace_back(runtime_->create_region(is, fs));
-}
-
-bool RegionManager::has_space() const { return !entries_.empty() && active_entry().has_space(); }
-
-std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(size_t field_size)
-{
-  if (!has_space()) push_entry();
-  auto& entry = active_entry();
-  auto fid =
-    runtime_->allocate_field(entry.region.get_field_space(), entry.get_next_field_id(), field_size);
-  return std::make_pair(entry.region, fid);
-}
-
-void RegionManager::import_region(const Legion::LogicalRegion& region)
-{
-  entries_.emplace_back(region);
-}
-
-////////////////////////////////////////////////////
-// legate::FieldManager
-////////////////////////////////////////////////////
-
-class FieldManager {
- public:
-  FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
-
- public:
-  std::shared_ptr<LogicalRegionField> allocate_field();
-  std::shared_ptr<LogicalRegionField> import_field(const Legion::LogicalRegion& region,
-                                                   Legion::FieldID field_id);
-
- private:
-  Runtime* runtime_;
-  Domain shape_;
-  uint32_t field_size_;
-
- private:
-  using FreeField = std::pair<Legion::LogicalRegion, Legion::FieldID>;
-  std::deque<FreeField> free_fields_;
-};
-
-FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
-  : runtime_(runtime), shape_(shape), field_size_(field_size)
-{
-}
-
-std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
-{
-  LogicalRegionField* rf = nullptr;
-  if (!free_fields_.empty()) {
-    auto field = free_fields_.front();
-    log_legate.debug("Field %u recycled in field manager %p", field.second, this);
-    free_fields_.pop_front();
-    rf = new LogicalRegionField(field.first, field.second);
-  } else {
-    auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_);
-    auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
-    rf             = new LogicalRegionField(lr, fid);
-    log_legate.debug("Field %u created in field manager %p", fid, this);
-  }
-  assert(rf != nullptr);
-  return std::shared_ptr<LogicalRegionField>(rf, [this](auto* field) {
-    log_legate.debug("Field %u freed in field manager %p", field->field_id(), this);
-    this->free_fields_.push_back(FreeField(field->region(), field->field_id()));
-    delete field;
-  });
-}
-
-std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::LogicalRegion& region,
-                                                               Legion::FieldID field_id)
-{
-  // Import the region only if the region manager is created fresh
-  auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
-  if (!rgn_mgr->has_space()) rgn_mgr->import_region(region);
-
-  log_legate.debug("Field %u imported in field manager %p", field_id, this);
-
-  auto* rf = new LogicalRegionField(region, field_id);
-  return std::shared_ptr<LogicalRegionField>(rf, [this](auto* field) {
-    log_legate.debug("Field %u freed in field manager %p", field->field_id(), this);
-    this->free_fields_.push_back(FreeField(field->region(), field->field_id()));
-    delete field;
-  });
-}
-
-////////////////////////////////////////////////////
-// legate::PartitionManager
-////////////////////////////////////////////////////
-
-PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* context)
-{
-  auto mapper_id = context->get_mapper_id();
-  min_shard_volume_ =
-    runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
-
-#ifdef DEBUG_LEGATE
-  assert(min_shard_volume_ > 0);
-#endif
-}
-
-const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::MachineDesc& machine)
-{
-  uint32_t curr_num_pieces = machine.count();
-
-  auto finder = all_factors_.find(curr_num_pieces);
-  if (all_factors_.end() == finder) {
-    uint32_t remaining_pieces = curr_num_pieces;
-    std::vector<uint32_t> factors;
-    auto push_factors = [&factors, &remaining_pieces](uint32_t prime) {
-      while (remaining_pieces % prime == 0) {
-        factors.push_back(prime);
-        remaining_pieces /= prime;
-      }
-    };
-    for (uint32_t factor : {11, 7, 5, 3, 2}) push_factors(factor);
-    all_factors_.insert({curr_num_pieces, std::move(factors)});
-    finder = all_factors_.find(curr_num_pieces);
-  }
-
-  return finder->second;
-}
-
-Shape PartitionManager::compute_launch_shape(const mapping::MachineDesc& machine,
-                                             const Restrictions& restrictions,
-                                             const Shape& shape)
-{
-  uint32_t curr_num_pieces = machine.count();
-  // Easy case if we only have one piece: no parallel launch space
-  if (1 == curr_num_pieces) return {};
-
-  // If we only have one point then we never do parallel launches
-  if (shape.all([](auto extent) { return 1 == extent; })) return {};
-
-  // Prune out any dimensions that are 1
-  std::vector<size_t> temp_shape{};
-  std::vector<uint32_t> temp_dims{};
-  int64_t volume = 1;
-  for (uint32_t dim = 0; dim < shape.size(); ++dim) {
-    auto extent = shape[dim];
-    if (1 == extent || restrictions[dim] == Restriction::FORBID) continue;
-    temp_shape.push_back(extent);
-    temp_dims.push_back(dim);
-    volume *= extent;
-  }
-
-  // Figure out how many shards we can make with this array
-  int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
-  assert(max_pieces > 0);
-  // If we can only make one piece return that now
-  if (1 == max_pieces) return {};
-
-  // Otherwise we need to compute it ourselves
-  // TODO: a better heuristic here.
-  //       For now if we can make at least two pieces then we will make N pieces.
-  max_pieces = curr_num_pieces;
-
-  // First compute the N-th root of the number of pieces
-  uint32_t ndim = temp_shape.size();
-  assert(ndim > 0);
-  std::vector<size_t> temp_result{};
-
-  if (1 == ndim) {
-    // Easy one dimensional case
-    temp_result.push_back(std::min<size_t>(temp_shape.front(), static_cast<size_t>(max_pieces)));
-  } else if (2 == ndim) {
-    if (volume < max_pieces) {
-      // TBD: Once the max_pieces heuristic is fixed, this should never happen
-      temp_result.swap(temp_shape);
-    } else {
-      // Two dimensional so we can use square root to try and generate as square a pieces
-      // as possible since most often we will be doing matrix operations with these
-      auto nx   = temp_shape[0];
-      auto ny   = temp_shape[1];
-      auto swap = nx > ny;
-      if (swap) std::swap(nx, ny);
-      auto n = std::sqrt(static_cast<double>(max_pieces) * nx / ny);
-
-      // Need to constraint n to be an integer with numpcs % n == 0
-      // try rounding n both up and down
-      auto n1 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n + 1e-12)));
-      while (max_pieces % n1 != 0) --n1;
-      auto n2 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n - 1e-12)));
-      while (max_pieces % n2 != 0) ++n2;
-
-      // pick whichever of n1 and n2 gives blocks closest to square
-      // i.e. gives the shortest long side
-      auto side1 = std::max(nx / n1, ny / (max_pieces / n1));
-      auto side2 = std::max(nx / n2, ny / (max_pieces / n2));
-      auto px    = static_cast<size_t>(side1 <= side2 ? n1 : n2);
-      auto py    = static_cast<size_t>(max_pieces / px);
-
-      // we need to trim launch space if it is larger than the
-      // original shape in one of the dimensions (can happen in
-      // testing)
-      if (swap) {
-        temp_result.push_back(std::min(py, temp_shape[0]));
-        temp_result.push_back(std::min(px, temp_shape[1]));
-      } else {
-        temp_result.push_back(std::min(px, temp_shape[1]));
-        temp_result.push_back(std::min(py, temp_shape[0]));
-      }
-    }
-  } else {
-    // For higher dimensions we care less about "square"-ness and more about evenly dividing
-    // things, compute the prime factors for our number of pieces and then round-robin them
-    // onto the shape, with the goal being to keep the last dimension >= 32 for good memory
-    // performance on the GPU
-    temp_result.resize(ndim);
-    std::fill(temp_result.begin(), temp_result.end(), 1);
-    size_t factor_prod = 1;
-    for (auto factor : get_factors(machine)) {
-      // Avoid exceeding the maximum number of pieces
-      if (factor * factor_prod > max_pieces) break;
-
-      factor_prod *= factor;
-
-      std::vector<size_t> remaining;
-      for (uint32_t idx = 0; idx < temp_shape.size(); ++idx)
-        remaining.push_back((temp_shape[idx] + temp_result[idx] - 1) / temp_result[idx]);
-      uint32_t big_dim = std::max_element(remaining.begin(), remaining.end()) - remaining.begin();
-      if (big_dim < ndim - 1) {
-        // Not the last dimension, so do it
-        temp_result[big_dim] *= factor;
-      } else {
-        // Last dim so see if it still bigger than 32
-        if (remaining[big_dim] / factor >= 32) {
-          // go ahead and do it
-          temp_result[big_dim] *= factor;
-        } else {
-          // Won't be see if we can do it with one of the other dimensions
-          uint32_t next_big_dim =
-            std::max_element(remaining.begin(), remaining.end() - 1) - remaining.begin();
-          if (remaining[next_big_dim] / factor > 0)
-            temp_result[next_big_dim] *= factor;
-          else
-            // Fine just do it on the last dimension
-            temp_result[big_dim] *= factor;
-        }
-      }
-    }
-  }
-
-  // Project back onto the original number of dimensions
-  assert(temp_result.size() == ndim);
-  std::vector<size_t> result(shape.size(), 1);
-  for (uint32_t idx = 0; idx < ndim; ++idx) result[temp_dims[idx]] = temp_result[idx];
-
-  return Shape(std::move(result));
-}
-
-Shape PartitionManager::compute_tile_shape(const Shape& extents, const Shape& launch_shape)
-{
-  assert(extents.size() == launch_shape.size());
-  Shape tile_shape;
-  for (uint32_t idx = 0; idx < extents.size(); ++idx) {
-    auto x = extents[idx];
-    auto y = launch_shape[idx];
-    tile_shape.append_inplace((x + y - 1) / y);
-  }
-  return std::move(tile_shape);
-}
-
-Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
-                                                              const Tiling& tiling) const
-{
-  auto finder = tiling_cache_.find(std::make_pair(index_space, tiling));
-  if (finder != tiling_cache_.end())
-    return finder->second;
-  else
-    return Legion::IndexPartition::NO_PART;
-}
-
-void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
-                                              const Tiling& tiling,
-                                              const Legion::IndexPartition& index_partition)
-{
-  tiling_cache_[std::make_pair(index_space, tiling)] = index_partition;
-}
-
-////////////////////////////////////////////
-// legate::MachineManager
-////////////////////////////////////////////
-const mapping::MachineDesc& MachineManager::get_machine() const
-{
-#ifdef DEBUG_LEGATE
-  assert(machines_.size() > 0);
-#endif
-  return machines_.back();
-}
-
-void MachineManager::push_machine(const mapping::MachineDesc& machine)
-{
-  machines_.push_back(machine);
-}
-
-void MachineManager::push_machine(mapping::MachineDesc&& machine)
-{
-  machines_.emplace_back(machine);
-}
-
-void MachineManager::pop_machine()
-{
-  if (machines_.size() <= 1) throw std::underflow_error("can't pop from the empty machine stack");
-  machines_.pop_back();
-}
-
-////////////////////////////////////////////
-// legate::MachineTracker
-////////////////////////////////////////////
-
-MachineTracker::MachineTracker(const mapping::MachineDesc& machine)
-{
-  auto* runtime = Runtime::get_runtime();
-  auto result   = machine & Runtime::get_runtime()->get_machine();
-  if (result.count() == 0)
-    throw std::runtime_error("Empty machines cannot be used for resource scoping");
-  runtime->machine_manager()->push_machine(std::move(result));
-}
-
-MachineTracker::~MachineTracker()
-{
-  auto* runtime = Runtime::get_runtime();
-  runtime->machine_manager()->pop_machine();
-}
-
-const mapping::MachineDesc& MachineTracker::get_current_machine() const
-{
-  return Runtime::get_runtime()->get_machine();
-}
-
-////////////////////////////////////////////////////
 // legate::Runtime
 ////////////////////////////////////////////////////
 
@@ -706,11 +329,8 @@ LibraryContext* Runtime::find_library(const std::string& library_name,
 {
   auto finder = libraries_.find(library_name);
   if (libraries_.end() == finder) {
-    if (!can_fail) {
-      log_legate.error("Library %s does not exist", library_name.c_str());
-      LEGATE_ABORT;
-    } else
-      return nullptr;
+    if (!can_fail) throw std::out_of_range("Library " + library_name + " does not exist");
+    return nullptr;
   }
   return finder->second;
 }
@@ -719,10 +339,8 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper)
 {
-  if (libraries_.find(library_name) != libraries_.end()) {
-    log_legate.error("Library %s already exists", library_name.c_str());
-    LEGATE_ABORT;
-  }
+  if (libraries_.find(library_name) != libraries_.end())
+    throw std::invalid_argument("Library " + library_name + " already exists");
 
   log_legate.debug("Library %s is created", library_name.c_str());
   if (nullptr == mapper) mapper = std::make_unique<mapping::DefaultMapper>();
@@ -796,14 +414,13 @@ mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, in
     throw std::invalid_argument(std::move(ss).str());
   }
 
-  std::set<mapping::TaskTarget> task_targets;
+  std::vector<mapping::TaskTarget> task_targets;
   auto& machine = machine_manager_->get_machine();
   for (const auto& t : machine.valid_targets()) {
-    auto variant = mapping::to_variant_code(t);
-    if (task_info->has_variant(variant)) task_targets.insert(t);
+    if (task_info->has_variant(mapping::to_variant_code(t))) task_targets.push_back(t);
   }
-
   auto sliced = machine.only(task_targets);
+
   if (sliced.empty()) {
     std::stringstream ss;
     ss << "Task " << task_id << " (" << task_info->name() << ") of library "
@@ -811,7 +428,7 @@ mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, in
        << "the current machine configuration.";
     throw std::invalid_argument(ss.str());
   }
-  return std::move(sliced);
+  return sliced;
 }
 
 // This function should be moved to the library context
@@ -1051,9 +668,11 @@ Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher* launcher,
 
 Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t idx) const
 {
-  auto& machine = get_machine();
-  auto variant  = mapping::to_variant_code(machine.preferred_target);
-  TaskLauncher launcher(core_context_, machine, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
+  auto& machine    = get_machine();
+  auto& provenance = provenance_manager()->get_provenance();
+  auto variant     = mapping::to_variant_code(machine.preferred_target);
+  TaskLauncher launcher(
+    core_context_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
   launcher.add_future(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute_single();
@@ -1063,9 +682,11 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
                                           uint32_t idx,
                                           const Legion::Domain& launch_domain) const
 {
-  auto& machine = get_machine();
-  auto variant  = mapping::to_variant_code(machine.preferred_target);
-  TaskLauncher launcher(core_context_, machine, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
+  auto& machine    = get_machine();
+  auto& provenance = provenance_manager()->get_provenance();
+  auto variant     = mapping::to_variant_code(machine.preferred_target);
+  TaskLauncher launcher(
+    core_context_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
   launcher.add_future_map(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute(launch_domain);
@@ -1083,6 +704,8 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
 
 void Runtime::issue_execution_fence(bool block /*=false*/)
 {
+  flush_scheduling_window();
+  // FIXME: This needs to be a Legate operation
   auto future = legion_runtime_->issue_execution_fence(legion_context_);
   if (block) future.wait();
 }
@@ -1219,73 +842,6 @@ void initialize(int32_t argc, char** argv) { Runtime::initialize(argc, argv); }
 int32_t start(int32_t argc, char** argv) { return Runtime::start(argc, argv); }
 
 int32_t wait_for_shutdown() { return Runtime::get_runtime()->wait_for_shutdown(); }
-
-//////////////////////////////////////////////
-//  ProvenanceManager
-//////////////////////////////////////////////
-
-ProvenanceManager::ProvenanceManager() { provenance_.push_back(EMPTY_STRING); }
-
-const std::string& ProvenanceManager::get_provenance()
-{
-#ifdef DEBUG_LEGATE
-  assert(provenance_.size() > 0);
-#endif
-  return provenance_.back();
-}
-
-void ProvenanceManager::set_provenance(const std::string& p)
-{
-#ifdef DEBUG_LEGATE
-  assert(provenance_.size() > 0);
-#endif
-  provenance_.back() = p;
-}
-
-void ProvenanceManager::reset_provenance()
-{
-#ifdef DEBUG_LEGATE
-  assert(provenance_.size() > 0);
-#endif
-  provenance_.back() = EMPTY_STRING;
-}
-
-void ProvenanceManager::push_provenance(const std::string& p) { provenance_.push_back(p); }
-
-void ProvenanceManager::pop_provenance()
-{
-  if (provenance_.size() <= 1) {
-    throw std::underflow_error("can't pop from an empty provenance stack");
-  }
-  provenance_.pop_back();
-}
-
-void ProvenanceManager::clear_all()
-{
-  provenance_.clear();
-  provenance_.push_back(EMPTY_STRING);
-}
-
-//////////////////////////////////////
-//  ProvenanceTracker
-//////////////////////////////////////
-
-ProvenanceTracker::ProvenanceTracker(const std::string& p)
-{
-  auto* runtime = Runtime::get_runtime();
-  runtime->provenance_manager()->push_provenance(p);
-}
-
-ProvenanceTracker::~ProvenanceTracker()
-{
-  auto* runtime = Runtime::get_runtime();
-  runtime->provenance_manager()->pop_provenance();
-}
-
-const std::string& ProvenanceTracker::get_current_provenance() const
-{
-  return Runtime::get_runtime()->provenance_manager()->get_provenance();
-}
 
 }  // namespace legate
 

@@ -22,33 +22,67 @@
 
 #include "core/utilities/tuple.h"
 
+/** @defgroup partitioning Partitioning
+ */
+
+/**
+ * @file
+ * @brief Class definitions for partitioning constraint language
+ */
+
 namespace legate {
 
-struct Alignment;
-struct Broadcast;
-struct Constraint;
-struct Literal;
-struct Operation;
-struct Partition;
-struct Variable;
+class Alignment;
+class Broadcast;
+class Constraint;
+class Literal;
+class Operation;
+class Partition;
+class Variable;
 
+/**
+ * @ingroup partitioning
+ * @brief A base class for expressions
+ */
 struct Expr {
- public:
+  enum class Kind : int32_t {
+    LITERAL  = 0,
+    VARIABLE = 1,
+  };
+
   virtual ~Expr() {}
 
- public:
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
 
- public:
-  virtual bool closed() const           = 0;
+  /**
+   * @brief Indicates whether the expression is 'closed', i.e., free of any variables
+   *
+   * @return true Expression is closed
+   * @return false Expression is not closed
+   */
+  virtual bool closed() const = 0;
+  /**
+   * @brief Converts the expressions to a human-readable string
+   *
+   * @return Expression in a string
+   */
   virtual std::string to_string() const = 0;
 
- public:
+  /**
+   * @brief Returns the expression kind
+   *
+   * @return Expression kind
+   */
+  virtual Kind kind() const                   = 0;
   virtual const Literal* as_literal() const   = 0;
   virtual const Variable* as_variable() const = 0;
 };
 
-struct Literal : public Expr {
+/**
+ * @ingroup partitioning
+ * @brief A class for literals
+ */
+class Literal : public Expr {
  public:
   Literal(const std::shared_ptr<Partition>& partition);
 
@@ -57,16 +91,16 @@ struct Literal : public Expr {
   Literal& operator=(const Literal&) = default;
 
  public:
-  virtual void find_partition_symbols(
-    std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
  public:
-  virtual bool closed() const override { return true; }
-  virtual std::string to_string() const override;
+  bool closed() const override { return true; }
+  std::string to_string() const override;
 
  public:
-  virtual const Literal* as_literal() const override { return this; }
-  virtual const Variable* as_variable() const override { return nullptr; }
+  Kind kind() const override { return Kind::LITERAL; }
+  const Literal* as_literal() const override { return this; }
+  const Variable* as_variable() const override { return nullptr; }
 
  public:
   std::shared_ptr<Partition> partition() const { return partition_; }
@@ -75,7 +109,11 @@ struct Literal : public Expr {
   std::shared_ptr<Partition> partition_;
 };
 
-struct Variable : public Expr {
+/**
+ * @ingroup partitioning
+ * @brief Class for partition symbols
+ */
+class Variable : public Expr {
  public:
   Variable(const Operation* op, int32_t id);
 
@@ -88,16 +126,16 @@ struct Variable : public Expr {
   friend bool operator<(const Variable& lhs, const Variable& rhs);
 
  public:
-  virtual void find_partition_symbols(
-    std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
  public:
-  virtual bool closed() const override { return false; }
-  virtual std::string to_string() const override;
+  bool closed() const override { return false; }
+  std::string to_string() const override;
 
  public:
-  virtual const Literal* as_literal() const override { return nullptr; }
-  virtual const Variable* as_variable() const override { return this; }
+  Kind kind() const override { return Kind::VARIABLE; }
+  const Literal* as_literal() const override { return nullptr; }
+  const Variable* as_variable() const override { return this; }
 
  public:
   const Operation* operation() const { return op_; }
@@ -107,6 +145,10 @@ struct Variable : public Expr {
   int32_t id_;
 };
 
+/**
+ * @ingroup partitioning
+ * @brief A base class for partitioning constraints
+ */
 struct Constraint {
   enum class Kind : int32_t {
     ALIGNMENT = 0,
@@ -115,17 +157,34 @@ struct Constraint {
 
   virtual ~Constraint() {}
 
-  virtual Kind kind() const = 0;
-
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
 
+  /**
+   * @brief Converts the constraint to a human-readable string
+   *
+   * @return Constraint in a string
+   */
   virtual std::string to_string() const = 0;
+
+  /**
+   * @brief Returns the constraint kind
+   *
+   * @return Constraint kind
+   */
+  virtual Kind kind() const = 0;
 
   virtual const Alignment* as_alignment() const = 0;
   virtual const Broadcast* as_broadcast() const = 0;
 };
 
-// Constraint AST nodes own their child nodes
+/**
+ * @ingroup partitioning
+ * @brief A class for alignment constraints
+ *
+ * An alignment constraint on stores indicates that the stores should be partitioned in the same
+ * way. If the stores referred to by an alignment constraint have different shapes, an
+ * `std::invalid_argument` exception will be raised when the partitioner solves the constraint.
+ */
 class Alignment : public Constraint {
  public:
   Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs);
@@ -144,7 +203,17 @@ class Alignment : public Constraint {
   const Broadcast* as_broadcast() const override { return nullptr; }
 
  public:
+  /**
+   * @brief Returns the LHS of the alignment constraint
+   *
+   * @return Expression
+   */
   const Expr* lhs() const { return lhs_.get(); }
+  /**
+   * @brief Returns the RHS of the alignment constraint
+   *
+   * @return Expression
+   */
   const Expr* rhs() const { return rhs_.get(); }
 
  private:
@@ -152,6 +221,15 @@ class Alignment : public Constraint {
   std::unique_ptr<Expr> rhs_;
 };
 
+/**
+ * @ingroup partitioning
+ * @brief A class for broadcast constraints
+ *
+ * A broadcast constraint on a store indicates that some or all dimensions of the store should not
+ * be partitioned. The dimensions to broadcast must be specified by the constraint as well. If any
+ * of the dimension names is invalid, an `std::invalid_argument` exception will be raised when the
+ * auto-partitioner solves the constraint.
+ */
 class Broadcast : public Constraint {
  public:
   Broadcast(std::unique_ptr<Variable> variable, tuple<int32_t>&& axes);
@@ -170,7 +248,17 @@ class Broadcast : public Constraint {
   const Broadcast* as_broadcast() const override { return this; }
 
  public:
+  /**
+   * @brief Returns the partition symbol to which this constraint is applied
+   *
+   * @return Partition symbol
+   */
   const Variable* variable() const { return variable_.get(); }
+  /**
+   * @brief Returns the list of axes to broadcast
+   *
+   * @return Tuple of integers
+   */
   const tuple<int32_t>& axes() const { return axes_; }
 
  private:
@@ -178,10 +266,37 @@ class Broadcast : public Constraint {
   tuple<int32_t> axes_;
 };
 
-std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs);
+/**
+ * @ingroup partitioning
+ * @brief Creates an alignment constraint on two variables
+ *
+ * @param lhs LHS variable
+ * @param rhs RHS variable
+ *
+ * @return Alignment constraint
+ */
+std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
 
-std::unique_ptr<Constraint> broadcast(const Variable* variable, const tuple<int32_t>& axes);
+/**
+ * @ingroup partitioning
+ * @brief Creates a broadcast constraint on a variable
+ *
+ * @param variable Partition symbol to constrain
+ * @param axes List of dimensions to broadcast
+ *
+ * @return Broadcast constraint
+ */
+std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes);
 
-std::unique_ptr<Constraint> broadcast(const Variable* variable, tuple<int32_t>&& axes);
+/**
+ * @ingroup partitioning
+ * @brief Creates a broadcast constraint on a variable
+ *
+ * @param variable Partition symbol to constrain
+ * @param axes List of dimensions to broadcast
+ *
+ * @return Broadcast constraint
+ */
+std::unique_ptr<Broadcast> broadcast(const Variable* variable, tuple<int32_t>&& axes);
 
 }  // namespace legate

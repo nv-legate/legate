@@ -62,7 +62,7 @@ TEST(Machine, ProcessorRange)
   // get_node_range
   {
     legate::mapping::ProcessorRange range(0, 7, 2);
-    EXPECT_EQ(range.get_node_range(), std::make_pair(uint32_t(0), uint32_t(3)));
+    EXPECT_EQ(range.get_node_range(), std::make_pair(uint32_t(0), uint32_t(4)));
   }
 
   // intersection nonempty
@@ -110,8 +110,8 @@ TEST(Machine, MachineDesc)
   {
     legate::mapping::MachineDesc machine;
     EXPECT_EQ(machine.preferred_target, legate::mapping::TaskTarget::CPU);
-    EXPECT_THROW(machine.count(), std::runtime_error);
-    EXPECT_THROW(machine.count(legate::mapping::TaskTarget::GPU), std::runtime_error);
+    EXPECT_EQ(machine.count(), 0);
+    EXPECT_EQ(machine.count(legate::mapping::TaskTarget::GPU), 0);
     EXPECT_EQ(machine.processor_range(), legate::mapping::ProcessorRange(0, 0, 1));
     EXPECT_EQ(machine.processor_range(legate::mapping::TaskTarget::GPU),
               legate::mapping::ProcessorRange(0, 0, 1));
@@ -254,7 +254,9 @@ TEST(Machine, MachineDesc)
   {
     legate::mapping::MachineDesc machine1({{legate::mapping::TaskTarget::CPU, cpu_range},
                                            {legate::mapping::TaskTarget::GPU, gpu_range}});
-    EXPECT_THROW(machine1.slice(0, 1), std::runtime_error);
+    legate::mapping::MachineDesc expected(
+      {{legate::mapping::TaskTarget::GPU, gpu_range.slice(0, 1)}});
+    EXPECT_EQ(machine1.slice(0, 1), expected);
 
     auto new_machine1 = machine1.slice(0, 2, legate::mapping::TaskTarget::GPU);
     EXPECT_EQ(new_machine1.preferred_target, legate::mapping::TaskTarget::GPU);

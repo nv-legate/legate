@@ -106,18 +106,25 @@ void test_clear_provenance(legate::LibraryContext* context)
 
 void test_provenance_tracker(legate::LibraryContext* context)
 {
+  legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__));
   auto runtime = legate::Runtime::get_runtime();
   // auto task
   auto task              = runtime->create_task(context, PROVENANCE);
-  std::string provenance = "provenance.cc:114";
+  std::string provenance = "provenance.cc:109";
   task->add_scalar_arg(legate::Scalar(provenance));
-  TRACK_PROVENANCE(runtime->submit(std::move(task)));
+  runtime->submit(std::move(task));
 }
 
 void test_nested_provenance_tracker(legate::LibraryContext* context)
 {
-  legate::ProvenanceTracker track(std::string(__FILE__) + std::to_string(__LINE__));
+  legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__));
   test_provenance_tracker(context);
+  // The provenance string used by test_provenance_tracker should be popped out at this point
+  auto runtime           = legate::Runtime::get_runtime();
+  auto task              = runtime->create_task(context, PROVENANCE);
+  std::string provenance = "provenance.cc:120";
+  task->add_scalar_arg(legate::Scalar(provenance));
+  runtime->submit(std::move(task));
 }
 
 void test_manual_tracker(legate::LibraryContext* context)

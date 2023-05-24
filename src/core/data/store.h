@@ -269,6 +269,7 @@ class FutureWrapper {
 
 /**
  * @ingroup data
+ *
  * @brief A multi-dimensional data container storing task data
  */
 class Store {

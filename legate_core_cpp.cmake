@@ -213,12 +213,18 @@ list(APPEND legate_core_SOURCES
   src/core/partitioning/partitioner.cc
   src/core/partitioning/restriction.cc
   src/core/runtime/context.cc
+  src/core/runtime/field_manager.cc
   src/core/runtime/launcher_arg.cc
   src/core/runtime/launcher.cc
+  src/core/runtime/machine_manager.cc
   src/core/runtime/operation.cc
+  src/core/runtime/partition_manager.cc
   src/core/runtime/projection.cc
+  src/core/runtime/provenance_manager.cc
+  src/core/runtime/region_manager.cc
   src/core/runtime/req_analyzer.cc
   src/core/runtime/runtime.cc
+  src/core/runtime/tracker.cc
   src/core/runtime/shard.cc
   src/core/task/registrar.cc
   src/core/task/return.cc
@@ -333,6 +339,7 @@ if (legate_core_BUILD_DOCS)
     list(APPEND legate_core_DOC_SOURCES
       # type
       src/core/type/type_info.h
+      src/core/type/type_traits.h
       # task
       src/core/task/task.h
       src/core/task/registrar.h
@@ -345,19 +352,25 @@ if (legate_core_BUILD_DOCS)
       src/core/data/buffer.h
       src/core/utilities/span.h
       src/core/data/allocator.h
+      src/core/data/logical_store.h
       # runtime
       src/core/runtime/runtime.h
       src/core/runtime/runtime.inl
       src/core/runtime/context.h
+      # operation
+      src/core/runtime/operation.h
+      # partitioning
+      src/core/partitioning/constraint.h
       # mapping
+      src/core/mapping/machine.h
       src/core/mapping/mapping.h
       src/core/mapping/operation.h
       # aliases
       src/core/utilities/typedefs.h
       # utilities
+      src/core/runtime/tracker.h
       src/core/utilities/debug.h
       src/core/utilities/dispatch.h
-      src/core/utilities/type_traits.h
       # main page
       src/legate.h
     )
@@ -368,6 +381,8 @@ if (legate_core_BUILD_DOCS)
     set(DOXYGEN_EXTENSION_MAPPING cu=C++ cuh=C++)
     set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
     set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
+    set(DOXYGEN_USE_MATHJAX YES)
+    set(DOXYGEN_MATHJAX_VERSION MathJax_3)
     set(DOXYGEN_STRIP_FROM_INC_PATH ${CMAKE_SOURCE_DIR}/src)
     doxygen_add_docs("doxygen_legate" ALL
       ${legate_core_DOC_SOURCES}
@@ -440,11 +455,14 @@ install(
 install(
   FILES src/core/runtime/context.h
         src/core/runtime/context.inl
+        src/core/runtime/machine_manager.h
         src/core/runtime/operation.h
+        src/core/runtime/provenance_manager.h
         src/core/runtime/resource.h
         src/core/runtime/projection.h
         src/core/runtime/runtime.h
         src/core/runtime/runtime.inl
+        src/core/runtime/tracker.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/runtime)
 
 install(

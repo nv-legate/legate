@@ -65,19 +65,8 @@ class InvalidTaskIdException : public std::exception {
  * @brief A library context that provides APIs for registering components
  */
 class LibraryContext {
- public:
-  /**
-   * @brief Creates a library context from a library name and a configuration.
-   *
-   * A library is registered to the runtime only upon the first construction
-   * and the `config` object is referred to only when the registration happens.
-   * All the following constructions of `LibraryContext` only retrieve the
-   * metadata from the runtime without registration and ignore the `config`.
-   *
-   * @param library_name Library name
-   * @param config Resource configuration for the library. If the library is already
-   * registered, the value will be ignored.
-   */
+ private:
+  friend class Runtime;
   LibraryContext(const std::string& library_name,
                  const ResourceConfig& config,
                  std::unique_ptr<mapping::Mapper> mapper);

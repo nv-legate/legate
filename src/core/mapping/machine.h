@@ -23,6 +23,11 @@
 #include "legate_defines.h"
 #include "legion.h"
 
+/**
+ * @file
+ * @brief Legate machine interface
+ */
+
 namespace legate {
 namespace mapping {
 
@@ -32,27 +37,110 @@ Processor::Kind to_kind(TaskTarget target);
 
 LegateVariantCode to_variant_code(TaskTarget target);
 
+/**
+ * @ingroup mapping
+ * @brief A class to represent a range of processors.
+ *
+ * `ProcessorRange`s are half-open intervals of logical processors IDs.
+ */
 struct ProcessorRange {
+  /**
+   * @brief Creates an empty processor range
+   */
   ProcessorRange() {}
+  /**
+   * @brief Creates a processor range
+   *
+   * @param low Starting processor ID
+   * @param high End processor ID
+   * @param per_node_count Number of per-node processors
+   */
   ProcessorRange(uint32_t low, uint32_t high, uint32_t per_node_count);
   ProcessorRange operator&(const ProcessorRange&) const;
   bool operator==(const ProcessorRange&) const;
   bool operator!=(const ProcessorRange&) const;
+  /**
+   * @brief Returns the number of processors in the range
+   *
+   * @return Processor count
+   */
   uint32_t count() const;
+  /**
+   * @brief Checks if the processor range is empty
+   *
+   * @return true The range is empty
+   * @return false The range is not empty
+   */
   bool empty() const;
+  /**
+   * @brief Converts the range to a human-readable string
+   *
+   * @return Processor range in a string
+   */
   std::string to_string() const;
+  /**
+   * @brief Computes a range of node IDs for this processor range
+   *
+   * @return Node range in a pair
+   */
   std::pair<uint32_t, uint32_t> get_node_range() const;
-  ProcessorRange slice(const uint32_t& lo, const uint32_t& hi) const;
+  /**
+   * @brief Slices the processor range for a given sub-range
+   *
+   * @param from Starting index
+   * @param to End index
+   *
+   * @return Sliced procesor range
+   */
+  ProcessorRange slice(uint32_t from, uint32_t to) const;
+  /**
+   * @brief Serializes the processor range to a buffer
+   *
+   * @param buffer Buffer to which the processor range should be serialized
+   */
   void pack(BufferBuilder& buffer) const;
 
+  /**
+   * @brief Starting processor ID
+   */
   uint32_t low{0};
+  /**
+   * @brief End processor ID
+   */
   uint32_t high{0};
+  /**
+   * @brief Number of per-node processors
+   */
   uint32_t per_node_count{1};
 };
 
+/**
+ * @ingroup mapping
+ * @brief Machine descriptor class
+ *
+ * A machine descriptor describes the machine resource that should be used for a given scope of
+ * execution. By default, the scope is given the entire machine resource configured for this
+ * process. Then, the client can limit the resource by extracting a portion of the machine
+ * descriptor and setting it for the scope using `MachineTracker`. Configuring the scope with an
+ * empty machine descriptor raises a `std::runtime_error` exception.
+ */
 struct MachineDesc {
+  /**
+   * @brief Creates an empty machine descriptor
+   */
   MachineDesc() {}
+  /**
+   * @brief Creates a machine descriptor with a given set of processor ranges
+   *
+   * @param processor_ranges Processor ranges
+   */
   MachineDesc(const std::map<TaskTarget, ProcessorRange>& processor_ranges);
+  /**
+   * @brief Creates a machine descriptor with a given set of processor ranges
+   *
+   * @param processor_ranges Processor ranges
+   */
+  MachineDesc(std::map<TaskTarget, ProcessorRange>&& processor_ranges);
 
   MachineDesc(const MachineDesc&)            = default;
   MachineDesc& operator=(const MachineDesc&) = default;
@@ -60,32 +148,156 @@ struct MachineDesc {
   MachineDesc(MachineDesc&&)            = default;
   MachineDesc& operator=(MachineDesc&&) = default;
 
+  /**
+   * @brief Returns the processor range for the preferred processor type in this descriptor
+   */
   const ProcessorRange& processor_range() const;
-  const ProcessorRange& processor_range(const TaskTarget& target) const;
+  /**
+   * @brief Returns the processor range for a given processor type
+   *
+   * If the processor type does not exist in the descriptor, an empty range is returned
+   *
+   * @target target Processor type to query
+   */
+  const ProcessorRange& processor_range(TaskTarget target) const;
 
+  /**
+   * @brief Returns the valid task targets within this machine descriptor
+   *
+   * @return Task targets
+   */
   std::vector<TaskTarget> valid_targets() const;
+  /**
+   * @brief Returns the valid task targets excluding a given set of targets
+   *
+   * @param to_exclude Task targets to exclude from the query
+   *
+   * @return Task targets
+   */
   std::vector<TaskTarget> valid_targets_except(const std::set<TaskTarget>& to_exclude) const;
 
+  /**
+   * @brief Returns the number of preferred processors
+   *
+   * @return Processor count
+   */
   size_t count() const;
-  size_t count(const TaskTarget& target) const;
+  /**
+   * @brief Returns the number of processors of a given type
+   *
+   * @param target Processor type to query
+   *
+   * @return Processor count
+   */
+  size_t count(TaskTarget target) const;
 
+  /**
+   * @brief Converts the machine descriptor to a human-readable string
+   *
+   * @return Machine descriptor in a string
+   */
   std::string to_string() const;
 
+  /**
+   * @brief Serializes the machine descriptor to a buffer
+   *
+   * @param buffer Buffer to which the machine descriptor should be serialized
+   */
   void pack(BufferBuilder& buffer) const;
 
-  MachineDesc only(const TaskTarget& target) const;
-  MachineDesc only(const std::set<TaskTarget>& target) const;
-  MachineDesc slice(const uint32_t& lo, const uint32_t& hi, const TaskTarget& target) const;
-  MachineDesc slice(const uint32_t& lo, const uint32_t& hi) const;
+  /**
+   * @brief Extracts the processor range for a given processor type and creates a fresh machine
+   * descriptor with it
+   *
+   * If the `target` does not exist in the machine descriptor, an empty descriptor is returned.
+   *
+   * @param target Processor type to select
+   *
+   * @return Machine descriptor with the chosen processor range
+   */
+  MachineDesc only(TaskTarget target) const;
+  /**
+   * @brief Extracts the processor ranges for a given set of processor types and creates a fresh
+   * machine descriptor with them
+   *
+   * Any of the `targets` that does not exist will be mapped to an empty processor range in the
+   * returned machine descriptor
+   *
+   * @param targets Processor types to select
+   *
+   * @return Machine descriptor with the chosen processor ranges
+   */
+  MachineDesc only(const std::vector<TaskTarget>& targets) const;
+  /**
+   * @brief Slices the processor range for a given processor type
+   *
+   * @param from Starting index
+   * @param to End index
+   * @param targets Processor type to slice
+   *
+   * @return Machine descriptor with the chosen procssor range sliced
+   */
+  MachineDesc slice(uint32_t from, uint32_t to, TaskTarget target) const;
+  /**
+   * @brief Slices the processor range for the preferred processor type of this machine descriptor
+   *
+   * @param from Starting index
+   * @param to End index
+   *
+   * @return Machine descriptor with the preferred processor range sliced
+   */
+  MachineDesc slice(uint32_t from, uint32_t to) const;
 
-  MachineDesc operator[](const TaskTarget& target) const;
+  /**
+   * @brief Selects the processor range for a given processor type and constructs a machine
+   * descriptor with it.
+   *
+   * This yields the same result as `.only(target)`.
+   *
+   * @param targets Processor type to select
+   *
+   * @return Machine descriptor with the chosen processor range
+   */
+  MachineDesc operator[](TaskTarget target) const;
+  /**
+   * @brief Selects the processor ranges for a given set of processor types and constructs a machine
+   * descriptor with them.
+   *
+   * This yields the same result as `.only(targets)`.
+   *
+   * @param targets Processor types to select
+   *
+   * @return Machine descriptor with the chosen processor ranges
+   */
+  MachineDesc operator[](const std::vector<TaskTarget>& targets) const;
   bool operator==(const MachineDesc& other) const;
   bool operator!=(const MachineDesc& other) const;
+  /**
+   * @brief Computes an intersection between two machine descriptors
+   *
+   * @param other Machine descriptor to intersect with this descriptor
+   *
+   * @return Machine descriptor
+   */
   MachineDesc operator&(const MachineDesc& other) const;
 
+  /**
+   * @brief Indicates whether the machine descriptor is empty.
+   *
+   * A machine descriptor is empty when all its processor ranges are empty
+   *
+   * @return true The machine descriptor is empty
+   * @return false The machine descriptor is non-empty
+   */
   bool empty() const;
 
+  /**
+   * @brief Preferred processor type of this machine descriptor
+   */
   TaskTarget preferred_target{TaskTarget::CPU};
+  /**
+   * @brief Processor ranges in this machine descriptor
+   */
   std::map<TaskTarget, ProcessorRange> processor_ranges{};
 };
 

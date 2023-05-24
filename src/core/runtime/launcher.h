@@ -48,6 +48,7 @@ class TaskLauncher {
  public:
   TaskLauncher(LibraryContext* library,
                const mapping::MachineDesc& machine,
+               const std::string& provenance,
                int64_t task_id,
                int64_t tag = 0);
   ~TaskLauncher();
@@ -102,6 +103,7 @@ class TaskLauncher {
   LibraryContext* library_;
   int64_t task_id_;
   int64_t tag_;
+  std::string provenance_;
 
  private:
   std::vector<ArgWrapper*> inputs_;

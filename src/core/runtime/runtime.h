@@ -22,14 +22,11 @@
 
 #include <memory>
 
-#include "core/data/scalar.h"
 #include "core/data/shape.h"
 #include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/mapping/machine.h"
-#include "core/partitioning/restriction.h"
 #include "core/runtime/resource.h"
-#include "core/task/exception.h"
 #include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
 
@@ -39,6 +36,8 @@
 namespace legate {
 
 class LibraryContext;
+class Scalar;
+class TaskException;
 
 namespace mapping {
 
@@ -61,7 +60,7 @@ struct Core {
   static void show_progress(const Legion::Task* task,
                             Legion::Context ctx,
                             Legion::Runtime* runtime);
-  static void report_unexpected_exception(const Legion::Task* task, const legate::TaskException& e);
+  static void report_unexpected_exception(const Legion::Task* task, const TaskException& e);
   static void retrieve_tunable(Legion::Context legion_context,
                                Legion::Runtime* legion_runtime,
                                LibraryContext* context);
@@ -94,88 +93,23 @@ class AutoTask;
 class FieldManager;
 class LogicalRegionField;
 class LogicalStore;
+class MachineManager;
 class ManualTask;
 class Operation;
-class PartitioningFunctor;
+class PartitionManager;
+class ProvenanceManager;
 class RegionManager;
-class ResourceConfig;
-class Runtime;
 class Tiling;
 
-class ProvenanceManager {
- public:
-  ProvenanceManager();
-
- public:
-  const std::string& get_provenance();
-
-  void set_provenance(const std::string& p);
-
-  void reset_provenance();
-
-  void push_provenance(const std::string& p);
-
-  void pop_provenance();
-
-  void clear_all();
-
- private:
-  std::vector<std::string> provenance_;
-};
-
-class PartitionManager {
- public:
-  PartitionManager(Runtime* runtime, const LibraryContext* context);
-
- public:
-  const std::vector<uint32_t>& get_factors(const mapping::MachineDesc& machine);
-
- public:
-  Shape compute_launch_shape(const mapping::MachineDesc& machine,
-                             const Restrictions& restrictions,
-                             const Shape& shape);
-  Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
-
- public:
-  Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
-                                              const Tiling& tiling) const;
-  void record_index_partition(const Legion::IndexSpace& index_space,
-                              const Tiling& tiling,
-                              const Legion::IndexPartition& index_partition);
-
- private:
-  int64_t min_shard_volume_;
-  std::unordered_map<uint32_t, std::vector<uint32_t>> all_factors_;
-
- private:
-  using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
-  std::map<TilingCacheKey, Legion::IndexPartition> tiling_cache_;
-};
-
-class MachineManager {
- public:
-  MachineManager(){};
-
- public:
-  const mapping::MachineDesc& get_machine() const;
-
-  void push_machine(const mapping::MachineDesc& machine);
-  void push_machine(mapping::MachineDesc&& machine);
-
-  void pop_machine();
-
- private:
-  std::vector<mapping::MachineDesc> machines_;
-};
-
-struct MachineTracker {
-  MachineTracker(const mapping::MachineDesc& machine);
-
-  ~MachineTracker();
-
-  const mapping::MachineDesc& get_current_machine() const;
-};
-
+/**
+ * @ingroup runtime
+ * @brief Class that implements the Legate runtime
+ *
+ * The legate runtime provides common services, including as library registration,
+ * store creation, operator creation and submission, resource management and scoping,
+ * and communicator management. Legate libraries are free of all these details about
+ * distribute programming and can focus on their domain logics.
+ */
 class Runtime {
  public:
   Runtime(Legion::Runtime* legion_runtime);
@@ -186,7 +120,34 @@ class Runtime {
   friend int32_t start(int32_t argc, char** argv);
 
  public:
+  /**
+   * @brief Find a library
+   *
+   * @param library_name Library name
+   * @param can_fail Optional flag indicating that the query can fail. When it's true and no
+   * library is found for a given name, `nullptr` is returned.
+   *
+   * @return Context object for the library
+   *
+   * @throw std::out_of_range If no library is found for a given name and `can_fail` is `false`
+   */
   LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
+  /**
+   * @brief Create a library
+   *
+   * A library is a collection of tasks and custom reduction operators. The maximum number of
+   * tasks and reduction operators can be optionally specified with a `ResourceConfig` object.
+   * Each library can optionally have a mapper that specifies mapping policies for its tasks.
+   * When no mapper is given, the default mapper is used.
+   *
+   * @param library_name Library name. Must be unique to this library
+   * @param config Optional configuration object
+   * @param mapper Optional mapper object
+   *
+   * @throw std::invalid_argument If a library already exists for a given name
+   *
+   * @return Context object for the library
+   */
   LibraryContext* create_library(const std::string& library_name,
                                  const ResourceConfig& config            = ResourceConfig{},
                                  std::unique_ptr<mapping::Mapper> mapper = nullptr);
@@ -210,18 +171,68 @@ class Runtime {
 
  public:
   mapping::MachineDesc slice_machine_for_task(LibraryContext* library, int64_t task_id);
+  /**
+   * @brief Create an AutoTask
+   *
+   * @param library Library to query the task
+   * @param task_id Library-local Task ID
+   *
+   * @return Task object
+   */
   std::unique_ptr<AutoTask> create_task(LibraryContext* library, int64_t task_id);
+  /**
+   * @brief Create a ManualTask
+   *
+   * @param library Library to query the task
+   * @param task_id Library-local Task ID
+   * @param launch_shape Launch domain for the task
+   *
+   * @return Task object
+   */
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
   void flush_scheduling_window();
+  /**
+   * @brief Submits an operation for execution
+   *
+   * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
+   * for execution. It's not guaranteed that the submitted operation starts executing immediately.
+   *
+   * @param op Operation to execute
+   */
   void submit(std::unique_ptr<Operation> op);
 
  public:
+  /**
+   * @brief Creates an unbound store
+   *
+   * @param type Element type
+   * @param dim Number of dimensions of the store
+   *
+   * @return Logical store
+   */
   LogicalStore create_store(std::unique_ptr<Type> type, int32_t dim = 1);
+  /**
+   * @brief Creates a normal store
+   *
+   * @param extents Shape of the store
+   * @param type Element type
+   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
+   * scalars
+   *
+   * @return Logical store
+   */
   LogicalStore create_store(std::vector<size_t> extents,
                             std::unique_ptr<Type> type,
                             bool optimize_scalar = false);
+  /**
+   * @brief Creates a normal store out of a `Scalar` object
+   *
+   * @param scalar Value of the scalar to create a store with
+   *
+   * @return Logical store
+   */
   LogicalStore create_store(const Scalar& scalar);
   uint64_t get_unique_store_id();
 
@@ -237,6 +248,7 @@ class Runtime {
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
   FieldManager* find_or_create_field_manager(const Legion::Domain& shape, uint32_t field_size);
+  MachineManager* machine_manager() const;
   PartitionManager* partition_manager() const;
   ProvenanceManager* provenance_manager() const;
 
@@ -273,10 +285,24 @@ class Runtime {
   Legion::Future reduce_future_map(const Legion::FutureMap& future_map, int32_t reduction_op) const;
 
  public:
+  /**
+   * @brief Issues an execution fence
+   *
+   * An execution fence is a join point in the task graph. All operations prior to a fence must
+   * finish before any of the subsequent operations start.
+   *
+   * @param block When `true`, the control code blocks on the fence and all operations that have
+   * been submitted prior to this fence.
+   */
   void issue_execution_fence(bool block = false);
 
  public:
   void initialize_toplevel_machine();
+  /**
+   * @brief Returns the machine of the current scope
+   *
+   * @return Machine object
+   */
   const mapping::MachineDesc& get_machine() const;
 
  public:
@@ -291,6 +317,11 @@ class Runtime {
   static int32_t start(int32_t argc, char** argv);
 
  public:
+  /**
+   * @brief Returns a singleton runtime object
+   *
+   * @return The runtime object
+   */
   static Runtime* get_runtime();
   static void create_runtime(Legion::Runtime* legion_runtime);
   int32_t wait_for_shutdown();
@@ -307,6 +338,7 @@ class Runtime {
   using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
   std::map<FieldManagerKey, FieldManager*> field_managers_;
   std::map<Legion::Domain, RegionManager*> region_managers_;
+  MachineManager* machine_manager_{nullptr};
   PartitionManager* partition_manager_{nullptr};
   ProvenanceManager* provenance_manager_{nullptr};
 
@@ -337,32 +369,37 @@ class Runtime {
  private:
   uint32_t next_type_uid_;
   std::map<std::pair<int32_t, int32_t>, int32_t> reduction_ops_{};
-
- private:
-  MachineManager* machine_manager_{nullptr};
-
- public:
-  MachineManager* machine_manager() const;
 };
 
+/**
+ * @brief Initializes the Legate runtime
+ *
+ * @param argc Number of command-line flags
+ * @param argv Command-line flags
+ */
 void initialize(int32_t argc, char** argv);
 
+/**
+ * @brief Starts the Legate runtime
+ *
+ * This makes the runtime ready to accept requests made via its APIs
+ *
+ * @param argc Number of command-line flags
+ * @param argv Command-line flags
+ *
+ * @return Non-zero value when the runtime start-up failed, 0 otherwise
+ */
 int32_t start(int32_t argc, char** argv);
 
+/**
+ * @brief Waits for the runtime to finish
+ *
+ * The client code must call this to make sure all Legate tasks run
+ *
+ * @return Non-zero value when the runtime encountered a failure, 0 otherwise
+ */
 int32_t wait_for_shutdown();
 
-struct ProvenanceTracker {
-  ProvenanceTracker(const std::string& p);
-  ~ProvenanceTracker();
-  const std::string& get_current_provenance() const;
-};
-
 }  // namespace legate
-
-#define TRACK_PROVENANCE(STMT)                                                               \
-  do {                                                                                       \
-    legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__)); \
-    STMT;                                                                                    \
-  } while (false)
 
 #include "core/runtime/runtime.inl"

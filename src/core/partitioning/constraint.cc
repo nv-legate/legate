@@ -85,19 +85,19 @@ std::string Broadcast::to_string() const
   return std::move(ss).str();
 }
 
-std::unique_ptr<Constraint> align(const Variable* lhs, const Variable* rhs)
+std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
 {
   // Since an Alignment object owns child nodes, inputs need to be copied
   return std::make_unique<Alignment>(std::make_unique<Variable>(*lhs),
                                      std::make_unique<Variable>(*rhs));
 }
 
-std::unique_ptr<Constraint> broadcast(const Variable* variable, const tuple<int32_t>& axes)
+std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
 {
   return broadcast(variable, tuple<int32_t>(axes));
 }
 
-std::unique_ptr<Constraint> broadcast(const Variable* variable, tuple<int32_t>&& axes)
+std::unique_ptr<Broadcast> broadcast(const Variable* variable, tuple<int32_t>&& axes)
 {
   return std::make_unique<Broadcast>(std::make_unique<Variable>(*variable),
                                      std::forward<tuple<int32_t>>(axes));

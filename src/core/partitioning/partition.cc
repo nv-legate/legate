@@ -19,6 +19,7 @@
 #include "core/data/logical_store_detail.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
+#include "core/runtime/partition_manager.h"
 #include "core/runtime/req_analyzer.h"
 #include "core/runtime/runtime.h"
 
