@@ -14,29 +14,28 @@
  *
  */
 
-#include <gtest/gtest.h>
+#pragma once
+
+#include "core/mapping/mapping.h"
 #include "legate.h"
 
-class Environment : public ::testing::Environment {
- public:
-  Environment(int argc, char** argv) : argc_(argc), argv_(argv) {}
+namespace task {
 
-  void SetUp() override
-  {
-    legate::initialize(argc_, argv_);
-    EXPECT_EQ(legate::start(argc_, argv_), 0);
-  }
-  void TearDown() override { EXPECT_EQ(legate::wait_for_shutdown(), 0); }
+namespace region_manager {
 
- private:
-  int argc_;
-  char** argv_;
+enum TaskOpCode {
+  PROVENANCE = 0,
 };
 
-int main(int argc, char** argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  ::testing::AddGlobalTestEnvironment(new Environment(argc, argv));
+static const char* library_name = "test_region_manager";
 
-  return RUN_ALL_TESTS();
-}
+void register_tasks();
+
+struct TesterTask : public legate::LegateTask<TesterTask> {
+  static const int32_t TASK_ID = 0;
+  static void cpu_variant(legate::TaskContext& context) {}
+};
+
+}  // namespace region_manager
+
+}  // namespace task

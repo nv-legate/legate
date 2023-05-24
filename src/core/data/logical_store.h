@@ -79,6 +79,9 @@ class LogicalStore {
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
 
  public:
+  void set_key_partition(const Partition* partition);
+
+ public:
   std::shared_ptr<detail::LogicalStore> impl() const { return impl_; }
 
  private:

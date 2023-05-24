@@ -17,33 +17,16 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "tasks/task_region_manager.h"
 
 namespace region_manager {
 
-namespace {
-
-static const char* library_name = "test_region_manager";
-
-struct TesterTask : public legate::LegateTask<TesterTask> {
-  static const int32_t TASK_ID = 0;
-  static void cpu_variant(legate::TaskContext& context) {}
-};
-
-void prepare()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  TesterTask::register_variants(context);
-}
-
-}  // namespace
-
 TEST(Integration, RegionManager)
 {
-  legate::Core::perform_registration<prepare>();
+  legate::Core::perform_registration<task::region_manager::register_tasks>();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(task::region_manager::library_name);
   auto task    = runtime->create_task(context, 0);
 
   std::vector<legate::LogicalStore> stores;

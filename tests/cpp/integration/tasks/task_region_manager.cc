@@ -14,29 +14,19 @@
  *
  */
 
-#include <gtest/gtest.h>
-#include "legate.h"
+#include "task_region_manager.h"
 
-class Environment : public ::testing::Environment {
- public:
-  Environment(int argc, char** argv) : argc_(argc), argv_(argv) {}
+namespace task {
 
-  void SetUp() override
-  {
-    legate::initialize(argc_, argv_);
-    EXPECT_EQ(legate::start(argc_, argv_), 0);
-  }
-  void TearDown() override { EXPECT_EQ(legate::wait_for_shutdown(), 0); }
+namespace region_manager {
 
- private:
-  int argc_;
-  char** argv_;
-};
-
-int main(int argc, char** argv)
+void register_tasks()
 {
-  ::testing::InitGoogleTest(&argc, argv);
-  ::testing::AddGlobalTestEnvironment(new Environment(argc, argv));
-
-  return RUN_ALL_TESTS();
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->create_library(library_name);
+  TesterTask::register_variants(context);
 }
+
+}  // namespace region_manager
+
+}  // namespace task

@@ -36,11 +36,10 @@ find_package(legate_core REQUIRED)
 enable_testing()
 
 file(GLOB main_SRC ${PROJECT_SOURCE_DIR}/main.cc)
-file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
-file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
-file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
+file(GLOB hello_SRC ${PROJECT_SOURCE_DIR}/hello/*.cc)
+file(GLOB io_SRC ${PROJECT_SOURCE_DIR}/io/*.cc)
 
-add_executable(cpp_tests ${main_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC})
+add_executable(cpp_tests ${main_SRC} ${hello_SRC} ${io_SRC})
 
 target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest)
 

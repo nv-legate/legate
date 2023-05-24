@@ -95,6 +95,11 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
   return impl_->get_physical_store(context);
 }
 
+void LogicalStore::set_key_partition(const Partition* partition)
+{
+  impl_->set_key_partition(partition);
+}
+
 LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl)
   : impl_(std::forward<decltype(impl_)>(impl))
 {

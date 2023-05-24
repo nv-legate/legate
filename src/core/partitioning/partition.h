@@ -65,6 +65,11 @@ struct Partition {
 
  public:
   virtual std::string to_string() const = 0;
+
+ public:
+  virtual const Shape& tile_shape() const  = 0;
+  virtual const Shape& color_shape() const = 0;
+  virtual const Shape& offsets() const     = 0;
 };
 
 class NoPartition : public Partition {
@@ -94,6 +99,20 @@ class NoPartition : public Partition {
 
  public:
   virtual std::string to_string() const override;
+
+ public:
+  const Shape& tile_shape() const override
+  {
+    throw std::invalid_argument("Partition kind doesn't support tile_shape");
+  }
+  const Shape& color_shape() const override
+  {
+    throw std::invalid_argument("Partition kind doesn't support color_shape");
+  }
+  const Shape& offsets() const override
+  {
+    throw std::invalid_argument("Partition kind doesn't support offsets");
+  }
 };
 
 class Tiling : public Partition {
@@ -132,9 +151,9 @@ class Tiling : public Partition {
   virtual std::string to_string() const override;
 
  public:
-  const Shape& tile_shape() const { return tile_shape_; }
-  const Shape& color_shape() const { return color_shape_; }
-  const Shape& offsets() const { return offsets_; }
+  const Shape& tile_shape() const override { return tile_shape_; }
+  const Shape& color_shape() const override { return color_shape_; }
+  const Shape& offsets() const override { return offsets_; }
 
  private:
   Shape tile_shape_;

@@ -18,65 +18,16 @@
 
 #include "core/mapping/mapping.h"
 #include "legate.h"
+#include "tasks/task_simple.h"
 
 namespace multiscalarout {
-
-static const char* library_name = "multi_scalar";
-static legate::Logger logger(library_name);
-
-enum TaskIDs {
-  WRITER  = 0,
-  REDUCER = 1,
-};
-
-struct WriterTask : public legate::LegateTask<WriterTask> {
-  static const int32_t TASK_ID = WRITER;
-  static void cpu_variant(legate::TaskContext& context);
-};
-
-struct ReducerTask : public legate::LegateTask<ReducerTask> {
-  static const int32_t TASK_ID = REDUCER;
-  static void cpu_variant(legate::TaskContext& context);
-};
-
-void register_tasks()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  WriterTask::register_variants(context);
-  ReducerTask::register_variants(context);
-}
-
-/*static*/ void WriterTask::cpu_variant(legate::TaskContext& context)
-{
-  auto& output1 = context.outputs()[0];
-  auto& output2 = context.outputs()[1];
-
-  auto acc1 = output1.write_accessor<int8_t, 2>();
-  auto acc2 = output2.write_accessor<int32_t, 3>();
-
-  acc1[{0, 0}]    = 10;
-  acc2[{0, 0, 0}] = 20;
-}
-
-/*static*/ void ReducerTask::cpu_variant(legate::TaskContext& context)
-{
-  auto& red1 = context.reductions()[0];
-  auto& red2 = context.reductions()[1];
-
-  auto acc1 = red1.reduce_accessor<legate::SumReduction<int8_t>, true, 2>();
-  auto acc2 = red2.reduce_accessor<legate::ProdReduction<int32_t>, true, 3>();
-
-  acc1[{0, 0}].reduce(10);
-  acc2[{0, 0, 0}].reduce(2);
-}
 
 void test_writer_auto(legate::LibraryContext* context,
                       legate::LogicalStore scalar1,
                       legate::LogicalStore scalar2)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, WRITER);
+  auto task    = runtime->create_task(context, task::simple::WRITER);
   auto part1   = task->declare_partition();
   auto part2   = task->declare_partition();
   task->add_output(scalar1, part1);
@@ -90,7 +41,7 @@ void test_reducer_auto(legate::LibraryContext* context,
                        legate::LogicalStore store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, REDUCER);
+  auto task    = runtime->create_task(context, task::simple::REDUCER);
   auto part1   = task->declare_partition();
   auto part2   = task->declare_partition();
   auto part3   = task->declare_partition();
@@ -107,7 +58,7 @@ void test_reducer_manual(legate::LibraryContext* context,
                          legate::LogicalStore scalar2)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, REDUCER, legate::Shape({2}));
+  auto task    = runtime->create_task(context, task::simple::REDUCER, legate::Shape({2}));
   auto redop1  = scalar1.type().find_reduction_operator(legate::ReductionOpKind::ADD);
   auto redop2  = scalar2.type().find_reduction_operator(legate::ReductionOpKind::MUL);
   task->add_reduction(scalar1, redop1);
@@ -126,15 +77,15 @@ void print_stores(legate::LibraryContext* context,
   auto acc2      = p_scalar2->read_accessor<int32_t, 3>();
   std::stringstream ss;
   ss << static_cast<int32_t>(acc1[{0, 0}]) << " " << acc2[{0, 0, 0}];
-  logger.print() << ss.str();
+  task::simple::logger.print() << ss.str();
 }
 
 TEST(Integration, ManualScalarOut)
 {
-  legate::Core::perform_registration<register_tasks>();
+  legate::Core::perform_registration<task::simple::register_tasks>();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(task::simple::library_name);
 
   auto scalar1 = runtime->create_store({1, 1}, legate::int8(), true);
   auto scalar2 = runtime->create_store({1, 1, 1}, legate::int32(), true);
