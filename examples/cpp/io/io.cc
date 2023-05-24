@@ -198,7 +198,7 @@ void _read_header_uneven(std::string path, std::vector<size_t>& color_shape)
   in.read(reinterpret_cast<char*>(&code), sizeof(uint32_t));
   in.read(reinterpret_cast<char*>(&dim), sizeof(uint32_t));
 
-  EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::UINT8));
+  EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::INT8));
 
   int64_t data;
   for (int i = 0; i < dim; i++) {
@@ -263,7 +263,7 @@ void _read_header_even(std::string path,
   in.read(reinterpret_cast<char*>(&code), sizeof(uint32_t));
   in.read(reinterpret_cast<char*>(&dim), sizeof(uint32_t));
 
-  EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::UINT8));
+  EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::INT8));
 
   uint32_t data;
   for (int i = 0; i < dim; i++) {
