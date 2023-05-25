@@ -384,6 +384,27 @@ std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
 std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_types,
                                   bool align = false) noexcept(false);
 
+/**
+ * @ingroup types
+ * @brief Creates a metadata object for a struct type
+ *
+ * @param align If true, fields in the struct are aligned
+ * @param field_types Field types
+ *
+ * @return Type object
+ */
+template <class... Types>
+std::enable_if_t<std::conjunction_v<std::is_same<Types, Type>...>, std::unique_ptr<Type>>
+struct_type(bool align, std::unique_ptr<Types>... field_types) noexcept(false)
+{
+  std::vector<std::unique_ptr<Type>> vec_field_types;
+  auto move_field_type = [&vec_field_types](auto&& field_type) {
+    vec_field_types.push_back(std::move(field_type));
+  };
+  (move_field_type(std::move(field_types)), ...);
+  return struct_type(std::move(vec_field_types), align);
+}
+
 std::ostream& operator<<(std::ostream&, const Type::Code&);
 
 std::ostream& operator<<(std::ostream&, const Type&);

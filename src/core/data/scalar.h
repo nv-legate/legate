@@ -68,6 +68,16 @@ class Scalar {
   template <typename T>
   Scalar(T value);
   /**
+   * @brief Creates an owned scalar of a specified type from a scalar value
+   *
+   * @tparam T The scalar type to wrap
+   *
+   * @param type A type of the scalar
+   * @param value A scalar value to create a `Scalar` with
+   */
+  template <typename T>
+  Scalar(T value, std::unique_ptr<Type> type);
+  /**
    * @brief Creates an owned scalar from a string. The value from the
    * original string will be copied.
    *
