@@ -235,6 +235,7 @@ class Runtime {
    */
   LogicalStore create_store(const Scalar& scalar);
   uint64_t get_unique_store_id();
+  uint64_t get_unique_storage_id();
 
  public:
   std::shared_ptr<LogicalRegionField> create_region_field(const Shape& extents,
@@ -242,7 +243,7 @@ class Runtime {
   std::shared_ptr<LogicalRegionField> import_region_field(Legion::LogicalRegion region,
                                                           Legion::FieldID field_id,
                                                           uint32_t field_size);
-  RegionField map_region_field(LibraryContext* context, const LogicalRegionField* region_field);
+  RegionField map_region_field(LibraryContext* context, const LogicalRegionField& region_field);
   void unmap_physical_region(Legion::PhysicalRegion pr);
 
  public:
@@ -264,6 +265,9 @@ class Runtime {
                                       const Legion::FieldSpace& field_space);
   Legion::LogicalPartition create_logical_partition(const Legion::LogicalRegion& logical_region,
                                                     const Legion::IndexPartition& index_partition);
+  Legion::LogicalRegion get_subregion(const Legion::LogicalPartition& partition,
+                                      const Legion::DomainPoint& color);
+  Legion::LogicalRegion find_parent_region(const Legion::LogicalRegion& region);
   Legion::Future create_future(const void* data, size_t datalen) const;
   Legion::FieldID allocate_field(const Legion::FieldSpace& field_space, size_t field_size);
   Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
@@ -359,6 +363,7 @@ class Runtime {
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::map<RegionFieldID, Legion::PhysicalRegion> inline_mapped_;
   uint64_t next_store_id_{1};
+  uint64_t next_storage_id_{1};
 
  private:
   bool in_callback_{false};

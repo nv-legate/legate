@@ -47,6 +47,7 @@ class PartitionManager {
                              const Restrictions& restrictions,
                              const Shape& shape);
   Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
+  bool use_complete_tiling(const Shape& extents, const Shape& tile_shape) const;
 
  public:
   Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,

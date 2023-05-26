@@ -22,6 +22,7 @@
 #include "legion.h"
 
 #include "core/data/shape.h"
+#include "core/data/slice.h"
 #include "core/data/transform.h"
 #include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
@@ -41,6 +42,12 @@ class Partition;
 class Projection;
 class Runtime;
 class Store;
+
+namespace mapping {
+
+class MachineDesc;
+
+}
 
 namespace detail {
 
@@ -230,7 +237,7 @@ class LogicalStore {
    *
    * @throw std::invalid_argument If `dim` is not a valid dimension name
    */
-  LogicalStore slice(int32_t dim, std::slice sl) const;
+  LogicalStore slice(int32_t dim, Slice sl) const;
   /**
    * @brief Reorders dimensions of the store.
    *
@@ -334,7 +341,7 @@ class LogicalStore {
   std::shared_ptr<Store> get_physical_store(LibraryContext* context);
 
  public:
-  void set_key_partition(const Partition* partition);
+  void set_key_partition(const mapping::MachineDesc& machine, const Partition* partition);
 
  public:
   std::shared_ptr<detail::LogicalStore> impl() const { return impl_; }

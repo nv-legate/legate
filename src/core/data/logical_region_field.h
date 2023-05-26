@@ -16,16 +16,24 @@
 
 #pragma once
 
+#include <memory>
+#include <unordered_map>
+
 #include "legion.h"
 
-#include "core/runtime/runtime.h"
+#include "core/data/shape.h"
 
 namespace legate {
 
-class LogicalRegionField {
+class Partition;
+class Tiling;
+
+class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionField> {
  public:
   LogicalRegionField() {}
-  LogicalRegionField(const Legion::LogicalRegion& lr, Legion::FieldID fid);
+  LogicalRegionField(const Legion::LogicalRegion& lr,
+                     Legion::FieldID fid,
+                     std::shared_ptr<LogicalRegionField> parent = nullptr);
 
  public:
   LogicalRegionField(const LogicalRegionField& other)            = default;
@@ -35,13 +43,21 @@ class LogicalRegionField {
   int32_t dim() const;
   const Legion::LogicalRegion& region() const { return lr_; }
   Legion::FieldID field_id() const { return fid_; }
+  const LogicalRegionField& get_root() const;
 
  public:
   Legion::Domain domain() const;
 
+ public:
+  std::shared_ptr<LogicalRegionField> get_child(const Tiling* tiling,
+                                                const Shape& color,
+                                                bool complete);
+  Legion::LogicalPartition get_legion_partition(const Partition* partition, bool complete);
+
  private:
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{-1U};
+  std::shared_ptr<LogicalRegionField> parent_{nullptr};
 };
 
 }  // namespace legate

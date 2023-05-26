@@ -47,6 +47,8 @@ class Scalar {
  public:
   Scalar() = default;
   Scalar(const Scalar& other);
+  Scalar(Scalar&& other);
+
   /**
    * @brief Creates a shared `Scalar` with an existing allocation. The caller is responsible
    * for passing in a sufficiently big allocation.

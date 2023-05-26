@@ -19,7 +19,7 @@
 #include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/constraint.h"
-#include "core/partitioning/constraint_graph.h"
+#include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/operation.h"
@@ -160,6 +160,22 @@ const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_s
   return finder->second;
 }
 
+void Strategy::dump() const
+{
+  log_legate.debug("===== Solution =====");
+  for (const auto& [symbol, part] : assignments_)
+    log_legate.debug() << symbol.to_string() << ": " << part->to_string();
+  for (const auto& [symbol, fspace] : field_spaces_)
+    log_legate.debug() << symbol.to_string() << ": " << fspace;
+  for (const auto& [op, domain] : launch_domains_) {
+    if (nullptr == domain)
+      log_legate.debug() << op->to_string() << ": (sequential)";
+    else
+      log_legate.debug() << op->to_string() << ": " << *domain;
+  }
+  log_legate.debug("====================");
+}
+
 void Strategy::compute_launch_domains()
 {
   std::map<const Operation*, LaunchDomainResolver> domain_resolvers;
@@ -191,60 +207,76 @@ Partitioner::Partitioner(std::vector<Operation*>&& operations) : operations_(std
 {
 }
 
-std::unique_ptr<Strategy> Partitioner::solve()
+std::unique_ptr<Strategy> Partitioner::partition_stores()
 {
-  ConstraintGraph constraints;
+  ConstraintSolver solver;
 
-  for (auto op : operations_) op->add_to_constraint_graph(constraints);
+  for (auto op : operations_) op->add_to_solver(solver);
 
-  constraints.compute_equivalence_classes();
+  solver.solve_constraints();
 
 #ifdef DEBUG_LEGATE
-  constraints.dump();
+  solver.dump();
 #endif
 
   auto strategy = std::make_unique<Strategy>();
 
   // Copy the list of partition symbols as we will sort them inplace
-  std::vector<const Variable*> partition_symbols(constraints.partition_symbols());
+  auto partition_symbols = solver.partition_symbols();
 
-  solve_for_unbound_stores(partition_symbols, strategy.get(), constraints);
+  auto remaining_symbols = handle_unbound_stores(strategy.get(), partition_symbols, solver);
 
-  std::stable_sort(partition_symbols.begin(),
-                   partition_symbols.end(),
-                   [](const auto& part_symb_a, const auto& part_symb_b) {
-                     auto get_storage_size = [](const auto& part_symb) {
-                       auto* op    = part_symb->operation();
-                       auto* store = op->find_store(part_symb);
+  auto comparison_key = [&solver](const auto& part_symb) {
+    auto* op    = part_symb->operation();
+    auto* store = op->find_store(part_symb);
+    auto has_key_part =
+      store->has_key_partition(op->machine(), solver.find_restrictions(part_symb));
 #ifdef DEBUG_LEGATE
-                       assert(!store->unbound());
+    assert(!store->unbound());
 #endif
-                       return store->storage_size();
-                     };
-                     return get_storage_size(part_symb_a) > get_storage_size(part_symb_b);
+    return std::make_pair(store->storage_size(), has_key_part);
+  };
+
+  for (auto& part_symb : remaining_symbols) {
+    auto [size, has_key_part] = comparison_key(part_symb);
+    log_legate.debug() << part_symb->to_string() << " " << size << " " << has_key_part;
+  }
+
+  std::stable_sort(remaining_symbols.begin(),
+                   remaining_symbols.end(),
+                   [&solver, &comparison_key](const auto& part_symb_a, const auto& part_symb_b) {
+                     return comparison_key(part_symb_a) > comparison_key(part_symb_b);
                    });
 
-  for (auto& part_symb : partition_symbols) {
+  for (auto& part_symb : remaining_symbols) {
     if (strategy->has_assignment(part_symb)) continue;
 
-    auto equiv_class  = constraints.find_equivalence_class(part_symb);
-    auto restrictions = constraints.find_restrictions(part_symb);
+    const auto& equiv_class  = solver.find_equivalence_class(part_symb);
+    const auto& restrictions = solver.find_restrictions(part_symb);
 
     auto* op       = part_symb->operation();
     auto store     = op->find_store(part_symb);
     auto partition = store->find_or_create_key_partition(op->machine(), restrictions);
+#ifdef DEBUG_LEGATE
+    assert(partition != nullptr);
+#endif
 
     for (auto symb : equiv_class) strategy->insert(symb, partition);
   }
 
   strategy->compute_launch_domains();
 
+#ifdef DEBUG_LEGATE
+  strategy->dump();
+#endif
+
   return strategy;
 }
 
-void Partitioner::solve_for_unbound_stores(std::vector<const Variable*>& partition_symbols,
-                                           Strategy* strategy,
-                                           const ConstraintGraph& constraints)
+std::vector<const Variable*> Partitioner::handle_unbound_stores(
+  Strategy* strategy,
+  const std::vector<const Variable*>& partition_symbols,
+  const ConstraintSolver& solver)
 {
   auto runtime = Runtime::get_runtime();
 
@@ -260,14 +292,14 @@ void Partitioner::solve_for_unbound_stores(std::vector<const Variable*>& partiti
       continue;
     }
 
-    auto equiv_class = constraints.find_equivalence_class(part_symb);
+    auto equiv_class = solver.find_equivalence_class(part_symb);
     std::shared_ptr<Partition> partition(create_no_partition());
     auto field_space = runtime->create_field_space();
 
     for (auto symb : equiv_class) strategy->insert(symb, partition, field_space);
   }
 
-  partition_symbols.swap(filtered);
+  return filtered;
 }
 
 }  // namespace legate

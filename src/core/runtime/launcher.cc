@@ -82,12 +82,14 @@ void TaskLauncher::add_output(detail::LogicalStore* store,
 
 void TaskLauncher::add_reduction(detail::LogicalStore* store,
                                  std::unique_ptr<Projection> proj,
+                                 bool read_write,
                                  Legion::MappingTagID tag,
-                                 Legion::RegionFlags flags,
-                                 bool read_write /*= false*/)
+                                 Legion::RegionFlags flags)
 {
-  assert(!read_write);
-  add_store(reductions_, store, std::move(proj), REDUCE, tag, flags);
+  if (read_write)
+    add_store(reductions_, store, std::move(proj), READ_WRITE, tag, flags);
+  else
+    add_store(reductions_, store, std::move(proj), REDUCE, tag, flags);
 }
 
 void TaskLauncher::add_unbound_output(detail::LogicalStore* store,

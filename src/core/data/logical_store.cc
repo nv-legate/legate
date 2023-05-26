@@ -16,7 +16,6 @@
 
 #include <numeric>
 
-#include "core/data/logical_region_field.h"
 #include "core/data/logical_store.h"
 #include "core/data/logical_store_detail.h"
 #include "core/data/store.h"
@@ -28,20 +27,9 @@
 #include "core/utilities/dispatch.h"
 #include "legate_defines.h"
 
-using namespace Legion;
-
 namespace legate {
 
 extern Logger log_legate;
-
-LogicalRegionField::LogicalRegionField(const LogicalRegion& lr, FieldID fid) : lr_(lr), fid_(fid) {}
-
-int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
-
-Domain LogicalRegionField::domain() const
-{
-  return Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
-}
 
 LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl) : impl_(std::move(impl)) {}
 
@@ -72,7 +60,7 @@ LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<size_t> tile
   return LogicalStorePartition(impl_->partition_by_tiling(Shape(std::move(tile_shape))));
 }
 
-LogicalStore LogicalStore::slice(int32_t dim, std::slice sl) const
+LogicalStore LogicalStore::slice(int32_t dim, Slice sl) const
 {
   return LogicalStore(impl_->slice(dim, sl));
 }
@@ -92,9 +80,10 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
   return impl_->get_physical_store(context);
 }
 
-void LogicalStore::set_key_partition(const Partition* partition)
+void LogicalStore::set_key_partition(const mapping::MachineDesc& machine,
+                                     const Partition* partition)
 {
-  impl_->set_key_partition(partition);
+  impl_->set_key_partition(machine, partition);
 }
 
 LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl)

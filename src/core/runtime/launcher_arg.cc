@@ -83,7 +83,7 @@ void FutureStoreArg::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(read_only_);
   buffer.pack<bool>(has_storage_);
   buffer.pack<uint32_t>(store_->type().size());
-  buffer.pack<size_t>(store_->extents().data());
+  buffer.pack<size_t>(store_->get_storage()->extents().data());
 }
 
 }  // namespace legate

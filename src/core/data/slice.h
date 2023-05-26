@@ -16,16 +16,32 @@
 
 #pragma once
 
-#include "core/utilities/tuple.h"
+#include <optional>
 
-#include "legion.h"
+/**
+ * @file
+ * @brief A simple slice class that has the same semantics as Python's
+ */
 
 namespace legate {
 
-using Shape = tuple<size_t>;
+/**
+ * @ingroup data
+ * @brief A slice descriptor
+ *
+ * legate::Slice behaves similarly to how the slice in Python does, and has different semantics
+ * from std::slice.
+ */
+struct Slice {
+  static constexpr std::optional<int64_t> OPEN = std::nullopt;
 
-Legion::Domain to_domain(const Shape& shape);
+  Slice(std::optional<int64_t> _start = OPEN, std::optional<int64_t> _stop = OPEN)
+    : start(_start), stop(_stop)
+  {
+  }
 
-Legion::DomainPoint to_domain_point(const Shape& shape);
+  std::optional<int64_t> start{OPEN};
+  std::optional<int64_t> stop{OPEN};
+};
 
 }  // namespace legate

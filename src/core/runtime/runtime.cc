@@ -470,7 +470,7 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op_pointers.push_back(op.get());
 
   Partitioner partitioner(std::move(op_pointers));
-  auto strategy = partitioner.solve();
+  auto strategy = partitioner.partition_stores();
 
   for (auto& op : operations) op->launch(strategy.get());
 }
@@ -499,6 +499,8 @@ LogicalStore Runtime::create_store(const Scalar& scalar)
 
 uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
+uint64_t Runtime::get_unique_storage_id() { return next_storage_id_++; }
+
 std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& extents,
                                                                  uint32_t field_size)
 {
@@ -524,10 +526,10 @@ std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::Logical
   return fld_mgr->import_field(region, field_id);
 }
 
-RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegionField* rf)
+RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegionField& rf)
 {
-  auto region   = rf->region();
-  auto field_id = rf->field_id();
+  auto region   = rf.region();
+  auto field_id = rf.field_id();
 
   Legion::PhysicalRegion pr;
 
@@ -544,7 +546,7 @@ RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegi
     inline_mapped_.insert({key, pr});
   } else
     pr = finder->second;
-  return RegionField(rf->dim(), pr, field_id);
+  return RegionField(rf.dim(), pr, field_id);
 }
 
 void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
@@ -623,6 +625,23 @@ Legion::LogicalPartition Runtime::create_logical_partition(
 {
   assert(nullptr != legion_context_);
   return legion_runtime_->get_logical_partition(legion_context_, logical_region, index_partition);
+}
+
+Legion::LogicalRegion Runtime::get_subregion(const Legion::LogicalPartition& partition,
+                                             const Legion::DomainPoint& color)
+{
+  assert(nullptr != legion_context_);
+  return legion_runtime_->get_logical_subregion_by_color(legion_context_, partition, color);
+}
+
+Legion::LogicalRegion Runtime::find_parent_region(const Legion::LogicalRegion& region)
+{
+  auto result = region;
+  while (legion_runtime_->has_parent_logical_partition(legion_context_, result)) {
+    auto partition = legion_runtime_->get_parent_logical_partition(legion_context_, result);
+    result         = legion_runtime_->get_parent_logical_region(legion_context_, partition);
+  }
+  return result;
 }
 
 Legion::Future Runtime::create_future(const void* data, size_t datalen) const

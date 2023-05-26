@@ -25,9 +25,18 @@ Legion::Domain to_domain(const tuple<size_t>& shape)
   domain.dim = ndim;
   for (int32_t idx = 0; idx < ndim; ++idx) {
     domain.rect_data[idx]        = 0;
-    domain.rect_data[idx + ndim] = shape[idx] - 1;
+    domain.rect_data[idx + ndim] = static_cast<int64_t>(shape[idx]) - 1;
   }
   return domain;
+}
+
+Legion::DomainPoint to_domain_point(const Shape& shape)
+{
+  Legion::DomainPoint point;
+  auto ndim = static_cast<int32_t>(shape.size());
+  point.dim = ndim;
+  for (int32_t idx = 0; idx < ndim; ++idx) point[idx] = static_cast<int64_t>(shape[idx]);
+  return point;
 }
 
 }  // namespace legate

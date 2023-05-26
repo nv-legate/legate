@@ -197,6 +197,16 @@ Shape PartitionManager::compute_tile_shape(const Shape& extents, const Shape& la
   return tile_shape;
 }
 
+bool PartitionManager::use_complete_tiling(const Shape& extents, const Shape& tile_shape) const
+{
+  // If it would generate a very large number of elements then
+  // we'll apply a heuristic for now and not actually tile it
+  // TODO: A better heuristic for this in the future
+  auto num_tiles  = (extents / tile_shape).volume();
+  auto num_pieces = Runtime::get_runtime()->get_machine().count();
+  return !(num_tiles > 256 && num_tiles > 16 * num_pieces);
+}
+
 Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
                                                               const Tiling& tiling) const
 {

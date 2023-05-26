@@ -69,9 +69,9 @@ class TaskLauncher {
                   Legion::RegionFlags flags = LEGION_NO_FLAG);
   void add_reduction(detail::LogicalStore* store,
                      std::unique_ptr<Projection> proj,
+                     bool read_write           = false,
                      Legion::MappingTagID tag  = 0,
-                     Legion::RegionFlags flags = LEGION_NO_FLAG,
-                     bool read_write           = false);
+                     Legion::RegionFlags flags = LEGION_NO_FLAG);
   void add_unbound_output(detail::LogicalStore* store,
                           Legion::FieldSpace field_space,
                           Legion::FieldID field_id);

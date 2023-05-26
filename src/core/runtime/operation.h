@@ -35,7 +35,7 @@
 namespace legate {
 
 class Constraint;
-class ConstraintGraph;
+class ConstraintSolver;
 class LibraryContext;
 class Runtime;
 class Scalar;
@@ -60,9 +60,9 @@ class Operation {
   virtual ~Operation() {}
 
  public:
-  virtual void add_to_constraint_graph(ConstraintGraph& constraint_graph) const = 0;
-  virtual void launch(Strategy* strategy)                                       = 0;
-  virtual std::string to_string() const                                         = 0;
+  virtual void add_to_solver(ConstraintSolver& constraint_graph) const = 0;
+  virtual void launch(Strategy* strategy)                              = 0;
+  virtual std::string to_string() const                                = 0;
 
  public:
   /**
@@ -209,7 +209,7 @@ class AutoTask : public Task {
    * @param constraint A partitioning constraint
    */
   void add_constraint(std::unique_ptr<Constraint> constraint);
-  void add_to_constraint_graph(ConstraintGraph& constraint_graph) const override;
+  void add_to_solver(ConstraintSolver& constraint_graph) const override;
 
  private:
   std::vector<std::unique_ptr<Constraint>> constraints_{};
@@ -288,7 +288,7 @@ class ManualTask : public Task {
   void launch(Strategy* strategy) override;
 
  public:
-  void add_to_constraint_graph(ConstraintGraph& constraint_graph) const override;
+  void add_to_solver(ConstraintSolver& constraint_graph) const override;
 
  private:
   std::unique_ptr<Strategy> strategy_;

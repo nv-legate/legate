@@ -18,8 +18,11 @@
 
 #include <memory>
 
-#include "core/data/shape.h"
 #include "legion.h"
+
+#include "core/data/shape.h"
+#include "core/partitioning/restriction.h"
+#include "core/utilities/typedefs.h"
 
 namespace legate {
 
@@ -28,6 +31,7 @@ class Projection;
 namespace detail {
 
 class LogicalStore;
+class Storage;
 
 }  // namespace detail
 
@@ -46,15 +50,13 @@ struct Partition {
   virtual Kind kind() const = 0;
 
  public:
-  virtual bool is_complete_for(const detail::LogicalStore* store) const = 0;
-  virtual bool is_disjoint_for(const detail::LogicalStore* store) const = 0;
+  virtual bool is_complete_for(const detail::Storage* storage) const          = 0;
+  virtual bool is_disjoint_for(const Domain* launch_domain) const             = 0;
+  virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
 
  public:
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                             bool disjoint = false,
-                                             bool complete = false) const       = 0;
-  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store,
-                                                     int32_t launch_ndim) const = 0;
+                                             bool complete = false) const = 0;
 
  public:
   virtual bool has_launch_domain() const       = 0;
@@ -67,9 +69,9 @@ struct Partition {
   virtual std::string to_string() const = 0;
 
  public:
-  virtual const Shape& tile_shape() const  = 0;
-  virtual const Shape& color_shape() const = 0;
-  virtual const Shape& offsets() const     = 0;
+  virtual const Shape& tile_shape() const       = 0;
+  virtual const Shape& color_shape() const      = 0;
+  virtual const tuple<int64_t>& offsets() const = 0;
 };
 
 class NoPartition : public Partition {
@@ -77,28 +79,25 @@ class NoPartition : public Partition {
   NoPartition();
 
  public:
-  virtual Kind kind() const override { return Kind::NO_PARTITION; }
+  Kind kind() const override { return Kind::NO_PARTITION; }
 
  public:
-  virtual bool is_complete_for(const detail::LogicalStore* store) const override;
-  virtual bool is_disjoint_for(const detail::LogicalStore* store) const override;
+  bool is_complete_for(const detail::Storage* storage) const override;
+  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool satisfies_restrictions(const Restrictions& restrictions) const override;
 
  public:
-  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                             bool disjoint,
-                                             bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store,
-                                                     int32_t launch_ndim) const override;
+  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
 
  public:
-  virtual bool has_launch_domain() const override;
-  virtual Legion::Domain launch_domain() const override;
+  bool has_launch_domain() const override;
+  Legion::Domain launch_domain() const override;
 
  public:
-  virtual std::unique_ptr<Partition> clone() const override;
+  std::unique_ptr<Partition> clone() const override;
 
  public:
-  virtual std::string to_string() const override;
+  std::string to_string() const override;
 
  public:
   const Shape& tile_shape() const override
@@ -109,7 +108,7 @@ class NoPartition : public Partition {
   {
     throw std::invalid_argument("Partition kind doesn't support color_shape");
   }
-  const Shape& offsets() const override
+  const tuple<int64_t>& offsets() const override
   {
     throw std::invalid_argument("Partition kind doesn't support offsets");
   }
@@ -117,7 +116,7 @@ class NoPartition : public Partition {
 
 class Tiling : public Partition {
  public:
-  Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets);
+  Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets);
 
  public:
   Tiling(const Tiling&) = default;
@@ -127,45 +126,46 @@ class Tiling : public Partition {
   bool operator<(const Tiling& other) const;
 
  public:
-  virtual Kind kind() const override { return Kind::TILING; }
+  Kind kind() const override { return Kind::TILING; }
 
  public:
-  virtual bool is_complete_for(const detail::LogicalStore* store) const override;
-  virtual bool is_disjoint_for(const detail::LogicalStore* store) const override;
+  bool is_complete_for(const detail::Storage* storage) const override;
+  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool satisfies_restrictions(const Restrictions& restrictions) const override;
 
  public:
-  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                             bool disjoint,
-                                             bool complete) const override;
-  virtual std::unique_ptr<Projection> get_projection(detail::LogicalStore* store,
-                                                     int32_t launch_ndim) const override;
+  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
 
  public:
-  virtual bool has_launch_domain() const override;
-  virtual Legion::Domain launch_domain() const override;
+  bool has_launch_domain() const override;
+  Legion::Domain launch_domain() const override;
 
  public:
-  virtual std::unique_ptr<Partition> clone() const override;
+  std::unique_ptr<Partition> clone() const override;
 
  public:
-  virtual std::string to_string() const override;
+  std::string to_string() const override;
 
  public:
   const Shape& tile_shape() const override { return tile_shape_; }
   const Shape& color_shape() const override { return color_shape_; }
-  const Shape& offsets() const override { return offsets_; }
+  const tuple<int64_t>& offsets() const override { return offsets_; }
+
+ public:
+  Shape get_child_extents(const Shape& extents, const Shape& color);
+  Shape get_child_offsets(const Shape& color);
 
  private:
   Shape tile_shape_;
   Shape color_shape_;
-  Shape offsets_;
+  tuple<int64_t> offsets_;
 };
 
 std::unique_ptr<Partition> create_no_partition();
 
 std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                          Shape&& color_shape,
-                                         Shape&& offsets = {});
+                                         tuple<int64_t>&& offsets = {});
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 

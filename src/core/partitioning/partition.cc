@@ -27,21 +27,18 @@ namespace legate {
 
 NoPartition::NoPartition() : Partition() {}
 
-bool NoPartition::is_complete_for(const detail::LogicalStore* store) const { return false; }
+bool NoPartition::is_complete_for(const detail::Storage* storage) const { return true; }
 
-bool NoPartition::is_disjoint_for(const detail::LogicalStore* store) const { return false; }
-
-Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region,
-                                                bool disjoint,
-                                                bool complete) const
+bool NoPartition::is_disjoint_for(const Domain* launch_domain) const
 {
-  return Legion::LogicalPartition::NO_PART;
+  return nullptr == launch_domain || launch_domain->get_volume() == 1;
 }
 
-std::unique_ptr<Projection> NoPartition::get_projection(detail::LogicalStore* store,
-                                                        int32_t launch_ndim) const
+bool NoPartition::satisfies_restrictions(const Restrictions& restrictions) const { return true; }
+
+Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region, bool complete) const
 {
-  return std::make_unique<Projection>();
+  return Legion::LogicalPartition::NO_PART;
 }
 
 bool NoPartition::has_launch_domain() const { return false; }
@@ -56,13 +53,13 @@ std::unique_ptr<Partition> NoPartition::clone() const { return create_no_partiti
 
 std::string NoPartition::to_string() const { return "NoPartition"; }
 
-Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, Shape&& offsets)
+Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets)
   : Partition(),
     tile_shape_(std::move(tile_shape)),
     color_shape_(std::move(color_shape)),
     offsets_(std::move(offsets))
 {
-  if (offsets_.empty()) offsets_ = Shape(tile_shape_.size(), 0);
+  if (offsets_.empty()) offsets_ = tuple<int64_t>(tile_shape_.size(), 0);
   assert(tile_shape_.size() == color_shape_.size());
   assert(tile_shape_.size() == offsets_.size());
 }
@@ -89,13 +86,42 @@ bool Tiling::operator<(const Tiling& other) const
     return false;
 }
 
-bool Tiling::is_complete_for(const detail::LogicalStore* store) const { return false; }
+bool Tiling::is_complete_for(const detail::Storage* storage) const
+{
+  const auto& storage_exts = storage->extents();
+  const auto& storage_offs = storage->offsets();
 
-bool Tiling::is_disjoint_for(const detail::LogicalStore* store) const { return true; }
+#ifdef DEBUG_LEGATE
+  assert(storage_exts.size() == storage_offs.size());
+  assert(storage_offs.size() == offsets_.size());
+#endif
 
-Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
-                                           bool disjoint,
-                                           bool complete) const
+  uint32_t ndim = storage_exts.size();
+
+  for (uint32_t dim = 0; dim < ndim; ++dim) {
+    int64_t my_lo = offsets_[dim];
+    int64_t my_hi = my_lo + static_cast<int64_t>(tile_shape_[dim] * color_shape_[dim]);
+    if (static_cast<int64_t>(storage_offs[dim]) < my_lo &&
+        my_hi < static_cast<int64_t>(storage_offs[dim] + storage_exts[dim]))
+      return false;
+  }
+  return true;
+}
+
+bool Tiling::is_disjoint_for(const Domain* launch_domain) const
+{
+  return nullptr == launch_domain || launch_domain->get_volume() <= color_shape_.volume();
+}
+
+bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
+{
+  static auto satisfies_restriction = [](Restriction r, size_t ext) {
+    return r != Restriction::FORBID || ext == 1;
+  };
+  return apply(satisfies_restriction, restrictions, color_shape_).all();
+}
+
+Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
 {
   auto index_space     = region.get_index_space();
   auto runtime         = Runtime::get_runtime();
@@ -121,19 +147,12 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region,
   auto color_domain = to_domain(color_shape_);
   auto color_space  = runtime->find_or_create_index_space(color_domain);
 
-  auto kind = complete ? (disjoint ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_ALIASED_COMPLETE_KIND)
-                       : (disjoint ? LEGION_DISJOINT_KIND : LEGION_ALIASED_KIND);
+  auto kind = complete ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_DISJOINT_KIND;
 
   index_partition =
     runtime->create_restricted_partition(index_space, color_space, kind, transform, extent);
   part_mgr->record_index_partition(index_space, *this, index_partition);
   return runtime->create_logical_partition(region, index_partition);
-}
-
-std::unique_ptr<Projection> Tiling::get_projection(detail::LogicalStore* store,
-                                                   int32_t launch_ndim) const
-{
-  return store->create_projection(this, launch_ndim);
 }
 
 bool Tiling::has_launch_domain() const { return true; }
@@ -150,11 +169,27 @@ std::string Tiling::to_string() const
   return std::move(ss).str();
 }
 
+Shape Tiling::get_child_extents(const Shape& extents, const Shape& color)
+{
+  auto lo = apply(std::plus<int64_t>{}, tile_shape_ * color, offsets_);
+  auto hi = apply(std::plus<int64_t>{}, tile_shape_ * (color + 1), offsets_);
+  lo      = apply([](int64_t v) { return std::max<int64_t>(0, v); }, lo);
+  hi      = apply([](size_t a, int64_t b) { return std::min<int64_t>(a, b); }, extents, hi);
+  return apply([](int64_t h, int64_t l) { return static_cast<size_t>(h - l); }, hi, lo);
+}
+
+Shape Tiling::get_child_offsets(const Shape& color)
+{
+  return apply([](size_t a, int64_t b) { return static_cast<size_t>(static_cast<int64_t>(a) + b); },
+               tile_shape_ * color,
+               offsets_);
+}
+
 std::unique_ptr<Partition> create_no_partition() { return std::make_unique<NoPartition>(); }
 
 std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
                                          Shape&& color_shape,
-                                         Shape&& offsets /*= {}*/)
+                                         tuple<int64_t>&& offsets /*= {}*/)
 {
   return std::make_unique<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets));

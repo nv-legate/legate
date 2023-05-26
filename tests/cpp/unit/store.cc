@@ -18,7 +18,6 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <valarray>
 
 #include "legate.h"
 
@@ -66,7 +65,7 @@ TEST(Store, Transform)
             }));
   EXPECT_TRUE(projected.transformed());
 
-  auto sliced = store.slice(1, std::slice(1, 3, 1));
+  auto sliced = store.slice(1, legate::Slice(1, 3));
   EXPECT_EQ(sliced.extents(), (std::vector<size_t>{4, 2}));
   EXPECT_TRUE(sliced.transformed());
 
@@ -93,9 +92,7 @@ TEST(Store, InvalidTransform)
     EXPECT_THROW(store.project(-3, 1), std::invalid_argument);
     EXPECT_THROW(store.project(0, 4), std::invalid_argument);
 
-    EXPECT_THROW(store.slice(2, std::slice(1, 3, 1)), std::invalid_argument);
-    EXPECT_THROW(store.slice(1, std::slice(1, 3, 2)), std::invalid_argument);
-    EXPECT_THROW(store.slice(1, std::slice(1, 4, 1)), std::invalid_argument);
+    EXPECT_THROW(store.slice(2, legate::Slice(1, 3)), std::invalid_argument);
 
     EXPECT_THROW(store.transpose({
                    2,

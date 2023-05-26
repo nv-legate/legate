@@ -23,7 +23,6 @@ Scalar::Scalar(T value) : own_(true), type_(primitive_type(legate_type_code_of<T
   static_assert(legate_type_code_of<T> != Type::Code::STRUCT);
   static_assert(legate_type_code_of<T> != Type::Code::STRING);
   static_assert(legate_type_code_of<T> != Type::Code::INVALID);
-
   auto buffer = malloc(sizeof(T));
   memcpy(buffer, &value, sizeof(T));
   data_ = buffer;

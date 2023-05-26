@@ -21,6 +21,13 @@ namespace legate {
 
 Scalar::Scalar(const Scalar& other) : own_(other.own_), type_(other.type_->clone()) { copy(other); }
 
+Scalar::Scalar(Scalar&& other) : own_(other.own_), type_(std::move(other.type_)), data_(other.data_)
+{
+  other.own_  = false;
+  other.type_ = nullptr;
+  other.data_ = nullptr;
+}
+
 Scalar::Scalar(std::unique_ptr<Type> type, const void* data) : type_(std::move(type)), data_(data)
 {
 }

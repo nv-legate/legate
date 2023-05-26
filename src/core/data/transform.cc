@@ -72,12 +72,40 @@ proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) con
   return parent_->identity() ? result : parent_->invert(result);
 }
 
+Restrictions TransformStack::convert(const Restrictions& restrictions) const
+{
+  if (identity()) return restrictions;
+
+  if (parent_->identity())
+    return transform_->convert(restrictions);
+  else {
+    auto result = parent_->convert(restrictions);
+    return transform_->convert(result);
+  }
+}
+
 Restrictions TransformStack::invert(const Restrictions& restrictions) const
 {
   if (identity()) return restrictions;
 
   auto result = transform_->invert(restrictions);
   return parent_->identity() ? std::move(result) : parent_->invert(result);
+}
+
+Shape TransformStack::invert_extents(const Shape& extents) const
+{
+  if (identity()) return extents;
+
+  auto result = transform_->invert_extents(extents);
+  return parent_->identity() ? std::move(result) : parent_->invert_extents(result);
+}
+
+Shape TransformStack::invert_point(const Shape& point) const
+{
+  if (identity()) return point;
+
+  auto result = transform_->invert_point(point);
+  return parent_->identity() ? std::move(result) : parent_->invert_point(result);
 }
 
 void TransformStack::pack(BufferBuilder& buffer) const
@@ -180,14 +208,56 @@ Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Shift::convert(const Partition* partition) const { return nullptr; }
+std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling = static_cast<const Tiling*>(partition);
+      return create_tiling(Shape(tiling->tile_shape()),
+                           Shape(tiling->color_shape()),
+                           tiling->offsets().update(dim_, offset_));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
 
-std::unique_ptr<Partition> Shift::invert(const Partition* partition) const { return nullptr; }
+std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling     = static_cast<const Tiling*>(partition);
+      auto new_offset = tiling->offsets()[dim_] - offset_;
+      return create_tiling(Shape(tiling->tile_shape()),
+                           Shape(tiling->color_shape()),
+                           tiling->offsets().update(dim_, new_offset));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
 
 // the shift transform makes no change on the store's dimensions
 proj::SymbolicPoint Shift::invert(const proj::SymbolicPoint& point) const { return point; }
 
+Restrictions Shift::convert(const Restrictions& restrictions) const { return restrictions; }
+
 Restrictions Shift::invert(const Restrictions& restrictions) const { return restrictions; }
+
+Shape Shift::invert_extents(const Shape& extents) const { return extents; }
+
+Shape Shift::invert_point(const Shape& point) const
+{
+  auto result = point;
+  result[dim_] -= offset_;
+  return std::move(result);
+}
 
 void Shift::pack(BufferBuilder& buffer) const
 {
@@ -290,10 +360,19 @@ proj::SymbolicPoint Promote::invert(const proj::SymbolicPoint& point) const
   return point.remove(extra_dim_);
 }
 
+Restrictions Promote::convert(const Restrictions& restrictions) const
+{
+  return restrictions.insert(extra_dim_, Restriction::AVOID);
+}
+
 Restrictions Promote::invert(const Restrictions& restrictions) const
 {
   return restrictions.remove(extra_dim_);
 }
+
+Shape Promote::invert_extents(const Shape& extents) const { return extents.remove(extra_dim_); }
+
+Shape Promote::invert_point(const Shape& point) const { return point.remove(extra_dim_); }
 
 void Promote::pack(BufferBuilder& buffer) const
 {
@@ -395,10 +474,19 @@ proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
   return point.insert(dim_, proj::SymbolicExpr());
 }
 
+Restrictions Project::convert(const Restrictions& restrictions) const
+{
+  return restrictions.remove(dim_);
+}
+
 Restrictions Project::invert(const Restrictions& restrictions) const
 {
   return restrictions.insert(dim_, Restriction::ALLOW);
 }
+
+Shape Project::invert_extents(const Shape& extents) const { return extents.insert(dim_, 1); }
+
+Shape Project::invert_point(const Shape& point) const { return point.insert(dim_, coord_); }
 
 void Project::pack(BufferBuilder& buffer) const
 {
@@ -457,9 +545,39 @@ Legion::DomainAffineTransform Transpose::inverse_transform(int32_t in_dim) const
   return result;
 }
 
-std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const { return nullptr; }
+std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling = static_cast<const Tiling*>(partition);
+      return create_tiling(tiling->tile_shape().map(axes_),
+                           tiling->color_shape().map(axes_),
+                           tiling->offsets().map(axes_));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
 
-std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const { return nullptr; }
+std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling = static_cast<const Tiling*>(partition);
+      return create_tiling(tiling->tile_shape().map(inverse_),
+                           tiling->color_shape().map(inverse_),
+                           tiling->offsets().map(inverse_));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
 
 proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
 {
@@ -472,12 +590,23 @@ proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
   return proj::SymbolicPoint(std::move(exprs));
 }
 
+Restrictions Transpose::convert(const Restrictions& restrictions) const
+{
+  std::vector<Restriction> result;
+  for (int32_t dim : axes_) result.push_back(restrictions[dim]);
+  return Restrictions(std::move(result));
+}
+
 Restrictions Transpose::invert(const Restrictions& restrictions) const
 {
   std::vector<Restriction> result;
   for (int32_t dim : inverse_) result.push_back(restrictions[dim]);
   return Restrictions(std::move(result));
 }
+
+Shape Transpose::invert_extents(const Shape& extents) const { return extents.map(inverse_); }
+
+Shape Transpose::invert_point(const Shape& point) const { return point.map(inverse_); }
 
 namespace {  // anonymous
 template <typename T>
@@ -577,10 +706,56 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) con
 
 std::unique_ptr<Partition> Delinearize::convert(const Partition* partition) const
 {
+  throw NonInvertibleTransformation("Delinearize transform cannot be used in conversion");
   return nullptr;
 }
 
-std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const { return nullptr; }
+std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
+{
+  switch (partition->kind()) {
+    case Partition::Kind::NO_PARTITION: {
+      return create_no_partition();
+    }
+    case Partition::Kind::TILING: {
+      auto tiling       = static_cast<const Tiling*>(partition);
+      auto& tile_shape  = tiling->tile_shape();
+      auto& color_shape = tiling->color_shape();
+      auto& offsets     = tiling->offsets();
+
+      auto invertible = [&](const Tiling* tiling) {
+        size_t volume     = 1;
+        size_t sum_offset = 0;
+        for (uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+          volume *= color_shape[dim_ + idx];
+          sum_offset += offsets[dim_ + idx];
+        }
+        return 1 == volume && 0 == sum_offset;
+      };
+
+      if (!invertible(tiling))
+        throw NonInvertibleTransformation("Delinearize transform cannot invert this partition: " +
+                                          tiling->to_string());
+
+      auto new_tile_shape  = tile_shape;
+      auto new_color_shape = color_shape;
+      auto new_offsets     = offsets;
+
+      for (uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+        new_tile_shape.remove_inplace(dim_ + 1);
+        new_color_shape.remove_inplace(dim_ + 1);
+        new_offsets.remove_inplace(dim_ + 1);
+      }
+
+      new_tile_shape[dim_] *= strides_[dim_];
+      new_offsets[dim_] *= strides_[dim_];
+
+      return create_tiling(
+        std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
+    }
+  }
+  assert(false);
+  return nullptr;
+}
 
 proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
 {
@@ -590,11 +765,35 @@ proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
   return proj::SymbolicPoint(std::move(exprs));
 }
 
+Restrictions Delinearize::convert(const Restrictions& restrictions) const
+{
+  std::vector<Restriction> result;
+  for (uint32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
+  for (uint32_t idx = 1; idx < sizes_.size(); ++idx) result.push_back(Restriction::FORBID);
+  for (uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim)
+    result.push_back(restrictions[dim]);
+  return Restrictions(std::move(result));
+}
+
 Restrictions Delinearize::invert(const Restrictions& restrictions) const
 {
-  auto result = restrictions;
-  for (uint32_t dim = 1; dim < sizes_.size(); ++dim) result.remove_inplace(dim + 1);
-  return result;
+  std::vector<Restriction> result;
+  for (uint32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
+  for (uint32_t dim = dim_ + sizes_.size(); dim < restrictions.size(); ++dim)
+    result.push_back(restrictions[dim]);
+  return Restrictions(std::move(result));
+}
+
+Shape Delinearize::invert_extents(const Shape& extents) const
+{
+  throw NonInvertibleTransformation();
+  return Shape();
+}
+
+Shape Delinearize::invert_point(const Shape& point) const
+{
+  throw NonInvertibleTransformation();
+  return Shape();
 }
 
 void Delinearize::pack(BufferBuilder& buffer) const

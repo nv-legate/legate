@@ -16,6 +16,7 @@
 
 #include "core/runtime/req_analyzer.h"
 #include "core/runtime/launcher.h"
+#include "core/runtime/runtime.h"
 
 namespace legate {
 
@@ -74,13 +75,15 @@ void ProjectionInfo::populate_launcher(Legion::TaskLauncher* task,
 {
   Legion::RegionRequirement legion_req;
 
+  auto parent = Runtime::get_runtime()->find_parent_region(region);
+
   if (LEGION_REDUCE == privilege) {
 #ifdef DEBUG_LEGATE
     assert(redop != -1);
 #endif
-    new (&legion_req) Legion::RegionRequirement(region, redop, LEGION_EXCLUSIVE, region, tag);
+    new (&legion_req) Legion::RegionRequirement(region, redop, LEGION_EXCLUSIVE, parent, tag);
   } else {
-    new (&legion_req) Legion::RegionRequirement(region, privilege, LEGION_EXCLUSIVE, region, tag);
+    new (&legion_req) Legion::RegionRequirement(region, privilege, LEGION_EXCLUSIVE, parent, tag);
   }
 
   legion_req.add_fields(fields).add_flags(flags);
@@ -94,15 +97,17 @@ void ProjectionInfo::populate_launcher(Legion::IndexTaskLauncher* task,
 {
   Legion::RegionRequirement legion_req;
 
+  auto parent = Runtime::get_runtime()->find_parent_region(region);
+
   // Broadcast
   if (Legion::LogicalPartition::NO_PART == partition) {
     if (LEGION_REDUCE == privilege) {
 #ifdef DEBUG_LEGATE
       assert(redop != -1);
 #endif
-      new (&legion_req) Legion::RegionRequirement(region, redop, LEGION_EXCLUSIVE, region, tag);
+      new (&legion_req) Legion::RegionRequirement(region, redop, LEGION_EXCLUSIVE, parent, tag);
     } else {
-      new (&legion_req) Legion::RegionRequirement(region, privilege, LEGION_EXCLUSIVE, region, tag);
+      new (&legion_req) Legion::RegionRequirement(region, privilege, LEGION_EXCLUSIVE, parent, tag);
     }
   } else {
     if (LEGION_REDUCE == privilege) {
@@ -110,10 +115,10 @@ void ProjectionInfo::populate_launcher(Legion::IndexTaskLauncher* task,
       assert(redop != -1);
 #endif
       new (&legion_req)
-        Legion::RegionRequirement(partition, proj_id, redop, LEGION_EXCLUSIVE, region, tag);
+        Legion::RegionRequirement(partition, proj_id, redop, LEGION_EXCLUSIVE, parent, tag);
     } else {
       new (&legion_req)
-        Legion::RegionRequirement(partition, proj_id, privilege, LEGION_EXCLUSIVE, region, tag);
+        Legion::RegionRequirement(partition, proj_id, privilege, LEGION_EXCLUSIVE, parent, tag);
     }
   }
 

@@ -22,7 +22,7 @@
 #include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/constraint.h"
-#include "core/partitioning/constraint_graph.h"
+#include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
@@ -77,45 +77,50 @@ void Task::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
   TaskLauncher launcher(library_, machine_, provenance_, task_id_);
-  auto launch_domain = strategy.launch_domain(this);
-  auto launch_ndim   = launch_domain != nullptr ? launch_domain->dim : 0;
+  const auto* launch_domain = strategy.launch_domain(this);
 
-  for (auto& pair : inputs_) {
-    auto& store = pair.first;
-    auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store, launch_ndim);
+  // Add input stores
+  for (auto& [store, var] : inputs_) {
+    const auto& part     = strategy[var];
+    auto store_partition = store->create_partition(part);
+    auto proj            = store_partition->create_projection(launch_domain);
     launcher.add_input(store, std::move(proj));
   }
-  for (auto& pair : outputs_) {
-    auto& store = pair.first;
+
+  // Add normal output stores
+  for (auto& [store, var] : outputs_) {
     if (store->unbound()) continue;
-    auto& var = pair.second;
-    auto part = strategy[var];
-    auto proj = part->get_projection(store, launch_ndim);
+    const auto& part     = strategy[var];
+    auto store_partition = store->create_partition(part);
+    auto proj            = store_partition->create_projection(launch_domain);
     launcher.add_output(store, std::move(proj));
-    store->set_key_partition(part.get());
-  }
-  uint32_t idx = 0;
-  for (auto& pair : reductions_) {
-    auto& store = pair.first;
-    auto& var   = pair.second;
-    auto proj   = strategy[var]->get_projection(store, launch_ndim);
-    auto redop  = reduction_ops_[idx++];
-    proj->set_reduction_op(redop);
-    launcher.add_reduction(store, std::move(proj));
+    store->set_key_partition(machine(), part.get());
   }
 
+  // Add reduction stores
+  uint32_t idx = 0;
+  for (auto& [store, var] : reductions_) {
+    const auto& part     = strategy[var];
+    auto store_partition = store->create_partition(part);
+    auto proj            = store_partition->create_projection(launch_domain);
+    bool read_write      = store_partition->is_disjoint_for(launch_domain);
+    auto redop           = reduction_ops_[idx++];
+    proj->set_reduction_op(redop);
+    launcher.add_reduction(store, std::move(proj), read_write);
+  }
+
+  // Add unbound output stores
   auto* runtime = Runtime::get_runtime();
-  for (auto& pair : outputs_) {
-    auto& store = pair.first;
+  for (auto& [store, var] : outputs_) {
     if (!store->unbound()) continue;
-    auto& var        = pair.second;
     auto field_space = strategy.find_field_space(var);
     // TODO: We should reuse field ids here
     auto field_size = store->type().size();
     auto field_id   = runtime->allocate_field(field_space, field_size);
     launcher.add_unbound_output(store, field_space, field_id);
   }
+
+  // Add by-value scalars
   for (auto& scalar : scalars_) launcher.add_scalar(scalar);
 
   if (launch_domain != nullptr) {
@@ -240,12 +245,12 @@ void AutoTask::add_constraint(std::unique_ptr<Constraint> constraint)
   constraints_.push_back(std::move(constraint));
 }
 
-void AutoTask::add_to_constraint_graph(ConstraintGraph& constraint_graph) const
+void AutoTask::add_to_solver(ConstraintSolver& solver) const
 {
-  for (auto& constraint : constraints_) constraint_graph.add_constraint(constraint.get());
-  for (auto& [_, symb] : inputs_) constraint_graph.add_partition_symbol(symb);
-  for (auto& [_, symb] : outputs_) constraint_graph.add_partition_symbol(symb);
-  for (auto& [_, symb] : reductions_) constraint_graph.add_partition_symbol(symb);
+  for (auto& constraint : constraints_) solver.add_constraint(constraint.get());
+  for (auto& [_, symb] : outputs_) solver.add_partition_symbol(symb);
+  for (auto& [_, symb] : reductions_) solver.add_partition_symbol(symb);
+  for (auto& [_, symb] : inputs_) solver.add_partition_symbol(symb);
 }
 
 ////////////////////////////////////////////////////
@@ -316,6 +321,6 @@ void ManualTask::add_store(std::vector<StoreArg>& store_args,
 
 void ManualTask::launch(Strategy*) { Task::launch(strategy_.get()); }
 
-void ManualTask::add_to_constraint_graph(ConstraintGraph& constraint_graph) const {}
+void ManualTask::add_to_solver(ConstraintSolver& constraint_graph) const {}
 
 }  // namespace legate

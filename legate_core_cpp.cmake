@@ -193,6 +193,7 @@ list(APPEND legate_core_SOURCES
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
   src/core/data/allocator.cc
+  src/core/data/logical_region_field.cc
   src/core/data/logical_store.cc
   src/core/data/logical_store_detail.cc
   src/core/data/scalar.cc
@@ -208,7 +209,7 @@ list(APPEND legate_core_SOURCES
   src/core/mapping/operation.cc
   src/core/mapping/store.cc
   src/core/partitioning/constraint.cc
-  src/core/partitioning/constraint_graph.cc
+  src/core/partitioning/constraint_solver.cc
   src/core/partitioning/partition.cc
   src/core/partitioning/partitioner.cc
   src/core/partitioning/restriction.cc
@@ -433,6 +434,7 @@ install(
         src/core/data/scalar.h
         src/core/data/scalar.inl
         src/core/data/shape.h
+        src/core/data/slice.h
         src/core/data/store.h
         src/core/data/store.inl
         src/core/data/transform.h

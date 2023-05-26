@@ -21,11 +21,12 @@
 
 #include "core/data/shape.h"
 #include "core/partitioning/constraint.h"
+#include "core/partitioning/restriction.h"
 #include "legion.h"
 
 namespace legate {
 
-class ConstraintGraph;
+class ConstraintSolver;
 class LogicalStore;
 class Operation;
 class Partition;
@@ -52,6 +53,9 @@ class Strategy {
   const std::shared_ptr<Partition>& operator[](const Variable* partition_symbol) const;
   const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
 
+ public:
+  void dump() const;
+
  private:
   void compute_launch_domains();
 
@@ -66,12 +70,15 @@ class Partitioner {
   Partitioner(std::vector<Operation*>&& operations);
 
  public:
-  std::unique_ptr<Strategy> solve();
+  std::unique_ptr<Strategy> partition_stores();
 
  private:
-  void solve_for_unbound_stores(std::vector<const Variable*>& partition_symbols,
-                                Strategy* strategy,
-                                const ConstraintGraph& constraints);
+  // Populates solutions for unbound stores in the `strategy` and returns remaining partition
+  // symbols
+  std::vector<const Variable*> handle_unbound_stores(
+    Strategy* strategy,
+    const std::vector<const Variable*>& partition_symbols,
+    const ConstraintSolver& constraints);
 
  private:
   std::vector<Operation*> operations_;

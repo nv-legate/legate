@@ -87,6 +87,7 @@ std::string Broadcast::to_string() const
 
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
 {
+  if (*lhs == *rhs) throw std::invalid_argument("Alignment needs two distinct variables");
   // Since an Alignment object owns child nodes, inputs need to be copied
   return std::make_unique<Alignment>(std::make_unique<Variable>(*lhs),
                                      std::make_unique<Variable>(*rhs));

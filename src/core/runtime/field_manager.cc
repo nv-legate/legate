@@ -18,6 +18,7 @@
 
 #include "core/data/logical_region_field.h"
 #include "core/runtime/region_manager.h"
+#include "core/runtime/runtime.h"
 
 namespace legate {
 
