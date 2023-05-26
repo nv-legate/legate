@@ -578,7 +578,10 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
     return key_partition_;
   }
 
-  Partition* storage_part = storage_->find_key_partition(machine, transform_->invert(restrictions));
+  Partition* storage_part = nullptr;
+  if (transform_->is_convertible())
+    storage_part = storage_->find_key_partition(machine, transform_->invert(restrictions));
+
   std::unique_ptr<Partition> store_part = nullptr;
   if (nullptr == storage_part) {
     auto part_mgr     = Runtime::get_runtime()->partition_manager();
@@ -607,7 +610,8 @@ bool LogicalStore::has_key_partition(const mapping::MachineDesc& machine,
       key_partition_->satisfies_restrictions(restrictions))
     return true;
   else
-    return storage_->find_key_partition(machine, transform_->invert(restrictions)) != nullptr;
+    return transform_->is_convertible() &
+           storage_->find_key_partition(machine, transform_->invert(restrictions)) != nullptr;
 }
 
 void LogicalStore::set_key_partition(const mapping::MachineDesc& machine,

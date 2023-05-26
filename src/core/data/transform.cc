@@ -34,13 +34,17 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
 
 TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
                                const std::shared_ptr<TransformStack>& parent)
-  : transform_(std::move(transform)), parent_(parent)
+  : transform_(std::move(transform)),
+    parent_(parent),
+    convertible_(transform_->is_convertible() && parent_->is_convertible())
 {
 }
 
 TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
                                std::shared_ptr<TransformStack>&& parent)
-  : transform_(std::move(transform)), parent_(std::move(parent))
+  : transform_(std::move(transform)),
+    parent_(std::move(parent)),
+    convertible_(transform_->is_convertible() && parent_->is_convertible())
 {
 }
 
@@ -582,8 +586,9 @@ std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
 proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
 {
   std::vector<proj::SymbolicExpr> exprs;
+  exprs.resize(point.size());
   std::transform(
-    point.data().begin(), point.data().end(), exprs.end(), [&](const proj::SymbolicExpr& expr) {
+    point.data().begin(), point.data().end(), exprs.begin(), [&](const proj::SymbolicExpr& expr) {
       auto dim = inverse_[expr.dim()];
       return proj::SymbolicExpr(dim, expr.weight(), expr.offset());
     });

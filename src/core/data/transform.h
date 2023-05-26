@@ -48,6 +48,7 @@ struct Transform {
   virtual Restrictions invert(const Restrictions& restrictions) const           = 0;
   virtual Shape invert_extents(const Shape& extents) const                      = 0;
   virtual Shape invert_point(const Shape& point) const                          = 0;
+  virtual bool is_convertible() const                                           = 0;
   virtual void pack(BufferBuilder& buffer) const                                = 0;
   virtual void print(std::ostream& out) const                                   = 0;
 };
@@ -66,17 +67,18 @@ struct TransformStack : public Transform, std::enable_shared_from_this<Transform
                  std::shared_ptr<TransformStack>&& parent);
 
  public:
-  virtual Domain transform(const Domain& input) const override;
-  virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  virtual Restrictions convert(const Restrictions& restrictions) const override;
-  virtual Restrictions invert(const Restrictions& restrictions) const override;
-  virtual Shape invert_extents(const Shape& extents) const override;
-  virtual Shape invert_point(const Shape& point) const override;
-  virtual void pack(BufferBuilder& buffer) const override;
-  virtual void print(std::ostream& out) const override;
+  Domain transform(const Domain& input) const override;
+  Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  std::unique_ptr<Partition> convert(const Partition* partition) const override;
+  std::unique_ptr<Partition> invert(const Partition* partition) const override;
+  proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  Restrictions convert(const Restrictions& restrictions) const override;
+  Restrictions invert(const Restrictions& restrictions) const override;
+  Shape invert_extents(const Shape& extents) const override;
+  Shape invert_point(const Shape& point) const override;
+  bool is_convertible() const override { return convertible_; }
+  void pack(BufferBuilder& buffer) const override;
+  void print(std::ostream& out) const override;
 
  public:
   std::unique_ptr<StoreTransform> pop();
@@ -89,6 +91,7 @@ struct TransformStack : public Transform, std::enable_shared_from_this<Transform
  private:
   std::unique_ptr<StoreTransform> transform_{nullptr};
   std::shared_ptr<TransformStack> parent_{nullptr};
+  bool convertible_{true};
 };
 
 class Shift : public StoreTransform {
@@ -96,17 +99,18 @@ class Shift : public StoreTransform {
   Shift(int32_t dim, int64_t offset);
 
  public:
-  virtual Domain transform(const Domain& input) const override;
-  virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  virtual Restrictions convert(const Restrictions& restrictions) const override;
-  virtual Restrictions invert(const Restrictions& restrictions) const override;
-  virtual Shape invert_extents(const Shape& extents) const override;
-  virtual Shape invert_point(const Shape& point) const override;
-  virtual void pack(BufferBuilder& buffer) const override;
-  virtual void print(std::ostream& out) const override;
+  Domain transform(const Domain& input) const override;
+  Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  std::unique_ptr<Partition> convert(const Partition* partition) const override;
+  std::unique_ptr<Partition> invert(const Partition* partition) const override;
+  proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  Restrictions convert(const Restrictions& restrictions) const override;
+  Restrictions invert(const Restrictions& restrictions) const override;
+  Shape invert_extents(const Shape& extents) const override;
+  Shape invert_point(const Shape& point) const override;
+  bool is_convertible() const override { return true; }
+  void pack(BufferBuilder& buffer) const override;
+  void print(std::ostream& out) const override;
 
  public:
   virtual int32_t target_ndim(int32_t source_ndim) const override;
@@ -121,17 +125,18 @@ class Promote : public StoreTransform {
   Promote(int32_t extra_dim, int64_t dim_size);
 
  public:
-  virtual Domain transform(const Domain& input) const override;
-  virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  virtual Restrictions convert(const Restrictions& restrictions) const override;
-  virtual Restrictions invert(const Restrictions& restrictions) const override;
-  virtual Shape invert_extents(const Shape& extents) const override;
-  virtual Shape invert_point(const Shape& point) const override;
-  virtual void pack(BufferBuilder& buffer) const override;
-  virtual void print(std::ostream& out) const override;
+  Domain transform(const Domain& input) const override;
+  Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  std::unique_ptr<Partition> convert(const Partition* partition) const override;
+  std::unique_ptr<Partition> invert(const Partition* partition) const override;
+  proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  Restrictions convert(const Restrictions& restrictions) const override;
+  Restrictions invert(const Restrictions& restrictions) const override;
+  Shape invert_extents(const Shape& extents) const override;
+  Shape invert_point(const Shape& point) const override;
+  bool is_convertible() const override { return true; }
+  void pack(BufferBuilder& buffer) const override;
+  void print(std::ostream& out) const override;
 
  public:
   virtual int32_t target_ndim(int32_t source_ndim) const override;
@@ -147,17 +152,18 @@ class Project : public StoreTransform {
   virtual ~Project() {}
 
  public:
-  virtual Domain transform(const Domain& domain) const override;
-  virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  virtual Restrictions convert(const Restrictions& restrictions) const override;
-  virtual Restrictions invert(const Restrictions& restrictions) const override;
-  virtual Shape invert_extents(const Shape& extents) const override;
-  virtual Shape invert_point(const Shape& point) const override;
-  virtual void pack(BufferBuilder& buffer) const override;
-  virtual void print(std::ostream& out) const override;
+  Domain transform(const Domain& domain) const override;
+  Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  std::unique_ptr<Partition> convert(const Partition* partition) const override;
+  std::unique_ptr<Partition> invert(const Partition* partition) const override;
+  proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  Restrictions convert(const Restrictions& restrictions) const override;
+  Restrictions invert(const Restrictions& restrictions) const override;
+  Shape invert_extents(const Shape& extents) const override;
+  Shape invert_point(const Shape& point) const override;
+  bool is_convertible() const override { return true; }
+  void pack(BufferBuilder& buffer) const override;
+  void print(std::ostream& out) const override;
 
  public:
   virtual int32_t target_ndim(int32_t source_ndim) const override;
@@ -181,6 +187,7 @@ class Transpose : public StoreTransform {
   virtual Restrictions invert(const Restrictions& restrictions) const override;
   virtual Shape invert_extents(const Shape& extents) const override;
   virtual Shape invert_point(const Shape& point) const override;
+  virtual bool is_convertible() const override { return true; }
   virtual void pack(BufferBuilder& buffer) const override;
   virtual void print(std::ostream& out) const override;
 
@@ -197,17 +204,18 @@ class Delinearize : public StoreTransform {
   Delinearize(int32_t dim, std::vector<int64_t>&& sizes);
 
  public:
-  virtual Domain transform(const Domain& domain) const override;
-  virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
-  virtual std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  virtual std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  virtual Restrictions convert(const Restrictions& restrictions) const override;
-  virtual Restrictions invert(const Restrictions& restrictions) const override;
-  virtual Shape invert_extents(const Shape& extents) const override;
-  virtual Shape invert_point(const Shape& point) const override;
-  virtual void pack(BufferBuilder& buffer) const override;
-  virtual void print(std::ostream& out) const override;
+  Domain transform(const Domain& domain) const override;
+  Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
+  std::unique_ptr<Partition> convert(const Partition* partition) const override;
+  std::unique_ptr<Partition> invert(const Partition* partition) const override;
+  proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
+  Restrictions convert(const Restrictions& restrictions) const override;
+  Restrictions invert(const Restrictions& restrictions) const override;
+  Shape invert_extents(const Shape& extents) const override;
+  Shape invert_point(const Shape& point) const override;
+  bool is_convertible() const override { return false; }
+  void pack(BufferBuilder& buffer) const override;
+  void print(std::ostream& out) const override;
 
  public:
   virtual int32_t target_ndim(int32_t source_ndim) const override;

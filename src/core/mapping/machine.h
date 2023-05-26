@@ -181,7 +181,7 @@ struct MachineDesc {
    *
    * @return Processor count
    */
-  size_t count() const;
+  uint32_t count() const;
   /**
    * @brief Returns the number of processors of a given type
    *
@@ -189,7 +189,7 @@ struct MachineDesc {
    *
    * @return Processor count
    */
-  size_t count(TaskTarget target) const;
+  uint32_t count(TaskTarget target) const;
 
   /**
    * @brief Converts the machine descriptor to a human-readable string

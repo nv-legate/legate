@@ -27,13 +27,16 @@ static const char* library_name = "test_broadcast_constraints";
 constexpr size_t EXT_SMALL = 10;
 constexpr size_t EXT_LARGE = 100;
 
+constexpr int32_t TESTER      = 0;
+constexpr int32_t INITIALIZER = 1;
+
 struct TesterTask : public legate::LegateTask<TesterTask> {
-  static const int32_t TASK_ID = 0;
   static void cpu_variant(legate::TaskContext& context)
   {
-    auto shape  = context.outputs().at(0).shape<3>();
-    auto extent = context.scalars().at(0).value<uint64_t>();
-    auto dims   = context.scalars().at(1).values<int32_t>();
+    auto extent  = context.scalars().at(0).value<uint64_t>();
+    auto dims    = context.scalars().at(1).values<int32_t>();
+    auto is_read = context.scalars().at(2).value<bool>();
+    auto shape   = is_read ? context.inputs().at(0).shape<3>() : context.outputs().at(0).shape<3>();
 
     for (auto dim : dims) {
       EXPECT_EQ(shape.lo[dim], 0);
@@ -42,11 +45,16 @@ struct TesterTask : public legate::LegateTask<TesterTask> {
   }
 };
 
+struct Initializer : public legate::LegateTask<Initializer> {
+  static void cpu_variant(legate::TaskContext& context) {}
+};
+
 void prepare()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
-  TesterTask::register_variants(context);
+  TesterTask::register_variants(context, TESTER);
+  Initializer::register_variants(context, INITIALIZER);
 }
 
 void test_normal_store()
@@ -58,11 +66,12 @@ void test_normal_store()
     std::vector<size_t> extents(3, EXT_SMALL);
     for (auto dim : dims) extents[dim] = EXT_LARGE;
     auto store = runtime->create_store(extents, legate::int64());
-    auto task  = runtime->create_task(context, 0);
+    auto task  = runtime->create_task(context, TESTER);
     auto part  = task->declare_partition();
     task->add_output(store, part);
     task->add_scalar_arg(legate::Scalar(EXT_LARGE));
     task->add_scalar_arg(legate::Scalar(dims));
+    task->add_scalar_arg(legate::Scalar(false));
     task->add_constraint(legate::broadcast(part, dims));
     runtime->submit(std::move(task));
   };
@@ -81,16 +90,25 @@ void test_promoted_store()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
+  auto initialize = [&](auto store) {
+    auto task = runtime->create_task(context, INITIALIZER);
+    auto part = task->declare_partition();
+    task->add_output(store, part);
+    runtime->submit(std::move(task));
+  };
+
   auto launch_tester = [&](const int32_t dim) {
     std::vector<size_t> extents(2, EXT_SMALL);
-    extents[dim]  = EXT_LARGE;
-    auto store    = runtime->create_store(extents, legate::int64());
-    auto promoted = store.promote(2, EXT_LARGE);
-    auto task     = runtime->create_task(context, 0);
-    auto part     = task->declare_partition();
-    task->add_output(promoted, part);
+    extents[dim] = EXT_LARGE;
+    auto store   = runtime->create_store(extents, legate::int64());
+    initialize(store);
+
+    auto task = runtime->create_task(context, TESTER);
+    auto part = task->declare_partition();
+    task->add_input(store.promote(2, EXT_LARGE), part);
     task->add_scalar_arg(legate::Scalar(EXT_LARGE));
     task->add_scalar_arg(legate::Scalar(std::vector<int32_t>{dim}));
+    task->add_scalar_arg(legate::Scalar(true));
     task->add_constraint(legate::broadcast(part, {dim}));
     runtime->submit(std::move(task));
   };

@@ -46,7 +46,7 @@ void test_reducer_auto(legate::LibraryContext* context,
   auto part2   = task->declare_partition();
   auto part3   = task->declare_partition();
   auto redop1  = scalar1.type().find_reduction_operator(legate::ReductionOpKind::ADD);
-  auto redop2  = scalar1.type().find_reduction_operator(legate::ReductionOpKind::MUL);
+  auto redop2  = scalar2.type().find_reduction_operator(legate::ReductionOpKind::MUL);
   task->add_reduction(scalar1, redop1, part1);
   task->add_reduction(scalar2, redop2, part2);
   task->add_output(store, part3);
@@ -80,7 +80,7 @@ void print_stores(legate::LibraryContext* context,
   task::simple::logger.print() << ss.str();
 }
 
-TEST(Integration, ManualScalarOut)
+TEST(Integration, MultiScalarOut)
 {
   legate::Core::perform_registration<task::simple::register_tasks>();
 

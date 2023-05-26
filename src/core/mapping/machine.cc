@@ -187,9 +187,9 @@ std::vector<TaskTarget> MachineDesc::valid_targets_except(
   return result;
 }
 
-size_t MachineDesc::count() const { return count(preferred_target); }
+uint32_t MachineDesc::count() const { return count(preferred_target); }
 
-size_t MachineDesc::count(TaskTarget target) const { return processor_range(target).count(); }
+uint32_t MachineDesc::count(TaskTarget target) const { return processor_range(target).count(); }
 
 std::string MachineDesc::to_string() const
 {
