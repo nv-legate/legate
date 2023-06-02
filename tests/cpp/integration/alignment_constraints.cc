@@ -207,9 +207,6 @@ TEST(Integration, AlignmentConstraints)
 {
   legate::Core::perform_registration<prepare>();
 
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-
   test_alignment();
   test_alignment_and_broadcast();
   test_alignment_transformed();

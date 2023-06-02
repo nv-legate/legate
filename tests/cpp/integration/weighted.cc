@@ -117,9 +117,6 @@ TEST(Integration, WeightedSingle)
 {
   legate::Core::perform_registration<prepare>();
 
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-
   test_weighted(1);
 }
 
@@ -127,9 +124,6 @@ TEST(Integration, WeightedSingle)
 TEST(Integration, WeightedMultiple)
 {
   legate::Core::perform_registration<prepare>();
-
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
 
   test_weighted(3);
 }

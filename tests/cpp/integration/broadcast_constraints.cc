@@ -123,9 +123,6 @@ TEST(Integration, BroadcastConstraints)
 {
   legate::Core::perform_registration<prepare>();
 
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-
   test_normal_store();
   test_promoted_store();
 }
