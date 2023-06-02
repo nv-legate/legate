@@ -44,7 +44,9 @@ uint32_t extract_env(const char* env_name, const uint32_t default_value, const u
     return atoi(env_value);
 }
 
-namespace mapping {
+}  // namespace legate
+
+namespace legate::mapping {
 
 // This is a custom mapper implementation that only has to map
 // start-up tasks associated with the Legate core, no one else
@@ -402,7 +404,9 @@ void CoreMapper::select_tunable_value(const Legion::Mapping::MapperContext ctx,
   LEGATE_ABORT;
 }
 
-}  // namespace mapping
+}  // namespace legate::mapping
+
+namespace legate {
 
 void register_legate_core_mapper(Legion::Machine machine,
                                  Legion::Runtime* runtime,

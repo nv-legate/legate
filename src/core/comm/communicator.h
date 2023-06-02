@@ -23,8 +23,7 @@
  * @brief Class definition for legate::comm::Communicator
  */
 
-namespace legate {
-namespace comm {
+namespace legate::comm {
 
 /**
  * @ingroup task
@@ -64,5 +63,4 @@ class Communicator {
   Legion::Future future_{};
 };
 
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm

@@ -23,18 +23,16 @@
 #include "core/data/shape.h"
 #include "core/partitioning/restriction.h"
 
+namespace legate::mapping {
+class MachineDesc;
+}  // namespace legate::mapping
+
 namespace legate {
 
 class LibraryContext;
 class Runtime;
 class Tiling;
 class Weighted;
-
-namespace mapping {
-
-class MachineDesc;
-
-}  // namespace mapping
 
 class PartitionManager {
  public:

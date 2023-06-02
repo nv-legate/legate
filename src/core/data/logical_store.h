@@ -33,6 +33,15 @@
  * legate::LogicalStorePartition
  */
 
+namespace legate::mapping {
+class MachineDesc;
+}  // namespace legate::mapping
+
+namespace legate::detail {
+class LogicalStore;
+class LogicalStorePartition;
+}  // namespace legate::detail
+
 namespace legate {
 
 class BufferBuilder;
@@ -42,19 +51,6 @@ class Partition;
 class Projection;
 class Runtime;
 class Store;
-
-namespace mapping {
-
-class MachineDesc;
-
-}
-
-namespace detail {
-
-class LogicalStore;
-class LogicalStorePartition;
-
-}  // namespace detail
 
 /**
  * @ingroup data

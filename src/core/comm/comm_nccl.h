@@ -19,11 +19,10 @@
 #include "legion.h"
 
 namespace legate {
-
 class LibraryContext;
+}  // namespace legate
 
-namespace comm {
-namespace nccl {
+namespace legate::comm::nccl {
 
 void register_tasks(Legion::Machine machine,
                     Legion::Runtime* runtime,
@@ -33,6 +32,4 @@ bool needs_barrier();
 
 void register_factory(const LibraryContext* context);
 
-}  // namespace nccl
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::nccl

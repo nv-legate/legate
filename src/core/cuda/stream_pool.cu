@@ -19,8 +19,7 @@
 #include "core/mapping/machine.h"
 #include "core/runtime/runtime.h"
 
-namespace legate {
-namespace cuda {
+namespace legate::cuda {
 
 StreamView::~StreamView()
 {
@@ -69,5 +68,4 @@ StreamView StreamPool::get_stream()
   return pools[proc_id];
 }
 
-}  // namespace cuda
-}  // namespace legate
+}  // namespace legate::cuda

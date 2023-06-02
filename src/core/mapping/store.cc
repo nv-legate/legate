@@ -16,8 +16,7 @@
 
 #include "core/mapping/store.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 RegionField::RegionField(const Legion::RegionRequirement* req,
                          int32_t dim,
@@ -136,5 +135,4 @@ Domain Store::domain() const
   return result;
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

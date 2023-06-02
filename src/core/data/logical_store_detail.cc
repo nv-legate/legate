@@ -25,10 +25,10 @@
 #include "legate_defines.h"
 
 namespace legate {
-
 extern Legion::Logger log_legate;
+}  // namespace legate
 
-namespace detail {
+namespace legate::detail {
 
 ////////////////////////////////////////////////////
 // legate::detail::Storage
@@ -685,5 +685,4 @@ bool LogicalStorePartition::is_disjoint_for(const Domain* launch_domain) const
   return storage_partition_->is_disjoint_for(launch_domain);
 }
 
-}  // namespace detail
-}  // namespace legate
+}  // namespace legate::detail

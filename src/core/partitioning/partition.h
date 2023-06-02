@@ -24,16 +24,14 @@
 #include "core/partitioning/restriction.h"
 #include "core/utilities/typedefs.h"
 
+namespace legate::detail {
+class LogicalStore;
+class Storage;
+}  // namespace legate::detail
+
 namespace legate {
 
 class Projection;
-
-namespace detail {
-
-class LogicalStore;
-class Storage;
-
-}  // namespace detail
 
 struct Partition {
  public:

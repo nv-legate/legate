@@ -19,8 +19,7 @@
 #include "core/data/transform.h"
 #include "core/type/type_info.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 class RegionField {
  public:
@@ -214,5 +213,4 @@ class Store {
   Legion::Mapping::MapperContext context_{nullptr};
 };
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

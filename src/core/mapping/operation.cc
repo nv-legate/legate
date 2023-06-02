@@ -18,8 +18,7 @@
 #include "core/runtime/context.h"
 #include "core/utilities/deserializer.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 Mappable::Mappable() {}
 
@@ -88,5 +87,4 @@ Copy::Copy(const Legion::Copy* copy,
 #endif
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

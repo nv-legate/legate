@@ -19,11 +19,10 @@
 #include "legion.h"
 
 namespace legate {
-
 class LibraryContext;
+}  // namespace legate
 
-namespace comm {
-namespace cpu {
+namespace legate::comm::cpu {
 
 void register_tasks(Legion::Machine machine,
                     Legion::Runtime* runtime,
@@ -31,6 +30,4 @@ void register_tasks(Legion::Machine machine,
 
 void register_factory(const LibraryContext* context);
 
-}  // namespace cpu
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::cpu

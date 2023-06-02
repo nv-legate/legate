@@ -28,8 +28,7 @@
  * @brief Legate machine interface
  */
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 TaskTarget to_target(Processor::Kind kind);
 
@@ -383,5 +382,4 @@ class Machine {
   std::map<Processor, Memory> socket_memories_;
 };
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

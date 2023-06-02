@@ -108,7 +108,9 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   std::vector<Legion::OutputRegion> outputs_;
 };
 
-namespace mapping {
+}  // namespace legate
+
+namespace legate::mapping {
 
 class MapperDataDeserializer : public BaseDeserializer<MapperDataDeserializer> {
  public:
@@ -168,8 +170,6 @@ class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {
   uint32_t req_index_offset_;
 };
 
-}  // namespace mapping
-
-}  // namespace legate
+}  // namespace legate::mapping
 
 #include "core/utilities/deserializer.inl"

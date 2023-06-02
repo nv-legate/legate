@@ -30,8 +30,7 @@
 #include "core/utilities/linearize.h"
 #include "legate_defines.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 namespace {
 
@@ -1335,5 +1334,4 @@ void BaseMapper::handle_task_result(const Legion::Mapping::MapperContext ctx,
   LEGATE_ABORT;
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

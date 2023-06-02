@@ -28,9 +28,7 @@
 #include <cuda.h>
 #include <nccl.h>
 
-namespace legate {
-namespace comm {
-namespace nccl {
+namespace legate::comm::nccl {
 
 struct _Payload {
   uint64_t field0;
@@ -241,6 +239,4 @@ void register_factory(const LibraryContext* context)
   comm_mgr->register_factory("nccl", std::make_unique<Factory>(context));
 }
 
-}  // namespace nccl
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::nccl

@@ -24,13 +24,11 @@
 #include "core/partitioning/restriction.h"
 #include "core/runtime/runtime.h"
 
-namespace legate {
-
-namespace mapping {
+namespace legate::mapping {
 class MachineDesc;
-}  // namespace mapping
+}  // namespace legate::mapping
 
-namespace detail {
+namespace legate::detail {
 
 class StoragePartition;
 class LogicalStorePartition;
@@ -253,5 +251,4 @@ class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePa
   std::shared_ptr<LogicalStore> store_;
 };
 
-}  // namespace detail
-}  // namespace legate
+}  // namespace legate::detail

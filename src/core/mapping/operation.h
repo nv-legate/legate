@@ -29,11 +29,11 @@
  */
 
 namespace legate {
-
 class LibraryContext;
 class TransformStack;
+}  // namespace legate
 
-namespace mapping {
+namespace legate::mapping {
 
 class Mappable {
  protected:
@@ -143,7 +143,6 @@ class Copy : public Mappable {
   std::vector<Store> output_indirections_;
 };
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping
 
 #include "core/mapping/operation.inl"

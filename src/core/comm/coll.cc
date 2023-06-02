@@ -31,9 +31,7 @@
 #include "legate.h"
 #include "legion.h"
 
-namespace legate {
-namespace comm {
-namespace coll {
+namespace legate::comm::coll {
 
 Logger log_coll("coll");
 
@@ -162,9 +160,7 @@ void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, size_t size)
   return sendbuf_tmp;
 }
 
-}  // namespace coll
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::coll
 
 extern "C" {
 

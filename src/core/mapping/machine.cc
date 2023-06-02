@@ -17,8 +17,7 @@
 #include "core/mapping/machine.h"
 #include "core/utilities/buffer_builder.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 TaskTarget to_target(Processor::Kind kind)
 {
@@ -451,5 +450,4 @@ std::ostream& operator<<(std::ostream& stream, const MachineDesc& info)
   return stream;
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

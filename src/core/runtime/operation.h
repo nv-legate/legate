@@ -32,6 +32,10 @@
  * @brief Class definitions for various operation kinds
  */
 
+namespace legate::detail {
+class LogicalStore;
+}  // namespace legate::detail
+
 namespace legate {
 
 class CommunicatorFactory;
@@ -41,12 +45,6 @@ class LibraryContext;
 class Runtime;
 class Scalar;
 class Strategy;
-
-namespace detail {
-
-class LogicalStore;
-
-}  // namespace detail
 
 /**
  * @ingroup op

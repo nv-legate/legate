@@ -27,8 +27,7 @@
  * @brief Legate Mapping API
  */
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 class Store;
 class Task;
@@ -432,5 +431,4 @@ class Mapper {
   virtual Scalar tunable_value(TunableID tunable_id) = 0;
 };
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

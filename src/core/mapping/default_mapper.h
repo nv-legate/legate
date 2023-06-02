@@ -18,8 +18,7 @@
 
 #pragma once
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 class DefaultMapper : public Mapper {
  public:
@@ -33,5 +32,4 @@ class DefaultMapper : public Mapper {
   Scalar tunable_value(TunableID tunable_id) override;
 };
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

@@ -22,9 +22,7 @@
 
 #include "core/comm/coll.h"
 
-namespace legate {
-namespace comm {
-namespace cpu {
+namespace legate::comm::cpu {
 
 class Factory : public CommunicatorFactory {
  public:
@@ -228,6 +226,4 @@ void register_factory(const LibraryContext* context)
   comm_mgr->register_factory("cpu", std::make_unique<Factory>(context));
 }
 
-}  // namespace cpu
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::cpu

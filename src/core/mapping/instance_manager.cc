@@ -17,8 +17,7 @@
 #include "core/mapping/instance_manager.h"
 #include "core/utilities/dispatch.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 using RegionGroupP = std::shared_ptr<RegionGroup>;
 
@@ -480,5 +479,4 @@ void ReductionInstanceManager::erase(Instance inst)
   return manager;
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

@@ -35,16 +35,14 @@
 /** @defgroup runtime Runtime and library contexts
  */
 
+namespace legate::mapping {
+class Mapper;
+}  // namespace legate::mapping
+
 namespace legate {
 
 class LibraryContext;
 class Scalar;
-
-namespace mapping {
-
-class Mapper;
-
-}  // namespace mapping
 
 extern uint32_t extract_env(const char* env_name,
                             const uint32_t default_value,

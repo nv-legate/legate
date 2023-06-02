@@ -18,16 +18,16 @@
 
 #include "core/task/task.h"
 
-namespace legate {
-
-namespace detail {
+namespace legate::detail {
 
 std::string generate_task_name(const std::type_info&);
 
 void task_wrapper(
   VariantImpl, const std::string&, const void*, size_t, const void*, size_t, Legion::Processor);
 
-};  // namespace detail
+};  // namespace legate::detail
+
+namespace legate {
 
 template <typename T>
 template <VariantImpl VARIANT_IMPL>

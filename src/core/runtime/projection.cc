@@ -29,9 +29,7 @@
 
 extern Legion::Logger log_legate;
 
-namespace legate {
-
-namespace proj {
+namespace legate::proj {
 
 SymbolicExpr::SymbolicExpr(int32_t dim, int32_t weight, int32_t offset)
   : dim_(dim), weight_(weight), offset_(offset)
@@ -107,7 +105,9 @@ bool is_identity(int32_t src_ndim, const SymbolicPoint& point)
   return true;
 }
 
-}  // namespace proj
+}  // namespace legate::proj
+
+namespace legate {
 
 // This special functor overrides the default projection implementation because it needs
 // to know the the target color space for delinearization. Also note that this functor's

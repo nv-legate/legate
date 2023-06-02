@@ -16,8 +16,7 @@
 
 #include "core/mapping/default_mapper.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 // Default mapper doesn't use the machine query interface
 void DefaultMapper::set_machine(const MachineQueryInterface* machine) {}
@@ -39,5 +38,4 @@ Scalar DefaultMapper::tunable_value(TunableID tunable_id)
   return Scalar(0);
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

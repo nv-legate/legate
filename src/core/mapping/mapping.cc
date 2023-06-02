@@ -21,8 +21,7 @@
 #include "core/mapping/mapping.h"
 #include "core/mapping/store.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 DimOrdering::DimOrdering(Kind _kind, std::vector<int32_t>&& _dims)
   : kind(_kind), dims(std::move(_dims))
@@ -226,5 +225,4 @@ void StoreMapping::populate_layout_constraints(
   return mapping;
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

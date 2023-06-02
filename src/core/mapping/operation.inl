@@ -14,8 +14,7 @@
  *
  */
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 template <int32_t DIM>
 Legion::Rect<DIM> RegionField::shape(Legion::Mapping::MapperRuntime* runtime,
@@ -36,5 +35,4 @@ Legion::Rect<DIM> Store::shape() const
   return Legion::Rect<DIM>(domain());
 }
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

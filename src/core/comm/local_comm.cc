@@ -23,9 +23,7 @@
 #include "legate.h"
 #include "legion.h"
 
-namespace legate {
-namespace comm {
-namespace coll {
+namespace legate::comm::coll {
 
 extern Logger log_coll;
 
@@ -345,6 +343,4 @@ void LocalNetwork::barrierLocal(CollComm global_comm)
   pthread_barrier_wait(const_cast<pthread_barrier_t*>(&(global_comm->local_comm->barrier)));
 }
 
-}  // namespace coll
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::coll

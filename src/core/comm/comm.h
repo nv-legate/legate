@@ -19,10 +19,10 @@
 #include "legate.h"
 
 namespace legate {
-
 class LibraryContext;
+}  // namespace legate
 
-namespace comm {
+namespace legate::comm {
 
 void register_tasks(Legion::Machine machine,
                     Legion::Runtime* runtime,
@@ -30,5 +30,4 @@ void register_tasks(Legion::Machine machine,
 
 void register_builtin_communicator_factories(const LibraryContext* context);
 
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm

@@ -26,8 +26,7 @@
  * @brief Class definition for legate::cuda::StreamPool
  */
 
-namespace legate {
-namespace cuda {
+namespace legate::cuda {
 
 /**
  * @ingroup task
@@ -101,5 +100,4 @@ struct StreamPool {
   std::unique_ptr<cudaStream_t> cached_stream_{nullptr};
 };
 
-}  // namespace cuda
-}  // namespace legate
+}  // namespace legate::cuda

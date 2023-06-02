@@ -40,8 +40,7 @@
 
 #endif
 
-namespace legate {
-namespace cuda {
+namespace legate::cuda {
 
 __host__ inline void check_cuda(cudaError_t error, const char* file, int line)
 {
@@ -60,5 +59,4 @@ __host__ inline void check_cuda(cudaError_t error, const char* file, int line)
   }
 }
 
-}  // namespace cuda
-}  // namespace legate
+}  // namespace legate::cuda

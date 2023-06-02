@@ -23,8 +23,7 @@
 
 #include "core/mapping/mapping.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 // This class represents a set of regions that colocate in an instance
 struct RegionGroup {
@@ -235,5 +234,4 @@ class ReductionInstanceManager : public BaseInstanceManager {
   std::map<FieldMemInfo, ReductionInstanceSet> instance_sets_{};
 };
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

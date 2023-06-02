@@ -36,13 +36,11 @@
  * @brief Class definitions for legate::LibraryContext and legate::TaskContext
  */
 
-namespace legate {
-
-namespace mapping {
-
+namespace legate::mapping {
 class Mapper;
+}  // namespace legate::mapping
 
-}
+namespace legate {
 
 class Store;
 class Scalar;

@@ -29,8 +29,7 @@
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 
-namespace legate {
-namespace detail {
+namespace legate::detail {
 
 std::string generate_task_name(const std::type_info& ti)
 {
@@ -88,5 +87,4 @@ void task_wrapper(VariantImpl variant_impl,
   return_values.finalize(legion_context);
 }
 
-}  // namespace detail
-}  // namespace legate
+}  // namespace legate::detail

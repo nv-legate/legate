@@ -18,13 +18,11 @@
 
 #include "core/mapping/machine.h"
 
-namespace legate {
-
-namespace mapping {
-
+namespace legate::mapping {
 class MachineDesc;
+}  // namespace legate::mapping
 
-}  // namespace mapping
+namespace legate {
 
 class MachineManager {
  public:

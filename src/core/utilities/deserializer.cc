@@ -121,7 +121,9 @@ void TaskDeserializer::_unpack(Legion::PhaseBarrier& barrier)
   barrier       = Legion::CObjectWrapper::unwrap(barrier_);
 }
 
-namespace mapping {
+}  // namespace legate
+
+namespace legate::mapping {
 
 MapperDataDeserializer::MapperDataDeserializer(const Legion::Mappable* mappable)
   : BaseDeserializer(mappable->mapper_data, mappable->mapper_data_size)
@@ -248,6 +250,4 @@ void CopyDeserializer::_unpack(RegionField& value)
   value    = RegionField(req, dim, idx + req_index_offset_, fid);
 }
 
-}  // namespace mapping
-
-}  // namespace legate
+}  // namespace legate::mapping

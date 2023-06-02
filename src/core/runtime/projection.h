@@ -21,11 +21,7 @@
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
-namespace legate {
-
-class LibraryContext;
-
-namespace proj {
+namespace legate::proj {
 
 class SymbolicExpr {
  public:
@@ -62,7 +58,11 @@ SymbolicPoint create_symbolic_point(int32_t ndim);
 
 bool is_identity(int32_t ndim, const SymbolicPoint& point);
 
-}  // namespace proj
+}  // namespace legate::proj
+
+namespace legate {
+
+class LibraryContext;
 
 // Interface for Legate projection functors
 class LegateProjectionFunctor : public Legion::ProjectionFunctor {

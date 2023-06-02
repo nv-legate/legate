@@ -22,6 +22,10 @@
 
 #include "core/mapping/machine.h"
 
+namespace legate::detail {
+class LogicalStore;
+}  // namespace legate::detail
+
 namespace legate {
 
 class ArgWrapper;
@@ -33,12 +37,6 @@ class OutputRegionArg;
 class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
 class Scalar;
-
-namespace detail {
-
-class LogicalStore;
-
-}  // namespace detail
 
 class TaskLauncher {
  public:

@@ -24,8 +24,7 @@
 #include "core/runtime/communicator_manager.h"
 #include "core/runtime/runtime.h"
 
-namespace legate {
-namespace comm {
+namespace legate::comm {
 
 void register_tasks(Legion::Machine machine,
                     Legion::Runtime* runtime,
@@ -47,5 +46,4 @@ void register_builtin_communicator_factories(const LibraryContext* context)
   cpu::register_factory(context);
 }
 
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm

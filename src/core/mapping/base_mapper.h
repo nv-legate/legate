@@ -27,8 +27,7 @@
 #include "core/runtime/context.h"
 #include "core/utilities/typedefs.h"
 
-namespace legate {
-namespace mapping {
+namespace legate::mapping {
 
 class InstanceManager;
 class Machine;
@@ -311,5 +310,4 @@ class BaseMapper : public Legion::Mapping::Mapper, public MachineQueryInterface 
   Machine machine;
 };
 
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping

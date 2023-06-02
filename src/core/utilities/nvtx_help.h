@@ -22,8 +22,7 @@
 
 #include <nvtx3/nvToolsExt.h>
 
-namespace legate {
-namespace nvtx {
+namespace legate::nvtx {
 
 class Range {
  public:
@@ -34,7 +33,6 @@ class Range {
   nvtxRangeId_t range_;
 };
 
-}  // namespace nvtx
-}  // namespace legate
+}  // namespace legate::nvtx
 
 #endif

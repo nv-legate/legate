@@ -34,9 +34,7 @@
 #include "core/comm/pthread_barrier.h"
 #endif
 
-namespace legate {
-namespace comm {
-namespace coll {
+namespace legate::comm::coll {
 
 #ifdef LEGATE_USE_NETWORK
 struct RankMappingTable {
@@ -266,6 +264,4 @@ int collFinalize();
 
 int collInitComm();
 
-}  // namespace coll
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::coll

@@ -21,9 +21,7 @@
 #include "core/task/task_info.h"
 #include "core/task/variant_options.h"
 
-namespace legate {
-
-namespace detail {
+namespace legate::detail {
 
 template <typename T>
 using void_t = void;
@@ -81,6 +79,4 @@ struct VariantHelper<T, SELECTOR, true> {
   }
 };
 
-}  // namespace detail
-
-}  // namespace legate
+}  // namespace legate::detail

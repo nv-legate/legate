@@ -23,9 +23,7 @@
 #include "legate.h"
 #include "legion.h"
 
-namespace legate {
-namespace comm {
-namespace coll {
+namespace legate::comm::coll {
 
 extern Logger log_coll;
 
@@ -568,6 +566,4 @@ int MPINetwork::generateGatherTag(int rank, CollComm global_comm)
   return tag;
 }
 
-}  // namespace coll
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::coll
