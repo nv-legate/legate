@@ -88,6 +88,9 @@ class CommunicatorManager {
   CommunicatorFactory* find_factory(const std::string& name);
   void register_factory(const std::string& name, std::unique_ptr<CommunicatorFactory> factory);
 
+ public:
+  void destroy();
+
  private:
   std::unordered_map<std::string, std::unique_ptr<CommunicatorFactory>> factories_;
 };

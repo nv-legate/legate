@@ -40,9 +40,30 @@ file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
 file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
 file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
 
+if(Legion_USE_CUDA)
+
+find_package(CUDAToolkit REQUIRED)
+enable_language(CUDA)
+
+file(GLOB integration_GPU_SRC ${PROJECT_SOURCE_DIR}/integration/*.cu)
+list(APPEND integration_SRC ${integration_GPU_SRC})
+
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
+  file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-23.04/RAPIDS.cmake
+       ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
+endif()
+include(${CMAKE_BINARY_DIR}/RAPIDS.cmake)
+include(rapids-find)
+include(cmake/thirdparty/get_nccl.cmake)
+
+endif()
+
 add_executable(cpp_tests ${main_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC})
 
 target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest)
+if(Legion_USE_CUDA)
+target_link_libraries(cpp_tests PRIVATE NCCL::NCCL)
+endif()
 
 include(GoogleTest)
 gtest_discover_tests(cpp_tests)

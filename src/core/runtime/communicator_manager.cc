@@ -79,4 +79,9 @@ void CommunicatorManager::register_factory(const std::string& name,
   factories_.insert({name, std::move(factory)});
 }
 
+void CommunicatorManager::destroy()
+{
+  for (auto& [_, factory] : factories_) factory->destroy();
+}
+
 }  // namespace legate

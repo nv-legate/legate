@@ -266,6 +266,8 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
     auto [arrival_barrier, wait_barrier] = runtime->create_barriers(num_tasks);
     index_task->add_future(Legion::Future::from_value(arrival_barrier));
     index_task->add_future(Legion::Future::from_value(wait_barrier));
+    runtime->destroy_barrier(arrival_barrier);
+    runtime->destroy_barrier(wait_barrier);
   }
   for (auto& communicator : communicators_) index_task->point_futures.push_back(communicator);
   for (auto& future_map : future_maps_) index_task->point_futures.push_back(future_map);

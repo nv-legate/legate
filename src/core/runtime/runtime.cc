@@ -966,6 +966,8 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 
 int32_t Runtime::wait_for_shutdown()
 {
+  destroy();
+
   // Mark that we are done excecuting the top-level task
   // After this call the context is no longer valid
   Legion::Runtime::get_runtime()->finish_implicit_task(legion_context_);
@@ -980,6 +982,12 @@ int32_t Runtime::wait_for_shutdown()
 /*static*/ void Runtime::create_runtime(Legion::Runtime* legion_runtime)
 {
   runtime_ = new Runtime(legion_runtime);
+}
+
+void Runtime::destroy()
+{
+  issue_execution_fence();
+  communicator_manager_->destroy();
 }
 
 void initialize(int32_t argc, char** argv) { Runtime::initialize(argc, argv); }

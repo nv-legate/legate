@@ -387,6 +387,7 @@ class Runtime {
    */
   static Runtime* get_runtime();
   static void create_runtime(Legion::Runtime* legion_runtime);
+  void destroy();
   int32_t wait_for_shutdown();
 
  private:

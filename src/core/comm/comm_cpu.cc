@@ -81,9 +81,10 @@ void Factory::finalize(const mapping::MachineDesc& machine,
                        uint32_t num_tasks,
                        const Legion::FutureMap& communicator)
 {
+  auto tag =
+    machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
-  TaskLauncher launcher(
-    core_context_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+  TaskLauncher launcher(core_context_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag);
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
