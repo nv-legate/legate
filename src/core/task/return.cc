@@ -131,6 +131,14 @@ ReturnedException::ReturnedException(int32_t index, const std::string& error_mes
 {
 }
 
+std::optional<TaskException> ReturnedException::to_task_exception() const
+{
+  if (!raised_)
+    return std::nullopt;
+  else
+    return TaskException(index_, error_message_);
+}
+
 size_t ReturnedException::legion_buffer_size() const
 {
   size_t size = sizeof(bool);

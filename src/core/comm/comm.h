@@ -16,15 +16,19 @@
 
 #pragma once
 
-#include "core/runtime/context.h"
 #include "legate.h"
 
 namespace legate {
+
+class LibraryContext;
+
 namespace comm {
 
 void register_tasks(Legion::Machine machine,
                     Legion::Runtime* runtime,
                     const LibraryContext* context);
+
+void register_builtin_communicator_factories(const LibraryContext* context);
 
 }  // namespace comm
 }  // namespace legate

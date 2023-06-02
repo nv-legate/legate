@@ -103,6 +103,19 @@ bool ProcessorRange::operator==(const ProcessorRange& other) const
 
 bool ProcessorRange::operator!=(const ProcessorRange& other) const { return !operator==(other); }
 
+bool ProcessorRange::operator<(const ProcessorRange& other) const
+{
+  if (low < other.low)
+    return true;
+  else if (low > other.low)
+    return false;
+  if (high < other.high)
+    return true;
+  else if (high > other.high)
+    return false;
+  return per_node_count < other.per_node_count;
+}
+
 uint32_t ProcessorRange::count() const { return high - low; }
 
 bool ProcessorRange::empty() const { return high <= low; }

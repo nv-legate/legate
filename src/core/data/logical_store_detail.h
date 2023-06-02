@@ -60,7 +60,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   bool unbound() const { return unbound_; }
   const Shape& extents() const;
   const Shape& offsets() const;
-  size_t volume() const { return volume_; }
+  size_t volume() const;
   int32_t dim() { return dim_; }
   const Type& type() const { return *type_; }
   Kind kind() const { return kind_; }

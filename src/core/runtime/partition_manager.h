@@ -28,6 +28,7 @@ namespace legate {
 class LibraryContext;
 class Runtime;
 class Tiling;
+class Weighted;
 
 namespace mapping {
 
@@ -52,8 +53,13 @@ class PartitionManager {
  public:
   Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
                                               const Tiling& tiling) const;
+  Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
+                                              const Weighted& weighted) const;
   void record_index_partition(const Legion::IndexSpace& index_space,
                               const Tiling& tiling,
+                              const Legion::IndexPartition& index_partition);
+  void record_index_partition(const Legion::IndexSpace& index_space,
+                              const Weighted& weighted,
                               const Legion::IndexPartition& index_partition);
 
  private:
@@ -63,6 +69,8 @@ class PartitionManager {
  private:
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
   std::map<TilingCacheKey, Legion::IndexPartition> tiling_cache_;
+  using WeightedCacheKey = std::pair<Legion::IndexSpace, Weighted>;
+  std::map<WeightedCacheKey, Legion::IndexPartition> weighted_cache_;
 };
 
 }  // namespace legate

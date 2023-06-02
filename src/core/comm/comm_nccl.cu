@@ -18,6 +18,9 @@
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #include "core/data/buffer.h"
+#include "core/runtime/communicator_manager.h"
+#include "core/runtime/launcher.h"
+#include "core/runtime/runtime.h"
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 #include "legate.h"
@@ -50,6 +53,64 @@ inline void check_nccl(ncclResult_t error, const char* file, int line)
             line);
     exit(error);
   }
+}
+
+class Factory : public CommunicatorFactory {
+ public:
+  Factory(const LibraryContext* core_context);
+
+ public:
+  bool needs_barrier() const override;
+  bool is_supported_target(mapping::TaskTarget target) const override;
+
+ protected:
+  Legion::FutureMap initialize(const mapping::MachineDesc& machine, uint32_t num_tasks) override;
+  void finalize(const mapping::MachineDesc& machine,
+                uint32_t num_tasks,
+                const Legion::FutureMap& communicator) override;
+
+ private:
+  const LibraryContext* core_context_;
+};
+
+Factory::Factory(const LibraryContext* core_context) : core_context_(core_context) {}
+
+bool Factory::needs_barrier() const { return legate::comm::nccl::needs_barrier(); }
+
+bool Factory::is_supported_target(mapping::TaskTarget target) const
+{
+  return target == mapping::TaskTarget::GPU;
+}
+
+Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint32_t num_tasks)
+{
+  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+
+  // Create a communicator ID
+  TaskLauncher init_nccl_id_launcher(
+    core_context_, machine, LEGATE_CORE_INIT_NCCL_ID_TASK_ID, LEGATE_GPU_VARIANT);
+  init_nccl_id_launcher.set_side_effect(true);
+  auto nccl_id = init_nccl_id_launcher.execute_single();
+
+  // Then create the communicators on participating GPUs
+  TaskLauncher init_nccl_launcher(
+    core_context_, machine, LEGATE_CORE_INIT_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+  init_nccl_launcher.add_future(nccl_id);
+  init_nccl_launcher.set_concurrent(true);
+  return init_nccl_launcher.execute(launch_domain);
+}
+
+void Factory::finalize(const mapping::MachineDesc& machine,
+                       uint32_t num_tasks,
+                       const Legion::FutureMap& communicator)
+{
+  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+
+  TaskLauncher launcher(
+    core_context_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+  launcher.set_concurrent(true);
+  launcher.add_future_map(communicator);
+  launcher.execute(launch_domain);
 }
 
 static ncclUniqueId init_nccl_id(const Legion::Task* task,
@@ -172,6 +233,12 @@ bool needs_barrier()
   // requirements and no CUDA drivers that have released are safe from this. Until either CUDA
   // or NCCL is fixed, we will always insert a barrier at the beginning of every NCCL task.
   return true;
+}
+
+void register_factory(const LibraryContext* context)
+{
+  auto* comm_mgr = Runtime::get_runtime()->communicator_manager();
+  comm_mgr->register_factory("nccl", std::make_unique<Factory>(context));
 }
 
 }  // namespace nccl

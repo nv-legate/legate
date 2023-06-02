@@ -17,15 +17,16 @@
 #pragma once
 
 #include "core/utilities/tuple.h"
-
-#include "legion.h"
+#include "core/utilities/typedefs.h"
 
 namespace legate {
 
 using Shape = tuple<size_t>;
 
-Legion::Domain to_domain(const Shape& shape);
+Domain to_domain(const Shape& shape);
 
-Legion::DomainPoint to_domain_point(const Shape& shape);
+DomainPoint to_domain_point(const Shape& shape);
+
+Shape from_domain(const Domain& domain);
 
 }  // namespace legate

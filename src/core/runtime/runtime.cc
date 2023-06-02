@@ -26,6 +26,7 @@
 #include "core/mapping/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
+#include "core/runtime/communicator_manager.h"
 #include "core/runtime/context.h"
 #include "core/runtime/field_manager.h"
 #include "core/runtime/launcher.h"
@@ -35,12 +36,13 @@
 #include "core/runtime/provenance_manager.h"
 #include "core/runtime/region_manager.h"
 #include "core/runtime/shard.h"
-#include "core/task/exception.h"
+#include "core/task/return.h"
 #include "core/task/task.h"
 #include "core/type/type_info.h"
 #include "core/utilities/deserializer.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/nvtx_help.h"
+#include "env_defaults.h"
 #include "legate.h"
 
 namespace legate {
@@ -315,13 +317,20 @@ constexpr uint32_t CUSTOM_TYPE_UID_BASE = 1000;
 }  // namespace
 
 Runtime::Runtime(Legion::Runtime* legion_runtime)
-  : legion_runtime_(legion_runtime), next_type_uid_(CUSTOM_TYPE_UID_BASE)
+  : legion_runtime_(legion_runtime),
+    next_type_uid_(CUSTOM_TYPE_UID_BASE),
+    max_pending_exceptions_(extract_env(
+      "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST))
 {
 }
 
 Runtime::~Runtime()
 {
   for (auto& [_, context] : libraries_) delete context;
+  delete communicator_manager_;
+  delete machine_manager_;
+  delete partition_manager_;
+  delete provenance_manager_;
 }
 
 LibraryContext* Runtime::find_library(const std::string& library_name,
@@ -396,13 +405,15 @@ bool Runtime::is_in_callback() const { return in_callback_; }
 
 void Runtime::post_startup_initialization(Legion::Context legion_context)
 {
-  legion_context_     = legion_context;
-  core_context_       = find_library(core_library_name);
-  partition_manager_  = new PartitionManager(this, core_context_);
-  machine_manager_    = new MachineManager();
-  provenance_manager_ = new ProvenanceManager();
+  legion_context_       = legion_context;
+  core_context_         = find_library(core_library_name);
+  communicator_manager_ = new CommunicatorManager();
+  partition_manager_    = new PartitionManager(this, core_context_);
+  machine_manager_      = new MachineManager();
+  provenance_manager_   = new ProvenanceManager();
   Core::retrieve_tunable(legion_context_, legion_runtime_, core_context_);
   initialize_toplevel_machine();
+  comm::register_builtin_communicator_factories(core_context_);
 }
 
 mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, int64_t task_id)
@@ -481,12 +492,24 @@ LogicalStore Runtime::create_store(std::unique_ptr<Type> type, int32_t dim)
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
 }
 
-LogicalStore Runtime::create_store(std::vector<size_t> extents,
+LogicalStore Runtime::create_store(const Type& type, int32_t dim)
+{
+  return create_store(type.clone(), dim);
+}
+
+LogicalStore Runtime::create_store(const Shape& extents,
                                    std::unique_ptr<Type> type,
                                    bool optimize_scalar /*=false*/)
 {
   auto storage = std::make_shared<detail::Storage>(extents, std::move(type), optimize_scalar);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
+}
+
+LogicalStore Runtime::create_store(const Shape& extents,
+                                   const Type& type,
+                                   bool optimize_scalar /*=false*/)
+{
+  return create_store(extents, type.clone(), optimize_scalar);
 }
 
 LogicalStore Runtime::create_store(const Scalar& scalar)
@@ -495,6 +518,47 @@ LogicalStore Runtime::create_store(const Scalar& scalar)
   auto future  = create_future(scalar.ptr(), scalar.size());
   auto storage = std::make_shared<detail::Storage>(extents, scalar.type().clone(), future);
   return LogicalStore(std::make_shared<detail::LogicalStore>(std::move(storage)));
+}
+
+uint32_t Runtime::max_pending_exceptions() const { return max_pending_exceptions_; }
+
+void Runtime::set_max_pending_exceptions(uint32_t max_pending_exceptions)
+{
+  uint32_t old_value      = max_pending_exceptions_;
+  max_pending_exceptions_ = max_pending_exceptions;
+  if (old_value > max_pending_exceptions_) raise_pending_task_exception();
+}
+
+void Runtime::raise_pending_task_exception()
+{
+  auto exn = check_pending_task_exception();
+  if (exn.has_value()) throw exn.value();
+}
+
+std::optional<TaskException> Runtime::check_pending_task_exception()
+{
+  // If there's already an outstanding exception from the previous scan, we just return that.
+  if (!outstanding_exceptions_.empty()) {
+    std::optional<TaskException> result = outstanding_exceptions_.front();
+    outstanding_exceptions_.pop_front();
+    return result;
+  }
+
+  // Othrewise, we unpack all pending exceptions and push them to the outstanding exception queue
+  for (auto& pending_exception : pending_exceptions_) {
+    auto returned_exception = pending_exception.get_result<ReturnedException>();
+    auto result             = returned_exception.to_task_exception();
+    if (result.has_value()) outstanding_exceptions_.push_back(result.value());
+  }
+  pending_exceptions_.clear();
+  return outstanding_exceptions_.empty() ? std::nullopt : check_pending_task_exception();
+}
+
+void Runtime::record_pending_exception(const Legion::Future& pending_exception)
+{
+  pending_exceptions_.push_back(pending_exception);
+  if (outstanding_exceptions_.size() + pending_exceptions_.size() >= max_pending_exceptions_)
+    raise_pending_task_exception();
 }
 
 uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
@@ -607,6 +671,14 @@ Legion::IndexPartition Runtime::create_restricted_partition(
     legion_context_, index_space, color_space, transform, extent, kind);
 }
 
+Legion::IndexPartition Runtime::create_weighted_partition(const Legion::IndexSpace& index_space,
+                                                          const Legion::IndexSpace& color_space,
+                                                          const Legion::FutureMap& weights)
+{
+  return legion_runtime_->create_partition_by_weights(
+    legion_context_, index_space, weights, color_space);
+}
+
 Legion::FieldSpace Runtime::create_field_space()
 {
   assert(nullptr != legion_context_);
@@ -671,6 +743,47 @@ Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space) co
   return legion_runtime_->get_index_space_domain(legion_context_, index_space);
 }
 
+namespace {
+
+Legion::DomainPoint _delinearize_future_map(const DomainPoint& point,
+                                            const Domain& domain,
+                                            const Domain& range)
+{
+  assert(range.dim == 1);
+  DomainPoint result;
+  result.dim = 1;
+
+  int32_t ndim = domain.dim;
+  int64_t idx  = point[0];
+  for (int32_t dim = 1; dim < ndim; ++dim) {
+    int64_t extent = domain.rect_data[dim + ndim] - domain.rect_data[dim] + 1;
+    idx            = idx * extent + point[dim];
+  }
+  result[0] = idx;
+  return result;
+}
+
+}  // namespace
+
+Legion::FutureMap Runtime::delinearize_future_map(const Legion::FutureMap& future_map,
+                                                  const Legion::IndexSpace& new_domain) const
+{
+  return legion_runtime_->transform_future_map(
+    legion_context_, future_map, new_domain, _delinearize_future_map);
+}
+
+std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> Runtime::create_barriers(size_t num_tasks)
+{
+  auto arrival_barrier = legion_runtime_->create_phase_barrier(legion_context_, num_tasks);
+  auto wait_barrier    = legion_runtime_->advance_phase_barrier(legion_context_, arrival_barrier);
+  return std::make_pair(arrival_barrier, wait_barrier);
+}
+
+void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
+{
+  legion_runtime_->destroy_phase_barrier(legion_context_, barrier);
+}
+
 Legion::Future Runtime::dispatch(Legion::TaskLauncher* launcher,
                                  std::vector<Legion::OutputRequirement>* output_requirements)
 {
@@ -719,6 +832,17 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
                                             reduction_op,
                                             false /*deterministic*/,
                                             core_context_->get_mapper_id());
+}
+
+Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map) const
+{
+  auto reduction_op = core_context_->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
+  return legion_runtime_->reduce_future_map(legion_context_,
+                                            future_map,
+                                            reduction_op,
+                                            false /*deterministic*/,
+                                            core_context_->get_mapper_id(),
+                                            LEGATE_CORE_JOIN_EXCEPTION_TAG);
 }
 
 void Runtime::issue_execution_fence(bool block /*=false*/)
@@ -806,6 +930,8 @@ Legion::ProjectionID Runtime::get_delinearizing_projection()
 {
   return core_context_->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
 }
+
+CommunicatorManager* Runtime::communicator_manager() const { return communicator_manager_; }
 
 MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 

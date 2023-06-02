@@ -21,6 +21,9 @@
 #include "core/comm/comm_cpu.h"
 #include "env_defaults.h"
 
+#include "core/runtime/communicator_manager.h"
+#include "core/runtime/runtime.h"
+
 namespace legate {
 namespace comm {
 
@@ -34,6 +37,14 @@ void register_tasks(Legion::Machine machine,
   bool disable_mpi =
     static_cast<bool>(extract_env("LEGATE_DISABLE_MPI", DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST));
   if (!disable_mpi) { cpu::register_tasks(machine, runtime, context); }
+}
+
+void register_builtin_communicator_factories(const LibraryContext* context)
+{
+#ifdef LEGATE_USE_CUDA
+  nccl::register_factory(context);
+#endif
+  cpu::register_factory(context);
 }
 
 }  // namespace comm

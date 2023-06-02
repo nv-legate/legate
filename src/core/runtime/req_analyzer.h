@@ -113,6 +113,7 @@ class RequirementAnalyzer {
   uint32_t get_requirement_index(const Legion::LogicalRegion& region,
                                  Legion::PrivilegeMode privilege,
                                  const ProjectionInfo* proj_info) const;
+  bool empty() const { return field_sets_.empty(); }
 
  public:
   void analyze_requirements();
@@ -131,6 +132,7 @@ class OutputRequirementAnalyzer {
   void insert(int32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
   uint32_t get_requirement_index(const Legion::FieldSpace& field_space,
                                  Legion::FieldID field_id) const;
+  bool empty() const { return field_groups_.empty(); }
 
  public:
   void analyze_requirements();

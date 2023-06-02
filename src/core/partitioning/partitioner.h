@@ -41,7 +41,7 @@ class Strategy {
 
  public:
   bool parallel(const Operation* op) const;
-  const Legion::Domain* launch_domain(const Operation* op) const;
+  const Domain* launch_domain(const Operation* op) const;
   void set_launch_shape(const Operation* op, const Shape& shape);
 
  public:
@@ -62,7 +62,7 @@ class Strategy {
  private:
   std::map<const Variable, std::shared_ptr<Partition>> assignments_{};
   std::map<const Variable, Legion::FieldSpace> field_spaces_{};
-  std::map<const Operation*, std::unique_ptr<Legion::Domain>> launch_domains_{};
+  std::map<const Operation*, std::unique_ptr<Domain>> launch_domains_{};
 };
 
 class Partitioner {

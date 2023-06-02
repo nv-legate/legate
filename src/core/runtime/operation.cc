@@ -25,6 +25,7 @@
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
+#include "core/runtime/communicator_manager.h"
 #include "core/runtime/context.h"
 #include "core/runtime/launcher.h"
 #include "core/runtime/req_analyzer.h"
@@ -72,6 +73,21 @@ Task::Task(LibraryContext* library,
 }
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
+
+void Task::set_concurrent(bool concurrent) { concurrent_ = concurrent; }
+
+void Task::set_side_effect(bool has_side_effect) { has_side_effect_ = has_side_effect; }
+
+void Task::throws_exception(bool can_throw_exception)
+{
+  can_throw_exception_ = can_throw_exception;
+}
+
+void Task::add_communicator(const std::string& name)
+{
+  auto* comm_mgr = Runtime::get_runtime()->communicator_manager();
+  communicator_factories_.push_back(comm_mgr->find_factory(name));
+}
 
 void Task::launch(Strategy* p_strategy)
 {
@@ -123,6 +139,21 @@ void Task::launch(Strategy* p_strategy)
   // Add by-value scalars
   for (auto& scalar : scalars_) launcher.add_scalar(scalar);
 
+  // Add communicators
+  if (launch_domain != nullptr)
+    for (auto* factory : communicator_factories_) {
+      auto target = machine_.preferred_target;
+      if (!factory->is_supported_target(target)) continue;
+      auto& processor_range = machine_.processor_range();
+      auto communicator     = factory->find_or_create(target, processor_range, *launch_domain);
+      launcher.add_communicator(communicator);
+      if (factory->needs_barrier()) launcher.set_insert_barrier(true);
+    }
+
+  launcher.set_side_effect(has_side_effect_);
+  launcher.set_concurrent(concurrent_);
+  launcher.throws_exception(can_throw_exception_);
+
   if (launch_domain != nullptr) {
     auto result = launcher.execute(*launch_domain);
     demux_scalar_stores(result, *launch_domain);
@@ -134,25 +165,33 @@ void Task::launch(Strategy* p_strategy)
 
 void Task::demux_scalar_stores(const Legion::Future& result)
 {
-  // TODO: Handle unbound stores
-  auto num_scalar_outs = scalar_outputs_.size();
-  auto num_scalar_reds = scalar_reductions_.size();
+  auto num_scalar_outs  = scalar_outputs_.size();
+  auto num_scalar_reds  = scalar_reductions_.size();
+  auto num_unbound_outs = unbound_outputs_.size();
 
-  auto total = num_scalar_outs + num_scalar_reds;
+  auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
+               static_cast<size_t>(can_throw_exception_);
   if (0 == total)
     return;
   else if (1 == total) {
     if (1 == num_scalar_outs) {
       auto [store, _] = outputs_[scalar_outputs_.front()];
       store->set_future(result);
-    } else {
-      assert(1 == num_scalar_reds);
+    } else if (1 == num_scalar_reds) {
       auto [store, _] = reductions_[scalar_reductions_.front()];
       store->set_future(result);
+    } else if (can_throw_exception_) {
+      auto* runtime = Runtime::get_runtime();
+      runtime->record_pending_exception(result);
     }
+#ifdef DEBUG_LEGATE
+    else {
+      assert(1 == num_unbound_outs);
+    }
+#endif
   } else {
     auto* runtime = Runtime::get_runtime();
-    uint32_t idx  = 0;
+    uint32_t idx  = num_unbound_outs;
     for (const auto& out_idx : scalar_outputs_) {
       auto [store, _] = outputs_[out_idx];
       store->set_future(runtime->extract_scalar(result, idx++));
@@ -161,32 +200,47 @@ void Task::demux_scalar_stores(const Legion::Future& result)
       auto [store, _] = reductions_[red_idx];
       store->set_future(runtime->extract_scalar(result, idx++));
     }
+    if (can_throw_exception_)
+      runtime->record_pending_exception(runtime->extract_scalar(result, idx));
   }
 }
 
-void Task::demux_scalar_stores(const Legion::FutureMap& result, const Legion::Domain& launch_domain)
+void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& launch_domain)
 {
   // Tasks with scalar outputs shouldn't have been parallelized
   assert(scalar_outputs_.empty());
 
-  // TODO: Handle unbound stores
-  auto num_scalar_reds = scalar_reductions_.size();
+  auto num_scalar_reds  = scalar_reductions_.size();
+  auto num_unbound_outs = unbound_outputs_.size();
 
-  auto total = num_scalar_reds;
+  auto total = num_scalar_reds + num_unbound_outs + static_cast<size_t>(can_throw_exception_);
   if (0 == total) return;
 
   auto* runtime = Runtime::get_runtime();
   if (1 == total) {
-    assert(1 == num_scalar_reds);
-    auto red_idx    = scalar_reductions_.front();
-    auto [store, _] = reductions_[red_idx];
-    store->set_future(runtime->reduce_future_map(result, reduction_ops_[red_idx]));
+    if (1 == num_scalar_reds) {
+      auto red_idx    = scalar_reductions_.front();
+      auto [store, _] = reductions_[red_idx];
+      store->set_future(runtime->reduce_future_map(result, reduction_ops_[red_idx]));
+    } else if (can_throw_exception_) {
+      auto* runtime = Runtime::get_runtime();
+      runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
+    }
+#ifdef DEBUG_LEGATE
+    else {
+      assert(1 == num_unbound_outs);
+    }
+#endif
   } else {
-    uint32_t idx = 0;
+    uint32_t idx = num_unbound_outs;
     for (const auto& red_idx : scalar_reductions_) {
       auto [store, _] = reductions_[red_idx];
       auto values     = runtime->extract_scalar(result, idx++, launch_domain);
       store->set_future(runtime->reduce_future_map(values, reduction_ops_[red_idx]));
+    }
+    if (can_throw_exception_) {
+      auto exn_fm = runtime->extract_scalar(result, idx, launch_domain);
+      runtime->record_pending_exception(runtime->reduce_exception_future_map(exn_fm));
     }
   }
 }
@@ -217,7 +271,10 @@ void AutoTask::add_input(LogicalStore store, const Variable* partition_symbol)
 
 void AutoTask::add_output(LogicalStore store, const Variable* partition_symbol)
 {
-  if (store.impl()->has_scalar_storage()) scalar_outputs_.push_back(outputs_.size());
+  if (store.impl()->has_scalar_storage())
+    scalar_outputs_.push_back(outputs_.size());
+  else if (store.impl()->unbound())
+    unbound_outputs_.push_back(outputs_.size());
   add_store(outputs_, store, partition_symbol);
 }
 
@@ -273,7 +330,10 @@ void ManualTask::add_input(LogicalStore store) { add_store(inputs_, store, creat
 
 void ManualTask::add_output(LogicalStore store)
 {
-  if (store.impl()->has_scalar_storage()) scalar_outputs_.push_back(outputs_.size());
+  if (store.impl()->has_scalar_storage())
+    scalar_outputs_.push_back(outputs_.size());
+  else if (store.impl()->unbound())
+    unbound_outputs_.push_back(outputs_.size());
   add_store(outputs_, store, create_no_partition());
 }
 
@@ -291,6 +351,9 @@ void ManualTask::add_input(LogicalStorePartition store_partition)
 
 void ManualTask::add_output(LogicalStorePartition store_partition)
 {
+#ifdef DEBUG_LEGATE
+  assert(!store_partition.store().unbound());
+#endif
   if (store_partition.store().impl()->has_scalar_storage())
     scalar_outputs_.push_back(outputs_.size());
   add_store(outputs_, store_partition.store(), store_partition.partition());

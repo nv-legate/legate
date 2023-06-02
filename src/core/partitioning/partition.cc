@@ -110,6 +110,8 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
 
 bool Tiling::is_disjoint_for(const Domain* launch_domain) const
 {
+  // TODO: The check really should be that every two points from the launch domain are mapped
+  // to two different colors
   return nullptr == launch_domain || launch_domain->get_volume() <= color_shape_.volume();
 }
 
@@ -185,14 +187,92 @@ Shape Tiling::get_child_offsets(const Shape& color)
                offsets_);
 }
 
-std::unique_ptr<Partition> create_no_partition() { return std::make_unique<NoPartition>(); }
+Weighted::Weighted(const Legion::FutureMap& weights, const Domain& color_domain)
+  : weights_(weights), color_domain_(color_domain), color_shape_(from_domain(color_domain))
+{
+}
 
-std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
-                                         Shape&& color_shape,
-                                         tuple<int64_t>&& offsets /*= {}*/)
+bool Weighted::operator==(const Weighted& other) const
+{
+  // Since both color_domain_ and color_shape_ are derived from weights_, they don't need to
+  // be compared
+  return weights_ == other.weights_;
+}
+
+bool Weighted::operator<(const Weighted& other) const { return weights_ < other.weights_; }
+
+bool Weighted::is_complete_for(const detail::Storage*) const
+{
+  // Partition-by-weight partitions are complete by definition
+  return true;
+}
+
+bool Weighted::is_disjoint_for(const Domain* launch_domain) const
+{
+  // TODO: The check really should be that every two points from the launch domain are mapped
+  // to two different colors
+  return nullptr == launch_domain || launch_domain->get_volume() <= color_domain_.get_volume();
+}
+
+bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
+{
+  static auto satisfies_restriction = [](Restriction r, size_t ext) {
+    return r != Restriction::FORBID || ext == 1;
+  };
+  return apply(satisfies_restriction, restrictions, color_shape_).all();
+}
+
+Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool) const
+{
+  auto runtime  = Runtime::get_runtime();
+  auto part_mgr = runtime->partition_manager();
+
+  const auto& index_space = region.get_index_space();
+  auto index_partition    = part_mgr->find_index_partition(index_space, *this);
+  if (index_partition != Legion::IndexPartition::NO_PART)
+    return runtime->create_logical_partition(region, index_partition);
+
+  auto color_space = runtime->find_or_create_index_space(color_domain_);
+  index_partition  = runtime->create_weighted_partition(index_space, color_space, weights_);
+  part_mgr->record_index_partition(index_space, *this, index_partition);
+  return runtime->create_logical_partition(region, index_partition);
+}
+
+bool Weighted::has_launch_domain() const { return true; }
+
+Domain Weighted::launch_domain() const { return color_domain_; }
+
+std::unique_ptr<Partition> Weighted::clone() const
+{
+  return create_weighted(weights_, color_domain_);
+}
+
+std::string Weighted::to_string() const
+{
+  std::stringstream ss;
+  ss << "Weighted({";
+  for (Domain::DomainPointIterator it(color_domain_); it; ++it) {
+    auto& p = *it;
+    ss << p << ":" << weights_.get_result<size_t>(p) << ",";
+  }
+  ss << "})";
+  return std::move(ss).str();
+}
+
+std::unique_ptr<NoPartition> create_no_partition() { return std::make_unique<NoPartition>(); }
+
+std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
+                                      Shape&& color_shape,
+                                      tuple<int64_t>&& offsets /*= {}*/)
 {
   return std::make_unique<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets));
+}
+
+std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
+                                          const Domain& color_domain)
+{
+  return std::make_unique<Weighted>(weights, color_domain);
 }
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition)

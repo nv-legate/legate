@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "legion.h"
 
@@ -27,6 +28,7 @@
 #include "core/legate_c.h"
 #include "core/mapping/machine.h"
 #include "core/runtime/resource.h"
+#include "core/task/exception.h"
 #include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
 
@@ -37,7 +39,6 @@ namespace legate {
 
 class LibraryContext;
 class Scalar;
-class TaskException;
 
 namespace mapping {
 
@@ -90,6 +91,7 @@ struct Core {
 };
 
 class AutoTask;
+class CommunicatorManager;
 class FieldManager;
 class LogicalRegionField;
 class LogicalStore;
@@ -214,6 +216,15 @@ class Runtime {
    */
   LogicalStore create_store(std::unique_ptr<Type> type, int32_t dim = 1);
   /**
+   * @brief Creates an unbound store
+   *
+   * @param type Element type
+   * @param dim Number of dimensions of the store
+   *
+   * @return Logical store
+   */
+  LogicalStore create_store(const Type& type, int32_t dim = 1);
+  /**
    * @brief Creates a normal store
    *
    * @param extents Shape of the store
@@ -223,9 +234,20 @@ class Runtime {
    *
    * @return Logical store
    */
-  LogicalStore create_store(std::vector<size_t> extents,
+  LogicalStore create_store(const Shape& extents,
                             std::unique_ptr<Type> type,
                             bool optimize_scalar = false);
+  /**
+   * @brief Creates a normal store
+   *
+   * @param extents Shape of the store
+   * @param type Element type
+   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
+   * scalars
+   *
+   * @return Logical store
+   */
+  LogicalStore create_store(const Shape& extents, const Type& type, bool optimize_scalar = false);
   /**
    * @brief Creates a normal store out of a `Scalar` object
    *
@@ -234,6 +256,34 @@ class Runtime {
    * @return Logical store
    */
   LogicalStore create_store(const Scalar& scalar);
+
+ public:
+  /**
+   * @brief Returns the maximum number of pending exceptions
+   *
+   * @return Maximum number of pending exceptions
+   */
+  uint32_t max_pending_exceptions() const;
+  /**
+   * @brief Updates the maximum number of pending exceptions
+   *
+   * If the new maximum number of pending exceptions is smaller than the previous value,
+   * `raise_pending_task_exception` will be invoked.
+   *
+   * @param max_pending_exceptions A new maximum number of pending exceptions
+   */
+  void set_max_pending_exceptions(uint32_t max_pending_exceptions);
+  /**
+   * @brief Inspects all pending exceptions and immediately raises the first one if there exists any
+   */
+  void raise_pending_task_exception();
+  /**
+   * @brief Returns the first pending exception.
+   */
+  std::optional<TaskException> check_pending_task_exception();
+  void record_pending_exception(const Legion::Future& pending_exception);
+
+ public:
   uint64_t get_unique_store_id();
   uint64_t get_unique_storage_id();
 
@@ -249,6 +299,7 @@ class Runtime {
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
   FieldManager* find_or_create_field_manager(const Legion::Domain& shape, uint32_t field_size);
+  CommunicatorManager* communicator_manager() const;
   MachineManager* machine_manager() const;
   PartitionManager* partition_manager() const;
   ProvenanceManager* provenance_manager() const;
@@ -260,6 +311,9 @@ class Runtime {
                                                      Legion::PartitionKind kind,
                                                      const Legion::DomainTransform& transform,
                                                      const Legion::Domain& extent);
+  Legion::IndexPartition create_weighted_partition(const Legion::IndexSpace& index_space,
+                                                   const Legion::IndexSpace& color_space,
+                                                   const Legion::FutureMap& weights);
   Legion::FieldSpace create_field_space();
   Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
                                       const Legion::FieldSpace& field_space);
@@ -274,6 +328,10 @@ class Runtime {
                                  Legion::FieldID field_id,
                                  size_t field_size);
   Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
+  Legion::FutureMap delinearize_future_map(const Legion::FutureMap& future_map,
+                                           const Legion::IndexSpace& new_domain) const;
+  std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> create_barriers(size_t num_tasks);
+  void destroy_barrier(Legion::PhaseBarrier barrier);
 
  public:
   Legion::Future dispatch(Legion::TaskLauncher* launcher,
@@ -287,6 +345,7 @@ class Runtime {
                                    uint32_t idx,
                                    const Legion::Domain& launch_domain) const;
   Legion::Future reduce_future_map(const Legion::FutureMap& future_map, int32_t reduction_op) const;
+  Legion::Future reduce_exception_future_map(const Legion::FutureMap& future_map) const;
 
  public:
   /**
@@ -342,6 +401,7 @@ class Runtime {
   using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
   std::map<FieldManagerKey, FieldManager*> field_managers_;
   std::map<Legion::Domain, RegionManager*> region_managers_;
+  CommunicatorManager* communicator_manager_{nullptr};
   MachineManager* machine_manager_{nullptr};
   PartitionManager* partition_manager_{nullptr};
   ProvenanceManager* provenance_manager_{nullptr};
@@ -374,6 +434,11 @@ class Runtime {
  private:
   uint32_t next_type_uid_;
   std::map<std::pair<int32_t, int32_t>, int32_t> reduction_ops_{};
+
+ private:
+  uint32_t max_pending_exceptions_;
+  std::vector<Legion::Future> pending_exceptions_{};
+  std::deque<TaskException> outstanding_exceptions_{};
 };
 
 /**

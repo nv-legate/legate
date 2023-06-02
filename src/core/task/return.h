@@ -16,7 +16,9 @@
 
 #pragma once
 
+#include <optional>
 #include <vector>
+#include "core/task/exception.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate {
@@ -55,6 +57,9 @@ struct ReturnedException {
 
  public:
   bool raised() const { return raised_; }
+
+ public:
+  std::optional<TaskException> to_task_exception() const;
 
  public:
   size_t legion_buffer_size() const;

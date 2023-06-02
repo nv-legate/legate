@@ -16,10 +16,12 @@
 
 #pragma once
 
-#include "core/runtime/context.h"
-#include "legate.h"
+#include "legion.h"
 
 namespace legate {
+
+class LibraryContext;
+
 namespace comm {
 namespace nccl {
 
@@ -28,6 +30,8 @@ void register_tasks(Legion::Machine machine,
                     const LibraryContext* context);
 
 bool needs_barrier();
+
+void register_factory(const LibraryContext* context);
 
 }  // namespace nccl
 }  // namespace comm

@@ -22,6 +22,7 @@
 #include "core/mapping/machine.h"
 #include "core/runtime/context.h"
 #include "core/runtime/launcher_arg.h"
+#include "core/runtime/partition_manager.h"
 #include "core/runtime/req_analyzer.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/buffer_builder.h"
@@ -29,18 +30,23 @@
 
 namespace legate {
 
-TaskLauncher::TaskLauncher(LibraryContext* library,
+TaskLauncher::TaskLauncher(const LibraryContext* library,
+                           const mapping::MachineDesc& machine,
+                           int64_t task_id,
+                           int64_t tag /*= 0*/)
+  : library_(library), task_id_(task_id), tag_(tag), machine_(machine), provenance_("")
+{
+  initialize();
+}
+
+TaskLauncher::TaskLauncher(const LibraryContext* library,
                            const mapping::MachineDesc& machine,
                            const std::string& provenance,
                            int64_t task_id,
                            int64_t tag /*= 0*/)
-  : library_(library), task_id_(task_id), tag_(tag), provenance_(provenance)
+  : library_(library), task_id_(task_id), tag_(tag), machine_(machine), provenance_(provenance)
 {
-  req_analyzer_ = new RequirementAnalyzer();
-  out_analyzer_ = new OutputRequirementAnalyzer();
-  buffer_       = new BufferBuilder();
-  mapper_arg_   = new BufferBuilder();
-  machine.pack(*mapper_arg_);
+  initialize();
 }
 
 TaskLauncher::~TaskLauncher()
@@ -53,6 +59,15 @@ TaskLauncher::~TaskLauncher()
   delete req_analyzer_;
   delete buffer_;
   delete mapper_arg_;
+}
+
+void TaskLauncher::initialize()
+{
+  req_analyzer_ = new RequirementAnalyzer();
+  out_analyzer_ = new OutputRequirementAnalyzer();
+  buffer_       = new BufferBuilder();
+  mapper_arg_   = new BufferBuilder();
+  machine_.pack(*mapper_arg_);
 }
 
 int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
@@ -114,6 +129,11 @@ void TaskLauncher::add_future_map(const Legion::FutureMap& future_map)
   future_maps_.push_back(future_map);
 }
 
+void TaskLauncher::add_communicator(const Legion::FutureMap& communicator)
+{
+  communicators_.push_back(communicator);
+}
+
 Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 {
   auto legion_launcher = build_index_task(launch_domain);
@@ -121,7 +141,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   if (output_requirements_.empty()) return Runtime::get_runtime()->dispatch(legion_launcher.get());
 
   auto result = Runtime::get_runtime()->dispatch(legion_launcher.get(), &output_requirements_);
-  bind_region_fields_to_unbound_stores();
+  post_process_unbound_stores(result, launch_domain);
   return result;
 }
 
@@ -131,7 +151,7 @@ Legion::Future TaskLauncher::execute_single()
 
   if (output_requirements_.empty()) return Runtime::get_runtime()->dispatch(legion_launcher.get());
   auto result = Runtime::get_runtime()->dispatch(legion_launcher.get(), &output_requirements_);
-  bind_region_fields_to_unbound_stores();
+  post_process_unbound_stores();
   return result;
 }
 
@@ -184,8 +204,7 @@ std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
   pack_args(outputs_);
   pack_args(reductions_);
   pack_args(scalars_);
-  // can_raise_exception
-  buffer_->pack<bool>(false);
+  buffer_->pack<bool>(can_throw_exception_);
   // insert_barrier
   buffer_->pack<bool>(false);
   // # communicators
@@ -206,6 +225,9 @@ std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
   req_analyzer_->populate_launcher(single_task.get());
   out_analyzer_->populate_output_requirements(output_requirements_);
 
+  single_task->local_function_task =
+    !has_side_effect_ && req_analyzer_->empty() && out_analyzer_->empty();
+
   return single_task;
 }
 
@@ -221,12 +243,9 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
   pack_args(outputs_);
   pack_args(reductions_);
   pack_args(scalars_);
-  // can_raise_exception
-  buffer_->pack<bool>(false);
-  // insert_barrier
-  buffer_->pack<bool>(false);
-  // # communicators
-  buffer_->pack<uint32_t>(0);
+  buffer_->pack<bool>(can_throw_exception_);
+  buffer_->pack<bool>(insert_barrier_);
+  buffer_->pack<uint32_t>(communicators_.size());
 
   pack_sharding_functor_id();
   auto* runtime = Runtime::get_runtime();
@@ -242,17 +261,31 @@ std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
                                                                 mapper_arg_->to_legion_buffer(),
                                                                 provenance_.c_str());
   for (auto& future : futures_) index_task->add_future(future);
+  if (insert_barrier_) {
+    size_t num_tasks                     = launch_domain.get_volume();
+    auto [arrival_barrier, wait_barrier] = runtime->create_barriers(num_tasks);
+    index_task->add_future(Legion::Future::from_value(arrival_barrier));
+    index_task->add_future(Legion::Future::from_value(wait_barrier));
+  }
+  for (auto& communicator : communicators_) index_task->point_futures.push_back(communicator);
   for (auto& future_map : future_maps_) index_task->point_futures.push_back(future_map);
 
   req_analyzer_->populate_launcher(index_task.get());
   out_analyzer_->populate_output_requirements(output_requirements_);
 
+  index_task->concurrent = concurrent_ || !communicators_.empty();
+
   return index_task;
 }
 
-void TaskLauncher::bind_region_fields_to_unbound_stores()
+void TaskLauncher::bind_region_fields_to_unbound_stores() {}
+
+void TaskLauncher::post_process_unbound_stores()
 {
+  if (unbound_stores_.empty()) return;
+
   auto* runtime = Runtime::get_runtime();
+  auto no_part  = create_no_partition();
 
   for (auto& arg : unbound_stores_) {
 #ifdef DEBUG_LEGATE
@@ -263,6 +296,51 @@ void TaskLauncher::bind_region_fields_to_unbound_stores()
     auto region_field =
       runtime->import_region_field(req.parent, arg->field_id(), store->type().size());
     store->set_region_field(std::move(region_field));
+    store->set_key_partition(machine_, no_part.get());
+  }
+}
+
+void TaskLauncher::post_process_unbound_stores(const Legion::FutureMap& result,
+                                               const Legion::Domain& launch_domain)
+{
+  if (unbound_stores_.empty()) return;
+
+  auto* runtime  = Runtime::get_runtime();
+  auto* part_mgr = runtime->partition_manager();
+
+  auto post_process_unbound_store =
+    [&runtime, &part_mgr, &launch_domain](
+      auto*& arg, const auto& req, const auto& weights, const auto& machine) {
+      auto* store = arg->store();
+      auto region_field =
+        runtime->import_region_field(req.parent, arg->field_id(), store->type().size());
+      store->set_region_field(std::move(region_field));
+
+      // TODO: Need to handle key partitions for multi-dimensional unbound stores
+      if (store->dim() > 1) return;
+
+      auto partition = create_weighted(weights, launch_domain);
+      store->set_key_partition(machine, partition.get());
+
+      const auto& index_partition = req.partition.get_index_partition();
+      part_mgr->record_index_partition(req.parent.get_index_space(), *partition, index_partition);
+    };
+
+  if (unbound_stores_.size() == 1) {
+    auto* arg       = unbound_stores_.front();
+    const auto& req = output_requirements_[arg->requirement_index()];
+    post_process_unbound_store(arg, req, result, machine_);
+  } else {
+    uint32_t idx = 0;
+    for (auto& arg : unbound_stores_) {
+      const auto& req = output_requirements_[arg->requirement_index()];
+      if (arg->store()->dim() == 1)
+        post_process_unbound_store(
+          arg, req, runtime->extract_scalar(result, idx, launch_domain), machine_);
+      else
+        post_process_unbound_store(arg, req, result, machine_);
+      ++idx;
+    }
   }
 }
 

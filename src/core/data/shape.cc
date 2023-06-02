@@ -18,9 +18,9 @@
 
 namespace legate {
 
-Legion::Domain to_domain(const tuple<size_t>& shape)
+Domain to_domain(const tuple<size_t>& shape)
 {
-  Legion::Domain domain;
+  Domain domain;
   auto ndim  = static_cast<int32_t>(shape.size());
   domain.dim = ndim;
   for (int32_t idx = 0; idx < ndim; ++idx) {
@@ -30,13 +30,22 @@ Legion::Domain to_domain(const tuple<size_t>& shape)
   return domain;
 }
 
-Legion::DomainPoint to_domain_point(const Shape& shape)
+DomainPoint to_domain_point(const Shape& shape)
 {
-  Legion::DomainPoint point;
+  DomainPoint point;
   auto ndim = static_cast<int32_t>(shape.size());
   point.dim = ndim;
   for (int32_t idx = 0; idx < ndim; ++idx) point[idx] = static_cast<int64_t>(shape[idx]);
   return point;
+}
+
+Shape from_domain(const Domain& domain)
+{
+  std::vector<size_t> result;
+  auto lo = domain.lo();
+  auto hi = domain.hi();
+  for (int32_t idx = 0; idx < domain.dim; ++idx) result.push_back(hi[idx] - lo[idx] + 1);
+  return Shape(std::move(result));
 }
 
 }  // namespace legate

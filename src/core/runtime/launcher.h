@@ -20,6 +20,8 @@
 
 #include "legion.h"
 
+#include "core/mapping/machine.h"
+
 namespace legate {
 
 class ArgWrapper;
@@ -32,12 +34,6 @@ class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
 class Scalar;
 
-namespace mapping {
-
-class MachineDesc;
-
-}  // namespace mapping
-
 namespace detail {
 
 class LogicalStore;
@@ -46,12 +42,19 @@ class LogicalStore;
 
 class TaskLauncher {
  public:
-  TaskLauncher(LibraryContext* library,
+  TaskLauncher(const LibraryContext* library,
+               const mapping::MachineDesc& machine,
+               int64_t task_id,
+               int64_t tag = 0);
+  TaskLauncher(const LibraryContext* library,
                const mapping::MachineDesc& machine,
                const std::string& provenance,
                int64_t task_id,
                int64_t tag = 0);
   ~TaskLauncher();
+
+ private:
+  void initialize();
 
  public:
   int64_t legion_task_id() const;
@@ -79,6 +82,13 @@ class TaskLauncher {
  public:
   void add_future(const Legion::Future& future);
   void add_future_map(const Legion::FutureMap& future_map);
+  void add_communicator(const Legion::FutureMap& communicator);
+
+ public:
+  void set_side_effect(bool has_side_effect) { has_side_effect_ = has_side_effect; }
+  void set_concurrent(bool is_concurrent) { concurrent_ = is_concurrent; }
+  void set_insert_barrier(bool insert_barrier) { insert_barrier_ = insert_barrier; }
+  void throws_exception(bool can_throw_exception) { can_throw_exception_ = can_throw_exception; }
 
  private:
   void add_store(std::vector<ArgWrapper*>& args,
@@ -98,12 +108,22 @@ class TaskLauncher {
   std::unique_ptr<Legion::IndexTaskLauncher> build_index_task(const Legion::Domain& launch_domain);
   std::unique_ptr<Legion::TaskLauncher> build_single_task();
   void bind_region_fields_to_unbound_stores();
+  void post_process_unbound_stores();
+  void post_process_unbound_stores(const Legion::FutureMap& result,
+                                   const Legion::Domain& launch_domain);
 
  private:
-  LibraryContext* library_;
+  const LibraryContext* library_;
   int64_t task_id_;
   int64_t tag_;
+  mapping::MachineDesc machine_;
   std::string provenance_;
+
+ private:
+  bool has_side_effect_{true};
+  bool concurrent_{false};
+  bool insert_barrier_{false};
+  bool can_throw_exception_{false};
 
  private:
   std::vector<ArgWrapper*> inputs_;
@@ -113,6 +133,7 @@ class TaskLauncher {
   std::vector<Legion::Future> futures_;
   std::vector<OutputRegionArg*> unbound_stores_;
   std::vector<Legion::FutureMap> future_maps_;
+  std::vector<Legion::FutureMap> communicators_;
 
  private:
   RequirementAnalyzer* req_analyzer_;

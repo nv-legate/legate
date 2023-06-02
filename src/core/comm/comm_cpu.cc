@@ -15,6 +15,9 @@
  */
 
 #include "core/comm/comm_cpu.h"
+#include "core/runtime/communicator_manager.h"
+#include "core/runtime/launcher.h"
+#include "core/runtime/runtime.h"
 #include "legate.h"
 
 #include "core/comm/coll.h"
@@ -22,6 +25,69 @@
 namespace legate {
 namespace comm {
 namespace cpu {
+
+class Factory : public CommunicatorFactory {
+ public:
+  Factory(const LibraryContext* core_context);
+
+ public:
+  bool needs_barrier() const override { return false; }
+  bool is_supported_target(mapping::TaskTarget target) const override;
+
+ protected:
+  Legion::FutureMap initialize(const mapping::MachineDesc& machine, uint32_t num_tasks) override;
+  void finalize(const mapping::MachineDesc& machine,
+                uint32_t num_tasks,
+                const Legion::FutureMap& communicator) override;
+
+ private:
+  const LibraryContext* core_context_;
+};
+
+Factory::Factory(const LibraryContext* core_context) : core_context_(core_context) {}
+
+bool Factory::is_supported_target(mapping::TaskTarget target) const
+{
+  return target == mapping::TaskTarget::OMP || target == mapping::TaskTarget::CPU;
+}
+
+Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint32_t num_tasks)
+{
+  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+  auto tag =
+    machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
+
+  // Generate a unique ID
+  auto comm_id = Legion::Future::from_value<int32_t>(coll::collInitComm());
+
+  // Find a mapping of all participants
+  TaskLauncher init_cpucoll_mapping_launcher(
+    core_context_, machine, LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID, tag);
+  init_cpucoll_mapping_launcher.add_future(comm_id);
+  auto mapping = init_cpucoll_mapping_launcher.execute(launch_domain);
+
+  // Then create communicators on participating processors
+  TaskLauncher init_cpucoll_launcher(core_context_, machine, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, tag);
+  init_cpucoll_launcher.add_future(comm_id);
+  init_cpucoll_launcher.set_concurrent(true);
+
+  auto domain = mapping.get_future_map_domain();
+  for (Domain::DomainPointIterator it(domain); it; ++it)
+    init_cpucoll_launcher.add_future(mapping.get_future(*it));
+  return init_cpucoll_launcher.execute(launch_domain);
+}
+
+void Factory::finalize(const mapping::MachineDesc& machine,
+                       uint32_t num_tasks,
+                       const Legion::FutureMap& communicator)
+{
+  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+  TaskLauncher launcher(
+    core_context_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+  launcher.set_concurrent(true);
+  launcher.add_future_map(communicator);
+  launcher.execute(launch_domain);
+}
 
 static int init_cpucoll_mapping(const Legion::Task* task,
                                 const std::vector<Legion::PhysicalRegion>& regions,
@@ -153,6 +219,12 @@ void register_tasks(Legion::Machine machine,
       make_registrar(finalize_cpucoll_task_id, finalize_cpucoll_task_name, Processor::OMP_PROC);
     runtime->register_task_variant<finalize_cpucoll>(registrar, LEGATE_OMP_VARIANT);
   }
+}
+
+void register_factory(const LibraryContext* context)
+{
+  auto* comm_mgr = Runtime::get_runtime()->communicator_manager();
+  comm_mgr->register_factory("cpu", std::make_unique<Factory>(context));
 }
 
 }  // namespace cpu

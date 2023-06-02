@@ -207,14 +207,32 @@ bool PartitionManager::use_complete_tiling(const Shape& extents, const Shape& ti
   return !(num_tiles > 256 && num_tiles > 16 * num_pieces);
 }
 
-Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
-                                                              const Tiling& tiling) const
+namespace {
+
+template <class Cache, class Partition>
+Legion::IndexPartition _find_index_partition(const Cache& cache,
+                                             const Legion::IndexSpace& index_space,
+                                             const Partition& partition)
 {
-  auto finder = tiling_cache_.find(std::make_pair(index_space, tiling));
-  if (finder != tiling_cache_.end())
+  auto finder = cache.find(std::make_pair(index_space, partition));
+  if (finder != cache.end())
     return finder->second;
   else
     return Legion::IndexPartition::NO_PART;
+}
+
+}  // namespace
+
+Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
+                                                              const Tiling& tiling) const
+{
+  return _find_index_partition(tiling_cache_, index_space, tiling);
+}
+
+Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
+                                                              const Weighted& weighted) const
+{
+  return _find_index_partition(weighted_cache_, index_space, weighted);
 }
 
 void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
@@ -222,6 +240,13 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
                                               const Legion::IndexPartition& index_partition)
 {
   tiling_cache_[std::make_pair(index_space, tiling)] = index_partition;
+}
+
+void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
+                                              const Weighted& weighted,
+                                              const Legion::IndexPartition& index_partition)
+{
+  weighted_cache_[std::make_pair(index_space, weighted)] = index_partition;
 }
 
 }  // namespace legate

@@ -59,6 +59,7 @@ struct ProcessorRange {
   ProcessorRange operator&(const ProcessorRange&) const;
   bool operator==(const ProcessorRange&) const;
   bool operator!=(const ProcessorRange&) const;
+  bool operator<(const ProcessorRange&) const;
   /**
    * @brief Returns the number of processors in the range
    *

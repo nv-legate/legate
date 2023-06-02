@@ -34,6 +34,7 @@
 
 namespace legate {
 
+class CommunicatorFactory;
 class Constraint;
 class ConstraintSolver;
 class LibraryContext;
@@ -129,22 +130,57 @@ class Task : public Operation {
    * @param scalar A scalar to add to the task
    */
   void add_scalar_arg(const Scalar& scalar);
+  /**
+   * @brief Sets whether the task needs a concurrent task launch.
+   *
+   * Any task with at least one communicator will implicitly use concurrent task launch, so this
+   * method is to be used when the task needs a concurrent task launch for a reason unknown to
+   * Legate.
+   *
+   * @param concurrent A boolean value indicating whether the task needs a concurrent task launch
+   */
+  void set_concurrent(bool concurrent);
+  /**
+   * @brief Sets whether the task has side effects or not.
+   *
+   * A task is assumed to be free of side effects by default if the task only has scalar arguments.
+   *
+   * @param has_side_effect A boolean value indicating whether the task has side effects
+   */
+  void set_side_effect(bool has_side_effect);
+  /**
+   * @brief Sets whether the task can throw an exception or not.
+   *
+   * @param can_throw_exception A boolean value indicating whether the task can throw an exception
+   */
+  void throws_exception(bool can_throw_exception);
+  /**
+   * @brief Requests a communicator for this task.
+   *
+   * @param name The name of the communicator to use for this task
+   */
+  void add_communicator(const std::string& name);
 
  public:
   virtual void launch(Strategy* strategy) override;
 
  private:
   void demux_scalar_stores(const Legion::Future& result);
-  void demux_scalar_stores(const Legion::FutureMap& result, const Legion::Domain& launch_domain);
+  void demux_scalar_stores(const Legion::FutureMap& result, const Domain& launch_domain);
 
  public:
   std::string to_string() const override;
 
  protected:
   int64_t task_id_;
+  bool concurrent_{false};
+  bool has_side_effect_{false};
+  bool can_throw_exception_{false};
   std::vector<Scalar> scalars_{};
+  std::vector<uint32_t> unbound_outputs_{};
   std::vector<uint32_t> scalar_outputs_{};
   std::vector<uint32_t> scalar_reductions_{};
+  std::vector<CommunicatorFactory*> communicator_factories_{};
 };
 
 /**

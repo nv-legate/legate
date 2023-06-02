@@ -40,6 +40,7 @@ struct Partition {
   enum class Kind : int32_t {
     NO_PARTITION = 0,
     TILING       = 1,
+    WEIGHTED     = 2,
   };
 
  public:
@@ -59,19 +60,14 @@ struct Partition {
                                              bool complete = false) const = 0;
 
  public:
-  virtual bool has_launch_domain() const       = 0;
-  virtual Legion::Domain launch_domain() const = 0;
+  virtual bool has_launch_domain() const = 0;
+  virtual Domain launch_domain() const   = 0;
 
  public:
   virtual std::unique_ptr<Partition> clone() const = 0;
 
  public:
   virtual std::string to_string() const = 0;
-
- public:
-  virtual const Shape& tile_shape() const       = 0;
-  virtual const Shape& color_shape() const      = 0;
-  virtual const tuple<int64_t>& offsets() const = 0;
 };
 
 class NoPartition : public Partition {
@@ -91,27 +87,13 @@ class NoPartition : public Partition {
 
  public:
   bool has_launch_domain() const override;
-  Legion::Domain launch_domain() const override;
+  Domain launch_domain() const override;
 
  public:
   std::unique_ptr<Partition> clone() const override;
 
  public:
   std::string to_string() const override;
-
- public:
-  const Shape& tile_shape() const override
-  {
-    throw std::invalid_argument("Partition kind doesn't support tile_shape");
-  }
-  const Shape& color_shape() const override
-  {
-    throw std::invalid_argument("Partition kind doesn't support color_shape");
-  }
-  const tuple<int64_t>& offsets() const override
-  {
-    throw std::invalid_argument("Partition kind doesn't support offsets");
-  }
 };
 
 class Tiling : public Partition {
@@ -138,7 +120,7 @@ class Tiling : public Partition {
 
  public:
   bool has_launch_domain() const override;
-  Legion::Domain launch_domain() const override;
+  Domain launch_domain() const override;
 
  public:
   std::unique_ptr<Partition> clone() const override;
@@ -147,9 +129,9 @@ class Tiling : public Partition {
   std::string to_string() const override;
 
  public:
-  const Shape& tile_shape() const override { return tile_shape_; }
-  const Shape& color_shape() const override { return color_shape_; }
-  const tuple<int64_t>& offsets() const override { return offsets_; }
+  const Shape& tile_shape() const { return tile_shape_; }
+  const Shape& color_shape() const { return color_shape_; }
+  const tuple<int64_t>& offsets() const { return offsets_; }
 
  public:
   Shape get_child_extents(const Shape& extents, const Shape& color);
@@ -161,11 +143,52 @@ class Tiling : public Partition {
   tuple<int64_t> offsets_;
 };
 
-std::unique_ptr<Partition> create_no_partition();
+class Weighted : public Partition {
+ public:
+  Weighted(const Legion::FutureMap& weights, const Domain& color_domain);
 
-std::unique_ptr<Partition> create_tiling(Shape&& tile_shape,
-                                         Shape&& color_shape,
-                                         tuple<int64_t>&& offsets = {});
+ public:
+  Weighted(const Weighted&) = default;
+
+ public:
+  bool operator==(const Weighted& other) const;
+  bool operator<(const Weighted& other) const;
+
+ public:
+  Kind kind() const override { return Kind::WEIGHTED; }
+
+ public:
+  bool is_complete_for(const detail::Storage* storage) const override;
+  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool satisfies_restrictions(const Restrictions& restrictions) const override;
+
+ public:
+  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
+
+ public:
+  bool has_launch_domain() const override;
+  Domain launch_domain() const override;
+
+ public:
+  std::unique_ptr<Partition> clone() const override;
+
+ public:
+  std::string to_string() const override;
+
+ private:
+  Legion::FutureMap weights_;
+  Domain color_domain_;
+  Shape color_shape_;
+};
+
+std::unique_ptr<NoPartition> create_no_partition();
+
+std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
+                                      Shape&& color_shape,
+                                      tuple<int64_t>&& offsets = {});
+
+std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
+                                          const Domain& color_domain);
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 

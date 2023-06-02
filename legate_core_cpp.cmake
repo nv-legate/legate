@@ -213,6 +213,7 @@ list(APPEND legate_core_SOURCES
   src/core/partitioning/partition.cc
   src/core/partitioning/partitioner.cc
   src/core/partitioning/restriction.cc
+  src/core/runtime/communicator_manager.cc
   src/core/runtime/context.cc
   src/core/runtime/field_manager.cc
   src/core/runtime/launcher_arg.cc
@@ -484,7 +485,9 @@ install(
         src/core/type/type_traits.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/type)
 install(
-  FILES src/core/utilities/debug.h
+  FILES src/core/utilities/buffer_builder.h
+        src/core/utilities/buffer_builder.inl
+        src/core/utilities/debug.h
         src/core/utilities/deserializer.h
         src/core/utilities/deserializer.inl
         src/core/utilities/dispatch.h

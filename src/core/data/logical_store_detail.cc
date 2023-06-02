@@ -112,6 +112,8 @@ const Shape& Storage::offsets() const
   return offsets_;
 }
 
+size_t Storage::volume() const { return extents().volume(); }
+
 std::shared_ptr<Storage> Storage::slice(Shape tile_shape, Shape offsets)
 {
   if (Kind::FUTURE == kind_) return shared_from_this();
