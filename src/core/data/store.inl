@@ -14,6 +14,11 @@
  *
  */
 
+#pragma once
+
+// Useful for IDEs
+#include "core/data/store.h"
+
 namespace legate {
 
 template <typename T, int DIM>

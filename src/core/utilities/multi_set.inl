@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,28 +17,37 @@
 #pragma once
 
 // Useful for IDEs
-#include "core/utilities/buffer_builder.h"
+#include "core/utilities/multi_set.h"
 
 namespace legate {
 
 template <typename T>
-void BufferBuilder::pack(const T& value)
+void MultiSet<T>::add(const T& value)
 {
-  pack_buffer(reinterpret_cast<const int8_t*>(&value), sizeof(T));
+  auto finder = map_.find(value);
+  if (finder == map_.end())
+    map_[value] = 1;
+  else
+    finder->second++;
 }
 
 template <typename T>
-void BufferBuilder::pack(const std::vector<T>& values)
+bool MultiSet<T>::remove(const T& value)
 {
-  uint32_t size = values.size();
-  pack(size);
-  pack_buffer(values.data(), size * sizeof(T));
+  auto finder = map_.find(value);
+  assert(finder != map_.end());
+  finder->second--;
+  if (finder->second == 0) {
+    map_.erase(finder);
+    return true;
+  }
+  return false;
 }
 
 template <typename T>
-void BufferBuilder::pack(const tuple<T>& values)
+bool MultiSet<T>::contains(const T& value) const
 {
-  pack(values.data());
+  return map_.contains(value);
 }
 
 }  // namespace legate

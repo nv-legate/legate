@@ -30,6 +30,7 @@
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/type/type_info.h"
+#include "core/utilities/multi_set.h"
 #include "core/utilities/typedefs.h"
 
 /** @defgroup runtime Runtime and library contexts
@@ -291,8 +292,9 @@ class Runtime {
   std::shared_ptr<LogicalRegionField> import_region_field(Legion::LogicalRegion region,
                                                           Legion::FieldID field_id,
                                                           uint32_t field_size);
-  RegionField map_region_field(LibraryContext* context, const LogicalRegionField& region_field);
+  RegionField map_region_field(LibraryContext* context, LogicalRegionField* region_field);
   void unmap_physical_region(Legion::PhysicalRegion pr);
+  size_t num_inline_mapped() const;
 
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
@@ -421,6 +423,7 @@ class Runtime {
  private:
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::map<RegionFieldID, Legion::PhysicalRegion> inline_mapped_;
+  MultiSet<Legion::PhysicalRegion> physical_region_refs_;
   uint64_t next_store_id_{1};
   uint64_t next_storage_id_{1};
 

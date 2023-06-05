@@ -16,6 +16,7 @@
 
 #pragma once
 
+// Useful for IDEs
 #include "core/task/task.h"
 
 namespace legate::detail {

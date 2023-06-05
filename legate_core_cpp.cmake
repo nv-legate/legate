@@ -373,6 +373,7 @@ if (legate_core_BUILD_DOCS)
       src/core/runtime/tracker.h
       src/core/utilities/debug.h
       src/core/utilities/dispatch.h
+      src/core/utilities/multi_set.h
       # main page
       src/legate.h
     )
@@ -492,10 +493,12 @@ install(
         src/core/utilities/deserializer.inl
         src/core/utilities/dispatch.h
         src/core/utilities/machine.h
+        src/core/utilities/multi_set.h
+        src/core/utilities/multi_set.inl
         src/core/utilities/nvtx_help.h
         src/core/utilities/span.h
-        src/core/utilities/tuple.inl
         src/core/utilities/tuple.h
+        src/core/utilities/tuple.inl
         src/core/utilities/typedefs.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 

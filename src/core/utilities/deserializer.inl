@@ -14,6 +14,11 @@
  *
  */
 
+#pragma once
+
+// Useful for IDEs
+#include "core/utilities/deserializer.h"
+
 namespace legate {
 
 template <typename Deserializer>

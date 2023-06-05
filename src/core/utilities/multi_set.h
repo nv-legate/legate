@@ -16,32 +16,40 @@
 
 #pragma once
 
-#include <optional>
-
-/**
- * @file
- * @brief A simple slice class that has the same semantics as Python's
- */
+#include <map>
 
 namespace legate {
 
 /**
- * @ingroup data
- * @brief A slice descriptor
- *
- * legate::Slice behaves similarly to how the slice in Python does, and has different semantics
- * from std::slice.
+ * @brief A set variant that allows for multiple instances of each element.
  */
-struct Slice {
-  static constexpr std::nullopt_t OPEN = std::nullopt;
+template <typename T>
+class MultiSet {
+ public:
+  MultiSet() {}
 
-  Slice(std::optional<int64_t> _start = OPEN, std::optional<int64_t> _stop = OPEN)
-    : start(_start), stop(_stop)
-  {
-  }
+ public:
+  /**
+   * @brief Add a value to the container.
+   */
+  void add(const T& value);
 
-  std::optional<int64_t> start{OPEN};
-  std::optional<int64_t> stop{OPEN};
+  /**
+   * @brief Remove an instance of a value from the container (other instances might still remain).
+   *
+   * @return Whether this removed the last instance of the value.
+   */
+  bool remove(const T& value);
+
+  /**
+   * @brief Test whether a value is present in the container (at least once).
+   */
+  bool contains(const T& value) const;
+
+ private:
+  std::map<T, size_t> map_;
 };
 
 }  // namespace legate
+
+#include "core/utilities/multi_set.inl"

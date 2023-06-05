@@ -583,40 +583,53 @@ std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::Logical
                                                                  Legion::FieldID field_id,
                                                                  uint32_t field_size)
 {
-  // TODO: This is a blocking operation. We should instead use index sapces as keys to field
+  // TODO: This is a blocking operation. We should instead use index spaces as keys to field
   // managers
   auto shape   = legion_runtime_->get_index_space_domain(legion_context_, region.get_index_space());
   auto fld_mgr = runtime_->find_or_create_field_manager(shape, field_size);
   return fld_mgr->import_field(region, field_id);
 }
 
-RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegionField& rf)
+RegionField Runtime::map_region_field(LibraryContext* context, LogicalRegionField* rf)
 {
-  auto region   = rf.region();
-  auto field_id = rf.field_id();
+  auto root_region = rf->get_root().region();
+  auto field_id    = rf->field_id();
 
   Legion::PhysicalRegion pr;
 
-  RegionFieldID key(region, field_id);
+  RegionFieldID key(root_region, field_id);
   auto finder = inline_mapped_.find(key);
   if (inline_mapped_.end() == finder) {
-    Legion::RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
+    Legion::RegionRequirement req(root_region, READ_WRITE, EXCLUSIVE, root_region);
     req.add_field(field_id);
 
     auto mapper_id = context->get_mapper_id();
     // TODO: We need to pass the metadata about logical store
     Legion::InlineLauncher launcher(req, mapper_id);
-    pr = legion_runtime_->map_region(legion_context_, launcher);
-    inline_mapped_.insert({key, pr});
+    pr                  = legion_runtime_->map_region(legion_context_, launcher);
+    inline_mapped_[key] = pr;
   } else
     pr = finder->second;
-  return RegionField(rf.dim(), pr, field_id);
+  physical_region_refs_.add(pr);
+  return RegionField(rf->dim(), pr, field_id);
 }
 
 void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
 {
-  legion_runtime_->unmap_region(legion_context_, pr);
+  if (physical_region_refs_.remove(pr)) {
+    // The last user of this inline mapping was removed, so remove it from our cache and unmap.
+    std::vector<Legion::FieldID> fields;
+    pr.get_fields(fields);
+    assert(fields.size() == 1);
+    RegionFieldID key(pr.get_logical_region(), fields[0]);
+    auto finder = inline_mapped_.find(key);
+    assert(finder != inline_mapped_.end() && finder->second == pr);
+    inline_mapped_.erase(finder);
+    legion_runtime_->unmap_region(legion_context_, pr);
+  }
 }
+
+size_t Runtime::num_inline_mapped() const { return inline_mapped_.size(); }
 
 RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
 {

@@ -14,6 +14,11 @@
  *
  */
 
+#pragma once
+
+// Useful for IDEs
+#include "core/data/scalar.h"
+
 namespace legate {
 
 template <typename T>

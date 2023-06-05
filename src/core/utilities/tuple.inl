@@ -14,6 +14,11 @@
  *
  */
 
+#pragma once
+
+// Useful for IDEs
+#include "core/utilities/tuple.h"
+
 #include <numeric>
 #include <type_traits>
 #include <vector>

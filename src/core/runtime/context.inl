@@ -16,6 +16,7 @@
 
 #pragma once
 
+// Useful for IDEs
 #include "core/runtime/context.h"
 
 namespace legate {

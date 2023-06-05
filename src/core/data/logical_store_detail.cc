@@ -198,7 +198,7 @@ RegionField Storage::map(LibraryContext* context)
 #ifdef DEBUG_LEGATE
   assert(Kind::REGION_FIELD == kind_);
 #endif
-  return Runtime::get_runtime()->map_region_field(context, region_field_->get_root());
+  return Runtime::get_runtime()->map_region_field(context, get_region_field());
 }
 
 Restrictions Storage::compute_restrictions() const

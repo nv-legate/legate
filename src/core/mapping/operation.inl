@@ -14,6 +14,11 @@
  *
  */
 
+#pragma once
+
+// Useful for IDEs
+#include "core/mapping/operation.h"
+
 namespace legate::mapping {
 
 template <int32_t DIM>
