@@ -18,6 +18,7 @@
 #include <fstream>
 
 #include "core/mapping/mapping.h"
+#include "cunumeric.h"
 #include "legate.h"
 #include "task_io.h"
 
@@ -100,56 +101,15 @@ class IOArray : public Array {
     task->add_scalar_arg(legate::Scalar(std::vector<uint32_t>{tile_shape, tile_shape}));
     runtime->submit(std::move(task));
   }
+
+  static IOArray from_store(legate::LogicalStore store)
+  {
+    auto runtime = legate::Runtime::get_runtime();
+    auto context = runtime->find_library(task::legateio::library_name);
+    return IOArray(context, store);
+  }
 };
 
-legate::LogicalStore iota(legate::LibraryContext* context, uint32_t size)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, task::legateio::IOTA);
-  auto output  = runtime->create_store({size}, legate::int8(), true);
-  auto part    = task->declare_partition();
-  task->add_output(output, part);
-  runtime->submit(std::move(task));
-  return output;
-}
-
-legate::LogicalStore iota_2d(legate::LibraryContext* context, uint32_t size)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, task::legateio::IOTA_2D);
-  auto output  = runtime->create_store({size, size}, legate::int8(), true);
-  auto part    = task->declare_partition();
-  task->add_output(output, part);
-  runtime->submit(std::move(task));
-  return output;
-}
-
-void array_equal(legate::LibraryContext* context, IOArray c1, IOArray c2)
-{
-  int8_t bytearray = 1;
-  auto runtime     = legate::Runtime::get_runtime();
-  auto task_id =
-    c1.store().extents().size() == 1 ? task::legateio::EQUAL : task::legateio::EQUAL_2D;
-  auto task   = runtime->create_task(context, task_id);
-  auto output = runtime->create_store(legate::Scalar(legate::int8(), &bytearray));
-  auto redop  = c1.store().type().find_reduction_operator(legate::ReductionOpKind::MUL);
-
-  auto part1 = task->declare_partition();
-  auto part2 = task->declare_partition();
-  auto part3 = task->declare_partition();
-
-  task->add_input(c1.store(), part1);
-  task->add_input(c2.store(), part2);
-  task->add_reduction(output, redop, part3);
-  runtime->submit(std::move(task));
-
-  auto p_scalar       = output.get_physical_store(context);
-  auto acc            = p_scalar->read_accessor<int8_t, 1>();
-  int8_t output_value = static_cast<int8_t>(acc[{0}]);
-  EXPECT_EQ(output_value, 1);
-}
-
-// TODO: return struct from an interface supporting legate arrays
 IOArray read_file(legate::LibraryContext* context,
                   std::string filename,
                   std::unique_ptr<legate::Type> dtype)
@@ -166,7 +126,6 @@ IOArray read_file(legate::LibraryContext* context,
   return IOArray(context, output);
 }
 
-// TODO: return struct from an interface supporting legate arrays
 IOArray read_file_parallel(legate::LibraryContext* context,
                            std::string filename,
                            std::unique_ptr<legate::Type> dtype,
@@ -304,7 +263,7 @@ IOArray read_even_tiles(legate::LibraryContext* context, std::string path)
 
   // Unlike AutoTask, manually parallelized tasks don't update the "key"
   // partition for their outputs.
-  output.set_key_partition(output_partition.partition().get());
+  output.set_key_partition(runtime->get_machine(), output_partition.partition().get());
 
   return IOArray(context, output);
 }
@@ -316,11 +275,11 @@ TEST(Example, SingleFileIO)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(task::legateio::library_name);
 
-  int n                = 10;
+  uint32_t n           = 10;
   std::string filename = "test.dat";
 
-  auto c1_store = iota(context, n);
-  IOArray c1(context, c1_store);
+  auto src = cunumeric::arange(n).as_type(legate::int8());
+  auto c1  = IOArray::from_store(src.get_store());
 
   // Dump the IOArray to a file
   c1.to_file(filename);
@@ -331,17 +290,16 @@ TEST(Example, SingleFileIO)
 
   // Read the file into a IOArray
   IOArray c2 = read_file(context, filename, legate::int8());
-  c2.to_file(filename);
-  array_equal(context, c1, c2);
+  EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c2.store())));
 
   // Read the file into a IOArray with a fixed degree of parallelism
   IOArray c3 = read_file_parallel(context, filename, legate::int8(), 2);
-  array_equal(context, c1, c3);
+  EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c3.store())));
 
   // Read the file into a IOArray with the library-chosen degree of
   // parallelism
   IOArray c4 = read_file_parallel(context, filename, legate::int8());
-  array_equal(context, c1, c4);
+  EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c4.store())));
 }
 
 TEST(Example, EvenTilesIO)
@@ -355,8 +313,11 @@ TEST(Example, EvenTilesIO)
   uint32_t store_shape     = 8;
   uint32_t tile_shape      = 3;
 
-  auto c1_store = iota_2d(context, store_shape);
-  IOArray c1(context, c1_store);
+  // Use cuNumeric to generate a random array to dump to a dataset
+  auto src = cunumeric::random({store_shape, store_shape}).as_type(legate::int8());
+
+  // Construct an IOArray from the cuNumeric ndarray
+  auto c1 = IOArray::from_store(src.get_store());
 
   // Dump the IOArray to a dataset of even tiles
   c1.to_even_tiles(dataset_name, tile_shape);
@@ -365,8 +326,15 @@ TEST(Example, EvenTilesIO)
 
   // Read the dataset into an IOArray
   IOArray c2 = read_even_tiles(context, dataset_name);
-  // TODO: Ideally we collapse the shapes to be the same
-  array_equal(context, c1, c2);
+
+  // Convert the IOArray into a cuNumeric ndarray and perform a binary
+  // operation, just to confirm in the profile that the partition from the
+  // reader tasks is reused in the downstream tasks.
+  auto empty =
+    cunumeric::full({store_shape, store_shape}, cunumeric::Scalar(static_cast<int64_t>(0)));
+  auto c2_cunumeric =
+    cunumeric::add(cunumeric::as_array(c2.store()).as_type(legate::int64()), empty);
+  EXPECT_TRUE(cunumeric::array_equal(src, c2_cunumeric.as_type(legate::int8())));
 }
 
 TEST(Example, UnevenTilesIO)
@@ -379,8 +347,11 @@ TEST(Example, UnevenTilesIO)
   std::string dataset_name = "uneven_datafiles";
   uint32_t store_shape     = 8;
 
-  auto c1_store = iota_2d(context, store_shape);
-  IOArray c1(context, c1_store);
+  // Use cuNumeric to generate a random array to dump to a dataset
+  auto src = cunumeric::random({store_shape, store_shape}).as_type(legate::int8());
+
+  // Construct an IOArray from the cuNumeric ndarray
+  auto c1 = IOArray::from_store(src.get_store());
 
   // Dump the IOArray to a dataset of even tiles
   c1.to_uneven_tiles(dataset_name);
@@ -389,7 +360,7 @@ TEST(Example, UnevenTilesIO)
 
   // Read the dataset into an IOArray
   IOArray c2 = read_uneven_tiles(context, dataset_name);
-  array_equal(context, c1, c2);
+  EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c2.store())));
 }
 
 }  // namespace legateio

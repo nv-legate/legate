@@ -64,6 +64,9 @@ struct Partition {
 
  public:
   virtual std::string to_string() const = 0;
+
+ public:
+  virtual const Shape& color_shape() const = 0;
 };
 
 class NoPartition : public Partition {
@@ -90,6 +93,13 @@ class NoPartition : public Partition {
 
  public:
   std::string to_string() const override;
+
+ public:
+  const Shape& color_shape() const override
+  {
+    assert(false);
+    throw std::invalid_argument("NoPartition doesn't support color_shape");
+  }
 };
 
 class Tiling : public Partition {
@@ -126,7 +136,7 @@ class Tiling : public Partition {
 
  public:
   const Shape& tile_shape() const { return tile_shape_; }
-  const Shape& color_shape() const { return color_shape_; }
+  const Shape& color_shape() const override { return color_shape_; }
   const tuple<int64_t>& offsets() const { return offsets_; }
 
  public:
@@ -170,6 +180,9 @@ class Weighted : public Partition {
 
  public:
   std::string to_string() const override;
+
+ public:
+  const Shape& color_shape() const override { return color_shape_; }
 
  private:
   Legion::FutureMap weights_;

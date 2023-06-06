@@ -32,6 +32,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 find_package(legate_core REQUIRED)
+find_package(cunumeric REQUIRED)
 
 enable_testing()
 
@@ -41,7 +42,7 @@ file(GLOB io_SRC ${PROJECT_SOURCE_DIR}/io/*.cc)
 
 add_executable(cpp_tests ${main_SRC} ${hello_SRC} ${io_SRC})
 
-target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest)
+target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE cunumeric::cunumeric PRIVATE GTest::gtest)
 
 include(GoogleTest)
 gtest_discover_tests(cpp_tests)

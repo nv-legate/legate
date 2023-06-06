@@ -31,10 +31,6 @@ enum LegateIOOpCode {
   WRITE_EVEN_TILES   = 4,
   WRITE_FILE         = 5,
   WRITE_UNEVEN_TILES = 6,
-  IOTA               = 7,
-  IOTA_2D            = 8,
-  EQUAL              = 9,
-  EQUAL_2D           = 10,
 };
 
 static const char* library_name = "legateio";
@@ -69,26 +65,6 @@ struct WriteFileTask : public legate::LegateTask<WriteFileTask> {
 
 struct WriteUnevenTilesTask : public legate::LegateTask<WriteUnevenTilesTask> {
   static const int32_t TASK_ID = WRITE_UNEVEN_TILES;
-  static void cpu_variant(legate::TaskContext& context);
-};
-
-struct IotaTask : public legate::LegateTask<IotaTask> {
-  static const int32_t TASK_ID = IOTA;
-  static void cpu_variant(legate::TaskContext& context);
-};
-
-struct Iota2DTask : public legate::LegateTask<Iota2DTask> {
-  static const int32_t TASK_ID = IOTA_2D;
-  static void cpu_variant(legate::TaskContext& context);
-};
-
-struct EqualTask : public legate::LegateTask<EqualTask> {
-  static const int32_t TASK_ID = EQUAL;
-  static void cpu_variant(legate::TaskContext& context);
-};
-
-struct EqualTask2D : public legate::LegateTask<EqualTask2D> {
-  static const int32_t TASK_ID = EQUAL_2D;
   static void cpu_variant(legate::TaskContext& context);
 };
 

@@ -37,10 +37,6 @@ void register_tasks()
   WriteEvenTilesTask::register_variants(context);
   WriteFileTask::register_variants(context);
   WriteUnevenTilesTask::register_variants(context);
-  IotaTask::register_variants(context);
-  Iota2DTask::register_variants(context);
-  EqualTask::register_variants(context);
-  EqualTask2D::register_variants(context);
 }
 
 namespace utils {
@@ -364,100 +360,6 @@ struct header_write_fn {
   }
 
   utils::write_to_file(context, dirname, input);
-}
-
-/*static*/ void IotaTask::cpu_variant(legate::TaskContext& context)
-{
-  legate::Store& output        = context.outputs().at(0);
-  legate::Rect<1> output_shape = output.shape<1>();
-  auto out                     = output.write_accessor<int8_t, 1>();
-
-  logger.debug() << "Iota task [" << output_shape.lo << "," << output_shape.hi << "]";
-
-  // i is a global index for the complete array
-  for (size_t i = output_shape.lo; i <= output_shape.hi; ++i) { out[i] = i + 1; }
-}
-
-/*static*/ void Iota2DTask::cpu_variant(legate::TaskContext& context)
-{
-  legate::Store& output        = context.outputs().at(0);
-  legate::Rect<2> output_shape = output.shape<2>();
-  auto out                     = output.write_accessor<int8_t, 2>();
-
-  logger.debug() << "Iota 2d task [" << output_shape.lo << "," << output_shape.hi << "]";
-
-  // i is a global index for the complete array
-  for (auto i = output_shape.lo[0]; i <= output_shape.hi[0]; ++i) {
-    for (auto j = output_shape.lo[1]; i <= output_shape.hi[1]; ++i) {
-      out[i][j] = i * output_shape.hi[0] + j;
-    }
-  }
-}
-
-/*static*/ void EqualTask::cpu_variant(legate::TaskContext& context)
-{
-  legate::Store& input0 = context.inputs().at(0);
-  legate::Store& input1 = context.inputs().at(1);
-
-  legate::Rect<1> input0_shape = input0.shape<1>();
-  legate::Rect<1> input1_shape = input1.shape<1>();
-
-  auto in0 = input0.read_accessor<int8_t, 1>();
-  auto in1 = input1.read_accessor<int8_t, 1>();
-
-  logger.debug() << "Equal task in0 [" << input0_shape.lo << "," << input0_shape.hi << "], in1 ["
-                 << input1_shape.lo << "," << input1_shape.hi << "]";
-
-  using Reduce          = Legion::ProdReduction<uint8_t>;
-  legate::Store& output = context.reductions().at(0);
-  auto out              = output.reduce_accessor<Reduce, true, 1>();
-
-  if (input0_shape.lo != input1_shape.lo || input0_shape.hi != input1_shape.hi) {
-    logger.debug() << "Shape different";
-    out.reduce(0, false);
-    return;
-  }
-
-  for (size_t i = input0_shape.lo; i <= input0_shape.hi; ++i) {
-    if (in0[i] != in1[i]) {
-      logger.debug() << "Value different";
-      out.reduce(0, false);
-      return;
-    }
-  }
-  out.reduce(0, true);
-}
-
-/*static*/ void EqualTask2D::cpu_variant(legate::TaskContext& context)
-{
-  legate::Store& input0 = context.inputs().at(0);
-  legate::Store& input1 = context.inputs().at(1);
-
-  legate::Rect<2> input0_shape = input0.shape<2>();
-  legate::Rect<2> input1_shape = input1.shape<2>();
-
-  auto in0 = input0.read_accessor<int8_t, 2>();
-  auto in1 = input1.read_accessor<int8_t, 2>();
-
-  logger.debug() << "Equal task 2D in0 [" << input0_shape.lo[0] << "," << input0_shape.lo[1]
-                 << "] to [" << input0_shape.hi[0] << "," << input0_shape.hi[1] << "]";
-  logger.debug() << "Equal task 2D in1 [" << input1_shape.lo[0] << "," << input1_shape.lo[1]
-                 << "] to [" << input1_shape.hi[0] << "," << input1_shape.hi[1] << "]";
-
-  using Reduce          = Legion::ProdReduction<uint8_t>;
-  legate::Store& output = context.reductions().at(0);
-  auto out              = output.reduce_accessor<Reduce, true, 1>();
-
-  for (size_t i = input1_shape.lo[0]; i <= input1_shape.hi[0]; ++i) {
-    for (size_t j = input1_shape.lo[1]; j <= input1_shape.hi[1]; ++j) {
-      if (in0[i][j] != in1[i][j]) {
-        logger.debug() << "Value different";
-        out.reduce(0, false);
-        return;
-      }
-    }
-  }
-  out.reduce(0, true);
 }
 
 }  // namespace legateio

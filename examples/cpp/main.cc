@@ -15,18 +15,15 @@
  */
 
 #include <gtest/gtest.h>
+#include "cunumeric.h"
 #include "legate.h"
 
 class Environment : public ::testing::Environment {
  public:
   Environment(int argc, char** argv) : argc_(argc), argv_(argv) {}
 
-  void SetUp() override
-  {
-    legate::initialize(argc_, argv_);
-    EXPECT_EQ(legate::start(argc_, argv_), 0);
-  }
-  void TearDown() override { EXPECT_EQ(legate::wait_for_shutdown(), 0); }
+  void SetUp() override { EXPECT_EQ(legate::start(argc_, argv_), 0); }
+  void TearDown() override { EXPECT_EQ(legate::finish(), 0); }
 
  private:
   int argc_;

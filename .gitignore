@@ -37,3 +37,5 @@ _cmake_test_compile
 !cmake/versions.json
 legate.core.code-workspace
 *.prof
+examples/cpp/build
+tests/cpp/build
