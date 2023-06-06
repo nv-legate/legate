@@ -18,9 +18,9 @@
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #include "core/data/buffer.h"
-#include "core/runtime/communicator_manager.h"
-#include "core/runtime/launcher.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/launcher.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 #include "legate.h"
@@ -53,7 +53,7 @@ inline void check_nccl(ncclResult_t error, const char* file, int line)
   }
 }
 
-class Factory : public CommunicatorFactory {
+class Factory : public detail::CommunicatorFactory {
  public:
   Factory(const LibraryContext* core_context);
 
@@ -85,13 +85,13 @@ Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint3
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
 
   // Create a communicator ID
-  TaskLauncher init_nccl_id_launcher(
+  detail::TaskLauncher init_nccl_id_launcher(
     core_context_, machine, LEGATE_CORE_INIT_NCCL_ID_TASK_ID, LEGATE_GPU_VARIANT);
   init_nccl_id_launcher.set_side_effect(true);
   auto nccl_id = init_nccl_id_launcher.execute_single();
 
   // Then create the communicators on participating GPUs
-  TaskLauncher init_nccl_launcher(
+  detail::TaskLauncher init_nccl_launcher(
     core_context_, machine, LEGATE_CORE_INIT_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
   init_nccl_launcher.add_future(nccl_id);
   init_nccl_launcher.set_concurrent(true);
@@ -104,7 +104,7 @@ void Factory::finalize(const mapping::MachineDesc& machine,
 {
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
 
-  TaskLauncher launcher(
+  detail::TaskLauncher launcher(
     core_context_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
@@ -235,7 +235,7 @@ bool needs_barrier()
 
 void register_factory(const LibraryContext* context)
 {
-  auto* comm_mgr = Runtime::get_runtime()->communicator_manager();
+  auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
   comm_mgr->register_factory("nccl", std::make_unique<Factory>(context));
 }
 

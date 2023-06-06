@@ -31,17 +31,12 @@ class BufferBuilder;
 
 /**
  * @ingroup data
- * @brief A type-erased container for scalars and tuples of scalars.
+ * @brief A type-erased container for scalars
  *
  * A Scalar can be owned or shared, depending on whether it owns the backing allocation:
  * If a `Scalar` is shared, it does not own the allocation and any of its copies are also
  * shared. If a `Scalar` is owned, it owns the backing allocation and releases it upon
  * destruction. Any copy of an owned `Scalar` is owned as well.
- *
- * A `Scalar` that stores a tuple of scalars has an allocation big enough to contain both
- * the number of elements and the elements themselves. The number of elements should be
- * stored in the first four bytes of the allocation.
- *
  */
 class Scalar {
  public:
@@ -51,12 +46,13 @@ class Scalar {
 
   /**
    * @brief Creates a shared `Scalar` with an existing allocation. The caller is responsible
-   * for passing in a sufficiently big allocation.
+   * for passing in a sufficiently big allocation. When `copy` is true, the scalar copies the
+   * data stored in the allocation and becomes owned.
    *
    * @param type Type of the scalar(s)
    * @param data Allocation containing the data.
    */
-  Scalar(std::unique_ptr<Type> type, const void* data);
+  Scalar(std::unique_ptr<Type> type, const void* data, bool copy = false);
   ~Scalar();
 
  public:

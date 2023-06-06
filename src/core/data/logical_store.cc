@@ -16,12 +16,10 @@
 
 #include <numeric>
 
+#include "core/data/detail/logical_store.h"
 #include "core/data/logical_store.h"
-#include "core/data/logical_store_detail.h"
 #include "core/data/store.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/req_analyzer.h"
-#include "core/runtime/runtime.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"

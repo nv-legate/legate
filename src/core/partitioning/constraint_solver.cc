@@ -18,14 +18,16 @@
 
 #include "legion.h"
 
-#include "core/data/logical_store_detail.h"
+#include "core/data/detail/logical_store.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/runtime/operation.h"
 
 namespace legate {
-
 extern Legion::Logger log_legate;
+}  // namespace legate
+
+namespace legate::detail {
 
 namespace {
 
@@ -204,4 +206,4 @@ const std::vector<const Variable*>& ConstraintSolver::partition_symbols() const
 
 const std::vector<const Constraint*>& ConstraintSolver::constraints() const { return constraints_; }
 
-}  // namespace legate
+}  // namespace legate::detail

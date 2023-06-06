@@ -21,8 +21,7 @@
 #include "core/comm/comm_cpu.h"
 #include "env_defaults.h"
 
-#include "core/runtime/communicator_manager.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/communicator_manager.h"
 
 namespace legate::comm {
 

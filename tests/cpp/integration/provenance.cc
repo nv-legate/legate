@@ -16,13 +16,12 @@
 
 #include <gtest/gtest.h>
 
-#include "core/mapping/mapping.h"
+#include "core/runtime/detail/runtime.h"
 #include "legate.h"
 
 namespace provenance {
 
-static const char* library_name = "provenance";
-static legate::Logger logger(library_name);
+static const char* library_name = "test_provenance";
 
 enum TaskIDs {
   PROVENANCE = 0,
@@ -51,7 +50,7 @@ void test_manual_provenance(legate::LibraryContext* context)
 {
   auto runtime           = legate::Runtime::get_runtime();
   std::string provenance = "test_manual_provenance";
-  runtime->provenance_manager()->set_provenance(provenance);
+  runtime->impl()->provenance_manager()->set_provenance(provenance);
   // auto task
   auto task = runtime->create_task(context, PROVENANCE);
   task->add_scalar_arg(legate::Scalar(provenance));
@@ -62,8 +61,8 @@ void test_push_provenance(legate::LibraryContext* context)
 {
   auto runtime           = legate::Runtime::get_runtime();
   std::string provenance = "test_push_provenance";
-  runtime->provenance_manager()->push_provenance(provenance);
-  EXPECT_EQ(runtime->provenance_manager()->get_provenance(), provenance);
+  runtime->impl()->provenance_manager()->push_provenance(provenance);
+  EXPECT_EQ(runtime->impl()->provenance_manager()->get_provenance(), provenance);
   // auto task
   auto task = runtime->create_task(context, PROVENANCE);
   task->add_scalar_arg(legate::Scalar(provenance));
@@ -73,9 +72,9 @@ void test_push_provenance(legate::LibraryContext* context)
 void test_pop_provenance(legate::LibraryContext* context)
 {
   auto runtime = legate::Runtime::get_runtime();
-  runtime->provenance_manager()->clear_all();
-  runtime->provenance_manager()->push_provenance("some provenance for provenance task");
-  runtime->provenance_manager()->pop_provenance();
+  runtime->impl()->provenance_manager()->clear_all();
+  runtime->impl()->provenance_manager()->push_provenance("some provenance for provenance task");
+  runtime->impl()->provenance_manager()->pop_provenance();
   // auto task
   auto task              = runtime->create_task(context, PROVENANCE);
   std::string provenance = "";
@@ -86,17 +85,17 @@ void test_pop_provenance(legate::LibraryContext* context)
 void test_underflow(legate::LibraryContext* context)
 {
   auto runtime = legate::Runtime::get_runtime();
-  runtime->provenance_manager()->clear_all();
-  runtime->provenance_manager()->set_provenance("some provenance for provenance task");
-  EXPECT_THROW(runtime->provenance_manager()->pop_provenance(), std::runtime_error);
+  runtime->impl()->provenance_manager()->clear_all();
+  runtime->impl()->provenance_manager()->set_provenance("some provenance for provenance task");
+  EXPECT_THROW(runtime->impl()->provenance_manager()->pop_provenance(), std::runtime_error);
 }
 
 void test_clear_provenance(legate::LibraryContext* context)
 {
   auto runtime = legate::Runtime::get_runtime();
-  runtime->provenance_manager()->push_provenance("provenance for provenance task");
-  runtime->provenance_manager()->push_provenance("another provenance");
-  runtime->provenance_manager()->clear_all();
+  runtime->impl()->provenance_manager()->push_provenance("provenance for provenance task");
+  runtime->impl()->provenance_manager()->push_provenance("another provenance");
+  runtime->impl()->provenance_manager()->clear_all();
   // auto task
   auto task              = runtime->create_task(context, PROVENANCE);
   std::string provenance = "";
@@ -110,7 +109,7 @@ void test_provenance_tracker(legate::LibraryContext* context)
   auto runtime = legate::Runtime::get_runtime();
   // auto task
   auto task              = runtime->create_task(context, PROVENANCE);
-  std::string provenance = "provenance.cc:109";
+  std::string provenance = "provenance.cc:108";
   task->add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
@@ -122,7 +121,7 @@ void test_nested_provenance_tracker(legate::LibraryContext* context)
   // The provenance string used by test_provenance_tracker should be popped out at this point
   auto runtime           = legate::Runtime::get_runtime();
   auto task              = runtime->create_task(context, PROVENANCE);
-  std::string provenance = "provenance.cc:120";
+  std::string provenance = "provenance.cc:119";
   task->add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }

@@ -17,7 +17,7 @@
 #include "core/data/store.h"
 
 #include "core/data/buffer.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/machine.h"
 #include "legate_defines.h"
@@ -66,7 +66,7 @@ bool RegionField::valid() const
 
 Domain RegionField::domain() const { return dim_dispatch(dim_, get_domain_fn{}, pr_); }
 
-void RegionField::unmap() { Runtime::get_runtime()->unmap_physical_region(pr_); }
+void RegionField::unmap() { detail::Runtime::get_runtime()->unmap_physical_region(pr_); }
 
 UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
   : out_(out),

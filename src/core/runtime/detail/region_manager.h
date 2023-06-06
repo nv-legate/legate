@@ -18,7 +18,7 @@
 
 #include "core/utilities/typedefs.h"
 
-namespace legate {
+namespace legate::detail {
 
 class Runtime;
 
@@ -35,12 +35,15 @@ class RegionManager {
     bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
     Legion::FieldID get_next_field_id() { return next_field_id++; }
 
+    void destroy(Runtime* runtime, bool unordered);
+
     Legion::LogicalRegion region;
     Legion::FieldID next_field_id;
   };
 
  public:
   RegionManager(Runtime* runtime, const Domain& shape);
+  void destroy(bool unordered = false);
 
  private:
   const ManagerEntry& active_entry() const { return entries_.back(); }
@@ -58,4 +61,4 @@ class RegionManager {
   std::vector<ManagerEntry> entries_{};
 };
 
-}  // namespace legate
+}  // namespace legate::detail

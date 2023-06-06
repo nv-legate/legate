@@ -18,11 +18,12 @@
 
 #include <optional>
 
-#include "core/data/logical_region_field.h"
+#include "core/data/detail/logical_region_field.h"
 #include "core/data/slice.h"
+#include "core/data/store.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/req_analyzer.h"
 
 namespace legate::mapping {
 class MachineDesc;
@@ -30,6 +31,7 @@ class MachineDesc;
 
 namespace legate::detail {
 
+class Projection;
 class StoragePartition;
 class LogicalStorePartition;
 

@@ -19,7 +19,7 @@
 #include <tuple>
 #include "legate.h"
 
-namespace legate {
+namespace legate::detail {
 
 class Projection {
  public:
@@ -147,4 +147,4 @@ class OutputRequirementAnalyzer {
   std::map<Legion::FieldSpace, ReqInfo> req_infos_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

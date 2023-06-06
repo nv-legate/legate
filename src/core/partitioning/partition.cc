@@ -16,12 +16,11 @@
 
 #include <sstream>
 
-#include "core/data/logical_store_detail.h"
+#include "core/data/detail/logical_store.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/launcher.h"
-#include "core/runtime/partition_manager.h"
-#include "core/runtime/req_analyzer.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/partition_manager.h"
+#include "core/runtime/detail/req_analyzer.h"
+#include "core/runtime/detail/runtime.h"
 
 namespace legate {
 
@@ -126,7 +125,7 @@ bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
 {
   auto index_space     = region.get_index_space();
-  auto runtime         = Runtime::get_runtime();
+  auto runtime         = detail::Runtime::get_runtime();
   auto part_mgr        = runtime->partition_manager();
   auto index_partition = part_mgr->find_index_partition(index_space, *this);
   if (index_partition != Legion::IndexPartition::NO_PART)
@@ -224,7 +223,7 @@ bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
 
 Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool) const
 {
-  auto runtime  = Runtime::get_runtime();
+  auto runtime  = detail::Runtime::get_runtime();
   auto part_mgr = runtime->partition_manager();
 
   const auto& index_space = region.get_index_space();

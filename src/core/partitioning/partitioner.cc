@@ -15,20 +15,20 @@
  */
 
 #include "core/partitioning/partitioner.h"
+#include "core/data/detail/logical_store.h"
 #include "core/data/logical_store.h"
-#include "core/data/logical_store_detail.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/launcher.h"
+#include "core/runtime/detail/launcher.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/runtime/operation.h"
-#include "core/runtime/runtime.h"
 
-namespace legate {
+namespace legate::detail {
 
 ////////////////////////////////////////////////////
-// legate::LaunchDomainResolver
+// legate::detail::LaunchDomainResolver
 ////////////////////////////////////////////////////
 
 class LaunchDomainResolver {
@@ -93,7 +93,7 @@ std::unique_ptr<Domain> LaunchDomainResolver::resolve_launch_domain() const
 }
 
 ////////////////////////////////////////////////////
-// legate::Strategy
+// legate::detail::Strategy
 ////////////////////////////////////////////////////
 
 Strategy::Strategy() {}
@@ -200,7 +200,7 @@ void Strategy::compute_launch_domains()
 }
 
 ////////////////////////////////////////////////////
-// legate::Partitioner
+// legate::detail::Partitioner
 ////////////////////////////////////////////////////
 
 Partitioner::Partitioner(std::vector<Operation*>&& operations) : operations_(std::move(operations))
@@ -297,4 +297,4 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
   return filtered;
 }
 
-}  // namespace legate
+}  // namespace legate::detail

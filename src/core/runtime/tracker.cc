@@ -16,9 +16,9 @@
 
 #include "core/runtime/tracker.h"
 
-#include "core/runtime/machine_manager.h"
-#include "core/runtime/provenance_manager.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/machine_manager.h"
+#include "core/runtime/detail/provenance_manager.h"
+#include "core/runtime/detail/runtime.h"
 
 namespace legate {
 
@@ -28,19 +28,19 @@ namespace legate {
 
 ProvenanceTracker::ProvenanceTracker(const std::string& p)
 {
-  auto* runtime = Runtime::get_runtime();
+  auto* runtime = detail::Runtime::get_runtime();
   runtime->provenance_manager()->push_provenance(p);
 }
 
 ProvenanceTracker::~ProvenanceTracker()
 {
-  auto* runtime = Runtime::get_runtime();
+  auto* runtime = detail::Runtime::get_runtime();
   runtime->provenance_manager()->pop_provenance();
 }
 
 const std::string& ProvenanceTracker::get_current_provenance() const
 {
-  return Runtime::get_runtime()->provenance_manager()->get_provenance();
+  return detail::Runtime::get_runtime()->provenance_manager()->get_provenance();
 }
 
 ////////////////////////////////////////////
@@ -49,8 +49,8 @@ const std::string& ProvenanceTracker::get_current_provenance() const
 
 MachineTracker::MachineTracker(const mapping::MachineDesc& machine)
 {
-  auto* runtime = Runtime::get_runtime();
-  auto result   = machine & Runtime::get_runtime()->get_machine();
+  auto* runtime = detail::Runtime::get_runtime();
+  auto result   = machine & runtime->get_machine();
   if (result.count() == 0)
     throw std::runtime_error("Empty machines cannot be used for resource scoping");
   runtime->machine_manager()->push_machine(std::move(result));
@@ -58,13 +58,13 @@ MachineTracker::MachineTracker(const mapping::MachineDesc& machine)
 
 MachineTracker::~MachineTracker()
 {
-  auto* runtime = Runtime::get_runtime();
+  auto* runtime = detail::Runtime::get_runtime();
   runtime->machine_manager()->pop_machine();
 }
 
 const mapping::MachineDesc& MachineTracker::get_current_machine() const
 {
-  return Runtime::get_runtime()->get_machine();
+  return detail::Runtime::get_runtime()->get_machine();
 }
 
 }  // namespace legate

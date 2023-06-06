@@ -67,65 +67,6 @@ const void* ReturnValue::ptr() const
   return acc.ptr(0);
 }
 
-struct JoinReturnedException {
-  using LHS = ReturnedException;
-  using RHS = LHS;
-
-  static const ReturnedException identity;
-
-  template <bool EXCLUSIVE>
-  static void apply(LHS& lhs, RHS rhs)
-  {
-#ifdef DEBUG_LEGATE
-    assert(EXCLUSIVE);
-#endif
-    if (lhs.raised() || !rhs.raised()) return;
-    lhs = rhs;
-  }
-
-  template <bool EXCLUSIVE>
-  static void fold(RHS& rhs1, RHS rhs2)
-  {
-#ifdef DEBUG_LEGATE
-    assert(EXCLUSIVE);
-#endif
-    if (rhs1.raised() || !rhs2.raised()) return;
-    rhs1 = rhs2;
-  }
-};
-
-/*static*/ const ReturnedException JoinReturnedException::identity;
-
-static void pack_returned_exception(const ReturnedException& value, void*& ptr, size_t& size)
-{
-  auto new_size = value.legion_buffer_size();
-  if (new_size > size) {
-    size = new_size;
-    ptr  = realloc(ptr, new_size);
-  }
-  value.legion_serialize(ptr);
-}
-
-static void returned_exception_init(const Legion::ReductionOp* reduction_op,
-                                    void*& ptr,
-                                    size_t& size)
-{
-  pack_returned_exception(JoinReturnedException::identity, ptr, size);
-}
-
-static void returned_exception_fold(const Legion::ReductionOp* reduction_op,
-                                    void*& lhs_ptr,
-                                    size_t& lhs_size,
-                                    const void* rhs_ptr)
-
-{
-  ReturnedException lhs, rhs;
-  lhs.legion_deserialize(lhs_ptr);
-  rhs.legion_deserialize(rhs_ptr);
-  JoinReturnedException::fold<true>(lhs, rhs);
-  pack_returned_exception(lhs, lhs_ptr, lhs_size);
-}
-
 ReturnedException::ReturnedException(int32_t index, const std::string& error_message)
   : raised_(true), index_(index), error_message_(error_message)
 {
@@ -331,6 +272,69 @@ void ReturnValues::finalize(Legion::Context legion_context) const
   return_buffer.finalize(legion_context);
 }
 
+}  // namespace legate
+
+namespace legate::detail {
+
+struct JoinReturnedException {
+  using LHS = ReturnedException;
+  using RHS = LHS;
+
+  static const ReturnedException identity;
+
+  template <bool EXCLUSIVE>
+  static void apply(LHS& lhs, RHS rhs)
+  {
+#ifdef DEBUG_LEGATE
+    assert(EXCLUSIVE);
+#endif
+    if (lhs.raised() || !rhs.raised()) return;
+    lhs = rhs;
+  }
+
+  template <bool EXCLUSIVE>
+  static void fold(RHS& rhs1, RHS rhs2)
+  {
+#ifdef DEBUG_LEGATE
+    assert(EXCLUSIVE);
+#endif
+    if (rhs1.raised() || !rhs2.raised()) return;
+    rhs1 = rhs2;
+  }
+};
+
+/*static*/ const ReturnedException JoinReturnedException::identity;
+
+static void pack_returned_exception(const ReturnedException& value, void*& ptr, size_t& size)
+{
+  auto new_size = value.legion_buffer_size();
+  if (new_size > size) {
+    size = new_size;
+    ptr  = realloc(ptr, new_size);
+  }
+  value.legion_serialize(ptr);
+}
+
+static void returned_exception_init(const Legion::ReductionOp* reduction_op,
+                                    void*& ptr,
+                                    size_t& size)
+{
+  pack_returned_exception(JoinReturnedException::identity, ptr, size);
+}
+
+static void returned_exception_fold(const Legion::ReductionOp* reduction_op,
+                                    void*& lhs_ptr,
+                                    size_t& lhs_size,
+                                    const void* rhs_ptr)
+
+{
+  ReturnedException lhs, rhs;
+  lhs.legion_deserialize(lhs_ptr);
+  rhs.legion_deserialize(rhs_ptr);
+  JoinReturnedException::fold<true>(lhs, rhs);
+  pack_returned_exception(lhs, lhs_ptr, lhs_size);
+}
+
 void register_exception_reduction_op(Legion::Runtime* runtime, const LibraryContext* context)
 {
   auto redop_id = context->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
@@ -339,4 +343,4 @@ void register_exception_reduction_op(Legion::Runtime* runtime, const LibraryCont
     redop_id, redop, returned_exception_init, returned_exception_fold);
 }
 
-}  // namespace legate
+}  // namespace legate::detail

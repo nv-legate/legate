@@ -14,12 +14,12 @@
  *
  */
 
-#include "core/runtime/provenance_manager.h"
+#include "core/runtime/detail/provenance_manager.h"
 
 #include <assert.h>
 #include <stdexcept>
 
-namespace legate {
+namespace legate::detail {
 
 static const std::string BOTTOM = "";
 
@@ -65,4 +65,4 @@ void ProvenanceManager::clear_all()
   provenance_.push_back(BOTTOM);
 }
 
-}  // namespace legate
+}  // namespace legate::detail

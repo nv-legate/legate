@@ -14,13 +14,13 @@
  *
  */
 
-#include "core/runtime/field_manager.h"
+#include "core/runtime/detail/field_manager.h"
 
-#include "core/data/logical_region_field.h"
-#include "core/runtime/region_manager.h"
-#include "core/runtime/runtime.h"
+#include "core/data/detail/logical_region_field.h"
+#include "core/runtime/detail/region_manager.h"
+#include "core/runtime/detail/runtime.h"
 
-namespace legate {
+namespace legate::detail {
 
 FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
   : runtime_(runtime), shape_(shape), field_size_(field_size)
@@ -66,4 +66,4 @@ std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::Log
   });
 }
 
-}  // namespace legate
+}  // namespace legate::detail

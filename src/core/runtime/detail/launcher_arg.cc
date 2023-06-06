@@ -14,17 +14,17 @@
  *
  */
 
-#include "core/runtime/launcher_arg.h"
-#include "core/data/logical_region_field.h"
-#include "core/runtime/launcher.h"
-#include "core/runtime/req_analyzer.h"
+#include "core/runtime/detail/launcher_arg.h"
+#include "core/data/detail/logical_region_field.h"
+#include "core/runtime/detail/launcher.h"
+#include "core/runtime/detail/req_analyzer.h"
 
-namespace legate {
+namespace legate::detail {
 
 void UntypedScalarArg::pack(BufferBuilder& buffer) const { scalar_.pack(buffer); }
 
 RegionFieldArg::RegionFieldArg(RequirementAnalyzer* analyzer,
-                               detail::LogicalStore* store,
+                               LogicalStore* store,
                                Legion::FieldID field_id,
                                Legion::PrivilegeMode privilege,
                                const ProjectionInfo* proj_info)
@@ -48,7 +48,7 @@ void RegionFieldArg::pack(BufferBuilder& buffer) const
 }
 
 OutputRegionArg::OutputRegionArg(OutputRequirementAnalyzer* analyzer,
-                                 detail::LogicalStore* store,
+                                 LogicalStore* store,
                                  Legion::FieldSpace field_space,
                                  Legion::FieldID field_id)
   : analyzer_(analyzer), store_(store), field_space_(field_space), field_id_(field_id)
@@ -67,7 +67,7 @@ void OutputRegionArg::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(field_id_);
 }
 
-FutureStoreArg::FutureStoreArg(detail::LogicalStore* store,
+FutureStoreArg::FutureStoreArg(LogicalStore* store,
                                bool read_only,
                                bool has_storage,
                                Legion::ReductionOpID redop)
@@ -86,4 +86,4 @@ void FutureStoreArg::pack(BufferBuilder& buffer) const
   buffer.pack<size_t>(store_->get_storage()->extents().data());
 }
 
-}  // namespace legate
+}  // namespace legate::detail

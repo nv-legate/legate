@@ -14,11 +14,10 @@
  *
  */
 
-#include "core/runtime/req_analyzer.h"
-#include "core/runtime/launcher.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/req_analyzer.h"
+#include "core/runtime/detail/runtime.h"
 
-namespace legate {
+namespace legate::detail {
 
 /////////////
 // Projection
@@ -304,4 +303,4 @@ void OutputRequirementAnalyzer::populate_output_requirements(
   }
 }
 
-}  // namespace legate
+}  // namespace legate::detail

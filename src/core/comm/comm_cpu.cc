@@ -15,16 +15,16 @@
  */
 
 #include "core/comm/comm_cpu.h"
-#include "core/runtime/communicator_manager.h"
-#include "core/runtime/launcher.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/launcher.h"
+#include "core/runtime/detail/runtime.h"
 #include "legate.h"
 
 #include "core/comm/coll.h"
 
 namespace legate::comm::cpu {
 
-class Factory : public CommunicatorFactory {
+class Factory : public detail::CommunicatorFactory {
  public:
   Factory(const LibraryContext* core_context);
 
@@ -59,13 +59,14 @@ Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint3
   auto comm_id = Legion::Future::from_value<int32_t>(coll::collInitComm());
 
   // Find a mapping of all participants
-  TaskLauncher init_cpucoll_mapping_launcher(
+  detail::TaskLauncher init_cpucoll_mapping_launcher(
     core_context_, machine, LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID, tag);
   init_cpucoll_mapping_launcher.add_future(comm_id);
   auto mapping = init_cpucoll_mapping_launcher.execute(launch_domain);
 
   // Then create communicators on participating processors
-  TaskLauncher init_cpucoll_launcher(core_context_, machine, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, tag);
+  detail::TaskLauncher init_cpucoll_launcher(
+    core_context_, machine, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, tag);
   init_cpucoll_launcher.add_future(comm_id);
   init_cpucoll_launcher.set_concurrent(true);
 
@@ -82,7 +83,7 @@ void Factory::finalize(const mapping::MachineDesc& machine,
   auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
-  TaskLauncher launcher(core_context_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag);
+  detail::TaskLauncher launcher(core_context_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag);
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
@@ -222,7 +223,7 @@ void register_tasks(Legion::Machine machine,
 
 void register_factory(const LibraryContext* context)
 {
-  auto* comm_mgr = Runtime::get_runtime()->communicator_manager();
+  auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
   comm_mgr->register_factory("cpu", std::make_unique<Factory>(context));
 }
 

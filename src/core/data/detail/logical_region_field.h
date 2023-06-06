@@ -24,9 +24,11 @@
 #include "core/data/shape.h"
 
 namespace legate {
-
 class Partition;
 class Tiling;
+}  // namespace legate
+
+namespace legate::detail {
 
 class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionField> {
  public:
@@ -60,4 +62,4 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   std::shared_ptr<LogicalRegionField> parent_{nullptr};
 };
 
-}  // namespace legate
+}  // namespace legate::detail

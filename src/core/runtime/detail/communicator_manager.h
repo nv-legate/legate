@@ -22,8 +22,9 @@
 #include "core/mapping/machine.h"
 #include "core/utilities/typedefs.h"
 
-namespace legate {
+namespace legate::detail {
 
+// TODO: We need to expose this eventually so client libraries can register custom communicators
 class CommunicatorFactory {
  protected:
   CommunicatorFactory();
@@ -95,4 +96,4 @@ class CommunicatorManager {
   std::unordered_map<std::string, std::unique_ptr<CommunicatorFactory>> factories_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

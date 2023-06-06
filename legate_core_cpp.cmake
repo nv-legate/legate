@@ -193,13 +193,13 @@ list(APPEND legate_core_SOURCES
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
   src/core/data/allocator.cc
-  src/core/data/logical_region_field.cc
   src/core/data/logical_store.cc
-  src/core/data/logical_store_detail.cc
   src/core/data/scalar.cc
   src/core/data/shape.cc
   src/core/data/store.cc
   src/core/data/transform.cc
+  src/core/data/detail/logical_region_field.cc
+  src/core/data/detail/logical_store.cc
   src/core/mapping/base_mapper.cc
   src/core/mapping/core_mapper.cc
   src/core/mapping/default_mapper.cc
@@ -213,21 +213,22 @@ list(APPEND legate_core_SOURCES
   src/core/partitioning/partition.cc
   src/core/partitioning/partitioner.cc
   src/core/partitioning/restriction.cc
-  src/core/runtime/communicator_manager.cc
   src/core/runtime/context.cc
-  src/core/runtime/field_manager.cc
-  src/core/runtime/launcher_arg.cc
-  src/core/runtime/launcher.cc
-  src/core/runtime/machine_manager.cc
   src/core/runtime/operation.cc
-  src/core/runtime/partition_manager.cc
   src/core/runtime/projection.cc
-  src/core/runtime/provenance_manager.cc
-  src/core/runtime/region_manager.cc
-  src/core/runtime/req_analyzer.cc
   src/core/runtime/runtime.cc
   src/core/runtime/tracker.cc
   src/core/runtime/shard.cc
+  src/core/runtime/detail/communicator_manager.cc
+  src/core/runtime/detail/field_manager.cc
+  src/core/runtime/detail/launcher_arg.cc
+  src/core/runtime/detail/launcher.cc
+  src/core/runtime/detail/machine_manager.cc
+  src/core/runtime/detail/partition_manager.cc
+  src/core/runtime/detail/provenance_manager.cc
+  src/core/runtime/detail/region_manager.cc
+  src/core/runtime/detail/req_analyzer.cc
+  src/core/runtime/detail/runtime.cc
   src/core/task/registrar.cc
   src/core/task/return.cc
   src/core/task/task.cc
@@ -373,7 +374,6 @@ if (legate_core_BUILD_DOCS)
       src/core/runtime/tracker.h
       src/core/utilities/debug.h
       src/core/utilities/dispatch.h
-      src/core/utilities/multi_set.h
       # main page
       src/legate.h
     )
@@ -460,9 +460,7 @@ install(
 install(
   FILES src/core/runtime/context.h
         src/core/runtime/context.inl
-        src/core/runtime/machine_manager.h
         src/core/runtime/operation.h
-        src/core/runtime/provenance_manager.h
         src/core/runtime/resource.h
         src/core/runtime/projection.h
         src/core/runtime/runtime.h
@@ -493,8 +491,6 @@ install(
         src/core/utilities/deserializer.inl
         src/core/utilities/dispatch.h
         src/core/utilities/machine.h
-        src/core/utilities/multi_set.h
-        src/core/utilities/multi_set.inl
         src/core/utilities/nvtx_help.h
         src/core/utilities/span.h
         src/core/utilities/tuple.h

@@ -14,21 +14,19 @@
  *
  */
 
-#include "core/runtime/launcher.h"
-#include "core/data/logical_region_field.h"
-#include "core/data/logical_store.h"
-#include "core/data/logical_store_detail.h"
+#include "core/runtime/detail/launcher.h"
+#include "core/data/detail/logical_region_field.h"
+#include "core/data/detail/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/mapping/machine.h"
 #include "core/runtime/context.h"
-#include "core/runtime/launcher_arg.h"
-#include "core/runtime/partition_manager.h"
-#include "core/runtime/req_analyzer.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/launcher_arg.h"
+#include "core/runtime/detail/partition_manager.h"
+#include "core/runtime/detail/req_analyzer.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/utilities/buffer_builder.h"
-#include "core/utilities/dispatch.h"
 
-namespace legate {
+namespace legate::detail {
 
 TaskLauncher::TaskLauncher(const LibraryContext* library,
                            const mapping::MachineDesc& machine,
@@ -79,7 +77,7 @@ void TaskLauncher::add_scalar(const Scalar& scalar)
   scalars_.push_back(new UntypedScalarArg(scalar));
 }
 
-void TaskLauncher::add_input(detail::LogicalStore* store,
+void TaskLauncher::add_input(LogicalStore* store,
                              std::unique_ptr<Projection> proj,
                              Legion::MappingTagID tag,
                              Legion::RegionFlags flags)
@@ -87,7 +85,7 @@ void TaskLauncher::add_input(detail::LogicalStore* store,
   add_store(inputs_, store, std::move(proj), READ_ONLY, tag, flags);
 }
 
-void TaskLauncher::add_output(detail::LogicalStore* store,
+void TaskLauncher::add_output(LogicalStore* store,
                               std::unique_ptr<Projection> proj,
                               Legion::MappingTagID tag,
                               Legion::RegionFlags flags)
@@ -95,7 +93,7 @@ void TaskLauncher::add_output(detail::LogicalStore* store,
   add_store(outputs_, store, std::move(proj), WRITE_ONLY, tag, flags);
 }
 
-void TaskLauncher::add_reduction(detail::LogicalStore* store,
+void TaskLauncher::add_reduction(LogicalStore* store,
                                  std::unique_ptr<Projection> proj,
                                  bool read_write,
                                  Legion::MappingTagID tag,
@@ -107,7 +105,7 @@ void TaskLauncher::add_reduction(detail::LogicalStore* store,
     add_store(reductions_, store, std::move(proj), REDUCE, tag, flags);
 }
 
-void TaskLauncher::add_unbound_output(detail::LogicalStore* store,
+void TaskLauncher::add_unbound_output(LogicalStore* store,
                                       Legion::FieldSpace field_space,
                                       Legion::FieldID field_id)
 {
@@ -156,7 +154,7 @@ Legion::Future TaskLauncher::execute_single()
 }
 
 void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
-                             detail::LogicalStore* store,
+                             LogicalStore* store,
                              std::unique_ptr<Projection> proj,
                              Legion::PrivilegeMode privilege,
                              Legion::MappingTagID tag,
@@ -346,4 +344,4 @@ void TaskLauncher::post_process_unbound_stores(const Legion::FutureMap& result,
   }
 }
 
-}  // namespace legate
+}  // namespace legate::detail

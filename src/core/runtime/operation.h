@@ -33,18 +33,18 @@
  */
 
 namespace legate::detail {
+class CommunicatorFactory;
+class ConstraintSolver;
 class LogicalStore;
+class Strategy;
+class Runtime;
 }  // namespace legate::detail
 
 namespace legate {
 
-class CommunicatorFactory;
 class Constraint;
-class ConstraintSolver;
 class LibraryContext;
-class Runtime;
 class Scalar;
-class Strategy;
 
 /**
  * @ingroup op
@@ -59,9 +59,9 @@ class Operation {
   virtual ~Operation() {}
 
  public:
-  virtual void add_to_solver(ConstraintSolver& constraint_graph) const = 0;
-  virtual void launch(Strategy* strategy)                              = 0;
-  virtual std::string to_string() const                                = 0;
+  virtual void add_to_solver(detail::ConstraintSolver& constraint_graph) const = 0;
+  virtual void launch(detail::Strategy* strategy)                              = 0;
+  virtual std::string to_string() const                                        = 0;
 
  public:
   /**
@@ -160,7 +160,7 @@ class Task : public Operation {
   void add_communicator(const std::string& name);
 
  public:
-  virtual void launch(Strategy* strategy) override;
+  virtual void launch(detail::Strategy* strategy) override;
 
  private:
   void demux_scalar_stores(const Legion::Future& result);
@@ -178,7 +178,7 @@ class Task : public Operation {
   std::vector<uint32_t> unbound_outputs_{};
   std::vector<uint32_t> scalar_outputs_{};
   std::vector<uint32_t> scalar_reductions_{};
-  std::vector<CommunicatorFactory*> communicator_factories_{};
+  std::vector<detail::CommunicatorFactory*> communicator_factories_{};
 };
 
 /**
@@ -187,7 +187,7 @@ class Task : public Operation {
  */
 class AutoTask : public Task {
  public:
-  friend class Runtime;
+  friend class detail::Runtime;
   AutoTask(LibraryContext* library,
            int64_t task_id,
            uint64_t unique_id,
@@ -243,7 +243,7 @@ class AutoTask : public Task {
    * @param constraint A partitioning constraint
    */
   void add_constraint(std::unique_ptr<Constraint> constraint);
-  void add_to_solver(ConstraintSolver& constraint_graph) const override;
+  void add_to_solver(detail::ConstraintSolver& constraint_graph) const override;
 
  private:
   std::vector<std::unique_ptr<Constraint>> constraints_{};
@@ -255,7 +255,7 @@ class AutoTask : public Task {
  */
 class ManualTask : public Task {
  private:
-  friend class Runtime;
+  friend class detail::Runtime;
   ManualTask(LibraryContext* library,
              int64_t task_id,
              const Shape& launch_shape,
@@ -319,13 +319,13 @@ class ManualTask : public Task {
                  std::shared_ptr<Partition> partition);
 
  public:
-  void launch(Strategy* strategy) override;
+  void launch(detail::Strategy* strategy) override;
 
  public:
-  void add_to_solver(ConstraintSolver& constraint_graph) const override;
+  void add_to_solver(detail::ConstraintSolver& constraint_graph) const override;
 
  private:
-  std::unique_ptr<Strategy> strategy_;
+  std::unique_ptr<detail::Strategy> strategy_;
 };
 
 }  // namespace legate

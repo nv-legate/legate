@@ -23,16 +23,19 @@
 #include "core/data/shape.h"
 #include "core/partitioning/restriction.h"
 
+namespace legate {
+class LibraryContext;
+class Tiling;
+class Weighted;
+}  // namespace legate
+
 namespace legate::mapping {
 class MachineDesc;
 }  // namespace legate::mapping
 
-namespace legate {
+namespace legate::detail {
 
-class LibraryContext;
 class Runtime;
-class Tiling;
-class Weighted;
 
 class PartitionManager {
  public:
@@ -71,4 +74,4 @@ class PartitionManager {
   std::map<WeightedCacheKey, Legion::IndexPartition> weighted_cache_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

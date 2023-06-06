@@ -17,7 +17,7 @@
 #include <numeric>
 #include <unordered_map>
 
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/type/type_info.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"
@@ -69,12 +69,12 @@ Type::Type(Code c) : code(c) {}
 
 void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
 {
-  Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
+  detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
 }
 
 int32_t Type::find_reduction_operator(int32_t op_kind) const
 {
-  return Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
+  return detail::Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
 }
 
 int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
@@ -255,14 +255,14 @@ std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
                                        uint32_t N) noexcept(false)
 {
   return std::make_unique<FixedArrayType>(
-    Runtime::get_runtime()->get_type_uid(), std::move(element_type), N);
+    detail::Runtime::get_runtime()->get_type_uid(), std::move(element_type), N);
 }
 
 std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_types,
                                   bool align) noexcept(false)
 {
   return std::make_unique<StructType>(
-    Runtime::get_runtime()->get_type_uid(), std::move(field_types), align);
+    detail::Runtime::get_runtime()->get_type_uid(), std::move(field_types), align);
 }
 
 std::ostream& operator<<(std::ostream& ostream, const Type::Code& code)

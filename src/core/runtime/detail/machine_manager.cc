@@ -14,9 +14,9 @@
  *
  */
 
-#include "core/runtime/machine_manager.h"
+#include "core/runtime/detail/machine_manager.h"
 
-namespace legate {
+namespace legate::detail {
 
 ////////////////////////////////////////////
 // legate::MachineManager
@@ -45,4 +45,4 @@ void MachineManager::pop_machine()
   machines_.pop_back();
 }
 
-}  // namespace legate
+}  // namespace legate::detail

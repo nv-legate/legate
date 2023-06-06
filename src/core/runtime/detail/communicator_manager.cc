@@ -14,12 +14,12 @@
  *
  */
 
-#include "core/runtime/communicator_manager.h"
+#include "core/runtime/detail/communicator_manager.h"
 
-#include "core/runtime/machine_manager.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/machine_manager.h"
+#include "core/runtime/detail/runtime.h"
 
-namespace legate {
+namespace legate::detail {
 
 CommunicatorFactory::CommunicatorFactory() {}
 
@@ -45,6 +45,8 @@ void CommunicatorFactory::destroy()
 {
   for (auto& [key, communicator] : communicators_)
     finalize(key.get_machine(), key.desc, communicator);
+  communicators_.clear();
+  nd_aliases_.clear();
 }
 
 Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget& target,
@@ -82,6 +84,7 @@ void CommunicatorManager::register_factory(const std::string& name,
 void CommunicatorManager::destroy()
 {
   for (auto& [_, factory] : factories_) factory->destroy();
+  factories_.clear();
 }
 
-}  // namespace legate
+}  // namespace legate::detail

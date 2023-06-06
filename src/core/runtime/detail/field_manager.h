@@ -20,7 +20,7 @@
 
 #include "core/utilities/typedefs.h"
 
-namespace legate {
+namespace legate::detail {
 
 class LogicalRegionField;
 class Runtime;
@@ -44,4 +44,4 @@ class FieldManager {
   std::deque<FreeField> free_fields_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

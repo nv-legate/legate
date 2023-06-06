@@ -24,7 +24,7 @@
 #include "core/partitioning/restriction.h"
 #include "core/utilities/ordered_set.h"
 
-namespace legate {
+namespace legate::detail {
 
 struct ConstraintSolver {
  public:
@@ -58,4 +58,4 @@ struct ConstraintSolver {
   std::vector<std::unique_ptr<EquivClass>> equiv_classes_{};
 };
 
-}  // namespace legate
+}  // namespace legate::detail

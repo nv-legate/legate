@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 
+#include "core/runtime/detail/runtime.h"
 #include "legate.h"
 
 namespace inline_map {
@@ -50,9 +51,9 @@ void test_mapped_regions_leak(legate::Runtime* runtime, legate::LibraryContext* 
     auto l_store = runtime->create_store({5}, legate::int64());
     auto p_store = l_store.get_physical_store(context);
     EXPECT_FALSE(p_store->is_future());
-    EXPECT_EQ(runtime->num_inline_mapped(), 1);
+    EXPECT_EQ(runtime->impl()->num_inline_mapped(), 1);
   }
-  EXPECT_EQ(runtime->num_inline_mapped(), 0);
+  EXPECT_EQ(runtime->impl()->num_inline_mapped(), 0);
 }
 
 void test_inline_map_future(legate::Runtime* runtime, legate::LibraryContext* context)

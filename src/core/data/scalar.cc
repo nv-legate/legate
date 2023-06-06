@@ -28,8 +28,15 @@ Scalar::Scalar(Scalar&& other) : own_(other.own_), type_(std::move(other.type_))
   other.data_ = nullptr;
 }
 
-Scalar::Scalar(std::unique_ptr<Type> type, const void* data) : type_(std::move(type)), data_(data)
+Scalar::Scalar(std::unique_ptr<Type> type, const void* data, bool copy)
+  : type_(std::move(type)), own_(copy)
 {
+  if (copy) {
+    auto buffer = malloc(type_->size());
+    memcpy(buffer, data, type_->size());
+    data_ = buffer;
+  } else
+    data_ = data;
 }
 
 Scalar::Scalar(const std::string& string) : own_(true), type_(string_type())

@@ -25,11 +25,14 @@
 #include "legion.h"
 
 namespace legate {
+class Operation;
+class Partition;
+}  // namespace legate
+
+namespace legate::detail {
 
 class ConstraintSolver;
 class LogicalStore;
-class Operation;
-class Partition;
 class Partitioner;
 class Projection;
 
@@ -84,4 +87,4 @@ class Partitioner {
   std::vector<Operation*> operations_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

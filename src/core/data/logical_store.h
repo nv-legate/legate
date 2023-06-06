@@ -44,11 +44,9 @@ class LogicalStorePartition;
 
 namespace legate {
 
-class BufferBuilder;
 class LibraryContext;
 class LogicalStorePartition;
 class Partition;
-class Projection;
 class Runtime;
 class Store;
 

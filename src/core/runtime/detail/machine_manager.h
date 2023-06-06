@@ -16,30 +16,25 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include "core/mapping/machine.h"
 
-namespace legate {
+namespace legate::mapping {
+class MachineDesc;
+}  // namespace legate::mapping
 
-class ProvenanceManager {
+namespace legate::detail {
+
+class MachineManager {
  public:
-  ProvenanceManager();
+  const mapping::MachineDesc& get_machine() const;
 
- public:
-  const std::string& get_provenance();
+  void push_machine(const mapping::MachineDesc& machine);
+  void push_machine(mapping::MachineDesc&& machine);
 
-  void set_provenance(const std::string& p);
-
-  void reset_provenance();
-
-  void push_provenance(const std::string& p);
-
-  void pop_provenance();
-
-  void clear_all();
+  void pop_machine();
 
  private:
-  std::vector<std::string> provenance_;
+  std::vector<mapping::MachineDesc> machines_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

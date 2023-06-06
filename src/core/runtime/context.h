@@ -26,7 +26,6 @@
 #include "core/comm/communicator.h"
 #include "core/mapping/machine.h"
 #include "core/runtime/resource.h"
-#include "core/runtime/runtime.h"
 #include "core/task/return.h"
 #include "core/task/task_info.h"
 #include "core/utilities/typedefs.h"
@@ -40,10 +39,16 @@ namespace legate::mapping {
 class Mapper;
 }  // namespace legate::mapping
 
+namespace legate::detail {
+class Runtime;
+}  // namespace legate::detail
+
 namespace legate {
 
 class Store;
 class Scalar;
+
+extern Legion::Logger log_legate;
 
 class InvalidTaskIdException : public std::exception {
  public:
@@ -64,7 +69,7 @@ class InvalidTaskIdException : public std::exception {
  */
 class LibraryContext {
  private:
-  friend class Runtime;
+  friend class detail::Runtime;
   LibraryContext(const std::string& library_name,
                  const ResourceConfig& config,
                  std::unique_ptr<mapping::Mapper> mapper);
@@ -173,6 +178,10 @@ class LibraryContext {
  public:
   void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
   const TaskInfo* find_task(int64_t local_task_id) const;
+
+ private:
+  void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
+                        Legion::UntypedBuffer buffer);
 
  private:
   Legion::Runtime* runtime_;

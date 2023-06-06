@@ -19,17 +19,18 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "core/data/logical_store_detail.h"
+#include "core/data/detail/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
-#include "core/runtime/communicator_manager.h"
 #include "core/runtime/context.h"
-#include "core/runtime/launcher.h"
-#include "core/runtime/req_analyzer.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/launcher.h"
+#include "core/runtime/detail/provenance_manager.h"
+#include "core/runtime/detail/req_analyzer.h"
+#include "core/runtime/detail/runtime.h"
 
 namespace legate {
 
@@ -41,7 +42,7 @@ Operation::Operation(LibraryContext* library, uint64_t unique_id, mapping::Machi
   : library_(library),
     unique_id_(unique_id),
     machine_(std::move(machine)),
-    provenance_(Runtime::get_runtime()->provenance_manager()->get_provenance())
+    provenance_(detail::Runtime::get_runtime()->provenance_manager()->get_provenance())
 {
 }
 
@@ -85,14 +86,14 @@ void Task::throws_exception(bool can_throw_exception)
 
 void Task::add_communicator(const std::string& name)
 {
-  auto* comm_mgr = Runtime::get_runtime()->communicator_manager();
+  auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
   communicator_factories_.push_back(comm_mgr->find_factory(name));
 }
 
-void Task::launch(Strategy* p_strategy)
+void Task::launch(detail::Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
-  TaskLauncher launcher(library_, machine_, provenance_, task_id_);
+  detail::TaskLauncher launcher(library_, machine_, provenance_, task_id_);
   const auto* launch_domain = strategy.launch_domain(this);
 
   // Add input stores
@@ -126,7 +127,7 @@ void Task::launch(Strategy* p_strategy)
   }
 
   // Add unbound output stores
-  auto* runtime = Runtime::get_runtime();
+  auto* runtime = detail::Runtime::get_runtime();
   for (auto& [store, var] : outputs_) {
     if (!store->unbound()) continue;
     auto field_space = strategy.find_field_space(var);
@@ -181,7 +182,7 @@ void Task::demux_scalar_stores(const Legion::Future& result)
       auto [store, _] = reductions_[scalar_reductions_.front()];
       store->set_future(result);
     } else if (can_throw_exception_) {
-      auto* runtime = Runtime::get_runtime();
+      auto* runtime = detail::Runtime::get_runtime();
       runtime->record_pending_exception(result);
     }
 #ifdef DEBUG_LEGATE
@@ -190,7 +191,7 @@ void Task::demux_scalar_stores(const Legion::Future& result)
     }
 #endif
   } else {
-    auto* runtime = Runtime::get_runtime();
+    auto* runtime = detail::Runtime::get_runtime();
     uint32_t idx  = num_unbound_outs;
     for (const auto& out_idx : scalar_outputs_) {
       auto [store, _] = outputs_[out_idx];
@@ -216,14 +217,14 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   auto total = num_scalar_reds + num_unbound_outs + static_cast<size_t>(can_throw_exception_);
   if (0 == total) return;
 
-  auto* runtime = Runtime::get_runtime();
+  auto* runtime = detail::Runtime::get_runtime();
   if (1 == total) {
     if (1 == num_scalar_reds) {
       auto red_idx    = scalar_reductions_.front();
       auto [store, _] = reductions_[red_idx];
       store->set_future(runtime->reduce_future_map(result, reduction_ops_[red_idx]));
     } else if (can_throw_exception_) {
-      auto* runtime = Runtime::get_runtime();
+      auto* runtime = detail::Runtime::get_runtime();
       runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
     }
 #ifdef DEBUG_LEGATE
@@ -302,7 +303,7 @@ void AutoTask::add_constraint(std::unique_ptr<Constraint> constraint)
   constraints_.push_back(std::move(constraint));
 }
 
-void AutoTask::add_to_solver(ConstraintSolver& solver) const
+void AutoTask::add_to_solver(detail::ConstraintSolver& solver) const
 {
   for (auto& constraint : constraints_) solver.add_constraint(constraint.get());
   for (auto& [_, symb] : outputs_) solver.add_partition_symbol(symb);
@@ -321,7 +322,8 @@ ManualTask::ManualTask(LibraryContext* library,
                        const Shape& launch_shape,
                        uint64_t unique_id,
                        mapping::MachineDesc&& machine)
-  : Task(library, task_id, unique_id, std::move(machine)), strategy_(std::make_unique<Strategy>())
+  : Task(library, task_id, unique_id, std::move(machine)),
+    strategy_(std::make_unique<detail::Strategy>())
 {
   strategy_->set_launch_shape(this, launch_shape);
 }
@@ -376,14 +378,14 @@ void ManualTask::add_store(std::vector<StoreArg>& store_args,
   store_args.push_back(StoreArg(store_impl.get(), partition_symbol));
   all_stores_.insert(std::move(store_impl));
   if (store.unbound()) {
-    auto field_space = Runtime::get_runtime()->create_field_space();
+    auto field_space = detail::Runtime::get_runtime()->create_field_space();
     strategy_->insert(partition_symbol, std::move(partition), field_space);
   } else
     strategy_->insert(partition_symbol, std::move(partition));
 }
 
-void ManualTask::launch(Strategy*) { Task::launch(strategy_.get()); }
+void ManualTask::launch(detail::Strategy*) { Task::launch(strategy_.get()); }
 
-void ManualTask::add_to_solver(ConstraintSolver& constraint_graph) const {}
+void ManualTask::add_to_solver(detail::ConstraintSolver& constraint_graph) const {}
 
 }  // namespace legate

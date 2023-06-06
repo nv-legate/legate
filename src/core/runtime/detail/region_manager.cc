@@ -14,14 +14,24 @@
  *
  */
 
-#include "core/runtime/region_manager.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/region_manager.h"
+#include "core/runtime/detail/runtime.h"
 
-namespace legate {
+namespace legate::detail {
+
+void RegionManager::ManagerEntry::destroy(Runtime* runtime, bool unordered)
+{
+  runtime->destroy_region(region, unordered);
+}
 
 RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
   : runtime_(runtime), shape_(shape)
 {
+}
+
+void RegionManager::destroy(bool unordered)
+{
+  for (auto& entry : entries_) entry.destroy(runtime_, unordered);
 }
 
 void RegionManager::push_entry()
@@ -47,4 +57,4 @@ void RegionManager::import_region(const Legion::LogicalRegion& region)
   entries_.emplace_back(region);
 }
 
-}  // namespace legate
+}  // namespace legate::detail

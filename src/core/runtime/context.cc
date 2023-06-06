@@ -171,6 +171,12 @@ const TaskInfo* LibraryContext::find_task(int64_t local_task_id) const
   return tasks_.end() == finder ? nullptr : finder->second.get();
 }
 
+void LibraryContext::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
+                                      Legion::UntypedBuffer buffer)
+{
+  Legion::Runtime::perform_registration_callback(callback, buffer, true /*global*/);
+}
+
 TaskContext::TaskContext(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& regions,
                          Legion::Context context,

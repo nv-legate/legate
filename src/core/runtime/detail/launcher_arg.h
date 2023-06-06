@@ -16,11 +16,11 @@
 
 #pragma once
 
-#include "core/data/logical_store_detail.h"
+#include "core/data/detail/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/utilities/buffer_builder.h"
 
-namespace legate {
+namespace legate::detail {
 
 class OutputRequirementAnalyzer;
 class ProjectionInfo;
@@ -63,7 +63,7 @@ struct UntypedScalarArg : public ArgWrapper {
 struct RegionFieldArg : public ArgWrapper {
  public:
   RegionFieldArg(RequirementAnalyzer* analyzer,
-                 detail::LogicalStore* store,
+                 LogicalStore* store,
                  Legion::FieldID field_id,
                  Legion::PrivilegeMode privilege,
                  const ProjectionInfo* proj_info);
@@ -76,7 +76,7 @@ struct RegionFieldArg : public ArgWrapper {
 
  private:
   RequirementAnalyzer* analyzer_;
-  detail::LogicalStore* store_;
+  LogicalStore* store_;
   Legion::LogicalRegion region_;
   Legion::FieldID field_id_;
   Legion::PrivilegeMode privilege_;
@@ -86,7 +86,7 @@ struct RegionFieldArg : public ArgWrapper {
 struct OutputRegionArg : public ArgWrapper {
  public:
   OutputRegionArg(OutputRequirementAnalyzer* analyzer,
-                  detail::LogicalStore* store,
+                  LogicalStore* store,
                   Legion::FieldSpace field_space,
                   Legion::FieldID field_id);
 
@@ -97,14 +97,14 @@ struct OutputRegionArg : public ArgWrapper {
   virtual ~OutputRegionArg() {}
 
  public:
-  detail::LogicalStore* store() const { return store_; }
+  LogicalStore* store() const { return store_; }
   const Legion::FieldSpace& field_space() const { return field_space_; }
   Legion::FieldID field_id() const { return field_id_; }
   uint32_t requirement_index() const { return requirement_index_; }
 
  private:
   OutputRequirementAnalyzer* analyzer_;
-  detail::LogicalStore* store_;
+  LogicalStore* store_;
   Legion::FieldSpace field_space_;
   Legion::FieldID field_id_;
   mutable uint32_t requirement_index_{-1U};
@@ -112,7 +112,7 @@ struct OutputRegionArg : public ArgWrapper {
 
 struct FutureStoreArg : public ArgWrapper {
  public:
-  FutureStoreArg(detail::LogicalStore* store,
+  FutureStoreArg(LogicalStore* store,
                  bool read_only,
                  bool has_storage,
                  Legion::ReductionOpID redop);
@@ -124,10 +124,10 @@ struct FutureStoreArg : public ArgWrapper {
   virtual void pack(BufferBuilder& buffer) const override;
 
  private:
-  detail::LogicalStore* store_;
+  LogicalStore* store_;
   bool read_only_;
   bool has_storage_;
   Legion::ReductionOpID redop_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

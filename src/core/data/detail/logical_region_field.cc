@@ -14,11 +14,11 @@
  *
  */
 
-#include "core/data/logical_region_field.h"
+#include "core/data/detail/logical_region_field.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/runtime.h"
 
-namespace legate {
+namespace legate::detail {
 
 LogicalRegionField::LogicalRegionField(const Legion::LogicalRegion& lr,
                                        Legion::FieldID fid,
@@ -55,4 +55,4 @@ Legion::LogicalPartition LogicalRegionField::get_legion_partition(const Partitio
   return partition->construct(lr_, complete);
 }
 
-}  // namespace legate
+}  // namespace legate::detail

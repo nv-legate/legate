@@ -31,8 +31,6 @@ class Storage;
 
 namespace legate {
 
-class Projection;
-
 struct Partition {
  public:
   enum class Kind : int32_t {

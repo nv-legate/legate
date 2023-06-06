@@ -14,15 +14,15 @@
  *
  */
 
-#include "core/runtime/partition_manager.h"
+#include "core/runtime/detail/partition_manager.h"
 
 #include "core/legate_c.h"
 #include "core/mapping/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/context.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/runtime.h"
 
-namespace legate {
+namespace legate::detail {
 
 PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* context)
 {
@@ -249,4 +249,4 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
   weighted_cache_[std::make_pair(index_space, weighted)] = index_partition;
 }
 
-}  // namespace legate
+}  // namespace legate::detail

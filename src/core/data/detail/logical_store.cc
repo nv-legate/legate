@@ -14,11 +14,11 @@
  *
  */
 
-#include "core/data/logical_store_detail.h"
+#include "core/data/detail/logical_store.h"
 
 #include "core/mapping/machine.h"
-#include "core/runtime/partition_manager.h"
-#include "core/runtime/req_analyzer.h"
+#include "core/runtime/detail/partition_manager.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"

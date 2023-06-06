@@ -22,21 +22,20 @@
 
 #include "core/mapping/machine.h"
 
-namespace legate::detail {
-class LogicalStore;
-}  // namespace legate::detail
-
 namespace legate {
-
-class ArgWrapper;
 class BufferBuilder;
 class LibraryContext;
+class Scalar;
+}  // namespace legate
+
+namespace legate::detail {
+
+class ArgWrapper;
 class LogicalStore;
 class Projection;
 class OutputRegionArg;
 class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
-class Scalar;
 
 class TaskLauncher {
  public:
@@ -60,20 +59,20 @@ class TaskLauncher {
 
  public:
   void add_scalar(const Scalar& scalar);
-  void add_input(detail::LogicalStore* store,
+  void add_input(LogicalStore* store,
                  std::unique_ptr<Projection> proj,
                  Legion::MappingTagID tag  = 0,
                  Legion::RegionFlags flags = LEGION_NO_FLAG);
-  void add_output(detail::LogicalStore* store,
+  void add_output(LogicalStore* store,
                   std::unique_ptr<Projection> proj,
                   Legion::MappingTagID tag  = 0,
                   Legion::RegionFlags flags = LEGION_NO_FLAG);
-  void add_reduction(detail::LogicalStore* store,
+  void add_reduction(LogicalStore* store,
                      std::unique_ptr<Projection> proj,
                      bool read_write           = false,
                      Legion::MappingTagID tag  = 0,
                      Legion::RegionFlags flags = LEGION_NO_FLAG);
-  void add_unbound_output(detail::LogicalStore* store,
+  void add_unbound_output(LogicalStore* store,
                           Legion::FieldSpace field_space,
                           Legion::FieldID field_id);
 
@@ -90,7 +89,7 @@ class TaskLauncher {
 
  private:
   void add_store(std::vector<ArgWrapper*>& args,
-                 detail::LogicalStore* store,
+                 LogicalStore* store,
                  std::unique_ptr<Projection> proj,
                  Legion::PrivilegeMode privilege,
                  Legion::MappingTagID tag,
@@ -141,4 +140,4 @@ class TaskLauncher {
   std::vector<Legion::OutputRequirement> output_requirements_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail
