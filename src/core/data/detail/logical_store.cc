@@ -612,7 +612,7 @@ bool LogicalStore::has_key_partition(const mapping::MachineDesc& machine,
       key_partition_->satisfies_restrictions(restrictions))
     return true;
   else
-    return transform_->is_convertible() &
+    return transform_->is_convertible() &&
            storage_->find_key_partition(machine, transform_->invert(restrictions)) != nullptr;
 }
 
