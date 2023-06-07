@@ -66,6 +66,10 @@ target_link_libraries(cpp_tests PRIVATE NCCL::NCCL)
 endif()
 
 include(GoogleTest)
-gtest_discover_tests(cpp_tests)
+gtest_discover_tests(cpp_tests DISCOVERY_MODE PRE_TEST WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+include(CPack)
+include(GNUInstallDirs)
 
 install(TARGETS cpp_tests DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/cmake-install")
+install( TARGETS cpp_tests DESTINATION ${CMAKE_INSTALL_BINDIR})

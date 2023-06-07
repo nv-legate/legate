@@ -1,0 +1,63 @@
+image:
+  name: "rapidsai/devcontainers:23.06-cpp-cuda11.8-mambaforge-ubuntu22.04"
+
+stages:
+    - build
+
+Build:LegateCore:
+  stage: build
+
+  tags:
+    - cpu_only
+    - gpu/disabled
+
+  variables:
+    # Set the following two vars to `nthreads - 1`
+    JOBS: 1
+    CMAKE_BUILD_PARALLEL_LEVEL: 1
+    PYTHONDONTWRITEBYTECODE: 1
+    DEFAULT_CONDA_ENV: legate
+    # Add these if we want to speed up builds with sccache
+    # SCCACHE_REGION: us-east-2
+    # SCCACHE_BUCKET: rapids-sccache-devs
+    # SCCACHE_S3_KEY_PREFIX: legate-cunumeric-dev
+    # VAULT_HOST: ${{ secrets.PERSONAL_ACCESS_TOKEN && 'https://vault.ops.k8s.rapids.ai' || '' }}
+    # GH_TOKEN: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+    # GITHUB_TOKEN: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+
+  before_script:
+    - cp -R $CI_PROJECT_DIR ~coder/legate
+    - mkdir -p ~coder/.local
+    - cp -R $CI_PROJECT_DIR/continuous_integration/home/coder/.local/bin  ~coder/.local/.
+    - cp -ar $CI_PROJECT_DIR/continuous_integration/home/coder/.gitconfig /home/coder/;
+    - chown -R coder:coder /home/coder/
+    - mkdir -p /tmp/out;
+    - chown -R coder:coder /tmp/out
+
+  script:
+    # Create conda env
+    - su coder -c 'cd ~/; exec entrypoint make-conda-env'
+
+    # Build legate.core C++ library
+    - su coder -c 'cd ~/; exec entrypoint build-legate-cpp'
+
+    # Build legate.core Python Wheel
+    - su coder -c 'cd ~/; exec entrypoint build-legate-wheel'
+
+    # Build legate.core Conda Package
+    - su coder -c 'cd ~/; exec entrypoint build-legate-conda'
+
+    # Build legate.core C++ test
+    - su coder -c 'cd ~/; exec entrypoint build-cpp-test'
+
+  after_script:
+    # Copy the artifacts
+    - mkdir -p $CI_PROJECT_DIR/artifacts
+    - cp /tmp/out/* $CI_PROJECT_DIR/artifacts/
+
+  artifacts:
+    name: "$CI_COMMIT_REF_NAME"
+    paths:
+      - artifacts
+    exclude:
+      - artifacts/env*.yaml

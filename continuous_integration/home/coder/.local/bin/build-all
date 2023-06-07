@@ -12,6 +12,7 @@ build_all() {
     build-legate-cpp;
     build-legate-wheel;
     build-legate-conda;
+    build-cpp-test;
 }
 
 (build_all "$@");

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+build_cpp_tests() {
+    set -ex;
+
+    conda deactivate 
+
+    cd ~/legate/tests/cpp
+
+    rm -rf build
+    cmake -B build -S . -D legate_core_ROOT=../../build -D CMAKE_BUILD_TYPE=Debug
+    cmake --build build -v -j 4 
+
+    (
+    cd ~/legate/tests/cpp/build;
+    cpack -G TGZ;
+    cp cpp_tests*.tar.gz /tmp/out/;
+    );
+
+    { set +x; } 2>/dev/null;
+}
+
+build_cpp_tests "$@";
