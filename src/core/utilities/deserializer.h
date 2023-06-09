@@ -62,6 +62,12 @@ class BaseDeserializer {
     values.reserve(size);
     for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(unpack<T>());
   }
+  void _unpack(std::vector<Scalar>& values)
+  {
+    auto size = unpack<uint32_t>();
+    values.reserve(size);
+    for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(_unpack_scalar());
+  }
   template <typename T1, typename T2>
   void _unpack(std::pair<T1, T2>& values)
   {
@@ -70,7 +76,7 @@ class BaseDeserializer {
   }
 
  public:
-  void _unpack(Scalar& value);
+  Scalar _unpack_scalar();
   void _unpack(mapping::TaskTarget& value);
   void _unpack(mapping::ProcessorRange& value);
   void _unpack(mapping::MachineDesc& value);

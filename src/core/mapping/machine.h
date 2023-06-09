@@ -234,19 +234,21 @@ struct MachineDesc {
    * @param from Starting index
    * @param to End index
    * @param targets Processor type to slice
+   * @param keep_others Optional flag to keep unsliced ranges in the returned machine descriptor
    *
    * @return Machine descriptor with the chosen procssor range sliced
    */
-  MachineDesc slice(uint32_t from, uint32_t to, TaskTarget target) const;
+  MachineDesc slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others = false) const;
   /**
    * @brief Slices the processor range for the preferred processor type of this machine descriptor
    *
    * @param from Starting index
    * @param to End index
+   * @param keep_others Optional flag to keep unsliced ranges in the returned machine descriptor
    *
    * @return Machine descriptor with the preferred processor range sliced
    */
-  MachineDesc slice(uint32_t from, uint32_t to) const;
+  MachineDesc slice(uint32_t from, uint32_t to, bool keep_others = false) const;
 
   /**
    * @brief Selects the processor range for a given processor type and constructs a machine

@@ -232,14 +232,22 @@ MachineDesc MachineDesc::only(const std::vector<TaskTarget>& targets) const
   return MachineDesc(new_processor_ranges);
 }
 
-MachineDesc MachineDesc::slice(uint32_t from, uint32_t to, TaskTarget target) const
+MachineDesc MachineDesc::slice(uint32_t from,
+                               uint32_t to,
+                               TaskTarget target,
+                               bool keep_others) const
 {
-  return MachineDesc({{target, processor_range(target).slice(from, to)}});
+  if (keep_others) {
+    std::map<TaskTarget, ProcessorRange> new_ranges(processor_ranges);
+    new_ranges[target] = processor_range(target).slice(from, to);
+    return MachineDesc(std::move(new_ranges));
+  } else
+    return MachineDesc({{target, processor_range(target).slice(from, to)}});
 }
 
-MachineDesc MachineDesc::slice(uint32_t from, uint32_t to) const
+MachineDesc MachineDesc::slice(uint32_t from, uint32_t to, bool keep_others) const
 {
-  return slice(from, to, preferred_target);
+  return slice(from, to, preferred_target, keep_others);
 }
 
 MachineDesc MachineDesc::operator[](TaskTarget target) const { return only(target); }

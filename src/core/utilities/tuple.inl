@@ -69,6 +69,12 @@ bool tuple<T>::operator==(const tuple<T>& other) const
 }
 
 template <typename T>
+bool tuple<T>::operator!=(const tuple<T>& other) const
+{
+  return data_ != other.data_;
+}
+
+template <typename T>
 bool tuple<T>::operator<(const tuple<T>& other) const
 {
   return data_ < other.data_;

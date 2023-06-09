@@ -16,59 +16,14 @@
 
 #pragma once
 
-#include <tuple>
-#include "legate.h"
+#include "core/runtime/detail/projection.h"
+#include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
 
-class Projection {
- public:
-  Projection() {}
-  Projection(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
-
- public:
-  void set_reduction_op(Legion::ReductionOpID redop);
-
- public:
-  const Legion::LogicalPartition partition{Legion::LogicalPartition::NO_PART};
-  const Legion::ProjectionID proj_id{0};
-  // TODO: Make this const as well
-  Legion::ReductionOpID redop{-1};
-};
-
-class ProjectionInfo {
- public:
-  ProjectionInfo(const Projection* proj, Legion::MappingTagID tag, Legion::RegionFlags flags);
-
- public:
-  ProjectionInfo(const ProjectionInfo&)            = default;
-  ProjectionInfo& operator=(const ProjectionInfo&) = default;
-
- public:
-  bool operator<(const ProjectionInfo& other) const;
-  bool operator==(const ProjectionInfo& other) const;
-
- public:
-  void populate_launcher(Legion::TaskLauncher* task,
-                         const Legion::LogicalRegion& region,
-                         const std::vector<Legion::FieldID>& fields,
-                         Legion::PrivilegeMode privilege) const;
-  void populate_launcher(Legion::IndexTaskLauncher* task,
-                         const Legion::LogicalRegion& region,
-                         const std::vector<Legion::FieldID>& fields,
-                         Legion::PrivilegeMode privilege) const;
-
- public:
-  Legion::LogicalPartition partition;
-  Legion::ProjectionID proj_id;
-  Legion::ReductionOpID redop;
-  Legion::MappingTagID tag;
-  Legion::RegionFlags flags;
-};
-
 class ProjectionSet {
  public:
-  void insert(Legion::PrivilegeMode new_privilege, const ProjectionInfo* proj_info);
+  void insert(Legion::PrivilegeMode new_privilege, const ProjectionInfo& proj_info);
 
  public:
   Legion::PrivilegeMode privilege;
@@ -82,16 +37,15 @@ class FieldSet {
  public:
   void insert(Legion::FieldID field_id,
               Legion::PrivilegeMode privilege,
-              const ProjectionInfo* proj_info);
+              const ProjectionInfo& proj_info);
   uint32_t num_requirements() const;
   uint32_t get_requirement_index(Legion::PrivilegeMode privilege,
-                                 const ProjectionInfo* proj_info) const;
+                                 const ProjectionInfo& proj_info) const;
 
  public:
   void coalesce();
-  void populate_launcher(Legion::IndexTaskLauncher* task,
-                         const Legion::LogicalRegion& region) const;
-  void populate_launcher(Legion::TaskLauncher* task, const Legion::LogicalRegion& region) const;
+  template <class Launcher>
+  void populate_launcher(Launcher* task, const Legion::LogicalRegion& region) const;
 
  private:
   std::map<Key, std::vector<Legion::FieldID>> coalesced_;
@@ -109,16 +63,20 @@ class RequirementAnalyzer {
   void insert(const Legion::LogicalRegion& region,
               Legion::FieldID field_id,
               Legion::PrivilegeMode privilege,
-              const ProjectionInfo* proj_info);
+              const ProjectionInfo& proj_info);
   uint32_t get_requirement_index(const Legion::LogicalRegion& region,
                                  Legion::PrivilegeMode privilege,
-                                 const ProjectionInfo* proj_info) const;
+                                 const ProjectionInfo& proj_info) const;
   bool empty() const { return field_sets_.empty(); }
 
  public:
   void analyze_requirements();
   void populate_launcher(Legion::IndexTaskLauncher* task) const;
   void populate_launcher(Legion::TaskLauncher* task) const;
+
+ private:
+  template <class Launcher>
+  void _populate_launcher(Launcher* task) const;
 
  private:
   std::map<Legion::LogicalRegion, std::pair<FieldSet, uint32_t>> field_sets_;

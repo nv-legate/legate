@@ -37,10 +37,10 @@ struct ScalarArg : public ArgWrapper {
   ScalarArg(const T& value) : value_(value) {}
 
  public:
-  virtual ~ScalarArg() {}
+  ~ScalarArg() {}
 
  public:
-  virtual void pack(BufferBuilder& buffer) const override { buffer.pack(value_); }
+  void pack(BufferBuilder& buffer) const override { buffer.pack(value_); }
 
  private:
   T value_;
@@ -51,10 +51,10 @@ struct UntypedScalarArg : public ArgWrapper {
   UntypedScalarArg(const Scalar& scalar) : scalar_(scalar) {}
 
  public:
-  virtual ~UntypedScalarArg() {}
+  ~UntypedScalarArg() {}
 
  public:
-  virtual void pack(BufferBuilder& buffer) const override;
+  void pack(BufferBuilder& buffer) const override;
 
  private:
   Scalar scalar_;
@@ -66,13 +66,13 @@ struct RegionFieldArg : public ArgWrapper {
                  LogicalStore* store,
                  Legion::FieldID field_id,
                  Legion::PrivilegeMode privilege,
-                 const ProjectionInfo* proj_info);
+                 std::unique_ptr<ProjectionInfo> proj_info);
 
  public:
-  virtual void pack(BufferBuilder& buffer) const override;
+  void pack(BufferBuilder& buffer) const override;
 
  public:
-  virtual ~RegionFieldArg() {}
+  ~RegionFieldArg() {}
 
  private:
   RequirementAnalyzer* analyzer_;
@@ -80,7 +80,7 @@ struct RegionFieldArg : public ArgWrapper {
   Legion::LogicalRegion region_;
   Legion::FieldID field_id_;
   Legion::PrivilegeMode privilege_;
-  const ProjectionInfo* proj_info_;
+  std::unique_ptr<ProjectionInfo> proj_info_;
 };
 
 struct OutputRegionArg : public ArgWrapper {
@@ -91,10 +91,10 @@ struct OutputRegionArg : public ArgWrapper {
                   Legion::FieldID field_id);
 
  public:
-  virtual void pack(BufferBuilder& buffer) const override;
+  void pack(BufferBuilder& buffer) const override;
 
  public:
-  virtual ~OutputRegionArg() {}
+  ~OutputRegionArg() {}
 
  public:
   LogicalStore* store() const { return store_; }
@@ -118,10 +118,10 @@ struct FutureStoreArg : public ArgWrapper {
                  Legion::ReductionOpID redop);
 
  public:
-  virtual ~FutureStoreArg() {}
+  ~FutureStoreArg() {}
 
  public:
-  virtual void pack(BufferBuilder& buffer) const override;
+  void pack(BufferBuilder& buffer) const override;
 
  private:
   LogicalStore* store_;

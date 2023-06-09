@@ -16,8 +16,8 @@
 
 #include "core/comm/comm_cpu.h"
 #include "core/runtime/detail/communicator_manager.h"
-#include "core/runtime/detail/launcher.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/runtime/detail/task_launcher.h"
 #include "legate.h"
 
 #include "core/comm/coll.h"

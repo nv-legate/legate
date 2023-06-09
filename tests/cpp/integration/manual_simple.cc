@@ -16,7 +16,6 @@
 
 #include <gtest/gtest.h>
 
-#include "core/mapping/mapping.h"
 #include "legate.h"
 #include "tasks/task_simple.h"
 

@@ -214,21 +214,26 @@ list(APPEND legate_core_SOURCES
   src/core/partitioning/partitioner.cc
   src/core/partitioning/restriction.cc
   src/core/runtime/context.cc
-  src/core/runtime/operation.cc
+  src/core/runtime/copy.cc
   src/core/runtime/projection.cc
   src/core/runtime/runtime.cc
+  src/core/runtime/task.cc
   src/core/runtime/tracker.cc
   src/core/runtime/shard.cc
   src/core/runtime/detail/communicator_manager.cc
+  src/core/runtime/detail/copy_launcher.cc
   src/core/runtime/detail/field_manager.cc
+  src/core/runtime/detail/fill.cc
+  src/core/runtime/detail/fill_launcher.cc
   src/core/runtime/detail/launcher_arg.cc
-  src/core/runtime/detail/launcher.cc
   src/core/runtime/detail/machine_manager.cc
   src/core/runtime/detail/partition_manager.cc
+  src/core/runtime/detail/projection.cc
   src/core/runtime/detail/provenance_manager.cc
   src/core/runtime/detail/region_manager.cc
   src/core/runtime/detail/req_analyzer.cc
   src/core/runtime/detail/runtime.cc
+  src/core/runtime/detail/task_launcher.cc
   src/core/task/registrar.cc
   src/core/task/return.cc
   src/core/task/task.cc

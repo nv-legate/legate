@@ -21,7 +21,6 @@
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/detail/launcher.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/operation.h"
 
@@ -38,6 +37,7 @@ class LaunchDomainResolver {
  public:
   void record_launch_domain(const Domain& launch_domain);
   void record_unbound_store(int32_t unbound_dim);
+  void set_must_be_sequential(bool must_be_sequential) { must_be_sequential_ = must_be_sequential; }
 
  public:
   std::unique_ptr<Domain> resolve_launch_domain() const;
@@ -142,7 +142,7 @@ bool Strategy::has_assignment(const Variable* partition_symbol) const
   return assignments_.find(*partition_symbol) != assignments_.end();
 }
 
-const std::shared_ptr<Partition>& Strategy::operator[](const Variable* partition_symbol) const
+std::shared_ptr<Partition> Strategy::operator[](const Variable* partition_symbol) const
 {
   auto finder = assignments_.find(*partition_symbol);
 #ifdef DEBUG_LEGATE
@@ -176,27 +176,28 @@ void Strategy::dump() const
   log_legate.debug("====================");
 }
 
-void Strategy::compute_launch_domains()
+void Strategy::compute_launch_domains(const ConstraintSolver& solver)
 {
   std::map<const Operation*, LaunchDomainResolver> domain_resolvers;
 
-  for (auto& assignment : assignments_) {
-    auto& part_symb = assignment.first;
-    auto& partition = assignment.second;
-    auto* op        = part_symb.operation();
+  for (auto& [part_symb, partition] : assignments_) {
+    auto* op              = part_symb.operation();
+    auto& domain_resolver = domain_resolvers[op];
 
     if (partition->has_launch_domain()) {
-      domain_resolvers[op].record_launch_domain(partition->launch_domain());
+      domain_resolver.record_launch_domain(partition->launch_domain());
       continue;
     }
 
     auto store = op->find_store(&part_symb);
-
-    if (store->unbound()) domain_resolvers[op].record_unbound_store(store->dim());
+    if (store->unbound())
+      domain_resolver.record_unbound_store(store->dim());
+    else if (solver.is_output(part_symb))
+      domain_resolver.set_must_be_sequential(true);
   }
 
-  for (auto& pair : domain_resolvers)
-    launch_domains_[pair.first] = pair.second.resolve_launch_domain();
+  for (auto& [op, domain_resolver] : domain_resolvers)
+    launch_domains_[op] = domain_resolver.resolve_launch_domain();
 }
 
 ////////////////////////////////////////////////////
@@ -259,7 +260,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     for (auto symb : equiv_class) strategy->insert(symb, partition);
   }
 
-  strategy->compute_launch_domains();
+  strategy->compute_launch_domains(solver);
 
 #ifdef DEBUG_LEGATE
   strategy->dump();

@@ -80,9 +80,10 @@ ConstraintSolver::ConstraintSolver() {}
 
 ConstraintSolver::~ConstraintSolver() {}
 
-void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol)
+void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, bool is_output)
 {
   partition_symbols_.insert(partition_symbol);
+  is_output_.insert({*partition_symbol, is_output});
 }
 
 void ConstraintSolver::add_constraint(const Constraint* constraint)
@@ -188,6 +189,11 @@ const Restrictions& ConstraintSolver::find_restrictions(const Variable* partitio
   return equiv_class_map_.at(*partition_symbol)->restrictions;
 }
 
+bool ConstraintSolver::is_output(const Variable& partition_symbol) const
+{
+  return is_output_.at(partition_symbol);
+}
+
 void ConstraintSolver::dump()
 {
   log_legate.debug("===== Constraint Graph =====");
@@ -203,7 +209,5 @@ const std::vector<const Variable*>& ConstraintSolver::partition_symbols() const
 {
   return partition_symbols_.elements();
 }
-
-const std::vector<const Constraint*>& ConstraintSolver::constraints() const { return constraints_; }
 
 }  // namespace legate::detail

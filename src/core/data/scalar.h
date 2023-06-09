@@ -40,7 +40,6 @@ class BufferBuilder;
  */
 class Scalar {
  public:
-  Scalar() = default;
   Scalar(const Scalar& other);
   Scalar(Scalar&& other);
 
@@ -91,6 +90,22 @@ class Scalar {
    */
   template <typename T>
   Scalar(const std::vector<T>& values);
+
+ public:
+  /**
+   * @brief Creates a point scalar
+   *
+   * @param point A point from which the scalar should be constructed
+   */
+  template <int32_t DIM>
+  Scalar(const Point<DIM>& point);
+  /**
+   * @brief Creates a rect scalar
+   *
+   * @param point A rect from which the scalar should be constructed
+   */
+  template <int32_t DIM>
+  Scalar(const Rect<DIM>& rect);
 
  public:
   Scalar& operator=(const Scalar& other);

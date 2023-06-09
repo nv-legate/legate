@@ -55,6 +55,22 @@ Scalar::Scalar(const std::vector<T>& values)
   data_ = buffer;
 }
 
+template <int32_t DIM>
+Scalar::Scalar(const Point<DIM>& point) : own_(true), type_(point_type(DIM))
+{
+  auto buffer = malloc(sizeof(Point<DIM>));
+  memcpy(buffer, &point, sizeof(Point<DIM>));
+  data_ = buffer;
+}
+
+template <int32_t DIM>
+Scalar::Scalar(const Rect<DIM>& rect) : own_(true), type_(rect_type(DIM))
+{
+  auto buffer = malloc(sizeof(Rect<DIM>));
+  memcpy(buffer, &rect, sizeof(Rect<DIM>));
+  data_ = buffer;
+}
+
 template <typename VAL>
 VAL Scalar::value() const
 {

@@ -32,7 +32,7 @@ struct ConstraintSolver {
   ~ConstraintSolver();
 
  public:
-  void add_partition_symbol(const Variable* partition_symbol);
+  void add_partition_symbol(const Variable* partition_symbol, bool is_output = false);
   void add_constraint(const Constraint* constraint);
 
  public:
@@ -40,16 +40,17 @@ struct ConstraintSolver {
 
  public:
   const std::vector<const Variable*>& partition_symbols() const;
-  const std::vector<const Constraint*>& constraints() const;
 
  public:
   void solve_constraints();
   const std::vector<const Variable*>& find_equivalence_class(
     const Variable* partition_symbol) const;
   const Restrictions& find_restrictions(const Variable* partition_symbol) const;
+  bool is_output(const Variable& partition_symbol) const;
 
  private:
   ordered_set<const Variable*> partition_symbols_{};
+  std::map<const Variable, bool> is_output_{};
   std::vector<const Constraint*> constraints_{};
 
  private:

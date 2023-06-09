@@ -307,4 +307,25 @@ std::unique_ptr<Type> complex128() { return primitive_type(Type::Code::COMPLEX12
 
 std::unique_ptr<Type> string() { return string_type(); }
 
+namespace {
+
+constexpr int32_t POINT_UID_BASE = static_cast<int32_t>(Type::Code::INVALID);
+constexpr int32_t RECT_UID_BASE  = POINT_UID_BASE + LEGATE_MAX_DIM + 1;
+
+}  // namespace
+
+std::unique_ptr<Type> point_type(int32_t dim)
+{
+  if (dim == 1) return int64();
+  return std::make_unique<FixedArrayType>(POINT_UID_BASE + dim, int64(), dim);
+}
+
+std::unique_ptr<Type> rect_type(int32_t dim)
+{
+  std::vector<std::unique_ptr<Type>> field_types;
+  field_types.push_back(point_type(dim));
+  field_types.push_back(point_type(dim));
+  return std::make_unique<StructType>(RECT_UID_BASE + dim, std::move(field_types), true /*align*/);
+}
+
 }  // namespace legate

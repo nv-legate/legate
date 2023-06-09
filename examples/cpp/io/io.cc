@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 #include <fstream>
 
-#include "core/mapping/mapping.h"
 #include "cunumeric.h"
 #include "legate.h"
 #include "task_io.h"

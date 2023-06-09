@@ -14,30 +14,34 @@
  *
  */
 
-#include <gtest/gtest.h>
-#include "cunumeric.h"
-#include "legate.h"
+#pragma once
 
-class Environment : public ::testing::Environment {
+#include "core/runtime/operation.h"
+
+namespace legate {
+
+class Fill : public Operation {
+ private:
+  friend class detail::Runtime;
+  Fill(LibraryContext* library,
+       LogicalStore lhs,
+       LogicalStore value,
+       int64_t unique_id,
+       mapping::MachineDesc&& machine);
+
  public:
-  Environment(int argc, char** argv) : argc_(argc), argv_(argv) {}
+  void launch(detail::Strategy* strategy) override;
 
-  void SetUp() override
-  {
-    EXPECT_EQ(legate::start(argc_, argv_), 0);
-    cunumeric::initialize(argc_, argv_);
-  }
-  void TearDown() override { EXPECT_EQ(legate::finish(), 0); }
+ public:
+  std::string to_string() const override;
+
+ public:
+  void add_to_solver(detail::ConstraintSolver& solver) override;
 
  private:
-  int argc_;
-  char** argv_;
+  const Variable* lhs_var_;
+  std::shared_ptr<detail::LogicalStore> lhs_;
+  std::shared_ptr<detail::LogicalStore> value_;
 };
 
-int main(int argc, char** argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  ::testing::AddGlobalTestEnvironment(new Environment(argc, argv));
-
-  return RUN_ALL_TESTS();
-}
+}  // namespace legate

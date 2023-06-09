@@ -87,6 +87,7 @@ struct Core {
 };
 
 class AutoTask;
+class Copy;
 class ManualTask;
 class Operation;
 
@@ -107,7 +108,7 @@ class Runtime;
 class Runtime {
  public:
   /**
-   * @brief Find a library
+   * @brief Finds a library
    *
    * @param library_name Library name
    * @param can_fail Optional flag indicating that the query can fail. When it's true and no
@@ -119,7 +120,7 @@ class Runtime {
    */
   LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
   /**
-   * @brief Create a library
+   * @brief Creates a library
    *
    * A library is a collection of tasks and custom reduction operators. The maximum number of
    * tasks and reduction operators can be optionally specified with a `ResourceConfig` object.
@@ -141,7 +142,7 @@ class Runtime {
 
  public:
   /**
-   * @brief Create an AutoTask
+   * @brief Creates an AutoTask
    *
    * @param library Library to query the task
    * @param task_id Library-local Task ID
@@ -150,7 +151,7 @@ class Runtime {
    */
   std::unique_ptr<AutoTask> create_task(LibraryContext* library, int64_t task_id);
   /**
-   * @brief Create a ManualTask
+   * @brief Creates a ManualTask
    *
    * @param library Library to query the task
    * @param task_id Library-local Task ID
@@ -161,6 +162,30 @@ class Runtime {
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
+  /**
+   * @brief Creates a Copy
+   *
+   * @param library Library in which the copy is created
+   *
+   * @return Copy object
+   */
+  std::unique_ptr<Copy> create_copy(LibraryContext* library);
+  /**
+   * @brief Fills a given store with a constant
+   *
+   * @param library Library in which the fill is performed
+   * @param lhs Logical store to fill
+   * @param value Logical store that contains the constant value to fill the store with
+   */
+  void issue_fill(LibraryContext* library, LogicalStore lhs, LogicalStore value);
+  /**
+   * @brief Fills a given store with a constant
+   *
+   * @param library Library in which the fill is performed
+   * @param lhs Logical store to fill
+   * @param value Value to fill the store with
+   */
+  void issue_fill(LibraryContext* library, LogicalStore lhs, const Scalar& value);
   /**
    * @brief Submits an operation for execution
    *
@@ -303,6 +328,13 @@ int32_t start(int32_t argc, char** argv);
  * @return Non-zero value when the runtime encountered a failure, 0 otherwise
  */
 int32_t finish();
+
+/**
+ * @brief Returns the machine for the current scope
+ *
+ * @return Machine object
+ */
+const mapping::MachineDesc& get_machine();
 
 }  // namespace legate
 

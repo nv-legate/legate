@@ -19,6 +19,7 @@
 #include <memory>
 #include <optional>
 
+#include "core/data/logical_store.h"
 #include "core/data/shape.h"
 #include "core/data/store.h"
 #include "core/mapping/machine.h"
@@ -35,6 +36,7 @@
 
 namespace legate {
 class AutoTask;
+class Copy;
 class LibraryContext;
 class ManualTask;
 class Operation;
@@ -62,11 +64,6 @@ class Runtime {
   int32_t find_reduction_operator(int32_t type_uid, int32_t op_kind) const;
 
  public:
-  void enter_callback();
-  void exit_callback();
-  bool is_in_callback() const;
-
- public:
   void initialize(Legion::Context legion_context);
 
  public:
@@ -75,6 +72,8 @@ class Runtime {
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
+  std::unique_ptr<Copy> create_copy(LibraryContext* library);
+  void issue_fill(LibraryContext* library, legate::LogicalStore lhs, legate::LogicalStore value);
   void flush_scheduling_window();
   void submit(std::unique_ptr<Operation> op);
 
@@ -155,6 +154,10 @@ class Runtime {
                           std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
   Legion::FutureMap dispatch(Legion::IndexTaskLauncher* launcher,
                              std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
+  void dispatch(Legion::CopyLauncher* launcher);
+  void dispatch(Legion::IndexCopyLauncher* launcher);
+  void dispatch(Legion::FillLauncher* launcher);
+  void dispatch(Legion::IndexFillLauncher* launcher);
 
  public:
   Legion::Future extract_scalar(const Legion::Future& result, uint32_t idx) const;
@@ -219,9 +222,6 @@ class Runtime {
   MultiSet<Legion::PhysicalRegion> physical_region_refs_;
   uint64_t next_store_id_{1};
   uint64_t next_storage_id_{1};
-
- private:
-  bool in_callback_{false};
 
  private:
   std::map<std::string, LibraryContext*> libraries_{};

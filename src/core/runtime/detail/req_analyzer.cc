@@ -19,123 +19,17 @@
 
 namespace legate::detail {
 
-/////////////
-// Projection
-/////////////
-
-Projection::Projection(Legion::LogicalPartition p, Legion::ProjectionID pr)
-  : partition(p), proj_id(pr)
-{
-}
-
-void Projection::set_reduction_op(Legion::ReductionOpID r) { redop = r; }
-
-/////////////////
-// ProjectionInfo
-/////////////////
-
-ProjectionInfo::ProjectionInfo(const Projection* proj,
-                               Legion::MappingTagID _tag,
-                               Legion::RegionFlags _flags)
-  : partition(proj->partition), proj_id(proj->proj_id), redop(proj->redop), tag(_tag), flags(_flags)
-{
-}
-
-bool ProjectionInfo::operator<(const ProjectionInfo& other) const
-{
-  if (partition < other.partition)
-    return true;
-  else if (other.partition < partition)
-    return false;
-  if (proj_id < other.proj_id)
-    return true;
-  else if (proj_id > other.proj_id)
-    return false;
-  if (redop < other.redop)
-    return true;
-  else if (redop > other.redop)
-    return false;
-  if (tag < other.tag)
-    return true;
-  else
-    return false;
-}
-
-bool ProjectionInfo::operator==(const ProjectionInfo& other) const
-{
-  return partition == other.partition && proj_id == other.proj_id && redop == other.redop &&
-         tag == other.tag && flags == other.flags;
-}
-
-void ProjectionInfo::populate_launcher(Legion::TaskLauncher* task,
-                                       const Legion::LogicalRegion& region,
-                                       const std::vector<Legion::FieldID>& fields,
-                                       Legion::PrivilegeMode privilege) const
-{
-  Legion::RegionRequirement legion_req;
-
-  auto parent = Runtime::get_runtime()->find_parent_region(region);
-
-  if (LEGION_REDUCE == privilege) {
-#ifdef DEBUG_LEGATE
-    assert(redop != -1);
-#endif
-    new (&legion_req) Legion::RegionRequirement(region, redop, LEGION_EXCLUSIVE, parent, tag);
-  } else {
-    new (&legion_req) Legion::RegionRequirement(region, privilege, LEGION_EXCLUSIVE, parent, tag);
-  }
-
-  legion_req.add_fields(fields).add_flags(flags);
-  task->add_region_requirement(legion_req);
-}
-
-void ProjectionInfo::populate_launcher(Legion::IndexTaskLauncher* task,
-                                       const Legion::LogicalRegion& region,
-                                       const std::vector<Legion::FieldID>& fields,
-                                       Legion::PrivilegeMode privilege) const
-{
-  Legion::RegionRequirement legion_req;
-
-  auto parent = Runtime::get_runtime()->find_parent_region(region);
-
-  // Broadcast
-  if (Legion::LogicalPartition::NO_PART == partition) {
-    if (LEGION_REDUCE == privilege) {
-#ifdef DEBUG_LEGATE
-      assert(redop != -1);
-#endif
-      new (&legion_req) Legion::RegionRequirement(region, redop, LEGION_EXCLUSIVE, parent, tag);
-    } else {
-      new (&legion_req) Legion::RegionRequirement(region, privilege, LEGION_EXCLUSIVE, parent, tag);
-    }
-  } else {
-    if (LEGION_REDUCE == privilege) {
-#ifdef DEBUG_LEGATE
-      assert(redop != -1);
-#endif
-      new (&legion_req)
-        Legion::RegionRequirement(partition, proj_id, redop, LEGION_EXCLUSIVE, parent, tag);
-    } else {
-      new (&legion_req)
-        Legion::RegionRequirement(partition, proj_id, privilege, LEGION_EXCLUSIVE, parent, tag);
-    }
-  }
-
-  legion_req.add_fields(fields).add_flags(flags);
-  task->add_region_requirement(legion_req);
-}
-
 ////////////////
 // ProjectionSet
 ////////////////
 
-void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const ProjectionInfo* proj_info)
+void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const ProjectionInfo& proj_info)
 {
   if (proj_infos.empty()) privilege = new_privilege;
   // conflicting privileges are promoted to a single read-write privilege
   else if (privilege != new_privilege)
     privilege = LEGION_READ_WRITE;
-  proj_infos.emplace(*proj_info);
+  proj_infos.emplace(proj_info);
 
   if (privilege != LEGION_READ_ONLY && proj_infos.size() > 1) {
     log_legate.error("Interfering requirements are found");
@@ -149,7 +43,7 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const Projection
 
 void FieldSet::insert(Legion::FieldID field_id,
                       Legion::PrivilegeMode privilege,
-                      const ProjectionInfo* proj_info)
+                      const ProjectionInfo& proj_info)
 {
   field_projs_[field_id].insert(privilege, proj_info);
 }
@@ -157,10 +51,10 @@ void FieldSet::insert(Legion::FieldID field_id,
 uint32_t FieldSet::num_requirements() const { return static_cast<uint32_t>(coalesced_.size()); }
 
 uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
-                                         const ProjectionInfo* proj_info) const
+                                         const ProjectionInfo& proj_info) const
 {
-  auto finder = req_indices_.find(Key(privilege, *proj_info));
-  if (req_indices_.end() == finder) finder = req_indices_.find(Key(LEGION_READ_WRITE, *proj_info));
+  auto finder = req_indices_.find(Key(privilege, proj_info));
+  if (req_indices_.end() == finder) finder = req_indices_.find(Key(LEGION_READ_WRITE, proj_info));
 #ifdef DEBUG_LEGATE
   assert(finder != req_indices_.end());
 #endif
@@ -178,25 +72,29 @@ void FieldSet::coalesce()
   for (const auto& entry : coalesced_) req_indices_[entry.first] = idx++;
 }
 
-void FieldSet::populate_launcher(Legion::IndexTaskLauncher* task,
-                                 const Legion::LogicalRegion& region) const
-{
-  for (auto& entry : coalesced_) {
-    auto privilege        = entry.first.first;
-    const auto& proj_info = entry.first.second;
-    const auto& fields    = entry.second;
-    proj_info.populate_launcher(task, region, fields, privilege);
-  }
-}
+namespace {
 
-void FieldSet::populate_launcher(Legion::TaskLauncher* task,
-                                 const Legion::LogicalRegion& region) const
+template <class Launcher>
+constexpr bool is_single;
+template <>
+constexpr bool is_single<Legion::TaskLauncher> = true;
+template <>
+constexpr bool is_single<Legion::IndexTaskLauncher> = false;
+
+}  // namespace
+
+template <class Launcher>
+void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& region) const
 {
   for (auto& entry : coalesced_) {
     auto privilege        = entry.first.first;
     const auto& proj_info = entry.first.second;
     const auto& fields    = entry.second;
-    proj_info.populate_launcher(task, region, fields, privilege);
+
+    task->region_requirements.push_back(Legion::RegionRequirement());
+    auto& requirement = task->region_requirements.back();
+    proj_info.template populate_requirement<is_single<Launcher>>(
+      requirement, region, fields, privilege);
   }
 }
 
@@ -209,14 +107,14 @@ RequirementAnalyzer::~RequirementAnalyzer() {}
 void RequirementAnalyzer::insert(const Legion::LogicalRegion& region,
                                  Legion::FieldID field_id,
                                  Legion::PrivilegeMode privilege,
-                                 const ProjectionInfo* proj_info)
+                                 const ProjectionInfo& proj_info)
 {
   field_sets_[region].first.insert(field_id, privilege, proj_info);
 }
 
 uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion& region,
                                                     Legion::PrivilegeMode privilege,
-                                                    const ProjectionInfo* proj_info) const
+                                                    const ProjectionInfo& proj_info) const
 {
   auto finder = field_sets_.find(region);
 #ifdef DEBUG_LEGATE
@@ -242,13 +140,16 @@ void RequirementAnalyzer::analyze_requirements()
 
 void RequirementAnalyzer::populate_launcher(Legion::IndexTaskLauncher* task) const
 {
-  for (auto& entry : field_sets_) {
-    const auto& field_set = entry.second.first;
-    field_set.populate_launcher(task, entry.first);
-  }
+  _populate_launcher(task);
 }
 
 void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher* task) const
+{
+  _populate_launcher(task);
+}
+
+template <class Launcher>
+void RequirementAnalyzer::_populate_launcher(Launcher* task) const
 {
   for (auto& entry : field_sets_) {
     const auto& field_set = entry.second.first;

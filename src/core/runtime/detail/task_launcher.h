@@ -32,7 +32,7 @@ namespace legate::detail {
 
 class ArgWrapper;
 class LogicalStore;
-class Projection;
+class ProjectionInfo;
 class OutputRegionArg;
 class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
@@ -59,19 +59,11 @@ class TaskLauncher {
 
  public:
   void add_scalar(const Scalar& scalar);
-  void add_input(LogicalStore* store,
-                 std::unique_ptr<Projection> proj,
-                 Legion::MappingTagID tag  = 0,
-                 Legion::RegionFlags flags = LEGION_NO_FLAG);
-  void add_output(LogicalStore* store,
-                  std::unique_ptr<Projection> proj,
-                  Legion::MappingTagID tag  = 0,
-                  Legion::RegionFlags flags = LEGION_NO_FLAG);
+  void add_input(LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
+  void add_output(LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
   void add_reduction(LogicalStore* store,
-                     std::unique_ptr<Projection> proj,
-                     bool read_write           = false,
-                     Legion::MappingTagID tag  = 0,
-                     Legion::RegionFlags flags = LEGION_NO_FLAG);
+                     std::unique_ptr<ProjectionInfo> proj_info,
+                     bool read_write);
   void add_unbound_output(LogicalStore* store,
                           Legion::FieldSpace field_space,
                           Legion::FieldID field_id);
@@ -90,10 +82,8 @@ class TaskLauncher {
  private:
   void add_store(std::vector<ArgWrapper*>& args,
                  LogicalStore* store,
-                 std::unique_ptr<Projection> proj,
-                 Legion::PrivilegeMode privilege,
-                 Legion::MappingTagID tag,
-                 Legion::RegionFlags flags);
+                 std::unique_ptr<ProjectionInfo> proj_info,
+                 Legion::PrivilegeMode privilege);
 
  public:
   Legion::FutureMap execute(const Legion::Domain& launch_domain);

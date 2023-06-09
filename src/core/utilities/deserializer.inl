@@ -28,11 +28,12 @@ BaseDeserializer<Deserializer>::BaseDeserializer(const void* args, size_t arglen
 }
 
 template <typename Deserializer>
-void BaseDeserializer<Deserializer>::_unpack(Scalar& value)
+Scalar BaseDeserializer<Deserializer>::_unpack_scalar()
 {
   auto type = unpack_type();
-  value     = Scalar(std::move(type), args_.ptr());
-  args_     = args_.subspan(value.size());
+  Scalar result(std::move(type), args_.ptr());
+  args_ = args_.subspan(result.size());
+  return result;
 }
 
 template <typename Deserializer>

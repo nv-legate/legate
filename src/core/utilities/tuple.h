@@ -48,6 +48,7 @@ class tuple {
 
  public:
   bool operator==(const tuple<T>& other) const;
+  bool operator!=(const tuple<T>& other) const;
   bool operator<(const tuple<T>& other) const;
   tuple<T> operator+(const tuple<T>& other) const;
   tuple<T> operator+(const T& other) const;

@@ -27,10 +27,10 @@
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
 #include "core/runtime/detail/communicator_manager.h"
-#include "core/runtime/detail/launcher.h"
+#include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/provenance_manager.h"
-#include "core/runtime/detail/req_analyzer.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/runtime/detail/task_launcher.h"
 
 namespace legate {
 
@@ -54,11 +54,18 @@ const Variable* Operation::declare_partition()
 
 detail::LogicalStore* Operation::find_store(const Variable* part_symb) const
 {
-  auto finder = store_mappings_.find(*part_symb);
-#ifdef DEBUG_LEGATE
-  assert(store_mappings_.end() != finder);
-#endif
-  return finder->second;
+  return store_mappings_.at(*part_symb);
+}
+
+void Operation::record_partition(const Variable* variable,
+                                 std::shared_ptr<detail::LogicalStore> store)
+{
+  if (store_mappings_.find(*variable) != store_mappings_.end()) {
+    throw std::invalid_argument("Variable " + variable->to_string() +
+                                " is already assigned to another store");
+  }
+  store_mappings_[*variable] = store.get();
+  all_stores_.insert(std::move(store));
 }
 
 ////////////////////////////////////////////////////
@@ -74,6 +81,8 @@ Task::Task(LibraryContext* library,
 }
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
+
+void Task::add_scalar_arg(Scalar&& scalar) { scalars_.emplace_back(std::move(scalar)); }
 
 void Task::set_concurrent(bool concurrent) { concurrent_ = concurrent; }
 
@@ -96,30 +105,26 @@ void Task::launch(detail::Strategy* p_strategy)
   detail::TaskLauncher launcher(library_, machine_, provenance_, task_id_);
   const auto* launch_domain = strategy.launch_domain(this);
 
+  auto create_projection_info = [&strategy, &launch_domain](auto& store, auto& var) {
+    auto store_partition = store->create_partition(strategy[var]);
+    return store_partition->create_projection_info(launch_domain);
+  };
+
   // Add input stores
-  for (auto& [store, var] : inputs_) {
-    const auto& part     = strategy[var];
-    auto store_partition = store->create_partition(part);
-    auto proj            = store_partition->create_projection(launch_domain);
-    launcher.add_input(store, std::move(proj));
-  }
+  for (auto& [store, var] : inputs_) launcher.add_input(store, create_projection_info(store, var));
 
   // Add normal output stores
   for (auto& [store, var] : outputs_) {
     if (store->unbound()) continue;
-    const auto& part     = strategy[var];
-    auto store_partition = store->create_partition(part);
-    auto proj            = store_partition->create_projection(launch_domain);
-    launcher.add_output(store, std::move(proj));
-    store->set_key_partition(machine(), part.get());
+    launcher.add_output(store, create_projection_info(store, var));
+    store->set_key_partition(machine(), strategy[var].get());
   }
 
   // Add reduction stores
   uint32_t idx = 0;
   for (auto& [store, var] : reductions_) {
-    const auto& part     = strategy[var];
-    auto store_partition = store->create_partition(part);
-    auto proj            = store_partition->create_projection(launch_domain);
+    auto store_partition = store->create_partition(strategy[var]);
+    auto proj            = store_partition->create_projection_info(launch_domain);
     bool read_write      = store_partition->is_disjoint_for(launch_domain);
     auto redop           = reduction_ops_[idx++];
     proj->set_reduction_op(redop);
@@ -294,8 +299,7 @@ void AutoTask::add_store(std::vector<StoreArg>& store_args,
 {
   auto store_impl = store.impl();
   store_args.push_back(StoreArg(store_impl.get(), partition_symbol));
-  store_mappings_[*partition_symbol] = store_impl.get();
-  all_stores_.insert(std::move(store_impl));
+  record_partition(partition_symbol, store_impl);
 }
 
 void AutoTask::add_constraint(std::unique_ptr<Constraint> constraint)
@@ -303,10 +307,10 @@ void AutoTask::add_constraint(std::unique_ptr<Constraint> constraint)
   constraints_.push_back(std::move(constraint));
 }
 
-void AutoTask::add_to_solver(detail::ConstraintSolver& solver) const
+void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 {
   for (auto& constraint : constraints_) solver.add_constraint(constraint.get());
-  for (auto& [_, symb] : outputs_) solver.add_partition_symbol(symb);
+  for (auto& [_, symb] : outputs_) solver.add_partition_symbol(symb, true);
   for (auto& [_, symb] : reductions_) solver.add_partition_symbol(symb);
   for (auto& [_, symb] : inputs_) solver.add_partition_symbol(symb);
 }
@@ -386,6 +390,6 @@ void ManualTask::add_store(std::vector<StoreArg>& store_args,
 
 void ManualTask::launch(detail::Strategy*) { Task::launch(strategy_.get()); }
 
-void ManualTask::add_to_solver(detail::ConstraintSolver& constraint_graph) const {}
+void ManualTask::add_to_solver(detail::ConstraintSolver& solver) {}
 
 }  // namespace legate

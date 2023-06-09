@@ -529,4 +529,20 @@ std::unique_ptr<Type> complex128();
  */
 std::unique_ptr<Type> string();
 
+/**
+ * @ingroup types
+ * @brief Creates a point type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> point_type(int32_t dim);
+
+/**
+ * @ingroup types
+ * @brief Creates a rect type
+ *
+ * @return Type object
+ */
+std::unique_ptr<Type> rect_type(int32_t dim);
+
 }  // namespace legate

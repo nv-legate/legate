@@ -19,7 +19,6 @@
 #include "core/data/detail/logical_store.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/partition_manager.h"
-#include "core/runtime/detail/req_analyzer.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate {

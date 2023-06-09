@@ -163,6 +163,21 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
   return impl_->create_task(library, task_id, launch_shape);
 }
 
+std::unique_ptr<Copy> Runtime::create_copy(LibraryContext* library)
+{
+  return impl_->create_copy(library);
+}
+
+void Runtime::issue_fill(LibraryContext* library, LogicalStore lhs, LogicalStore value)
+{
+  impl_->issue_fill(library, lhs, value);
+}
+
+void Runtime::issue_fill(LibraryContext* library, LogicalStore lhs, const Scalar& value)
+{
+  issue_fill(library, lhs, create_store(value));
+}
+
 void Runtime::submit(std::unique_ptr<Operation> op) { impl_->submit(std::move(op)); }
 
 LogicalStore Runtime::create_store(std::unique_ptr<Type> type, int32_t dim)
@@ -233,6 +248,8 @@ Runtime::Runtime(detail::Runtime* impl) : impl_(impl) {}
 int32_t start(int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
 
 int32_t finish() { return detail::Runtime::get_runtime()->finish(); }
+
+const mapping::MachineDesc& get_machine() { return Runtime::get_runtime()->get_machine(); }
 
 }  // namespace legate
 

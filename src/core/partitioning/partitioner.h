@@ -34,7 +34,7 @@ namespace legate::detail {
 class ConstraintSolver;
 class LogicalStore;
 class Partitioner;
-class Projection;
+class ProjectionInfo;
 
 class Strategy {
   friend class Partitioner;
@@ -53,14 +53,14 @@ class Strategy {
               std::shared_ptr<Partition> partition,
               Legion::FieldSpace field_space);
   bool has_assignment(const Variable* partition_symbol) const;
-  const std::shared_ptr<Partition>& operator[](const Variable* partition_symbol) const;
+  std::shared_ptr<Partition> operator[](const Variable* partition_symbol) const;
   const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
 
  public:
   void dump() const;
 
  private:
-  void compute_launch_domains();
+  void compute_launch_domains(const ConstraintSolver& solver);
 
  private:
   std::map<const Variable, std::shared_ptr<Partition>> assignments_{};

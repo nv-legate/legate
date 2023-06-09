@@ -59,9 +59,9 @@ class Operation {
   virtual ~Operation() {}
 
  public:
-  virtual void add_to_solver(detail::ConstraintSolver& constraint_graph) const = 0;
-  virtual void launch(detail::Strategy* strategy)                              = 0;
-  virtual std::string to_string() const                                        = 0;
+  virtual void add_to_solver(detail::ConstraintSolver& solver) = 0;
+  virtual void launch(detail::Strategy* strategy)              = 0;
+  virtual std::string to_string() const                        = 0;
 
  public:
   /**
@@ -86,6 +86,9 @@ class Operation {
    * @return Provenance
    */
   const std::string& provenance() const { return provenance_; }
+
+ protected:
+  void record_partition(const Variable* variable, std::shared_ptr<detail::LogicalStore> store);
 
  protected:
   LibraryContext* library_;
@@ -128,6 +131,12 @@ class Task : public Operation {
    * @param scalar A scalar to add to the task
    */
   void add_scalar_arg(const Scalar& scalar);
+  /**
+   * @brief Adds a by-value scalar argument to the task
+   *
+   * @param scalar A scalar to add to the task
+   */
+  void add_scalar_arg(Scalar&& scalar);
   /**
    * @brief Sets whether the task needs a concurrent task launch.
    *
@@ -243,7 +252,7 @@ class AutoTask : public Task {
    * @param constraint A partitioning constraint
    */
   void add_constraint(std::unique_ptr<Constraint> constraint);
-  void add_to_solver(detail::ConstraintSolver& constraint_graph) const override;
+  void add_to_solver(detail::ConstraintSolver& solver) override;
 
  private:
   std::vector<std::unique_ptr<Constraint>> constraints_{};
@@ -322,10 +331,51 @@ class ManualTask : public Task {
   void launch(detail::Strategy* strategy) override;
 
  public:
-  void add_to_solver(detail::ConstraintSolver& constraint_graph) const override;
+  void add_to_solver(detail::ConstraintSolver& solver) override;
 
  private:
   std::unique_ptr<detail::Strategy> strategy_;
+};
+
+class Copy : public Operation {
+ private:
+  friend class detail::Runtime;
+  Copy(LibraryContext* library, int64_t unique_id, mapping::MachineDesc&& machine);
+
+ public:
+  void add_input(LogicalStore store);
+  void add_output(LogicalStore store);
+  void add_reduction(LogicalStore store, Legion::ReductionOpID redop);
+  void add_source_indirect(LogicalStore store);
+  void add_target_indirect(LogicalStore store);
+
+ private:
+  void add_store(std::vector<StoreArg>& store_args,
+                 LogicalStore& store,
+                 const Variable* partition_symbol);
+  void add_store(std::optional<StoreArg>& store_arg,
+                 LogicalStore& store,
+                 const Variable* partition_symbol);
+
+ public:
+  void set_source_indirect_out_of_range(bool flag);
+  void set_target_indirect_out_of_range(bool flag);
+
+ public:
+  void launch(detail::Strategy* strategy) override;
+
+ public:
+  void add_to_solver(detail::ConstraintSolver& solver) override;
+
+ public:
+  std::string to_string() const override;
+
+ private:
+  std::vector<std::unique_ptr<Constraint>> constraints_{};
+  std::optional<StoreArg> source_indirect_{};
+  std::optional<StoreArg> target_indirect_{};
+  bool source_indirect_out_of_range_{true};
+  bool target_indirect_out_of_range_{true};
 };
 
 }  // namespace legate

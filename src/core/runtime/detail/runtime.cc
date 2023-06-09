@@ -22,7 +22,8 @@
 #include "core/mapping/core_mapper.h"
 #include "core/mapping/default_mapper.h"
 #include "core/partitioning/partitioner.h"
-#include "core/runtime/detail/launcher.h"
+#include "core/runtime/detail/fill.h"
+#include "core/runtime/detail/task_launcher.h"
 #include "core/runtime/projection.h"
 #include "core/runtime/shard.h"
 #include "env_defaults.h"
@@ -118,12 +119,6 @@ int32_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) cons
   return finder->second;
 }
 
-void Runtime::enter_callback() { in_callback_ = true; }
-
-void Runtime::exit_callback() { in_callback_ = false; }
-
-bool Runtime::is_in_callback() const { return in_callback_; }
-
 void Runtime::initialize(Legion::Context legion_context)
 {
   if (initialized_) throw std::runtime_error("Legate runtime has already been initialized");
@@ -180,6 +175,22 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
   auto machine = slice_machine_for_task(library, task_id);
   auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++, std::move(machine));
   return std::unique_ptr<ManualTask>(task);
+}
+
+std::unique_ptr<Copy> Runtime::create_copy(LibraryContext* library)
+{
+  auto machine = machine_manager_->get_machine();
+  auto copy    = new Copy(library, next_unique_id_++, std::move(machine));
+  return std::unique_ptr<Copy>(copy);
+}
+
+void Runtime::issue_fill(LibraryContext* library,
+                         legate::LogicalStore lhs,
+                         legate::LogicalStore value)
+{
+  auto machine = machine_manager_->get_machine();
+  submit(
+    std::unique_ptr<Fill>(new Fill(library, lhs, value, next_unique_id_++, std::move(machine))));
 }
 
 void Runtime::flush_scheduling_window()
@@ -532,6 +543,30 @@ Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher* launcher,
 {
   assert(nullptr != legion_context_);
   return legion_runtime_->execute_index_space(legion_context_, *launcher, output_requirements);
+}
+
+void Runtime::dispatch(Legion::CopyLauncher* launcher)
+{
+  assert(nullptr != legion_context_);
+  return legion_runtime_->issue_copy_operation(legion_context_, *launcher);
+}
+
+void Runtime::dispatch(Legion::IndexCopyLauncher* launcher)
+{
+  assert(nullptr != legion_context_);
+  return legion_runtime_->issue_copy_operation(legion_context_, *launcher);
+}
+
+void Runtime::dispatch(Legion::FillLauncher* launcher)
+{
+  assert(nullptr != legion_context_);
+  return legion_runtime_->fill_fields(legion_context_, *launcher);
+}
+
+void Runtime::dispatch(Legion::IndexFillLauncher* launcher)
+{
+  assert(nullptr != legion_context_);
+  return legion_runtime_->fill_fields(legion_context_, *launcher);
 }
 
 Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t idx) const

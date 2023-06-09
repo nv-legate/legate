@@ -18,6 +18,7 @@
 
 #include "core/mapping/machine.h"
 #include "core/runtime/detail/partition_manager.h"
+#include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"
@@ -624,7 +625,13 @@ void LogicalStore::set_key_partition(const mapping::MachineDesc& machine,
   storage_->set_key_partition(machine, std::move(inverted));
 }
 
-void LogicalStore::reset_key_partition() { storage_->reset_key_partition(); }
+void LogicalStore::reset_key_partition()
+{
+  // Need to flush scheduling window to make this effective
+  Runtime::get_runtime()->flush_scheduling_window();
+  key_partition_ = nullptr;
+  storage_->reset_key_partition();
+}
 
 std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
   std::shared_ptr<Partition> partition, std::optional<bool> complete)
@@ -632,7 +639,8 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
   if (unbound()) { throw std::invalid_argument("Unbound store cannot be manually partitioned"); }
   auto storage_partition =
     storage_->create_partition(transform_->invert(partition.get()), complete);
-  return std::make_shared<LogicalStorePartition>(std::move(storage_partition), shared_from_this());
+  return std::make_shared<LogicalStorePartition>(
+    std::move(partition), std::move(storage_partition), shared_from_this());
 }
 
 void LogicalStore::pack(BufferBuilder& buffer) const
@@ -662,22 +670,26 @@ std::string LogicalStore::to_string() const
 ////////////////////////////////////////////////////
 // legate::detail::LogicalStorePartition
 ////////////////////////////////////////////////////
-LogicalStorePartition::LogicalStorePartition(std::shared_ptr<StoragePartition> storage_partition,
+LogicalStorePartition::LogicalStorePartition(std::shared_ptr<Partition> partition,
+                                             std::shared_ptr<StoragePartition> storage_partition,
                                              std::shared_ptr<LogicalStore> store)
-  : storage_partition_(std::move(storage_partition)), store_(std::move(store))
+  : partition_(std::move(partition)),
+    storage_partition_(std::move(storage_partition)),
+    store_(std::move(store))
 {
 }
 
-std::unique_ptr<Projection> LogicalStorePartition::create_projection(const Domain* launch_domain)
+std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
+  const Domain* launch_domain)
 {
   if (nullptr == launch_domain || store_->has_scalar_storage())
-    return std::make_unique<Projection>();
+    return std::make_unique<ProjectionInfo>();
 
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
   auto legion_partition = storage_partition_->get_legion_partition();
   auto proj_id          = store_->compute_projection(launch_domain->dim);
-  return std::make_unique<Projection>(legion_partition, proj_id);
+  return std::make_unique<ProjectionInfo>(legion_partition, proj_id);
 }
 
 bool LogicalStorePartition::is_disjoint_for(const Domain* launch_domain) const

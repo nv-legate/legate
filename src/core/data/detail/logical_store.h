@@ -23,7 +23,6 @@
 #include "core/data/store.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
-#include "core/runtime/detail/req_analyzer.h"
 
 namespace legate::mapping {
 class MachineDesc;
@@ -31,7 +30,7 @@ class MachineDesc;
 
 namespace legate::detail {
 
-class Projection;
+class ProjectionInfo;
 class StoragePartition;
 class LogicalStorePartition;
 
@@ -206,7 +205,6 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  public:
   Restrictions compute_restrictions() const;
-  std::unique_ptr<Projection> create_projection(const Partition* partition, int32_t launch_ndim);
   std::shared_ptr<Partition> find_or_create_key_partition(const mapping::MachineDesc& machine,
                                                           const Restrictions& restrictions);
   bool has_key_partition(const mapping::MachineDesc& machine,
@@ -239,16 +237,19 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
 class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePartition> {
  public:
-  LogicalStorePartition(std::shared_ptr<StoragePartition> storage_partition,
+  LogicalStorePartition(std::shared_ptr<Partition> partition,
+                        std::shared_ptr<StoragePartition> storage_partition,
                         std::shared_ptr<LogicalStore> store);
 
  public:
+  std::shared_ptr<Partition> partition() const { return partition_; }
   std::shared_ptr<StoragePartition> storage_partition() const { return storage_partition_; }
   std::shared_ptr<LogicalStore> store() const { return store_; }
-  std::unique_ptr<Projection> create_projection(const Domain* launch_domain);
+  std::unique_ptr<ProjectionInfo> create_projection_info(const Domain* launch_domain);
   bool is_disjoint_for(const Domain* launch_domain) const;
 
  private:
+  std::shared_ptr<Partition> partition_;
   std::shared_ptr<StoragePartition> storage_partition_;
   std::shared_ptr<LogicalStore> store_;
 };
