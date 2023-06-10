@@ -7,6 +7,9 @@ stages:
 Build:LegateCore:
   stage: build
 
+  rules:
+    - if: ($CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "legate/legate.core.internal")
+
   tags:
     - cpu_only
     - gpu/disabled
