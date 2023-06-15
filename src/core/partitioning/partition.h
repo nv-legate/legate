@@ -50,6 +50,7 @@ struct Partition {
   virtual bool is_complete_for(const detail::Storage* storage) const          = 0;
   virtual bool is_disjoint_for(const Domain* launch_domain) const             = 0;
   virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
+  virtual bool is_convertible() const                                         = 0;
 
  public:
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
@@ -80,6 +81,7 @@ class NoPartition : public Partition {
   bool is_complete_for(const detail::Storage* storage) const override;
   bool is_disjoint_for(const Domain* launch_domain) const override;
   bool satisfies_restrictions(const Restrictions& restrictions) const override;
+  bool is_convertible() const override { return true; }
 
  public:
   Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
@@ -120,6 +122,7 @@ class Tiling : public Partition {
   bool is_complete_for(const detail::Storage* storage) const override;
   bool is_disjoint_for(const Domain* launch_domain) const override;
   bool satisfies_restrictions(const Restrictions& restrictions) const override;
+  bool is_convertible() const override { return true; }
 
  public:
   Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
@@ -167,6 +170,7 @@ class Weighted : public Partition {
   bool is_complete_for(const detail::Storage* storage) const override;
   bool is_disjoint_for(const Domain* launch_domain) const override;
   bool satisfies_restrictions(const Restrictions& restrictions) const override;
+  bool is_convertible() const override { return false; }
 
  public:
   Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;

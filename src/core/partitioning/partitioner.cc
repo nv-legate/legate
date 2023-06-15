@@ -160,6 +160,11 @@ const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_s
   return finder->second;
 }
 
+bool Strategy::is_key_partition(const Variable* partition_symbol) const
+{
+  return key_partition_.has_value() && key_partition_.value() == partition_symbol;
+}
+
 void Strategy::dump() const
 {
   log_legate.debug("===== Solution =====");
@@ -198,6 +203,11 @@ void Strategy::compute_launch_domains(const ConstraintSolver& solver)
 
   for (auto& [op, domain_resolver] : domain_resolvers)
     launch_domains_[op] = domain_resolver.resolve_launch_domain();
+}
+
+void Strategy::record_key_partition(const Variable* partition_symbol)
+{
+  if (!key_partition_) key_partition_ = partition_symbol;
 }
 
 ////////////////////////////////////////////////////
@@ -253,6 +263,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto* op       = part_symb->operation();
     auto store     = op->find_store(part_symb);
     auto partition = store->find_or_create_key_partition(op->machine(), restrictions);
+    strategy->record_key_partition(part_symb);
 #ifdef DEBUG_LEGATE
     assert(partition != nullptr);
 #endif

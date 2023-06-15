@@ -177,6 +177,8 @@ class Runtime {
  public:
   Legion::ProjectionID get_projection(int32_t src_ndim, const proj::SymbolicPoint& point);
   Legion::ProjectionID get_delinearizing_projection();
+  Legion::ShardingID get_sharding(const mapping::MachineDesc& machine,
+                                  Legion::ProjectionID proj_id);
 
  private:
   void schedule(std::vector<std::unique_ptr<Operation>> operations);
@@ -209,7 +211,12 @@ class Runtime {
  private:
   using ProjectionDesc = std::pair<int32_t, proj::SymbolicPoint>;
   int64_t next_projection_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
-  std::map<ProjectionDesc, Legion::ProjectionID> registered_projections_;
+  std::map<ProjectionDesc, Legion::ProjectionID> registered_projections_{};
+
+ private:
+  using ShardingDesc = std::tuple<Legion::ProjectionID, uint32_t, uint32_t, uint32_t, uint32_t>;
+  int64_t next_sharding_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
+  std::map<ShardingDesc, Legion::ShardingID> registered_shardings_{};
 
  private:
   std::vector<std::unique_ptr<Operation>> operations_;

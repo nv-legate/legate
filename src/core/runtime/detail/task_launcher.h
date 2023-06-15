@@ -105,6 +105,7 @@ class TaskLauncher {
   int64_t tag_;
   mapping::MachineDesc machine_;
   std::string provenance_;
+  Legion::ProjectionID key_proj_id_{0};
 
  private:
   bool has_side_effect_{true};

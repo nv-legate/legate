@@ -17,6 +17,8 @@
 #include "core/mapping/machine.h"
 #include "core/utilities/buffer_builder.h"
 
+#include "realm/network.h"
+
 namespace legate::mapping {
 
 TaskTarget to_target(Processor::Kind kind)
@@ -144,6 +146,12 @@ void ProcessorRange::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(low);
   buffer.pack<uint32_t>(high);
   buffer.pack<uint32_t>(per_node_count);
+}
+
+std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range)
+{
+  stream << range.to_string();
+  return stream;
 }
 
 ///////////////////////////////////////////
@@ -317,12 +325,27 @@ const Processor& LocalProcessorRange::operator[](uint32_t idx) const
   return procs_[local_idx];
 }
 
+std::string LocalProcessorRange::to_string() const
+{
+  std::stringstream ss;
+  ss << "{offset: " << offset_ << ", total processor count: " << total_proc_count_
+     << ", processors: ";
+  for (uint32_t idx = 0; idx < procs_.size(); ++idx) ss << procs_[idx] << ",";
+  ss << "}";
+  return std::move(ss).str();
+}
+
+std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range)
+{
+  stream << range.to_string();
+  return stream;
+}
+
 //////////////////////////////
 // legate::mapping::Machine
 //////////////////////////////
 Machine::Machine(Legion::Machine legion_machine)
-  : local_node(Processor::get_executing_processor().address_space()),
-    total_nodes(legion_machine.get_address_space_count())
+  : local_node(Realm::Network::my_node_id), total_nodes(legion_machine.get_address_space_count())
 {
   Legion::Machine::ProcessorQuery procs(legion_machine);
   // Query to find all our local processors

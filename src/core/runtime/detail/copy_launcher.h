@@ -19,7 +19,7 @@
 #include <memory>
 #include <optional>
 
-#include "legion.h"
+#include "core/mapping/machine.h"
 
 namespace legate {
 class BufferBuilder;
@@ -82,6 +82,8 @@ class CopyLauncher {
  private:
   LibraryContext* library_;
   int64_t tag_;
+  mapping::MachineDesc machine_;
+  Legion::ProjectionID key_proj_id_{0};
 
  private:
   BufferBuilder* mapper_arg_;

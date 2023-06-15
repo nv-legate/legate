@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 
 #include "core/data/shape.h"
@@ -55,17 +56,20 @@ class Strategy {
   bool has_assignment(const Variable* partition_symbol) const;
   std::shared_ptr<Partition> operator[](const Variable* partition_symbol) const;
   const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
+  bool is_key_partition(const Variable* partition_symbol) const;
 
  public:
   void dump() const;
 
  private:
   void compute_launch_domains(const ConstraintSolver& solver);
+  void record_key_partition(const Variable* partition_symbol);
 
  private:
   std::map<const Variable, std::shared_ptr<Partition>> assignments_{};
   std::map<const Variable, Legion::FieldSpace> field_spaces_{};
   std::map<const Operation*, std::unique_ptr<Domain>> launch_domains_{};
+  std::optional<const Variable*> key_partition_{};
 };
 
 class Partitioner {

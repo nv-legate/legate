@@ -27,10 +27,8 @@ namespace legate::detail {
 FillLauncher::FillLauncher(LibraryContext* library,
                            const mapping::MachineDesc& machine,
                            int64_t tag)
-  : library_(library), tag_(tag)
+  : library_(library), tag_(tag), machine_(machine), mapper_arg_(new BufferBuilder())
 {
-  mapper_arg_ = new BufferBuilder();
-  machine.pack(*mapper_arg_);
 }
 
 FillLauncher::~FillLauncher() { delete mapper_arg_; }
@@ -52,7 +50,11 @@ void FillLauncher::launch_single(LogicalStore* lhs,
   return Runtime::get_runtime()->dispatch(legion_fill_launcher.get());
 }
 
-void FillLauncher::pack_args() { mapper_arg_->pack<uint32_t>(0); }
+void FillLauncher::pack_mapper_arg(Legion::ProjectionID proj_id)
+{
+  machine_.pack(*mapper_arg_);
+  mapper_arg_->pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, proj_id));
+}
 
 std::unique_ptr<Legion::IndexFillLauncher> FillLauncher::build_index_fill(
   const Legion::Domain& launch_domain,
@@ -60,7 +62,7 @@ std::unique_ptr<Legion::IndexFillLauncher> FillLauncher::build_index_fill(
   const ProjectionInfo& lhs_proj,
   LogicalStore* value)
 {
-  pack_args();
+  pack_mapper_arg(lhs_proj.proj_id);
   auto* runtime         = Runtime::get_runtime();
   auto& provenance      = runtime->provenance_manager()->get_provenance();
   auto lhs_region_field = lhs->get_region_field();
@@ -86,7 +88,7 @@ std::unique_ptr<Legion::IndexFillLauncher> FillLauncher::build_index_fill(
 std::unique_ptr<Legion::FillLauncher> FillLauncher::build_single_fill(
   LogicalStore* lhs, const ProjectionInfo& lhs_proj, LogicalStore* value)
 {
-  pack_args();
+  pack_mapper_arg(lhs_proj.proj_id);
   auto* runtime         = Runtime::get_runtime();
   auto& provenance      = runtime->provenance_manager()->get_provenance();
   auto lhs_region_field = lhs->get_region_field();

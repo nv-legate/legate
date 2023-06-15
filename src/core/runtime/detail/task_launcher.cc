@@ -24,6 +24,7 @@
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/req_analyzer.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/runtime/shard.h"
 #include "core/utilities/buffer_builder.h"
 
 namespace legate::detail {
@@ -161,6 +162,8 @@ void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
     auto field_id     = region_field->field_id();
 
     req_analyzer_->insert(region, field_id, privilege, *proj_info);
+    // Keep the projection functor id of the key store
+    if (LEGATE_CORE_KEY_STORE_TAG == proj_info->tag) key_proj_id_ = proj_info->proj_id;
     args.push_back(
       new RegionFieldArg(req_analyzer_, store, field_id, privilege, std::move(proj_info)));
   }
@@ -174,8 +177,7 @@ void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
 
 void TaskLauncher::pack_sharding_functor_id()
 {
-  // TODO: Generate the right sharding functor id
-  mapper_arg_->pack<uint32_t>(0);
+  mapper_arg_->pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
 }
 
 std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()

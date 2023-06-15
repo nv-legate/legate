@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "legion.h"
+#include "core/mapping/machine.h"
 
 namespace legate {
 class BufferBuilder;
@@ -47,7 +47,7 @@ class FillLauncher {
   void launch_single(LogicalStore* lhs, const ProjectionInfo& lhs_proj, LogicalStore* value);
 
  private:
-  void pack_args();
+  void pack_mapper_arg(Legion::ProjectionID proj_id);
   std::unique_ptr<Legion::IndexFillLauncher> build_index_fill(const Legion::Domain& launch_domain,
                                                               LogicalStore* lhs,
                                                               const ProjectionInfo& lhs_proj,
@@ -59,6 +59,7 @@ class FillLauncher {
  private:
   LibraryContext* library_;
   int64_t tag_;
+  mapping::MachineDesc machine_;
 
  private:
   BufferBuilder* mapper_arg_;

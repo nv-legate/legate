@@ -586,7 +586,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
     storage_part = storage_->find_key_partition(machine, transform_->invert(restrictions));
 
   std::unique_ptr<Partition> store_part = nullptr;
-  if (nullptr == storage_part) {
+  if (nullptr == storage_part || (!transform_->identity() && !storage_part->is_convertible())) {
     auto part_mgr     = Runtime::get_runtime()->partition_manager();
     auto launch_shape = part_mgr->compute_launch_shape(machine, restrictions, extents_);
     if (launch_shape.empty())

@@ -86,12 +86,13 @@ CopyLauncher::CopyLauncher(LibraryContext* library,
                            bool target_indirect_out_of_range,
                            int64_t tag)
   : library_(library),
+    machine_(machine),
     source_indirect_out_of_range_(source_indirect_out_of_range),
     target_indirect_out_of_range_(target_indirect_out_of_range),
     tag_(tag)
 {
   mapper_arg_ = new BufferBuilder();
-  machine.pack(*mapper_arg_);
+  machine_.pack(*mapper_arg_);
 }
 
 CopyLauncher::~CopyLauncher()
@@ -114,6 +115,7 @@ void CopyLauncher::add_store(std::vector<CopyArg*>& args,
   auto region_field = store->get_region_field();
   auto region       = region_field->region();
   auto field_id     = region_field->field_id();
+  if (LEGATE_CORE_KEY_STORE_TAG == proj_info->tag) key_proj_id_ = proj_info->proj_id;
   args.push_back(new CopyArg(req_idx, store, field_id, privilege, std::move(proj_info)));
 }
 
@@ -168,8 +170,7 @@ void CopyLauncher::execute_single()
 
 void CopyLauncher::pack_sharding_functor_id()
 {
-  // TODO: Generate the right sharding functor id
-  mapper_arg_->pack<uint32_t>(0);
+  mapper_arg_->pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
 }
 
 void CopyLauncher::pack_args()

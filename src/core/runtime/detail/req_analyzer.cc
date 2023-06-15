@@ -63,13 +63,12 @@ uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
 
 void FieldSet::coalesce()
 {
-  for (const auto& entry : field_projs_) {
-    const auto& proj_set = entry.second;
+  for (const auto& [field_id, proj_set] : field_projs_) {
     for (const auto& proj_info : proj_set.proj_infos)
-      coalesced_[Key(proj_set.privilege, proj_info)].push_back(entry.first);
+      coalesced_[Key(proj_set.privilege, proj_info)].push_back(field_id);
   }
   uint32_t idx = 0;
-  for (const auto& entry : coalesced_) req_indices_[entry.first] = idx++;
+  for (const auto& [key, _] : coalesced_) req_indices_[key] = idx++;
 }
 
 namespace {
@@ -86,11 +85,8 @@ constexpr bool is_single<Legion::IndexTaskLauncher> = false;
 template <class Launcher>
 void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& region) const
 {
-  for (auto& entry : coalesced_) {
-    auto privilege        = entry.first.first;
-    const auto& proj_info = entry.first.second;
-    const auto& fields    = entry.second;
-
+  for (auto& [key, fields] : coalesced_) {
+    auto& [privilege, proj_info] = key;
     task->region_requirements.push_back(Legion::RegionRequirement());
     auto& requirement = task->region_requirements.back();
     proj_info.template populate_requirement<is_single<Launcher>>(
@@ -120,18 +116,15 @@ uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion&
 #ifdef DEBUG_LEGATE
   assert(finder != field_sets_.end());
 #endif
-  auto& field_set  = finder->second.first;
-  auto& req_offset = finder->second.second;
+  auto& [field_set, req_offset] = finder->second;
   return req_offset + field_set.get_requirement_index(privilege, proj_info);
 }
 
 void RequirementAnalyzer::analyze_requirements()
 {
   uint32_t num_reqs = 0;
-  for (auto& entry : field_sets_) {
-    auto& field_set  = entry.second.first;
-    auto& req_offset = entry.second.second;
-
+  for (auto& [_, entry] : field_sets_) {
+    auto& [field_set, req_offset] = entry;
     field_set.coalesce();
     req_offset = num_reqs;
     num_reqs += field_set.num_requirements();
@@ -151,10 +144,7 @@ void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher* task) const
 template <class Launcher>
 void RequirementAnalyzer::_populate_launcher(Launcher* task) const
 {
-  for (auto& entry : field_sets_) {
-    const auto& field_set = entry.second.first;
-    field_set.populate_launcher(task, entry.first);
-  }
+  for (auto& [region, entry] : field_sets_) entry.first.populate_launcher(task, region);
 }
 
 ////////////////////////////
@@ -189,18 +179,15 @@ uint32_t OutputRequirementAnalyzer::get_requirement_index(const Legion::FieldSpa
 void OutputRequirementAnalyzer::analyze_requirements()
 {
   uint32_t idx = 0;
-  for (auto& entry : field_groups_) req_infos_[entry.first].req_idx = idx++;
+  for (const auto& [field_space, _] : field_groups_) req_infos_[field_space].req_idx = idx++;
 }
 
 void OutputRequirementAnalyzer::populate_output_requirements(
   std::vector<Legion::OutputRequirement>& out_reqs) const
 {
-  for (auto& entry : field_groups_) {
-    auto finder = req_infos_.find(entry.first);
-#ifdef DEBUG_LEGATE
-    assert(finder != req_infos_.end());
-#endif
-    out_reqs.emplace_back(entry.first, entry.second, finder->second.dim, true);
+  for (auto& [field_space, fields] : field_groups_) {
+    auto& [dim, _] = req_infos_.at(field_space);
+    out_reqs.emplace_back(field_space, fields, dim, true /*global_indexing*/);
   }
 }
 

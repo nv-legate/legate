@@ -28,6 +28,8 @@
 #include "core/runtime/shard.h"
 #include "env_defaults.h"
 
+#include "realm/network.h"
+
 namespace legate {
 
 Logger log_legate("legate");
@@ -702,6 +704,44 @@ Legion::ProjectionID Runtime::get_delinearizing_projection()
   return core_context_->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
 }
 
+Legion::ShardingID Runtime::get_sharding(const mapping::MachineDesc& machine,
+                                         Legion::ProjectionID proj_id)
+{
+  // If we're running on a single node, we don't need to generate sharding functors
+  if (Realm::Network::max_node_id == 0) return 0;
+
+  auto& proc_range = machine.processor_range();
+  auto [low, high] = proc_range.get_node_range();
+  auto offset      = proc_range.low % proc_range.per_node_count;
+  ShardingDesc key{proj_id, low, high, offset, proc_range.per_node_count};
+
+#ifdef DEBUG_LEGATE
+  log_legate.debug() << "Query sharding {proj_id: " << proj_id
+                     << ", processor range: " << proc_range
+                     << ", processor type: " << machine.preferred_target << "}";
+#endif
+
+  auto finder = registered_shardings_.find(key);
+  if (finder != registered_shardings_.end()) {
+#ifdef DEBUG_LEGATE
+    log_legate.debug() << "Found sharding " << finder->second;
+#endif
+    return finder->second;
+  }
+
+  auto sharding_id = core_context_->get_sharding_id(next_sharding_id_++);
+  registered_shardings_.insert({key, sharding_id});
+
+#ifdef DEBUG_LEGATE
+  log_legate.debug() << "Create sharding " << sharding_id;
+#endif
+
+  legate_create_sharding_functor_using_projection(
+    sharding_id, proj_id, low, high, offset, proc_range.per_node_count);
+
+  return sharding_id;
+}
+
 CommunicatorManager* Runtime::communicator_manager() const { return communicator_manager_; }
 
 MachineManager* Runtime::machine_manager() const { return machine_manager_; }
@@ -755,7 +795,10 @@ int32_t Runtime::finish()
 
 void Runtime::destroy()
 {
-  // Make sure all Legate ops finish
+  // Flush any outstanding operations before we tear down the runtime
+  flush_scheduling_window();
+
+  // Then also make sure all the operations finish
   issue_execution_fence(true);
 
   // Clean up resources used by Legate

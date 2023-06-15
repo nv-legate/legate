@@ -36,6 +36,8 @@ Processor::Kind to_kind(TaskTarget target);
 
 LegateVariantCode to_variant_code(TaskTarget target);
 
+std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
+
 /**
  * @ingroup mapping
  * @brief A class to represent a range of processors.
@@ -113,6 +115,8 @@ struct ProcessorRange {
    */
   uint32_t per_node_count{1};
 };
+
+std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
 
 /**
  * @ingroup mapping
@@ -324,11 +328,16 @@ class LocalProcessorRange {
  public:
   bool empty() const { return procs_.size() == 0; }
 
+ public:
+  std::string to_string() const;
+
  private:
   uint32_t offset_;
   uint32_t total_proc_count_;
   Span<const Processor> procs_;
 };
+
+std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& info);
 
 class Machine {
  public:

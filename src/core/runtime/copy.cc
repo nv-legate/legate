@@ -107,7 +107,9 @@ void Copy::launch(detail::Strategy* p_strategy)
 
   auto create_projection_info = [&strategy, &launch_domain](auto& store, auto& var) {
     auto store_partition = store->create_partition(strategy[var]);
-    return store_partition->create_projection_info(launch_domain);
+    auto proj_info       = store_partition->create_projection_info(launch_domain);
+    proj_info->tag       = strategy.is_key_partition(var) ? LEGATE_CORE_KEY_STORE_TAG : 0;
+    return std::move(proj_info);
   };
 
   for (auto& [store, var] : inputs_) launcher.add_input(store, create_projection_info(store, var));
