@@ -944,11 +944,10 @@ void core_library_registration(Legion::Machine machine,
   config.max_reduction_ops = LEGATE_CORE_MAX_REDUCTION_OP_ID;
 
   auto runtime  = Runtime::get_runtime();
-  auto core_lib = runtime->create_library(core_library_name, config);
+  auto core_lib = Runtime::get_runtime()->create_library(
+    core_library_name, config, mapping::create_core_mapper());
 
   register_legate_core_tasks(machine, legion_runtime, core_lib);
-
-  register_legate_core_mapper(machine, legion_runtime, core_lib);
 
   register_builtin_reduction_ops();
 

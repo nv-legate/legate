@@ -341,7 +341,7 @@ std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& info);
 
 class Machine {
  public:
-  Machine(Legion::Machine legion_machine);
+  Machine();
 
  public:
   const std::vector<Processor>& cpus() const { return cpus_; }

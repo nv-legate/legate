@@ -344,9 +344,11 @@ std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range)
 //////////////////////////////
 // legate::mapping::Machine
 //////////////////////////////
-Machine::Machine(Legion::Machine legion_machine)
-  : local_node(Realm::Network::my_node_id), total_nodes(legion_machine.get_address_space_count())
+Machine::Machine()
+  : local_node(Realm::Network::my_node_id),
+    total_nodes(Legion::Machine::get_machine().get_address_space_count())
 {
+  auto legion_machine = Legion::Machine::get_machine();
   Legion::Machine::ProcessorQuery procs(legion_machine);
   // Query to find all our local processors
   procs.local_address_space();
