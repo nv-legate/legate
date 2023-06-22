@@ -798,33 +798,33 @@ void Runtime::destroy()
   // Flush any outstanding operations before we tear down the runtime
   flush_scheduling_window();
 
-  // Then also make sure all the operations finish
-  issue_execution_fence(true);
+  // Need a fence to make sure all client operations come before the subsequent clean-up tasks
+  issue_execution_fence();
 
-  // Clean up resources used by Legate
-  for (auto& [_, context] : libraries_) delete context;
-  libraries_.clear();
-
+  // Destroy all communicators. This will likely launch some tasks for the clean-up.
   communicator_manager_->destroy();
-  delete communicator_manager_;
-  delete machine_manager_;
-  delete partition_manager_;
-  delete provenance_manager_;
 
-  for (auto& [_, region_manager] : region_managers_) {
-    region_manager->destroy(true /*unordered*/);
-    delete region_manager;
-  }
-  region_managers_.clear();
-
-  for (auto& [_, field_manager] : field_managers_) delete field_manager;
-  field_managers_.clear();
-
+  // Destroy all Legion handles used by Legate
+  for (auto& [_, region_manager] : region_managers_) region_manager->destroy(true /*unordered*/);
   for (auto& [_, index_space] : index_spaces_)
     legion_runtime_->destroy_index_space(legion_context_, index_space, true /*unordered*/);
   index_spaces_.clear();
 
-  issue_execution_fence();
+  // We're about to deallocate objects below, so let's block on all outstanding Legion operations
+  issue_execution_fence(true);
+
+  // We finally deallocate managers
+  for (auto& [_, context] : libraries_) delete context;
+  libraries_.clear();
+  for (auto& [_, region_manager] : region_managers_) delete region_manager;
+  region_managers_.clear();
+  for (auto& [_, field_manager] : field_managers_) delete field_manager;
+  field_managers_.clear();
+
+  delete communicator_manager_;
+  delete machine_manager_;
+  delete partition_manager_;
+  delete provenance_manager_;
 }
 
 static void extract_scalar_task(
