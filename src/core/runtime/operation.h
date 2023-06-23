@@ -65,6 +65,14 @@ class Operation {
 
  public:
   /**
+   * @brief Finds or creates a partition symbol for the given store
+   *
+   * @param Store for which the partition symbol is queried
+   *
+   * @return The existing symbol if there is one for the store, a fresh symbol otherwise
+   */
+  const Variable* find_or_declare_partition(LogicalStore store);
+  /**
    * @brief Declares partition symbol
    *
    * @return A new symbol that can be used when passing a store to an operation
@@ -104,6 +112,7 @@ class Operation {
   uint32_t next_part_id_{0};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
   std::map<const Variable, detail::LogicalStore*> store_mappings_{};
+  std::map<detail::LogicalStore*, const Variable*> part_mappings_{};
   std::string provenance_;
   mapping::MachineDesc machine_;
 };

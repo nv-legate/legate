@@ -45,6 +45,16 @@ Operation::Operation(uint64_t unique_id, mapping::MachineDesc&& machine)
 {
 }
 
+const Variable* Operation::find_or_declare_partition(LogicalStore store)
+{
+  auto* impl  = store.impl().get();
+  auto finder = part_mappings_.find(impl);
+  if (finder != part_mappings_.end()) return finder->second;
+  const auto* symb = declare_partition();
+  part_mappings_.insert({impl, symb});
+  return symb;
+}
+
 const Variable* Operation::declare_partition()
 {
   partition_symbols_.emplace_back(new Variable(this, next_part_id_++));
@@ -59,9 +69,12 @@ detail::LogicalStore* Operation::find_store(const Variable* part_symb) const
 void Operation::record_partition(const Variable* variable,
                                  std::shared_ptr<detail::LogicalStore> store)
 {
-  if (store_mappings_.find(*variable) != store_mappings_.end()) {
-    throw std::invalid_argument("Variable " + variable->to_string() +
-                                " is already assigned to another store");
+  auto finder = store_mappings_.find(*variable);
+  if (finder != store_mappings_.end()) {
+    if (finder->second->id() != store->id())
+      throw std::invalid_argument("Variable " + variable->to_string() +
+                                  " is already assigned to another store");
+    return;
   }
   store_mappings_[*variable] = store.get();
   all_stores_.insert(std::move(store));

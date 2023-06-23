@@ -371,6 +371,8 @@ const Type& LogicalStore::type() const { return storage_->type(); }
 
 bool LogicalStore::transformed() const { return !transform_->identity(); }
 
+uint64_t LogicalStore::id() const { return store_id_; }
+
 const Storage* LogicalStore::get_storage() const { return storage_.get(); }
 
 LogicalRegionField* LogicalStore::get_region_field() { return storage_->get_region_field(); }

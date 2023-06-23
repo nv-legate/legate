@@ -182,6 +182,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   bool has_scalar_storage() const;
   const Type& type() const;
   bool transformed() const;
+  uint64_t id() const;
 
  public:
   const Storage* get_storage() const;
