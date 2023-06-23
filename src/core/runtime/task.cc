@@ -38,9 +38,8 @@ namespace legate {
 // legate::Operation
 ////////////////////////////////////////////////////
 
-Operation::Operation(LibraryContext* library, uint64_t unique_id, mapping::MachineDesc&& machine)
-  : library_(library),
-    unique_id_(unique_id),
+Operation::Operation(uint64_t unique_id, mapping::MachineDesc&& machine)
+  : unique_id_(unique_id),
     machine_(std::move(machine)),
     provenance_(detail::Runtime::get_runtime()->provenance_manager()->get_provenance())
 {
@@ -72,11 +71,11 @@ void Operation::record_partition(const Variable* variable,
 // legate::Task
 ////////////////////////////////////////////////////
 
-Task::Task(LibraryContext* library,
+Task::Task(const LibraryContext* library,
            int64_t task_id,
            uint64_t unique_id,
            mapping::MachineDesc&& machine)
-  : Operation(library, unique_id, std::move(machine)), task_id_(task_id)
+  : Operation(unique_id, std::move(machine)), library_(library), task_id_(task_id)
 {
 }
 
@@ -264,7 +263,7 @@ std::string Task::to_string() const
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-AutoTask::AutoTask(LibraryContext* library,
+AutoTask::AutoTask(const LibraryContext* library,
                    int64_t task_id,
                    uint64_t unique_id,
                    mapping::MachineDesc&& machine)
@@ -323,7 +322,7 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 
 ManualTask::~ManualTask() {}
 
-ManualTask::ManualTask(LibraryContext* library,
+ManualTask::ManualTask(const LibraryContext* library,
                        int64_t task_id,
                        const Shape& launch_shape,
                        uint64_t unique_id,

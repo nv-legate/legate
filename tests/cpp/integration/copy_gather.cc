@@ -144,7 +144,7 @@ void test_gather(const GatherSpec& spec)
   fill_input(context, src, spec.seed);
   fill_indirect(context, ind, src);
 
-  auto copy = runtime->create_copy(context);
+  auto copy = runtime->create_copy();
   copy->add_input(src);
   copy->add_output(tgt);
   copy->add_source_indirect(ind);

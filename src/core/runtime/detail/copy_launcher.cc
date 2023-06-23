@@ -80,16 +80,14 @@ void CopyArg::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(field_id_);
 }
 
-CopyLauncher::CopyLauncher(LibraryContext* library,
-                           const mapping::MachineDesc& machine,
+CopyLauncher::CopyLauncher(const mapping::MachineDesc& machine,
                            bool source_indirect_out_of_range,
                            bool target_indirect_out_of_range,
                            int64_t tag)
-  : library_(library),
-    machine_(machine),
+  : machine_(machine),
+    tag_(tag),
     source_indirect_out_of_range_(source_indirect_out_of_range),
-    target_indirect_out_of_range_(target_indirect_out_of_range),
-    tag_(tag)
+    target_indirect_out_of_range_(target_indirect_out_of_range)
 {
   mapper_arg_ = new BufferBuilder();
   machine_.pack(*mapper_arg_);
@@ -103,8 +101,6 @@ CopyLauncher::~CopyLauncher()
   for (auto& arg : source_indirect_) delete arg;
   for (auto& arg : target_indirect_) delete arg;
 }
-
-int64_t CopyLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
 
 void CopyLauncher::add_store(std::vector<CopyArg*>& args,
                              detail::LogicalStore* store,
@@ -228,12 +224,13 @@ std::unique_ptr<Legion::IndexCopyLauncher> CopyLauncher::build_index_copy(
   pack_args();
   auto* runtime    = Runtime::get_runtime();
   auto& provenance = runtime->provenance_manager()->get_provenance();
-  auto index_copy  = std::make_unique<Legion::IndexCopyLauncher>(launch_domain,
-                                                                Legion::Predicate::TRUE_PRED,
-                                                                legion_mapper_id(),
-                                                                tag_,
-                                                                mapper_arg_->to_legion_buffer(),
-                                                                provenance.c_str());
+  auto index_copy =
+    std::make_unique<Legion::IndexCopyLauncher>(launch_domain,
+                                                Legion::Predicate::TRUE_PRED,
+                                                runtime->core_context()->get_mapper_id(),
+                                                tag_,
+                                                mapper_arg_->to_legion_buffer(),
+                                                provenance.c_str());
 
   populate_copy(index_copy.get());
   return std::move(index_copy);
@@ -244,11 +241,12 @@ std::unique_ptr<Legion::CopyLauncher> CopyLauncher::build_single_copy()
   pack_args();
   auto* runtime    = Runtime::get_runtime();
   auto& provenance = runtime->provenance_manager()->get_provenance();
-  auto single_copy = std::make_unique<Legion::CopyLauncher>(Legion::Predicate::TRUE_PRED,
-                                                            legion_mapper_id(),
-                                                            tag_,
-                                                            mapper_arg_->to_legion_buffer(),
-                                                            provenance.c_str());
+  auto single_copy =
+    std::make_unique<Legion::CopyLauncher>(Legion::Predicate::TRUE_PRED,
+                                           runtime->core_context()->get_mapper_id(),
+                                           tag_,
+                                           mapper_arg_->to_legion_buffer(),
+                                           provenance.c_str());
 
   populate_copy(single_copy.get());
   return std::move(single_copy);

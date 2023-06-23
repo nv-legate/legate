@@ -31,7 +31,7 @@ void test_input_output_failure()
   auto in_store2              = runtime->create_store(extents, legate::int64());
   auto out_store              = runtime->create_store(extents, legate::int64());
   // fill input store with some values
-  auto copy = runtime->create_copy(context);
+  auto copy = runtime->create_copy();
   copy->add_input(in_store1);
   copy->add_input(in_store2);
   copy->add_output(out_store);
@@ -51,7 +51,7 @@ void test_indirect_failure()
   auto out_store2             = runtime->create_store(extents, legate::int64());
   auto indirect_store         = runtime->create_store(extents, legate::int64());
 
-  auto copy = runtime->create_copy(context);
+  auto copy = runtime->create_copy();
   copy->add_input(in_store1);
   copy->add_input(in_store2);
   copy->add_output(out_store1);
@@ -71,14 +71,14 @@ void test_shape_check_failure()
   auto store3 = runtime->create_store({20, 5}, legate::int64());
 
   {
-    auto copy = runtime->create_copy(context);
+    auto copy = runtime->create_copy();
     copy->add_input(store1);
     copy->add_output(store2);
     EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
   }
 
   {
-    auto copy = runtime->create_copy(context);
+    auto copy = runtime->create_copy();
     copy->add_input(store1);
     copy->add_source_indirect(store2);
     copy->add_output(store3);
@@ -86,7 +86,7 @@ void test_shape_check_failure()
   }
 
   {
-    auto copy = runtime->create_copy(context);
+    auto copy = runtime->create_copy();
     copy->add_input(store1);
     copy->add_target_indirect(store2);
     copy->add_output(store3);
@@ -94,7 +94,7 @@ void test_shape_check_failure()
   }
 
   {
-    auto copy = runtime->create_copy(context);
+    auto copy = runtime->create_copy();
     copy->add_input(store1);
     copy->add_source_indirect(store2);
     copy->add_target_indirect(store3);

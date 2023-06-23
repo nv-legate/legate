@@ -163,19 +163,13 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
   return impl_->create_task(library, task_id, launch_shape);
 }
 
-std::unique_ptr<Copy> Runtime::create_copy(LibraryContext* library)
-{
-  return impl_->create_copy(library);
-}
+std::unique_ptr<Copy> Runtime::create_copy() { return impl_->create_copy(); }
 
-void Runtime::issue_fill(LibraryContext* library, LogicalStore lhs, LogicalStore value)
-{
-  impl_->issue_fill(library, lhs, value);
-}
+void Runtime::issue_fill(LogicalStore lhs, LogicalStore value) { impl_->issue_fill(lhs, value); }
 
-void Runtime::issue_fill(LibraryContext* library, LogicalStore lhs, const Scalar& value)
+void Runtime::issue_fill(LogicalStore lhs, const Scalar& value)
 {
-  issue_fill(library, lhs, create_store(value));
+  issue_fill(lhs, create_store(value));
 }
 
 void Runtime::submit(std::unique_ptr<Operation> op) { impl_->submit(std::move(op)); }

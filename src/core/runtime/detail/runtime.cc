@@ -179,20 +179,17 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
   return std::unique_ptr<ManualTask>(task);
 }
 
-std::unique_ptr<Copy> Runtime::create_copy(LibraryContext* library)
+std::unique_ptr<Copy> Runtime::create_copy()
 {
   auto machine = machine_manager_->get_machine();
-  auto copy    = new Copy(library, next_unique_id_++, std::move(machine));
+  auto copy    = new Copy(next_unique_id_++, std::move(machine));
   return std::unique_ptr<Copy>(copy);
 }
 
-void Runtime::issue_fill(LibraryContext* library,
-                         legate::LogicalStore lhs,
-                         legate::LogicalStore value)
+void Runtime::issue_fill(legate::LogicalStore lhs, legate::LogicalStore value)
 {
   auto machine = machine_manager_->get_machine();
-  submit(
-    std::unique_ptr<Fill>(new Fill(library, lhs, value, next_unique_id_++, std::move(machine))));
+  submit(std::unique_ptr<Fill>(new Fill(lhs, value, next_unique_id_++, std::move(machine))));
 }
 
 void Runtime::flush_scheduling_window()
@@ -314,7 +311,7 @@ std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::Logical
   return fld_mgr->import_field(region, field_id);
 }
 
-RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegionField* rf)
+RegionField Runtime::map_region_field(const LogicalRegionField* rf)
 {
   auto root_region = rf->get_root().region();
   auto field_id    = rf->field_id();
@@ -327,7 +324,7 @@ RegionField Runtime::map_region_field(LibraryContext* context, const LogicalRegi
     Legion::RegionRequirement req(root_region, READ_WRITE, EXCLUSIVE, root_region);
     req.add_field(field_id);
 
-    auto mapper_id = context->get_mapper_id();
+    auto mapper_id = core_context_->get_mapper_id();
     // TODO: We need to pass the metadata about logical store
     Legion::InlineLauncher launcher(req, mapper_id);
     pr                  = legion_runtime_->map_region(legion_context_, launcher);

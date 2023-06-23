@@ -39,10 +39,10 @@ void test_manual_task(legate::LibraryContext* context, legate::LogicalStore stor
   runtime->submit(std::move(task));
 }
 
-void print_store(legate::LibraryContext* context, legate::LogicalStore store)
+void print_store(legate::LogicalStore store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto p_store = store.get_physical_store(context);
+  auto p_store = store.get_physical_store();
   auto acc     = p_store->read_accessor<int64_t, 2>();
   auto shape   = p_store->shape<2>();
   std::stringstream ss;
@@ -59,9 +59,9 @@ TEST(Integration, ManualSimple)
 
   auto store = runtime->create_store({5, 5}, legate::int64());
   test_auto_task(context, store);
-  print_store(context, store);
+  print_store(store);
   test_manual_task(context, store);
-  print_store(context, store);
+  print_store(store);
 }
 
 }  // namespace manualsimple

@@ -36,7 +36,7 @@ class ProjectionInfo;
 
 class FillLauncher {
  public:
-  FillLauncher(LibraryContext* library, const mapping::MachineDesc& machine, int64_t tag = 0);
+  FillLauncher(const mapping::MachineDesc& machine, int64_t tag = 0);
   ~FillLauncher();
 
  public:
@@ -57,9 +57,8 @@ class FillLauncher {
                                                           LogicalStore* value);
 
  private:
-  LibraryContext* library_;
-  int64_t tag_;
   mapping::MachineDesc machine_;
+  int64_t tag_;
 
  private:
   BufferBuilder* mapper_arg_;

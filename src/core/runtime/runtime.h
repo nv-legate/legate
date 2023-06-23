@@ -165,27 +165,23 @@ class Runtime {
   /**
    * @brief Creates a Copy
    *
-   * @param library Library in which the copy is created
-   *
    * @return Copy object
    */
-  std::unique_ptr<Copy> create_copy(LibraryContext* library);
+  std::unique_ptr<Copy> create_copy();
   /**
    * @brief Fills a given store with a constant
    *
-   * @param library Library in which the fill is performed
    * @param lhs Logical store to fill
    * @param value Logical store that contains the constant value to fill the store with
    */
-  void issue_fill(LibraryContext* library, LogicalStore lhs, LogicalStore value);
+  void issue_fill(LogicalStore lhs, LogicalStore value);
   /**
    * @brief Fills a given store with a constant
    *
-   * @param library Library in which the fill is performed
    * @param lhs Logical store to fill
    * @param value Value to fill the store with
    */
-  void issue_fill(LibraryContext* library, LogicalStore lhs, const Scalar& value);
+  void issue_fill(LogicalStore lhs, const Scalar& value);
   /**
    * @brief Submits an operation for execution
    *

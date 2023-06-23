@@ -49,7 +49,7 @@ void test_mapped_regions_leak(legate::Runtime* runtime, legate::LibraryContext* 
 {
   {
     auto l_store = runtime->create_store({5}, legate::int64());
-    auto p_store = l_store.get_physical_store(context);
+    auto p_store = l_store.get_physical_store();
     EXPECT_FALSE(p_store->is_future());
     EXPECT_EQ(runtime->impl()->num_inline_mapped(), 1);
   }
@@ -59,17 +59,17 @@ void test_mapped_regions_leak(legate::Runtime* runtime, legate::LibraryContext* 
 void test_inline_map_future(legate::Runtime* runtime, legate::LibraryContext* context)
 {
   auto l_store = runtime->create_store({1}, legate::int64(), true /*optimize_scalar*/);
-  auto p_store = l_store.get_physical_store(context);
+  auto p_store = l_store.get_physical_store();
   EXPECT_TRUE(p_store->is_future());
 }
 
 void test_inline_map_region_and_slice(legate::Runtime* runtime, legate::LibraryContext* context)
 {
   auto root_ls = runtime->create_store({5}, legate::int64());
-  auto root_ps = root_ls.get_physical_store(context);
+  auto root_ps = root_ls.get_physical_store();
   EXPECT_FALSE(root_ps->is_future());
   auto slice_ls = root_ls.slice(0, legate::Slice(1));
-  auto slice_ps = slice_ls.get_physical_store(context);
+  auto slice_ps = slice_ls.get_physical_store();
   EXPECT_FALSE(slice_ps->is_future());
   auto root_acc  = root_ps->write_accessor<int64_t, 1>();
   root_acc[2]    = 42;
@@ -81,7 +81,7 @@ void test_inline_map_and_task(legate::Runtime* runtime, legate::LibraryContext* 
 {
   auto l_store = runtime->create_store({5}, legate::int64());
   {
-    auto p_store = l_store.get_physical_store(context);
+    auto p_store = l_store.get_physical_store();
     auto acc     = p_store->write_accessor<int64_t, 1>();
     acc[2]       = 42;
   }
@@ -89,7 +89,7 @@ void test_inline_map_and_task(legate::Runtime* runtime, legate::LibraryContext* 
   task->add_input(l_store);
   task->add_output(l_store);
   runtime->submit(std::move(task));
-  auto p_store = l_store.get_physical_store(context);
+  auto p_store = l_store.get_physical_store();
   auto acc     = p_store->read_accessor<int64_t, 1>();
   EXPECT_EQ(acc[2], 43);
 }

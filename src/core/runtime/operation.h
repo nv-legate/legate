@@ -53,7 +53,7 @@ class Scalar;
 class Operation {
  protected:
   using StoreArg = std::pair<detail::LogicalStore*, const Variable*>;
-  Operation(LibraryContext* library, uint64_t unique_id, mapping::MachineDesc&& machine);
+  Operation(uint64_t unique_id, mapping::MachineDesc&& machine);
 
  public:
   virtual ~Operation() {}
@@ -91,7 +91,6 @@ class Operation {
   void record_partition(const Variable* variable, std::shared_ptr<detail::LogicalStore> store);
 
  protected:
-  LibraryContext* library_;
   uint64_t unique_id_;
 
  protected:
@@ -116,7 +115,7 @@ class Operation {
  */
 class Task : public Operation {
  protected:
-  Task(LibraryContext* library,
+  Task(const LibraryContext* library,
        int64_t task_id,
        uint64_t unique_id,
        mapping::MachineDesc&& machine);
@@ -179,6 +178,7 @@ class Task : public Operation {
   std::string to_string() const override;
 
  protected:
+  const LibraryContext* library_;
   int64_t task_id_;
   bool concurrent_{false};
   bool has_side_effect_{false};
@@ -197,7 +197,7 @@ class Task : public Operation {
 class AutoTask : public Task {
  public:
   friend class detail::Runtime;
-  AutoTask(LibraryContext* library,
+  AutoTask(const LibraryContext* library,
            int64_t task_id,
            uint64_t unique_id,
            mapping::MachineDesc&& machine);
@@ -265,7 +265,7 @@ class AutoTask : public Task {
 class ManualTask : public Task {
  private:
   friend class detail::Runtime;
-  ManualTask(LibraryContext* library,
+  ManualTask(const LibraryContext* library,
              int64_t task_id,
              const Shape& launch_shape,
              uint64_t unique_id,
@@ -340,7 +340,7 @@ class ManualTask : public Task {
 class Copy : public Operation {
  private:
   friend class detail::Runtime;
-  Copy(LibraryContext* library, int64_t unique_id, mapping::MachineDesc&& machine);
+  Copy(int64_t unique_id, mapping::MachineDesc&& machine);
 
  public:
   void add_input(LogicalStore store);

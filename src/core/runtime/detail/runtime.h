@@ -72,8 +72,8 @@ class Runtime {
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
-  std::unique_ptr<Copy> create_copy(LibraryContext* library);
-  void issue_fill(LibraryContext* library, legate::LogicalStore lhs, legate::LogicalStore value);
+  std::unique_ptr<Copy> create_copy();
+  void issue_fill(legate::LogicalStore lhs, legate::LogicalStore value);
   void flush_scheduling_window();
   void submit(std::unique_ptr<Operation> op);
 
@@ -101,7 +101,7 @@ class Runtime {
   std::shared_ptr<LogicalRegionField> import_region_field(Legion::LogicalRegion region,
                                                           Legion::FieldID field_id,
                                                           uint32_t field_size);
-  RegionField map_region_field(LibraryContext* context, const LogicalRegionField* region_field);
+  RegionField map_region_field(const LogicalRegionField* region_field);
   void unmap_physical_region(Legion::PhysicalRegion pr);
   size_t num_inline_mapped() const;
 
@@ -189,6 +189,7 @@ class Runtime {
   bool initialized() const { return initialized_; }
   void destroy();
   int32_t finish();
+  const LibraryContext* core_context() const { return core_context_; }
 
  private:
   bool initialized_{false};

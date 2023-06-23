@@ -328,11 +328,9 @@ class LogicalStore {
    * This call blocks the client's control flow. And it fetches the data for the whole store on
    * a single node.
    *
-   * @param context Library within which the physical store is created
-   *
    * @return A physical store of the logical store
    */
-  std::shared_ptr<Store> get_physical_store(LibraryContext* context);
+  std::shared_ptr<Store> get_physical_store();
 
  public:
   void set_key_partition(const mapping::MachineDesc& machine, const Partition* partition);

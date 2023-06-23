@@ -194,12 +194,12 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
 
 void Storage::set_future(Legion::Future future) { future_ = future; }
 
-RegionField Storage::map(LibraryContext* context)
+RegionField Storage::map()
 {
 #ifdef DEBUG_LEGATE
   assert(Kind::REGION_FIELD == kind_);
 #endif
-  return Runtime::get_runtime()->map_region_field(context, get_region_field());
+  return Runtime::get_runtime()->map_region_field(get_region_field());
 }
 
 Restrictions Storage::compute_restrictions() const
@@ -523,7 +523,7 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t idx, std::vector
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
+std::shared_ptr<Store> LogicalStore::get_physical_store()
 {
   if (unbound()) { throw std::invalid_argument("Unbound store cannot be inlined mapped"); }
   if (nullptr != mapped_) return mapped_;
@@ -539,7 +539,7 @@ std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
 #ifdef DEBUG_LEGATE
   assert(storage_->kind() == Storage::Kind::REGION_FIELD);
 #endif
-  auto region_field = storage_->map(context);
+  auto region_field = storage_->map();
   mapped_ = std::make_shared<Store>(dim(), type().clone(), -1, std::move(region_field), transform_);
   return mapped_;
 }

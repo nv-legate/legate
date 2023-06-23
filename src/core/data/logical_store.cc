@@ -73,10 +73,7 @@ LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes
   return LogicalStore(impl_->delinearize(dim, std::move(sizes)));
 }
 
-std::shared_ptr<Store> LogicalStore::get_physical_store(LibraryContext* context)
-{
-  return impl_->get_physical_store(context);
-}
+std::shared_ptr<Store> LogicalStore::get_physical_store() { return impl_->get_physical_store(); }
 
 void LogicalStore::set_key_partition(const mapping::MachineDesc& machine,
                                      const Partition* partition)

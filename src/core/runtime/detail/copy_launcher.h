@@ -41,15 +41,11 @@ class RequirementAnalyzer;
 
 class CopyLauncher {
  public:
-  CopyLauncher(LibraryContext* library,
-               const mapping::MachineDesc& machine,
+  CopyLauncher(const mapping::MachineDesc& machine,
                bool source_indirect_out_of_range,
                bool target_indirect_out_of_range,
                int64_t tag = 0);
   ~CopyLauncher();
-
- public:
-  int64_t legion_mapper_id() const;
 
  public:
   void add_input(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
@@ -80,9 +76,8 @@ class CopyLauncher {
   void populate_copy(Launcher* launcher);
 
  private:
-  LibraryContext* library_;
-  int64_t tag_;
   mapping::MachineDesc machine_;
+  int64_t tag_;
   Legion::ProjectionID key_proj_id_{0};
 
  private:

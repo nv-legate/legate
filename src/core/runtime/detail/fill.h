@@ -23,11 +23,7 @@ namespace legate {
 class Fill : public Operation {
  private:
   friend class detail::Runtime;
-  Fill(LibraryContext* library,
-       LogicalStore lhs,
-       LogicalStore value,
-       int64_t unique_id,
-       mapping::MachineDesc&& machine);
+  Fill(LogicalStore lhs, LogicalStore value, int64_t unique_id, mapping::MachineDesc&& machine);
 
  public:
   void launch(detail::Strategy* strategy) override;

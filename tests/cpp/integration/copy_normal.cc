@@ -111,7 +111,7 @@ void test_normal_copies(const std::vector<NormalCopySpec> specs)
     outputs.push_back(runtime->create_store(shape, type.clone()));
   }
 
-  auto copy = runtime->create_copy(context);
+  auto copy = runtime->create_copy();
   for (auto& input : inputs) copy->add_input(input);
   for (auto& output : outputs) copy->add_output(output);
   runtime->submit(std::move(copy));

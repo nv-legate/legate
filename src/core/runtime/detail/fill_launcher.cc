@@ -24,10 +24,8 @@
 
 namespace legate::detail {
 
-FillLauncher::FillLauncher(LibraryContext* library,
-                           const mapping::MachineDesc& machine,
-                           int64_t tag)
-  : library_(library), tag_(tag), machine_(machine), mapper_arg_(new BufferBuilder())
+FillLauncher::FillLauncher(const mapping::MachineDesc& machine, int64_t tag)
+  : machine_(machine), tag_(tag), mapper_arg_(new BufferBuilder())
 {
 }
 
@@ -69,17 +67,18 @@ std::unique_ptr<Legion::IndexFillLauncher> FillLauncher::build_index_fill(
   auto lhs_region       = lhs_region_field->region();
   auto field_id         = lhs_region_field->field_id();
   auto future_value     = value->get_future();
-  auto lhs_parent       = Runtime::get_runtime()->find_parent_region(lhs_region);
-  auto index_fill       = std::make_unique<Legion::IndexFillLauncher>(launch_domain,
-                                                                lhs_proj.partition,
-                                                                lhs_parent,
-                                                                future_value,
-                                                                lhs_proj.proj_id,
-                                                                Legion::Predicate::TRUE_PRED,
-                                                                library_->get_mapper_id(),
-                                                                lhs_proj.tag,
-                                                                mapper_arg_->to_legion_buffer(),
-                                                                provenance.c_str());
+  auto lhs_parent       = runtime->find_parent_region(lhs_region);
+  auto index_fill =
+    std::make_unique<Legion::IndexFillLauncher>(launch_domain,
+                                                lhs_proj.partition,
+                                                lhs_parent,
+                                                future_value,
+                                                lhs_proj.proj_id,
+                                                Legion::Predicate::TRUE_PRED,
+                                                runtime->core_context()->get_mapper_id(),
+                                                lhs_proj.tag,
+                                                mapper_arg_->to_legion_buffer(),
+                                                provenance.c_str());
 
   index_fill->add_field(field_id);
   return std::move(index_fill);
@@ -95,15 +94,16 @@ std::unique_ptr<Legion::FillLauncher> FillLauncher::build_single_fill(
   auto lhs_region       = lhs_region_field->region();
   auto field_id         = lhs_region_field->field_id();
   auto future_value     = value->get_future();
-  auto lhs_parent       = Runtime::get_runtime()->find_parent_region(lhs_region);
-  auto single_fill      = std::make_unique<Legion::FillLauncher>(lhs_region,
-                                                            lhs_parent,
-                                                            future_value,
-                                                            Legion::Predicate::TRUE_PRED,
-                                                            library_->get_mapper_id(),
-                                                            lhs_proj.tag,
-                                                            mapper_arg_->to_legion_buffer(),
-                                                            provenance.c_str());
+  auto lhs_parent       = runtime->find_parent_region(lhs_region);
+  auto single_fill =
+    std::make_unique<Legion::FillLauncher>(lhs_region,
+                                           lhs_parent,
+                                           future_value,
+                                           Legion::Predicate::TRUE_PRED,
+                                           runtime->core_context()->get_mapper_id(),
+                                           lhs_proj.tag,
+                                           mapper_arg_->to_legion_buffer(),
+                                           provenance.c_str());
 
   single_fill->add_field(field_id);
   return std::move(single_fill);

@@ -172,9 +172,9 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   fill_input(context, src, spec.seed);
   fill_indirect(context, src_ind, src);
   fill_indirect(context, tgt_ind, tgt);
-  runtime->issue_fill(context, tgt, spec.init);
+  runtime->issue_fill(tgt, spec.init);
 
-  auto copy = runtime->create_copy(context);
+  auto copy = runtime->create_copy();
   copy->add_input(src);
   copy->add_output(tgt);
   copy->add_source_indirect(src_ind);

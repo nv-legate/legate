@@ -25,12 +25,8 @@
 
 namespace legate {
 
-Fill::Fill(LibraryContext* library,
-           LogicalStore lhs,
-           LogicalStore value,
-           int64_t unique_id,
-           mapping::MachineDesc&& machine)
-  : Operation(library, unique_id, std::move(machine)),
+Fill::Fill(LogicalStore lhs, LogicalStore value, int64_t unique_id, mapping::MachineDesc&& machine)
+  : Operation(unique_id, std::move(machine)),
     lhs_var_(declare_partition()),
     lhs_(lhs.impl()),
     value_(value.impl())
@@ -45,7 +41,7 @@ Fill::Fill(LibraryContext* library,
 
 void Fill::launch(detail::Strategy* strategy)
 {
-  detail::FillLauncher launcher(library_, machine_);
+  detail::FillLauncher launcher(machine_);
   auto launch_domain = strategy->launch_domain(this);
   auto part          = (*strategy)[lhs_var_];
   auto lhs_proj      = lhs_->create_partition(part)->create_projection_info(launch_domain);

@@ -128,7 +128,7 @@ void test_fill_index(int32_t dim)
   auto value = runtime->create_store(v);
 
   // fill input store with some values
-  runtime->issue_fill(context, lhs, value);
+  runtime->issue_fill(lhs, value);
 
   // check the result of fill
   check_output(lhs, v);
@@ -156,12 +156,12 @@ void test_fill_slice(int32_t dim)
   auto value_outside_slice = runtime->create_store(v2);
 
   // First fill the entire store with v1
-  runtime->issue_fill(context, lhs, value_outside_slice);
+  runtime->issue_fill(lhs, value_outside_slice);
 
   // Then fill a slice with v2
   auto sliced = lhs;
   for (int32_t idx = 0; idx < dim; ++idx) sliced = sliced.slice(idx, legate::Slice(offset));
-  runtime->issue_fill(context, sliced, value_in_slice);
+  runtime->issue_fill(sliced, value_in_slice);
 
   // check if the slice is filled correctly
   check_output_slice(lhs, v1, v2, offset);

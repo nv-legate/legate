@@ -77,7 +77,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   void set_future(Legion::Future future);
 
  public:
-  RegionField map(LibraryContext* context);
+  RegionField map();
 
  public:
   Restrictions compute_restrictions() const;
@@ -201,7 +201,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   std::shared_ptr<LogicalStorePartition> partition_by_tiling(Shape tile_shape);
 
  public:
-  std::shared_ptr<Store> get_physical_store(LibraryContext* context);
+  std::shared_ptr<Store> get_physical_store();
 
  public:
   Restrictions compute_restrictions() const;

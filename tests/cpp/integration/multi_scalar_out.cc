@@ -65,13 +65,11 @@ void test_reducer_manual(legate::LibraryContext* context,
   runtime->submit(std::move(task));
 }
 
-void print_stores(legate::LibraryContext* context,
-                  legate::LogicalStore scalar1,
-                  legate::LogicalStore scalar2)
+void print_stores(legate::LogicalStore scalar1, legate::LogicalStore scalar2)
 {
   auto runtime   = legate::Runtime::get_runtime();
-  auto p_scalar1 = scalar1.get_physical_store(context);
-  auto p_scalar2 = scalar2.get_physical_store(context);
+  auto p_scalar1 = scalar1.get_physical_store();
+  auto p_scalar2 = scalar2.get_physical_store();
   auto acc1      = p_scalar1->read_accessor<int8_t, 2>();
   auto acc2      = p_scalar2->read_accessor<int32_t, 3>();
   std::stringstream ss;
@@ -90,11 +88,11 @@ TEST(Integration, MultiScalarOut)
   auto scalar2 = runtime->create_store({1, 1, 1}, legate::int32(), true);
   auto store   = runtime->create_store({10}, legate::int64());
   test_writer_auto(context, scalar1, scalar2);
-  print_stores(context, scalar1, scalar2);
+  print_stores(scalar1, scalar2);
   test_reducer_auto(context, scalar1, scalar2, store);
-  print_stores(context, scalar1, scalar2);
+  print_stores(scalar1, scalar2);
   test_reducer_manual(context, scalar1, scalar2);
-  print_stores(context, scalar1, scalar2);
+  print_stores(scalar1, scalar2);
 }
 
 }  // namespace multiscalarout

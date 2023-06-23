@@ -28,8 +28,8 @@
 
 namespace legate {
 
-Copy::Copy(LibraryContext* library, int64_t unique_id, mapping::MachineDesc&& machine)
-  : Operation(library, unique_id, std::move(machine))
+Copy::Copy(int64_t unique_id, mapping::MachineDesc&& machine)
+  : Operation(unique_id, std::move(machine))
 {
 }
 
@@ -102,7 +102,7 @@ void Copy::launch(detail::Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
   detail::CopyLauncher launcher(
-    library_, machine_, source_indirect_out_of_range_, target_indirect_out_of_range_);
+    machine_, source_indirect_out_of_range_, target_indirect_out_of_range_);
   auto launch_domain = strategy.launch_domain(this);
 
   auto create_projection_info = [&strategy, &launch_domain](auto& store, auto& var) {
