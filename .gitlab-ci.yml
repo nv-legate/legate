@@ -1,14 +1,16 @@
 image:
   name: "rapidsai/devcontainers:23.06-cpp-cuda11.8-mambaforge-ubuntu22.04"
 
+workflow:
+  rules:
+    - if: ($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_PIPELINE_SOURCE == "push") &&
+          ($CI_PROJECT_PATH == "legate/legate.core.internal")
+
 stages:
     - build
 
 Build:LegateCore:
   stage: build
-
-  rules:
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "legate/legate.core.internal")
 
   tags:
     - cpu_only
