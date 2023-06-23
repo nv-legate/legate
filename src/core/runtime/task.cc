@@ -76,8 +76,11 @@ void Operation::record_partition(const Variable* variable,
                                   " is already assigned to another store");
     return;
   }
-  store_mappings_[*variable] = store.get();
+  auto* p_store              = store.get();
+  store_mappings_[*variable] = p_store;
   all_stores_.insert(std::move(store));
+  if (part_mappings_.find(p_store) == part_mappings_.end())
+    part_mappings_.insert({p_store, variable});
 }
 
 ////////////////////////////////////////////////////
