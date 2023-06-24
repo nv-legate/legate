@@ -186,7 +186,7 @@ void CopyLauncher::pack_args()
 namespace {
 
 template <class Launcher>
-constexpr bool is_single;
+constexpr bool is_single = false;
 template <>
 constexpr bool is_single<Legion::CopyLauncher> = true;
 template <>

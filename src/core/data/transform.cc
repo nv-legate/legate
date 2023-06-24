@@ -224,6 +224,10 @@ std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
                            Shape(tiling->color_shape()),
                            tiling->offsets().update(dim_, offset_));
     }
+    default: {
+      assert(false);
+      return nullptr;
+    }
   }
   assert(false);
   return nullptr;
@@ -241,6 +245,10 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
       return create_tiling(Shape(tiling->tile_shape()),
                            Shape(tiling->color_shape()),
                            tiling->offsets().update(dim_, new_offset));
+    }
+    default: {
+      assert(false);
+      return nullptr;
     }
   }
   assert(false);
@@ -337,6 +345,10 @@ std::unique_ptr<Partition> Promote::convert(const Partition* partition) const
                            tiling->color_shape().insert(extra_dim_, 1),
                            tiling->offsets().insert(extra_dim_, 0));
     }
+    default: {
+      assert(false);
+      return nullptr;
+    }
   }
   assert(false);
   return nullptr;
@@ -353,6 +365,10 @@ std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
       return create_tiling(tiling->tile_shape().remove(extra_dim_),
                            tiling->color_shape().remove(extra_dim_),
                            tiling->offsets().remove(extra_dim_));
+    }
+    default: {
+      assert(false);
+      return nullptr;
     }
   }
   assert(false);
@@ -451,6 +467,10 @@ std::unique_ptr<Partition> Project::convert(const Partition* partition) const
                            tiling->color_shape().remove(dim_),
                            tiling->offsets().remove(dim_));
     }
+    default: {
+      assert(false);
+      return nullptr;
+    }
   }
   assert(false);
   return nullptr;
@@ -467,6 +487,10 @@ std::unique_ptr<Partition> Project::invert(const Partition* partition) const
       return create_tiling(tiling->tile_shape().insert(dim_, 1),
                            tiling->color_shape().insert(dim_, 1),
                            tiling->offsets().insert(dim_, coord_));
+    }
+    default: {
+      assert(false);
+      return nullptr;
     }
   }
   assert(false);
@@ -561,6 +585,10 @@ std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const
                            tiling->color_shape().map(axes_),
                            tiling->offsets().map(axes_));
     }
+    default: {
+      assert(false);
+      return nullptr;
+    }
   }
   assert(false);
   return nullptr;
@@ -577,6 +605,10 @@ std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
       return create_tiling(tiling->tile_shape().map(inverse_),
                            tiling->color_shape().map(inverse_),
                            tiling->offsets().map(inverse_));
+    }
+    default: {
+      assert(false);
+      return nullptr;
     }
   }
   assert(false);
@@ -756,6 +788,10 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
 
       return create_tiling(
         std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
+    }
+    default: {
+      assert(false);
+      return nullptr;
     }
   }
   assert(false);

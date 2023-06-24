@@ -56,7 +56,7 @@ struct ConstraintSolver {
  private:
   class EquivClass;
   std::map<const Variable, EquivClass*> equiv_class_map_{};
-  std::vector<std::unique_ptr<EquivClass>> equiv_classes_{};
+  std::vector<EquivClass*> equiv_classes_{};
 };
 
 }  // namespace legate::detail

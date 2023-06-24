@@ -74,7 +74,7 @@ void FieldSet::coalesce()
 namespace {
 
 template <class Launcher>
-constexpr bool is_single;
+constexpr bool is_single = false;
 template <>
 constexpr bool is_single<Legion::TaskLauncher> = true;
 template <>

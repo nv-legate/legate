@@ -78,7 +78,10 @@ struct ConstraintSolver::EquivClass {
 
 ConstraintSolver::ConstraintSolver() {}
 
-ConstraintSolver::~ConstraintSolver() {}
+ConstraintSolver::~ConstraintSolver()
+{
+  for (auto equiv_class : equiv_classes_) delete equiv_class;
+}
 
 void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, bool is_output)
 {
@@ -171,10 +174,9 @@ void ConstraintSolver::solve_constraints()
   for (auto& [_, entry] : table) distinct_entries.insert(entry);
 
   for (auto* entry : distinct_entries) {
-    auto equiv_class = std::make_unique<EquivClass>(entry);
-    for (auto* symb : equiv_class->partition_symbols)
-      equiv_class_map_.insert({*symb, equiv_class.get()});
-    equiv_classes_.push_back(std::move(equiv_class));
+    auto equiv_class = new EquivClass(entry);
+    for (auto* symb : equiv_class->partition_symbols) equiv_class_map_.insert({*symb, equiv_class});
+    equiv_classes_.push_back(equiv_class);
   }
 }
 
