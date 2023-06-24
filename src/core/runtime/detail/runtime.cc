@@ -745,25 +745,41 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 
 /*static*/ int32_t Runtime::start(int32_t argc, char** argv)
 {
-  Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);
+  static bool initialized = false;
 
-  Legion::Runtime::add_registration_callback(registration_callback);
+  if (initialized) return 0;
+  initialized = true;
 
-  auto result = Legion::Runtime::start(argc, argv, true);
-  if (result != 0) {
-    log_legate.error("Legion Runtime failed to start.");
-    return result;
-  }
+  int32_t result = 0;
+  if (!Legion::Runtime::has_runtime()) {
+    Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);
+
+    Legion::Runtime::add_registration_callback(registration_callback);
+
+    result = Legion::Runtime::start(argc, argv, true);
+    if (result != 0) {
+      log_legate.error("Legion Runtime failed to start.");
+      return result;
+    }
+  } else
+    Legion::Runtime::perform_registration_callback(registration_callback, true /*global*/);
 
   // Get the runtime now that we've started it
   auto legion_runtime = Legion::Runtime::get_runtime();
 
-  // Then we can make this thread into an implicit top-level task
-  auto legion_context = legion_runtime->begin_implicit_task(LEGATE_CORE_TOPLEVEL_TASK_ID,
-                                                            0 /*mapper id*/,
-                                                            Processor::LOC_PROC,
-                                                            TOPLEVEL_NAME,
-                                                            true /*control replicable*/);
+  Legion::Context legion_context;
+  // If the context already exists, that means that some other driver started the top-level task,
+  // so here we just grab it to initialize the Legate runtime
+  if (Legion::Runtime::has_context())
+    legion_context = Legion::Runtime::get_context();
+  else {
+    // Otherwise we  make this thread into an implicit top-level task
+    legion_context = legion_runtime->begin_implicit_task(LEGATE_CORE_TOPLEVEL_TASK_ID,
+                                                         0 /*mapper id*/,
+                                                         Processor::LOC_PROC,
+                                                         TOPLEVEL_NAME,
+                                                         true /*control replicable*/);
+  }
 
   // We can now initialize the Legate runtime with the Legion context
   Runtime::get_runtime()->initialize(legion_context);
