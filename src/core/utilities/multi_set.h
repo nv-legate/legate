@@ -46,6 +46,11 @@ class MultiSet {
    */
   bool contains(const T& value) const;
 
+  /**
+   * @brief Clears the container
+   */
+  void clear();
+
  private:
   std::map<T, size_t> map_;
 };

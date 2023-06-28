@@ -36,6 +36,7 @@ constexpr size_t SIZE = 10;
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
   static void cpu_variant(legate::TaskContext& context)
   {
+    EXPECT_TRUE(context.can_raise_exception());
     auto raise = context.scalars().at(0).value<bool>();
     auto index = context.scalars().at(1).value<int32_t>();
     // Make sure only some of the  point tasks raise an exception
@@ -163,21 +164,44 @@ void test_multi(bool use_auto_task)
   EXPECT_EQ(exn.value().error_message(), EXN_MSG);
 }
 
+void test_pending()
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+
+  runtime->set_max_pending_exceptions(2);
+  auto task = runtime->create_task(context, EXCEPTION_TASK);
+  task->throws_exception(true);
+  task->add_scalar_arg(legate::Scalar(false));
+  task->add_scalar_arg(legate::Scalar(12345));
+
+  runtime->submit(std::move(task));
+
+  // Finish the test with a pending exception to check if the runtime cleans things up correctly
+}
+
 }  // namespace
 
-TEST(Integration, ExceptionSingle)
+TEST(Exception, Single)
 {
   legate::Core::perform_registration<prepare>();
 
   test_single();
 }
 
-TEST(Integration, ExceptionMulti)
+TEST(Exception, Multi)
 {
   legate::Core::perform_registration<prepare>();
 
   test_multi(true /* use_auto_task */);
   test_multi(false /* use_auto_task */);
+}
+
+TEST(Exception, Pending)
+{
+  legate::Core::perform_registration<prepare>();
+
+  test_pending();
 }
 
 }  // namespace exception

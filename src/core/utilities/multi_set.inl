@@ -50,4 +50,10 @@ bool MultiSet<T>::contains(const T& value) const
   return map_.contains(value);
 }
 
+template <typename T>
+void MultiSet<T>::clear()
+{
+  map_.clear();
+}
+
 }  // namespace legate

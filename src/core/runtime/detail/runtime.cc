@@ -826,6 +826,12 @@ void Runtime::destroy()
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
   issue_execution_fence(true);
 
+  // Any STL containers holding Legion handles need to be cleared here, otherwise they cause
+  // trouble when they get destroyed in the Legate runtime's destructor
+  inline_mapped_.clear();
+  physical_region_refs_.clear();
+  pending_exceptions_.clear();
+
   // We finally deallocate managers
   for (auto& [_, context] : libraries_) delete context;
   libraries_.clear();
