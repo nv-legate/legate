@@ -14,9 +14,10 @@
  *
  */
 
-#include "core/runtime/detail/launcher_arg.h"
+#include "core/operation/detail/launcher_arg.h"
+
 #include "core/data/detail/logical_region_field.h"
-#include "core/runtime/detail/req_analyzer.h"
+#include "core/operation/detail/req_analyzer.h"
 
 namespace legate::detail {
 

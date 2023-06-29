@@ -45,15 +45,15 @@ class IOArray : public Array {
   {
     auto runtime = legate::Runtime::get_runtime();
     auto task    = runtime->create_task(context_, task::legateio::WRITE_FILE);
-    auto part    = task->declare_partition();
+    auto part    = task.declare_partition();
 
-    task->add_scalar_arg(legate::Scalar(filename));
-    task->add_input(store_, part);
+    task.add_scalar_arg(legate::Scalar(filename));
+    task.add_input(store_, part);
 
     // Request a broadcasting for the input. Since this is the only store
     // argument to the task, Legate will launch a single task from this
     // task descriptor.
-    task->add_constraint(legate::broadcast(part, {0}));
+    task.add_constraint(legate::broadcast(part, {0}));
 
     runtime->submit(std::move(task));
   }
@@ -69,10 +69,10 @@ class IOArray : public Array {
 
     auto runtime = legate::Runtime::get_runtime();
     auto task    = runtime->create_task(context_, task::legateio::WRITE_UNEVEN_TILES);
-    auto part    = task->declare_partition();
+    auto part    = task.declare_partition();
 
-    task->add_scalar_arg(legate::Scalar(path));
-    task->add_input(store_, part);
+    task.add_scalar_arg(legate::Scalar(path));
+    task.add_input(store_, part);
     runtime->submit(std::move(task));
   }
 
@@ -90,14 +90,14 @@ class IOArray : public Array {
     auto launch_shape    = store_partition.partition()->color_shape();
 
     auto task = runtime->create_task(context_, task::legateio::WRITE_EVEN_TILES, launch_shape);
-    task->add_input(store_partition);
-    task->add_scalar_arg(legate::Scalar(path));
+    task.add_input(store_partition);
+    task.add_scalar_arg(legate::Scalar(path));
 
     auto extents = store_.extents();
     EXPECT_EQ(extents.size(), 2);
-    task->add_scalar_arg(
+    task.add_scalar_arg(
       legate::Scalar(std::vector<uint32_t>{(uint32_t)extents[0], (uint32_t)extents[1]}));
-    task->add_scalar_arg(legate::Scalar(std::vector<uint32_t>{tile_shape, tile_shape}));
+    task.add_scalar_arg(legate::Scalar(std::vector<uint32_t>{tile_shape, tile_shape}));
     runtime->submit(std::move(task));
   }
 
@@ -116,10 +116,10 @@ IOArray read_file(legate::LibraryContext* context,
   auto runtime = legate::Runtime::get_runtime();
   auto output  = runtime->create_store(std::move(dtype), 1);
   auto task    = runtime->create_task(context, task::legateio::READ_FILE);
-  auto part    = task->declare_partition();
+  auto part    = task.declare_partition();
 
-  task->add_scalar_arg(legate::Scalar(filename));
-  task->add_output(output, part);
+  task.add_scalar_arg(legate::Scalar(filename));
+  task.add_output(output, part);
 
   runtime->submit(std::move(task));
   return IOArray(context, output);
@@ -139,8 +139,8 @@ IOArray read_file_parallel(legate::LibraryContext* context,
   auto task =
     runtime->create_task(context, task::legateio::READ_FILE, legate::Shape({parallelism}));
 
-  task->add_scalar_arg(legate::Scalar(filename));
-  task->add_output(output);
+  task.add_scalar_arg(legate::Scalar(filename));
+  task.add_output(output);
 
   runtime->submit(std::move(task));
   return IOArray(context, output);
@@ -202,8 +202,8 @@ IOArray read_uneven_tiles(legate::LibraryContext* context, std::string path)
   auto task =
     runtime->create_task(context, task::legateio::READ_UNEVEN_TILES, legate::Shape(color_shape));
 
-  task->add_output(output);
-  task->add_scalar_arg(legate::Scalar(path));
+  task.add_output(output);
+  task.add_scalar_arg(legate::Scalar(path));
   runtime->submit(std::move(task));
 
   return IOArray(context, output);
@@ -256,8 +256,8 @@ IOArray read_even_tiles(legate::LibraryContext* context, std::string path)
   auto launch_shape     = output_partition.partition()->color_shape();
   auto task = runtime->create_task(context, task::legateio::READ_EVEN_TILES, launch_shape);
 
-  task->add_output(output_partition);
-  task->add_scalar_arg(legate::Scalar(path));
+  task.add_output(output_partition);
+  task.add_scalar_arg(legate::Scalar(path));
   runtime->submit(std::move(task));
 
   // Unlike AutoTask, manually parallelized tasks don't update the "key"

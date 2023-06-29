@@ -76,12 +76,12 @@ void check_output(legate::LibraryContext* context,
   auto machine = runtime->get_machine();
   auto task    = runtime->create_task(context, CHECK_TASK + tgt.dim());
 
-  auto src_part = task->declare_partition();
-  auto tgt_part = task->declare_partition();
+  auto src_part = task.declare_partition();
+  auto tgt_part = task.declare_partition();
 
-  task->add_input(src, src_part);
-  task->add_input(tgt, tgt_part);
-  task->add_constraint(legate::align(src_part, tgt_part));
+  task.add_input(src, src_part);
+  task.add_input(tgt, tgt_part);
+  task.add_constraint(legate::align(src_part, tgt_part));
 
   runtime->submit(std::move(task));
 }
@@ -112,8 +112,8 @@ void test_normal_copies(const std::vector<NormalCopySpec> specs)
   }
 
   auto copy = runtime->create_copy();
-  for (auto& input : inputs) copy->add_input(input);
-  for (auto& output : outputs) copy->add_output(output);
+  for (auto& input : inputs) copy.add_input(input);
+  for (auto& output : outputs) copy.add_output(output);
   runtime->submit(std::move(copy));
 
   // check the result of copy

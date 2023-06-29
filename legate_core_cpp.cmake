@@ -208,32 +208,35 @@ list(APPEND legate_core_SOURCES
   src/core/mapping/mapping.cc
   src/core/mapping/operation.cc
   src/core/mapping/store.cc
+  src/core/operation/copy.cc
+  src/core/operation/task.cc
+  src/core/operation/detail/copy.cc
+  src/core/operation/detail/copy_launcher.cc
+  src/core/operation/detail/fill.cc
+  src/core/operation/detail/fill_launcher.cc
+  src/core/operation/detail/launcher_arg.cc
+  src/core/operation/detail/operation.cc
+  src/core/operation/detail/projection.cc
+  src/core/operation/detail/req_analyzer.cc
+  src/core/operation/detail/task.cc
+  src/core/operation/detail/task_launcher.cc
   src/core/partitioning/constraint.cc
   src/core/partitioning/constraint_solver.cc
   src/core/partitioning/partition.cc
   src/core/partitioning/partitioner.cc
   src/core/partitioning/restriction.cc
   src/core/runtime/context.cc
-  src/core/runtime/copy.cc
   src/core/runtime/projection.cc
   src/core/runtime/runtime.cc
-  src/core/runtime/task.cc
   src/core/runtime/tracker.cc
   src/core/runtime/shard.cc
   src/core/runtime/detail/communicator_manager.cc
-  src/core/runtime/detail/copy_launcher.cc
   src/core/runtime/detail/field_manager.cc
-  src/core/runtime/detail/fill.cc
-  src/core/runtime/detail/fill_launcher.cc
-  src/core/runtime/detail/launcher_arg.cc
   src/core/runtime/detail/machine_manager.cc
   src/core/runtime/detail/partition_manager.cc
-  src/core/runtime/detail/projection.cc
   src/core/runtime/detail/provenance_manager.cc
   src/core/runtime/detail/region_manager.cc
-  src/core/runtime/detail/req_analyzer.cc
   src/core/runtime/detail/runtime.cc
-  src/core/runtime/detail/task_launcher.cc
   src/core/task/registrar.cc
   src/core/task/return.cc
   src/core/task/task.cc
@@ -366,7 +369,8 @@ if (legate_core_BUILD_DOCS)
       src/core/runtime/runtime.inl
       src/core/runtime/context.h
       # operation
-      src/core/runtime/operation.h
+      src/core/operation/task.h
+      src/core/operation/copy.h
       # partitioning
       src/core/partitioning/constraint.h
       # mapping
@@ -456,6 +460,11 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/mapping)
 
 install(
+  FILES src/core/operation/copy.h
+        src/core/operation/task.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/operation)
+
+install(
   FILES src/core/partitioning/constraint.h
         src/core/partitioning/partition.h
         src/core/partitioning/restriction.h
@@ -464,7 +473,6 @@ install(
 install(
   FILES src/core/runtime/context.h
         src/core/runtime/context.inl
-        src/core/runtime/operation.h
         src/core/runtime/resource.h
         src/core/runtime/projection.h
         src/core/runtime/runtime.h

@@ -53,7 +53,7 @@ void test_manual_provenance(legate::LibraryContext* context)
   runtime->impl()->provenance_manager()->set_provenance(provenance);
   // auto task
   auto task = runtime->create_task(context, PROVENANCE);
-  task->add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
@@ -65,7 +65,7 @@ void test_push_provenance(legate::LibraryContext* context)
   EXPECT_EQ(runtime->impl()->provenance_manager()->get_provenance(), provenance);
   // auto task
   auto task = runtime->create_task(context, PROVENANCE);
-  task->add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
@@ -78,7 +78,7 @@ void test_pop_provenance(legate::LibraryContext* context)
   // auto task
   auto task              = runtime->create_task(context, PROVENANCE);
   std::string provenance = "";
-  task->add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
@@ -99,7 +99,7 @@ void test_clear_provenance(legate::LibraryContext* context)
   // auto task
   auto task              = runtime->create_task(context, PROVENANCE);
   std::string provenance = "";
-  task->add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
@@ -110,7 +110,7 @@ void test_provenance_tracker(legate::LibraryContext* context)
   // auto task
   auto task              = runtime->create_task(context, PROVENANCE);
   std::string provenance = "provenance.cc:108";
-  task->add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
@@ -122,7 +122,7 @@ void test_nested_provenance_tracker(legate::LibraryContext* context)
   auto runtime           = legate::Runtime::get_runtime();
   auto task              = runtime->create_task(context, PROVENANCE);
   std::string provenance = "provenance.cc:119";
-  task->add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
@@ -132,7 +132,7 @@ void test_manual_tracker(legate::LibraryContext* context)
   auto runtime = legate::Runtime::get_runtime();
   // auto task
   auto task = runtime->create_task(context, PROVENANCE);
-  task->add_scalar_arg(legate::Scalar(track.get_current_provenance()));
+  task.add_scalar_arg(legate::Scalar(track.get_current_provenance()));
   runtime->submit(std::move(task));
 }
 

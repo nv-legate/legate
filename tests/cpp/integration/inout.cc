@@ -30,8 +30,8 @@ void test_inout()
   runtime->issue_fill(store, legate::Scalar(int64_t(0)));
 
   auto task = runtime->create_task(context, task::simple::HELLO);
-  task->add_input(store, task->find_or_declare_partition(store));
-  task->add_output(store, task->find_or_declare_partition(store));
+  task.add_input(store, task.find_or_declare_partition(store));
+  task.add_output(store, task.find_or_declare_partition(store));
   runtime->submit(std::move(task));
 }
 

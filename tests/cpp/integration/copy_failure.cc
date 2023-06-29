@@ -32,9 +32,9 @@ void test_input_output_failure()
   auto out_store              = runtime->create_store(extents, legate::int64());
   // fill input store with some values
   auto copy = runtime->create_copy();
-  copy->add_input(in_store1);
-  copy->add_input(in_store2);
-  copy->add_output(out_store);
+  copy.add_input(in_store1);
+  copy.add_input(in_store2);
+  copy.add_output(out_store);
   EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
 }
 
@@ -52,11 +52,11 @@ void test_indirect_failure()
   auto indirect_store         = runtime->create_store(extents, legate::int64());
 
   auto copy = runtime->create_copy();
-  copy->add_input(in_store1);
-  copy->add_input(in_store2);
-  copy->add_output(out_store1);
-  copy->add_output(out_store2);
-  copy->add_target_indirect(indirect_store);
+  copy.add_input(in_store1);
+  copy.add_input(in_store2);
+  copy.add_output(out_store1);
+  copy.add_output(out_store2);
+  copy.add_target_indirect(indirect_store);
 
   EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
 }
@@ -72,33 +72,33 @@ void test_shape_check_failure()
 
   {
     auto copy = runtime->create_copy();
-    copy->add_input(store1);
-    copy->add_output(store2);
+    copy.add_input(store1);
+    copy.add_output(store2);
     EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
   }
 
   {
     auto copy = runtime->create_copy();
-    copy->add_input(store1);
-    copy->add_source_indirect(store2);
-    copy->add_output(store3);
+    copy.add_input(store1);
+    copy.add_source_indirect(store2);
+    copy.add_output(store3);
     EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
   }
 
   {
     auto copy = runtime->create_copy();
-    copy->add_input(store1);
-    copy->add_target_indirect(store2);
-    copy->add_output(store3);
+    copy.add_input(store1);
+    copy.add_target_indirect(store2);
+    copy.add_output(store3);
     EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
   }
 
   {
     auto copy = runtime->create_copy();
-    copy->add_input(store1);
-    copy->add_source_indirect(store2);
-    copy->add_target_indirect(store3);
-    copy->add_output(store1);
+    copy.add_input(store1);
+    copy.add_source_indirect(store2);
+    copy.add_target_indirect(store3);
+    copy.add_output(store1);
     EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
   }
 }

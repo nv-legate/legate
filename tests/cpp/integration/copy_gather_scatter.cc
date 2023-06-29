@@ -137,20 +137,20 @@ void check_gather_scatter_output(legate::LibraryContext* context,
 
   auto task = runtime->create_task(context, task_id);
 
-  auto src_part     = task->declare_partition();
-  auto tgt_part     = task->declare_partition();
-  auto src_ind_part = task->declare_partition();
-  auto tgt_ind_part = task->declare_partition();
-  task->add_input(src, src_part);
-  task->add_input(tgt, tgt_part);
-  task->add_input(src_ind, src_ind_part);
-  task->add_input(tgt_ind, tgt_ind_part);
-  task->add_scalar_arg(init);
+  auto src_part     = task.declare_partition();
+  auto tgt_part     = task.declare_partition();
+  auto src_ind_part = task.declare_partition();
+  auto tgt_ind_part = task.declare_partition();
+  task.add_input(src, src_part);
+  task.add_input(tgt, tgt_part);
+  task.add_input(src_ind, src_ind_part);
+  task.add_input(tgt_ind, tgt_ind_part);
+  task.add_scalar_arg(init);
 
-  task->add_constraint(legate::broadcast(src_part, legate::from_range<int32_t>(src.dim())));
-  task->add_constraint(legate::broadcast(tgt_part, legate::from_range<int32_t>(tgt.dim())));
-  task->add_constraint(legate::broadcast(src_ind_part, legate::from_range<int32_t>(src_ind.dim())));
-  task->add_constraint(legate::broadcast(tgt_ind_part, legate::from_range<int32_t>(tgt_ind.dim())));
+  task.add_constraint(legate::broadcast(src_part, legate::from_range<int32_t>(src.dim())));
+  task.add_constraint(legate::broadcast(tgt_part, legate::from_range<int32_t>(tgt.dim())));
+  task.add_constraint(legate::broadcast(src_ind_part, legate::from_range<int32_t>(src_ind.dim())));
+  task.add_constraint(legate::broadcast(tgt_ind_part, legate::from_range<int32_t>(tgt_ind.dim())));
 
   runtime->submit(std::move(task));
 }
@@ -175,10 +175,10 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   runtime->issue_fill(tgt, spec.init);
 
   auto copy = runtime->create_copy();
-  copy->add_input(src);
-  copy->add_output(tgt);
-  copy->add_source_indirect(src_ind);
-  copy->add_target_indirect(tgt_ind);
+  copy.add_input(src);
+  copy.add_output(tgt);
+  copy.add_source_indirect(src_ind);
+  copy.add_target_indirect(tgt_ind);
   runtime->submit(std::move(copy));
 
   check_gather_scatter_output(context, src, tgt, src_ind, tgt_ind, spec.init);

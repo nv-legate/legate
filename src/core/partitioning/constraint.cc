@@ -17,9 +17,9 @@
 #include <sstream>
 
 #include "core/data/scalar.h"
+#include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/operation.h"
 
 namespace legate {
 
@@ -29,7 +29,7 @@ std::string Literal::to_string() const { return partition_->to_string(); }
 
 void Literal::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const {}
 
-Variable::Variable(const Operation* op, int32_t id) : op_(op), id_(id) {}
+Variable::Variable(const detail::Operation* op, int32_t id) : op_(op), id_(id) {}
 
 bool operator==(const Variable& lhs, const Variable& rhs)
 {

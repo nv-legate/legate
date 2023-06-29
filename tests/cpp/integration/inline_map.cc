@@ -86,8 +86,8 @@ void test_inline_map_and_task(legate::Runtime* runtime, legate::LibraryContext* 
     acc[2]       = 42;
   }
   auto task = runtime->create_task(context, ADDER, {1});
-  task->add_input(l_store);
-  task->add_output(l_store);
+  task.add_input(l_store);
+  task.add_output(l_store);
   runtime->submit(std::move(task));
   auto p_store = l_store.get_physical_store();
   auto acc     = p_store->read_accessor<int64_t, 1>();

@@ -72,9 +72,9 @@ void test_single()
 
   auto issue_task = [&](int32_t index, bool raise) {
     auto task = runtime->create_task(context, EXCEPTION_TASK);
-    task->add_scalar_arg(legate::Scalar(raise));
-    task->add_scalar_arg(legate::Scalar(index));
-    task->throws_exception(true);
+    task.add_scalar_arg(legate::Scalar(raise));
+    task.add_scalar_arg(legate::Scalar(index));
+    task.throws_exception(true);
     runtime->submit(std::move(task));
   };
 
@@ -139,22 +139,22 @@ void test_multi(bool use_auto_task)
   auto store = runtime->create_store({SIZE, SIZE}, legate::int64());
   if (use_auto_task) {
     auto task = runtime->create_task(context, EXCEPTION_TASK);
-    auto part = task->declare_partition();
+    auto part = task.declare_partition();
     // Dummy store argument to trigger parallelization
-    task->add_output(store, part);
-    task->throws_exception(true);
-    task->add_scalar_arg(legate::Scalar(true));
-    task->add_scalar_arg(legate::Scalar(12345));
+    task.add_output(store, part);
+    task.throws_exception(true);
+    task.add_scalar_arg(legate::Scalar(true));
+    task.add_scalar_arg(legate::Scalar(12345));
 
     runtime->submit(std::move(task));
   } else {
     auto task = runtime->create_task(context, EXCEPTION_TASK, {2, 2});
     auto part = store.partition_by_tiling({SIZE / 2, SIZE / 2});
     // Dummy store argument to trigger parallelization
-    task->add_output(part);
-    task->throws_exception(true);
-    task->add_scalar_arg(legate::Scalar(true));
-    task->add_scalar_arg(legate::Scalar(12345));
+    task.add_output(part);
+    task.throws_exception(true);
+    task.add_scalar_arg(legate::Scalar(true));
+    task.add_scalar_arg(legate::Scalar(12345));
     runtime->submit(std::move(task));
   }
 
@@ -171,9 +171,9 @@ void test_pending()
 
   runtime->set_max_pending_exceptions(2);
   auto task = runtime->create_task(context, EXCEPTION_TASK);
-  task->throws_exception(true);
-  task->add_scalar_arg(legate::Scalar(false));
-  task->add_scalar_arg(legate::Scalar(12345));
+  task.throws_exception(true);
+  task.add_scalar_arg(legate::Scalar(false));
+  task.add_scalar_arg(legate::Scalar(12345));
 
   runtime->submit(std::move(task));
 

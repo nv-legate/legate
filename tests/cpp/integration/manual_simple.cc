@@ -25,8 +25,8 @@ void test_auto_task(legate::LibraryContext* context, legate::LogicalStore store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(context, task::simple::HELLO);
-  auto part    = task->declare_partition();
-  task->add_output(store, part);
+  auto part    = task.declare_partition();
+  task.add_output(store, part);
   runtime->submit(std::move(task));
 }
 
@@ -35,7 +35,7 @@ void test_manual_task(legate::LibraryContext* context, legate::LogicalStore stor
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(context, task::simple::HELLO, {3, 3});
   auto part    = store.partition_by_tiling({2, 2});
-  task->add_output(part);
+  task.add_output(part);
   runtime->submit(std::move(task));
 }
 

@@ -19,9 +19,9 @@
 #include "legion.h"
 
 #include "core/data/detail/logical_store.h"
+#include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
-#include "core/runtime/operation.h"
 
 namespace legate {
 extern Legion::Logger log_legate;

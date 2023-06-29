@@ -35,17 +35,17 @@
 #include "core/utilities/multi_set.h"
 
 namespace legate {
-class AutoTask;
-class Copy;
 class LibraryContext;
-class ManualTask;
-class Operation;
 }  // namespace legate
 
 namespace legate::detail {
 
+class AutoTask;
+class Copy;
 class LogicalRegionField;
 class LogicalStore;
+class ManualTask;
+class Operation;
 
 class Runtime {
  public:
@@ -73,7 +73,7 @@ class Runtime {
                                           int64_t task_id,
                                           const Shape& launch_shape);
   std::unique_ptr<Copy> create_copy();
-  void issue_fill(legate::LogicalStore lhs, legate::LogicalStore value);
+  void issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value);
   void flush_scheduling_window();
   void submit(std::unique_ptr<Operation> op);
 

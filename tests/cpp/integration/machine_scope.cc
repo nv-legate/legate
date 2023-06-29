@@ -68,35 +68,35 @@ void test_scoping(legate::LibraryContext* context)
   auto store   = runtime->create_store({5, 5}, legate::int64());
   auto machine = runtime->get_machine();
   auto task    = runtime->create_task(context, MULTI_VARIANT);
-  auto part    = task->declare_partition();
-  task->add_output(store, part);
-  task->add_scalar_arg(machine.count());
+  auto part    = task.declare_partition();
+  task.add_output(store, part);
+  task.add_scalar_arg(machine.count());
   runtime->submit(std::move(task));
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
     legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::CPU));
     auto task_scoped = runtime->create_task(context, MULTI_VARIANT);
-    auto part_scoped = task_scoped->declare_partition();
-    task_scoped->add_output(store, part_scoped);
-    task_scoped->add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
+    auto part_scoped = task_scoped.declare_partition();
+    task_scoped.add_output(store, part_scoped);
+    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
     runtime->submit(std::move(task_scoped));
   }
 
   if (machine.count(legate::mapping::TaskTarget::OMP) > 0) {
     legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::OMP));
     auto task_scoped = runtime->create_task(context, MULTI_VARIANT);
-    auto part_scoped = task_scoped->declare_partition();
-    task_scoped->add_output(store, part_scoped);
-    task_scoped->add_scalar_arg(machine.count(legate::mapping::TaskTarget::OMP));
+    auto part_scoped = task_scoped.declare_partition();
+    task_scoped.add_output(store, part_scoped);
+    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::OMP));
     runtime->submit(std::move(task_scoped));
   }
 
   if (machine.count(legate::mapping::TaskTarget::GPU) > 0) {
     legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
     auto task_scoped = runtime->create_task(context, MULTI_VARIANT);
-    auto part_scoped = task_scoped->declare_partition();
-    task_scoped->add_output(store, part_scoped);
-    task_scoped->add_scalar_arg(machine.count(legate::mapping::TaskTarget::GPU));
+    auto part_scoped = task_scoped.declare_partition();
+    task_scoped.add_output(store, part_scoped);
+    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::GPU));
     runtime->submit(std::move(task_scoped));
   }
 }
@@ -107,17 +107,17 @@ void test_cpu_only(legate::LibraryContext* context)
   auto store   = runtime->create_store({5, 5}, legate::int64());
   auto machine = runtime->get_machine();
   auto task    = runtime->create_task(context, CPU_VARIANT);
-  auto part    = task->declare_partition();
-  task->add_output(store, part);
-  task->add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
+  auto part    = task.declare_partition();
+  task.add_output(store, part);
+  task.add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
   runtime->submit(std::move(task));
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
     legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::CPU));
     auto task_scoped = runtime->create_task(context, CPU_VARIANT);
-    auto part_scoped = task_scoped->declare_partition();
-    task_scoped->add_output(store, part_scoped);
-    task_scoped->add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
+    auto part_scoped = task_scoped.declare_partition();
+    task_scoped.add_output(store, part_scoped);
+    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
     runtime->submit(std::move(task_scoped));
   }
 

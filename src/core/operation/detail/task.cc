@@ -14,74 +14,22 @@
  *
  */
 
-#include "core/runtime/operation.h"
+#include "core/operation/detail/task.h"
 
 #include <sstream>
-#include <unordered_set>
 
-#include "core/data/detail/logical_store.h"
 #include "core/data/scalar.h"
-#include "core/partitioning/constraint.h"
+#include "core/operation/detail/projection.h"
+#include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
 #include "core/runtime/context.h"
 #include "core/runtime/detail/communicator_manager.h"
-#include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/provenance_manager.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/runtime/detail/task_launcher.h"
 
-namespace legate {
-
-////////////////////////////////////////////////////
-// legate::Operation
-////////////////////////////////////////////////////
-
-Operation::Operation(uint64_t unique_id, mapping::MachineDesc&& machine)
-  : unique_id_(unique_id),
-    machine_(std::move(machine)),
-    provenance_(detail::Runtime::get_runtime()->provenance_manager()->get_provenance())
-{
-}
-
-const Variable* Operation::find_or_declare_partition(LogicalStore store)
-{
-  auto* impl  = store.impl().get();
-  auto finder = part_mappings_.find(impl);
-  if (finder != part_mappings_.end()) return finder->second;
-  const auto* symb = declare_partition();
-  part_mappings_.insert({impl, symb});
-  return symb;
-}
-
-const Variable* Operation::declare_partition()
-{
-  partition_symbols_.emplace_back(new Variable(this, next_part_id_++));
-  return partition_symbols_.back().get();
-}
-
-detail::LogicalStore* Operation::find_store(const Variable* part_symb) const
-{
-  return store_mappings_.at(*part_symb);
-}
-
-void Operation::record_partition(const Variable* variable,
-                                 std::shared_ptr<detail::LogicalStore> store)
-{
-  auto finder = store_mappings_.find(*variable);
-  if (finder != store_mappings_.end()) {
-    if (finder->second->id() != store->id())
-      throw std::invalid_argument("Variable " + variable->to_string() +
-                                  " is already assigned to another store");
-    return;
-  }
-  auto* p_store              = store.get();
-  store_mappings_[*variable] = p_store;
-  all_stores_.insert(std::move(store));
-  if (part_mappings_.find(p_store) == part_mappings_.end())
-    part_mappings_.insert({p_store, variable});
-}
+namespace legate::detail {
 
 ////////////////////////////////////////////////////
 // legate::Task
@@ -114,7 +62,7 @@ void Task::add_communicator(const std::string& name)
   communicator_factories_.push_back(comm_mgr->find_factory(name));
 }
 
-void Task::launch(detail::Strategy* p_strategy)
+void Task::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
   detail::TaskLauncher launcher(library_, machine_, provenance_, task_id_);
@@ -287,36 +235,35 @@ AutoTask::AutoTask(const LibraryContext* library,
 {
 }
 
-void AutoTask::add_input(LogicalStore store, const Variable* partition_symbol)
+void AutoTask::add_input(std::shared_ptr<LogicalStore>&& store, const Variable* partition_symbol)
 {
-  add_store(inputs_, store, partition_symbol);
+  add_store(inputs_, std::move(store), partition_symbol);
 }
 
-void AutoTask::add_output(LogicalStore store, const Variable* partition_symbol)
+void AutoTask::add_output(std::shared_ptr<LogicalStore>&& store, const Variable* partition_symbol)
 {
-  if (store.impl()->has_scalar_storage())
+  if (store->has_scalar_storage())
     scalar_outputs_.push_back(outputs_.size());
-  else if (store.impl()->unbound())
+  else if (store->unbound())
     unbound_outputs_.push_back(outputs_.size());
-  add_store(outputs_, store, partition_symbol);
+  add_store(outputs_, std::move(store), partition_symbol);
 }
 
-void AutoTask::add_reduction(LogicalStore store,
+void AutoTask::add_reduction(std::shared_ptr<LogicalStore>&& store,
                              Legion::ReductionOpID redop,
                              const Variable* partition_symbol)
 {
-  if (store.impl()->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
-  add_store(reductions_, store, partition_symbol);
+  if (store->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
+  add_store(reductions_, std::move(store), partition_symbol);
   reduction_ops_.push_back(redop);
 }
 
 void AutoTask::add_store(std::vector<StoreArg>& store_args,
-                         LogicalStore& store,
+                         std::shared_ptr<LogicalStore> store,
                          const Variable* partition_symbol)
 {
-  auto store_impl = store.impl();
-  store_args.push_back(StoreArg(store_impl.get(), partition_symbol));
-  record_partition(partition_symbol, store_impl);
+  store_args.push_back(StoreArg(store.get(), partition_symbol));
+  record_partition(partition_symbol, std::move(store));
 }
 
 void AutoTask::add_constraint(std::unique_ptr<Constraint> constraint)
@@ -349,64 +296,67 @@ ManualTask::ManualTask(const LibraryContext* library,
   strategy_->set_launch_shape(this, launch_shape);
 }
 
-void ManualTask::add_input(LogicalStore store) { add_store(inputs_, store, create_no_partition()); }
-
-void ManualTask::add_output(LogicalStore store)
+void ManualTask::add_input(std::shared_ptr<LogicalStore>&& store)
 {
-  if (store.impl()->has_scalar_storage())
-    scalar_outputs_.push_back(outputs_.size());
-  else if (store.impl()->unbound())
-    unbound_outputs_.push_back(outputs_.size());
-  add_store(outputs_, store, create_no_partition());
+  add_store(inputs_, std::move(store), create_no_partition());
 }
 
-void ManualTask::add_reduction(LogicalStore store, Legion::ReductionOpID redop)
+void ManualTask::add_input(std::shared_ptr<LogicalStorePartition>&& store_partition)
 {
-  if (store.impl()->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
-  add_store(reductions_, store, create_no_partition());
+  add_store(inputs_, store_partition->store(), store_partition->partition());
+}
+
+void ManualTask::add_output(std::shared_ptr<LogicalStore>&& store)
+{
+  if (store->has_scalar_storage())
+    scalar_outputs_.push_back(outputs_.size());
+  else if (store->unbound())
+    unbound_outputs_.push_back(outputs_.size());
+  add_store(outputs_, std::move(store), create_no_partition());
+}
+
+void ManualTask::add_output(std::shared_ptr<LogicalStorePartition>&& store_partition)
+{
+#ifdef DEBUG_LEGATE
+  // TODO: We need to raise an exception for the user error in this case
+  assert(!store_partition->store()->unbound());
+#endif
+  if (store_partition->store()->has_scalar_storage()) scalar_outputs_.push_back(outputs_.size());
+  add_store(outputs_, store_partition->store(), store_partition->partition());
+}
+
+void ManualTask::add_reduction(std::shared_ptr<LogicalStore>&& store, Legion::ReductionOpID redop)
+{
+  if (store->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
+  add_store(reductions_, std::move(store), create_no_partition());
   reduction_ops_.push_back(redop);
 }
 
-void ManualTask::add_input(LogicalStorePartition store_partition)
+void ManualTask::add_reduction(std::shared_ptr<LogicalStorePartition>&& store_partition,
+                               Legion::ReductionOpID redop)
 {
-  add_store(inputs_, store_partition.store(), store_partition.partition());
-}
-
-void ManualTask::add_output(LogicalStorePartition store_partition)
-{
-#ifdef DEBUG_LEGATE
-  assert(!store_partition.store().unbound());
-#endif
-  if (store_partition.store().impl()->has_scalar_storage())
-    scalar_outputs_.push_back(outputs_.size());
-  add_store(outputs_, store_partition.store(), store_partition.partition());
-}
-
-void ManualTask::add_reduction(LogicalStorePartition store_partition, Legion::ReductionOpID redop)
-{
-  if (store_partition.store().impl()->has_scalar_storage())
+  if (store_partition->store()->has_scalar_storage())
     scalar_reductions_.push_back(reductions_.size());
-  add_store(reductions_, store_partition.store(), store_partition.partition());
+  add_store(reductions_, store_partition->store(), store_partition->partition());
   reduction_ops_.push_back(redop);
 }
 
 void ManualTask::add_store(std::vector<StoreArg>& store_args,
-                           const LogicalStore& store,
+                           std::shared_ptr<LogicalStore> store,
                            std::shared_ptr<Partition> partition)
 {
-  auto store_impl       = store.impl();
   auto partition_symbol = declare_partition();
-  store_args.push_back(StoreArg(store_impl.get(), partition_symbol));
-  all_stores_.insert(std::move(store_impl));
-  if (store.unbound()) {
+  store_args.push_back(StoreArg(store.get(), partition_symbol));
+  if (store->unbound()) {
     auto field_space = detail::Runtime::get_runtime()->create_field_space();
     strategy_->insert(partition_symbol, std::move(partition), field_space);
   } else
     strategy_->insert(partition_symbol, std::move(partition));
+  all_stores_.insert(std::move(store));
 }
 
-void ManualTask::launch(detail::Strategy*) { Task::launch(strategy_.get()); }
+void ManualTask::launch(Strategy*) { Task::launch(strategy_.get()); }
 
-void ManualTask::add_to_solver(detail::ConstraintSolver& solver) {}
+void ManualTask::add_to_solver(ConstraintSolver& solver) {}
 
-}  // namespace legate
+}  // namespace legate::detail

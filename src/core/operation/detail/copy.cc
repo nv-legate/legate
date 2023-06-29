@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,16 @@
  *
  */
 
-#include "core/runtime/operation.h"
+#include "core/operation/detail/copy.h"
 
-#include "core/data/detail/logical_store.h"
-#include "core/data/logical_store.h"
+#include "core/operation/detail/copy_launcher.h"
+#include "core/operation/detail/projection.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/partitioner.h"
-#include "core/runtime/context.h"
-#include "core/runtime/detail/copy_launcher.h"
-#include "core/runtime/detail/projection.h"
 
-namespace legate {
+namespace legate::detail {
 
 Copy::Copy(int64_t unique_id, mapping::MachineDesc&& machine)
   : Operation(unique_id, std::move(machine))
@@ -34,75 +31,71 @@ Copy::Copy(int64_t unique_id, mapping::MachineDesc&& machine)
 }
 
 void Copy::add_store(std::vector<StoreArg>& store_args,
-                     LogicalStore& store,
+                     std::shared_ptr<LogicalStore> store,
                      const Variable* partition_symbol)
 {
-  auto store_impl = store.impl();
-  store_args.push_back(StoreArg(store_impl.get(), partition_symbol));
-  record_partition(partition_symbol, std::move(store_impl));
+  store_args.push_back(StoreArg(store.get(), partition_symbol));
+  record_partition(partition_symbol, std::move(store));
 }
 
 void Copy::add_store(std::optional<StoreArg>& store_arg,
-                     LogicalStore& store,
+                     std::shared_ptr<LogicalStore> store,
                      const Variable* partition_symbol)
 {
-  auto store_impl = store.impl();
-  store_arg       = StoreArg(store_impl.get(), partition_symbol);
-  record_partition(partition_symbol, std::move(store_impl));
+  store_arg = StoreArg(store.get(), partition_symbol);
+  record_partition(partition_symbol, std::move(store));
 }
 
-void check_store(LogicalStore store)
+void check_store(std::shared_ptr<LogicalStore>& store)
 {
-  if (store.unbound() || store.impl()->has_scalar_storage() || store.transformed()) {
-    std::string msg = "Copy accepts only normal, not transformed, region-backed store";
-    throw std::runtime_error(msg);
+  if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
+    throw std::runtime_error("Copy accepts only normal, not transformed, region-backed stores");
   }
 }
 
-void Copy::add_input(LogicalStore store)
+void Copy::add_input(std::shared_ptr<LogicalStore>&& store)
 {
   check_store(store);
-  add_store(inputs_, store, declare_partition());
+  add_store(inputs_, std::move(store), declare_partition());
 }
 
-void Copy::add_output(LogicalStore store)
+void Copy::add_output(std::shared_ptr<LogicalStore>&& store)
 {
   check_store(store);
   if (reductions_.size() > 0)
     throw std::runtime_error("Copy targets must be either all normal outputs or reductions");
-  add_store(outputs_, store, declare_partition());
+  add_store(outputs_, std::move(store), declare_partition());
 }
 
-void Copy::add_reduction(LogicalStore store, Legion::ReductionOpID redop)
+void Copy::add_reduction(std::shared_ptr<LogicalStore>&& store, Legion::ReductionOpID redop)
 {
   check_store(store);
   if (outputs_.size() > 0)
     throw std::runtime_error("Copy targets must be either all normal outputs or reductions");
-  add_store(reductions_, store, declare_partition());
+  add_store(reductions_, std::move(store), declare_partition());
   reduction_ops_.push_back(redop);
 }
 
-void Copy::add_source_indirect(LogicalStore store)
+void Copy::add_source_indirect(std::shared_ptr<LogicalStore>&& store)
 {
   check_store(store);
-  add_store(source_indirect_, store, declare_partition());
+  add_store(source_indirect_, std::move(store), declare_partition());
 }
 
-void Copy::add_target_indirect(LogicalStore store)
+void Copy::add_target_indirect(std::shared_ptr<LogicalStore>&& store)
 {
   check_store(store);
-  add_store(target_indirect_, store, declare_partition());
+  add_store(target_indirect_, std::move(store), declare_partition());
 }
 
 void Copy::set_source_indirect_out_of_range(bool flag) { source_indirect_out_of_range_ = flag; }
 
 void Copy::set_target_indirect_out_of_range(bool flag) { target_indirect_out_of_range_ = flag; }
 
-void Copy::launch(detail::Strategy* p_strategy)
+void Copy::launch(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
-  detail::CopyLauncher launcher(
-    machine_, source_indirect_out_of_range_, target_indirect_out_of_range_);
+  CopyLauncher launcher(machine_, source_indirect_out_of_range_, target_indirect_out_of_range_);
   auto launch_domain = strategy.launch_domain(this);
 
   auto create_projection_info = [&strategy, &launch_domain](auto& store, auto& var) {
@@ -153,7 +146,7 @@ void Copy::launch(detail::Strategy* p_strategy)
   }
 }
 
-void Copy::add_to_solver(detail::ConstraintSolver& solver)
+void Copy::add_to_solver(ConstraintSolver& solver)
 {
   bool gather  = source_indirect_.has_value();
   bool scatter = target_indirect_.has_value();
@@ -211,4 +204,4 @@ void Copy::add_to_solver(detail::ConstraintSolver& solver)
 
 std::string Copy::to_string() const { return "Copy:" + std::to_string(unique_id_); }
 
-}  // namespace legate
+}  // namespace legate::detail

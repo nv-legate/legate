@@ -32,8 +32,8 @@ TEST(Integration, RegionManager)
   std::vector<legate::LogicalStore> stores;
   for (uint32_t idx = 0; idx < LEGION_MAX_FIELDS * 2; ++idx) {
     auto store = runtime->create_store({10}, legate::int64());
-    auto part  = task->declare_partition();
-    task->add_output(store, part);
+    auto part  = task.declare_partition();
+    task.add_output(store, part);
     stores.push_back(store);
   }
   runtime->submit(std::move(task));

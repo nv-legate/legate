@@ -18,11 +18,11 @@
 #include "core/data/detail/logical_store.h"
 #include "core/data/logical_store.h"
 #include "core/data/scalar.h"
+#include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/runtime/operation.h"
 
 namespace legate::detail {
 

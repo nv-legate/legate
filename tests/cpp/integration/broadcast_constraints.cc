@@ -67,12 +67,12 @@ void test_normal_store()
     for (auto dim : dims) extents[dim] = EXT_LARGE;
     auto store = runtime->create_store(extents, legate::int64());
     auto task  = runtime->create_task(context, TESTER);
-    auto part  = task->declare_partition();
-    task->add_output(store, part);
-    task->add_scalar_arg(legate::Scalar(EXT_LARGE));
-    task->add_scalar_arg(legate::Scalar(dims));
-    task->add_scalar_arg(legate::Scalar(false));
-    task->add_constraint(legate::broadcast(part, dims));
+    auto part  = task.declare_partition();
+    task.add_output(store, part);
+    task.add_scalar_arg(legate::Scalar(EXT_LARGE));
+    task.add_scalar_arg(legate::Scalar(dims));
+    task.add_scalar_arg(legate::Scalar(false));
+    task.add_constraint(legate::broadcast(part, dims));
     runtime->submit(std::move(task));
   };
 
@@ -92,8 +92,8 @@ void test_promoted_store()
 
   auto initialize = [&](auto store) {
     auto task = runtime->create_task(context, INITIALIZER);
-    auto part = task->declare_partition();
-    task->add_output(store, part);
+    auto part = task.declare_partition();
+    task.add_output(store, part);
     runtime->submit(std::move(task));
   };
 
@@ -104,12 +104,12 @@ void test_promoted_store()
     initialize(store);
 
     auto task = runtime->create_task(context, TESTER);
-    auto part = task->declare_partition();
-    task->add_input(store.promote(2, EXT_LARGE), part);
-    task->add_scalar_arg(legate::Scalar(EXT_LARGE));
-    task->add_scalar_arg(legate::Scalar(std::vector<int32_t>{dim}));
-    task->add_scalar_arg(legate::Scalar(true));
-    task->add_constraint(legate::broadcast(part, {dim}));
+    auto part = task.declare_partition();
+    task.add_input(store.promote(2, EXT_LARGE), part);
+    task.add_scalar_arg(legate::Scalar(EXT_LARGE));
+    task.add_scalar_arg(legate::Scalar(std::vector<int32_t>{dim}));
+    task.add_scalar_arg(legate::Scalar(true));
+    task.add_constraint(legate::broadcast(part, {dim}));
     runtime->submit(std::move(task));
   };
 

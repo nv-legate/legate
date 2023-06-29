@@ -120,8 +120,8 @@ void fill_input(legate::LibraryContext* context,
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
   auto task    = runtime->create_task(context, FILL_TASK + src.dim());
-  task->add_output(src, task->declare_partition());
-  task->add_scalar_arg(value);
+  task.add_output(src, task.declare_partition());
+  task.add_scalar_arg(value);
   runtime->submit(std::move(task));
 }
 
@@ -133,24 +133,24 @@ void fill_indirect(legate::LibraryContext* context,
   auto machine    = runtime->get_machine();
   int32_t task_id = FILL_INDIRECT_TASK + ind.dim() * TEST_MAX_DIM + data.dim();
   auto task       = runtime->create_task(context, task_id);
-  auto part       = task->declare_partition();
-  task->add_output(ind, part);
+  auto part       = task.declare_partition();
+  task.add_output(ind, part);
   // Technically indirection fields for gather coipes can have repeated points
   // and thus be initialized in parallel, but we always serialize the
   // initialization to simplify the logic
-  task->add_constraint(legate::broadcast(part, legate::from_range(ind.dim())));
+  task.add_constraint(legate::broadcast(part, legate::from_range(ind.dim())));
   auto domain = legate::to_domain(data.extents());
   switch (data.dim()) {
     case 1: {
-      task->add_scalar_arg(legate::Rect<1>(domain));
+      task.add_scalar_arg(legate::Rect<1>(domain));
       break;
     }
     case 2: {
-      task->add_scalar_arg(legate::Rect<2>(domain));
+      task.add_scalar_arg(legate::Rect<2>(domain));
       break;
     }
     case 3: {
-      task->add_scalar_arg(legate::Rect<3>(domain));
+      task.add_scalar_arg(legate::Rect<3>(domain));
       break;
     }
     default: {

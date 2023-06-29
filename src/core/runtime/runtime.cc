@@ -16,9 +16,11 @@
 
 #include "core/runtime/runtime.h"
 
+#include "core/operation/detail/copy.h"
+#include "core/operation/detail/operation.h"
+#include "core/operation/detail/task.h"
 #include "core/runtime/context.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/runtime/operation.h"
 
 namespace legate {
 
@@ -151,28 +153,33 @@ void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int32
 }
 
 // This function should be moved to the library context
-std::unique_ptr<AutoTask> Runtime::create_task(LibraryContext* library, int64_t task_id)
+AutoTask Runtime::create_task(LibraryContext* library, int64_t task_id)
 {
-  return impl_->create_task(library, task_id);
+  return AutoTask(impl_->create_task(library, task_id));
 }
 
-std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
-                                                 int64_t task_id,
-                                                 const Shape& launch_shape)
+ManualTask Runtime::create_task(LibraryContext* library, int64_t task_id, const Shape& launch_shape)
 {
-  return impl_->create_task(library, task_id, launch_shape);
+  return ManualTask(impl_->create_task(library, task_id, launch_shape));
 }
 
-std::unique_ptr<Copy> Runtime::create_copy() { return impl_->create_copy(); }
+Copy Runtime::create_copy() { return Copy(impl_->create_copy()); }
 
-void Runtime::issue_fill(LogicalStore lhs, LogicalStore value) { impl_->issue_fill(lhs, value); }
+void Runtime::issue_fill(LogicalStore lhs, LogicalStore value)
+{
+  impl_->issue_fill(lhs.impl(), value.impl());
+}
 
 void Runtime::issue_fill(LogicalStore lhs, const Scalar& value)
 {
-  issue_fill(lhs, create_store(value));
+  issue_fill(std::move(lhs), create_store(value));
 }
 
-void Runtime::submit(std::unique_ptr<Operation> op) { impl_->submit(std::move(op)); }
+void Runtime::submit(AutoTask&& task) { impl_->submit(std::move(task.impl_)); }
+
+void Runtime::submit(ManualTask&& task) { impl_->submit(std::move(task.impl_)); }
+
+void Runtime::submit(Copy&& copy) { impl_->submit(std::move(copy.impl_)); }
 
 LogicalStore Runtime::create_store(std::unique_ptr<Type> type, int32_t dim)
 {

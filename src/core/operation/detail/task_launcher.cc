@@ -14,15 +14,15 @@
  *
  */
 
-#include "core/runtime/detail/task_launcher.h"
+#include "core/operation/detail/task_launcher.h"
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
 #include "core/data/scalar.h"
 #include "core/mapping/machine.h"
+#include "core/operation/detail/launcher_arg.h"
+#include "core/operation/detail/req_analyzer.h"
 #include "core/runtime/context.h"
-#include "core/runtime/detail/launcher_arg.h"
 #include "core/runtime/detail/partition_manager.h"
-#include "core/runtime/detail/req_analyzer.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/shard.h"
 #include "core/utilities/buffer_builder.h"

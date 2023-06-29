@@ -16,28 +16,31 @@
 
 #pragma once
 
-#include "core/runtime/operation.h"
+#include "core/operation/detail/operation.h"
 
-namespace legate {
+namespace legate::detail {
 
 class Fill : public Operation {
  private:
-  friend class detail::Runtime;
-  Fill(LogicalStore lhs, LogicalStore value, int64_t unique_id, mapping::MachineDesc&& machine);
+  friend class Runtime;
+  Fill(std::shared_ptr<LogicalStore>&& lhs,
+       std::shared_ptr<LogicalStore>&& value,
+       int64_t unique_id,
+       mapping::MachineDesc&& machine);
 
  public:
-  void launch(detail::Strategy* strategy) override;
+  void launch(Strategy* strategy) override;
 
  public:
   std::string to_string() const override;
 
  public:
-  void add_to_solver(detail::ConstraintSolver& solver) override;
+  void add_to_solver(ConstraintSolver& solver) override;
 
  private:
   const Variable* lhs_var_;
-  std::shared_ptr<detail::LogicalStore> lhs_;
-  std::shared_ptr<detail::LogicalStore> value_;
+  std::shared_ptr<LogicalStore> lhs_;
+  std::shared_ptr<LogicalStore> value_;
 };
 
-}  // namespace legate
+}  // namespace legate::detail

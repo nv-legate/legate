@@ -75,10 +75,10 @@ void test_nccl_auto(int32_t ndim)
   auto store   = runtime->create_store(std::vector<size_t>(ndim, SIZE), legate::int32());
 
   auto task = runtime->create_task(context, NCCL_TESTER);
-  auto part = task->declare_partition();
-  task->add_output(store, part);
-  task->add_communicator("cpu");  // This requested will be ignored
-  task->add_communicator("nccl");
+  auto part = task.declare_partition();
+  task.add_output(store, part);
+  task.add_communicator("cpu");  // This requested will be ignored
+  task.add_communicator("nccl");
   runtime->submit(std::move(task));
 }
 
@@ -98,9 +98,9 @@ void test_nccl_manual(int32_t ndim)
   auto part = store.partition_by_tiling(std::move(tile_shape));
 
   auto task = runtime->create_task(context, NCCL_TESTER, std::move(launch_shape));
-  task->add_output(part);
-  task->add_communicator("cpu");  // This requested will be ignored
-  task->add_communicator("nccl");
+  task.add_output(part);
+  task.add_communicator("cpu");  // This requested will be ignored
+  task.add_communicator("nccl");
   runtime->submit(std::move(task));
 }
 

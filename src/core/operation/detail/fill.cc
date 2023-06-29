@@ -14,22 +14,24 @@
  *
  */
 
-#include "core/runtime/detail/fill.h"
+#include "core/operation/detail/fill.h"
 
 #include "core/data/detail/logical_store.h"
+#include "core/operation/detail/fill_launcher.h"
+#include "core/operation/detail/projection.h"
 #include "core/partitioning/constraint_solver.h"
 #include "core/partitioning/partitioner.h"
-#include "core/runtime/context.h"
-#include "core/runtime/detail/fill_launcher.h"
-#include "core/runtime/detail/projection.h"
 
-namespace legate {
+namespace legate::detail {
 
-Fill::Fill(LogicalStore lhs, LogicalStore value, int64_t unique_id, mapping::MachineDesc&& machine)
+Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
+           std::shared_ptr<LogicalStore>&& value,
+           int64_t unique_id,
+           mapping::MachineDesc&& machine)
   : Operation(unique_id, std::move(machine)),
     lhs_var_(declare_partition()),
-    lhs_(lhs.impl()),
-    value_(value.impl())
+    lhs_(std::move(lhs)),
+    value_(std::move(value))
 {
   store_mappings_[*lhs_var_] = lhs_.get();
   if (lhs_->unbound() || lhs_->has_scalar_storage())
@@ -39,9 +41,9 @@ Fill::Fill(LogicalStore lhs, LogicalStore value, int64_t unique_id, mapping::Mac
     throw std::runtime_error("Fill value should be a Future-back store");
 }
 
-void Fill::launch(detail::Strategy* strategy)
+void Fill::launch(Strategy* strategy)
 {
-  detail::FillLauncher launcher(machine_);
+  FillLauncher launcher(machine_);
   auto launch_domain = strategy->launch_domain(this);
   auto part          = (*strategy)[lhs_var_];
   auto lhs_proj      = lhs_->create_partition(part)->create_projection_info(launch_domain);
@@ -55,9 +57,6 @@ void Fill::launch(detail::Strategy* strategy)
 
 std::string Fill::to_string() const { return "Fill:" + std::to_string(unique_id_); }
 
-void Fill::add_to_solver(detail::ConstraintSolver& solver)
-{
-  solver.add_partition_symbol(lhs_var_);
-}
+void Fill::add_to_solver(ConstraintSolver& solver) { solver.add_partition_symbol(lhs_var_); }
 
-}  // namespace legate
+}  // namespace legate::detail

@@ -17,8 +17,8 @@
 #include "core/data/detail/logical_store.h"
 
 #include "core/mapping/machine.h"
+#include "core/operation/detail/projection.h"
 #include "core/runtime/detail/partition_manager.h"
-#include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/buffer_builder.h"

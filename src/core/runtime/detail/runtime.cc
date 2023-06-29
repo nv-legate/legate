@@ -21,9 +21,11 @@
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/core_mapper.h"
 #include "core/mapping/default_mapper.h"
+#include "core/operation/detail/copy.h"
+#include "core/operation/detail/fill.h"
+#include "core/operation/detail/task.h"
+#include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/partitioner.h"
-#include "core/runtime/detail/fill.h"
-#include "core/runtime/detail/task_launcher.h"
 #include "core/runtime/projection.h"
 #include "core/runtime/shard.h"
 #include "env_defaults.h"
@@ -186,10 +188,11 @@ std::unique_ptr<Copy> Runtime::create_copy()
   return std::unique_ptr<Copy>(copy);
 }
 
-void Runtime::issue_fill(legate::LogicalStore lhs, legate::LogicalStore value)
+void Runtime::issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::unique_ptr<Fill>(new Fill(lhs, value, next_unique_id_++, std::move(machine))));
+  submit(std::unique_ptr<Fill>(
+    new Fill(std::move(lhs), std::move(value), next_unique_id_++, std::move(machine))));
 }
 
 void Runtime::flush_scheduling_window()

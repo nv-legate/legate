@@ -30,13 +30,16 @@
  * @brief Class definitions for partitioning constraint language
  */
 
+namespace legate::detail {
+class Operation;
+}  // namespace legate::detail
+
 namespace legate {
 
 class Alignment;
 class Broadcast;
 class Constraint;
 class Literal;
-class Operation;
 class Partition;
 class Variable;
 
@@ -115,7 +118,7 @@ class Literal : public Expr {
  */
 class Variable : public Expr {
  public:
-  Variable(const Operation* op, int32_t id);
+  Variable(const detail::Operation* op, int32_t id);
 
  public:
   Variable(const Variable&)            = default;
@@ -138,10 +141,10 @@ class Variable : public Expr {
   const Variable* as_variable() const override { return this; }
 
  public:
-  const Operation* operation() const { return op_; }
+  const detail::Operation* operation() const { return op_; }
 
  private:
-  const Operation* op_;
+  const detail::Operation* op_;
   int32_t id_;
 };
 

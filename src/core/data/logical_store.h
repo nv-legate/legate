@@ -351,6 +351,9 @@ class LogicalStorePartition {
   LogicalStore store() const;
   std::shared_ptr<Partition> partition() const;
 
+ public:
+  std::shared_ptr<detail::LogicalStorePartition> impl() const { return impl_; }
+
  private:
   std::shared_ptr<detail::LogicalStorePartition> impl_{nullptr};
 };

@@ -26,7 +26,7 @@ void test_print_hello(legate::LibraryContext* context, std::string str)
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(context, task::hello::HELLO_WORLD);
 
-  task->add_scalar_arg(legate::Scalar(str));
+  task.add_scalar_arg(legate::Scalar(str));
   runtime->submit(std::move(task));
 }
 
@@ -35,7 +35,7 @@ void test_print_hellos(legate::LibraryContext* context, std::string str, size_t 
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(context, task::hello::HELLO_WORLD, legate::Shape({count}));
 
-  task->add_scalar_arg(legate::Scalar(str));
+  task.add_scalar_arg(legate::Scalar(str));
   runtime->submit(std::move(task));
 }
 

@@ -72,10 +72,7 @@ void initialize(legate::Runtime* runtime,
   auto task = runtime->create_task(context, INIT, {NUM_TASKS});
 
   std::vector<const legate::Variable*> parts;
-  for (auto& output : outputs) {
-    auto part = task->declare_partition();
-    task->add_output(output);
-  }
+  for (auto& output : outputs) task.add_output(output);
 
   runtime->submit(std::move(task));
 }
@@ -87,12 +84,12 @@ void check(legate::Runtime* runtime,
   auto task = runtime->create_task(context, CHECK);
 
   for (auto& input : inputs) {
-    auto part_in  = task->declare_partition();
+    auto part_in  = task.declare_partition();
     auto output   = runtime->create_store(input.extents(), input.type());
-    auto part_out = task->declare_partition();
-    task->add_input(input, part_in);
-    task->add_output(output, part_out);
-    task->add_constraint(legate::align(part_in, part_out));
+    auto part_out = task.declare_partition();
+    task.add_input(input, part_in);
+    task.add_output(output, part_out);
+    task.add_constraint(legate::align(part_in, part_out));
   }
 
   runtime->submit(std::move(task));

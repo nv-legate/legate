@@ -14,7 +14,7 @@
  *
  */
 
-#include "core/runtime/detail/req_analyzer.h"
+#include "core/operation/detail/req_analyzer.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {

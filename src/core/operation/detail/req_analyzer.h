@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "core/runtime/detail/projection.h"
+#include "core/operation/detail/projection.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {

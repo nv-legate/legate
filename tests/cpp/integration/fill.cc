@@ -94,9 +94,9 @@ void check_output(legate::LogicalStore store, int64_t value)
   auto context = runtime->find_library(library_name);
 
   auto task = runtime->create_task(context, CHECK_TASK + store.dim());
-  auto part = task->declare_partition();
-  task->add_input(store, part);
-  task->add_scalar_arg(value);
+  auto part = task.declare_partition();
+  task.add_input(store, part);
+  task.add_scalar_arg(value);
   runtime->submit(std::move(task));
 }
 
@@ -109,11 +109,11 @@ void check_output_slice(legate::LogicalStore store,
   auto context = runtime->find_library(library_name);
 
   auto task = runtime->create_task(context, CHECK_SLICE_TASK + store.dim());
-  auto part = task->declare_partition();
-  task->add_input(store, part);
-  task->add_scalar_arg(value_in_slice);
-  task->add_scalar_arg(value_outside_slice);
-  task->add_scalar_arg(offset);
+  auto part = task.declare_partition();
+  task.add_input(store, part);
+  task.add_scalar_arg(value_in_slice);
+  task.add_scalar_arg(value_outside_slice);
+  task.add_scalar_arg(offset);
   runtime->submit(std::move(task));
 }
 

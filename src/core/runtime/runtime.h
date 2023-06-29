@@ -22,6 +22,8 @@
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
 #include "core/data/store.h"
+#include "core/operation/copy.h"
+#include "core/operation/task.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/utilities/typedefs.h"
@@ -86,11 +88,6 @@ struct Core {
   static bool has_socket_mem;
 };
 
-class AutoTask;
-class Copy;
-class ManualTask;
-class Operation;
-
 /**
  * @ingroup runtime
  * @brief Class that implements the Legate runtime
@@ -149,7 +146,7 @@ class Runtime {
    *
    * @return Task object
    */
-  std::unique_ptr<AutoTask> create_task(LibraryContext* library, int64_t task_id);
+  AutoTask create_task(LibraryContext* library, int64_t task_id);
   /**
    * @brief Creates a ManualTask
    *
@@ -159,15 +156,13 @@ class Runtime {
    *
    * @return Task object
    */
-  std::unique_ptr<ManualTask> create_task(LibraryContext* library,
-                                          int64_t task_id,
-                                          const Shape& launch_shape);
+  ManualTask create_task(LibraryContext* library, int64_t task_id, const Shape& launch_shape);
   /**
    * @brief Creates a Copy
    *
    * @return Copy object
    */
-  std::unique_ptr<Copy> create_copy();
+  Copy create_copy();
   /**
    * @brief Fills a given store with a constant
    *
@@ -183,14 +178,32 @@ class Runtime {
    */
   void issue_fill(LogicalStore lhs, const Scalar& value);
   /**
-   * @brief Submits an operation for execution
+   * @brief Submits an AutoTask for execution
    *
    * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
    * for execution. It's not guaranteed that the submitted operation starts executing immediately.
    *
-   * @param op Operation to execute
+   * @param task An AutoTask to execute
    */
-  void submit(std::unique_ptr<Operation> op);
+  void submit(AutoTask&& task);
+  /**
+   * @brief Submits a ManualTask for execution
+   *
+   * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
+   * for execution. It's not guaranteed that the submitted operation starts executing immediately.
+   *
+   * @param task A ManualTask to execute
+   */
+  void submit(ManualTask&& task);
+  /**
+   * @brief Submits a copy for execution
+   *
+   * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
+   * for execution. It's not guaranteed that the submitted operation starts executing immediately.
+   *
+   * @param copy A Copy to execute
+   */
+  void submit(Copy&& copy);
 
  public:
   /**
