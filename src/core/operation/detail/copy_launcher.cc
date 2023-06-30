@@ -80,14 +80,8 @@ void CopyArg::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(field_id_);
 }
 
-CopyLauncher::CopyLauncher(const mapping::MachineDesc& machine,
-                           bool source_indirect_out_of_range,
-                           bool target_indirect_out_of_range,
-                           int64_t tag)
-  : machine_(machine),
-    tag_(tag),
-    source_indirect_out_of_range_(source_indirect_out_of_range),
-    target_indirect_out_of_range_(target_indirect_out_of_range)
+CopyLauncher::CopyLauncher(const mapping::MachineDesc& machine, int64_t tag)
+  : machine_(machine), tag_(tag)
 {
   mapper_arg_ = new BufferBuilder();
   machine_.pack(*mapper_arg_);

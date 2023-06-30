@@ -535,7 +535,7 @@ std::unique_ptr<Type> string();
  *
  * @return Type object
  */
-std::unique_ptr<Type> point_type(int32_t dim);
+std::unique_ptr<Type> point_type(int32_t ndim);
 
 /**
  * @ingroup types
@@ -543,6 +543,15 @@ std::unique_ptr<Type> point_type(int32_t dim);
  *
  * @return Type object
  */
-std::unique_ptr<Type> rect_type(int32_t dim);
+std::unique_ptr<Type> rect_type(int32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Checks if the type is a point type of the given dimensionality
+ *
+ * @return true If the `type` is a point type
+ * @return false Otherwise
+ */
+bool is_point_type(const Type& type, int32_t ndim);
 
 }  // namespace legate

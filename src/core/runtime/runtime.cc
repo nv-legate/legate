@@ -163,7 +163,29 @@ ManualTask Runtime::create_task(LibraryContext* library, int64_t task_id, const 
   return ManualTask(impl_->create_task(library, task_id, launch_shape));
 }
 
-Copy Runtime::create_copy() { return Copy(impl_->create_copy()); }
+void Runtime::issue_copy(LogicalStore target, LogicalStore source)
+{
+  impl_->issue_copy(target.impl(), source.impl());
+}
+
+void Runtime::issue_gather(LogicalStore target, LogicalStore source, LogicalStore source_indirect)
+{
+  impl_->issue_gather(target.impl(), source.impl(), source_indirect.impl());
+}
+
+void Runtime::issue_scatter(LogicalStore target, LogicalStore target_indirect, LogicalStore source)
+{
+  impl_->issue_scatter(target.impl(), target_indirect.impl(), source.impl());
+}
+
+void Runtime::issue_scatter_gather(LogicalStore target,
+                                   LogicalStore target_indirect,
+                                   LogicalStore source,
+                                   LogicalStore source_indirect)
+{
+  impl_->issue_scatter_gather(
+    target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl());
+}
 
 void Runtime::issue_fill(LogicalStore lhs, LogicalStore value)
 {
@@ -178,8 +200,6 @@ void Runtime::issue_fill(LogicalStore lhs, const Scalar& value)
 void Runtime::submit(AutoTask&& task) { impl_->submit(std::move(task.impl_)); }
 
 void Runtime::submit(ManualTask&& task) { impl_->submit(std::move(task.impl_)); }
-
-void Runtime::submit(Copy&& copy) { impl_->submit(std::move(copy.impl_)); }
 
 LogicalStore Runtime::create_store(std::unique_ptr<Type> type, int32_t dim)
 {

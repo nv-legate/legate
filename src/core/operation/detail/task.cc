@@ -235,12 +235,12 @@ AutoTask::AutoTask(const LibraryContext* library,
 {
 }
 
-void AutoTask::add_input(std::shared_ptr<LogicalStore>&& store, const Variable* partition_symbol)
+void AutoTask::add_input(std::shared_ptr<LogicalStore> store, const Variable* partition_symbol)
 {
   add_store(inputs_, std::move(store), partition_symbol);
 }
 
-void AutoTask::add_output(std::shared_ptr<LogicalStore>&& store, const Variable* partition_symbol)
+void AutoTask::add_output(std::shared_ptr<LogicalStore> store, const Variable* partition_symbol)
 {
   if (store->has_scalar_storage())
     scalar_outputs_.push_back(outputs_.size());
@@ -249,7 +249,7 @@ void AutoTask::add_output(std::shared_ptr<LogicalStore>&& store, const Variable*
   add_store(outputs_, std::move(store), partition_symbol);
 }
 
-void AutoTask::add_reduction(std::shared_ptr<LogicalStore>&& store,
+void AutoTask::add_reduction(std::shared_ptr<LogicalStore> store,
                              Legion::ReductionOpID redop,
                              const Variable* partition_symbol)
 {
@@ -262,7 +262,7 @@ void AutoTask::add_store(std::vector<StoreArg>& store_args,
                          std::shared_ptr<LogicalStore> store,
                          const Variable* partition_symbol)
 {
-  store_args.push_back(StoreArg(store.get(), partition_symbol));
+  store_args.push_back(StoreArg{store.get(), partition_symbol});
   record_partition(partition_symbol, std::move(store));
 }
 
@@ -277,6 +277,11 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
   for (auto& [_, symb] : outputs_) solver.add_partition_symbol(symb, true);
   for (auto& [_, symb] : reductions_) solver.add_partition_symbol(symb);
   for (auto& [_, symb] : inputs_) solver.add_partition_symbol(symb);
+}
+
+void AutoTask::validate()
+{
+  for (auto& constraint : constraints_) constraint->validate();
 }
 
 ////////////////////////////////////////////////////
@@ -296,17 +301,17 @@ ManualTask::ManualTask(const LibraryContext* library,
   strategy_->set_launch_shape(this, launch_shape);
 }
 
-void ManualTask::add_input(std::shared_ptr<LogicalStore>&& store)
+void ManualTask::add_input(std::shared_ptr<LogicalStore> store)
 {
   add_store(inputs_, std::move(store), create_no_partition());
 }
 
-void ManualTask::add_input(std::shared_ptr<LogicalStorePartition>&& store_partition)
+void ManualTask::add_input(std::shared_ptr<LogicalStorePartition> store_partition)
 {
   add_store(inputs_, store_partition->store(), store_partition->partition());
 }
 
-void ManualTask::add_output(std::shared_ptr<LogicalStore>&& store)
+void ManualTask::add_output(std::shared_ptr<LogicalStore> store)
 {
   if (store->has_scalar_storage())
     scalar_outputs_.push_back(outputs_.size());
@@ -315,7 +320,7 @@ void ManualTask::add_output(std::shared_ptr<LogicalStore>&& store)
   add_store(outputs_, std::move(store), create_no_partition());
 }
 
-void ManualTask::add_output(std::shared_ptr<LogicalStorePartition>&& store_partition)
+void ManualTask::add_output(std::shared_ptr<LogicalStorePartition> store_partition)
 {
 #ifdef DEBUG_LEGATE
   // TODO: We need to raise an exception for the user error in this case
@@ -325,14 +330,14 @@ void ManualTask::add_output(std::shared_ptr<LogicalStorePartition>&& store_parti
   add_store(outputs_, store_partition->store(), store_partition->partition());
 }
 
-void ManualTask::add_reduction(std::shared_ptr<LogicalStore>&& store, Legion::ReductionOpID redop)
+void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, Legion::ReductionOpID redop)
 {
   if (store->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, std::move(store), create_no_partition());
   reduction_ops_.push_back(redop);
 }
 
-void ManualTask::add_reduction(std::shared_ptr<LogicalStorePartition>&& store_partition,
+void ManualTask::add_reduction(std::shared_ptr<LogicalStorePartition> store_partition,
                                Legion::ReductionOpID redop)
 {
   if (store_partition->store()->has_scalar_storage())
@@ -346,7 +351,7 @@ void ManualTask::add_store(std::vector<StoreArg>& store_args,
                            std::shared_ptr<Partition> partition)
 {
   auto partition_symbol = declare_partition();
-  store_args.push_back(StoreArg(store.get(), partition_symbol));
+  store_args.push_back(StoreArg{store.get(), partition_symbol});
   if (store->unbound()) {
     auto field_space = detail::Runtime::get_runtime()->create_field_space();
     strategy_->insert(partition_symbol, std::move(partition), field_space);
@@ -354,6 +359,8 @@ void ManualTask::add_store(std::vector<StoreArg>& store_args,
     strategy_->insert(partition_symbol, std::move(partition));
   all_stores_.insert(std::move(store));
 }
+
+void ManualTask::validate() {}
 
 void ManualTask::launch(Strategy*) { Task::launch(strategy_.get()); }
 

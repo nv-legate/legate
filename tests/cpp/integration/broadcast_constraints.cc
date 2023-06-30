@@ -117,14 +117,37 @@ void test_promoted_store()
   launch_tester(1);
 }
 
+void test_invalid_broadcast()
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+
+  auto task  = runtime->create_task(context, INITIALIZER);
+  auto store = runtime->create_store({10}, legate::int64());
+  auto part  = task.declare_partition();
+  task.add_output(store, part);
+  task.add_constraint(legate::broadcast(part, {1}));
+  EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
+}
+
 }  // namespace
 
-TEST(Integration, BroadcastConstraints)
+TEST(Broadcast, Basic)
 {
   legate::Core::perform_registration<prepare>();
-
   test_normal_store();
+}
+
+TEST(Broadcast, WithPromotion)
+{
+  legate::Core::perform_registration<prepare>();
   test_promoted_store();
+}
+
+TEST(Broadcast, Invalid)
+{
+  legate::Core::perform_registration<prepare>();
+  test_invalid_broadcast();
 }
 
 }  // namespace broadcast_constraints

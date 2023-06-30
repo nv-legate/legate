@@ -41,6 +41,8 @@ Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
     throw std::runtime_error("Fill value should be a Future-back store");
 }
 
+void Fill::validate() {}
+
 void Fill::launch(Strategy* strategy)
 {
   FillLauncher launcher(machine_);

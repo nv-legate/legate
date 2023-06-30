@@ -88,9 +88,9 @@ class AutoTask : public Task {
   ~AutoTask() {}
 
  public:
-  void add_input(std::shared_ptr<LogicalStore>&& store, const Variable* partition_symbol);
-  void add_output(std::shared_ptr<LogicalStore>&& store, const Variable* partition_symbol);
-  void add_reduction(std::shared_ptr<LogicalStore>&& store,
+  void add_input(std::shared_ptr<LogicalStore> store, const Variable* partition_symbol);
+  void add_output(std::shared_ptr<LogicalStore> store, const Variable* partition_symbol);
+  void add_reduction(std::shared_ptr<LogicalStore> store,
                      Legion::ReductionOpID redop,
                      const Variable* partition_symbol);
 
@@ -102,6 +102,9 @@ class AutoTask : public Task {
  public:
   void add_constraint(std::unique_ptr<Constraint> constraint);
   void add_to_solver(ConstraintSolver& solver) override;
+
+ public:
+  void validate() override;
 
  private:
   std::vector<std::unique_ptr<Constraint>> constraints_{};
@@ -120,12 +123,12 @@ class ManualTask : public Task {
   ~ManualTask();
 
  public:
-  void add_input(std::shared_ptr<LogicalStore>&& store);
-  void add_input(std::shared_ptr<LogicalStorePartition>&& store_partition);
-  void add_output(std::shared_ptr<LogicalStore>&& store);
-  void add_output(std::shared_ptr<LogicalStorePartition>&& store_partition);
-  void add_reduction(std::shared_ptr<LogicalStore>&& store, Legion::ReductionOpID redop);
-  void add_reduction(std::shared_ptr<LogicalStorePartition>&& store_partition,
+  void add_input(std::shared_ptr<LogicalStore> store);
+  void add_input(std::shared_ptr<LogicalStorePartition> store_partition);
+  void add_output(std::shared_ptr<LogicalStore> store);
+  void add_output(std::shared_ptr<LogicalStorePartition> store_partition);
+  void add_reduction(std::shared_ptr<LogicalStore> store, Legion::ReductionOpID redop);
+  void add_reduction(std::shared_ptr<LogicalStorePartition> store_partition,
                      Legion::ReductionOpID redop);
 
  private:
@@ -134,6 +137,7 @@ class ManualTask : public Task {
                  std::shared_ptr<Partition> partition);
 
  public:
+  void validate() override;
   void launch(Strategy* strategy) override;
 
  public:

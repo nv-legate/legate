@@ -23,10 +23,8 @@
 #include "core/data/shape.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/restriction.h"
-#include "legion.h"
 
 namespace legate {
-class Operation;
 class Partition;
 }  // namespace legate
 
@@ -35,7 +33,6 @@ namespace legate::detail {
 class ConstraintSolver;
 class LogicalStore;
 class Partitioner;
-class ProjectionInfo;
 
 class Strategy {
   friend class Partitioner;

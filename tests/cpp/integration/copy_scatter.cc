@@ -170,12 +170,7 @@ void test_scatter(const ScatterSpec& spec)
   fill_input(context, src, spec.seed);
   fill_indirect(context, ind, tgt);
   runtime->issue_fill(tgt, spec.init);
-
-  auto copy = runtime->create_copy();
-  copy.add_input(src);
-  copy.add_output(tgt);
-  copy.add_target_indirect(ind);
-  runtime->submit(std::move(copy));
+  runtime->issue_scatter(tgt, ind, src);
 
   check_scatter_output(context, src, tgt, ind, spec.init);
 }

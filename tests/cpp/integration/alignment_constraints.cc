@@ -201,15 +201,47 @@ void test_alignment_transformed()
   launch_tester(store1.delinearize(0, {10, 10}), store4);
 }
 
+void test_invalid_alignment()
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+
+  auto store1 = runtime->create_store({10}, legate::int64());
+  auto store2 = runtime->create_store({9}, legate::int64());
+  auto task   = runtime->create_task(context, TRANSFORMED_TESTER + store1.dim());
+
+  auto part1 = task.declare_partition();
+  auto part2 = task.declare_partition();
+  task.add_output(store1, part1);
+  task.add_output(store2, part2);
+  task.add_constraint(legate::align(part1, part2));
+  EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
+}
+
 }  // namespace
 
-TEST(Integration, AlignmentConstraints)
+TEST(Alignment, Basic)
 {
   legate::Core::perform_registration<prepare>();
-
   test_alignment();
+}
+
+TEST(Alignment, WithBroadcast)
+{
+  legate::Core::perform_registration<prepare>();
   test_alignment_and_broadcast();
+}
+
+TEST(Alignment, WithTransform)
+{
+  legate::Core::perform_registration<prepare>();
   test_alignment_transformed();
+}
+
+TEST(Alignment, Invalid)
+{
+  legate::Core::perform_registration<prepare>();
+  test_invalid_alignment();
 }
 
 }  // namespace alignment_constraints

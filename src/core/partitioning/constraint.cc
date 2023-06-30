@@ -50,7 +50,7 @@ std::string Variable::to_string() const
   return std::move(ss).str();
 }
 
-Alignment::Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs)
+Alignment::Alignment(std::unique_ptr<Variable>&& lhs, std::unique_ptr<Variable>&& rhs)
   : lhs_(std::move(lhs)), rhs_(std::move(rhs))
 {
 }
@@ -59,6 +59,16 @@ void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_s
 {
   lhs_->find_partition_symbols(partition_symbols);
   rhs_->find_partition_symbols(partition_symbols);
+}
+
+void Alignment::validate() const
+{
+  auto* lhs_store = lhs_->operation()->find_store(lhs_.get());
+  auto* rhs_store = rhs_->operation()->find_store(rhs_.get());
+  if (lhs_store->extents() != rhs_store->extents())
+    throw std::invalid_argument("Alignment requires the stores to have the same shape, but found " +
+                                lhs_store->extents().to_string() + " and " +
+                                rhs_store->extents().to_string());
 }
 
 std::string Alignment::to_string() const
@@ -76,6 +86,16 @@ Broadcast::Broadcast(std::unique_ptr<Variable> variable, tuple<int32_t>&& axes)
 void Broadcast::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(variable_.get());
+}
+
+void Broadcast::validate() const
+{
+  auto* store = variable_->operation()->find_store(variable_.get());
+  for (auto axis : axes_.data()) {
+    if (axis < 0 || axis >= store->dim())
+      throw std::invalid_argument("Invalid broadcasting dimension " + std::to_string(axis) +
+                                  " for a " + std::to_string(store->dim()) + "-D store");
+  }
 }
 
 std::string Broadcast::to_string() const

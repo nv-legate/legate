@@ -176,6 +176,8 @@ struct Constraint {
    */
   virtual Kind kind() const = 0;
 
+  virtual void validate() const = 0;
+
   virtual const Alignment* as_alignment() const = 0;
   virtual const Broadcast* as_broadcast() const = 0;
 };
@@ -190,13 +192,16 @@ struct Constraint {
  */
 class Alignment : public Constraint {
  public:
-  Alignment(std::unique_ptr<Expr>&& lhs, std::unique_ptr<Expr>&& rhs);
+  Alignment(std::unique_ptr<Variable>&& lhs, std::unique_ptr<Variable>&& rhs);
 
  public:
   Kind kind() const override { return Kind::ALIGNMENT; }
 
  public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+
+ public:
+  void validate() const;
 
  public:
   std::string to_string() const override;
@@ -209,19 +214,19 @@ class Alignment : public Constraint {
   /**
    * @brief Returns the LHS of the alignment constraint
    *
-   * @return Expression
+   * @return Variable
    */
-  const Expr* lhs() const { return lhs_.get(); }
+  const Variable* lhs() const { return lhs_.get(); }
   /**
    * @brief Returns the RHS of the alignment constraint
    *
-   * @return Expression
+   * @return Variable
    */
-  const Expr* rhs() const { return rhs_.get(); }
+  const Variable* rhs() const { return rhs_.get(); }
 
  private:
-  std::unique_ptr<Expr> lhs_;
-  std::unique_ptr<Expr> rhs_;
+  std::unique_ptr<Variable> lhs_;
+  std::unique_ptr<Variable> rhs_;
 };
 
 /**
@@ -242,6 +247,9 @@ class Broadcast : public Constraint {
 
  public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+
+ public:
+  void validate() const;
 
  public:
   std::string to_string() const override;

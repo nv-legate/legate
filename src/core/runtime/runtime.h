@@ -22,7 +22,6 @@
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
 #include "core/data/store.h"
-#include "core/operation/copy.h"
 #include "core/operation/task.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
@@ -158,11 +157,49 @@ class Runtime {
    */
   ManualTask create_task(LibraryContext* library, int64_t task_id, const Shape& launch_shape);
   /**
-   * @brief Creates a Copy
+   * @brief Issues a copy between stores.
    *
-   * @return Copy object
+   * The source and target stores must have the same shape.
+   *
+   * @param target Copy target
+   * @param source Copy source
    */
-  Copy create_copy();
+  void issue_copy(LogicalStore target, LogicalStore source);
+  /**
+   * @brief Issues a gather copy between stores.
+   *
+   * The indirection store and the target store must have the same shape.
+   *
+   * @param target Copy target
+   * @param source Copy source
+   * @param source_indirect Store for source indirection
+   */
+  void issue_gather(LogicalStore target, LogicalStore source, LogicalStore source_indirect);
+  /**
+   * @brief Issues a scatter copy between stores.
+   *
+   * The indirection store and the source store must have the same shape.
+   *
+   * @param target Copy target
+   * @param target_indirect Store for target indirection
+   * @param source Copy source
+   */
+  void issue_scatter(LogicalStore target, LogicalStore target_indirect, LogicalStore source);
+  /**
+   * @brief Issues a scatter-gather copy between stores.
+   *
+   * The indirection stores must have the same shape.
+   *
+   * @param target Copy target
+   * @param target_indirect Store for target indirection
+   * @param source Copy source
+   * @param source_indirect Store for source indirection
+   */
+  void issue_scatter_gather(LogicalStore target,
+                            LogicalStore target_indirect,
+                            LogicalStore source,
+                            LogicalStore source_indirect);
+
   /**
    * @brief Fills a given store with a constant
    *
@@ -195,15 +232,6 @@ class Runtime {
    * @param task A ManualTask to execute
    */
   void submit(ManualTask&& task);
-  /**
-   * @brief Submits a copy for execution
-   *
-   * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
-   * for execution. It's not guaranteed that the submitted operation starts executing immediately.
-   *
-   * @param copy A Copy to execute
-   */
-  void submit(Copy&& copy);
 
  public:
   /**

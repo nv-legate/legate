@@ -314,18 +314,34 @@ constexpr int32_t RECT_UID_BASE  = POINT_UID_BASE + LEGATE_MAX_DIM + 1;
 
 }  // namespace
 
-std::unique_ptr<Type> point_type(int32_t dim)
+std::unique_ptr<Type> point_type(int32_t ndim)
 {
-  if (dim == 1) return int64();
-  return std::make_unique<FixedArrayType>(POINT_UID_BASE + dim, int64(), dim);
+  if (ndim == 1) return int64();
+  return std::make_unique<FixedArrayType>(POINT_UID_BASE + ndim, int64(), ndim);
 }
 
-std::unique_ptr<Type> rect_type(int32_t dim)
+std::unique_ptr<Type> rect_type(int32_t ndim)
 {
   std::vector<std::unique_ptr<Type>> field_types;
-  field_types.push_back(point_type(dim));
-  field_types.push_back(point_type(dim));
-  return std::make_unique<StructType>(RECT_UID_BASE + dim, std::move(field_types), true /*align*/);
+  field_types.push_back(point_type(ndim));
+  field_types.push_back(point_type(ndim));
+  return std::make_unique<StructType>(RECT_UID_BASE + ndim, std::move(field_types), true /*align*/);
+}
+
+bool is_point_type(const Type& type, int32_t ndim)
+{
+  switch (type.code) {
+    case Type::Code::INT64: {
+      return 1 == ndim;
+    }
+    case Type::Code::FIXED_ARRAY: {
+      return static_cast<const FixedArrayType&>(type).num_elements() == ndim;
+    }
+    default: {
+      return false;
+    }
+  }
+  return false;
 }
 
 }  // namespace legate

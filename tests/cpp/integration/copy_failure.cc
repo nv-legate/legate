@@ -20,93 +20,75 @@
 
 namespace copy_failure {
 
-void test_input_output_failure()
+void test_invalid_stores()
 {
-  // inconsistent number of inputs and outputs
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library("legate.core");
 
-  std::vector<size_t> extents = {100};
-  auto in_store1              = runtime->create_store(extents, legate::int64());
-  auto in_store2              = runtime->create_store(extents, legate::int64());
-  auto out_store              = runtime->create_store(extents, legate::int64());
-  // fill input store with some values
-  auto copy = runtime->create_copy();
-  copy.add_input(in_store1);
-  copy.add_input(in_store2);
-  copy.add_output(out_store);
-  EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
-}
+  auto store1 = runtime->create_store({10, 10}, legate::int64());
+  auto store2 = runtime->create_store({1}, legate::int64(), true /*optimize_scalar*/);
+  auto store3 = runtime->create_store(legate::int64());
+  auto store4 = runtime->create_store({10, 10}, legate::int64()).promote(2, 10);
 
-void test_indirect_failure()
-{
-  // using indirect with several inputs/outputs
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library("legate.core");
+  EXPECT_THROW(runtime->issue_copy(store2, store1), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_copy(store3, store1), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_copy(store4, store1), std::invalid_argument);
 
-  std::vector<size_t> extents = {100};
-  auto in_store1              = runtime->create_store(extents, legate::int64());
-  auto in_store2              = runtime->create_store(extents, legate::int64());
-  auto out_store1             = runtime->create_store(extents, legate::int64());
-  auto out_store2             = runtime->create_store(extents, legate::int64());
-  auto indirect_store         = runtime->create_store(extents, legate::int64());
+  EXPECT_THROW(runtime->issue_gather(store2, store3, store1), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_gather(store3, store4, store1), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_gather(store4, store2, store1), std::invalid_argument);
 
-  auto copy = runtime->create_copy();
-  copy.add_input(in_store1);
-  copy.add_input(in_store2);
-  copy.add_output(out_store1);
-  copy.add_output(out_store2);
-  copy.add_target_indirect(indirect_store);
+  EXPECT_THROW(runtime->issue_scatter(store2, store3, store1), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_scatter(store3, store4, store1), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_scatter(store4, store2, store1), std::invalid_argument);
 
-  EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
+  EXPECT_THROW(runtime->issue_scatter_gather(store2, store3, store4, store1),
+               std::invalid_argument);
+  EXPECT_THROW(runtime->issue_scatter_gather(store3, store4, store2, store1),
+               std::invalid_argument);
+  EXPECT_THROW(runtime->issue_scatter_gather(store4, store2, store3, store1),
+               std::invalid_argument);
 }
 
 void test_shape_check_failure()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library("legate.core");
 
   auto store1 = runtime->create_store({10, 10}, legate::int64());
   auto store2 = runtime->create_store({5, 20}, legate::int64());
   auto store3 = runtime->create_store({20, 5}, legate::int64());
+  auto store4 = runtime->create_store({5, 5}, legate::int64());
 
-  {
-    auto copy = runtime->create_copy();
-    copy.add_input(store1);
-    copy.add_output(store2);
-    EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
-  }
+  EXPECT_THROW(runtime->issue_copy(store2, store1), std::invalid_argument);
 
-  {
-    auto copy = runtime->create_copy();
-    copy.add_input(store1);
-    copy.add_source_indirect(store2);
-    copy.add_output(store3);
-    EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
-  }
+  EXPECT_THROW(runtime->issue_gather(store3, store2, store1), std::invalid_argument);
 
-  {
-    auto copy = runtime->create_copy();
-    copy.add_input(store1);
-    copy.add_target_indirect(store2);
-    copy.add_output(store3);
-    EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
-  }
+  EXPECT_THROW(runtime->issue_scatter(store3, store2, store1), std::invalid_argument);
 
-  {
-    auto copy = runtime->create_copy();
-    copy.add_input(store1);
-    copy.add_source_indirect(store2);
-    copy.add_target_indirect(store3);
-    copy.add_output(store1);
-    EXPECT_THROW(runtime->submit(std::move(copy)), std::runtime_error);
-  }
+  EXPECT_THROW(runtime->issue_scatter_gather(store4, store3, store2, store1),
+               std::invalid_argument);
 }
 
-TEST(Copy, FailureInputOutputMismatch) { test_input_output_failure(); }
+void test_non_point_types_failure()
+{
+  auto runtime = legate::Runtime::get_runtime();
 
-TEST(Copy, FailureMultipleIndirectCopies) { test_indirect_failure(); }
+  auto store1 = runtime->create_store({10, 10}, legate::int32());
+  auto store2 = runtime->create_store({10, 10}, legate::int32());
+  auto store3 = runtime->create_store({10, 10}, legate::int32());
+  auto store4 = runtime->create_store({10, 10}, legate::int32());
+
+  EXPECT_THROW(runtime->issue_gather(store3, store2, store1), std::invalid_argument);
+
+  EXPECT_THROW(runtime->issue_scatter(store3, store2, store1), std::invalid_argument);
+
+  EXPECT_THROW(runtime->issue_scatter_gather(store4, store3, store2, store1),
+               std::invalid_argument);
+}
+
+TEST(Copy, FailureInvalidStores) { test_invalid_stores(); }
 
 TEST(Copy, FailureDifferentShapes) { test_shape_check_failure(); }
+
+TEST(Copy, FailureNonPointTypes) { test_non_point_types_failure(); }
 
 }  // namespace copy_failure

@@ -29,6 +29,7 @@ class Fill : public Operation {
        mapping::MachineDesc&& machine);
 
  public:
+  void validate() override;
   void launch(Strategy* strategy) override;
 
  public:

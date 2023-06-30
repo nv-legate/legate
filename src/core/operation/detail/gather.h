@@ -26,12 +26,16 @@ namespace legate::detail {
 
 class ConstraintSolver;
 
-class Copy : public Operation {
+class Gather : public Operation {
  public:
-  Copy(std::shared_ptr<LogicalStore> target,
-       std::shared_ptr<LogicalStore> source,
-       int64_t unique_id,
-       mapping::MachineDesc&& machine);
+  Gather(std::shared_ptr<LogicalStore> target,
+         std::shared_ptr<LogicalStore> source,
+         std::shared_ptr<LogicalStore> source_indirect,
+         int64_t unique_id,
+         mapping::MachineDesc&& machine);
+
+ public:
+  void set_indirect_out_of_range(bool flag) { out_of_range_ = flag; }
 
  public:
   void validate() override;
@@ -44,8 +48,10 @@ class Copy : public Operation {
   std::string to_string() const override;
 
  private:
+  bool out_of_range_{true};
   StoreArg target_;
   StoreArg source_;
+  StoreArg source_indirect_;
   std::unique_ptr<Constraint> constraint_;
 };
 

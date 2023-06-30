@@ -72,7 +72,17 @@ class Runtime {
   std::unique_ptr<ManualTask> create_task(LibraryContext* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
-  std::unique_ptr<Copy> create_copy();
+  void issue_copy(std::shared_ptr<LogicalStore> target, std::shared_ptr<LogicalStore> source);
+  void issue_gather(std::shared_ptr<LogicalStore> target,
+                    std::shared_ptr<LogicalStore> source,
+                    std::shared_ptr<LogicalStore> source_indirect);
+  void issue_scatter(std::shared_ptr<LogicalStore> target,
+                     std::shared_ptr<LogicalStore> target_indirect,
+                     std::shared_ptr<LogicalStore> source);
+  void issue_scatter_gather(std::shared_ptr<LogicalStore> target,
+                            std::shared_ptr<LogicalStore> target_indirect,
+                            std::shared_ptr<LogicalStore> source,
+                            std::shared_ptr<LogicalStore> source_indirect);
   void issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value);
   void flush_scheduling_window();
   void submit(std::unique_ptr<Operation> op);

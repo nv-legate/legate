@@ -30,7 +30,6 @@
 #include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/mapping/mapping.h"
-#include "core/operation/copy.h"
 #include "core/operation/task.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/partition.h"

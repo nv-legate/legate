@@ -96,37 +96,21 @@ struct NormalCopySpec {
   legate::Scalar seed;
 };
 
-void test_normal_copies(const std::vector<NormalCopySpec> specs)
+void test_normal_copy(const NormalCopySpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  std::vector<legate::LogicalStore> inputs;
-  std::vector<legate::LogicalStore> outputs;
+  auto& [shape, type, seed] = spec;
 
-  for (auto& [shape, type, seed] : specs) {
-    auto input = runtime->create_store(shape, type.clone());
-    fill_input(context, input, seed);
-    inputs.push_back(std::move(input));
-    outputs.push_back(runtime->create_store(shape, type.clone()));
-  }
+  auto input  = runtime->create_store(shape, type.clone());
+  auto output = runtime->create_store(shape, type.clone());
 
-  auto copy = runtime->create_copy();
-  for (auto& input : inputs) copy.add_input(input);
-  for (auto& output : outputs) copy.add_output(output);
-  runtime->submit(std::move(copy));
+  fill_input(context, input, seed);
+  runtime->issue_copy(output, input);
 
   // check the result of copy
-  for (uint32_t idx = 0; idx < outputs.size(); ++idx) {
-    auto& output = outputs[idx];
-    auto& input  = inputs.at(idx);
-    check_output(context, input, output);
-  }
-}
-
-void test_all_normal_copies()
-{
-  test_normal_copies({{{1000, 100}, *uint32, legate::Scalar(uint32_t(3))}});
+  check_output(context, input, output);
 }
 
 TEST(Copy, Single)
@@ -135,29 +119,8 @@ TEST(Copy, Single)
   // For some reason, clang-format gets tripped over by singleton initialization lists,
   // so factor out the definition here
   std::vector<size_t> shape1d{9};
-  test_normal_copies({{{4, 7}, *int64, legate::Scalar(int64_t(12))}});
-  test_normal_copies({{{1000, 100}, *uint32, legate::Scalar(uint32_t(3))}});
-}
-
-TEST(Copy, Multi2)
-{
-  legate::Core::perform_registration<register_tasks>();
-  std::vector<size_t> shape1d{13};
-  test_normal_copies({
-    {shape1d, *float64, legate::Scalar(double(5.0))},
-    {{3, 7, 5}, *uint32, legate::Scalar(uint32_t(456))},
-  });
-}
-
-TEST(Copy, Multi3)
-{
-  legate::Core::perform_registration<register_tasks>();
-  std::vector<size_t> shape1d{11};
-  test_normal_copies({
-    {shape1d, *int64, legate::Scalar(int64_t(789))},
-    {{5, 5}, *float64, legate::Scalar(double(10.0))},
-    {{2, 4, 4}, *uint32, legate::Scalar(uint32_t(7))},
-  });
+  test_normal_copy({{4, 7}, *int64, legate::Scalar(int64_t(12))});
+  test_normal_copy({{1000, 100}, *uint32, legate::Scalar(uint32_t(3))});
 }
 
 }  // namespace copy_normal

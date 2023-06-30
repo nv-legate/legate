@@ -23,6 +23,9 @@
 #include "core/mapping/default_mapper.h"
 #include "core/operation/detail/copy.h"
 #include "core/operation/detail/fill.h"
+#include "core/operation/detail/gather.h"
+#include "core/operation/detail/scatter.h"
+#include "core/operation/detail/scatter_gather.h"
 #include "core/operation/detail/task.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/partitioner.h"
@@ -181,11 +184,49 @@ std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
   return std::unique_ptr<ManualTask>(task);
 }
 
-std::unique_ptr<Copy> Runtime::create_copy()
+void Runtime::issue_copy(std::shared_ptr<LogicalStore> target, std::shared_ptr<LogicalStore> source)
 {
   auto machine = machine_manager_->get_machine();
-  auto copy    = new Copy(next_unique_id_++, std::move(machine));
-  return std::unique_ptr<Copy>(copy);
+  submit(std::make_unique<Copy>(
+    std::move(target), std::move(source), next_unique_id_++, std::move(machine)));
+}
+
+void Runtime::issue_gather(std::shared_ptr<LogicalStore> target,
+                           std::shared_ptr<LogicalStore> source,
+                           std::shared_ptr<LogicalStore> source_indirect)
+{
+  auto machine = machine_manager_->get_machine();
+  submit(std::make_unique<Gather>(std::move(target),
+                                  std::move(source),
+                                  std::move(source_indirect),
+                                  next_unique_id_++,
+                                  std::move(machine)));
+}
+
+void Runtime::issue_scatter(std::shared_ptr<LogicalStore> target,
+                            std::shared_ptr<LogicalStore> target_indirect,
+                            std::shared_ptr<LogicalStore> source)
+{
+  auto machine = machine_manager_->get_machine();
+  submit(std::make_unique<Scatter>(std::move(target),
+                                   std::move(target_indirect),
+                                   std::move(source),
+                                   next_unique_id_++,
+                                   std::move(machine)));
+}
+
+void Runtime::issue_scatter_gather(std::shared_ptr<LogicalStore> target,
+                                   std::shared_ptr<LogicalStore> target_indirect,
+                                   std::shared_ptr<LogicalStore> source,
+                                   std::shared_ptr<LogicalStore> source_indirect)
+{
+  auto machine = machine_manager_->get_machine();
+  submit(std::make_unique<ScatterGather>(std::move(target),
+                                         std::move(target_indirect),
+                                         std::move(source),
+                                         std::move(source_indirect),
+                                         next_unique_id_++,
+                                         std::move(machine)));
 }
 
 void Runtime::issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value)
@@ -206,6 +247,7 @@ void Runtime::flush_scheduling_window()
 
 void Runtime::submit(std::unique_ptr<Operation> op)
 {
+  op->validate();
   operations_.push_back(std::move(op));
   if (operations_.size() >= window_size_) { flush_scheduling_window(); }
 }

@@ -41,10 +41,7 @@ class RequirementAnalyzer;
 
 class CopyLauncher {
  public:
-  CopyLauncher(const mapping::MachineDesc& machine,
-               bool source_indirect_out_of_range,
-               bool target_indirect_out_of_range,
-               int64_t tag = 0);
+  CopyLauncher(const mapping::MachineDesc& machine, int64_t tag = 0);
   ~CopyLauncher();
 
  public:
@@ -62,6 +59,10 @@ class CopyLauncher {
                  detail::LogicalStore* store,
                  std::unique_ptr<ProjectionInfo> proj_info,
                  Legion::PrivilegeMode privilege);
+
+ public:
+  void set_source_indirect_out_of_range(bool flag) { source_indirect_out_of_range_ = flag; }
+  void set_target_indirect_out_of_range(bool flag) { target_indirect_out_of_range_ = flag; }
 
  public:
   void execute(const Legion::Domain& launch_domain);
@@ -88,8 +89,8 @@ class CopyLauncher {
   std::vector<CopyArg*> target_indirect_{};
 
  private:
-  bool source_indirect_out_of_range_;
-  bool target_indirect_out_of_range_;
+  bool source_indirect_out_of_range_{true};
+  bool target_indirect_out_of_range_{true};
 };
 
 }  // namespace legate::detail

@@ -17,6 +17,7 @@
 #include "core/operation/detail/operation.h"
 
 #include "core/partitioning/constraint.h"
+#include "core/partitioning/partitioner.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
@@ -60,6 +61,16 @@ void Operation::record_partition(const Variable* variable, std::shared_ptr<Logic
   if (part_mappings_.find(store) == part_mappings_.end()) part_mappings_.insert({store, variable});
   store_mappings_[*variable] = store.get();
   all_stores_.insert(std::move(store));
+}
+
+std::unique_ptr<ProjectionInfo> Operation::create_projection_info(const Strategy& strategy,
+                                                                  const Domain* launch_domain,
+                                                                  const StoreArg& arg) const
+{
+  auto store_partition = arg.store->create_partition(strategy[arg.variable]);
+  auto proj_info       = store_partition->create_projection_info(launch_domain);
+  proj_info->tag       = strategy.is_key_partition(arg.variable) ? LEGATE_CORE_KEY_STORE_TAG : 0;
+  return std::move(proj_info);
 }
 
 }  // namespace legate::detail

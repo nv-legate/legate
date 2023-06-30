@@ -20,6 +20,7 @@
 
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/machine.h"
+#include "core/operation/detail/projection.h"
 
 namespace legate {
 class Variable;
@@ -32,13 +33,17 @@ class Strategy;
 
 class Operation {
  protected:
-  using StoreArg = std::pair<LogicalStore*, const Variable*>;
+  struct StoreArg {
+    LogicalStore* store;
+    const Variable* variable;
+  };
   Operation(uint64_t unique_id, mapping::MachineDesc&& machine);
 
  public:
   virtual ~Operation() {}
 
  public:
+  virtual void validate()                              = 0;
   virtual void add_to_solver(ConstraintSolver& solver) = 0;
   virtual void launch(Strategy* strategy)              = 0;
   virtual std::string to_string() const                = 0;
@@ -54,6 +59,10 @@ class Operation {
 
  protected:
   void record_partition(const Variable* variable, std::shared_ptr<LogicalStore> store);
+  // Helper methods
+  std::unique_ptr<ProjectionInfo> create_projection_info(const Strategy& strategy,
+                                                         const Domain* launch_domain,
+                                                         const StoreArg& arg) const;
 
  protected:
   uint64_t unique_id_;
