@@ -129,20 +129,32 @@ class Scalar {
 
  public:
   /**
-   * @brief Returns the value stored in the `Scalar`. The call does no type checking;
-   * i.e., passing a wrong type parameter will not be caught by the call.
+   * @brief Returns a copy of the value stored in this `Scalar`.
    *
    * @tparam VAL Type of the value to unwrap
    *
-   * @return The value stored in the `Scalar`
+   * @return A copy of the value stored in this `Scalar`
+   *
+   * @throw std::invalid_argument If one of the following cases is encountered:
+   *
+   * 1) size of the scalar does not match with size of `VAL`,
+   * 2) the scalar holds a string but `VAL` isn't `std:string` or `std:string_view`, or
+   * 3) the inverse; i.e.,  `VAL` is `std:string` or `std:string_view` but the scalar's type
+   * isn't string
    */
   template <typename VAL>
   VAL value() const;
   /**
-   * @brief Returns values stored in the `Scalar`. If the `Scalar` contains a scalar,
+   * @brief Returns values stored in the `Scalar`. If the `Scalar` does not have a fixed array type,
    * a unit span will be returned.
    *
    * @return Values stored in the `Scalar`
+   *
+   * @throw std::invalid_argument If one of the following cases is encountered:
+   *
+   * 1) the scalar has a fixed array type whose elemenet type has a different size from `VAL`,
+   * 2) the scalar holds a string and size of `VAL` isn't 1 byte,
+   * 3) the scalar's type isn't a fixed array type and the size is different from size of `VAL`
    */
   template <typename VAL>
   Span<const VAL> values() const;

@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <string_view>
+
 // Useful for IDEs
 #include "core/data/scalar.h"
 
@@ -74,6 +76,8 @@ Scalar::Scalar(const Rect<DIM>& rect) : own_(true), type_(rect_type(DIM))
 template <typename VAL>
 VAL Scalar::value() const
 {
+  if (type_->code == Type::Code::STRING)
+    throw std::invalid_argument("String cannot be casted to other types");
   if (sizeof(VAL) != type_->size())
     throw std::invalid_argument("Size of the scalar is " + std::to_string(type_->size()) +
                                 ", but the requested type has size " + std::to_string(sizeof(VAL)));
@@ -85,12 +89,20 @@ inline std::string Scalar::value() const
 {
   if (type_->code != Type::Code::STRING)
     throw std::invalid_argument("Type of the scalar is not string");
-  // Getting a span of a temporary scalar is illegal in general,
-  // but we know this is safe as the span's pointer is held by this object.
   auto len          = *static_cast<const uint32_t*>(data_);
   const auto* begin = static_cast<const char*>(data_) + sizeof(uint32_t);
   const auto* end   = begin + len;
   return std::string(begin, end);
+}
+
+template <>
+inline std::string_view Scalar::value() const
+{
+  if (type_->code != Type::Code::STRING)
+    throw std::invalid_argument("Type of the scalar is not string");
+  auto len          = *static_cast<const uint32_t*>(data_);
+  const auto* begin = static_cast<const char*>(data_) + sizeof(uint32_t);
+  return std::string_view(begin, len);
 }
 
 template <typename VAL>
@@ -105,6 +117,13 @@ Span<const VAL> Scalar::values() const
         ", but the requested element type has size " + std::to_string(sizeof(VAL)));
     auto size = arr_type->num_elements();
     return Span<const VAL>(reinterpret_cast<const VAL*>(data_), size);
+  } else if (type_->code == Type::Code::STRING) {
+    if (sizeof(VAL) != 1)
+      throw std::invalid_argument(
+        "String scalar can only be converted into a span of a type whose size is 1 byte");
+    auto len          = *static_cast<const uint32_t*>(data_);
+    const auto* begin = static_cast<const char*>(data_) + sizeof(uint32_t);
+    return Span<const VAL>(reinterpret_cast<const VAL*>(begin), len);
   } else {
     if (sizeof(VAL) != type_->size())
       throw std::invalid_argument("Size of the scalar is " + std::to_string(type_->size()) +

@@ -165,9 +165,10 @@ TEST(ScalarUnit, CreateWithString)
 
   // Check values
   EXPECT_EQ(scalar.value<std::string>(), inputString);
-  legate::Span actualValues(scalar.values<std::string>());
-  EXPECT_EQ(actualValues.size(), 1);
-  EXPECT_EQ(*actualValues.begin(), inputString.substr(0, 1));
+  EXPECT_EQ(scalar.value<std::string_view>(), inputString);
+  legate::Span actualValues(scalar.values<char>());
+  EXPECT_EQ(actualValues.size(), inputString.size());
+  EXPECT_EQ(*actualValues.begin(), inputString[0]);
 
   // Invalid type
   EXPECT_THROW(scalar.value<int32_t>(), std::invalid_argument);
