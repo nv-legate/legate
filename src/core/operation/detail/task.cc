@@ -219,7 +219,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
 std::string Task::to_string() const
 {
   std::stringstream ss;
-  ss << library_->find_task(task_id_)->name() << ":" << unique_id_;
+  ss << library_->get_task_name(task_id_) << ":" << unique_id_;
   return std::move(ss).str();
 }
 

@@ -62,17 +62,6 @@ Runtime::Runtime()
 
 Runtime::~Runtime() {}
 
-LibraryContext* Runtime::find_library(const std::string& library_name,
-                                      bool can_fail /*=false*/) const
-{
-  auto finder = libraries_.find(library_name);
-  if (libraries_.end() == finder) {
-    if (!can_fail) throw std::out_of_range("Library " + library_name + " does not exist");
-    return nullptr;
-  }
-  return finder->second;
-}
-
 LibraryContext* Runtime::create_library(const std::string& library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper)
@@ -85,6 +74,32 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
   auto context             = new LibraryContext(library_name, config, std::move(mapper));
   libraries_[library_name] = context;
   return context;
+}
+
+LibraryContext* Runtime::find_library(const std::string& library_name,
+                                      bool can_fail /*=false*/) const
+{
+  auto finder = libraries_.find(library_name);
+  if (libraries_.end() == finder) {
+    if (!can_fail) throw std::out_of_range("Library " + library_name + " does not exist");
+    return nullptr;
+  }
+  return finder->second;
+}
+
+LibraryContext* Runtime::find_or_create_library(const std::string& library_name,
+                                                const ResourceConfig& config,
+                                                std::unique_ptr<mapping::Mapper> mapper,
+                                                bool* created)
+{
+  LibraryContext* result = find_library(library_name, true /*can_fail*/);
+  if (result != nullptr) {
+    if (created != nullptr) *created = false;
+    return result;
+  }
+  result = create_library(library_name, config, std::move(mapper));
+  if (created != nullptr) *created = true;
+  return result;
 }
 
 uint32_t Runtime::get_type_uid() { return next_type_uid_++; }
@@ -131,7 +146,7 @@ void Runtime::initialize(Legion::Context legion_context)
   if (initialized_) throw std::runtime_error("Legate runtime has already been initialized");
   initialized_          = true;
   legion_context_       = legion_context;
-  core_context_         = find_library(core_library_name);
+  core_context_         = find_library(core_library_name, false /*can_fail*/);
   communicator_manager_ = new CommunicatorManager();
   partition_manager_    = new PartitionManager(this, core_context_);
   machine_manager_      = new MachineManager();
@@ -143,12 +158,7 @@ void Runtime::initialize(Legion::Context legion_context)
 
 mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, int64_t task_id)
 {
-  auto task_info = library->find_task(task_id);
-  if (nullptr == task_info) {
-    std::stringstream ss;
-    ss << "Library " << library->get_library_name() << " does not have task " << task_id;
-    throw std::invalid_argument(std::move(ss).str());
-  }
+  auto* task_info = library->find_task(task_id);
 
   std::vector<mapping::TaskTarget> task_targets;
   auto& machine = machine_manager_->get_machine();

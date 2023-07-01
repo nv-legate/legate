@@ -47,9 +47,7 @@ const char* InvalidTaskIdException::what() const throw() { return error_message.
 LibraryContext::LibraryContext(const std::string& library_name,
                                const ResourceConfig& config,
                                std::unique_ptr<mapping::Mapper> mapper)
-  : runtime_(Legion::Runtime::get_runtime()),
-    library_name_(library_name),
-    mapper_(std::move(mapper))
+  : runtime_(Legion::Runtime::get_runtime()), library_name_(library_name)
 {
   task_scope_ = ResourceIdScope(
     runtime_->generate_library_task_ids(library_name.c_str(), config.max_tasks), config.max_tasks);
@@ -62,14 +60,9 @@ LibraryContext::LibraryContext(const std::string& library_name,
   shard_scope_ = ResourceIdScope(
     runtime_->generate_library_sharding_ids(library_name.c_str(), config.max_shardings),
     config.max_shardings);
-
-  auto base_mapper = new mapping::BaseMapper(mapper_.get(), runtime_->get_mapper_runtime(), this);
-  Legion::Mapping::Mapper* legion_mapper = base_mapper;
-  if (Core::log_mapping_decisions)
-    legion_mapper = new Legion::Mapping::LoggingWrapper(base_mapper, &base_mapper->logger);
-
   mapper_id_ = runtime_->generate_library_mapper_ids(library_name.c_str(), 1);
-  runtime_->add_mapper(mapper_id_, legion_mapper);
+
+  register_mapper(std::move(mapper));
 }
 
 const std::string& LibraryContext::get_library_name() const { return library_name_; }
@@ -150,6 +143,23 @@ bool LibraryContext::valid_sharding_id(Legion::ShardingID shard_id) const
   return shard_scope_.in_scope(shard_id);
 }
 
+const std::string& LibraryContext::get_task_name(int64_t local_task_id) const
+{
+  return find_task(local_task_id)->name();
+}
+
+void LibraryContext::register_mapper(std::unique_ptr<mapping::Mapper> mapper)
+{
+  // Hold the pointer to the mapper to keep it alive
+  mapper_ = std::move(mapper);
+
+  auto base_mapper = new mapping::BaseMapper(mapper_.get(), runtime_->get_mapper_runtime(), this);
+  Legion::Mapping::Mapper* legion_mapper = base_mapper;
+  if (Core::log_mapping_decisions)
+    legion_mapper = new Legion::Mapping::LoggingWrapper(base_mapper, &base_mapper->logger);
+  runtime_->add_mapper(mapper_id_, legion_mapper);
+}
+
 void LibraryContext::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   auto task_id = get_task_id(local_task_id);
@@ -167,7 +177,11 @@ void LibraryContext::register_task(int64_t local_task_id, std::unique_ptr<TaskIn
 const TaskInfo* LibraryContext::find_task(int64_t local_task_id) const
 {
   auto finder = tasks_.find(local_task_id);
-  return tasks_.end() == finder ? nullptr : finder->second.get();
+  if (tasks_.end() == finder) {
+    throw std::out_of_range("Library " + get_library_name() + " does not have task " +
+                            std::to_string(local_task_id));
+  }
+  return finder->second.get();
 }
 
 void LibraryContext::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,

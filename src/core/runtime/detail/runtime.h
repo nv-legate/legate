@@ -53,10 +53,14 @@ class Runtime {
   ~Runtime();
 
  public:
-  LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
   LibraryContext* create_library(const std::string& library_name,
-                                 const ResourceConfig& config            = ResourceConfig{},
-                                 std::unique_ptr<mapping::Mapper> mapper = nullptr);
+                                 const ResourceConfig& config,
+                                 std::unique_ptr<mapping::Mapper> mapper);
+  LibraryContext* find_library(const std::string& library_name, bool can_fail) const;
+  LibraryContext* find_or_create_library(const std::string& library_name,
+                                         const ResourceConfig& config,
+                                         std::unique_ptr<mapping::Mapper> mapper,
+                                         bool* created);
 
  public:
   uint32_t get_type_uid();

@@ -109,7 +109,6 @@ class LibraryContext {
   int64_t get_new_task_id() { return task_scope_.generate_id(); }
 
  public:
-  void record_task_name(int64_t local_task_id, const std::string& task_name);
   /**
    * @brief Returns the name of a task
    *
@@ -174,6 +173,12 @@ class LibraryContext {
    */
   template <typename REDOP>
   int32_t register_reduction_operator(int32_t redop_id);
+  /**
+   * @brief Registers a library mapper. Replaces the existing mapper if there already is one.
+   *
+   * @param mapper A Legate mapper to register for the library
+   */
+  void register_mapper(std::unique_ptr<mapping::Mapper> mapper);
 
  public:
   void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);

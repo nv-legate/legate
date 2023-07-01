@@ -147,9 +147,12 @@ LibraryContext* Runtime::create_library(const std::string& library_name,
   return impl_->create_library(library_name, config, std::move(mapper));
 }
 
-void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id)
+LibraryContext* Runtime::find_or_create_library(const std::string& library_name,
+                                                const ResourceConfig& config,
+                                                std::unique_ptr<mapping::Mapper> mapper,
+                                                bool* created)
 {
-  impl_->record_reduction_operator(type_uid, op_kind, legion_op_id);
+  return impl_->find_or_create_library(library_name, config, std::move(mapper), created);
 }
 
 // This function should be moved to the library context

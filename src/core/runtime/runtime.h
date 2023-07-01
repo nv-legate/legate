@@ -104,6 +104,25 @@ class Runtime;
 class Runtime {
  public:
   /**
+   * @brief Creates a library
+   *
+   * A library is a collection of tasks and custom reduction operators. The maximum number of
+   * tasks and reduction operators can be optionally specified with a `ResourceConfig` object.
+   * Each library can optionally have a mapper that specifies mapping policies for its tasks.
+   * When no mapper is given, the default mapper is used.
+   *
+   * @param library_name Library name. Must be unique to this library
+   * @param config Optional configuration object
+   * @param mapper Optional mapper object
+   *
+   * @return Context object for the library
+   *
+   * @throw std::invalid_argument If a library already exists for a given name
+   */
+  LibraryContext* create_library(const std::string& library_name,
+                                 const ResourceConfig& config            = ResourceConfig{},
+                                 std::unique_ptr<mapping::Mapper> mapper = nullptr);
+  /**
    * @brief Finds a library
    *
    * @param library_name Library name
@@ -116,25 +135,23 @@ class Runtime {
    */
   LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
   /**
-   * @brief Creates a library
+   * @brief Finds or creates a library.
    *
-   * A library is a collection of tasks and custom reduction operators. The maximum number of
-   * tasks and reduction operators can be optionally specified with a `ResourceConfig` object.
-   * Each library can optionally have a mapper that specifies mapping policies for its tasks.
-   * When no mapper is given, the default mapper is used.
+   * The optional configuration and mapper objects are picked up only when the library is created.
+   *
    *
    * @param library_name Library name. Must be unique to this library
    * @param config Optional configuration object
    * @param mapper Optional mapper object
-   *
-   * @throw std::invalid_argument If a library already exists for a given name
+   * @param created Optional pointer to a boolean flag indicating whether the library has been
+   * created because of this call
    *
    * @return Context object for the library
    */
-  LibraryContext* create_library(const std::string& library_name,
-                                 const ResourceConfig& config            = ResourceConfig{},
-                                 std::unique_ptr<mapping::Mapper> mapper = nullptr);
-  void record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id);
+  LibraryContext* find_or_create_library(const std::string& library_name,
+                                         const ResourceConfig& config            = ResourceConfig{},
+                                         std::unique_ptr<mapping::Mapper> mapper = nullptr,
+                                         bool* created                           = nullptr);
 
  public:
   /**
