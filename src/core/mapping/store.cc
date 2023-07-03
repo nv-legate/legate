@@ -135,4 +135,10 @@ Domain Store::domain() const
   return result;
 }
 
+std::vector<int32_t> Store::find_imaginary_dims() const
+{
+  if (nullptr != transform_) return transform_->find_imaginary_dims();
+  return std::vector<int32_t>();
+}
+
 }  // namespace legate::mapping
