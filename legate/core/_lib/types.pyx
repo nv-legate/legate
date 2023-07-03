@@ -217,6 +217,10 @@ cdef class Dtype:
     def serialize(self, buf) -> None:
         buf.pack_32bit_int(self.code)
 
+    @property
+    def raw_ptr(self) -> long:
+        return <long>(self._type.get())
+
 
 cdef class FixedArrayDtype(Dtype):
     def num_elements(self) -> int:
