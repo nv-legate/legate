@@ -32,18 +32,6 @@
 
 namespace legate {
 
-InvalidTaskIdException::InvalidTaskIdException(const std::string& library_name,
-                                               int64_t offending_task_id,
-                                               int64_t max_task_id)
-{
-  std::stringstream ss;
-  ss << "Task id " << offending_task_id << " is invalid for library '" << library_name
-     << "' (max local task id: " << max_task_id << ")";
-  error_message = std::move(ss).str();
-}
-
-const char* InvalidTaskIdException::what() const throw() { return error_message.c_str(); }
-
 LibraryContext::LibraryContext(const std::string& library_name,
                                const ResourceConfig& config,
                                std::unique_ptr<mapping::Mapper> mapper)
@@ -163,13 +151,20 @@ void LibraryContext::register_mapper(std::unique_ptr<mapping::Mapper> mapper)
 void LibraryContext::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   auto task_id = get_task_id(local_task_id);
-  if (!task_scope_.in_scope(task_id))
-    throw InvalidTaskIdException(library_name_, local_task_id, task_scope_.size() - 1);
+  if (!task_scope_.in_scope(task_id)) {
+    std::stringstream ss;
+    ss << "Task " << local_task_id << " is invalid for library '" << library_name_
+       << "' (max local task id: " << (task_scope_.size() - 1) << ")";
+    throw std::out_of_range(std::move(ss).str());
+  }
 
 #ifdef DEBUG_LEGATE
   log_legate.debug() << "[" << library_name_ << "] task " << local_task_id
                      << " (global id: " << task_id << "), " << *task_info;
 #endif
+  if (tasks_.find(local_task_id) != tasks_.end())
+    throw std::invalid_argument("Task " + std::to_string(local_task_id) +
+                                " already exists in library " + library_name_);
   task_info->register_task(task_id);
   tasks_.emplace(std::make_pair(local_task_id, std::move(task_info)));
 }

@@ -50,19 +50,6 @@ class Scalar;
 
 extern Legion::Logger log_legate;
 
-class InvalidTaskIdException : public std::exception {
- public:
-  InvalidTaskIdException(const std::string& library_name,
-                         int64_t offending_task_id,
-                         int64_t max_task_id);
-
- public:
-  virtual const char* what() const throw();
-
- private:
-  std::string error_message;
-};
-
 /**
  * @ingroup runtime
  * @brief A library context that provides APIs for registering components
