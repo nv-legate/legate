@@ -127,6 +127,13 @@ class Type {
   virtual std::string to_string() const = 0;
 
   /**
+   * @brief Indicates whether the type is a primitive type
+   *
+   * @return true If the type is a primitive type
+   * @return false Otherwise
+   */
+  virtual bool is_primitive() const = 0;
+  /**
    * @brief Serializes the type into a buffer
    *
    * @param buffer A BufferBuilder object to serialize the type into
@@ -201,6 +208,7 @@ class PrimitiveType : public Type {
   bool variable_size() const override { return false; }
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
+  bool is_primitive() const override { return true; }
   void pack(BufferBuilder& buffer) const override;
 
  private:
@@ -223,6 +231,7 @@ class StringType : public Type {
   int32_t uid() const override;
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
+  bool is_primitive() const override { return false; }
   void pack(BufferBuilder& buffer) const override;
 
  private:
@@ -237,6 +246,7 @@ class ExtensionType : public Type {
  public:
   ExtensionType(int32_t uid, Type::Code code);
   int32_t uid() const override { return uid_; }
+  bool is_primitive() const override { return false; }
 
  protected:
   const uint32_t uid_;

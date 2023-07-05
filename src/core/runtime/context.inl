@@ -30,7 +30,7 @@ void register_reduction_callback(const Legion::RegistrationCallbackArgs& args)
   Legion::Runtime::register_reduction_op<REDOP>(legion_redop_id);
 }
 
-#else   // ifndef REALM_COMPILER_IS_NVCC
+#else  // ifndef REALM_COMPILER_IS_NVCC
 
 template <typename T>
 class CUDAReductionOpWrapper : public T {

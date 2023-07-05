@@ -365,8 +365,13 @@ class Store {
   template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorRO<T, DIM> read_accessor() const;
   /**
-   * @brief Returns a write-only accessor to the store for the entire domain. Validates type and
-   * dimension by default, disable with VALIDATE_TYPE = false.
+   * @brief Returns a write-only accessor to the store for the entire domain.
+   *
+   * @tparam T Element type
+   *
+   * @tparam DIM Number of dimensions
+   *
+   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -379,8 +384,13 @@ class Store {
   template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorWO<T, DIM> write_accessor() const;
   /**
-   * @brief Returns a read-write accessor to the store for the entire domain. Validates type and
-   * dimension by default, disable with VALIDATE_TYPE = false.
+   * @brief Returns a read-write accessor to the store for the entire domain.
+   *
+   * @tparam T Element type
+   *
+   * @tparam DIM Number of dimensions
+   *
+   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -393,13 +403,17 @@ class Store {
   template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorRW<T, DIM> read_write_accessor() const;
   /**
-   * @brief Returns a reduction accessor to the store for the entire domain
+   * @brief Returns a reduction accessor to the store for the entire domain.
    *
    * @tparam OP Reduction operator class. For details about reduction operators, See
    * LibraryContext::register_reduction_operator.
    *
    * @tparam EXCLUSIVE Indicates whether reductions can be performed in exclusive mode. If
-   * `EXCLUSIVE` is `false`, every reduction via the acecssor is performed atomically.
+   * `EXCLUSIVE` is `false`, every reduction via the accessor is performed atomically.
+   *
+   * @tparam DIM Number of dimensions
+   *
+   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam DIM Number of dimensions
    *
@@ -412,8 +426,13 @@ class Store {
 
  public:
   /**
-   * @brief Returns a read-only accessor to the store for specific bounds. Validates type and
-   * dimension by default, disable with VALIDATE_TYPE = false.
+   * @brief Returns a read-only accessor to the store for specific bounds.
+   *
+   * @tparam T Element type
+   *
+   * @tparam DIM Number of dimensions
+   *
+   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -430,8 +449,13 @@ class Store {
   template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorRO<T, DIM> read_accessor(const Rect<DIM>& bounds) const;
   /**
-   * @brief Returns a write-only accessor to the store for the entire domain. Validates type and
-   * dimension by default, disable with VALIDATE_TYPE = false.
+   * @brief Returns a write-only accessor to the store for the entire domain.
+   *
+   * @tparam T Element type
+   *
+   * @tparam DIM Number of dimensions
+   *
+   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -448,8 +472,13 @@ class Store {
   template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds) const;
   /**
-   * @brief Returns a read-write accessor to the store for the entire domain. Validates type and
-   * dimension by default, disable with VALIDATE_TYPE = false.
+   * @brief Returns a read-write accessor to the store for the entire domain.
+   *
+   * @tparam T Element type
+   *
+   * @tparam DIM Number of dimensions
+   *
+   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -466,7 +495,7 @@ class Store {
   template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorRW<T, DIM> read_write_accessor(const Rect<DIM>& bounds) const;
   /**
-   * @brief Returns a reduction accessor to the store for the entire domain
+   * @brief Returns a reduction accessor to the store for the entire domain.
    *
    * @param bounds Domain within which accesses should be allowed.
    * The actual bounds for valid access are determined by an intersection between
@@ -476,7 +505,11 @@ class Store {
    * LibraryContext::register_reduction_operator.
    *
    * @tparam EXCLUSIVE Indicates whether reductions can be performed in exclusive mode. If
-   * `EXCLUSIVE` is `false`, every reduction via the acecssor is performed atomically.
+   * `EXCLUSIVE` is `false`, every reduction via the accessor is performed atomically.
+   *
+   * @tparam DIM Number of dimensions
+   *
+   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam DIM Number of dimensions
    *
