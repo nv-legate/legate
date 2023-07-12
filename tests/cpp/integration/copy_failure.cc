@@ -49,6 +49,25 @@ void test_invalid_stores()
                std::invalid_argument);
 }
 
+void test_type_check_failure()
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto source          = runtime->create_store({10, 10}, legate::int64());
+  auto target          = runtime->create_store({10, 10}, legate::float64());
+  auto source_indirect = runtime->create_store({10, 10}, legate::point_type(2));
+  auto target_indirect = runtime->create_store({10, 10}, legate::point_type(2));
+
+  EXPECT_THROW(runtime->issue_copy(target, source), std::invalid_argument);
+
+  EXPECT_THROW(runtime->issue_gather(target, source, source_indirect), std::invalid_argument);
+
+  EXPECT_THROW(runtime->issue_scatter(target, target_indirect, source), std::invalid_argument);
+
+  EXPECT_THROW(runtime->issue_scatter_gather(target, target_indirect, source, source_indirect),
+               std::invalid_argument);
+}
+
 void test_shape_check_failure()
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -85,10 +104,31 @@ void test_non_point_types_failure()
                std::invalid_argument);
 }
 
+void test_dimension_mismatch_failure()
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto source          = runtime->create_store({10, 10}, legate::int64());
+  auto target          = runtime->create_store({10, 10}, legate::int64());
+  auto source_indirect = runtime->create_store({10, 10}, legate::point_type(3));
+  auto target_indirect = runtime->create_store({10, 10}, legate::point_type(3));
+
+  EXPECT_THROW(runtime->issue_gather(target, source, source_indirect), std::invalid_argument);
+
+  EXPECT_THROW(runtime->issue_scatter(target, target_indirect, source), std::invalid_argument);
+
+  EXPECT_THROW(runtime->issue_scatter_gather(target, target_indirect, source, source_indirect),
+               std::invalid_argument);
+}
+
 TEST(Copy, FailureInvalidStores) { test_invalid_stores(); }
+
+TEST(Copy, FailureDifferentTypes) { test_type_check_failure(); }
 
 TEST(Copy, FailureDifferentShapes) { test_shape_check_failure(); }
 
 TEST(Copy, FailureNonPointTypes) { test_non_point_types_failure(); }
+
+TEST(Copy, FailureDimensionMismatch) { test_dimension_mismatch_failure(); }
 
 }  // namespace copy_failure
