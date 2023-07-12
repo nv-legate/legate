@@ -27,6 +27,8 @@
 namespace legate {
 
 class BufferBuilder;
+class FixedArrayType;
+class StructType;
 
 /**
  * @ingroup types
@@ -139,6 +141,24 @@ class Type {
    * @param buffer A BufferBuilder object to serialize the type into
    */
   virtual void pack(BufferBuilder& buffer) const = 0;
+
+  /**
+   * @brief Dynamically casts the type into a fixed size array type.
+   *
+   * If the type is not a fixed size array type, an exception will be raised.
+   *
+   * @return Type object
+   */
+  virtual const FixedArrayType& as_fixed_array_type() const;
+
+  /**
+   * @brief Dynamically casts the type into a struct type.
+   *
+   * If the type is not a struct type, an exception will be raised.
+   *
+   * @return Type object
+   */
+  virtual const StructType& as_struct_type() const;
 
   /**
    * @brief Records a reduction operator.
@@ -272,6 +292,7 @@ class FixedArrayType : public ExtensionType {
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
+  const FixedArrayType& as_fixed_array_type() const override;
 
   /**
    * @brief Returns the number of elements
@@ -318,6 +339,7 @@ class StructType : public ExtensionType {
   std::unique_ptr<Type> clone() const override;
   std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
+  const StructType& as_struct_type() const override;
 
   /**
    * @brief Returns the number of fields
@@ -543,6 +565,8 @@ std::unique_ptr<Type> string();
  * @ingroup types
  * @brief Creates a point type
  *
+ * @param ndim Number of dimensions
+ *
  * @return Type object
  */
 std::unique_ptr<Type> point_type(int32_t ndim);
@@ -550,6 +574,8 @@ std::unique_ptr<Type> point_type(int32_t ndim);
 /**
  * @ingroup types
  * @brief Creates a rect type
+ *
+ * @param ndim Number of dimensions
  *
  * @return Type object
  */
@@ -559,9 +585,24 @@ std::unique_ptr<Type> rect_type(int32_t ndim);
  * @ingroup types
  * @brief Checks if the type is a point type of the given dimensionality
  *
+ * @param type Type to check
+ * @param ndim Number of dimensions the point type should have
+ *
  * @return true If the `type` is a point type
  * @return false Otherwise
  */
 bool is_point_type(const Type& type, int32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Checks if the type is a rect type of the given dimensionality
+ *
+ * @param type Type to check
+ * @param ndim Number of dimensions the rect type should have
+ *
+ * @return true If the `type` is a rect type
+ * @return false Otherwise
+ */
+bool is_rect_type(const Type& type, int32_t ndim);
 
 }  // namespace legate

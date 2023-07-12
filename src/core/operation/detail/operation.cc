@@ -44,7 +44,7 @@ const Variable* Operation::declare_partition()
   return partition_symbols_.back().get();
 }
 
-LogicalStore* Operation::find_store(const Variable* part_symb) const
+std::shared_ptr<LogicalStore> Operation::find_store(const Variable* part_symb) const
 {
   return store_mappings_.at(*part_symb);
 }
@@ -59,7 +59,7 @@ void Operation::record_partition(const Variable* variable, std::shared_ptr<Logic
     return;
   }
   if (part_mappings_.find(store) == part_mappings_.end()) part_mappings_.insert({store, variable});
-  store_mappings_[*variable] = store.get();
+  store_mappings_[*variable] = store;
   all_stores_.insert(std::move(store));
 }
 

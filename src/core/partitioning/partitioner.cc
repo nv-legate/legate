@@ -238,8 +238,8 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
   auto remaining_symbols = handle_unbound_stores(strategy.get(), partition_symbols, solver);
 
   auto comparison_key = [&solver](const auto& part_symb) {
-    auto* op    = part_symb->operation();
-    auto* store = op->find_store(part_symb);
+    auto* op   = part_symb->operation();
+    auto store = op->find_store(part_symb);
     auto has_key_part =
       store->has_key_partition(op->machine(), solver.find_restrictions(part_symb));
 #ifdef DEBUG_LEGATE
@@ -255,7 +255,10 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
                    });
 
   for (auto& part_symb : remaining_symbols) {
-    if (strategy->has_assignment(part_symb)) continue;
+    if (strategy->has_assignment(part_symb))
+      continue;
+    else if (solver.is_dependent(*part_symb))
+      continue;
 
     const auto& equiv_class  = solver.find_equivalence_class(part_symb);
     const auto& restrictions = solver.find_restrictions(part_symb);
@@ -270,6 +273,8 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
     for (auto symb : equiv_class) strategy->insert(symb, partition);
   }
+
+  solver.solve_dependent_constraints(*strategy);
 
   strategy->compute_launch_domains(solver);
 

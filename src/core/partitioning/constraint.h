@@ -32,6 +32,7 @@
 
 namespace legate::detail {
 class Operation;
+class Strategy;
 }  // namespace legate::detail
 
 namespace legate {
@@ -39,6 +40,7 @@ namespace legate {
 class Alignment;
 class Broadcast;
 class Constraint;
+class ImageConstraint;
 class Literal;
 class Partition;
 class Variable;
@@ -156,6 +158,7 @@ struct Constraint {
   enum class Kind : int32_t {
     ALIGNMENT = 0,
     BROADCAST = 1,
+    IMAGE     = 2,
   };
 
   virtual ~Constraint() {}
@@ -178,8 +181,9 @@ struct Constraint {
 
   virtual void validate() const = 0;
 
-  virtual const Alignment* as_alignment() const = 0;
-  virtual const Broadcast* as_broadcast() const = 0;
+  virtual const Alignment* as_alignment() const              = 0;
+  virtual const Broadcast* as_broadcast() const              = 0;
+  virtual const ImageConstraint* as_image_constraint() const = 0;
 };
 
 /**
@@ -209,6 +213,7 @@ class Alignment : public Constraint {
  public:
   const Alignment* as_alignment() const override { return this; }
   const Broadcast* as_broadcast() const override { return nullptr; }
+  const ImageConstraint* as_image_constraint() const override { return nullptr; }
 
  public:
   /**
@@ -257,6 +262,7 @@ class Broadcast : public Constraint {
  public:
   const Alignment* as_alignment() const override { return nullptr; }
   const Broadcast* as_broadcast() const override { return this; }
+  const ImageConstraint* as_image_constraint() const override { return nullptr; }
 
  public:
   /**
@@ -275,6 +281,47 @@ class Broadcast : public Constraint {
  private:
   std::unique_ptr<Variable> variable_;
   tuple<int32_t> axes_;
+};
+
+/**
+ * @ingroup partitioning
+ * @brief A class for image constraints
+ *
+ * This constraint tells the partitioner that `var_range_` should be derived by collecting the image
+ * of a "function", a store that contains either points or rects. `var_function_` is the partition
+ * of the function that the partitioner should use in the image partitioning.
+ */
+class ImageConstraint : public Constraint {
+ public:
+  ImageConstraint(std::unique_ptr<Variable> var_function, std::unique_ptr<Variable> var_range);
+
+ public:
+  Kind kind() const override { return Kind::IMAGE; }
+
+ public:
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+
+ public:
+  void validate() const;
+
+ public:
+  std::string to_string() const override;
+
+ public:
+  const Alignment* as_alignment() const override { return nullptr; }
+  const Broadcast* as_broadcast() const override { return nullptr; }
+  const ImageConstraint* as_image_constraint() const override { return this; }
+
+ public:
+  const Variable* var_function() const { return var_function_.get(); }
+  const Variable* var_range() const { return var_range_.get(); }
+
+ public:
+  std::unique_ptr<Partition> resolve(const detail::Strategy& strategy) const;
+
+ private:
+  std::unique_ptr<Variable> var_function_;
+  std::unique_ptr<Variable> var_range_;
 };
 
 /**
@@ -309,5 +356,16 @@ std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32
  * @return Broadcast constraint
  */
 std::unique_ptr<Broadcast> broadcast(const Variable* variable, tuple<int32_t>&& axes);
+
+/**
+ * @ingroup partitioning
+ * @brief Creates an image constraint between partitions.
+ *
+ * @param var_function Partition symbol for the function store
+ * @param var_range Partition symbol of the store whose partition should be derived from the image
+ *
+ * @return Broadcast constraint
+ */
+std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range);
 
 }  // namespace legate

@@ -257,6 +257,80 @@ std::string Weighted::to_string() const
   return std::move(ss).str();
 }
 
+Image::Image(std::shared_ptr<detail::LogicalStore> func, std::shared_ptr<Partition> func_partition)
+  : func_(std::move(func)), func_partition_(std::move(func_partition))
+{
+}
+
+bool Image::operator==(const Image& other) const
+{
+  // FIXME: This needs to be implemented to cache image partitions
+  return false;
+}
+
+bool Image::operator<(const Image& other) const
+{
+  // FIXME: This needs to be implemented to cache image partitions
+  return false;
+}
+
+bool Image::is_complete_for(const detail::Storage* storage) const
+{
+  // Completeness check for image partitions is expensive, so we give a sound answer
+  return false;
+}
+
+bool Image::is_disjoint_for(const Domain* launch_domain) const
+{
+  // Disjointness check for image partitions is expensive, so we give a sound answer;
+  return false;
+}
+
+bool Image::satisfies_restrictions(const Restrictions& restrictions) const
+{
+  static auto satisfies_restriction = [](Restriction r, size_t ext) {
+    return r != Restriction::FORBID || ext == 1;
+  };
+  return apply(satisfies_restriction, restrictions, color_shape()).all();
+}
+
+Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool complete) const
+{
+  auto* func_rf    = func_->get_region_field();
+  auto func_region = func_rf->region();
+  auto func_partition =
+    func_partition_->construct(func_region, func_partition_->is_complete_for(func_->get_storage()));
+
+  auto runtime     = detail::Runtime::get_runtime();
+  bool is_range    = func_->type().code == Type::Code::STRUCT;
+  auto color_space = runtime->find_or_create_index_space(to_domain(color_shape()));
+
+  auto index_partition = runtime->create_image_partition(region.get_index_space(),
+                                                         color_space,
+                                                         func_region,
+                                                         func_partition,
+                                                         func_rf->field_id(),
+                                                         is_range);
+
+  return runtime->create_logical_partition(region, index_partition);
+}
+
+bool Image::has_launch_domain() const { return true; }
+
+Domain Image::launch_domain() const { return to_domain(color_shape()); }
+
+std::unique_ptr<Partition> Image::clone() const { return std::make_unique<Image>(*this); }
+
+std::string Image::to_string() const
+{
+  std::stringstream ss;
+  ss << "Image(func: " << func_->to_string() << ", partition: " << func_partition_->to_string()
+     << ")";
+  return std::move(ss).str();
+}
+
+const Shape& Image::color_shape() const { return func_partition_->color_shape(); }
+
 std::unique_ptr<NoPartition> create_no_partition() { return std::make_unique<NoPartition>(); }
 
 std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
@@ -271,6 +345,12 @@ std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
                                           const Domain& color_domain)
 {
   return std::make_unique<Weighted>(weights, color_domain);
+}
+
+std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
+                                    std::shared_ptr<Partition> func_partition)
+{
+  return std::make_unique<Image>(std::move(func), std::move(func_partition));
 }
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition)

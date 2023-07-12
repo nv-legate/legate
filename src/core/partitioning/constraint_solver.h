@@ -26,6 +26,8 @@
 
 namespace legate::detail {
 
+class Strategy;
+
 struct ConstraintSolver {
  public:
   ConstraintSolver();
@@ -43,10 +45,12 @@ struct ConstraintSolver {
 
  public:
   void solve_constraints();
+  void solve_dependent_constraints(Strategy& strategy);
   const std::vector<const Variable*>& find_equivalence_class(
     const Variable* partition_symbol) const;
   const Restrictions& find_restrictions(const Variable* partition_symbol) const;
   bool is_output(const Variable& partition_symbol) const;
+  bool is_dependent(const Variable& partition_symbol) const;
 
  private:
   ordered_set<const Variable*> partition_symbols_{};
@@ -57,6 +61,9 @@ struct ConstraintSolver {
   class EquivClass;
   std::map<const Variable, EquivClass*> equiv_class_map_{};
   std::vector<EquivClass*> equiv_classes_{};
+
+ private:
+  std::map<const Variable, bool> is_dependent_{};
 };
 
 }  // namespace legate::detail

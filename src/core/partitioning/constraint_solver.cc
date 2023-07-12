@@ -22,6 +22,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/constraint_solver.h"
+#include "core/partitioning/partitioner.h"
 
 namespace legate {
 extern Legion::Logger log_legate;
@@ -87,6 +88,7 @@ void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, bo
 {
   partition_symbols_.insert(partition_symbol);
   is_output_.insert({*partition_symbol, is_output});
+  is_dependent_.insert({*partition_symbol, false});
 }
 
 void ConstraintSolver::add_constraint(const Constraint* constraint)
@@ -107,8 +109,8 @@ void ConstraintSolver::solve_constraints()
     for (auto& symb : all_symbols) {
       // TODO: partition symbols can be independent of any stores of the operation
       //       (e.g., when a symbol subsumes a union of two other symbols)
-      auto* store = symb->operation()->find_store(symb);
-      entries.emplace_back(symb, store);
+      auto store = symb->operation()->find_store(symb);
+      entries.emplace_back(symb, store.get());
       table.insert({*symb, &entries.back()});
     }
   };
@@ -157,8 +159,14 @@ void ConstraintSolver::solve_constraints()
     }
   };
 
+  // Here we only mark dependent partition symbols
+  auto handle_image_constraint = [&](const ImageConstraint* image_constraint) {
+    is_dependent_[*image_constraint->var_range()] = true;
+  };
+
   // Reflect each constraint to the solver state
-  for (auto& constraint : constraints_) switch (constraint->kind()) {
+  for (auto& constraint : constraints_) {
+    switch (constraint->kind()) {
       case Constraint::Kind::ALIGNMENT: {
         handle_alignment(constraint->as_alignment());
         break;
@@ -167,7 +175,12 @@ void ConstraintSolver::solve_constraints()
         handle_broadcast(constraint->as_broadcast());
         break;
       }
+      case Constraint::Kind::IMAGE: {
+        handle_image_constraint(constraint->as_image_constraint());
+        break;
+      }
     }
+  }
 
   // Combine states of each union of equivalence classes into one
   std::unordered_set<UnionFindEntry*> distinct_entries;
@@ -177,6 +190,26 @@ void ConstraintSolver::solve_constraints()
     auto equiv_class = new EquivClass(entry);
     for (auto* symb : equiv_class->partition_symbols) equiv_class_map_.insert({*symb, equiv_class});
     equiv_classes_.push_back(equiv_class);
+  }
+}
+
+void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
+{
+  auto solve_image_constraint = [&strategy](const ImageConstraint* image_constraint) {
+    auto image = image_constraint->resolve(strategy);
+    strategy.insert(image_constraint->var_range(), std::move(image));
+  };
+
+  for (auto& constraint : constraints_) {
+    switch (constraint->kind()) {
+      case Constraint::Kind::IMAGE: {
+        solve_image_constraint(constraint->as_image_constraint());
+        break;
+      }
+      default: {
+        continue;
+      }
+    }
   }
 }
 
@@ -196,9 +229,19 @@ bool ConstraintSolver::is_output(const Variable& partition_symbol) const
   return is_output_.at(partition_symbol);
 }
 
+bool ConstraintSolver::is_dependent(const Variable& partition_symbol) const
+{
+  return is_dependent_.at(partition_symbol);
+}
+
 void ConstraintSolver::dump()
 {
   log_legate.debug("===== Constraint Graph =====");
+  log_legate.debug() << "Stores:";
+  for (auto& symbol : partition_symbols_.elements()) {
+    auto store = symbol->operation()->find_store(symbol);
+    log_legate.debug() << "  " << symbol->to_string() << " ~> " << store->to_string();
+  }
   log_legate.debug() << "Variables:";
   for (auto& symbol : partition_symbols_.elements())
     log_legate.debug() << "  " << symbol->to_string();

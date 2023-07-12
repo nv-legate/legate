@@ -33,7 +33,7 @@ Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
     lhs_(std::move(lhs)),
     value_(std::move(value))
 {
-  store_mappings_[*lhs_var_] = lhs_.get();
+  store_mappings_[*lhs_var_] = lhs_;
   if (lhs_->unbound() || lhs_->has_scalar_storage())
     throw std::runtime_error("Fill lhs must be a normal, region-backed store");
 

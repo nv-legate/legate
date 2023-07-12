@@ -67,6 +67,18 @@ const char* _VARIABLE_SIZE_ERROR_MESSAGE = "Variable-size element type cannot be
 
 Type::Type(Code c) : code(c) {}
 
+const FixedArrayType& Type::as_fixed_array_type() const
+{
+  throw std::invalid_argument("Type is not a fixed array type");
+  return *static_cast<const FixedArrayType*>(nullptr);
+}
+
+const StructType& Type::as_struct_type() const
+{
+  throw std::invalid_argument("Type is not a struct type");
+  return *static_cast<const StructType*>(nullptr);
+}
+
 void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
 {
   detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
@@ -131,6 +143,8 @@ void FixedArrayType::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(N_);
   element_type_->pack(buffer);
 }
+
+const FixedArrayType& FixedArrayType::as_fixed_array_type() const { return *this; }
 
 bool FixedArrayType::equal(const Type& other) const
 {
@@ -207,6 +221,8 @@ void StructType::pack(BufferBuilder& buffer) const
   for (auto& field_type : field_types_) field_type->pack(buffer);
   buffer.pack<bool>(aligned_);
 }
+
+const StructType& StructType::as_struct_type() const { return *this; }
 
 bool StructType::equal(const Type& other) const
 {
@@ -326,7 +342,6 @@ constexpr int32_t RECT_UID_BASE  = POINT_UID_BASE + LEGATE_MAX_DIM + 1;
 
 std::unique_ptr<Type> point_type(int32_t ndim)
 {
-  if (ndim == 1) return int64();
   return std::make_unique<FixedArrayType>(POINT_UID_BASE + ndim, int64(), ndim);
 }
 
@@ -352,6 +367,14 @@ bool is_point_type(const Type& type, int32_t ndim)
     }
   }
   return false;
+}
+
+bool is_rect_type(const Type& type, int32_t ndim)
+{
+  if (type.code != Type::Code::STRUCT) return false;
+  auto& st_type = static_cast<const StructType&>(type);
+  return st_type.num_fields() == 2 && is_point_type(st_type.field_type(0), ndim) &&
+         is_point_type(st_type.field_type(1), ndim);
 }
 
 }  // namespace legate

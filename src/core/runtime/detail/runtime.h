@@ -137,6 +137,12 @@ class Runtime {
   Legion::IndexPartition create_weighted_partition(const Legion::IndexSpace& index_space,
                                                    const Legion::IndexSpace& color_space,
                                                    const Legion::FutureMap& weights);
+  Legion::IndexPartition create_image_partition(const Legion::IndexSpace& index_space,
+                                                const Legion::IndexSpace& color_space,
+                                                const Legion::LogicalRegion& func_region,
+                                                const Legion::LogicalPartition& func_partition,
+                                                Legion::FieldID func_field_id,
+                                                bool is_range);
   Legion::FieldSpace create_field_space();
   Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
                                       const Legion::FieldSpace& field_space);

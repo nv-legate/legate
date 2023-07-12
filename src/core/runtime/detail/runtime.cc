@@ -468,6 +468,36 @@ Legion::IndexPartition Runtime::create_weighted_partition(const Legion::IndexSpa
     legion_context_, index_space, weights, color_space);
 }
 
+Legion::IndexPartition Runtime::create_image_partition(
+  const Legion::IndexSpace& index_space,
+  const Legion::IndexSpace& color_space,
+  const Legion::LogicalRegion& func_region,
+  const Legion::LogicalPartition& func_partition,
+  Legion::FieldID func_field_id,
+  bool is_range)
+{
+  if (is_range)
+    return legion_runtime_->create_partition_by_image_range(legion_context_,
+                                                            index_space,
+                                                            func_partition,
+                                                            func_region,
+                                                            func_field_id,
+                                                            color_space,
+                                                            LEGION_COMPUTE_KIND,
+                                                            LEGION_AUTO_GENERATE_ID,
+                                                            core_context_->get_mapper_id());
+  else
+    return legion_runtime_->create_partition_by_image(legion_context_,
+                                                      index_space,
+                                                      func_partition,
+                                                      func_region,
+                                                      func_field_id,
+                                                      color_space,
+                                                      LEGION_COMPUTE_KIND,
+                                                      LEGION_AUTO_GENERATE_ID,
+                                                      core_context_->get_mapper_id());
+}
+
 Legion::FieldSpace Runtime::create_field_space()
 {
   assert(nullptr != legion_context_);

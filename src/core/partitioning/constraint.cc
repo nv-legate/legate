@@ -20,6 +20,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/partition.h"
+#include "core/partitioning/partitioner.h"
 
 namespace legate {
 
@@ -63,8 +64,8 @@ void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_s
 
 void Alignment::validate() const
 {
-  auto* lhs_store = lhs_->operation()->find_store(lhs_.get());
-  auto* rhs_store = rhs_->operation()->find_store(rhs_.get());
+  auto lhs_store = lhs_->operation()->find_store(lhs_.get());
+  auto rhs_store = rhs_->operation()->find_store(rhs_.get());
   if (lhs_store->extents() != rhs_store->extents())
     throw std::invalid_argument("Alignment requires the stores to have the same shape, but found " +
                                 lhs_store->extents().to_string() + " and " +
@@ -90,7 +91,7 @@ void Broadcast::find_partition_symbols(std::vector<const Variable*>& partition_s
 
 void Broadcast::validate() const
 {
-  auto* store = variable_->operation()->find_store(variable_.get());
+  auto store = variable_->operation()->find_store(variable_.get());
   for (auto axis : axes_.data()) {
     if (axis < 0 || axis >= store->dim())
       throw std::invalid_argument("Invalid broadcasting dimension " + std::to_string(axis) +
@@ -103,6 +104,45 @@ std::string Broadcast::to_string() const
   std::stringstream ss;
   ss << "Broadcast(" << variable_->to_string() << ", " << axes_.to_string() << ")";
   return std::move(ss).str();
+}
+
+ImageConstraint::ImageConstraint(std::unique_ptr<Variable> var_function,
+                                 std::unique_ptr<Variable> var_range)
+  : var_function_(std::move(var_function)), var_range_(std::move(var_range))
+{
+}
+
+void ImageConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+{
+  partition_symbols.push_back(var_function_.get());
+  partition_symbols.push_back(var_range_.get());
+}
+
+void ImageConstraint::validate() const
+{
+  auto func  = var_function_->operation()->find_store(var_function_.get());
+  auto range = var_range_->operation()->find_store(var_range_.get());
+
+  if (!(is_point_type(func->type(), range->dim()) || is_rect_type(func->type(), range->dim())))
+    throw std::invalid_argument("Store from which the image partition is derived should have " +
+                                std::to_string(range->dim()) + "-D points or rects");
+}
+
+std::string ImageConstraint::to_string() const
+{
+  std::stringstream ss;
+  ss << "ImageConstraint(" << var_function_->to_string() << ", " << var_range_->to_string() << ")";
+  return std::move(ss).str();
+}
+
+std::unique_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
+{
+  const auto* src = var_function();
+  auto src_part   = strategy[src];
+  if (src_part->has_launch_domain())
+    return create_image(src->operation()->find_store(src), src_part);
+  else
+    return create_no_partition();
 }
 
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
@@ -121,6 +161,12 @@ std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32
 std::unique_ptr<Broadcast> broadcast(const Variable* variable, tuple<int32_t>&& axes)
 {
   return std::make_unique<Broadcast>(std::make_unique<Variable>(*variable), std::move(axes));
+}
+
+std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
+{
+  return std::make_unique<ImageConstraint>(std::make_unique<Variable>(*var_function),
+                                           std::make_unique<Variable>(*var_range));
 }
 
 }  // namespace legate

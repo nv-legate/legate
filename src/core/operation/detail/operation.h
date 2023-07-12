@@ -51,7 +51,7 @@ class Operation {
  public:
   const Variable* find_or_declare_partition(std::shared_ptr<LogicalStore> store);
   const Variable* declare_partition();
-  LogicalStore* find_store(const Variable* variable) const;
+  std::shared_ptr<LogicalStore> find_store(const Variable* variable) const;
 
  public:
   const mapping::MachineDesc& machine() const { return machine_; }
@@ -77,7 +77,7 @@ class Operation {
  protected:
   uint32_t next_part_id_{0};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
-  std::map<const Variable, LogicalStore*> store_mappings_{};
+  std::map<const Variable, std::shared_ptr<LogicalStore>> store_mappings_{};
   std::map<std::shared_ptr<LogicalStore>, const Variable*> part_mappings_{};
   std::string provenance_;
   mapping::MachineDesc machine_;

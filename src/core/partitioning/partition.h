@@ -37,6 +37,7 @@ struct Partition {
     NO_PARTITION = 0,
     TILING       = 1,
     WEIGHTED     = 2,
+    IMAGE        = 3,
   };
 
  public:
@@ -194,6 +195,47 @@ class Weighted : public Partition {
   Shape color_shape_;
 };
 
+class Image : public Partition {
+ public:
+  Image(std::shared_ptr<detail::LogicalStore> func, std::shared_ptr<Partition> func_partition);
+
+ public:
+  Image(const Image&) = default;
+
+ public:
+  bool operator==(const Image& other) const;
+  bool operator<(const Image& other) const;
+
+ public:
+  Kind kind() const override { return Kind::IMAGE; }
+
+ public:
+  bool is_complete_for(const detail::Storage* storage) const override;
+  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool satisfies_restrictions(const Restrictions& restrictions) const override;
+  bool is_convertible() const override { return false; }
+
+ public:
+  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
+
+ public:
+  bool has_launch_domain() const override;
+  Domain launch_domain() const override;
+
+ public:
+  std::unique_ptr<Partition> clone() const override;
+
+ public:
+  std::string to_string() const override;
+
+ public:
+  const Shape& color_shape() const override;
+
+ private:
+  std::shared_ptr<detail::LogicalStore> func_;
+  std::shared_ptr<Partition> func_partition_;
+};
+
 std::unique_ptr<NoPartition> create_no_partition();
 
 std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
@@ -202,6 +244,9 @@ std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
 
 std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
                                           const Domain& color_domain);
+
+std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
+                                    std::shared_ptr<Partition> func_partition);
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 
