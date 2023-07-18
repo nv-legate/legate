@@ -54,13 +54,12 @@ legate::LogicalStore sum(legate::LibraryContext* context,
   auto task    = runtime->create_task(context, task::hello::SUM);
 
   auto output = runtime->create_store(legate::Scalar(legate::float32(), bytearray));
-  auto redop  = input.type().find_reduction_operator(legate::ReductionOpKind::ADD);
 
   auto part1 = task.declare_partition();
   auto part2 = task.declare_partition();
 
   task.add_input(input, part1);
-  task.add_reduction(output, redop, part2);
+  task.add_reduction(output, legate::ReductionOpKind::ADD, part2);
   runtime->submit(std::move(task));
   return output;
 }

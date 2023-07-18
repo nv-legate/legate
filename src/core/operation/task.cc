@@ -35,8 +35,13 @@ void AutoTask::add_output(LogicalStore store, const Variable* partition_symbol)
 }
 
 void AutoTask::add_reduction(LogicalStore store,
-                             Legion::ReductionOpID redop,
+                             ReductionOpKind redop,
                              const Variable* partition_symbol)
+{
+  impl_->add_reduction(store.impl(), static_cast<int32_t>(redop), partition_symbol);
+}
+
+void AutoTask::add_reduction(LogicalStore store, int32_t redop, const Variable* partition_symbol)
 {
   impl_->add_reduction(store.impl(), redop, partition_symbol);
 }
@@ -94,12 +99,22 @@ void ManualTask::add_output(LogicalStorePartition store_partition)
   impl_->add_output(store_partition.impl());
 }
 
-void ManualTask::add_reduction(LogicalStore store, Legion::ReductionOpID redop)
+void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop)
+{
+  impl_->add_reduction(store.impl(), static_cast<int32_t>(redop));
+}
+
+void ManualTask::add_reduction(LogicalStore store, int32_t redop)
 {
   impl_->add_reduction(store.impl(), redop);
 }
 
-void ManualTask::add_reduction(LogicalStorePartition store_partition, Legion::ReductionOpID redop)
+void ManualTask::add_reduction(LogicalStorePartition store_partition, ReductionOpKind redop)
+{
+  impl_->add_reduction(store_partition.impl(), static_cast<int32_t>(redop));
+}
+
+void ManualTask::add_reduction(LogicalStorePartition store_partition, int32_t redop)
 {
   impl_->add_reduction(store_partition.impl(), redop);
 }

@@ -250,12 +250,13 @@ void AutoTask::add_output(std::shared_ptr<LogicalStore> store, const Variable* p
 }
 
 void AutoTask::add_reduction(std::shared_ptr<LogicalStore> store,
-                             Legion::ReductionOpID redop,
+                             int32_t redop,
                              const Variable* partition_symbol)
 {
+  auto legion_redop_id = store->type().find_reduction_operator(redop);
   if (store->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, std::move(store), partition_symbol);
-  reduction_ops_.push_back(redop);
+  reduction_ops_.push_back(legion_redop_id);
 }
 
 void AutoTask::add_store(std::vector<StoreArg>& store_args,
@@ -330,20 +331,22 @@ void ManualTask::add_output(std::shared_ptr<LogicalStorePartition> store_partiti
   add_store(outputs_, store_partition->store(), store_partition->partition());
 }
 
-void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, Legion::ReductionOpID redop)
+void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redop)
 {
+  auto legion_redop_id = store->type().find_reduction_operator(redop);
   if (store->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, std::move(store), create_no_partition());
-  reduction_ops_.push_back(redop);
+  reduction_ops_.push_back(legion_redop_id);
 }
 
 void ManualTask::add_reduction(std::shared_ptr<LogicalStorePartition> store_partition,
-                               Legion::ReductionOpID redop)
+                               int32_t redop)
 {
+  auto legion_redop_id = store_partition->store()->type().find_reduction_operator(redop);
   if (store_partition->store()->has_scalar_storage())
     scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, store_partition->store(), store_partition->partition());
-  reduction_ops_.push_back(redop);
+  reduction_ops_.push_back(legion_redop_id);
 }
 
 void ManualTask::add_store(std::vector<StoreArg>& store_args,

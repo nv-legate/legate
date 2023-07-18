@@ -229,6 +229,9 @@ class Alignment : public Constraint {
    */
   const Variable* rhs() const { return rhs_.get(); }
 
+ public:
+  bool is_trivial() const { return *lhs_ == *rhs_; }
+
  private:
   std::unique_ptr<Variable> lhs_;
   std::unique_ptr<Variable> rhs_;

@@ -168,7 +168,8 @@ void ConstraintSolver::solve_constraints()
   for (auto& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::ALIGNMENT: {
-        handle_alignment(constraint->as_alignment());
+        auto* alignment = constraint->as_alignment();
+        if (!alignment->is_trivial()) handle_alignment(alignment);
         break;
       }
       case Constraint::Kind::BROADCAST: {

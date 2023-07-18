@@ -70,12 +70,21 @@ class AutoTask {
    * associated with the store
    *
    * @param store A store to add to the task for reductions
-   * @param redop ID of the reduction operator to use
+   * @param redop ID of the reduction operator to use. The store's type must support the operator.
    * @param partition_symbol A partition symbol for the store
    */
-  void add_reduction(LogicalStore store,
-                     Legion::ReductionOpID redop,
-                     const Variable* partition_symbol);
+  void add_reduction(LogicalStore store, ReductionOpKind redop, const Variable* partition_symbol);
+  /**
+   * @brief Adds a store to the task for reductions
+   *
+   * Partitioning of the store is controlled by constraints on the partition symbol
+   * associated with the store
+   *
+   * @param store A store to add to the task for reductions
+   * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   * @param partition_symbol A partition symbol for the store
+   */
+  void add_reduction(LogicalStore store, int32_t redop, const Variable* partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -210,16 +219,32 @@ class ManualTask {
    * The store will be unpartitioned but broadcasted to all the tasks
    *
    * @param store A store to add to the task for reductions
-   * @param redop ID of the reduction operator
+   * @param redop ID of the reduction operator to use. The store's type must support the operator.
    */
-  void add_reduction(LogicalStore store, Legion::ReductionOpID redop);
+  void add_reduction(LogicalStore store, ReductionOpKind redop);
+  /**
+   * @brief Adds a store to the task for reductions
+   *
+   * The store will be unpartitioned but broadcasted to all the tasks
+   *
+   * @param store A store to add to the task for reductions
+   * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   */
+  void add_reduction(LogicalStore store, int32_t redop);
   /**
    * @brief Adds a store partition to the task for reductions
    *
    * @param store_partition A store partition to add to the task for reductions
-   * @param redop ID of the reduction operator
+   * @param redop ID of the reduction operator to use. The store's type must support the operator.
    */
-  void add_reduction(LogicalStorePartition store_partition, Legion::ReductionOpID redop);
+  void add_reduction(LogicalStorePartition store_partition, ReductionOpKind redop);
+  /**
+   * @brief Adds a store partition to the task for reductions
+   *
+   * @param store_partition A store partition to add to the task for reductions
+   * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   */
+  void add_reduction(LogicalStorePartition store_partition, int32_t redop);
   /**
    * @brief Adds a by-value scalar argument to the task
    *

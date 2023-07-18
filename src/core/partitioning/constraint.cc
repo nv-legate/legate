@@ -64,6 +64,7 @@ void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_s
 
 void Alignment::validate() const
 {
+  if (*lhs_ == *rhs_) return;
   auto lhs_store = lhs_->operation()->find_store(lhs_.get());
   auto rhs_store = rhs_->operation()->find_store(rhs_.get());
   if (lhs_store->extents() != rhs_store->extents())
@@ -147,8 +148,6 @@ std::unique_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& stra
 
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
 {
-  if (*lhs == *rhs) throw std::invalid_argument("Alignment needs two distinct variables");
-  // Since an Alignment object owns child nodes, inputs need to be copied
   return std::make_unique<Alignment>(std::make_unique<Variable>(*lhs),
                                      std::make_unique<Variable>(*rhs));
 }
