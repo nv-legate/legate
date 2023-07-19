@@ -77,6 +77,10 @@ void AutoTask::throws_exception(bool can_throw_exception)
 
 void AutoTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
 
+AutoTask::AutoTask(AutoTask&&) = default;
+
+AutoTask& AutoTask::operator=(AutoTask&&) = default;
+
 AutoTask::~AutoTask() {}
 
 AutoTask::AutoTask(std::unique_ptr<detail::AutoTask> impl) : impl_(std::move(impl)) {}
@@ -137,6 +141,10 @@ void ManualTask::throws_exception(bool can_throw_exception)
 }
 
 void ManualTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
+
+ManualTask::ManualTask(ManualTask&&) = default;
+
+ManualTask& ManualTask::operator=(ManualTask&&) = default;
 
 ManualTask::~ManualTask() {}
 

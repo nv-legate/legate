@@ -165,10 +165,12 @@ class AutoTask {
   void add_communicator(const std::string& name);
 
  public:
+  AutoTask(AutoTask&&);
+  AutoTask& operator=(AutoTask&&);
+
+ private:
   AutoTask(const AutoTask&)            = delete;
-  AutoTask(AutoTask&&)                 = default;
   AutoTask& operator=(const AutoTask&) = delete;
-  AutoTask& operator=(AutoTask&&)      = default;
 
  public:
   ~AutoTask();
@@ -305,10 +307,12 @@ class ManualTask {
   void add_communicator(const std::string& name);
 
  public:
+  ManualTask(ManualTask&&);
+  ManualTask& operator=(ManualTask&&);
+
+ private:
   ManualTask(const ManualTask&)            = delete;
-  ManualTask(ManualTask&&)                 = default;
   ManualTask& operator=(const ManualTask&) = delete;
-  ManualTask& operator=(ManualTask&&)      = default;
 
  public:
   ~ManualTask();
