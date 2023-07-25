@@ -20,8 +20,6 @@
 
 namespace broadcast_constraints {
 
-namespace {
-
 static const char* library_name = "test_broadcast_constraints";
 
 constexpr size_t EXT_SMALL = 10;
@@ -129,8 +127,6 @@ void test_invalid_broadcast()
   task.add_constraint(legate::broadcast(part, {1}));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
-
-}  // namespace
 
 TEST(Broadcast, Basic)
 {

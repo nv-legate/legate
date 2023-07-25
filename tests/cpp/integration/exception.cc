@@ -20,8 +20,6 @@
 
 namespace exception {
 
-namespace {
-
 const char* library_name = "test_exception";
 
 static legate::Logger logger(library_name);
@@ -179,8 +177,6 @@ void test_pending()
 
   // Finish the test with a pending exception to check if the runtime cleans things up correctly
 }
-
-}  // namespace
 
 TEST(Exception, Single)
 {

@@ -66,6 +66,7 @@ target_link_libraries(cpp_tests PRIVATE NCCL::NCCL)
 endif()
 
 include(GoogleTest)
+set_property(TARGET cpp_tests PROPERTY ENABLE_EXPORTS ON)
 gtest_discover_tests(cpp_tests DISCOVERY_MODE PRE_TEST WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 include(CPack)

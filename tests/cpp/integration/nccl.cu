@@ -24,8 +24,6 @@
 
 namespace nccl {
 
-namespace {
-
 const char* library_name = "test_nccl";
 
 enum TaskIDs {
@@ -103,8 +101,6 @@ void test_nccl_manual(int32_t ndim)
   task.add_communicator("nccl");
   runtime->submit(std::move(task));
 }
-
-}  // namespace
 
 // Test case with single unbound store
 TEST(Integration, NCCL)

@@ -20,8 +20,6 @@
 
 namespace alignment_constraints {
 
-namespace {
-
 static const char* library_name = "test_alignment_constraints";
 
 enum TaskIDs {
@@ -217,8 +215,6 @@ void test_invalid_alignment()
   task.add_constraint(legate::align(part1, part2));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
-
-}  // namespace
 
 TEST(Alignment, Basic)
 {

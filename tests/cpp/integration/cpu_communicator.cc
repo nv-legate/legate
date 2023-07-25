@@ -21,8 +21,6 @@
 
 namespace cpu_communicator {
 
-namespace {
-
 const char* library_name = "test_cpu_communicator";
 
 enum TaskIDs {
@@ -89,8 +87,6 @@ void test_cpu_communicator_manual(int32_t ndim)
   task.add_communicator("cpu");
   runtime->submit(std::move(task));
 }
-
-}  // namespace
 
 // Test case with single unbound store
 TEST(Integration, CPUCommunicator)

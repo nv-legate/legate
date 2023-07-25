@@ -20,8 +20,6 @@
 
 namespace weighted {
 
-namespace {
-
 const char* library_name = "test_weighted";
 
 enum TaskIDs {
@@ -106,8 +104,6 @@ void test_weighted(uint32_t num_stores)
   initialize(runtime, library, stores);
   check(runtime, library, stores);
 }
-
-}  // namespace
 
 // Test case with single unbound store
 TEST(Integration, WeightedSingle)
