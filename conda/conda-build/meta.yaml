@@ -138,7 +138,7 @@ test:
 
 about:
   home: https://github.com/nv-legate/legate.core
-  license: Apache-2.0
+  license: NVIDIA Proprietary
   license_file: LICENSE
   summary: 'Scalable Computational Code'
   description: |
