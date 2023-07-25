@@ -1,4 +1,4 @@
-/* Copyright 2022 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,9 @@
  *
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "coll.h"
-#include "legate_defines.h"
-#include "legion.h"
+
+#include "core/utilities/typedefs.h"
 
 namespace legate::comm::coll {
 

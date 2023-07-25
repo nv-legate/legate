@@ -29,6 +29,7 @@
 // does not implement pthread barriers, so we need to include an
 // implementation in case they are not defined. We also need to
 // include unistd.h since that defines _POSIX_BARRIERS.
+#include <pthread.h>
 #include <unistd.h>
 #if !defined(_POSIX_BARRIERS) || (_POSIX_BARRIERS < 0)
 #include "core/comm/pthread_barrier.h"
