@@ -19,19 +19,19 @@
 #include <optional>
 
 #include "core/data/detail/logical_region_field.h"
+#include "core/data/detail/store.h"
 #include "core/data/slice.h"
 #include "core/data/store.h"
+#include "core/mapping/detail/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
-
-namespace legate::mapping {
-class MachineDesc;
-}  // namespace legate::mapping
+#include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::detail {
 
 class ProjectionInfo;
 class StoragePartition;
+class Store;
 class LogicalStorePartition;
 
 class Storage : public std::enable_shared_from_this<Storage> {
@@ -43,14 +43,14 @@ class Storage : public std::enable_shared_from_this<Storage> {
 
  public:
   // Create a RegionField-backed storage whose size is unbound. Initialized lazily.
-  Storage(int32_t dim, std::unique_ptr<Type> type);
+  Storage(int32_t dim, std::shared_ptr<Type> type);
   // Create a RegionField-backed or a Future-backed storage. Initialized lazily.
-  Storage(const Shape& extents, std::unique_ptr<Type> type, bool optimize_scalar);
+  Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(const Shape& extents, std::unique_ptr<Type> type, const Legion::Future& future);
+  Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future);
   // Create a RegionField-bakced sub-storage. Initialized lazily.
   Storage(Shape&& extents,
-          std::unique_ptr<Type> type,
+          std::shared_ptr<Type> type,
           std::shared_ptr<StoragePartition> parent,
           Shape&& color,
           Shape&& offsets);
@@ -61,7 +61,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   const Shape& offsets() const;
   size_t volume() const;
   int32_t dim() { return dim_; }
-  const Type& type() const { return *type_; }
+  std::shared_ptr<Type> type() const { return type_; }
   Kind kind() const { return kind_; }
   int32_t level() const { return level_; }
 
@@ -81,9 +81,9 @@ class Storage : public std::enable_shared_from_this<Storage> {
 
  public:
   Restrictions compute_restrictions() const;
-  Partition* find_key_partition(const mapping::MachineDesc& machine,
+  Partition* find_key_partition(const mapping::detail::Machine& machine,
                                 const Restrictions& restrictions) const;
-  void set_key_partition(const mapping::MachineDesc& machine,
+  void set_key_partition(const mapping::detail::Machine& machine,
                          std::unique_ptr<Partition>&& key_partition);
   void reset_key_partition();
 
@@ -100,7 +100,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   int32_t dim_{-1};
   Shape extents_;
   size_t volume_;
-  std::unique_ptr<Type> type_{nullptr};
+  std::shared_ptr<Type> type_{nullptr};
   Kind kind_{Kind::REGION_FIELD};
 
  private:
@@ -134,7 +134,7 @@ class StoragePartition : public std::enable_shared_from_this<StoragePartition> {
   std::shared_ptr<LogicalRegionField> get_child_data(const Shape& color);
 
  public:
-  Partition* find_key_partition(const mapping::MachineDesc& machine,
+  Partition* find_key_partition(const mapping::detail::Machine& machine,
                                 const Restrictions& restrictions) const;
   Legion::LogicalPartition get_legion_partition();
 
@@ -180,7 +180,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   size_t storage_size() const;
   int32_t dim() const;
   bool has_scalar_storage() const;
-  const Type& type() const;
+  std::shared_ptr<Type> type() const;
   bool transformed() const;
   uint64_t id() const;
 
@@ -206,11 +206,11 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  public:
   Restrictions compute_restrictions() const;
-  std::shared_ptr<Partition> find_or_create_key_partition(const mapping::MachineDesc& machine,
+  std::shared_ptr<Partition> find_or_create_key_partition(const mapping::detail::Machine& machine,
                                                           const Restrictions& restrictions);
-  bool has_key_partition(const mapping::MachineDesc& machine,
+  bool has_key_partition(const mapping::detail::Machine& machine,
                          const Restrictions& restrictions) const;
-  void set_key_partition(const mapping::MachineDesc& machine, const Partition* partition);
+  void set_key_partition(const mapping::detail::Machine& machine, const Partition* partition);
   void reset_key_partition();
 
  public:

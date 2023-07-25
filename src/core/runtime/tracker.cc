@@ -16,6 +16,7 @@
 
 #include "core/runtime/tracker.h"
 
+#include "core/mapping/detail/machine.h"
 #include "core/runtime/detail/machine_manager.h"
 #include "core/runtime/detail/provenance_manager.h"
 #include "core/runtime/detail/runtime.h"
@@ -47,13 +48,13 @@ const std::string& ProvenanceTracker::get_current_provenance() const
 // legate::MachineTracker
 ////////////////////////////////////////////
 
-MachineTracker::MachineTracker(const mapping::MachineDesc& machine)
+MachineTracker::MachineTracker(const mapping::Machine& machine)
 {
   auto* runtime = detail::Runtime::get_runtime();
-  auto result   = machine & runtime->get_machine();
+  auto result   = machine & mapping::Machine(runtime->get_machine());
   if (result.count() == 0)
     throw std::runtime_error("Empty machines cannot be used for resource scoping");
-  runtime->machine_manager()->push_machine(std::move(result));
+  runtime->machine_manager()->push_machine(std::move(*result.impl()));
 }
 
 MachineTracker::~MachineTracker()
@@ -62,9 +63,9 @@ MachineTracker::~MachineTracker()
   runtime->machine_manager()->pop_machine();
 }
 
-const mapping::MachineDesc& MachineTracker::get_current_machine() const
+mapping::Machine MachineTracker::get_current_machine() const
 {
-  return detail::Runtime::get_runtime()->get_machine();
+  return mapping::Machine(detail::Runtime::get_runtime()->get_machine());
 }
 
 }  // namespace legate

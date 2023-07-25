@@ -25,15 +25,12 @@ namespace legateio {
 
 class Array {
  public:
-  Array(legate::LibraryContext* context, legate::LogicalStore store)
-    : context_(context), store_(store)
-  {
-  }
+  Array(legate::Library library, legate::LogicalStore store) : library_(library), store_(store) {}
 
   legate::LogicalStore store() { return store_; }
 
  protected:
-  legate::LibraryContext* context_;
+  legate::Library library_;
   legate::LogicalStore store_;
 };
 
@@ -44,7 +41,7 @@ class IOArray : public Array {
   void to_file(std::string filename)
   {
     auto runtime = legate::Runtime::get_runtime();
-    auto task    = runtime->create_task(context_, task::legateio::WRITE_FILE);
+    auto task    = runtime->create_task(library_, task::legateio::WRITE_FILE);
     auto part    = task.declare_partition();
 
     task.add_scalar_arg(legate::Scalar(filename));
@@ -68,7 +65,7 @@ class IOArray : public Array {
     }
 
     auto runtime = legate::Runtime::get_runtime();
-    auto task    = runtime->create_task(context_, task::legateio::WRITE_UNEVEN_TILES);
+    auto task    = runtime->create_task(library_, task::legateio::WRITE_UNEVEN_TILES);
     auto part    = task.declare_partition();
 
     task.add_scalar_arg(legate::Scalar(path));
@@ -87,9 +84,9 @@ class IOArray : public Array {
 
     auto runtime         = legate::Runtime::get_runtime();
     auto store_partition = store_.partition_by_tiling({tile_shape, tile_shape});
-    auto launch_shape    = store_partition.partition()->color_shape();
+    auto launch_shape    = store_partition.color_shape();
 
-    auto task = runtime->create_task(context_, task::legateio::WRITE_EVEN_TILES, launch_shape);
+    auto task = runtime->create_task(library_, task::legateio::WRITE_EVEN_TILES, launch_shape);
     task.add_input(store_partition);
     task.add_scalar_arg(legate::Scalar(path));
 
@@ -104,30 +101,28 @@ class IOArray : public Array {
   static IOArray from_store(legate::LogicalStore store)
   {
     auto runtime = legate::Runtime::get_runtime();
-    auto context = runtime->find_library(task::legateio::library_name);
-    return IOArray(context, store);
+    auto library = runtime->find_library(task::legateio::library_name);
+    return IOArray(library, store);
   }
 };
 
-IOArray read_file(legate::LibraryContext* context,
-                  std::string filename,
-                  std::unique_ptr<legate::Type> dtype)
+IOArray read_file(legate::Library library, std::string filename, legate::Type dtype)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto output  = runtime->create_store(std::move(dtype), 1);
-  auto task    = runtime->create_task(context, task::legateio::READ_FILE);
+  auto task    = runtime->create_task(library, task::legateio::READ_FILE);
   auto part    = task.declare_partition();
 
   task.add_scalar_arg(legate::Scalar(filename));
   task.add_output(output, part);
 
   runtime->submit(std::move(task));
-  return IOArray(context, output);
+  return IOArray(library, output);
 }
 
-IOArray read_file_parallel(legate::LibraryContext* context,
+IOArray read_file_parallel(legate::Library library,
                            std::string filename,
-                           std::unique_ptr<legate::Type> dtype,
+                           legate::Type dtype,
                            uint parallelism = 0)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -137,13 +132,13 @@ IOArray read_file_parallel(legate::LibraryContext* context,
 
   auto output = runtime->create_store(std::move(dtype), 1);
   auto task =
-    runtime->create_task(context, task::legateio::READ_FILE, legate::Shape({parallelism}));
+    runtime->create_task(library, task::legateio::READ_FILE, legate::Shape({parallelism}));
 
   task.add_scalar_arg(legate::Scalar(filename));
   task.add_output(output);
 
   runtime->submit(std::move(task));
-  return IOArray(context, output);
+  return IOArray(library, output);
 }
 
 void _read_header_uneven(std::string path, std::vector<size_t>& color_shape)
@@ -166,7 +161,7 @@ void _read_header_uneven(std::string path, std::vector<size_t>& color_shape)
   in.close();
 }
 
-IOArray read_uneven_tiles(legate::LibraryContext* context, std::string path)
+IOArray read_uneven_tiles(legate::Library library, std::string path)
 {
   // Read the dataset's header to find the type code and the color shape of
   // the partition, which are laid out in the header in the following way:
@@ -200,13 +195,13 @@ IOArray read_uneven_tiles(legate::LibraryContext* context, std::string path)
   auto runtime = legate::Runtime::get_runtime();
   auto output  = runtime->create_store(legate::int8(), color_shape.size());
   auto task =
-    runtime->create_task(context, task::legateio::READ_UNEVEN_TILES, legate::Shape(color_shape));
+    runtime->create_task(library, task::legateio::READ_UNEVEN_TILES, legate::Shape(color_shape));
 
   task.add_output(output);
   task.add_scalar_arg(legate::Scalar(path));
   runtime->submit(std::move(task));
 
-  return IOArray(context, output);
+  return IOArray(library, output);
 }
 
 void _read_header_even(std::string path,
@@ -235,7 +230,7 @@ void _read_header_even(std::string path,
   in.close();
 }
 
-IOArray read_even_tiles(legate::LibraryContext* context, std::string path)
+IOArray read_even_tiles(legate::Library library, std::string path)
 {
   // Read the dataset's header to find the type code, the array's shape, and
   // the tile shape. The following shows the header's format:
@@ -253,18 +248,14 @@ IOArray read_even_tiles(legate::LibraryContext* context, std::string path)
   auto runtime          = legate::Runtime::get_runtime();
   auto output           = runtime->create_store(shape, legate::int8());
   auto output_partition = output.partition_by_tiling(tile_shape);
-  auto launch_shape     = output_partition.partition()->color_shape();
-  auto task = runtime->create_task(context, task::legateio::READ_EVEN_TILES, launch_shape);
+  auto launch_shape     = output_partition.color_shape();
+  auto task = runtime->create_task(library, task::legateio::READ_EVEN_TILES, launch_shape);
 
   task.add_output(output_partition);
   task.add_scalar_arg(legate::Scalar(path));
   runtime->submit(std::move(task));
 
-  // Unlike AutoTask, manually parallelized tasks don't update the "key"
-  // partition for their outputs.
-  output.set_key_partition(runtime->get_machine(), output_partition.partition().get());
-
-  return IOArray(context, output);
+  return IOArray(library, output);
 }
 
 TEST(Example, SingleFileIO)
@@ -272,7 +263,7 @@ TEST(Example, SingleFileIO)
   legate::Core::perform_registration<task::legateio::register_tasks>();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(task::legateio::library_name);
+  auto library = runtime->find_library(task::legateio::library_name);
 
   uint32_t n           = 10;
   std::string filename = "test.dat";
@@ -288,16 +279,16 @@ TEST(Example, SingleFileIO)
   runtime->issue_execution_fence();
 
   // Read the file into a IOArray
-  IOArray c2 = read_file(context, filename, legate::int8());
+  IOArray c2 = read_file(library, filename, legate::int8());
   EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c2.store())));
 
   // Read the file into a IOArray with a fixed degree of parallelism
-  IOArray c3 = read_file_parallel(context, filename, legate::int8(), 2);
+  IOArray c3 = read_file_parallel(library, filename, legate::int8(), 2);
   EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c3.store())));
 
   // Read the file into a IOArray with the library-chosen degree of
   // parallelism
-  IOArray c4 = read_file_parallel(context, filename, legate::int8());
+  IOArray c4 = read_file_parallel(library, filename, legate::int8());
   EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c4.store())));
 }
 
@@ -306,7 +297,7 @@ TEST(Example, EvenTilesIO)
   legate::Core::perform_registration<task::legateio::register_tasks>();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(task::legateio::library_name);
+  auto library = runtime->find_library(task::legateio::library_name);
 
   std::string dataset_name = "even_datafiles";
   uint32_t store_shape     = 8;
@@ -324,7 +315,7 @@ TEST(Example, EvenTilesIO)
   runtime->issue_execution_fence(true);
 
   // Read the dataset into an IOArray
-  IOArray c2 = read_even_tiles(context, dataset_name);
+  IOArray c2 = read_even_tiles(library, dataset_name);
 
   // Convert the IOArray into a cuNumeric ndarray and perform a binary
   // operation, just to confirm in the profile that the partition from the
@@ -341,7 +332,7 @@ TEST(Example, UnevenTilesIO)
   legate::Core::perform_registration<task::legateio::register_tasks>();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(task::legateio::library_name);
+  auto library = runtime->find_library(task::legateio::library_name);
 
   std::string dataset_name = "uneven_datafiles";
   uint32_t store_shape     = 8;
@@ -358,7 +349,7 @@ TEST(Example, UnevenTilesIO)
   runtime->issue_execution_fence(true);
 
   // Read the dataset into an IOArray
-  IOArray c2 = read_uneven_tiles(context, dataset_name);
+  IOArray c2 = read_uneven_tiles(library, dataset_name);
   EXPECT_TRUE(cunumeric::array_equal(src, cunumeric::as_array(c2.store())));
 }
 

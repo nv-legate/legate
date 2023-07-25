@@ -19,30 +19,27 @@
 #include "core/comm/comm_nccl.h"
 #endif
 #include "core/comm/comm_cpu.h"
+#include "core/runtime/runtime.h"
 #include "env_defaults.h"
-
-#include "core/runtime/detail/communicator_manager.h"
 
 namespace legate::comm {
 
-void register_tasks(Legion::Machine machine,
-                    Legion::Runtime* runtime,
-                    const LibraryContext* context)
+void register_tasks(Legion::Runtime* runtime, const detail::Library* library)
 {
 #ifdef LEGATE_USE_CUDA
-  nccl::register_tasks(machine, runtime, context);
+  nccl::register_tasks(runtime, library);
 #endif
   bool disable_mpi =
     static_cast<bool>(extract_env("LEGATE_DISABLE_MPI", DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST));
-  if (!disable_mpi) { cpu::register_tasks(machine, runtime, context); }
+  if (!disable_mpi) { cpu::register_tasks(runtime, library); }
 }
 
-void register_builtin_communicator_factories(const LibraryContext* context)
+void register_builtin_communicator_factories(const detail::Library* library)
 {
 #ifdef LEGATE_USE_CUDA
-  nccl::register_factory(context);
+  nccl::register_factory(library);
 #endif
-  cpu::register_factory(context);
+  cpu::register_factory(library);
 }
 
 }  // namespace legate::comm

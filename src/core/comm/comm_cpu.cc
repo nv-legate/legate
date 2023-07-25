@@ -17,8 +17,9 @@
 #include "core/comm/comm_cpu.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
-#include "legate.h"
+#include "core/runtime/runtime.h"
 
 #include "core/comm/coll.h"
 
@@ -26,30 +27,31 @@ namespace legate::comm::cpu {
 
 class Factory : public detail::CommunicatorFactory {
  public:
-  Factory(const LibraryContext* core_context);
+  Factory(const detail::Library* core_library);
 
  public:
   bool needs_barrier() const override { return false; }
   bool is_supported_target(mapping::TaskTarget target) const override;
 
  protected:
-  Legion::FutureMap initialize(const mapping::MachineDesc& machine, uint32_t num_tasks) override;
-  void finalize(const mapping::MachineDesc& machine,
+  Legion::FutureMap initialize(const mapping::detail::Machine& machine,
+                               uint32_t num_tasks) override;
+  void finalize(const mapping::detail::Machine& machine,
                 uint32_t num_tasks,
                 const Legion::FutureMap& communicator) override;
 
  private:
-  const LibraryContext* core_context_;
+  const detail::Library* core_library_;
 };
 
-Factory::Factory(const LibraryContext* core_context) : core_context_(core_context) {}
+Factory::Factory(const detail::Library* core_library) : core_library_(core_library) {}
 
 bool Factory::is_supported_target(mapping::TaskTarget target) const
 {
   return target == mapping::TaskTarget::OMP || target == mapping::TaskTarget::CPU;
 }
 
-Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint32_t num_tasks)
+Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, uint32_t num_tasks)
 {
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
   auto tag =
@@ -60,13 +62,13 @@ Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint3
 
   // Find a mapping of all participants
   detail::TaskLauncher init_cpucoll_mapping_launcher(
-    core_context_, machine, LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID, tag);
+    core_library_, machine, LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID, tag);
   init_cpucoll_mapping_launcher.add_future(comm_id);
   auto mapping = init_cpucoll_mapping_launcher.execute(launch_domain);
 
   // Then create communicators on participating processors
   detail::TaskLauncher init_cpucoll_launcher(
-    core_context_, machine, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, tag);
+    core_library_, machine, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, tag);
   init_cpucoll_launcher.add_future(comm_id);
   init_cpucoll_launcher.set_concurrent(true);
 
@@ -76,14 +78,14 @@ Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint3
   return init_cpucoll_launcher.execute(launch_domain);
 }
 
-void Factory::finalize(const mapping::MachineDesc& machine,
+void Factory::finalize(const mapping::detail::Machine& machine,
                        uint32_t num_tasks,
                        const Legion::FutureMap& communicator)
 {
   auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
-  detail::TaskLauncher launcher(core_context_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag);
+  detail::TaskLauncher launcher(core_library_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag);
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
@@ -155,27 +157,25 @@ static void finalize_cpucoll(const Legion::Task* task,
   comm = nullptr;
 }
 
-void register_tasks(Legion::Machine machine,
-                    Legion::Runtime* runtime,
-                    const LibraryContext* context)
+void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library)
 {
   const auto& command_args = Legion::Runtime::get_input_args();
   coll::collInit(command_args.argc, command_args.argv);
 
   auto init_cpucoll_mapping_task_id =
-    context->get_task_id(LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID);
+    core_library->get_task_id(LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID);
   const char* init_cpucoll_mapping_task_name = "core::comm::cpu::init_mapping";
   runtime->attach_name(init_cpucoll_mapping_task_id,
                        init_cpucoll_mapping_task_name,
                        false /*mutable*/,
                        true /*local only*/);
 
-  auto init_cpucoll_task_id          = context->get_task_id(LEGATE_CORE_INIT_CPUCOLL_TASK_ID);
+  auto init_cpucoll_task_id          = core_library->get_task_id(LEGATE_CORE_INIT_CPUCOLL_TASK_ID);
   const char* init_cpucoll_task_name = "core::comm::cpu::init";
   runtime->attach_name(
     init_cpucoll_task_id, init_cpucoll_task_name, false /*mutable*/, true /*local only*/);
 
-  auto finalize_cpucoll_task_id = context->get_task_id(LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID);
+  auto finalize_cpucoll_task_id = core_library->get_task_id(LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID);
   const char* finalize_cpucoll_task_name = "core::comm::cpu::finalize";
   runtime->attach_name(
     finalize_cpucoll_task_id, finalize_cpucoll_task_name, false /*mutable*/, true /*local only*/);
@@ -221,10 +221,10 @@ void register_tasks(Legion::Machine machine,
   }
 }
 
-void register_factory(const LibraryContext* context)
+void register_factory(const detail::Library* library)
 {
   auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  comm_mgr->register_factory("cpu", std::make_unique<Factory>(context));
+  comm_mgr->register_factory("cpu", std::make_unique<Factory>(library));
 }
 
 }  // namespace legate::comm::cpu

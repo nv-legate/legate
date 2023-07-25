@@ -111,8 +111,8 @@ TEST(Integration, NCCL)
 {
   legate::Core::perform_registration<prepare>();
 
-  auto runtime  = legate::Runtime::get_runtime();
-  auto& machine = runtime->get_machine();
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
   if (machine.count(legate::mapping::TaskTarget::GPU) == 0) return;
   legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
 

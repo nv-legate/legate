@@ -250,7 +250,7 @@ using Memory = Legion::Memory;
  * types (`__half`, `float`, and `double`) are supported by all but bitwise operators. Arithmetic
  * operators also cover complex types `complex<__half>` and `complex<float>`.
  *
- * For details about reduction operators, See LibraryContext::register_reduction_operator.
+ * For details about reduction operators, See Library::register_reduction_operator.
  *
  * @{
  */

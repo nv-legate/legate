@@ -20,10 +20,11 @@
 #include "core/data/buffer.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/runtime/runtime.h"
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
-#include "legate.h"
 
 #include <cuda.h>
 #include <nccl.h>
@@ -55,23 +56,24 @@ inline void check_nccl(ncclResult_t error, const char* file, int line)
 
 class Factory : public detail::CommunicatorFactory {
  public:
-  Factory(const LibraryContext* core_context);
+  Factory(const detail::Library* core_library);
 
  public:
   bool needs_barrier() const override;
   bool is_supported_target(mapping::TaskTarget target) const override;
 
  protected:
-  Legion::FutureMap initialize(const mapping::MachineDesc& machine, uint32_t num_tasks) override;
-  void finalize(const mapping::MachineDesc& machine,
+  Legion::FutureMap initialize(const mapping::detail::Machine& machine,
+                               uint32_t num_tasks) override;
+  void finalize(const mapping::detail::Machine& machine,
                 uint32_t num_tasks,
                 const Legion::FutureMap& communicator) override;
 
  private:
-  const LibraryContext* core_context_;
+  const detail::Library* core_library_;
 };
 
-Factory::Factory(const LibraryContext* core_context) : core_context_(core_context) {}
+Factory::Factory(const detail::Library* core_library) : core_library_(core_library) {}
 
 bool Factory::needs_barrier() const { return legate::comm::nccl::needs_barrier(); }
 
@@ -80,32 +82,32 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
   return target == mapping::TaskTarget::GPU;
 }
 
-Legion::FutureMap Factory::initialize(const mapping::MachineDesc& machine, uint32_t num_tasks)
+Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, uint32_t num_tasks)
 {
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
 
   // Create a communicator ID
   detail::TaskLauncher init_nccl_id_launcher(
-    core_context_, machine, LEGATE_CORE_INIT_NCCL_ID_TASK_ID, LEGATE_GPU_VARIANT);
+    core_library_, machine, LEGATE_CORE_INIT_NCCL_ID_TASK_ID, LEGATE_GPU_VARIANT);
   init_nccl_id_launcher.set_side_effect(true);
   auto nccl_id = init_nccl_id_launcher.execute_single();
 
   // Then create the communicators on participating GPUs
   detail::TaskLauncher init_nccl_launcher(
-    core_context_, machine, LEGATE_CORE_INIT_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+    core_library_, machine, LEGATE_CORE_INIT_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
   init_nccl_launcher.add_future(nccl_id);
   init_nccl_launcher.set_concurrent(true);
   return init_nccl_launcher.execute(launch_domain);
 }
 
-void Factory::finalize(const mapping::MachineDesc& machine,
+void Factory::finalize(const mapping::detail::Machine& machine,
                        uint32_t num_tasks,
                        const Legion::FutureMap& communicator)
 {
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
 
   detail::TaskLauncher launcher(
-    core_context_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+    core_library_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
@@ -181,21 +183,19 @@ static void finalize_nccl(const Legion::Task* task,
   delete comm;
 }
 
-void register_tasks(Legion::Machine machine,
-                    Legion::Runtime* runtime,
-                    const LibraryContext* context)
+void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library)
 {
-  auto init_nccl_id_task_id          = context->get_task_id(LEGATE_CORE_INIT_NCCL_ID_TASK_ID);
+  auto init_nccl_id_task_id          = core_library->get_task_id(LEGATE_CORE_INIT_NCCL_ID_TASK_ID);
   const char* init_nccl_id_task_name = "core::comm::nccl::init_id";
   runtime->attach_name(
     init_nccl_id_task_id, init_nccl_id_task_name, false /*mutable*/, true /*local only*/);
 
-  auto init_nccl_task_id          = context->get_task_id(LEGATE_CORE_INIT_NCCL_TASK_ID);
+  auto init_nccl_task_id          = core_library->get_task_id(LEGATE_CORE_INIT_NCCL_TASK_ID);
   const char* init_nccl_task_name = "core::comm::nccl::init";
   runtime->attach_name(
     init_nccl_task_id, init_nccl_task_name, false /*mutable*/, true /*local only*/);
 
-  auto finalize_nccl_task_id          = context->get_task_id(LEGATE_CORE_FINALIZE_NCCL_TASK_ID);
+  auto finalize_nccl_task_id = core_library->get_task_id(LEGATE_CORE_FINALIZE_NCCL_TASK_ID);
   const char* finalize_nccl_task_name = "core::comm::nccl::finalize";
   runtime->attach_name(
     finalize_nccl_task_id, finalize_nccl_task_name, false /*mutable*/, true /*local only*/);
@@ -233,10 +233,10 @@ bool needs_barrier()
   return true;
 }
 
-void register_factory(const LibraryContext* context)
+void register_factory(const detail::Library* core_library)
 {
   auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  comm_mgr->register_factory("nccl", std::make_unique<Factory>(context));
+  comm_mgr->register_factory("nccl", std::make_unique<Factory>(core_library));
 }
 
 }  // namespace legate::comm::nccl

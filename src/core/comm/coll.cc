@@ -23,13 +23,8 @@
 #include <cstdlib>
 #include <unordered_map>
 
-#ifndef LEGATE_USE_NETWORK
-#include <stdint.h>
-#endif
-
 #include "coll.h"
-#include "legate.h"
-#include "legion.h"
+#include "core/utilities/typedefs.h"
 
 namespace legate::comm::coll {
 

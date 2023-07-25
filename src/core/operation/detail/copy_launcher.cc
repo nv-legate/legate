@@ -1,4 +1,4 @@
-/* Copyright 2021 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 
 #include "core/operation/detail/copy_launcher.h"
+
 #include "core/data/detail/logical_store.h"
-#include "core/mapping/machine.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/projection.h"
-#include "core/runtime/context.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/utilities/buffer_builder.h"
+#include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::detail {
 
@@ -80,7 +80,7 @@ void CopyArg::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(field_id_);
 }
 
-CopyLauncher::CopyLauncher(const mapping::MachineDesc& machine, int64_t tag)
+CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine, int64_t tag)
   : machine_(machine), tag_(tag)
 {
   mapper_arg_ = new BufferBuilder();
@@ -221,7 +221,7 @@ std::unique_ptr<Legion::IndexCopyLauncher> CopyLauncher::build_index_copy(
   auto index_copy =
     std::make_unique<Legion::IndexCopyLauncher>(launch_domain,
                                                 Legion::Predicate::TRUE_PRED,
-                                                runtime->core_context()->get_mapper_id(),
+                                                runtime->core_library()->get_mapper_id(),
                                                 tag_,
                                                 mapper_arg_->to_legion_buffer(),
                                                 provenance.c_str());
@@ -237,7 +237,7 @@ std::unique_ptr<Legion::CopyLauncher> CopyLauncher::build_single_copy()
   auto& provenance = runtime->provenance_manager()->get_provenance();
   auto single_copy =
     std::make_unique<Legion::CopyLauncher>(Legion::Predicate::TRUE_PRED,
-                                           runtime->core_context()->get_mapper_id(),
+                                           runtime->core_library()->get_mapper_id(),
                                            tag_,
                                            mapper_arg_->to_legion_buffer(),
                                            provenance.c_str());

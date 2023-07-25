@@ -31,7 +31,7 @@ class Copy : public Operation {
   Copy(std::shared_ptr<LogicalStore> target,
        std::shared_ptr<LogicalStore> source,
        int64_t unique_id,
-       mapping::MachineDesc&& machine);
+       mapping::detail::Machine&& machine);
 
  public:
   void validate() override;

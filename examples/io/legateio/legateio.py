@@ -19,7 +19,7 @@ from enum import IntEnum
 from typing import Any, Optional
 
 import legate.core.types as ty
-from legate.core import Array, Field, Rect, Store, get_legate_runtime
+from legate.core import Array, Field, Rect, Store, get_machine
 
 from .library import user_context as context, user_lib
 
@@ -245,7 +245,7 @@ def read_file_parallel(
     if parallelism is None:
         # the num_procs property returns the number of processors that
         # Legate will favor to launch tasks
-        parallelism = get_legate_runtime().num_procs
+        parallelism = len(get_machine())
 
     # Create an 1D unbound store
     #

@@ -19,8 +19,9 @@
 #include "core/comm/comm.h"
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
-#include "core/mapping/core_mapper.h"
-#include "core/mapping/default_mapper.h"
+#include "core/mapping/detail/core_mapper.h"
+#include "core/mapping/detail/default_mapper.h"
+#include "core/mapping/detail/machine.h"
 #include "core/operation/detail/copy.h"
 #include "core/operation/detail/fill.h"
 #include "core/operation/detail/gather.h"
@@ -28,9 +29,11 @@
 #include "core/operation/detail/scatter_gather.h"
 #include "core/operation/detail/task.h"
 #include "core/operation/detail/task_launcher.h"
-#include "core/partitioning/partitioner.h"
-#include "core/runtime/projection.h"
-#include "core/runtime/shard.h"
+#include "core/partitioning/detail/partitioner.h"
+#include "core/runtime/detail/library.h"
+#include "core/runtime/detail/shard.h"
+#include "core/runtime/runtime.h"
+#include "core/task/detail/task_context.h"
 #include "env_defaults.h"
 
 #include "realm/network.h"
@@ -39,6 +42,8 @@ namespace legate {
 
 Logger log_legate("legate");
 
+// This is the unique string name for our library which can be used from both C++ and Python to
+// generate IDs
 const char* const core_library_name = "legate.core";
 
 }  // namespace legate
@@ -62,22 +67,21 @@ Runtime::Runtime()
 
 Runtime::~Runtime() {}
 
-LibraryContext* Runtime::create_library(const std::string& library_name,
-                                        const ResourceConfig& config,
-                                        std::unique_ptr<mapping::Mapper> mapper)
+Library* Runtime::create_library(const std::string& library_name,
+                                 const ResourceConfig& config,
+                                 std::unique_ptr<mapping::Mapper> mapper)
 {
   if (libraries_.find(library_name) != libraries_.end())
     throw std::invalid_argument("Library " + library_name + " already exists");
 
   log_legate.debug("Library %s is created", library_name.c_str());
-  if (nullptr == mapper) mapper = std::make_unique<mapping::DefaultMapper>();
-  auto context             = new LibraryContext(library_name, config, std::move(mapper));
+  if (nullptr == mapper) mapper = std::make_unique<mapping::detail::DefaultMapper>();
+  auto context             = new Library(library_name, config, std::move(mapper));
   libraries_[library_name] = context;
   return context;
 }
 
-LibraryContext* Runtime::find_library(const std::string& library_name,
-                                      bool can_fail /*=false*/) const
+Library* Runtime::find_library(const std::string& library_name, bool can_fail /*=false*/) const
 {
   auto finder = libraries_.find(library_name);
   if (libraries_.end() == finder) {
@@ -87,12 +91,12 @@ LibraryContext* Runtime::find_library(const std::string& library_name,
   return finder->second;
 }
 
-LibraryContext* Runtime::find_or_create_library(const std::string& library_name,
-                                                const ResourceConfig& config,
-                                                std::unique_ptr<mapping::Mapper> mapper,
-                                                bool* created)
+Library* Runtime::find_or_create_library(const std::string& library_name,
+                                         const ResourceConfig& config,
+                                         std::unique_ptr<mapping::Mapper> mapper,
+                                         bool* created)
 {
-  LibraryContext* result = find_library(library_name, true /*can_fail*/);
+  Library* result = find_library(library_name, true /*can_fail*/);
   if (result != nullptr) {
     if (created != nullptr) *created = false;
     return result;
@@ -146,24 +150,25 @@ void Runtime::initialize(Legion::Context legion_context)
   if (initialized_) throw std::runtime_error("Legate runtime has already been initialized");
   initialized_          = true;
   legion_context_       = legion_context;
-  core_context_         = find_library(core_library_name, false /*can_fail*/);
+  core_library_         = find_library(core_library_name, false /*can_fail*/);
   communicator_manager_ = new CommunicatorManager();
-  partition_manager_    = new PartitionManager(this, core_context_);
+  partition_manager_    = new PartitionManager(this);
   machine_manager_      = new MachineManager();
   provenance_manager_   = new ProvenanceManager();
-  Core::retrieve_tunable(legion_context_, legion_runtime_, core_context_);
+  Core::has_socket_mem =
+    get_tunable<bool>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM);
   initialize_toplevel_machine();
-  comm::register_builtin_communicator_factories(core_context_);
+  comm::register_builtin_communicator_factories(core_library_);
 }
 
-mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, int64_t task_id)
+mapping::detail::Machine Runtime::slice_machine_for_task(Library* library, int64_t task_id)
 {
   auto* task_info = library->find_task(task_id);
 
   std::vector<mapping::TaskTarget> task_targets;
   auto& machine = machine_manager_->get_machine();
   for (const auto& t : machine.valid_targets()) {
-    if (task_info->has_variant(mapping::to_variant_code(t))) task_targets.push_back(t);
+    if (task_info->has_variant(mapping::detail::to_variant_code(t))) task_targets.push_back(t);
   }
   auto sliced = machine.only(task_targets);
 
@@ -178,14 +183,14 @@ mapping::MachineDesc Runtime::slice_machine_for_task(LibraryContext* library, in
 }
 
 // This function should be moved to the library context
-std::unique_ptr<AutoTask> Runtime::create_task(LibraryContext* library, int64_t task_id)
+std::unique_ptr<AutoTask> Runtime::create_task(Library* library, int64_t task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
   auto task    = new AutoTask(library, task_id, next_unique_id_++, std::move(machine));
   return std::unique_ptr<AutoTask>(task);
 }
 
-std::unique_ptr<ManualTask> Runtime::create_task(LibraryContext* library,
+std::unique_ptr<ManualTask> Runtime::create_task(Library* library,
                                                  int64_t task_id,
                                                  const Shape& launch_shape)
 {
@@ -274,14 +279,14 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op->launch(strategy.get());
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(std::unique_ptr<Type> type, int32_t dim)
+std::shared_ptr<LogicalStore> Runtime::create_store(std::shared_ptr<Type> type, int32_t dim)
 {
   auto storage = std::make_shared<detail::Storage>(dim, std::move(type));
   return std::make_shared<LogicalStore>(std::move(storage));
 }
 
 std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
-                                                    std::unique_ptr<Type> type,
+                                                    std::shared_ptr<Type> type,
                                                     bool optimize_scalar /*=false*/)
 {
   auto storage = std::make_shared<detail::Storage>(extents, std::move(type), optimize_scalar);
@@ -291,8 +296,8 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
 std::shared_ptr<LogicalStore> Runtime::create_store(const Scalar& scalar)
 {
   Shape extents{1};
-  auto future  = create_future(scalar.ptr(), scalar.size());
-  auto storage = std::make_shared<detail::Storage>(extents, scalar.type().clone(), future);
+  auto future  = create_future(scalar.data(), scalar.size());
+  auto storage = std::make_shared<detail::Storage>(extents, scalar.type(), future);
   return std::make_shared<detail::LogicalStore>(std::move(storage));
 }
 
@@ -379,7 +384,7 @@ RegionField Runtime::map_region_field(const LogicalRegionField* rf)
     Legion::RegionRequirement req(root_region, READ_WRITE, EXCLUSIVE, root_region);
     req.add_field(field_id);
 
-    auto mapper_id = core_context_->get_mapper_id();
+    auto mapper_id = core_library_->get_mapper_id();
     // TODO: We need to pass the metadata about logical store
     Legion::InlineLauncher launcher(req, mapper_id);
     pr                  = legion_runtime_->map_region(legion_context_, launcher);
@@ -485,7 +490,7 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                             color_space,
                                                             LEGION_COMPUTE_KIND,
                                                             LEGION_AUTO_GENERATE_ID,
-                                                            core_context_->get_mapper_id());
+                                                            core_library_->get_mapper_id());
   else
     return legion_runtime_->create_partition_by_image(legion_context_,
                                                       index_space,
@@ -495,7 +500,7 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                       color_space,
                                                       LEGION_COMPUTE_KIND,
                                                       LEGION_AUTO_GENERATE_ID,
-                                                      core_context_->get_mapper_id());
+                                                      core_library_->get_mapper_id());
 }
 
 Legion::FieldSpace Runtime::create_field_space()
@@ -657,9 +662,9 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t id
 {
   auto& machine    = get_machine();
   auto& provenance = provenance_manager()->get_provenance();
-  auto variant     = mapping::to_variant_code(machine.preferred_target);
+  auto variant     = mapping::detail::to_variant_code(machine.preferred_target);
   TaskLauncher launcher(
-    core_context_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
+    core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
   launcher.add_future(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute_single();
@@ -671,9 +676,9 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
 {
   auto& machine    = get_machine();
   auto& provenance = provenance_manager()->get_provenance();
-  auto variant     = mapping::to_variant_code(machine.preferred_target);
+  auto variant     = mapping::detail::to_variant_code(machine.preferred_target);
   TaskLauncher launcher(
-    core_context_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
+    core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
   launcher.add_future_map(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute(launch_domain);
@@ -686,17 +691,17 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
                                             future_map,
                                             reduction_op,
                                             false /*deterministic*/,
-                                            core_context_->get_mapper_id());
+                                            core_library_->get_mapper_id());
 }
 
 Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map) const
 {
-  auto reduction_op = core_context_->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
+  auto reduction_op = core_library_->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
   return legion_runtime_->reduce_future_map(legion_context_,
                                             future_map,
                                             reduction_op,
                                             false /*deterministic*/,
-                                            core_context_->get_mapper_id(),
+                                            core_library_->get_mapper_id(),
                                             LEGATE_CORE_JOIN_EXCEPTION_TAG);
 }
 
@@ -710,7 +715,7 @@ void Runtime::issue_execution_fence(bool block /*=false*/)
 
 void Runtime::initialize_toplevel_machine()
 {
-  auto mapper_id = core_context_->get_mapper_id();
+  auto mapper_id = core_library_->get_mapper_id();
   auto num_nodes = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_NODES);
 
   auto num_gpus = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_GPUS);
@@ -722,9 +727,9 @@ void Runtime::initialize_toplevel_machine()
     return mapping::ProcessorRange(0, num_procs, per_node_count);
   };
 
-  mapping::MachineDesc machine({{mapping::TaskTarget::GPU, create_range(num_gpus)},
-                                {mapping::TaskTarget::OMP, create_range(num_omps)},
-                                {mapping::TaskTarget::CPU, create_range(num_cpus)}});
+  mapping::detail::Machine machine({{mapping::TaskTarget::GPU, create_range(num_gpus)},
+                                    {mapping::TaskTarget::OMP, create_range(num_omps)},
+                                    {mapping::TaskTarget::CPU, create_range(num_cpus)}});
 #ifdef DEBUG_LEGATE
   assert(machine_manager_ != nullptr);
 #endif
@@ -732,7 +737,7 @@ void Runtime::initialize_toplevel_machine()
   machine_manager_->push_machine(std::move(machine));
 }
 
-const mapping::MachineDesc& Runtime::get_machine() const
+const mapping::detail::Machine& Runtime::get_machine() const
 {
 #ifdef DEBUG_LEGATE
   assert(machine_manager_ != nullptr);
@@ -758,7 +763,7 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
   auto finder = registered_projections_.find(key);
   if (registered_projections_.end() != finder) return finder->second;
 
-  auto proj_id = core_context_->get_projection_id(next_projection_id_++);
+  auto proj_id = core_library_->get_projection_id(next_projection_id_++);
 
   auto ndim = point.size();
   std::vector<int32_t> dims;
@@ -783,10 +788,10 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
 
 Legion::ProjectionID Runtime::get_delinearizing_projection()
 {
-  return core_context_->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
+  return core_library_->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
 }
 
-Legion::ShardingID Runtime::get_sharding(const mapping::MachineDesc& machine,
+Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine,
                                          Legion::ProjectionID proj_id)
 {
   // If we're running on a single node, we don't need to generate sharding functors
@@ -811,7 +816,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::MachineDesc& machine,
     return finder->second;
   }
 
-  auto sharding_id = core_context_->get_sharding_id(next_sharding_id_++);
+  auto sharding_id = core_library_->get_sharding_id(next_sharding_id_++);
   registered_shardings_.insert({key, sharding_id});
 
 #ifdef DEBUG_LEGATE
@@ -918,7 +923,7 @@ void Runtime::destroy()
   pending_exceptions_.clear();
 
   // We finally deallocate managers
-  for (auto& [_, context] : libraries_) delete context;
+  for (auto& [_, library] : libraries_) delete library;
   libraries_.clear();
   for (auto& [_, region_manager] : region_managers_) delete region_manager;
   region_managers_.clear();
@@ -943,7 +948,7 @@ static void extract_scalar_task(
 
   Core::show_progress(task, legion_context, runtime);
 
-  TaskContext context(task, *regions, legion_context, runtime);
+  detail::TaskContext context(task, *regions);
   auto idx            = context.scalars()[0].value<int32_t>();
   auto value_and_size = ReturnValues::extract(task->futures[0], idx);
 
@@ -953,7 +958,7 @@ static void extract_scalar_task(
 
 void register_legate_core_tasks(Legion::Machine machine,
                                 Legion::Runtime* runtime,
-                                LibraryContext* context)
+                                Library* core_lib)
 {
   auto task_info                       = std::make_unique<TaskInfo>("core::extract_scalar");
   auto register_extract_scalar_variant = [&](auto variant_id) {
@@ -968,9 +973,9 @@ void register_legate_core_tasks(Legion::Machine machine,
 #ifdef LEGATE_USE_OPENMP
   register_extract_scalar_variant(LEGATE_OMP_VARIANT);
 #endif
-  context->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
+  core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
 
-  comm::register_tasks(machine, runtime, context);
+  comm::register_tasks(runtime, core_lib);
 }
 
 #define BUILTIN_REDOP_ID(OP, TYPE_CODE) \
@@ -1021,8 +1026,7 @@ void register_builtin_reduction_ops()
   RECORD_INT(XOR_LT)
 }
 
-extern void register_exception_reduction_op(Legion::Runtime* runtime,
-                                            const LibraryContext* context);
+extern void register_exception_reduction_op(Legion::Runtime* runtime, const Library* context);
 
 void core_library_registration(Legion::Machine machine,
                                Legion::Runtime* legion_runtime,
@@ -1037,7 +1041,7 @@ void core_library_registration(Legion::Machine machine,
 
   auto runtime  = Runtime::get_runtime();
   auto core_lib = Runtime::get_runtime()->create_library(
-    core_library_name, config, mapping::create_core_mapper());
+    core_library_name, config, mapping::detail::create_core_mapper());
 
   register_legate_core_tasks(machine, legion_runtime, core_lib);
 

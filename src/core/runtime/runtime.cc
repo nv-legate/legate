@@ -19,16 +19,12 @@
 #include "core/operation/detail/copy.h"
 #include "core/operation/detail/operation.h"
 #include "core/operation/detail/task.h"
-#include "core/runtime/context.h"
+#include "core/partitioning/detail/constraint.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate {
 
 extern Logger log_legate;
-
-// This is the unique string name for our library which can be used
-// from both C++ and Python to generate IDs
-extern const char* const core_library_name;
 
 /*static*/ bool Core::show_progress_requested = false;
 
@@ -120,50 +116,45 @@ extern const char* const core_library_name;
   LEGATE_ABORT;
 }
 
-/*static*/ void Core::retrieve_tunable(Legion::Context legion_context,
-                                       Legion::Runtime* legion_runtime,
-                                       LibraryContext* context)
-{
-  auto fut = legion_runtime->select_tunable_value(
-    legion_context, LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM, context->get_mapper_id());
-  Core::has_socket_mem = fut.get_result<bool>();
-}
-
 /*static*/ void Core::perform_callback(Legion::RegistrationCallbackFnptr callback)
 {
   Legion::Runtime::perform_registration_callback(callback, true /*global*/);
 }
 
-LibraryContext* Runtime::find_library(const std::string& library_name,
-                                      bool can_fail /*=false*/) const
+Library Runtime::find_library(const std::string& library_name) const
 {
-  return impl_->find_library(library_name, can_fail);
+  return Library(impl_->find_library(library_name, false));
 }
 
-LibraryContext* Runtime::create_library(const std::string& library_name,
+std::optional<Library> Runtime::maybe_find_library(const std::string& library_name) const
+{
+  auto result = impl_->find_library(library_name, true);
+  return result != nullptr ? std::optional<Library>(Library(result)) : std::nullopt;
+}
+
+Library Runtime::create_library(const std::string& library_name,
+                                const ResourceConfig& config,
+                                std::unique_ptr<mapping::Mapper> mapper)
+{
+  return Library(impl_->create_library(library_name, config, std::move(mapper)));
+}
+
+Library Runtime::find_or_create_library(const std::string& library_name,
                                         const ResourceConfig& config,
-                                        std::unique_ptr<mapping::Mapper> mapper)
+                                        std::unique_ptr<mapping::Mapper> mapper,
+                                        bool* created)
 {
-  return impl_->create_library(library_name, config, std::move(mapper));
+  return Library(impl_->find_or_create_library(library_name, config, std::move(mapper), created));
 }
 
-LibraryContext* Runtime::find_or_create_library(const std::string& library_name,
-                                                const ResourceConfig& config,
-                                                std::unique_ptr<mapping::Mapper> mapper,
-                                                bool* created)
+AutoTask Runtime::create_task(Library library, int64_t task_id)
 {
-  return impl_->find_or_create_library(library_name, config, std::move(mapper), created);
+  return AutoTask(impl_->create_task(library.impl(), task_id));
 }
 
-// This function should be moved to the library context
-AutoTask Runtime::create_task(LibraryContext* library, int64_t task_id)
+ManualTask Runtime::create_task(Library library, int64_t task_id, const Shape& launch_shape)
 {
-  return AutoTask(impl_->create_task(library, task_id));
-}
-
-ManualTask Runtime::create_task(LibraryContext* library, int64_t task_id, const Shape& launch_shape)
-{
-  return ManualTask(impl_->create_task(library, task_id, launch_shape));
+  return ManualTask(impl_->create_task(library.impl(), task_id, launch_shape));
 }
 
 void Runtime::issue_copy(LogicalStore target, LogicalStore source)
@@ -204,33 +195,21 @@ void Runtime::submit(AutoTask&& task) { impl_->submit(std::move(task.impl_)); }
 
 void Runtime::submit(ManualTask&& task) { impl_->submit(std::move(task.impl_)); }
 
-LogicalStore Runtime::create_store(std::unique_ptr<Type> type, int32_t dim)
-{
-  return LogicalStore(impl_->create_store(std::move(type), dim));
-}
-
 LogicalStore Runtime::create_store(const Type& type, int32_t dim)
 {
-  return create_store(type.clone(), dim);
-}
-
-LogicalStore Runtime::create_store(const Shape& extents,
-                                   std::unique_ptr<Type> type,
-                                   bool optimize_scalar /*=false*/)
-{
-  return LogicalStore(impl_->create_store(extents, std::move(type), optimize_scalar));
+  return LogicalStore(impl_->create_store(type.impl(), dim));
 }
 
 LogicalStore Runtime::create_store(const Shape& extents,
                                    const Type& type,
                                    bool optimize_scalar /*=false*/)
 {
-  return create_store(extents, type.clone(), optimize_scalar);
+  return LogicalStore(impl_->create_store(extents, type.impl(), optimize_scalar));
 }
 
 LogicalStore Runtime::create_store(const Scalar& scalar)
 {
-  return LogicalStore(impl_->create_store(scalar));
+  return LogicalStore(impl_->create_store(*scalar.impl_));
 }
 
 uint32_t Runtime::max_pending_exceptions() const { return impl_->max_pending_exceptions(); }
@@ -249,7 +228,7 @@ std::optional<TaskException> Runtime::check_pending_task_exception()
 
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }
 
-const mapping::MachineDesc& Runtime::get_machine() const { return impl_->get_machine(); }
+mapping::Machine Runtime::get_machine() const { return mapping::Machine(impl_->get_machine()); }
 
 /*static*/ Runtime* Runtime::get_runtime()
 {
@@ -273,7 +252,7 @@ int32_t start(int32_t argc, char** argv) { return detail::Runtime::start(argc, a
 
 int32_t finish() { return detail::Runtime::get_runtime()->finish(); }
 
-const mapping::MachineDesc& get_machine() { return Runtime::get_runtime()->get_machine(); }
+mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
 
 }  // namespace legate
 

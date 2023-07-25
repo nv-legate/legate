@@ -16,22 +16,31 @@
 
 #include "core/task/registrar.h"
 
-#include "core/runtime/context.h"
+#include "core/runtime/detail/library.h"
 #include "core/task/task_info.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate {
 
+struct TaskRegistrar::Impl {
+  std::vector<std::pair<int64_t, std::unique_ptr<TaskInfo>>> pending_task_infos;
+};
+
 void TaskRegistrar::record_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
-  pending_task_infos_.push_back(std::make_pair(local_task_id, std::move(task_info)));
+  impl_->pending_task_infos.push_back(std::make_pair(local_task_id, std::move(task_info)));
 }
 
-void TaskRegistrar::register_all_tasks(LibraryContext* context)
+void TaskRegistrar::register_all_tasks(Library library)
 {
-  for (auto& [local_task_id, task_info] : pending_task_infos_)
-    context->register_task(local_task_id, std::move(task_info));
-  pending_task_infos_.clear();
+  auto* lib_impl = library.impl();
+  for (auto& [local_task_id, task_info] : impl_->pending_task_infos)
+    lib_impl->register_task(local_task_id, std::move(task_info));
+  impl_->pending_task_infos.clear();
 }
+
+TaskRegistrar::TaskRegistrar() : impl_(new TaskRegistrar::Impl()) {}
+
+TaskRegistrar::~TaskRegistrar() { delete impl_; }
 
 }  // namespace legate

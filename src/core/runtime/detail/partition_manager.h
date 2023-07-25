@@ -18,19 +18,16 @@
 
 #include <unordered_map>
 
-#include "legion.h"
-
 #include "core/data/shape.h"
 #include "core/partitioning/restriction.h"
 
 namespace legate {
-class LibraryContext;
 class Tiling;
 class Weighted;
 }  // namespace legate
 
 namespace legate::mapping {
-class MachineDesc;
+class Machine;
 }  // namespace legate::mapping
 
 namespace legate::detail {
@@ -39,13 +36,13 @@ class Runtime;
 
 class PartitionManager {
  public:
-  PartitionManager(Runtime* runtime, const LibraryContext* context);
+  PartitionManager(Runtime* runtime);
 
  public:
-  const std::vector<uint32_t>& get_factors(const mapping::MachineDesc& machine);
+  const std::vector<uint32_t>& get_factors(const mapping::Machine& machine);
 
  public:
-  Shape compute_launch_shape(const mapping::MachineDesc& machine,
+  Shape compute_launch_shape(const mapping::Machine& machine,
                              const Restrictions& restrictions,
                              const Shape& shape);
   Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);

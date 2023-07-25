@@ -16,25 +16,24 @@
 
 #pragma once
 
-#include "core/mapping/machine.h"
+#include "core/mapping/detail/machine.h"
 
-namespace legate::mapping {
-class MachineDesc;
-}  // namespace legate::mapping
+namespace legate::mapping::detail {
+class Machine;
+}  // namespace legate::mapping::detail
 
 namespace legate::detail {
 
 class MachineManager {
  public:
-  const mapping::MachineDesc& get_machine() const;
+  const mapping::detail::Machine& get_machine() const;
 
-  void push_machine(const mapping::MachineDesc& machine);
-  void push_machine(mapping::MachineDesc&& machine);
+  void push_machine(mapping::detail::Machine&& machine);
 
   void pop_machine();
 
  private:
-  std::vector<mapping::MachineDesc> machines_;
+  std::vector<legate::mapping::detail::Machine> machines_;
 };
 
 }  // namespace legate::detail

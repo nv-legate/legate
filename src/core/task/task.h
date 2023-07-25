@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "core/runtime/context.h"
+#include "core/runtime/library.h"
 #include "core/task/task_info.h"
 #include "core/task/variant_helper.h"
 #include "core/task/variant_options.h"
@@ -72,29 +72,28 @@ struct LegateTask {
   /**
    * @brief Registers all variants of this task immediately.
    *
-   * Unlike the other method, this one takes a library context so the registration can be done
-   * immediately. The value of T::TASK_ID is used as the task id.
+   * Unlike the other method, this one takes a library so the registration can be done immediately.
+   * The value of T::TASK_ID is used as the task id.
    *
-   * @param context Library to which the task should be registered
+   * @param library Library to which the task should be registered
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
    * use the default set of options
    */
   static void register_variants(
-    LibraryContext* context, const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+    Library library, const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 
   /**
    * @brief Registers all variants of this task immediately.
    *
-   * Unlike the other method, this one takes a library context so the registration can be done
-   * immediately.
+   * Unlike the other method, this one takes a library so the registration can be done immediately.
    *
-   * @param context Library to which the task should be registered
+   * @param library Library to which the task should be registered
    * @param task_id Task id
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
    * use the default set of options
    */
   static void register_variants(
-    LibraryContext* context,
+    Library library,
     int64_t task_id,
     const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 

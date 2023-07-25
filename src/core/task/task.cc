@@ -1,4 +1,4 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,12 @@
 
 #include "realm/faults.h"
 
-#include "core/runtime/context.h"
 #include "core/runtime/runtime.h"
+#include "core/task/detail/return.h"
+#include "core/task/detail/task_context.h"
 #include "core/task/exception.h"
 #include "core/task/registrar.h"
-#include "core/task/return.h"
+#include "core/task/task_context.h"
 #include "core/utilities/deserializer.h"
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
@@ -67,11 +68,12 @@ void task_wrapper(VariantImpl variant_impl,
 
   Core::show_progress(task, legion_context, runtime);
 
-  TaskContext context(task, *regions, legion_context, runtime);
+  detail::TaskContext context(task, *regions);
 
   ReturnValues return_values{};
   try {
-    if (!Core::use_empty_task) (*variant_impl)(context);
+    legate::TaskContext ctx(&context);
+    if (!Core::use_empty_task) (*variant_impl)(ctx);
     return_values = context.pack_return_values();
   } catch (legate::TaskException& e) {
     if (context.can_raise_exception()) {

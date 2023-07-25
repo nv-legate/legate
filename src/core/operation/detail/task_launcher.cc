@@ -18,19 +18,19 @@
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
 #include "core/data/scalar.h"
-#include "core/mapping/machine.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/req_analyzer.h"
-#include "core/runtime/context.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/runtime/shard.h"
-#include "core/utilities/buffer_builder.h"
+#include "core/runtime/detail/shard.h"
+#include "core/type/detail/type_info.h"
+#include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::detail {
 
-TaskLauncher::TaskLauncher(const LibraryContext* library,
-                           const mapping::MachineDesc& machine,
+TaskLauncher::TaskLauncher(const Library* library,
+                           const mapping::detail::Machine& machine,
                            int64_t task_id,
                            int64_t tag /*= 0*/)
   : library_(library), task_id_(task_id), tag_(tag), machine_(machine), provenance_("")
@@ -38,8 +38,8 @@ TaskLauncher::TaskLauncher(const LibraryContext* library,
   initialize();
 }
 
-TaskLauncher::TaskLauncher(const LibraryContext* library,
-                           const mapping::MachineDesc& machine,
+TaskLauncher::TaskLauncher(const Library* library,
+                           const mapping::detail::Machine& machine,
                            const std::string& provenance,
                            int64_t task_id,
                            int64_t tag /*= 0*/)
@@ -73,9 +73,9 @@ int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task
 
 int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
 
-void TaskLauncher::add_scalar(const Scalar& scalar)
+void TaskLauncher::add_scalar(Scalar&& scalar)
 {
-  scalars_.push_back(new UntypedScalarArg(scalar));
+  scalars_.push_back(new UntypedScalarArg(std::move(scalar)));
 }
 
 void TaskLauncher::add_input(LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info)
@@ -283,7 +283,7 @@ void TaskLauncher::post_process_unbound_stores()
     auto* store = arg->store();
     auto& req   = output_requirements_[arg->requirement_index()];
     auto region_field =
-      runtime->import_region_field(req.parent, arg->field_id(), store->type().size());
+      runtime->import_region_field(req.parent, arg->field_id(), store->type()->size());
     store->set_region_field(std::move(region_field));
     store->set_key_partition(machine_, no_part.get());
   }
@@ -302,7 +302,7 @@ void TaskLauncher::post_process_unbound_stores(const Legion::FutureMap& result,
       auto*& arg, const auto& req, const auto& weights, const auto& machine) {
       auto* store = arg->store();
       auto region_field =
-        runtime->import_region_field(req.parent, arg->field_id(), store->type().size());
+        runtime->import_region_field(req.parent, arg->field_id(), store->type()->size());
       store->set_region_field(std::move(region_field));
 
       // TODO: Need to handle key partitions for multi-dimensional unbound stores

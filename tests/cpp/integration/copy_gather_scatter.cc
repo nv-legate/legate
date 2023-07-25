@@ -74,7 +74,7 @@ struct CheckGatherScatterTask
                                  IND_DIM * TEST_MAX_DIM + TGT_DIM;
   static void cpu_variant(legate::TaskContext& context)
   {
-    auto type_code = context.inputs().at(0).type().code;
+    auto type_code = context.inputs().at(0).type().code();
     type_dispatch_for_test(type_code, CheckGatherScatterTaskBody{}, context);
   }
 };
@@ -100,29 +100,29 @@ struct GatherScatterSpec {
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  FillTask<1>::register_variants(context);
-  FillTask<2>::register_variants(context);
-  FillTask<3>::register_variants(context);
+  auto library = runtime->create_library(library_name);
+  FillTask<1>::register_variants(library);
+  FillTask<2>::register_variants(library);
+  FillTask<3>::register_variants(library);
 
-  FillIndirectTask<1, 1>::register_variants(context);
-  FillIndirectTask<1, 2>::register_variants(context);
-  FillIndirectTask<1, 3>::register_variants(context);
-  FillIndirectTask<2, 1>::register_variants(context);
-  FillIndirectTask<2, 2>::register_variants(context);
-  FillIndirectTask<2, 3>::register_variants(context);
-  FillIndirectTask<3, 1>::register_variants(context);
-  FillIndirectTask<3, 2>::register_variants(context);
-  FillIndirectTask<3, 3>::register_variants(context);
+  FillIndirectTask<1, 1>::register_variants(library);
+  FillIndirectTask<1, 2>::register_variants(library);
+  FillIndirectTask<1, 3>::register_variants(library);
+  FillIndirectTask<2, 1>::register_variants(library);
+  FillIndirectTask<2, 2>::register_variants(library);
+  FillIndirectTask<2, 3>::register_variants(library);
+  FillIndirectTask<3, 1>::register_variants(library);
+  FillIndirectTask<3, 2>::register_variants(library);
+  FillIndirectTask<3, 3>::register_variants(library);
 
-  CheckGatherScatterTask<1, 2, 3>::register_variants(context);
-  CheckGatherScatterTask<2, 3, 1>::register_variants(context);
-  CheckGatherScatterTask<3, 1, 2>::register_variants(context);
-  CheckGatherScatterTask<3, 3, 3>::register_variants(context);
-  CheckGatherScatterTask<2, 2, 3>::register_variants(context);
+  CheckGatherScatterTask<1, 2, 3>::register_variants(library);
+  CheckGatherScatterTask<2, 3, 1>::register_variants(library);
+  CheckGatherScatterTask<3, 1, 2>::register_variants(library);
+  CheckGatherScatterTask<3, 3, 3>::register_variants(library);
+  CheckGatherScatterTask<2, 2, 3>::register_variants(library);
 }
 
-void check_gather_scatter_output(legate::LibraryContext* context,
+void check_gather_scatter_output(legate::Library library,
                                  const legate::LogicalStore& src,
                                  const legate::LogicalStore& tgt,
                                  const legate::LogicalStore& src_ind,
@@ -135,7 +135,7 @@ void check_gather_scatter_output(legate::LibraryContext* context,
   int32_t task_id = CHECK_GATHER_SCATTER_TASK + src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
                     src_ind.dim() * TEST_MAX_DIM + tgt.dim();
 
-  auto task = runtime->create_task(context, task_id);
+  auto task = runtime->create_task(library, task_id);
 
   auto src_part     = task.declare_partition();
   auto tgt_part     = task.declare_partition();
@@ -161,21 +161,21 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   logger.print() << "Gather-scatter Copy: " << spec.to_string();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto library = runtime->find_library(library_name);
 
-  auto& type   = spec.seed.type();
-  auto src     = runtime->create_store(spec.src_shape, type.clone());
-  auto tgt     = runtime->create_store(spec.tgt_shape, type.clone());
+  auto type    = spec.seed.type();
+  auto src     = runtime->create_store(spec.src_shape, type);
+  auto tgt     = runtime->create_store(spec.tgt_shape, type);
   auto src_ind = runtime->create_store(spec.ind_shape, legate::point_type(spec.src_shape.size()));
   auto tgt_ind = runtime->create_store(spec.ind_shape, legate::point_type(spec.tgt_shape.size()));
 
-  fill_input(context, src, spec.seed);
-  fill_indirect(context, src_ind, src);
-  fill_indirect(context, tgt_ind, tgt);
+  fill_input(library, src, spec.seed);
+  fill_indirect(library, src_ind, src);
+  fill_indirect(library, tgt_ind, tgt);
   runtime->issue_fill(tgt, spec.init);
   runtime->issue_scatter_gather(tgt, tgt_ind, src, src_ind);
 
-  check_gather_scatter_output(context, src, tgt, src_ind, tgt_ind, spec.init);
+  check_gather_scatter_output(library, src, tgt, src_ind, tgt_ind, spec.init);
 }
 
 TEST(Copy, GatherScatter1Dto3Dvia2D)

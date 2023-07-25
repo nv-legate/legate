@@ -62,7 +62,7 @@ struct ProvenanceTracker {
  *
  * By default, Legate operations target the entire machine available for the program. When a client
  * program wants to assign a subset of the machine to its operations, it can subdivide the machine
- * using the machine API (see `MachineDesc` for details) and set a sub-machine for the scope using
+ * using the machine API (see `Machine` for details) and set a sub-machine for the scope using
  * `MachineTracker`. All operations within the scope where the `MachineTracker` object is alive will
  * only target that sub-machine, instead of the entire machine.
  *
@@ -73,7 +73,7 @@ struct MachineTracker {
    *
    * @param machine Machine to use for the scope
    */
-  MachineTracker(const mapping::MachineDesc& machine);
+  MachineTracker(const mapping::Machine& machine);
 
   /**
    * @brief Pops out the machine set by this tracker
@@ -85,7 +85,7 @@ struct MachineTracker {
    *
    * @return Machine
    */
-  const mapping::MachineDesc& get_current_machine() const;
+  mapping::Machine get_current_machine() const;
 };
 
 }  // namespace legate

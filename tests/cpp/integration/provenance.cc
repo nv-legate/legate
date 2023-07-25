@@ -35,8 +35,8 @@ struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  ProvenanceTask::register_variants(context);
+  auto library = runtime->create_library(library_name);
+  ProvenanceTask::register_variants(library);
 }
 
 /*static*/ void ProvenanceTask::cpu_variant(legate::TaskContext& context)
@@ -46,43 +46,43 @@ void register_tasks()
   EXPECT_TRUE(provenance.find(scalar) != std::string::npos);
 }
 
-void test_manual_provenance(legate::LibraryContext* context)
+void test_manual_provenance(legate::Library library)
 {
   auto runtime           = legate::Runtime::get_runtime();
   std::string provenance = "test_manual_provenance";
   runtime->impl()->provenance_manager()->set_provenance(provenance);
   // auto task
-  auto task = runtime->create_task(context, PROVENANCE);
+  auto task = runtime->create_task(library, PROVENANCE);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
-void test_push_provenance(legate::LibraryContext* context)
+void test_push_provenance(legate::Library library)
 {
   auto runtime           = legate::Runtime::get_runtime();
   std::string provenance = "test_push_provenance";
   runtime->impl()->provenance_manager()->push_provenance(provenance);
   EXPECT_EQ(runtime->impl()->provenance_manager()->get_provenance(), provenance);
   // auto task
-  auto task = runtime->create_task(context, PROVENANCE);
+  auto task = runtime->create_task(library, PROVENANCE);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
-void test_pop_provenance(legate::LibraryContext* context)
+void test_pop_provenance(legate::Library library)
 {
   auto runtime = legate::Runtime::get_runtime();
   runtime->impl()->provenance_manager()->clear_all();
   runtime->impl()->provenance_manager()->push_provenance("some provenance for provenance task");
   runtime->impl()->provenance_manager()->pop_provenance();
   // auto task
-  auto task              = runtime->create_task(context, PROVENANCE);
+  auto task              = runtime->create_task(library, PROVENANCE);
   std::string provenance = "";
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
-void test_underflow(legate::LibraryContext* context)
+void test_underflow(legate::Library library)
 {
   auto runtime = legate::Runtime::get_runtime();
   runtime->impl()->provenance_manager()->clear_all();
@@ -90,48 +90,48 @@ void test_underflow(legate::LibraryContext* context)
   EXPECT_THROW(runtime->impl()->provenance_manager()->pop_provenance(), std::runtime_error);
 }
 
-void test_clear_provenance(legate::LibraryContext* context)
+void test_clear_provenance(legate::Library library)
 {
   auto runtime = legate::Runtime::get_runtime();
   runtime->impl()->provenance_manager()->push_provenance("provenance for provenance task");
   runtime->impl()->provenance_manager()->push_provenance("another provenance");
   runtime->impl()->provenance_manager()->clear_all();
   // auto task
-  auto task              = runtime->create_task(context, PROVENANCE);
+  auto task              = runtime->create_task(library, PROVENANCE);
   std::string provenance = "";
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
-void test_provenance_tracker(legate::LibraryContext* context)
+void test_provenance_tracker(legate::Library library)
 {
   legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__));
   auto runtime = legate::Runtime::get_runtime();
   // auto task
-  auto task              = runtime->create_task(context, PROVENANCE);
+  auto task              = runtime->create_task(library, PROVENANCE);
   std::string provenance = "provenance.cc:108";
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
-void test_nested_provenance_tracker(legate::LibraryContext* context)
+void test_nested_provenance_tracker(legate::Library library)
 {
   legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__));
-  test_provenance_tracker(context);
+  test_provenance_tracker(library);
   // The provenance string used by test_provenance_tracker should be popped out at this point
   auto runtime           = legate::Runtime::get_runtime();
-  auto task              = runtime->create_task(context, PROVENANCE);
+  auto task              = runtime->create_task(library, PROVENANCE);
   std::string provenance = "provenance.cc:119";
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
-void test_manual_tracker(legate::LibraryContext* context)
+void test_manual_tracker(legate::Library library)
 {
   legate::ProvenanceTracker track("manual provenance through tracker");
   auto runtime = legate::Runtime::get_runtime();
   // auto task
-  auto task = runtime->create_task(context, PROVENANCE);
+  auto task = runtime->create_task(library, PROVENANCE);
   task.add_scalar_arg(legate::Scalar(track.get_current_provenance()));
   runtime->submit(std::move(task));
 }
@@ -141,16 +141,16 @@ TEST(Integration, Provenance)
   legate::Core::perform_registration<register_tasks>();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto library = runtime->find_library(library_name);
 
-  test_manual_provenance(context);
-  test_push_provenance(context);
-  test_pop_provenance(context);
-  test_underflow(context);
-  test_clear_provenance(context);
-  test_provenance_tracker(context);
-  test_nested_provenance_tracker(context);
-  test_manual_tracker(context);
+  test_manual_provenance(library);
+  test_push_provenance(library);
+  test_pop_provenance(library);
+  test_underflow(library);
+  test_clear_provenance(library);
+  test_provenance_tracker(library);
+  test_nested_provenance_tracker(library);
+  test_manual_tracker(library);
 }
 
 }  // namespace provenance

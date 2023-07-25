@@ -30,13 +30,13 @@ Legion::Logger logger(library_name);
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  ReadEvenTilesTask::register_variants(context);
-  ReadFileTask::register_variants(context);
-  ReadUnevenTilesTask::register_variants(context);
-  WriteEvenTilesTask::register_variants(context);
-  WriteFileTask::register_variants(context);
-  WriteUnevenTilesTask::register_variants(context);
+  auto library = runtime->create_library(library_name);
+  ReadEvenTilesTask::register_variants(library);
+  ReadFileTask::register_variants(library);
+  ReadUnevenTilesTask::register_variants(library);
+  WriteEvenTilesTask::register_variants(library);
+  WriteFileTask::register_variants(library);
+  WriteUnevenTilesTask::register_variants(library);
 }
 
 namespace utils {

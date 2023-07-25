@@ -18,18 +18,19 @@
 
 #include <memory>
 
+#include "core/data/detail/scalar.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
 
 namespace legate {
 class Constraint;
-class LibraryContext;
 class Scalar;
 }  // namespace legate
 
 namespace legate::detail {
 class CommunicatorFactory;
 class ConstraintSolver;
+class Library;
 class LogicalStore;
 class LogicalStorePartition;
 class Strategy;
@@ -37,10 +38,10 @@ class Runtime;
 
 class Task : public Operation {
  protected:
-  Task(const LibraryContext* library,
+  Task(const Library* library,
        int64_t task_id,
        uint64_t unique_id,
-       mapping::MachineDesc&& machine);
+       mapping::detail::Machine&& machine);
 
  public:
   virtual ~Task() {}
@@ -64,7 +65,7 @@ class Task : public Operation {
   std::string to_string() const override;
 
  protected:
-  const LibraryContext* library_;
+  const Library* library_;
   int64_t task_id_;
   bool concurrent_{false};
   bool has_side_effect_{false};
@@ -79,10 +80,10 @@ class Task : public Operation {
 class AutoTask : public Task {
  private:
   friend class Runtime;
-  AutoTask(const LibraryContext* library,
+  AutoTask(const Library* library,
            int64_t task_id,
            uint64_t unique_id,
-           mapping::MachineDesc&& machine);
+           mapping::detail::Machine&& machine);
 
  public:
   ~AutoTask() {}
@@ -113,11 +114,11 @@ class AutoTask : public Task {
 class ManualTask : public Task {
  private:
   friend class Runtime;
-  ManualTask(const LibraryContext* library,
+  ManualTask(const Library* library,
              int64_t task_id,
              const Shape& launch_shape,
              uint64_t unique_id,
-             mapping::MachineDesc&& machine);
+             mapping::detail::Machine&& machine);
 
  public:
   ~ManualTask();

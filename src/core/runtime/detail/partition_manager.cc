@@ -19,14 +19,14 @@
 #include "core/legate_c.h"
 #include "core/mapping/machine.h"
 #include "core/partitioning/partition.h"
-#include "core/runtime/context.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
 
-PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* context)
+PartitionManager::PartitionManager(Runtime* runtime)
 {
-  auto mapper_id = context->get_mapper_id();
+  auto mapper_id = runtime->core_library()->get_mapper_id();
   min_shard_volume_ =
     runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
@@ -35,7 +35,7 @@ PartitionManager::PartitionManager(Runtime* runtime, const LibraryContext* conte
 #endif
 }
 
-const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::MachineDesc& machine)
+const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::Machine& machine)
 {
   uint32_t curr_num_pieces = machine.count();
 
@@ -57,7 +57,7 @@ const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::Machin
   return finder->second;
 }
 
-Shape PartitionManager::compute_launch_shape(const mapping::MachineDesc& machine,
+Shape PartitionManager::compute_launch_shape(const mapping::Machine& machine,
                                              const Restrictions& restrictions,
                                              const Shape& shape)
 {

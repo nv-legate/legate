@@ -16,7 +16,9 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <exception>
+#include <string>
 
 /**
  * @file

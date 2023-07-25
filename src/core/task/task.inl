@@ -48,19 +48,17 @@ template <typename T>
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
-  LibraryContext* context, const std::map<LegateVariantCode, VariantOptions>& all_options)
+  Library library, const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  register_variants(context, T::TASK_ID, all_options);
+  register_variants(library, T::TASK_ID, all_options);
 }
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
-  LibraryContext* context,
-  int64_t task_id,
-  const std::map<LegateVariantCode, VariantOptions>& all_options)
+  Library library, int64_t task_id, const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
   auto task_info = create_task_info(all_options);
-  context->register_task(task_id, std::move(task_info));
+  library.register_task(task_id, std::move(task_info));
 }
 
 template <typename T>

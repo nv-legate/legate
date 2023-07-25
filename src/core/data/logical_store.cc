@@ -20,10 +20,8 @@
 #include "core/data/logical_store.h"
 #include "core/data/store.h"
 #include "core/partitioning/partition.h"
+#include "core/type/detail/type_info.h"
 #include "core/type/type_traits.h"
-#include "core/utilities/buffer_builder.h"
-#include "core/utilities/dispatch.h"
-#include "legate_defines.h"
 
 namespace legate {
 
@@ -33,7 +31,7 @@ LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl) : impl_
 
 int32_t LogicalStore::dim() const { return impl_->dim(); }
 
-const Type& LogicalStore::type() const { return impl_->type(); }
+Type LogicalStore::type() const { return Type(impl_->type()); }
 
 const Shape& LogicalStore::extents() const { return impl_->extents(); }
 
@@ -73,13 +71,7 @@ LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes
   return LogicalStore(impl_->delinearize(dim, std::move(sizes)));
 }
 
-std::shared_ptr<Store> LogicalStore::get_physical_store() { return impl_->get_physical_store(); }
-
-void LogicalStore::set_key_partition(const mapping::MachineDesc& machine,
-                                     const Partition* partition)
-{
-  impl_->set_key_partition(machine, partition);
-}
+Store LogicalStore::get_physical_store() { return Store(impl_->get_physical_store()); }
 
 LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl)
   : impl_(std::move(impl))
@@ -88,9 +80,9 @@ LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStor
 
 LogicalStore LogicalStorePartition::store() const { return LogicalStore(impl_->store()); }
 
-std::shared_ptr<Partition> LogicalStorePartition::partition() const
+const Shape& LogicalStorePartition::color_shape() const
 {
-  return impl_->storage_partition()->partition();
+  return impl_->partition()->color_shape();
 }
 
 }  // namespace legate

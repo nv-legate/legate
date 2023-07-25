@@ -19,14 +19,16 @@
 #include <memory>
 #include <optional>
 
+#include "core/data/detail/scalar.h"
+#include "core/data/detail/store.h"
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
-#include "core/data/store.h"
 #include "core/mapping/machine.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/machine_manager.h"
 #include "core/runtime/detail/partition_manager.h"
+#include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/provenance_manager.h"
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/resource.h"
@@ -34,14 +36,11 @@
 #include "core/type/type_info.h"
 #include "core/utilities/multi_set.h"
 
-namespace legate {
-class LibraryContext;
-}  // namespace legate
-
 namespace legate::detail {
 
 class AutoTask;
 class Copy;
+class Library;
 class LogicalRegionField;
 class LogicalStore;
 class ManualTask;
@@ -53,14 +52,14 @@ class Runtime {
   ~Runtime();
 
  public:
-  LibraryContext* create_library(const std::string& library_name,
-                                 const ResourceConfig& config,
-                                 std::unique_ptr<mapping::Mapper> mapper);
-  LibraryContext* find_library(const std::string& library_name, bool can_fail) const;
-  LibraryContext* find_or_create_library(const std::string& library_name,
-                                         const ResourceConfig& config,
-                                         std::unique_ptr<mapping::Mapper> mapper,
-                                         bool* created);
+  Library* create_library(const std::string& library_name,
+                          const ResourceConfig& config,
+                          std::unique_ptr<mapping::Mapper> mapper);
+  Library* find_library(const std::string& library_name, bool can_fail) const;
+  Library* find_or_create_library(const std::string& library_name,
+                                  const ResourceConfig& config,
+                                  std::unique_ptr<mapping::Mapper> mapper,
+                                  bool* created);
 
  public:
   uint32_t get_type_uid();
@@ -71,9 +70,9 @@ class Runtime {
   void initialize(Legion::Context legion_context);
 
  public:
-  mapping::MachineDesc slice_machine_for_task(LibraryContext* library, int64_t task_id);
-  std::unique_ptr<AutoTask> create_task(LibraryContext* library, int64_t task_id);
-  std::unique_ptr<ManualTask> create_task(LibraryContext* library,
+  mapping::detail::Machine slice_machine_for_task(Library* library, int64_t task_id);
+  std::unique_ptr<AutoTask> create_task(Library* library, int64_t task_id);
+  std::unique_ptr<ManualTask> create_task(Library* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
   void issue_copy(std::shared_ptr<LogicalStore> target, std::shared_ptr<LogicalStore> source);
@@ -92,9 +91,9 @@ class Runtime {
   void submit(std::unique_ptr<Operation> op);
 
  public:
-  std::shared_ptr<LogicalStore> create_store(std::unique_ptr<Type> type, int32_t dim = 1);
+  std::shared_ptr<LogicalStore> create_store(std::shared_ptr<Type> type, int32_t dim = 1);
   std::shared_ptr<LogicalStore> create_store(const Shape& extents,
-                                             std::unique_ptr<Type> type,
+                                             std::shared_ptr<Type> type,
                                              bool optimize_scalar = false);
   std::shared_ptr<LogicalStore> create_store(const Scalar& scalar);
 
@@ -192,12 +191,12 @@ class Runtime {
 
  public:
   void initialize_toplevel_machine();
-  const mapping::MachineDesc& get_machine() const;
+  const mapping::detail::Machine& get_machine() const;
 
  public:
   Legion::ProjectionID get_projection(int32_t src_ndim, const proj::SymbolicPoint& point);
   Legion::ProjectionID get_delinearizing_projection();
-  Legion::ShardingID get_sharding(const mapping::MachineDesc& machine,
+  Legion::ShardingID get_sharding(const mapping::detail::Machine& machine,
                                   Legion::ProjectionID proj_id);
 
  private:
@@ -209,13 +208,13 @@ class Runtime {
   bool initialized() const { return initialized_; }
   void destroy();
   int32_t finish();
-  const LibraryContext* core_context() const { return core_context_; }
+  const Library* core_library() const { return core_library_; }
 
  private:
   bool initialized_{false};
   Legion::Runtime* legion_runtime_{nullptr};
   Legion::Context legion_context_{nullptr};
-  LibraryContext* core_context_{nullptr};
+  Library* core_library_{nullptr};
 
  private:
   using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
@@ -252,7 +251,7 @@ class Runtime {
   uint64_t next_storage_id_{1};
 
  private:
-  std::map<std::string, LibraryContext*> libraries_{};
+  std::map<std::string, Library*> libraries_{};
 
  private:
   uint32_t next_type_uid_;

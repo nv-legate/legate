@@ -21,13 +21,14 @@
 #include "core/data/scalar.h"
 #include "core/operation/detail/projection.h"
 #include "core/operation/detail/task_launcher.h"
-#include "core/partitioning/constraint_solver.h"
+#include "core/partitioning/detail/constraint_solver.h"
+#include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
-#include "core/partitioning/partitioner.h"
-#include "core/runtime/context.h"
 #include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/provenance_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/type/detail/type_info.h"
 
 namespace legate::detail {
 
@@ -35,17 +36,17 @@ namespace legate::detail {
 // legate::Task
 ////////////////////////////////////////////////////
 
-Task::Task(const LibraryContext* library,
+Task::Task(const Library* library,
            int64_t task_id,
            uint64_t unique_id,
-           mapping::MachineDesc&& machine)
+           mapping::detail::Machine&& machine)
   : Operation(unique_id, std::move(machine)), library_(library), task_id_(task_id)
 {
 }
 
 void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
 
-void Task::add_scalar_arg(Scalar&& scalar) { scalars_.emplace_back(std::move(scalar)); }
+void Task::add_scalar_arg(Scalar&& scalar) { scalars_.push_back(std::move(scalar)); }
 
 void Task::set_concurrent(bool concurrent) { concurrent_ = concurrent; }
 
@@ -102,13 +103,13 @@ void Task::launch(Strategy* p_strategy)
     if (!store->unbound()) continue;
     auto field_space = strategy.find_field_space(var);
     // TODO: We should reuse field ids here
-    auto field_size = store->type().size();
+    auto field_size = store->type()->size();
     auto field_id   = runtime->allocate_field(field_space, field_size);
     launcher.add_unbound_output(store, field_space, field_id);
   }
 
   // Add by-value scalars
-  for (auto& scalar : scalars_) launcher.add_scalar(scalar);
+  for (auto& scalar : scalars_) launcher.add_scalar(std::move(scalar));
 
   // Add communicators
   if (launch_domain != nullptr)
@@ -227,10 +228,10 @@ std::string Task::to_string() const
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-AutoTask::AutoTask(const LibraryContext* library,
+AutoTask::AutoTask(const Library* library,
                    int64_t task_id,
                    uint64_t unique_id,
-                   mapping::MachineDesc&& machine)
+                   mapping::detail::Machine&& machine)
   : Task(library, task_id, unique_id, std::move(machine))
 {
 }
@@ -253,7 +254,7 @@ void AutoTask::add_reduction(std::shared_ptr<LogicalStore> store,
                              int32_t redop,
                              const Variable* partition_symbol)
 {
-  auto legion_redop_id = store->type().find_reduction_operator(redop);
+  auto legion_redop_id = store->type()->find_reduction_operator(redop);
   if (store->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, std::move(store), partition_symbol);
   reduction_ops_.push_back(legion_redop_id);
@@ -291,11 +292,11 @@ void AutoTask::validate()
 
 ManualTask::~ManualTask() {}
 
-ManualTask::ManualTask(const LibraryContext* library,
+ManualTask::ManualTask(const Library* library,
                        int64_t task_id,
                        const Shape& launch_shape,
                        uint64_t unique_id,
-                       mapping::MachineDesc&& machine)
+                       mapping::detail::Machine&& machine)
   : Task(library, task_id, unique_id, std::move(machine)),
     strategy_(std::make_unique<detail::Strategy>())
 {
@@ -333,7 +334,7 @@ void ManualTask::add_output(std::shared_ptr<LogicalStorePartition> store_partiti
 
 void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redop)
 {
-  auto legion_redop_id = store->type().find_reduction_operator(redop);
+  auto legion_redop_id = store->type()->find_reduction_operator(redop);
   if (store->has_scalar_storage()) scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, std::move(store), create_no_partition());
   reduction_ops_.push_back(legion_redop_id);
@@ -342,7 +343,7 @@ void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redo
 void ManualTask::add_reduction(std::shared_ptr<LogicalStorePartition> store_partition,
                                int32_t redop)
 {
-  auto legion_redop_id = store_partition->store()->type().find_reduction_operator(redop);
+  auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop);
   if (store_partition->store()->has_scalar_storage())
     scalar_reductions_.push_back(reductions_.size());
   add_store(reductions_, store_partition->store(), store_partition->partition());

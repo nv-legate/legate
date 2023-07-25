@@ -25,9 +25,15 @@
  * @brief Class definition for legate::Scalar
  */
 
+namespace legate::detail {
+class Scalar;
+}  // namespace legate::detail
+
 namespace legate {
 
-class BufferBuilder;
+class AutoTask;
+class ManualTask;
+class Runtime;
 
 /**
  * @ingroup data
@@ -40,9 +46,12 @@ class BufferBuilder;
  */
 class Scalar {
  public:
+  Scalar(std::unique_ptr<detail::Scalar> impl);
   Scalar(const Scalar& other);
   Scalar(Scalar&& other);
+  ~Scalar();
 
+ public:
   /**
    * @brief Creates a shared `Scalar` with an existing allocation. The caller is responsible
    * for passing in a sufficiently big allocation. When `copy` is true, the scalar copies the
@@ -51,10 +60,7 @@ class Scalar {
    * @param type Type of the scalar(s)
    * @param data Allocation containing the data.
    */
-  Scalar(std::unique_ptr<Type> type, const void* data, bool copy = false);
-  ~Scalar();
-
- public:
+  Scalar(Type type, const void* data, bool copy = false);
   /**
    * @brief Creates an owned scalar from a scalar value
    *
@@ -73,7 +79,7 @@ class Scalar {
    * @param value A scalar value to create a `Scalar` with
    */
   template <typename T>
-  Scalar(T value, std::unique_ptr<Type> type);
+  Scalar(T value, Type type);
   /**
    * @brief Creates an owned scalar from a string. The value from the
    * original string will be copied.
@@ -110,16 +116,13 @@ class Scalar {
  public:
   Scalar& operator=(const Scalar& other);
 
- private:
-  void copy(const Scalar& other);
-
  public:
   /**
    * @brief Returns the data type of the scalar
    *
    * @return Data type
    */
-  const Type& type() const { return *type_; }
+  Type type() const;
   /**
    * @brief Returns the size of allocation for the `Scalar`.
    *
@@ -163,20 +166,19 @@ class Scalar {
    *
    * @return A raw pointer to the `Scalar`'s data
    */
-  const void* ptr() const { return data_; }
+  const void* ptr() const;
 
  public:
-  /**
-   * @brief Serializes the scalar into a buffer
-   *
-   * @param buffer A BufferBuilder into which the scalar needs to be serialized
-   */
-  void pack(BufferBuilder& buffer) const;
+  detail::Scalar* impl() const { return impl_; }
 
  private:
-  bool own_{false};
-  std::unique_ptr<Type> type_{nullptr};
-  const void* data_;
+  static detail::Scalar* create_impl(Type type, const void* data, bool copy);
+
+ private:
+  friend class AutoTask;
+  friend class ManualTask;
+  friend class Runtime;
+  detail::Scalar* impl_{nullptr};
 };
 
 }  // namespace legate

@@ -1,4 +1,4 @@
-/* Copyright 2022 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 
 #pragma once
 
-#include "core/data/buffer.h"
-
-#include <unordered_map>
+#include "core/utilities/typedefs.h"
 
 /**
  * @file
@@ -38,11 +36,6 @@ namespace legate {
  */
 class ScopedAllocator {
  public:
-  using ByteBuffer = Buffer<int8_t>;
-
- public:
-  ScopedAllocator() = default;
-
   // Iff 'scoped', all allocations will be released upon destruction.
   // Otherwise this is up to the runtime after the task has finished.
   /**
@@ -77,11 +70,17 @@ class ScopedAllocator {
    */
   void deallocate(void* ptr);
 
+ public:
+  ScopedAllocator(ScopedAllocator&&);
+  ScopedAllocator& operator=(ScopedAllocator&&);
+
  private:
-  Memory::Kind target_kind_{Memory::Kind::SYSTEM_MEM};
-  bool scoped_;
-  size_t alignment_;
-  std::unordered_map<const void*, ByteBuffer> buffers_{};
+  ScopedAllocator(const ScopedAllocator&)            = delete;
+  ScopedAllocator& operator=(const ScopedAllocator&) = delete;
+
+ private:
+  class Impl;
+  Impl* impl_;
 };
 
 }  // namespace legate

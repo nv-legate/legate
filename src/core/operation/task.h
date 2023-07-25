@@ -19,7 +19,9 @@
 #include <memory>
 
 #include "core/data/logical_store.h"
+#include "core/data/scalar.h"
 #include "core/mapping/machine.h"
+#include "core/partitioning/constraint.h"
 
 /**
  * @file
@@ -32,10 +34,6 @@ class ManualTask;
 }  // namespace legate::detail
 
 namespace legate {
-
-class Constraint;
-class Scalar;
-class Variable;
 
 /**
  * @ingroup op
@@ -52,7 +50,7 @@ class AutoTask {
    * @param store A store to add to the task as input
    * @param partition_symbol A partition symbol for the store
    */
-  void add_input(LogicalStore store, const Variable* partition_symbol);
+  void add_input(LogicalStore store, Variable partition_symbol);
   /**
    * @brief Adds a store to the task as output
    *
@@ -62,7 +60,7 @@ class AutoTask {
    * @param store A store to add to the task as output
    * @param partition_symbol A partition symbol for the store
    */
-  void add_output(LogicalStore store, const Variable* partition_symbol);
+  void add_output(LogicalStore store, Variable partition_symbol);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -73,7 +71,7 @@ class AutoTask {
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
    * @param partition_symbol A partition symbol for the store
    */
-  void add_reduction(LogicalStore store, ReductionOpKind redop, const Variable* partition_symbol);
+  void add_reduction(LogicalStore store, ReductionOpKind redop, Variable partition_symbol);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -84,7 +82,7 @@ class AutoTask {
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
    * @param partition_symbol A partition symbol for the store
    */
-  void add_reduction(LogicalStore store, int32_t redop, const Variable* partition_symbol);
+  void add_reduction(LogicalStore store, int32_t redop, Variable partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -102,7 +100,7 @@ class AutoTask {
    *
    * @param constraint A partitioning constraint
    */
-  void add_constraint(std::unique_ptr<Constraint> constraint);
+  void add_constraint(Constraint&& constraint);
 
  public:
   /**
@@ -112,19 +110,13 @@ class AutoTask {
    *
    * @return The existing symbol if there is one for the store, a fresh symbol otherwise
    */
-  const Variable* find_or_declare_partition(LogicalStore store);
+  Variable find_or_declare_partition(LogicalStore store);
   /**
    * @brief Declares partition symbol
    *
    * @return A new symbol that can be used when passing a store to an operation
    */
-  const Variable* declare_partition();
-  /**
-   * @brief Returns the machine of the scope in which this operation is issued
-   *
-   * @return The machine of the scope
-   */
-  const mapping::MachineDesc& machine() const;
+  Variable declare_partition();
   /**
    * @brief Returns the provenance information of this operation
    *
@@ -261,12 +253,6 @@ class ManualTask {
   void add_scalar_arg(Scalar&& scalar);
 
  public:
-  /**
-   * @brief Returns the machine of the scope in which this operation is issued
-   *
-   * @return The machine of the scope
-   */
-  const mapping::MachineDesc& machine() const;
   /**
    * @brief Returns the provenance information of this operation
    *

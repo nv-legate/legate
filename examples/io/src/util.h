@@ -19,7 +19,7 @@
 #include <filesystem>
 
 #include "core/data/store.h"
-#include "core/runtime/context.h"
+#include "core/task/task_context.h"
 
 namespace legateio {
 

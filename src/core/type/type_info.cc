@@ -14,281 +14,108 @@
  *
  */
 
-#include <numeric>
-#include <unordered_map>
-
-#include "core/runtime/detail/runtime.h"
 #include "core/type/type_info.h"
-#include "core/type/type_traits.h"
-#include "core/utilities/buffer_builder.h"
+#include "core/runtime/detail/runtime.h"
+#include "core/type/detail/type_info.h"
 
 namespace legate {
 
-namespace {
+Type::Code Type::code() const { return impl_->code; }
 
-const std::unordered_map<Type::Code, uint32_t> SIZEOF = {
-  {Type::Code::BOOL, sizeof(legate_type_of<Type::Code::BOOL>)},
-  {Type::Code::INT8, sizeof(legate_type_of<Type::Code::INT8>)},
-  {Type::Code::INT16, sizeof(legate_type_of<Type::Code::INT16>)},
-  {Type::Code::INT32, sizeof(legate_type_of<Type::Code::INT32>)},
-  {Type::Code::INT64, sizeof(legate_type_of<Type::Code::INT64>)},
-  {Type::Code::UINT8, sizeof(legate_type_of<Type::Code::UINT8>)},
-  {Type::Code::UINT16, sizeof(legate_type_of<Type::Code::UINT16>)},
-  {Type::Code::UINT32, sizeof(legate_type_of<Type::Code::UINT32>)},
-  {Type::Code::UINT64, sizeof(legate_type_of<Type::Code::UINT64>)},
-  {Type::Code::FLOAT16, sizeof(legate_type_of<Type::Code::FLOAT16>)},
-  {Type::Code::FLOAT32, sizeof(legate_type_of<Type::Code::FLOAT32>)},
-  {Type::Code::FLOAT64, sizeof(legate_type_of<Type::Code::FLOAT64>)},
-  {Type::Code::COMPLEX64, sizeof(legate_type_of<Type::Code::COMPLEX64>)},
-  {Type::Code::COMPLEX128, sizeof(legate_type_of<Type::Code::COMPLEX128>)},
-};
+uint32_t Type::size() const { return impl_->size(); }
 
-const std::unordered_map<Type::Code, std::string> TYPE_NAMES = {
-  {Type::Code::BOOL, "bool"},
-  {Type::Code::INT8, "int8"},
-  {Type::Code::INT16, "int16"},
-  {Type::Code::INT32, "int32"},
-  {Type::Code::INT64, "int64"},
-  {Type::Code::UINT8, "uint8"},
-  {Type::Code::UINT16, "uint16"},
-  {Type::Code::UINT32, "uint32"},
-  {Type::Code::UINT64, "uint64"},
-  {Type::Code::FLOAT16, "float16"},
-  {Type::Code::FLOAT32, "float32"},
-  {Type::Code::FLOAT64, "float64"},
-  {Type::Code::COMPLEX64, "complex64"},
-  {Type::Code::COMPLEX128, "complex128"},
-  {Type::Code::STRING, "string"},
-};
+uint32_t Type::alignment() const { return impl_->alignment(); }
 
-const char* _VARIABLE_SIZE_ERROR_MESSAGE = "Variable-size element type cannot be used";
+int32_t Type::uid() const { return impl_->uid(); }
 
-}  // namespace
+bool Type::variable_size() const { return impl_->variable_size(); }
 
-Type::Type(Code c) : code(c) {}
+std::string Type::to_string() const { return impl_->to_string(); }
 
-const FixedArrayType& Type::as_fixed_array_type() const
+bool Type::is_primitive() const { return impl_->is_primitive(); }
+
+FixedArrayType Type::as_fixed_array_type() const
 {
-  throw std::invalid_argument("Type is not a fixed array type");
-  return *static_cast<const FixedArrayType*>(nullptr);
+  if (impl_->code != Code::FIXED_ARRAY) {
+    throw std::invalid_argument("Type is not a fixed array type");
+  }
+  return FixedArrayType(impl_);
 }
 
-const StructType& Type::as_struct_type() const
+StructType Type::as_struct_type() const
 {
-  throw std::invalid_argument("Type is not a struct type");
-  return *static_cast<const StructType*>(nullptr);
+  if (impl_->code != Code::STRUCT) { throw std::invalid_argument("Type is not a struct type"); }
+  return StructType(impl_);
 }
 
 void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
 {
-  detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
+  impl_->record_reduction_operator(op_kind, global_op_id);
 }
 
 int32_t Type::find_reduction_operator(int32_t op_kind) const
 {
-  return detail::Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
+  return impl_->find_reduction_operator(op_kind);
 }
 
 int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
-  return find_reduction_operator(static_cast<int32_t>(op_kind));
+  return impl_->find_reduction_operator(op_kind);
 }
 
-bool Type::operator==(const Type& other) const { return equal(other); }
+bool Type::operator==(const Type& other) const { return impl_->equal(*other.impl_); }
 
-PrimitiveType::PrimitiveType(Code code) : Type(code), size_(SIZEOF.at(code)) {}
+bool Type::operator!=(const Type& other) const { return !operator==(other); }
 
-int32_t PrimitiveType::uid() const { return static_cast<int32_t>(code); }
+Type::Type() {}
 
-std::unique_ptr<Type> PrimitiveType::clone() const { return std::make_unique<PrimitiveType>(code); }
+Type::Type(std::shared_ptr<detail::Type> impl) : impl_(std::move(impl)) {}
 
-std::string PrimitiveType::to_string() const { return TYPE_NAMES.at(code); }
+Type::~Type() {}
 
-void PrimitiveType::pack(BufferBuilder& buffer) const
+uint32_t FixedArrayType::num_elements() const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
+  return static_cast<const detail::FixedArrayType*>(impl_.get())->num_elements();
 }
 
-bool PrimitiveType::equal(const Type& other) const { return code == other.code; }
-
-ExtensionType::ExtensionType(int32_t uid, Type::Code code) : Type(code), uid_(uid) {}
-
-FixedArrayType::FixedArrayType(int32_t uid,
-                               std::unique_ptr<Type> element_type,
-                               uint32_t N) noexcept(false)
-  : ExtensionType(uid, Type::Code::FIXED_ARRAY),
-    element_type_(std::move(element_type)),
-    N_(N),
-    size_(element_type_->size() * N)
+Type FixedArrayType::element_type() const
 {
-  if (element_type_->variable_size()) throw std::invalid_argument(_VARIABLE_SIZE_ERROR_MESSAGE);
+  return Type(static_cast<const detail::FixedArrayType*>(impl_.get())->element_type());
 }
 
-std::unique_ptr<Type> FixedArrayType::clone() const
+FixedArrayType::FixedArrayType(std::shared_ptr<detail::Type> type) : Type(std::move(type)) {}
+
+uint32_t StructType::num_fields() const
 {
-  return std::make_unique<FixedArrayType>(uid_, element_type_->clone(), N_);
+  return static_cast<const detail::StructType*>(impl_.get())->num_fields();
 }
 
-std::string FixedArrayType::to_string() const
+Type StructType::field_type(uint32_t field_idx) const
 {
-  std::stringstream ss;
-  ss << element_type_->to_string() << "[" << N_ << "]";
-  return std::move(ss).str();
+  return Type(static_cast<const detail::StructType*>(impl_.get())->field_type(field_idx));
 }
 
-void FixedArrayType::pack(BufferBuilder& buffer) const
+bool StructType::aligned() const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
-  buffer.pack<uint32_t>(uid_);
-  buffer.pack<uint32_t>(N_);
-  element_type_->pack(buffer);
+  return static_cast<const detail::StructType*>(impl_.get())->aligned();
 }
 
-const FixedArrayType& FixedArrayType::as_fixed_array_type() const { return *this; }
+StructType::StructType(std::shared_ptr<detail::Type> type) : Type(std::move(type)) {}
 
-bool FixedArrayType::equal(const Type& other) const
+Type primitive_type(Type::Code code) { return Type(detail::primitive_type(code)); }
+
+Type string_type() { return Type(detail::string_type()); }
+
+Type fixed_array_type(const Type& element_type, uint32_t N) noexcept(false)
 {
-  if (code != other.code) return false;
-  auto& casted = static_cast<const FixedArrayType&>(other);
-
-#ifdef DEBUG_LEGATE
-  // Do a structural check in debug mode
-  return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
-#else
-  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
-#endif
+  return Type(detail::fixed_array_type(element_type.impl(), N));
 }
 
-StructType::StructType(int32_t uid,
-                       std::vector<std::unique_ptr<Type>>&& field_types,
-                       bool align) noexcept(false)
-  : ExtensionType(uid, Type::Code::STRUCT),
-    aligned_(align),
-    alignment_(1),
-    size_(0),
-    field_types_(std::move(field_types))
+Type struct_type(const std::vector<Type>& field_types, bool align) noexcept(false)
 {
-  offsets_.reserve(field_types_.size());
-  if (aligned_) {
-    static constexpr auto align_offset = [](uint32_t offset, uint32_t align) {
-      return (offset + (align - 1)) & -align;
-    };
-
-    for (auto& field_type : field_types_) {
-      if (field_type->variable_size()) throw std::invalid_argument(_VARIABLE_SIZE_ERROR_MESSAGE);
-      uint32_t _my_align = field_type->alignment();
-      alignment_         = std::max(_my_align, alignment_);
-
-      uint32_t offset = align_offset(size_, _my_align);
-      offsets_.push_back(offset);
-      size_ = offset + field_type->size();
-    }
-    size_ = align_offset(size_, alignment_);
-  } else {
-    for (auto& field_type : field_types_) {
-      if (field_type->variable_size()) throw std::invalid_argument(_VARIABLE_SIZE_ERROR_MESSAGE);
-      offsets_.push_back(size_);
-      size_ += field_type->size();
-    }
-  }
-}
-
-std::unique_ptr<Type> StructType::clone() const
-{
-  std::vector<std::unique_ptr<Type>> field_types;
-  for (auto& field_type : field_types_) field_types.push_back(field_type->clone());
-  return std::make_unique<StructType>(uid_, std::move(field_types), aligned_);
-}
-
-std::string StructType::to_string() const
-{
-  std::stringstream ss;
-  ss << "{";
-  for (uint32_t idx = 0; idx < field_types_.size(); ++idx) {
-    if (idx > 0) ss << ",";
-    ss << field_types_.at(idx)->to_string() << ":" << offsets_.at(idx);
-  }
-  ss << "}";
-  return std::move(ss).str();
-}
-
-void StructType::pack(BufferBuilder& buffer) const
-{
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
-  buffer.pack<uint32_t>(uid_);
-  buffer.pack<uint32_t>(field_types_.size());
-  for (auto& field_type : field_types_) field_type->pack(buffer);
-  buffer.pack<bool>(aligned_);
-}
-
-const StructType& StructType::as_struct_type() const { return *this; }
-
-bool StructType::equal(const Type& other) const
-{
-  if (code != other.code) return false;
-  auto& casted = static_cast<const StructType&>(other);
-
-#ifdef DEBUG_LEGATE
-  // Do a structural check in debug mode
-  if (uid_ != casted.uid_) return false;
-  uint32_t nf = num_fields();
-  if (nf != casted.num_fields()) return false;
-  for (uint32_t idx = 0; idx < nf; ++idx)
-    if (field_type(idx) != casted.field_type(idx)) return false;
-  return true;
-#else
-  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
-#endif
-}
-
-const Type& StructType::field_type(uint32_t field_idx) const { return *field_types_.at(field_idx); }
-
-StringType::StringType() : Type(Type::Code::STRING) {}
-
-int32_t StringType::uid() const { return static_cast<int32_t>(code); }
-
-std::unique_ptr<Type> StringType::clone() const { return string_type(); }
-
-std::string StringType::to_string() const { return "string"; }
-
-void StringType::pack(BufferBuilder& buffer) const
-{
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
-}
-
-bool StringType::equal(const Type& other) const { return code == other.code; }
-
-std::unique_ptr<Type> primitive_type(Type::Code code)
-{
-  return std::make_unique<PrimitiveType>(code);
-}
-
-std::unique_ptr<Type> string_type() { return std::make_unique<StringType>(); }
-
-std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
-                                       uint32_t N) noexcept(false)
-{
-  // We use UIDs of the following format for "common" fixed array types
-  //    1B            1B
-  // +--------+-------------------+
-  // | length | element type code |
-  // +--------+-------------------+
-  auto generate_uid = [](const Type& elem_type, uint32_t N) {
-    if (!elem_type.is_primitive() || N > 0xFFU)
-      return detail::Runtime::get_runtime()->get_type_uid();
-    return static_cast<int32_t>(elem_type.code) | N << 8;
-  };
-  int32_t uid = generate_uid(*element_type, N);
-  return std::make_unique<FixedArrayType>(uid, std::move(element_type), N);
-}
-
-std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_types,
-                                  bool align) noexcept(false)
-{
-  return std::make_unique<StructType>(
-    detail::Runtime::get_runtime()->get_type_uid(), std::move(field_types), align);
+  std::vector<std::shared_ptr<detail::Type>> detail_field_types;
+  for (const auto& field_type : field_types) { detail_field_types.push_back(field_type.impl()); }
+  return Type(detail::struct_type(std::move(detail_field_types), align));
 }
 
 std::ostream& operator<<(std::ostream& ostream, const Type::Code& code)
@@ -303,35 +130,89 @@ std::ostream& operator<<(std::ostream& ostream, const Type& type)
   return ostream;
 }
 
-std::unique_ptr<Type> bool_() { return primitive_type(Type::Code::BOOL); }
+Type bool_()
+{
+  static auto result = primitive_type(Type::Code::BOOL);
+  return result;
+}
 
-std::unique_ptr<Type> int8() { return primitive_type(Type::Code::INT8); }
+Type int8()
+{
+  static auto result = primitive_type(Type::Code::INT8);
+  return result;
+}
 
-std::unique_ptr<Type> int16() { return primitive_type(Type::Code::INT16); }
+Type int16()
+{
+  static auto result = primitive_type(Type::Code::INT16);
+  return result;
+}
 
-std::unique_ptr<Type> int32() { return primitive_type(Type::Code::INT32); }
+Type int32()
+{
+  static auto result = primitive_type(Type::Code::INT32);
+  return result;
+}
 
-std::unique_ptr<Type> int64() { return primitive_type(Type::Code::INT64); }
+Type int64()
+{
+  static auto result = primitive_type(Type::Code::INT64);
+  return result;
+}
 
-std::unique_ptr<Type> uint8() { return primitive_type(Type::Code::UINT8); }
+Type uint8()
+{
+  static auto result = primitive_type(Type::Code::UINT8);
+  return result;
+}
 
-std::unique_ptr<Type> uint16() { return primitive_type(Type::Code::UINT16); }
+Type uint16()
+{
+  static auto result = primitive_type(Type::Code::UINT16);
+  return result;
+}
 
-std::unique_ptr<Type> uint32() { return primitive_type(Type::Code::UINT32); }
+Type uint32()
+{
+  static auto result = primitive_type(Type::Code::UINT32);
+  return result;
+}
 
-std::unique_ptr<Type> uint64() { return primitive_type(Type::Code::UINT64); }
+Type uint64()
+{
+  static auto result = primitive_type(Type::Code::UINT64);
+  return result;
+}
 
-std::unique_ptr<Type> float16() { return primitive_type(Type::Code::FLOAT16); }
+Type float16()
+{
+  static auto result = primitive_type(Type::Code::FLOAT16);
+  return result;
+}
 
-std::unique_ptr<Type> float32() { return primitive_type(Type::Code::FLOAT32); }
+Type float32()
+{
+  static auto result = primitive_type(Type::Code::FLOAT32);
+  return result;
+}
 
-std::unique_ptr<Type> float64() { return primitive_type(Type::Code::FLOAT64); }
+Type float64()
+{
+  static auto result = primitive_type(Type::Code::FLOAT64);
+  return result;
+}
 
-std::unique_ptr<Type> complex64() { return primitive_type(Type::Code::COMPLEX64); }
+Type complex64()
+{
+  static auto result = primitive_type(Type::Code::COMPLEX64);
+  return result;
+}
 
-std::unique_ptr<Type> complex128() { return primitive_type(Type::Code::COMPLEX128); }
-
-std::unique_ptr<Type> string() { return string_type(); }
+Type complex128()
+{
+  static auto result = primitive_type(Type::Code::COMPLEX128);
+  return result;
+}
 
 namespace {
 
@@ -340,27 +221,35 @@ constexpr int32_t RECT_UID_BASE  = POINT_UID_BASE + LEGATE_MAX_DIM + 1;
 
 }  // namespace
 
-std::unique_ptr<Type> point_type(int32_t ndim)
+Type point_type(int32_t ndim)
 {
-  return std::make_unique<FixedArrayType>(POINT_UID_BASE + ndim, int64(), ndim);
+  static Type cache[LEGATE_MAX_DIM + 1];
+
+  if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
+    throw std::out_of_range(std::to_string(ndim) + " is not a supported number of dimensions");
+  if (cache[ndim].impl() == nullptr) {
+    cache[ndim] =
+      Type(std::make_shared<detail::FixedArrayType>(POINT_UID_BASE + ndim, int64().impl(), ndim));
+  }
+  return cache[ndim];
 }
 
-std::unique_ptr<Type> rect_type(int32_t ndim)
+Type rect_type(int32_t ndim)
 {
-  std::vector<std::unique_ptr<Type>> field_types;
-  field_types.push_back(point_type(ndim));
-  field_types.push_back(point_type(ndim));
-  return std::make_unique<StructType>(RECT_UID_BASE + ndim, std::move(field_types), true /*align*/);
+  std::vector<std::shared_ptr<detail::Type>> field_types{point_type(ndim).impl(),
+                                                         point_type(ndim).impl()};
+  return Type(std::make_shared<detail::StructType>(
+    RECT_UID_BASE + ndim, std::move(field_types), true /*align*/));
 }
 
 bool is_point_type(const Type& type, int32_t ndim)
 {
-  switch (type.code) {
+  switch (type.code()) {
     case Type::Code::INT64: {
       return 1 == ndim;
     }
     case Type::Code::FIXED_ARRAY: {
-      return static_cast<const FixedArrayType&>(type).num_elements() == ndim;
+      return type.as_fixed_array_type().num_elements() == ndim;
     }
     default: {
       return false;
@@ -371,8 +260,8 @@ bool is_point_type(const Type& type, int32_t ndim)
 
 bool is_rect_type(const Type& type, int32_t ndim)
 {
-  if (type.code != Type::Code::STRUCT) return false;
-  auto& st_type = static_cast<const StructType&>(type);
+  if (type.code() != Type::Code::STRUCT) return false;
+  auto st_type = type.as_struct_type();
   return st_type.num_fields() == 2 && is_point_type(st_type.field_type(0), ndim) &&
          is_point_type(st_type.field_type(1), ndim);
 }

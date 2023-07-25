@@ -15,7 +15,7 @@
 
 
 from libcpp cimport bool
-from libcpp.memory cimport unique_ptr
+from libcpp.memory cimport shared_ptr
 from libcpp.string cimport string
 from libcpp.utility cimport move
 from libcpp.vector cimport vector
@@ -104,7 +104,7 @@ _NUMPY_DTYPES = {
 }
 
 
-cdef extern from "core/type/type_info.h" namespace "legate" nogil:
+cdef extern from "core/type/detail/type_info.h" namespace "legate::detail" nogil:
     cdef cppclass Type:
         ctypedef enum Code:
             pass
@@ -113,34 +113,34 @@ cdef extern from "core/type/type_info.h" namespace "legate" nogil:
         unsigned int alignment()
         int uid()
         bool variable_size()
-        unique_ptr[Type] clone()
         string to_string()
         bool is_primitive()
+        void record_reduction_operator(int, int) except+
         int find_reduction_operator(int) except+
 
     cdef cppclass FixedArrayType(Type):
         unsigned int num_elements()
-        const Type& element_type()
+        shared_ptr[Type] element_type()
 
     cdef cppclass StructType(Type):
         unsigned int num_fields()
-        const Type& field_type(unsigned int)
+        shared_ptr[Type] field_type(unsigned int)
         bool aligned()
 
-    cdef unique_ptr[Type] primitive_type(int code)
+    cdef shared_ptr[Type] primitive_type(int code)
 
-    cdef unique_ptr[Type] string_type()
+    cdef shared_ptr[Type] string_type()
 
-    cdef unique_ptr[Type] fixed_array_type(
-        unique_ptr[Type] element_type, unsigned int N
+    cdef shared_ptr[Type] fixed_array_type(
+        shared_ptr[Type] element_type, unsigned int N
     ) except+
 
-    cdef unique_ptr[Type] struct_type(
-        vector[unique_ptr[Type]] field_types, bool
+    cdef shared_ptr[Type] struct_type(
+        vector[shared_ptr[Type]] field_types, bool
     ) except+
 
 
-cdef Dtype from_ptr(unique_ptr[Type] ty):
+cdef Dtype from_ptr(shared_ptr[Type] ty):
     cdef Dtype dtype
     if <int> ty.get().code == FIXED_ARRAY:
         dtype = FixedArrayDtype.__new__(FixedArrayDtype)
@@ -153,33 +153,33 @@ cdef Dtype from_ptr(unique_ptr[Type] ty):
 
 
 cdef class Dtype:
-    cdef unique_ptr[Type] _type
+    cdef shared_ptr[Type] _type
 
     @staticmethod
     def primitive_type(int code) -> Dtype:
-        return from_ptr(move(primitive_type(<Type.Code> code)))
+        return from_ptr(primitive_type(<Type.Code> code))
 
     @staticmethod
     def string_type() -> Dtype:
-        return from_ptr(move(string_type()))
+        return from_ptr(string_type())
 
     @staticmethod
     def fixed_array_type(
         Dtype element_type, unsigned N
     ) -> FixedArrayDtype:
         return <FixedArrayDtype> from_ptr(
-            move(fixed_array_type(element_type._type.get().clone(), N))
+            fixed_array_type(element_type._type, N)
         )
 
     @staticmethod
     def struct_type(list field_types, bool align) -> StructDtype:
-        cdef vector[unique_ptr[Type]] types
+        cdef vector[shared_ptr[Type]] types
         for field_type in field_types:
             types.push_back(
-                move((<Dtype> field_type)._type.get().clone())
+                (<Dtype> field_type)._type
             )
         return <StructDtype> from_ptr(
-            move(struct_type(move(types), align))
+            struct_type(move(types), align)
         )
 
     @property
@@ -205,6 +205,9 @@ cdef class Dtype:
     @property
     def is_primitive(self) -> bool:
         return self._type.get().is_primitive()
+
+    def record_reduction_op(self, int op_kind, int reduction_op_id) -> None:
+        self._type.get().record_reduction_operator(op_kind, reduction_op_id)
 
     def reduction_op_id(self, int op_kind) -> int:
         return self._type.get().find_reduction_operator(op_kind)
@@ -235,7 +238,7 @@ cdef class FixedArrayDtype(Dtype):
     @property
     def element_type(self) -> Dtype:
         cdef FixedArrayType* ty = <FixedArrayType*> self._type.get()
-        return from_ptr(move(ty.element_type().clone()))
+        return from_ptr(ty.element_type())
 
     def to_numpy_dtype(self):
         arr_type = (
@@ -259,7 +262,7 @@ cdef class StructDtype(Dtype):
 
     def field_type(self, int field_idx) -> Dtype:
         cdef StructType* ty = <StructType*> self._type.get()
-        return from_ptr(move(ty.field_type(field_idx).clone()))
+        return from_ptr(ty.field_type(field_idx))
 
     def aligned(self) -> bool:
         cdef StructType* ty = <StructType*> self._type.get()

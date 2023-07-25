@@ -19,11 +19,9 @@
 #include <memory>
 #include <valarray>
 
-#include "legion.h"
-
 #include "core/data/shape.h"
 #include "core/data/slice.h"
-#include "core/data/transform.h"
+#include "core/data/store.h"
 #include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
 
@@ -33,10 +31,6 @@
  * legate::LogicalStorePartition
  */
 
-namespace legate::mapping {
-class MachineDesc;
-}  // namespace legate::mapping
-
 namespace legate::detail {
 class LogicalStore;
 class LogicalStorePartition;
@@ -44,11 +38,8 @@ class LogicalStorePartition;
 
 namespace legate {
 
-class LibraryContext;
 class LogicalStorePartition;
-class Partition;
 class Runtime;
-class Store;
 
 /**
  * @ingroup data
@@ -108,7 +99,7 @@ class LogicalStore {
    *
    * @return Type of elements in the store
    */
-  const Type& type() const;
+  Type type() const;
   /**
    * @brief Returns the shape of the store.
    *
@@ -330,10 +321,7 @@ class LogicalStore {
    *
    * @return A physical store of the logical store
    */
-  std::shared_ptr<Store> get_physical_store();
-
- public:
-  void set_key_partition(const mapping::MachineDesc& machine, const Partition* partition);
+  Store get_physical_store();
 
  public:
   std::shared_ptr<detail::LogicalStore> impl() const { return impl_; }
@@ -349,7 +337,7 @@ class LogicalStorePartition {
 
  public:
   LogicalStore store() const;
-  std::shared_ptr<Partition> partition() const;
+  const Shape& color_shape() const;
 
  public:
   std::shared_ptr<detail::LogicalStorePartition> impl() const { return impl_; }

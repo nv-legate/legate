@@ -17,10 +17,10 @@
 #include "core/operation/detail/scatter_gather.h"
 
 #include "core/operation/detail/copy_launcher.h"
-#include "core/partitioning/constraint.h"
-#include "core/partitioning/constraint_solver.h"
+#include "core/partitioning/detail/constraint.h"
+#include "core/partitioning/detail/constraint_solver.h"
+#include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
-#include "core/partitioning/partitioner.h"
 
 namespace legate::detail {
 
@@ -29,13 +29,13 @@ ScatterGather::ScatterGather(std::shared_ptr<LogicalStore> target,
                              std::shared_ptr<LogicalStore> source,
                              std::shared_ptr<LogicalStore> source_indirect,
                              int64_t unique_id,
-                             mapping::MachineDesc&& machine)
+                             mapping::detail::Machine&& machine)
   : Operation(unique_id, std::move(machine)),
     target_{target.get(), declare_partition()},
     target_indirect_{target_indirect.get(), declare_partition()},
     source_{source.get(), declare_partition()},
     source_indirect_{source_indirect.get(), declare_partition()},
-    constraint_(legate::align(source_indirect_.variable, target_indirect_.variable))
+    constraint_(align(source_indirect_.variable, target_indirect_.variable))
 {
   record_partition(target_.variable, std::move(target));
   record_partition(target_indirect_.variable, std::move(target_indirect));

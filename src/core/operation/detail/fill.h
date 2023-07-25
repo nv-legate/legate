@@ -26,7 +26,7 @@ class Fill : public Operation {
   Fill(std::shared_ptr<LogicalStore>&& lhs,
        std::shared_ptr<LogicalStore>&& value,
        int64_t unique_id,
-       mapping::MachineDesc&& machine);
+       mapping::detail::Machine&& machine);
 
  public:
   void validate() override;

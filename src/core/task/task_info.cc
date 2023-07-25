@@ -31,31 +31,58 @@ const Processor::Kind VARIANT_PROC_KINDS[] = {
 
 }  // namespace
 
-TaskInfo::TaskInfo(const std::string& task_name) : task_name_(task_name) {}
+class TaskInfo::Impl {
+ public:
+  Impl(const std::string& task_name);
 
-void TaskInfo::add_variant(LegateVariantCode vid,
-                           VariantImpl body,
-                           const Legion::CodeDescriptor& code_desc,
-                           const VariantOptions& options)
+ public:
+  const std::string& name() const { return task_name_; }
+
+ public:
+  void add_variant(LegateVariantCode vid,
+                   VariantImpl body,
+                   const Legion::CodeDescriptor& code_desc,
+                   const VariantOptions& options);
+  const VariantInfo& find_variant(LegateVariantCode vid) const;
+  bool has_variant(LegateVariantCode vid) const;
+
+ public:
+  void register_task(Legion::TaskID task_id);
+
+ public:
+  const std::map<LegateVariantCode, VariantInfo>& variants() const { return variants_; }
+
+ private:
+  std::string task_name_;
+  std::map<LegateVariantCode, VariantInfo> variants_{};
+};
+
+TaskInfo::Impl::Impl(const std::string& task_name) : task_name_(task_name) {}
+
+const std::string& TaskInfo::name() const { return impl_->name(); }
+
+void TaskInfo::Impl::add_variant(LegateVariantCode vid,
+                                 VariantImpl body,
+                                 const Legion::CodeDescriptor& code_desc,
+                                 const VariantOptions& options)
 {
-#ifdef DEBUG_LEGATE
-  assert(variants_.find(vid) == variants_.end());
-#endif
+  if (variants_.find(vid) != variants_.end())
+    throw std::invalid_argument("Task " + task_name_ + " already has variant " +
+                                std::to_string(vid));
   variants_.emplace(std::make_pair(vid, VariantInfo{body, code_desc, options}));
 }
 
-const VariantInfo* TaskInfo::find_variant(LegateVariantCode vid) const
+const VariantInfo& TaskInfo::Impl::find_variant(LegateVariantCode vid) const
 {
-  auto finder = variants_.find(vid);
-  return finder != variants_.end() ? &finder->second : nullptr;
+  return variants_.at(vid);
 }
 
-bool TaskInfo::has_variant(LegateVariantCode vid) const
+bool TaskInfo::Impl::has_variant(LegateVariantCode vid) const
 {
   return variants_.find(vid) != variants_.end();
 }
 
-void TaskInfo::register_task(Legion::TaskID task_id)
+void TaskInfo::Impl::register_task(Legion::TaskID task_id)
 {
   auto runtime = Legion::Runtime::get_runtime();
   runtime->attach_name(task_id, task_name_.c_str(), false /*mutable*/, true /*local_only*/);
@@ -67,6 +94,25 @@ void TaskInfo::register_task(Legion::TaskID task_id)
       registrar, vinfo.code_desc, nullptr, 0, vinfo.options.return_size, vid);
   }
 }
+
+TaskInfo::TaskInfo(const std::string& task_name) : impl_(new Impl(task_name)) {}
+
+void TaskInfo::add_variant(LegateVariantCode vid,
+                           VariantImpl body,
+                           const Legion::CodeDescriptor& code_desc,
+                           const VariantOptions& options)
+{
+  impl_->add_variant(vid, body, code_desc, options);
+}
+
+const VariantInfo& TaskInfo::find_variant(LegateVariantCode vid) const
+{
+  return impl_->find_variant(vid);
+}
+
+bool TaskInfo::has_variant(LegateVariantCode vid) const { return impl_->has_variant(vid); }
+
+void TaskInfo::register_task(Legion::TaskID task_id) { return impl_->register_task(task_id); }
 
 std::ostream& operator<<(std::ostream& os, const VariantInfo& info)
 {
@@ -80,7 +126,8 @@ std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
 {
   std::stringstream ss;
   ss << info.name() << " {";
-  for (auto [vid, vinfo] : info.variants_) ss << VARIANT_NAMES[vid] << ":[" << vinfo << "],";
+  for (auto [vid, vinfo] : info.impl_->variants())
+    ss << VARIANT_NAMES[vid] << ":[" << vinfo << "],";
   ss << "}";
   os << std::move(ss).str();
   return os;

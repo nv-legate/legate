@@ -60,16 +60,16 @@ struct Tester : public legate::LegateTask<Tester> {
 void prepare()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  Initializer::register_variants(context, INIT);
-  Tester::register_variants(context, CHECK);
+  auto library = runtime->create_library(library_name);
+  Initializer::register_variants(library, INIT);
+  Tester::register_variants(library, CHECK);
 }
 
 void initialize(legate::Runtime* runtime,
-                legate::LibraryContext* context,
+                legate::Library library,
                 const std::vector<legate::LogicalStore>& outputs)
 {
-  auto task = runtime->create_task(context, INIT, {NUM_TASKS});
+  auto task = runtime->create_task(library, INIT, {NUM_TASKS});
 
   std::vector<const legate::Variable*> parts;
   for (auto& output : outputs) task.add_output(output);
@@ -78,10 +78,10 @@ void initialize(legate::Runtime* runtime,
 }
 
 void check(legate::Runtime* runtime,
-           legate::LibraryContext* context,
+           legate::Library library,
            const std::vector<legate::LogicalStore>& inputs)
 {
-  auto task = runtime->create_task(context, CHECK);
+  auto task = runtime->create_task(library, CHECK);
 
   for (auto& input : inputs) {
     auto part_in  = task.declare_partition();
@@ -98,13 +98,13 @@ void check(legate::Runtime* runtime,
 void test_weighted(uint32_t num_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto library = runtime->find_library(library_name);
 
   std::vector<legate::LogicalStore> stores;
   for (uint32_t idx = 0; idx < num_stores; ++idx)
     stores.push_back(runtime->create_store(legate::int32()));
-  initialize(runtime, context, stores);
-  check(runtime, context, stores);
+  initialize(runtime, library, stores);
+  check(runtime, library, stores);
 }
 
 }  // namespace

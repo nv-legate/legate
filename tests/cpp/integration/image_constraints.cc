@@ -184,7 +184,7 @@ void initialize_function(legate::LogicalStore func, const std::vector<size_t> ra
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto is_rect = func.type().code == legate::Type::Code::STRUCT;
+  auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
   auto task    = runtime->create_task(
     context, INIT_FUNC + static_cast<int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
   auto part = task.declare_partition();
@@ -201,7 +201,7 @@ void check_image(legate::LogicalStore func, legate::LogicalStore range)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto is_rect = func.type().code == legate::Type::Code::STRUCT;
+  auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
   auto task    = runtime->create_task(
     context, IMAGE_TESTER + static_cast<int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
   auto part_domain = task.declare_partition();

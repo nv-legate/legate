@@ -32,7 +32,7 @@ class Scatter : public Operation {
           std::shared_ptr<LogicalStore> target_indirect,
           std::shared_ptr<LogicalStore> source,
           int64_t unique_id,
-          mapping::MachineDesc&& machine);
+          mapping::detail::Machine&& machine);
 
  public:
   void set_indirect_out_of_range(bool flag) { out_of_range_ = flag; }

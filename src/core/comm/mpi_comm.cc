@@ -20,7 +20,7 @@
 #include <string.h>
 
 #include "coll.h"
-#include "legate.h"
+#include "legate_defines.h"
 #include "legion.h"
 
 namespace legate::comm::coll {

@@ -19,259 +19,207 @@
 // Useful for IDEs
 #include "core/data/store.h"
 
+namespace legate::detail {
+namespace {
+
+template <typename ACC, int32_t N>
+struct trans_accessor_fn {
+  template <int32_t M>
+  ACC operator()(const Legion::PhysicalRegion& pr,
+                 Legion::FieldID fid,
+                 const Legion::AffineTransform<M, N>& transform,
+                 const Rect<N>& bounds)
+  {
+    return ACC(pr, fid, transform, bounds);
+  }
+  template <int32_t M>
+  ACC operator()(const Legion::PhysicalRegion& pr,
+                 Legion::FieldID fid,
+                 int32_t redop_id,
+                 const Legion::AffineTransform<M, N>& transform,
+                 const Rect<N>& bounds)
+  {
+    return ACC(pr, fid, redop_id, transform, bounds);
+  }
+};
+
+}  // namespace
+}  // namespace legate::detail
+
 namespace legate {
 
-template <typename T, int DIM>
-AccessorRO<T, DIM> RegionField::read_accessor() const
+template <typename T, int DIM, bool VALIDATE_TYPE>
+AccessorRO<T, DIM> Store::read_accessor() const
 {
-  return AccessorRO<T, DIM>(pr_, fid_);
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
+
+  if (is_future()) {
+    if (is_read_only_future()) {
+      return AccessorRO<T, DIM>(get_future(), shape<DIM>(), Memory::Kind::NO_MEMKIND);
+    } else {
+      return AccessorRO<T, DIM>(get_buffer(), shape<DIM>());
+    }
+  }
+
+  return create_field_accessor<AccessorRO<T, DIM>, DIM>(shape<DIM>());
 }
 
-template <typename T, int DIM>
-AccessorWO<T, DIM> RegionField::write_accessor() const
+template <typename T, int DIM, bool VALIDATE_TYPE>
+AccessorWO<T, DIM> Store::write_accessor() const
 {
-  return AccessorWO<T, DIM>(pr_, fid_);
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
+
+  if (is_future()) { return AccessorWO<T, DIM>(get_buffer(), shape<DIM>()); }
+
+  return create_field_accessor<AccessorWO<T, DIM>, DIM>(shape<DIM>());
 }
 
-template <typename T, int DIM>
-AccessorRW<T, DIM> RegionField::read_write_accessor() const
+template <typename T, int DIM, bool VALIDATE_TYPE>
+AccessorRW<T, DIM> Store::read_write_accessor() const
 {
-  return AccessorRW<T, DIM>(pr_, fid_);
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
+
+  if (is_future()) { return AccessorRW<T, DIM>(get_buffer(), shape<DIM>()); }
+
+  return create_field_accessor<AccessorRW<T, DIM>, DIM>(shape<DIM>());
 }
 
-template <typename OP, bool EXCLUSIVE, int DIM>
-AccessorRD<OP, EXCLUSIVE, DIM> RegionField::reduce_accessor(int32_t redop_id) const
+template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
+AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor() const
 {
-  return AccessorRD<OP, EXCLUSIVE, DIM>(pr_, fid_, redop_id);
+  using T = typename OP::LHS;
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
+
+  if (is_future()) { return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), shape<DIM>()); }
+
+  return create_reduction_accessor<AccessorRD<OP, EXCLUSIVE, DIM>, DIM>(shape<DIM>());
 }
 
-template <typename T, int DIM>
-AccessorRO<T, DIM> RegionField::read_accessor(const Legion::DomainAffineTransform& transform) const
+template <typename T, int DIM, bool VALIDATE_TYPE>
+AccessorRO<T, DIM> Store::read_accessor(const Rect<DIM>& bounds) const
 {
-  using ACC = AccessorRO<T, DIM>;
-  return dim_dispatch(transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform);
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
+
+  if (is_future()) {
+    if (is_read_only_future()) {
+      return AccessorRO<T, DIM>(get_future(), bounds, Memory::Kind::NO_MEMKIND);
+    } else {
+      return AccessorRO<T, DIM>(get_buffer(), bounds);
+    }
+  }
+
+  return create_field_accessor<AccessorRO<T, DIM>, DIM>(bounds);
 }
 
-template <typename T, int DIM>
-AccessorWO<T, DIM> RegionField::write_accessor(const Legion::DomainAffineTransform& transform) const
+template <typename T, int DIM, bool VALIDATE_TYPE>
+AccessorWO<T, DIM> Store::write_accessor(const Rect<DIM>& bounds) const
 {
-  using ACC = AccessorWO<T, DIM>;
-  return dim_dispatch(transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform);
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
+
+  if (is_future()) { return AccessorWO<T, DIM>(get_buffer(), bounds); }
+
+  return create_field_accessor<AccessorWO<T, DIM>, DIM>(bounds);
 }
 
-template <typename T, int DIM>
-AccessorRW<T, DIM> RegionField::read_write_accessor(
-  const Legion::DomainAffineTransform& transform) const
+template <typename T, int DIM, bool VALIDATE_TYPE>
+AccessorRW<T, DIM> Store::read_write_accessor(const Rect<DIM>& bounds) const
 {
-  using ACC = AccessorRW<T, DIM>;
-  return dim_dispatch(transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform);
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
+
+  if (is_future()) { return AccessorRW<T, DIM>(get_buffer(), bounds); }
+
+  return create_field_accessor<AccessorRW<T, DIM>, DIM>(bounds);
 }
 
-template <typename OP, bool EXCLUSIVE, int DIM>
-AccessorRD<OP, EXCLUSIVE, DIM> RegionField::reduce_accessor(
-  int32_t redop_id, const Legion::DomainAffineTransform& transform) const
+template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
+AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Rect<DIM>& bounds) const
 {
-  using ACC = AccessorRD<OP, EXCLUSIVE, DIM>;
-  return dim_dispatch(
-    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, redop_id, transform);
-}
+  using T = typename OP::LHS;
+  if constexpr (VALIDATE_TYPE) {
+    check_accessor_dimension(DIM);
+    check_accessor_type<T>();
+  }
 
-template <typename T, int DIM>
-AccessorRO<T, DIM> RegionField::read_accessor(const Rect<DIM>& bounds) const
-{
-  return AccessorRO<T, DIM>(pr_, fid_, bounds);
-}
+  if (is_future()) { return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), bounds); }
 
-template <typename T, int DIM>
-AccessorWO<T, DIM> RegionField::write_accessor(const Rect<DIM>& bounds) const
-{
-  return AccessorWO<T, DIM>(pr_, fid_, bounds);
-}
-
-template <typename T, int DIM>
-AccessorRW<T, DIM> RegionField::read_write_accessor(const Rect<DIM>& bounds) const
-{
-  return AccessorRW<T, DIM>(pr_, fid_, bounds);
-}
-
-template <typename OP, bool EXCLUSIVE, int DIM>
-AccessorRD<OP, EXCLUSIVE, DIM> RegionField::reduce_accessor(int32_t redop_id,
-                                                            const Rect<DIM>& bounds) const
-{
-  return AccessorRD<OP, EXCLUSIVE, DIM>(pr_, fid_, redop_id, bounds);
+  return create_reduction_accessor<AccessorRD<OP, EXCLUSIVE, DIM>, DIM>(bounds);
 }
 
 template <typename T, int32_t DIM>
-AccessorRO<T, DIM> RegionField::read_accessor(const Rect<DIM>& bounds,
-                                              const Legion::DomainAffineTransform& transform) const
+Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents, bool bind_buffer /*= false*/)
 {
-  using ACC = AccessorRO<T, DIM>;
-  return dim_dispatch(
-    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
-}
+  check_valid_binding(bind_buffer);
+  check_buffer_dimension(DIM);
 
-template <typename T, int32_t DIM>
-AccessorWO<T, DIM> RegionField::write_accessor(const Rect<DIM>& bounds,
-                                               const Legion::DomainAffineTransform& transform) const
-{
-  using ACC = AccessorWO<T, DIM>;
-  return dim_dispatch(
-    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
-}
+  Legion::OutputRegion out;
+  Legion::FieldID fid;
+  get_output_field(out, fid);
 
-template <typename T, int32_t DIM>
-AccessorRW<T, DIM> RegionField::read_write_accessor(
-  const Rect<DIM>& bounds, const Legion::DomainAffineTransform& transform) const
-{
-  using ACC = AccessorRW<T, DIM>;
-  return dim_dispatch(
-    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, transform, bounds);
-}
-
-template <typename OP, bool EXCLUSIVE, int DIM>
-AccessorRD<OP, EXCLUSIVE, DIM> RegionField::reduce_accessor(
-  int32_t redop_id, const Rect<DIM>& bounds, const Legion::DomainAffineTransform& transform) const
-{
-  using ACC = AccessorRD<OP, EXCLUSIVE, DIM>;
-  return dim_dispatch(
-    transform.transform.m, trans_accessor_fn<ACC, DIM>{}, pr_, fid_, redop_id, transform, bounds);
+  auto result = out.create_buffer<T, DIM>(extents, fid, nullptr, bind_buffer);
+  // We will use this value only when the unbound store is 1D
+  if (bind_buffer) update_num_elements(extents[0]);
+  return result;
 }
 
 template <int32_t DIM>
-Rect<DIM> RegionField::shape() const
+Rect<DIM> Store::shape() const
 {
-  return Rect<DIM>(pr_);
-}
-
-template <typename T, int DIM>
-AccessorRO<T, DIM> FutureWrapper::read_accessor() const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(T) == field_size_);
-#endif
-  if (read_only_) {
-    auto memkind = Memory::Kind::NO_MEMKIND;
-    return AccessorRO<T, DIM>(future_, memkind);
-  } else
-    return AccessorRO<T, DIM>(buffer_);
-}
-
-template <typename T, int DIM>
-AccessorWO<T, DIM> FutureWrapper::write_accessor() const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(T) == field_size_);
-  assert(!read_only_);
-#endif
-  return AccessorWO<T, DIM>(buffer_);
-}
-
-template <typename T, int DIM>
-AccessorRW<T, DIM> FutureWrapper::read_write_accessor() const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(T) == field_size_);
-  assert(!read_only_);
-#endif
-  return AccessorRW<T, DIM>(buffer_);
-}
-
-template <typename OP, bool EXCLUSIVE, int DIM>
-AccessorRD<OP, EXCLUSIVE, DIM> FutureWrapper::reduce_accessor(int32_t redop_id) const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(typename OP::LHS) == field_size_);
-  assert(!read_only_);
-#endif
-  return AccessorRD<OP, EXCLUSIVE, DIM>(buffer_);
-}
-
-template <typename T, int DIM>
-AccessorRO<T, DIM> FutureWrapper::read_accessor(const Rect<DIM>& bounds) const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(T) == field_size_);
-#endif
-  if (read_only_) {
-    auto memkind = Memory::Kind::NO_MEMKIND;
-    return AccessorRO<T, DIM>(future_, bounds, memkind);
-  } else
-    return AccessorRO<T, DIM>(buffer_, bounds);
-}
-
-template <typename T, int DIM>
-AccessorWO<T, DIM> FutureWrapper::write_accessor(const Rect<DIM>& bounds) const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(T) == field_size_);
-  assert(!read_only_);
-#endif
-  return AccessorWO<T, DIM>(buffer_, bounds);
-}
-
-template <typename T, int DIM>
-AccessorRW<T, DIM> FutureWrapper::read_write_accessor(const Rect<DIM>& bounds) const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(T) == field_size_);
-  assert(!read_only_);
-#endif
-  return AccessorRW<T, DIM>(buffer_, bounds);
-}
-
-template <typename OP, bool EXCLUSIVE, int DIM>
-AccessorRD<OP, EXCLUSIVE, DIM> FutureWrapper::reduce_accessor(int32_t redop_id,
-                                                              const Rect<DIM>& bounds) const
-{
-#ifdef DEBUG_LEGATE
-  assert(sizeof(typename OP::LHS) == field_size_);
-  assert(!read_only_);
-#endif
-  return AccessorRD<OP, EXCLUSIVE, DIM>(buffer_, bounds);
-}
-
-template <int32_t DIM>
-Rect<DIM> FutureWrapper::shape() const
-{
-  return Rect<DIM>(domain());
+  check_shape_dimension(DIM);
+  if (dim() > 0) {
+    return domain().bounds<DIM, Legion::coord_t>();
+  } else {
+    auto p = Point<DIM>::ZEROES();
+    return Rect<DIM>(p, p);
+  }
 }
 
 template <typename VAL>
-VAL FutureWrapper::scalar() const
+VAL Store::scalar() const
 {
-#ifdef DEBUG_LEGATE
-  assert(sizeof(VAL) == field_size_);
-#endif
-  if (!read_only_)
-    return buffer_.operator Legion::DeferredValue<VAL>().read();
-  else
-    return future_.get_result<VAL>();
-}
-
-template <typename T, int32_t DIM>
-Buffer<T, DIM> UnboundRegionField::create_output_buffer(const Point<DIM>& extents, bool bind_buffer)
-{
-  if (bind_buffer) {
-#ifdef DEBUG_LEGATE
-    assert(!bound_);
-#endif
-    // We will use this value only when the unbound store is 1D
-    update_num_elements(extents[0]);
-    bound_ = true;
+  if (!is_future()) {
+    throw std::invalid_argument("Scalars can be retrieved only from scalar stores");
   }
-  return out_.create_buffer<T, DIM>(extents, fid_, nullptr, bind_buffer);
+  if (is_read_only_future()) {
+    return get_future().get_result<VAL>();
+  } else {
+    return get_buffer().operator Legion::DeferredValue<VAL>().read();
+  }
 }
 
 template <typename T, int32_t DIM>
-void UnboundRegionField::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents)
+void Store::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents)
 {
-#ifdef DEBUG_LEGATE
-  assert(!bound_);
-#endif
-  out_.return_data(extents, fid_, buffer);
+  check_valid_binding(true);
+  check_buffer_dimension(DIM);
+
+  Legion::OutputRegion out;
+  Legion::FieldID fid;
+  get_output_field(out, fid);
+
+  out.return_data(extents, fid, buffer);
   // We will use this value only when the unbound store is 1D
   update_num_elements(extents[0]);
-  bound_ = true;
 }
 
 template <typename T>
@@ -282,7 +230,7 @@ void Store::check_accessor_type() const
   // Test exact match for primitive types
   if (in_type != Type::Code::INVALID) {
     throw std::invalid_argument(
-      "Type mismatch: " + PrimitiveType(in_type).to_string() + " accessor to a " +
+      "Type mismatch: " + primitive_type(in_type).to_string() + " accessor to a " +
       type().to_string() +
       " store. Disable type checking via accessor template parameter if this is intended.");
   }
@@ -295,177 +243,39 @@ void Store::check_accessor_type() const
   }
 }
 
-template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRO<T, DIM> Store::read_accessor() const
+template <typename ACC, int32_t DIM>
+ACC Store::create_field_accessor(const Rect<DIM>& bounds) const
 {
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
-  }
+  Legion::PhysicalRegion pr;
+  Legion::FieldID fid;
+  get_region_field(pr, fid);
 
-  if (is_future_) return future_.read_accessor<T, DIM>(shape<DIM>());
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.read_accessor<T, DIM>(shape<DIM>(), transform);
+  if (transformed()) {
+    auto transform = get_inverse_transform();
+    return dim_dispatch(
+      transform.transform.m, detail::trans_accessor_fn<ACC, DIM>{}, pr, fid, transform, bounds);
   }
-  return region_field_.read_accessor<T, DIM>(shape<DIM>());
+  return ACC(pr, fid, bounds);
 }
 
-template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorWO<T, DIM> Store::write_accessor() const
+template <typename ACC, int32_t DIM>
+ACC Store::create_reduction_accessor(const Rect<DIM>& bounds) const
 {
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
+  Legion::PhysicalRegion pr;
+  Legion::FieldID fid;
+  get_region_field(pr, fid);
+
+  if (transformed()) {
+    auto transform = get_inverse_transform();
+    return dim_dispatch(transform.transform.m,
+                        detail::trans_accessor_fn<ACC, DIM>{},
+                        pr,
+                        fid,
+                        get_redop_id(),
+                        transform,
+                        bounds);
   }
-
-  if (is_future_) return future_.write_accessor<T, DIM>(shape<DIM>());
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.write_accessor<T, DIM>(shape<DIM>(), transform);
-  }
-  return region_field_.write_accessor<T, DIM>(shape<DIM>());
-}
-
-template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRW<T, DIM> Store::read_write_accessor() const
-{
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
-  }
-
-  if (is_future_) return future_.read_write_accessor<T, DIM>(shape<DIM>());
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.read_write_accessor<T, DIM>(shape<DIM>(), transform);
-  }
-  return region_field_.read_write_accessor<T, DIM>(shape<DIM>());
-}
-
-template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
-AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor() const
-{
-  using T = typename OP::LHS;
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
-  }
-
-  if (is_future_) return future_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, shape<DIM>());
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, shape<DIM>(), transform);
-  }
-  return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, shape<DIM>());
-}
-
-template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRO<T, DIM> Store::read_accessor(const Rect<DIM>& bounds) const
-{
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
-  }
-
-  if (is_future_) return future_.read_accessor<T, DIM>(bounds);
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.read_accessor<T, DIM>(bounds, transform);
-  }
-  return region_field_.read_accessor<T, DIM>(bounds);
-}
-
-template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorWO<T, DIM> Store::write_accessor(const Rect<DIM>& bounds) const
-{
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
-  }
-
-  if (is_future_) return future_.write_accessor<T, DIM>(bounds);
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.write_accessor<T, DIM>(bounds, transform);
-  }
-  return region_field_.write_accessor<T, DIM>(bounds);
-}
-
-template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRW<T, DIM> Store::read_write_accessor(const Rect<DIM>& bounds) const
-{
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
-  }
-
-  if (is_future_) return future_.read_write_accessor<T, DIM>(bounds);
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.read_write_accessor<T, DIM>(bounds, transform);
-  }
-  return region_field_.read_write_accessor<T, DIM>(bounds);
-}
-
-template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
-AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Rect<DIM>& bounds) const
-{
-  using T = typename OP::LHS;
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension(DIM);
-    check_accessor_type<T>();
-  }
-
-  if (is_future_) return future_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, bounds);
-
-  if (!transform_->identity()) {
-    auto transform = transform_->inverse_transform(dim_);
-    return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, bounds, transform);
-  }
-  return region_field_.reduce_accessor<OP, EXCLUSIVE, DIM>(redop_id_, bounds);
-}
-
-template <typename T, int32_t DIM>
-Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents, bool bind_buffer /*= false*/)
-{
-  check_valid_binding();
-  check_buffer_dimension(DIM);
-  return unbound_field_.create_output_buffer<T, DIM>(extents, bind_buffer);
-}
-
-template <int32_t DIM>
-Rect<DIM> Store::shape() const
-{
-  check_shape_dimension(DIM);
-  if (dim_ > 0) {
-    return domain().bounds<DIM, Legion::coord_t>();
-  } else {
-    auto p = Point<DIM>::ZEROES();
-    return Rect<DIM>(p, p);
-  }
-}
-
-template <typename VAL>
-VAL Store::scalar() const
-{
-  if (!is_future_) throw std::invalid_argument("Scalars can be retrieved only from scalar stores");
-  return future_.scalar<VAL>();
-}
-
-template <typename T, int32_t DIM>
-void Store::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents)
-{
-  check_valid_binding();
-  check_buffer_dimension(DIM);
-  unbound_field_.bind_data(buffer, extents);
+  return ACC(pr, fid, get_redop_id(), bounds);
 }
 
 }  // namespace legate

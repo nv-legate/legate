@@ -56,7 +56,7 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
   static const int32_t TASK_ID = CHECK_GATHER_TASK + IND_DIM * TEST_MAX_DIM + SRC_DIM;
   static void cpu_variant(legate::TaskContext& context)
   {
-    auto type_code = context.inputs().at(0).type().code;
+    auto type_code = context.inputs().at(0).type().code();
     type_dispatch_for_test(type_code, CheckGatherTaskBody{}, context);
   }
 };
@@ -91,7 +91,7 @@ void register_tasks()
   // CheckGatherTask<3, 3>::register_variants(context);
 }
 
-void check_gather_output(legate::LibraryContext* context,
+void check_gather_output(legate::Library library,
                          const legate::LogicalStore& src,
                          const legate::LogicalStore& tgt,
                          const legate::LogicalStore& ind)
@@ -99,7 +99,7 @@ void check_gather_output(legate::LibraryContext* context,
   auto runtime    = legate::Runtime::get_runtime();
   auto machine    = runtime->get_machine();
   int32_t task_id = CHECK_GATHER_TASK + ind.dim() * TEST_MAX_DIM + src.dim();
-  auto task       = runtime->create_task(context, task_id);
+  auto task       = runtime->create_task(library, task_id);
   auto src_part   = task.declare_partition();
   auto tgt_part   = task.declare_partition();
   auto ind_part   = task.declare_partition();
@@ -134,19 +134,19 @@ void test_gather(const GatherSpec& spec)
   logger.print() << "Gather Copy: " << spec.to_string();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto library = runtime->find_library(library_name);
 
-  auto& type = spec.seed.type();
-  auto src   = runtime->create_store(spec.data_shape, type.clone());
-  auto tgt   = runtime->create_store(spec.ind_shape, type.clone());
-  auto ind   = runtime->create_store(spec.ind_shape, legate::point_type(spec.data_shape.size()));
+  auto type = spec.seed.type();
+  auto src  = runtime->create_store(spec.data_shape, type);
+  auto tgt  = runtime->create_store(spec.ind_shape, type);
+  auto ind  = runtime->create_store(spec.ind_shape, legate::point_type(spec.data_shape.size()));
 
-  fill_input(context, src, spec.seed);
-  fill_indirect(context, ind, src);
+  fill_input(library, src, spec.seed);
+  fill_indirect(library, ind, src);
 
   runtime->issue_gather(tgt, src, ind);
 
-  check_gather_output(context, src, tgt, ind);
+  check_gather_output(library, src, tgt, ind);
 }
 
 TEST(Copy, Gather2Dto1D)

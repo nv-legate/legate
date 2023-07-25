@@ -1,4 +1,4 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,76 +15,47 @@
  */
 
 #include "core/mapping/operation.h"
-#include "core/runtime/context.h"
-#include "core/utilities/deserializer.h"
+#include "core/mapping/detail/operation.h"
 
 namespace legate::mapping {
 
-Mappable::Mappable() {}
+int64_t Task::task_id() const { return impl_->task_id(); }
 
-Mappable::Mappable(const Legion::Mappable* mappable)
+namespace {
+
+template <typename Stores>
+std::vector<Store> convert_stores(const Stores& stores)
 {
-  MapperDataDeserializer dez(mappable);
-  machine_desc_ = dez.unpack<MachineDesc>();
-  sharding_id_  = dez.unpack<uint32_t>();
+  std::vector<Store> result;
+  for (auto& store : stores) { result.emplace_back(&store); }
+  return std::move(result);
 }
 
-Task::Task(const Legion::Task* task,
-           const LibraryContext* library,
-           Legion::Mapping::MapperRuntime* runtime,
-           const Legion::Mapping::MapperContext context)
-  : Mappable(task), task_(task), library_(library)
-{
-  TaskDeserializer dez(task, runtime, context);
-  inputs_     = dez.unpack<std::vector<Store>>();
-  outputs_    = dez.unpack<std::vector<Store>>();
-  reductions_ = dez.unpack<std::vector<Store>>();
-  scalars_    = dez.unpack<std::vector<Scalar>>();
-}
+}  // namespace
 
-int64_t Task::task_id() const { return library_->get_local_task_id(task_->task_id); }
+std::vector<Store> Task::inputs() const { return convert_stores(impl_->inputs()); }
 
-TaskTarget Task::target() const
-{
-  switch (task_->target_proc.kind()) {
-    case Processor::LOC_PROC: return TaskTarget::CPU;
-    case Processor::TOC_PROC: return TaskTarget::GPU;
-    case Processor::OMP_PROC: return TaskTarget::OMP;
-    default: {
-      assert(false);
-    }
-  }
-  assert(false);
-  return TaskTarget::CPU;
-}
+std::vector<Store> Task::outputs() const { return convert_stores(impl_->outputs()); }
 
-Copy::Copy(const Legion::Copy* copy,
-           Legion::Mapping::MapperRuntime* runtime,
-           const Legion::Mapping::MapperContext context)
-  : Mappable(), copy_(copy)
-{
-  CopyDeserializer dez(copy,
-                       {copy->src_requirements,
-                        copy->dst_requirements,
-                        copy->src_indirect_requirements,
-                        copy->dst_indirect_requirements},
-                       runtime,
-                       context);
-  machine_desc_ = dez.unpack<mapping::MachineDesc>();
-  sharding_id_  = dez.unpack<uint32_t>();
-  inputs_       = dez.unpack<std::vector<Store>>();
-  dez.next_requirement_list();
-  outputs_ = dez.unpack<std::vector<Store>>();
-  dez.next_requirement_list();
-  input_indirections_ = dez.unpack<std::vector<Store>>();
-  dez.next_requirement_list();
-  output_indirections_ = dez.unpack<std::vector<Store>>();
-#ifdef DEBUG_LEGATE
-  for (auto& input : inputs_) assert(!input.is_future());
-  for (auto& output : outputs_) assert(!output.is_future());
-  for (auto& input_indirection : input_indirections_) assert(!input_indirection.is_future());
-  for (auto& output_indirection : output_indirections_) assert(!output_indirection.is_future());
-#endif
-}
+std::vector<Store> Task::reductions() const { return convert_stores(impl_->reductions()); }
+
+const std::vector<Scalar>& Task::scalars() const { return impl_->scalars(); }
+
+Store Task::input(uint32_t index) const { return Store(&impl_->inputs().at(index)); }
+
+Store Task::output(uint32_t index) const { return Store(&impl_->outputs().at(index)); }
+
+Store Task::reduction(uint32_t index) const { return Store(&impl_->reductions().at(index)); }
+
+size_t Task::num_inputs() const { return impl_->inputs().size(); }
+
+size_t Task::num_outputs() const { return impl_->outputs().size(); }
+
+size_t Task::num_reductions() const { return impl_->reductions().size(); }
+
+Task::Task(detail::Task* impl) : impl_(impl) {}
+
+// The impl is owned by the caller, so we don't need to deallocate it
+Task::~Task() {}
 
 }  // namespace legate::mapping

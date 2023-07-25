@@ -16,8 +16,9 @@
 
 #include <gtest/gtest.h>
 
-#include "core/utilities/buffer_builder.h"
-#include "legate.h"
+#include "core/data/detail/scalar.h"
+#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/buffer_builder.h"
 
 namespace scalar_test {
 
@@ -68,9 +69,9 @@ TEST(ScalarUnit, CreateWithObject)
   // constructor with Scalar object
   legate::Scalar scalar1(INT32_VALUE);
   legate::Scalar scalar2(scalar1);
-  EXPECT_EQ(scalar2.type().code, scalar1.type().code);
+  EXPECT_EQ(scalar2.type().code(), scalar1.type().code());
   EXPECT_EQ(scalar2.size(), scalar1.size());
-  EXPECT_EQ(scalar2.size(), legate::uint32()->size());
+  EXPECT_EQ(scalar2.size(), legate::uint32().size());
   EXPECT_NE(scalar2.ptr(), nullptr);
   EXPECT_EQ(scalar2.value<int32_t>(), scalar1.value<int32_t>());
   EXPECT_EQ(scalar2.values<int32_t>().size(), scalar1.values<int32_t>().size());
@@ -86,8 +87,8 @@ TEST(ScalarUnit, CreateSharedScalar)
   auto data_vec    = std::vector<uint64_t>(DATA_SIZE, UINT64_VALUE);
   const auto* data = data_vec.data();
   legate::Scalar scalar(legate::uint64(), data);
-  EXPECT_EQ(scalar.type().code, legate::Type::Code::UINT64);
-  EXPECT_EQ(scalar.size(), legate::uint64()->size());
+  EXPECT_EQ(scalar.type().code(), legate::Type::Code::UINT64);
+  EXPECT_EQ(scalar.size(), legate::uint64().size());
   EXPECT_EQ(scalar.ptr(), data);
 
   EXPECT_EQ(scalar.value<uint64_t>(), UINT64_VALUE);
@@ -105,7 +106,7 @@ template <typename T>
 void checkType(T value)
 {
   legate::Scalar scalar(value);
-  EXPECT_EQ(scalar.type().code, legate::legate_type_code_of<T>);
+  EXPECT_EQ(scalar.type().code(), legate::legate_type_code_of<T>);
   EXPECT_EQ(scalar.size(), sizeof(T));
   EXPECT_EQ(scalar.value<T>(), value);
   EXPECT_EQ(scalar.values<T>().size(), 1);
@@ -135,9 +136,9 @@ TEST(ScalarUnit, CreateWithVector)
   // constructor with arrays
   std::vector<int32_t> scalar_data{INT32_VALUE, INT32_VALUE};
   legate::Scalar scalar(scalar_data);
-  EXPECT_EQ(scalar.type().code, legate::Type::Code::FIXED_ARRAY);
+  EXPECT_EQ(scalar.type().code(), legate::Type::Code::FIXED_ARRAY);
   auto fixed_type = legate::fixed_array_type(legate::int32(), scalar_data.size());
-  EXPECT_EQ(scalar.size(), fixed_type->size());
+  EXPECT_EQ(scalar.size(), fixed_type.size());
 
   // check values here. Note: no value allowed for a fixed arrays scalar
   std::vector<int32_t> data_vec = {INT32_VALUE, INT32_VALUE};
@@ -158,7 +159,7 @@ TEST(ScalarUnit, CreateWithString)
   // constructor with string
   auto inputString = STRING_VALUE;
   legate::Scalar scalar(inputString);
-  EXPECT_EQ(scalar.type().code, legate::Type::Code::STRING);
+  EXPECT_EQ(scalar.type().code(), legate::Type::Code::STRING);
   auto expectedSize = sizeof(uint32_t) + sizeof(char) * inputString.size();
   EXPECT_EQ(scalar.size(), expectedSize);
   EXPECT_NE(scalar.ptr(), inputString.data());
@@ -182,7 +183,7 @@ TEST(ScalarUnit, CreateWithStructType)
     PaddingStructData structData = {BOOL_VALUE, INT32_VALUE, UINT64_VALUE};
     legate::Scalar scalar(
       structData, legate::struct_type(true, legate::bool_(), legate::int32(), legate::uint64()));
-    EXPECT_EQ(scalar.type().code, legate::Type::Code::STRUCT);
+    EXPECT_EQ(scalar.type().code(), legate::Type::Code::STRUCT);
     EXPECT_EQ(scalar.size(), sizeof(PaddingStructData));
     EXPECT_NE(scalar.ptr(), nullptr);
 
@@ -207,7 +208,7 @@ TEST(ScalarUnit, CreateWithStructType)
     NoPaddingStructData structData = {BOOL_VALUE, INT32_VALUE, UINT64_VALUE};
     legate::Scalar scalar(
       structData, legate::struct_type(false, legate::bool_(), legate::int32(), legate::uint64()));
-    EXPECT_EQ(scalar.type().code, legate::Type::Code::STRUCT);
+    EXPECT_EQ(scalar.type().code(), legate::Type::Code::STRUCT);
     EXPECT_EQ(scalar.size(), sizeof(NoPaddingStructData));
     EXPECT_NE(scalar.ptr(), nullptr);
 
@@ -233,7 +234,7 @@ TEST(ScalarUnit, OperatorEqual)
   legate::Scalar scalar1(INT32_VALUE);
   legate::Scalar scalar2(UINT64_VALUE);
   scalar2 = scalar1;
-  EXPECT_EQ(scalar2.type().code, scalar1.type().code);
+  EXPECT_EQ(scalar2.type().code(), scalar1.type().code());
   EXPECT_EQ(scalar2.size(), scalar2.size());
   EXPECT_EQ(scalar2.value<int32_t>(), scalar1.value<int32_t>());
   EXPECT_EQ(scalar2.values<int32_t>().size(), scalar1.values<int32_t>().size());
@@ -241,14 +242,14 @@ TEST(ScalarUnit, OperatorEqual)
 
 void checkPack(const legate::Scalar& scalar)
 {
-  legate::BufferBuilder buf;
-  scalar.pack(buf);
+  legate::detail::BufferBuilder buf;
+  scalar.impl()->pack(buf);
   auto legion_buffer = buf.to_legion_buffer();
   EXPECT_NE(legion_buffer.get_ptr(), nullptr);
   legate::BaseDeserializer<ScalarUnitTestDeserializer> deserializer(legion_buffer.get_ptr(),
                                                                     legion_buffer.get_size());
   auto scalar_unpack = deserializer._unpack_scalar();
-  EXPECT_EQ(scalar_unpack.type().code, scalar.type().code);
+  EXPECT_EQ(scalar_unpack.type().code(), scalar.type().code());
   EXPECT_EQ(scalar_unpack.size(), scalar.size());
 }
 

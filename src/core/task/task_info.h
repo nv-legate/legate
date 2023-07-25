@@ -32,14 +32,14 @@ class TaskInfo {
   TaskInfo(const std::string& task_name);
 
  public:
-  const std::string& name() const { return task_name_; }
+  const std::string& name() const;
 
  public:
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options);
-  const VariantInfo* find_variant(LegateVariantCode vid) const;
+  const VariantInfo& find_variant(LegateVariantCode vid) const;
   bool has_variant(LegateVariantCode vid) const;
 
  public:
@@ -47,8 +47,16 @@ class TaskInfo {
 
  private:
   friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);
-  std::string task_name_;
-  std::map<LegateVariantCode, VariantInfo> variants_;
+
+ private:
+  TaskInfo(const TaskInfo&)            = delete;
+  TaskInfo& operator=(const TaskInfo&) = delete;
+  TaskInfo(TaskInfo&&)                 = delete;
+  TaskInfo& operator=(TaskInfo&&)      = delete;
+
+ private:
+  class Impl;
+  Impl* impl_;
 };
 
 }  // namespace legate

@@ -24,9 +24,12 @@
 /** @defgroup types Type system
  */
 
+namespace legate::detail {
+class Type;
+}  // namespace legate::detail
+
 namespace legate {
 
-class BufferBuilder;
 class FixedArrayType;
 class StructType;
 
@@ -77,71 +80,51 @@ class Type {
     INVALID     = INVALID_LT,     /*!< Invalid type */
   };
 
- protected:
-  Type(Code code);
-
-  virtual bool equal(const Type& other) const = 0;
-
  public:
-  virtual ~Type() {}
-
+  /**
+   * @brief Code of the type
+   *
+   * @return Type code
+   */
+  Code code() const;
   /**
    * @brief Size of the data type in bytes
    *
    * @return Data type size in bytes
    */
-  virtual uint32_t size() const = 0;
-
+  uint32_t size() const;
   /**
    * @brief Alignment of the type
    *
    * @return Alignment in bytes
    */
-  virtual uint32_t alignment() const = 0;
-
+  uint32_t alignment() const;
   /**
    * @brief Unique ID of the data type
    *
    * @return Unique ID
    */
-  virtual int32_t uid() const = 0;
-
+  int32_t uid() const;
   /**
    * @brief Inidicates whether the data type is of varible size elements
    *
    * @return true Elements can be variable size
    * @return false Elements have fixed size
    */
-  virtual bool variable_size() const = 0;
-
-  /**
-   * @brief Returns a copy of the data type
-   *
-   * @return A copy of the data type
-   */
-  virtual std::unique_ptr<Type> clone() const = 0;
-
+  bool variable_size() const;
   /**
    * @brief Converts the data type into a string
    *
    * @return A string of the data type
    */
-  virtual std::string to_string() const = 0;
-
+  std::string to_string() const;
   /**
    * @brief Indicates whether the type is a primitive type
    *
    * @return true If the type is a primitive type
    * @return false Otherwise
    */
-  virtual bool is_primitive() const = 0;
-  /**
-   * @brief Serializes the type into a buffer
-   *
-   * @param buffer A BufferBuilder object to serialize the type into
-   */
-  virtual void pack(BufferBuilder& buffer) const = 0;
-
+  bool is_primitive() const;
   /**
    * @brief Dynamically casts the type into a fixed size array type.
    *
@@ -149,8 +132,7 @@ class Type {
    *
    * @return Type object
    */
-  virtual const FixedArrayType& as_fixed_array_type() const;
-
+  FixedArrayType as_fixed_array_type() const;
   /**
    * @brief Dynamically casts the type into a struct type.
    *
@@ -158,8 +140,7 @@ class Type {
    *
    * @return Type object
    */
-  virtual const StructType& as_struct_type() const;
-
+  StructType as_struct_type() const;
   /**
    * @brief Records a reduction operator.
    *
@@ -170,7 +151,6 @@ class Type {
    * @param global_op_id Global reduction operator ID
    */
   void record_reduction_operator(int32_t op_kind, int32_t global_op_id) const;
-
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -181,7 +161,6 @@ class Type {
    * @return Global reduction operator ID
    */
   int32_t find_reduction_operator(int32_t op_kind) const;
-
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -192,7 +171,6 @@ class Type {
    * @return Global reduction operator ID
    */
   int32_t find_reduction_operator(ReductionOpKind op_kind) const;
-
   /**
    * @brief Equality check between types
    *
@@ -205,148 +183,62 @@ class Type {
    * @return false Types are different
    */
   bool operator==(const Type& other) const;
-  bool operator!=(const Type& other) const { return !operator==(other); }
+  bool operator!=(const Type& other) const;
 
-  const Code code;
-};
-
-/**
- * @ingroup types
- * @brief A class for primitive data types
- */
-class PrimitiveType : public Type {
  public:
-  /**
-   * @brief Constructs a primitive type metadata object
-   *
-   * @param code Type code. Must be one of the primitive types.
-   */
-  PrimitiveType(Code code);
-  uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return size_; }
-  int32_t uid() const override;
-  bool variable_size() const override { return false; }
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
-  bool is_primitive() const override { return true; }
-  void pack(BufferBuilder& buffer) const override;
+  Type();
+  Type(std::shared_ptr<detail::Type> impl);
+  Type(const Type&)            = default;
+  Type(Type&&)                 = default;
+  Type& operator=(const Type&) = default;
+  Type& operator=(Type&&)      = default;
 
- private:
-  bool equal(const Type& other) const override;
-
- private:
-  const uint32_t size_;
-};
-
-/**
- * @ingroup types
- * @brief String data type
- */
-class StringType : public Type {
  public:
-  StringType();
-  bool variable_size() const override { return true; }
-  uint32_t size() const override { return 0; }
-  uint32_t alignment() const override { return 0; }
-  int32_t uid() const override;
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
-  bool is_primitive() const override { return false; }
-  void pack(BufferBuilder& buffer) const override;
+  virtual ~Type();
 
- private:
-  bool equal(const Type& other) const override;
-};
-
-/**
- * @ingroup types
- * @brief A class for all extension types. Each extension type expects a unique ID.
- */
-class ExtensionType : public Type {
  public:
-  ExtensionType(int32_t uid, Type::Code code);
-  int32_t uid() const override { return uid_; }
-  bool is_primitive() const override { return false; }
+  std::shared_ptr<detail::Type> impl() const { return impl_; }
 
  protected:
-  const uint32_t uid_;
+  std::shared_ptr<detail::Type> impl_{nullptr};
 };
 
 /**
  * @ingroup types
  * @brief A class for fixed-size array data types
  */
-class FixedArrayType : public ExtensionType {
+class FixedArrayType : public Type {
  public:
-  /**
-   * @brief Constructs a metadata object for a fixed-size array type
-   *
-   * @param uid Unique ID
-   * @param element_type Type of the array elements
-   * @param N Size of the array
-   */
-  FixedArrayType(int32_t uid, std::unique_ptr<Type> element_type, uint32_t N) noexcept(false);
-  uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return element_type_->alignment(); }
-  bool variable_size() const override { return false; }
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
-  void pack(BufferBuilder& buffer) const override;
-  const FixedArrayType& as_fixed_array_type() const override;
-
   /**
    * @brief Returns the number of elements
    *
    * @return Number of elements
    */
-  uint32_t num_elements() const { return N_; }
+  uint32_t num_elements() const;
   /**
    * @brief Returns the element type
    *
    * @return Element type
    */
-  const Type& element_type() const { return *element_type_; }
+  Type element_type() const;
 
  private:
-  bool equal(const Type& other) const override;
-
- private:
-  const std::unique_ptr<Type> element_type_;
-  const uint32_t N_;
-  const uint32_t size_;
+  friend class Type;
+  FixedArrayType(std::shared_ptr<detail::Type> type);
 };
 
 /**
  * @ingroup types
  * @brief A class for struct data types
  */
-class StructType : public ExtensionType {
+class StructType : public Type {
  public:
-  /**
-   * @brief Constructs a metadata object for a struct type
-   *
-   * @param uid Unique ID
-   * @param field_types A vector of field types
-   * @param align Optional boolean flag indicating whether the struct fields should be aligned.
-   *              false by default.
-   */
-  StructType(int32_t uid,
-             std::vector<std::unique_ptr<Type>>&& field_types,
-             bool align = false) noexcept(false);
-  uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return alignment_; }
-  bool variable_size() const override { return false; }
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
-  void pack(BufferBuilder& buffer) const override;
-  const StructType& as_struct_type() const override;
-
   /**
    * @brief Returns the number of fields
    *
    * @return Number of fields
    */
-  uint32_t num_fields() const { return field_types_.size(); }
+  uint32_t num_fields() const;
   /**
    * @brief Returns the element type
    *
@@ -354,24 +246,18 @@ class StructType : public ExtensionType {
    *
    * @return Element type
    */
-  const Type& field_type(uint32_t field_idx) const;
+  Type field_type(uint32_t field_idx) const;
   /**
    * @brief Indiciates whether the fields are aligned
    *
    * @return true Fields are aligned
    * @return false Fields are compact
    */
-  bool aligned() const { return aligned_; }
+  bool aligned() const;
 
  private:
-  bool equal(const Type& other) const override;
-
- private:
-  bool aligned_;
-  uint32_t size_;
-  uint32_t alignment_;
-  std::vector<std::unique_ptr<Type>> field_types_{};
-  std::vector<uint32_t> offsets_{};
+  friend class Type;
+  StructType(std::shared_ptr<detail::Type> type);
 };
 
 /**
@@ -382,7 +268,7 @@ class StructType : public ExtensionType {
  *
  * @return Type object
  */
-std::unique_ptr<Type> primitive_type(Type::Code code);
+Type primitive_type(Type::Code code);
 
 /**
  * @ingroup types
@@ -390,7 +276,7 @@ std::unique_ptr<Type> primitive_type(Type::Code code);
  *
  * @return Type object
  */
-std::unique_ptr<Type> string_type();
+Type string_type();
 
 /**
  * @ingroup types
@@ -401,8 +287,7 @@ std::unique_ptr<Type> string_type();
  *
  * @return Type object
  */
-std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
-                                       uint32_t N) noexcept(false);
+Type fixed_array_type(const Type& element_type, uint32_t N) noexcept(false);
 
 /**
  * @ingroup types
@@ -413,8 +298,7 @@ std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
  *
  * @return Type object
  */
-std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_types,
-                                  bool align = false) noexcept(false);
+Type struct_type(const std::vector<Type>& field_types, bool align = false) noexcept(false);
 
 /**
  * @ingroup types
@@ -426,15 +310,15 @@ std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_typ
  * @return Type object
  */
 template <class... Types>
-std::enable_if_t<std::conjunction_v<std::is_same<Types, Type>...>, std::unique_ptr<Type>>
-struct_type(bool align, std::unique_ptr<Types>... field_types) noexcept(false)
+std::enable_if_t<std::conjunction_v<std::is_same<Types, Type>...>, Type> struct_type(
+  bool align, Types... field_types) noexcept(false)
 {
-  std::vector<std::unique_ptr<Type>> vec_field_types;
-  auto move_field_type = [&vec_field_types](auto&& field_type) {
-    vec_field_types.push_back(std::move(field_type));
+  std::vector<Type> vec_field_types;
+  auto copy_field_type = [&vec_field_types](const auto& field_type) {
+    vec_field_types.push_back(field_type);
   };
-  (move_field_type(std::move(field_types)), ...);
-  return struct_type(std::move(vec_field_types), align);
+  (copy_field_type(field_types), ...);
+  return struct_type(vec_field_types, align);
 }
 
 std::ostream& operator<<(std::ostream&, const Type::Code&);
@@ -447,7 +331,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-std::unique_ptr<Type> bool_();
+Type bool_();
 
 /**
  * @ingroup types
@@ -455,7 +339,7 @@ std::unique_ptr<Type> bool_();
  *
  * @return Type object
  */
-std::unique_ptr<Type> int8();
+Type int8();
 
 /**
  * @ingroup types
@@ -463,7 +347,7 @@ std::unique_ptr<Type> int8();
  *
  * @return Type object
  */
-std::unique_ptr<Type> int16();
+Type int16();
 
 /**
  * @ingroup types
@@ -471,7 +355,7 @@ std::unique_ptr<Type> int16();
  *
  * @return Type object
  */
-std::unique_ptr<Type> int32();
+Type int32();
 
 /**
  * @ingroup types
@@ -479,7 +363,7 @@ std::unique_ptr<Type> int32();
  *
  * @return Type object
  */
-std::unique_ptr<Type> int64();
+Type int64();
 
 /**
  * @ingroup types
@@ -487,7 +371,7 @@ std::unique_ptr<Type> int64();
  *
  * @return Type object
  */
-std::unique_ptr<Type> uint8();
+Type uint8();
 
 /**
  * @ingroup types
@@ -495,7 +379,7 @@ std::unique_ptr<Type> uint8();
  *
  * @return Type object
  */
-std::unique_ptr<Type> uint16();
+Type uint16();
 
 /**
  * @ingroup types
@@ -503,7 +387,7 @@ std::unique_ptr<Type> uint16();
  *
  * @return Type object
  */
-std::unique_ptr<Type> uint32();
+Type uint32();
 
 /**
  * @ingroup types
@@ -511,7 +395,7 @@ std::unique_ptr<Type> uint32();
  *
  * @return Type object
  */
-std::unique_ptr<Type> uint64();
+Type uint64();
 
 /**
  * @ingroup types
@@ -519,7 +403,7 @@ std::unique_ptr<Type> uint64();
  *
  * @return Type object
  */
-std::unique_ptr<Type> float16();
+Type float16();
 
 /**
  * @ingroup types
@@ -527,7 +411,7 @@ std::unique_ptr<Type> float16();
  *
  * @return Type object
  */
-std::unique_ptr<Type> float32();
+Type float32();
 
 /**
  * @ingroup types
@@ -535,7 +419,7 @@ std::unique_ptr<Type> float32();
  *
  * @return Type object
  */
-std::unique_ptr<Type> float64();
+Type float64();
 
 /**
  * @ingroup types
@@ -543,7 +427,7 @@ std::unique_ptr<Type> float64();
  *
  * @return Type object
  */
-std::unique_ptr<Type> complex64();
+Type complex64();
 
 /**
  * @ingroup types
@@ -551,15 +435,7 @@ std::unique_ptr<Type> complex64();
  *
  * @return Type object
  */
-std::unique_ptr<Type> complex128();
-
-/**
- * @ingroup types
- * @brief Creates a string type
- *
- * @return Type object
- */
-std::unique_ptr<Type> string();
+Type complex128();
 
 /**
  * @ingroup types
@@ -569,7 +445,7 @@ std::unique_ptr<Type> string();
  *
  * @return Type object
  */
-std::unique_ptr<Type> point_type(int32_t ndim);
+Type point_type(int32_t ndim);
 
 /**
  * @ingroup types
@@ -579,7 +455,7 @@ std::unique_ptr<Type> point_type(int32_t ndim);
  *
  * @return Type object
  */
-std::unique_ptr<Type> rect_type(int32_t ndim);
+Type rect_type(int32_t ndim);
 
 /**
  * @ingroup types

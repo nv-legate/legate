@@ -32,7 +32,7 @@ TEST(Store, Creation)
     EXPECT_FALSE(store.unbound());
     EXPECT_EQ(store.dim(), 2);
     EXPECT_EQ(store.extents(), (std::vector<size_t>{4, 4}));
-    EXPECT_EQ(store.type(), *legate::int64());
+    EXPECT_EQ(store.type(), legate::int64());
     EXPECT_FALSE(store.transformed());
   }
 
@@ -42,7 +42,7 @@ TEST(Store, Creation)
     auto store   = runtime->create_store(legate::int64());
     EXPECT_TRUE(store.unbound());
     EXPECT_EQ(store.dim(), 1);
-    EXPECT_EQ(store.type(), *legate::int64());
+    EXPECT_EQ(store.type(), legate::int64());
     EXPECT_FALSE(store.transformed());
     EXPECT_THROW(store.extents(), std::invalid_argument);
   }

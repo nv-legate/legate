@@ -20,31 +20,27 @@
 
 #include "legion.h"
 
-#include "core/mapping/machine.h"
-
-namespace legate {
-class BufferBuilder;
-class LibraryContext;
-class Scalar;
-}  // namespace legate
+#include "core/mapping/detail/machine.h"
 
 namespace legate::detail {
 
 class ArgWrapper;
+class Library;
 class LogicalStore;
 class ProjectionInfo;
 class OutputRegionArg;
 class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
+class Scalar;
 
 class TaskLauncher {
  public:
-  TaskLauncher(const LibraryContext* library,
-               const mapping::MachineDesc& machine,
+  TaskLauncher(const Library* library,
+               const mapping::detail::Machine& machine,
                int64_t task_id,
                int64_t tag = 0);
-  TaskLauncher(const LibraryContext* library,
-               const mapping::MachineDesc& machine,
+  TaskLauncher(const Library* library,
+               const mapping::detail::Machine& machine,
                const std::string& provenance,
                int64_t task_id,
                int64_t tag = 0);
@@ -58,7 +54,7 @@ class TaskLauncher {
   int64_t legion_mapper_id() const;
 
  public:
-  void add_scalar(const Scalar& scalar);
+  void add_scalar(Scalar&& scalar);
   void add_input(LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
   void add_output(LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
   void add_reduction(LogicalStore* store,
@@ -100,10 +96,10 @@ class TaskLauncher {
                                    const Legion::Domain& launch_domain);
 
  private:
-  const LibraryContext* library_;
+  const Library* library_;
   int64_t task_id_;
   int64_t tag_;
-  mapping::MachineDesc machine_;
+  mapping::detail::Machine machine_;
   std::string provenance_;
   Legion::ProjectionID key_proj_id_{0};
 

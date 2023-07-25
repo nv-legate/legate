@@ -15,16 +15,17 @@
  */
 
 #include "core/operation/detail/fill_launcher.h"
+
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/machine.h"
 #include "core/operation/detail/projection.h"
-#include "core/runtime/context.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/utilities/buffer_builder.h"
+#include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::detail {
 
-FillLauncher::FillLauncher(const mapping::MachineDesc& machine, int64_t tag)
+FillLauncher::FillLauncher(const mapping::detail::Machine& machine, int64_t tag)
   : machine_(machine), tag_(tag), mapper_arg_(new BufferBuilder())
 {
 }
@@ -75,7 +76,7 @@ std::unique_ptr<Legion::IndexFillLauncher> FillLauncher::build_index_fill(
                                                 future_value,
                                                 lhs_proj.proj_id,
                                                 Legion::Predicate::TRUE_PRED,
-                                                runtime->core_context()->get_mapper_id(),
+                                                runtime->core_library()->get_mapper_id(),
                                                 lhs_proj.tag,
                                                 mapper_arg_->to_legion_buffer(),
                                                 provenance.c_str());
@@ -100,7 +101,7 @@ std::unique_ptr<Legion::FillLauncher> FillLauncher::build_single_fill(
                                            lhs_parent,
                                            future_value,
                                            Legion::Predicate::TRUE_PRED,
-                                           runtime->core_context()->get_mapper_id(),
+                                           runtime->core_library()->get_mapper_id(),
                                            lhs_proj.tag,
                                            mapper_arg_->to_legion_buffer(),
                                            provenance.c_str());

@@ -1,4 +1,4 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,8 @@
 #pragma once
 
 #include "core/data/buffer.h"
-#include "core/data/transform.h"
-#include "core/task/return.h"
-#include "core/type/type_info.h"
 #include "core/type/type_traits.h"
-#include "core/utilities/machine.h"
-#include "core/utilities/typedefs.h"
-#include "legate_defines.h"
-#include "legion.h"
+#include "core/utilities/dispatch.h"
 
 /** @defgroup data Data abstractions and allocators
  */
@@ -34,239 +28,11 @@
  * @brief Class definition for legate::Store
  */
 
+namespace legate::detail {
+class Store;
+}  // namespace legate::detail
+
 namespace legate {
-
-class RegionField {
- public:
-  RegionField() {}
-  RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid);
-
- public:
-  RegionField(RegionField&& other) noexcept;
-  RegionField& operator=(RegionField&& other) noexcept;
-
- private:
-  RegionField(const RegionField& other)            = delete;
-  RegionField& operator=(const RegionField& other) = delete;
-
- public:
-  bool valid() const;
-
- public:
-  int32_t dim() const { return dim_; }
-
- private:
-  template <typename ACC, int32_t N>
-  struct trans_accessor_fn {
-    template <int32_t M>
-    ACC operator()(const Legion::PhysicalRegion& pr,
-                   Legion::FieldID fid,
-                   const Legion::AffineTransform<M, N>& transform)
-    {
-      return ACC(pr, fid, transform);
-    }
-    template <int32_t M>
-    ACC operator()(const Legion::PhysicalRegion& pr,
-                   Legion::FieldID fid,
-                   const Legion::AffineTransform<M, N>& transform,
-                   const Rect<N>& bounds)
-    {
-      return ACC(pr, fid, transform, bounds);
-    }
-    template <int32_t M>
-    ACC operator()(const Legion::PhysicalRegion& pr,
-                   Legion::FieldID fid,
-                   int32_t redop_id,
-                   const Legion::AffineTransform<M, N>& transform)
-    {
-      return ACC(pr, fid, redop_id, transform);
-    }
-    template <int32_t M>
-    ACC operator()(const Legion::PhysicalRegion& pr,
-                   Legion::FieldID fid,
-                   int32_t redop_id,
-                   const Legion::AffineTransform<M, N>& transform,
-                   const Rect<N>& bounds)
-    {
-      return ACC(pr, fid, redop_id, transform, bounds);
-    }
-  };
-
-  struct get_domain_fn {
-    template <int32_t DIM>
-    Domain operator()(const Legion::PhysicalRegion& pr)
-    {
-      return Domain(pr.get_bounds<DIM, Legion::coord_t>());
-    }
-  };
-
- public:
-  template <typename T, int32_t DIM>
-  AccessorRO<T, DIM> read_accessor() const;
-  template <typename T, int32_t DIM>
-  AccessorWO<T, DIM> write_accessor() const;
-  template <typename T, int32_t DIM>
-  AccessorRW<T, DIM> read_write_accessor() const;
-  template <typename OP, bool EXCLUSIVE, int32_t DIM>
-  AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(int32_t redop_id) const;
-
- public:
-  template <typename T, int32_t DIM>
-  AccessorRO<T, DIM> read_accessor(const Legion::DomainAffineTransform& transform) const;
-  template <typename T, int32_t DIM>
-  AccessorWO<T, DIM> write_accessor(const Legion::DomainAffineTransform& transform) const;
-  template <typename T, int32_t DIM>
-  AccessorRW<T, DIM> read_write_accessor(const Legion::DomainAffineTransform& transform) const;
-  template <typename OP, bool EXCLUSIVE, int32_t DIM>
-  AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(
-    int32_t redop_id, const Legion::DomainAffineTransform& transform) const;
-
- public:
-  template <typename T, int32_t DIM>
-  AccessorRO<T, DIM> read_accessor(const Rect<DIM>& bounds) const;
-  template <typename T, int32_t DIM>
-  AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds) const;
-  template <typename T, int32_t DIM>
-  AccessorRW<T, DIM> read_write_accessor(const Rect<DIM>& bounds) const;
-  template <typename OP, bool EXCLUSIVE, int32_t DIM>
-  AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(int32_t redop_id, const Rect<DIM>& bounds) const;
-
- public:
-  template <typename T, int32_t DIM>
-  AccessorRO<T, DIM> read_accessor(const Rect<DIM>& bounds,
-                                   const Legion::DomainAffineTransform& transform) const;
-  template <typename T, int32_t DIM>
-  AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds,
-                                    const Legion::DomainAffineTransform& transform) const;
-  template <typename T, int32_t DIM>
-  AccessorRW<T, DIM> read_write_accessor(const Rect<DIM>& bounds,
-                                         const Legion::DomainAffineTransform& transform) const;
-  template <typename OP, bool EXCLUSIVE, int32_t DIM>
-  AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(
-    int32_t redop_id,
-    const Rect<DIM>& bounds,
-    const Legion::DomainAffineTransform& transform) const;
-
- public:
-  template <int32_t DIM>
-  Rect<DIM> shape() const;
-  Domain domain() const;
-
- public:
-  void unmap();
-
- public:
-  bool is_readable() const { return readable_; }
-  bool is_writable() const { return writable_; }
-  bool is_reducible() const { return reducible_; }
-
- private:
-  int32_t dim_{-1};
-  Legion::PhysicalRegion pr_{};
-  Legion::FieldID fid_{-1U};
-
- private:
-  bool readable_{false};
-  bool writable_{false};
-  bool reducible_{false};
-};
-
-class UnboundRegionField {
- public:
-  UnboundRegionField() {}
-  UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid);
-
- public:
-  UnboundRegionField(UnboundRegionField&& other) noexcept;
-  UnboundRegionField& operator=(UnboundRegionField&& other) noexcept;
-
- private:
-  UnboundRegionField(const UnboundRegionField& other)            = delete;
-  UnboundRegionField& operator=(const UnboundRegionField& other) = delete;
-
- public:
-  bool bound() const { return bound_; }
-
- public:
-  template <typename T, int32_t DIM>
-  Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents, bool bind_buffer);
-
- public:
-  template <typename T, int32_t DIM>
-  void bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents);
-  void bind_empty_data(int32_t dim);
-
- public:
-  ReturnValue pack_weight() const;
-
- private:
-  void update_num_elements(size_t num_elements);
-
- private:
-  bool bound_{false};
-  Legion::UntypedDeferredValue num_elements_;
-  Legion::OutputRegion out_{};
-  Legion::FieldID fid_{-1U};
-};
-
-class FutureWrapper {
- public:
-  FutureWrapper() {}
-  FutureWrapper(bool read_only,
-                uint32_t field_size,
-                Domain domain,
-                Legion::Future future,
-                bool initialize = false);
-
- public:
-  FutureWrapper(const FutureWrapper& other) noexcept;
-  FutureWrapper& operator=(const FutureWrapper& other) noexcept;
-
- public:
-  int32_t dim() const { return domain_.dim; }
-
- public:
-  template <typename T, int32_t DIM>
-  AccessorRO<T, DIM> read_accessor() const;
-  template <typename T, int32_t DIM>
-  AccessorWO<T, DIM> write_accessor() const;
-  template <typename T, int32_t DIM>
-  AccessorRW<T, DIM> read_write_accessor() const;
-  template <typename OP, bool EXCLUSIVE, int32_t DIM>
-  AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(int32_t redop_id) const;
-
- public:
-  template <typename T, int32_t DIM>
-  AccessorRO<T, DIM> read_accessor(const Rect<DIM>& bounds) const;
-  template <typename T, int32_t DIM>
-  AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds) const;
-  template <typename T, int32_t DIM>
-  AccessorRW<T, DIM> read_write_accessor(const Rect<DIM>& bounds) const;
-  template <typename OP, bool EXCLUSIVE, int32_t DIM>
-  AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(int32_t redop_id, const Rect<DIM>& bounds) const;
-
- public:
-  template <typename VAL>
-  VAL scalar() const;
-
- public:
-  template <int32_t DIM>
-  Rect<DIM> shape() const;
-  Domain domain() const;
-
- public:
-  void initialize_with_identity(int32_t redop_id);
-
- public:
-  ReturnValue pack() const;
-
- private:
-  bool read_only_{true};
-  uint32_t field_size_{0};
-  Domain domain_{};
-  Legion::Future future_{};
-  Legion::UntypedDeferredValue buffer_{};
-};
 
 /**
  * @ingroup data
@@ -274,82 +40,6 @@ class FutureWrapper {
  * @brief A multi-dimensional data container storing task data
  */
 class Store {
- public:
-  Store() {}
-  Store(int32_t dim,
-        std::unique_ptr<Type> type,
-        int32_t redop_id,
-        FutureWrapper future,
-        std::shared_ptr<TransformStack>&& transform = nullptr);
-  Store(int32_t dim,
-        std::unique_ptr<Type> type,
-        int32_t redop_id,
-        RegionField&& region_field,
-        std::shared_ptr<TransformStack>&& transform = nullptr);
-  Store(int32_t dim,
-        std::unique_ptr<Type> type,
-        UnboundRegionField&& unbound_field,
-        std::shared_ptr<TransformStack>&& transform = nullptr);
-  Store(int32_t dim,
-        std::unique_ptr<Type> type,
-        int32_t redop_id,
-        FutureWrapper future,
-        const std::shared_ptr<TransformStack>& transform);
-  Store(int32_t dim,
-        std::unique_ptr<Type> type,
-        int32_t redop_id,
-        RegionField&& region_field,
-        const std::shared_ptr<TransformStack>& transform);
-
- public:
-  Store(Store&& other) noexcept;
-  Store& operator=(Store&& other) noexcept;
-
- private:
-  Store(const Store& other)            = delete;
-  Store& operator=(const Store& other) = delete;
-
- public:
-  /**
-   * @brief Indicates whether the store is valid. A store passed to a task can be invalid
-   * only for reducer tasks for tree reduction.
-   *
-   * @return true The store is valid
-   * @return false The store is invalid and cannot be used in any data access
-   */
-  bool valid() const;
-  /**
-   * @brief Indicates whether the store is transformed in any way.
-   *
-   * @return true The store is transformed
-   * @return false The store is not transformed
-   */
-  bool transformed() const { return !transform_->identity(); }
-
- public:
-  /**
-   * @brief Returns the dimension of the store
-   *
-   * @return The store's dimension
-   */
-  int32_t dim() const { return dim_; }
-  /**
-   * @brief Returns the type metadata of the store
-   *
-   * @return The store's type metadata
-   */
-  const Type& type() const { return *type_; }
-  /**
-   * @brief Returns the type code of the store
-   *
-   * @return The store's type code
-   */
-  template <typename TYPE_CODE = Type::Code>
-  TYPE_CODE code() const
-  {
-    return static_cast<TYPE_CODE>(type_->code);
-  }
-
  public:
   /**
    * @brief Returns a read-only accessor to the store for the entire domain.
@@ -373,24 +63,12 @@ class Store {
    *
    * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
-   * @tparam T Element type
-   *
-   * @tparam DIM Number of dimensions
-   *
-   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
-   *
    * @return A write-only accessor to the store
    */
   template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorWO<T, DIM> write_accessor() const;
   /**
    * @brief Returns a read-write accessor to the store for the entire domain.
-   *
-   * @tparam T Element type
-   *
-   * @tparam DIM Number of dimensions
-   *
-   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -406,14 +84,10 @@ class Store {
    * @brief Returns a reduction accessor to the store for the entire domain.
    *
    * @tparam OP Reduction operator class. For details about reduction operators, See
-   * LibraryContext::register_reduction_operator.
+   * Library::register_reduction_operator.
    *
    * @tparam EXCLUSIVE Indicates whether reductions can be performed in exclusive mode. If
    * `EXCLUSIVE` is `false`, every reduction via the accessor is performed atomically.
-   *
-   * @tparam DIM Number of dimensions
-   *
-   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam DIM Number of dimensions
    *
@@ -427,12 +101,6 @@ class Store {
  public:
   /**
    * @brief Returns a read-only accessor to the store for specific bounds.
-   *
-   * @tparam T Element type
-   *
-   * @tparam DIM Number of dimensions
-   *
-   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -457,12 +125,6 @@ class Store {
    *
    * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
-   * @tparam T Element type
-   *
-   * @tparam DIM Number of dimensions
-   *
-   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
-   *
    * @param bounds Domain within which accesses should be allowed.
    * The actual bounds for valid access are determined by an intersection between
    * the store's domain and the bounds.
@@ -473,12 +135,6 @@ class Store {
   AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds) const;
   /**
    * @brief Returns a read-write accessor to the store for the entire domain.
-   *
-   * @tparam T Element type
-   *
-   * @tparam DIM Number of dimensions
-   *
-   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam T Element type
    *
@@ -502,14 +158,10 @@ class Store {
    * the store's domain and the bounds.
    *
    * @tparam OP Reduction operator class. For details about reduction operators, See
-   * LibraryContext::register_reduction_operator.
+   * Library::register_reduction_operator.
    *
    * @tparam EXCLUSIVE Indicates whether reductions can be performed in exclusive mode. If
    * `EXCLUSIVE` is `false`, every reduction via the accessor is performed atomically.
-   *
-   * @tparam DIM Number of dimensions
-   *
-   * @tparam VALIDATE_TYPE If `true` (default), validates type and number of dimensions
    *
    * @tparam DIM Number of dimensions
    *
@@ -519,66 +171,6 @@ class Store {
    */
   template <typename OP, bool EXCLUSIVE, int32_t DIM, bool VALIDATE_TYPE = true>
   AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(const Rect<DIM>& bounds) const;
-
- public:
-  /**
-   * @brief Creates a buffer of specified extents for the unbound store. The returned
-   * buffer is always consistent with the mapping policy for the store. Can be invoked
-   * multiple times unless `bind_buffer` is true.
-   *
-   * @param extents Extents of the buffer
-   *
-   * @param bind_buffer If the value is true, the created buffer will be bound
-   * to the store upon return
-   *
-   * @return A reduction accessor to the store
-   */
-  template <typename T, int32_t DIM>
-  Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents, bool bind_buffer = false);
-
- public:
-  /**
-   * @brief Returns the store's domain
-   *
-   * @return Store's domain
-   */
-  template <int32_t DIM>
-  Rect<DIM> shape() const;
-  /**
-   * @brief Returns the store's domain in a dimension-erased domain type
-   *
-   * @return Store's domain in a dimension-erased domain type
-   */
-  Domain domain() const;
-
- public:
-  /**
-   * @brief Releases all inline allocations of the store
-   */
-  void unmap();
-
- public:
-  /**
-   * @brief Indicates whether the store can have a read accessor
-   *
-   * @return true The store can have a read accessor
-   * @return false The store cannot have a read accesor
-   */
-  bool is_readable() const { return readable_; }
-  /**
-   * @brief Indicates whether the store can have a write accessor
-   *
-   * @return true The store can have a write accessor
-   * @return false The store cannot have a write accesor
-   */
-  bool is_writable() const { return writable_; }
-  /**
-   * @brief Indicates whether the store can have a reduction accessor
-   *
-   * @return true The store can have a reduction accessor
-   * @return false The store cannot have a reduction accesor
-   */
-  bool is_reducible() const { return reducible_; }
 
  public:
   /**
@@ -595,6 +187,20 @@ class Store {
   VAL scalar() const;
 
  public:
+  /**
+   * @brief Creates a buffer of specified extents for the unbound store. The returned
+   * buffer is always consistent with the mapping policy for the store. Can be invoked
+   * multiple times unless `bind_buffer` is true.
+   *
+   * @param extents Extents of the buffer
+   *
+   * @param bind_buffer If the value is true, the created buffer will be bound
+   * to the store upon return
+   *
+   * @return A reduction accessor to the store
+   */
+  template <typename T, int32_t DIM>
+  Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents, bool bind_buffer = false);
   /**
    * @brief Binds a buffer to the store. Valid only when the store is unbound and
    * has not yet been bound to another buffer. The buffer must be consistent with
@@ -618,13 +224,92 @@ class Store {
 
  public:
   /**
+   * @brief Returns the dimension of the store
+   *
+   * @return The store's dimension
+   */
+  int32_t dim() const;
+  /**
+   * @brief Returns the type metadata of the store
+   *
+   * @return The store's type metadata
+   */
+  Type type() const;
+  /**
+   * @brief Returns the type code of the store
+   *
+   * @return The store's type code
+   */
+  template <typename TYPE_CODE = Type::Code>
+  TYPE_CODE code() const
+  {
+    return static_cast<TYPE_CODE>(type().code());
+  }
+
+ public:
+  /**
+   * @brief Returns the store's domain
+   *
+   * @return Store's domain
+   */
+  template <int32_t DIM>
+  Rect<DIM> shape() const;
+  /**
+   * @brief Returns the store's domain in a dimension-erased domain type
+   *
+   * @return Store's domain in a dimension-erased domain type
+   */
+  Domain domain() const;
+
+ public:
+  /**
+   * @brief Indicates whether the store can have a read accessor
+   *
+   * @return true The store can have a read accessor
+   * @return false The store cannot have a read accesor
+   */
+  bool is_readable() const;
+  /**
+   * @brief Indicates whether the store can have a write accessor
+   *
+   * @return true The store can have a write accessor
+   * @return false The store cannot have a write accesor
+   */
+  bool is_writable() const;
+  /**
+   * @brief Indicates whether the store can have a reduction accessor
+   *
+   * @return true The store can have a reduction accessor
+   * @return false The store cannot have a reduction accesor
+   */
+  bool is_reducible() const;
+
+ public:
+  /**
+   * @brief Indicates whether the store is valid. A store passed to a task can be invalid
+   * only for reducer tasks for tree reduction.
+   *
+   * @return true The store is valid
+   * @return false The store is invalid and cannot be used in any data access
+   */
+  bool valid() const;
+  /**
+   * @brief Indicates whether the store is transformed in any way.
+   *
+   * @return true The store is transformed
+   * @return false The store is not transformed
+   */
+  bool transformed() const;
+
+ public:
+  /**
    * @brief Indicates whether the store is backed by a future
    * (i.e., a container for scalar value)
    *
    * @return true The store is backed by a future
    * @return false The store is backed by a region field
    */
-  bool is_future() const { return is_future_; }
+  bool is_future() const;
   /**
    * @brief Indicates whether the store is an unbound store. The value DOES NOT indicate
    * that the store has already assigned to a buffer; i.e., the store may have been assigned
@@ -633,43 +318,56 @@ class Store {
    * @return true The store is an unbound store
    * @return false The store is a normal store
    */
-  bool is_unbound_store() const { return is_unbound_store_; }
-  ReturnValue pack() const { return future_.pack(); }
-  ReturnValue pack_weight() const { return unbound_field_.pack_weight(); }
+  bool is_unbound_store() const;
 
  public:
-  // TODO: It'd be btter to return a parent store from this method than permanently
-  // losing the transform. This requires the backing storages to be referenced by multiple
-  // stores, which isn't possible as they use move-only types.
-  void remove_transform();
+  /**
+   * @brief Releases all inline allocations of the store
+   */
+  void unmap();
 
  private:
   void check_accessor_dimension(const int32_t dim) const;
   void check_buffer_dimension(const int32_t dim) const;
   void check_shape_dimension(const int32_t dim) const;
-  void check_valid_binding() const;
+  void check_valid_binding(bool bind_buffer) const;
   template <typename T>
   void check_accessor_type() const;
+  Legion::DomainAffineTransform get_inverse_transform() const;
 
  private:
-  bool is_future_{false};
-  bool is_unbound_store_{false};
-  int32_t dim_{-1};
-  std::unique_ptr<Type> type_{nullptr};
-  int32_t redop_id_{-1};
+  void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
+  int32_t get_redop_id() const;
+  template <typename ACC, int32_t DIM>
+  ACC create_field_accessor(const Rect<DIM>& bounds) const;
+  template <typename ACC, int32_t DIM>
+  ACC create_reduction_accessor(const Rect<DIM>& bounds) const;
 
  private:
-  FutureWrapper future_;
-  RegionField region_field_;
-  UnboundRegionField unbound_field_;
+  bool is_read_only_future() const;
+  Legion::Future get_future() const;
+  Legion::UntypedDeferredValue get_buffer() const;
 
  private:
-  std::shared_ptr<TransformStack> transform_{nullptr};
+  void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
+  void update_num_elements(size_t num_elements);
+
+ public:
+  Store();
+  Store(std::shared_ptr<detail::Store> impl);
+  std::shared_ptr<detail::Store> impl() const { return impl_; }
+
+ public:
+  Store(const Store&);
+  Store& operator=(const Store&);
+  Store(Store&&);
+  Store& operator=(Store&&);
+
+ public:
+  ~Store();
 
  private:
-  bool readable_{false};
-  bool writable_{false};
-  bool reducible_{false};
+  std::shared_ptr<detail::Store> impl_{nullptr};
 };
 
 }  // namespace legate

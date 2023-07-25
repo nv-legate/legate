@@ -59,7 +59,7 @@ def test_scoping():
         task.add_scalar_arg(m.count(ProcessorKind.CPU), ty.int32)
         task.execute()
 
-    store.get_inline_allocation(user_context)
+    store.get_inline_allocation()
 
 
 def test_cpu_only():
@@ -90,7 +90,7 @@ def test_cpu_only():
                     user_lib.shared_object.CPU_VARIANT_ONLY
                 )
 
-    store.get_inline_allocation(user_context)
+    store.get_inline_allocation()
 
 
 if __name__ == "__main__":

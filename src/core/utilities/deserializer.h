@@ -21,10 +21,14 @@
 #include "legion.h"
 
 #include "core/comm/communicator.h"
+#include "core/data/detail/scalar.h"
+#include "core/data/detail/store.h"
+#include "core/data/detail/transform.h"
 #include "core/data/scalar.h"
 #include "core/data/store.h"
-#include "core/mapping/machine.h"
-#include "core/mapping/operation.h"
+#include "core/mapping/detail/machine.h"
+#include "core/mapping/detail/store.h"
+#include "core/type/detail/type_info.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/span.h"
 #include "core/utilities/typedefs.h"
@@ -79,14 +83,14 @@ class BaseDeserializer {
   Scalar _unpack_scalar();
   void _unpack(mapping::TaskTarget& value);
   void _unpack(mapping::ProcessorRange& value);
-  void _unpack(mapping::MachineDesc& value);
+  void _unpack(mapping::detail::Machine& value);
 
  public:
   Span<const int8_t> current_args() const { return args_; }
 
  protected:
-  std::shared_ptr<TransformStack> unpack_transform();
-  std::unique_ptr<Type> unpack_type();
+  std::shared_ptr<detail::TransformStack> unpack_transform();
+  std::shared_ptr<detail::Type> unpack_type();
 
  protected:
   bool first_task_;
@@ -101,10 +105,18 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   using BaseDeserializer::_unpack;
 
  public:
-  void _unpack(Store& value);
-  void _unpack(FutureWrapper& value);
-  void _unpack(RegionField& value);
-  void _unpack(UnboundRegionField& value);
+  void _unpack(std::vector<Store>& values)
+  {
+    auto size = unpack<uint32_t>();
+    values.reserve(size);
+    for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(_unpack_store());
+  }
+
+ public:
+  std::shared_ptr<detail::Store> _unpack_store();
+  void _unpack(detail::FutureWrapper& value);
+  void _unpack(detail::RegionField& value);
+  void _unpack(detail::UnboundRegionField& value);
   void _unpack(comm::Communicator& value);
   void _unpack(Legion::PhaseBarrier& barrier);
 
@@ -136,9 +148,9 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   using BaseDeserializer::_unpack;
 
  public:
-  void _unpack(Store& value);
-  void _unpack(FutureWrapper& value);
-  void _unpack(RegionField& value, bool is_output_region);
+  void _unpack(detail::Store& store);
+  void _unpack(detail::FutureWrapper& value);
+  void _unpack(detail::RegionField& value, bool is_output_region);
 
  private:
   const Legion::Task* task_;
@@ -165,8 +177,8 @@ class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {
   void next_requirement_list();
 
  public:
-  void _unpack(Store& value);
-  void _unpack(RegionField& value);
+  void _unpack(detail::Store& store);
+  void _unpack(detail::RegionField& value);
 
  private:
   std::vector<ReqsRef> all_reqs_;

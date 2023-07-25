@@ -25,11 +25,11 @@ Legion::Logger logger(library_name);
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  HelloWorldTask::register_variants(context);
-  IotaTask::register_variants(context);
-  SquareTask::register_variants(context);
-  SumTask::register_variants(context);
+  auto library = runtime->create_library(library_name);
+  HelloWorldTask::register_variants(library);
+  IotaTask::register_variants(library);
+  SquareTask::register_variants(library);
+  SumTask::register_variants(library);
 }
 
 /*static*/ void HelloWorldTask::cpu_variant(legate::TaskContext& context)

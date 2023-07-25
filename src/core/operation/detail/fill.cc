@@ -19,15 +19,15 @@
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/fill_launcher.h"
 #include "core/operation/detail/projection.h"
-#include "core/partitioning/constraint_solver.h"
-#include "core/partitioning/partitioner.h"
+#include "core/partitioning/detail/constraint_solver.h"
+#include "core/partitioning/detail/partitioner.h"
 
 namespace legate::detail {
 
 Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
            std::shared_ptr<LogicalStore>&& value,
            int64_t unique_id,
-           mapping::MachineDesc&& machine)
+           mapping::detail::Machine&& machine)
   : Operation(unique_id, std::move(machine)),
     lhs_var_(declare_partition()),
     lhs_(std::move(lhs)),

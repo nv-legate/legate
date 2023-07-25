@@ -19,9 +19,9 @@
 namespace legate::detail {
 
 ////////////////////////////////////////////
-// legate::MachineManager
+// legate::detail::MachineManager
 ////////////////////////////////////////////
-const mapping::MachineDesc& MachineManager::get_machine() const
+const mapping::detail::Machine& MachineManager::get_machine() const
 {
 #ifdef DEBUG_LEGATE
   assert(machines_.size() > 0);
@@ -29,14 +29,9 @@ const mapping::MachineDesc& MachineManager::get_machine() const
   return machines_.back();
 }
 
-void MachineManager::push_machine(const mapping::MachineDesc& machine)
+void MachineManager::push_machine(mapping::detail::Machine&& machine)
 {
-  machines_.push_back(machine);
-}
-
-void MachineManager::push_machine(mapping::MachineDesc&& machine)
-{
-  machines_.emplace_back(machine);
+  machines_.push_back(std::move(machine));
 }
 
 void MachineManager::pop_machine()

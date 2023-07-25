@@ -17,10 +17,10 @@
 #include "core/operation/detail/gather.h"
 
 #include "core/operation/detail/copy_launcher.h"
-#include "core/partitioning/constraint.h"
-#include "core/partitioning/constraint_solver.h"
+#include "core/partitioning/detail/constraint.h"
+#include "core/partitioning/detail/constraint_solver.h"
+#include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
-#include "core/partitioning/partitioner.h"
 
 namespace legate::detail {
 
@@ -28,12 +28,12 @@ Gather::Gather(std::shared_ptr<LogicalStore> target,
                std::shared_ptr<LogicalStore> source,
                std::shared_ptr<LogicalStore> source_indirect,
                int64_t unique_id,
-               mapping::MachineDesc&& machine)
+               mapping::detail::Machine&& machine)
   : Operation(unique_id, std::move(machine)),
     target_{target.get(), declare_partition()},
     source_{source.get(), declare_partition()},
     source_indirect_{source_indirect.get(), declare_partition()},
-    constraint_(legate::align(target_.variable, source_indirect_.variable))
+    constraint_(align(target_.variable, source_indirect_.variable))
 {
   record_partition(target_.variable, std::move(target));
   record_partition(source_.variable, std::move(source));

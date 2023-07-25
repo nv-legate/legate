@@ -19,17 +19,12 @@
 #include <memory>
 #include <optional>
 
-#include "core/mapping/machine.h"
+#include "core/mapping/detail/machine.h"
 
 namespace legate {
 class BufferBuilder;
-class LibraryContext;
 class Scalar;
 }  // namespace legate
-
-namespace legate::mapping {
-class MachineDesc;
-}  // namespace legate::mapping
 
 namespace legate::detail {
 
@@ -41,7 +36,7 @@ class RequirementAnalyzer;
 
 class CopyLauncher {
  public:
-  CopyLauncher(const mapping::MachineDesc& machine, int64_t tag = 0);
+  CopyLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
   ~CopyLauncher();
 
  public:
@@ -77,7 +72,7 @@ class CopyLauncher {
   void populate_copy(Launcher* launcher);
 
  private:
-  mapping::MachineDesc machine_;
+  mapping::detail::Machine machine_;
   int64_t tag_;
   Legion::ProjectionID key_proj_id_{0};
 

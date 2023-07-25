@@ -22,7 +22,9 @@
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
 #include "core/data/store.h"
+#include "core/mapping/machine.h"
 #include "core/operation/task.h"
+#include "core/runtime/library.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/utilities/typedefs.h"
@@ -36,7 +38,6 @@ class Mapper;
 
 namespace legate {
 
-class LibraryContext;
 class Scalar;
 class Type;
 
@@ -56,9 +57,6 @@ struct Core {
                             Legion::Context ctx,
                             Legion::Runtime* runtime);
   static void report_unexpected_exception(const Legion::Task* task, const TaskException& e);
-  static void retrieve_tunable(Legion::Context legion_context,
-                               Legion::Runtime* legion_runtime,
-                               LibraryContext* context);
 
  public:
   /**
@@ -115,25 +113,33 @@ class Runtime {
    * @param config Optional configuration object
    * @param mapper Optional mapper object
    *
-   * @return Context object for the library
+   * @return Library object
    *
    * @throw std::invalid_argument If a library already exists for a given name
    */
-  LibraryContext* create_library(const std::string& library_name,
-                                 const ResourceConfig& config            = ResourceConfig{},
-                                 std::unique_ptr<mapping::Mapper> mapper = nullptr);
+  Library create_library(const std::string& library_name,
+                         const ResourceConfig& config            = ResourceConfig{},
+                         std::unique_ptr<mapping::Mapper> mapper = nullptr);
   /**
    * @brief Finds a library
    *
    * @param library_name Library name
-   * @param can_fail Optional flag indicating that the query can fail. When it's true and no
-   * library is found for a given name, `nullptr` is returned.
    *
-   * @return Context object for the library
+   * @return Library object
    *
-   * @throw std::out_of_range If no library is found for a given name and `can_fail` is `false`
+   * @throw std::out_of_range If no library is found for a given name
    */
-  LibraryContext* find_library(const std::string& library_name, bool can_fail = false) const;
+  Library find_library(const std::string& library_name) const;
+  /**
+   * @brief Attempts to find a library.
+   *
+   * If no library exists for a given name, a null value will be returned
+   *
+   * @param library_name Library name
+   *
+   * @return Library object if a library exists for a given name, a null object otherwise
+   */
+  std::optional<Library> maybe_find_library(const std::string& library_name) const;
   /**
    * @brief Finds or creates a library.
    *
@@ -148,10 +154,10 @@ class Runtime {
    *
    * @return Context object for the library
    */
-  LibraryContext* find_or_create_library(const std::string& library_name,
-                                         const ResourceConfig& config            = ResourceConfig{},
-                                         std::unique_ptr<mapping::Mapper> mapper = nullptr,
-                                         bool* created                           = nullptr);
+  Library find_or_create_library(const std::string& library_name,
+                                 const ResourceConfig& config            = ResourceConfig{},
+                                 std::unique_ptr<mapping::Mapper> mapper = nullptr,
+                                 bool* created                           = nullptr);
 
  public:
   /**
@@ -162,7 +168,7 @@ class Runtime {
    *
    * @return Task object
    */
-  AutoTask create_task(LibraryContext* library, int64_t task_id);
+  AutoTask create_task(Library library, int64_t task_id);
   /**
    * @brief Creates a ManualTask
    *
@@ -172,7 +178,7 @@ class Runtime {
    *
    * @return Task object
    */
-  ManualTask create_task(LibraryContext* library, int64_t task_id, const Shape& launch_shape);
+  ManualTask create_task(Library library, int64_t task_id, const Shape& launch_shape);
   /**
    * @brief Issues a copy between stores.
    *
@@ -259,29 +265,7 @@ class Runtime {
    *
    * @return Logical store
    */
-  LogicalStore create_store(std::unique_ptr<Type> type, int32_t dim = 1);
-  /**
-   * @brief Creates an unbound store
-   *
-   * @param type Element type
-   * @param dim Number of dimensions of the store
-   *
-   * @return Logical store
-   */
   LogicalStore create_store(const Type& type, int32_t dim = 1);
-  /**
-   * @brief Creates a normal store
-   *
-   * @param extents Shape of the store
-   * @param type Element type
-   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
-   * scalars
-   *
-   * @return Logical store
-   */
-  LogicalStore create_store(const Shape& extents,
-                            std::unique_ptr<Type> type,
-                            bool optimize_scalar = false);
   /**
    * @brief Creates a normal store
    *
@@ -345,7 +329,7 @@ class Runtime {
    *
    * @return Machine object
    */
-  const mapping::MachineDesc& get_machine() const;
+  mapping::Machine get_machine() const;
 
  public:
   /**
@@ -388,7 +372,7 @@ int32_t finish();
  *
  * @return Machine object
  */
-const mapping::MachineDesc& get_machine();
+mapping::Machine get_machine();
 
 }  // namespace legate
 

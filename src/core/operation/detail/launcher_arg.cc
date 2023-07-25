@@ -18,6 +18,8 @@
 
 #include "core/data/detail/logical_region_field.h"
 #include "core/operation/detail/req_analyzer.h"
+#include "core/type/detail/type_info.h"
+#include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::detail {
 
@@ -82,7 +84,7 @@ void FutureStoreArg::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(redop_);
   buffer.pack<bool>(read_only_);
   buffer.pack<bool>(has_storage_);
-  buffer.pack<uint32_t>(store_->type().size());
+  buffer.pack<uint32_t>(store_->type()->size());
   buffer.pack<size_t>(store_->get_storage()->extents().data());
 }
 

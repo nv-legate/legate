@@ -16,13 +16,13 @@
 
 #include "core/operation/detail/operation.h"
 
-#include "core/partitioning/constraint.h"
-#include "core/partitioning/partitioner.h"
+#include "core/partitioning/detail/constraint.h"
+#include "core/partitioning/detail/partitioner.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
 
-Operation::Operation(uint64_t unique_id, mapping::MachineDesc&& machine)
+Operation::Operation(uint64_t unique_id, mapping::detail::Machine&& machine)
   : unique_id_(unique_id),
     machine_(std::move(machine)),
     provenance_(Runtime::get_runtime()->provenance_manager()->get_provenance())

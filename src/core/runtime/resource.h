@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 namespace legate {
 
 /**
@@ -33,41 +35,6 @@ struct ResourceConfig {
   int64_t max_reduction_ops{0};
   int64_t max_projections{0};
   int64_t max_shardings{0};
-};
-
-class ResourceIdScope {
- public:
-  ResourceIdScope() = default;
-  ResourceIdScope(int64_t base, int64_t size) : base_(base), size_(size) {}
-
- public:
-  ResourceIdScope(const ResourceIdScope&) = default;
-
- public:
-  int64_t translate(int64_t local_resource_id) const { return base_ + local_resource_id; }
-  int64_t invert(int64_t resource_id) const
-  {
-    assert(in_scope(resource_id));
-    return resource_id - base_;
-  }
-  int64_t generate_id()
-  {
-    if (next_ == size_) throw std::overflow_error("The scope ran out of IDs");
-    return next_++;
-  }
-
- public:
-  bool valid() const { return base_ != -1; }
-  bool in_scope(int64_t resource_id) const
-  {
-    return base_ <= resource_id && resource_id < base_ + size_;
-  }
-  int64_t size() const { return size_; }
-
- private:
-  int64_t base_{-1};
-  int64_t size_{-1};
-  int64_t next_{0};
 };
 
 }  // namespace legate

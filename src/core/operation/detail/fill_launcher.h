@@ -18,16 +18,11 @@
 
 #include <memory>
 
-#include "core/mapping/machine.h"
+#include "core/mapping/detail/machine.h"
 
 namespace legate {
 class BufferBuilder;
-class LibraryContext;
 }  // namespace legate
-
-namespace legate::mapping {
-class MachineDesc;
-}  // namespace legate::mapping
 
 namespace legate::detail {
 
@@ -36,7 +31,7 @@ class ProjectionInfo;
 
 class FillLauncher {
  public:
-  FillLauncher(const mapping::MachineDesc& machine, int64_t tag = 0);
+  FillLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
   ~FillLauncher();
 
  public:
@@ -57,7 +52,7 @@ class FillLauncher {
                                                           LogicalStore* value);
 
  private:
-  mapping::MachineDesc machine_;
+  mapping::detail::Machine machine_;
   int64_t tag_;
 
  private:

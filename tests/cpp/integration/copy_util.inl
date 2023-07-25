@@ -72,7 +72,7 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
 
     if (shape.empty()) return;
 
-    type_dispatch_for_test(output.type().code, FillTaskBody{}, output, shape, seed);
+    type_dispatch_for_test(output.type().code(), FillTaskBody{}, output, shape, seed);
   }
 };
 
@@ -113,26 +113,26 @@ struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DA
   }
 };
 
-void fill_input(legate::LibraryContext* context,
+void fill_input(legate::Library library,
                 const legate::LogicalStore& src,
                 const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task    = runtime->create_task(context, FILL_TASK + src.dim());
+  auto task    = runtime->create_task(library, FILL_TASK + src.dim());
   task.add_output(src, task.declare_partition());
   task.add_scalar_arg(value);
   runtime->submit(std::move(task));
 }
 
-void fill_indirect(legate::LibraryContext* context,
+void fill_indirect(legate::Library library,
                    const legate::LogicalStore& ind,
                    const legate::LogicalStore& data)
 {
   auto runtime    = legate::Runtime::get_runtime();
   auto machine    = runtime->get_machine();
   int32_t task_id = FILL_INDIRECT_TASK + ind.dim() * TEST_MAX_DIM + data.dim();
-  auto task       = runtime->create_task(context, task_id);
+  auto task       = runtime->create_task(library, task_id);
   auto part       = task.declare_partition();
   task.add_output(ind, part);
   // Technically indirection fields for gather coipes can have repeated points

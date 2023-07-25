@@ -24,73 +24,60 @@
 namespace legate {
 
 template <typename T>
-Scalar::Scalar(T value) : own_(true), type_(primitive_type(legate_type_code_of<T>))
+Scalar::Scalar(T value) : impl_(create_impl(primitive_type(legate_type_code_of<T>), &value, true))
 {
   static_assert(legate_type_code_of<T> != Type::Code::FIXED_ARRAY);
   static_assert(legate_type_code_of<T> != Type::Code::STRUCT);
   static_assert(legate_type_code_of<T> != Type::Code::STRING);
   static_assert(legate_type_code_of<T> != Type::Code::INVALID);
-  auto buffer = malloc(sizeof(T));
-  memcpy(buffer, &value, sizeof(T));
-  data_ = buffer;
 }
 
 template <typename T>
-Scalar::Scalar(T value, std::unique_ptr<Type> type) : own_(true), type_(std::move(type))
+Scalar::Scalar(T value, Type type) : impl_(create_impl(type, &value, true))
 {
-  if (type_->code == Type::Code::INVALID)
+  if (type.code() == Type::Code::INVALID)
     throw std::invalid_argument("Invalid type cannot be used");
-  if (type_->size() != sizeof(T))
+  if (type.size() != sizeof(T))
     throw std::invalid_argument("Size of the value doesn't match with the type");
-  auto buffer = malloc(sizeof(T));
-  memcpy(buffer, &value, sizeof(T));
-  data_ = buffer;
 }
 
 template <typename T>
 Scalar::Scalar(const std::vector<T>& values)
-  : own_(true), type_(fixed_array_type(primitive_type(legate_type_code_of<T>), values.size()))
+  : impl_(create_impl(
+      fixed_array_type(primitive_type(legate_type_code_of<T>), values.size()), values.data(), true))
 {
-  auto size   = type_->size();
-  auto buffer = malloc(size);
-  memcpy(buffer, values.data(), size);
-  data_ = buffer;
 }
 
 template <int32_t DIM>
-Scalar::Scalar(const Point<DIM>& point) : own_(true), type_(point_type(DIM))
+Scalar::Scalar(const Point<DIM>& point) : impl_(create_impl(point_type(DIM), &point, true))
 {
-  auto buffer = malloc(sizeof(Point<DIM>));
-  memcpy(buffer, &point, sizeof(Point<DIM>));
-  data_ = buffer;
 }
 
 template <int32_t DIM>
-Scalar::Scalar(const Rect<DIM>& rect) : own_(true), type_(rect_type(DIM))
+Scalar::Scalar(const Rect<DIM>& rect) : impl_(create_impl(rect_type(DIM), &rect, true))
 {
-  auto buffer = malloc(sizeof(Rect<DIM>));
-  memcpy(buffer, &rect, sizeof(Rect<DIM>));
-  data_ = buffer;
 }
 
 template <typename VAL>
 VAL Scalar::value() const
 {
-  if (type_->code == Type::Code::STRING)
+  auto ty = type();
+  if (ty.code() == Type::Code::STRING)
     throw std::invalid_argument("String cannot be casted to other types");
-  if (sizeof(VAL) != type_->size())
-    throw std::invalid_argument("Size of the scalar is " + std::to_string(type_->size()) +
+  if (sizeof(VAL) != ty.size())
+    throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
                                 ", but the requested type has size " + std::to_string(sizeof(VAL)));
-  return *static_cast<const VAL*>(data_);
+  return *static_cast<const VAL*>(ptr());
 }
 
 template <>
 inline std::string Scalar::value() const
 {
-  if (type_->code != Type::Code::STRING)
+  if (type().code() != Type::Code::STRING)
     throw std::invalid_argument("Type of the scalar is not string");
-  auto len          = *static_cast<const uint32_t*>(data_);
-  const auto* begin = static_cast<const char*>(data_) + sizeof(uint32_t);
+  const void* data  = ptr();
+  auto len          = *static_cast<const uint32_t*>(data);
+  const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
   const auto* end   = begin + len;
   return std::string(begin, end);
 }
@@ -98,38 +85,41 @@ inline std::string Scalar::value() const
 template <>
 inline std::string_view Scalar::value() const
 {
-  if (type_->code != Type::Code::STRING)
+  if (type().code() != Type::Code::STRING)
     throw std::invalid_argument("Type of the scalar is not string");
-  auto len          = *static_cast<const uint32_t*>(data_);
-  const auto* begin = static_cast<const char*>(data_) + sizeof(uint32_t);
+  const void* data  = ptr();
+  auto len          = *static_cast<const uint32_t*>(data);
+  const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
   return std::string_view(begin, len);
 }
 
 template <typename VAL>
 Span<const VAL> Scalar::values() const
 {
-  if (type_->code == Type::Code::FIXED_ARRAY) {
-    auto arr_type         = static_cast<const FixedArrayType*>(type_.get());
-    const auto& elem_type = arr_type->element_type();
+  auto ty = type();
+  if (ty.code() == Type::Code::FIXED_ARRAY) {
+    auto arr_type  = ty.as_fixed_array_type();
+    auto elem_type = arr_type.element_type();
     if (sizeof(VAL) != elem_type.size())
       throw std::invalid_argument(
         "The scalar's element type has size " + std::to_string(elem_type.size()) +
         ", but the requested element type has size " + std::to_string(sizeof(VAL)));
-    auto size = arr_type->num_elements();
-    return Span<const VAL>(reinterpret_cast<const VAL*>(data_), size);
-  } else if (type_->code == Type::Code::STRING) {
+    auto size = arr_type.num_elements();
+    return Span<const VAL>(reinterpret_cast<const VAL*>(ptr()), size);
+  } else if (ty.code() == Type::Code::STRING) {
     if (sizeof(VAL) != 1)
       throw std::invalid_argument(
         "String scalar can only be converted into a span of a type whose size is 1 byte");
-    auto len          = *static_cast<const uint32_t*>(data_);
-    const auto* begin = static_cast<const char*>(data_) + sizeof(uint32_t);
+    auto data         = ptr();
+    auto len          = *static_cast<const uint32_t*>(data);
+    const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
     return Span<const VAL>(reinterpret_cast<const VAL*>(begin), len);
   } else {
-    if (sizeof(VAL) != type_->size())
-      throw std::invalid_argument("Size of the scalar is " + std::to_string(type_->size()) +
+    if (sizeof(VAL) != ty.size())
+      throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
                                   ", but the requested element type has size " +
                                   std::to_string(sizeof(VAL)));
-    return Span<const VAL>(static_cast<const VAL*>(data_), 1);
+    return Span<const VAL>(static_cast<const VAL*>(ptr()), 1);
   }
 }
 

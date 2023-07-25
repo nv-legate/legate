@@ -20,6 +20,7 @@
 
 #include "legion.h"
 
+#include "core/runtime/library.h"
 #include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
 
@@ -30,7 +31,6 @@
 
 namespace legate {
 
-class LibraryContext;
 class TaskInfo;
 
 /**
@@ -76,19 +76,30 @@ class TaskInfo;
  */
 class TaskRegistrar {
  public:
-  void record_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
-
- public:
   /**
    * @brief Registers all tasks recorded in this registrar. Typically invoked in a registration
    * callback of a library.
    *
-   * @param context Context of the library that owns this registrar
+   * @param library Library that owns this registrar
    */
-  void register_all_tasks(LibraryContext* context);
+  void register_all_tasks(Library library);
+
+ public:
+  void record_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+
+ public:
+  TaskRegistrar();
+  ~TaskRegistrar();
 
  private:
-  std::vector<std::pair<int64_t, std::unique_ptr<TaskInfo>>> pending_task_infos_;
+  TaskRegistrar(const TaskRegistrar&)            = delete;
+  TaskRegistrar& operator=(const TaskRegistrar&) = delete;
+  TaskRegistrar(TaskRegistrar&&)                 = delete;
+  TaskRegistrar& operator=(TaskRegistrar&&)      = delete;
+
+ private:
+  class Impl;
+  Impl* impl_;
 };
 
 }  // namespace legate

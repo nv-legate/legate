@@ -17,11 +17,12 @@
 #pragma once
 
 #include "core/data/detail/logical_store.h"
+#include "core/data/detail/scalar.h"
 #include "core/data/scalar.h"
-#include "core/utilities/buffer_builder.h"
 
 namespace legate::detail {
 
+class BufferBuilder;
 class OutputRequirementAnalyzer;
 class ProjectionInfo;
 class RequirementAnalyzer;
@@ -48,7 +49,7 @@ struct ScalarArg : public ArgWrapper {
 
 struct UntypedScalarArg : public ArgWrapper {
  public:
-  UntypedScalarArg(const Scalar& scalar) : scalar_(scalar) {}
+  UntypedScalarArg(Scalar&& scalar) : scalar_(std::move(scalar)) {}
 
  public:
   ~UntypedScalarArg() {}

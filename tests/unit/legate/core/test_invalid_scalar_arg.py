@@ -22,7 +22,7 @@ class Test_scalar_arg:
     def test_unimplemented_types(self) -> None:
         context = get_legate_runtime().core_context
         # Create a task object only to test validation logic
-        task = context.create_auto_task(0)
+        task = context.create_auto_task(1)
         with pytest.raises(NotImplementedError):
             task.add_scalar_arg(None, ty.struct_type([ty.int8]))
         with pytest.raises(NotImplementedError):
@@ -35,14 +35,14 @@ class Test_scalar_arg:
     def test_scalar_arg_with_array_type(self) -> None:
         context = get_legate_runtime().core_context
         # Create a task object only to test validation logic
-        task = context.create_auto_task(0)
+        task = context.create_auto_task(1)
         with pytest.raises(ValueError):
             task.add_scalar_arg(1, ty.array_type(ty.int8, 1))
 
     def test_array_size_mismatch(self) -> None:
         context = get_legate_runtime().core_context
         # Create a task object only to test validation logic
-        task = context.create_auto_task(0)
+        task = context.create_auto_task(1)
         with pytest.raises(ValueError):
             task.add_scalar_arg((1, 2, 3), ty.array_type(ty.int8, 1))
 

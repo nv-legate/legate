@@ -19,17 +19,14 @@
 #include <memory>
 
 #include "core/data/detail/logical_store.h"
-#include "core/mapping/machine.h"
+#include "core/mapping/detail/machine.h"
 #include "core/operation/detail/projection.h"
-
-namespace legate {
-class Variable;
-}  // namespace legate
 
 namespace legate::detail {
 class ConstraintSolver;
 class LogicalStore;
 class Strategy;
+class Variable;
 
 class Operation {
  protected:
@@ -37,7 +34,7 @@ class Operation {
     LogicalStore* store;
     const Variable* variable;
   };
-  Operation(uint64_t unique_id, mapping::MachineDesc&& machine);
+  Operation(uint64_t unique_id, mapping::detail::Machine&& machine);
 
  public:
   virtual ~Operation() {}
@@ -54,7 +51,7 @@ class Operation {
   std::shared_ptr<LogicalStore> find_store(const Variable* variable) const;
 
  public:
-  const mapping::MachineDesc& machine() const { return machine_; }
+  const mapping::detail::Machine& machine() const { return machine_; }
   const std::string& provenance() const { return provenance_; }
 
  protected:
@@ -80,7 +77,7 @@ class Operation {
   std::map<const Variable, std::shared_ptr<LogicalStore>> store_mappings_{};
   std::map<std::shared_ptr<LogicalStore>, const Variable*> part_mappings_{};
   std::string provenance_;
-  mapping::MachineDesc machine_;
+  mapping::detail::Machine machine_;
 };
 
 }  // namespace legate::detail

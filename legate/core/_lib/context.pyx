@@ -27,20 +27,20 @@ cdef extern from "core/task/task_info.h" namespace "legate" nogil:
         bool has_variant(int)
         string name()
 
-cdef extern from "core/runtime/context.h" namespace "legate" nogil:
-    cdef cppclass LibraryContext:
+cdef extern from "core/runtime/detail/library.h" namespace "legate::detail" nogil:
+    cdef cppclass Library:
         unsigned int get_task_id(long long)
         unsigned int get_mapper_id()
         int get_reduction_op_id(long long)
         unsigned int get_projection_id(long long)
         unsigned int get_sharding_id(long long)
-        TaskInfo* find_task(long long)
+        const TaskInfo* find_task(long long) except+
 
-cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
+cdef extern from "core/runtime/detail/runtime.h" namespace "legate::detail" nogil:
     cdef cppclass Runtime:
         @staticmethod
         Runtime* get_runtime()
-        LibraryContext* find_library(string, bool)
+        Library* find_library(string, bool)
 
 
 cdef class CppTaskInfo:
@@ -67,7 +67,7 @@ cdef class CppTaskInfo:
 
 
 cdef class Context:
-    cdef LibraryContext* _context
+    cdef Library* _context
 
     def __cinit__(self, str library_name, bool can_fail=False):
         self._context = Runtime.get_runtime().find_library(library_name.encode(), can_fail)
@@ -88,4 +88,7 @@ cdef class Context:
         return self._context.get_sharding_id(local_shard_id)
 
     def find_task(self, long long local_task_id) -> CppTaskInfo:
-        return CppTaskInfo.from_ptr(self._context.find_task(local_task_id))
+        try:
+            return CppTaskInfo.from_ptr(self._context.find_task(local_task_id))
+        except IndexError:
+            return CppTaskInfo.from_ptr(NULL)

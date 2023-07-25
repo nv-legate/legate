@@ -16,7 +16,9 @@
 
 #include "core/operation/task.h"
 
+#include "core/data/detail/scalar.h"
 #include "core/operation/detail/task.h"
+#include "core/partitioning/detail/constraint.h"
 
 namespace legate {
 
@@ -24,45 +26,41 @@ namespace legate {
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-void AutoTask::add_input(LogicalStore store, const Variable* partition_symbol)
+void AutoTask::add_input(LogicalStore store, Variable partition_symbol)
 {
-  impl_->add_input(store.impl(), partition_symbol);
+  impl_->add_input(store.impl(), partition_symbol.impl());
 }
 
-void AutoTask::add_output(LogicalStore store, const Variable* partition_symbol)
+void AutoTask::add_output(LogicalStore store, Variable partition_symbol)
 {
-  impl_->add_output(store.impl(), partition_symbol);
+  impl_->add_output(store.impl(), partition_symbol.impl());
 }
 
-void AutoTask::add_reduction(LogicalStore store,
-                             ReductionOpKind redop,
-                             const Variable* partition_symbol)
+void AutoTask::add_reduction(LogicalStore store, ReductionOpKind redop, Variable partition_symbol)
 {
-  impl_->add_reduction(store.impl(), static_cast<int32_t>(redop), partition_symbol);
+  impl_->add_reduction(store.impl(), static_cast<int32_t>(redop), partition_symbol.impl());
 }
 
-void AutoTask::add_reduction(LogicalStore store, int32_t redop, const Variable* partition_symbol)
+void AutoTask::add_reduction(LogicalStore store, int32_t redop, Variable partition_symbol)
 {
-  impl_->add_reduction(store.impl(), redop, partition_symbol);
+  impl_->add_reduction(store.impl(), redop, partition_symbol.impl());
 }
 
-void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(scalar); }
+void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl_); }
 
-void AutoTask::add_scalar_arg(Scalar&& scalar) { impl_->add_scalar_arg(scalar); }
+void AutoTask::add_scalar_arg(Scalar&& scalar) { impl_->add_scalar_arg(std::move(*scalar.impl_)); }
 
-void AutoTask::add_constraint(std::unique_ptr<Constraint> constraint)
+void AutoTask::add_constraint(Constraint&& constraint)
 {
-  impl_->add_constraint(std::move(constraint));
+  impl_->add_constraint(std::unique_ptr<detail::Constraint>(constraint.release()));
 }
 
-const Variable* AutoTask::find_or_declare_partition(LogicalStore store)
+Variable AutoTask::find_or_declare_partition(LogicalStore store)
 {
-  return impl_->find_or_declare_partition(store.impl());
+  return Variable(impl_->find_or_declare_partition(store.impl()));
 }
 
-const Variable* AutoTask::declare_partition() { return impl_->declare_partition(); }
-
-const mapping::MachineDesc& AutoTask::machine() const { return impl_->machine(); }
+Variable AutoTask::declare_partition() { return Variable(impl_->declare_partition()); }
 
 const std::string& AutoTask::provenance() const { return impl_->provenance(); }
 
@@ -123,11 +121,12 @@ void ManualTask::add_reduction(LogicalStorePartition store_partition, int32_t re
   impl_->add_reduction(store_partition.impl(), redop);
 }
 
-void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(scalar); }
+void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl_); }
 
-void ManualTask::add_scalar_arg(Scalar&& scalar) { impl_->add_scalar_arg(scalar); }
-
-const mapping::MachineDesc& ManualTask::machine() const { return impl_->machine(); }
+void ManualTask::add_scalar_arg(Scalar&& scalar)
+{
+  impl_->add_scalar_arg(std::move(*scalar.impl_));
+}
 
 const std::string& ManualTask::provenance() const { return impl_->provenance(); }
 

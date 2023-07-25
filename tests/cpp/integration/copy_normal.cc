@@ -52,29 +52,29 @@ struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
 
     if (shape.empty()) return;
 
-    type_dispatch(source.type().code, CheckTaskBody{}, source, target, shape);
+    type_dispatch(source.type().code(), CheckTaskBody{}, source, target, shape);
   }
 };
 
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  FillTask<1>::register_variants(context);
-  FillTask<2>::register_variants(context);
-  FillTask<3>::register_variants(context);
-  CheckTask<1>::register_variants(context);
-  CheckTask<2>::register_variants(context);
-  CheckTask<3>::register_variants(context);
+  auto library = runtime->create_library(library_name);
+  FillTask<1>::register_variants(library);
+  FillTask<2>::register_variants(library);
+  FillTask<3>::register_variants(library);
+  CheckTask<1>::register_variants(library);
+  CheckTask<2>::register_variants(library);
+  CheckTask<3>::register_variants(library);
 }
 
-void check_output(legate::LibraryContext* context,
+void check_output(legate::Library library,
                   const legate::LogicalStore& src,
                   const legate::LogicalStore& tgt)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task    = runtime->create_task(context, CHECK_TASK + tgt.dim());
+  auto task    = runtime->create_task(library, CHECK_TASK + tgt.dim());
 
   auto src_part = task.declare_partition();
   auto tgt_part = task.declare_partition();
@@ -86,31 +86,27 @@ void check_output(legate::LibraryContext* context,
   runtime->submit(std::move(task));
 }
 
-const auto uint32  = legate::uint32();
-const auto int64   = legate::int64();
-const auto float64 = legate::float64();
-
 struct NormalCopySpec {
   std::vector<size_t> shape;
-  const legate::Type& type;
+  legate::Type type;
   legate::Scalar seed;
 };
 
 void test_normal_copy(const NormalCopySpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto library = runtime->find_library(library_name);
 
   auto& [shape, type, seed] = spec;
 
-  auto input  = runtime->create_store(shape, type.clone());
-  auto output = runtime->create_store(shape, type.clone());
+  auto input  = runtime->create_store(shape, type);
+  auto output = runtime->create_store(shape, type);
 
-  fill_input(context, input, seed);
+  fill_input(library, input, seed);
   runtime->issue_copy(output, input);
 
   // check the result of copy
-  check_output(context, input, output);
+  check_output(library, input, output);
 }
 
 TEST(Copy, Single)
@@ -119,8 +115,8 @@ TEST(Copy, Single)
   // For some reason, clang-format gets tripped over by singleton initialization lists,
   // so factor out the definition here
   std::vector<size_t> shape1d{9};
-  test_normal_copy({{4, 7}, *int64, legate::Scalar(int64_t(12))});
-  test_normal_copy({{1000, 100}, *uint32, legate::Scalar(uint32_t(3))});
+  test_normal_copy({{4, 7}, legate::int64(), legate::Scalar(int64_t(12))});
+  test_normal_copy({{1000, 100}, legate::uint32(), legate::Scalar(uint32_t(3))});
 }
 
 }  // namespace copy_normal

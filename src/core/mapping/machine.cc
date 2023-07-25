@@ -15,85 +15,72 @@
  */
 
 #include "core/mapping/machine.h"
-#include "core/utilities/buffer_builder.h"
-
-#include "realm/network.h"
+#include "core/mapping/detail/machine.h"
+#include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::mapping {
 
-TaskTarget to_target(Processor::Kind kind)
+/////////////////////////////////////
+// legate::mapping::NodeRange
+/////////////////////////////////////
+
+bool NodeRange::operator<(const NodeRange& other) const
 {
-  switch (kind) {
-    case Processor::Kind::TOC_PROC: return TaskTarget::GPU;
-    case Processor::Kind::OMP_PROC: return TaskTarget::OMP;
-    case Processor::Kind::LOC_PROC: return TaskTarget::CPU;
-    default: LEGATE_ABORT;
-  }
-  assert(false);
-  return TaskTarget::CPU;
+  return low < other.low || (low == other.low && high < other.high);
 }
 
-Processor::Kind to_kind(TaskTarget target)
+bool NodeRange::operator==(const NodeRange& other) const
 {
-  switch (target) {
-    case TaskTarget::GPU: return Processor::Kind::TOC_PROC;
-    case TaskTarget::OMP: return Processor::Kind::OMP_PROC;
-    case TaskTarget::CPU: return Processor::Kind::LOC_PROC;
-    default: LEGATE_ABORT;
-  }
-  assert(false);
-  return Processor::Kind::LOC_PROC;
+  return low == other.low && high == other.high;
 }
 
-LegateVariantCode to_variant_code(TaskTarget target)
-{
-  switch (target) {
-    case TaskTarget::GPU: return LEGATE_GPU_VARIANT;
-    case TaskTarget::OMP: return LEGATE_OMP_VARIANT;
-    case TaskTarget::CPU: return LEGATE_CPU_VARIANT;
-    default: LEGATE_ABORT;
-  }
-  assert(false);
-  return LEGATE_CPU_VARIANT;
-}
-
-std::ostream& operator<<(std::ostream& stream, const TaskTarget& target)
-{
-  switch (target) {
-    case TaskTarget::GPU: {
-      stream << "GPU";
-      break;
-    }
-    case TaskTarget::OMP: {
-      stream << "OMP";
-      break;
-    }
-    case TaskTarget::CPU: {
-      stream << "CPU";
-      break;
-    }
-  }
-  return stream;
-}
+bool NodeRange::operator!=(const NodeRange& other) const { return !operator==(other); }
 
 /////////////////////////////////////
 // legate::mapping::ProcessorRange
 /////////////////////////////////////
 
-ProcessorRange::ProcessorRange(uint32_t _low, uint32_t _high, uint32_t _per_node_count)
-  : low(_low), high(_high), per_node_count(_per_node_count)
+uint32_t ProcessorRange::count() const { return high - low; }
+
+bool ProcessorRange::empty() const { return high <= low; }
+
+ProcessorRange ProcessorRange::slice(uint32_t from, uint32_t to) const
 {
-  if (high < low) {
-    low  = 0;
-    high = 0;
+  uint32_t new_low  = std::min<uint32_t>(low + from, high);
+  uint32_t new_high = std::min<uint32_t>(low + to, high);
+  return ProcessorRange(new_low, new_high, per_node_count);
+}
+
+NodeRange ProcessorRange::get_node_range() const
+{
+  if (empty()) {
+    throw std::invalid_argument("Illegal to get a node range of an empty processor range");
   }
+  return NodeRange{low / per_node_count, (high + per_node_count - 1) / per_node_count};
+}
+
+std::string ProcessorRange::to_string() const
+{
+  std::stringstream ss;
+  ss << "Proc([" << low << "," << high << "], " << per_node_count << " per node)";
+  return ss.str();
+}
+
+ProcessorRange::ProcessorRange() {}
+
+ProcessorRange::ProcessorRange(uint32_t _low, uint32_t _high, uint32_t _per_node_count)
+  : low(_low < _high ? _low : 0),
+    high(_low < _high ? _high : 0),
+    per_node_count(std::max<uint32_t>(1, _per_node_count))
+{
 }
 
 ProcessorRange ProcessorRange::operator&(const ProcessorRange& other) const
 {
-#ifdef DEBUG_LEGATE
-  assert(other.per_node_count == per_node_count);
-#endif
+  if (other.per_node_count != per_node_count) {
+    throw std::invalid_argument(
+      "Invalid to compute an intersection between processor ranges with different per-node counts");
+  }
   return ProcessorRange(std::max(low, other.low), std::min(high, other.high), per_node_count);
 }
 
@@ -117,37 +104,6 @@ bool ProcessorRange::operator<(const ProcessorRange& other) const
   return per_node_count < other.per_node_count;
 }
 
-uint32_t ProcessorRange::count() const { return high - low; }
-
-bool ProcessorRange::empty() const { return high <= low; }
-
-std::string ProcessorRange::to_string() const
-{
-  std::stringstream ss;
-  ss << "Proc([" << low << "," << high << "], " << per_node_count << " per node)";
-  return ss.str();
-}
-
-std::pair<uint32_t, uint32_t> ProcessorRange::get_node_range() const
-{
-  if (empty()) throw std::runtime_error("Illegal to get a node range of an empty processor range");
-  return std::make_pair(low / per_node_count, (high + per_node_count - 1) / per_node_count);
-}
-
-ProcessorRange ProcessorRange::slice(uint32_t from, uint32_t to) const
-{
-  uint32_t new_low  = std::min<uint32_t>(low + from, high);
-  uint32_t new_high = std::min<uint32_t>(low + to, high);
-  return ProcessorRange(new_low, new_high, per_node_count);
-}
-
-void ProcessorRange::pack(BufferBuilder& buffer) const
-{
-  buffer.pack<uint32_t>(low);
-  buffer.pack<uint32_t>(high);
-  buffer.pack<uint32_t>(per_node_count);
-}
-
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range)
 {
   stream << range.to_string();
@@ -155,334 +111,89 @@ std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range)
 }
 
 ///////////////////////////////////////////
-// legate::mapping::MachineDesc
+// legate::mapping::Machine
 //////////////////////////////////////////
 
-MachineDesc::MachineDesc(const std::map<TaskTarget, ProcessorRange>& ranges)
-  : processor_ranges(ranges)
+TaskTarget Machine::preferred_target() const { return impl_->preferred_target; }
+
+ProcessorRange Machine::processor_range() const { return processor_range(impl_->preferred_target); }
+ProcessorRange Machine::processor_range(TaskTarget target) const
 {
-  for (auto& [target, processor_range] : processor_ranges)
-    if (!processor_range.empty()) {
-      preferred_target = target;
-      return;
-    }
+  return impl_->processor_range(target);
 }
 
-MachineDesc::MachineDesc(std::map<TaskTarget, ProcessorRange>&& ranges)
-  : processor_ranges(std::move(ranges))
+std::vector<TaskTarget> Machine::valid_targets() const { return impl_->valid_targets(); }
+
+std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
-  for (auto& [target, processor_range] : processor_ranges)
-    if (!processor_range.empty()) {
-      preferred_target = target;
-      return;
-    }
+  return impl_->valid_targets_except(to_exclude);
 }
 
-const ProcessorRange& MachineDesc::processor_range() const
-{
-  return processor_range(preferred_target);
-}
-static const ProcessorRange EMPTY_RANGE{};
+uint32_t Machine::count() const { return count(impl_->preferred_target); }
 
-const ProcessorRange& MachineDesc::processor_range(TaskTarget target) const
-{
-  auto finder = processor_ranges.find(target);
-  if (finder == processor_ranges.end()) { return EMPTY_RANGE; }
-  return finder->second;
-}
+uint32_t Machine::count(TaskTarget target) const { return impl_->count(target); }
 
-std::vector<TaskTarget> MachineDesc::valid_targets() const
+std::string Machine::to_string() const { return impl_->to_string(); }
+
+Machine Machine::only(TaskTarget target) const { return only(std::vector({target})); }
+
+Machine Machine::only(const std::vector<TaskTarget>& targets) const
 {
-  std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges) result.push_back(target);
-  return result;
+  return Machine(new detail::Machine(impl_->only(targets)));
 }
 
-std::vector<TaskTarget> MachineDesc::valid_targets_except(
-  const std::set<TaskTarget>& to_exclude) const
+Machine Machine::slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others) const
 {
-  std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges)
-    if (to_exclude.find(target) == to_exclude.end()) result.push_back(target);
-  return result;
+  return Machine(new detail::Machine(impl_->slice(from, to, target, keep_others)));
 }
 
-uint32_t MachineDesc::count() const { return count(preferred_target); }
-
-uint32_t MachineDesc::count(TaskTarget target) const { return processor_range(target).count(); }
-
-std::string MachineDesc::to_string() const
+Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
 {
-  std::stringstream ss;
-  ss << "Machine(preferred_target: " << preferred_target;
-  for (auto& [kind, range] : processor_ranges) ss << ", " << kind << ": " << range.to_string();
-  ss << ")";
-  return ss.str();
+  return slice(from, to, impl_->preferred_target, keep_others);
 }
 
-void MachineDesc::pack(BufferBuilder& buffer) const
+Machine Machine::operator[](TaskTarget target) const { return only(target); }
+
+Machine Machine::operator[](const std::vector<TaskTarget>& targets) const { return only(targets); }
+
+bool Machine::operator==(const Machine& other) const { return *impl_ == *other.impl_; }
+
+bool Machine::operator!=(const Machine& other) const { return !(*impl_ == *other.impl_); }
+
+Machine Machine::operator&(const Machine& other) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(preferred_target));
-  buffer.pack<uint32_t>(processor_ranges.size());
-  for (auto& [target, processor_range] : processor_ranges) {
-    buffer.pack<int32_t>(static_cast<int32_t>(target));
-    processor_range.pack(buffer);
-  }
+  auto result = *impl_ & *other.impl_;
+  return Machine(new detail::Machine(std::move(result)));
 }
 
-MachineDesc MachineDesc::only(TaskTarget target) const { return only(std::vector({target})); }
+bool Machine::empty() const { return impl_->empty(); }
 
-MachineDesc MachineDesc::only(const std::vector<TaskTarget>& targets) const
+Machine::Machine(detail::Machine* impl) : impl_(impl) {}
+
+Machine::Machine(const detail::Machine& impl) : impl_(new detail::Machine(impl)) {}
+
+Machine::Machine(const Machine& other) : impl_(new detail::Machine(*other.impl_)) {}
+
+Machine& Machine::operator=(const Machine& other)
 {
-  std::map<TaskTarget, ProcessorRange> new_processor_ranges;
-  for (auto t : targets) new_processor_ranges.insert({t, processor_range(t)});
-
-  return MachineDesc(new_processor_ranges);
+  impl_ = new detail::Machine(*other.impl_);
+  return *this;
 }
 
-MachineDesc MachineDesc::slice(uint32_t from,
-                               uint32_t to,
-                               TaskTarget target,
-                               bool keep_others) const
+Machine::Machine(Machine&& other) : impl_(other.impl_) { other.impl_ = nullptr; }
+
+Machine& Machine::operator=(Machine&& other)
 {
-  if (keep_others) {
-    std::map<TaskTarget, ProcessorRange> new_ranges(processor_ranges);
-    new_ranges[target] = processor_range(target).slice(from, to);
-    return MachineDesc(std::move(new_ranges));
-  } else
-    return MachineDesc({{target, processor_range(target).slice(from, to)}});
+  impl_       = other.impl_;
+  other.impl_ = nullptr;
+  return *this;
 }
 
-MachineDesc MachineDesc::slice(uint32_t from, uint32_t to, bool keep_others) const
+Machine::~Machine() { delete impl_; }
+
+std::ostream& operator<<(std::ostream& stream, const Machine& machine)
 {
-  return slice(from, to, preferred_target, keep_others);
-}
-
-MachineDesc MachineDesc::operator[](TaskTarget target) const { return only(target); }
-
-MachineDesc MachineDesc::operator[](const std::vector<TaskTarget>& targets) const
-{
-  return only(targets);
-}
-
-bool MachineDesc::operator==(const MachineDesc& other) const
-{
-  if (preferred_target != other.preferred_target) return false;
-  if (processor_ranges.size() != other.processor_ranges.size()) return false;
-  for (auto const& r : processor_ranges) {
-    auto finder = other.processor_ranges.find(r.first);
-    if (finder == other.processor_ranges.end() || r.second != finder->second) return false;
-  }
-  return true;
-}
-
-bool MachineDesc::operator!=(const MachineDesc& other) const { return !(*this == other); }
-
-MachineDesc MachineDesc::operator&(const MachineDesc& other) const
-{
-  std::map<TaskTarget, ProcessorRange> new_processor_ranges;
-  for (const auto& [target, range] : processor_ranges) {
-    auto finder = other.processor_ranges.find(target);
-    if (finder != other.processor_ranges.end()) {
-      new_processor_ranges[target] = finder->second & range;
-    }
-  }
-  return MachineDesc(new_processor_ranges);
-}
-
-bool MachineDesc::empty() const
-{
-  for (const auto& r : processor_ranges)
-    if (!r.second.empty()) return false;
-  return true;
-}
-
-////////////////////////////////////////
-// legate::mapping::LocalProcessorRange
-/////////////////////////////////////////
-
-LocalProcessorRange::LocalProcessorRange() : offset_(0), total_proc_count_(0), procs_() {}
-
-LocalProcessorRange::LocalProcessorRange(const std::vector<Processor>& procs)
-  : offset_(0), total_proc_count_(procs.size()), procs_(procs.data(), procs.size())
-{
-}
-
-LocalProcessorRange::LocalProcessorRange(uint32_t offset,
-                                         uint32_t total_proc_count,
-                                         const Processor* local_procs,
-                                         size_t num_local_procs)
-  : offset_(offset), total_proc_count_(total_proc_count), procs_(local_procs, num_local_procs)
-{
-}
-
-const Processor& LocalProcessorRange::operator[](uint32_t idx) const
-{
-  auto local_idx = (idx % total_proc_count_) - offset_;
-#ifdef DEBUG_LEGATE
-  assert(local_idx < procs_.size());
-#endif
-  return procs_[local_idx];
-}
-
-std::string LocalProcessorRange::to_string() const
-{
-  std::stringstream ss;
-  ss << "{offset: " << offset_ << ", total processor count: " << total_proc_count_
-     << ", processors: ";
-  for (uint32_t idx = 0; idx < procs_.size(); ++idx) ss << procs_[idx] << ",";
-  ss << "}";
-  return std::move(ss).str();
-}
-
-std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range)
-{
-  stream << range.to_string();
-  return stream;
-}
-
-//////////////////////////////
-// legate::mapping::Machine
-//////////////////////////////
-Machine::Machine()
-  : local_node(Realm::Network::my_node_id),
-    total_nodes(Legion::Machine::get_machine().get_address_space_count())
-{
-  auto legion_machine = Legion::Machine::get_machine();
-  Legion::Machine::ProcessorQuery procs(legion_machine);
-  // Query to find all our local processors
-  procs.local_address_space();
-  for (auto proc : procs) {
-    switch (proc.kind()) {
-      case Processor::LOC_PROC: {
-        cpus_.push_back(proc);
-        continue;
-      }
-      case Processor::TOC_PROC: {
-        gpus_.push_back(proc);
-        continue;
-      }
-      case Processor::OMP_PROC: {
-        omps_.push_back(proc);
-        continue;
-      }
-      default: {
-        continue;
-      }
-    }
-  }
-
-  // Now do queries to find all our local memories
-  Legion::Machine::MemoryQuery sysmem(legion_machine);
-  sysmem.local_address_space().only_kind(Legion::Memory::SYSTEM_MEM);
-  assert(sysmem.count() > 0);
-  system_memory_ = sysmem.first();
-
-  if (!gpus_.empty()) {
-    Legion::Machine::MemoryQuery zcmem(legion_machine);
-    zcmem.local_address_space().only_kind(Legion::Memory::Z_COPY_MEM);
-    assert(zcmem.count() > 0);
-    zerocopy_memory_ = zcmem.first();
-  }
-  for (auto& gpu : gpus_) {
-    Legion::Machine::MemoryQuery framebuffer(legion_machine);
-    framebuffer.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
-    assert(framebuffer.count() > 0);
-    frame_buffers_[gpu] = framebuffer.first();
-  }
-  for (auto& omp : omps_) {
-    Legion::Machine::MemoryQuery sockmem(legion_machine);
-    sockmem.local_address_space().only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);
-    // If we have socket memories then use them
-    if (sockmem.count() > 0) socket_memories_[omp] = sockmem.first();
-    // Otherwise we just use the local system memory
-    else
-      socket_memories_[omp] = system_memory_;
-  }
-}
-
-const std::vector<Processor>& Machine::procs(TaskTarget target) const
-{
-  switch (target) {
-    case TaskTarget::GPU: return gpus_;
-    case TaskTarget::OMP: return omps_;
-    case TaskTarget::CPU: return cpus_;
-    default: LEGATE_ABORT;
-  }
-  assert(false);
-  return cpus_;
-}
-
-size_t Machine::total_frame_buffer_size() const
-{
-  // We assume that all memories of the same kind are symmetric in size
-  size_t per_node_size = frame_buffers_.size() * frame_buffers_.begin()->second.capacity();
-  return per_node_size * total_nodes;
-}
-
-size_t Machine::total_socket_memory_size() const
-{
-  // We assume that all memories of the same kind are symmetric in size
-  size_t per_node_size = socket_memories_.size() * socket_memories_.begin()->second.capacity();
-  return per_node_size * total_nodes;
-}
-
-bool Machine::has_socket_memory() const
-{
-  return !socket_memories_.empty() &&
-         socket_memories_.begin()->second.kind() == Legion::Memory::SOCKET_MEM;
-}
-
-LocalProcessorRange Machine::slice(TaskTarget target,
-                                   const MachineDesc& machine_desc,
-                                   bool fallback_to_global /*=false*/) const
-{
-  const auto& local_procs = procs(target);
-
-  auto finder = machine_desc.processor_ranges.find(target);
-  if (machine_desc.processor_ranges.end() == finder) {
-    if (fallback_to_global)
-      return LocalProcessorRange(local_procs);
-    else
-      return LocalProcessorRange();
-  }
-
-  auto& global_range = finder->second;
-
-  uint32_t num_local_procs = local_procs.size();
-  uint32_t my_low          = num_local_procs * local_node;
-  ProcessorRange my_range(my_low, my_low + num_local_procs, global_range.per_node_count);
-
-  auto slice = global_range & my_range;
-  if (slice.empty()) {
-    if (fallback_to_global)
-      return LocalProcessorRange(local_procs);
-    else
-      return LocalProcessorRange();
-  }
-
-  return LocalProcessorRange(slice.low - global_range.low,
-                             global_range.count(),
-                             local_procs.data() + (slice.low - my_low),
-                             slice.count());
-}
-
-Legion::Memory Machine::get_memory(Processor proc, StoreTarget target) const
-{
-  switch (target) {
-    case StoreTarget::SYSMEM: return system_memory_;
-    case StoreTarget::FBMEM: return frame_buffers_.at(proc);
-    case StoreTarget::ZCMEM: return zerocopy_memory_;
-    case StoreTarget::SOCKETMEM: return socket_memories_.at(proc);
-    default: LEGATE_ABORT;
-  }
-  assert(false);
-  return Legion::Memory::NO_MEMORY;
-}
-
-std::ostream& operator<<(std::ostream& stream, const MachineDesc& info)
-{
-  stream << info.to_string();
+  stream << machine.impl()->to_string();
   return stream;
 }
 

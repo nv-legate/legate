@@ -18,18 +18,16 @@
 
 #include "legion.h"
 
-namespace legate {
-class LibraryContext;
-}  // namespace legate
+namespace legate::detail {
+class Library;
+}  // namespace legate::detail
 
 namespace legate::comm::nccl {
 
-void register_tasks(Legion::Machine machine,
-                    Legion::Runtime* runtime,
-                    const LibraryContext* context);
+void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library);
 
 bool needs_barrier();
 
-void register_factory(const LibraryContext* context);
+void register_factory(const detail::Library* core_library);
 
 }  // namespace legate::comm::nccl

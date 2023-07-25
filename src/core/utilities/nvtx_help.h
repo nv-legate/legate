@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "legate.h"
+#include "legate_defines.h"
 
 #ifdef LEGATE_USE_CUDA
 

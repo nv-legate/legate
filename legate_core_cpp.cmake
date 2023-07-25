@@ -207,17 +207,23 @@ list(APPEND legate_core_SOURCES
   src/core/data/scalar.cc
   src/core/data/shape.cc
   src/core/data/store.cc
-  src/core/data/transform.cc
   src/core/data/detail/logical_region_field.cc
   src/core/data/detail/logical_store.cc
-  src/core/mapping/base_mapper.cc
-  src/core/mapping/core_mapper.cc
-  src/core/mapping/default_mapper.cc
-  src/core/mapping/instance_manager.cc
+  src/core/data/detail/scalar.cc
+  src/core/data/detail/store.cc
+  src/core/data/detail/transform.cc
   src/core/mapping/machine.cc
   src/core/mapping/mapping.cc
   src/core/mapping/operation.cc
   src/core/mapping/store.cc
+  src/core/mapping/detail/base_mapper.cc
+  src/core/mapping/detail/core_mapper.cc
+  src/core/mapping/detail/default_mapper.cc
+  src/core/mapping/detail/instance_manager.cc
+  src/core/mapping/detail/machine.cc
+  src/core/mapping/detail/mapping.cc
+  src/core/mapping/detail/operation.cc
+  src/core/mapping/detail/store.cc
   src/core/operation/task.cc
   src/core/operation/detail/copy.cc
   src/core/operation/detail/copy_launcher.cc
@@ -233,33 +239,38 @@ list(APPEND legate_core_SOURCES
   src/core/operation/detail/task.cc
   src/core/operation/detail/task_launcher.cc
   src/core/partitioning/constraint.cc
-  src/core/partitioning/constraint_solver.cc
   src/core/partitioning/partition.cc
-  src/core/partitioning/partitioner.cc
   src/core/partitioning/restriction.cc
-  src/core/runtime/context.cc
-  src/core/runtime/projection.cc
+  src/core/partitioning/detail/constraint.cc
+  src/core/partitioning/detail/constraint_solver.cc
+  src/core/partitioning/detail/partitioner.cc
+  src/core/runtime/library.cc
   src/core/runtime/runtime.cc
   src/core/runtime/tracker.cc
-  src/core/runtime/shard.cc
   src/core/runtime/detail/communicator_manager.cc
   src/core/runtime/detail/field_manager.cc
+  src/core/runtime/detail/library.cc
   src/core/runtime/detail/machine_manager.cc
   src/core/runtime/detail/partition_manager.cc
+  src/core/runtime/detail/projection.cc
   src/core/runtime/detail/provenance_manager.cc
   src/core/runtime/detail/region_manager.cc
   src/core/runtime/detail/runtime.cc
+  src/core/runtime/detail/shard.cc
   src/core/task/registrar.cc
-  src/core/task/return.cc
   src/core/task/task.cc
+  src/core/task/task_context.cc
   src/core/task/task_info.cc
   src/core/task/variant_options.cc
+  src/core/task/detail/return.cc
+  src/core/task/detail/task_context.cc
   src/core/type/type_info.cc
-  src/core/utilities/buffer_builder.cc
+  src/core/type/detail/type_info.cc
   src/core/utilities/debug.cc
   src/core/utilities/deserializer.cc
   src/core/utilities/machine.cc
   src/core/utilities/linearize.cc
+  src/core/utilities/detail/buffer_builder.cc
 )
 
 if(Legion_NETWORKS)
@@ -365,6 +376,7 @@ if (legate_core_BUILD_DOCS)
       src/core/type/type_traits.h
       # task
       src/core/task/task.h
+      src/core/task/task_context.h
       src/core/task/registrar.h
       src/core/task/variant_options.h
       src/core/task/exception.h
@@ -377,9 +389,9 @@ if (legate_core_BUILD_DOCS)
       src/core/data/allocator.h
       src/core/data/logical_store.h
       # runtime
+      src/core/runtime/library.h
       src/core/runtime/runtime.h
       src/core/runtime/runtime.inl
-      src/core/runtime/context.h
       # operation
       src/core/operation/task.h
       # partitioning
@@ -388,6 +400,7 @@ if (legate_core_BUILD_DOCS)
       src/core/mapping/machine.h
       src/core/mapping/mapping.h
       src/core/mapping/operation.h
+      src/core/mapping/store.h
       # aliases
       src/core/utilities/typedefs.h
       # utilities
@@ -459,14 +472,12 @@ install(
         src/core/data/slice.h
         src/core/data/store.h
         src/core/data/store.inl
-        src/core/data/transform.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/data)
 
 install(
   FILES src/core/mapping/machine.h
         src/core/mapping/mapping.h
         src/core/mapping/operation.h
-        src/core/mapping/operation.inl
         src/core/mapping/store.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/mapping)
 
@@ -476,15 +487,12 @@ install(
 
 install(
   FILES src/core/partitioning/constraint.h
-        src/core/partitioning/partition.h
-        src/core/partitioning/restriction.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/partitioning)
 
 install(
-  FILES src/core/runtime/context.h
-        src/core/runtime/context.inl
+  FILES src/core/runtime/library.h
+        src/core/runtime/library.inl
         src/core/runtime/resource.h
-        src/core/runtime/projection.h
         src/core/runtime/runtime.h
         src/core/runtime/runtime.inl
         src/core/runtime/tracker.h
@@ -493,9 +501,9 @@ install(
 install(
   FILES src/core/task/exception.h
         src/core/task/registrar.h
-        src/core/task/return.h
         src/core/task/task.h
         src/core/task/task.inl
+        src/core/task/task_context.h
         src/core/task/task_info.h
         src/core/task/variant_helper.h
         src/core/task/variant_options.h
@@ -506,11 +514,7 @@ install(
         src/core/type/type_traits.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/type)
 install(
-  FILES src/core/utilities/buffer_builder.h
-        src/core/utilities/buffer_builder.inl
-        src/core/utilities/debug.h
-        src/core/utilities/deserializer.h
-        src/core/utilities/deserializer.inl
+  FILES src/core/utilities/debug.h
         src/core/utilities/dispatch.h
         src/core/utilities/machine.h
         src/core/utilities/nvtx_help.h

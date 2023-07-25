@@ -20,6 +20,7 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/type/detail/type_info.h"
 
 namespace legate {
 
@@ -302,7 +303,7 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool com
     func_partition_->construct(func_region, func_partition_->is_complete_for(func_->get_storage()));
 
   auto runtime     = detail::Runtime::get_runtime();
-  bool is_range    = func_->type().code == Type::Code::STRUCT;
+  bool is_range    = func_->type()->code == Type::Code::STRUCT;
   auto color_space = runtime->find_or_create_index_space(to_domain(color_shape()));
 
   auto index_partition = runtime->create_image_partition(region.get_index_space(),

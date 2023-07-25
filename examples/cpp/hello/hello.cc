@@ -21,10 +21,10 @@
 
 namespace hello {
 
-legate::LogicalStore iota(legate::LibraryContext* context, size_t size)
+legate::LogicalStore iota(legate::Library library, size_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, task::hello::IOTA);
+  auto task    = runtime->create_task(library, task::hello::IOTA);
   auto output  = runtime->create_store({size}, legate::float32(), true);
   auto part    = task.declare_partition();
   task.add_output(output, part);
@@ -32,10 +32,10 @@ legate::LogicalStore iota(legate::LibraryContext* context, size_t size)
   return output;
 }
 
-legate::LogicalStore square(legate::LibraryContext* context, legate::LogicalStore input)
+legate::LogicalStore square(legate::Library library, legate::LogicalStore input)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, task::hello::SQUARE);
+  auto task    = runtime->create_task(library, task::hello::SQUARE);
   auto output  = runtime->create_store(input.extents().data(), legate::float32(), true);
   auto part1   = task.declare_partition();
   auto part2   = task.declare_partition();
@@ -46,12 +46,10 @@ legate::LogicalStore square(legate::LibraryContext* context, legate::LogicalStor
   return output;
 }
 
-legate::LogicalStore sum(legate::LibraryContext* context,
-                         legate::LogicalStore input,
-                         const void* bytearray)
+legate::LogicalStore sum(legate::Library library, legate::LogicalStore input, const void* bytearray)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, task::hello::SUM);
+  auto task    = runtime->create_task(library, task::hello::SUM);
 
   auto output = runtime->create_store(legate::Scalar(legate::float32(), bytearray));
 
@@ -64,11 +62,11 @@ legate::LogicalStore sum(legate::LibraryContext* context,
   return output;
 }
 
-float to_scalar(legate::LibraryContext* context, legate::LogicalStore scalar)
+float to_scalar(legate::Library library, legate::LogicalStore scalar)
 {
   auto runtime  = legate::Runtime::get_runtime();
   auto p_scalar = scalar.get_physical_store();
-  auto acc      = p_scalar->read_accessor<float, 1>();
+  auto acc      = p_scalar.read_accessor<float, 1>();
   float output  = static_cast<float>(acc[{0}]);
   return output;
 }
@@ -78,14 +76,14 @@ TEST(Example, Hello)
   legate::Core::perform_registration<task::hello::register_tasks>();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(task::hello::library_name);
+  auto library = runtime->find_library(task::hello::library_name);
 
   float bytearray = 0;
 
-  auto store        = iota(context, 5);
-  auto storeSquared = square(context, store);
-  auto storeSummed  = sum(context, storeSquared, &bytearray);
-  float scalar      = to_scalar(context, storeSummed);
+  auto store        = iota(library, 5);
+  auto storeSquared = square(library, store);
+  auto storeSummed  = sum(library, storeSquared, &bytearray);
+  float scalar      = to_scalar(library, storeSummed);
 
   ASSERT_EQ(scalar, 55);
 }

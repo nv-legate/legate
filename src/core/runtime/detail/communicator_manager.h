@@ -19,7 +19,7 @@
 #include <map>
 #include <unordered_map>
 
-#include "core/mapping/machine.h"
+#include "core/mapping/detail/machine.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate::detail {
@@ -49,10 +49,11 @@ class CommunicatorFactory {
   virtual bool is_supported_target(mapping::TaskTarget target) const = 0;
 
  protected:
-  virtual Legion::FutureMap initialize(const mapping::MachineDesc& machine, uint32_t num_tasks) = 0;
-  virtual void finalize(const mapping::MachineDesc& machine,
+  virtual Legion::FutureMap initialize(const mapping::detail::Machine& machine,
+                                       uint32_t num_tasks)     = 0;
+  virtual void finalize(const mapping::detail::Machine& machine,
                         uint32_t num_tasks,
-                        const Legion::FutureMap& communicator)                                  = 0;
+                        const Legion::FutureMap& communicator) = 0;
 
  private:
   template <class Desc>
@@ -60,7 +61,10 @@ class CommunicatorFactory {
     Desc desc;
     mapping::TaskTarget target;
     mapping::ProcessorRange range;
-    mapping::MachineDesc get_machine() const { return mapping::MachineDesc({{target, range}}); }
+    mapping::detail::Machine get_machine() const
+    {
+      return mapping::detail::Machine({{target, range}});
+    }
     bool operator==(const CacheKey& other) const
     {
       return desc == other.desc && target == other.target && range == other.range;

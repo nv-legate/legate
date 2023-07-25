@@ -16,12 +16,13 @@
 
 #include "core/data/detail/logical_store.h"
 
-#include "core/mapping/machine.h"
+#include "core/data/detail/store.h"
+#include "core/data/detail/transform.h"
 #include "core/operation/detail/projection.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/type/detail/type_info.h"
 #include "core/type/type_traits.h"
-#include "core/utilities/buffer_builder.h"
 #include "core/utilities/dispatch.h"
 #include "legate_defines.h"
 
@@ -35,7 +36,7 @@ namespace legate::detail {
 // legate::detail::Storage
 ////////////////////////////////////////////////////
 
-Storage::Storage(int32_t dim, std::unique_ptr<Type> type)
+Storage::Storage(int32_t dim, std::shared_ptr<Type> type)
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     unbound_(true),
     dim_(dim),
@@ -47,7 +48,7 @@ Storage::Storage(int32_t dim, std::unique_ptr<Type> type)
 #endif
 }
 
-Storage::Storage(const Shape& extents, std::unique_ptr<Type> type, bool optimize_scalar)
+Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar)
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(extents),
@@ -61,7 +62,7 @@ Storage::Storage(const Shape& extents, std::unique_ptr<Type> type, bool optimize
 #endif
 }
 
-Storage::Storage(const Shape& extents, std::unique_ptr<Type> type, const Legion::Future& future)
+Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future)
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(extents),
@@ -77,7 +78,7 @@ Storage::Storage(const Shape& extents, std::unique_ptr<Type> type, const Legion:
 }
 
 Storage::Storage(Shape&& extents,
-                 std::unique_ptr<Type> type,
+                 std::shared_ptr<Type> type,
                  std::shared_ptr<StoragePartition> parent,
                  Shape&& color,
                  Shape&& offsets)
@@ -207,7 +208,7 @@ Restrictions Storage::compute_restrictions() const
   return Restrictions(dim_, Restriction::ALLOW);
 }
 
-Partition* Storage::find_key_partition(const mapping::MachineDesc& machine,
+Partition* Storage::find_key_partition(const mapping::detail::Machine& machine,
                                        const Restrictions& restrictions) const
 {
   uint32_t new_num_pieces = machine.count();
@@ -220,7 +221,7 @@ Partition* Storage::find_key_partition(const mapping::MachineDesc& machine,
     return nullptr;
 }
 
-void Storage::set_key_partition(const mapping::MachineDesc& machine,
+void Storage::set_key_partition(const mapping::detail::Machine& machine,
                                 std::unique_ptr<Partition>&& key_partition)
 {
   num_pieces_    = machine.count();
@@ -278,7 +279,7 @@ std::shared_ptr<Storage> StoragePartition::get_child_storage(const Shape& color)
   auto child_extents = tiling->get_child_extents(parent_->extents(), color);
   auto child_offsets = tiling->get_child_offsets(color);
   return std::make_shared<Storage>(std::move(child_extents),
-                                   parent_->type().clone(),
+                                   parent_->type(),
                                    shared_from_this(),
                                    Shape(color),
                                    std::move(child_offsets));
@@ -292,7 +293,7 @@ std::shared_ptr<LogicalRegionField> StoragePartition::get_child_data(const Shape
   return parent_->get_region_field()->get_child(tiling, color, complete_);
 }
 
-Partition* StoragePartition::find_key_partition(const mapping::MachineDesc& machine,
+Partition* StoragePartition::find_key_partition(const mapping::detail::Machine& machine,
                                                 const Restrictions& restrictions) const
 {
   return parent_->find_key_partition(machine, restrictions);
@@ -358,7 +359,7 @@ const Shape& LogicalStore::extents() const
 
 size_t LogicalStore::volume() const { return extents().volume(); }
 
-size_t LogicalStore::storage_size() const { return storage_->volume() * type().size(); }
+size_t LogicalStore::storage_size() const { return storage_->volume() * type()->size(); }
 
 int32_t LogicalStore::dim() const
 {
@@ -367,7 +368,7 @@ int32_t LogicalStore::dim() const
 
 bool LogicalStore::has_scalar_storage() const { return storage_->kind() == Storage::Kind::FUTURE; }
 
-const Type& LogicalStore::type() const { return storage_->type(); }
+std::shared_ptr<Type> LogicalStore::type() const { return storage_->type(); }
 
 bool LogicalStore::transformed() const { return !transform_->identity(); }
 
@@ -532,17 +533,17 @@ std::shared_ptr<Store> LogicalStore::get_physical_store()
   if (storage_->kind() == Storage::Kind::FUTURE) {
     // TODO: future wrappers from inline mappings are read-only for now
     auto domain = to_domain(storage_->extents());
-    FutureWrapper future(true, type().size(), domain, storage_->get_future());
+    FutureWrapper future(true, type()->size(), domain, storage_->get_future());
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    return std::make_shared<Store>(dim(), type().clone(), -1, future, transform_);
+    return std::make_shared<Store>(dim(), type(), -1, future, transform_);
   }
 
 #ifdef DEBUG_LEGATE
   assert(storage_->kind() == Storage::Kind::REGION_FIELD);
 #endif
   auto region_field = storage_->map();
-  mapped_ = std::make_shared<Store>(dim(), type().clone(), -1, std::move(region_field), transform_);
+  mapped_ = std::make_shared<Store>(dim(), type(), -1, std::move(region_field), transform_);
   return mapped_;
 }
 
@@ -570,7 +571,7 @@ Legion::ProjectionID LogicalStore::compute_projection(int32_t launch_ndim) const
 }
 
 std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
-  const mapping::MachineDesc& machine, const Restrictions& restrictions)
+  const mapping::detail::Machine& machine, const Restrictions& restrictions)
 {
   uint32_t new_num_pieces = machine.count();
   if (num_pieces_ == new_num_pieces && key_partition_ != nullptr &&
@@ -607,7 +608,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
   return key_partition_;
 }
 
-bool LogicalStore::has_key_partition(const mapping::MachineDesc& machine,
+bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
                                      const Restrictions& restrictions) const
 {
   uint32_t new_num_pieces = machine.count();
@@ -619,7 +620,7 @@ bool LogicalStore::has_key_partition(const mapping::MachineDesc& machine,
            storage_->find_key_partition(machine, transform_->invert(restrictions)) != nullptr;
 }
 
-void LogicalStore::set_key_partition(const mapping::MachineDesc& machine,
+void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
                                      const Partition* partition)
 {
   num_pieces_   = machine.count();
@@ -650,7 +651,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(has_scalar_storage());
   buffer.pack<bool>(unbound());
   buffer.pack<int32_t>(dim());
-  type().pack(buffer);
+  type()->pack(buffer);
   transform_->pack(buffer);
 }
 

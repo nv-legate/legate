@@ -1,4 +1,4 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/* Copyright 2023 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include "core/data/scalar.h"
+#include "core/mapping/store.h"
 
 /** @defgroup mapping Mapping API
  */
@@ -29,7 +31,12 @@
 
 namespace legate::mapping {
 
-class Store;
+namespace detail {
+class BaseMapper;
+class DimOrdering;
+class StoreMapping;
+}  // namespace detail
+
 class Task;
 
 // NOTE: codes are chosen to reflect the precedence between the processor kinds in choosing target
@@ -57,6 +64,8 @@ enum class TaskTarget : int32_t {
   CPU = 3,
 };
 
+std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
+
 /**
  * @ingroup mapping
  * @brief An enum class for store targets
@@ -79,6 +88,8 @@ enum class StoreTarget : int32_t {
    */
   SOCKETMEM = 4,
 };
+
+std::ostream& operator<<(std::ostream& stream, const StoreTarget& target);
 
 /**
  * @ingroup mapping
@@ -138,10 +149,6 @@ struct DimOrdering {
   };
 
  public:
-  DimOrdering() {}
-  DimOrdering(Kind kind, std::vector<int32_t>&& dims = {});
-
- public:
   /**
    * @brief Creates a C ordering object
    *
@@ -161,22 +168,7 @@ struct DimOrdering {
    *
    * @return A `DimOrdering` object
    */
-  static DimOrdering custom_order(std::vector<int32_t>&& dims);
-
- public:
-  DimOrdering(const DimOrdering&)            = default;
-  DimOrdering& operator=(const DimOrdering&) = default;
-
- public:
-  DimOrdering(DimOrdering&&)            = default;
-  DimOrdering& operator=(DimOrdering&&) = default;
-
- public:
-  bool operator==(const DimOrdering&) const;
-
- public:
-  void populate_dimension_ordering(const Store& store,
-                                   std::vector<Legion::DimensionKind>& ordering) const;
+  static DimOrdering custom_order(const std::vector<int32_t>& dims);
 
  public:
   /**
@@ -192,26 +184,36 @@ struct DimOrdering {
    *
    * @param dims A vector that stores the order of dimensions.
    */
-  void set_custom_order(std::vector<int32_t>&& dims);
+  void set_custom_order(const std::vector<int32_t>& dims);
 
  public:
   /**
    * @brief Dimension ordering type
    */
-  Kind kind{Kind::C};
-  // When relative is true, 'dims' specifies the order of dimensions
-  // for the store's local coordinate space, which will be mapped
-  // back to the root store's original coordinate space.
-  /**
-   * @brief If true, the dimension ordering specifies the order of dimensions
-   * for the store's current domain, which will be transformed back to the root
-   * store's domain.
-   */
-  bool relative{false};
+  Kind kind() const;
   /**
    * @brief Dimension list. Used only when the `kind` is `CUSTOM`.
    */
-  std::vector<int32_t> dims{};
+  std::vector<int32_t> dimensions() const;
+
+ public:
+  bool operator==(const DimOrdering&) const;
+
+ private:
+  DimOrdering(std::shared_ptr<detail::DimOrdering> impl);
+
+ public:
+  const detail::DimOrdering* impl() const;
+
+ public:
+  DimOrdering();
+  DimOrdering(const DimOrdering&);
+  DimOrdering& operator=(const DimOrdering&);
+  DimOrdering(DimOrdering&&);
+  DimOrdering& operator=(DimOrdering&&);
+
+ private:
+  std::shared_ptr<detail::DimOrdering> impl_;
 };
 
 /**
@@ -233,7 +235,7 @@ struct InstanceMappingPolicy {
    */
   InstLayout layout{InstLayout::SOA};
   /**
-   * @brief Dimension ordering for the instance
+   * @brief Dimension ordering for the instance. C order by default.
    */
   DimOrdering ordering{};
   /**
@@ -243,19 +245,88 @@ struct InstanceMappingPolicy {
   bool exact{false};
 
  public:
-  InstanceMappingPolicy() {}
+  /**
+   * @brief Changes the store target
+   *
+   * @param `target` A new store target
+   *
+   * @return This instance mapping policy
+   */
+  InstanceMappingPolicy& with_target(StoreTarget target) &;
+  InstanceMappingPolicy&& with_target(StoreTarget target) const&;
+  InstanceMappingPolicy&& with_target(StoreTarget target) &&;
+  /**
+   * @brief Changes the allocation policy
+   *
+   * @param `allocation` A new allocation policy
+   *
+   * @return This instance mapping policy
+   */
+  InstanceMappingPolicy& with_allocation_policy(AllocPolicy allocation) &;
+  InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) const&;
+  InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) &&;
+  /**
+   * @brief Changes the instance layout
+   *
+   * @param `target` A new instance layout
+   *
+   * @return This instance mapping policy
+   */
+  InstanceMappingPolicy& with_instance_layout(InstLayout layout) &;
+  InstanceMappingPolicy&& with_instance_layout(InstLayout layout) const&;
+  InstanceMappingPolicy&& with_instance_layout(InstLayout layout) &&;
+  /**
+   * @brief Changes the dimension ordering
+   *
+   * @param `target` A new dimension ordering
+   *
+   * @return This instance mapping policy
+   */
+  InstanceMappingPolicy& with_ordering(DimOrdering ordering) &;
+  InstanceMappingPolicy&& with_ordering(DimOrdering ordering) const&;
+  InstanceMappingPolicy&& with_ordering(DimOrdering ordering) &&;
+  /**
+   * @brief Changes the value of `exact`
+   *
+   * @param `target` A new value for the `exact` field
+   *
+   * @return This instance mapping policy
+   */
+  InstanceMappingPolicy& with_exact(bool exact) &;
+  InstanceMappingPolicy&& with_exact(bool exact) const&;
+  InstanceMappingPolicy&& with_exact(bool exact) &&;
 
  public:
-  InstanceMappingPolicy(const InstanceMappingPolicy&)            = default;
-  InstanceMappingPolicy& operator=(const InstanceMappingPolicy&) = default;
-
- public:
-  InstanceMappingPolicy(InstanceMappingPolicy&&)            = default;
-  InstanceMappingPolicy& operator=(InstanceMappingPolicy&&) = default;
-
- public:
-  bool operator==(const InstanceMappingPolicy&) const;
-  bool operator!=(const InstanceMappingPolicy&) const;
+  /**
+   * @brief Changes the store target
+   *
+   * @param `target` A new store target
+   */
+  void set_target(StoreTarget target);
+  /**
+   * @brief Changes the allocation policy
+   *
+   * @param `allocation` A new allocation policy
+   */
+  void set_allocation_policy(AllocPolicy allocation);
+  /**
+   * @brief Changes the instance layout
+   *
+   * @param `target` A new instance layout
+   */
+  void set_instance_layout(InstLayout layout);
+  /**
+   * @brief Changes the dimension ordering
+   *
+   * @param `target` A new dimension ordering
+   */
+  void set_ordering(DimOrdering ordering);
+  /**
+   * @brief Changes the value of `exact`
+   *
+   * @param `target` A new value for the `exact` field
+   */
+  void set_exact(bool exact);
 
  public:
   /**
@@ -270,13 +341,19 @@ struct InstanceMappingPolicy {
    */
   bool subsumes(const InstanceMappingPolicy& other) const;
 
- private:
-  friend class StoreMapping;
-  void populate_layout_constraints(const Store& store,
-                                   Legion::LayoutConstraintSet& layout_constraints) const;
+ public:
+  InstanceMappingPolicy();
+  ~InstanceMappingPolicy();
 
  public:
-  static InstanceMappingPolicy default_policy(StoreTarget target, bool exact = false);
+  InstanceMappingPolicy(const InstanceMappingPolicy&);
+  InstanceMappingPolicy& operator=(const InstanceMappingPolicy&);
+  InstanceMappingPolicy(InstanceMappingPolicy&&);
+  InstanceMappingPolicy& operator=(InstanceMappingPolicy&&);
+
+ public:
+  bool operator==(const InstanceMappingPolicy&) const;
+  bool operator!=(const InstanceMappingPolicy&) const;
 };
 
 /**
@@ -286,68 +363,96 @@ struct InstanceMappingPolicy {
 struct StoreMapping {
  public:
   /**
-   * @brief Stores to which the `policy` should be applied
-   */
-  std::vector<std::reference_wrapper<const Store>> stores{};
-  /**
-   * @brief Instance mapping policy
-   */
-  InstanceMappingPolicy policy;
-
- public:
-  StoreMapping() {}
-
- public:
-  StoreMapping(const StoreMapping&)            = default;
-  StoreMapping& operator=(const StoreMapping&) = default;
-
- public:
-  StoreMapping(StoreMapping&&)            = default;
-  StoreMapping& operator=(StoreMapping&&) = default;
-
- public:
-  bool for_future() const;
-  bool for_unbound_store() const;
-  const Store& store() const;
-
- public:
-  /**
-   * @brief Returns a region requirement index for the stores.
+   * @brief Creates a mapping policy for the given store following the default mapping poicy
    *
-   * Returns an undefined value if the store mapping has more than one store and the stores are
-   * mapped to different region requirements.
+   * @param store Target store
+   * @param target Kind of the memory to which the store should be mapped
+   * @param exact Indicates whether the instance should be exact
    *
-   * @return Region requirement index
+   * @return A store mapping
    */
-  uint32_t requirement_index() const;
+  static StoreMapping default_mapping(Store store, StoreTarget target, bool exact = false);
   /**
-   * @brief Returns a set of region requirement indices for the stores.
-   *
-   * @return A set of region requirement indices
-   */
-  std::set<uint32_t> requirement_indices() const;
-  /**
-   * @brief Returns the stores' region requirements
-   *
-   * @return A set of region requirements
-   */
-  std::set<const Legion::RegionRequirement*> requirements() const;
-
- private:
-  friend class BaseMapper;
-  void populate_layout_constraints(Legion::LayoutConstraintSet& layout_constraints) const;
-
- public:
-  /**
-   * @brief Creates a `StoreMapping` object following the default mapping poicy
+   * @brief Creates a mapping policy for the given store using the instance mapping policy
    *
    * @param store Target store for the mapping policy
-   * @param target Target memory type for the store
-   * @param exact Indicates whether the policy should request an exact instance
+   * @param policy Instance mapping policy to apply
    *
-   * @return A `StoreMapping` object
+   * @return A store mapping
    */
-  static StoreMapping default_mapping(const Store& store, StoreTarget target, bool exact = false);
+  static StoreMapping create(Store store, InstanceMappingPolicy&& policy);
+
+  /**
+   * @brief Creates a mapping policy for the given set of stores using the instance mapping policy
+   *
+   * @param store Target store for the mapping policy
+   * @param policy Instance mapping policy to apply
+   *
+   * @return A store mapping
+   */
+  static StoreMapping create(const std::vector<Store>& stores, InstanceMappingPolicy&& policy);
+
+ public:
+  /**
+   * @brief Returns the instance mapping policy of this `StoreMapping` object
+   *
+   * @return A reference to the `InstanceMappingPolicy` object
+   */
+  InstanceMappingPolicy& policy();
+  /**
+   * @brief Returns the instance mapping policy of this `StoreMapping` object
+   *
+   * @return A reference to the `InstanceMappingPolicy` object
+   */
+  const InstanceMappingPolicy& policy() const;
+
+ public:
+  /**
+   * @brief Returns the store for which this `StoreMapping` object describes a mapping policy.
+   *
+   * If the policy is for multiple stores, the first store added to this policy will be returned;
+   *
+   * @return A `Store` object
+   */
+  Store store() const;
+  /**
+   * @brief Returns all the stores for which this `StoreMapping` object describes a mapping policy
+   *
+   * @return A vector of `Store` objects
+   */
+  std::vector<Store> stores() const;
+
+ public:
+  /**
+   * @brief Adds a store to this `StoreMapping` object
+   *
+   * @param store Store to add
+   */
+  void add_store(Store store);
+
+ private:
+  StoreMapping(detail::StoreMapping* impl);
+
+ public:
+  const detail::StoreMapping* impl() const;
+
+ private:
+  StoreMapping(const StoreMapping&)            = delete;
+  StoreMapping& operator=(const StoreMapping&) = delete;
+
+ public:
+  StoreMapping(StoreMapping&&);
+  StoreMapping& operator=(StoreMapping&&);
+
+ public:
+  ~StoreMapping();
+
+ private:
+  friend class detail::BaseMapper;
+  detail::StoreMapping* release();
+
+ private:
+  detail::StoreMapping* impl_{nullptr};
 };
 
 /**

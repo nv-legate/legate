@@ -37,7 +37,7 @@ struct GPUVariantTask : public legate::LegateTask<GPUVariantTask<ID>> {
 void test_duplicates()
 {
   auto* runtime = legate::Runtime::get_runtime();
-  auto* library = runtime->create_library("libA");
+  auto library  = runtime->create_library("libA");
   test_registration::CPUVariantTask<0>::register_variants(library);
   EXPECT_THROW(test_registration::CPUVariantTask<0>::register_variants(library),
                std::invalid_argument);
@@ -48,7 +48,7 @@ void test_out_of_bounds_task_id()
   legate::ResourceConfig config;
   config.max_tasks = 1;
   auto* runtime    = legate::Runtime::get_runtime();
-  auto* library    = runtime->create_library("libA", config);
+  auto library     = runtime->create_library("libA", config);
 
   EXPECT_THROW(test_registration::CPUVariantTask<1>::register_variants(library), std::out_of_range);
 }
