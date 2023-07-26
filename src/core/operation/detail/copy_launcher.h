@@ -39,9 +39,7 @@ class CopyLauncher {
   void add_input(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
   void add_output(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
   void add_inout(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
-  void add_reduction(detail::LogicalStore* store,
-                     std::unique_ptr<ProjectionInfo> proj_info,
-                     bool read_write);
+  void add_reduction(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
   void add_source_indirect(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
   void add_target_indirect(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info);
 

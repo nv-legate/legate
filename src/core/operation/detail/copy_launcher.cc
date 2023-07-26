@@ -122,13 +122,9 @@ void CopyLauncher::add_inout(detail::LogicalStore* store, std::unique_ptr<Projec
 }
 
 void CopyLauncher::add_reduction(detail::LogicalStore* store,
-                                 std::unique_ptr<ProjectionInfo> proj_info,
-                                 bool read_write)
+                                 std::unique_ptr<ProjectionInfo> proj_info)
 {
-  if (read_write)
-    add_store(outputs_, store, std::move(proj_info), LEGION_READ_WRITE);
-  else
-    add_store(outputs_, store, std::move(proj_info), LEGION_REDUCE);
+  add_store(outputs_, store, std::move(proj_info), LEGION_REDUCE);
 }
 void CopyLauncher::add_source_indirect(detail::LogicalStore* store,
                                        std::unique_ptr<ProjectionInfo> proj_info)

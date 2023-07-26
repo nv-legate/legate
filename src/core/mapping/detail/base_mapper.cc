@@ -563,6 +563,8 @@ bool BaseMapper::map_legate_store(const Legion::Mapping::MapperContext ctx,
     }
   }
 #endif
+  // Targets of reduction copies should be mapped to normal instances
+  if (mappable.get_mappable_type() == Legion::Mappable::COPY_MAPPABLE) redop = 0;
 
   // Generate layout constraints from the store mapping
   Legion::LayoutConstraintSet layout_constraints;
