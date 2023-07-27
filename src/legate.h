@@ -29,7 +29,6 @@
 #include "core/mapping/operation.h"
 #include "core/operation/task.h"
 #include "core/partitioning/constraint.h"
-#include "core/partitioning/partition.h"
 #include "core/runtime/library.h"
 #include "core/runtime/runtime.h"
 #include "core/runtime/tracker.h"
