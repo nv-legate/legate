@@ -19,33 +19,11 @@ std::string Variable::to_string() const { return impl_->to_string(); }
 
 Variable::Variable(const detail::Variable* impl) : impl_(impl) {}
 
-Variable::~Variable() {}
-
-Variable::Variable(const Variable&) = default;
-
-Variable& Variable::operator=(const Variable&) = default;
-
 std::string Constraint::to_string() const { return impl_->to_string(); }
 
 Constraint::Constraint(detail::Constraint* impl) : impl_(impl) {}
 
-Constraint::~Constraint() { delete impl_; }
-
-Constraint::Constraint(Constraint&& other) : impl_(other.impl_) { other.impl_ = nullptr; }
-
-Constraint& Constraint::operator=(Constraint&& other)
-{
-  impl_       = other.impl_;
-  other.impl_ = nullptr;
-  return *this;
-}
-
-detail::Constraint* Constraint::release()
-{
-  auto result = impl_;
-  impl_       = nullptr;
-  return result;
-}
+detail::Constraint* Constraint::release() { return impl_.release(); }
 
 Constraint align(Variable lhs, Variable rhs)
 {

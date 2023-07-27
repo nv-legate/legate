@@ -18,6 +18,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
+#include "core/utilities/memory.h"
 
 namespace legate::detail {
 
@@ -156,3 +157,8 @@ std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Varia
 }
 
 }  // namespace legate::detail
+
+// explicitly instantiate the deleter for std::unique_ptr<detail::Constraint>
+namespace legate {
+template class default_delete<detail::Constraint>;
+}

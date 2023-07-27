@@ -12,8 +12,7 @@
 
 #pragma once
 
-#include <memory>
-
+#include "core/utilities/memory.h"
 #include "core/utilities/tuple.h"
 
 /** @defgroup partitioning Partitioning
@@ -31,6 +30,7 @@ namespace detail {
 class Constraint;
 class Variable;
 }  // namespace detail
+extern template class default_delete<detail::Constraint>;
 
 /**
  * @ingroup partitioning
@@ -42,15 +42,7 @@ class Variable {
 
  public:
   Variable(const detail::Variable* impl);
-  ~Variable();
-
- public:
-  Variable(const Variable&);
-  Variable& operator=(const Variable&);
-
- private:
-  Variable(Variable&&)            = delete;
-  Variable& operator=(Variable&&) = delete;
+  ~Variable() = default;
 
  public:
   const detail::Variable* impl() const { return impl_; }
@@ -69,22 +61,14 @@ class Constraint {
 
  public:
   Constraint(detail::Constraint* impl);
-  ~Constraint();
-
- public:
-  Constraint(Constraint&&);
-  Constraint& operator=(Constraint&&);
-
- private:
-  Constraint(const Constraint&)            = delete;
-  Constraint& operator=(const Constraint&) = delete;
+  ~Constraint() = default;
 
  private:
   friend class AutoTask;
   detail::Constraint* release();
 
  private:
-  detail::Constraint* impl_{nullptr};
+  std::unique_ptr<detail::Constraint, default_delete<detail::Constraint>> impl_;
 };
 
 /**
