@@ -14,6 +14,8 @@
 #include "core/data/buffer.h"
 #include "core/utilities/typedefs.h"
 
+#include <unordered_map>
+
 namespace legate {
 
 class ScopedAllocator::Impl {
