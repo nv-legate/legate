@@ -88,6 +88,11 @@ class Runtime {
                             std::shared_ptr<LogicalStore> source_indirect,
                             std::optional<int32_t> redop);
   void issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value);
+  void tree_reduce(const Library* library,
+                   int64_t task_id,
+                   std::shared_ptr<LogicalStore> store,
+                   std::shared_ptr<LogicalStore> out_store,
+                   int64_t radix);
   void flush_scheduling_window();
   void submit(std::unique_ptr<Operation> op);
 

@@ -83,11 +83,26 @@ std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
   return out;
 }
 
+RadixProjectionFunctor::RadixProjectionFunctor(int32_t radix, int32_t offset)
+  : radix_(radix), offset_(offset)
+{
+}
+
+SymbolicPoint RadixProjectionFunctor::operator()(const SymbolicPoint& in_p) const
+{
+  auto ndim = in_p.size();
+  std::vector<SymbolicExpr> exprs;
+  exprs.resize(ndim);
+  for (int32_t dim = 0; dim < ndim; ++dim) { exprs[dim] = in_p[dim] * radix_ + offset_; }
+  return SymbolicPoint(std::move(exprs));
+}
+
 SymbolicPoint create_symbolic_point(int32_t ndim)
 {
   std::vector<SymbolicExpr> exprs;
   exprs.resize(ndim);
-  for (int32_t dim = 0; dim < ndim; ++dim) exprs[dim] = proj::SymbolicExpr(dim);
+
+  for (int32_t dim = 0; dim < ndim; ++dim) { exprs[dim] = proj::SymbolicExpr(dim); }
   return SymbolicPoint(std::move(exprs));
 }
 

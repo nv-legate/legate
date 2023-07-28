@@ -21,6 +21,7 @@
 #include "core/mapping/detail/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
+#include "core/runtime/detail/projection.h"
 #include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::detail {
@@ -212,7 +213,8 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
  public:
   std::shared_ptr<LogicalStorePartition> create_partition(
     std::shared_ptr<Partition> partition, std::optional<bool> complete = std::nullopt);
-  Legion::ProjectionID compute_projection(int32_t launch_ndim) const;
+  Legion::ProjectionID compute_projection(
+    int32_t launch_ndim, std::optional<proj::SymbolicFunctor> proj_fn = nullptr) const;
 
  public:
   void pack(BufferBuilder& buffer) const;
@@ -242,7 +244,8 @@ class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePa
   std::shared_ptr<Partition> partition() const { return partition_; }
   std::shared_ptr<StoragePartition> storage_partition() const { return storage_partition_; }
   std::shared_ptr<LogicalStore> store() const { return store_; }
-  std::unique_ptr<ProjectionInfo> create_projection_info(const Domain* launch_domain);
+  std::unique_ptr<ProjectionInfo> create_projection_info(
+    const Domain* launch_domain, std::optional<proj::SymbolicFunctor> proj_fn = nullptr);
   bool is_disjoint_for(const Domain* launch_domain) const;
 
  private:

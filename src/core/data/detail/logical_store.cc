@@ -548,8 +548,17 @@ Restrictions LogicalStore::compute_restrictions() const
   return transform_->convert(storage_->compute_restrictions());
 }
 
-Legion::ProjectionID LogicalStore::compute_projection(int32_t launch_ndim) const
+Legion::ProjectionID LogicalStore::compute_projection(
+  int32_t launch_ndim, std::optional<proj::SymbolicFunctor> proj_fn) const
 {
+  auto ndim = dim();
+
+  if (proj_fn != nullptr) {
+    assert(!transformed());
+    auto point = proj_fn.value()(proj::create_symbolic_point(launch_ndim));
+    return Runtime::get_runtime()->get_projection(launch_ndim, point);
+  }
+
   if (transform_->identity()) {
     if (launch_ndim != dim())
       return Runtime::get_runtime()->get_delinearizing_projection();
@@ -557,7 +566,6 @@ Legion::ProjectionID LogicalStore::compute_projection(int32_t launch_ndim) const
       return 0;
   }
 
-  auto ndim  = dim();
   auto point = transform_->invert(proj::create_symbolic_point(ndim));
   // TODO: We can't currently mix affine projections with delinearizing projections
 #ifdef DEBUG_LEGATE
@@ -678,8 +686,9 @@ LogicalStorePartition::LogicalStorePartition(std::shared_ptr<Partition> partitio
 {
 }
 
+// FIXME pass projection functor
 std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
-  const Domain* launch_domain)
+  const Domain* launch_domain, std::optional<proj::SymbolicFunctor> proj_fn)
 {
   if (nullptr == launch_domain || store_->has_scalar_storage())
     return std::make_unique<ProjectionInfo>();
@@ -687,7 +696,7 @@ std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
   auto legion_partition = storage_partition_->get_legion_partition();
-  auto proj_id          = store_->compute_projection(launch_domain->dim);
+  auto proj_id          = store_->compute_projection(launch_domain->dim, proj_fn);
   return std::make_unique<ProjectionInfo>(legion_partition, proj_id);
 }
 

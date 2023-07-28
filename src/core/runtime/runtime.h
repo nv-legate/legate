@@ -325,6 +325,14 @@ class Runtime {
    */
   void issue_fill(LogicalStore lhs, const Scalar& value);
   /**
+   * @brief tree_reduce given store and task id
+   *
+   * @param task_id reduction task ID
+   * @param store Logical store to reduce
+   */
+  LogicalStore tree_reduce(Library library, int64_t task_id, LogicalStore store, int64_t radix = 4);
+
+  /**
    * @brief Submits an AutoTask for execution
    *
    * Each submitted operation goes through multiple pipeline steps to eventually get scheduled

@@ -229,6 +229,7 @@ list(APPEND legate_core_SOURCES
   src/core/operation/detail/launcher_arg.cc
   src/core/operation/detail/operation.cc
   src/core/operation/detail/projection.cc
+  src/core/operation/detail/reduce.cc
   src/core/operation/detail/req_analyzer.cc
   src/core/operation/detail/scatter.cc
   src/core/operation/detail/scatter_gather.cc

@@ -231,6 +231,16 @@ void Runtime::issue_fill(LogicalStore lhs, const Scalar& value)
   issue_fill(std::move(lhs), create_store(value));
 }
 
+LogicalStore Runtime::tree_reduce(Library library,
+                                  int64_t task_id,
+                                  LogicalStore store,
+                                  int64_t radix)
+{
+  auto out_store = create_store(store.type(), 1);
+  impl_->tree_reduce(library.impl(), task_id, store.impl(), out_store.impl(), radix);
+  return out_store;
+}
+
 void Runtime::submit(AutoTask&& task) { impl_->submit(std::move(task.impl_)); }
 
 void Runtime::submit(ManualTask&& task) { impl_->submit(std::move(task.impl_)); }

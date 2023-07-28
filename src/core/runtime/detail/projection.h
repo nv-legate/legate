@@ -11,6 +11,7 @@
  */
 
 #pragma once
+#include <optional>
 
 #include "legion.h"
 
@@ -48,7 +49,17 @@ class SymbolicExpr {
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
 
 using SymbolicPoint   = tuple<SymbolicExpr>;
-using SymbolicFunctor = SymbolicPoint (*)(const SymbolicPoint&);
+using SymbolicFunctor = std::function<SymbolicPoint(const SymbolicPoint&)>;
+;
+
+struct RadixProjectionFunctor {
+  RadixProjectionFunctor(int32_t radix, int32_t offset);
+
+  SymbolicPoint operator()(const SymbolicPoint& exprs) const;
+
+ private:
+  int32_t offset_, radix_;
+};
 
 SymbolicPoint create_symbolic_point(int32_t ndim);
 
