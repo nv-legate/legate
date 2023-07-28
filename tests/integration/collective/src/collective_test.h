@@ -10,7 +10,6 @@
  * its affiliates is strictly prohibited.
  */
 
-
 #pragma once
 
 #include "collective_cffi.h"

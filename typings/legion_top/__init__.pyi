@@ -8,7 +8,6 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-
 from typing import Any, Callable, Tuple
 
 from legion_cffi.lib import legion_context_t, legion_runtime_t
