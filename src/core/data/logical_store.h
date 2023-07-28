@@ -243,7 +243,7 @@ class LogicalStore {
    *   [4, 8]]]
    * @endcode
    *
-   * @code(.unparsed}
+   * @code{.unparsed}
    * [[[1, 5],
    *  [3, 7]],
    *

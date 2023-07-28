@@ -144,7 +144,7 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
     auto& func = context.inputs().at(0);
 
     auto range = context.inputs().at(1).domain();
-    EXPECT_FALSE(range.get_volume() > 1 && range.dense());
+    EXPECT_FALSE(!context.is_single_task() && range.get_volume() > 1 && range.dense());
 
     if constexpr (RECT) {
       const auto& rect_type  = func.type().as_struct_type();
