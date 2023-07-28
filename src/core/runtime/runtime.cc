@@ -153,28 +153,72 @@ ManualTask Runtime::create_task(Library library, int64_t task_id, const Shape& l
   return ManualTask(impl_->create_task(library.impl(), task_id, launch_shape));
 }
 
-void Runtime::issue_copy(LogicalStore target, LogicalStore source)
+void Runtime::issue_copy(LogicalStore target,
+                         LogicalStore source,
+                         std::optional<ReductionOpKind> redop)
 {
-  impl_->issue_copy(target.impl(), source.impl());
+  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  impl_->issue_copy(target.impl(), source.impl(), op);
 }
 
-void Runtime::issue_gather(LogicalStore target, LogicalStore source, LogicalStore source_indirect)
+void Runtime::issue_copy(LogicalStore target, LogicalStore source, std::optional<int32_t> redop)
 {
-  impl_->issue_gather(target.impl(), source.impl(), source_indirect.impl());
+  impl_->issue_copy(target.impl(), source.impl(), redop);
 }
 
-void Runtime::issue_scatter(LogicalStore target, LogicalStore target_indirect, LogicalStore source)
+void Runtime::issue_gather(LogicalStore target,
+                           LogicalStore source,
+                           LogicalStore source_indirect,
+                           std::optional<ReductionOpKind> redop)
 {
-  impl_->issue_scatter(target.impl(), target_indirect.impl(), source.impl());
+  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  impl_->issue_gather(target.impl(), source.impl(), source_indirect.impl(), op);
+}
+
+void Runtime::issue_gather(LogicalStore target,
+                           LogicalStore source,
+                           LogicalStore source_indirect,
+                           std::optional<int32_t> redop)
+{
+  impl_->issue_gather(target.impl(), source.impl(), source_indirect.impl(), redop);
+}
+
+void Runtime::issue_scatter(LogicalStore target,
+                            LogicalStore target_indirect,
+                            LogicalStore source,
+                            std::optional<ReductionOpKind> redop)
+{
+  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  impl_->issue_scatter(target.impl(), target_indirect.impl(), source.impl(), op);
+}
+
+void Runtime::issue_scatter(LogicalStore target,
+                            LogicalStore target_indirect,
+                            LogicalStore source,
+                            std::optional<int32_t> redop)
+{
+  impl_->issue_scatter(target.impl(), target_indirect.impl(), source.impl(), redop);
 }
 
 void Runtime::issue_scatter_gather(LogicalStore target,
                                    LogicalStore target_indirect,
                                    LogicalStore source,
-                                   LogicalStore source_indirect)
+                                   LogicalStore source_indirect,
+                                   std::optional<ReductionOpKind> redop)
+{
+  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  impl_->issue_scatter_gather(
+    target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl(), op);
+}
+
+void Runtime::issue_scatter_gather(LogicalStore target,
+                                   LogicalStore target_indirect,
+                                   LogicalStore source,
+                                   LogicalStore source_indirect,
+                                   std::optional<int32_t> redop)
 {
   impl_->issue_scatter_gather(
-    target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl());
+    target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl(), redop);
 }
 
 void Runtime::issue_fill(LogicalStore lhs, LogicalStore value)

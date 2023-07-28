@@ -24,12 +24,14 @@ Scatter::Scatter(std::shared_ptr<LogicalStore> target,
                  std::shared_ptr<LogicalStore> target_indirect,
                  std::shared_ptr<LogicalStore> source,
                  int64_t unique_id,
-                 mapping::detail::Machine&& machine)
+                 mapping::detail::Machine&& machine,
+                 std::optional<int32_t> redop)
   : Operation(unique_id, std::move(machine)),
     target_{target.get(), declare_partition()},
     target_indirect_{target_indirect.get(), declare_partition()},
     source_{source.get(), declare_partition()},
-    constraint_(align(source_.variable, target_indirect_.variable))
+    constraint_(align(source_.variable, target_indirect_.variable)),
+    redop_{redop}
 {
   record_partition(target_.variable, std::move(target));
   record_partition(target_indirect_.variable, std::move(target_indirect));
@@ -66,7 +68,16 @@ void Scatter::launch(Strategy* p_strategy)
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.add_input(source_.store, create_projection_info(strategy, launch_domain, source_));
-  launcher.add_inout(target_.store, create_projection_info(strategy, launch_domain, target_));
+
+  if (!redop_) {
+    launcher.add_inout(target_.store, create_projection_info(strategy, launch_domain, target_));
+  } else {
+    auto store_partition = target_.store->create_partition(strategy[target_.variable]);
+    auto proj            = store_partition->create_projection_info(launch_domain);
+    proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_.value()));
+    launcher.add_reduction(target_.store, std::move(proj));
+  }
+
   launcher.add_target_indirect(target_indirect_.store,
                                create_projection_info(strategy, launch_domain, target_indirect_));
   launcher.set_target_indirect_out_of_range(out_of_range_);

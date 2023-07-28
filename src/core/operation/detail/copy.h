@@ -13,6 +13,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
@@ -27,7 +28,8 @@ class Copy : public Operation {
   Copy(std::shared_ptr<LogicalStore> target,
        std::shared_ptr<LogicalStore> source,
        int64_t unique_id,
-       mapping::detail::Machine&& machine);
+       mapping::detail::Machine&& machine,
+       std::optional<int32_t> redop);
 
  public:
   void validate() override;
@@ -43,6 +45,7 @@ class Copy : public Operation {
   StoreArg target_;
   StoreArg source_;
   std::unique_ptr<Constraint> constraint_;
+  std::optional<int32_t> redop_;
 };
 
 }  // namespace legate::detail

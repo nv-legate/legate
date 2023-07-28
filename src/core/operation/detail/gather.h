@@ -13,6 +13,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
@@ -28,7 +29,8 @@ class Gather : public Operation {
          std::shared_ptr<LogicalStore> source,
          std::shared_ptr<LogicalStore> source_indirect,
          int64_t unique_id,
-         mapping::detail::Machine&& machine);
+         mapping::detail::Machine&& machine,
+         std::optional<int32_t> redop);
 
  public:
   void set_indirect_out_of_range(bool flag) { out_of_range_ = flag; }
@@ -49,6 +51,7 @@ class Gather : public Operation {
   StoreArg source_;
   StoreArg source_indirect_;
   std::unique_ptr<Constraint> constraint_;
+  std::optional<int32_t> redop_;
 };
 
 }  // namespace legate::detail

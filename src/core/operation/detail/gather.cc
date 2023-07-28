@@ -24,12 +24,14 @@ Gather::Gather(std::shared_ptr<LogicalStore> target,
                std::shared_ptr<LogicalStore> source,
                std::shared_ptr<LogicalStore> source_indirect,
                int64_t unique_id,
-               mapping::detail::Machine&& machine)
+               mapping::detail::Machine&& machine,
+               std::optional<int32_t> redop)
   : Operation(unique_id, std::move(machine)),
     target_{target.get(), declare_partition()},
     source_{source.get(), declare_partition()},
     source_indirect_{source_indirect.get(), declare_partition()},
-    constraint_(align(target_.variable, source_indirect_.variable))
+    constraint_(align(target_.variable, source_indirect_.variable)),
+    redop_{redop}
 {
   record_partition(target_.variable, std::move(target));
   record_partition(source_.variable, std::move(source));
@@ -68,7 +70,16 @@ void Gather::launch(Strategy* p_strategy)
   launcher.add_input(source_.store, create_projection_info(strategy, launch_domain, source_));
   launcher.add_source_indirect(source_indirect_.store,
                                create_projection_info(strategy, launch_domain, source_indirect_));
-  launcher.add_output(target_.store, create_projection_info(strategy, launch_domain, target_));
+
+  if (!redop_) {
+    launcher.add_output(target_.store, create_projection_info(strategy, launch_domain, target_));
+  } else {
+    auto store_partition = target_.store->create_partition(strategy[target_.variable]);
+    auto proj            = store_partition->create_projection_info(launch_domain);
+    proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_.value()));
+    launcher.add_reduction(target_.store, std::move(proj));
+  }
+
   launcher.set_source_indirect_out_of_range(out_of_range_);
 
   if (launch_domain != nullptr) {

@@ -13,6 +13,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
@@ -28,7 +29,8 @@ class Scatter : public Operation {
           std::shared_ptr<LogicalStore> target_indirect,
           std::shared_ptr<LogicalStore> source,
           int64_t unique_id,
-          mapping::detail::Machine&& machine);
+          mapping::detail::Machine&& machine,
+          std::optional<int32_t> redop);
 
  public:
   void set_indirect_out_of_range(bool flag) { out_of_range_ = flag; }
@@ -49,6 +51,7 @@ class Scatter : public Operation {
   StoreArg target_indirect_;
   StoreArg source_;
   std::unique_ptr<Constraint> constraint_;
+  std::optional<int32_t> redop_;
 };
 
 }  // namespace legate::detail

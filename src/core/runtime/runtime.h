@@ -23,6 +23,7 @@
 #include "core/runtime/library.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
+#include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
 
 /** @defgroup runtime Runtime and library contexts
@@ -182,8 +183,27 @@ class Runtime {
    *
    * @param target Copy target
    * @param source Copy source
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_copy(LogicalStore target, LogicalStore source);
+  void issue_copy(LogicalStore target,
+                  LogicalStore source,
+                  std::optional<ReductionOpKind> redop = std::nullopt);
+  /**
+   * @brief Issues a copy between stores.
+   *
+   * The source and target stores must have the same shape.
+   *
+   * @param target Copy target
+   * @param source Copy source
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
+   */
+  void issue_copy(LogicalStore target, LogicalStore source, std::optional<int32_t> redop);
   /**
    * @brief Issues a gather copy between stores.
    *
@@ -192,8 +212,32 @@ class Runtime {
    * @param target Copy target
    * @param source Copy source
    * @param source_indirect Store for source indirection
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_gather(LogicalStore target, LogicalStore source, LogicalStore source_indirect);
+  void issue_gather(LogicalStore target,
+                    LogicalStore source,
+                    LogicalStore source_indirect,
+                    std::optional<ReductionOpKind> redop = std::nullopt);
+  /**
+   * @brief Issues a gather copy between stores.
+   *
+   * The indirection store and the target store must have the same shape.
+   *
+   * @param target Copy target
+   * @param source Copy source
+   * @param source_indirect Store for source indirection
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
+   */
+  void issue_gather(LogicalStore target,
+                    LogicalStore source,
+                    LogicalStore source_indirect,
+                    std::optional<int32_t> redop);
   /**
    * @brief Issues a scatter copy between stores.
    *
@@ -202,8 +246,32 @@ class Runtime {
    * @param target Copy target
    * @param target_indirect Store for target indirection
    * @param source Copy source
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_scatter(LogicalStore target, LogicalStore target_indirect, LogicalStore source);
+  void issue_scatter(LogicalStore target,
+                     LogicalStore target_indirect,
+                     LogicalStore source,
+                     std::optional<ReductionOpKind> redop = std::nullopt);
+  /**
+   * @brief Issues a scatter copy between stores.
+   *
+   * The indirection store and the source store must have the same shape.
+   *
+   * @param target Copy target
+   * @param target_indirect Store for target indirection
+   * @param source Copy source
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
+   */
+  void issue_scatter(LogicalStore target,
+                     LogicalStore target_indirect,
+                     LogicalStore source,
+                     std::optional<int32_t> redop);
   /**
    * @brief Issues a scatter-gather copy between stores.
    *
@@ -213,12 +281,35 @@ class Runtime {
    * @param target_indirect Store for target indirection
    * @param source Copy source
    * @param source_indirect Store for source indirection
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
   void issue_scatter_gather(LogicalStore target,
                             LogicalStore target_indirect,
                             LogicalStore source,
-                            LogicalStore source_indirect);
-
+                            LogicalStore source_indirect,
+                            std::optional<ReductionOpKind> redop = std::nullopt);
+  /**
+   * @brief Issues a scatter-gather copy between stores.
+   *
+   * The indirection stores must have the same shape.
+   *
+   * @param target Copy target
+   * @param target_indirect Store for target indirection
+   * @param source Copy source
+   * @param source_indirect Store for source indirection
+   * @param redop ID of the reduction operator to use (optional). The store's type must support the
+   * operator.
+   *
+   * @throw std::invalid_argument If the store's type doesn't support the reduction operator
+   */
+  void issue_scatter_gather(LogicalStore target,
+                            LogicalStore target_indirect,
+                            LogicalStore source,
+                            LogicalStore source_indirect,
+                            std::optional<int32_t> redop);
   /**
    * @brief Fills a given store with a constant
    *
