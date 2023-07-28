@@ -18,6 +18,7 @@
 #include "legion.h"
 
 #include "core/data/shape.h"
+#include "core/runtime/detail/field_manager.h"
 
 namespace legate {
 class Partition;
@@ -27,11 +28,17 @@ class Tiling;
 namespace legate::detail {
 
 class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionField> {
+ private:
+  friend class FieldManager;
+
  public:
-  LogicalRegionField() {}
-  LogicalRegionField(const Legion::LogicalRegion& lr,
+  LogicalRegionField(FieldManager* manager,
+                     const Legion::LogicalRegion& lr,
                      Legion::FieldID fid,
                      std::shared_ptr<LogicalRegionField> parent = nullptr);
+
+ public:
+  ~LogicalRegionField();
 
  public:
   LogicalRegionField(const LogicalRegionField& other)            = default;
@@ -42,9 +49,10 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   const Legion::LogicalRegion& region() const { return lr_; }
   Legion::FieldID field_id() const { return fid_; }
   const LogicalRegionField& get_root() const;
+  Legion::Domain domain() const;
 
  public:
-  Legion::Domain domain() const;
+  void allow_out_of_order_destruction();
 
  public:
   std::shared_ptr<LogicalRegionField> get_child(const Tiling* tiling,
@@ -53,9 +61,11 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   Legion::LogicalPartition get_legion_partition(const Partition* partition, bool complete);
 
  private:
-  Legion::LogicalRegion lr_{};
-  Legion::FieldID fid_{-1U};
-  std::shared_ptr<LogicalRegionField> parent_{nullptr};
+  FieldManager* manager_;
+  Legion::LogicalRegion lr_;
+  Legion::FieldID fid_;
+  std::shared_ptr<LogicalRegionField> parent_;
+  bool destroyed_out_of_order_{false};
 };
 
 }  // namespace legate::detail

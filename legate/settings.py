@@ -23,10 +23,11 @@ __all__ = ("settings",)
 
 
 class LegateRuntimeSettings(Settings):
-    consensus: PrioritizedSetting[bool] = PrioritizedSetting(
+    consensus: EnvOnlySetting[bool] = EnvOnlySetting(
         "consensus",
         "LEGATE_CONSENSUS",
         default=False,
+        test_default=False,
         convert=convert_bool,
         help="""
         Whether to perform the RegionField consensus match operation on
@@ -34,6 +35,8 @@ class LegateRuntimeSettings(Settings):
         multi-node runs, where all processes must collectively agree that a
         RegionField has been garbage collected at the Python level before it
         can be reused.
+
+        This is a read-only environment variable setting used by the runtime.
         """,
     )
 
@@ -189,7 +192,7 @@ class LegateRuntimeSettings(Settings):
         "field_reuse_freq",
         "LEGATE_FIELD_REUSE_FREQ",
         default=32,
-        test_default=32,
+        test_default=8,
         convert=convert_int,
         help="""
         Every how many RegionField allocations to perform a consensus match

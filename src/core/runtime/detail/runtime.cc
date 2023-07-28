@@ -57,6 +57,9 @@ const char* TOPLEVEL_NAME               = "Legate Core Toplevel Task";
 Runtime::Runtime()
   : legion_runtime_(Legion::Runtime::get_runtime()),
     next_type_uid_(CUSTOM_TYPE_UID_BASE),
+    field_reuse_freq_(
+      extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)),
+    force_consensus_match_(extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)),
     max_pending_exceptions_(extract_env(
       "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST))
 {
@@ -346,7 +349,7 @@ std::optional<TaskException> Runtime::check_pending_task_exception()
     return result;
   }
 
-  // Othrewise, we unpack all pending exceptions and push them to the outstanding exception queue
+  // Otherwise, we unpack all pending exceptions and push them to the outstanding exception queue
   for (auto& pending_exception : pending_exceptions_) {
     auto returned_exception = pending_exception.get_result<ReturnedException>();
     auto result             = returned_exception.to_task_exception();
@@ -418,6 +421,12 @@ RegionField Runtime::map_region_field(const LogicalRegionField* rf)
 
 void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
 {
+  // TODO: Unmapping doesn't go through the Legion pipeline, so from that perspective it's not
+  // critical that all shards call `unmap_region` in the same order. However, if shard A unmaps
+  // region R and shard B doesn't, then both shards launch a task that uses R (or any region that
+  // overlaps with R), then B will unmap/remap around the task, whereas A will not. To be safe, we
+  // should consider delaying the unmapping until the field has gone through consensus match, or
+  // have a full consensus matching process just for unmapping.
   if (physical_region_refs_.remove(pr)) {
     // The last user of this inline mapping was removed, so remove it from our cache and unmap.
     std::vector<Legion::FieldID> fields;
@@ -432,6 +441,13 @@ void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
 }
 
 size_t Runtime::num_inline_mapped() const { return inline_mapped_.size(); }
+
+uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
+
+bool Runtime::consensus_match_required() const
+{
+  return force_consensus_match_ || Legion::Machine::get_machine().get_address_space_count() > 1;
+}
 
 RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
 {

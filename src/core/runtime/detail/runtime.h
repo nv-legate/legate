@@ -22,6 +22,7 @@
 #include "core/mapping/machine.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/field_manager.h"
+#include "core/runtime/detail/library.h"
 #include "core/runtime/detail/machine_manager.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/projection.h"
@@ -41,6 +42,33 @@ class LogicalRegionField;
 class LogicalStore;
 class ManualTask;
 class Operation;
+
+template <typename T>
+class ConsensusMatchResult {
+ private:
+  friend class Runtime;
+  ConsensusMatchResult(std::vector<T>&& input, Legion::Context ctx, Legion::Runtime* runtime);
+
+ public:
+  ~ConsensusMatchResult();
+  ConsensusMatchResult(ConsensusMatchResult&&)            = default;
+  ConsensusMatchResult& operator=(ConsensusMatchResult&&) = default;
+
+ private:
+  ConsensusMatchResult(const ConsensusMatchResult&)            = delete;
+  ConsensusMatchResult& operator=(const ConsensusMatchResult&) = delete;
+
+ public:
+  void wait();
+  const std::vector<T>& input() const;
+  const std::vector<T>& output() const;
+
+ private:
+  std::vector<T> input_;
+  std::vector<T> output_;
+  Legion::Future future_;
+  bool complete_{false};
+};
 
 class Runtime {
  public:
@@ -123,6 +151,8 @@ class Runtime {
   RegionField map_region_field(const LogicalRegionField* region_field);
   void unmap_physical_region(Legion::PhysicalRegion pr);
   size_t num_inline_mapped() const;
+  uint32_t field_reuse_freq() const;
+  bool consensus_match_required() const;
 
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
@@ -173,6 +203,11 @@ class Runtime {
   {
     return get_tunable(mapper_id, tunable_id, sizeof(T)).get_result<T>();
   }
+  template <class T>
+  T get_core_tunable(int64_t tunable_id)
+  {
+    return get_tunable<T>(core_library_->get_mapper_id(), tunable_id);
+  }
 
  public:
   Legion::Future dispatch(Legion::TaskLauncher* launcher,
@@ -194,6 +229,16 @@ class Runtime {
 
  public:
   void issue_execution_fence(bool block = false);
+  // NOTE: If the type T contains any padding bits, make sure the entries *in the vector* are
+  // deterministically zero'd out on all shards, e.g. by doing the initialization as follows:
+  //   struct Fred { bool flag; int number; };
+  //   std::vector<Fred> input;
+  //   input.emplace_back();
+  //   memset(&input.back(), 0, sizeof(Fred));
+  //   input.back().flag = true;
+  //   input.back().flag = number;
+  template <typename T>
+  ConsensusMatchResult<T> issue_consensus_match(std::vector<T>&& input);
 
  public:
   void initialize_toplevel_machine();
@@ -255,6 +300,8 @@ class Runtime {
   MultiSet<Legion::PhysicalRegion> physical_region_refs_;
   uint64_t next_store_id_{1};
   uint64_t next_storage_id_{1};
+  const uint32_t field_reuse_freq_;
+  const bool force_consensus_match_;
 
  private:
   std::map<std::string, Library*> libraries_{};
@@ -278,3 +325,5 @@ void registration_callback_for_python(Legion::Machine machine,
                                       const std::set<Processor>& local_procs);
 
 }  // namespace legate::detail
+
+#include "core/runtime/detail/runtime.inl"

@@ -69,4 +69,4 @@ include(CPack)
 include(GNUInstallDirs)
 
 install(TARGETS cpp_tests DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/cmake-install")
-install( TARGETS cpp_tests DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS cpp_tests DESTINATION ${CMAKE_INSTALL_BINDIR})

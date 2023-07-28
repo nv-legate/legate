@@ -12,15 +12,23 @@
 
 #include "core/data/detail/logical_region_field.h"
 #include "core/partitioning/partition.h"
+#include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
 
-LogicalRegionField::LogicalRegionField(const Legion::LogicalRegion& lr,
+LogicalRegionField::LogicalRegionField(FieldManager* manager,
+                                       const Legion::LogicalRegion& lr,
                                        Legion::FieldID fid,
                                        std::shared_ptr<LogicalRegionField> parent)
-  : lr_(lr), fid_(fid), parent_(std::move(parent))
+  : manager_(manager), lr_(lr), fid_(fid), parent_(std::move(parent))
 {
+}
+
+LogicalRegionField::~LogicalRegionField()
+{
+  // Only free the field once the top-level region is deleted.
+  if (parent_ == nullptr) manager_->free_field(lr_, fid_, destroyed_out_of_order_);
 }
 
 int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
@@ -35,6 +43,14 @@ Domain LogicalRegionField::domain() const
   return Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
 }
 
+void LogicalRegionField::allow_out_of_order_destruction()
+{
+  if (parent_ != nullptr)
+    parent_->allow_out_of_order_destruction();
+  else
+    destroyed_out_of_order_ = true;
+}
+
 std::shared_ptr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* tiling,
                                                                   const Shape& color,
                                                                   bool complete)
@@ -42,7 +58,10 @@ std::shared_ptr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* 
   auto legion_partition = get_legion_partition(tiling, complete);
   auto color_point      = to_domain_point(color);
   return std::make_shared<LogicalRegionField>(
-    Runtime::get_runtime()->get_subregion(legion_partition, color_point), fid_, shared_from_this());
+    manager_,
+    Runtime::get_runtime()->get_subregion(legion_partition, color_point),
+    fid_,
+    shared_from_this());
 }
 
 Legion::LogicalPartition LogicalRegionField::get_legion_partition(const Partition* partition,

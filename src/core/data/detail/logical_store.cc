@@ -159,9 +159,10 @@ LogicalRegionField* Storage::get_region_field()
 #endif
   if (region_field_ != nullptr) return region_field_.get();
 
-  if (nullptr == parent_)
+  if (nullptr == parent_) {
     region_field_ = Runtime::get_runtime()->create_region_field(extents_, type_->size());
-  else
+    if (destroyed_out_of_order_) region_field_->allow_out_of_order_destruction();
+  } else
     region_field_ = parent_->get_child_data(color_);
 
   return region_field_.get();
@@ -177,8 +178,12 @@ Legion::Future Storage::get_future() const
 
 void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
 {
+  assert(unbound_ && region_field_ == nullptr);
+  assert(parent_ == nullptr);
+
   unbound_      = false;
   region_field_ = std::move(region_field);
+  if (destroyed_out_of_order_) region_field_->allow_out_of_order_destruction();
 
   // TODO: this is a blocking operation
   auto domain = region_field_->domain();
@@ -197,6 +202,21 @@ RegionField Storage::map()
   assert(Kind::REGION_FIELD == kind_);
 #endif
   return Runtime::get_runtime()->map_region_field(get_region_field());
+}
+
+void Storage::allow_out_of_order_destruction()
+{
+  // Technically speaking this property only needs to be tracked on (root) LogicalRegionFields, but
+  // a Storage may not have instantiated its region_field_ yet, so we note this also on the (root)
+  // Storage, in case we need to propagate later. We only need to note this on the root Storage,
+  // because any call that sets region_field_ (get_region_field(), set_region_field()) will end up
+  // touching the root Storage.
+  if (parent_ != nullptr)
+    get_root()->allow_out_of_order_destruction();
+  else if (!destroyed_out_of_order_) {
+    destroyed_out_of_order_ = true;
+    if (region_field_ != nullptr) region_field_->allow_out_of_order_destruction();
+  }
 }
 
 Restrictions Storage::compute_restrictions() const
@@ -244,7 +264,7 @@ std::string Storage::to_string() const
   else
     ss << extents_;
   ss << ", dim: " << dim_ << ", kind: " << (kind_ == Kind::REGION_FIELD ? "Region" : "Future")
-     << ", type: " << type_->to_string() << ", level: " << level_;
+     << ", type: " << type_->to_string() << ", level: " << level_ << "}";
 
   return std::move(ss).str();
 }
@@ -542,6 +562,8 @@ std::shared_ptr<Store> LogicalStore::get_physical_store()
   mapped_ = std::make_shared<Store>(dim(), type(), -1, std::move(region_field), transform_);
   return mapped_;
 }
+
+void LogicalStore::allow_out_of_order_destruction() { storage_->allow_out_of_order_destruction(); }
 
 Restrictions LogicalStore::compute_restrictions() const
 {

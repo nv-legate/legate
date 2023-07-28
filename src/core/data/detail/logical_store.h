@@ -75,6 +75,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
 
  public:
   RegionField map();
+  void allow_out_of_order_destruction();
 
  public:
   Restrictions compute_restrictions() const;
@@ -94,6 +95,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
  private:
   uint64_t storage_id_{0};
   bool unbound_{false};
+  bool destroyed_out_of_order_{false};
   int32_t dim_{-1};
   Shape extents_;
   size_t volume_;
@@ -200,6 +202,20 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  public:
   std::shared_ptr<Store> get_physical_store();
+  // Informs the runtime that references to this store may be removed in non-deterministic order
+  // (e.g. by an asynchronous garbage collector).
+  //
+  // Normally the top-level code must perform all Legate operations in a deterministic order (at
+  // least when running on multiple ranks/nodes). This includes destruction of objects managing
+  // Legate state, like stores. Passing a reference to such an object to a garbage-collected
+  // language violates this assumption, because (in general) garbage collection can occur at
+  // indeterminate points during the execution, and thus the point when the object's reference count
+  // drops to 0 (which triggers object destruction) is not deterministic.
+  //
+  // Before passing a store to a garbage collected language, it must first be marked using this
+  // function, so that the runtime knows to work around the potentially non-determintic removal of
+  // references.
+  void allow_out_of_order_destruction();
 
  public:
   Restrictions compute_restrictions() const;
