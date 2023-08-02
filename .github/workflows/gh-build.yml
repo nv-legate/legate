@@ -1,4 +1,4 @@
-name: Build legate.core on GH
+name: Build legate.core.internal on GH
 
 on:
   workflow_call:
@@ -39,7 +39,7 @@ jobs:
         VAULT_S3_TTL: "28800s" # 8 hours
 
     steps:
-      - name: Checkout legate.core (= this repo)
+      - name: Checkout legate.core.internal (= this repo)
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -86,7 +86,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: "legate.core-${{ inputs.build-target }}-${{ inputs.sha }}"
+          name: "legate.core.internal-${{ inputs.build-target }}-${{ inputs.sha }}"
           path: |
             /tmp/conda-build
             /tmp/out

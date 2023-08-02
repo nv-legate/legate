@@ -1,4 +1,4 @@
-name: Build and test GPU legate.core on GH
+name: Build and test GPU legate.core.internal on GH
 
 concurrency:
   group: ci-gpu-on-${{ github.event_name }}-from-${{ github.ref_name }}
@@ -8,7 +8,7 @@ on:
   push:
     branches:
       - "pull-request/[0-9]+"
-      - "branch-*"
+      - "cpp-branch-*"
 
 jobs:
   build-gpu:
@@ -17,7 +17,7 @@ jobs:
     with:
       build-target: gpu
       # Ref: https://docs.rapids.ai/resources/github-actions/#cpu-labels for `linux-amd64-cpu4`
-      runs-on: ${{ github.repository == 'nv-legate/legate.core' && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
+      runs-on: ${{ github.repository == 'nv-legate/legate.core.internal' && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
       sha: ${{ github.sha }}
 
   test-gpu:

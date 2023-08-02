@@ -1,4 +1,4 @@
-name: Test legate.core on GH
+name: Test legate.core.internal on GH
 
 on:
   workflow_call:
@@ -34,17 +34,17 @@ jobs:
         name: Run nvidia-smi to make sure GPU is working
         run: nvidia-smi
 
-      - name: Checkout legate.core
+      - name: Checkout legate.core.internal
         uses: actions/checkout@v3
         with:
-          repository: nv-legate/legate.core
+          repository: nv-legate/legate.core.internal
           fetch-depth: 0
           path: legate
 
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
-          name: "legate.core-${{inputs.build-target}}-${{ inputs.sha }}"
+          name: "legate.core.internal-${{inputs.build-target}}-${{ inputs.sha }}"
           path: artifacts
           
       - name: Display structure of downloaded artifacts
