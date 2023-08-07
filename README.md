@@ -57,7 +57,6 @@ If you have questions, please contact us at legate(at)nvidia.com.
     - [Configuring the Jupyter Notebook](#configuring-the-jupyter-notebook)
     - [Magic Command](#magic-command)
   - [Other FAQs](#other-faqs)
-  - [Contributing](#contributing)
   - [Documentation](#documentation)
   - [Next Steps](#next-steps)
 

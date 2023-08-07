@@ -19,7 +19,6 @@ supercomputer without any code modifications.
   Build instructions <BUILD.md>
   Python API Reference <api/index.rst>
   C++ API Reference <https://nv-legate.github.io/legate.core/cpp-interface>
-  Contributing <CONTRIBUTING.md>
 
 .. toctree::
   :maxdepth: 1
