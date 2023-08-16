@@ -14,11 +14,12 @@
 
 namespace tree_reduce {
 
-/*static*/ void ProduceUnboundTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void ProduceUnboundTask::cpu_variant(legate::TaskContext context)
 {
-  auto& output = context.outputs().at(0);
-  auto size    = context.get_task_index()[0] + 1;
-  auto buffer  = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true /*bind*/);
+  auto output = context.output(0);
+  auto size   = context.get_task_index()[0] + 1;
+  auto buffer =
+    output.data().create_output_buffer<int64_t, 1>(legate::Point<1>(size), true /*bind*/);
   for (int64_t idx = 0; idx < size; ++idx) buffer[idx] = size;
 }
 

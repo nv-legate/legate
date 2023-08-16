@@ -12,7 +12,11 @@ build_all() {
     build-legate-cpp;
     build-legate-wheel;
     build-legate-conda;
-    build-cpp-example;
+    # FIXME: C++ Legate examples need a working cuNumeric installation for the
+    #        build, but the current CI image doesn't have it. This needs to get
+    #        fixed by either including cuNumeric in CI image or modifying the
+    #        examples so they are self-contained
+    #build-cpp-example;
     build-cpp-test;
 }
 

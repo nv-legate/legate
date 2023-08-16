@@ -28,25 +28,25 @@ enum TaskIDs { TASK_FILL = 1, TASK_UNIQUE, TASK_UNIQUE_REDUCE, TASK_CHECK };
 
 struct FillTask : public legate::LegateTask<FillTask> {
   static const int32_t TASK_ID = TASK_FILL;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& output = context.outputs().at(0);
-    auto rect    = output.shape<1>();
-    auto volume  = rect.volume();
-    auto out     = output.write_accessor<int64_t, 1>(rect);
+    auto output = context.output(0).data();
+    auto rect   = output.shape<1>();
+    auto volume = rect.volume();
+    auto out    = output.write_accessor<int64_t, 1>(rect);
     for (size_t idx = 0; idx < volume; ++idx) { out[idx] = idx / 2; }
   }
 };
 
 struct UniqueTask : public legate::LegateTask<UniqueTask> {
   static const int32_t TASK_ID = TASK_UNIQUE;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& input  = context.inputs().at(0);
-    auto& output = context.outputs().at(0);
-    auto rect    = input.shape<1>();
-    auto volume  = rect.volume();
-    auto in      = input.read_accessor<int64_t, 1>(rect);
+    auto input  = context.input(0).data();
+    auto output = context.output(0).data();
+    auto rect   = input.shape<1>();
+    auto volume = rect.volume();
+    auto in     = input.read_accessor<int64_t, 1>(rect);
     std::set<int64_t> dedup_set;
     for (size_t idx = 0; idx < volume; ++idx) dedup_set.insert(in[idx]);
 
@@ -58,35 +58,34 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
 
 struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
   static const int32_t TASK_ID = TASK_UNIQUE_REDUCE;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& output = context.outputs().at(0);
-    std::vector<std::pair<legate::AccessorRO<int64_t, 1>, Legion::Rect<1>>> inputs;
+    auto output = context.output(0).data();
+    std::vector<std::pair<legate::AccessorRO<int64_t, 1>, legate::Rect<1>>> inputs;
     for (auto& input_arr : context.inputs()) {
       auto shape = input_arr.shape<1>();
-      auto acc   = input_arr.read_accessor<int64_t, 1>(shape);
+      auto acc   = input_arr.data().read_accessor<int64_t, 1>(shape);
       inputs.push_back(std::make_pair(acc, shape));
     }
     std::set<int64_t> dedup_set;
     for (auto& pair : inputs) {
       auto& input = pair.first;
       auto& shape = pair.second;
-      for (Legion::coord_t idx = shape.lo[0]; idx <= shape.hi[0]; ++idx)
-        dedup_set.insert(input[idx]);
+      for (auto idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) dedup_set.insert(input[idx]);
     }
 
     size_t size = dedup_set.size();
     size_t pos  = 0;
-    auto result = output.create_output_buffer<int64_t, 1>(Legion::Point<1>(size), true);
+    auto result = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
     for (auto e : dedup_set) result[pos++] = e;
   }
 };
 
 struct CheckTask : public legate::LegateTask<CheckTask> {
   static const int32_t TASK_ID = TASK_CHECK;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& input = context.inputs().at(0);
+    auto input  = context.input(0).data();
     auto rect   = input.shape<1>();
     auto volume = rect.volume();
     auto in     = input.read_accessor<int64_t, 1>(rect);

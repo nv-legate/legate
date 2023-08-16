@@ -17,9 +17,9 @@ namespace hello {
 
 class IotaTask : public Task<IotaTask, IOTA> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    legate::Store& output        = context.outputs().at(0);
+    legate::Store output         = context.output(0).data();
     legate::Rect<1> output_shape = output.shape<1>();
     auto out                     = output.write_accessor<float, 1>();
 

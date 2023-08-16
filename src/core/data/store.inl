@@ -163,7 +163,8 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Rect<DIM>& bounds) c
 }
 
 template <typename T, int32_t DIM>
-Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents, bool bind_buffer /*= false*/)
+Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents,
+                                           bool bind_buffer /*= false*/) const
 {
   check_valid_binding(bind_buffer);
   check_buffer_dimension(DIM);
@@ -183,7 +184,7 @@ Rect<DIM> Store::shape() const
 {
   check_shape_dimension(DIM);
   if (dim() > 0) {
-    return domain().bounds<DIM, Legion::coord_t>();
+    return domain().bounds<DIM, coord_t>();
   } else {
     auto p = Point<DIM>::ZEROES();
     return Rect<DIM>(p, p);
@@ -204,7 +205,7 @@ VAL Store::scalar() const
 }
 
 template <typename T, int32_t DIM>
-void Store::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents)
+void Store::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 {
   check_valid_binding(true);
   check_buffer_dimension(DIM);

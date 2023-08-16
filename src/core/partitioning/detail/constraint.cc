@@ -62,6 +62,10 @@ void Alignment::validate() const
   if (*lhs_ == *rhs_) return;
   auto lhs_store = lhs_->operation()->find_store(lhs_);
   auto rhs_store = rhs_->operation()->find_store(rhs_);
+  if (lhs_store->unbound() != rhs_store->unbound()) {
+    throw std::invalid_argument("Alignment requires the stores to be all normal or all unbound");
+  }
+  if (lhs_store->unbound()) return;
   if (lhs_store->extents() != rhs_store->extents())
     throw std::invalid_argument("Alignment requires the stores to have the same shape, but found " +
                                 lhs_store->extents().to_string() + " and " +
@@ -118,9 +122,13 @@ void ImageConstraint::validate() const
   auto func  = var_function_->operation()->find_store(var_function_);
   auto range = var_range_->operation()->find_store(var_range_);
 
-  if (!(is_point_type(func->type(), range->dim()) || is_rect_type(func->type(), range->dim())))
+  if (!(is_point_type(func->type(), range->dim()) || is_rect_type(func->type(), range->dim()))) {
     throw std::invalid_argument("Store from which the image partition is derived should have " +
                                 std::to_string(range->dim()) + "-D points or rects");
+  }
+  if (range->transformed()) {
+    throw std::runtime_error("Image constraints on transformed stores are not supported yet");
+  }
 }
 
 std::string ImageConstraint::to_string() const
@@ -132,12 +140,14 @@ std::string ImageConstraint::to_string() const
 
 std::unique_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
 {
-  const auto* src = var_function();
-  auto src_part   = strategy[src];
-  if (src_part->has_launch_domain())
+  const auto* src   = var_function();
+  const auto* range = var_range();
+  auto src_part     = strategy[src];
+  if (src_part->has_launch_domain()) {
     return create_image(src->operation()->find_store(src), src_part);
-  else
+  } else {
     return create_no_partition();
+  }
 }
 
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)

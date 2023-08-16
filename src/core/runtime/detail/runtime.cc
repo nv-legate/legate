@@ -13,6 +13,8 @@
 #include "core/runtime/detail/runtime.h"
 
 #include "core/comm/comm.h"
+#include "core/data/detail/array_tasks.h"
+#include "core/data/detail/logical_array.h"
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/detail/core_mapper.h"
@@ -161,7 +163,7 @@ void Runtime::initialize(Legion::Context legion_context)
   comm::register_builtin_communicator_factories(core_library_);
 }
 
-mapping::detail::Machine Runtime::slice_machine_for_task(Library* library, int64_t task_id)
+mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library, int64_t task_id)
 {
   auto* task_info = library->find_task(task_id);
 
@@ -183,14 +185,14 @@ mapping::detail::Machine Runtime::slice_machine_for_task(Library* library, int64
 }
 
 // This function should be moved to the library context
-std::unique_ptr<AutoTask> Runtime::create_task(Library* library, int64_t task_id)
+std::unique_ptr<AutoTask> Runtime::create_task(const Library* library, int64_t task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
   auto task    = new AutoTask(library, task_id, next_unique_id_++, std::move(machine));
   return std::unique_ptr<AutoTask>(task);
 }
 
-std::unique_ptr<ManualTask> Runtime::create_task(Library* library,
+std::unique_ptr<ManualTask> Runtime::create_task(const Library* library,
                                                  int64_t task_id,
                                                  const Shape& launch_shape)
 {
@@ -303,8 +305,114 @@ void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
   for (auto& op : operations) op->launch(strategy.get());
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(std::shared_ptr<Type> type, int32_t dim)
+std::shared_ptr<LogicalArray> Runtime::create_array(std::shared_ptr<Type> type,
+                                                    uint32_t dim,
+                                                    bool nullable)
 {
+  if (Type::Code::STRUCT == type->code) {
+    return create_struct_array(std::move(type), dim, nullable);
+  } else if (type->variable_size()) {
+    if (dim != 1) { throw std::invalid_argument("List/string arrays can only be 1D"); }
+    auto elem_type =
+      Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
+    auto descriptor = create_base_array(rect_type(1), dim, nullable);
+    auto vardata    = create_array(std::move(elem_type), 1, false);
+    return std::make_shared<ListLogicalArray>(
+      std::move(type), std::move(descriptor), std::move(vardata));
+  } else {
+    return create_base_array(std::move(type), dim, nullable);
+  }
+}
+
+std::shared_ptr<LogicalArray> Runtime::create_array(const Shape& extents,
+                                                    std::shared_ptr<Type> type,
+                                                    bool nullable,
+                                                    bool optimize_scalar)
+{
+  if (Type::Code::STRUCT == type->code) {
+    return create_struct_array(extents, std::move(type), nullable, optimize_scalar);
+  } else if (type->variable_size()) {
+    if (extents.size() != 1) { throw std::invalid_argument("List/string arrays can only be 1D"); }
+    auto elem_type =
+      Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
+    auto descriptor = create_base_array(extents, rect_type(1), nullable, optimize_scalar);
+    auto vardata    = create_array(std::move(elem_type), 1, false);
+    return std::make_shared<ListLogicalArray>(
+      std::move(type), std::move(descriptor), std::move(vardata));
+  } else {
+    return create_base_array(extents, std::move(type), nullable, optimize_scalar);
+  }
+}
+
+std::shared_ptr<LogicalArray> Runtime::create_array_like(std::shared_ptr<LogicalArray> array,
+                                                         std::shared_ptr<Type> type)
+{
+  if (Type::Code::STRUCT == type->code || type->variable_size()) {
+    throw std::runtime_error(
+      "create_array_like doesn't support variable size types or struct types");
+  }
+
+  if (array->unbound()) {
+    return create_array(std::move(type), array->dim(), array->nullable());
+  } else {
+    bool optimize_scalar = array->data()->has_scalar_storage();
+    return create_array(array->extents(), std::move(type), array->nullable(), optimize_scalar);
+  }
+}
+
+std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(std::shared_ptr<Type> type,
+                                                                 uint32_t dim,
+                                                                 bool nullable)
+{
+  const auto& st_type = type->as_struct_type();
+  auto null_mask      = nullable ? create_store(bool_(), dim) : nullptr;
+
+  std::vector<std::shared_ptr<LogicalArray>> fields;
+  for (auto& field_type : st_type.field_types()) {
+    fields.push_back(create_array(field_type, dim, false));
+  }
+  return std::make_shared<StructLogicalArray>(
+    std::move(type), std::move(null_mask), std::move(fields));
+}
+
+std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(const Shape& extents,
+                                                                 std::shared_ptr<Type> type,
+                                                                 bool nullable,
+                                                                 bool optimize_scalar)
+{
+  const auto& st_type = type->as_struct_type();
+  auto null_mask      = nullable ? create_store(extents, bool_(), optimize_scalar) : nullptr;
+
+  std::vector<std::shared_ptr<LogicalArray>> fields;
+  for (auto& field_type : st_type.field_types()) {
+    fields.push_back(create_array(extents, field_type, false, optimize_scalar));
+  }
+  return std::make_shared<StructLogicalArray>(
+    std::move(type), std::move(null_mask), std::move(fields));
+}
+
+std::shared_ptr<BaseLogicalArray> Runtime::create_base_array(std::shared_ptr<Type> type,
+                                                             uint32_t dim,
+                                                             bool nullable)
+{
+  auto data      = create_store(std::move(type), dim);
+  auto null_mask = nullable ? create_store(bool_(), dim) : nullptr;
+  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+}
+
+std::shared_ptr<BaseLogicalArray> Runtime::create_base_array(const Shape& extents,
+                                                             std::shared_ptr<Type> type,
+                                                             bool nullable,
+                                                             bool optimize_scalar)
+{
+  auto data      = create_store(extents, std::move(type), optimize_scalar);
+  auto null_mask = nullable ? create_store(extents, bool_(), optimize_scalar) : nullptr;
+  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+}
+
+std::shared_ptr<LogicalStore> Runtime::create_store(std::shared_ptr<Type> type, uint32_t dim)
+{
+  check_dimensionality(dim);
   auto storage = std::make_shared<detail::Storage>(dim, std::move(type));
   return std::make_shared<LogicalStore>(std::move(storage));
 }
@@ -313,6 +421,7 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
                                                     std::shared_ptr<Type> type,
                                                     bool optimize_scalar /*=false*/)
 {
+  check_dimensionality(extents.size());
   auto storage = std::make_shared<detail::Storage>(extents, std::move(type), optimize_scalar);
   return std::make_shared<detail::LogicalStore>(std::move(storage));
 }
@@ -323,6 +432,15 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Scalar& scalar)
   auto future  = create_future(scalar.data(), scalar.size());
   auto storage = std::make_shared<detail::Storage>(extents, scalar.type(), future);
   return std::make_shared<detail::LogicalStore>(std::move(storage));
+}
+
+void Runtime::check_dimensionality(uint32_t dim)
+{
+  if (dim > LEGATE_MAX_DIM) {
+    throw std::out_of_range("The maximum number of dimensions is " +
+                            std::to_string(LEGION_MAX_DIM) + ", but a " + std::to_string(dim) +
+                            "-D store is requested");
+  }
 }
 
 uint32_t Runtime::max_pending_exceptions() const { return max_pending_exceptions_; }
@@ -518,6 +636,11 @@ Legion::IndexPartition Runtime::create_image_partition(
   Legion::FieldID func_field_id,
   bool is_range)
 {
+#ifdef DEBUG_LEGATE
+  log_legate.debug() << "Create image partition {index_space: " << index_space
+                     << ", func_partition: " << func_partition
+                     << ", func_field_id: " << func_field_id << ", is_range: " << is_range << "}";
+#endif
   if (is_range)
     return legion_runtime_->create_partition_by_image_range(legion_context_,
                                                             index_space,
@@ -657,42 +780,42 @@ Legion::Future Runtime::get_tunable(Legion::MapperID mapper_id, int64_t tunable_
   return legion_runtime_->select_tunable_value(legion_context_, launcher);
 }
 
-Legion::Future Runtime::dispatch(Legion::TaskLauncher* launcher,
-                                 std::vector<Legion::OutputRequirement>* output_requirements)
+Legion::Future Runtime::dispatch(Legion::TaskLauncher& launcher,
+                                 std::vector<Legion::OutputRequirement>& output_requirements)
 {
   assert(nullptr != legion_context_);
-  return legion_runtime_->execute_task(legion_context_, *launcher, output_requirements);
+  return legion_runtime_->execute_task(legion_context_, launcher, &output_requirements);
 }
 
-Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher* launcher,
-                                    std::vector<Legion::OutputRequirement>* output_requirements)
+Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher& launcher,
+                                    std::vector<Legion::OutputRequirement>& output_requirements)
 {
   assert(nullptr != legion_context_);
-  return legion_runtime_->execute_index_space(legion_context_, *launcher, output_requirements);
+  return legion_runtime_->execute_index_space(legion_context_, launcher, &output_requirements);
 }
 
-void Runtime::dispatch(Legion::CopyLauncher* launcher)
+void Runtime::dispatch(Legion::CopyLauncher& launcher)
 {
   assert(nullptr != legion_context_);
-  return legion_runtime_->issue_copy_operation(legion_context_, *launcher);
+  return legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
-void Runtime::dispatch(Legion::IndexCopyLauncher* launcher)
+void Runtime::dispatch(Legion::IndexCopyLauncher& launcher)
 {
   assert(nullptr != legion_context_);
-  return legion_runtime_->issue_copy_operation(legion_context_, *launcher);
+  return legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
-void Runtime::dispatch(Legion::FillLauncher* launcher)
+void Runtime::dispatch(Legion::FillLauncher& launcher)
 {
   assert(nullptr != legion_context_);
-  return legion_runtime_->fill_fields(legion_context_, *launcher);
+  return legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
-void Runtime::dispatch(Legion::IndexFillLauncher* launcher)
+void Runtime::dispatch(Legion::IndexFillLauncher& launcher)
 {
   assert(nullptr != legion_context_);
-  return legion_runtime_->fill_fields(legion_context_, *launcher);
+  return legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
 Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t idx) const
@@ -1012,6 +1135,7 @@ void register_legate_core_tasks(Legion::Machine machine,
 #endif
   core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
 
+  register_array_tasks(core_lib);
   comm::register_tasks(runtime, core_lib);
 }
 

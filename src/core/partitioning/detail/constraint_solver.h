@@ -31,7 +31,7 @@ struct ConstraintSolver {
 
  public:
   void add_partition_symbol(const Variable* partition_symbol, bool is_output = false);
-  void add_constraint(const Constraint* constraint);
+  void add_constraint(std::unique_ptr<Constraint> constraint);
 
  public:
   void dump();
@@ -51,7 +51,7 @@ struct ConstraintSolver {
  private:
   ordered_set<const Variable*> partition_symbols_{};
   std::map<const Variable, bool> is_output_{};
-  std::vector<const Constraint*> constraints_{};
+  std::vector<std::unique_ptr<Constraint>> constraints_{};
 
  private:
   class EquivClass;

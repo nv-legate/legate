@@ -48,10 +48,10 @@ struct write_fn {
 
 class WriteFileTask : public Task<WriteFileTask, WRITE_FILE> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto filename = context.scalars().at(0).value<std::string>();
-    auto& input   = context.inputs().at(0);
+    auto filename = context.scalar(0).value<std::string>();
+    auto input    = context.input(0).data();
     logger.print() << "Write to " << filename;
 
     legate::type_dispatch(input.code(), write_fn{}, input, filename);

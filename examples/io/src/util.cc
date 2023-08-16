@@ -58,7 +58,7 @@ struct write_fn {
 
 }  // namespace
 
-std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext& context,
+std::filesystem::path get_unique_path_for_task_index(legate::TaskContext context,
                                                      int32_t ndim,
                                                      const std::string& dirname)
 {
@@ -79,7 +79,7 @@ std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext& 
   return fs::path(dirname) / filename;
 }
 
-void write_to_file(legate::TaskContext& task_context,
+void write_to_file(legate::TaskContext task_context,
                    const std::string& dirname,
                    const legate::Store& store)
 {

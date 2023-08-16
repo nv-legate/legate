@@ -13,8 +13,8 @@
 #pragma once
 
 #include "core/comm/communicator.h"
+#include "core/data/array.h"
 #include "core/data/scalar.h"
-#include "core/data/store.h"
 #include "core/mapping/machine.h"
 
 /**
@@ -28,9 +28,6 @@ class TaskContext;
 
 namespace legate {
 
-class Store;
-class Scalar;
-
 /**
  * @ingroup task
  * @brief A task context that contains task arguments and communicators
@@ -38,29 +35,61 @@ class Scalar;
 class TaskContext {
  public:
   /**
-   * @brief Returns input stores of the task
+   * @brief Returns an input array of the task
    *
-   * @return Vector of input stores
+   * @param index Index of the array
+   *
+   * @return Array
    */
-  std::vector<Store>& inputs();
+  Array input(uint32_t index) const;
   /**
-   * @brief Returns output stores of the task
+   * @brief Returns all input arrays of the task
    *
-   * @return Vector of output stores
+   * @return Vector of arrays
    */
-  std::vector<Store>& outputs();
+  std::vector<Array> inputs() const;
   /**
-   * @brief Returns reduction stores of the task
+   * @brief Returns an output array of the task
    *
-   * @return Vector of reduction stores
+   * @param index Index of the array
+   *
+   * @return Array
    */
-  std::vector<Store>& reductions();
+  Array output(uint32_t index) const;
+  /**
+   * @brief Returns all output arrays of the task
+   *
+   * @return Vector of arrays
+   */
+  std::vector<Array> outputs() const;
+  /**
+   * @brief Returns a reduction array of the task
+   *
+   * @param index Index of the array
+   *
+   * @return Array
+   */
+  Array reduction(uint32_t index) const;
+  /**
+   * @brief Returns all reduction arrays of the task
+   *
+   * @return Vector of arrays
+   */
+  std::vector<Array> reductions() const;
   /**
    * @brief Returns by-value arguments of the task
    *
+   * @param index Index of the array
+   *
    * @return Vector of scalar objects
    */
-  std::vector<Scalar>& scalars();
+  const Scalar& scalar(uint32_t index) const;
+  /**
+   * @brief Returns by-value arguments of the task
+   *
+   * @return Vector of scalars
+   */
+  const std::vector<Scalar>& scalars() const;
   /**
    * @brief Returns communicators of the task
    *
@@ -70,7 +99,27 @@ class TaskContext {
    *
    * @return Vector of communicator objects
    */
-  std::vector<comm::Communicator>& communicators();
+  std::vector<comm::Communicator> communicators() const;
+
+ public:
+  /**
+   * @brief Returns the number of task's inputs
+   *
+   * @return Number of arrays
+   */
+  size_t num_inputs() const;
+  /**
+   * @brief Returns the number of task's outputs
+   *
+   * @return Number of arrays
+   */
+  size_t num_outputs() const;
+  /**
+   * @brief Returns the number of task's reductions
+   *
+   * @return Number of arrays
+   */
+  size_t num_reductions() const;
 
  public:
   /**

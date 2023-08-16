@@ -22,7 +22,7 @@ namespace reduction {
 namespace {
 
 template <typename VAL>
-void add_to_set(std::unordered_set<VAL>& unique_values, legate::Store& input)
+void add_to_set(std::unordered_set<VAL>& unique_values, legate::Store input)
 {
   auto shape = input.shape<1>();
   if (shape.empty()) return;
@@ -32,7 +32,7 @@ void add_to_set(std::unordered_set<VAL>& unique_values, legate::Store& input)
 }
 
 template <typename VAL>
-void copy_to_output(legate::Store& output, const std::unordered_set<VAL>& values)
+void copy_to_output(legate::Store output, const std::unordered_set<VAL>& values)
 {
   if (values.empty()) {
     output.bind_empty_data();
@@ -51,19 +51,19 @@ constexpr bool is_supported =
   !(legate::is_floating_point<CODE>::value || legate::is_complex<CODE>::value);
 struct unique_fn {
   template <legate::Type::Code CODE, std::enable_if_t<is_supported<CODE>>* = nullptr>
-  void operator()(legate::Store& output, std::vector<legate::Store>& inputs)
+  void operator()(legate::Array& output, std::vector<legate::Array>& inputs)
   {
     using VAL = legate::legate_type_of<CODE>;
 
     std::unordered_set<VAL> unique_values;
     // Find unique values across all inputs
-    for (auto& input : inputs) add_to_set(unique_values, input);
+    for (auto& input : inputs) add_to_set(unique_values, input.data());
     // Copy the set of unique values to the output store
-    copy_to_output(output, unique_values);
+    copy_to_output(output.data(), unique_values);
   }
 
   template <legate::Type::Code CODE, std::enable_if_t<!is_supported<CODE>>* = nullptr>
-  void operator()(legate::Store& output, std::vector<legate::Store>& inputs)
+  void operator()(legate::Array& output, std::vector<legate::Array>& inputs)
   {
     LEGATE_ABORT;
   }
@@ -73,11 +73,11 @@ struct unique_fn {
 
 class UniqueTask : public Task<UniqueTask, UNIQUE> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& inputs = context.inputs();
-    auto& output = context.outputs().at(0);
-    legate::type_dispatch(output.code(), unique_fn{}, output, inputs);
+    auto inputs = context.inputs();
+    auto output = context.output(0);
+    legate::type_dispatch(output.type().code(), unique_fn{}, output, inputs);
   }
 };
 

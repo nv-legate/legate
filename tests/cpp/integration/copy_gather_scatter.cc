@@ -27,15 +27,15 @@ struct CheckGatherScatterTask
   : public legate::LegateTask<CheckGatherScatterTask<SRC_DIM, IND_DIM, TGT_DIM>> {
   struct CheckGatherScatterTaskBody {
     template <legate::Type::Code CODE>
-    void operator()(legate::TaskContext& context)
+    void operator()(legate::TaskContext context)
     {
       using VAL = legate::legate_type_of<CODE>;
 
-      auto& src_store     = context.inputs().at(0);
-      auto& tgt_store     = context.inputs().at(1);
-      auto& src_ind_store = context.inputs().at(2);
-      auto& tgt_ind_store = context.inputs().at(3);
-      auto init           = context.scalars().at(0).value<VAL>();
+      auto src_store     = context.input(0).data();
+      auto tgt_store     = context.input(1).data();
+      auto src_ind_store = context.input(2).data();
+      auto tgt_ind_store = context.input(3).data();
+      auto init          = context.scalar(0).value<VAL>();
 
       auto src_shape = src_store.shape<SRC_DIM>();
       auto tgt_shape = tgt_store.shape<TGT_DIM>();
@@ -68,9 +68,9 @@ struct CheckGatherScatterTask
 
   static const int32_t TASK_ID = CHECK_GATHER_SCATTER_TASK + SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM +
                                  IND_DIM * TEST_MAX_DIM + TGT_DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto type_code = context.inputs().at(0).type().code();
+    auto type_code = context.input(0).type().code();
     type_dispatch_for_test(type_code, CheckGatherScatterTaskBody{}, context);
   }
 };

@@ -19,7 +19,7 @@ namespace region_manager {
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
   static constexpr int TASK_ID = TESTER;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 }  // namespace region_manager

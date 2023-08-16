@@ -44,11 +44,11 @@ struct mul_fn {
 
 class MultiplyTask : public Task<MultiplyTask, MUL> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& rhs1 = context.inputs().at(0);
-    auto& rhs2 = context.inputs().at(1);
-    auto& lhs  = context.outputs().at(0);
+    auto rhs1 = context.input(0).data();
+    auto rhs2 = context.input(1).data();
+    auto lhs  = context.output(0).data();
 
     legate::double_dispatch(lhs.dim(), lhs.code(), mul_fn{}, lhs, rhs1, rhs2);
   }

@@ -15,15 +15,43 @@
 
 namespace legate {
 
-std::vector<Store>& TaskContext::inputs() { return impl_->inputs(); }
+namespace {
 
-std::vector<Store>& TaskContext::outputs() { return impl_->outputs(); }
+std::vector<Array> to_arrays(const std::vector<std::shared_ptr<detail::Array>>& array_impls)
+{
+  std::vector<Array> result;
+  for (const auto& array_impl : array_impls) { result.emplace_back(array_impl); }
+  return std::move(result);
+}
 
-std::vector<Store>& TaskContext::reductions() { return impl_->reductions(); }
+}  // namespace
 
-std::vector<Scalar>& TaskContext::scalars() { return impl_->scalars(); }
+Array TaskContext::input(uint32_t index) const { return Array(impl_->inputs().at(index)); }
 
-std::vector<comm::Communicator>& TaskContext::communicators() { return impl_->communicators(); }
+std::vector<Array> TaskContext::inputs() const { return to_arrays(impl_->inputs()); }
+
+Array TaskContext::output(uint32_t index) const { return Array(impl_->outputs().at(index)); }
+
+std::vector<Array> TaskContext::outputs() const { return to_arrays(impl_->outputs()); }
+
+Array TaskContext::reduction(uint32_t index) const { return Array(impl_->reductions().at(index)); }
+
+std::vector<Array> TaskContext::reductions() const { return to_arrays(impl_->reductions()); }
+
+const Scalar& TaskContext::scalar(uint32_t index) const { return impl_->scalars().at(index); }
+
+const std::vector<Scalar>& TaskContext::scalars() const { return impl_->scalars(); }
+
+std::vector<comm::Communicator> TaskContext::communicators() const
+{
+  return impl_->communicators();
+}
+
+size_t TaskContext::num_inputs() const { return impl_->inputs().size(); }
+
+size_t TaskContext::num_outputs() const { return impl_->outputs().size(); }
+
+size_t TaskContext::num_reductions() const { return impl_->reductions().size(); }
 
 bool TaskContext::is_single_task() const { return impl_->is_single_task(); }
 

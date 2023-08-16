@@ -21,7 +21,7 @@
 
 namespace legate::detail {
 
-struct CopyArg : public ArgWrapper {
+struct CopyArg : public Serializable {
  public:
   CopyArg(uint32_t req_idx,
           LogicalStore* store,
@@ -79,13 +79,10 @@ void CopyArg::pack(BufferBuilder& buffer) const
 CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine, int64_t tag)
   : machine_(machine), tag_(tag)
 {
-  mapper_arg_ = new BufferBuilder();
-  machine_.pack(*mapper_arg_);
 }
 
 CopyLauncher::~CopyLauncher()
 {
-  delete mapper_arg_;
   for (auto& arg : inputs_) delete arg;
   for (auto& arg : outputs_) delete arg;
   for (auto& arg : source_indirect_) delete arg;
@@ -140,28 +137,48 @@ void CopyLauncher::add_target_indirect(detail::LogicalStore* store,
 
 void CopyLauncher::execute(const Legion::Domain& launch_domain)
 {
-  auto legion_copy_launcher = build_index_copy(launch_domain);
-  return Runtime::get_runtime()->dispatch(legion_copy_launcher.get());
+  BufferBuilder mapper_arg;
+  pack_args(mapper_arg);
+  auto* runtime    = Runtime::get_runtime();
+  auto& provenance = runtime->provenance_manager()->get_provenance();
+  Legion::IndexCopyLauncher index_copy(launch_domain,
+                                       Legion::Predicate::TRUE_PRED,
+                                       runtime->core_library()->get_mapper_id(),
+                                       tag_,
+                                       mapper_arg.to_legion_buffer(),
+                                       provenance.c_str());
+  populate_copy(index_copy);
+  Runtime::get_runtime()->dispatch(index_copy);
 }
 
 void CopyLauncher::execute_single()
 {
-  auto legion_copy_launcher = build_single_copy();
-  return Runtime::get_runtime()->dispatch(legion_copy_launcher.get());
+  BufferBuilder mapper_arg;
+  pack_args(mapper_arg);
+  auto* runtime    = Runtime::get_runtime();
+  auto& provenance = runtime->provenance_manager()->get_provenance();
+  Legion::CopyLauncher single_copy(Legion::Predicate::TRUE_PRED,
+                                   runtime->core_library()->get_mapper_id(),
+                                   tag_,
+                                   mapper_arg.to_legion_buffer(),
+                                   provenance.c_str());
+  populate_copy(single_copy);
+  return Runtime::get_runtime()->dispatch(single_copy);
 }
 
-void CopyLauncher::pack_sharding_functor_id()
+void CopyLauncher::pack_sharding_functor_id(BufferBuilder& buffer)
 {
-  mapper_arg_->pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
+  buffer.pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
 }
 
-void CopyLauncher::pack_args()
+void CopyLauncher::pack_args(BufferBuilder& buffer)
 {
-  pack_sharding_functor_id();
+  machine_.pack(buffer);
+  pack_sharding_functor_id(buffer);
 
-  auto pack_args = [&](const std::vector<CopyArg*>& args) {
-    mapper_arg_->pack<uint32_t>(args.size());
-    for (auto& arg : args) arg->pack(*mapper_arg_);
+  auto pack_args = [&buffer](const std::vector<CopyArg*>& args) {
+    buffer.pack<uint32_t>(args.size());
+    for (auto& arg : args) arg->pack(buffer);
   };
   pack_args(inputs_);
   pack_args(outputs_);
@@ -181,7 +198,7 @@ constexpr bool is_single<Legion::IndexCopyLauncher> = false;
 }  // namespace
 
 template <class Launcher>
-void CopyLauncher::populate_copy(Launcher* launcher)
+void CopyLauncher::populate_copy(Launcher& launcher)
 {
   auto populate_requirements = [&](auto& args, auto& requirements) {
     requirements.resize(args.size());
@@ -192,50 +209,16 @@ void CopyLauncher::populate_copy(Launcher* launcher)
     }
   };
 
-  populate_requirements(inputs_, launcher->src_requirements);
-  populate_requirements(outputs_, launcher->dst_requirements);
-  populate_requirements(source_indirect_, launcher->src_indirect_requirements);
-  populate_requirements(target_indirect_, launcher->dst_indirect_requirements);
+  populate_requirements(inputs_, launcher.src_requirements);
+  populate_requirements(outputs_, launcher.dst_requirements);
+  populate_requirements(source_indirect_, launcher.src_indirect_requirements);
+  populate_requirements(target_indirect_, launcher.dst_indirect_requirements);
 
-  launcher->src_indirect_is_range.resize(source_indirect_.size(), false);
-  launcher->dst_indirect_is_range.resize(target_indirect_.size(), false);
+  launcher.src_indirect_is_range.resize(source_indirect_.size(), false);
+  launcher.dst_indirect_is_range.resize(target_indirect_.size(), false);
 
-  launcher->possible_src_indirect_out_of_range = source_indirect_out_of_range_;
-  launcher->possible_dst_indirect_out_of_range = target_indirect_out_of_range_;
-}
-
-std::unique_ptr<Legion::IndexCopyLauncher> CopyLauncher::build_index_copy(
-  const Legion::Domain& launch_domain)
-{
-  pack_args();
-  auto* runtime    = Runtime::get_runtime();
-  auto& provenance = runtime->provenance_manager()->get_provenance();
-  auto index_copy =
-    std::make_unique<Legion::IndexCopyLauncher>(launch_domain,
-                                                Legion::Predicate::TRUE_PRED,
-                                                runtime->core_library()->get_mapper_id(),
-                                                tag_,
-                                                mapper_arg_->to_legion_buffer(),
-                                                provenance.c_str());
-
-  populate_copy(index_copy.get());
-  return std::move(index_copy);
-}
-
-std::unique_ptr<Legion::CopyLauncher> CopyLauncher::build_single_copy()
-{
-  pack_args();
-  auto* runtime    = Runtime::get_runtime();
-  auto& provenance = runtime->provenance_manager()->get_provenance();
-  auto single_copy =
-    std::make_unique<Legion::CopyLauncher>(Legion::Predicate::TRUE_PRED,
-                                           runtime->core_library()->get_mapper_id(),
-                                           tag_,
-                                           mapper_arg_->to_legion_buffer(),
-                                           provenance.c_str());
-
-  populate_copy(single_copy.get());
-  return std::move(single_copy);
+  launcher.possible_src_indirect_out_of_range = source_indirect_out_of_range_;
+  launcher.possible_dst_indirect_out_of_range = target_indirect_out_of_range_;
 }
 
 }  // namespace legate::detail

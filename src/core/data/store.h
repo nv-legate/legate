@@ -30,6 +30,8 @@ class Store;
 
 namespace legate {
 
+class Array;
+
 /**
  * @ingroup data
  *
@@ -196,7 +198,7 @@ class Store {
    * @return A reduction accessor to the store
    */
   template <typename T, int32_t DIM>
-  Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents, bool bind_buffer = false);
+  Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents, bool bind_buffer = false) const;
   /**
    * @brief Binds a buffer to the store. Valid only when the store is unbound and
    * has not yet been bound to another buffer. The buffer must be consistent with
@@ -211,12 +213,12 @@ class Store {
    *
    */
   template <typename T, int32_t DIM>
-  void bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents);
+  void bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const;
   /**
    * @brief Makes the unbound store empty. Valid only when the store is unbound and
    * has not yet been bound to another buffer.
    */
-  void bind_empty_data();
+  void bind_empty_data() const;
 
  public:
   /**
@@ -322,6 +324,14 @@ class Store {
    */
   void unmap();
 
+ public:
+  /**
+   * @brief Constructs a store out of an array
+   *
+   * @throw std::invalid_argument If the array is nullable or has sub-arrays
+   */
+  Store(const Array& array);
+
  private:
   void check_accessor_dimension(const int32_t dim) const;
   void check_buffer_dimension(const int32_t dim) const;
@@ -345,8 +355,8 @@ class Store {
   Legion::UntypedDeferredValue get_buffer() const;
 
  private:
-  void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
-  void update_num_elements(size_t num_elements);
+  void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const;
+  void update_num_elements(size_t num_elements) const;
 
  public:
   Store();

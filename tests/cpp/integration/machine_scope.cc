@@ -24,7 +24,7 @@ enum TaskIDs {
   CPU_VARIANT   = 1,
 };
 
-void validate(legate::TaskContext& context)
+void validate(legate::TaskContext context)
 {
   if (context.is_single_task()) return;
 
@@ -36,18 +36,18 @@ void validate(legate::TaskContext& context)
 struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
   static const int32_t TASK_ID = MULTI_VARIANT;
 
-  static void cpu_variant(legate::TaskContext& context) { validate(context); }
+  static void cpu_variant(legate::TaskContext context) { validate(context); }
 #ifdef LEGATE_USE_OPENMP
-  static void omp_variant(legate::TaskContext& context) { validate(context); }
+  static void omp_variant(legate::TaskContext context) { validate(context); }
 #endif
 #ifdef LEGATE_USE_CUDA
-  static void gpu_variant(legate::TaskContext& context) { validate(context); }
+  static void gpu_variant(legate::TaskContext context) { validate(context); }
 #endif
 };
 
 struct CpuVariantOnlyTask : public legate::LegateTask<CpuVariantOnlyTask> {
   static const int32_t TASK_ID = CPU_VARIANT;
-  static void cpu_variant(legate::TaskContext& context) { validate(context); }
+  static void cpu_variant(legate::TaskContext context) { validate(context); }
 };
 
 void register_tasks()

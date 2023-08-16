@@ -29,7 +29,7 @@ enum TaskIDs {
 constexpr size_t SIZE = 10;
 
 struct NCCLTester : public legate::LegateTask<NCCLTester> {
-  static void gpu_variant(legate::TaskContext& context)
+  static void gpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE((context.is_single_task() && context.communicators().empty()) ||
                 context.communicators().size() == 1);

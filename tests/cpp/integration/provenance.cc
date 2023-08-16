@@ -25,7 +25,7 @@ enum TaskIDs {
 
 struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
   static const int32_t TASK_ID = PROVENANCE;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 void register_tasks()
@@ -35,9 +35,9 @@ void register_tasks()
   ProvenanceTask::register_variants(library);
 }
 
-/*static*/ void ProvenanceTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void ProvenanceTask::cpu_variant(legate::TaskContext context)
 {
-  std::string scalar = context.scalars()[0].value<std::string>();
+  std::string scalar = context.scalar(0).value<std::string>();
   auto provenance    = context.get_provenance();
   EXPECT_TRUE(provenance.find(scalar) != std::string::npos);
 }

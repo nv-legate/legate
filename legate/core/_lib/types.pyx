@@ -103,7 +103,7 @@ cdef extern from "core/type/detail/type_info.h" namespace "legate::detail" nogil
         ctypedef enum Code:
             pass
         int code
-        unsigned int size()
+        unsigned int size() except+
         unsigned int alignment()
         int uid()
         bool variable_size()

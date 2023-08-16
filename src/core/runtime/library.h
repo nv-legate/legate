@@ -146,11 +146,8 @@ class Library {
  public:
   void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
 
- private:
-  friend class Runtime;
-  Library(detail::Library* impl);
-
  public:
+  Library(detail::Library* impl);
   Library(const Library&) = default;
   Library(Library&&)      = default;
 

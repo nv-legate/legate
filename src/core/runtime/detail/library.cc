@@ -156,7 +156,7 @@ void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> tas
   tasks_.emplace(std::make_pair(local_task_id, std::move(task_info)));
 }
 
-const TaskInfo* Library::find_task(int64_t local_task_id) const noexcept(false)
+const TaskInfo* Library::find_task(int64_t local_task_id) const
 {
   auto finder = tasks_.find(local_task_id);
   if (tasks_.end() == finder) {

@@ -14,15 +14,15 @@
 
 namespace tree_reduce {
 
-/*static*/ void ReduceNormalTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void ReduceNormalTask::cpu_variant(legate::TaskContext context)
 {
-  auto& inputs = context.inputs();
-  auto& output = context.outputs().at(0);
+  auto inputs = context.inputs();
+  auto output = context.output(0);
   for (auto& input : inputs) {
     auto shape = input.shape<1>();
     assert(shape.empty() || shape.volume() == TILE_SIZE);
   }
-  output.create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);
+  output.data().create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);
 }
 
 }  // namespace tree_reduce

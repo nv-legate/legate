@@ -18,7 +18,7 @@
 namespace tree_reduce {
 
 struct ReduceUnboundTask : public Task<ReduceUnboundTask, REDUCE_UNBOUND> {
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 }  // namespace tree_reduce

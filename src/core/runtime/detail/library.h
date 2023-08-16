@@ -108,7 +108,7 @@ class Library {
 
  public:
   void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
-  const TaskInfo* find_task(int64_t local_task_id) const noexcept(false);
+  const TaskInfo* find_task(int64_t local_task_id) const;
 
  private:
   void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,

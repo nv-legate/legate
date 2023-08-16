@@ -17,9 +17,9 @@ namespace hello {
 
 class SumTask : public Task<SumTask, SUM> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    legate::Store& input        = context.inputs().at(0);
+    legate::Store input         = context.input(0).data();
     legate::Rect<1> input_shape = input.shape<1>();  // should be a 1-Dim array
     auto in                     = input.read_accessor<float, 1>();
 
@@ -37,9 +37,9 @@ class SumTask : public Task<SumTask, SUM> {
       to add our local contribution. After all point tasks return, the runtime
       will make sure to combine all their buffers into the single final result.
     */
-    using Reduce          = Legion::SumReduction<float>;
-    legate::Store& output = context.reductions().at(0);
-    auto sum              = output.reduce_accessor<Reduce, true, 1>();
+    using Reduce         = Legion::SumReduction<float>;
+    legate::Store output = context.reduction(0).data();
+    auto sum             = output.reduce_accessor<Reduce, true, 1>();
     assert(output.shape<1>() == legate::Rect<1>(0, 0));
     sum.reduce(0, total);
   }

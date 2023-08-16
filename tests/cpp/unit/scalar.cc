@@ -244,9 +244,9 @@ void checkPack(const legate::Scalar& scalar)
   EXPECT_NE(legion_buffer.get_ptr(), nullptr);
   legate::BaseDeserializer<ScalarUnitTestDeserializer> deserializer(legion_buffer.get_ptr(),
                                                                     legion_buffer.get_size());
-  auto scalar_unpack = deserializer._unpack_scalar();
-  EXPECT_EQ(scalar_unpack.type().code(), scalar.type().code());
-  EXPECT_EQ(scalar_unpack.size(), scalar.size());
+  auto scalar_unpack = deserializer.unpack_scalar();
+  EXPECT_EQ(scalar_unpack->type()->code, scalar.type().code());
+  EXPECT_EQ(scalar_unpack->size(), scalar.size());
 }
 
 TEST(ScalarUnit, Pack)

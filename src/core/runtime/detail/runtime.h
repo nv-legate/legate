@@ -36,12 +36,15 @@
 namespace legate::detail {
 
 class AutoTask;
+class BaseLogicalArray;
 class Copy;
 class Library;
+class LogicalArray;
 class LogicalRegionField;
 class LogicalStore;
 class ManualTask;
 class Operation;
+class StructLogicalArray;
 
 template <typename T>
 class ConsensusMatchResult {
@@ -94,9 +97,9 @@ class Runtime {
   void initialize(Legion::Context legion_context);
 
  public:
-  mapping::detail::Machine slice_machine_for_task(Library* library, int64_t task_id);
-  std::unique_ptr<AutoTask> create_task(Library* library, int64_t task_id);
-  std::unique_ptr<ManualTask> create_task(Library* library,
+  mapping::detail::Machine slice_machine_for_task(const Library* library, int64_t task_id);
+  std::unique_ptr<AutoTask> create_task(const Library* library, int64_t task_id);
+  std::unique_ptr<ManualTask> create_task(const Library* library,
                                           int64_t task_id,
                                           const Shape& launch_shape);
   void issue_copy(std::shared_ptr<LogicalStore> target,
@@ -125,11 +128,43 @@ class Runtime {
   void submit(std::unique_ptr<Operation> op);
 
  public:
-  std::shared_ptr<LogicalStore> create_store(std::shared_ptr<Type> type, int32_t dim = 1);
+  std::shared_ptr<LogicalArray> create_array(std::shared_ptr<Type> type,
+                                             uint32_t dim,
+                                             bool nullable);
+  std::shared_ptr<LogicalArray> create_array(const Shape& extents,
+                                             std::shared_ptr<Type> type,
+                                             bool nullable,
+                                             bool optimize_scalar);
+  std::shared_ptr<LogicalArray> create_array_like(std::shared_ptr<LogicalArray> array,
+                                                  std::shared_ptr<Type> type);
+
+ private:
+  std::shared_ptr<StructLogicalArray> create_struct_array(std::shared_ptr<Type> type,
+                                                          uint32_t dim,
+                                                          bool nullable);
+  std::shared_ptr<StructLogicalArray> create_struct_array(const Shape& extents,
+                                                          std::shared_ptr<Type> type,
+                                                          bool nullable,
+                                                          bool optimize_scalar);
+
+ private:
+  std::shared_ptr<BaseLogicalArray> create_base_array(std::shared_ptr<Type> type,
+                                                      uint32_t dim,
+                                                      bool nullable);
+  std::shared_ptr<BaseLogicalArray> create_base_array(const Shape& extents,
+                                                      std::shared_ptr<Type> type,
+                                                      bool nullable,
+                                                      bool optimize_scalar);
+
+ public:
+  std::shared_ptr<LogicalStore> create_store(std::shared_ptr<Type> type, uint32_t);
   std::shared_ptr<LogicalStore> create_store(const Shape& extents,
                                              std::shared_ptr<Type> type,
                                              bool optimize_scalar = false);
   std::shared_ptr<LogicalStore> create_store(const Scalar& scalar);
+
+ private:
+  void check_dimensionality(uint32_t dim);
 
  public:
   uint32_t max_pending_exceptions() const;
@@ -210,14 +245,14 @@ class Runtime {
   }
 
  public:
-  Legion::Future dispatch(Legion::TaskLauncher* launcher,
-                          std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
-  Legion::FutureMap dispatch(Legion::IndexTaskLauncher* launcher,
-                             std::vector<Legion::OutputRequirement>* output_requirements = nullptr);
-  void dispatch(Legion::CopyLauncher* launcher);
-  void dispatch(Legion::IndexCopyLauncher* launcher);
-  void dispatch(Legion::FillLauncher* launcher);
-  void dispatch(Legion::IndexFillLauncher* launcher);
+  Legion::Future dispatch(Legion::TaskLauncher& launcher,
+                          std::vector<Legion::OutputRequirement>& output_requirements);
+  Legion::FutureMap dispatch(Legion::IndexTaskLauncher& launcher,
+                             std::vector<Legion::OutputRequirement>& output_requirements);
+  void dispatch(Legion::CopyLauncher& launcher);
+  void dispatch(Legion::IndexCopyLauncher& launcher);
+  void dispatch(Legion::FillLauncher& launcher);
+  void dispatch(Legion::IndexFillLauncher& launcher);
 
  public:
   Legion::Future extract_scalar(const Legion::Future& result, uint32_t idx) const;

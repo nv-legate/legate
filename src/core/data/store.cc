@@ -11,11 +11,13 @@
  */
 
 #include "core/data/store.h"
+
+#include "core/data/array.h"
 #include "core/data/detail/store.h"
 
 namespace legate {
 
-void Store::bind_empty_data() { impl_->bind_empty_data(); }
+void Store::bind_empty_data() const { impl_->bind_empty_data(); }
 
 int32_t Store::dim() const { return impl_->dim(); }
 
@@ -38,6 +40,8 @@ bool Store::is_future() const { return impl_->is_future(); }
 bool Store::is_unbound_store() const { return impl_->is_unbound_store(); }
 
 void Store::unmap() { impl_->unmap(); }
+
+Store::Store(const Array& array) : impl_(array.data().impl()) {}
 
 void Store::check_accessor_dimension(const int32_t dim) const
 {
@@ -68,12 +72,15 @@ Legion::Future Store::get_future() const { return impl_->get_future(); }
 
 Legion::UntypedDeferredValue Store::get_buffer() const { return impl_->get_buffer(); }
 
-void Store::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid)
+void Store::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const
 {
   impl_->get_output_field(out, fid);
 }
 
-void Store::update_num_elements(size_t num_elements) { impl_->update_num_elements(num_elements); }
+void Store::update_num_elements(size_t num_elements) const
+{
+  impl_->update_num_elements(num_elements);
+}
 
 Store::Store() {}
 

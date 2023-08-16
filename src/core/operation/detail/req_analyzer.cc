@@ -23,11 +23,11 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const Projection
 {
   if (proj_infos.empty()) privilege = new_privilege;
   // conflicting privileges are promoted to a single read-write privilege
-  else if (privilege != new_privilege)
+  else if (!(privilege == new_privilege || privilege == NO_ACCESS || new_privilege == NO_ACCESS))
     privilege = LEGION_READ_WRITE;
   proj_infos.emplace(proj_info);
 
-  if (privilege != LEGION_READ_ONLY && proj_infos.size() > 1) {
+  if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && proj_infos.size() > 1) {
     log_legate.error("Interfering requirements are found");
     LEGATE_ABORT;
   }
@@ -79,12 +79,12 @@ constexpr bool is_single<Legion::IndexTaskLauncher> = false;
 }  // namespace
 
 template <class Launcher>
-void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& region) const
+void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const
 {
   for (auto& [key, fields] : coalesced_) {
     auto& [privilege, proj_info] = key;
-    task->region_requirements.push_back(Legion::RegionRequirement());
-    auto& requirement = task->region_requirements.back();
+    task.region_requirements.push_back(Legion::RegionRequirement());
+    auto& requirement = task.region_requirements.back();
     proj_info.template populate_requirement<is_single<Launcher>>(
       requirement, region, fields, privilege);
   }
@@ -93,8 +93,6 @@ void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& re
 //////////////////////
 // RequirementAnalyzer
 //////////////////////
-
-RequirementAnalyzer::~RequirementAnalyzer() {}
 
 void RequirementAnalyzer::insert(const Legion::LogicalRegion& region,
                                  Legion::FieldID field_id,
@@ -127,18 +125,18 @@ void RequirementAnalyzer::analyze_requirements()
   }
 }
 
-void RequirementAnalyzer::populate_launcher(Legion::IndexTaskLauncher* task) const
+void RequirementAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {
   _populate_launcher(task);
 }
 
-void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher* task) const
+void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 {
   _populate_launcher(task);
 }
 
 template <class Launcher>
-void RequirementAnalyzer::_populate_launcher(Launcher* task) const
+void RequirementAnalyzer::_populate_launcher(Launcher& task) const
 {
   for (auto& [region, entry] : field_sets_) entry.first.populate_launcher(task, region);
 }
@@ -146,8 +144,6 @@ void RequirementAnalyzer::_populate_launcher(Launcher* task) const
 ////////////////////////////
 // OutputRequirementAnalyzer
 ////////////////////////////
-
-OutputRequirementAnalyzer::~OutputRequirementAnalyzer() {}
 
 void OutputRequirementAnalyzer::insert(int32_t dim,
                                        const Legion::FieldSpace& field_space,
@@ -185,6 +181,38 @@ void OutputRequirementAnalyzer::populate_output_requirements(
     auto& [dim, _] = req_infos_.at(field_space);
     out_reqs.emplace_back(field_space, fields, dim, true /*global_indexing*/);
   }
+}
+
+/////////////////
+// FutureAnalyzer
+/////////////////
+
+void FutureAnalyzer::insert(const Legion::Future& future) { futures_.push_back(future); }
+
+int32_t FutureAnalyzer::get_future_index(const Legion::Future& future) const
+{
+  return future_indices_.at(future);
+}
+
+void FutureAnalyzer::analyze_futures()
+{
+  int32_t index = 0;
+  for (auto& future : futures_) { future_indices_[future] = index++; }
+}
+
+template <class Launcher>
+void FutureAnalyzer::_populate_launcher(Launcher& task) const
+{
+  for (auto& future : futures_) { task.add_future(future); }
+}
+void FutureAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
+{
+  _populate_launcher(task);
+}
+
+void FutureAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
+{
+  _populate_launcher(task);
 }
 
 }  // namespace legate::detail

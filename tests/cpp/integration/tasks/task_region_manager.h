@@ -29,7 +29,7 @@ void register_tasks();
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
   static const int32_t TASK_ID = 0;
-  static void cpu_variant(legate::TaskContext& context) {}
+  static void cpu_variant(legate::TaskContext context) {}
 };
 
 }  // namespace region_manager

@@ -28,7 +28,10 @@ LogicalRegionField::LogicalRegionField(FieldManager* manager,
 LogicalRegionField::~LogicalRegionField()
 {
   // Only free the field once the top-level region is deleted.
-  if (parent_ == nullptr) manager_->free_field(lr_, fid_, destroyed_out_of_order_);
+  if (parent_ == nullptr) {
+    perform_invalidation_callbacks();
+    manager_->free_field(lr_, fid_, destroyed_out_of_order_);
+  }
 }
 
 int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
@@ -68,6 +71,29 @@ Legion::LogicalPartition LogicalRegionField::get_legion_partition(const Partitio
                                                                   bool complete)
 {
   return partition->construct(lr_, complete);
+}
+
+void LogicalRegionField::add_invalidation_callback(std::function<void()> callback)
+{
+  if (parent_ != nullptr) {
+    parent_->add_invalidation_callback(callback);
+  } else {
+    callbacks_.push_back(callback);
+  }
+}
+
+void LogicalRegionField::perform_invalidation_callbacks()
+{
+  if (parent_ != nullptr) {
+#ifdef DEBUG_LEGATE
+    // Callbacks should exist only in the root
+    assert(callbacks_.empty());
+#endif
+    parent_->perform_invalidation_callbacks();
+  } else {
+    for (auto& callback : callbacks_) { callback(); }
+    callbacks_.clear();
+  }
 }
 
 }  // namespace legate::detail

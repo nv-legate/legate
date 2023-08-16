@@ -28,16 +28,16 @@ enum TaskIDs {
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
   static const int32_t TASK_ID = INIT;
-  static void cpu_variant(legate::TaskContext& context) {}
+  static void cpu_variant(legate::TaskContext context) {}
 };
 
 template <int32_t DIM>
 struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
   static const int32_t TASK_ID = ALIGNMENT_TESTER + DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& outputs = context.outputs();
-    auto shape    = outputs.at(0).shape<DIM>();
+    auto outputs = context.outputs();
+    auto shape   = outputs.at(0).shape<DIM>();
     for (auto& output : outputs) EXPECT_EQ(shape, output.shape<DIM>());
   }
 };
@@ -45,7 +45,7 @@ struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
 template <int32_t DIM>
 struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTester<DIM>> {
   static const int32_t TASK_ID = ALIGNMENT_BROADCAST_TESTER + DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
     auto shape1 = context.outputs().at(0).shape<DIM>();
     auto shape2 = context.outputs().at(1).shape<DIM>();
@@ -60,7 +60,7 @@ struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTe
 template <int32_t DIM>
 struct TransformedTester : public legate::LegateTask<TransformedTester<DIM>> {
   static const int32_t TASK_ID = TRANSFORMED_TESTER + DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
     auto shape1 = context.inputs().at(0).shape<DIM>();
     auto shape2 = context.inputs().at(1).shape<DIM>();
@@ -95,13 +95,9 @@ void test_alignment()
     auto store3 = runtime->create_store(extents, legate::int64());
 
     auto task  = runtime->create_task(context, ALIGNMENT_TESTER + extents.size());
-    auto part1 = task.declare_partition();
-    auto part2 = task.declare_partition();
-    auto part3 = task.declare_partition();
-
-    task.add_output(store1, part1);
-    task.add_output(store2, part2);
-    task.add_output(store3, part3);
+    auto part1 = task.add_output(store1);
+    auto part2 = task.add_output(store2);
+    auto part3 = task.add_output(store3);
 
     task.add_constraint(legate::align(part1, part2));
     task.add_constraint(legate::align(part2, part3));
@@ -124,11 +120,8 @@ void test_alignment_and_broadcast()
     auto store2 = runtime->create_store(extents, legate::int64());
 
     auto task  = runtime->create_task(context, ALIGNMENT_BROADCAST_TESTER + extents.size());
-    auto part1 = task.declare_partition();
-    auto part2 = task.declare_partition();
-
-    task.add_output(store1, part1);
-    task.add_output(store2, part2);
+    auto part1 = task.add_output(store1);
+    auto part2 = task.add_output(store2);
 
     task.add_scalar_arg(legate::Scalar(extents[0]));
 
@@ -149,8 +142,7 @@ void initialize(legate::LogicalStore store)
   auto context = runtime->find_library(library_name);
   auto task    = runtime->create_task(context, INIT);
 
-  auto part = task.declare_partition();
-  task.add_output(store, part);
+  task.add_output(store);
 
   runtime->submit(std::move(task));
 }
@@ -162,11 +154,8 @@ void test_alignment_transformed()
 
   auto launch_tester = [&](auto store1, auto store2) {
     auto task  = runtime->create_task(context, TRANSFORMED_TESTER + store1.dim());
-    auto part1 = task.declare_partition();
-    auto part2 = task.declare_partition();
-
-    task.add_input(store1, part1);
-    task.add_input(store2, part2);
+    auto part1 = task.add_input(store1);
+    auto part2 = task.add_input(store2);
 
     task.add_constraint(legate::align(part1, part2));
 
@@ -204,10 +193,8 @@ void test_invalid_alignment()
   auto store2 = runtime->create_store({9}, legate::int64());
   auto task   = runtime->create_task(context, TRANSFORMED_TESTER + store1.dim());
 
-  auto part1 = task.declare_partition();
-  auto part2 = task.declare_partition();
-  task.add_output(store1, part1);
-  task.add_output(store2, part2);
+  auto part1 = task.add_output(store1);
+  auto part2 = task.add_output(store2);
   task.add_constraint(legate::align(part1, part2));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }

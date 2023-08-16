@@ -69,7 +69,7 @@ struct write_util_fn {
   }
 };
 
-std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext& context,
+std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext context,
                                                      int32_t ndim,
                                                      const std::string& dirname)
 {
@@ -90,7 +90,7 @@ std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext& 
   return fs::path(dirname) / filename;
 }
 
-void write_to_file(legate::TaskContext& task_context,
+void write_to_file(legate::TaskContext task_context,
                    const std::string& dirname,
                    const legate::Store& store)
 {
@@ -131,10 +131,10 @@ struct read_even_fn {
   }
 };
 
-/*static*/ void ReadEvenTilesTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void ReadEvenTilesTask::cpu_variant(legate::TaskContext context)
 {
-  auto dirname = context.scalars().at(0).value<std::string>();
-  auto& output = context.outputs().at(0);
+  auto dirname = context.scalar(0).value<std::string>();
+  auto output  = context.output(0).data();
 
   auto path = utils::get_unique_path_for_task_index(context, output.dim(), dirname);
   // double_dispatch converts the first two arguments to non-type template arguments
@@ -193,10 +193,10 @@ struct read_fn {
   }
 };
 
-/*static*/ void ReadFileTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void ReadFileTask::cpu_variant(legate::TaskContext context)
 {
-  auto filename = context.scalars().at(0).value<std::string>();
-  auto& output  = context.outputs().at(0);
+  auto filename = context.scalar(0).value<std::string>();
+  auto output   = context.output(0).data();
 
   // The task context contains metadata about the launch so each reader task can figure out
   // which part of the file it needs to read into the output.
@@ -238,10 +238,10 @@ struct read_uneven_fn {
   }
 };
 
-/*static*/ void ReadUnevenTilesTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void ReadUnevenTilesTask::cpu_variant(legate::TaskContext context)
 {
-  auto dirname = context.scalars().at(0).value<std::string>();
-  auto& output = context.outputs().at(0);
+  auto dirname = context.scalar(0).value<std::string>();
+  auto output  = context.output(0).data();
 
   auto path = utils::get_unique_path_for_task_index(context, output.dim(), dirname);
   // double_dispatch converts the first two arguments to non-type template arguments
@@ -262,12 +262,12 @@ void write_header(std::ofstream& out,
   for (auto& v : tile_shape) out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
 }
 
-/*static*/ void WriteEvenTilesTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void WriteEvenTilesTask::cpu_variant(legate::TaskContext context)
 {
-  auto dirname                           = context.scalars().at(0).value<std::string>();
-  legate::Span<const int32_t> shape      = context.scalars().at(1).values<int32_t>();
-  legate::Span<const int32_t> tile_shape = context.scalars().at(2).values<int32_t>();
-  auto& input                            = context.inputs().at(0);
+  auto dirname                           = context.scalar(0).value<std::string>();
+  legate::Span<const int32_t> shape      = context.scalar(1).values<int32_t>();
+  legate::Span<const int32_t> tile_shape = context.scalar(2).values<int32_t>();
+  auto input                             = context.input(0).data();
 
   auto launch_domain = context.get_launch_domain();
   auto task_index    = context.get_task_index();
@@ -306,10 +306,10 @@ struct write_fn {
   }
 };
 
-/*statis*/ void WriteFileTask::cpu_variant(legate::TaskContext& context)
+/*statis*/ void WriteFileTask::cpu_variant(legate::TaskContext context)
 {
-  auto filename = context.scalars().at(0).value<std::string>();
-  auto& input   = context.inputs().at(0);
+  auto filename = context.scalar(0).value<std::string>();
+  auto input    = context.input(0).data();
   logger.debug() << "Write to " << filename;
 
   legate::type_dispatch(input.code(), write_fn{}, input, filename);
@@ -332,10 +332,10 @@ struct header_write_fn {
   }
 };
 
-/*statis*/ void WriteUnevenTilesTask::cpu_variant(legate::TaskContext& context)
+/*statis*/ void WriteUnevenTilesTask::cpu_variant(legate::TaskContext context)
 {
-  auto dirname = context.scalars().at(0).value<std::string>();
-  auto& input  = context.inputs().at(0);
+  auto dirname = context.scalar(0).value<std::string>();
+  auto input   = context.input(0).data();
 
   auto launch_domain = context.get_launch_domain();
   auto task_index    = context.get_task_index();

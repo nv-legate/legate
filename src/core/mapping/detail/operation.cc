@@ -32,10 +32,10 @@ Task::Task(const Legion::Task* task,
   : Mappable(task), task_(task), library_(library)
 {
   TaskDeserializer dez(task, runtime, context);
-  inputs_     = dez.unpack<Stores>();
-  outputs_    = dez.unpack<Stores>();
-  reductions_ = dez.unpack<Stores>();
-  scalars_    = dez.unpack<std::vector<Scalar>>();
+  inputs_     = dez.unpack_arrays();
+  outputs_    = dez.unpack_arrays();
+  reductions_ = dez.unpack_arrays();
+  scalars_    = dez.unpack_scalars();
 }
 
 int64_t Task::task_id() const { return library_->get_local_task_id(task_->task_id); }

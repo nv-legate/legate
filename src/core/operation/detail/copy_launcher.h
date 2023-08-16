@@ -24,10 +24,10 @@ class Scalar;
 
 namespace legate::detail {
 
+class CopyArg;
 class LogicalStore;
 class ProjectionInfo;
 class OutputRequirementAnalyzer;
-class CopyArg;
 class RequirementAnalyzer;
 
 class CopyLauncher {
@@ -58,20 +58,17 @@ class CopyLauncher {
   void execute_single();
 
  private:
-  void pack_args();
-  void pack_sharding_functor_id();
-  std::unique_ptr<Legion::IndexCopyLauncher> build_index_copy(const Legion::Domain& launch_domain);
-  std::unique_ptr<Legion::CopyLauncher> build_single_copy();
+  void pack_args(BufferBuilder& buffer);
+  void pack_sharding_functor_id(BufferBuilder& buffer);
   template <class Launcher>
-  void populate_copy(Launcher* launcher);
+  void populate_copy(Launcher& launcher);
 
  private:
-  mapping::detail::Machine machine_;
+  const mapping::detail::Machine& machine_;
   int64_t tag_;
   Legion::ProjectionID key_proj_id_{0};
 
  private:
-  BufferBuilder* mapper_arg_;
   std::vector<CopyArg*> inputs_{};
   std::vector<CopyArg*> outputs_{};
   std::vector<CopyArg*> source_indirect_{};

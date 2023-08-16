@@ -28,11 +28,11 @@ const char* EXN_MSG   = "Exception Test";
 constexpr size_t SIZE = 10;
 
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE(context.can_raise_exception());
-    auto raise = context.scalars().at(0).value<bool>();
-    auto index = context.scalars().at(1).value<int32_t>();
+    auto raise = context.scalar(0).value<bool>();
+    auto index = context.scalar(1).value<int32_t>();
     // Make sure only some of the  point tasks raise an exception
     if (raise && (context.is_single_task() || context.get_task_index()[0] == 0)) {
       if (context.is_single_task())

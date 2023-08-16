@@ -26,14 +26,14 @@ template <int32_t IND_DIM, int32_t TGT_DIM>
 struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TGT_DIM>> {
   struct CheckScatterTaskBody {
     template <legate::Type::Code CODE>
-    void operator()(legate::TaskContext& context)
+    void operator()(legate::TaskContext context)
     {
       using VAL = legate::legate_type_of<CODE>;
 
-      auto& src_store = context.inputs().at(0);
-      auto& tgt_store = context.inputs().at(1);
-      auto& ind_store = context.inputs().at(2);
-      auto init       = context.scalars().at(0).value<VAL>();
+      auto src_store = context.input(0).data();
+      auto tgt_store = context.input(1).data();
+      auto ind_store = context.input(2).data();
+      auto init      = context.scalar(0).value<VAL>();
 
       auto ind_shape = ind_store.shape<IND_DIM>();
       if (ind_shape.empty()) return;
@@ -64,9 +64,9 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
   };
 
   static const int32_t TASK_ID = CHECK_SCATTER_TASK + IND_DIM * TEST_MAX_DIM + TGT_DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto type_code = context.inputs().at(0).type().code();
+    auto type_code = context.input(0).type().code();
     type_dispatch_for_test(type_code, CheckScatterTaskBody{}, context);
   }
 };

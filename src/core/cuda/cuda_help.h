@@ -16,6 +16,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 
+#define THREADS_PER_BLOCK 128
 #define CHECK_CUDA(expr)                                      \
   do {                                                        \
     cudaError_t __result__ = (expr);                          \

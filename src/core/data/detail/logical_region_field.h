@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <unordered_map>
 
@@ -60,12 +61,17 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
                                                 bool complete);
   Legion::LogicalPartition get_legion_partition(const Partition* partition, bool complete);
 
+ public:
+  void add_invalidation_callback(std::function<void()> callback);
+  void perform_invalidation_callbacks();
+
  private:
   FieldManager* manager_;
   Legion::LogicalRegion lr_;
   Legion::FieldID fid_;
   std::shared_ptr<LogicalRegionField> parent_;
   bool destroyed_out_of_order_{false};
+  std::vector<std::function<void()>> callbacks_{};
 };
 
 }  // namespace legate::detail

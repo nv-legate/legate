@@ -49,12 +49,26 @@ class PartitionManager {
                                               const Tiling& tiling) const;
   Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
                                               const Weighted& weighted) const;
+  Legion::IndexPartition find_image_partition(const Legion::IndexSpace& index_space,
+                                              const Legion::LogicalPartition& func_partition,
+                                              Legion::FieldID field_id) const;
+
+ public:
   void record_index_partition(const Legion::IndexSpace& index_space,
                               const Tiling& tiling,
                               const Legion::IndexPartition& index_partition);
   void record_index_partition(const Legion::IndexSpace& index_space,
                               const Weighted& weighted,
                               const Legion::IndexPartition& index_partition);
+  void record_image_partition(const Legion::IndexSpace& index_space,
+                              const Legion::LogicalPartition& func_partition,
+                              Legion::FieldID field_id,
+                              const Legion::IndexPartition& index_partition);
+
+ public:
+  void invalidate_image_partition(const Legion::IndexSpace& index_space,
+                                  const Legion::LogicalPartition& func_partition,
+                                  Legion::FieldID field_id);
 
  private:
   int64_t min_shard_volume_;
@@ -65,6 +79,8 @@ class PartitionManager {
   std::map<TilingCacheKey, Legion::IndexPartition> tiling_cache_;
   using WeightedCacheKey = std::pair<Legion::IndexSpace, Weighted>;
   std::map<WeightedCacheKey, Legion::IndexPartition> weighted_cache_;
+  using ImageCacheKey = std::tuple<Legion::IndexSpace, Legion::LogicalPartition, Legion::FieldID>;
+  std::map<ImageCacheKey, Legion::IndexPartition> image_cache_;
 };
 
 }  // namespace legate::detail

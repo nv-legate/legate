@@ -34,22 +34,22 @@ void register_tasks();
 
 struct HelloWorldTask : public legate::LegateTask<HelloWorldTask> {
   static const int32_t TASK_ID = HELLO_WORLD;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 struct SumTask : public legate::LegateTask<SumTask> {
   static const int32_t TASK_ID = SUM;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 struct SquareTask : public legate::LegateTask<SquareTask> {
   static const int32_t TASK_ID = SQUARE;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 struct IotaTask : public legate::LegateTask<IotaTask> {
   static const int32_t TASK_ID = IOTA;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 }  // namespace hello

@@ -87,9 +87,9 @@ void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, bo
   is_dependent_.insert({*partition_symbol, false});
 }
 
-void ConstraintSolver::add_constraint(const Constraint* constraint)
+void ConstraintSolver::add_constraint(std::unique_ptr<Constraint> constraint)
 {
-  constraints_.push_back(constraint);
+  constraints_.push_back(std::move(constraint));
 }
 
 void ConstraintSolver::solve_constraints()

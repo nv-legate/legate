@@ -14,7 +14,7 @@
 
 namespace rg {
 
-/*static*/ void WorldTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void WorldTask::cpu_variant(legate::TaskContext context)
 {
   log_registry.info() << "World!";
 }

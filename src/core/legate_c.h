@@ -28,6 +28,9 @@ typedef enum legate_core_task_id_t {
   LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID,
   LEGATE_CORE_INIT_CPUCOLL_TASK_ID,
   LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID,
+  LEGATE_CORE_FIXUP_RANGES,
+  LEGATE_CORE_OFFSETS_TO_RANGES,
+  LEGATE_CORE_RANGES_TO_OFFSETS,
   LEGATE_CORE_NUM_TASK_IDS,  // must be last
 } legate_core_task_id_t;
 
@@ -91,6 +94,7 @@ typedef enum legate_core_type_code_t {
   STRUCT_LT,
   // Variable size types
   STRING_LT,
+  LIST_LT,
   INVALID_LT = -1,
 } legate_core_type_code_t;
 

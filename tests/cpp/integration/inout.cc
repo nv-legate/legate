@@ -22,12 +22,12 @@ void test_inout()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(task::simple::library_name);
 
-  auto store = runtime->create_store({10, 10}, legate::int64());
-  runtime->issue_fill(store, legate::Scalar(int64_t(0)));
+  auto array = runtime->create_array({10, 10}, legate::int64());
+  runtime->issue_fill(array.data(), legate::Scalar(int64_t(0)));
 
   auto task = runtime->create_task(context, task::simple::HELLO);
-  task.add_input(store, task.find_or_declare_partition(store));
-  task.add_output(store, task.find_or_declare_partition(store));
+  task.add_input(array, task.find_or_declare_partition(array));
+  task.add_output(array, task.find_or_declare_partition(array));
   runtime->submit(std::move(task));
 }
 

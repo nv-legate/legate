@@ -27,7 +27,7 @@ struct Task : public legate::LegateTask<T> {
 
 namespace {
 
-void validate(legate::TaskContext& context)
+void validate(legate::TaskContext context)
 {
   if (context.is_single_task()) return;
 
@@ -43,18 +43,18 @@ void validate(legate::TaskContext& context)
 
 class MultiVariantTask : public Task<MultiVariantTask, MULTI_VARIANT> {
  public:
-  static void cpu_variant(legate::TaskContext& context) { validate(context); }
+  static void cpu_variant(legate::TaskContext context) { validate(context); }
 #ifdef LEGATE_USE_OPENMP
-  static void omp_variant(legate::TaskContext& context) { validate(context); }
+  static void omp_variant(legate::TaskContext context) { validate(context); }
 #endif
 #ifdef LEGATE_USE_CUDA
-  static void gpu_variant(legate::TaskContext& context) { validate(context); }
+  static void gpu_variant(legate::TaskContext context) { validate(context); }
 #endif
 };
 
 class CpuVariantOnlyTask : public Task<CpuVariantOnlyTask, CPU_VARIANT_ONLY> {
  public:
-  static void cpu_variant(legate::TaskContext& context) { validate(context); }
+  static void cpu_variant(legate::TaskContext context) { validate(context); }
 };
 
 void registration_callback()

@@ -11,9 +11,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 
 #include "legate.h"
 

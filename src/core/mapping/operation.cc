@@ -11,6 +11,7 @@
  */
 
 #include "core/mapping/operation.h"
+#include "core/mapping/detail/array.h"
 #include "core/mapping/detail/operation.h"
 
 namespace legate::mapping {
@@ -19,29 +20,29 @@ int64_t Task::task_id() const { return impl_->task_id(); }
 
 namespace {
 
-template <typename Stores>
-std::vector<Store> convert_stores(const Stores& stores)
+template <typename Arrays>
+std::vector<Array> convert_arrays(const Arrays& arrays)
 {
-  std::vector<Store> result;
-  for (auto& store : stores) { result.emplace_back(&store); }
+  std::vector<Array> result;
+  for (auto& array : arrays) { result.emplace_back(array.get()); }
   return std::move(result);
 }
 
 }  // namespace
 
-std::vector<Store> Task::inputs() const { return convert_stores(impl_->inputs()); }
+std::vector<Array> Task::inputs() const { return convert_arrays(impl_->inputs()); }
 
-std::vector<Store> Task::outputs() const { return convert_stores(impl_->outputs()); }
+std::vector<Array> Task::outputs() const { return convert_arrays(impl_->outputs()); }
 
-std::vector<Store> Task::reductions() const { return convert_stores(impl_->reductions()); }
+std::vector<Array> Task::reductions() const { return convert_arrays(impl_->reductions()); }
 
 const std::vector<Scalar>& Task::scalars() const { return impl_->scalars(); }
 
-Store Task::input(uint32_t index) const { return Store(&impl_->inputs().at(index)); }
+Array Task::input(uint32_t index) const { return Array(impl_->inputs().at(index).get()); }
 
-Store Task::output(uint32_t index) const { return Store(&impl_->outputs().at(index)); }
+Array Task::output(uint32_t index) const { return Array(impl_->outputs().at(index).get()); }
 
-Store Task::reduction(uint32_t index) const { return Store(&impl_->reductions().at(index)); }
+Array Task::reduction(uint32_t index) const { return Array(impl_->reductions().at(index).get()); }
 
 size_t Task::num_inputs() const { return impl_->inputs().size(); }
 

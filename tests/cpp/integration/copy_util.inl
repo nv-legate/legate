@@ -60,11 +60,11 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
   };
 
   static const int32_t TASK_ID = FILL_TASK + DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& output = context.outputs().at(0);
-    auto shape   = output.shape<DIM>();
-    auto& seed   = context.scalars().at(0);
+    auto output = context.output(0).data();
+    auto shape  = output.shape<DIM>();
+    auto seed   = context.scalar(0);
 
     if (shape.empty()) return;
 
@@ -88,11 +88,11 @@ legate::Point<DIM> delinearize(size_t index,
 template <int32_t IND_DIM, int32_t DATA_DIM>
 struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DATA_DIM>> {
   static const int32_t TASK_ID = FILL_INDIRECT_TASK + IND_DIM * TEST_MAX_DIM + DATA_DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& output    = context.outputs().at(0);
+    auto output     = context.output(0).data();
     auto ind_shape  = output.shape<IND_DIM>();
-    auto data_shape = context.scalars().at(0).value<legate::Rect<DATA_DIM>>();
+    auto data_shape = context.scalar(0).value<legate::Rect<DATA_DIM>>();
 
     size_t data_vol = data_shape.volume();
     size_t ind_vol  = ind_shape.volume();

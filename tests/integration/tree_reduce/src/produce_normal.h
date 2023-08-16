@@ -18,7 +18,7 @@
 namespace tree_reduce {
 
 struct ProduceNormalTask : public Task<ProduceNormalTask, PRODUCE_NORMAL> {
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 }  // namespace tree_reduce

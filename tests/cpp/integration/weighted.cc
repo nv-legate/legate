@@ -26,24 +26,24 @@ enum TaskIDs {
 constexpr uint32_t NUM_TASKS = 4;
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
     auto task_idx = context.get_task_index()[0];
-    auto& outputs = context.outputs();
+    auto outputs  = context.outputs();
     for (uint32_t idx = 0; idx < outputs.size(); ++idx) {
-      auto& output = outputs.at(idx);
+      auto output = outputs.at(idx).data();
       output.create_output_buffer<int32_t, 1>(legate::Point<1>(task_idx + 10 * (idx + 1)), true);
     }
   }
 };
 
 struct Tester : public legate::LegateTask<Tester> {
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_FALSE(context.is_single_task());
     EXPECT_EQ(context.get_launch_domain().get_volume(), NUM_TASKS);
     auto task_idx = context.get_task_index()[0];
-    auto& outputs = context.outputs();
+    auto outputs  = context.outputs();
     for (uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto volume = outputs.at(idx).shape<1>().volume();
       EXPECT_EQ(volume, task_idx + 10 * (idx + 1));
@@ -78,11 +78,9 @@ void check(legate::Runtime* runtime,
   auto task = runtime->create_task(library, CHECK);
 
   for (auto& input : inputs) {
-    auto part_in  = task.declare_partition();
+    auto part_in  = task.add_input(input);
     auto output   = runtime->create_store(input.extents(), input.type());
-    auto part_out = task.declare_partition();
-    task.add_input(input, part_in);
-    task.add_output(output, part_out);
+    auto part_out = task.add_output(output);
     task.add_constraint(legate::align(part_in, part_out));
   }
 

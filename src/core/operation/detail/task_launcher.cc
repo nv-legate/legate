@@ -11,6 +11,7 @@
  */
 
 #include "core/operation/detail/task_launcher.h"
+#include <optional>
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
 #include "core/data/scalar.h"
@@ -31,7 +32,6 @@ TaskLauncher::TaskLauncher(const Library* library,
                            int64_t tag /*= 0*/)
   : library_(library), task_id_(task_id), tag_(tag), machine_(machine), provenance_("")
 {
-  initialize();
 }
 
 TaskLauncher::TaskLauncher(const Library* library,
@@ -41,75 +41,33 @@ TaskLauncher::TaskLauncher(const Library* library,
                            int64_t tag /*= 0*/)
   : library_(library), task_id_(task_id), tag_(tag), machine_(machine), provenance_(provenance)
 {
-  initialize();
 }
 
-TaskLauncher::~TaskLauncher()
-{
-  for (auto& arg : inputs_) delete arg;
-  for (auto& arg : outputs_) delete arg;
-  for (auto& arg : reductions_) delete arg;
-  for (auto& arg : scalars_) delete arg;
-
-  delete req_analyzer_;
-  delete buffer_;
-  delete mapper_arg_;
-}
-
-void TaskLauncher::initialize()
-{
-  req_analyzer_ = new RequirementAnalyzer();
-  out_analyzer_ = new OutputRequirementAnalyzer();
-  buffer_       = new BufferBuilder();
-  mapper_arg_   = new BufferBuilder();
-  machine_.pack(*mapper_arg_);
-}
+TaskLauncher::~TaskLauncher() {}
 
 int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
 
 int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
 
+void TaskLauncher::add_input(std::unique_ptr<Analyzable> arg) { inputs_.push_back(std::move(arg)); }
+
+void TaskLauncher::add_output(std::unique_ptr<Analyzable> arg)
+{
+  arg->record_unbound_stores(unbound_stores_);
+  outputs_.push_back(std::move(arg));
+}
+
+void TaskLauncher::add_reduction(std::unique_ptr<Analyzable> arg)
+{
+  reductions_.push_back(std::move(arg));
+}
+
 void TaskLauncher::add_scalar(Scalar&& scalar)
 {
-  scalars_.push_back(new UntypedScalarArg(std::move(scalar)));
+  scalars_.emplace_back(new ScalarArg(std::move(scalar)));
 }
 
-void TaskLauncher::add_input(LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info)
-{
-  add_store(inputs_, store, std::move(proj_info), READ_ONLY);
-}
-
-void TaskLauncher::add_output(LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info)
-{
-  add_store(outputs_, store, std::move(proj_info), WRITE_ONLY);
-}
-
-void TaskLauncher::add_reduction(LogicalStore* store,
-                                 std::unique_ptr<ProjectionInfo> proj_info,
-                                 bool read_write)
-{
-  if (read_write)
-    add_store(reductions_, store, std::move(proj_info), READ_WRITE);
-  else
-    add_store(reductions_, store, std::move(proj_info), REDUCE);
-}
-
-void TaskLauncher::add_unbound_output(LogicalStore* store,
-                                      Legion::FieldSpace field_space,
-                                      Legion::FieldID field_id)
-{
-  out_analyzer_->insert(store->dim(), field_space, field_id);
-  auto arg = new OutputRegionArg(out_analyzer_, store, field_space, field_id);
-  outputs_.push_back(arg);
-  unbound_stores_.push_back(arg);
-}
-
-void TaskLauncher::add_future(const Legion::Future& future)
-{
-  // FIXME: Futures that are directly added by this function are incompatible with those
-  // from scalar stores. We need to separate the two sets.
-  futures_.push_back(future);
-}
+void TaskLauncher::add_future(const Legion::Future& future) { futures_.push_back(future); }
 
 void TaskLauncher::add_future_map(const Legion::FutureMap& future_map)
 {
@@ -121,151 +79,152 @@ void TaskLauncher::add_communicator(const Legion::FutureMap& communicator)
   communicators_.push_back(communicator);
 }
 
+namespace {
+
+void analyze(StoreAnalyzer& analyzer, const std::vector<std::unique_ptr<Analyzable>>& args)
+{
+  for (auto& arg : args) { arg->analyze(analyzer); }
+}
+
+void pack_args(BufferBuilder& buffer,
+               StoreAnalyzer& analyzer,
+               const std::vector<std::unique_ptr<Analyzable>>& args)
+{
+  buffer.pack<uint32_t>(args.size());
+  for (auto& arg : args) arg->pack(buffer, analyzer);
+}
+
+void pack_args(BufferBuilder& buffer, const std::vector<std::unique_ptr<ScalarArg>>& args)
+{
+  buffer.pack<uint32_t>(args.size());
+  for (auto& arg : args) arg->pack(buffer);
+}
+
+}  // namespace
+
 Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 {
-  auto legion_launcher = build_index_task(launch_domain);
+  StoreAnalyzer analyzer;
+  BufferBuilder task_arg;
+  BufferBuilder mapper_arg;
+  std::vector<Legion::OutputRequirement> output_requirements;
 
-  if (output_requirements_.empty()) return Runtime::get_runtime()->dispatch(legion_launcher.get());
+  analyze(analyzer, inputs_);
+  analyze(analyzer, outputs_);
+  analyze(analyzer, reductions_);
+  for (auto& future : futures_) analyzer.insert(future);
 
-  auto result = Runtime::get_runtime()->dispatch(legion_launcher.get(), &output_requirements_);
-  post_process_unbound_stores(result, launch_domain);
+  // Coalesce region requirements before packing task arguments
+  // as the latter requires requirement indices to be finalized
+  analyzer.analyze();
+
+  pack_args(task_arg, analyzer, inputs_);
+  pack_args(task_arg, analyzer, outputs_);
+  pack_args(task_arg, analyzer, reductions_);
+  pack_args(task_arg, scalars_);
+  task_arg.pack<bool>(can_throw_exception_);
+  task_arg.pack<bool>(insert_barrier_);
+  task_arg.pack<uint32_t>(communicators_.size());
+
+  pack_mapper_arg(mapper_arg);
+
+  Legion::IndexTaskLauncher index_task(legion_task_id(),
+                                       launch_domain,
+                                       task_arg.to_legion_buffer(),
+                                       Legion::ArgumentMap(),
+                                       Legion::Predicate::TRUE_PRED,
+                                       false /*must*/,
+                                       legion_mapper_id(),
+                                       tag_,
+                                       mapper_arg.to_legion_buffer(),
+                                       provenance_.c_str());
+
+  analyzer.populate(index_task, output_requirements);
+
+  if (insert_barrier_) {
+    auto* runtime                        = Runtime::get_runtime();
+    size_t num_tasks                     = launch_domain.get_volume();
+    auto [arrival_barrier, wait_barrier] = runtime->create_barriers(num_tasks);
+    index_task.add_future(Legion::Future::from_value(arrival_barrier));
+    index_task.add_future(Legion::Future::from_value(wait_barrier));
+    runtime->destroy_barrier(arrival_barrier);
+    runtime->destroy_barrier(wait_barrier);
+  }
+  for (auto& communicator : communicators_) index_task.point_futures.push_back(communicator);
+  for (auto& future_map : future_maps_) index_task.point_futures.push_back(future_map);
+
+  index_task.concurrent = concurrent_ || !communicators_.empty();
+
+  auto result = Runtime::get_runtime()->dispatch(index_task, output_requirements);
+  post_process_unbound_stores(result, launch_domain, output_requirements);
+  for (auto& arg : outputs_) arg->perform_invalidations();
   return result;
 }
 
 Legion::Future TaskLauncher::execute_single()
 {
-  auto legion_launcher = build_single_task();
+  StoreAnalyzer analyzer;
+  BufferBuilder task_arg;
+  BufferBuilder mapper_arg;
+  std::vector<Legion::OutputRequirement> output_requirements;
 
-  if (output_requirements_.empty()) return Runtime::get_runtime()->dispatch(legion_launcher.get());
-  auto result = Runtime::get_runtime()->dispatch(legion_launcher.get(), &output_requirements_);
-  post_process_unbound_stores();
+  analyze(analyzer, inputs_);
+  analyze(analyzer, outputs_);
+  analyze(analyzer, reductions_);
+  for (auto& future : futures_) analyzer.insert(future);
+
+  // Coalesce region requirements before packing task arguments
+  // as the latter requires requirement indices to be finalized
+  analyzer.analyze();
+
+  pack_args(task_arg, analyzer, inputs_);
+  pack_args(task_arg, analyzer, outputs_);
+  pack_args(task_arg, analyzer, reductions_);
+  pack_args(task_arg, scalars_);
+  task_arg.pack<bool>(can_throw_exception_);
+  // insert_barrier
+  task_arg.pack<bool>(false);
+  // # communicators
+  task_arg.pack<uint32_t>(0);
+
+  pack_mapper_arg(mapper_arg);
+
+  Legion::TaskLauncher single_task(legion_task_id(),
+                                   task_arg.to_legion_buffer(),
+                                   Legion::Predicate::TRUE_PRED,
+                                   legion_mapper_id(),
+                                   tag_,
+                                   mapper_arg.to_legion_buffer(),
+                                   provenance_.c_str());
+  analyzer.populate(single_task, output_requirements);
+  single_task.local_function_task = !has_side_effect_ && analyzer.can_be_local_function_task();
+
+  auto result = Runtime::get_runtime()->dispatch(single_task, output_requirements);
+  post_process_unbound_stores(output_requirements);
+  for (auto& arg : outputs_) arg->perform_invalidations();
   return result;
 }
 
-void TaskLauncher::add_store(std::vector<ArgWrapper*>& args,
-                             LogicalStore* store,
-                             std::unique_ptr<ProjectionInfo> proj_info,
-                             Legion::PrivilegeMode privilege)
+void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
 {
-  if (store->has_scalar_storage()) {
-    auto has_storage = privilege != WRITE_ONLY;
-    auto read_only   = privilege == READ_ONLY;
-    if (has_storage) futures_.push_back(store->get_future());
-    args.push_back(new FutureStoreArg(store, read_only, has_storage, proj_info->redop));
-  } else {
-    auto region_field = store->get_region_field();
-    auto region       = region_field->region();
-    auto field_id     = region_field->field_id();
+  machine_.pack(buffer);
 
-    req_analyzer_->insert(region, field_id, privilege, *proj_info);
-    // Keep the projection functor id of the key store
-    if (LEGATE_CORE_KEY_STORE_TAG == proj_info->tag) key_proj_id_ = proj_info->proj_id;
-    args.push_back(
-      new RegionFieldArg(req_analyzer_, store, field_id, privilege, std::move(proj_info)));
-  }
+  std::optional<Legion::ProjectionID> key_proj_id = std::nullopt;
+  auto find_key_proj_id                           = [&key_proj_id](auto& args) {
+    for (auto& arg : args) {
+      key_proj_id = arg->get_key_proj_id();
+      if (key_proj_id) break;
+    }
+  };
+  find_key_proj_id(inputs_);
+  if (!key_proj_id) find_key_proj_id(outputs_);
+  if (!key_proj_id) find_key_proj_id(reductions_);
+  if (!key_proj_id) { key_proj_id = std::optional<Legion::ProjectionID>(0); }
+  buffer.pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
 }
 
-void TaskLauncher::pack_args(const std::vector<ArgWrapper*>& args)
-{
-  buffer_->pack<uint32_t>(args.size());
-  for (auto& arg : args) arg->pack(*buffer_);
-}
-
-void TaskLauncher::pack_sharding_functor_id()
-{
-  mapper_arg_->pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
-}
-
-std::unique_ptr<Legion::TaskLauncher> TaskLauncher::build_single_task()
-{
-  // Coalesce region requirements before packing task arguments
-  // as the latter requires requirement indices to be finalized
-  req_analyzer_->analyze_requirements();
-  out_analyzer_->analyze_requirements();
-
-  pack_args(inputs_);
-  pack_args(outputs_);
-  pack_args(reductions_);
-  pack_args(scalars_);
-  buffer_->pack<bool>(can_throw_exception_);
-  // insert_barrier
-  buffer_->pack<bool>(false);
-  // # communicators
-  buffer_->pack<uint32_t>(0);
-
-  pack_sharding_functor_id();
-  auto* runtime = Runtime::get_runtime();
-
-  auto single_task = std::make_unique<Legion::TaskLauncher>(legion_task_id(),
-                                                            buffer_->to_legion_buffer(),
-                                                            Legion::Predicate::TRUE_PRED,
-                                                            legion_mapper_id(),
-                                                            tag_,
-                                                            mapper_arg_->to_legion_buffer(),
-                                                            provenance_.c_str());
-  for (auto& future : futures_) single_task->add_future(future);
-
-  req_analyzer_->populate_launcher(single_task.get());
-  out_analyzer_->populate_output_requirements(output_requirements_);
-
-  single_task->local_function_task =
-    !has_side_effect_ && req_analyzer_->empty() && out_analyzer_->empty();
-
-  return single_task;
-}
-
-std::unique_ptr<Legion::IndexTaskLauncher> TaskLauncher::build_index_task(
-  const Legion::Domain& launch_domain)
-{
-  // Coalesce region requirements before packing task arguments
-  // as the latter requires requirement indices to be finalized
-  req_analyzer_->analyze_requirements();
-  out_analyzer_->analyze_requirements();
-
-  pack_args(inputs_);
-  pack_args(outputs_);
-  pack_args(reductions_);
-  pack_args(scalars_);
-  buffer_->pack<bool>(can_throw_exception_);
-  buffer_->pack<bool>(insert_barrier_);
-  buffer_->pack<uint32_t>(communicators_.size());
-
-  pack_sharding_functor_id();
-  auto* runtime = Runtime::get_runtime();
-
-  auto index_task = std::make_unique<Legion::IndexTaskLauncher>(legion_task_id(),
-                                                                launch_domain,
-                                                                buffer_->to_legion_buffer(),
-                                                                Legion::ArgumentMap(),
-                                                                Legion::Predicate::TRUE_PRED,
-                                                                false /*must*/,
-                                                                legion_mapper_id(),
-                                                                tag_,
-                                                                mapper_arg_->to_legion_buffer(),
-                                                                provenance_.c_str());
-  for (auto& future : futures_) index_task->add_future(future);
-  if (insert_barrier_) {
-    size_t num_tasks                     = launch_domain.get_volume();
-    auto [arrival_barrier, wait_barrier] = runtime->create_barriers(num_tasks);
-    index_task->add_future(Legion::Future::from_value(arrival_barrier));
-    index_task->add_future(Legion::Future::from_value(wait_barrier));
-    runtime->destroy_barrier(arrival_barrier);
-    runtime->destroy_barrier(wait_barrier);
-  }
-  for (auto& communicator : communicators_) index_task->point_futures.push_back(communicator);
-  for (auto& future_map : future_maps_) index_task->point_futures.push_back(future_map);
-
-  req_analyzer_->populate_launcher(index_task.get());
-  out_analyzer_->populate_output_requirements(output_requirements_);
-
-  index_task->concurrent = concurrent_ || !communicators_.empty();
-
-  return index_task;
-}
-
-void TaskLauncher::bind_region_fields_to_unbound_stores() {}
-
-void TaskLauncher::post_process_unbound_stores()
+void TaskLauncher::post_process_unbound_stores(
+  const std::vector<Legion::OutputRequirement>& output_requirements)
 {
   if (unbound_stores_.empty()) return;
 
@@ -277,7 +236,7 @@ void TaskLauncher::post_process_unbound_stores()
     assert(arg->requirement_index() != -1U);
 #endif
     auto* store = arg->store();
-    auto& req   = output_requirements_[arg->requirement_index()];
+    auto& req   = output_requirements[arg->requirement_index()];
     auto region_field =
       runtime->import_region_field(req.parent, arg->field_id(), store->type()->size());
     store->set_region_field(std::move(region_field));
@@ -285,8 +244,10 @@ void TaskLauncher::post_process_unbound_stores()
   }
 }
 
-void TaskLauncher::post_process_unbound_stores(const Legion::FutureMap& result,
-                                               const Legion::Domain& launch_domain)
+void TaskLauncher::post_process_unbound_stores(
+  const Legion::FutureMap& result,
+  const Legion::Domain& launch_domain,
+  const std::vector<Legion::OutputRequirement>& output_requirements)
 {
   if (unbound_stores_.empty()) return;
 
@@ -313,12 +274,12 @@ void TaskLauncher::post_process_unbound_stores(const Legion::FutureMap& result,
 
   if (unbound_stores_.size() == 1) {
     auto* arg       = unbound_stores_.front();
-    const auto& req = output_requirements_[arg->requirement_index()];
+    const auto& req = output_requirements[arg->requirement_index()];
     post_process_unbound_store(arg, req, result, machine_);
   } else {
     uint32_t idx = 0;
     for (auto& arg : unbound_stores_) {
-      const auto& req = output_requirements_[arg->requirement_index()];
+      const auto& req = output_requirements[arg->requirement_index()];
       if (arg->store()->dim() == 1)
         post_process_unbound_store(
           arg, req, runtime->extract_scalar(result, idx, launch_domain), machine_);

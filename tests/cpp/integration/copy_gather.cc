@@ -26,13 +26,13 @@ template <int32_t IND_DIM, int32_t SRC_DIM>
 struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_DIM>> {
   struct CheckGatherTaskBody {
     template <legate::Type::Code CODE>
-    void operator()(legate::TaskContext& context)
+    void operator()(legate::TaskContext context)
     {
       using VAL = legate::legate_type_of<CODE>;
 
-      auto& src_store = context.inputs().at(0);
-      auto& tgt_store = context.inputs().at(1);
-      auto& ind_store = context.inputs().at(2);
+      auto src_store = context.input(0).data();
+      auto tgt_store = context.input(1).data();
+      auto ind_store = context.input(2).data();
 
       auto ind_shape = ind_store.shape<IND_DIM>();
       if (ind_shape.empty()) return;
@@ -50,9 +50,9 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
   };
 
   static const int32_t TASK_ID = CHECK_GATHER_TASK + IND_DIM * TEST_MAX_DIM + SRC_DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto type_code = context.inputs().at(0).type().code();
+    auto type_code = context.input(0).type().code();
     type_dispatch_for_test(type_code, CheckGatherTaskBody{}, context);
   }
 };

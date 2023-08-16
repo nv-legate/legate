@@ -22,24 +22,44 @@ namespace legate {
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-void AutoTask::add_input(LogicalStore store, Variable partition_symbol)
+Variable AutoTask::add_input(LogicalArray array)
 {
-  impl_->add_input(store.impl(), partition_symbol.impl());
+  return Variable(impl_->add_input(array.impl()));
 }
 
-void AutoTask::add_output(LogicalStore store, Variable partition_symbol)
+Variable AutoTask::add_output(LogicalArray array)
 {
-  impl_->add_output(store.impl(), partition_symbol.impl());
+  return Variable(impl_->add_output(array.impl()));
 }
 
-void AutoTask::add_reduction(LogicalStore store, ReductionOpKind redop, Variable partition_symbol)
+Variable AutoTask::add_reduction(LogicalArray array, ReductionOpKind redop)
 {
-  impl_->add_reduction(store.impl(), static_cast<int32_t>(redop), partition_symbol.impl());
+  return Variable(impl_->add_reduction(array.impl(), static_cast<int32_t>(redop)));
 }
 
-void AutoTask::add_reduction(LogicalStore store, int32_t redop, Variable partition_symbol)
+Variable AutoTask::add_reduction(LogicalArray array, int32_t redop)
 {
-  impl_->add_reduction(store.impl(), redop, partition_symbol.impl());
+  return Variable(impl_->add_reduction(array.impl(), redop));
+}
+
+void AutoTask::add_input(LogicalArray array, Variable partition_symbol)
+{
+  impl_->add_input(array.impl(), partition_symbol.impl());
+}
+
+void AutoTask::add_output(LogicalArray array, Variable partition_symbol)
+{
+  impl_->add_output(array.impl(), partition_symbol.impl());
+}
+
+void AutoTask::add_reduction(LogicalArray array, ReductionOpKind redop, Variable partition_symbol)
+{
+  impl_->add_reduction(array.impl(), static_cast<int32_t>(redop), partition_symbol.impl());
+}
+
+void AutoTask::add_reduction(LogicalArray array, int32_t redop, Variable partition_symbol)
+{
+  impl_->add_reduction(array.impl(), redop, partition_symbol.impl());
 }
 
 void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl_); }
@@ -51,9 +71,9 @@ void AutoTask::add_constraint(Constraint&& constraint)
   impl_->add_constraint(std::unique_ptr<detail::Constraint>(constraint.release()));
 }
 
-Variable AutoTask::find_or_declare_partition(LogicalStore store)
+Variable AutoTask::find_or_declare_partition(LogicalArray array)
 {
-  return Variable(impl_->find_or_declare_partition(store.impl()));
+  return Variable(impl_->find_or_declare_partition(array.impl()));
 }
 
 Variable AutoTask::declare_partition() { return Variable(impl_->declare_partition()); }

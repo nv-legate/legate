@@ -43,7 +43,7 @@ template <int32_t DIM, bool RECT>
 struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RECT>> {
   struct InitializeRects {
     template <int32_t TGT_DIM>
-    void operator()(legate::Store& output, const legate::Scalar& extents_scalar)
+    void operator()(legate::Store& output, const legate::Scalar& extents_scalar, bool ascending)
     {
       auto shape   = output.shape<DIM>();
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
@@ -58,21 +58,23 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
           if (point[dim] >= extents[dim]) return false;
         return true;
       };
-      size_t idx = 0;
+      int64_t idx  = ascending ? 0 : vol - 1;
+      int64_t diff = ascending ? 1 : -1;
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-        auto lo = delinearize(idx++ * tgt_vol / vol, extents);
+        auto lo = delinearize(idx * tgt_vol / vol, extents);
         auto hi = lo + legate::Point<TGT_DIM>::ONES();
         if (in_bounds(hi))
           acc[*it] = legate::Rect<TGT_DIM>(lo, hi);
         else
           acc[*it] = legate::Rect<TGT_DIM>(lo, lo);
+        idx += diff;
       }
     }
   };
 
   struct InitializePoints {
     template <int32_t TGT_DIM>
-    void operator()(legate::Store& output, const legate::Scalar& extents_scalar)
+    void operator()(legate::Store& output, const legate::Scalar& extents_scalar, bool ascending)
     {
       auto shape   = output.shape<DIM>();
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
@@ -82,26 +84,31 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       size_t tgt_vol = 1;
       for (int32_t dim = 0; dim < TGT_DIM; ++dim) tgt_vol *= extents[dim];
 
-      size_t idx = 0;
+      int64_t idx  = ascending ? 0 : vol - 1;
+      int64_t diff = ascending ? 1 : -1;
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-        auto p   = delinearize(idx++ * tgt_vol / vol, extents);
+        auto p   = delinearize(idx * tgt_vol / vol, extents);
         acc[*it] = p;
+        idx += diff;
       }
     }
   };
 
   static const int32_t TASK_ID = INIT_FUNC + static_cast<int32_t>(RECT) * TEST_MAX_DIM + DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& output  = context.outputs().at(0);
-    auto& extents = context.scalars().at(0);
+    auto output    = context.output(0).data();
+    auto extents   = context.scalar(0);
+    auto ascending = context.scalar(1).value<bool>();
     if constexpr (RECT) {
       const auto& rect_type  = output.type().as_struct_type();
       const auto& point_type = rect_type.field_type(0).as_fixed_array_type();
-      legate::dim_dispatch(point_type.num_elements(), InitializeRects{}, output, extents);
+      legate::dim_dispatch(
+        point_type.num_elements(), InitializeRects{}, output, extents, ascending);
     } else {
       const auto& point_type = output.type().as_fixed_array_type();
-      legate::dim_dispatch(point_type.num_elements(), InitializePoints{}, output, extents);
+      legate::dim_dispatch(
+        point_type.num_elements(), InitializePoints{}, output, extents, ascending);
     }
   }
 };
@@ -139,12 +146,11 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
       }
     }
   };
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& func = context.inputs().at(0);
-
-    auto range = context.inputs().at(1).domain();
-    EXPECT_FALSE(!context.is_single_task() && range.get_volume() > 1 && range.dense());
+    auto func  = context.input(0).data();
+    auto range = context.input(1).domain();
+    EXPECT_TRUE(context.is_single_task() || range.get_volume() <= 1 || !range.dense());
 
     if constexpr (RECT) {
       const auto& rect_type  = func.type().as_struct_type();
@@ -153,6 +159,14 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
     } else {
       const auto& point_type = func.type().as_fixed_array_type();
       legate::dim_dispatch(point_type.num_elements(), CheckPoints{}, func, range);
+    }
+
+    if (context.get_task_index() == context.get_launch_domain().lo()) {
+      logger.debug() << "== Image received in task 0 ==";
+      for (legate::Domain::DomainPointIterator it(range); it; ++it) {
+        logger.debug() << "  " << *it;
+      }
+      logger.debug() << "==============================";
     }
   }
 };
@@ -175,7 +189,9 @@ void prepare()
   ImageTester<3, false>::register_variants(context);
 }
 
-void initialize_function(legate::LogicalStore func, const std::vector<size_t> range_extents)
+void initialize_function(legate::LogicalStore func,
+                         const std::vector<size_t> range_extents,
+                         bool ascending)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -186,6 +202,7 @@ void initialize_function(legate::LogicalStore func, const std::vector<size_t> ra
   auto part = task.declare_partition();
   task.add_output(func, part);
   task.add_scalar_arg(range_extents);
+  task.add_scalar_arg(ascending);
   task.add_constraint(legate::broadcast(part, legate::from_range(func.dim())));
   runtime->submit(std::move(task));
 
@@ -226,8 +243,14 @@ void test_image(const ImageTestSpec& spec)
   auto func       = runtime->create_store(spec.domain_extents, std::move(image_type));
   auto range      = runtime->create_store(spec.range_extents, legate::int64());
 
-  initialize_function(func, spec.range_extents);
+  initialize_function(func, spec.range_extents, true);
   runtime->issue_fill(range, legate::Scalar(int64_t(1234)));
+  check_image(func, range);
+  runtime->issue_execution_fence();
+  check_image(func, range);
+  initialize_function(func, spec.range_extents, false);
+  check_image(func, range);
+  runtime->issue_execution_fence();
   check_image(func, range);
 }
 

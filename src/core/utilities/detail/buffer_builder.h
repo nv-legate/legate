@@ -70,6 +70,12 @@ class BufferBuilder {
    */
   Legion::UntypedBuffer to_legion_buffer() const;
 
+ public:
+  BufferBuilder(const BufferBuilder&)            = default;
+  BufferBuilder& operator=(const BufferBuilder&) = default;
+  BufferBuilder(BufferBuilder&&)                 = default;
+  BufferBuilder& operator=(BufferBuilder&&)      = default;
+
  private:
   std::vector<int8_t> buffer_;
 };

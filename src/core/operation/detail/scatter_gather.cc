@@ -112,7 +112,7 @@ void ScatterGather::launch(Strategy* p_strategy)
 
 void ScatterGather::add_to_solver(ConstraintSolver& solver)
 {
-  solver.add_constraint(constraint_.get());
+  solver.add_constraint(std::move(constraint_));
   solver.add_partition_symbol(target_.variable);
   solver.add_partition_symbol(target_indirect_.variable);
   solver.add_partition_symbol(source_.variable);

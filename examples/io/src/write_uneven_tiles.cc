@@ -46,10 +46,10 @@ struct header_write_fn {
 
 class WriteUnevenTilesTask : public Task<WriteUnevenTilesTask, WRITE_UNEVEN_TILES> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto dirname = context.scalars().at(0).value<std::string>();
-    auto& input  = context.inputs().at(0);
+    auto dirname = context.scalar(0).value<std::string>();
+    auto input   = context.input(0).data();
 
     auto launch_domain = context.get_launch_domain();
     auto task_index    = context.get_task_index();

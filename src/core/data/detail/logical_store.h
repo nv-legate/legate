@@ -26,10 +26,13 @@
 
 namespace legate::detail {
 
+class Analyzable;
+class LogicalStorePartition;
 class ProjectionInfo;
+class Strategy;
 class StoragePartition;
 class Store;
-class LogicalStorePartition;
+class Variable;
 
 class Storage : public std::enable_shared_from_this<Storage> {
  public:
@@ -194,7 +197,9 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size);
   std::shared_ptr<LogicalStore> project(int32_t dim, int64_t index);
   std::shared_ptr<LogicalStore> slice(int32_t dim, Slice sl);
+  std::shared_ptr<LogicalStore> transpose(const std::vector<int32_t>& axes);
   std::shared_ptr<LogicalStore> transpose(std::vector<int32_t>&& axes);
+  std::shared_ptr<LogicalStore> delinearize(int32_t dim, const std::vector<int64_t>& sizes);
   std::shared_ptr<LogicalStore> delinearize(int32_t dim, std::vector<int64_t>&& sizes);
 
  public:
@@ -221,6 +226,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   Restrictions compute_restrictions() const;
   std::shared_ptr<Partition> find_or_create_key_partition(const mapping::detail::Machine& machine,
                                                           const Restrictions& restrictions);
+  std::shared_ptr<Partition> get_current_key_partition() const { return key_partition_; }
   bool has_key_partition(const mapping::detail::Machine& machine,
                          const Restrictions& restrictions) const;
   void set_key_partition(const mapping::detail::Machine& machine, const Partition* partition);
@@ -234,6 +240,13 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  public:
   void pack(BufferBuilder& buffer) const;
+  std::unique_ptr<Analyzable> to_launcher_arg(const Variable* variable,
+                                              const Strategy& strategy,
+                                              const Domain* launch_domain,
+                                              Legion::PrivilegeMode privilege,
+                                              int32_t redop = -1);
+  std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(const Domain* launch_domain,
+                                                        Legion::PrivilegeMode privilege);
 
  public:
   std::string to_string() const;

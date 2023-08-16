@@ -15,7 +15,7 @@
 #include <memory>
 
 #include "core/data/scalar.h"
-#include "core/mapping/store.h"
+#include "core/mapping/array.h"
 
 /**
  * @file
@@ -43,26 +43,26 @@ class Task {
 
  public:
   /**
-   * @brief Returns metadata for the task's input stores
+   * @brief Returns metadata for the task's input arrays
    *
-   * @return Vector of store metadata objects
+   * @return Vector of array metadata objects
    */
-  std::vector<Store> inputs() const;
+  std::vector<Array> inputs() const;
   /**
-   * @brief Returns metadata for the task's output stores
+   * @brief Returns metadata for the task's output arrays
    *
-   * @return Vector of store metadata objects
+   * @return Vector of array metadata objects
    */
-  std::vector<Store> outputs() const;
+  std::vector<Array> outputs() const;
   /**
-   * @brief Returns metadata for the task's reduction stores
+   * @brief Returns metadata for the task's reduction arrays
    *
-   * @return Vector of store metadata objects
+   * @return Vector of array metadata objects
    */
-  std::vector<Store> reductions() const;
+  std::vector<Array> reductions() const;
   /**
-   * @brief Returns the vector of the task's by-value arguments. Unlike `mapping::Store`
-   * objects that have no access to data in the stores, the returned `Scalar` objects
+   * @brief Returns the vector of the task's by-value arguments. Unlike `mapping::Array`
+   * objects that have no access to data in the arrays, the returned `Scalar` objects
    * contain valid arguments to the task
    *
    * @return Vector of `Scalar` objects
@@ -71,47 +71,47 @@ class Task {
 
  public:
   /**
-   * @brief Returns metadata for the task's input store
+   * @brief Returns metadata for the task's input array
    *
-   * @param index Index of the input store
+   * @param index Index of the input array
    *
-   * @return Store metadata object
+   * @return Array metadata object
    */
-  Store input(uint32_t index) const;
+  Array input(uint32_t index) const;
   /**
-   * @brief Returns metadata for the task's output store
+   * @brief Returns metadata for the task's output array
    *
-   * @param index Index of the output store
+   * @param index Index of the output array
    *
-   * @return Store metadata object
+   * @return Array metadata object
    */
-  Store output(uint32_t index) const;
+  Array output(uint32_t index) const;
   /**
-   * @brief Returns metadata for the task's reduction store
+   * @brief Returns metadata for the task's reduction array
    *
-   * @param index Index of the reduction store
+   * @param index Index of the reduction array
    *
-   * @return Store metadata object
+   * @return Array metadata object
    */
-  Store reduction(uint32_t index) const;
+  Array reduction(uint32_t index) const;
 
  public:
   /**
    * @brief Returns the number of task's inputs
    *
-   * @return Number of stores
+   * @return Number of arrays
    */
   size_t num_inputs() const;
   /**
    * @brief Returns the number of task's outputs
    *
-   * @return Number of stores
+   * @return Number of arrays
    */
   size_t num_outputs() const;
   /**
    * @brief Returns the number of task's reductions
    *
-   * @return Number of stores
+   * @return Number of arrays
    */
   size_t num_reductions() const;
 

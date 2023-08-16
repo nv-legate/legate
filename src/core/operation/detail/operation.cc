@@ -56,7 +56,6 @@ void Operation::record_partition(const Variable* variable, std::shared_ptr<Logic
   }
   if (part_mappings_.find(store) == part_mappings_.end()) part_mappings_.insert({store, variable});
   store_mappings_[*variable] = store;
-  all_stores_.insert(std::move(store));
 }
 
 std::unique_ptr<ProjectionInfo> Operation::create_projection_info(const Strategy& strategy,

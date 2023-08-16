@@ -27,10 +27,10 @@ void register_tasks()
   ReducerTask::register_variants(context);
 }
 
-/*static*/ void HelloTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void HelloTask::cpu_variant(legate::TaskContext context)
 {
-  auto& output = context.outputs()[0];
-  auto shape   = output.shape<2>();
+  auto output = context.output(0).data();
+  auto shape  = output.shape<2>();
 
   if (shape.empty()) return;
 
@@ -39,10 +39,10 @@ void register_tasks()
     acc[*it] = (*it)[0] + (*it)[1] * 1000;
 }
 
-/*static*/ void WriterTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void WriterTask::cpu_variant(legate::TaskContext context)
 {
-  auto& output1 = context.outputs()[0];
-  auto& output2 = context.outputs()[1];
+  auto output1 = context.output(0).data();
+  auto output2 = context.output(1).data();
 
   auto acc1 = output1.write_accessor<int8_t, 2>();
   auto acc2 = output2.write_accessor<int32_t, 3>();
@@ -51,10 +51,10 @@ void register_tasks()
   acc2[{0, 0, 0}] = 20;
 }
 
-/*static*/ void ReducerTask::cpu_variant(legate::TaskContext& context)
+/*static*/ void ReducerTask::cpu_variant(legate::TaskContext context)
 {
-  auto& red1 = context.reductions()[0];
-  auto& red2 = context.reductions()[1];
+  auto red1 = context.reduction(0).data();
+  auto red2 = context.reduction(1).data();
 
   auto acc1 = red1.reduce_accessor<legate::SumReduction<int8_t>, true, 2>();
   auto acc2 = red2.reduce_accessor<legate::ProdReduction<int32_t>, true, 3>();

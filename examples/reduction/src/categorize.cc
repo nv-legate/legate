@@ -60,11 +60,11 @@ struct categorize_fn {
 
 class CategorizeTask : public Task<CategorizeTask, CATEGORIZE> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& input  = context.inputs().at(0);
-    auto& bins   = context.inputs().at(1);
-    auto& result = context.outputs().at(0);
+    auto input  = context.input(0).data();
+    auto bins   = context.input(1).data();
+    auto result = context.output(0).data();
 
     legate::type_dispatch(input.code(), categorize_fn{}, result, input, bins);
   }

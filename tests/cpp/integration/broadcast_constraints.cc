@@ -25,12 +25,12 @@ constexpr int32_t TESTER      = 0;
 constexpr int32_t INITIALIZER = 1;
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto extent  = context.scalars().at(0).value<uint64_t>();
-    auto dims    = context.scalars().at(1).values<int32_t>();
-    auto is_read = context.scalars().at(2).value<bool>();
-    auto shape   = is_read ? context.inputs().at(0).shape<3>() : context.outputs().at(0).shape<3>();
+    auto extent  = context.scalar(0).value<uint64_t>();
+    auto dims    = context.scalar(1).values<int32_t>();
+    auto is_read = context.scalar(2).value<bool>();
+    auto shape   = is_read ? context.input(0).shape<3>() : context.output(0).shape<3>();
 
     for (auto dim : dims) {
       EXPECT_EQ(shape.lo[dim], 0);
@@ -40,7 +40,7 @@ struct TesterTask : public legate::LegateTask<TesterTask> {
 };
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static void cpu_variant(legate::TaskContext& context) {}
+  static void cpu_variant(legate::TaskContext context) {}
 };
 
 void prepare()
@@ -61,8 +61,7 @@ void test_normal_store()
     for (auto dim : dims) extents[dim] = EXT_LARGE;
     auto store = runtime->create_store(extents, legate::int64());
     auto task  = runtime->create_task(context, TESTER);
-    auto part  = task.declare_partition();
-    task.add_output(store, part);
+    auto part  = task.add_output(store);
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(dims));
     task.add_scalar_arg(legate::Scalar(false));
@@ -86,8 +85,7 @@ void test_promoted_store()
 
   auto initialize = [&](auto store) {
     auto task = runtime->create_task(context, INITIALIZER);
-    auto part = task.declare_partition();
-    task.add_output(store, part);
+    task.add_output(store);
     runtime->submit(std::move(task));
   };
 
@@ -98,8 +96,7 @@ void test_promoted_store()
     initialize(store);
 
     auto task = runtime->create_task(context, TESTER);
-    auto part = task.declare_partition();
-    task.add_input(store.promote(2, EXT_LARGE), part);
+    auto part = task.add_input(store.promote(2, EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(std::vector<int32_t>{dim}));
     task.add_scalar_arg(legate::Scalar(true));
@@ -118,8 +115,7 @@ void test_invalid_broadcast()
 
   auto task  = runtime->create_task(context, INITIALIZER);
   auto store = runtime->create_store({10}, legate::int64());
-  auto part  = task.declare_partition();
-  task.add_output(store, part);
+  auto part  = task.add_output(store);
   task.add_constraint(legate::broadcast(part, {1}));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }

@@ -21,6 +21,7 @@ class Store;
 }  // namespace legate
 namespace legate::detail {
 
+class BaseArray;
 class TransformStack;
 
 class RegionField {
@@ -209,6 +210,7 @@ class Store {
 
  private:
   friend class legate::Store;
+  friend class legate::detail::BaseArray;
   void check_accessor_dimension(const int32_t dim) const;
   void check_buffer_dimension(const int32_t dim) const;
   void check_shape_dimension(const int32_t dim) const;

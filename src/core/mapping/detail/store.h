@@ -116,6 +116,7 @@ class Store {
   bool is_future() const { return is_future_; }
   bool unbound() const { return is_unbound_store_; }
   int32_t dim() const { return dim_; }
+  std::shared_ptr<legate::detail::Type> type() const { return type_; }
 
  public:
   bool is_reduction() const { return redop_id_ > 0; }

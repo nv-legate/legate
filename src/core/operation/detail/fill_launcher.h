@@ -28,7 +28,6 @@ class ProjectionInfo;
 class FillLauncher {
  public:
   FillLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
-  ~FillLauncher();
 
  public:
   void launch(const Legion::Domain& launch_domain,
@@ -38,21 +37,11 @@ class FillLauncher {
   void launch_single(LogicalStore* lhs, const ProjectionInfo& lhs_proj, LogicalStore* value);
 
  private:
-  void pack_mapper_arg(Legion::ProjectionID proj_id);
-  std::unique_ptr<Legion::IndexFillLauncher> build_index_fill(const Legion::Domain& launch_domain,
-                                                              LogicalStore* lhs,
-                                                              const ProjectionInfo& lhs_proj,
-                                                              LogicalStore* value);
-  std::unique_ptr<Legion::FillLauncher> build_single_fill(LogicalStore* lhs,
-                                                          const ProjectionInfo& lhs_proj,
-                                                          LogicalStore* value);
+  void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);
 
  private:
-  mapping::detail::Machine machine_;
+  const mapping::detail::Machine& machine_;
   int64_t tag_;
-
- private:
-  BufferBuilder* mapper_arg_;
 };
 
 }  // namespace legate::detail

@@ -129,23 +129,29 @@ void BaseMapper::select_task_options(const Legion::Mapping::MapperContext ctx,
 #ifdef LEGATE_USE_COLLECTIVE
   auto hi = task.index_domain.hi();
   auto lo = task.index_domain.lo();
-  for (auto& store : legate_task.inputs()) {
-    if (store.is_future()) continue;
-    std::vector<int32_t> promoted_dims = store.find_imaginary_dims();
-    for (auto& d : promoted_dims) {
-      if ((hi[d] - lo[d]) >= 1) {
-        output.check_collective_regions.insert(store.requirement_index());
-        break;
+  for (auto& array : legate_task.inputs()) {
+    auto stores = array->stores();
+    for (auto& store : stores) {
+      if (store->is_future()) continue;
+      std::vector<int32_t> promoted_dims = store->find_imaginary_dims();
+      for (auto& d : promoted_dims) {
+        if ((hi[d] - lo[d]) >= 1) {
+          output.check_collective_regions.insert(store->requirement_index());
+          break;
+        }
       }
     }
   }
-  for (auto& store : legate_task.reductions()) {
-    if (store.is_future()) continue;
-    auto idx = store.requirement_index();
-    auto req = task.regions[idx];
-    if (req.privilege & LEGION_WRITE_PRIV) continue;
-    if (req.handle_type == LEGION_SINGULAR_PROJECTION || req.projection != 0) {
-      output.check_collective_regions.insert(idx);
+  for (auto& array : legate_task.reductions()) {
+    auto stores = array->stores();
+    for (auto& store : stores) {
+      if (store->is_future()) continue;
+      auto idx = store->requirement_index();
+      auto req = task.regions[idx];
+      if (req.privilege & LEGION_WRITE_PRIV) continue;
+      if (req.handle_type == LEGION_SINGULAR_PROJECTION || req.projection != 0) {
+        output.check_collective_regions.insert(idx);
+      }
     }
   }
 
@@ -359,24 +365,28 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
 
   // Generate default mappings for stores that are not yet mapped by the client mapper
   auto default_option            = options.front();
-  auto generate_default_mappings = [&](auto& stores, bool exact) {
-    for (auto& store : stores) {
-      auto mapping = StoreMapping::default_mapping(&store, default_option, exact);
-      if (store.is_future()) {
-        auto fut_idx = store.future_index();
-        // Only need to map Future-backed Stores corresponding to inputs (i.e. one of task.futures)
-        if (fut_idx >= task.futures.size()) continue;
-        if (mapped_futures.find(fut_idx) != mapped_futures.end()) continue;
-        mapped_futures.insert(fut_idx);
-        for_futures.push_back(std::move(mapping));
-      } else {
-        auto key = store.unique_region_field_id();
-        if (mapped_regions.find(key) != mapped_regions.end()) continue;
-        mapped_regions.insert(key);
-        if (store.unbound())
-          for_unbound_stores.push_back(std::move(mapping));
-        else
-          for_stores.push_back(std::move(mapping));
+  auto generate_default_mappings = [&](auto& arrays, bool exact) {
+    for (auto& array : arrays) {
+      auto stores = array->stores();
+      for (auto& store : stores) {
+        auto mapping = StoreMapping::default_mapping(store.get(), default_option, exact);
+        if (store->is_future()) {
+          auto fut_idx = store->future_index();
+          // Only need to map Future-backed Stores corresponding to inputs (i.e. one of
+          // task.futures)
+          if (fut_idx >= task.futures.size()) continue;
+          if (mapped_futures.find(fut_idx) != mapped_futures.end()) continue;
+          mapped_futures.insert(fut_idx);
+          for_futures.push_back(std::move(mapping));
+        } else {
+          auto key = store->unique_region_field_id();
+          if (mapped_regions.find(key) != mapped_regions.end()) continue;
+          mapped_regions.insert(key);
+          if (store->unbound())
+            for_unbound_stores.push_back(std::move(mapping));
+          else
+            for_stores.push_back(std::move(mapping));
+        }
       }
     }
   };
@@ -547,9 +557,14 @@ bool BaseMapper::map_legate_store(const Legion::Mapping::MapperContext ctx,
 {
   if (reqs.empty()) return false;
 
-  const auto& policy = mapping.policy;
   std::vector<Legion::LogicalRegion> regions;
-  for (auto* req : reqs) regions.push_back(req->region);
+  for (auto* req : reqs) {
+    if (LEGION_NO_ACCESS == req->privilege) continue;
+    regions.push_back(req->region);
+  }
+  if (regions.empty()) return false;
+
+  const auto& policy = mapping.policy;
   auto target_memory = local_machine.get_memory(target_proc, policy.target);
 
   auto redop = (*reqs.begin())->redop;

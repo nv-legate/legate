@@ -25,11 +25,11 @@ enum TaskOpCode {
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
   static const int32_t TASK_ID = ADDER;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& output = context.outputs()[0];
-    auto shape   = output.shape<1>();
-    auto acc     = output.read_write_accessor<int64_t, 1>(shape);
+    auto output = context.output(0).data();
+    auto shape  = output.shape<1>();
+    auto acc    = output.read_write_accessor<int64_t, 1>(shape);
     for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) acc[*it] += 1;
   }
 };

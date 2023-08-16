@@ -63,6 +63,8 @@ void Reduce::launch(Strategy* p_strategy)
     for (size_t i = 0; i < radix_; i++) proj_fns.push_back(proj::RadixProjectionFunctor(radix_, i));
   }
 
+  auto to_array_arg = [](auto&& arg) { return std::make_unique<BaseArrayArg>(std::move(arg)); };
+
   std::shared_ptr<LogicalStore> new_output;
   bool done = false;
   while (!done) {
@@ -72,13 +74,15 @@ void Reduce::launch(Strategy* p_strategy)
       // if there are more than 1 sub-task, we add several slices of the input
       // for each sub-task
       for (auto& proj_fn : proj_fns) {
-        launcher.add_input(input_.get(),
-                           input_partition->create_projection_info(&launch_domain, proj_fn));
+        auto proj_info = input_partition->create_projection_info(&launch_domain, proj_fn);
+        launcher.add_input(to_array_arg(
+          std::make_unique<RegionFieldArg>(input_.get(), READ_ONLY, std::move(proj_info))));
       }
     } else {
       // otherwise we just add an entire input region to the task
-      auto proj = input_partition->create_projection_info(&launch_domain);
-      launcher.add_input(input_.get(), std::move(proj));
+      auto proj_info = input_partition->create_projection_info(&launch_domain);
+      launcher.add_input(to_array_arg(
+        std::make_unique<RegionFieldArg>(input_.get(), READ_ONLY, std::move(proj_info))));
     }
 
     // calculating #of sub-tasks in the reduction task
@@ -89,15 +93,15 @@ void Reduce::launch(Strategy* p_strategy)
     auto runtime = detail::Runtime::get_runtime();
 
     auto field_space = runtime->create_field_space();
-    auto field_size  = input_->type()->size();
-    auto field_id    = runtime->allocate_field(field_space, field_size);
     // if this is not the last iteration of the while loop, we generate
     // a new output region
     if (n_tasks != 1) {
       new_output = runtime->create_store(input_->type(), 1);
-      launcher.add_unbound_output(new_output.get(), field_space, field_id);
+      launcher.add_output(
+        to_array_arg(std::make_unique<OutputRegionArg>(new_output.get(), field_space)));
     } else {
-      launcher.add_unbound_output(output_.get(), field_space, field_id);
+      launcher.add_output(
+        to_array_arg(std::make_unique<OutputRegionArg>(output_.get(), field_space)));
     }
 
     launch_domain = Domain(DomainPoint(0), DomainPoint(n_tasks - 1));

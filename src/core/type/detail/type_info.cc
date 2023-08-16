@@ -62,6 +62,12 @@ const char* _VARIABLE_SIZE_ERROR_MESSAGE = "Variable-size element type cannot be
 
 Type::Type(Code c) : code(c) {}
 
+uint32_t Type::size() const
+{
+  throw std::invalid_argument("Size of a variable size type is undefined");
+  return 0;
+}
+
 const FixedArrayType& Type::as_fixed_array_type() const
 {
   throw std::invalid_argument("Type is not a fixed array type");
@@ -72,6 +78,12 @@ const StructType& Type::as_struct_type() const
 {
   throw std::invalid_argument("Type is not a struct type");
   return *static_cast<const StructType*>(nullptr);
+}
+
+const ListType& Type::as_list_type() const
+{
+  throw std::invalid_argument("Type is not a list type");
+  return *static_cast<const ListType*>(nullptr);
 }
 
 void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
@@ -106,9 +118,7 @@ bool PrimitiveType::equal(const Type& other) const { return code == other.code; 
 
 ExtensionType::ExtensionType(int32_t uid, Type::Code code) : Type(code), uid_(uid) {}
 
-FixedArrayType::FixedArrayType(int32_t uid,
-                               std::shared_ptr<Type> element_type,
-                               uint32_t N) noexcept(false)
+FixedArrayType::FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
   : ExtensionType(uid, Type::Code::FIXED_ARRAY),
     element_type_(std::move(element_type)),
     N_(N),
@@ -148,15 +158,21 @@ bool FixedArrayType::equal(const Type& other) const
 #endif
 }
 
-StructType::StructType(int32_t uid,
-                       std::vector<std::shared_ptr<Type>>&& field_types,
-                       bool align) noexcept(false)
+StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
   : ExtensionType(uid, Type::Code::STRUCT),
     aligned_(align),
     alignment_(1),
     size_(0),
     field_types_(std::move(field_types))
 {
+  if (std::any_of(
+        field_types_.begin(), field_types_.end(), [](auto& ty) { return ty->variable_size(); })) {
+    throw std::runtime_error("Struct types can't have a variable size field");
+  }
+  if (field_types_.empty()) {
+    throw std::invalid_argument("Struct types must have at least one field");
+  }
+
   offsets_.reserve(field_types_.size());
   if (aligned_) {
     static constexpr auto align_offset = [](uint32_t offset, uint32_t align) {
@@ -247,14 +263,51 @@ std::shared_ptr<Type> primitive_type(Type::Code code)
   return std::make_shared<PrimitiveType>(code);
 }
 
+ListType::ListType(int32_t uid, std::shared_ptr<Type> element_type)
+  : ExtensionType(uid, Type::Code::LIST), element_type_(std::move(element_type))
+{
+  if (element_type_->variable_size()) {
+    throw std::runtime_error("Nested variable size types are not implemented yet");
+  }
+}
+
+std::string ListType::to_string() const
+{
+  std::stringstream ss;
+  ss << "list(" << element_type_->to_string() << ")";
+  return std::move(ss).str();
+}
+
+void ListType::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(static_cast<int32_t>(code));
+  buffer.pack<uint32_t>(uid_);
+  element_type_->pack(buffer);
+}
+
+const ListType& ListType::as_list_type() const { return *this; }
+
+bool ListType::equal(const Type& other) const
+{
+  if (code != other.code) return false;
+  auto& casted = static_cast<const ListType&>(other);
+
+#ifdef DEBUG_LEGATE
+  // Do a structural check in debug mode
+  return uid_ == casted.uid_ && element_type_ == casted.element_type_;
+#else
+  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+  return uid_ == casted.uid_;
+#endif
+}
+
 std::shared_ptr<Type> string_type()
 {
   static auto type = std::make_shared<StringType>();
   return type;
 }
 
-std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type,
-                                       uint32_t N) noexcept(false)
+std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint32_t N)
 {
   // We use UIDs of the following format for "common" fixed array types
   //    1B            1B
@@ -268,18 +321,165 @@ std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type,
   return std::make_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
 
-std::shared_ptr<Type> struct_type(const std::vector<std::shared_ptr<Type>>& field_types,
-                                  bool align) noexcept(false)
+std::shared_ptr<Type> struct_type(const std::vector<std::shared_ptr<Type>>& field_types, bool align)
 {
   return std::make_shared<StructType>(
     Runtime::get_runtime()->get_type_uid(), std::vector<std::shared_ptr<Type>>(field_types), align);
 }
 
-std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>>&& field_types,
-                                  bool align) noexcept(false)
+std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>>&& field_types, bool align)
 {
   return std::make_shared<StructType>(
     Runtime::get_runtime()->get_type_uid(), std::move(field_types), align);
+}
+
+std::shared_ptr<Type> list_type(std::shared_ptr<Type> element_type)
+{
+  return std::make_shared<ListType>(Runtime::get_runtime()->get_type_uid(),
+                                    std::move(element_type));
+}
+
+std::shared_ptr<Type> bool_()
+{
+  static auto result = detail::primitive_type(Type::Code::BOOL);
+  return result;
+}
+
+std::shared_ptr<Type> int8()
+{
+  static auto result = detail::primitive_type(Type::Code::INT8);
+  return result;
+}
+
+std::shared_ptr<Type> int16()
+{
+  static auto result = detail::primitive_type(Type::Code::INT16);
+  return result;
+}
+
+std::shared_ptr<Type> int32()
+{
+  static auto result = detail::primitive_type(Type::Code::INT32);
+  return result;
+}
+
+std::shared_ptr<Type> int64()
+{
+  static auto result = detail::primitive_type(Type::Code::INT64);
+  return result;
+}
+
+std::shared_ptr<Type> uint8()
+{
+  static auto result = detail::primitive_type(Type::Code::UINT8);
+  return result;
+}
+
+std::shared_ptr<Type> uint16()
+{
+  static auto result = detail::primitive_type(Type::Code::UINT16);
+  return result;
+}
+
+std::shared_ptr<Type> uint32()
+{
+  static auto result = detail::primitive_type(Type::Code::UINT32);
+  return result;
+}
+
+std::shared_ptr<Type> uint64()
+{
+  static auto result = detail::primitive_type(Type::Code::UINT64);
+  return result;
+}
+
+std::shared_ptr<Type> float16()
+{
+  static auto result = detail::primitive_type(Type::Code::FLOAT16);
+  return result;
+}
+
+std::shared_ptr<Type> float32()
+{
+  static auto result = detail::primitive_type(Type::Code::FLOAT32);
+  return result;
+}
+
+std::shared_ptr<Type> float64()
+{
+  static auto result = detail::primitive_type(Type::Code::FLOAT64);
+  return result;
+}
+
+std::shared_ptr<Type> complex64()
+{
+  static auto result = detail::primitive_type(Type::Code::COMPLEX64);
+  return result;
+}
+
+std::shared_ptr<Type> complex128()
+{
+  static auto result = detail::primitive_type(Type::Code::COMPLEX128);
+  return result;
+}
+
+namespace {
+
+constexpr int32_t POINT_UID_BASE = static_cast<int32_t>(Type::Code::INVALID);
+constexpr int32_t RECT_UID_BASE  = POINT_UID_BASE + LEGATE_MAX_DIM + 1;
+
+}  // namespace
+
+std::shared_ptr<Type> point_type(int32_t ndim)
+{
+  static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
+
+  if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
+    throw std::out_of_range(std::to_string(ndim) + " is not a supported number of dimensions");
+  if (nullptr == cache[ndim]) {
+    cache[ndim] = std::make_shared<detail::FixedArrayType>(POINT_UID_BASE + ndim, int64(), ndim);
+  }
+  return cache[ndim];
+}
+
+std::shared_ptr<Type> rect_type(int32_t ndim)
+{
+  static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
+
+  if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
+    throw std::out_of_range(std::to_string(ndim) + " is not a supported number of dimensions");
+
+  if (nullptr == cache[ndim]) {
+    auto pt_type = point_type(ndim);
+    std::vector<std::shared_ptr<detail::Type>> field_types{pt_type, pt_type};
+    cache[ndim] = std::make_shared<detail::StructType>(
+      RECT_UID_BASE + ndim, std::move(field_types), true /*align*/);
+  }
+  return cache[ndim];
+}
+
+bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim)
+{
+  switch (type->code) {
+    case Type::Code::INT64: {
+      return 1 == ndim;
+    }
+    case Type::Code::FIXED_ARRAY: {
+      return type->as_fixed_array_type().num_elements() == ndim;
+    }
+    default: {
+      return false;
+    }
+  }
+  return false;
+}
+
+bool is_rect_type(const std::shared_ptr<Type>& type, int32_t ndim)
+{
+  if (type->code != Type::Code::STRUCT) return false;
+  const auto& st_type = type->as_struct_type();
+  return st_type.num_fields() == 2 && is_point_type(st_type.field_type(0), ndim) &&
+         is_point_type(st_type.field_type(1), ndim);
 }
 
 }  // namespace legate::detail

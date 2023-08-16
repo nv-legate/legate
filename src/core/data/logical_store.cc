@@ -67,7 +67,7 @@ LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes
   return LogicalStore(impl_->delinearize(dim, std::move(sizes)));
 }
 
-Store LogicalStore::get_physical_store() { return Store(impl_->get_physical_store()); }
+Store LogicalStore::get_physical_store() const { return Store(impl_->get_physical_store()); }
 
 LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl)
   : impl_(std::move(impl))

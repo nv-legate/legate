@@ -245,7 +245,26 @@ void Runtime::submit(AutoTask&& task) { impl_->submit(std::move(task.impl_)); }
 
 void Runtime::submit(ManualTask&& task) { impl_->submit(std::move(task.impl_)); }
 
-LogicalStore Runtime::create_store(const Type& type, int32_t dim)
+LogicalArray Runtime::create_array(const Type& type, uint32_t dim, bool nullable)
+{
+  return LogicalArray(impl_->create_array(type.impl(), dim, nullable));
+}
+
+LogicalArray Runtime::create_array(const Shape& extents,
+                                   const Type& type,
+                                   bool nullable,
+                                   bool optimize_scalar)
+{
+  return LogicalArray(impl_->create_array(extents, type.impl(), nullable, optimize_scalar));
+}
+
+LogicalArray Runtime::create_array_like(const LogicalArray& to_mirror, std::optional<Type> type)
+{
+  auto ty = type ? type.value().impl() : to_mirror.type().impl();
+  return LogicalArray(impl_->create_array_like(to_mirror.impl(), std::move(ty)));
+}
+
+LogicalStore Runtime::create_store(const Type& type, uint32_t dim)
 {
   return LogicalStore(impl_->create_store(type.impl(), dim));
 }

@@ -44,11 +44,11 @@ struct matmul_fn {
 
 class MatMulTask : public Task<MatMulTask, MATMUL> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& rhs1 = context.inputs().at(0);
-    auto& rhs2 = context.inputs().at(1);
-    auto& lhs  = context.reductions().at(0);
+    auto rhs1 = context.input(0).data();
+    auto rhs2 = context.input(1).data();
+    auto lhs  = context.reduction(0).data();
 
     legate::type_dispatch(lhs.code(), matmul_fn{}, lhs, rhs1, rhs2);
   }

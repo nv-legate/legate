@@ -31,21 +31,27 @@ TaskContext::TaskContext(const Legion::Task* task,
   }
 
   TaskDeserializer dez(task, regions);
-  inputs_     = dez.unpack<std::vector<legate::Store>>();
-  outputs_    = dez.unpack<std::vector<legate::Store>>();
-  reductions_ = dez.unpack<std::vector<legate::Store>>();
-  scalars_    = dez.unpack<std::vector<legate::Scalar>>();
+  inputs_     = dez.unpack_arrays();
+  outputs_    = dez.unpack_arrays();
+  reductions_ = dez.unpack_arrays();
+  scalars_    = dez.unpack_scalars();
 
   // Make copies of stores that we need to postprocess, as clients might move the stores away
   for (auto& output : outputs_) {
-    if (output.is_unbound_store()) {
-      unbound_stores_.push_back(output);
-    } else if (output.is_future()) {
-      scalar_stores_.push_back(output);
+    auto stores = output->stores();
+    for (auto& store : stores) {
+      if (store->is_unbound_store()) {
+        unbound_stores_.push_back(std::move(store));
+      } else if (store->is_future()) {
+        scalar_stores_.push_back(std::move(store));
+      }
     }
   }
   for (auto& reduction : reductions_) {
-    if (reduction.is_future()) { scalar_stores_.push_back(reduction); }
+    auto stores = reduction->stores();
+    for (auto& store : stores) {
+      if (store->is_future()) { scalar_stores_.push_back(std::move(store)); }
+    }
   }
 
   can_raise_exception_ = dez.unpack<bool>();
@@ -65,9 +71,9 @@ TaskContext::TaskContext(const Legion::Task* task,
   // when the number of subregions isn't a multiple of the chosen radix.
   // To simplify the programming mode, we filter out those "invalid" stores out.
   if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
-    std::vector<legate::Store> inputs;
+    std::vector<std::shared_ptr<Array>> inputs;
     for (auto& input : inputs_)
-      if (input.valid()) inputs.push_back(std::move(input));
+      if (input->valid()) inputs.push_back(std::move(input));
     inputs_.swap(inputs);
   }
 
@@ -84,18 +90,19 @@ TaskContext::TaskContext(const Legion::Task* task,
   // If the task is running on a GPU and there is at least one scalar store for reduction,
   // we need to wait for all the host-to-device copies for initialization to finish
   if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC)
-    for (auto& reduction : reductions_)
-      if (reduction.is_future()) {
+    for (auto& reduction : reductions_) {
+      auto reduction_store = reduction->data();
+      if (reduction_store->is_future()) {
         CHECK_CUDA(cudaDeviceSynchronize());
         break;
       }
+    }
 #endif
 }
 
 void TaskContext::make_all_unbound_stores_empty()
 {
-  for (auto& output : outputs_)
-    if (output.is_unbound_store()) output.bind_empty_data();
+  for (auto& store : unbound_stores_) { store->bind_empty_data(); }
 }
 
 ReturnValues TaskContext::pack_return_values() const
@@ -123,8 +130,8 @@ std::vector<ReturnValue> TaskContext::get_return_values() const
 {
   std::vector<ReturnValue> return_values;
 
-  for (auto& store : unbound_stores_) { return_values.push_back(store.impl()->pack_weight()); }
-  for (auto& store : scalar_stores_) { return_values.push_back(store.impl()->pack()); }
+  for (auto& store : unbound_stores_) { return_values.push_back(store->pack_weight()); }
+  for (auto& store : scalar_stores_) { return_values.push_back(store->pack()); }
 
   // If this is a reduction task, we do sanity checks on the invariants
   // the Python code relies on.

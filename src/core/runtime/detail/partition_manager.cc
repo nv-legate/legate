@@ -231,6 +231,20 @@ Legion::IndexPartition PartitionManager::find_index_partition(const Legion::Inde
   return _find_index_partition(weighted_cache_, index_space, weighted);
 }
 
+Legion::IndexPartition PartitionManager::find_image_partition(
+  const Legion::IndexSpace& index_space,
+  const Legion::LogicalPartition& func_partition,
+  Legion::FieldID field_id) const
+{
+  ImageCacheKey key(index_space, func_partition, field_id);
+  auto finder = image_cache_.find(key);
+  if (finder != image_cache_.end()) {
+    return finder->second;
+  } else {
+    return Legion::IndexPartition::NO_PART;
+  }
+}
+
 void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
                                               const Tiling& tiling,
                                               const Legion::IndexPartition& index_partition)
@@ -243,6 +257,25 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
                                               const Legion::IndexPartition& index_partition)
 {
   weighted_cache_[std::make_pair(index_space, weighted)] = index_partition;
+}
+
+void PartitionManager::record_image_partition(const Legion::IndexSpace& index_space,
+                                              const Legion::LogicalPartition& func_partition,
+                                              Legion::FieldID field_id,
+                                              const Legion::IndexPartition& index_partition)
+{
+  image_cache_[std::tie(index_space, func_partition, field_id)] = index_partition;
+}
+
+void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& index_space,
+                                                  const Legion::LogicalPartition& func_partition,
+                                                  Legion::FieldID field_id)
+{
+  auto finder = image_cache_.find(std::tie(index_space, func_partition, field_id));
+#ifdef DEBUG_LEGATE
+  assert(finder != image_cache_.end());
+#endif
+  image_cache_.erase(finder);
 }
 
 }  // namespace legate::detail

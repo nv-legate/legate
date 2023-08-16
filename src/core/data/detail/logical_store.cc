@@ -14,7 +14,10 @@
 
 #include "core/data/detail/store.h"
 #include "core/data/detail/transform.h"
+#include "core/operation/detail/launcher_arg.h"
+#include "core/operation/detail/operation.h"
 #include "core/operation/detail/projection.h"
+#include "core/partitioning/detail/partitioner.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
@@ -491,6 +494,11 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t idx, Slice slice)
     std::move(exts), std::move(substorage), std::move(transform));
 }
 
+std::shared_ptr<LogicalStore> LogicalStore::transpose(const std::vector<int32_t>& axes)
+{
+  return transpose(std::vector<int32_t>(axes));
+}
+
 std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axes)
 {
   if (axes.size() != dim()) {
@@ -513,6 +521,12 @@ std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axe
 
   auto transform = transform_->push(std::make_unique<Transpose>(std::move(axes)));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+}
+
+std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t idx,
+                                                        const std::vector<int64_t>& sizes)
+{
+  return delinearize(idx, std::vector<int64_t>(sizes));
 }
 
 std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t idx, std::vector<int64_t>&& sizes)
@@ -604,11 +618,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
       key_partition_->satisfies_restrictions(restrictions))
     return key_partition_;
 
-  if (has_scalar_storage()) {
-    num_pieces_    = new_num_pieces;
-    key_partition_ = create_no_partition();
-    return key_partition_;
-  }
+  if (has_scalar_storage()) { return create_no_partition(); }
 
   Partition* storage_part = nullptr;
   if (transform_->is_convertible())
@@ -629,9 +639,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
 #ifdef DEBUG_LEGATE
   assert(store_part != nullptr);
 #endif
-  num_pieces_    = new_num_pieces;
-  key_partition_ = std::move(store_part);
-  return key_partition_;
+  return std::move(store_part);
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
@@ -649,7 +657,8 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
 void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
                                      const Partition* partition)
 {
-  num_pieces_   = machine.count();
+  num_pieces_ = machine.count();
+  key_partition_.reset(partition->clone().release());
   auto inverted = transform_->invert(partition);
   storage_->set_key_partition(machine, std::move(inverted));
 }
@@ -679,6 +688,46 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(dim());
   type()->pack(buffer);
   transform_->pack(buffer);
+}
+
+std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variable,
+                                                          const Strategy& strategy,
+                                                          const Domain* launch_domain,
+                                                          Legion::PrivilegeMode privilege,
+                                                          int32_t redop)
+{
+  if (has_scalar_storage()) {
+    auto has_storage = privilege != WRITE_ONLY;
+    auto read_only   = privilege == READ_ONLY;
+    return std::make_unique<FutureStoreArg>(this, read_only, has_storage, redop);
+  } else if (unbound()) {
+    return std::make_unique<OutputRegionArg>(this, strategy.find_field_space(variable));
+  } else {
+    auto partition       = strategy[variable];
+    auto store_partition = create_partition(partition);
+    auto proj_info       = store_partition->create_projection_info(launch_domain);
+    proj_info->tag       = strategy.is_key_partition(variable) ? LEGATE_CORE_KEY_STORE_TAG : 0;
+    proj_info->redop     = redop;
+
+    if (privilege == REDUCE && store_partition->is_disjoint_for(launch_domain)) {
+      privilege = READ_WRITE;
+    }
+    if (privilege == WRITE_ONLY) {
+      set_key_partition(variable->operation()->machine(), partition.get());
+    }
+    return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));
+  }
+}
+
+std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(const Domain* launch_domain,
+                                                                    Legion::PrivilegeMode privilege)
+{
+#ifdef DEBUG_LEGATE
+  assert(key_partition_ != nullptr);
+#endif
+  auto store_partition = create_partition(key_partition_);
+  auto proj_info       = store_partition->create_projection_info(launch_domain);
+  return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));
 }
 
 std::string LogicalStore::to_string() const
@@ -712,13 +761,15 @@ LogicalStorePartition::LogicalStorePartition(std::shared_ptr<Partition> partitio
 std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
   const Domain* launch_domain, std::optional<proj::SymbolicFunctor> proj_fn)
 {
-  if (nullptr == launch_domain || store_->has_scalar_storage())
-    return std::make_unique<ProjectionInfo>();
+  if (store_->has_scalar_storage()) return std::make_unique<ProjectionInfo>();
+
+  if (!partition_->has_launch_domain()) { return std::make_unique<ProjectionInfo>(); }
 
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
   auto legion_partition = storage_partition_->get_legion_partition();
-  auto proj_id          = store_->compute_projection(launch_domain->dim, proj_fn);
+  auto proj_id =
+    launch_domain != nullptr ? store_->compute_projection(launch_domain->dim, proj_fn) : 0;
   return std::make_unique<ProjectionInfo>(legion_partition, proj_id);
 }
 

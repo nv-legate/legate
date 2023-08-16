@@ -19,7 +19,7 @@ namespace collective {
 
 class CollectiveTestTask : public Task<CollectiveTestTask, COLLECTIVE> {
  public:
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 }  // namespace collective

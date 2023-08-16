@@ -59,11 +59,11 @@ struct histogram_fn {
 
 class HistogramTask : public Task<HistogramTask, HISTOGRAM> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& input  = context.inputs().at(0);
-    auto& bins   = context.inputs().at(1);
-    auto& result = context.reductions().at(0);
+    auto input  = context.input(0).data();
+    auto bins   = context.input(1).data();
+    auto result = context.reduction(0).data();
 
     legate::type_dispatch(input.code(), histogram_fn{}, result, input, bins);
   }

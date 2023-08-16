@@ -59,15 +59,6 @@ class Operation {
 
  protected:
   uint64_t unique_id_;
-
- protected:
-  std::set<std::shared_ptr<LogicalStore>> all_stores_{};
-  std::vector<StoreArg> inputs_{};
-  std::vector<StoreArg> outputs_{};
-  std::vector<StoreArg> reductions_{};
-  std::vector<Legion::ReductionOpID> reduction_ops_{};
-
- protected:
   uint32_t next_part_id_{0};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
   std::map<const Variable, std::shared_ptr<LogicalStore>> store_mappings_{};

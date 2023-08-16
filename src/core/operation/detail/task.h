@@ -14,6 +14,7 @@
 
 #include <memory>
 
+#include "core/data/detail/logical_array.h"
 #include "core/data/detail/scalar.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
@@ -34,6 +35,13 @@ class Runtime;
 
 class Task : public Operation {
  protected:
+  struct ArrayArg {
+    ArrayArg(std::shared_ptr<LogicalArray> _array) : array(std::move(_array)) {}
+    std::shared_ptr<LogicalArray> array;
+    std::map<std::shared_ptr<LogicalStore>, const Variable*> mapping{};
+  };
+
+ protected:
   Task(const Library* library,
        int64_t task_id,
        uint64_t unique_id,
@@ -51,7 +59,13 @@ class Task : public Operation {
   void add_communicator(const std::string& name);
 
  public:
-  virtual void launch(Strategy* strategy) override;
+  void record_scalar_output(std::shared_ptr<LogicalStore> store);
+  void record_unbound_output(std::shared_ptr<LogicalStore> store);
+  void record_scalar_reduction(std::shared_ptr<LogicalStore> store,
+                               Legion::ReductionOpID legion_redop_id);
+
+ protected:
+  void launch_task(Strategy* strategy);
 
  private:
   void demux_scalar_stores(const Legion::Future& result);
@@ -67,9 +81,13 @@ class Task : public Operation {
   bool has_side_effect_{false};
   bool can_throw_exception_{false};
   std::vector<Scalar> scalars_{};
-  std::vector<uint32_t> unbound_outputs_{};
-  std::vector<uint32_t> scalar_outputs_{};
-  std::vector<uint32_t> scalar_reductions_{};
+  std::vector<ArrayArg> inputs_{};
+  std::vector<ArrayArg> outputs_{};
+  std::vector<ArrayArg> reductions_{};
+  std::vector<Legion::ReductionOpID> reduction_ops_{};
+  std::vector<std::shared_ptr<LogicalStore>> unbound_outputs_{};
+  std::vector<std::shared_ptr<LogicalStore>> scalar_outputs_{};
+  std::vector<std::pair<std::shared_ptr<LogicalStore>, Legion::ReductionOpID>> scalar_reductions_{};
   std::vector<CommunicatorFactory*> communicator_factories_{};
 };
 
@@ -85,16 +103,19 @@ class AutoTask : public Task {
   ~AutoTask() {}
 
  public:
-  void add_input(std::shared_ptr<LogicalStore> store, const Variable* partition_symbol);
-  void add_output(std::shared_ptr<LogicalStore> store, const Variable* partition_symbol);
-  void add_reduction(std::shared_ptr<LogicalStore> store,
-                     Legion::ReductionOpID redop,
+  const Variable* add_input(std::shared_ptr<LogicalArray> array);
+  const Variable* add_output(std::shared_ptr<LogicalArray> array);
+  const Variable* add_reduction(std::shared_ptr<LogicalArray> array, int32_t redop);
+
+ public:
+  void add_input(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol);
+  void add_output(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol);
+  void add_reduction(std::shared_ptr<LogicalArray> array,
+                     int32_t redop,
                      const Variable* partition_symbol);
 
- private:
-  void add_store(std::vector<StoreArg>& store_args,
-                 std::shared_ptr<LogicalStore> store,
-                 const Variable* partition_symbol);
+ public:
+  const Variable* find_or_declare_partition(std::shared_ptr<LogicalArray> array);
 
  public:
   void add_constraint(std::unique_ptr<Constraint> constraint);
@@ -102,9 +123,14 @@ class AutoTask : public Task {
 
  public:
   void validate() override;
+  void launch(Strategy* strategy) override;
+
+ private:
+  void fixup_ranges(Strategy& strategy);
 
  private:
   std::vector<std::unique_ptr<Constraint>> constraints_{};
+  std::vector<LogicalArray*> arrays_to_fixup_{};
 };
 
 class ManualTask : public Task {
@@ -129,13 +155,14 @@ class ManualTask : public Task {
                      Legion::ReductionOpID redop);
 
  private:
-  void add_store(std::vector<StoreArg>& store_args,
+  void add_store(std::vector<ArrayArg>& store_args,
                  std::shared_ptr<LogicalStore> store,
                  std::shared_ptr<Partition> partition);
 
  public:
   void validate() override;
   void launch(Strategy* strategy) override;
+  void launch();
 
  public:
   void add_to_solver(ConstraintSolver& solver) override;

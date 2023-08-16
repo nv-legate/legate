@@ -13,7 +13,6 @@
 #pragma once
 
 #include <memory>
-#include <valarray>
 
 #include "core/data/shape.h"
 #include "core/data/slice.h"
@@ -28,6 +27,7 @@
  */
 
 namespace legate::detail {
+class LogicalArray;
 class LogicalStore;
 class LogicalStorePartition;
 }  // namespace legate::detail
@@ -72,6 +72,7 @@ class Runtime;
 class LogicalStore {
  private:
   friend class Runtime;
+  friend class LogicalArray;
   friend class LogicalStorePartition;
   LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl);
 
@@ -104,6 +105,13 @@ class LogicalStore {
    * @return The store's shape
    */
   const Shape& extents() const;
+  /**
+   * @brief Returns the number of elements in the store.
+   *
+   * Flushes the scheduling window if the store is unbound and has no shape assigned.
+   *
+   * @return The number of elements in the store
+   */
   size_t volume() const;
   /**
    * @brief Indicates whether the store is unbound
@@ -214,7 +222,7 @@ class LogicalStore {
    * @param dim Dimension to slice
    * @param sl Slice descriptor
    *
-   * @return A new store that correponds to the sliced section
+   * @return A new store that corresponds to the sliced section
    *
    * @throw std::invalid_argument If `dim` is not a valid dimension name
    */
@@ -312,12 +320,12 @@ class LogicalStore {
   /**
    * @brief Creates a physical store for this logical store
    *
-   * This call blocks the client's control flow. And it fetches the data for the whole store on
-   * a single node.
+   * This call blocks the client's control flow and fetches the data for the whole store to the
+   * current node
    *
    * @return A physical store of the logical store
    */
-  Store get_physical_store();
+  Store get_physical_store() const;
 
  public:
   std::shared_ptr<detail::LogicalStore> impl() const { return impl_; }

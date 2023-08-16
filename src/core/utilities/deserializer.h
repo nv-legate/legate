@@ -17,11 +17,13 @@
 #include "legion.h"
 
 #include "core/comm/communicator.h"
+#include "core/data/detail/array.h"
 #include "core/data/detail/scalar.h"
 #include "core/data/detail/store.h"
 #include "core/data/detail/transform.h"
 #include "core/data/scalar.h"
 #include "core/data/store.h"
+#include "core/mapping/detail/array.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/store.h"
 #include "core/type/detail/type_info.h"
@@ -62,12 +64,6 @@ class BaseDeserializer {
     values.reserve(size);
     for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(unpack<T>());
   }
-  void _unpack(std::vector<Scalar>& values)
-  {
-    auto size = unpack<uint32_t>();
-    values.reserve(size);
-    for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(_unpack_scalar());
-  }
   template <typename T1, typename T2>
   void _unpack(std::pair<T1, T2>& values)
   {
@@ -76,10 +72,12 @@ class BaseDeserializer {
   }
 
  public:
-  Scalar _unpack_scalar();
+  std::vector<Scalar> unpack_scalars();
+  std::unique_ptr<detail::Scalar> unpack_scalar();
   void _unpack(mapping::TaskTarget& value);
   void _unpack(mapping::ProcessorRange& value);
   void _unpack(mapping::detail::Machine& value);
+  void _unpack(Domain& domain);
 
  public:
   Span<const int8_t> current_args() const { return args_; }
@@ -101,15 +99,14 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   using BaseDeserializer::_unpack;
 
  public:
-  void _unpack(std::vector<Store>& values)
-  {
-    auto size = unpack<uint32_t>();
-    values.reserve(size);
-    for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(_unpack_store());
-  }
+  std::vector<std::shared_ptr<detail::Array>> unpack_arrays();
+  std::shared_ptr<detail::Array> unpack_array();
+  std::shared_ptr<detail::BaseArray> unpack_base_array();
+  std::shared_ptr<detail::ListArray> unpack_list_array();
+  std::shared_ptr<detail::StructArray> unpack_struct_array();
+  std::shared_ptr<detail::Store> unpack_store();
 
  public:
-  std::shared_ptr<detail::Store> _unpack_store();
   void _unpack(detail::FutureWrapper& value);
   void _unpack(detail::RegionField& value);
   void _unpack(detail::UnboundRegionField& value);
@@ -144,6 +141,15 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   using BaseDeserializer::_unpack;
 
  public:
+  std::vector<std::shared_ptr<detail::Array>> unpack_arrays();
+  std::shared_ptr<detail::Array> unpack_array();
+  std::shared_ptr<detail::BaseArray> unpack_base_array();
+  std::shared_ptr<detail::ListArray> unpack_list_array();
+  std::shared_ptr<detail::StructArray> unpack_struct_array();
+  std::shared_ptr<detail::Store> unpack_store();
+
+ public:
+  void _unpack(detail::Array& array);
   void _unpack(detail::Store& store);
   void _unpack(detail::FutureWrapper& value);
   void _unpack(detail::RegionField& value, bool is_output_region);
@@ -152,7 +158,6 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   const Legion::Task* task_;
   Legion::Mapping::MapperRuntime* runtime_;
   Legion::Mapping::MapperContext context_;
-  uint32_t future_index_;
 };
 
 class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {

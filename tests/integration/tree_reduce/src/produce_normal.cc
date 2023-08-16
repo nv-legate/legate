@@ -14,6 +14,6 @@
 
 namespace tree_reduce {
 
-/*static*/ void ProduceNormalTask::cpu_variant(legate::TaskContext& context) {}
+/*static*/ void ProduceNormalTask::cpu_variant(legate::TaskContext context) {}
 
 }  // namespace tree_reduce

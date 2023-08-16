@@ -28,13 +28,13 @@ enum TaskIDs {
 template <int32_t DIM>
 struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
   static const int32_t TASK_ID = CHECK_TASK + DIM;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 template <int32_t DIM>
 struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
   static const int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
-  static void cpu_variant(legate::TaskContext& context);
+  static void cpu_variant(legate::TaskContext context);
 };
 
 void register_tasks()
@@ -50,11 +50,11 @@ void register_tasks()
 }
 
 template <int32_t DIM>
-/*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext& context)
+/*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto& input   = context.inputs().at(0);
+  auto input    = context.input(0).data();
   auto shape    = input.shape<DIM>();
-  int64_t value = context.scalars().at(0).value<int64_t>();
+  int64_t value = context.scalar(0).value<int64_t>();
 
   if (shape.empty()) return;
 
@@ -63,13 +63,13 @@ template <int32_t DIM>
 }
 
 template <int32_t DIM>
-/*static*/ void CheckSliceTask<DIM>::cpu_variant(legate::TaskContext& context)
+/*static*/ void CheckSliceTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto& input                 = context.inputs().at(0);
+  auto input                  = context.input(0).data();
   auto shape                  = input.shape<DIM>();
-  int64_t value_in_slice      = context.scalars().at(0).value<int64_t>();
-  int64_t value_outside_slice = context.scalars().at(1).value<int64_t>();
-  int64_t offset              = context.scalars().at(2).value<int64_t>();
+  int64_t value_in_slice      = context.scalar(0).value<int64_t>();
+  int64_t value_outside_slice = context.scalar(1).value<int64_t>();
+  int64_t offset              = context.scalar(2).value<int64_t>();
 
   if (shape.empty()) return;
 

@@ -17,7 +17,7 @@ namespace rg {
 
 class HelloTask : public Task<HelloTask, HELLO> {
  public:
-  static void cpu_variant(legate::TaskContext& context) { log_registry.info() << "Hello"; }
+  static void cpu_variant(legate::TaskContext context) { log_registry.info() << "Hello"; }
 };
 
 }  // namespace rg

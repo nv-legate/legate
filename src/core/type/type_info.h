@@ -27,6 +27,7 @@ class Type;
 namespace legate {
 
 class FixedArrayType;
+class ListType;
 class StructType;
 
 /**
@@ -73,6 +74,7 @@ class Type {
     FIXED_ARRAY = FIXED_ARRAY_LT, /*!< Fixed-size array type */
     STRUCT      = STRUCT_LT,      /*!< Struct type */
     STRING      = STRING_LT,      /*!< String type */
+    LIST        = LIST_LT,        /*!< List type */
     INVALID     = INVALID_LT,     /*!< Invalid type */
   };
 
@@ -137,6 +139,14 @@ class Type {
    * @return Type object
    */
   StructType as_struct_type() const;
+  /**
+   * @brief Dynamically casts the type into a struct type.
+   *
+   * If the type is not a struct type, an exception will be raised.
+   *
+   * @return Type object
+   */
+  ListType as_list_type() const;
   /**
    * @brief Records a reduction operator.
    *
@@ -258,6 +268,24 @@ class StructType : public Type {
 
 /**
  * @ingroup types
+ * @brief A class for list types
+ */
+class ListType : public Type {
+ public:
+  /**
+   * @brief Returns the element type
+   *
+   * @return Element type
+   */
+  Type element_type() const;
+
+ private:
+  friend class Type;
+  ListType(std::shared_ptr<detail::Type> type);
+};
+
+/**
+ * @ingroup types
  * @brief Creates a metadata object for a primitive type
  *
  * @param code Type code
@@ -283,7 +311,7 @@ Type string_type();
  *
  * @return Type object
  */
-Type fixed_array_type(const Type& element_type, uint32_t N) noexcept(false);
+Type fixed_array_type(const Type& element_type, uint32_t N);
 
 /**
  * @ingroup types
@@ -294,7 +322,17 @@ Type fixed_array_type(const Type& element_type, uint32_t N) noexcept(false);
  *
  * @return Type object
  */
-Type struct_type(const std::vector<Type>& field_types, bool align = false) noexcept(false);
+Type struct_type(const std::vector<Type>& field_types, bool align = false);
+
+/**
+ * @ingroup types
+ * @brief Creates a metadata object for a list type
+ *
+ * @param element_type Type of the list elements
+ *
+ * @return Type object
+ */
+Type list_type(const Type& element_type);
 
 /**
  * @ingroup types
@@ -307,7 +345,7 @@ Type struct_type(const std::vector<Type>& field_types, bool align = false) noexc
  */
 template <class... Types>
 std::enable_if_t<std::conjunction_v<std::is_same<Types, Type>...>, Type> struct_type(
-  bool align, Types... field_types) noexcept(false)
+  bool align, Types... field_types)
 {
   std::vector<Type> vec_field_types;
   auto copy_field_type = [&vec_field_types](const auto& field_type) {

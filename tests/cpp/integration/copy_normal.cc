@@ -41,11 +41,11 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
   };
 
   static const int32_t TASK_ID = CHECK_COPY_TASK + DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& source = context.inputs().at(0);
-    auto& target = context.inputs().at(1);
-    auto shape   = source.shape<DIM>();
+    auto source = context.input(0).data();
+    auto target = context.input(1).data();
+    auto shape  = source.shape<DIM>();
 
     if (shape.empty()) return;
 
@@ -61,7 +61,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
     template <legate::Type::Code CODE, std::enable_if_t<legate::is_integral<CODE>::value, int> = 0>
     void operator()(legate::Store& source,
                     legate::Store& target,
-                    legate::Scalar& seed,
+                    const legate::Scalar& seed,
                     legate::Rect<DIM>& shape)
     {
       using VAL = legate::legate_type_of<CODE>;
@@ -76,7 +76,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
     template <legate::Type::Code CODE, std::enable_if_t<!legate::is_integral<CODE>::value, int> = 0>
     void operator()(legate::Store& source,
                     legate::Store& target,
-                    legate::Scalar& seed,
+                    const legate::Scalar& seed,
                     legate::Rect<DIM>& shape)
     {
       assert(false);
@@ -84,12 +84,12 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
   };
 
   static const int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& source = context.inputs().at(0);
-    auto& target = context.inputs().at(1);
-    auto& seed   = context.scalars().at(0);
-    auto shape   = target.shape<DIM>();
+    legate::Store source = context.input(0);
+    legate::Store target = context.input(1);
+    auto& seed           = context.scalar(0);
+    auto shape           = target.shape<DIM>();
 
     if (shape.empty()) return;
 

@@ -15,6 +15,7 @@
 #include <memory>
 #include <optional>
 
+#include "core/data/logical_array.h"
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
 #include "core/data/store.h"
@@ -353,6 +354,43 @@ class Runtime {
 
  public:
   /**
+   * @brief Creates an unbound array
+   *
+   * @param extents Shape of the array
+   * @param type Element type
+   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
+   * scalars
+   *
+   * @return Logical array
+   */
+  LogicalArray create_array(const Type& type, uint32_t dim = 1, bool nullable = false);
+  /**
+   * @brief Creates a normal array
+   *
+   * @param extents Shape of the array
+   * @param type Element type
+   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
+   * scalars
+   *
+   * @return Logical array
+   */
+  LogicalArray create_array(const Shape& extents,
+                            const Type& type,
+                            bool nullable        = false,
+                            bool optimize_scalar = false);
+  /**
+   * @brief Creates an array isomorphic to the given array
+   *
+   * @param type Optional type for the resulting array. Must be compatible with the input array's
+   * type
+   *
+   * @return Logical array isomorphic to the input
+   */
+  LogicalArray create_array_like(const LogicalArray& to_mirror,
+                                 std::optional<Type> type = std::nullopt);
+
+ public:
+  /**
    * @brief Creates an unbound store
    *
    * @param type Element type
@@ -360,7 +398,7 @@ class Runtime {
    *
    * @return Logical store
    */
-  LogicalStore create_store(const Type& type, int32_t dim = 1);
+  LogicalStore create_store(const Type& type, uint32_t dim = 1);
   /**
    * @brief Creates a normal store
    *

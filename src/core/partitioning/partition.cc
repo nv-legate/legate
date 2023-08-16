@@ -13,9 +13,12 @@
 #include <sstream>
 
 #include "core/data/detail/logical_store.h"
+#include "core/operation/detail/task.h"
+#include "core/partitioning/detail/constraint.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/runtime/library.h"
 #include "core/type/detail/type_info.h"
 
 namespace legate {
@@ -293,28 +296,39 @@ bool Image::satisfies_restrictions(const Restrictions& restrictions) const
 
 Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool complete) const
 {
+  if (!has_launch_domain()) { return Legion::LogicalPartition::NO_PART; }
   auto* func_rf    = func_->get_region_field();
   auto func_region = func_rf->region();
   auto func_partition =
     func_partition_->construct(func_region, func_partition_->is_complete_for(func_->get_storage()));
 
-  auto runtime     = detail::Runtime::get_runtime();
-  bool is_range    = func_->type()->code == Type::Code::STRUCT;
-  auto color_space = runtime->find_or_create_index_space(to_domain(color_shape()));
+  auto runtime  = detail::Runtime::get_runtime();
+  auto part_mgr = runtime->partition_manager();
 
-  auto index_partition = runtime->create_image_partition(region.get_index_space(),
-                                                         color_space,
-                                                         func_region,
-                                                         func_partition,
-                                                         func_rf->field_id(),
-                                                         is_range);
+  auto target = region.get_index_space();
+  auto index_partition =
+    part_mgr->find_image_partition(target, func_partition, func_rf->field_id());
+
+  if (Legion::IndexPartition::NO_PART == index_partition) {
+    bool is_range    = func_->type()->code == Type::Code::STRUCT;
+    auto color_space = runtime->find_or_create_index_space(to_domain(color_shape()));
+
+    auto field_id   = func_rf->field_id();
+    index_partition = runtime->create_image_partition(
+      target, color_space, func_region, func_partition, field_id, is_range);
+    part_mgr->record_image_partition(target, func_partition, field_id, index_partition);
+    func_rf->add_invalidation_callback([target, func_partition, field_id]() {
+      auto part_mgr = detail::Runtime::get_runtime()->partition_manager();
+      part_mgr->invalidate_image_partition(target, func_partition, field_id);
+    });
+  }
 
   return runtime->create_logical_partition(region, index_partition);
 }
 
-bool Image::has_launch_domain() const { return true; }
+bool Image::has_launch_domain() const { return func_partition_->has_launch_domain(); }
 
-Domain Image::launch_domain() const { return to_domain(color_shape()); }
+Domain Image::launch_domain() const { return func_partition_->launch_domain(); }
 
 std::unique_ptr<Partition> Image::clone() const { return std::make_unique<Image>(*this); }
 

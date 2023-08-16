@@ -33,26 +33,26 @@ enum TaskIDs {
 
 struct ProduceNormalTask : public legate::LegateTask<ProduceNormalTask> {
   static const int32_t TASK_ID = TASK_PRODUCE_NORMAL;
-  static void cpu_variant(legate::TaskContext& context) {}
+  static void cpu_variant(legate::TaskContext context) {}
 };
 
 struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
   static const int32_t TASK_ID = TASK_PRODUCE_UNBOUND;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& output = context.outputs().at(0);
-    auto size    = context.get_task_index()[0] + 1;
-    auto buffer  = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true /*bind*/);
+    auto output = context.output(0).data();
+    auto size   = context.get_task_index()[0] + 1;
+    auto buffer = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true /*bind*/);
     for (int64_t idx = 0; idx < size; ++idx) buffer[idx] = size;
   }
 };
 
 struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
   static const int32_t TASK_ID = TASK_REDUCE_NORMAL;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& inputs = context.inputs();
-    auto& output = context.outputs().at(0);
+    auto inputs = context.inputs();
+    auto output = context.output(0).data();
     for (auto& input : inputs) {
       auto shape = input.shape<1>();
       EXPECT_TRUE(shape.empty() || shape.volume() == TILE_SIZE);
@@ -63,10 +63,10 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
 
 struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
   static const int32_t TASK_ID = TASK_REDUCE_UNBOUND;
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& inputs      = context.inputs();
-    auto& output      = context.outputs().at(0);
+    auto inputs       = context.inputs();
+    auto output       = context.output(0).data();
     uint32_t expected = 1;
     for (auto& input : inputs) {
       auto shape = input.shape<1>();

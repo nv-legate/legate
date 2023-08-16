@@ -43,12 +43,12 @@ void write_header(std::ofstream& out,
 
 class WriteEvenTilesTask : public Task<WriteEvenTilesTask, WRITE_EVEN_TILES> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto dirname                           = context.scalars().at(0).value<std::string>();
-    legate::Span<const int32_t> shape      = context.scalars().at(1).values<int32_t>();
-    legate::Span<const int32_t> tile_shape = context.scalars().at(2).values<int32_t>();
-    auto& input                            = context.inputs().at(0);
+    auto dirname                           = context.scalar(0).value<std::string>();
+    legate::Span<const int32_t> shape      = context.scalar(1).values<int32_t>();
+    legate::Span<const int32_t> tile_shape = context.scalar(2).values<int32_t>();
+    auto input                             = context.input(0).data();
 
     auto launch_domain = context.get_launch_domain();
     auto task_index    = context.get_task_index();

@@ -24,14 +24,24 @@ BaseDeserializer<Deserializer>::BaseDeserializer(const void* args, size_t arglen
 }
 
 template <typename Deserializer>
-Scalar BaseDeserializer<Deserializer>::_unpack_scalar()
+std::vector<Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
+{
+  std::vector<Scalar> values;
+  auto size = unpack<uint32_t>();
+  values.reserve(size);
+  for (uint32_t idx = 0; idx < size; ++idx) { values.emplace_back(unpack_scalar()); }
+  return values;
+}
+
+template <typename Deserializer>
+std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
 {
   // this unpack_type call must be in a separate line from the following one because they both
   // read and update the buffer location.
   auto type   = unpack_type();
   auto result = std::make_unique<detail::Scalar>(type, args_.ptr(), false /*copy*/);
   args_       = args_.subspan(result->size());
-  return Scalar(std::move(result));
+  return std::move(result);
 }
 
 template <typename Deserializer>
@@ -57,6 +67,17 @@ void BaseDeserializer<Deserializer>::_unpack(mapping::detail::Machine& value)
     auto kind  = unpack<mapping::TaskTarget>();
     auto range = unpack<mapping::ProcessorRange>();
     if (!range.empty()) value.processor_ranges.insert({kind, range});
+  }
+}
+
+template <typename Deserializer>
+void BaseDeserializer<Deserializer>::_unpack(Domain& domain)
+{
+  domain.dim = unpack<uint32_t>();
+  for (int32_t idx = 0; idx < domain.dim; ++idx) {
+    auto coord                         = unpack<int64_t>();
+    domain.rect_data[idx]              = 0;
+    domain.rect_data[idx + domain.dim] = coord - 1;
   }
 }
 
@@ -129,6 +150,11 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
       auto align = unpack<bool>();
 
       return std::make_shared<detail::StructType>(uid, std::move(field_types), align);
+    }
+    case Type::Code::LIST: {
+      auto uid  = unpack<uint32_t>();
+      auto type = unpack_type();
+      return std::make_shared<detail::ListType>(uid, std::move(type));
     }
     case Type::Code::BOOL:
     case Type::Code::INT8:

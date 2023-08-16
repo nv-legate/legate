@@ -14,6 +14,6 @@
 
 namespace region_manager {
 
-/*static*/ void TesterTask::cpu_variant(legate::TaskContext& context) {}
+/*static*/ void TesterTask::cpu_variant(legate::TaskContext context) {}
 
 }  // namespace region_manager
