@@ -90,4 +90,5 @@ jobs:
         with:
           name: "legate.core.internal-${{ inputs.build-target }}-${{ inputs.sha }}"
           path: |
-            artifacts
+            /tmp/conda-build
+            /tmp/out
