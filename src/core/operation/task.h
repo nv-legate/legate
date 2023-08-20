@@ -45,7 +45,8 @@ class AutoTask {
    * associated with the array
    *
    * @param array An array to add to the task as input
-   * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
   Variable add_input(LogicalArray array);
   /**
@@ -55,7 +56,8 @@ class AutoTask {
    * associated with the array
    *
    * @param array An array to add to the task as output
-   * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
   Variable add_output(LogicalArray array);
   /**
@@ -66,7 +68,8 @@ class AutoTask {
    *
    * @param array An array to add to the task for reductions
    * @param redop ID of the reduction operator to use. The array's type must support the operator.
-   * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
   Variable add_reduction(LogicalArray array, ReductionOpKind redop);
   /**
@@ -77,7 +80,8 @@ class AutoTask {
    *
    * @param array An array to add to the task for reductions
    * @param redop ID of the reduction operator to use. The array's type must support the operator.
-   * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
   Variable add_reduction(LogicalArray array, int32_t redop);
 

@@ -134,6 +134,8 @@ class Machine {
   TaskTarget preferred_target() const;
   /**
    * @brief Returns the processor range for the preferred processor type in this descriptor
+   *
+   * @return A processor range
    */
   ProcessorRange processor_range() const;
   /**
@@ -141,7 +143,9 @@ class Machine {
    *
    * If the processor type does not exist in the descriptor, an empty range is returned
    *
-   * @target target Processor type to query
+   * @param target Processor type to query
+   *
+   * @return A processor range
    */
   ProcessorRange processor_range(TaskTarget target) const;
   /**
@@ -207,7 +211,7 @@ class Machine {
    *
    * @param from Starting index
    * @param to End index
-   * @param targets Processor type to slice
+   * @param target Processor type to slice
    * @param keep_others Optional flag to keep unsliced ranges in the returned machine descriptor
    *
    * @return Machine descriptor with the chosen procssor range sliced
@@ -229,7 +233,7 @@ class Machine {
    *
    * This yields the same result as `.only(target)`.
    *
-   * @param targets Processor type to select
+   * @param target Processor type to select
    *
    * @return Machine descriptor with the chosen processor range
    */

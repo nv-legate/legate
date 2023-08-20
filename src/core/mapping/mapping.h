@@ -244,7 +244,7 @@ struct InstanceMappingPolicy {
   /**
    * @brief Changes the store target
    *
-   * @param `target` A new store target
+   * @param target A new store target
    *
    * @return This instance mapping policy
    */
@@ -254,7 +254,7 @@ struct InstanceMappingPolicy {
   /**
    * @brief Changes the allocation policy
    *
-   * @param `allocation` A new allocation policy
+   * @param allocation A new allocation policy
    *
    * @return This instance mapping policy
    */
@@ -264,7 +264,7 @@ struct InstanceMappingPolicy {
   /**
    * @brief Changes the instance layout
    *
-   * @param `target` A new instance layout
+   * @param layout A new instance layout
    *
    * @return This instance mapping policy
    */
@@ -274,7 +274,7 @@ struct InstanceMappingPolicy {
   /**
    * @brief Changes the dimension ordering
    *
-   * @param `target` A new dimension ordering
+   * @param ordering A new dimension ordering
    *
    * @return This instance mapping policy
    */
@@ -284,7 +284,7 @@ struct InstanceMappingPolicy {
   /**
    * @brief Changes the value of `exact`
    *
-   * @param `target` A new value for the `exact` field
+   * @param exact A new value for the `exact` field
    *
    * @return This instance mapping policy
    */
@@ -296,31 +296,31 @@ struct InstanceMappingPolicy {
   /**
    * @brief Changes the store target
    *
-   * @param `target` A new store target
+   * @param target A new store target
    */
   void set_target(StoreTarget target);
   /**
    * @brief Changes the allocation policy
    *
-   * @param `allocation` A new allocation policy
+   * @param allocation A new allocation policy
    */
   void set_allocation_policy(AllocPolicy allocation);
   /**
    * @brief Changes the instance layout
    *
-   * @param `target` A new instance layout
+   * @param layout A new instance layout
    */
   void set_instance_layout(InstLayout layout);
   /**
    * @brief Changes the dimension ordering
    *
-   * @param `target` A new dimension ordering
+   * @param ordering A new dimension ordering
    */
   void set_ordering(DimOrdering ordering);
   /**
    * @brief Changes the value of `exact`
    *
-   * @param `target` A new value for the `exact` field
+   * @param exact A new value for the `exact` field
    */
   void set_exact(bool exact);
 
@@ -381,7 +381,7 @@ struct StoreMapping {
   /**
    * @brief Creates a mapping policy for the given set of stores using the instance mapping policy
    *
-   * @param store Target store for the mapping policy
+   * @param stores Target stores for the mapping policy
    * @param policy Instance mapping policy to apply
    *
    * @return A store mapping

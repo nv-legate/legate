@@ -50,11 +50,11 @@ class Scalar {
  public:
   /**
    * @brief Creates a shared `Scalar` with an existing allocation. The caller is responsible
-   * for passing in a sufficiently big allocation. When `copy` is true, the scalar copies the
-   * data stored in the allocation and becomes owned.
+   * for passing in a sufficiently big allocation.
    *
-   * @param type Type of the scalar(s)
+   * @param type Type of the scalar
    * @param data Allocation containing the data.
+   * @param copy If true, the scalar copies the data stored in the allocation and becomes owned.
    */
   Scalar(Type type, const void* data, bool copy = false);
   /**
@@ -104,7 +104,7 @@ class Scalar {
   /**
    * @brief Creates a rect scalar
    *
-   * @param point A rect from which the scalar should be constructed
+   * @param rect A rect from which the scalar should be constructed
    */
   template <int32_t DIM>
   Scalar(const Rect<DIM>& rect);
