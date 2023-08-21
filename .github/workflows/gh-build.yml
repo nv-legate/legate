@@ -15,7 +15,7 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  IMAGE_NAME: legate.core-${{ inputs.build-target }}
+  IMAGE_NAME: legate.core.internal_pkg-${{ inputs.build-target }}
   USE_CUDA: ${{ (inputs.build-target == 'cpu' && 'OFF') || 'ON' }}
 
 jobs:
@@ -90,5 +90,4 @@ jobs:
         with:
           name: "legate.core.internal-${{ inputs.build-target }}-${{ inputs.sha }}"
           path: |
-            /tmp/conda-build
-            /tmp/out
+            artifacts

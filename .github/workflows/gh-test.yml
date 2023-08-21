@@ -23,7 +23,7 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
     container:
       options: -u root
-      image: ghcr.io/nv-legate/legate.core-${{ inputs.build-target }}:${{ inputs.sha }}
+      image: ghcr.io/nv-legate/legate.core.internal_pkg-${{ inputs.build-target }}:${{ inputs.sha }}
       env:
         PYTHONDONTWRITEBYTECODE: 1
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
@@ -57,7 +57,6 @@ jobs:
 
           cp -ar legate/continuous_integration/home/coder/.gitconfig /home/coder/
           cp -ar legate/continuous_integration/home/coder/.local /home/coder/
-          mv legate /home/coder/legate
 
           chmod a+x /home/coder/.local/bin/*
           chown -R coder:coder /home/coder/
