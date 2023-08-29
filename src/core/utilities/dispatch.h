@@ -70,7 +70,7 @@ struct inner_type_dispatch_fn {
       }
       default: break;
     }
-    assert(false);
+    throw std::runtime_error("Unsupported type code");
     return f.template operator()<Type::Code::BOOL, DIM>(std::forward<Fnargs>(args)...);
   }
 };
@@ -125,7 +125,7 @@ struct inner_dim_dispatch_fn {
       }
 #endif
     }
-    assert(false);
+    throw std::runtime_error("Unsupported number of dimensions");
     return f.template operator()<DIM, 1>(std::forward<Fnargs>(args)...);
   }
 };
@@ -194,7 +194,7 @@ constexpr decltype(auto) double_dispatch(int dim, Type::Code code, Functor f, Fn
     }
 #endif
   }
-  assert(false);
+  throw std::runtime_error("Unsupported number of dimensions");
   return inner_type_dispatch_fn<1>{}(code, f, std::forward<Fnargs>(args)...);
 }
 
@@ -262,7 +262,7 @@ constexpr decltype(auto) double_dispatch(int dim1, int dim2, Functor f, Fnargs&&
     }
 #endif
   }
-  assert(false);
+  throw std::runtime_error("Unsupported number of dimensions");
   return inner_dim_dispatch_fn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
 }
 
@@ -329,7 +329,7 @@ constexpr decltype(auto) dim_dispatch(int dim, Functor f, Fnargs&&... args)
     }
 #endif
   }
-  assert(false);
+  throw std::runtime_error("Unsupported number of dimensions");
   return f.template operator()<1>(std::forward<Fnargs>(args)...);
 }
 
@@ -394,7 +394,7 @@ constexpr decltype(auto) type_dispatch(Type::Code code, Functor f, Fnargs&&... a
     }
     default: break;
   }
-  assert(false);
+  throw std::runtime_error("Unsupported type code");
   return f.template operator()<Type::Code::BOOL>(std::forward<Fnargs>(args)...);
 }
 
