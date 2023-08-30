@@ -84,7 +84,7 @@ std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
 }
 
 RadixProjectionFunctor::RadixProjectionFunctor(int32_t radix, int32_t offset)
-  : radix_(radix), offset_(offset)
+  : offset_(offset), radix_(radix)
 {
 }
 
@@ -317,7 +317,8 @@ void register_legate_core_projection_functors(Legion::Runtime* runtime,
 {
   auto proj_id = core_library->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
   auto functor = new DelinearizationFunctor(runtime);
-  log_legate.debug("Register delinearizing functor: functor: %p, id: %d", functor, proj_id);
+  log_legate.debug(
+    "Register delinearizing functor: functor: %p, id: %d", static_cast<void*>(functor), proj_id);
   runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
   {
     const std::lock_guard<std::mutex> lock(functor_table_lock);

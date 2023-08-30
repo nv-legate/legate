@@ -18,10 +18,10 @@
 
 namespace legate::detail {
 
-class Array;
+struct Array;
 class AutoTask;
 class BaseArray;
-class ConstraintSolver;
+struct ConstraintSolver;
 class ListLogicalArray;
 class Variable;
 

@@ -16,12 +16,12 @@
 
 #include "core/utilities/typedefs.h"
 
+#include "core/runtime/detail/consensus_match_result.h"
+
 namespace legate::detail {
 
 class LogicalRegionField;
 class Runtime;
-template <typename T>
-class ConsensusMatchResult;
 
 class FieldManager {
  private:

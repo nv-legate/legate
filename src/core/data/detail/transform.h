@@ -21,7 +21,7 @@
 #include "core/utilities/typedefs.h"
 
 namespace legate {
-class Partition;
+struct Partition;
 }  // namespace legate
 
 namespace legate::detail {
@@ -30,13 +30,14 @@ class NonInvertibleTransformation : public std::exception {
  public:
   NonInvertibleTransformation() : error_message_("Non-invertible transformation") {}
   NonInvertibleTransformation(const std::string& error_message) : error_message_(error_message) {}
-  const char* what() const throw() { return error_message_.c_str(); }
+  const char* what() const noexcept { return error_message_.c_str(); }
 
  private:
   std::string error_message_;
 };
 
 struct Transform {
+  virtual ~Transform()                                                          = default;
   virtual Domain transform(const Domain& input) const                           = 0;
   virtual Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const = 0;
   virtual std::unique_ptr<Partition> convert(const Partition* partition) const  = 0;
@@ -52,7 +53,6 @@ struct Transform {
 };
 
 struct StoreTransform : public Transform {
-  virtual ~StoreTransform() {}
   virtual int32_t target_ndim(int32_t source_ndim) const        = 0;
   virtual void find_imaginary_dims(std::vector<int32_t>&) const = 0;
 };

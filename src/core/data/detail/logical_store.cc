@@ -51,8 +51,8 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(extents),
-    type_(std::move(type)),
     volume_(extents.volume()),
+    type_(std::move(type)),
     offsets_(dim_, 0)
 {
   if (optimize_scalar && volume_ == 1) kind_ = Kind::FUTURE;
@@ -65,10 +65,10 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(extents),
+    volume_(extents.volume()),
     type_(std::move(type)),
     kind_(Kind::FUTURE),
     future_(future),
-    volume_(extents.volume()),
     offsets_(dim_, 0)
 {
 #ifdef DEBUG_LEGATE
@@ -84,8 +84,8 @@ Storage::Storage(Shape&& extents,
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(std::move(extents)),
-    type_(std::move(type)),
     volume_(extents_.volume()),
+    type_(std::move(type)),
     level_(parent->level() + 1),
     parent_(std::move(parent)),
     color_(std::move(color)),
@@ -140,7 +140,6 @@ std::shared_ptr<Storage> Storage::slice(Shape tile_shape, Shape offsets)
 
   auto tiling =
     create_tiling(std::move(tile_shape), std::move(color_shape), std::move(signed_offsets));
-  auto* p_tiling         = static_cast<const Tiling*>(tiling.get());
   auto storage_partition = root->create_partition(std::move(tiling), can_tile_completely);
   return storage_partition->get_child_storage(color);
 }
@@ -639,7 +638,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
 #ifdef DEBUG_LEGATE
   assert(store_part != nullptr);
 #endif
-  return std::move(store_part);
+  return store_part;
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,

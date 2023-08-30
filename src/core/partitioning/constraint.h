@@ -27,10 +27,10 @@ namespace legate {
 class AutoTask;
 
 namespace detail {
-class Constraint;
+struct Constraint;
 class Variable;
 }  // namespace detail
-extern template class default_delete<detail::Constraint>;
+extern template struct default_delete<detail::Constraint>;
 
 /**
  * @ingroup partitioning

@@ -26,7 +26,7 @@ class Scalar;
 
 namespace legate::detail {
 class CommunicatorFactory;
-class ConstraintSolver;
+struct ConstraintSolver;
 class Library;
 class LogicalStore;
 class LogicalStorePartition;

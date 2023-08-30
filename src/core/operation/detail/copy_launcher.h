@@ -24,9 +24,9 @@ class Scalar;
 
 namespace legate::detail {
 
-class CopyArg;
+struct CopyArg;
 class LogicalStore;
-class ProjectionInfo;
+struct ProjectionInfo;
 class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
 

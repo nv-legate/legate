@@ -30,7 +30,7 @@ TaskContext::TaskContext(const Legion::Task* task,
     machine_ = dez.unpack<mapping::detail::Machine>();
   }
 
-  TaskDeserializer dez(task, regions);
+  TaskDeserializer dez(task, regions_);
   inputs_     = dez.unpack_arrays();
   outputs_    = dez.unpack_arrays();
   reductions_ = dez.unpack_arrays();

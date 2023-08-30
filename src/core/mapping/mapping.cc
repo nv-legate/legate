@@ -261,7 +261,7 @@ std::vector<Store> StoreMapping::stores() const
 {
   std::vector<Store> result;
   for (auto& store : impl_->stores) { result.emplace_back(store); }
-  return std::move(result);
+  return result;
 }
 
 void StoreMapping::add_store(Store store) { impl_->stores.push_back(store.impl()); }

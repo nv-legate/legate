@@ -26,7 +26,7 @@ namespace legate::detail {
 
 class Library;
 class LogicalStore;
-class ProjectionInfo;
+struct ProjectionInfo;
 
 class TaskLauncher {
  public:

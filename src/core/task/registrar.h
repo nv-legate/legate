@@ -94,7 +94,7 @@ class TaskRegistrar {
   TaskRegistrar& operator=(TaskRegistrar&&)      = delete;
 
  private:
-  class Impl;
+  struct Impl;
   Impl* impl_;
 };
 

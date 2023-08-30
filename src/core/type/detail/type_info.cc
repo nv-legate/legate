@@ -161,8 +161,8 @@ bool FixedArrayType::equal(const Type& other) const
 StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
   : ExtensionType(uid, Type::Code::STRUCT),
     aligned_(align),
-    alignment_(1),
     size_(0),
+    alignment_(1),
     field_types_(std::move(field_types))
 {
   if (std::any_of(

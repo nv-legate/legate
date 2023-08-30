@@ -140,9 +140,8 @@ std::string ImageConstraint::to_string() const
 
 std::unique_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
 {
-  const auto* src   = var_function();
-  const auto* range = var_range();
-  auto src_part     = strategy[src];
+  const auto* src = var_function();
+  auto src_part   = strategy[src];
   if (src_part->has_launch_domain()) {
     return create_image(src->operation()->find_store(src), src_part);
   } else {
@@ -170,5 +169,5 @@ std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Varia
 
 // explicitly instantiate the deleter for std::unique_ptr<detail::Constraint>
 namespace legate {
-template class default_delete<detail::Constraint>;
+template struct default_delete<detail::Constraint>;
 }

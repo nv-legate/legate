@@ -32,9 +32,6 @@ class Library {
     ResourceIdScope(int64_t base, int64_t size) : base_(base), size_(size) {}
 
    public:
-    ResourceIdScope(const ResourceIdScope&) = default;
-
-   public:
     int64_t translate(int64_t local_resource_id) const { return base_ + local_resource_id; }
     int64_t invert(int64_t resource_id) const
     {

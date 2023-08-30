@@ -19,7 +19,7 @@
 #include "core/operation/detail/projection.h"
 
 namespace legate::detail {
-class ConstraintSolver;
+struct ConstraintSolver;
 class LogicalStore;
 class Strategy;
 class Variable;

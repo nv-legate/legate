@@ -21,6 +21,7 @@
 #include "core/data/shape.h"
 #include "core/mapping/machine.h"
 #include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/consensus_match_result.h"
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/machine_manager.h"
@@ -39,39 +40,12 @@ class AutoTask;
 class BaseLogicalArray;
 class Copy;
 class Library;
-class LogicalArray;
+struct LogicalArray;
 class LogicalRegionField;
 class LogicalStore;
 class ManualTask;
 class Operation;
 class StructLogicalArray;
-
-template <typename T>
-class ConsensusMatchResult {
- private:
-  friend class Runtime;
-  ConsensusMatchResult(std::vector<T>&& input, Legion::Context ctx, Legion::Runtime* runtime);
-
- public:
-  ~ConsensusMatchResult();
-  ConsensusMatchResult(ConsensusMatchResult&&)            = default;
-  ConsensusMatchResult& operator=(ConsensusMatchResult&&) = default;
-
- private:
-  ConsensusMatchResult(const ConsensusMatchResult&)            = delete;
-  ConsensusMatchResult& operator=(const ConsensusMatchResult&) = delete;
-
- public:
-  void wait();
-  const std::vector<T>& input() const;
-  const std::vector<T>& output() const;
-
- private:
-  std::vector<T> input_;
-  std::vector<T> output_;
-  Legion::Future future_;
-  bool complete_{false};
-};
 
 class Runtime {
  public:

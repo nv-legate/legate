@@ -24,6 +24,7 @@ namespace legate::detail {
 FillLauncher::FillLauncher(const mapping::detail::Machine& machine, int64_t tag)
   : machine_(machine), tag_(tag)
 {
+  static_cast<void>(tag_);
 }
 
 void FillLauncher::launch(const Legion::Domain& launch_domain,

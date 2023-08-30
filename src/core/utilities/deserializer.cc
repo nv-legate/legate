@@ -42,7 +42,7 @@ std::vector<std::shared_ptr<detail::Array>> TaskDeserializer::unpack_arrays()
   auto size = unpack<uint32_t>();
   arrays.reserve(size);
   for (uint32_t idx = 0; idx < size; ++idx) { arrays.emplace_back(unpack_array()); }
-  return std::move(arrays);
+  return arrays;
 }
 
 std::shared_ptr<detail::Array> TaskDeserializer::unpack_array()
@@ -140,7 +140,6 @@ void TaskDeserializer::_unpack(detail::RegionField& value)
 
 void TaskDeserializer::_unpack(detail::UnboundRegionField& value)
 {
-  auto dim = unpack<int32_t>();
   auto idx = unpack<uint32_t>();
   auto fid = unpack<int32_t>();
 
@@ -185,7 +184,7 @@ std::vector<std::shared_ptr<detail::Array>> TaskDeserializer::unpack_arrays()
   auto size = unpack<uint32_t>();
   arrays.reserve(size);
   for (uint32_t idx = 0; idx < size; ++idx) { arrays.emplace_back(unpack_array()); }
-  return std::move(arrays);
+  return arrays;
 }
 
 std::shared_ptr<detail::Array> TaskDeserializer::unpack_array()

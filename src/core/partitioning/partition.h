@@ -37,8 +37,12 @@ struct Partition {
   };
 
  public:
-  Partition() {}
-  virtual ~Partition() {}
+  Partition()                                = default;
+  virtual ~Partition()                       = default;
+  Partition(const Partition&)                = default;
+  Partition(Partition&&) noexcept            = default;
+  Partition& operator=(const Partition&)     = default;
+  Partition& operator=(Partition&&) noexcept = default;
 
  public:
   virtual Kind kind() const = 0;

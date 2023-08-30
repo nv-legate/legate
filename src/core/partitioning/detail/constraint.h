@@ -19,7 +19,7 @@
 #include "core/utilities/tuple.h"
 
 namespace legate {
-class Partition;
+struct Partition;
 }  // namespace legate
 
 namespace legate::detail {
@@ -28,7 +28,7 @@ class Strategy;
 
 class Alignment;
 class Broadcast;
-class Constraint;
+struct Constraint;
 class ImageConstraint;
 class Literal;
 class Variable;
@@ -38,7 +38,13 @@ struct Expr {
     LITERAL  = 0,
     VARIABLE = 1,
   };
-  virtual ~Expr() {}
+  Expr()                           = default;
+  virtual ~Expr()                  = default;
+  Expr(const Expr&)                = default;
+  Expr(Expr&&) noexcept            = default;
+  Expr& operator=(const Expr&)     = default;
+  Expr& operator=(Expr&&) noexcept = default;
+
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
   virtual bool closed() const                                                                = 0;
   virtual std::string to_string() const                                                      = 0;
@@ -133,7 +139,7 @@ class Alignment : public Constraint {
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
  public:
-  void validate() const;
+  void validate() const override;
 
  public:
   std::string to_string() const override;
@@ -166,7 +172,7 @@ class Broadcast : public Constraint {
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
  public:
-  void validate() const;
+  void validate() const override;
 
  public:
   std::string to_string() const override;
@@ -196,7 +202,7 @@ class ImageConstraint : public Constraint {
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
  public:
-  void validate() const;
+  void validate() const override;
 
  public:
   std::string to_string() const override;

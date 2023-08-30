@@ -25,7 +25,7 @@ std::vector<Array> convert_arrays(const Arrays& arrays)
 {
   std::vector<Array> result;
   for (auto& array : arrays) { result.emplace_back(array.get()); }
-  return std::move(result);
+  return result;
 }
 
 }  // namespace

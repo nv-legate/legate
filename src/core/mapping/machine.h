@@ -113,7 +113,7 @@ struct ProcessorRange {
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
 
 namespace detail {
-class Machine;
+struct Machine;
 }  // namespace detail
 
 /**

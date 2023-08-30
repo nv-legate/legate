@@ -21,7 +21,7 @@
 
 namespace legate::detail {
 
-class ConstraintSolver;
+struct ConstraintSolver;
 
 class Copy : public Operation {
  public:

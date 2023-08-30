@@ -96,7 +96,6 @@ void CopyLauncher::add_store(std::vector<CopyArg*>& args,
 {
   uint32_t req_idx  = args.size();
   auto region_field = store->get_region_field();
-  auto region       = region_field->region();
   auto field_id     = region_field->field_id();
   if (LEGATE_CORE_KEY_STORE_TAG == proj_info->tag) key_proj_id_ = proj_info->proj_id;
   args.push_back(new CopyArg(req_idx, store, field_id, privilege, std::move(proj_info)));

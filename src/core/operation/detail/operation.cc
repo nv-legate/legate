@@ -20,8 +20,8 @@ namespace legate::detail {
 
 Operation::Operation(uint64_t unique_id, mapping::detail::Machine&& machine)
   : unique_id_(unique_id),
-    machine_(std::move(machine)),
-    provenance_(Runtime::get_runtime()->provenance_manager()->get_provenance())
+    provenance_(Runtime::get_runtime()->provenance_manager()->get_provenance()),
+    machine_(std::move(machine))
 {
 }
 
@@ -65,7 +65,7 @@ std::unique_ptr<ProjectionInfo> Operation::create_projection_info(const Strategy
   auto store_partition = arg.store->create_partition(strategy[arg.variable]);
   auto proj_info       = store_partition->create_projection_info(launch_domain);
   proj_info->tag       = strategy.is_key_partition(arg.variable) ? LEGATE_CORE_KEY_STORE_TAG : 0;
-  return std::move(proj_info);
+  return proj_info;
 }
 
 }  // namespace legate::detail

@@ -30,7 +30,7 @@ std::vector<Store> Array::stores() const
   std::vector<Store> result;
   result.push_back(data());
   if (nullable()) result.push_back(null_mask());
-  return std::move(result);
+  return result;
 }
 
 Domain Array::domain() const { return impl_->domain(); }

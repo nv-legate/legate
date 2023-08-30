@@ -58,10 +58,10 @@ const char* TOPLEVEL_NAME               = "Legate Core Toplevel Task";
 
 Runtime::Runtime()
   : legion_runtime_(Legion::Runtime::get_runtime()),
-    next_type_uid_(CUSTOM_TYPE_UID_BASE),
     field_reuse_freq_(
       extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)),
     force_consensus_match_(extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)),
+    next_type_uid_(CUSTOM_TYPE_UID_BASE),
     max_pending_exceptions_(extract_env(
       "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST))
 {
@@ -1200,7 +1200,6 @@ void core_library_registration(Legion::Machine machine,
   config.max_shardings     = LEGATE_CORE_MAX_FUNCTOR_ID;
   config.max_reduction_ops = LEGATE_CORE_MAX_REDUCTION_OP_ID;
 
-  auto runtime  = Runtime::get_runtime();
   auto core_lib = Runtime::get_runtime()->create_library(
     core_library_name, config, mapping::detail::create_core_mapper());
 

@@ -21,7 +21,7 @@ std::vector<Array> to_arrays(const std::vector<std::shared_ptr<detail::Array>>& 
 {
   std::vector<Array> result;
   for (const auto& array_impl : array_impls) { result.emplace_back(array_impl); }
-  return std::move(result);
+  return result;
 }
 
 }  // namespace

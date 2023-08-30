@@ -180,7 +180,7 @@ std::vector<int32_t> TransformStack::find_imaginary_dims() const
   std::vector<int32_t> dims;
   if (nullptr != parent_) { dims = parent_->find_imaginary_dims(); }
   if (nullptr != transform_) transform_->find_imaginary_dims(dims);
-  return std::move(dims);
+  return dims;
 }
 
 Shift::Shift(int32_t dim, int64_t offset) : dim_(dim), offset_(offset) {}
@@ -271,7 +271,7 @@ Shape Shift::invert_point(const Shape& point) const
 {
   auto result = point;
   result[dim_] -= offset_;
-  return std::move(result);
+  return result;
 }
 
 void Shift::pack(BufferBuilder& buffer) const
@@ -725,8 +725,7 @@ Domain Delinearize::transform(const Domain& input) const
 {
   auto delinearize = [](const auto dim, const auto ndim, const auto& strides, const Domain& input) {
     Domain output;
-    output.dim     = input.dim - 1 + ndim;
-    int32_t in_dim = 0;
+    output.dim = input.dim - 1 + ndim;
     for (int32_t in_dim = 0, out_dim = 0; in_dim < input.dim; ++in_dim) {
       if (in_dim == dim) {
         auto lo = input.rect_data[in_dim];

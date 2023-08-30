@@ -29,8 +29,8 @@ namespace legate::mapping {
 
 namespace detail {
 class BaseMapper;
-class DimOrdering;
-class StoreMapping;
+struct DimOrdering;
+struct StoreMapping;
 }  // namespace detail
 
 class Task;

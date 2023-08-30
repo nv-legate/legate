@@ -22,7 +22,7 @@
 #include "core/runtime/detail/field_manager.h"
 
 namespace legate {
-class Partition;
+struct Partition;
 class Tiling;
 }  // namespace legate
 

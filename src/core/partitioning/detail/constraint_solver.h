@@ -54,7 +54,7 @@ struct ConstraintSolver {
   std::vector<std::unique_ptr<Constraint>> constraints_{};
 
  private:
-  class EquivClass;
+  struct EquivClass;
   std::map<const Variable, EquivClass*> equiv_class_map_{};
   std::vector<EquivClass*> equiv_classes_{};
 

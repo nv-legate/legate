@@ -23,7 +23,7 @@ class BufferBuilder;
 namespace legate::detail {
 
 class LogicalStore;
-class ProjectionInfo;
+struct ProjectionInfo;
 
 class FillLauncher {
  public:

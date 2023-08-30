@@ -41,7 +41,7 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
   auto type   = unpack_type();
   auto result = std::make_unique<detail::Scalar>(type, args_.ptr(), false /*copy*/);
   args_       = args_.subspan(result->size());
-  return std::move(result);
+  return result;
 }
 
 template <typename Deserializer>

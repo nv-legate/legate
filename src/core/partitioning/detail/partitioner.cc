@@ -246,7 +246,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   std::stable_sort(remaining_symbols.begin(),
                    remaining_symbols.end(),
-                   [&solver, &comparison_key](const auto& part_symb_a, const auto& part_symb_b) {
+                   [&comparison_key](const auto& part_symb_a, const auto& part_symb_b) {
                      return comparison_key(part_symb_a) > comparison_key(part_symb_b);
                    });
 

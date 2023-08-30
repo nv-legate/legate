@@ -23,7 +23,7 @@
 namespace legate {
 
 namespace detail {
-class Array;
+struct Array;
 }  // namespace detail
 
 class ListArray;

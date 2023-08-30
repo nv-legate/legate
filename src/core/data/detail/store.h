@@ -22,7 +22,7 @@ class Store;
 namespace legate::detail {
 
 class BaseArray;
-class TransformStack;
+struct TransformStack;
 
 class RegionField {
  public:

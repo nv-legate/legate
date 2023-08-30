@@ -41,7 +41,7 @@ const void* Scalar::ptr() const { return impl_->data(); }
 
 /*static*/ detail::Scalar* Scalar::create_impl(Type type, const void* data, bool copy)
 {
-  return new detail::Scalar(std::move(type.impl()), data, copy);
+  return new detail::Scalar(type.impl(), data, copy);
 }
 
 }  // namespace legate

@@ -22,8 +22,8 @@
 namespace legate::detail {
 
 class BufferBuilder;
-class OutputRegionArg;
-class StoreAnalyzer;
+struct OutputRegionArg;
+struct StoreAnalyzer;
 class TaskLauncher;
 
 struct Serializable {

@@ -56,7 +56,7 @@ class TaskException : public std::exception {
   TaskException(const std::string& error_message) : index_(0), error_message_(error_message) {}
 
  public:
-  virtual const char* what() const throw() { return error_message_.c_str(); }
+  virtual const char* what() const noexcept { return error_message_.c_str(); }
 
  public:
   /**

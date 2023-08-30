@@ -21,12 +21,12 @@
 #include "core/partitioning/restriction.h"
 
 namespace legate {
-class Partition;
+struct Partition;
 }  // namespace legate
 
 namespace legate::detail {
 
-class ConstraintSolver;
+struct ConstraintSolver;
 class LogicalStore;
 class Partitioner;
 

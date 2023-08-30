@@ -26,9 +26,9 @@
 
 namespace legate::detail {
 
-class Analyzable;
+struct Analyzable;
 class LogicalStorePartition;
-class ProjectionInfo;
+struct ProjectionInfo;
 class Strategy;
 class StoragePartition;
 class Store;

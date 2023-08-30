@@ -16,7 +16,7 @@
 #include "core/utilities/typedefs.h"
 
 namespace legate::detail {
-class TransformStack;
+struct TransformStack;
 }  // namespace legate::detail
 
 namespace legate::mapping::detail {
