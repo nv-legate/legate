@@ -22,10 +22,10 @@
 *.dylib
 install_info.py
 /dist
-/build
+build*/
 /legion
 /install*
-/_skbuild
+_skbuild/
 config.mk
 /docs/legate/core/build
 /docs/legate/core/source/api/generated
@@ -41,3 +41,4 @@ examples/cpp/build
 tests/cpp/build
 .legate-test-last-failed
 out/
+venv/
