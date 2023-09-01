@@ -696,8 +696,9 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
                                                           int32_t redop)
 {
   if (has_scalar_storage()) {
-    auto has_storage = privilege != WRITE_ONLY;
+    if (nullptr == launch_domain && REDUCE == privilege) { privilege = READ_WRITE; }
     auto read_only   = privilege == READ_ONLY;
+    auto has_storage = privilege == READ_ONLY || privilege == READ_WRITE;
     return std::make_unique<FutureStoreArg>(this, read_only, has_storage, redop);
   } else if (unbound()) {
     return std::make_unique<OutputRegionArg>(this, strategy.find_field_space(variable));
@@ -711,7 +712,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
     if (privilege == REDUCE && store_partition->is_disjoint_for(launch_domain)) {
       privilege = READ_WRITE;
     }
-    if (privilege == WRITE_ONLY) {
+    if (privilege == WRITE_ONLY || privilege == READ_WRITE) {
       set_key_partition(variable->operation()->machine(), partition.get());
     }
     return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));

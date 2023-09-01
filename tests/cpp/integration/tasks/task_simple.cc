@@ -44,8 +44,8 @@ void register_tasks()
   auto output1 = context.output(0).data();
   auto output2 = context.output(1).data();
 
-  auto acc1 = output1.write_accessor<int8_t, 2>();
-  auto acc2 = output2.write_accessor<int32_t, 3>();
+  auto acc1 = output1.write_accessor<int32_t, 2>();
+  auto acc2 = output2.write_accessor<int64_t, 3>();
 
   acc1[{0, 0}]    = 10;
   acc2[{0, 0, 0}] = 20;
@@ -53,14 +53,20 @@ void register_tasks()
 
 /*static*/ void ReducerTask::cpu_variant(legate::TaskContext context)
 {
+  auto in   = context.input(0).data();
   auto red1 = context.reduction(0).data();
   auto red2 = context.reduction(1).data();
 
-  auto acc1 = red1.reduce_accessor<legate::SumReduction<int8_t>, true, 2>();
-  auto acc2 = red2.reduce_accessor<legate::ProdReduction<int32_t>, true, 3>();
+  auto shape = in.shape<1>();
+  if (shape.empty()) return;
 
-  acc1[{0, 0}].reduce(10);
-  acc2[{0, 0, 0}].reduce(2);
+  auto red_acc1 = red1.reduce_accessor<legate::SumReduction<int32_t>, true, 2>();
+  auto red_acc2 = red2.reduce_accessor<legate::ProdReduction<int64_t>, true, 3>();
+
+  for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
+    red_acc1[{0, 0}].reduce(10);
+    red_acc2[{0, 0, 0}].reduce(2);
+  }
 }
 
 }  // namespace simple

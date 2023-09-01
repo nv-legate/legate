@@ -845,13 +845,17 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
 }
 
 Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
-                                          int32_t reduction_op) const
+                                          int32_t reduction_op,
+                                          const Legion::Future& init_value) const
 {
   return legion_runtime_->reduce_future_map(legion_context_,
                                             future_map,
                                             reduction_op,
                                             false /*deterministic*/,
-                                            core_library_->get_mapper_id());
+                                            core_library_->get_mapper_id(),
+                                            0 /*tag*/,
+                                            nullptr /*provenance*/,
+                                            init_value);
 }
 
 Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map) const

@@ -180,7 +180,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   if (1 == total) {
     if (1 == num_scalar_reds) {
       auto& [store, redop] = scalar_reductions_.front();
-      store->set_future(runtime->reduce_future_map(result, redop));
+      store->set_future(runtime->reduce_future_map(result, redop, store->get_future()));
     } else if (can_throw_exception_) {
       auto* runtime = detail::Runtime::get_runtime();
       runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
@@ -194,7 +194,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
     uint32_t idx = num_unbound_outs;
     for (auto& [store, redop] : scalar_reductions_) {
       auto values = runtime->extract_scalar(result, idx++, launch_domain);
-      store->set_future(runtime->reduce_future_map(values, redop));
+      store->set_future(runtime->reduce_future_map(values, redop, store->get_future()));
     }
     if (can_throw_exception_) {
       auto exn_fm = runtime->extract_scalar(result, idx, launch_domain);

@@ -233,7 +233,9 @@ class Runtime {
   Legion::FutureMap extract_scalar(const Legion::FutureMap& result,
                                    uint32_t idx,
                                    const Legion::Domain& launch_domain) const;
-  Legion::Future reduce_future_map(const Legion::FutureMap& future_map, int32_t reduction_op) const;
+  Legion::Future reduce_future_map(const Legion::FutureMap& future_map,
+                                   int32_t reduction_op,
+                                   const Legion::Future& init_value = Legion::Future()) const;
   Legion::Future reduce_exception_future_map(const Legion::FutureMap& future_map) const;
 
  public:
