@@ -22,6 +22,7 @@ from typing_extensions import TypeAlias
 from ..util.args import ExtendAction, MultipleChoices
 from . import (
     DEFAULT_CPUS_PER_NODE,
+    DEFAULT_GPU_BLOAT_FACTOR,
     DEFAULT_GPU_DELAY,
     DEFAULT_GPU_MEMORY_BUDGET,
     DEFAULT_GPUS_PER_NODE,
@@ -155,6 +156,15 @@ feature_opts.add_argument(
     type=int,
     default=DEFAULT_GPU_MEMORY_BUDGET,
     help="GPU framebuffer memory (MB)",
+)
+
+
+feature_opts.add_argument(
+    "--bloat-factor",
+    dest="bloat_factor",
+    type=int,
+    default=DEFAULT_GPU_BLOAT_FACTOR,
+    help="Fudge factor to adjust GPU memory reserved",
 )
 
 

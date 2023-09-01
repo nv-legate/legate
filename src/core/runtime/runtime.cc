@@ -32,6 +32,8 @@ extern Logger log_legate;
 
 /*static*/ bool Core::has_socket_mem = false;
 
+/*static*/ bool Core::warmup_nccl = false;
+
 /*static*/ void Core::parse_config(void)
 {
 #ifndef LEGATE_USE_CUDA
@@ -70,6 +72,7 @@ extern Logger log_legate;
   parse_variable("LEGATE_EMPTY_TASK", use_empty_task);
   parse_variable("LEGATE_SYNC_STREAM_VIEW", synchronize_stream_view);
   parse_variable("LEGATE_LOG_MAPPING", log_mapping_decisions);
+  parse_variable("LEGATE_WARMUP_NCCL", warmup_nccl);
 }
 
 /*static*/ void Core::shutdown(void)

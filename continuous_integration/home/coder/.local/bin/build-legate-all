@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-build_all() {
+build_legate_all() {
     set -x
     cd ~/;
 
@@ -20,4 +20,4 @@ build_all() {
     build-cpp-test;
 }
 
-(build_all "$@");
+(build_legate_all "$@");

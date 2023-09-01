@@ -87,7 +87,6 @@ class BaseDeserializer {
   std::shared_ptr<detail::Type> unpack_type();
 
  protected:
-  bool first_task_;
   Span<const int8_t> args_;
 };
 

@@ -32,8 +32,6 @@ TaskDeserializer::TaskDeserializer(const Legion::Task* task,
   auto runtime = Legion::Runtime::get_runtime();
   auto ctx     = Legion::Runtime::get_context();
   runtime->get_output_regions(ctx, outputs_);
-
-  first_task_ = !task->is_index_space || (task->index_point == task->index_domain.lo());
 }
 
 std::vector<std::shared_ptr<detail::Array>> TaskDeserializer::unpack_arrays()
@@ -102,7 +100,7 @@ std::shared_ptr<detail::Store> TaskDeserializer::unpack_store()
 
   if (is_future) {
     auto fut = unpack<detail::FutureWrapper>();
-    if (redop_id != -1 && !first_task_) fut.initialize_with_identity(redop_id);
+    if (redop_id != -1 && !fut.valid()) fut.initialize_with_identity(redop_id);
     return std::make_shared<detail::Store>(
       dim, std::move(type), redop_id, fut, std::move(transform));
   } else if (!is_output_region) {
@@ -126,7 +124,7 @@ void TaskDeserializer::_unpack(detail::FutureWrapper& value)
 
   auto has_storage      = future_index >= 0;
   Legion::Future future = has_storage ? futures_[future_index] : Legion::Future();
-  value = detail::FutureWrapper(read_only, field_size, domain, future, has_storage && first_task_);
+  value                 = detail::FutureWrapper(read_only, field_size, domain, future, has_storage);
 }
 
 void TaskDeserializer::_unpack(detail::RegionField& value)
@@ -176,7 +174,6 @@ TaskDeserializer::TaskDeserializer(const Legion::Task* task,
                                    Legion::Mapping::MapperContext context)
   : BaseDeserializer(task->args, task->arglen), task_(task), runtime_(runtime), context_(context)
 {
-  first_task_ = false;
 }
 
 std::vector<std::shared_ptr<detail::Array>> TaskDeserializer::unpack_arrays()

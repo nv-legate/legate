@@ -802,7 +802,7 @@ class TaskLauncher:
             # the inverse isn't true.)
             future_index = -1
             read_only = perm == Permission.READ
-            if store.has_storage:
+            if store.has_storage and perm != Permission.REDUCTION:
                 future_index = self.add_future(store.storage)
             args.append(FutureStoreArg(store, read_only, future_index, redop))
 
@@ -847,7 +847,7 @@ class TaskLauncher:
         flags: int = 0,
         read_write: bool = False,
     ) -> None:
-        if read_write and store.kind is not Future:
+        if read_write:
             self.add_store(
                 self._reductions,
                 store,

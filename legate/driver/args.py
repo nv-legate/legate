@@ -145,7 +145,7 @@ profiling.add_argument(
     dest="cprofile",
     action="store_true",
     required=False,
-    help="profile Python execution with the cprofile module, "
+    help="profile Python execution with the cprofile module "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -155,7 +155,7 @@ profiling.add_argument(
     dest="nvprof",
     action="store_true",
     required=False,
-    help="run Legate with nvprof, "
+    help="run Legate with nvprof "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -165,7 +165,7 @@ profiling.add_argument(
     dest="nsys",
     action="store_true",
     required=False,
-    help="run Legate with Nsight Systems, "
+    help="run Legate with Nsight Systems "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -175,7 +175,7 @@ profiling.add_argument(
     dest="nsys_targets",
     default="cublas,cuda,cudnn,nvtx,ucx",
     required=False,
-    help="Specify profiling targets for Nsight Systems, "
+    help="Specify profiling targets for Nsight Systems "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -188,7 +188,7 @@ profiling.add_argument(
     required=False,
     help="Specify extra flags for Nsight Systems (can appear more than once). "
     "Multiple arguments may be provided together in a quoted string "
-    "(arguments with spaces inside must be additionally quoted), "
+    "(arguments with spaces inside must be additionally quoted) "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -230,7 +230,7 @@ debugging.add_argument(
     dest="gdb",
     action="store_true",
     required=False,
-    help="run Legate inside gdb, "
+    help="run Legate inside gdb "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -240,7 +240,7 @@ debugging.add_argument(
     dest="cuda_gdb",
     action="store_true",
     required=False,
-    help="run Legate inside cuda-gdb, "
+    help="run Legate inside cuda-gdb "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -250,7 +250,7 @@ debugging.add_argument(
     dest="memcheck",
     action="store_true",
     required=False,
-    help="run Legate with cuda-memcheck, "
+    help="run Legate with cuda-memcheck "
     "[legate-only, not supported with standard Python invocation]",
 )
 debugging.add_argument(
@@ -258,7 +258,7 @@ debugging.add_argument(
     dest="valgrind",
     action="store_true",
     required=False,
-    help="run Legate with valgrind, "
+    help="run Legate with valgrind "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -353,20 +353,61 @@ info.add_argument(
     dest="bind_detail",
     action="store_true",
     required=False,
-    help="print out the final invocation run by bind.sh, "
+    help="print out the final invocation run by bind.sh "
     "[legate-only, not supported with standard Python invocation]",
 )
 
 
 other = parser.add_argument_group("Other options")
 
+other.add_argument(
+    "--timing",
+    dest="timing",
+    action="store_true",
+    required=False,
+    help="Print overall process start and end timestamps to stdout "
+    "[legate-only, not supported with standard Python invocation]",
+)
+
+other.add_argument(
+    "--wrapper",
+    dest="wrapper",
+    required=False,
+    action="append",
+    default=[],
+    help="Specify another executable (and any command-line arguments for that "
+    "executable) to wrap the Legate executable invocation. This wrapper will "
+    "come right after the launcher invocation, and will be passed the rest of "
+    "the Legate invocation (including any other wrappers) to execute. May "
+    "contain the special string %%%%LEGATE_GLOBAL_RANK%%%% that will be "
+    "replaced with the rank of the current process by bind.sh. If multiple "
+    "--wrapper values are provided, they will execute in the order given. "
+    "[legate-only, not supported with standard Python invocation]",
+)
+
+other.add_argument(
+    "--wrapper-inner",
+    dest="wrapper_inner",
+    required=False,
+    action="append",
+    default=[],
+    help="Specify another executable (and any command-line arguments for that "
+    "executable) to wrap the Legate executable invocation. This wrapper will "
+    "come right before the legion_python invocation (after any other "
+    "wrappers) and will be passed the rest of the legion_python invocation to "
+    "execute. May contain the special string %%%%LEGATE_GLOBAL_RANK%%%% that "
+    "will be replaced with the rank of the current process by bind.sh. If "
+    "multiple --wrapper-inner values are given, they will execute in the "
+    "order given. "
+    "[legate-only, not supported with standard Python invocation]",
+)
 
 other.add_argument(
     "--module",
     dest="module",
     default=None,
     required=False,
-    help="Specify a Python module to load before running, "
+    help="Specify a Python module to load before running "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -385,7 +426,7 @@ other.add_argument(
     dest="rlwrap",
     action="store_true",
     required=False,
-    help="Whether to run with rlwrap to improve readline ability, "
+    help="Whether to run with rlwrap to improve readline ability "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -406,6 +447,6 @@ other.add_argument(
 other.add_argument(
     "--info",
     action=InfoAction,
-    help="Print information about the capabilities of this build of legate, "
+    help="Print information about the capabilities of this build of legate "
     "and immediately exit.",
 )
