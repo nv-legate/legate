@@ -35,6 +35,7 @@
 #include "core/task/detail/task_context.h"
 #include "env_defaults.h"
 
+#include "realm/cmdline.h"
 #include "realm/network.h"
 
 namespace legate {
@@ -1010,6 +1011,8 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 
     Legion::Runtime::add_registration_callback(registration_callback);
 
+    handle_legate_args(argc, argv);
+
     result = Legion::Runtime::start(argc, argv, true);
     if (result != 0) {
       log_legate.error("Legion Runtime failed to start.");
@@ -1234,6 +1237,107 @@ void registration_callback_for_python(Legion::Machine machine,
   core_library_registration(machine, legion_runtime, local_procs);
 
   Runtime::get_runtime()->initialize(Legion::Runtime::get_context());
+}
+
+template <typename Runtime, typename Value>
+void try_set_property(Runtime& runtime,
+                      const std::string& config_name,
+                      const std::string& property_name,
+                      const Value& value,
+                      const std::string& error_msg)
+{
+  if (value < 0) {
+    log_legate.error(error_msg.c_str());
+    LEGATE_ABORT;
+  }
+  auto config = runtime.get_module_config(config_name);
+  if (!config && value > 0) {
+    const std::string msg = error_msg + " (" + config_name + " is not available)";
+    log_legate.error(msg.c_str());
+    LEGATE_ABORT;
+  }
+  auto success = config->set_property(property_name, value);
+  if (!success) {
+    log_legate.error(error_msg.c_str());
+    LEGATE_ABORT;
+  }
+}
+
+constexpr long MB = 1024 * 1024;
+
+void handle_legate_args(int32_t argc, char** argv)
+{
+  // Realm uses ints rather than unsigned ints
+  int cpus                = DEFAULT_CPUS;
+  int gpus                = DEFAULT_GPUS;
+  int omps                = DEFAULT_OMPS;
+  int ompthreads          = DEFAULT_OMPTHREADS;
+  int util                = DEFAULT_UTILITY;
+  int sysmem              = DEFAULT_SYSMEM;
+  int numamem             = DEFAULT_NUMAMEM;
+  int fbmem               = DEFAULT_FBMEM;
+  int zcmem               = DEFAULT_ZCMEM;
+  int regmem              = DEFAULT_REGMEM;
+  int eager_alloc_percent = DEFAULT_EAGER_ALLOC_PERCENT;
+
+  Realm::CommandLineParser cp;
+  cp.add_option_int("--cpus", cpus)
+    .add_option_int("--gpus", gpus)
+    .add_option_int("--omps", omps)
+    .add_option_int("--ompthreads", ompthreads)
+    .add_option_int("--utility", util)
+    .add_option_int("--sysmem", sysmem)
+    .add_option_int("--numamem", numamem)
+    .add_option_int("--fbmem", fbmem)
+    .add_option_int("--zcmem", zcmem)
+    .add_option_int("--regmem", regmem)
+    .add_option_int("--eager-alloc-percentage", eager_alloc_percent)
+    .parse_command_line(argc, argv);
+
+  auto rt = Realm::Runtime::get_runtime();
+
+  // ensure core module
+  if (!rt.get_module_config("core")) {
+    log_legate.error("core module config is missing");
+    LEGATE_ABORT;
+  }
+
+  // ensure sensible utility
+  if (util < 1) {
+    log_legate.error("--utility must be at least 1");
+    LEGATE_ABORT;
+  }
+
+  // Set core configuration properties
+  try_set_property(rt, "core", "cpu", cpus, "unable to set --cpus");
+  try_set_property(rt, "core", "util", util, "unable to set --utility");
+  try_set_property(rt, "core", "sysmem", sysmem * MB, "unable to set --sysmem");
+  try_set_property(rt, "core", "regmem", regmem * MB, "unable to set --regmem");
+
+  // Set CUDA configuration properties
+  try_set_property(rt, "cuda", "gpu", gpus, "unable to set --gpus");
+  try_set_property(rt, "cuda", "fbmem", fbmem * MB, "unable to set --fbmem");
+  try_set_property(rt, "cuda", "zcmem", zcmem * MB, "unable to set --zcmem");
+
+  // Set OpenMP configuration properties
+  if (omps > 0 && ompthreads == 0) {
+    log_legate.error("--omps configured with zero threads");
+    LEGATE_ABORT;
+  }
+  try_set_property(rt, "openmp", "ocpu", omps, "unable to set --omps");
+  try_set_property(rt, "openmp", "othr", ompthreads, "unable to set --ompthreads");
+
+  // Set NUMA configuration properties
+  try_set_property(rt, "numa", "numamem", numamem * MB, "unable to set --numamem");
+
+  // eager alloc has to be passed via env var
+  const char* existing_default_args = getenv("LEGION_DEFAULT_ARGS");
+  const std::string eager_alloc_arg =
+    " -lg:eager_alloc_percentage " + std::to_string(eager_alloc_percent);
+  const std::string new_default_args =
+    (existing_default_args == nullptr ? "" : std::string(existing_default_args)) + eager_alloc_arg +
+    " -lg:local 0";
+  setenv("LEGION_DEFAULT_ARGS", new_default_args.c_str(), true);
 }
 
 }  // namespace legate::detail

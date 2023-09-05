@@ -335,6 +335,8 @@ void registration_callback_for_python(Legion::Machine machine,
                                       Legion::Runtime* legion_runtime,
                                       const std::set<Processor>& local_procs);
 
+void handle_legate_args(int32_t argc, char** argv);
+
 }  // namespace legate::detail
 
 #include "core/runtime/detail/runtime.inl"

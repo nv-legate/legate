@@ -98,6 +98,18 @@ namespace detail {
 class Runtime;
 }  // namespace detail
 
+constexpr auto DEFAULT_CPUS                = 1;
+constexpr auto DEFAULT_GPUS                = 0;
+constexpr auto DEFAULT_OMPS                = 0;
+constexpr auto DEFAULT_OMPTHREADS          = 2;
+constexpr auto DEFAULT_UTILITY             = 1;
+constexpr auto DEFAULT_SYSMEM              = 4000;  // MB
+constexpr auto DEFAULT_NUMAMEM             = 0;     // MB
+constexpr auto DEFAULT_FBMEM               = 4000;  // MB
+constexpr auto DEFAULT_ZCMEM               = 32;    // MB
+constexpr auto DEFAULT_REGMEM              = 0;     // MB
+constexpr auto DEFAULT_EAGER_ALLOC_PERCENT = 50;
+
 class Runtime {
  public:
   /**
