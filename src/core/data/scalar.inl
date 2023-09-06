@@ -12,20 +12,58 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>  // std::addressof
 #include <string_view>
+#include <type_traits>
 
 // Useful for IDEs
 #include "core/data/scalar.h"
 
 namespace legate {
 
+namespace detail {
+
 template <typename T>
-Scalar::Scalar(T value) : impl_(create_impl(primitive_type(legate_type_code_of<T>), &value, true))
+inline constexpr legate::Type::Code canonical_type_code_of() noexcept
 {
-  static_assert(legate_type_code_of<T> != Type::Code::FIXED_ARRAY);
-  static_assert(legate_type_code_of<T> != Type::Code::STRUCT);
-  static_assert(legate_type_code_of<T> != Type::Code::STRING);
-  static_assert(legate_type_code_of<T> != Type::Code::INVALID);
+  using legate::Type;  // to disambiguate from legate::detail::Type;
+
+  if constexpr (std::is_same_v<std::size_t, T>) {
+    static_assert(sizeof(T) == sizeof(std::uint64_t));
+    return Type::Code::UINT64;
+  } else {
+    constexpr auto ret = legate_type_code_of<T>;
+
+    static_assert(ret != Type::Code::FIXED_ARRAY);
+    static_assert(ret != Type::Code::STRUCT);
+    static_assert(ret != Type::Code::STRING);
+    static_assert(ret != Type::Code::INVALID);
+    return ret;
+  }
+}
+
+template <typename T>
+inline decltype(auto) canonical_value_of(T&& v) noexcept
+{
+  return std::forward<T>(v);
+}
+
+inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return std::uint64_t{v}; }
+
+}  // namespace detail
+
+template <typename T>
+Scalar::Scalar(T value, private_tag)
+  : impl_{
+      create_impl(primitive_type(detail::canonical_type_code_of<T>()), std::addressof(value), true)}
+{
+}
+
+template <typename T>
+Scalar::Scalar(T value) : Scalar{detail::canonical_value_of(std::move(value)), private_tag{}}
+{
 }
 
 template <typename T>

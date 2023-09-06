@@ -170,7 +170,11 @@ class Scalar {
  private:
   static detail::Scalar* create_impl(Type type, const void* data, bool copy);
 
- private:
+  struct private_tag {};
+
+  template <typename T>
+  Scalar(T value, private_tag);
+
   friend class AutoTask;
   friend class ManualTask;
   friend class Runtime;
