@@ -169,6 +169,10 @@ template <Type::Code CODE>
 struct is_signed {
   static constexpr bool value = std::is_signed<legate_type_of<CODE>>::value;
 };
+template <>
+struct is_signed<Type::Code::FLOAT16> {
+  static constexpr bool value = true;
+};
 
 /**
  * @ingroup util

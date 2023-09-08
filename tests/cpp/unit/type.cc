@@ -165,13 +165,11 @@ TEST(TypeUnit, PrimitiveType)
   EXPECT_EQ(legate::complex64(), legate::primitive_type(legate::Type::Code::COMPLEX64));
   EXPECT_EQ(legate::complex128(), legate::primitive_type(legate::Type::Code::COMPLEX128));
 
-  // Invalid code
-  // Note: issue #20, throws std::out_of_range with description "_Map_base::at"
-  // legate::primitive_type(legate::Type::Code::FIXED_ARRAY);
-  // legate::primitive_type(legate::Type::Code::STRUCT);
-  // legate::primitive_type(legate::Type::Code::STRING);
-  // legate::primitive_type(legate::Type::Code::LIST);
-  // legate::primitive_type(legate::Type::Code::INVALID);
+  EXPECT_THROW(legate::primitive_type(legate::Type::Code::FIXED_ARRAY), std::invalid_argument);
+  EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRUCT), std::invalid_argument);
+  EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRING), std::invalid_argument);
+  EXPECT_THROW(legate::primitive_type(legate::Type::Code::LIST), std::invalid_argument);
+  EXPECT_THROW(legate::primitive_type(legate::Type::Code::INVALID), std::invalid_argument);
 }
 
 TEST(TypeUnit, StringType) { test_string_type(legate::string_type()); }
@@ -180,34 +178,31 @@ TEST(TypeUnit, FixedArrayType)
 {
   // element type is a primitive type
   {
-    uint32_t N        = 10;
-    auto element_type = legate::uint64();
+    uint32_t N            = 10;
+    auto element_type     = legate::uint64();
     auto fixed_array_type = legate::fixed_array_type(element_type, N);
     test_fixed_array_type(fixed_array_type, element_type, N, "uint64[10]");
   }
 
   // element type is not a primitive type
   {
-    uint32_t N        = 10;
-    auto element_type = legate::fixed_array_type(legate::uint16(), N);
+    uint32_t N            = 10;
+    auto element_type     = legate::fixed_array_type(legate::uint16(), N);
     auto fixed_array_type = legate::fixed_array_type(element_type, N);
     test_fixed_array_type(fixed_array_type, element_type, N, "uint16[10][10]");
   }
 
   // N > 0xFFU
   {
-    uint32_t N        = 256;
-    auto element_type = legate::float64();
+    uint32_t N            = 256;
+    auto element_type     = legate::float64();
     auto fixed_array_type = legate::fixed_array_type(element_type, N);
     test_fixed_array_type(fixed_array_type, element_type, N, "float64[256]");
   }
 
   // N = 0
   {
-    // Note: No exceptions throwed when N of fixed array type is 0
-    // Expected: legate::fixed_array_type(legate::int64(), 0) throws an exception of type
-    // std::out_of_range. Actual: it throws nothing.
-    // EXPECT_THROW(legate::fixed_array_type(legate::int64(), 0), std::out_of_range);
+    EXPECT_THROW(legate::fixed_array_type(legate::int64(), 0), std::out_of_range);
   }
 
   // element type has variable size
@@ -521,8 +516,7 @@ TEST(TypeUnit, TypeUtils)
   EXPECT_TRUE(legate::is_signed<legate::Type::Code::INT64>::value);
   EXPECT_TRUE(legate::is_signed<legate::Type::Code::FLOAT32>::value);
   EXPECT_TRUE(legate::is_signed<legate::Type::Code::FLOAT64>::value);
-  // Note: issue #5 float16 turns out to be unsigned
-  // EXPECT_TRUE(legate::is_signed<legate::Type::Code::FLOAT16>::value);
+  EXPECT_TRUE(legate::is_signed<legate::Type::Code::FLOAT16>::value);
 
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::BOOL>::value);
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::UINT8>::value);

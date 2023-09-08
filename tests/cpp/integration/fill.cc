@@ -163,7 +163,18 @@ void test_fill_slice(int32_t dim)
   check_output_slice(lhs, v1, v2, offset);
 }
 
-TEST(Integration, FillIndex)
+void test_invalid()
+{
+  auto runtime  = legate::Runtime::get_runtime();
+  auto store1   = runtime->create_store({10, 10}, legate::int64());
+  auto store2   = runtime->create_store(10.0);
+  auto scalar_v = legate::Scalar(10.0);
+
+  EXPECT_THROW(runtime->issue_fill(store1, store2), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_fill(store1, scalar_v), std::invalid_argument);
+}
+
+TEST(Fill, Index)
 {
   legate::Core::perform_registration<register_tasks>();
   test_fill_index(1);
@@ -171,7 +182,7 @@ TEST(Integration, FillIndex)
   test_fill_index(3);
 }
 
-TEST(Integration, FillSingle)
+TEST(Fill, Single)
 {
   legate::Core::perform_registration<register_tasks>();
   test_fill_single(1);
@@ -179,12 +190,14 @@ TEST(Integration, FillSingle)
   test_fill_single(3);
 }
 
-TEST(Integration, FillSlice)
+TEST(Fill, Slice)
 {
   legate::Core::perform_registration<register_tasks>();
   test_fill_slice(1);
   test_fill_slice(2);
   test_fill_slice(3);
 }
+
+TEST(Fill, Invalid) { test_invalid(); }
 
 }  // namespace fill

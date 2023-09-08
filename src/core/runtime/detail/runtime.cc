@@ -199,6 +199,7 @@ std::unique_ptr<ManualTask> Runtime::create_task(const Library* library,
                                                  int64_t task_id,
                                                  const Shape& launch_shape)
 {
+  if (launch_shape.volume() == 0) { throw std::invalid_argument("Launch shape must not be empty"); }
   auto machine = slice_machine_for_task(library, task_id);
   auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++, std::move(machine));
   return std::unique_ptr<ManualTask>(task);

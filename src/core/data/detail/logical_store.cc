@@ -456,6 +456,9 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(Shape t
                                 std::to_string(extents().size()) + "-tuple, got a " +
                                 std::to_string(tile_shape.size()) + "-tuple");
   }
+  if (tile_shape.volume() == 0) {
+    throw std::invalid_argument("Tile shape must have a volume greater than 0");
+  }
   auto color_shape = apply([](auto c, auto t) { return (c + t - 1) / t; }, extents(), tile_shape);
   auto partition   = create_tiling(std::move(tile_shape), std::move(color_shape));
   return create_partition(std::move(partition), true);

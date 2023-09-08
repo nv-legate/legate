@@ -38,8 +38,8 @@ Copy::Copy(std::shared_ptr<LogicalStore> target,
 
 void Copy::validate()
 {
-  if (source_.store->type() != target_.store->type()) {
-    throw std::invalid_argument("Source and targets must have the same type");
+  if (*source_.store->type() != *target_.store->type()) {
+    throw std::invalid_argument("Source and target must have the same type");
   }
   auto validate_store = [](auto* store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {

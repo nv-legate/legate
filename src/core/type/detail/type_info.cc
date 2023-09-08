@@ -260,7 +260,16 @@ bool StringType::equal(const Type& other) const { return code == other.code; }
 
 std::shared_ptr<Type> primitive_type(Type::Code code)
 {
-  return std::make_shared<PrimitiveType>(code);
+  static std::unordered_map<Type::Code, std::shared_ptr<Type>> cache{};
+  if (SIZEOF.find(code) == SIZEOF.end()) {
+    throw std::invalid_argument(std::to_string(static_cast<int32_t>(code)) +
+                                " is not a valid type code for a primitive type");
+  }
+  auto finder = cache.find(code);
+  if (finder != cache.end()) { return finder->second; }
+  auto result = std::make_shared<PrimitiveType>(code);
+  cache[code] = result;
+  return result;
 }
 
 ListType::ListType(int32_t uid, std::shared_ptr<Type> element_type)
@@ -309,6 +318,7 @@ std::shared_ptr<Type> string_type()
 
 std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint32_t N)
 {
+  if (N == 0) { throw std::out_of_range("Size of array must be greater than 0"); }
   // We use UIDs of the following format for "common" fixed array types
   //    1B            1B
   // +--------+-------------------+

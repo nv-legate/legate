@@ -37,7 +37,12 @@ Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
     throw std::runtime_error("Fill value should be a Future-back store");
 }
 
-void Fill::validate() {}
+void Fill::validate()
+{
+  if (*lhs_->type() != *value_->type()) {
+    throw std::invalid_argument("Fill value and target must have the same type");
+  }
+}
 
 void Fill::launch(Strategy* strategy)
 {

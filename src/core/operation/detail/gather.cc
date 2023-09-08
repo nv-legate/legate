@@ -40,7 +40,7 @@ Gather::Gather(std::shared_ptr<LogicalStore> target,
 
 void Gather::validate()
 {
-  if (source_.store->type() != target_.store->type()) {
+  if (*source_.store->type() != *target_.store->type()) {
     throw std::invalid_argument("Source and targets must have the same type");
   }
   auto validate_store = [](auto* store) {
