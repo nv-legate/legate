@@ -34,6 +34,11 @@ bool NoPartition::is_disjoint_for(const Domain* launch_domain) const
 
 bool NoPartition::satisfies_restrictions(const Restrictions& restrictions) const { return true; }
 
+std::unique_ptr<Partition> NoPartition::scale(const Shape& factors) const
+{
+  return create_no_partition();
+}
+
 Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region, bool complete) const
 {
   return Legion::LogicalPartition::NO_PART;
@@ -119,6 +124,13 @@ bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape_).all();
+}
+
+std::unique_ptr<Partition> Tiling::scale(const Shape& factors) const
+{
+  auto new_offsets =
+    apply([](int64_t off, size_t factor) -> int64_t { return off * factor; }, offsets_, factors);
+  return create_tiling(tile_shape_ * factors, Shape(color_shape_), std::move(new_offsets));
 }
 
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
@@ -220,6 +232,12 @@ bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
   return apply(satisfies_restriction, restrictions, color_shape_).all();
 }
 
+std::unique_ptr<Partition> Weighted::scale(const Shape& factors) const
+{
+  throw std::runtime_error("Not implemented");
+  return nullptr;
+}
+
 Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool) const
 {
   auto runtime  = detail::Runtime::get_runtime();
@@ -292,6 +310,12 @@ bool Image::satisfies_restrictions(const Restrictions& restrictions) const
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape()).all();
+}
+
+std::unique_ptr<Partition> Image::scale(const Shape& factors) const
+{
+  throw std::runtime_error("Not implemented");
+  return nullptr;
 }
 
 Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool complete) const

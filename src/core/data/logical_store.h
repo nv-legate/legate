@@ -164,7 +164,7 @@ class LogicalStore {
   /**
    * @brief Projects out a dimension of the store.
    *
-   * Each dimension @f$@f$, where @f$i@f$ > `dim`, is mapped to dimension @f$i-1@f$ in a returned
+   * Each dimension @f$i@f$, where @f$i@f$ > `dim`, is mapped to dimension @f$i-1@f$ in a returned
    * store. A returned store provides a view to the input store where the values are on hyperplane
    * @f$x_\mathtt{dim} = \mathtt{index}@f$.
    *

@@ -159,6 +159,9 @@ void ConstraintSolver::solve_constraints()
   auto handle_image_constraint = [&](const ImageConstraint* image_constraint) {
     is_dependent_[*image_constraint->var_range()] = true;
   };
+  auto handle_scale_constraint = [&](const ScaleConstraint* scale_constraint) {
+    is_dependent_[*scale_constraint->var_bigger()] = true;
+  };
 
   // Reflect each constraint to the solver state
   for (auto& constraint : constraints_) {
@@ -174,6 +177,10 @@ void ConstraintSolver::solve_constraints()
       }
       case Constraint::Kind::IMAGE: {
         handle_image_constraint(constraint->as_image_constraint());
+        break;
+      }
+      case Constraint::Kind::SCALE: {
+        handle_scale_constraint(constraint->as_scale_constraint());
         break;
       }
     }
@@ -197,10 +204,19 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
     strategy.insert(image_constraint->var_range(), std::move(image));
   };
 
+  auto solve_scale_constraint = [&strategy](const ScaleConstraint* scale_constraint) {
+    auto scaled = scale_constraint->resolve(strategy);
+    strategy.insert(scale_constraint->var_bigger(), std::move(scaled));
+  };
+
   for (auto& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::IMAGE: {
         solve_image_constraint(constraint->as_image_constraint());
+        break;
+      }
+      case Constraint::Kind::SCALE: {
+        solve_scale_constraint(constraint->as_scale_constraint());
         break;
       }
       default: {

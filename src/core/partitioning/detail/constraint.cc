@@ -149,6 +149,49 @@ std::unique_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& stra
   }
 }
 
+ScaleConstraint::ScaleConstraint(const Shape& factors,
+                                 const Variable* var_smaller,
+                                 const Variable* var_bigger)
+  : factors_(factors), var_smaller_(var_smaller), var_bigger_(var_bigger)
+{
+}
+
+void ScaleConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+{
+  partition_symbols.push_back(var_smaller_);
+  partition_symbols.push_back(var_bigger_);
+}
+
+void ScaleConstraint::validate() const
+{
+  auto smaller = var_smaller_->operation()->find_store(var_smaller_);
+  auto bigger  = var_bigger_->operation()->find_store(var_bigger_);
+
+  if (smaller->dim() != bigger->dim()) {
+    throw std::invalid_argument(
+      "Scaling constraint requires the stores to have the same number of dimensions");
+  }
+
+  if (smaller->dim() != factors_.size()) {
+    throw std::invalid_argument(
+      "Scaling constraint requires the number of factors to match the number of dimensions");
+  }
+}
+
+std::string ScaleConstraint::to_string() const
+{
+  std::stringstream ss;
+  ss << "ScaleConstraint(" << factors_ << ", " << var_smaller_->to_string() << ", "
+     << var_bigger_->to_string() << ")";
+  return std::move(ss).str();
+}
+
+std::unique_ptr<Partition> ScaleConstraint::resolve(const detail::Strategy& strategy) const
+{
+  auto src_part = strategy[var_smaller()];
+  return src_part->scale(factors_);
+}
+
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
 {
   return std::make_unique<Alignment>(lhs, rhs);
@@ -163,6 +206,13 @@ std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32
 std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
 {
   return std::make_unique<ImageConstraint>(var_function, var_range);
+}
+
+std::unique_ptr<ScaleConstraint> scale(const Shape& factors,
+                                       const Variable* var_smaller,
+                                       const Variable* var_bigger)
+{
+  return std::make_unique<ScaleConstraint>(factors, var_smaller, var_bigger);
 }
 
 }  // namespace legate::detail

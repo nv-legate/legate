@@ -40,4 +40,9 @@ Constraint image(Variable var_function, Variable var_range)
   return Constraint(detail::image(var_function.impl(), var_range.impl()).release());
 }
 
+Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger)
+{
+  return Constraint(detail::scale(factors, var_smaller.impl(), var_bigger.impl()).release());
+}
+
 }  // namespace legate

@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/data/shape.h"
 #include "core/utilities/memory.h"
 #include "core/utilities/tuple.h"
 
@@ -103,5 +104,28 @@ Constraint broadcast(Variable variable, const tuple<int32_t>& axes);
  * @return Broadcast constraint
  */
 Constraint image(Variable var_function, Variable var_range);
+
+/**
+ * @ingroup partitioning
+ * @brief Creates a scaling constraint between partitions
+ *
+ * If two stores `A` and `B` are constrained by a scaling constraint
+ *
+ *   `legate::scale(S, pA, pB)`
+ *
+ * where `pA` and `pB ` are partition symbols for `A` and `B`, respectively, `A` and `B` will be
+ * partitioned such that each pair of sub-stores `Ak` and `Bk` satisfy the following property:
+ *
+ * @f$\mathtt{S} \cdot \mathit{dom}(\mathtt{Ak}) \cap \mathit{dom}(\mathtt{B}) \subseteq @f$
+ * @f$\mathit{dom}(\mathtt{Bk})@f$
+ *
+ * @param factors Scaling factors
+ * @param var_smaller Partition symbol for the smaller store (i.e., the one whose extents are
+ * scaled)
+ * @param var_bigger Partition symbol of the bigger store
+ *
+ * @return Scaling constraint
+ */
+Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger);
 
 }  // namespace legate

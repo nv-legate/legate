@@ -12,10 +12,9 @@
 
 #pragma once
 
-#include <map>
 #include <memory>
-#include <vector>
 
+#include "core/data/shape.h"
 #include "core/utilities/tuple.h"
 
 namespace legate {
@@ -31,6 +30,7 @@ class Broadcast;
 struct Constraint;
 class ImageConstraint;
 class Literal;
+class ScaleConstraint;
 class Variable;
 
 struct Expr {
@@ -117,6 +117,7 @@ struct Constraint {
     ALIGNMENT = 0,
     BROADCAST = 1,
     IMAGE     = 2,
+    SCALE     = 3,
   };
   virtual ~Constraint() {}
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
@@ -126,6 +127,7 @@ struct Constraint {
   virtual const Alignment* as_alignment() const                                              = 0;
   virtual const Broadcast* as_broadcast() const                                              = 0;
   virtual const ImageConstraint* as_image_constraint() const                                 = 0;
+  virtual const ScaleConstraint* as_scale_constraint() const                                 = 0;
 };
 
 class Alignment : public Constraint {
@@ -148,6 +150,7 @@ class Alignment : public Constraint {
   const Alignment* as_alignment() const override { return this; }
   const Broadcast* as_broadcast() const override { return nullptr; }
   const ImageConstraint* as_image_constraint() const override { return nullptr; }
+  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
 
  public:
   const Variable* lhs() const { return lhs_; }
@@ -181,6 +184,7 @@ class Broadcast : public Constraint {
   const Alignment* as_alignment() const override { return nullptr; }
   const Broadcast* as_broadcast() const override { return this; }
   const ImageConstraint* as_image_constraint() const override { return nullptr; }
+  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
 
  public:
   const Variable* variable() const { return variable_; }
@@ -211,6 +215,7 @@ class ImageConstraint : public Constraint {
   const Alignment* as_alignment() const override { return nullptr; }
   const Broadcast* as_broadcast() const override { return nullptr; }
   const ImageConstraint* as_image_constraint() const override { return this; }
+  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
 
  public:
   const Variable* var_function() const { return var_function_; }
@@ -224,10 +229,49 @@ class ImageConstraint : public Constraint {
   const Variable* var_range_;
 };
 
+class ScaleConstraint : public Constraint {
+ public:
+  ScaleConstraint(const Shape& factors, const Variable* var_smaller, const Variable* var_bigger);
+
+ public:
+  Kind kind() const override { return Kind::SCALE; }
+
+ public:
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+
+ public:
+  void validate() const override;
+
+ public:
+  std::string to_string() const override;
+
+ public:
+  const Alignment* as_alignment() const override { return nullptr; }
+  const Broadcast* as_broadcast() const override { return nullptr; }
+  const ImageConstraint* as_image_constraint() const override { return nullptr; }
+  const ScaleConstraint* as_scale_constraint() const override { return this; }
+
+ public:
+  const Variable* var_smaller() const { return var_smaller_; }
+  const Variable* var_bigger() const { return var_bigger_; }
+
+ public:
+  std::unique_ptr<Partition> resolve(const Strategy& strategy) const;
+
+ private:
+  Shape factors_;
+  const Variable* var_smaller_;
+  const Variable* var_bigger_;
+};
+
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
 
 std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes);
 
 std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range);
+
+std::unique_ptr<ScaleConstraint> scale(const Shape& factors,
+                                       const Variable* var_smaller,
+                                       const Variable* var_bigger);
 
 }  // namespace legate::detail
