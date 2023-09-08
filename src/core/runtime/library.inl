@@ -40,7 +40,7 @@ class CUDAReductionOpWrapper : public T {
   }
 
   template <bool EXCLUSIVE>
-  __device__ static void fold_cuda(typename T::LHS& lhs, typename T::RHS rhs)
+  __device__ static void fold_cuda(typename T::RHS& lhs, typename T::RHS rhs)
   {
     T::template fold<EXCLUSIVE>(lhs, rhs);
   }
