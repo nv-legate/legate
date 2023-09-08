@@ -12,6 +12,8 @@
 
 #include "core/runtime/detail/runtime.h"
 
+#include <limits>
+
 #include "core/comm/comm.h"
 #include "core/data/detail/array_tasks.h"
 #include "core/data/detail/logical_array.h"
@@ -1239,20 +1241,36 @@ void registration_callback_for_python(Legion::Machine machine,
   Runtime::get_runtime()->initialize(Legion::Runtime::get_context());
 }
 
-template <typename Runtime, typename Value>
+// Simple wrapper for variables with default values
+template <typename VAL, VAL DEFAULT, VAL SCALE = 1>
+class VarWithDefault {
+ public:
+  VAL value() const { return (has_value() ? value_ : DEFAULT) * SCALE; }
+  bool has_value() const { return value_ != UNSET; }
+  VAL& ref() { return value_; }
+
+ private:
+  static constexpr VAL UNSET{std::numeric_limits<VAL>::max()};
+  VAL value_{UNSET};
+};
+
+template <typename Runtime, typename Value, Value DEFAULT, Value SCALE>
 void try_set_property(Runtime& runtime,
-                      const std::string& config_name,
+                      const std::string& module_name,
                       const std::string& property_name,
-                      const Value& value,
+                      const VarWithDefault<Value, DEFAULT, SCALE>& var,
                       const std::string& error_msg)
 {
+  auto value = var.value();
   if (value < 0) {
     log_legate.error(error_msg.c_str());
     LEGATE_ABORT;
   }
-  auto config = runtime.get_module_config(config_name);
-  if (!config && value > 0) {
-    const std::string msg = error_msg + " (" + config_name + " is not available)";
+  auto config = runtime.get_module_config(module_name);
+  if (nullptr == config) {
+    // If the variable doesn't have a value, we don't care if the module is nonexistent
+    if (!var.has_value()) { return; }
+    const std::string msg = error_msg + " (the " + module_name + " module is not available)";
     log_legate.error(msg.c_str());
     LEGATE_ABORT;
   }
@@ -1263,35 +1281,50 @@ void try_set_property(Runtime& runtime,
   }
 }
 
-constexpr long MB = 1024 * 1024;
+namespace {
+
+constexpr int64_t DEFAULT_CPUS                = 1;
+constexpr int64_t DEFAULT_GPUS                = 0;
+constexpr int64_t DEFAULT_OMPS                = 0;
+constexpr int64_t DEFAULT_OMPTHREADS          = 2;
+constexpr int64_t DEFAULT_UTILITY             = 1;
+constexpr int64_t DEFAULT_SYSMEM              = 4000;  // MB
+constexpr int64_t DEFAULT_NUMAMEM             = 0;     // MB
+constexpr int64_t DEFAULT_FBMEM               = 4000;  // MB
+constexpr int64_t DEFAULT_ZCMEM               = 32;    // MB
+constexpr int64_t DEFAULT_REGMEM              = 0;     // MB
+constexpr int64_t DEFAULT_EAGER_ALLOC_PERCENT = 50;
+constexpr int64_t MB                          = 1024 * 1024;
+
+}  // namespace
 
 void handle_legate_args(int32_t argc, char** argv)
 {
   // Realm uses ints rather than unsigned ints
-  int cpus                = DEFAULT_CPUS;
-  int gpus                = DEFAULT_GPUS;
-  int omps                = DEFAULT_OMPS;
-  int ompthreads          = DEFAULT_OMPTHREADS;
-  int util                = DEFAULT_UTILITY;
-  int sysmem              = DEFAULT_SYSMEM;
-  int numamem             = DEFAULT_NUMAMEM;
-  int fbmem               = DEFAULT_FBMEM;
-  int zcmem               = DEFAULT_ZCMEM;
-  int regmem              = DEFAULT_REGMEM;
-  int eager_alloc_percent = DEFAULT_EAGER_ALLOC_PERCENT;
+  VarWithDefault<int64_t, DEFAULT_CPUS> cpus;
+  VarWithDefault<int64_t, DEFAULT_GPUS> gpus;
+  VarWithDefault<int64_t, DEFAULT_OMPS> omps;
+  VarWithDefault<int64_t, DEFAULT_OMPTHREADS> ompthreads;
+  VarWithDefault<int64_t, DEFAULT_UTILITY> util;
+  VarWithDefault<int64_t, DEFAULT_SYSMEM, MB> sysmem;
+  VarWithDefault<int64_t, DEFAULT_NUMAMEM, MB> numamem;
+  VarWithDefault<int64_t, DEFAULT_FBMEM, MB> fbmem;
+  VarWithDefault<int64_t, DEFAULT_ZCMEM, MB> zcmem;
+  VarWithDefault<int64_t, DEFAULT_REGMEM, MB> regmem;
+  VarWithDefault<int64_t, DEFAULT_EAGER_ALLOC_PERCENT> eager_alloc_percent;
 
   Realm::CommandLineParser cp;
-  cp.add_option_int("--cpus", cpus)
-    .add_option_int("--gpus", gpus)
-    .add_option_int("--omps", omps)
-    .add_option_int("--ompthreads", ompthreads)
-    .add_option_int("--utility", util)
-    .add_option_int("--sysmem", sysmem)
-    .add_option_int("--numamem", numamem)
-    .add_option_int("--fbmem", fbmem)
-    .add_option_int("--zcmem", zcmem)
-    .add_option_int("--regmem", regmem)
-    .add_option_int("--eager-alloc-percentage", eager_alloc_percent)
+  cp.add_option_int("--cpus", cpus.ref())
+    .add_option_int("--gpus", gpus.ref())
+    .add_option_int("--omps", omps.ref())
+    .add_option_int("--ompthreads", ompthreads.ref())
+    .add_option_int("--utility", util.ref())
+    .add_option_int("--sysmem", sysmem.ref())
+    .add_option_int("--numamem", numamem.ref())
+    .add_option_int("--fbmem", fbmem.ref())
+    .add_option_int("--zcmem", zcmem.ref())
+    .add_option_int("--regmem", regmem.ref())
+    .add_option_int("--eager-alloc-percentage", eager_alloc_percent.ref())
     .parse_command_line(argc, argv);
 
   auto rt = Realm::Runtime::get_runtime();
@@ -1303,7 +1336,7 @@ void handle_legate_args(int32_t argc, char** argv)
   }
 
   // ensure sensible utility
-  if (util < 1) {
+  if (util.value() < 1) {
     log_legate.error("--utility must be at least 1");
     LEGATE_ABORT;
   }
@@ -1311,16 +1344,16 @@ void handle_legate_args(int32_t argc, char** argv)
   // Set core configuration properties
   try_set_property(rt, "core", "cpu", cpus, "unable to set --cpus");
   try_set_property(rt, "core", "util", util, "unable to set --utility");
-  try_set_property(rt, "core", "sysmem", sysmem * MB, "unable to set --sysmem");
-  try_set_property(rt, "core", "regmem", regmem * MB, "unable to set --regmem");
+  try_set_property(rt, "core", "sysmem", sysmem, "unable to set --sysmem");
+  try_set_property(rt, "core", "regmem", regmem, "unable to set --regmem");
 
   // Set CUDA configuration properties
   try_set_property(rt, "cuda", "gpu", gpus, "unable to set --gpus");
-  try_set_property(rt, "cuda", "fbmem", fbmem * MB, "unable to set --fbmem");
-  try_set_property(rt, "cuda", "zcmem", zcmem * MB, "unable to set --zcmem");
+  try_set_property(rt, "cuda", "fbmem", fbmem, "unable to set --fbmem");
+  try_set_property(rt, "cuda", "zcmem", zcmem, "unable to set --zcmem");
 
   // Set OpenMP configuration properties
-  if (omps > 0 && ompthreads == 0) {
+  if (omps.value() > 0 && ompthreads.value() == 0) {
     log_legate.error("--omps configured with zero threads");
     LEGATE_ABORT;
   }
@@ -1328,12 +1361,12 @@ void handle_legate_args(int32_t argc, char** argv)
   try_set_property(rt, "openmp", "othr", ompthreads, "unable to set --ompthreads");
 
   // Set NUMA configuration properties
-  try_set_property(rt, "numa", "numamem", numamem * MB, "unable to set --numamem");
+  try_set_property(rt, "numa", "numamem", numamem, "unable to set --numamem");
 
   // eager alloc has to be passed via env var
   const char* existing_default_args = getenv("LEGION_DEFAULT_ARGS");
   const std::string eager_alloc_arg =
-    " -lg:eager_alloc_percentage " + std::to_string(eager_alloc_percent);
+    " -lg:eager_alloc_percentage " + std::to_string(eager_alloc_percent.value());
   const std::string new_default_args =
     (existing_default_args == nullptr ? "" : std::string(existing_default_args)) + eager_alloc_arg +
     " -lg:local 0";

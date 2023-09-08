@@ -80,7 +80,7 @@ def run_test(config, test_name, log, extra_args):
 
     test_command += [config.binary_path]
     test_command += [f"--gtest_filter={test_name}"]
-    test_command += ["-ll:cpu", str(config.cpus)]
+    test_command += ["--cpus", str(config.cpus)]
     test_command += extra_args
 
     if test_name in test_args_dict:

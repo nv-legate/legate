@@ -2,12 +2,12 @@
 
 if [ $# -eq 0 ]
   then
-    REALM_BACKTRACE=1 LEGATE_TEST=1 python run.py
+    REALM_BACKTRACE=1 LEGATE_TEST=1 python run.py --cpus 4
 elif [ $# -ge 1 ]  && [ "$1" = "ctest" ]
   then
     echo "Using ctest"
     cd build
-    REALM_BACKTRACE=1 LEGATE_TEST=1 LEGION_DEFAULT_ARGS="-ll:cpu 4" ctest --output-on-failure "$@"
+    REALM_BACKTRACE=1 LEGATE_TEST=1 ctest --output-on-failure "$@"
 else
     echo "Invalid arguments"
 fi
