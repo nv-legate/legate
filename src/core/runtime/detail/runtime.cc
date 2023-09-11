@@ -54,8 +54,7 @@ namespace legate::detail {
 
 namespace {
 
-constexpr uint32_t CUSTOM_TYPE_UID_BASE = 0x10000;
-const char* TOPLEVEL_NAME               = "Legate Core Toplevel Task";
+const char* TOPLEVEL_NAME = "Legate Core Toplevel Task";
 
 }  // namespace
 
@@ -64,7 +63,6 @@ Runtime::Runtime()
     field_reuse_freq_(
       extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)),
     force_consensus_match_(extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)),
-    next_type_uid_(CUSTOM_TYPE_UID_BASE),
     max_pending_exceptions_(extract_env(
       "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST))
 {
@@ -110,8 +108,6 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
   if (created != nullptr) *created = true;
   return result;
 }
-
-uint32_t Runtime::get_type_uid() { return next_type_uid_++; }
 
 void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id)
 {

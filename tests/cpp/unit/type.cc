@@ -55,6 +55,18 @@ void test_string_type(const legate::Type& type)
   EXPECT_EQ(other, type);
 }
 
+void test_binary_type(const legate::Type& type, uint32_t size)
+{
+  EXPECT_EQ(type.code(), legate::Type::Code::BINARY);
+  EXPECT_EQ(type.size(), size);
+  EXPECT_EQ(type.alignment(), size);
+  EXPECT_FALSE(type.variable_size());
+  EXPECT_FALSE(type.is_primitive());
+  EXPECT_EQ(type.to_string(), "binary(" + std::to_string(size) + ")");
+  legate::Type other(type);
+  EXPECT_EQ(other, type);
+}
+
 void test_fixed_array_type(const legate::Type& type,
                            const legate::Type& element_type,
                            uint32_t N,
@@ -165,14 +177,24 @@ TEST(TypeUnit, PrimitiveType)
   EXPECT_EQ(legate::complex64(), legate::primitive_type(legate::Type::Code::COMPLEX64));
   EXPECT_EQ(legate::complex128(), legate::primitive_type(legate::Type::Code::COMPLEX128));
 
+  EXPECT_THROW(legate::primitive_type(legate::Type::Code::BINARY), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::FIXED_ARRAY), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRUCT), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRING), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::LIST), std::invalid_argument);
-  EXPECT_THROW(legate::primitive_type(legate::Type::Code::INVALID), std::invalid_argument);
 }
 
 TEST(TypeUnit, StringType) { test_string_type(legate::string_type()); }
+
+TEST(TypeUnit, BinaryType)
+{
+  test_binary_type(legate::binary_type(123), 123);
+  test_binary_type(legate::binary_type(45), 45);
+  EXPECT_EQ(legate::binary_type(678).uid(), legate::binary_type(678).uid());
+
+  EXPECT_THROW(legate::binary_type(0), std::out_of_range);
+  EXPECT_THROW(legate::binary_type(0xFFFFF + 1), std::out_of_range);
+}
 
 TEST(TypeUnit, FixedArrayType)
 {
@@ -440,7 +462,7 @@ TEST(TypeUnit, ReductionOperator)
 
 TEST(TypeUnit, TypeCodeOf)
 {
-  EXPECT_EQ(legate::legate_type_code_of<void>, legate::Type::Code::INVALID);
+  EXPECT_EQ(legate::legate_type_code_of<void>, legate::Type::Code::NIL);
   EXPECT_EQ(legate::legate_type_code_of<bool>, legate::Type::Code::BOOL);
   EXPECT_EQ(legate::legate_type_code_of<int8_t>, legate::Type::Code::INT8);
   EXPECT_EQ(legate::legate_type_code_of<int16_t>, legate::Type::Code::INT16);
@@ -478,7 +500,7 @@ TEST(TypeUnit, TypeOf)
     (std::is_same_v<legate::legate_type_of<legate::Type::Code::COMPLEX128>, complex<double>>));
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::STRING>, std::string>));
 
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::INVALID>, void>));
+  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::NIL>, void>));
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::FIXED_ARRAY>, void>));
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::STRUCT>, void>));
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::LIST>, void>));
@@ -503,7 +525,7 @@ TEST(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::COMPLEX64>::value);
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::COMPLEX128>::value);
 
-  EXPECT_FALSE(legate::is_integral<legate::Type::Code::INVALID>::value);
+  EXPECT_FALSE(legate::is_integral<legate::Type::Code::NIL>::value);
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::STRING>::value);
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::STRUCT>::value);
@@ -526,7 +548,7 @@ TEST(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::COMPLEX64>::value);
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::COMPLEX128>::value);
 
-  EXPECT_FALSE(legate::is_signed<legate::Type::Code::INVALID>::value);
+  EXPECT_FALSE(legate::is_signed<legate::Type::Code::NIL>::value);
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::STRING>::value);
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::STRUCT>::value);
@@ -549,7 +571,7 @@ TEST(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::COMPLEX64>::value);
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::COMPLEX128>::value);
 
-  EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::INVALID>::value);
+  EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::NIL>::value);
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::STRING>::value);
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::STRUCT>::value);
@@ -572,7 +594,7 @@ TEST(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::COMPLEX64>::value);
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::COMPLEX128>::value);
 
-  EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::INVALID>::value);
+  EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::NIL>::value);
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::STRING>::value);
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::STRUCT>::value);
@@ -595,7 +617,7 @@ TEST(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::FLOAT32>::value);
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::FLOAT64>::value);
 
-  EXPECT_FALSE(legate::is_complex<legate::Type::Code::INVALID>::value);
+  EXPECT_FALSE(legate::is_complex<legate::Type::Code::NIL>::value);
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::STRING>::value);
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::STRUCT>::value);

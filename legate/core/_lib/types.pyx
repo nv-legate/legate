@@ -20,6 +20,7 @@ import numpy as np
 
 cdef extern from "core/legate_c.h" nogil:
     ctypedef enum legate_core_type_code_t:
+        _NULL "NULL_LT"
         _BOOL "BOOL_LT"
         _INT8 "INT8_LT"
         _INT16 "INT16_LT"
@@ -34,10 +35,10 @@ cdef extern from "core/legate_c.h" nogil:
         _FLOAT64 "FLOAT64_LT"
         _COMPLEX64 "COMPLEX64_LT"
         _COMPLEX128 "COMPLEX128_LT"
+        _BINARY "BINARY_LT"
         _FIXED_ARRAY "FIXED_ARRAY_LT"
         _STRUCT "STRUCT_LT"
         _STRING "STRING_LT"
-        _INVALID "INVALID_LT"
 
     ctypedef enum legate_core_reduction_op_kind_t:
         _ADD "ADD_LT"
@@ -50,6 +51,7 @@ cdef extern from "core/legate_c.h" nogil:
         _AND "AND_LT"
         _XOR "XOR_LT"
 
+NIL        = legate_core_type_code_t._NULL
 BOOL        = legate_core_type_code_t._BOOL
 INT8        = legate_core_type_code_t._INT8
 INT16       = legate_core_type_code_t._INT16
@@ -64,10 +66,10 @@ FLOAT32     = legate_core_type_code_t._FLOAT32
 FLOAT64     = legate_core_type_code_t._FLOAT64
 COMPLEX64   = legate_core_type_code_t._COMPLEX64
 COMPLEX128  = legate_core_type_code_t._COMPLEX128
+BINARY      = legate_core_type_code_t._BINARY
 FIXED_ARRAY = legate_core_type_code_t._FIXED_ARRAY
 STRUCT      = legate_core_type_code_t._STRUCT
 STRING      = legate_core_type_code_t._STRING
-INVALID     = legate_core_type_code_t._INVALID
 
 ADD = legate_core_reduction_op_kind_t._ADD
 SUB = legate_core_reduction_op_kind_t._SUB
@@ -125,6 +127,8 @@ cdef extern from "core/type/detail/type_info.h" namespace "legate::detail" nogil
 
     cdef shared_ptr[Type] string_type()
 
+    cdef shared_ptr[Type] binary_type(unsigned int size)
+
     cdef shared_ptr[Type] fixed_array_type(
         shared_ptr[Type] element_type, unsigned int N
     ) except+
@@ -156,6 +160,10 @@ cdef class Dtype:
     @staticmethod
     def string_type() -> Dtype:
         return from_ptr(string_type())
+
+    @staticmethod
+    def binary_type(unsigned size) -> Dtype:
+        return from_ptr(binary_type(size))
 
     @staticmethod
     def fixed_array_type(

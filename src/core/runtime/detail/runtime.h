@@ -63,7 +63,6 @@ class Runtime {
                                   bool* created);
 
  public:
-  uint32_t get_type_uid();
   void record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id);
   int32_t find_reduction_operator(int32_t type_uid, int32_t op_kind) const;
 
@@ -318,7 +317,6 @@ class Runtime {
   std::map<std::string, Library*> libraries_{};
 
  private:
-  uint32_t next_type_uid_;
   std::map<std::pair<int32_t, int32_t>, int32_t> reduction_ops_{};
 
  private:

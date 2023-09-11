@@ -57,6 +57,7 @@ class Type {
    * @brief Enum for type codes
    */
   enum class Code : int32_t {
+    NIL         = NULL_LT,        /*!< Null type */
     BOOL        = BOOL_LT,        /*!< Boolean type */
     INT8        = INT8_LT,        /*!< 8-bit signed integer type */
     INT16       = INT16_LT,       /*!< 16-bit signed integer type */
@@ -71,11 +72,11 @@ class Type {
     FLOAT64     = FLOAT64_LT,     /*!< Double-precision floating point type */
     COMPLEX64   = COMPLEX64_LT,   /*!< Single-precision complex type */
     COMPLEX128  = COMPLEX128_LT,  /*!< Double-precision complex type */
+    BINARY      = BINARY_LT,      /*!< Opaque binary type */
     FIXED_ARRAY = FIXED_ARRAY_LT, /*!< Fixed-size array type */
     STRUCT      = STRUCT_LT,      /*!< Struct type */
     STRING      = STRING_LT,      /*!< String type */
     LIST        = LIST_LT,        /*!< List type */
-    INVALID     = INVALID_LT,     /*!< Invalid type */
   };
 
  public:
@@ -157,6 +158,16 @@ class Type {
    * @param global_op_id Global reduction operator ID
    */
   void record_reduction_operator(int32_t op_kind, int32_t global_op_id) const;
+  /**
+   * @brief Records a reduction operator.
+   *
+   * The global ID of the reduction operator is issued when that operator is registered
+   * to the runtime.
+   *
+   * @param op_kind Reduction operator kind
+   * @param global_op_id Global reduction operator ID
+   */
+  void record_reduction_operator(ReductionOpKind op_kind, int32_t global_op_id) const;
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -301,6 +312,16 @@ Type primitive_type(Type::Code code);
  * @return Type object
  */
 Type string_type();
+
+/**
+ * @ingroup types
+ * @brief Creates an opaque binary type of a given size
+ *
+ * @param size Element size
+ *
+ * @return Type object
+ */
+Type binary_type(uint32_t size);
 
 /**
  * @ingroup types
@@ -490,6 +511,14 @@ Type point_type(int32_t ndim);
  * @return Type object
  */
 Type rect_type(int32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Creates a null type
+ *
+ * @return Type object
+ */
+Type null_type();
 
 /**
  * @ingroup types

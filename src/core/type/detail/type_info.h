@@ -94,6 +94,22 @@ class ExtensionType : public Type {
   const uint32_t uid_;
 };
 
+class BinaryType : public ExtensionType {
+ public:
+  BinaryType(int32_t uid, uint32_t size);
+  uint32_t size() const override { return size_; }
+  uint32_t alignment() const override { return size_; }
+  bool variable_size() const override { return false; }
+  std::string to_string() const override;
+  void pack(BufferBuilder& buffer) const override;
+
+ private:
+  bool equal(const Type& other) const override;
+
+ private:
+  const uint32_t size_;
+};
+
 class FixedArrayType : public ExtensionType {
  public:
   FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, uint32_t N);
@@ -164,6 +180,8 @@ std::shared_ptr<Type> primitive_type(Type::Code code);
 
 std::shared_ptr<Type> string_type();
 
+std::shared_ptr<Type> binary_type(uint32_t size);
+
 std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint32_t N);
 
 std::shared_ptr<Type> struct_type(const std::vector<std::shared_ptr<Type>>& field_types,
@@ -189,6 +207,7 @@ std::shared_ptr<Type> complex64();
 std::shared_ptr<Type> complex128();
 std::shared_ptr<Type> point_type(int32_t ndim);
 std::shared_ptr<Type> rect_type(int32_t ndim);
+std::shared_ptr<Type> null_type();
 bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim);
 bool is_rect_type(const std::shared_ptr<Type>& type, int32_t ndim);
 

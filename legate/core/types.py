@@ -34,6 +34,7 @@ FixedArrayDtype = ext.FixedArrayDtype
 StructDtype = ext.StructDtype
 
 
+null = Dtype.primitive_type(ext.NIL)
 bool_ = Dtype.primitive_type(ext.BOOL)
 int8 = Dtype.primitive_type(ext.INT8)
 int16 = Dtype.primitive_type(ext.INT16)
@@ -49,6 +50,10 @@ float64 = Dtype.primitive_type(ext.FLOAT64)
 complex64 = Dtype.primitive_type(ext.COMPLEX64)
 complex128 = Dtype.primitive_type(ext.COMPLEX128)
 string = Dtype.string_type()
+
+
+def binary_type(size: int) -> Dtype:
+    return Dtype.binary_type(size)
 
 
 def array_type(element_type: Dtype, N: int) -> FixedArrayDtype:

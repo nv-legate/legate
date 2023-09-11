@@ -46,7 +46,7 @@ namespace legate {
  * @brief A template constexpr that converts types to type codes
  */
 template <class>
-PREFIX constexpr Type::Code legate_type_code_of = Type::Code::INVALID;
+PREFIX constexpr Type::Code legate_type_code_of = Type::Code::NIL;
 template <>
 PREFIX constexpr Type::Code legate_type_code_of<__half> = Type::Code::FLOAT16;
 template <>

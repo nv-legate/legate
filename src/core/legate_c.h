@@ -89,13 +89,16 @@ typedef enum legate_core_type_code_t {
   FLOAT64_LT    = LEGION_TYPE_FLOAT64,
   COMPLEX64_LT  = LEGION_TYPE_COMPLEX64,
   COMPLEX128_LT = LEGION_TYPE_COMPLEX128,
+  // Null type
+  NULL_LT,
+  // Opaque binary type
+  BINARY_LT,
   // Compound types
   FIXED_ARRAY_LT,
   STRUCT_LT,
   // Variable size types
   STRING_LT,
   LIST_LT,
-  INVALID_LT = -1,
 } legate_core_type_code_t;
 
 typedef enum legate_core_reduction_op_kind_t {

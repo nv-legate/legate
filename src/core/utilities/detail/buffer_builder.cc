@@ -22,6 +22,7 @@ BufferBuilder::BufferBuilder()
 
 void BufferBuilder::pack_buffer(const void* src, size_t size)
 {
+  if (0 == size) return;
   auto off = buffer_.size();
   buffer_.resize(buffer_.size() + size);
   auto tgt = buffer_.data() + off;

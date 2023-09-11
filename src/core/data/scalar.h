@@ -49,6 +49,10 @@ class Scalar {
 
  public:
   /**
+   * @brief Creates a null scalar
+   */
+  Scalar();
+  /**
    * @brief Creates a shared `Scalar` with an existing allocation. The caller is responsible
    * for passing in a sufficiently big allocation.
    *
@@ -180,6 +184,8 @@ class Scalar {
   friend class Runtime;
   detail::Scalar* impl_{nullptr};
 };
+
+Scalar null();
 
 }  // namespace legate
 

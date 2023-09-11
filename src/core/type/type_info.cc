@@ -55,6 +55,11 @@ void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) cons
   impl_->record_reduction_operator(op_kind, global_op_id);
 }
 
+void Type::record_reduction_operator(ReductionOpKind op_kind, int32_t global_op_id) const
+{
+  impl_->record_reduction_operator(static_cast<int32_t>(op_kind), global_op_id);
+}
+
 int32_t Type::find_reduction_operator(int32_t op_kind) const
 {
   return impl_->find_reduction_operator(op_kind);
@@ -62,7 +67,7 @@ int32_t Type::find_reduction_operator(int32_t op_kind) const
 
 int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
-  return impl_->find_reduction_operator(op_kind);
+  return impl_->find_reduction_operator(static_cast<int32_t>(op_kind));
 }
 
 bool Type::operator==(const Type& other) const { return impl_->equal(*other.impl_); }
@@ -169,9 +174,13 @@ Type complex64() { return Type(detail::complex64()); }
 
 Type complex128() { return Type(detail::complex128()); }
 
+Type binary_type(uint32_t size) { return Type(detail::binary_type(size)); }
+
 Type point_type(int32_t ndim) { return Type(detail::point_type(ndim)); }
 
 Type rect_type(int32_t ndim) { return Type(detail::rect_type(ndim)); }
+
+Type null_type() { return Type(detail::null_type()); }
 
 bool is_point_type(const Type& type, int32_t ndim)
 {

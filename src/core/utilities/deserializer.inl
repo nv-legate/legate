@@ -39,8 +39,9 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
   // this unpack_type call must be in a separate line from the following one because they both
   // read and update the buffer location.
   auto type   = unpack_type();
-  auto result = std::make_unique<detail::Scalar>(type, args_.ptr(), false /*copy*/);
-  args_       = args_.subspan(result->size());
+  auto result = std::make_unique<detail::Scalar>(
+    type, type->code == Type::Code::NIL ? nullptr : args_.ptr(), false /*copy*/);
+  args_ = args_.subspan(result->size());
   return result;
 }
 
@@ -156,21 +157,54 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
       auto type = unpack_type();
       return std::make_shared<detail::ListType>(uid, std::move(type));
     }
-    case Type::Code::BOOL:
-    case Type::Code::INT8:
-    case Type::Code::INT16:
-    case Type::Code::INT32:
-    case Type::Code::INT64:
-    case Type::Code::UINT8:
-    case Type::Code::UINT16:
-    case Type::Code::UINT32:
-    case Type::Code::UINT64:
-    case Type::Code::FLOAT16:
-    case Type::Code::FLOAT32:
-    case Type::Code::FLOAT64:
-    case Type::Code::COMPLEX64:
+    case Type::Code::NIL: {
+      return detail::null_type();
+    }
+    case Type::Code::BOOL: {
+      return detail::bool_();
+    }
+    case Type::Code::INT8: {
+      return detail::int8();
+    }
+    case Type::Code::INT16: {
+      return detail::int16();
+    }
+    case Type::Code::INT32: {
+      return detail::int32();
+    }
+    case Type::Code::INT64: {
+      return detail::int64();
+    }
+    case Type::Code::UINT8: {
+      return detail::uint8();
+    }
+    case Type::Code::UINT16: {
+      return detail::uint16();
+    }
+    case Type::Code::UINT32: {
+      return detail::uint32();
+    }
+    case Type::Code::UINT64: {
+      return detail::uint64();
+    }
+    case Type::Code::FLOAT16: {
+      return detail::float16();
+    }
+    case Type::Code::FLOAT32: {
+      return detail::float32();
+    }
+    case Type::Code::FLOAT64: {
+      return detail::float64();
+    }
+    case Type::Code::COMPLEX64: {
+      return detail::complex64();
+    }
     case Type::Code::COMPLEX128: {
-      return std::make_shared<detail::PrimitiveType>(code);
+      return detail::complex128();
+    }
+    case Type::Code::BINARY: {
+      auto size = unpack<uint32_t>();
+      return detail::binary_type(size);
     }
     case Type::Code::STRING: {
       return std::make_shared<detail::StringType>();

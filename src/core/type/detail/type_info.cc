@@ -10,6 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <atomic>
 #include <numeric>
 #include <unordered_map>
 
@@ -36,6 +37,7 @@ const std::unordered_map<Type::Code, uint32_t> SIZEOF = {
   {Type::Code::FLOAT64, sizeof(legate_type_of<Type::Code::FLOAT64>)},
   {Type::Code::COMPLEX64, sizeof(legate_type_of<Type::Code::COMPLEX64>)},
   {Type::Code::COMPLEX128, sizeof(legate_type_of<Type::Code::COMPLEX128>)},
+  {Type::Code::NIL, 0},
 };
 
 const std::unordered_map<Type::Code, std::string> TYPE_NAMES = {
@@ -54,9 +56,37 @@ const std::unordered_map<Type::Code, std::string> TYPE_NAMES = {
   {Type::Code::COMPLEX64, "complex64"},
   {Type::Code::COMPLEX128, "complex128"},
   {Type::Code::STRING, "string"},
+  {Type::Code::NIL, "null_type"},
 };
 
 const char* _VARIABLE_SIZE_ERROR_MESSAGE = "Variable-size element type cannot be used";
+
+// Some notes about these magic numbers:
+//
+// The numbers are chosen such that UIDs of types are truly unique even in the presence of types
+// with static UIDs derived from their type codes and sizes. Here's the list of static UIDs that
+// each kind of types can take (dynamic UIDs generated off of _BASE_CUSTOM_TYPE_UID are unique by
+// construction):
+//
+// * Primitive types: [0x00, 0x0E]
+// * Binary types: [0x000001, 0x0FFFFF] <+> [0x0F]
+// * Fixed-size array types: [0x01, 0xFF] <+> [0x00, 0x0E]
+// * Point types: [_BASE_POINT_TYPE_UID + 1, _BASE_POINT_TYPE_UID + LEGATE_MAX_DIM]
+// * Rect types: [_BASE_RECT_TYPE_UID + 1, _BASE_RECT_TYPE_UID + LEGATE_MAX_DIM]
+//
+// where the <+> operator is a pairwise concatenation
+constexpr uint32_t _TYPE_CODE_OFFSET     = 8;
+constexpr uint32_t _BASE_POINT_TYPE_UID  = 0x10000000;
+constexpr uint32_t _BASE_RECT_TYPE_UID   = _BASE_POINT_TYPE_UID + LEGATE_MAX_DIM + 1;
+constexpr uint32_t _BASE_CUSTOM_TYPE_UID = _BASE_RECT_TYPE_UID + LEGATE_MAX_DIM + 1;
+// Last byte of a static UID is a type code
+constexpr uint32_t _MAX_BINARY_TYPE_SIZE = 0x0FFFFF00 >> _TYPE_CODE_OFFSET;
+
+uint32_t get_next_uid()
+{
+  static std::atomic<uint32_t> next_uid = _BASE_CUSTOM_TYPE_UID;
+  return next_uid++;
+}
 
 }  // namespace
 
@@ -117,6 +147,21 @@ void PrimitiveType::pack(BufferBuilder& buffer) const
 bool PrimitiveType::equal(const Type& other) const { return code == other.code; }
 
 ExtensionType::ExtensionType(int32_t uid, Type::Code code) : Type(code), uid_(uid) {}
+
+BinaryType::BinaryType(int32_t uid, uint32_t size)
+  : ExtensionType(uid, Type::Code::BINARY), size_(size)
+{
+}
+
+std::string BinaryType::to_string() const { return "binary(" + std::to_string(size_) + ")"; }
+
+void BinaryType::pack(BufferBuilder& buffer) const
+{
+  buffer.pack<int32_t>(static_cast<int32_t>(code));
+  buffer.pack<uint32_t>(size_);
+}
+
+bool BinaryType::equal(const Type& other) const { return uid_ == other.uid(); }
 
 FixedArrayType::FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
   : ExtensionType(uid, Type::Code::FIXED_ARRAY),
@@ -316,6 +361,19 @@ std::shared_ptr<Type> string_type()
   return type;
 }
 
+std::shared_ptr<Type> binary_type(uint32_t size)
+{
+  if (size == 0) {
+    throw std::out_of_range("Size for an opaque binary type must be greater than 0");
+  }
+  if (size > _MAX_BINARY_TYPE_SIZE) {
+    throw std::out_of_range("Maximum size for opaque binary types is " +
+                            std::to_string(_MAX_BINARY_TYPE_SIZE));
+  }
+  int32_t uid = static_cast<int32_t>(Type::Code::BINARY) | (size << _TYPE_CODE_OFFSET);
+  return std::make_shared<BinaryType>(uid, size);
+}
+
 std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint32_t N)
 {
   if (N == 0) { throw std::out_of_range("Size of array must be greater than 0"); }
@@ -325,8 +383,8 @@ std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint3
   // | length | element type code |
   // +--------+-------------------+
   int32_t uid = [&N](const Type& elem_type) {
-    if (!elem_type.is_primitive() || N > 0xFFU) return Runtime::get_runtime()->get_type_uid();
-    return static_cast<int32_t>(elem_type.code) | N << 8;
+    if (!elem_type.is_primitive() || N > 0xFFU) return get_next_uid();
+    return static_cast<int32_t>(elem_type.code) | (N << _TYPE_CODE_OFFSET);
   }(*element_type);
   return std::make_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
@@ -334,19 +392,17 @@ std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint3
 std::shared_ptr<Type> struct_type(const std::vector<std::shared_ptr<Type>>& field_types, bool align)
 {
   return std::make_shared<StructType>(
-    Runtime::get_runtime()->get_type_uid(), std::vector<std::shared_ptr<Type>>(field_types), align);
+    get_next_uid(), std::vector<std::shared_ptr<Type>>(field_types), align);
 }
 
 std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>>&& field_types, bool align)
 {
-  return std::make_shared<StructType>(
-    Runtime::get_runtime()->get_type_uid(), std::move(field_types), align);
+  return std::make_shared<StructType>(get_next_uid(), std::move(field_types), align);
 }
 
 std::shared_ptr<Type> list_type(std::shared_ptr<Type> element_type)
 {
-  return std::make_shared<ListType>(Runtime::get_runtime()->get_type_uid(),
-                                    std::move(element_type));
+  return std::make_shared<ListType>(get_next_uid(), std::move(element_type));
 }
 
 std::shared_ptr<Type> bool_()
@@ -433,13 +489,6 @@ std::shared_ptr<Type> complex128()
   return result;
 }
 
-namespace {
-
-constexpr int32_t POINT_UID_BASE = static_cast<int32_t>(Type::Code::INVALID);
-constexpr int32_t RECT_UID_BASE  = POINT_UID_BASE + LEGATE_MAX_DIM + 1;
-
-}  // namespace
-
 std::shared_ptr<Type> point_type(int32_t ndim)
 {
   static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
@@ -447,7 +496,8 @@ std::shared_ptr<Type> point_type(int32_t ndim)
   if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
     throw std::out_of_range(std::to_string(ndim) + " is not a supported number of dimensions");
   if (nullptr == cache[ndim]) {
-    cache[ndim] = std::make_shared<detail::FixedArrayType>(POINT_UID_BASE + ndim, int64(), ndim);
+    cache[ndim] =
+      std::make_shared<detail::FixedArrayType>(_BASE_POINT_TYPE_UID + ndim, int64(), ndim);
   }
   return cache[ndim];
 }
@@ -463,9 +513,15 @@ std::shared_ptr<Type> rect_type(int32_t ndim)
     auto pt_type = point_type(ndim);
     std::vector<std::shared_ptr<detail::Type>> field_types{pt_type, pt_type};
     cache[ndim] = std::make_shared<detail::StructType>(
-      RECT_UID_BASE + ndim, std::move(field_types), true /*align*/);
+      _BASE_RECT_TYPE_UID + ndim, std::move(field_types), true /*align*/);
   }
   return cache[ndim];
+}
+
+std::shared_ptr<Type> null_type()
+{
+  static auto result = detail::primitive_type(Type::Code::NIL);
+  return result;
 }
 
 bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim)

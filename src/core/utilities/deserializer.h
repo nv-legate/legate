@@ -49,7 +49,7 @@ class BaseDeserializer {
   }
 
  public:
-  template <typename T, std::enable_if_t<legate_type_code_of<T> != Type::Code::INVALID>* = nullptr>
+  template <typename T, std::enable_if_t<legate_type_code_of<T> != Type::Code::NIL>* = nullptr>
   void _unpack(T& value)
   {
     value = *reinterpret_cast<const T*>(args_.ptr());

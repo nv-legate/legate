@@ -78,7 +78,13 @@ class Permission(IntEnum):
 
 Serializer = Callable[[BufferBuilder, Any], None]
 
+
+def ignore(_: BufferBuilder, __: Any) -> None:
+    pass
+
+
 _SERIALIZERS: dict[int, Serializer] = {
+    ty.null.uid: ignore,
     ty.bool_.uid: BufferBuilder.pack_bool,
     ty.int8.uid: BufferBuilder.pack_8bit_int,
     ty.int16.uid: BufferBuilder.pack_16bit_int,

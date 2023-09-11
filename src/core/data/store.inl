@@ -225,7 +225,7 @@ void Store::check_accessor_type() const
   auto in_type = legate_type_code_of<T>;
   if (in_type == this->code()) return;
   // Test exact match for primitive types
-  if (in_type != Type::Code::INVALID) {
+  if (in_type != Type::Code::NIL) {
     throw std::invalid_argument(
       "Type mismatch: " + primitive_type(in_type).to_string() + " accessor to a " +
       type().to_string() +

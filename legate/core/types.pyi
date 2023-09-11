@@ -27,6 +27,8 @@ class ReductionOp:
 
 class Dtype:
     @staticmethod
+    def binary_type(size: int) -> Dtype: ...
+    @staticmethod
     def fixed_array_type(element_type: Dtype, N: int) -> Dtype: ...
     @staticmethod
     def struct_type(field_types: list[Dtype], align: bool) -> Dtype: ...
@@ -59,6 +61,7 @@ class StructDtype(Dtype):
     def num_fields(self) -> int: ...
     def field_type(self, field_idx: int) -> Dtype: ...
 
+null: Dtype
 bool_: Dtype
 int8: Dtype
 int16: Dtype
@@ -75,6 +78,7 @@ complex64: Dtype
 complex128: Dtype
 string: Dtype
 
+def binary_type(size: int) -> Dtype: ...
 def array_type(element_type: Dtype, N: int) -> FixedArrayDtype: ...
 def struct_type(
     field_types: list[Dtype], align: bool = False

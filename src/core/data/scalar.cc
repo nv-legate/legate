@@ -21,6 +21,8 @@ Scalar::Scalar(const Scalar& other) : impl_(new detail::Scalar(*other.impl_)) {}
 
 Scalar::Scalar(Scalar&& other) : impl_(other.impl_) { other.impl_ = nullptr; }
 
+Scalar::Scalar() : impl_(create_impl(null_type(), nullptr, false)) {}
+
 Scalar::~Scalar() { delete impl_; }
 
 Scalar::Scalar(Type type, const void* data, bool copy) : impl_(create_impl(type, data, copy)) {}
@@ -43,5 +45,7 @@ const void* Scalar::ptr() const { return impl_->data(); }
 {
   return new detail::Scalar(type.impl(), data, copy);
 }
+
+Scalar null() { return Scalar(); }
 
 }  // namespace legate

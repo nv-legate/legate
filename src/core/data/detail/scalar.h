@@ -35,7 +35,7 @@ class Scalar {
     static_assert(legate_type_code_of<T> != Type::Code::FIXED_ARRAY);
     static_assert(legate_type_code_of<T> != Type::Code::STRUCT);
     static_assert(legate_type_code_of<T> != Type::Code::STRING);
-    static_assert(legate_type_code_of<T> != Type::Code::INVALID);
+    static_assert(legate_type_code_of<T> != Type::Code::NIL);
     data_ = copy_data(&value, sizeof(T));
   }
 

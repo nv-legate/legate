@@ -423,7 +423,11 @@ class Task(TaskProtocol):
                 raise TypeError(f"Unsupported type: {dtype}")
             if not isinstance(value, (tuple, Shape)):
                 raise ValueError(f"{value} is not a valid scalar")
-            sanitized = ty.array_type(dtype[0], len(value))
+            sanitized = (
+                ty.array_type(dtype[0], len(value))
+                if len(value) > 0
+                else ty.null
+            )
         else:
             raise TypeError(f"Unsupported type: {dtype}")
 

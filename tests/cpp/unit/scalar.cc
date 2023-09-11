@@ -39,12 +39,22 @@ struct PaddingStructData {
   bool bool_data;
   int32_t int32_data;
   uint64_t uint64_data;
+  bool operator==(const PaddingStructData& other) const
+  {
+    return bool_data == other.bool_data && int32_data == other.int32_data &&
+           uint64_data == other.uint64_data;
+  }
 };
 
 struct __attribute__((packed)) NoPaddingStructData {
   bool bool_data;
   int32_t int32_data;
   uint64_t uint64_data;
+  bool operator==(const NoPaddingStructData& other) const
+  {
+    return bool_data == other.bool_data && int32_data == other.int32_data &&
+           uint64_data == other.uint64_data;
+  }
 };
 
 template <int32_t DIM>
@@ -103,6 +113,19 @@ void check_type(T value, legate::Type type)
     EXPECT_EQ(scalar.values<T>().size(), 1);
     EXPECT_NE(scalar.ptr(), nullptr);
   }
+}
+
+template <typename T>
+void check_binary_scalar(T& value)
+{
+  legate::Scalar scalar(value, legate::binary_type(sizeof(T)));
+  EXPECT_EQ(scalar.type().size(), sizeof(T));
+  EXPECT_NE(scalar.ptr(), nullptr);
+
+  EXPECT_EQ(value, scalar.value<T>());
+  auto actual = scalar.values<T>();
+  EXPECT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], value);
 }
 
 template <typename T>
@@ -295,15 +318,21 @@ TEST(ScalarUnit, CreateWithValue)
   check_type(COMPLEX_FLOAT_VALUE, legate::complex64());
   check_type(COMPLEX_DOUBLE_VALUE, legate::complex128());
 
-  // Invalid type
-  // Note: test fails
-  // Expected: legate::Scalar(BOOL_VALUE, legate::primitive_type(legate::Type::Code::INVALID))
-  // throws an exception of type std::invalid_argument. Actual: it throws std::out_of_range with
-  // description "_Map_base::at". EXPECT_THROW(legate::Scalar(BOOL_VALUE,
-  // legate::primitive_type(legate::Type::Code::INVALID)), std::invalid_argument);
-
   // Size mismatch
   EXPECT_THROW(legate::Scalar(FLOAT16_VALUE, legate::float32()), std::invalid_argument);
+}
+
+TEST(ScalarUnit, CreateBinary)
+{
+  {
+    PaddingStructData value = {BOOL_VALUE, INT32_VALUE, UINT64_VALUE};
+    check_binary_scalar(value);
+  }
+
+  {
+    NoPaddingStructData value = {BOOL_VALUE, INT32_VALUE, UINT64_VALUE};
+    check_binary_scalar(value);
+  }
 }
 
 TEST(ScalarUnit, CreateWithVector)
@@ -355,13 +384,13 @@ TEST(ScalarUnit, CreateWithStructType)
   // with struct padding
   {
     PaddingStructData struct_data = {BOOL_VALUE, INT32_VALUE, UINT64_VALUE};
-    check_struct_type_scalar<PaddingStructData>(struct_data, true);
+    check_struct_type_scalar(struct_data, true);
   }
 
   // without struct padding
   {
     NoPaddingStructData struct_data = {BOOL_VALUE, INT32_VALUE, UINT64_VALUE};
-    check_struct_type_scalar<NoPaddingStructData>(struct_data, false);
+    check_struct_type_scalar(struct_data, false);
   }
 }
 

@@ -39,7 +39,7 @@ inline constexpr legate::Type::Code canonical_type_code_of() noexcept
     static_assert(ret != Type::Code::FIXED_ARRAY);
     static_assert(ret != Type::Code::STRUCT);
     static_assert(ret != Type::Code::STRING);
-    static_assert(ret != Type::Code::INVALID);
+    static_assert(ret != Type::Code::NIL);
     return ret;
   }
 }
@@ -69,8 +69,7 @@ Scalar::Scalar(T value) : Scalar{detail::canonical_value_of(std::move(value)), p
 template <typename T>
 Scalar::Scalar(T value, Type type) : impl_(create_impl(type, &value, true))
 {
-  if (type.code() == Type::Code::INVALID)
-    throw std::invalid_argument("Invalid type cannot be used");
+  if (type.code() == Type::Code::NIL) throw std::invalid_argument("Null type cannot be used");
   if (type.size() != sizeof(T))
     throw std::invalid_argument("Size of the value doesn't match with the type");
 }
@@ -148,6 +147,8 @@ Span<const VAL> Scalar::values() const
     auto len          = *static_cast<const uint32_t*>(data);
     const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
     return Span<const VAL>(reinterpret_cast<const VAL*>(begin), len);
+  } else if (ty.code() == Type::Code::NIL) {
+    return Span<const VAL>(nullptr, 0);
   } else {
     if (sizeof(VAL) != ty.size())
       throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
