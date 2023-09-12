@@ -64,7 +64,7 @@ std::string NoPartition::to_string() const { return "NoPartition"; }
 
 Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets)
   : Partition(),
-    disjoint_(true),
+    overlapped_(false),
     tile_shape_(std::move(tile_shape)),
     color_shape_(std::move(color_shape)),
     offsets_(std::move(offsets)),
@@ -77,12 +77,15 @@ Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets
 
 Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets, Shape&& strides)
   : Partition(),
-    disjoint_(!(strides < tile_shape)),
+    overlapped_(strides < tile_shape),
     tile_shape_(std::move(tile_shape)),
     color_shape_(std::move(color_shape)),
     offsets_(std::move(offsets)),
     strides_(std::move(strides))
 {
+  if (!overlapped_) {
+    throw std::invalid_argument("This constructor must be called only for overlapped tiling");
+  }
   if (offsets_.empty()) offsets_ = tuple<int64_t>(tile_shape_.size(), 0);
   assert(tile_shape_.size() == color_shape_.size());
   assert(tile_shape_.size() == offsets_.size());
@@ -91,7 +94,7 @@ Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets
 bool Tiling::operator==(const Tiling& other) const
 {
   return tile_shape_ == other.tile_shape_ && color_shape_ == other.color_shape_ &&
-         offsets_ == other.offsets_;
+         offsets_ == other.offsets_ && strides_ == other.strides_;
 }
 
 bool Tiling::operator<(const Tiling& other) const
@@ -105,6 +108,10 @@ bool Tiling::operator<(const Tiling& other) const
   else if (other.color_shape_ < color_shape_)
     return false;
   if (offsets_ < other.offsets_)
+    return true;
+  else if (other.offsets_ < offsets_)
+    return false;
+  if (strides_ < other.strides_)
     return true;
   else
     return false;
@@ -124,7 +131,7 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
 
   for (uint32_t dim = 0; dim < ndim; ++dim) {
     int64_t my_lo = offsets_[dim];
-    int64_t my_hi = my_lo + static_cast<int64_t>(tile_shape_[dim] * color_shape_[dim]);
+    int64_t my_hi = my_lo + static_cast<int64_t>(strides_[dim] * color_shape_[dim]);
     if (static_cast<int64_t>(storage_offs[dim]) < my_lo &&
         my_hi < static_cast<int64_t>(storage_offs[dim] + storage_exts[dim]))
       return false;
@@ -136,7 +143,7 @@ bool Tiling::is_disjoint_for(const Domain* launch_domain) const
 {
   // TODO: The check really should be that every two points from the launch domain are mapped
   // to two different colors
-  return disjoint_ &&
+  return !overlapped_ &&
          (nullptr == launch_domain || launch_domain->get_volume() <= color_shape_.volume());
 }
 
@@ -226,7 +233,7 @@ Shape Tiling::get_child_extents(const Shape& extents, const Shape& color)
 Shape Tiling::get_child_offsets(const Shape& color)
 {
   return apply([](size_t a, int64_t b) { return static_cast<size_t>(static_cast<int64_t>(a) + b); },
-               tile_shape_ * color,
+               strides_ * color,
                offsets_);
 }
 

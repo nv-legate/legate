@@ -81,6 +81,14 @@ Scalar::Scalar(const std::vector<T>& values)
 {
 }
 
+template <typename T>
+Scalar::Scalar(const tuple<T>& values)
+  : impl_(create_impl(fixed_array_type(primitive_type(legate_type_code_of<T>), values.size()),
+                      values.data().data(),
+                      true))
+{
+}
+
 template <int32_t DIM>
 Scalar::Scalar(const Point<DIM>& point) : impl_(create_impl(point_type(DIM), &point, true))
 {

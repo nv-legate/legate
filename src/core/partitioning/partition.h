@@ -164,7 +164,7 @@ class Tiling : public Partition {
   Shape get_child_offsets(const Shape& color);
 
  private:
-  bool disjoint_;
+  bool overlapped_;
   Shape tile_shape_;
   Shape color_shape_;
   tuple<int64_t> offsets_;

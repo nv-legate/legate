@@ -14,6 +14,7 @@
 
 #include "core/type/type_traits.h"
 #include "core/utilities/span.h"
+#include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
 /**
@@ -87,15 +88,22 @@ class Scalar {
    * @param string A string to create a `Scalar` with
    */
   Scalar(const std::string& string);
-
   /**
-   * @brief Creates an owned scalar from a tuple of scalars. The values in the input vector
+   * @brief Creates an owned scalar from a vector of scalars. The values in the input vector
    * will be copied.
    *
-   * @param values A vector that contains elements of a tuple
+   * @param values Values to create a scalar with in a vector
    */
   template <typename T>
   Scalar(const std::vector<T>& values);
+  /**
+   * @brief Creates an owned scalar from a tuple of scalars. The values in the input tuple
+   * will be copied.
+   *
+   * @param values Values to create a scalar with in a tuple
+   */
+  template <typename T>
+  Scalar(const tuple<T>& values);
 
  public:
   /**
