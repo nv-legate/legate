@@ -184,6 +184,32 @@ void test_alignment_transformed()
   launch_tester(store1.delinearize(0, {10, 10}), store4);
 }
 
+void test_redundant_alignment()
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+
+  const std::vector<size_t> extents = {10};
+  auto store1                       = runtime->create_store(extents, legate::int64());
+  auto store2                       = runtime->create_store(extents, legate::int64());
+  auto store3                       = runtime->create_store(extents, legate::int64());
+
+  auto task  = runtime->create_task(context, ALIGNMENT_TESTER + extents.size());
+  auto part1 = task.add_output(store1);
+  auto part2 = task.add_output(store2);
+  auto part3 = task.add_output(store3);
+
+  task.add_constraint(legate::align(part1, part2));
+  task.add_constraint(legate::align(part2, part3));
+
+  // Redundant alignments
+  task.add_constraint(legate::align(part1, part2));
+  task.add_constraint(legate::align(part1, part3));
+  task.add_constraint(legate::align(part2, part1));
+
+  runtime->submit(std::move(task));
+}
+
 void test_invalid_alignment()
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -215,6 +241,12 @@ TEST(Alignment, WithTransform)
 {
   legate::Core::perform_registration<prepare>();
   test_alignment_transformed();
+}
+
+TEST(Alignment, Redundant)
+{
+  legate::Core::perform_registration<prepare>();
+  test_redundant_alignment();
 }
 
 TEST(Alignment, Invalid)

@@ -36,6 +36,8 @@ struct UnionFindEntry {
 
   UnionFindEntry* unify(UnionFindEntry* other)
   {
+    if (this == other) return this;
+
     UnionFindEntry* self = this;
     if (self->size < other->size) std::swap(self, other);
 
