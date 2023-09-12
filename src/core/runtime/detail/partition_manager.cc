@@ -78,9 +78,9 @@ Shape PartitionManager::compute_launch_shape(const mapping::Machine& machine,
 
   // Figure out how many shards we can make with this array
   int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
-  assert(max_pieces > 0);
+  assert(volume == 0 || max_pieces > 0);
   // If we can only make one piece return that now
-  if (1 == max_pieces) return {};
+  if (max_pieces <= 1) return {};
 
   // Otherwise we need to compute it ourselves
   // TODO: a better heuristic here.
