@@ -122,10 +122,36 @@ Constraint image(Variable var_function, Variable var_range);
  * @param factors Scaling factors
  * @param var_smaller Partition symbol for the smaller store (i.e., the one whose extents are
  * scaled)
- * @param var_bigger Partition symbol of the bigger store
+ * @param var_bigger Partition symbol for the bigger store
  *
  * @return Scaling constraint
  */
 Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger);
+
+/**
+ * @ingroup partitioning
+ * @brief Creates a bloating constraint between partitions
+ *
+ * If two stores `A` and `B` are constrained by a bloating constraint
+ *
+ *   `legate::bloat(pA, pB, L, H)`
+ *
+ * where `pA` and `pB ` are partition symbols for `A` and `B`, respectively, `A` and `B` will be
+ * partitioned such that each pair of sub-stores `Ak` and `Bk` satisfy the following property:
+ *
+ * @f$ \forall p \in \mathit{dom}(\mathtt{Ak}). \forall \delta \in [-\mathtt{L}, \mathtt{H}]. @f$
+ * @f$ p + \delta \in \mathit{dom}(\mathtt{Bk}) \lor p + \delta \not \in \mathit{dom}(\mathtt{B})@f$
+ *
+ * @param var_source Partition symbol for the source store
+ * @param var_bloat Partition symbol for the target store
+ * @param low_offsets Offsets to bloat towards the negative direction
+ * @param high_offsets Offsets to bloat towards the positive direction
+ *
+ * @return Bloating constraint
+ */
+Constraint bloat(Variable var_source,
+                 Variable var_bloat,
+                 const Shape& low_offsets,
+                 const Shape& high_offsets);
 
 }  // namespace legate

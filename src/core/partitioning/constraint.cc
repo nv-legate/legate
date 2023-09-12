@@ -45,4 +45,13 @@ Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger
   return Constraint(detail::scale(factors, var_smaller.impl(), var_bigger.impl()).release());
 }
 
+Constraint bloat(Variable var_source,
+                 Variable var_bloat,
+                 const Shape& low_offsets,
+                 const Shape& high_offsets)
+{
+  return Constraint(
+    detail::bloat(var_source.impl(), var_bloat.impl(), low_offsets, high_offsets).release());
+}
+
 }  // namespace legate

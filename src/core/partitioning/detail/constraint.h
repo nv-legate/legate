@@ -26,6 +26,7 @@ class Operation;
 class Strategy;
 
 class Alignment;
+class BloatConstraint;
 class Broadcast;
 struct Constraint;
 class ImageConstraint;
@@ -118,6 +119,7 @@ struct Constraint {
     BROADCAST = 1,
     IMAGE     = 2,
     SCALE     = 3,
+    BLOAT     = 4,
   };
   virtual ~Constraint() {}
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
@@ -128,6 +130,7 @@ struct Constraint {
   virtual const Broadcast* as_broadcast() const                                              = 0;
   virtual const ImageConstraint* as_image_constraint() const                                 = 0;
   virtual const ScaleConstraint* as_scale_constraint() const                                 = 0;
+  virtual const BloatConstraint* as_bloat_constraint() const                                 = 0;
 };
 
 class Alignment : public Constraint {
@@ -151,6 +154,7 @@ class Alignment : public Constraint {
   const Broadcast* as_broadcast() const override { return nullptr; }
   const ImageConstraint* as_image_constraint() const override { return nullptr; }
   const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
+  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
 
  public:
   const Variable* lhs() const { return lhs_; }
@@ -185,6 +189,7 @@ class Broadcast : public Constraint {
   const Broadcast* as_broadcast() const override { return this; }
   const ImageConstraint* as_image_constraint() const override { return nullptr; }
   const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
+  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
 
  public:
   const Variable* variable() const { return variable_; }
@@ -216,6 +221,7 @@ class ImageConstraint : public Constraint {
   const Broadcast* as_broadcast() const override { return nullptr; }
   const ImageConstraint* as_image_constraint() const override { return this; }
   const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
+  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
 
  public:
   const Variable* var_function() const { return var_function_; }
@@ -250,6 +256,7 @@ class ScaleConstraint : public Constraint {
   const Broadcast* as_broadcast() const override { return nullptr; }
   const ImageConstraint* as_image_constraint() const override { return nullptr; }
   const ScaleConstraint* as_scale_constraint() const override { return this; }
+  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
 
  public:
   const Variable* var_smaller() const { return var_smaller_; }
@@ -259,9 +266,49 @@ class ScaleConstraint : public Constraint {
   std::unique_ptr<Partition> resolve(const Strategy& strategy) const;
 
  private:
-  Shape factors_;
+  const Shape factors_;
   const Variable* var_smaller_;
   const Variable* var_bigger_;
+};
+
+class BloatConstraint : public Constraint {
+ public:
+  BloatConstraint(const Variable* var_source,
+                  const Variable* var_bloat,
+                  const Shape& low_offsets,
+                  const Shape& high_offsets);
+
+ public:
+  Kind kind() const override { return Kind::BLOAT; }
+
+ public:
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+
+ public:
+  void validate() const override;
+
+ public:
+  std::string to_string() const override;
+
+ public:
+  const Alignment* as_alignment() const override { return nullptr; }
+  const Broadcast* as_broadcast() const override { return nullptr; }
+  const ImageConstraint* as_image_constraint() const override { return nullptr; }
+  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
+  const BloatConstraint* as_bloat_constraint() const override { return this; }
+
+ public:
+  const Variable* var_source() const { return var_source_; }
+  const Variable* var_bloat() const { return var_bloat_; }
+
+ public:
+  std::unique_ptr<Partition> resolve(const Strategy& strategy) const;
+
+ private:
+  const Variable* var_source_;
+  const Variable* var_bloat_;
+  const Shape low_offsets_;
+  const Shape high_offsets_;
 };
 
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
@@ -273,5 +320,10 @@ std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Varia
 std::unique_ptr<ScaleConstraint> scale(const Shape& factors,
                                        const Variable* var_smaller,
                                        const Variable* var_bigger);
+
+std::unique_ptr<BloatConstraint> bloat(const Variable* var_source,
+                                       const Variable* var_bloat,
+                                       const Shape& low_offsets,
+                                       const Shape& high_offsets);
 
 }  // namespace legate::detail

@@ -54,7 +54,9 @@ struct Partition {
   virtual bool is_convertible() const                                         = 0;
 
  public:
-  virtual std::unique_ptr<Partition> scale(const Shape& factors) const = 0;
+  virtual std::unique_ptr<Partition> scale(const Shape& factors) const      = 0;
+  virtual std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                           const Shape& high_offsets) const = 0;
 
  public:
   virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
@@ -89,6 +91,8 @@ class NoPartition : public Partition {
 
  public:
   std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                   const Shape& high_offsets) const override;
 
  public:
   Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
@@ -114,6 +118,7 @@ class NoPartition : public Partition {
 class Tiling : public Partition {
  public:
   Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets);
+  Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets, Shape&& strides);
 
  public:
   Tiling(const Tiling&) = default;
@@ -133,6 +138,8 @@ class Tiling : public Partition {
 
  public:
   std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                   const Shape& high_offsets) const override;
 
  public:
   Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
@@ -157,9 +164,11 @@ class Tiling : public Partition {
   Shape get_child_offsets(const Shape& color);
 
  private:
+  bool disjoint_;
   Shape tile_shape_;
   Shape color_shape_;
   tuple<int64_t> offsets_;
+  Shape strides_;
 };
 
 class Weighted : public Partition {
@@ -184,6 +193,8 @@ class Weighted : public Partition {
 
  public:
   std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                   const Shape& high_offsets) const override;
 
  public:
   Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
@@ -229,6 +240,8 @@ class Image : public Partition {
 
  public:
   std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                   const Shape& high_offsets) const override;
 
  public:
   Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
@@ -256,6 +269,11 @@ std::unique_ptr<NoPartition> create_no_partition();
 std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
                                       Shape&& color_shape,
                                       tuple<int64_t>&& offsets = {});
+
+std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
+                                      Shape&& color_shape,
+                                      tuple<int64_t>&& offsets,
+                                      Shape&& strides);
 
 std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
                                           const Domain& color_domain);

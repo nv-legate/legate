@@ -162,6 +162,9 @@ void ConstraintSolver::solve_constraints()
   auto handle_scale_constraint = [&](const ScaleConstraint* scale_constraint) {
     is_dependent_[*scale_constraint->var_bigger()] = true;
   };
+  auto handle_bloat_constraint = [&](const BloatConstraint* bloat_constraint) {
+    is_dependent_[*bloat_constraint->var_bloat()] = true;
+  };
 
   // Reflect each constraint to the solver state
   for (auto& constraint : constraints_) {
@@ -181,6 +184,10 @@ void ConstraintSolver::solve_constraints()
       }
       case Constraint::Kind::SCALE: {
         handle_scale_constraint(constraint->as_scale_constraint());
+        break;
+      }
+      case Constraint::Kind::BLOAT: {
+        handle_bloat_constraint(constraint->as_bloat_constraint());
         break;
       }
     }
@@ -209,6 +216,11 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
     strategy.insert(scale_constraint->var_bigger(), std::move(scaled));
   };
 
+  auto solve_bloat_constraint = [&strategy](const BloatConstraint* bloat_constraint) {
+    auto bloated = bloat_constraint->resolve(strategy);
+    strategy.insert(bloat_constraint->var_bloat(), std::move(bloated));
+  };
+
   for (auto& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::IMAGE: {
@@ -217,6 +229,10 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
       }
       case Constraint::Kind::SCALE: {
         solve_scale_constraint(constraint->as_scale_constraint());
+        break;
+      }
+      case Constraint::Kind::BLOAT: {
+        solve_bloat_constraint(constraint->as_bloat_constraint());
         break;
       }
       default: {

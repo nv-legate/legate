@@ -39,6 +39,12 @@ std::unique_ptr<Partition> NoPartition::scale(const Shape& factors) const
   return create_no_partition();
 }
 
+std::unique_ptr<Partition> NoPartition::bloat(const Shape& low_offsts,
+                                              const Shape& high_offsets) const
+{
+  return create_no_partition();
+}
+
 Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion region, bool complete) const
 {
   return Legion::LogicalPartition::NO_PART;
@@ -58,9 +64,24 @@ std::string NoPartition::to_string() const { return "NoPartition"; }
 
 Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets)
   : Partition(),
+    disjoint_(true),
     tile_shape_(std::move(tile_shape)),
     color_shape_(std::move(color_shape)),
-    offsets_(std::move(offsets))
+    offsets_(std::move(offsets)),
+    strides_(tile_shape_)
+{
+  if (offsets_.empty()) offsets_ = tuple<int64_t>(tile_shape_.size(), 0);
+  assert(tile_shape_.size() == color_shape_.size());
+  assert(tile_shape_.size() == offsets_.size());
+}
+
+Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets, Shape&& strides)
+  : Partition(),
+    disjoint_(!(strides < tile_shape)),
+    tile_shape_(std::move(tile_shape)),
+    color_shape_(std::move(color_shape)),
+    offsets_(std::move(offsets)),
+    strides_(std::move(strides))
 {
   if (offsets_.empty()) offsets_ = tuple<int64_t>(tile_shape_.size(), 0);
   assert(tile_shape_.size() == color_shape_.size());
@@ -115,7 +136,8 @@ bool Tiling::is_disjoint_for(const Domain* launch_domain) const
 {
   // TODO: The check really should be that every two points from the launch domain are mapped
   // to two different colors
-  return nullptr == launch_domain || launch_domain->get_volume() <= color_shape_.volume();
+  return disjoint_ &&
+         (nullptr == launch_domain || launch_domain->get_volume() <= color_shape_.volume());
 }
 
 bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
@@ -133,6 +155,17 @@ std::unique_ptr<Partition> Tiling::scale(const Shape& factors) const
   return create_tiling(tile_shape_ * factors, Shape(color_shape_), std::move(new_offsets));
 }
 
+std::unique_ptr<Partition> Tiling::bloat(const Shape& low_offsets, const Shape& high_offsets) const
+{
+  auto tile_shape = tile_shape_ + low_offsets + high_offsets;
+  auto offsets    = apply([](int64_t off, size_t diff) { return off - static_cast<int64_t>(diff); },
+                       offsets_,
+                       low_offsets);
+
+  return create_tiling(
+    std::move(tile_shape), Shape(color_shape_), std::move(offsets), Shape(tile_shape_));
+}
+
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
 {
   auto index_space     = region.get_index_space();
@@ -148,7 +181,7 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
   transform.m = ndim;
   transform.n = ndim;
   for (int32_t idx = 0; idx < ndim * ndim; ++idx) transform.matrix[idx] = 0;
-  for (int32_t idx = 0; idx < ndim; ++idx) transform.matrix[ndim * idx + idx] = tile_shape_[idx];
+  for (int32_t idx = 0; idx < ndim; ++idx) transform.matrix[ndim * idx + idx] = strides_[idx];
 
   auto extent = to_domain(tile_shape_);
   for (int32_t idx = 0; idx < ndim; ++idx) {
@@ -177,7 +210,7 @@ std::string Tiling::to_string() const
 {
   std::stringstream ss;
   ss << "Tiling(tile:" << tile_shape_ << ",colors:" << color_shape_ << ",offset:" << offsets_
-     << ")";
+     << ",strides:" << strides_ << ")";
   return std::move(ss).str();
 }
 
@@ -233,6 +266,12 @@ bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
 }
 
 std::unique_ptr<Partition> Weighted::scale(const Shape& factors) const
+{
+  throw std::runtime_error("Not implemented");
+  return nullptr;
+}
+
+std::unique_ptr<Partition> Weighted::bloat(const Shape& low_offsts, const Shape& high_offsets) const
 {
   throw std::runtime_error("Not implemented");
   return nullptr;
@@ -318,6 +357,12 @@ std::unique_ptr<Partition> Image::scale(const Shape& factors) const
   return nullptr;
 }
 
+std::unique_ptr<Partition> Image::bloat(const Shape& low_offsts, const Shape& high_offsets) const
+{
+  throw std::runtime_error("Not implemented");
+  return nullptr;
+}
+
 Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool complete) const
 {
   if (!has_launch_domain()) { return Legion::LogicalPartition::NO_PART; }
@@ -374,6 +419,15 @@ std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
 {
   return std::make_unique<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets));
+}
+
+std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
+                                      Shape&& color_shape,
+                                      tuple<int64_t>&& offsets,
+                                      Shape&& strides)
+{
+  return std::make_unique<Tiling>(
+    std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));
 }
 
 std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,

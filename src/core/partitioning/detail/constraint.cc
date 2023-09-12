@@ -192,6 +192,53 @@ std::unique_ptr<Partition> ScaleConstraint::resolve(const detail::Strategy& stra
   return src_part->scale(factors_);
 }
 
+BloatConstraint::BloatConstraint(const Variable* var_source,
+                                 const Variable* var_bloat,
+                                 const Shape& low_offsets,
+                                 const Shape& high_offsets)
+  : var_source_(var_source),
+    var_bloat_(var_bloat),
+    low_offsets_(low_offsets),
+    high_offsets_(high_offsets)
+{
+}
+
+void BloatConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
+{
+  partition_symbols.push_back(var_source_);
+  partition_symbols.push_back(var_bloat_);
+}
+
+void BloatConstraint::validate() const
+{
+  auto source = var_source_->operation()->find_store(var_source_);
+  auto bloat  = var_bloat_->operation()->find_store(var_bloat_);
+
+  if (source->dim() != bloat->dim()) {
+    throw std::invalid_argument(
+      "Bloating constraint requires the stores to have the same number of dimensions");
+  }
+
+  if (source->dim() != low_offsets_.size() || source->dim() != high_offsets_.size()) {
+    throw std::invalid_argument(
+      "Bloating constraint requires the number of offsets to match the number of dimensions");
+  }
+}
+
+std::string BloatConstraint::to_string() const
+{
+  std::stringstream ss;
+  ss << "BloatConstraint(" << var_source_->to_string() << ", " << var_bloat_->to_string()
+     << ", low: " << low_offsets_ << ", high: " << high_offsets_ << ")";
+  return std::move(ss).str();
+}
+
+std::unique_ptr<Partition> BloatConstraint::resolve(const detail::Strategy& strategy) const
+{
+  auto src_part = strategy[var_source()];
+  return src_part->bloat(low_offsets_, high_offsets_);
+}
+
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
 {
   return std::make_unique<Alignment>(lhs, rhs);
@@ -213,6 +260,14 @@ std::unique_ptr<ScaleConstraint> scale(const Shape& factors,
                                        const Variable* var_bigger)
 {
   return std::make_unique<ScaleConstraint>(factors, var_smaller, var_bigger);
+}
+
+std::unique_ptr<BloatConstraint> bloat(const Variable* var_source,
+                                       const Variable* var_bloat,
+                                       const Shape& low_offsets,
+                                       const Shape& high_offsets)
+{
+  return std::make_unique<BloatConstraint>(var_source, var_bloat, low_offsets, high_offsets);
 }
 
 }  // namespace legate::detail
