@@ -48,6 +48,17 @@ TEST(Machine, ProcessorRange)
     EXPECT_THROW(range.get_node_range(), std::invalid_argument);
   }
 
+  // create another empty
+  {
+    legate::mapping::ProcessorRange range(3, 3, 0);
+    EXPECT_TRUE(range.empty());
+    EXPECT_EQ(range.per_node_count, 1);
+    EXPECT_EQ(range.low, 0);
+    EXPECT_EQ(range.high, 0);
+    EXPECT_EQ(range.count(), 0);
+    EXPECT_THROW(range.get_node_range(), std::invalid_argument);
+  }
+
   // check defaults
   {
     legate::mapping::ProcessorRange range;
@@ -56,6 +67,23 @@ TEST(Machine, ProcessorRange)
     EXPECT_EQ(range.low, 0);
     EXPECT_EQ(range.high, 0);
     EXPECT_EQ(range.count(), 0);
+  }
+
+  // test equal and comparison
+  {
+    legate::mapping::ProcessorRange range1(2, 6, 2);
+    legate::mapping::ProcessorRange range2(2, 6, 2);
+    EXPECT_EQ(range1, range2);
+
+    legate::mapping::ProcessorRange range3(1, 6, 2);
+    EXPECT_NE(range1, range3);
+    EXPECT_TRUE(range3 < range1);
+
+    legate::mapping::ProcessorRange range4(2, 5, 2);
+    EXPECT_TRUE(range4 < range1);
+
+    legate::mapping::ProcessorRange range5(2, 6, 1);
+    EXPECT_TRUE(range5 < range1);
   }
 
   // get_node_range
@@ -93,6 +121,7 @@ TEST(Machine, ProcessorRange)
     legate::mapping::ProcessorRange range(1, 3, 1);
     EXPECT_EQ(range.slice(0, 0).count(), 0);
     EXPECT_EQ(range.slice(4, 6).count(), 0);
+    EXPECT_EQ(range.slice(1, 0).count(), 0);
   }
 
   // nonempty slice nonempty range
@@ -117,6 +146,13 @@ TEST(Machine, MachineDesc)
     EXPECT_EQ(machine.slice(0, 1),
               legate::mapping::detail::Machine(
                 {{legate::mapping::TaskTarget::CPU, legate::mapping::ProcessorRange()}}));
+    EXPECT_TRUE(machine.empty());
+    EXPECT_EQ(machine.valid_targets().size(), 0);
+    EXPECT_EQ(machine.only(legate::mapping::TaskTarget::CPU),
+              legate::mapping::detail::Machine(
+                {{legate::mapping::TaskTarget::CPU, legate::mapping::ProcessorRange()}}));
+    std::map<legate::mapping::TaskTarget, legate::mapping::ProcessorRange> processor_ranges = {};
+    EXPECT_EQ(machine.processor_ranges, processor_ranges);
   }
 
   legate::mapping::ProcessorRange cpu_range(1, 3, 4);
@@ -265,11 +301,26 @@ TEST(Machine, MachineDesc)
     auto new_machine2 = machine2.slice(0, 2);
     EXPECT_EQ(new_machine2.preferred_target, legate::mapping::TaskTarget::GPU);
     EXPECT_EQ(new_machine2.processor_range().count(), 2);
+
+    legate::mapping::detail::Machine machine3({{legate::mapping::TaskTarget::CPU, cpu_range},
+                                               {legate::mapping::TaskTarget::OMP, omp_range},
+                                               {legate::mapping::TaskTarget::GPU, gpu_range}});
+    legate::mapping::detail::Machine expected1(
+      {{legate::mapping::TaskTarget::CPU, cpu_range},
+       {legate::mapping::TaskTarget::OMP, omp_range},
+       {legate::mapping::TaskTarget::GPU, gpu_range.slice(0, 1)}});
+    EXPECT_EQ(machine3.slice(0, 1, true), expected1);
+    legate::mapping::detail::Machine expected2(
+      {{legate::mapping::TaskTarget::CPU, cpu_range.slice(1, 2)},
+       {legate::mapping::TaskTarget::OMP, omp_range},
+       {legate::mapping::TaskTarget::GPU, gpu_range}});
+    EXPECT_EQ(machine3.slice(1, 2, legate::mapping::TaskTarget::CPU, true), expected2);
   }
 
   // test operator[]
   {
     legate::mapping::detail::Machine machine({{legate::mapping::TaskTarget::CPU, cpu_range},
+                                              {legate::mapping::TaskTarget::OMP, omp_range},
                                               {legate::mapping::TaskTarget::GPU, gpu_range}});
 
     auto machine1       = machine[legate::mapping::TaskTarget::GPU];
@@ -278,6 +329,12 @@ TEST(Machine, MachineDesc)
     EXPECT_EQ(machine1.count(), 3);
     EXPECT_EQ(machine1.preferred_target, legate::mapping::TaskTarget::GPU);
     EXPECT_EQ(machine1.processor_range().per_node_count, 3);
+
+    auto machine2 = machine[{legate::mapping::TaskTarget::CPU, legate::mapping::TaskTarget::OMP}];
+    auto valid_targets2 = machine2.valid_targets();
+    EXPECT_EQ(valid_targets2.size(), 2);
+    EXPECT_EQ(machine2.preferred_target, legate::mapping::TaskTarget::OMP);
+    EXPECT_EQ(machine2.processor_range().per_node_count, 2);
   }
 
   // test intersection
