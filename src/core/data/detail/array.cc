@@ -27,9 +27,9 @@ BaseArray::BaseArray(std::shared_ptr<Store> data, std::shared_ptr<Store> null_ma
 
 bool BaseArray::unbound() const
 {
-#ifdef DEBUG_LEGATE
-  assert(!nullable() || data_->is_unbound_store() == null_mask_->is_unbound_store());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!nullable() || data_->is_unbound_store() == null_mask_->is_unbound_store());
+  }
   return data_->is_unbound_store();
 }
 
@@ -75,9 +75,7 @@ bool ListArray::unbound() const { return descriptor_->unbound() || vardata_->unb
 
 bool ListArray::valid() const
 {
-#ifdef DEBUG_LEGATE
-  assert(descriptor_->valid() == vardata_->valid());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(descriptor_->valid() == vardata_->valid()); }
   return descriptor_->valid();
 }
 
@@ -125,9 +123,7 @@ bool StructArray::valid() const
 {
   auto result =
     std::all_of(fields_.begin(), fields_.end(), [](auto& field) { return field->valid(); });
-#ifdef DEBUG_LEGATE
-  assert(null_mask_->valid() == result);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(null_mask_->valid() == result); }
   return result;
 }
 

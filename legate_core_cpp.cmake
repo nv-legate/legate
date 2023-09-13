@@ -133,8 +133,8 @@ if (legate_core_COLLECTIVE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND legate_core_CXX_DEFS DEBUG_LEGATE)
-  list(APPEND legate_core_CUDA_DEFS DEBUG_LEGATE)
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_DEBUG)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_DEBUG)
 endif()
 
 if(Legion_USE_CUDA)

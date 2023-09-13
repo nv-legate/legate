@@ -77,9 +77,7 @@ std::shared_ptr<detail::ListArray> TaskDeserializer::unpack_list_array()
 std::shared_ptr<detail::StructArray> TaskDeserializer::unpack_struct_array()
 {
   auto type = unpack_type();
-#ifdef DEBUG_LEGATE
-  assert(type->code == Type::Code::STRUCT);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(type->code == Type::Code::STRUCT); }
   std::vector<std::shared_ptr<detail::Array>> fields;
   const auto& st_type = type->as_struct_type();
   auto nullable       = unpack<bool>();
@@ -219,9 +217,7 @@ std::shared_ptr<detail::ListArray> TaskDeserializer::unpack_list_array()
 std::shared_ptr<detail::StructArray> TaskDeserializer::unpack_struct_array()
 {
   auto type = unpack_type();
-#ifdef DEBUG_LEGATE
-  assert(type->code == Type::Code::STRUCT);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(type->code == Type::Code::STRUCT); }
   std::vector<std::shared_ptr<detail::Array>> fields;
   const auto& st_type = type->as_struct_type();
   auto nullable       = unpack<bool>();
@@ -288,9 +284,7 @@ CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
 
 void CopyDeserializer::next_requirement_list()
 {
-#ifdef DEBUG_LEGATE
-  assert(curr_reqs_ != all_reqs_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(curr_reqs_ != all_reqs_.end()); }
   req_index_offset_ += curr_reqs_->get().size();
   ++curr_reqs_;
 }
@@ -304,9 +298,7 @@ void CopyDeserializer::_unpack(detail::Store& store)
 
   auto transform = unpack_transform();
 
-#ifdef DEBUG_LEGATE
-  assert(!is_future && !is_output_region);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!is_future && !is_output_region); }
   auto redop_id = unpack<int32_t>();
   detail::RegionField rf;
   _unpack(rf);

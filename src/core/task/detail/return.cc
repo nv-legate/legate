@@ -15,7 +15,7 @@
 #include "core/runtime/detail/library.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #endif
@@ -31,9 +31,7 @@ ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, size_t size)
 /*static*/ ReturnValue ReturnValue::unpack(const void* ptr, size_t size, Memory::Kind memory_kind)
 {
   ReturnValue result(Legion::UntypedDeferredValue(size, memory_kind), size);
-#ifdef DEBUG_LEGATE
-  assert(!result.is_device_value());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!result.is_device_value()); }
   memcpy(result.ptr(), ptr, size);
 
   return result;
@@ -149,19 +147,21 @@ void ReturnValues::legion_serialize(void* buffer) const
   // Special case with a single scalar
   if (return_values_.size() == 1) {
     auto& ret = return_values_.front();
-#ifdef LEGATE_USE_CUDA
+
     if (ret.is_device_value()) {
-#ifdef DEBUG_LEGATE
-      assert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
-#endif
+      if (LegateDefined(LEGATE_USE_DEBUG)) {
+        assert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
+      }
+#if LegateDefined(LEGATE_USE_CUDA)  // TODO expose cudaMemcpyAsync() as a stub instead
       CHECK_CUDA(cudaMemcpyAsync(buffer,
                                  ret.ptr(),
                                  ret.size(),
                                  cudaMemcpyDeviceToHost,
                                  cuda::StreamPool::get_stream_pool().get_stream()));
-    } else
 #endif
-      memcpy(buffer, ret.ptr(), ret.size());
+      return;
+    }
+    memcpy(buffer, ret.ptr(), ret.size());
     return;
   }
 
@@ -175,7 +175,7 @@ void ReturnValues::legion_serialize(void* buffer) const
     ptr                               = ptr + sizeof(uint32_t);
   }
 
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
   if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
     for (auto ret : return_values_) {
@@ -244,7 +244,7 @@ void ReturnValues::finalize(Legion::Context legion_context) const
     return;
   }
 
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
   auto kind = Processor::get_executing_processor().kind();
   // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
   //        as doing so would require the packing to be chained up with all preceding kernels,
@@ -270,9 +270,7 @@ struct JoinReturnedException {
   template <bool EXCLUSIVE>
   static void apply(LHS& lhs, RHS rhs)
   {
-#ifdef DEBUG_LEGATE
-    assert(EXCLUSIVE);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(EXCLUSIVE); }
     if (lhs.raised() || !rhs.raised()) return;
     lhs = rhs;
   }
@@ -280,9 +278,7 @@ struct JoinReturnedException {
   template <bool EXCLUSIVE>
   static void fold(RHS& rhs1, RHS rhs2)
   {
-#ifdef DEBUG_LEGATE
-    assert(EXCLUSIVE);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(EXCLUSIVE); }
     if (rhs1.raised() || !rhs2.raised()) return;
     rhs1 = rhs2;
   }

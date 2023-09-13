@@ -145,10 +145,10 @@ void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> tas
     throw std::out_of_range(std::move(ss).str());
   }
 
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "[" << library_name_ << "] task " << local_task_id
-                     << " (global id: " << task_id << "), " << *task_info;
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate.debug() << "[" << library_name_ << "] task " << local_task_id
+                       << " (global id: " << task_id << "), " << *task_info;
+  }
   if (tasks_.find(local_task_id) != tasks_.end())
     throw std::invalid_argument("Task " + std::to_string(local_task_id) +
                                 " already exists in library " + library_name_);

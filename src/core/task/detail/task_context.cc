@@ -15,7 +15,7 @@
 #include "core/data/detail/store.h"
 #include "core/utilities/deserializer.h"
 
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
 #include "core/cuda/cuda_help.h"
 #endif
 
@@ -86,18 +86,20 @@ TaskContext::TaskContext(const Legion::Task* task,
     arrival.arrive();
     wait.wait();
   }
-#ifdef LEGATE_USE_CUDA
-  // If the task is running on a GPU and there is at least one scalar store for reduction,
-  // we need to wait for all the host-to-device copies for initialization to finish
-  if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC)
-    for (auto& reduction : reductions_) {
-      auto reduction_store = reduction->data();
-      if (reduction_store->is_future()) {
-        CHECK_CUDA(cudaDeviceSynchronize());
-        break;
-      }
-    }
+  if (LegateDefined(LEGATE_USE_CUDA)) {
+    // If the task is running on a GPU and there is at least one scalar store for reduction,
+    // we need to wait for all the host-to-device copies for initialization to finish
+    if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC)
+      for (auto& reduction : reductions_) {
+        auto reduction_store = reduction->data();
+        if (reduction_store->is_future()) {
+#if LegateDefined(LEGATE_USE_CUDA)
+          CHECK_CUDA(cudaDeviceSynchronize());
 #endif
+          break;
+        }
+      }
+  }
 }
 
 void TaskContext::make_all_unbound_stores_empty()

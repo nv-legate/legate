@@ -120,9 +120,9 @@ class LegateShardingFunctor : public Legion::ShardingFunctor {
     auto point = proj_functor_->project_point(p, launch_space);
 
     auto shard_id = (linearize(lo, hi, point) + offset_) / per_node_count_ + start_node_id_;
-#ifdef DEBUG_LEGATE
-    assert(start_node_id_ <= shard_id && shard_id < end_node_id_);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(start_node_id_ <= shard_id && shard_id < end_node_id_);
+    }
     return shard_id;
   }
 

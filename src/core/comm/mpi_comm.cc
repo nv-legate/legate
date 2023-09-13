@@ -34,11 +34,11 @@ inline void check_mpi(int error, const char* file, int line)
   if (error != MPI_SUCCESS) {
     fprintf(
       stderr, "Internal MPI failure with error code %d in file %s at line %d\n", error, file, line);
-#ifdef DEBUG_LEGATE
-    assert(false);
-#else
-    exit(error);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(false);
+    } else {
+      exit(error);
+    }
   }
 }
 
@@ -103,13 +103,13 @@ int MPINetwork::init_comm()
 {
   int id = 0;
   collGetUniqueId(&id);
-#ifdef DEBUG_LEGATE
-  int mpi_rank;
-  int send_id = id;
-  // check if all ranks get the same unique id
-  CHECK_MPI(MPI_Bcast(&send_id, 1, MPI_INT, 0, MPI_COMM_WORLD));
-  assert(send_id == id);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    int mpi_rank;
+    int send_id = id;
+    // check if all ranks get the same unique id
+    CHECK_MPI(MPI_Bcast(&send_id, 1, MPI_INT, 0, MPI_COMM_WORLD));
+    assert(send_id == id);
+  }
   assert(mpi_comms.size() == id);
   // create mpi comm
   MPI_Comm mpi_comm;
@@ -202,21 +202,21 @@ int MPINetwork::alltoallv(const void* sendbuf,
     // tag: seg idx + rank_idx + tag
     int send_tag = generateAlltoallvTag(sendto_global_rank, global_rank, global_comm);
     int recv_tag = generateAlltoallvTag(global_rank, recvfrom_global_rank, global_comm);
-#ifdef DEBUG_LEGATE
-    log_coll.debug(
-      "AlltoallvMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
-      "recv from %d (%d), "
-      "recv_tag %d",
-      i,
-      global_rank,
-      global_comm->mpi_rank,
-      sendto_global_rank,
-      sendto_mpi_rank,
-      send_tag,
-      recvfrom_global_rank,
-      recvfrom_mpi_rank,
-      recv_tag);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug(
+        "AlltoallvMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
+        "recv from %d (%d), "
+        "recv_tag %d",
+        i,
+        global_rank,
+        global_comm->mpi_rank,
+        sendto_global_rank,
+        sendto_mpi_rank,
+        send_tag,
+        recvfrom_global_rank,
+        recvfrom_mpi_rank,
+        recv_tag);
+    }
     CHECK_MPI(MPI_Sendrecv(src,
                            scount,
                            mpi_type,
@@ -262,21 +262,21 @@ int MPINetwork::alltoall(
     // tag: seg idx + rank_idx + tag
     int send_tag = generateAlltoallTag(sendto_global_rank, global_rank, global_comm);
     int recv_tag = generateAlltoallTag(global_rank, recvfrom_global_rank, global_comm);
-#ifdef DEBUG_LEGATE
-    log_coll.debug(
-      "AlltoallMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
-      "recv from %d (%d), "
-      "recv_tag %d",
-      i,
-      global_rank,
-      global_comm->mpi_rank,
-      sendto_global_rank,
-      sendto_mpi_rank,
-      send_tag,
-      recvfrom_global_rank,
-      recvfrom_mpi_rank,
-      recv_tag);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug(
+        "AlltoallMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
+        "recv from %d (%d), "
+        "recv_tag %d",
+        i,
+        global_rank,
+        global_comm->mpi_rank,
+        sendto_global_rank,
+        sendto_mpi_rank,
+        send_tag,
+        recvfrom_global_rank,
+        recvfrom_mpi_rank,
+        recv_tag);
+    }
     CHECK_MPI(MPI_Sendrecv(src,
                            count,
                            mpi_type,
@@ -340,14 +340,15 @@ int MPINetwork::gather(
   // non-root
   if (global_rank != root) {
     tag = generateGatherTag(global_rank, global_comm);
-#ifdef DEBUG_LEGATE
-    log_coll.debug("GatherMPI: non-root send global_rank %d, mpi rank %d, send to %d (%d), tag %d",
-                   global_rank,
-                   global_comm->mpi_rank,
-                   root,
-                   root_mpi_rank,
-                   tag);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug(
+        "GatherMPI: non-root send global_rank %d, mpi rank %d, send to %d (%d), tag %d",
+        global_rank,
+        global_comm->mpi_rank,
+        root,
+        root_mpi_rank,
+        tag);
+    }
     CHECK_MPI(MPI_Send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
     return CollSuccess;
   }
@@ -362,17 +363,17 @@ int MPINetwork::gather(
     recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[i];
     assert(i == global_comm->mapping_table.global_rank[i]);
     tag = generateGatherTag(i, global_comm);
-#ifdef DEBUG_LEGATE
-    log_coll.debug(
-      "GatherMPI: root i %d === global_rank %d, mpi rank %d, recv %p, from %d (%d), tag %d",
-      i,
-      global_rank,
-      global_comm->mpi_rank,
-      dst,
-      i,
-      recvfrom_mpi_rank,
-      tag);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug(
+        "GatherMPI: root i %d === global_rank %d, mpi rank %d, recv %p, from %d (%d), tag %d",
+        i,
+        global_rank,
+        global_comm->mpi_rank,
+        dst,
+        i,
+        recvfrom_mpi_rank,
+        tag);
+    }
     assert(dst != nullptr);
     if (global_rank == i) {
       memcpy(dst, sendbuf, incr);
@@ -402,14 +403,14 @@ int MPINetwork::bcast(void* buf, int count, CollDataType type, int root, CollCom
   // non-root
   if (global_rank != root) {
     tag = generateBcastTag(global_rank, global_comm);
-#ifdef DEBUG_LEGATE
-    log_coll.debug("BcastMPI: non-root recv global_rank %d, mpi rank %d, send to %d (%d), tag %d",
-                   global_rank,
-                   global_comm->mpi_rank,
-                   root,
-                   root_mpi_rank,
-                   tag);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug("BcastMPI: non-root recv global_rank %d, mpi rank %d, send to %d (%d), tag %d",
+                     global_rank,
+                     global_comm->mpi_rank,
+                     root,
+                     root_mpi_rank,
+                     tag);
+    }
     CHECK_MPI(MPI_Recv(buf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm, &status));
     return CollSuccess;
   }
@@ -420,15 +421,15 @@ int MPINetwork::bcast(void* buf, int count, CollDataType type, int root, CollCom
     sendto_mpi_rank = global_comm->mapping_table.mpi_rank[i];
     assert(i == global_comm->mapping_table.global_rank[i]);
     tag = generateBcastTag(i, global_comm);
-#ifdef DEBUG_LEGATE
-    log_coll.debug("BcastMPI: root i %d === global_rank %d, mpi rank %d, send to %d (%d), tag %d",
-                   i,
-                   global_rank,
-                   global_comm->mpi_rank,
-                   i,
-                   sendto_mpi_rank,
-                   tag);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug("BcastMPI: root i %d === global_rank %d, mpi rank %d, send to %d (%d), tag %d",
+                     i,
+                     global_rank,
+                     global_comm->mpi_rank,
+                     i,
+                     sendto_mpi_rank,
+                     tag);
+    }
     if (global_rank != i) {
       CHECK_MPI(MPI_Send(buf, count, mpi_type, sendto_mpi_rank, tag, global_comm->mpi_comm));
     }

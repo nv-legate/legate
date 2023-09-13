@@ -75,12 +75,12 @@ Copy::Copy(const Legion::Copy* copy,
   input_indirections_ = dez.unpack<Stores>();
   dez.next_requirement_list();
   output_indirections_ = dez.unpack<Stores>();
-#ifdef DEBUG_LEGATE
-  for (auto& input : inputs_) assert(!input.is_future());
-  for (auto& output : outputs_) assert(!output.is_future());
-  for (auto& input_indirection : input_indirections_) assert(!input_indirection.is_future());
-  for (auto& output_indirection : output_indirections_) assert(!output_indirection.is_future());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    for (auto& input : inputs_) assert(!input.is_future());
+    for (auto& output : outputs_) assert(!output.is_future());
+    for (auto& input_indirection : input_indirections_) assert(!input_indirection.is_future());
+    for (auto& output_indirection : output_indirections_) assert(!output_indirection.is_future());
+  }
 }
 
 }  // namespace legate::mapping::detail

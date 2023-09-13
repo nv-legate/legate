@@ -37,10 +37,10 @@ struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
   static const int32_t TASK_ID = MULTI_VARIANT;
 
   static void cpu_variant(legate::TaskContext context) { validate(context); }
-#ifdef LEGATE_USE_OPENMP
+#if LegateDefined(USE_OPENMP)
   static void omp_variant(legate::TaskContext context) { validate(context); }
 #endif
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(USE_CUDA)
   static void gpu_variant(legate::TaskContext context) { validate(context); }
 #endif
 };

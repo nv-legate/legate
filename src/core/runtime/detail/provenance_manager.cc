@@ -12,6 +12,10 @@
 
 #include "core/runtime/detail/provenance_manager.h"
 
+#include "legion.h"
+
+#include "legate_defines.h"
+
 #include <assert.h>
 #include <stdexcept>
 
@@ -23,25 +27,19 @@ ProvenanceManager::ProvenanceManager() { provenance_.push_back(BOTTOM); }
 
 const std::string& ProvenanceManager::get_provenance()
 {
-#ifdef DEBUG_LEGATE
-  assert(provenance_.size() > 0);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(provenance_.size() > 0); }
   return provenance_.back();
 }
 
 void ProvenanceManager::set_provenance(const std::string& p)
 {
-#ifdef DEBUG_LEGATE
-  assert(provenance_.size() > 0);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(provenance_.size() > 0); }
   provenance_.back() = p;
 }
 
 void ProvenanceManager::reset_provenance()
 {
-#ifdef DEBUG_LEGATE
-  assert(provenance_.size() > 0);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(provenance_.size() > 0); }
   provenance_.back() = BOTTOM;
 }
 

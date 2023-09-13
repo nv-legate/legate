@@ -51,9 +51,7 @@ uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
 {
   auto finder = req_indices_.find(Key(privilege, proj_info));
   if (req_indices_.end() == finder) finder = req_indices_.find(Key(LEGION_READ_WRITE, proj_info));
-#ifdef DEBUG_LEGATE
-  assert(finder != req_indices_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != req_indices_.end()); }
   return finder->second;
 }
 
@@ -107,9 +105,7 @@ uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion&
                                                     const ProjectionInfo& proj_info) const
 {
   auto finder = field_sets_.find(region);
-#ifdef DEBUG_LEGATE
-  assert(finder != field_sets_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != field_sets_.end()); }
   auto& [field_set, req_offset] = finder->second;
   return req_offset + field_set.get_requirement_index(privilege, proj_info);
 }
@@ -150,10 +146,10 @@ void OutputRequirementAnalyzer::insert(int32_t dim,
                                        Legion::FieldID field_id)
 {
   auto& req_info = req_infos_[field_space];
-#ifdef DEBUG_LEGATE
-  // TODO: This should be checked when alignment constraints are set on unbound stores
-  assert(-1 == req_info.dim || req_info.dim == dim);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    // TODO: This should be checked when alignment constraints are set on unbound stores
+    assert(-1 == req_info.dim || req_info.dim == dim);
+  }
   req_info.dim = dim;
   field_groups_[field_space].insert(field_id);
 }
@@ -162,9 +158,7 @@ uint32_t OutputRequirementAnalyzer::get_requirement_index(const Legion::FieldSpa
                                                           Legion::FieldID field_id) const
 {
   auto finder = req_infos_.find(field_space);
-#ifdef DEBUG_LEGATE
-  assert(finder != req_infos_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != req_infos_.end()); }
   return finder->second.req_idx;
 }
 

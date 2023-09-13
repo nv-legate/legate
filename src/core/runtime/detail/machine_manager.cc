@@ -19,9 +19,7 @@ namespace legate::detail {
 ////////////////////////////////////////////
 const mapping::detail::Machine& MachineManager::get_machine() const
 {
-#ifdef DEBUG_LEGATE
-  assert(machines_.size() > 0);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(machines_.size() > 0); }
   return machines_.back();
 }
 

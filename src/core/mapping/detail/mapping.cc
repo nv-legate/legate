@@ -103,20 +103,20 @@ const Store* StoreMapping::store() const { return stores.front(); }
 
 uint32_t StoreMapping::requirement_index() const
 {
-#ifdef DEBUG_LEGATE
-  assert(stores.size() > 0);
-  uint32_t result = -1U;
-  for (auto& store : stores) {
-    auto idx = store->requirement_index();
-    assert(result == -1U || result == idx);
-    result = idx;
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(stores.size() > 0);
+    uint32_t result = -1U;
+    for (auto& store : stores) {
+      auto idx = store->requirement_index();
+      assert(result == -1U || result == idx);
+      result = idx;
+    }
+    return result;
+  } else {
+    static constexpr uint32_t invalid = -1U;
+    if (stores.empty()) return invalid;
+    return stores.front()->requirement_index();
   }
-  return result;
-#else
-  static constexpr uint32_t invalid = -1U;
-  if (stores.empty()) return invalid;
-  return stores.front()->requirement_index();
-#endif
 }
 
 std::set<uint32_t> StoreMapping::requirement_indices() const

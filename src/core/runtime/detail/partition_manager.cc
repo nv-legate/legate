@@ -26,9 +26,7 @@ PartitionManager::PartitionManager(Runtime* runtime)
   min_shard_volume_ =
     runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
-#ifdef DEBUG_LEGATE
-  assert(min_shard_volume_ > 0);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(min_shard_volume_ > 0); }
 }
 
 const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::Machine& machine)
@@ -272,9 +270,7 @@ void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& inde
                                                   Legion::FieldID field_id)
 {
   auto finder = image_cache_.find(std::tie(index_space, func_partition, field_id));
-#ifdef DEBUG_LEGATE
-  assert(finder != image_cache_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != image_cache_.end()); }
   image_cache_.erase(finder);
 }
 

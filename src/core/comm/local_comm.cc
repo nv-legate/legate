@@ -154,23 +154,22 @@ int LocalNetwork::alltoallv(const void* sendbuf,
                 static_cast<ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent;
     char* dst = static_cast<char*>(recvbuf) +
                 static_cast<ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
-#ifdef DEBUG_LEGATE
-    log_coll.debug(
-      "AlltoallvLocal i: %d === global_rank %d, dtype %d, copy rank %d (seg %d, sdispls %d, %p) to "
-      "rank %d (seg "
-      "%d, rdispls %d, %p)",
-      i,
-      global_rank,
-      type_extent,
-      recvfrom_global_rank,
-      recvfrom_seg_id,
-      sdispls[recvfrom_seg_id],
-      static_cast<void*>(src),
-      global_rank,
-      recvfrom_global_rank,
-      rdispls[recvfrom_global_rank],
-      static_cast<void*>(dst));
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug(
+        "AlltoallvLocal i: %d === global_rank %d, dtype %d, copy rank %d (seg %d, sdispls %d, %p) "
+        "to rank %d (seg %d, rdispls %d, %p)",
+        i,
+        global_rank,
+        type_extent,
+        recvfrom_global_rank,
+        recvfrom_seg_id,
+        sdispls[recvfrom_seg_id],
+        static_cast<void*>(src),
+        global_rank,
+        recvfrom_global_rank,
+        rdispls[recvfrom_global_rank],
+        static_cast<void*>(dst));
+    }
     memcpy(dst, src, recvcounts[recvfrom_global_rank] * type_extent);
   }
 
@@ -208,20 +207,20 @@ int LocalNetwork::alltoall(
                 static_cast<ptrdiff_t>(recvfrom_seg_id) * type_extent * count;
     char* dst = static_cast<char*>(recvbuf) +
                 static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
-#ifdef DEBUG_LEGATE
-    log_coll.debug(
-      "AlltoallLocal i: %d === global_rank %d, dtype %d, copy rank %d (seg %d, %p) to rank %d (seg "
-      "%d, %p)",
-      i,
-      global_rank,
-      type_extent,
-      recvfrom_global_rank,
-      recvfrom_seg_id,
-      static_cast<void*>(src),
-      global_rank,
-      recvfrom_global_rank,
-      static_cast<void*>(dst));
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug(
+        "AlltoallLocal i: %d === global_rank %d, dtype %d, copy rank %d (seg %d, %p) to rank %d "
+        "(seg %d, %p)",
+        i,
+        global_rank,
+        type_extent,
+        recvfrom_global_rank,
+        recvfrom_seg_id,
+        static_cast<void*>(src),
+        global_rank,
+        recvfrom_global_rank,
+        static_cast<void*>(dst));
+    }
     memcpy(dst, src, count * type_extent);
   }
 
@@ -258,17 +257,17 @@ int LocalNetwork::allgather(
     const void* src = global_comm->local_comm->buffers[recvfrom_global_rank];
     char* dst       = static_cast<char*>(recvbuf) +
                 static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
-#ifdef DEBUG_LEGATE
-    log_coll.debug(
-      "AllgatherLocal i: %d === global_rank %d, dtype %d, copy rank %d (%p) to rank %d (%p)",
-      recvfrom_global_rank,
-      global_rank,
-      type_extent,
-      recvfrom_global_rank,
-      src,
-      global_rank,
-      static_cast<void*>(dst));
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_coll.debug(
+        "AllgatherLocal i: %d === global_rank %d, dtype %d, copy rank %d (%p) to rank %d (%p)",
+        recvfrom_global_rank,
+        global_rank,
+        type_extent,
+        recvfrom_global_rank,
+        src,
+        global_rank,
+        static_cast<void*>(dst));
+    }
     memcpy(dst, src, count * type_extent);
   }
 

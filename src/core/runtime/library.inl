@@ -68,10 +68,11 @@ template <typename REDOP>
 int32_t Library::register_reduction_operator(int32_t redop_id)
 {
   int32_t legion_redop_id = get_reduction_op_id(redop_id);
-#if defined(LEGATE_USE_CUDA) && !defined(REALM_COMPILER_IS_NVCC)
-  extern Logger log_legate;
-  log_legate.error("Reduction operators must be registered in a .cu file when CUDA is enabled");
-  LEGATE_ABORT;
+#if !defined(REALM_COMPILER_IS_NVCC)
+  if (LegateDefined(LEGATE_USE_CUDA)) {
+    log_legate.error("Reduction operators must be registered in a .cu file when CUDA is enabled");
+    LEGATE_ABORT;
+  }
 #endif
   perform_callback(detail::register_reduction_callback<REDOP>,
                    Legion::UntypedBuffer(&legion_redop_id, sizeof(int32_t)));

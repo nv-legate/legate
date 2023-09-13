@@ -297,14 +297,15 @@ struct create_affine_functor_fn {
                   Legion::ProjectionID proj_id)
   {
     auto functor = new AffineFunctor<SRC_DIM, TGT_DIM>(runtime, dims, weights, offsets);
-#ifdef DEBUG_LEGATE
-    std::stringstream ss;
-    ss << "Register projection functor: functor: " << functor << ", id: " << proj_id << ", ";
-    spec_to_string(ss, SRC_DIM, TGT_DIM, dims, weights, offsets);
-    log_legate.debug() << ss.str();
-#else
-    log_legate.debug("Register projection functor: functor: %p, id: %d", functor, proj_id);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      std::stringstream ss;
+      ss << "Register projection functor: functor: " << functor << ", id: " << proj_id << ", ";
+      spec_to_string(ss, SRC_DIM, TGT_DIM, dims, weights, offsets);
+      log_legate.debug() << ss.str();
+    } else {
+      log_legate.debug(
+        "Register projection functor: functor: %p, id: %d", static_cast<void*>(functor), proj_id);
+    }
     runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
 
     const std::lock_guard<std::mutex> lock(functor_table_lock);

@@ -16,7 +16,9 @@
 #include <stddef.h>
 #include <vector>
 
-#ifdef LEGATE_USE_NETWORK
+#include "legate_defines.h"
+
+#if LegateDefined(LEGATE_USE_NETWORK)
 #include <mpi.h>
 #endif
 
@@ -33,7 +35,7 @@
 
 namespace legate::comm::coll {
 
-#ifdef LEGATE_USE_NETWORK
+#if LegateDefined(LEGATE_USE_NETWORK)
 struct RankMappingTable {
   int* mpi_rank;
   int* global_rank;
@@ -70,7 +72,7 @@ enum CollCommType : int {
 };
 
 struct Coll_Comm {
-#ifdef LEGATE_USE_NETWORK
+#if LegateDefined(LEGATE_USE_NETWORK)
   MPI_Comm mpi_comm;
   RankMappingTable mapping_table;
 #endif
@@ -129,7 +131,7 @@ class BackendNetwork {
   int current_unique_id;
 };
 
-#ifdef LEGATE_USE_NETWORK
+#if LegateDefined(LEGATE_USE_NETWORK)
 class MPINetwork : public BackendNetwork {
  public:
   MPINetwork(int argc, char* argv[]);

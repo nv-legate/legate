@@ -16,6 +16,10 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 
+#include "legion.h"
+
+#include "legate_defines.h"
+
 #define THREADS_PER_BLOCK 128
 #define CHECK_CUDA(expr)                                      \
   do {                                                        \
@@ -23,18 +27,14 @@
     legate::cuda::check_cuda(__result__, __FILE__, __LINE__); \
   } while (false)
 
-#ifdef DEBUG_LEGATE
-
+#if LegateDefined(LEGATE_USE_DEBUG)
 #define CHECK_CUDA_STREAM(stream)              \
   do {                                         \
     CHECK_CUDA(cudaStreamSynchronize(stream)); \
     CHECK_CUDA(cudaPeekAtLastError());         \
   } while (false)
-
 #else
-
 #define CHECK_CUDA_STREAM(stream)
-
 #endif
 
 namespace legate::cuda {
@@ -48,11 +48,11 @@ __host__ inline void check_cuda(cudaError_t error, const char* file, int line)
             cudaGetErrorName(error),
             file,
             line);
-#ifdef DEBUG_LEGATE
-    assert(false);
-#else
-    exit(error);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(false);
+    } else {
+      exit(error);
+    }
   }
 }
 

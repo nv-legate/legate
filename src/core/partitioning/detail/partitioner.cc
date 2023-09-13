@@ -69,16 +69,12 @@ std::unique_ptr<Domain> LaunchDomainResolver::resolve_launch_domain() const
     if (unbound_dim_ != UNSET && unbound_dim_ > 1)
       return nullptr;
     else {
-#ifdef DEBUG_LEGATE
-      assert(launch_volumes_.size() == 1);
-#endif
+      if (LegateDefined(LEGATE_USE_DEBUG)) { assert(launch_volumes_.size() == 1); }
       int64_t volume = *launch_volumes_.begin();
       return std::make_unique<Domain>(0, volume - 1);
     }
   } else {
-#ifdef DEBUG_LEGATE
-    assert(launch_domains_.size() == 1);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(launch_domains_.size() == 1); }
     auto& launch_domain = *launch_domains_.begin();
     if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) {
       int64_t volume = *launch_volumes_.begin();
@@ -108,17 +104,17 @@ const Domain* Strategy::launch_domain(const Operation* op) const
 
 void Strategy::set_launch_shape(const Operation* op, const Shape& shape)
 {
-#ifdef DEBUG_LEGATE
-  assert(launch_domains_.find(op) == launch_domains_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(launch_domains_.find(op) == launch_domains_.end());
+  }
   launch_domains_.insert({op, std::make_unique<Domain>(to_domain(shape))});
 }
 
 void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition)
 {
-#ifdef DEBUG_LEGATE
-  assert(assignments_.find(*partition_symbol) == assignments_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(assignments_.find(*partition_symbol) == assignments_.end());
+  }
   assignments_.insert({*partition_symbol, std::move(partition)});
 }
 
@@ -126,9 +122,9 @@ void Strategy::insert(const Variable* partition_symbol,
                       std::shared_ptr<Partition> partition,
                       Legion::FieldSpace field_space)
 {
-#ifdef DEBUG_LEGATE
-  assert(field_spaces_.find(*partition_symbol) == field_spaces_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(field_spaces_.find(*partition_symbol) == field_spaces_.end());
+  }
   field_spaces_.insert({*partition_symbol, field_space});
   insert(partition_symbol, std::move(partition));
 }
@@ -141,18 +137,14 @@ bool Strategy::has_assignment(const Variable* partition_symbol) const
 std::shared_ptr<Partition> Strategy::operator[](const Variable* partition_symbol) const
 {
   auto finder = assignments_.find(*partition_symbol);
-#ifdef DEBUG_LEGATE
-  assert(finder != assignments_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != assignments_.end()); }
   return finder->second;
 }
 
 const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_symbol) const
 {
   auto finder = field_spaces_.find(*partition_symbol);
-#ifdef DEBUG_LEGATE
-  assert(finder != field_spaces_.end());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != field_spaces_.end()); }
   return finder->second;
 }
 
@@ -222,9 +214,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   solver.solve_constraints();
 
-#ifdef DEBUG_LEGATE
-  solver.dump();
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { solver.dump(); }
 
   auto strategy = std::make_unique<Strategy>();
 
@@ -238,9 +228,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto store = op->find_store(part_symb);
     auto has_key_part =
       store->has_key_partition(op->machine(), solver.find_restrictions(part_symb));
-#ifdef DEBUG_LEGATE
-    assert(!store->unbound());
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!store->unbound()); }
     return std::make_pair(store->storage_size(), has_key_part);
   };
 
@@ -263,9 +251,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto store     = op->find_store(part_symb);
     auto partition = store->find_or_create_key_partition(op->machine(), restrictions);
     strategy->record_key_partition(part_symb);
-#ifdef DEBUG_LEGATE
-    assert(partition != nullptr);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(partition != nullptr); }
 
     for (auto symb : equiv_class) strategy->insert(symb, partition);
   }
@@ -274,9 +260,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   strategy->compute_launch_domains(solver);
 
-#ifdef DEBUG_LEGATE
-  strategy->dump();
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { strategy->dump(); }
 
   return strategy;
 }

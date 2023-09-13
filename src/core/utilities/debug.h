@@ -15,7 +15,7 @@
 #include "core/data/store.h"
 #include "core/utilities/typedefs.h"
 
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
 #include <cuda_runtime_api.h>
 #endif
 
@@ -30,21 +30,6 @@
  */
 namespace legate {
 
-#ifdef LEGATE_USE_CUDA
-
-#ifndef MAX
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#endif
-
-inline bool is_device_only_ptr(const void* ptr)
-{
-  cudaPointerAttributes attrs;
-  cudaError_t res = cudaPointerGetAttributes(&attrs, ptr);
-  return res == cudaSuccess && attrs.type == cudaMemoryTypeDevice;
-}
-
-#endif  // LEGATE_USE_CUDA
-
 /**
  * @ingroup util
  * @brief Converts the dense array into a string
@@ -58,19 +43,33 @@ inline bool is_device_only_ptr(const void* ptr)
 template <typename T, int DIM>
 std::string print_dense_array(const T* base, const Point<DIM>& extents, size_t strides[DIM])
 {
-#ifdef LEGATE_USE_CUDA
-  T* buf = nullptr;
+  T* buf                        = nullptr;
+  const auto is_device_only_ptr = [](const void* ptr) {
+#if LegateDefined(LEGATE_USE_CUDA)
+    cudaPointerAttributes attrs;
+    auto res = cudaPointerGetAttributes(&attrs, ptr);
+    return res == cudaSuccess && attrs.type == cudaMemoryTypeDevice;
+#else
+    static_cast<void>(ptr);
+    return false;
+#endif
+  };
+
   if (is_device_only_ptr(base)) {
+    const auto max_different_types = [](const auto& lhs, const auto& rhs) {
+      return lhs < rhs ? rhs : lhs;
+    };
     size_t num_elems = 0;
     for (size_t dim = 0; dim < DIM; ++dim) {
-      num_elems = MAX(num_elems, strides[dim] * extents[dim]);
+      num_elems = max_different_types(num_elems, strides[dim] * extents[dim]);
     }
-    buf             = new T[num_elems];
-    cudaError_t res = cudaMemcpy(buf, base, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
+    buf = new T[num_elems];
+#if LegateDefined(LEGATE_USE_CUDA)
+    auto res = cudaMemcpy(buf, base, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
     assert(res == cudaSuccess);
+#endif
     base = buf;
   }
-#endif  // LEGATE_USE_CUDA
   std::stringstream ss;
   for (int dim = 0; dim < DIM; ++dim) {
     if (strides[dim] == 0) continue;
@@ -100,9 +99,7 @@ std::string print_dense_array(const T* base, const Point<DIM>& extents, size_t s
       }
     }
   } while (dim >= 0);
-#ifdef LEGATE_USE_CUDA
-  if (buf != nullptr) delete buf;
-#endif  // LEGATE_USE_CUDA
+  if (LegateDefined(LEGATE_USE_CUDA)) { delete buf; }  // LEGATE_USE_CUDA
   return ss.str();
 }
 

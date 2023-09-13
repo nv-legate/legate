@@ -111,12 +111,12 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
 
 void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id)
 {
-#ifdef DEBUG_LEGATE
-  log_legate.debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %d)",
-                   type_uid,
-                   op_kind,
-                   legion_op_id);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate.debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %d)",
+                     type_uid,
+                     op_kind,
+                     legion_op_id);
+  }
   auto key    = std::make_pair(type_uid, op_kind);
   auto finder = reduction_ops_.find(key);
   if (finder != reduction_ops_.end()) {
@@ -132,17 +132,17 @@ int32_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) cons
   auto key    = std::make_pair(type_uid, op_kind);
   auto finder = reduction_ops_.find(key);
   if (reduction_ops_.end() == finder) {
-#ifdef DEBUG_LEGATE
-    log_legate.debug("Can't find reduction op (type_uid: %d, op_kind: %d)", type_uid, op_kind);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_legate.debug("Can't find reduction op (type_uid: %d, op_kind: %d)", type_uid, op_kind);
+    }
     std::stringstream ss;
     ss << "Reduction op " << op_kind << " does not exist for type " << type_uid;
     throw std::invalid_argument(std::move(ss).str());
   }
-#ifdef DEBUG_LEGATE
-  log_legate.debug(
-    "Found reduction op %d (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate.debug(
+      "Found reduction op %d (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
+  }
   return finder->second;
 }
 
@@ -636,11 +636,11 @@ Legion::IndexPartition Runtime::create_image_partition(
   Legion::FieldID func_field_id,
   bool is_range)
 {
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Create image partition {index_space: " << index_space
-                     << ", func_partition: " << func_partition
-                     << ", func_field_id: " << func_field_id << ", is_range: " << is_range << "}";
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate.debug() << "Create image partition {index_space: " << index_space
+                       << ", func_partition: " << func_partition
+                       << ", func_field_id: " << func_field_id << ", is_range: " << is_range << "}";
+  }
   if (is_range)
     return legion_runtime_->create_partition_by_image_range(legion_context_,
                                                             index_space,
@@ -894,32 +894,28 @@ void Runtime::initialize_toplevel_machine()
   mapping::detail::Machine machine({{mapping::TaskTarget::GPU, create_range(num_gpus)},
                                     {mapping::TaskTarget::OMP, create_range(num_omps)},
                                     {mapping::TaskTarget::CPU, create_range(num_cpus)}});
-#ifdef DEBUG_LEGATE
-  assert(machine_manager_ != nullptr);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(machine_manager_ != nullptr); }
 
   machine_manager_->push_machine(std::move(machine));
 }
 
 const mapping::detail::Machine& Runtime::get_machine() const
 {
-#ifdef DEBUG_LEGATE
-  assert(machine_manager_ != nullptr);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(machine_manager_ != nullptr); }
   return machine_manager_->get_machine();
 }
 
 Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::SymbolicPoint& point)
 {
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Query projection {src_ndim: " << src_ndim << ", point: " << point << "}";
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate.debug() << "Query projection {src_ndim: " << src_ndim << ", point: " << point << "}";
+  }
 
   if (is_identity(src_ndim, point)) {
-#ifdef DEBUG_LEGATE
-    log_legate.debug() << "Identity projection {src_ndim: " << src_ndim << ", point: " << point
-                       << "}";
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_legate.debug() << "Identity projection {src_ndim: " << src_ndim << ", point: " << point
+                         << "}";
+    }
     return 0;
   }
 
@@ -942,10 +938,10 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
     src_ndim, ndim, dims.data(), weights.data(), offsets.data(), proj_id);
   registered_projections_[key] = proj_id;
 
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Register projection " << proj_id << " {src_ndim: " << src_ndim
-                     << ", point: " << point << "}";
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate.debug() << "Register projection " << proj_id << " {src_ndim: " << src_ndim
+                       << ", point: " << point << "}";
+  }
 
   return proj_id;
 }
@@ -966,26 +962,24 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   auto offset      = proc_range.low % proc_range.per_node_count;
   ShardingDesc key{proj_id, low, high, offset, proc_range.per_node_count};
 
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Query sharding {proj_id: " << proj_id
-                     << ", processor range: " << proc_range
-                     << ", processor type: " << machine.preferred_target << "}";
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate.debug() << "Query sharding {proj_id: " << proj_id
+                       << ", processor range: " << proc_range
+                       << ", processor type: " << machine.preferred_target << "}";
+  }
 
   auto finder = registered_shardings_.find(key);
   if (finder != registered_shardings_.end()) {
-#ifdef DEBUG_LEGATE
-    log_legate.debug() << "Found sharding " << finder->second;
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      log_legate.debug() << "Found sharding " << finder->second;
+    }
     return finder->second;
   }
 
   auto sharding_id = core_library_->get_sharding_id(next_sharding_id_++);
   registered_shardings_.insert({key, sharding_id});
 
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Create sharding " << sharding_id;
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create sharding " << sharding_id; }
 
   legate_create_sharding_functor_using_projection(
     sharding_id, proj_id, low, high, offset, proc_range.per_node_count);
@@ -1133,12 +1127,8 @@ void register_legate_core_tasks(Legion::Machine machine,
     task_info->add_variant(variant_id, nullptr, desc, VariantOptions{});
   };
   register_extract_scalar_variant(LEGATE_CPU_VARIANT);
-#ifdef LEGATE_USE_CUDA
-  register_extract_scalar_variant(LEGATE_GPU_VARIANT);
-#endif
-#ifdef LEGATE_USE_OPENMP
-  register_extract_scalar_variant(LEGATE_OMP_VARIANT);
-#endif
+  if (LegateDefined(LEGATE_USE_CUDA)) register_extract_scalar_variant(LEGATE_GPU_VARIANT);
+  if (LegateDefined(LEGATE_USE_OPENMP)) register_extract_scalar_variant(LEGATE_OMP_VARIANT);
   core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
 
   register_array_tasks(core_lib);

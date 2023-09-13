@@ -119,17 +119,13 @@ void TransformStack::pack(BufferBuilder& buffer) const
 
 Legion::Domain TransformStack::transform(const Legion::Domain& input) const
 {
-#ifdef DEBUG_LEGATE
-  assert(transform_ != nullptr);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
   return transform_->transform(parent_->identity() ? input : parent_->transform(input));
 }
 
 Legion::DomainAffineTransform TransformStack::inverse_transform(int32_t in_dim) const
 {
-#ifdef DEBUG_LEGATE
-  assert(transform_ != nullptr);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
   auto result  = transform_->inverse_transform(in_dim);
   auto out_dim = transform_->target_ndim(in_dim);
 
@@ -157,9 +153,7 @@ void TransformStack::print(std::ostream& out) const
 
 std::unique_ptr<StoreTransform> TransformStack::pop()
 {
-#ifdef DEBUG_LEGATE
-  assert(transform_ != nullptr);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
   auto result = std::move(transform_);
   if (parent_ != nullptr) {
     transform_ = std::move(parent_->transform_);
@@ -706,9 +700,7 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
   // e.g. X.promoted = [0] => X.transpose((1,2,0)).promoted = [2]
   for (auto& promoted : dims) {
     auto finder = std::find(axes_.begin(), axes_.end(), promoted);
-#ifdef DEBUG_LEGATE
-    assert(finder != axes_.end());
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != axes_.end()); }
     promoted = finder - axes_.begin();
   }
 }

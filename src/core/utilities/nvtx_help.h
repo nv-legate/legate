@@ -14,9 +14,13 @@
 
 #include "legate_defines.h"
 
-#ifdef LEGATE_USE_CUDA
-
+#if LegateDefined(LEGATE_USE_CUDA)
 #include <nvtx3/nvToolsExt.h>
+#else
+using nvtxRangeId_t = char;
+inline constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
+inline constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
+#endif
 
 namespace legate::nvtx {
 
@@ -30,5 +34,3 @@ class Range {
 };
 
 }  // namespace legate::nvtx
-
-#endif

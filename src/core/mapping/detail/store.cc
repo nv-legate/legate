@@ -104,17 +104,13 @@ bool Store::can_colocate_with(const Store& other) const
 
 const RegionField& Store::region_field() const
 {
-#ifdef DEBUG_LEGATE
-  assert(!is_future());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!is_future()); }
   return region_field_;
 }
 
 const FutureWrapper& Store::future() const
 {
-#ifdef DEBUG_LEGATE
-  assert(is_future());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_future()); }
   return future_;
 }
 

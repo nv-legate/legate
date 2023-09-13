@@ -30,7 +30,7 @@
 #define WINDOW_SIZE_DEFAULT 1
 #define WINDOW_SIZE_TEST 1
 
-#ifdef DEBUG_LEGATE
+#ifdef LEGATE_USE_DEBUG
 // In debug mode, the default is always block on tasks that can throw exceptions
 #define MAX_PENDING_EXCEPTIONS_DEFAULT 1
 #else

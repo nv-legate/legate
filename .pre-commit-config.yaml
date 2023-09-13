@@ -24,6 +24,16 @@ repos:
           pass_filenames: false
           args: ['legate', 'tests']
           additional_dependencies: [numpy,pytest,pytest_mock]
+    - repo: local
+      hooks:
+        -   id: legate-defined
+            name: legate-defined
+            description: 'Find uses of ifdef LEGATE_ that should be using LegateDefined()'
+            entry: ./scripts/pre-commit/legate_defined.sh
+            language: script
+            'types_or': [c++, c, cuda]
+            require_serial: false
+            stages: [pre-commit]
 
 ci:
     autoupdate_schedule: quarterly

@@ -109,18 +109,20 @@ int collAllgather(
 // called from main thread
 int collInit(int argc, char* argv[])
 {
-#ifdef LEGATE_USE_NETWORK
-  char* network    = getenv("LEGATE_NEED_NETWORK");
-  int need_network = 0;
-  if (network != nullptr) { need_network = atoi(network); }
-  if (need_network) {
-    backend_network = new MPINetwork(argc, argv);
+  if (LegateDefined(LEGATE_USE_NETWORK)) {
+    char* network    = getenv("LEGATE_NEED_NETWORK");
+    int need_network = 0;
+    if (network != nullptr) { need_network = atoi(network); }
+    if (need_network) {
+#if LegateDefined(LEGATE_USE_NETWORK)
+      backend_network = new MPINetwork(argc, argv);
+#endif
+    } else {
+      backend_network = new LocalNetwork(argc, argv);
+    }
   } else {
     backend_network = new LocalNetwork(argc, argv);
   }
-#else
-  backend_network = new LocalNetwork(argc, argv);
-#endif
   return CollSuccess;
 }
 

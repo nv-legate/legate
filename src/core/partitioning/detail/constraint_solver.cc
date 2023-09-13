@@ -125,15 +125,11 @@ void ConstraintSolver::solve_constraints()
 
     std::vector<const Variable*> part_symbs_to_unify;
     alignment->find_partition_symbols(part_symbs_to_unify);
-#ifdef DEBUG_LEGATE
-    assert(!part_symbs_to_unify.empty());
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!part_symbs_to_unify.empty()); }
 
     auto it           = part_symbs_to_unify.begin();
     auto* equiv_class = table[**it++];
-#ifdef DEBUG_LEGATE
-    assert(equiv_class != nullptr);
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(equiv_class != nullptr); }
     for (; it != part_symbs_to_unify.end(); ++it) {
       auto* to_unify = table[**it];
       auto* result   = equiv_class->unify(to_unify);

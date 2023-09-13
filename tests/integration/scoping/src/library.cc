@@ -44,10 +44,10 @@ void validate(legate::TaskContext context)
 class MultiVariantTask : public Task<MultiVariantTask, MULTI_VARIANT> {
  public:
   static void cpu_variant(legate::TaskContext context) { validate(context); }
-#ifdef LEGATE_USE_OPENMP
+#if LegateDefined(USE_OPENMP)
   static void omp_variant(legate::TaskContext context) { validate(context); }
 #endif
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(USE_CUDA)
   static void gpu_variant(legate::TaskContext context) { validate(context); }
 #endif
 };

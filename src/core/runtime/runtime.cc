@@ -36,33 +36,34 @@ extern Logger log_legate;
 
 /*static*/ void Core::parse_config(void)
 {
-#ifndef LEGATE_USE_CUDA
-  const char* need_cuda = getenv("LEGATE_NEED_CUDA");
-  if (need_cuda != nullptr) {
-    fprintf(stderr,
-            "Legate was run with GPUs but was not built with GPU support. "
-            "Please install Legate again with the \"--cuda\" flag.\n");
-    exit(1);
+  if (!LegateDefined(LEGATE_USE_CUDA)) {
+    const char* need_cuda = getenv("LEGATE_NEED_CUDA");
+    if (need_cuda != nullptr) {
+      fprintf(stderr,
+              "Legate was run with GPUs but was not built with GPU support. "
+              "Please install Legate again with the \"--cuda\" flag.\n");
+      exit(1);
+    }
   }
-#endif
-#ifndef LEGATE_USE_OPENMP
-  const char* need_openmp = getenv("LEGATE_NEED_OPENMP");
-  if (need_openmp != nullptr) {
-    fprintf(stderr,
-            "Legate was run with OpenMP processors but was not built with "
-            "OpenMP support. Please install Legate again with the \"--openmp\" flag.\n");
-    exit(1);
+  if (!LegateDefined(LEGATE_USE_OPENMP)) {
+    const char* need_openmp = getenv("LEGATE_NEED_OPENMP");
+    if (need_openmp != nullptr) {
+      fprintf(stderr,
+              "Legate was run on multiple nodes but was not built with networking "
+              "support. Please install Legate again with \"--network\".\n");
+      exit(1);
+    }
   }
-#endif
-#ifndef LEGATE_USE_NETWORK
-  const char* need_network = getenv("LEGATE_NEED_NETWORK");
-  if (need_network != nullptr) {
-    fprintf(stderr,
-            "Legate was run on multiple nodes but was not built with networking "
-            "support. Please install Legate again with \"--network\".\n");
-    exit(1);
+  if (!LegateDefined(LEGATE_USE_NETWORK)) {
+    const char* need_network = getenv("LEGATE_NEED_NETWORK");
+    if (need_network != nullptr) {
+      fprintf(stderr,
+              "Legate was run on multiple nodes but was not built with networking "
+              "support. Please install Legate again with \"--network\".\n");
+      exit(1);
+    }
   }
-#endif
+
   auto parse_variable = [](const char* variable, bool& result) {
     const char* value = getenv(variable);
     if (value != nullptr && atoi(value) > 0) result = true;

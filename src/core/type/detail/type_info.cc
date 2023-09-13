@@ -194,13 +194,13 @@ bool FixedArrayType::equal(const Type& other) const
   if (code != other.code) return false;
   auto& casted = static_cast<const FixedArrayType&>(other);
 
-#ifdef DEBUG_LEGATE
-  // Do a structural check in debug mode
-  return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
-#else
-  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    // Do a structural check in debug mode
+    return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
+  } else {
+    // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+    return uid_ == casted.uid_;
+  }
 }
 
 StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
@@ -271,18 +271,18 @@ bool StructType::equal(const Type& other) const
   if (code != other.code) return false;
   auto& casted = static_cast<const StructType&>(other);
 
-#ifdef DEBUG_LEGATE
-  // Do a structural check in debug mode
-  if (uid_ != casted.uid_) return false;
-  uint32_t nf = num_fields();
-  if (nf != casted.num_fields()) return false;
-  for (uint32_t idx = 0; idx < nf; ++idx)
-    if (field_type(idx) != casted.field_type(idx)) return false;
-  return true;
-#else
-  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    // Do a structural check in debug mode
+    if (uid_ != casted.uid_) return false;
+    uint32_t nf = num_fields();
+    if (nf != casted.num_fields()) return false;
+    for (uint32_t idx = 0; idx < nf; ++idx)
+      if (field_type(idx) != casted.field_type(idx)) return false;
+    return true;
+  } else {
+    // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+    return uid_ == casted.uid_;
+  }
 }
 
 std::shared_ptr<Type> StructType::field_type(uint32_t field_idx) const
@@ -346,13 +346,13 @@ bool ListType::equal(const Type& other) const
   if (code != other.code) return false;
   auto& casted = static_cast<const ListType&>(other);
 
-#ifdef DEBUG_LEGATE
-  // Do a structural check in debug mode
-  return uid_ == casted.uid_ && element_type_ == casted.element_type_;
-#else
-  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    // Do a structural check in debug mode
+    return uid_ == casted.uid_ && element_type_ == casted.element_type_;
+  } else {
+    // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+    return uid_ == casted.uid_;
+  }
 }
 
 std::shared_ptr<Type> string_type()

@@ -14,10 +14,8 @@
 
 #include "core/mapping/detail/core_mapper.h"
 
-#include "core/mapping/detail/machine.h"
-#ifdef LEGATE_USE_CUDA
 #include "core/comm/comm_nccl.h"
-#endif
+#include "core/mapping/detail/machine.h"
 
 namespace legate {
 
@@ -157,11 +155,8 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
       return max_lru_length;
     }
     case LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER: {
-#ifdef LEGATE_USE_CUDA
-      return machine.has_gpus() && comm::nccl::needs_barrier();
-#else
-      return false;
-#endif
+      return LegateDefined(LEGATE_USE_CUDA) ? machine.has_gpus() && comm::nccl::needs_barrier()
+                                            : false;
     }
   }
   // Illegal tunable variable

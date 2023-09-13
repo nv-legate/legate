@@ -85,10 +85,10 @@ void LogicalRegionField::add_invalidation_callback(std::function<void()> callbac
 void LogicalRegionField::perform_invalidation_callbacks()
 {
   if (parent_ != nullptr) {
-#ifdef DEBUG_LEGATE
-    // Callbacks should exist only in the root
-    assert(callbacks_.empty());
-#endif
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      // Callbacks should exist only in the root
+      assert(callbacks_.empty());
+    }
     parent_->perform_invalidation_callbacks();
   } else {
     for (auto& callback : callbacks_) { callback(); }

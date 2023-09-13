@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "legion.h"
+
 #ifdef __cplusplus
 #if __cplusplus <= 199711L
 #ifdef _MSC_VER
@@ -61,28 +63,59 @@
 
 #ifndef LEGATE_USE_CUDA
 #ifdef LEGION_USE_CUDA
-#define LEGATE_USE_CUDA
+#define LEGATE_USE_CUDA 1
 #endif
 #endif
 
 #ifndef LEGATE_USE_OPENMP
 #ifdef REALM_USE_OPENMP
-#define LEGATE_USE_OPENMP
+#define LEGATE_USE_OPENMP 1
 #endif
 #endif
 
 #ifndef LEGATE_USE_NETWORK
 #if defined(REALM_USE_GASNET1) || defined(REALM_USE_GASNETEX) || defined(REALM_USE_MPI) || \
   defined(REALM_USE_UCX)
-#define LEGATE_USE_NETWORK
+#define LEGATE_USE_NETWORK 1
 #endif
 #endif
 
 #ifdef LEGION_BOUNDS_CHECKS
-#define LEGATE_BOUNDS_CHECKS
+#define LEGATE_BOUNDS_CHECKS 1
 #endif
 
 #define LEGATE_MAX_DIM LEGION_MAX_DIM
 
+// backwards compatibility
+#if defined(DEBUG_LEGATE) && !defined(LEGATE_USE_DEBUG)
+#define LEGATE_USE_DEBUG 1
+#endif
+
 // TODO: 2022-10-04: Work around a Legion bug, by not instantiating futures on framebuffer.
-#define LEGATE_NO_FUTURES_ON_FB
+#define LEGATE_NO_FUTURES_ON_FB 1
+
+#define LegateConcat_(x, y) x##y
+#define LegateConcat(x, y) LegateConcat_(x, y)
+
+// Each suffix defines an additional "enabled" state for LegateDefined(LEGATE_), i.e. if you define
+//
+// #define LegateDefinedEnabledForm_FOO ignored,
+//                                  ^^^~~~~~~~~~~~ note suffix
+// Results in
+//
+// #define LEGATE_HAVE_BAR FOO
+// LegateDefined(LEGATE_HAVE_BAR) // now evalues to 1
+#define LegateDefinedEnabledForm_1 ignored,
+#define LegateDefinedEnabledForm_ ignored,
+
+// arguments are either
+// - (0, 1, 0, dummy)
+// - (1, 0, dummy)
+// this final step cherry-picks the middle
+#define LegateDefinedPrivate___(ignored, val, ...) val
+// the following 2 steps are needed purely for MSVC since it has a nonconforming preprocessor
+// and does not expand __VA_ARGS__ in a single step
+#define LegateDefinedPrivate__(args) LegateDefinedPrivate___ args
+#define LegateDefinedPrivate_(...) LegateDefinedPrivate__((__VA_ARGS__))
+#define LegateDefinedPrivate(x) LegateDefinedPrivate_(x 1, 0, dummy)
+#define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))

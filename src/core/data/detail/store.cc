@@ -17,7 +17,7 @@
 #include "core/utilities/dispatch.h"
 #include "core/utilities/machine.h"
 
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #endif
@@ -120,14 +120,14 @@ void UnboundRegionField::bind_empty_data(int32_t ndim)
 
 ReturnValue UnboundRegionField::pack_weight() const
 {
-#ifdef DEBUG_LEGATE
-  if (!bound_) {
-    legate::log_legate.error(
-      "Found an uninitialized unbound store. Please make sure you return buffers to all unbound "
-      "stores in the task");
-    LEGATE_ABORT;
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (!bound_) {
+      legate::log_legate.error(
+        "Found an uninitialized unbound store. Please make sure you return buffers to all unbound "
+        "stores in the task");
+      LEGATE_ABORT;
+    }
   }
-#endif
   return ReturnValue(num_elements_, sizeof(size_t));
 }
 
@@ -145,19 +145,14 @@ FutureWrapper::FutureWrapper(bool read_only,
   : read_only_(read_only), field_size_(field_size), domain_(domain), future_(future)
 {
   if (!read_only) {
-#ifdef DEBUG_LEGATE
-    assert(!initialize || future_.get_untyped_size() == field_size);
-#endif
-    auto mem_kind = find_memory_kind_for_executing_processor(
-#ifdef LEGATE_NO_FUTURES_ON_FB
-      true
-#else
-      false
-#endif
-    );
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(!initialize || future_.get_untyped_size() == field_size);
+    }
+    auto mem_kind =
+      find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB));
     if (initialize) {
       auto p_init_value = future_.get_buffer(mem_kind);
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
       if (mem_kind == Memory::Kind::GPU_FB_MEM) {
         // TODO: This should be done by Legion
         buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
@@ -200,11 +195,9 @@ void FutureWrapper::initialize_with_identity(int32_t redop_id)
   auto ptr         = untyped_acc.ptr(0);
 
   auto redop = Legion::Runtime::get_reduction_op(redop_id);
-#ifdef DEBUG_LEGATE
-  assert(redop->sizeof_lhs == field_size_);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(redop->sizeof_lhs == field_size_); }
   auto identity = redop->identity;
-#ifdef LEGATE_USE_CUDA
+#if LegateDefined(LEGATE_USE_CUDA)
   if (buffer_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
     CHECK_CUDA(cudaMemcpyAsync(ptr, identity, field_size_, cudaMemcpyHostToDevice, stream));
@@ -343,9 +336,7 @@ Domain Store::domain() const
     throw std::invalid_argument("Invalid to retrieve the domain of an unbound store");
   auto result = is_future_ ? future_.domain() : region_field_.domain();
   if (!transform_->identity()) result = transform_->transform(result);
-#ifdef DEBUG_LEGATE
-  assert(result.dim == dim_ || dim_ == 0);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(result.dim == dim_ || dim_ == 0); }
   return result;
 }
 
@@ -408,34 +399,26 @@ bool Store::is_read_only_future() const { return future_.is_read_only(); }
 
 void Store::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
 {
-#ifdef DEBUG_LEGATE
-  assert(!(is_future() || is_unbound_store()));
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!(is_future() || is_unbound_store())); }
   pr  = region_field_.get_physical_region();
   fid = region_field_.get_field_id();
 }
 
 Legion::Future Store::get_future() const
 {
-#ifdef DEBUG_LEGATE
-  assert(is_future());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_future()); }
   return future_.get_future();
 }
 
 Legion::UntypedDeferredValue Store::get_buffer() const
 {
-#ifdef DEBUG_LEGATE
-  assert(is_future());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_future()); }
   return future_.get_buffer();
 }
 
 void Store::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid)
 {
-#ifdef DEBUG_LEGATE
-  assert(is_unbound_store());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_unbound_store()); }
   out = unbound_field_.get_output_region();
   fid = unbound_field_.get_field_id();
 }

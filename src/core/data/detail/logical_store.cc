@@ -42,9 +42,7 @@ Storage::Storage(int32_t dim, std::shared_ptr<Type> type)
     type_(std::move(type)),
     offsets_(dim_, 0)
 {
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Create " << to_string();
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
 
 Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar)
@@ -56,9 +54,7 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize
     offsets_(dim_, 0)
 {
   if (optimize_scalar && volume_ == 1) kind_ = Kind::FUTURE;
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Create " << to_string();
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
 
 Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future)
@@ -71,9 +67,7 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
     future_(future),
     offsets_(dim_, 0)
 {
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Create " << to_string();
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
 
 Storage::Storage(Shape&& extents,
@@ -91,9 +85,7 @@ Storage::Storage(Shape&& extents,
     color_(std::move(color)),
     offsets_(std::move(offsets))
 {
-#ifdef DEBUG_LEGATE
-  log_legate.debug() << "Create " << to_string();
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
 
 const Shape& Storage::extents() const
@@ -107,9 +99,7 @@ const Shape& Storage::extents() const
 
 const Shape& Storage::offsets() const
 {
-#ifdef DEBUG_LEGATE
-  assert(!unbound_);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!unbound_); }
   return offsets_;
 }
 
@@ -156,9 +146,7 @@ std::shared_ptr<Storage> Storage::get_root()
 
 LogicalRegionField* Storage::get_region_field()
 {
-#ifdef DEBUG_LEGATE
-  assert(Kind::REGION_FIELD == kind_);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::REGION_FIELD == kind_); }
   if (region_field_ != nullptr) return region_field_.get();
 
   if (nullptr == parent_) {
@@ -172,9 +160,7 @@ LogicalRegionField* Storage::get_region_field()
 
 Legion::Future Storage::get_future() const
 {
-#ifdef DEBUG_LEGATE
-  assert(Kind::FUTURE == kind_);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::FUTURE == kind_); }
   return future_;
 }
 
@@ -200,9 +186,7 @@ void Storage::set_future(Legion::Future future) { future_ = future; }
 
 RegionField Storage::map()
 {
-#ifdef DEBUG_LEGATE
-  assert(Kind::REGION_FIELD == kind_);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::REGION_FIELD == kind_); }
   return Runtime::get_runtime()->map_region_field(get_region_field());
 }
 
@@ -337,11 +321,11 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
     transform_(std::make_shared<TransformStack>())
 {
   if (!unbound()) extents_ = storage_->extents();
-#ifdef DEBUG_LEGATE
-  assert(transform_ != nullptr);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(transform_ != nullptr);
 
-  log_legate.debug() << "Create " << to_string();
-#endif
+    log_legate.debug() << "Create " << to_string();
+  }
 }
 
 LogicalStore::LogicalStore(Shape&& extents,
@@ -352,11 +336,11 @@ LogicalStore::LogicalStore(Shape&& extents,
     storage_(storage),
     transform_(std::move(transform))
 {
-#ifdef DEBUG_LEGATE
-  assert(transform_ != nullptr);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(transform_ != nullptr);
 
-  log_legate.debug() << "Create " << to_string();
-#endif
+    log_legate.debug() << "Create " << to_string();
+  }
 }
 
 LogicalStore::~LogicalStore()
@@ -400,18 +384,14 @@ Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
 
 void LogicalStore::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
 {
-#ifdef DEBUG_LEGATE
-  assert(!has_scalar_storage());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!has_scalar_storage()); }
   storage_->set_region_field(std::move(region_field));
   extents_ = storage_->extents();
 }
 
 void LogicalStore::set_future(Legion::Future future)
 {
-#ifdef DEBUG_LEGATE
-  assert(has_scalar_storage());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(has_scalar_storage()); }
   storage_->set_future(future);
 }
 
@@ -571,9 +551,7 @@ std::shared_ptr<Store> LogicalStore::get_physical_store()
     return std::make_shared<Store>(dim(), type(), -1, future, transform_);
   }
 
-#ifdef DEBUG_LEGATE
-  assert(storage_->kind() == Storage::Kind::REGION_FIELD);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(storage_->kind() == Storage::Kind::REGION_FIELD); }
   auto region_field = storage_->map();
   mapped_ = std::make_shared<Store>(dim(), type(), -1, std::move(region_field), transform_);
   return mapped_;
@@ -606,9 +584,7 @@ Legion::ProjectionID LogicalStore::compute_projection(
 
   auto point = transform_->invert(proj::create_symbolic_point(ndim));
   // TODO: We can't currently mix affine projections with delinearizing projections
-#ifdef DEBUG_LEGATE
-  assert(ndim == launch_ndim);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(ndim == launch_ndim); }
   return Runtime::get_runtime()->get_projection(ndim, point);
 }
 
@@ -638,9 +614,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
     }
   } else
     store_part = transform_->convert(storage_part);
-#ifdef DEBUG_LEGATE
-  assert(store_part != nullptr);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(store_part != nullptr); }
   return store_part;
 }
 
@@ -725,9 +699,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(const Domain* launch_domain,
                                                                     Legion::PrivilegeMode privilege)
 {
-#ifdef DEBUG_LEGATE
-  assert(key_partition_ != nullptr);
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(key_partition_ != nullptr); }
   auto store_partition = create_partition(key_partition_);
   auto proj_info       = store_partition->create_projection_info(launch_domain);
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));

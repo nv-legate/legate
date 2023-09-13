@@ -146,7 +146,7 @@ void Task::demux_scalar_stores(const Legion::Future& result)
       auto* runtime = detail::Runtime::get_runtime();
       runtime->record_pending_exception(result);
     }
-#ifdef DEBUG_LEGATE
+#if LegateDefined(LEGATE_USE_DEBUG)
     else {
       assert(1 == num_unbound_outs);
     }
@@ -185,7 +185,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
       auto* runtime = detail::Runtime::get_runtime();
       runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
     }
-#ifdef DEBUG_LEGATE
+#if LegateDefined(LEGATE_USE_DEBUG)
     else {
       assert(1 == num_unbound_outs);
     }
@@ -365,10 +365,10 @@ void ManualTask::add_output(std::shared_ptr<LogicalStore> store)
 
 void ManualTask::add_output(std::shared_ptr<LogicalStorePartition> store_partition)
 {
-#ifdef DEBUG_LEGATE
-  // TODO: We need to raise an exception for the user error in this case
-  assert(!store_partition->store()->unbound());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    // TODO: We need to raise an exception for the user error in this case
+    assert(!store_partition->store()->unbound());
+  }
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_output(store_partition->store());
   }

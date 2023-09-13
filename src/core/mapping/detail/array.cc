@@ -27,9 +27,9 @@ BaseArray::BaseArray(std::shared_ptr<Store> data, std::shared_ptr<Store> null_ma
 
 bool BaseArray::unbound() const
 {
-#ifdef DEBUG_LEGATE
-  assert(!nullable() || data_->unbound() == null_mask_->unbound());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!nullable() || data_->unbound() == null_mask_->unbound());
+  }
   return data_->unbound();
 }
 

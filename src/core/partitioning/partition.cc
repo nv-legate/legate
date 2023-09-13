@@ -122,10 +122,10 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   const auto& storage_exts = storage->extents();
   const auto& storage_offs = storage->offsets();
 
-#ifdef DEBUG_LEGATE
-  assert(storage_exts.size() == storage_offs.size());
-  assert(storage_offs.size() == offsets_.size());
-#endif
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(storage_exts.size() == storage_offs.size());
+    assert(storage_offs.size() == offsets_.size());
+  }
 
   uint32_t ndim = storage_exts.size();
 
