@@ -58,6 +58,7 @@ include(rapids-cython)
 rapids_cython_init()
 
 add_subdirectory(legate/core/_lib)
+add_subdirectory(legate/timing/_lib)
 
 set(cython_lib_dir "../../")
 

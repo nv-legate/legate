@@ -8,6 +8,19 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from __future__ import annotations
+from libcpp.utility cimport move
 
-from legate.timing._lib.timing import time
+import cython
+
+
+cdef extern from "timing/timing.h" namespace "legate::timing" nogil:
+    cdef cppclass Time:
+        int value()
+
+    cdef Time measure_microseconds()
+
+    cdef Time measure_nanoseconds()
+
+
+cdef class PyTime:
+    cdef Time _time

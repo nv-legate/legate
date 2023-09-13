@@ -1,3 +1,4 @@
+#=============================================================================
 # SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -7,7 +8,18 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
+#=============================================================================
 
-from __future__ import annotations
+set(cython_sources timing.pyx)
+set(linked_libraries legate::core)
 
-from legate.timing._lib.timing import time
+rapids_cython_create_modules(
+  CXX
+  ASSOCIATED_TARGETS legate_core
+  SOURCE_FILES "${cython_sources}"
+  LINKED_LIBRARIES "${linked_libraries}"
+)
+
+foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
+  target_compile_features(${target} PRIVATE cxx_std_17)
+endforeach()

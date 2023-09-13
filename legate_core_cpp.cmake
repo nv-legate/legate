@@ -256,6 +256,7 @@ list(APPEND legate_core_SOURCES
   src/core/utilities/machine.cc
   src/core/utilities/linearize.cc
   src/core/utilities/detail/buffer_builder.cc
+  src/timing/timing.cc
 )
 
 if(Legion_NETWORKS)
@@ -390,6 +391,7 @@ if (legate_core_BUILD_DOCS)
       src/core/runtime/tracker.h
       src/core/utilities/debug.h
       src/core/utilities/dispatch.h
+      src/timing/timing.h
       # main page
       src/legate.h
     )
