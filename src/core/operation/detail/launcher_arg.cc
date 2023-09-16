@@ -50,8 +50,7 @@ void RegionFieldArg::analyze(StoreAnalyzer& analyzer)
 
 std::optional<Legion::ProjectionID> RegionFieldArg::get_key_proj_id() const
 {
-  return LEGATE_CORE_KEY_STORE_TAG == proj_info_->tag ? std::make_optional(proj_info_->proj_id)
-                                                      : std::nullopt;
+  return proj_info_->is_key ? std::make_optional(proj_info_->proj_id) : std::nullopt;
 }
 
 void RegionFieldArg::perform_invalidations() const

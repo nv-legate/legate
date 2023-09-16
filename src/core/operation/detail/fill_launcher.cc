@@ -48,7 +48,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
                                        lhs_proj.proj_id,
                                        Legion::Predicate::TRUE_PRED,
                                        runtime->core_library()->get_mapper_id(),
-                                       lhs_proj.tag,
+                                       lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0,
                                        mapper_arg.to_legion_buffer(),
                                        provenance.c_str());
 
@@ -74,7 +74,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
                                    future_value,
                                    Legion::Predicate::TRUE_PRED,
                                    runtime->core_library()->get_mapper_id(),
-                                   lhs_proj.tag,
+                                   lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0,
                                    mapper_arg.to_legion_buffer(),
                                    provenance.c_str());
 

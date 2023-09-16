@@ -683,7 +683,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
     auto partition       = strategy[variable];
     auto store_partition = create_partition(partition);
     auto proj_info       = store_partition->create_projection_info(launch_domain);
-    proj_info->tag       = strategy.is_key_partition(variable) ? LEGATE_CORE_KEY_STORE_TAG : 0;
+    proj_info->is_key    = strategy.is_key_partition(variable);
     proj_info->redop     = redop;
 
     if (privilege == REDUCE && store_partition->is_disjoint_for(launch_domain)) {

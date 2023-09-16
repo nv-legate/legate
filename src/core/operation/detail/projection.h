@@ -17,15 +17,15 @@
 
 namespace legate::detail {
 
-struct ProjectionInfo {
-  ProjectionInfo() {}
-  ProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
+struct BaseProjectionInfo {
+  BaseProjectionInfo() = default;
+  BaseProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
 
-  ProjectionInfo(const ProjectionInfo&)            = default;
-  ProjectionInfo& operator=(const ProjectionInfo&) = default;
+  BaseProjectionInfo(const BaseProjectionInfo&)            = default;
+  BaseProjectionInfo& operator=(const BaseProjectionInfo&) = default;
 
-  bool operator<(const ProjectionInfo& other) const;
-  bool operator==(const ProjectionInfo& other) const;
+  bool operator<(const BaseProjectionInfo& other) const;
+  bool operator==(const BaseProjectionInfo& other) const;
 
   // TODO: Ideally we want this method to return a requirement, instead of taking an inout argument.
   // We go with an inout parameter for now, as RegionRequirement doesn't have a move
@@ -34,15 +34,31 @@ struct ProjectionInfo {
   void populate_requirement(Legion::RegionRequirement& requirement,
                             const Legion::LogicalRegion& region,
                             const std::vector<Legion::FieldID>& fields,
-                            Legion::PrivilegeMode privilege) const;
+                            Legion::PrivilegeMode privilege,
+                            bool is_key) const;
 
   void set_reduction_op(Legion::ReductionOpID _redop) { redop = _redop; }
 
   Legion::LogicalPartition partition{Legion::LogicalPartition::NO_PART};
   Legion::ProjectionID proj_id{0};
   Legion::ReductionOpID redop{-1};
-  Legion::MappingTagID tag{0};
-  Legion::RegionFlags flags{LEGION_NO_FLAG};
+};
+
+struct ProjectionInfo : public BaseProjectionInfo {
+  ProjectionInfo() = default;
+  ProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
+
+  ProjectionInfo(const ProjectionInfo&)            = default;
+  ProjectionInfo& operator=(const ProjectionInfo&) = default;
+
+  using BaseProjectionInfo::populate_requirement;
+  template <bool SINGLE>
+  void populate_requirement(Legion::RegionRequirement& requirement,
+                            const Legion::LogicalRegion& region,
+                            const std::vector<Legion::FieldID>& fields,
+                            Legion::PrivilegeMode privilege) const;
+
+  bool is_key{false};
 };
 
 }  // namespace legate::detail

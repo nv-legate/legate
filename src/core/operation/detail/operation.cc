@@ -64,7 +64,7 @@ std::unique_ptr<ProjectionInfo> Operation::create_projection_info(const Strategy
 {
   auto store_partition = arg.store->create_partition(strategy[arg.variable]);
   auto proj_info       = store_partition->create_projection_info(launch_domain);
-  proj_info->tag       = strategy.is_key_partition(arg.variable) ? LEGATE_CORE_KEY_STORE_TAG : 0;
+  proj_info->is_key    = strategy.is_key_partition(arg.variable);
   return proj_info;
 }
 

@@ -26,6 +26,7 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const Projection
   else if (!(privilege == new_privilege || privilege == NO_ACCESS || new_privilege == NO_ACCESS))
     privilege = LEGION_READ_WRITE;
   proj_infos.emplace(proj_info);
+  is_key = is_key || proj_info.is_key;
 
   if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && proj_infos.size() > 1) {
     log_legate.error("Interfering requirements are found");
@@ -49,8 +50,8 @@ uint32_t FieldSet::num_requirements() const { return static_cast<uint32_t>(coale
 uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
                                          const ProjectionInfo& proj_info) const
 {
-  auto finder = req_indices_.find(Key(privilege, proj_info));
-  if (req_indices_.end() == finder) finder = req_indices_.find(Key(LEGION_READ_WRITE, proj_info));
+  auto finder = req_indices_.find(Key{privilege, proj_info});
+  if (req_indices_.end() == finder) finder = req_indices_.find(Key{LEGION_READ_WRITE, proj_info});
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != req_indices_.end()); }
   return finder->second;
 }
@@ -58,8 +59,11 @@ uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
 void FieldSet::coalesce()
 {
   for (const auto& [field_id, proj_set] : field_projs_) {
-    for (const auto& proj_info : proj_set.proj_infos)
-      coalesced_[Key(proj_set.privilege, proj_info)].push_back(field_id);
+    for (const auto& proj_info : proj_set.proj_infos) {
+      auto& [fields, is_key] = coalesced_[Key{proj_set.privilege, proj_info}];
+      fields.push_back(field_id);
+      is_key = is_key || proj_set.is_key;
+    }
   }
   uint32_t idx = 0;
   for (const auto& [key, _] : coalesced_) req_indices_[key] = idx++;
@@ -79,12 +83,13 @@ constexpr bool is_single<Legion::IndexTaskLauncher> = false;
 template <class Launcher>
 void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const
 {
-  for (auto& [key, fields] : coalesced_) {
+  for (auto& [key, entry] : coalesced_) {
+    auto& [fields, is_key]       = entry;
     auto& [privilege, proj_info] = key;
     task.region_requirements.push_back(Legion::RegionRequirement());
     auto& requirement = task.region_requirements.back();
     proj_info.template populate_requirement<is_single<Launcher>>(
-      requirement, region, fields, privilege);
+      requirement, region, fields, privilege, is_key);
   }
 }
 

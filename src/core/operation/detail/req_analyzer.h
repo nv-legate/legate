@@ -24,12 +24,13 @@ class ProjectionSet {
 
  public:
   Legion::PrivilegeMode privilege;
-  std::set<ProjectionInfo> proj_infos;
+  std::set<BaseProjectionInfo> proj_infos;
+  bool is_key;
 };
 
 class FieldSet {
  public:
-  using Key = std::pair<Legion::PrivilegeMode, ProjectionInfo>;
+  using Key = std::pair<Legion::PrivilegeMode, BaseProjectionInfo>;
 
  public:
   void insert(Legion::FieldID field_id,
@@ -45,7 +46,11 @@ class FieldSet {
   void populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const;
 
  private:
-  std::map<Key, std::vector<Legion::FieldID>> coalesced_;
+  struct Entry {
+    std::vector<Legion::FieldID> fields;
+    bool is_key;
+  };
+  std::map<Key, Entry> coalesced_;
   std::map<Key, uint32_t> req_indices_;
 
  private:

@@ -17,34 +17,36 @@
 namespace legate::detail {
 
 template <>
-void ProjectionInfo::populate_requirement<true>(Legion::RegionRequirement& requirement,
-                                                const Legion::LogicalRegion& region,
-                                                const std::vector<Legion::FieldID>& fields,
-                                                Legion::PrivilegeMode privilege) const
+void BaseProjectionInfo::populate_requirement<true>(Legion::RegionRequirement& requirement,
+                                                    const Legion::LogicalRegion& region,
+                                                    const std::vector<Legion::FieldID>& fields,
+                                                    Legion::PrivilegeMode privilege,
+                                                    bool is_key) const
 {
   auto parent = Runtime::get_runtime()->find_parent_region(region);
-
+  auto tag    = is_key ? LEGATE_CORE_KEY_STORE_TAG : 0;
   if (LEGION_REDUCE == privilege) {
     new (&requirement) Legion::RegionRequirement(region, redop, LEGION_EXCLUSIVE, parent, tag);
   } else {
     new (&requirement) Legion::RegionRequirement(region, privilege, LEGION_EXCLUSIVE, parent, tag);
   }
-  requirement.add_fields(fields).add_flags(flags);
+  requirement.add_fields(fields);
 }
 
 template <>
-void ProjectionInfo::populate_requirement<false>(Legion::RegionRequirement& requirement,
-                                                 const Legion::LogicalRegion& region,
-                                                 const std::vector<Legion::FieldID>& fields,
-                                                 Legion::PrivilegeMode privilege) const
+void BaseProjectionInfo::populate_requirement<false>(Legion::RegionRequirement& requirement,
+                                                     const Legion::LogicalRegion& region,
+                                                     const std::vector<Legion::FieldID>& fields,
+                                                     Legion::PrivilegeMode privilege,
+                                                     bool is_key) const
 {
   if (Legion::LogicalPartition::NO_PART == partition) {
-    populate_requirement<true>(requirement, region, fields, privilege);
+    populate_requirement<true>(requirement, region, fields, privilege, is_key);
     return;
   }
 
   auto parent = Runtime::get_runtime()->find_parent_region(region);
-
+  auto tag    = is_key ? LEGATE_CORE_KEY_STORE_TAG : 0;
   if (LEGION_REDUCE == privilege) {
     new (&requirement)
       Legion::RegionRequirement(partition, proj_id, redop, LEGION_EXCLUSIVE, parent, tag);
@@ -52,15 +54,16 @@ void ProjectionInfo::populate_requirement<false>(Legion::RegionRequirement& requ
     new (&requirement)
       Legion::RegionRequirement(partition, proj_id, privilege, LEGION_EXCLUSIVE, parent, tag);
   }
-  requirement.add_fields(fields).add_flags(flags);
+  requirement.add_fields(fields);
 }
 
-ProjectionInfo::ProjectionInfo(Legion::LogicalPartition _partition, Legion::ProjectionID _proj_id)
+BaseProjectionInfo::BaseProjectionInfo(Legion::LogicalPartition _partition,
+                                       Legion::ProjectionID _proj_id)
   : partition(_partition), proj_id(_proj_id)
 {
 }
 
-bool ProjectionInfo::operator<(const ProjectionInfo& other) const
+bool BaseProjectionInfo::operator<(const BaseProjectionInfo& other) const
 {
   if (partition < other.partition)
     return true;
@@ -72,18 +75,36 @@ bool ProjectionInfo::operator<(const ProjectionInfo& other) const
     return false;
   if (redop < other.redop)
     return true;
-  else if (redop > other.redop)
-    return false;
-  if (tag < other.tag)
-    return true;
   else
     return false;
 }
 
-bool ProjectionInfo::operator==(const ProjectionInfo& other) const
+bool BaseProjectionInfo::operator==(const BaseProjectionInfo& other) const
 {
-  return partition == other.partition && proj_id == other.proj_id && redop == other.redop &&
-         tag == other.tag && flags == other.flags;
+  return partition == other.partition && proj_id == other.proj_id && redop == other.redop;
+}
+
+ProjectionInfo::ProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id)
+  : BaseProjectionInfo(partition, proj_id)
+{
+}
+
+template <>
+void ProjectionInfo::populate_requirement<true>(Legion::RegionRequirement& requirement,
+                                                const Legion::LogicalRegion& region,
+                                                const std::vector<Legion::FieldID>& fields,
+                                                Legion::PrivilegeMode privilege) const
+{
+  populate_requirement<true>(requirement, region, fields, privilege, is_key);
+}
+
+template <>
+void ProjectionInfo::populate_requirement<false>(Legion::RegionRequirement& requirement,
+                                                 const Legion::LogicalRegion& region,
+                                                 const std::vector<Legion::FieldID>& fields,
+                                                 Legion::PrivilegeMode privilege) const
+{
+  populate_requirement<false>(requirement, region, fields, privilege, is_key);
 }
 
 }  // namespace legate::detail
