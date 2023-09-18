@@ -1250,7 +1250,7 @@ void try_set_property(Runtime& runtime,
 {
   auto value = var.value();
   if (value < 0) {
-    log_legate.error(error_msg.c_str());
+    log_legate.error("%s", error_msg.c_str());
     LEGATE_ABORT;
   }
   auto config = runtime.get_module_config(module_name);
@@ -1258,12 +1258,12 @@ void try_set_property(Runtime& runtime,
     // If the variable doesn't have a value, we don't care if the module is nonexistent
     if (!var.has_value()) { return; }
     const std::string msg = error_msg + " (the " + module_name + " module is not available)";
-    log_legate.error(msg.c_str());
+    log_legate.error("%s", msg.c_str());
     LEGATE_ABORT;
   }
   auto success = config->set_property(property_name, value);
   if (!success) {
-    log_legate.error(error_msg.c_str());
+    log_legate.error("%s", error_msg.c_str());
     LEGATE_ABORT;
   }
 }
