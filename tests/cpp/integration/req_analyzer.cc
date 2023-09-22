@@ -24,7 +24,16 @@ enum TaskIDs {
 
 struct Tester : public legate::LegateTask<Tester> {
   static const int32_t TASK_ID = TESTER;
-  static void cpu_variant(legate::TaskContext context) {}
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto inputs  = context.inputs();
+    auto outputs = context.outputs();
+    for (auto& input : inputs) { input.data().read_accessor<int64_t, 2>(); }
+    for (auto& output : outputs) {
+      output.data().read_accessor<int64_t, 2>();
+      output.data().write_accessor<int64_t, 2>();
+    }
+  }
 };
 
 void prepare()
@@ -32,6 +41,24 @@ void prepare()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   Tester::register_variants(context);
+}
+
+void test_inout_store()
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+
+  auto store1 = runtime->create_store({10, 5}, legate::int64());
+  auto store2 = runtime->create_store({10, 5}, legate::int64());
+  runtime->issue_fill(store1, legate::Scalar(int64_t{0}));
+  runtime->issue_fill(store2, legate::Scalar(int64_t{0}));
+
+  auto task  = runtime->create_task(context, TESTER);
+  auto part1 = task.add_input(store1);
+  auto part2 = task.add_input(store2);
+  task.add_output(store1);
+  task.add_constraint(legate::align(part1, part2));
+  runtime->submit(std::move(task));
 }
 
 void test_isomorphic_transformed_stores()
@@ -49,6 +76,12 @@ void test_isomorphic_transformed_stores()
   task.add_input(promoted1);
   task.add_output(promoted2);
   runtime->submit(std::move(task));
+}
+
+TEST(ReqAnalyzer, InoutStore)
+{
+  legate::Core::perform_registration<prepare>();
+  test_inout_store();
 }
 
 TEST(ReqAnalyzer, IsomorphicTransformedStores)

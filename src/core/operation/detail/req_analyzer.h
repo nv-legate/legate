@@ -38,7 +38,8 @@ class FieldSet {
               const ProjectionInfo& proj_info);
   uint32_t num_requirements() const;
   uint32_t get_requirement_index(Legion::PrivilegeMode privilege,
-                                 const ProjectionInfo& proj_info) const;
+                                 const ProjectionInfo& proj_info,
+                                 Legion::FieldID field_id) const;
 
  public:
   void coalesce();
@@ -51,7 +52,7 @@ class FieldSet {
     bool is_key;
   };
   std::map<Key, Entry> coalesced_;
-  std::map<Key, uint32_t> req_indices_;
+  std::map<std::pair<Key, Legion::FieldID>, uint32_t> req_indices_;
 
  private:
   std::map<Legion::FieldID, ProjectionSet> field_projs_;
@@ -65,7 +66,8 @@ class RequirementAnalyzer {
               const ProjectionInfo& proj_info);
   uint32_t get_requirement_index(const Legion::LogicalRegion& region,
                                  Legion::PrivilegeMode privilege,
-                                 const ProjectionInfo& proj_info) const;
+                                 const ProjectionInfo& proj_info,
+                                 Legion::FieldID field_id) const;
   bool empty() const { return field_sets_.empty(); }
 
  public:
@@ -144,9 +146,10 @@ struct StoreAnalyzer {
  public:
   uint32_t get_index(const Legion::LogicalRegion& region,
                      Legion::PrivilegeMode privilege,
-                     const ProjectionInfo& proj_info) const
+                     const ProjectionInfo& proj_info,
+                     Legion::FieldID field_id) const
   {
-    return req_analyzer_.get_requirement_index(region, privilege, proj_info);
+    return req_analyzer_.get_requirement_index(region, privilege, proj_info, field_id);
   }
   uint32_t get_index(const Legion::FieldSpace& field_space, Legion::FieldID field_id) const
   {

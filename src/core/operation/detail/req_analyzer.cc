@@ -48,10 +48,13 @@ void FieldSet::insert(Legion::FieldID field_id,
 uint32_t FieldSet::num_requirements() const { return static_cast<uint32_t>(coalesced_.size()); }
 
 uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
-                                         const ProjectionInfo& proj_info) const
+                                         const ProjectionInfo& proj_info,
+                                         Legion::FieldID field_id) const
 {
-  auto finder = req_indices_.find(Key{privilege, proj_info});
-  if (req_indices_.end() == finder) finder = req_indices_.find(Key{LEGION_READ_WRITE, proj_info});
+  auto finder = req_indices_.find(std::make_pair(Key{privilege, proj_info}, field_id));
+  if (req_indices_.end() == finder) {
+    finder = req_indices_.find(std::make_pair(Key{LEGION_READ_WRITE, proj_info}, field_id));
+  }
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != req_indices_.end()); }
   return finder->second;
 }
@@ -66,7 +69,10 @@ void FieldSet::coalesce()
     }
   }
   uint32_t idx = 0;
-  for (const auto& [key, _] : coalesced_) req_indices_[key] = idx++;
+  for (const auto& [key, entry] : coalesced_) {
+    for (const auto& field : entry.fields) { req_indices_[std::make_pair(key, field)] = idx; }
+    ++idx;
+  }
 }
 
 namespace {
@@ -107,12 +113,13 @@ void RequirementAnalyzer::insert(const Legion::LogicalRegion& region,
 
 uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion& region,
                                                     Legion::PrivilegeMode privilege,
-                                                    const ProjectionInfo& proj_info) const
+                                                    const ProjectionInfo& proj_info,
+                                                    Legion::FieldID field_id) const
 {
   auto finder = field_sets_.find(region);
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != field_sets_.end()); }
   auto& [field_set, req_offset] = finder->second;
-  return req_offset + field_set.get_requirement_index(privilege, proj_info);
+  return req_offset + field_set.get_requirement_index(privilege, proj_info, field_id);
 }
 
 void RequirementAnalyzer::analyze_requirements()

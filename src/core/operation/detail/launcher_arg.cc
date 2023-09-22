@@ -39,7 +39,7 @@ void RegionFieldArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
 
   buffer.pack<int32_t>(proj_info_->redop);
   buffer.pack<int32_t>(region.get_dim());
-  buffer.pack<uint32_t>(analyzer.get_index(region, privilege_, *proj_info_));
+  buffer.pack<uint32_t>(analyzer.get_index(region, privilege_, *proj_info_, field_id));
   buffer.pack<uint32_t>(field_id);
 }
 
