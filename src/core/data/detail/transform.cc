@@ -632,12 +632,7 @@ std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
 proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
 {
   std::vector<proj::SymbolicExpr> exprs;
-  exprs.resize(point.size());
-  std::transform(
-    point.data().begin(), point.data().end(), exprs.begin(), [&](const proj::SymbolicExpr& expr) {
-      auto dim = inverse_[expr.dim()];
-      return proj::SymbolicExpr(dim, expr.weight(), expr.offset());
-    });
+  for (int32_t idx : inverse_) { exprs.push_back(point[idx]); }
   return proj::SymbolicPoint(std::move(exprs));
 }
 

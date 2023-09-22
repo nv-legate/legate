@@ -182,6 +182,7 @@ void test_alignment_transformed()
   launch_tester(store1.promote(1, 5), store2.slice(1, legate::Slice(3, 8)));
   launch_tester(store1.promote(0, 10).transpose({1, 0}), store2);
   launch_tester(store1.delinearize(0, {10, 10}), store4);
+  launch_tester(store4.transpose({1, 0}).promote(0, 1), store4.promote(0, 1));
 }
 
 void test_redundant_alignment()
