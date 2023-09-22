@@ -30,11 +30,10 @@ Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
     value_(std::move(value))
 {
   store_mappings_[*lhs_var_] = lhs_;
-  if (lhs_->unbound() || lhs_->has_scalar_storage())
-    throw std::runtime_error("Fill lhs must be a normal, region-backed store");
+  if (lhs_->unbound()) throw std::invalid_argument("Fill lhs must be a normal store");
 
   if (!value_->has_scalar_storage())
-    throw std::runtime_error("Fill value should be a Future-back store");
+    throw std::invalid_argument("Fill value should be a Future-back store");
 }
 
 void Fill::validate()
@@ -46,6 +45,11 @@ void Fill::validate()
 
 void Fill::launch(Strategy* strategy)
 {
+  if (lhs_->has_scalar_storage()) {
+    lhs_->set_future(value_->get_future());
+    return;
+  }
+
   FillLauncher launcher(machine_);
   auto launch_domain = strategy->launch_domain(this);
   auto part          = (*strategy)[lhs_var_];

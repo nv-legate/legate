@@ -42,17 +42,29 @@ void Copy::validate()
     throw std::invalid_argument("Source and target must have the same type");
   }
   auto validate_store = [](auto* store) {
-    if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
-      throw std::invalid_argument("Copy accepts only normal, untransformed, region-backed stores");
+    if (store->unbound() || store->transformed()) {
+      throw std::invalid_argument("Copy accepts only normal and untransformed stores");
     }
   };
   validate_store(target_.store);
   validate_store(source_.store);
   constraint_->validate();
+
+  if (target_.store->has_scalar_storage() != source_.store->has_scalar_storage()) {
+    throw std::runtime_error("Copies are supported only between the same kind of stores");
+  }
+  if (redop_ && target_.store->has_scalar_storage()) {
+    throw std::runtime_error("Reduction copies don't support future-backed target stores");
+  }
 }
 
 void Copy::launch(Strategy* p_strategy)
 {
+  if (target_.store->has_scalar_storage()) {
+    assert(source_.store->has_scalar_storage());
+    target_.store->set_future(source_.store->get_future());
+    return;
+  }
   auto& strategy = *p_strategy;
   CopyLauncher launcher(machine_);
   auto launch_domain = strategy.launch_domain(this);

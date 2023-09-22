@@ -115,6 +115,7 @@ class FutureAnalyzer {
 
  private:
   std::map<Legion::Future, int32_t> future_indices_{};
+  std::vector<Legion::Future> coalesced_{};
   std::vector<Legion::Future> futures_{};
 };
 

@@ -170,8 +170,8 @@ void test_normal_copy(const NormalCopySpec& spec)
 
   auto& [shape, type, seed] = spec;
 
-  auto input  = runtime->create_store(shape, type);
-  auto output = runtime->create_store(shape, type);
+  auto input  = runtime->create_store(shape, type, true /*optimize_scalar*/);
+  auto output = runtime->create_store(shape, type, true /*optimize_scalar*/);
 
   fill_input(library, input, seed);
   runtime->issue_copy(output, input);
@@ -203,6 +203,7 @@ TEST(Copy, Single)
   legate::Core::perform_registration<register_tasks>();
   test_normal_copy({{4, 7}, legate::int64(), legate::Scalar(int64_t(12))});
   test_normal_copy({{1000, 100}, legate::uint32(), legate::Scalar(uint32_t(3))});
+  test_normal_copy({{1}, legate::int64(), legate::Scalar(int64_t(12))});
 }
 
 TEST(Copy, SingleReduction)

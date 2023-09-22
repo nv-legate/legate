@@ -58,7 +58,7 @@ template <int32_t DIM>
 
   if (shape.empty()) return;
 
-  auto acc = input.write_accessor<int64_t, DIM>(shape);
+  auto acc = input.read_accessor<int64_t, DIM>(shape);
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) { EXPECT_EQ(acc[*it], value); }
 }
 
@@ -113,14 +113,15 @@ void check_output_slice(legate::LogicalStore store,
   runtime->submit(std::move(task));
 }
 
-void test_fill_index(int32_t dim)
+void test_fill_index(int32_t dim, size_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
   int64_t v = 10;
 
-  auto lhs   = runtime->create_store(legate::Shape(dim, SIZE), legate::int64());
+  auto lhs =
+    runtime->create_store(legate::Shape(dim, size), legate::int64(), true /*optimize_scalar*/);
   auto value = runtime->create_store(v);
 
   // fill input store with some values
@@ -130,15 +131,15 @@ void test_fill_index(int32_t dim)
   check_output(lhs, v);
 }
 
-void test_fill_single(int32_t dim)
+void test_fill_single(int32_t dim, size_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
   legate::MachineTracker tracker(machine.slice(0, 1, legate::mapping::TaskTarget::CPU));
-  test_fill_index(dim);
+  test_fill_index(dim, size);
 }
 
-void test_fill_slice(int32_t dim)
+void test_fill_slice(int32_t dim, size_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -147,7 +148,7 @@ void test_fill_slice(int32_t dim)
   int64_t v2     = 200;
   int64_t offset = 3;
 
-  auto lhs                 = runtime->create_store(legate::Shape(dim, SIZE), legate::int64());
+  auto lhs                 = runtime->create_store(legate::Shape(dim, size), legate::int64());
   auto value_in_slice      = runtime->create_store(v1);
   auto value_outside_slice = runtime->create_store(v2);
 
@@ -177,25 +178,31 @@ void test_invalid()
 TEST(Fill, Index)
 {
   legate::Core::perform_registration<register_tasks>();
-  test_fill_index(1);
-  test_fill_index(2);
-  test_fill_index(3);
+  test_fill_index(1, SIZE);
+  test_fill_index(2, SIZE);
+  test_fill_index(3, SIZE);
+  test_fill_index(1, 1);
+  test_fill_index(2, 1);
+  test_fill_index(3, 1);
 }
 
 TEST(Fill, Single)
 {
   legate::Core::perform_registration<register_tasks>();
-  test_fill_single(1);
-  test_fill_single(2);
-  test_fill_single(3);
+  test_fill_single(1, SIZE);
+  test_fill_single(2, SIZE);
+  test_fill_single(3, SIZE);
+  test_fill_single(1, 1);
+  test_fill_single(2, 1);
+  test_fill_single(3, 1);
 }
 
 TEST(Fill, Slice)
 {
   legate::Core::perform_registration<register_tasks>();
-  test_fill_slice(1);
-  test_fill_slice(2);
-  test_fill_slice(3);
+  test_fill_slice(1, SIZE);
+  test_fill_slice(2, SIZE);
+  test_fill_slice(3, SIZE);
 }
 
 TEST(Fill, Invalid) { test_invalid(); }

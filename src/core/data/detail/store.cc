@@ -220,7 +220,8 @@ Store::Store(int32_t dim,
     redop_id_(redop_id),
     future_(future),
     transform_(std::move(transform)),
-    readable_(true)
+    readable_(future.valid()),
+    writable_(!future.is_read_only())
 {
 }
 
@@ -388,6 +389,16 @@ void Store::check_valid_binding(bool bind_buffer) const
   if (bind_buffer && unbound_field_.bound()) {
     throw std::invalid_argument("A buffer has already been bound to the store");
   }
+}
+
+void Store::check_write_access() const
+{
+  if (!writable_) { throw std::invalid_argument("Store isn't writable"); }
+}
+
+void Store::check_reduction_access() const
+{
+  if (!(writable_ || reducible_)) { throw std::invalid_argument("Store isn't reducible"); }
 }
 
 Legion::DomainAffineTransform Store::get_inverse_transform() const

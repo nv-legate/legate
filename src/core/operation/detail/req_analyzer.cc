@@ -196,13 +196,17 @@ int32_t FutureAnalyzer::get_future_index(const Legion::Future& future) const
 void FutureAnalyzer::analyze_futures()
 {
   int32_t index = 0;
-  for (auto& future : futures_) { future_indices_[future] = index++; }
+  for (auto& future : futures_) {
+    if (future_indices_.find(future) != future_indices_.end()) { continue; }
+    future_indices_[future] = index++;
+    coalesced_.push_back(future);
+  }
 }
 
 template <class Launcher>
 void FutureAnalyzer::_populate_launcher(Launcher& task) const
 {
-  for (auto& future : futures_) { task.add_future(future); }
+  for (auto& future : coalesced_) { task.add_future(future); }
 }
 void FutureAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {

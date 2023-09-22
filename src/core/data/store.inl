@@ -71,7 +71,10 @@ AccessorWO<T, DIM> Store::write_accessor() const
     check_accessor_type<T>();
   }
 
-  if (is_future()) { return AccessorWO<T, DIM>(get_buffer(), shape<DIM>()); }
+  if (is_future()) {
+    check_write_access();
+    return AccessorWO<T, DIM>(get_buffer(), shape<DIM>());
+  }
 
   return create_field_accessor<AccessorWO<T, DIM>, DIM>(shape<DIM>());
 }
@@ -84,7 +87,10 @@ AccessorRW<T, DIM> Store::read_write_accessor() const
     check_accessor_type<T>();
   }
 
-  if (is_future()) { return AccessorRW<T, DIM>(get_buffer(), shape<DIM>()); }
+  if (is_future()) {
+    check_write_access();
+    return AccessorRW<T, DIM>(get_buffer(), shape<DIM>());
+  }
 
   return create_field_accessor<AccessorRW<T, DIM>, DIM>(shape<DIM>());
 }
@@ -98,7 +104,10 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor() const
     check_accessor_type<T>();
   }
 
-  if (is_future()) { return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), shape<DIM>()); }
+  if (is_future()) {
+    check_reduction_access();
+    return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), shape<DIM>());
+  }
 
   return create_reduction_accessor<AccessorRD<OP, EXCLUSIVE, DIM>, DIM>(shape<DIM>());
 }
@@ -130,7 +139,10 @@ AccessorWO<T, DIM> Store::write_accessor(const Rect<DIM>& bounds) const
     check_accessor_type<T>();
   }
 
-  if (is_future()) { return AccessorWO<T, DIM>(get_buffer(), bounds); }
+  if (is_future()) {
+    check_write_access();
+    return AccessorWO<T, DIM>(get_buffer(), bounds);
+  }
 
   return create_field_accessor<AccessorWO<T, DIM>, DIM>(bounds);
 }
@@ -143,7 +155,10 @@ AccessorRW<T, DIM> Store::read_write_accessor(const Rect<DIM>& bounds) const
     check_accessor_type<T>();
   }
 
-  if (is_future()) { return AccessorRW<T, DIM>(get_buffer(), bounds); }
+  if (is_future()) {
+    check_write_access();
+    return AccessorRW<T, DIM>(get_buffer(), bounds);
+  }
 
   return create_field_accessor<AccessorRW<T, DIM>, DIM>(bounds);
 }
@@ -157,7 +172,10 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Rect<DIM>& bounds) c
     check_accessor_type<T>();
   }
 
-  if (is_future()) { return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), bounds); }
+  if (is_future()) {
+    check_reduction_access();
+    return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), bounds);
+  }
 
   return create_reduction_accessor<AccessorRD<OP, EXCLUSIVE, DIM>, DIM>(bounds);
 }

@@ -54,6 +54,10 @@ void Store::check_shape_dimension(const int32_t dim) const { impl_->check_shape_
 
 void Store::check_valid_binding(bool bind_buffer) const { impl_->check_valid_binding(bind_buffer); }
 
+void Store::check_write_access() const { impl_->check_write_access(); }
+
+void Store::check_reduction_access() const { impl_->check_reduction_access(); }
+
 Legion::DomainAffineTransform Store::get_inverse_transform() const
 {
   return impl_->get_inverse_transform();

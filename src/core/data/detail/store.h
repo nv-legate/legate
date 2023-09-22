@@ -216,6 +216,8 @@ class Store {
   void check_buffer_dimension(const int32_t dim) const;
   void check_shape_dimension(const int32_t dim) const;
   void check_valid_binding(bool bind_buffer) const;
+  void check_write_access() const;
+  void check_reduction_access() const;
   Legion::DomainAffineTransform get_inverse_transform() const;
 
  private:
