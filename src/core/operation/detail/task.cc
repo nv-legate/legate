@@ -84,11 +84,6 @@ void Task::launch_task(Strategy* p_strategy)
 
   for (auto& [arr, mapping] : inputs_) {
     launcher.add_input(arr->to_launcher_arg(mapping, strategy, launch_domain, READ_ONLY, -1));
-    for (auto& [store, symb] : mapping) {
-      // Key partitions for unbound stores will be populated by the launcher
-      if (store->unbound()) continue;
-      store->set_key_partition(machine_, strategy[symb].get());
-    }
   }
   for (auto& [arr, mapping] : outputs_) {
     launcher.add_output(arr->to_launcher_arg(mapping, strategy, launch_domain, WRITE_ONLY, -1));
