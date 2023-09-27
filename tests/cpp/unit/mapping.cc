@@ -36,7 +36,7 @@ TEST(Mapping, DimOrdering)
     order.set_c_order();
     EXPECT_EQ(order.kind(), legate::mapping::DimOrdering::Kind::C);
   }
-  
+
   // Fortran ordering
   {
     auto fortran_order = legate::mapping::DimOrdering::fortran_order();
@@ -45,13 +45,13 @@ TEST(Mapping, DimOrdering)
 
     auto order = legate::mapping::DimOrdering();
     order.set_fortran_order();
-    EXPECT_EQ(order.kind(), legate::mapping::DimOrdering::Kind::FORTRAN);    
+    EXPECT_EQ(order.kind(), legate::mapping::DimOrdering::Kind::FORTRAN);
   }
 
   // custom ordering
   {
-    std::vector<int32_t> dim = {0,1,2};
-    auto custom_order = legate::mapping::DimOrdering::custom_order(dim);
+    std::vector<int32_t> dim = {0, 1, 2};
+    auto custom_order        = legate::mapping::DimOrdering::custom_order(dim);
     EXPECT_EQ(custom_order.kind(), legate::mapping::DimOrdering::Kind::CUSTOM);
     EXPECT_EQ(custom_order.dimensions(), dim);
 
@@ -63,8 +63,8 @@ TEST(Mapping, DimOrdering)
 
   // custom ordering to c order
   {
-    std::vector<int32_t> dim = {0,1,2};
-    auto order = legate::mapping::DimOrdering::custom_order(dim);
+    std::vector<int32_t> dim = {0, 1, 2};
+    auto order               = legate::mapping::DimOrdering::custom_order(dim);
     order.set_c_order();
     EXPECT_EQ(order.kind(), legate::mapping::DimOrdering::Kind::C);
     EXPECT_EQ(order.dimensions(), std::vector<int32_t>());
@@ -85,87 +85,97 @@ TEST(Mapping, InstanceMappingPolicy)
 
   // Test set methods
   {
-    auto target = legate::mapping::StoreTarget::FBMEM;
+    auto target     = legate::mapping::StoreTarget::FBMEM;
     auto allocation = legate::mapping::AllocPolicy::MUST_ALLOC;
-    auto layout = legate::mapping::InstLayout::AOS;
-    auto dim_order = legate::mapping::DimOrdering::fortran_order();
+    auto layout     = legate::mapping::InstLayout::AOS;
+    auto dim_order  = legate::mapping::DimOrdering::fortran_order();
 
     auto policy = legate::mapping::InstanceMappingPolicy();
     policy.set_target(target);
     EXPECT_EQ(policy, legate::mapping::InstanceMappingPolicy{}.with_target(target));
-    
+
     policy.set_allocation_policy(allocation);
-    EXPECT_EQ(policy, legate::mapping::InstanceMappingPolicy{}.with_target(target).
-                                                               with_allocation_policy(allocation));
-   
+    EXPECT_EQ(policy,
+              legate::mapping::InstanceMappingPolicy{}.with_target(target).with_allocation_policy(
+                allocation));
+
     policy.set_instance_layout(layout);
-    EXPECT_EQ(policy, legate::mapping::InstanceMappingPolicy{}.with_target(target).
-                                                               with_allocation_policy(allocation).
-                                                               with_instance_layout(layout));
-    
+    EXPECT_EQ(policy,
+              legate::mapping::InstanceMappingPolicy{}
+                .with_target(target)
+                .with_allocation_policy(allocation)
+                .with_instance_layout(layout));
+
     policy.set_ordering(dim_order);
-    EXPECT_EQ(policy, legate::mapping::InstanceMappingPolicy{}.with_target(target).
-                                                               with_allocation_policy(allocation).
-                                                               with_instance_layout(layout).
-                                                               with_ordering(dim_order));
-    
+    EXPECT_EQ(policy,
+              legate::mapping::InstanceMappingPolicy{}
+                .with_target(target)
+                .with_allocation_policy(allocation)
+                .with_instance_layout(layout)
+                .with_ordering(dim_order));
+
     policy.set_exact(true);
-    EXPECT_EQ(policy, legate::mapping::InstanceMappingPolicy{}.with_target(target).
-                                                               with_allocation_policy(allocation).
-                                                               with_instance_layout(layout).
-                                                               with_ordering(dim_order).
-                                                               with_exact(true));    
+    EXPECT_EQ(policy,
+              legate::mapping::InstanceMappingPolicy{}
+                .with_target(target)
+                .with_allocation_policy(allocation)
+                .with_instance_layout(layout)
+                .with_ordering(dim_order)
+                .with_exact(true));
   }
 
   // Test subsumes
   {
-    auto judge_subsumes = [](auto policy_a, auto policy_b){
+    auto judge_subsumes = [](auto policy_a, auto policy_b) {
       auto expect_result = true;
-      if(!(policy_a.target == policy_b.target))
+      if (!(policy_a.target == policy_b.target))
         expect_result = false;
-      else if(!(policy_a.layout == policy_b.layout))
+      else if (!(policy_a.layout == policy_b.layout))
         expect_result = false;
-      else if(!(policy_a.ordering == policy_b.ordering))
+      else if (!(policy_a.ordering == policy_b.ordering))
         expect_result = false;
-      else if(!(policy_a.exact == policy_b.exact) && !policy_a.exact)
+      else if (!(policy_a.exact == policy_b.exact) && !policy_a.exact)
         expect_result = false;
-      
+
       EXPECT_EQ(policy_a.subsumes(policy_b), expect_result);
     };
 
-    auto target = legate::mapping::StoreTarget::ZCMEM;
-    auto allocation = legate::mapping::AllocPolicy::MUST_ALLOC;
-    auto layout = legate::mapping::InstLayout::AOS;
-    std::vector<int32_t> dim = {0,1,2}; 
-    auto dim_order = legate::mapping::DimOrdering::custom_order(dim);
+    auto target              = legate::mapping::StoreTarget::ZCMEM;
+    auto allocation          = legate::mapping::AllocPolicy::MUST_ALLOC;
+    auto layout              = legate::mapping::InstLayout::AOS;
+    std::vector<int32_t> dim = {0, 1, 2};
+    auto dim_order           = legate::mapping::DimOrdering::custom_order(dim);
 
-    auto policy_a = legate::mapping::InstanceMappingPolicy{}.with_target(target).
-                                                             with_allocation_policy(allocation).
-                                                             with_instance_layout(layout).
-                                                             with_ordering(dim_order).
-                                                             with_exact(true);
+    auto policy_a = legate::mapping::InstanceMappingPolicy{}
+                      .with_target(target)
+                      .with_allocation_policy(allocation)
+                      .with_instance_layout(layout)
+                      .with_ordering(dim_order)
+                      .with_exact(true);
     auto policy_b = policy_a;
     judge_subsumes(policy_a, policy_b);
 
-    for (int i=(int)legate::mapping::StoreTarget::SYSMEM; i<=(int)legate::mapping::StoreTarget::SOCKETMEM; ++i)
-    {
+    for (int i = (int)legate::mapping::StoreTarget::SYSMEM;
+         i <= (int)legate::mapping::StoreTarget::SOCKETMEM;
+         ++i) {
       policy_b.set_target(static_cast<legate::mapping::StoreTarget>(i));
       judge_subsumes(policy_a, policy_b);
     }
-    
+
     policy_b = policy_a;
-    for (int i=(int)legate::mapping::AllocPolicy::MAY_ALLOC; i<=(int)legate::mapping::AllocPolicy::MUST_ALLOC; ++i)
-    {
+    for (int i = (int)legate::mapping::AllocPolicy::MAY_ALLOC;
+         i <= (int)legate::mapping::AllocPolicy::MUST_ALLOC;
+         ++i) {
       policy_b.set_allocation_policy(static_cast<legate::mapping::AllocPolicy>(i));
       judge_subsumes(policy_a, policy_b);
     }
 
     policy_b = policy_a;
-    for (int i = (int)legate::mapping::InstLayout::SOA; i<=(int)legate::mapping::InstLayout::AOS; ++i)
-    {
+    for (int i = (int)legate::mapping::InstLayout::SOA; i <= (int)legate::mapping::InstLayout::AOS;
+         ++i) {
       policy_b.set_instance_layout(static_cast<legate::mapping::InstLayout>(i));
       judge_subsumes(policy_a, policy_b);
-    }    
+    }
 
     policy_b = policy_a;
     policy_b.set_ordering(legate::mapping::DimOrdering::c_order());

@@ -24,6 +24,11 @@ repos:
           pass_filenames: false
           args: ['legate', 'tests']
           additional_dependencies: [numpy,pytest,pytest_mock]
+    - repo: https://github.com/MarcoGorelli/cython-lint
+      rev: v0.15.0
+      hooks:
+      - id: cython-lint
+      - id: double-quote-cython-strings
     - repo: local
       hooks:
         -   id: legate-defined

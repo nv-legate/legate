@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,7 +15,6 @@ from libcpp.string cimport string
 from libcpp.utility cimport move
 from libcpp.vector cimport vector
 
-import cython
 import numpy as np
 
 
@@ -51,25 +51,25 @@ cdef extern from "core/legate_c.h" nogil:
         _AND "AND_LT"
         _XOR "XOR_LT"
 
-NIL        = legate_core_type_code_t._NULL
-BOOL        = legate_core_type_code_t._BOOL
-INT8        = legate_core_type_code_t._INT8
-INT16       = legate_core_type_code_t._INT16
-INT32       = legate_core_type_code_t._INT32
-INT64       = legate_core_type_code_t._INT64
-UINT8       = legate_core_type_code_t._UINT8
-UINT16      = legate_core_type_code_t._UINT16
-UINT32      = legate_core_type_code_t._UINT32
-UINT64      = legate_core_type_code_t._UINT64
-FLOAT16     = legate_core_type_code_t._FLOAT16
-FLOAT32     = legate_core_type_code_t._FLOAT32
-FLOAT64     = legate_core_type_code_t._FLOAT64
-COMPLEX64   = legate_core_type_code_t._COMPLEX64
-COMPLEX128  = legate_core_type_code_t._COMPLEX128
-BINARY      = legate_core_type_code_t._BINARY
+NIL = legate_core_type_code_t._NULL
+BOOL = legate_core_type_code_t._BOOL
+INT8 = legate_core_type_code_t._INT8
+INT16 = legate_core_type_code_t._INT16
+INT32 = legate_core_type_code_t._INT32
+INT64 = legate_core_type_code_t._INT64
+UINT8 = legate_core_type_code_t._UINT8
+UINT16 = legate_core_type_code_t._UINT16
+UINT32 = legate_core_type_code_t._UINT32
+UINT64 = legate_core_type_code_t._UINT64
+FLOAT16 = legate_core_type_code_t._FLOAT16
+FLOAT32 = legate_core_type_code_t._FLOAT32
+FLOAT64 = legate_core_type_code_t._FLOAT64
+COMPLEX64 = legate_core_type_code_t._COMPLEX64
+COMPLEX128 = legate_core_type_code_t._COMPLEX128
+BINARY = legate_core_type_code_t._BINARY
 FIXED_ARRAY = legate_core_type_code_t._FIXED_ARRAY
-STRUCT      = legate_core_type_code_t._STRUCT
-STRING      = legate_core_type_code_t._STRING
+STRUCT = legate_core_type_code_t._STRUCT
+STRING = legate_core_type_code_t._STRING
 
 ADD = legate_core_reduction_op_kind_t._ADD
 SUB = legate_core_reduction_op_kind_t._SUB
@@ -77,7 +77,7 @@ MUL = legate_core_reduction_op_kind_t._MUL
 DIV = legate_core_reduction_op_kind_t._DIV
 MAX = legate_core_reduction_op_kind_t._MAX
 MIN = legate_core_reduction_op_kind_t._MIN
-OR  = legate_core_reduction_op_kind_t._OR
+OR = legate_core_reduction_op_kind_t._OR
 AND = legate_core_reduction_op_kind_t._AND
 XOR = legate_core_reduction_op_kind_t._XOR
 
