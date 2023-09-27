@@ -27,6 +27,7 @@ void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
+  static_cast<void>(context);
 }
 
 struct Thing {
@@ -40,6 +41,7 @@ TEST(Integration, ConsensusMatch)
   auto runtime = legate::Runtime::get_runtime();
   legate::Core::perform_registration<register_tasks>();
   auto context = runtime->find_library(library_name);
+  static_cast<void>(context);
 
   Legion::Runtime* legion_runtime = Legion::Runtime::get_runtime();
   Legion::Context legion_context  = legion_runtime->get_context();
@@ -85,8 +87,8 @@ TEST(Integration, ConsensusMatch)
     Thing ta{true, -1};
     Thing tb{false, -2};
     EXPECT_EQ(result.output().size(), 2);
-    EXPECT_TRUE(result.output()[0] == ta && result.output()[1] == tb ||
-                result.output()[0] == tb && result.output()[1] == ta);
+    EXPECT_TRUE((result.output()[0] == ta && result.output()[1] == tb) ||
+                (result.output()[0] == tb && result.output()[1] == ta));
   }
 }
 

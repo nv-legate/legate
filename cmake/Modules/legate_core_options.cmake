@@ -120,3 +120,12 @@ elseif(NOT DEFINED Legion_CUDA_DYNAMIC_LOAD)
   set(Legion_CUDA_DYNAMIC_LOAD OFF)
   set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
 endif()
+
+set(legate_core_CXX_FLAGS "" CACHE STRING "C++ flags for legate core")
+set(legate_core_CUDA_FLAGS "" CACHE STRING "CUDA flags for legate core")
+set(legate_core_LINKER_FLAGS "" CACHE STRING "CUDA flags for legate core")
+
+# there must be some way to automate creating these for all dependent packages...
+set(Legion_CXX_FLAGS "" CACHE STRING "C++ flags for Legion")
+set(Legion_CUDA_FLAGS "" CACHE STRING "CUDA flags for Legion")
+set(Legion_LINKER_FLAGS "" CACHE STRING "CUDA flags for Legion")

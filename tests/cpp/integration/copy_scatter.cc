@@ -110,11 +110,7 @@ struct ScatterSpec {
   std::string to_string() const
   {
     std::stringstream ss;
-    auto print_shape = [&](auto& shape) {
-      ss << "(";
-      for (auto& ext : shape) ss << ext << ",";
-      ss << ")";
-    };
+
     ss << "indirection/source shape: " << ::to_string(ind_shape)
        << ", target shape: " << ::to_string(data_shape);
     ss << ", data type: " << seed.type().to_string();

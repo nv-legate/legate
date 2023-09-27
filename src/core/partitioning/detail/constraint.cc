@@ -172,7 +172,7 @@ void ScaleConstraint::validate() const
       "Scaling constraint requires the stores to have the same number of dimensions");
   }
 
-  if (smaller->dim() != factors_.size()) {
+  if (static_cast<std::size_t>(smaller->dim()) != factors_.size()) {
     throw std::invalid_argument(
       "Scaling constraint requires the number of factors to match the number of dimensions");
   }
@@ -211,15 +211,17 @@ void BloatConstraint::find_partition_symbols(std::vector<const Variable*>& parti
 
 void BloatConstraint::validate() const
 {
-  auto source = var_source_->operation()->find_store(var_source_);
-  auto bloat  = var_bloat_->operation()->find_store(var_bloat_);
+  auto source     = var_source_->operation()->find_store(var_source_);
+  auto bloat      = var_bloat_->operation()->find_store(var_bloat_);
+  const auto sdim = source->dim();
 
-  if (source->dim() != bloat->dim()) {
+  if (sdim != bloat->dim()) {
     throw std::invalid_argument(
       "Bloating constraint requires the stores to have the same number of dimensions");
   }
 
-  if (source->dim() != low_offsets_.size() || source->dim() != high_offsets_.size()) {
+  if (const auto sdim_s = static_cast<std::size_t>(sdim);
+      sdim_s != low_offsets_.size() || sdim_s != high_offsets_.size()) {
     throw std::invalid_argument(
       "Bloating constraint requires the number of offsets to match the number of dimensions");
   }

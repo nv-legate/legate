@@ -18,6 +18,12 @@ import platform
 import shutil
 import subprocess
 import sys
+
+try:
+    import skbuild
+except ModuleNotFoundError as ie:
+    raise ImportError("Must install scikit-build!") from ie
+
 from distutils import sysconfig
 
 # Flush output on newlines
@@ -106,12 +112,16 @@ def find_active_python_version_and_path():
 
 
 def scikit_build_cmake_build_dir(skbuild_dir):
-    if os.path.exists(skbuild_dir):
-        for f in os.listdir(skbuild_dir):
-            if os.path.exists(
-                cmake_build := os.path.join(skbuild_dir, f, "cmake-build")
-            ):
-                return cmake_build
+    def yield_guesses():
+        sk_cmake_build_dir = skbuild.constants.CMAKE_BUILD_DIR()
+
+        yield os.path.join(skbuild_dir, sk_cmake_build_dir)
+        par_skbuild_dir = os.path.dirname(skbuild_dir)
+        yield os.path.join(par_skbuild_dir, sk_cmake_build_dir)
+
+    for guess in yield_guesses():
+        if os.path.exists(guess):
+            return os.path.abspath(guess)
     return None
 
 
@@ -260,6 +270,7 @@ def install_legion_jupyter_notebook(
 
 
 def install(
+    cmake_preset,
     networks,
     cuda,
     arch,
@@ -313,6 +324,7 @@ def install(
 
     print(f"Verbose build is {'on' if verbose else 'off'}")
     if verbose:
+        print(f"cmake_preset: {cmake_preset}")
         print(f"networks: {networks}")
         print(f"cuda: {cuda}")
         print(f"arch: {arch}")
@@ -433,7 +445,10 @@ def install(
     if clean_first:
         shutil.rmtree(skbuild_dir, ignore_errors=True)
         shutil.rmtree(join(legate_core_dir, "dist"), ignore_errors=True)
-        shutil.rmtree(join(legate_core_dir, "build"), ignore_errors=True)
+        build_dir = join(legate_core_dir, "build")
+        if cmake_preset:
+            build_dir = join(build_dir, cmake_preset)
+        shutil.rmtree(build_dir, ignore_errors=True)
         shutil.rmtree(
             join(legate_core_dir, "legate_core.egg-info"),
             ignore_errors=True,
@@ -443,7 +458,12 @@ def install(
     pip_install_cmd = [sys.executable, "-m", "pip", "install"]
 
     # Use preexisting CMAKE_ARGS from conda if set
-    cmake_flags = cmd_env.get("CMAKE_ARGS", "").split(" ")
+    cmake_flags = []
+
+    if cmake_preset:
+        cmake_flags.extend(["--preset", cmake_preset])
+
+    cmake_flags.extend(cmd_env.get("CMAKE_ARGS", "").split(" "))
 
     if unknown is None:
         unknown = []
@@ -473,7 +493,7 @@ def install(
     else:
         pip_install_cmd += ["--upgrade"]
 
-    pip_install_cmd += ["."]
+    pip_install_cmd += [os.getcwd()]
 
     if verbose:
         pip_install_cmd += ["-vv"]
@@ -564,7 +584,10 @@ def install(
 
     # execute python -m pip install <args> .
     execute_command(pip_install_cmd, verbose, cwd=legate_core_dir, env=cmd_env)
-
+    print("=" * 90, flush=True)
+    print("=" * 90, flush=True)
+    print("=" * 90, flush=True)
+    print("=" * 90, flush=True)
     install_legion_python_bindings(
         verbose,
         cmake_exe,
@@ -587,6 +610,12 @@ def driver():
     )
 
     parser = argparse.ArgumentParser(description="Install Legate front end.")
+    parser.add_argument(
+        "--cmake-preset",
+        required=False,
+        default=os.environ.get("LEGATE_CORE_CMAKE_PRESET", ""),
+        help="Set a CMake Preset to use",
+    )
     parser.add_argument(
         "--debug",
         dest="debug",

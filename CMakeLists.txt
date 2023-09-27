@@ -57,24 +57,17 @@ endif()
 ##############################################################################
 # - Download and initialize RAPIDS CMake helpers -----------------------------
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
-  file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-23.08/RAPIDS.cmake
-       ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
-endif()
-include(${CMAKE_BINARY_DIR}/RAPIDS.cmake)
-include(rapids-cmake)
-include(rapids-cpm)
-include(rapids-cuda)
-include(rapids-export)
-include(rapids-find)
-
 set(legate_core_version 23.09.00)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/legate_helper_functions.cmake)
+
+legate_include_rapids()
 
 # For now we want the optimization flags to match on both normal make and cmake
 # builds so we override the cmake defaults here for release, this changes
 # -O3 to -O2 and removes -DNDEBUG
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set(CMAKE_CUDA_FLAGS_DEBUG "-O0 -g")
+# set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+# set(CMAKE_CUDA_FLAGS_DEBUG "-O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 set(CMAKE_CUDA_FLAGS_RELEASE "-O2")
 set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os")

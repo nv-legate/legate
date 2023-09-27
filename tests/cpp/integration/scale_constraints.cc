@@ -19,8 +19,6 @@ namespace scale_constraints {
 
 static const char* library_name = "test_scale_constraints";
 
-static const int32_t TEST_MAX_DIM = 3;
-
 static legate::Logger logger(library_name);
 
 enum TaskIDs {

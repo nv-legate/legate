@@ -237,6 +237,7 @@ void test_image(const ImageTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
+  static_cast<void>(context);
 
   int32_t tgt_dim = spec.range_extents.size();
   auto image_type = spec.is_rect ? legate::rect_type(tgt_dim) : legate::point_type(tgt_dim);

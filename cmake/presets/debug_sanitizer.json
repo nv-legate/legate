@@ -1,0 +1,72 @@
+{
+    "version": 4,
+    "include": [
+        "debug.json"
+    ],
+    "configurePresets": [
+        {
+            "inherits": "base-debug",
+            "name": "base-debug-sanitizer",
+            "hidden": true,
+            "environment": {
+                // base flags
+                "LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_FLAGS": "-fsanitize=address,undefined,bounds",
+                "LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_COMPILER_FLAGS": "$env{LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_FLAGS} -fno-omit-frame-pointer",
+                // CXX flags
+                "LEGATE_DEBUG_SANITIZER_PRESET_CMAKE_CXX_FLAGS": "$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS} $env{LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_COMPILER_FLAGS}",
+                "LEGATE_DEBUG_SANITIZER_PRESET_LEGATE_CORE_CXX_FLAGS": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS} $env{LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_COMPILER_FLAGS}",
+                // CUDA flags, no sanitizers enabled because nvcc chokes on the arguments...
+                "LEGATE_DEBUG_SANITIZER_PRESET_CMAKE_CUDA_FLAGS": "$env{LEGATE_DEBUG_PRESET_CMAKE_CUDA_FLAGS} --compiler-options=-fno-omit-frame-pointer",
+                "LEGATE_DEBUG_SANITIZER_PRESET_LEGATE_CORE_CUDA_FLAGS": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS} --compiler-options=-fno-omit-frame-pointer",
+                // Linker flags
+                "LEGATE_DEBUG_SANITIZER_PRESET_LEGATE_CORE_LINKER_FLAGS": "$env{LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_FLAGS}"
+            },
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS_DEBUG": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_SANITIZER_PRESET_CMAKE_CXX_FLAGS}"
+                },
+                "legate_core_CXX_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_SANITIZER_PRESET_LEGATE_CORE_CXX_FLAGS}"
+                },
+                "CMAKE_CUDA_FLAGS_DEBUG": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_SANITIZER_PRESET_CMAKE_CUDA_FLAGS}"
+                },
+                "legate_core_CUDA_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_SANITIZER_PRESET_LEGATE_CORE_CUDA_FLAGS}"
+                },
+                "legate_core_LINKER_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_SANITIZER_PRESET_LEGATE_CORE_LINKER_FLAGS}"
+                }
+            }
+        },
+        {
+            "inherits": ["base-debug-sanitizer", "debug-clang"],
+            "name": "debug-sanitizer-clang",
+            "displayName": "Debug Clang Build With Sanitizers",
+            "description": "Debug Clang Build With Sanitizers"
+        },
+        {
+            "inherits": ["base-debug-sanitizer", "debug-gcc"],
+            "name": "debug-sanitizer-gcc",
+            "displayName": "Debug GCC  Build With Sanitizers",
+            "description": "Debug GCC Build With Sanitizers"
+        }
+    ],
+    "buildPresets": [
+        {
+            "inherits": "debug-clang",
+            "name": "debug-sanitizer-clang",
+            "configurePreset": "debug-sanitizer-clang"
+        },
+        {
+            "inherits": "debug-gcc",
+            "name": "debug-sanitizer-gcc",
+            "configurePreset": "debug-sanitizer-gcc"
+        }
+    ]
+}

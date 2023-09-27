@@ -34,6 +34,7 @@ docker build \
      --build-arg AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
      --build-arg GITHUB_TOKEN="$GITHUB_TOKEN" \
      --build-arg USE_CUDA="$USE_CUDA" \
+     --build-arg LEGATE_CORE_CMAKE_PRESET="$LEGATE_CORE_CMAKE_PRESET" \
      --progress=plain \
      --tag="$IMAGE_TAG" \
      -f "$SOURCE_DIR/continuous_integration/Dockerfile" "$SOURCE_DIR"

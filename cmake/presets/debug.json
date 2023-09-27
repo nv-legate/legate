@@ -1,0 +1,70 @@
+{
+    "version": 4,
+    "include": [
+        "base.json"
+    ],
+    "configurePresets": [
+        {
+            "inherits": ["base", "base-ninja"],
+            "hidden": true,
+            "name": "base-debug",
+            "environment": {
+                "LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS": "-O0 -g -g3",
+                "LEGATE_DEBUG_PRESET_CMAKE_CUDA_FLAGS": "-g -lineinfo --compiler-options='$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS}'",
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS": "-g -lineinfo --compiler-options='$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS}'"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": {
+                    "type": "STRING",
+                    "value": "Debug"
+                },
+                "CMAKE_CXX_FLAGS_DEBUG": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS}"
+                },
+                "legate_core_CXX_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS}"
+                },
+                "CMAKE_CUDA_FLAGS_DEBUG": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_PRESET_CMAKE_CUDA_FLAGS}"
+                },
+                "legate_core_CUDA_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS}"
+                }
+            }
+        },
+        {
+            "inherits": "base-debug",
+            "name": "debug-clang",
+            "displayName": "Debug Clang Build",
+            "description": "Debug Clang Build",
+            "environment": {
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS": "-Werror -Wall -fstack-protector -Walloca -Wdeprecated -Wimplicit-fallthrough -Wsign-compare -fdiagnostics-show-template-tree -Warray-bounds-pointer-arithmetic -Wassign-enum -Wformat-pedantic -D_LIBCPP_ENABLE_ASSERTIONS=1 -D_LIBCPP_ENABLE_NODISCARD=1"
+            }
+        },
+        {
+            "inherits": "base-debug",
+            "name": "debug-gcc",
+            "displayName": "Debug GCC Build",
+            "description": "Debug GCC Build",
+            "environment": {
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS": "-Werror -Wall -fstack-protector -Walloca -Wdeprecated -Wimplicit-fallthrough -fdiagnostics-show-template-tree"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "inherits": "base",
+            "name": "debug-clang",
+            "configurePreset": "debug-clang"
+        },
+        {
+            "inherits": "base",
+            "name": "debug-gcc",
+            "configurePreset": "debug-gcc"
+        }
+    ]
+}

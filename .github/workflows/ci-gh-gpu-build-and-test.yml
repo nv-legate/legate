@@ -12,10 +12,15 @@ on:
 
 jobs:
   build-gpu:
+    strategy:
+      fail-fast: false
+      matrix:
+        cmake-preset: [debug-gcc, debug-sanitizer-gcc]
     uses:
       ./.github/workflows/gh-build.yml
     with:
       build-target: gpu
+      cmake-preset: ${{ matrix.cmake-preset }}
       # Ref: https://docs.rapids.ai/resources/github-actions/#cpu-labels for `linux-amd64-cpu4`
       runs-on: ${{ github.repository == 'nv-legate/legate.core.internal' && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
       sha: ${{ github.sha }}
@@ -26,6 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        cmake-preset: [debug-gcc, debug-sanitizer-gcc]
         include:
           - { name: Pytest Unit Tests, test-scope: unit, runner: linux-amd64-gpu-v100-latest-1 }
           - { name: Pytest Unit Tests, test-scope: unit, runner: linux-amd64-2gpu }
@@ -37,6 +43,7 @@ jobs:
       build-target: gpu
       runs-on: ${{ matrix.runner }}
       sha: ${{ github.sha }}
+      cmake-preset: ${{ matrix.cmake-preset }}
       test-scope: ${{ matrix.test-scope }}
 
   cleanup:

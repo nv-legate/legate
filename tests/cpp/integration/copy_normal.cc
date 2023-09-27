@@ -17,6 +17,14 @@
 
 #include "copy_util.inl"
 
+// extern so that compilers don't also complain that function is unused!
+extern void silence_unused_function_warnings()
+{
+  // defined in copy_util.inl
+  static_cast<void>(::to_string);
+  static_cast<void>(::fill_indirect);
+}
+
 namespace copy_normal {
 
 static const char* library_name = "test_copy_normal";

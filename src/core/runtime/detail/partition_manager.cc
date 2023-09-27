@@ -141,7 +141,7 @@ Shape PartitionManager::compute_launch_shape(const mapping::Machine& machine,
     size_t factor_prod = 1;
     for (auto factor : get_factors(machine)) {
       // Avoid exceeding the maximum number of pieces
-      if (factor * factor_prod > max_pieces) break;
+      if (factor * factor_prod > static_cast<std::size_t>(max_pieces)) break;
 
       factor_prod *= factor;
 

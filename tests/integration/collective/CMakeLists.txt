@@ -21,7 +21,11 @@ project(collective VERSION 1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(BUILD_SHARED_LIBS ON)
 
-find_package(legate_core REQUIRED)
+cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/../../../")
+
+include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
+
+legate_ensure_legate()
 
 legate_add_cpp_subdirectory(src TARGET collective  EXPORT collective-export)
 

@@ -3,16 +3,16 @@
 build_cpp_tests() {
     set -ex;
 
-    conda deactivate 
+    conda deactivate
 
     cd ~/legate/tests/cpp
 
     rm -rf build
-    cmake -B build -S . -D legate_core_ROOT=../../build -D CMAKE_BUILD_TYPE=Debug
-    cmake --build build -v -j 4 
+    cmake --preset ${LEGATE_CORE_CMAKE_PRESET}
+    cmake --build --preset ${LEGATE_CORE_CMAKE_PRESET}
 
     (
-    cd ~/legate/tests/cpp/build;
+    cd ./build/${LEGATE_CORE_CMAKE_PRESET};
     cpack -G TGZ;
     cp cpp_tests*.tar.gz /tmp/out/;
     );

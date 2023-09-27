@@ -117,10 +117,19 @@ function(find_or_configure_legion)
       set(Legion_BACKTRACE_USE_LIBDW OFF)
     endif()
 
+    string(APPEND CMAKE_CXX_FLAGS ${Legion_CXX_FLAGS})
+    string(APPEND CMAKE_CUDA_FLAGS ${Legion_CUDA_FLAGS})
+    string(APPEND CMAKE_LINKER_FLAGS ${Legion_LINKER_FLAGS})
+
     rapids_cpm_find(Legion ${version} ${FIND_PKG_ARGS}
         CPM_ARGS
           ${legion_cpm_git_args}
+          # HACK: Legion headers contain *many* warnings, but we would like to build with
+          # -Wall -Werror. But there is a work-around. Compilers treat system headers as
+          # special and do not emit any warnings about suspect code in them, so until
+          # legion cleans house, we mark their headers as "system" headers.
           FIND_PACKAGE_ARGUMENTS EXACT
+          SYSTEM                 TRUE
           EXCLUDE_FROM_ALL       ${exclude_from_all}
           OPTIONS                ${_legion_cuda_options}
                                  "CMAKE_CXX_STANDARD ${_cxx_std}"

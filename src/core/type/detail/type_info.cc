@@ -161,7 +161,10 @@ void BinaryType::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(size_);
 }
 
-bool BinaryType::equal(const Type& other) const { return uid_ == other.uid(); }
+bool BinaryType::equal(const Type& other) const
+{
+  return static_cast<int32_t>(uid_) == other.uid();
+}
 
 FixedArrayType::FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
   : ExtensionType(uid, Type::Code::FIXED_ARRAY),
@@ -531,11 +534,9 @@ bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim)
       return 1 == ndim;
     }
     case Type::Code::FIXED_ARRAY: {
-      return type->as_fixed_array_type().num_elements() == ndim;
+      return type->as_fixed_array_type().num_elements() == static_cast<std::uint32_t>(ndim);
     }
-    default: {
-      return false;
-    }
+    default: break;
   }
   return false;
 }

@@ -28,7 +28,7 @@ constexpr uint16_t UINT16_VALUE = 65535;
 constexpr uint32_t UINT32_VALUE = 999;
 constexpr uint64_t UINT64_VALUE = 100;
 constexpr float FLOAT_VALUE     = 1.23f;
-constexpr double DOUBLE_VALUE   = -4.567d;
+constexpr double DOUBLE_VALUE   = -4.567;
 const std::string STRING_VALUE  = "123";
 const __half FLOAT16_VALUE(0.1f);
 const complex<float> COMPLEX_FLOAT_VALUE{0, 1};
@@ -217,7 +217,7 @@ void check_rect_bounds(const MultiDimRectStruct<DIM>& to_compare,
   EXPECT_EQ(std::size(expect.lo), std::size(expect.hi));
   EXPECT_EQ(std::size(to_compare.lo), std::size(expect.lo));
 
-  for (int i = 0; i < std::size(to_compare.lo); i++) {
+  for (std::size_t i = 0; i < std::size(to_compare.lo); i++) {
     EXPECT_EQ(to_compare.lo[i], expect.lo[i]);
     EXPECT_EQ(to_compare.hi[i], expect.hi[i]);
   }
@@ -349,7 +349,9 @@ TEST(ScalarUnit, CreateWithVector)
   const auto* data              = data_vec.data();
   legate::Span expectedValues   = legate::Span<const int32_t>(data, scalar_data.size());
   legate::Span actualValues(scalar.values<int32_t>());
-  for (int i = 0; i < scalar_data.size(); i++) { EXPECT_EQ(actualValues[i], expectedValues[i]); }
+  for (std::size_t i = 0; i < scalar_data.size(); i++) {
+    EXPECT_EQ(actualValues[i], expectedValues[i]);
+  }
   EXPECT_EQ(actualValues.size(), expectedValues.size());
 
   // Invalid type
@@ -417,7 +419,7 @@ TEST(ScalarUnit, CreateWithPoint)
   }
 
   // Invalid dim
-  EXPECT_THROW(legate::Scalar(legate::Point<10>::ONES()), std::out_of_range);
+  EXPECT_THROW(legate::Scalar{legate::Point<10>::ONES()}, std::out_of_range);
 }
 
 TEST(ScalarUnit, CreateWithRect)

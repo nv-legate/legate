@@ -28,6 +28,7 @@ void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
+  static_cast<void>(context);
 }
 
 void check_field_is_new(Legion::FieldID fid)
@@ -45,6 +46,7 @@ TEST(Integration, FieldReuse)
   auto runtime = legate::Runtime::get_runtime();
   legate::Core::perform_registration<register_tasks>();
   auto context = runtime->find_library(library_name);
+  static_cast<void>(context);
 
   Legion::Runtime* legion_runtime = Legion::Runtime::get_runtime();
   Legion::Context legion_context  = legion_runtime->get_context();

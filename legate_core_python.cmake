@@ -133,3 +133,33 @@ rapids_export(
   NAMESPACE legate::
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string)
+
+# We want to extract where the _skbuild/<machine-specific>/cmake-build folder is when
+# using scikit-build to build the project. scikit-build expects all build artifacts to go
+# there after configuration, but this may not always be the case. The user may pass -B
+# ./path/to/other/build, or this may be set automatically by a cmake preset.
+#
+# The workaround is therefore to locate this cmake-build folder, and -- after
+# configuration is complete -- create a symlink from the *actual* build folder to
+# cmake-build.
+#
+# But locating cmake-build is not easy:
+#
+# - CMAKE_CURRENT_BINARY_DIR is unreliable since it may be overridden (as detailed above).
+# - CMAKE_CURRENT_[SOURCE|LIST]_DIR don't work, they are /path/to/legate.core.internal
+#   (not the directory from which cmake was invoked)
+#
+# So the trick is to exploit the fact that scikit-build sets CMAKE_INSTALL_PREFIX to
+# _skbuild/<machine-specific>/cmake-install (and enforces that the user does not override
+# this! see
+# https://github.com/scikit-build/scikit-build/blob/main/skbuild/cmaker.py#L321). From
+# this, we can reconstruct the cmake-build path.
+if(SKBUILD)
+  cmake_path(GET CMAKE_INSTALL_PREFIX PARENT_PATH skbuild_root_dir)
+  cmake_path(APPEND skbuild_root_dir "cmake-build" OUTPUT_VARIABLE skbuild_cmake_build_dir)
+  if (NOT (${skbuild_cmake_build_dir} STREQUAL ${CMAKE_CURRENT_BINARY_DIR}))
+    # The binary dir has been overridden.
+    file(REMOVE_RECURSE ${skbuild_cmake_build_dir})
+    file(CREATE_LINK ${CMAKE_CURRENT_BINARY_DIR} ${skbuild_cmake_build_dir} SYMBOLIC)
+  endif()
+endif()

@@ -38,6 +38,7 @@ void test_manual_task(legate::Library library, legate::LogicalStore store)
 void print_store(legate::LogicalStore store)
 {
   auto runtime = legate::Runtime::get_runtime();
+  static_cast<void>(runtime);
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<int64_t, 2>();
   auto shape   = p_store.shape<2>();

@@ -11,9 +11,13 @@
 #=============================================================================
 
 macro(legate_include_rapids)
+  if(NOT rapids-cmake-version)
+    # default
+    set(rapids-cmake-version 23.10)
+  endif()
   if (NOT _LEGATE_HAS_RAPIDS)
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-      file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-23.08/RAPIDS.cmake
+      file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
            ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
     endif()
     include(${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
@@ -449,3 +453,17 @@ user_context = get_legate_runtime().register_library(user_lib)
   string(CONFIGURE "${file_template}" file_content @ONLY)
   file(WRITE "${fn_library}" "${file_content}")
 endfunction()
+
+macro(legate_ensure_legate)
+  if (legate_core_CMAKE_PRESET_NAME AND NOT legate_core_ROOT)
+    # If we are using a preset (and the user is not overriding the path anyways), then we
+    # know exactly where the root is
+    cmake_path(SET legate_core_ROOT NORMALIZE "${LEGATE_CORE_DIR}/build/${legate_core_CMAKE_PRESET_NAME}")
+  endif()
+
+  if(NOT (CMAKE_PROJECT_NAME STREQUAL "legate_core"))
+    # If CMAKE_PROJECT_NAME is not legate_core, then we are not configuring from
+    # top-level.
+    find_package(legate_core REQUIRED)
+  endif()
+endmacro()

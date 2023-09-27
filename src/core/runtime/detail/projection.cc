@@ -93,7 +93,7 @@ SymbolicPoint RadixProjectionFunctor::operator()(const SymbolicPoint& in_p) cons
   auto ndim = in_p.size();
   std::vector<SymbolicExpr> exprs;
   exprs.resize(ndim);
-  for (int32_t dim = 0; dim < ndim; ++dim) { exprs[dim] = in_p[dim] * radix_ + offset_; }
+  for (std::size_t dim = 0; dim < ndim; ++dim) { exprs[dim] = in_p[dim] * radix_ + offset_; }
   return SymbolicPoint(std::move(exprs));
 }
 

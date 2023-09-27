@@ -414,7 +414,7 @@ std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
   if (d < 0 || d >= dim()) {
     throw std::invalid_argument("Invalid projection on dimension " + std::to_string(d) + " for a " +
                                 std::to_string(dim()) + "-D store");
-  } else if (index < 0 || index >= old_extents[d]) {
+  } else if (index < 0 || index >= static_cast<int64_t>(old_extents[d])) {
     throw std::invalid_argument("Projection index " + std::to_string(index) +
                                 " is out of bounds [0, " + std::to_string(old_extents[d]) + ")");
   }
@@ -483,23 +483,23 @@ std::shared_ptr<LogicalStore> LogicalStore::transpose(const std::vector<int32_t>
 
 std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axes)
 {
-  if (axes.size() != dim()) {
+  if (axes.size() != static_cast<size_t>(dim())) {
     throw std::invalid_argument("Dimension Mismatch: expected " + std::to_string(dim()) +
                                 " axes, but got " + std::to_string(axes.size()));
   } else if (axes.size() != (std::set<int32_t>(axes.begin(), axes.end())).size()) {
     throw std::invalid_argument("Duplicate axes found");
   }
 
-  for (int i = 0; i < axes.size(); i++) {
-    if (axes[i] < 0 || axes[i] >= dim()) {
-      throw std::invalid_argument("Invalid axis " + std::to_string(axes[i]) + " for a " +
+  for (auto&& ax : axes) {
+    if (ax < 0 || ax >= dim()) {
+      throw std::invalid_argument("Invalid axis " + std::to_string(ax) + " for a " +
                                   std::to_string(dim()) + "-D store");
     }
   }
 
   auto old_extents = extents();
   auto new_extents = Shape();
-  for (int i = 0; i < axes.size(); i++) { new_extents.append_inplace(old_extents[axes[i]]); }
+  for (auto&& ax : axes) { new_extents.append_inplace(old_extents[ax]); }
 
   auto transform = transform_->push(std::make_unique<Transpose>(std::move(axes)));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
@@ -520,9 +520,9 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t idx, std::vector
 
   auto old_shape = extents();
   int64_t volume = 1;
-  for (int i = 0; i < sizes.size(); i++) { volume *= sizes[i]; }
+  for (auto&& size : sizes) volume *= size;
 
-  if (old_shape[idx] != volume) {
+  if (static_cast<int64_t>(old_shape[idx]) != volume) {
     throw std::invalid_argument("Dimension of size " + std::to_string(old_shape[idx]) +
                                 " cannot be delinearized into shape with volume " +
                                 std::to_string(volume));
@@ -531,8 +531,10 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t idx, std::vector
   auto old_extents = extents();
   auto new_extents = Shape();
   for (int i = 0; i < idx; i++) { new_extents.append_inplace(old_extents[i]); }
-  for (int i = 0; i < sizes.size(); i++) { new_extents.append_inplace(sizes[i]); }
-  for (int i = idx + 1; i < old_extents.size(); i++) { new_extents.append_inplace(old_extents[i]); }
+  for (auto&& size : sizes) { new_extents.append_inplace(size); }
+  for (int i = idx + 1; static_cast<size_t>(i) < old_extents.size(); i++) {
+    new_extents.append_inplace(old_extents[i]);
+  }
 
   auto transform = transform_->push(std::make_unique<Delinearize>(idx, std::move(sizes)));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));

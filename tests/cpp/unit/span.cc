@@ -25,7 +25,7 @@ constexpr uint16_t UINT16_VALUE = 65535;
 constexpr uint32_t UINT32_VALUE = 999;
 constexpr uint64_t UINT64_VALUE = 100;
 constexpr float FLOAT_VALUE     = 1.23f;
-constexpr double DOUBLE_VALUE   = -4.567d;
+constexpr double DOUBLE_VALUE   = -4.567;
 const std::string STRING_VALUE  = "123";
 const __half FLOAT16_VALUE1(0.1f);
 const __half FLOAT16_VALUE2(0.2f);
@@ -70,7 +70,7 @@ TEST(SpanUnit, Create)
   create(
     UINT64_VALUE, static_cast<uint64_t>(UINT64_VALUE + 1), static_cast<uint64_t>(UINT64_VALUE + 2));
   create(FLOAT_VALUE, FLOAT_VALUE + 1.0f, FLOAT_VALUE + 2.0f);
-  create(DOUBLE_VALUE, DOUBLE_VALUE + 1.0d, DOUBLE_VALUE + 2.0d);
+  create(DOUBLE_VALUE, DOUBLE_VALUE + 1.0, DOUBLE_VALUE + 2.0);
   create(STRING_VALUE, STRING_VALUE + "1", STRING_VALUE + "2");
   create(FLOAT16_VALUE1, FLOAT16_VALUE2, FLOAT16_VALUE3);
   create(COMPLEX_FLOAT_VALUE1, COMPLEX_FLOAT_VALUE2, COMPLEX_FLOAT_VALUE3);

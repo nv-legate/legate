@@ -76,10 +76,11 @@ struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
 void test_allocator(
   BufferOpCode op_code, legate::Memory::Kind kind, bool scoped, size_t bytes, size_t alignment = 16)
 {
-  auto runtime                = legate::Runtime::get_runtime();
-  auto context                = runtime->find_library(library_name);
-  auto task                   = runtime->create_task(context, ALLOCATOR_TASK_ID);
-  auto part                   = task.declare_partition();
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+  auto task    = runtime->create_task(context, ALLOCATOR_TASK_ID);
+  auto part    = task.declare_partition();
+  static_cast<void>(part);
   AllocatorParams struct_data = {
     static_cast<uint32_t>(op_code), static_cast<uint64_t>(kind), scoped, alignment, bytes};
   task.add_scalar_arg(legate::Scalar(struct_data,

@@ -20,6 +20,11 @@ rapids_cython_create_modules(
   LINKED_LIBRARIES "${linked_libraries}"
 )
 
+find_package (Python3 REQUIRED COMPONENTS Development)
+
 foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
   target_compile_features(${target} PRIVATE cxx_std_17)
+  # Mark python headers as system (in case user has added warning flags, we don't want the
+  # python headers to trigger them)
+  target_include_directories(${target} SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 endforeach()

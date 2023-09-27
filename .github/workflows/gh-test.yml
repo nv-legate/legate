@@ -15,15 +15,18 @@ on:
       test-scope:
         required: true
         type: string
+      cmake-preset:
+        required: true
+        type: string
 
 jobs:
   test:
     if: github.repository_owner == 'nv-legate'
-    name: test-${{ inputs.build-target }}-sub-workflow
+    name: test-${{ inputs.build-target }}-${{ inputs.cmake-preset }}-sub-workflow
     runs-on: ${{ inputs.runs-on }}
     container:
       options: -u root
-      image: ghcr.io/nv-legate/legate.core.internal_pkg-${{ inputs.build-target }}:${{ inputs.sha }}
+      image: ghcr.io/nv-legate/legate.core.internal_pkg-${{ inputs.build-target }}-${{ inputs.cmake-preset }}:${{ inputs.sha }}
       env:
         PYTHONDONTWRITEBYTECODE: 1
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
@@ -43,7 +46,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v3
         with:
-          name: "legate.core.internal-${{inputs.build-target}}-${{ inputs.sha }}"
+          name: "legate.core.internal-${{inputs.build-target}}-${{ inputs.cmake-preset }}-${{ inputs.sha }}"
           path: artifacts
 
       - name: Display structure of downloaded artifacts

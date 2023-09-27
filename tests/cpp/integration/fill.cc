@@ -117,6 +117,7 @@ void test_fill_index(int32_t dim, size_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
+  static_cast<void>(context);
 
   int64_t v = 10;
 
@@ -143,6 +144,7 @@ void test_fill_slice(int32_t dim, size_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
+  static_cast<void>(context);
 
   int64_t v1     = 100;
   int64_t v2     = 200;

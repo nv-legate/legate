@@ -59,7 +59,8 @@ void validate_stores(legate::LogicalStore scalar1,
                      int32_t to_match1,
                      int64_t to_match2)
 {
-  auto runtime   = legate::Runtime::get_runtime();
+  auto runtime = legate::Runtime::get_runtime();
+  static_cast<void>(runtime);
   auto p_scalar1 = scalar1.get_physical_store();
   auto p_scalar2 = scalar2.get_physical_store();
   auto acc1      = p_scalar1.read_accessor<int32_t, 2>();

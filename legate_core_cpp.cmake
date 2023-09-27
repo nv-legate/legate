@@ -120,59 +120,6 @@ include(cmake/thirdparty/get_thrust.cmake)
 # - legate.core --------------------------------------------------------------
 
 set(legate_core_SOURCES "")
-set(legate_core_CXX_DEFS "")
-set(legate_core_CUDA_DEFS "")
-set(legate_core_CXX_OPTIONS "")
-set(legate_core_CUDA_OPTIONS "")
-
-include(cmake/Modules/set_cpu_arch_flags.cmake)
-set_cpu_arch_flags(legate_core_CXX_OPTIONS)
-
-if (legate_core_COLLECTIVE)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_COLLECTIVE)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_DEBUG)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_DEBUG)
-endif()
-
-if(Legion_USE_CUDA)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_CUDA)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_CUDA)
-
-  add_cuda_architecture_defines(legate_core_CUDA_DEFS ARCHS ${Legion_CUDA_ARCH})
-
-  list(APPEND legate_core_CUDA_OPTIONS -Xfatbin=-compress-all)
-  list(APPEND legate_core_CUDA_OPTIONS --expt-extended-lambda)
-  list(APPEND legate_core_CUDA_OPTIONS --expt-relaxed-constexpr)
-  list(APPEND legate_core_CUDA_OPTIONS -Wno-deprecated-gpu-targets)
-endif()
-
-if(Legion_USE_OpenMP)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_OPENMP)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_OPENMP)
-endif()
-
-if(Legion_NETWORKS)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_NETWORK)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_NETWORK)
-endif()
-
-# Change THRUST_DEVICE_SYSTEM for `.cpp` files
-# TODO: This is what we do in cuNumeric, should we do it here as well?
-if(Legion_USE_OpenMP)
-  list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-  list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP)
-elseif(NOT Legion_USE_CUDA)
-  list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-  list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
-endif()
-# Or should we only do it if OpenMP and CUDA are both disabled?
-# if(NOT Legion_USE_OpenMP AND (NOT Legion_USE_CUDA))
-#   list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-#   list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
-# endif()
 
 list(APPEND legate_core_SOURCES
   src/core/legate_c.cc
@@ -283,6 +230,63 @@ endif()
 add_library(legate_core ${legate_core_SOURCES})
 add_library(legate::core ALIAS legate_core)
 
+set(legate_core_CXX_DEFS "")
+set(legate_core_CUDA_DEFS "")
+set(legate_core_CXX_OPTIONS "")
+set(legate_core_CUDA_OPTIONS "")
+set(legate_core_LINKER_OPTIONS "")
+
+include(cmake/Modules/set_cpu_arch_flags.cmake)
+set_cpu_arch_flags(legate_core_CXX_OPTIONS)
+
+if (legate_core_COLLECTIVE)
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_COLLECTIVE)
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_DEBUG)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_DEBUG)
+endif()
+
+if(Legion_USE_CUDA)
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_CUDA)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_CUDA)
+
+  add_cuda_architecture_defines(legate_core_CUDA_DEFS ARCHS ${Legion_CUDA_ARCH})
+
+  list(APPEND legate_core_CUDA_OPTIONS -Xfatbin=-compress-all)
+  list(APPEND legate_core_CUDA_OPTIONS --expt-extended-lambda)
+  list(APPEND legate_core_CUDA_OPTIONS --expt-relaxed-constexpr)
+  list(APPEND legate_core_CUDA_OPTIONS -Wno-deprecated-gpu-targets)
+endif()
+
+if(Legion_NETWORKS)
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_NETWORK)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_NETWORK)
+endif()
+
+# Change THRUST_DEVICE_SYSTEM for `.cpp` files
+# TODO: This is what we do in cuNumeric, should we do it here as well?
+if(Legion_USE_OpenMP)
+  find_package(OpenMP REQUIRED)
+
+  target_link_libraries(legate_core PRIVATE OpenMP::OpenMP_CXX)
+
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_OPENMP)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_OPENMP)
+
+  list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
+  list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP)
+elseif(NOT Legion_USE_CUDA)
+  list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
+  list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
+endif()
+# Or should we only do it if OpenMP and CUDA are both disabled?
+# if(NOT Legion_USE_OpenMP AND (NOT Legion_USE_CUDA))
+#   list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
+#   list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
+# endif()
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(platform_rpath_origin "\$ORIGIN")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -330,13 +334,48 @@ target_link_libraries(legate_core
           $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
   PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>)
 
-target_compile_options(legate_core
-  PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${legate_core_CXX_OPTIONS}>"
-          "$<$<COMPILE_LANGUAGE:CUDA>:${legate_core_CUDA_OPTIONS}>")
-
 target_compile_definitions(legate_core
   PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${legate_core_CXX_DEFS}>"
          "$<$<COMPILE_LANGUAGE:CUDA>:${legate_core_CUDA_DEFS}>")
+
+##############################################################################
+# - Custom User Flags --------------------------------------------------------
+
+macro(legate_core_add_target_compile_option OPTION_LANG VIS OPTION_NAME)
+  if (NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
+    # Using this form of separate_arguments() makes sure that quotes are respected when
+    # the list is formed. Otherwise stuff like
+    #
+    # "--compiler-options='-foo -bar -baz'"
+    #
+    # becomes
+    #
+    # --compiler-options="'-foo";"-bar";"-baz'"
+    #
+    # which is obviously not what we wanted
+    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
+  endif()
+  if(${OPTION_NAME})
+    target_compile_options(legate_core ${VIS} "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
+  endif()
+endmacro()
+
+macro(legate_core_add_target_link_option VIS OPTION_NAME)
+  if (NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
+    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
+  endif()
+  if(${OPTION_NAME})
+    target_link_options(legate_core ${VIS} "${${OPTION_NAME}}")
+  endif()
+endmacro()
+
+legate_core_add_target_compile_option(CXX PRIVATE legate_core_CXX_OPTIONS)
+legate_core_add_target_compile_option(CUDA PRIVATE legate_core_CUDA_OPTIONS)
+
+legate_core_add_target_compile_option(CXX PUBLIC legate_core_CXX_FLAGS)
+legate_core_add_target_compile_option(CUDA PUBLIC legate_core_CUDA_FLAGS)
+
+legate_core_add_target_link_option(INTERFACE legate_core_LINKER_FLAGS)
 
 target_include_directories(legate_core
   PUBLIC
@@ -344,6 +383,25 @@ target_include_directories(legate_core
   INTERFACE
     $<INSTALL_INTERFACE:include/legate>
 )
+
+if (((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+    AND (CMAKE_SYSTEM_NAME STREQUAL "Darwin"))
+  # Both clang and gcc will automatically generate a <TARGET>.dSYM directory (the debug
+  # symbols) when creating single executables, but refuse to do so when creating
+  # libraries. So we must do this ourselves...
+  find_program(DSYMUTIL dsymutil)
+  if (DSYMUTIL)
+    get_target_property(LEGATE_CORE_LIB_DIR legate_core LIBRARY_OUTPUT_DIRECTORY)
+    get_target_property(LEGATE_CORE_BIN_DIR legate_core BINARY_DIR)
+
+    add_custom_command(
+      TARGET legate_core POST_BUILD
+      COMMAND "${DSYMUTIL}" "$<TARGET_FILE_NAME:legate_core>"
+      WORKING_DIRECTORY "${LEGATE_CORE_BIN_DIR}/${LEGATE_CORE_LIB_DIR}"
+      DEPENDS legate_core
+    )
+  endif()
+endif()
 
 ##############################################################################
 # - Doxygen target------------------------------------------------------------
@@ -419,6 +477,7 @@ endif()
 
 include(CPack)
 include(GNUInstallDirs)
+
 rapids_cmake_install_lib_dir(lib_dir)
 
 install(TARGETS legate_core
@@ -502,6 +561,7 @@ install(
   FILES src/core/type/type_info.h
         src/core/type/type_traits.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/type)
+
 install(
   FILES src/core/utilities/debug.h
         src/core/utilities/dispatch.h
@@ -569,8 +629,6 @@ rapids_export(
   FINAL_CODE_BLOCK code_string
   LANGUAGES ${ENABLED_LANGUAES}
 )
-
-include(cmake/legate_helper_functions.cmake)
 
 set(legate_core_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 

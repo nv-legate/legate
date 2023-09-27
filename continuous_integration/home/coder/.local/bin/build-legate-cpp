@@ -7,7 +7,6 @@ build_legate_cpp() {
     local cmake_args=(${CMAKE_ARGS:-});
     cmake_args+=(-DBUILD_SHARED_LIBS=ON);
     cmake_args+=(-DBUILD_MARCH=${BUILD_MARCH:-haswell});
-    cmake_args+=(-DCMAKE_BUILD_TYPE=Release);
     cmake_args+=(-DLegion_CUDA_ARCH=all-major);
     cmake_args+=(-DLegion_NETWORKS=);
     cmake_args+=(-DLegion_USE_Python=ON);
@@ -28,6 +27,7 @@ build_legate_cpp() {
     cmake_args+=(-DLegion_USE_OpenMP=${USE_OPENMP:-OFF});
     cmake_args+=(-Dlegate_core_BUILD_DOCS=ON);
     cmake_args+=(-DCMAKE_BUILD_PARALLEL_LEVEL=${JOBS:-$(nproc --ignore=1)});
+    cmake_args+=(--preset ${LEGATE_CORE_CMAKE_PRESET:-debug-gcc})
     cmake_args+=(${@});
 
     sccache --stop-server >/dev/null 2>&1 || true;
@@ -39,19 +39,21 @@ build_legate_cpp() {
 
     rm -rf ~/legate/build;
 
+    cd ~/legate;
+
     time CMAKE_BUILD_PARALLEL_LEVEL=${JOBS:-$(nproc --ignore=1)} \
-    cmake -S ~/legate -B ~/legate/build "${cmake_args[@]}" -GNinja;
+    cmake -S ~/legate "${cmake_args[@]}" -GNinja;
 
     sccache --show-stats;
 
     time CMAKE_BUILD_PARALLEL_LEVEL=${JOBS:-$(nproc --ignore=1)} \
-    cmake --build ~/legate/build --verbose --parallel ${JOBS:-$(nproc --ignore=1)};
+    cmake --build --preset ${LEGATE_CORE_CMAKE_PRESET} --verbose --parallel ${JOBS:-$(nproc --ignore=1)};
 
     sccache --show-stats;
 
     (
     mkdir -p /tmp/out;
-    cd ~/legate/build;
+    cd ~/legate/build/${LEGATE_CORE_CMAKE_PRESET};
     cpack -G TGZ;
     cp ./*-Linux.tar.gz /tmp/out/;
     );

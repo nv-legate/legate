@@ -821,14 +821,14 @@ proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
 {
   std::vector<proj::SymbolicExpr> exprs;
   for (int32_t dim = 0; dim < dim_ + 1; ++dim) exprs.push_back(point[dim]);
-  for (int32_t dim = dim_ + sizes_.size(); dim < point.size(); ++dim) exprs.push_back(point[dim]);
+  for (auto dim = dim_ + sizes_.size(); dim < point.size(); ++dim) exprs.push_back(point[dim]);
   return proj::SymbolicPoint(std::move(exprs));
 }
 
 Restrictions Delinearize::convert(const Restrictions& restrictions) const
 {
   std::vector<Restriction> result;
-  for (uint32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
+  for (int32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
   for (uint32_t idx = 1; idx < sizes_.size(); ++idx) result.push_back(Restriction::FORBID);
   for (uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim)
     result.push_back(restrictions[dim]);
@@ -838,7 +838,7 @@ Restrictions Delinearize::convert(const Restrictions& restrictions) const
 Restrictions Delinearize::invert(const Restrictions& restrictions) const
 {
   std::vector<Restriction> result;
-  for (uint32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
+  for (int32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
   for (uint32_t dim = dim_ + sizes_.size(); dim < restrictions.size(); ++dim)
     result.push_back(restrictions[dim]);
   return Restrictions(std::move(result));

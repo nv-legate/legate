@@ -109,7 +109,7 @@ int LocalNetwork::init_comm()
 {
   int id = 0;
   collGetUniqueId(&id);
-  assert(thread_comms.size() == id);
+  assert(id >= 0 && thread_comms.size() == static_cast<std::size_t>(id));
   // create thread comm
   ThreadComm* thread_comm = (ThreadComm*)malloc(sizeof(ThreadComm));
   thread_comm->ready_flag = false;

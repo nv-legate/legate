@@ -171,7 +171,7 @@ static ncclComm_t* init_nccl(const Legion::Task* task,
   CHECK_CUDA(cudaEventRecord(ev_start, stream));
 
   CHECK_NCCL(ncclGroupStart());
-  for (auto idx = 0; idx < num_ranks; ++idx) {
+  for (std::size_t idx = 0; idx < num_ranks; ++idx) {
     CHECK_NCCL(ncclSend(src_buffer.ptr(0), sizeof(_Payload), ncclInt8, idx, *comm, stream));
     CHECK_NCCL(ncclRecv(tgt_buffer.ptr(0), sizeof(_Payload), ncclInt8, idx, *comm, stream));
   }

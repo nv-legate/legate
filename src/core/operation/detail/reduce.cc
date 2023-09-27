@@ -60,7 +60,7 @@ void Reduce::launch(Strategy* p_strategy)
   // generating projection functions to use in tree_reduction task
   std::vector<proj::RadixProjectionFunctor> proj_fns;
   if (n_tasks > 1) {
-    for (size_t i = 0; i < radix_; i++) proj_fns.push_back(proj::RadixProjectionFunctor(radix_, i));
+    for (auto i = 0; i < radix_; i++) proj_fns.push_back(proj::RadixProjectionFunctor(radix_, i));
   }
 
   auto to_array_arg = [](auto&& arg) { return std::make_unique<BaseArrayArg>(std::move(arg)); };

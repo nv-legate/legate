@@ -38,6 +38,7 @@ struct CheckGatherScatterTask
       auto init          = context.scalar(0).value<VAL>();
 
       auto src_shape = src_store.shape<SRC_DIM>();
+      static_cast<void>(src_shape);
       auto tgt_shape = tgt_store.shape<TGT_DIM>();
       auto ind_shape = src_ind_store.shape<IND_DIM>();
 

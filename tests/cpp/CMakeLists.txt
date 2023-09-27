@@ -14,6 +14,8 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 project(cpp_tests VERSION 0.1 LANGUAGES C CXX)
 
+cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/../../")
+
 if (NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
@@ -36,7 +38,9 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-find_package(legate_core REQUIRED)
+include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
+
+legate_ensure_legate()
 
 enable_testing()
 
@@ -53,12 +57,8 @@ enable_language(CUDA)
 file(GLOB integration_GPU_SRC ${PROJECT_SOURCE_DIR}/integration/*.cu)
 list(APPEND integration_SRC ${integration_GPU_SRC})
 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
-  file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-23.04/RAPIDS.cmake
-       ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
-endif()
-include(${CMAKE_BINARY_DIR}/RAPIDS.cmake)
-include(rapids-find)
+legate_include_rapids()
+
 include(cmake/thirdparty/get_nccl.cmake)
 
 endif()
