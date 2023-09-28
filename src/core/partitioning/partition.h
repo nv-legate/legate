@@ -49,7 +49,7 @@ struct Partition {
 
  public:
   virtual bool is_complete_for(const detail::Storage* storage) const          = 0;
-  virtual bool is_disjoint_for(const Domain* launch_domain) const             = 0;
+  virtual bool is_disjoint_for(const Domain& launch_domain) const             = 0;
   virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
   virtual bool is_convertible() const                                         = 0;
 
@@ -85,7 +85,7 @@ class NoPartition : public Partition {
 
  public:
   bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool is_disjoint_for(const Domain& launch_domain) const override;
   bool satisfies_restrictions(const Restrictions& restrictions) const override;
   bool is_convertible() const override { return true; }
 
@@ -132,7 +132,7 @@ class Tiling : public Partition {
 
  public:
   bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool is_disjoint_for(const Domain& launch_domain) const override;
   bool satisfies_restrictions(const Restrictions& restrictions) const override;
   bool is_convertible() const override { return true; }
 
@@ -187,7 +187,7 @@ class Weighted : public Partition {
 
  public:
   bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool is_disjoint_for(const Domain& launch_domain) const override;
   bool satisfies_restrictions(const Restrictions& restrictions) const override;
   bool is_convertible() const override { return false; }
 
@@ -234,7 +234,7 @@ class Image : public Partition {
 
  public:
   bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain* launch_domain) const override;
+  bool is_disjoint_for(const Domain& launch_domain) const override;
   bool satisfies_restrictions(const Restrictions& restrictions) const override;
   bool is_convertible() const override { return false; }
 

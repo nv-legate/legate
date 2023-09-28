@@ -80,7 +80,7 @@ void Task::launch_task(Strategy* p_strategy)
 {
   auto& strategy = *p_strategy;
   detail::TaskLauncher launcher(library_, machine_, provenance_, task_id_);
-  const auto* launch_domain = strategy.launch_domain(this);
+  auto launch_domain = strategy.launch_domain(this);
 
   for (auto& [arr, mapping] : inputs_) {
     launcher.add_input(arr->to_launcher_arg(mapping, strategy, launch_domain, READ_ONLY, -1));
@@ -98,23 +98,24 @@ void Task::launch_task(Strategy* p_strategy)
   for (auto& scalar : scalars_) launcher.add_scalar(std::move(scalar));
 
   // Add communicators
-  if (launch_domain != nullptr)
+  if (launch_domain.is_valid()) {
     for (auto* factory : communicator_factories_) {
       auto target = machine_.preferred_target;
       if (!factory->is_supported_target(target)) continue;
       auto& processor_range = machine_.processor_range();
-      auto communicator     = factory->find_or_create(target, processor_range, *launch_domain);
+      auto communicator     = factory->find_or_create(target, processor_range, launch_domain);
       launcher.add_communicator(communicator);
       if (factory->needs_barrier()) launcher.set_insert_barrier(true);
     }
+  }
 
   launcher.set_side_effect(has_side_effect_);
   launcher.set_concurrent(concurrent_);
   launcher.throws_exception(can_throw_exception_);
 
-  if (launch_domain != nullptr) {
-    auto result = launcher.execute(*launch_domain);
-    demux_scalar_stores(result, *launch_domain);
+  if (launch_domain.is_valid()) {
+    auto result = launcher.execute(launch_domain);
+    demux_scalar_stores(result, launch_domain);
   } else {
     auto result = launcher.execute_single();
     demux_scalar_stores(result);
@@ -310,15 +311,15 @@ void AutoTask::launch(Strategy* p_strategy)
 
 void AutoTask::fixup_ranges(Strategy& strategy)
 {
-  const auto* launch_domain = strategy.launch_domain(this);
-  if (nullptr == launch_domain) return;
+  auto launch_domain = strategy.launch_domain(this);
+  if (!launch_domain.is_valid()) return;
 
   auto* core_lib = detail::Runtime::get_runtime()->core_library();
   detail::TaskLauncher launcher(core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES);
   for (auto* array : arrays_to_fixup_) {
     launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, NO_ACCESS));
   }
-  launcher.execute(*launch_domain);
+  launcher.execute(launch_domain);
 }
 
 ////////////////////////////////////////////////////

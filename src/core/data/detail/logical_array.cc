@@ -142,7 +142,7 @@ void BaseLogicalArray::generate_constraints(
 std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
   const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
-  const Domain* launch_domain,
+  const Domain& launch_domain,
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
@@ -160,7 +160,7 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
 }
 
 std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg_for_fixup(
-  const Domain* launch_domain, Legion::PrivilegeMode privilege) const
+  const Domain& launch_domain, Legion::PrivilegeMode privilege) const
 {
   auto data_arg = data_->to_launcher_arg_for_fixup(launch_domain, privilege);
   return std::make_unique<BaseArrayArg>(std::move(data_arg));
@@ -270,7 +270,7 @@ void ListLogicalArray::generate_constraints(
 std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
   const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
-  const Domain* launch_domain,
+  const Domain& launch_domain,
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
@@ -283,7 +283,7 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
 }
 
 std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg_for_fixup(
-  const Domain* launch_domain, Legion::PrivilegeMode privilege) const
+  const Domain& launch_domain, Legion::PrivilegeMode privilege) const
 {
   auto descriptor_arg = descriptor_->to_launcher_arg_for_fixup(launch_domain, READ_WRITE);
   auto vardata_arg    = vardata_->to_launcher_arg_for_fixup(launch_domain, privilege);
@@ -417,7 +417,7 @@ void StructLogicalArray::generate_constraints(
 std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
-  const Domain* launch_domain,
+  const Domain& launch_domain,
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
@@ -439,7 +439,7 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
 }
 
 std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg_for_fixup(
-  const Domain* launch_domain, Legion::PrivilegeMode privilege) const
+  const Domain& launch_domain, Legion::PrivilegeMode privilege) const
 {
   std::vector<std::unique_ptr<Analyzable>> field_args;
   for (auto& field : fields_) {

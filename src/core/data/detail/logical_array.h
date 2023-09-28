@@ -61,11 +61,11 @@ struct LogicalArray {
   virtual std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
-    const Domain* launch_domain,
+    const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const = 0;
   virtual std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
-    const Domain* launch_domain, Legion::PrivilegeMode privilege) const = 0;
+    const Domain& launch_domain, Legion::PrivilegeMode privilege) const = 0;
 };
 
 class BaseLogicalArray : public LogicalArray {
@@ -113,11 +113,11 @@ class BaseLogicalArray : public LogicalArray {
   std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
-    const Domain* launch_domain,
+    const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
   std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
-    const Domain* launch_domain, Legion::PrivilegeMode privilege) const override;
+    const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
  private:
   std::shared_ptr<LogicalStore> data_;
@@ -173,11 +173,11 @@ class ListLogicalArray : public LogicalArray {
   std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
-    const Domain* launch_domain,
+    const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
   std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
-    const Domain* launch_domain, Legion::PrivilegeMode privilege) const override;
+    const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
  private:
   std::shared_ptr<Type> type_;
@@ -229,11 +229,11 @@ class StructLogicalArray : public LogicalArray {
   std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
-    const Domain* launch_domain,
+    const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
   std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
-    const Domain* launch_domain, Legion::PrivilegeMode privilege) const override;
+    const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
  private:
   std::shared_ptr<Type> type_;

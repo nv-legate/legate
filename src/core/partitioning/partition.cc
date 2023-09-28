@@ -27,9 +27,9 @@ NoPartition::NoPartition() : Partition() {}
 
 bool NoPartition::is_complete_for(const detail::Storage* storage) const { return true; }
 
-bool NoPartition::is_disjoint_for(const Domain* launch_domain) const
+bool NoPartition::is_disjoint_for(const Domain& launch_domain) const
 {
-  return nullptr == launch_domain || launch_domain->get_volume() == 1;
+  return !launch_domain.is_valid() || launch_domain.get_volume() == 1;
 }
 
 bool NoPartition::satisfies_restrictions(const Restrictions& restrictions) const { return true; }
@@ -139,12 +139,12 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   return true;
 }
 
-bool Tiling::is_disjoint_for(const Domain* launch_domain) const
+bool Tiling::is_disjoint_for(const Domain& launch_domain) const
 {
   // TODO: The check really should be that every two points from the launch domain are mapped
   // to two different colors
   return !overlapped_ &&
-         (nullptr == launch_domain || launch_domain->get_volume() <= color_shape_.volume());
+         (!launch_domain.is_valid() || launch_domain.get_volume() <= color_shape_.volume());
 }
 
 bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
@@ -257,11 +257,11 @@ bool Weighted::is_complete_for(const detail::Storage*) const
   return true;
 }
 
-bool Weighted::is_disjoint_for(const Domain* launch_domain) const
+bool Weighted::is_disjoint_for(const Domain& launch_domain) const
 {
   // TODO: The check really should be that every two points from the launch domain are mapped
   // to two different colors
-  return nullptr == launch_domain || launch_domain->get_volume() <= color_domain_.get_volume();
+  return !launch_domain.is_valid() || launch_domain.get_volume() <= color_domain_.get_volume();
 }
 
 bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
@@ -344,10 +344,10 @@ bool Image::is_complete_for(const detail::Storage* storage) const
   return false;
 }
 
-bool Image::is_disjoint_for(const Domain* launch_domain) const
+bool Image::is_disjoint_for(const Domain& launch_domain) const
 {
   // Disjointness check for image partitions is expensive, so we give a sound answer;
-  return false;
+  return !launch_domain.is_valid();
 }
 
 bool Image::satisfies_restrictions(const Restrictions& restrictions) const

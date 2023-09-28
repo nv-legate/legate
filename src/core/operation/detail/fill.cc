@@ -56,10 +56,11 @@ void Fill::launch(Strategy* strategy)
   auto lhs_proj      = lhs_->create_partition(part)->create_projection_info(launch_domain);
   lhs_->set_key_partition(machine(), part.get());
 
-  if (nullptr == launch_domain)
+  if (launch_domain.is_valid()) {
+    launcher.launch(launch_domain, lhs_.get(), *lhs_proj, value_.get());
+  } else {
     launcher.launch_single(lhs_.get(), *lhs_proj, value_.get());
-  else
-    launcher.launch(*launch_domain, lhs_.get(), *lhs_proj, value_.get());
+  }
 }
 
 std::string Fill::to_string() const { return "Fill:" + std::to_string(unique_id_); }

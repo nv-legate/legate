@@ -104,7 +104,7 @@ void register_tasks()
   CheckTask::register_variants(context);
 }
 
-TEST(Integration, TreeReduceUnique)
+TEST(TreeReduce, Unique)
 {
   legate::Core::perform_registration<register_tasks>();
 

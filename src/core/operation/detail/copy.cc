@@ -80,8 +80,8 @@ void Copy::launch(Strategy* p_strategy)
     launcher.add_reduction(target_.store, std::move(proj));
   }
 
-  if (launch_domain != nullptr) {
-    return launcher.execute(*launch_domain);
+  if (launch_domain.is_valid()) {
+    return launcher.execute(launch_domain);
   } else {
     return launcher.execute_single();
   }

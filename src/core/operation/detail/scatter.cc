@@ -82,8 +82,8 @@ void Scatter::launch(Strategy* p_strategy)
                                create_projection_info(strategy, launch_domain, target_indirect_));
   launcher.set_target_indirect_out_of_range(out_of_range_);
 
-  if (launch_domain != nullptr) {
-    return launcher.execute(*launch_domain);
+  if (launch_domain.is_valid()) {
+    return launcher.execute(launch_domain);
   } else {
     return launcher.execute_single();
   }

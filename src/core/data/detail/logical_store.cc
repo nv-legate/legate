@@ -306,7 +306,7 @@ Legion::LogicalPartition StoragePartition::get_legion_partition()
   return parent_->get_region_field()->get_legion_partition(partition_.get(), complete_);
 }
 
-bool StoragePartition::is_disjoint_for(const Domain* launch_domain) const
+bool StoragePartition::is_disjoint_for(const Domain& launch_domain) const
 {
   return partition_->is_disjoint_for(launch_domain);
 }
@@ -670,12 +670,12 @@ void LogicalStore::pack(BufferBuilder& buffer) const
 
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variable,
                                                           const Strategy& strategy,
-                                                          const Domain* launch_domain,
+                                                          const Domain& launch_domain,
                                                           Legion::PrivilegeMode privilege,
                                                           int32_t redop)
 {
   if (has_scalar_storage()) {
-    if (nullptr == launch_domain && REDUCE == privilege) { privilege = READ_WRITE; }
+    if (!launch_domain.is_valid() && REDUCE == privilege) { privilege = READ_WRITE; }
     auto read_only   = privilege == READ_ONLY;
     auto has_storage = privilege == READ_ONLY || privilege == READ_WRITE;
     return std::make_unique<FutureStoreArg>(this, read_only, has_storage, redop);
@@ -698,7 +698,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
   }
 }
 
-std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(const Domain* launch_domain,
+std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(const Domain& launch_domain,
                                                                     Legion::PrivilegeMode privilege)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(key_partition_ != nullptr); }
@@ -736,7 +736,7 @@ LogicalStorePartition::LogicalStorePartition(std::shared_ptr<Partition> partitio
 
 // FIXME pass projection functor
 std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
-  const Domain* launch_domain, std::optional<proj::SymbolicFunctor> proj_fn)
+  const Domain& launch_domain, std::optional<proj::SymbolicFunctor> proj_fn)
 {
   if (store_->has_scalar_storage()) return std::make_unique<ProjectionInfo>();
 
@@ -746,11 +746,11 @@ std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
   // created.
   auto legion_partition = storage_partition_->get_legion_partition();
   auto proj_id =
-    launch_domain != nullptr ? store_->compute_projection(launch_domain->dim, proj_fn) : 0;
+    launch_domain.is_valid() ? store_->compute_projection(launch_domain.dim, proj_fn) : 0;
   return std::make_unique<ProjectionInfo>(legion_partition, proj_id);
 }
 
-bool LogicalStorePartition::is_disjoint_for(const Domain* launch_domain) const
+bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const
 {
   return storage_partition_->is_disjoint_for(launch_domain);
 }

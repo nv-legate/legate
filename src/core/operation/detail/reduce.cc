@@ -51,8 +51,8 @@ Reduce::Reduce(const Library* library,
 void Reduce::launch(Strategy* p_strategy)
 {
   auto& strategy     = *p_strategy;
-  auto launch_domain = *(strategy.launch_domain(this));
-  auto n_tasks       = launch_domain.get_volume();
+  auto launch_domain = strategy.launch_domain(this);
+  auto n_tasks       = launch_domain.is_valid() ? launch_domain.get_volume() : 1;
 
   auto input_part      = strategy[input_part_];
   auto input_partition = input_->create_partition(input_part);
@@ -74,13 +74,13 @@ void Reduce::launch(Strategy* p_strategy)
       // if there are more than 1 sub-task, we add several slices of the input
       // for each sub-task
       for (auto& proj_fn : proj_fns) {
-        auto proj_info = input_partition->create_projection_info(&launch_domain, proj_fn);
+        auto proj_info = input_partition->create_projection_info(launch_domain, proj_fn);
         launcher.add_input(to_array_arg(
           std::make_unique<RegionFieldArg>(input_.get(), READ_ONLY, std::move(proj_info))));
       }
     } else {
       // otherwise we just add an entire input region to the task
-      auto proj_info = input_partition->create_projection_info(&launch_domain);
+      auto proj_info = input_partition->create_projection_info(launch_domain);
       launcher.add_input(to_array_arg(
         std::make_unique<RegionFieldArg>(input_.get(), READ_ONLY, std::move(proj_info))));
     }

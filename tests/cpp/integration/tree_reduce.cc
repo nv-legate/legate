@@ -87,7 +87,7 @@ void register_tasks()
   ReduceUnboundTask::register_variants(context);
 }
 
-TEST(Integration, TreeReduceNormal)
+TEST(TreeReduce, AutoProducer)
 {
   legate::Core::perform_registration<register_tasks>();
 
@@ -109,7 +109,29 @@ TEST(Integration, TreeReduceNormal)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(Integration, TreeReduceNormalTwoSteps)
+TEST(TreeReduce, ManualProducer)
+{
+  legate::Core::perform_registration<register_tasks>();
+
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+
+  size_t num_tasks = 3;
+  size_t tile_size = TILE_SIZE;
+
+  auto store = runtime->create_store({num_tasks * tile_size}, legate::int64());
+
+  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, {num_tasks});
+  auto part = store.partition_by_tiling({tile_size});
+  task.add_output(part);
+  runtime->submit(std::move(task));
+
+  auto result = runtime->tree_reduce(context, TASK_REDUCE_NORMAL, store, 4);
+
+  EXPECT_FALSE(result.unbound());
+}
+
+TEST(TreeReduce, ManualProducerMultiLevel)
 {
   legate::Core::perform_registration<register_tasks>();
 
@@ -131,7 +153,7 @@ TEST(Integration, TreeReduceNormalTwoSteps)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(Integration, TreeReduceUnboud)
+TEST(TreeReduce, ManualProducerUnbound)
 {
   legate::Core::perform_registration<register_tasks>();
 
@@ -150,7 +172,7 @@ TEST(Integration, TreeReduceUnboud)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(Integration, TreeReduceSingleProc)
+TEST(TreeReduce, ManualProducerSingle)
 {
   legate::Core::perform_registration<register_tasks>();
 
@@ -163,6 +185,28 @@ TEST(Integration, TreeReduceSingleProc)
   auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, {1});
   task.add_output(store);
   runtime->submit(std::move(task));
+
+  auto result = runtime->tree_reduce(context, TASK_REDUCE_UNBOUND, store, 4);
+  EXPECT_FALSE(result.unbound());
+}
+
+TEST(TreeReduce, AutoProducerSingle)
+{
+  legate::Core::perform_registration<register_tasks>();
+
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_library(library_name);
+
+  // unbound store
+  auto store = runtime->create_store(legate::int64());
+
+  {
+    auto machine = runtime->get_machine();
+    legate::MachineTracker tracker(machine.slice(0, 1, legate::mapping::TaskTarget::CPU));
+    auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND);
+    task.add_output(store);
+    runtime->submit(std::move(task));
+  }
 
   auto result = runtime->tree_reduce(context, TASK_REDUCE_UNBOUND, store, 4);
   EXPECT_FALSE(result.unbound());

@@ -54,7 +54,7 @@ class Operation {
   void record_partition(const Variable* variable, std::shared_ptr<LogicalStore> store);
   // Helper methods
   std::unique_ptr<ProjectionInfo> create_projection_info(const Strategy& strategy,
-                                                         const Domain* launch_domain,
+                                                         const Domain& launch_domain,
                                                          const StoreArg& arg) const;
 
  protected:

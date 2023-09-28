@@ -36,7 +36,7 @@ class LaunchDomainResolver {
   void set_must_be_sequential(bool must_be_sequential) { must_be_sequential_ = must_be_sequential; }
 
  public:
-  std::unique_ptr<Domain> resolve_launch_domain() const;
+  Domain resolve_launch_domain() const;
 
  private:
   bool must_be_sequential_{false};
@@ -62,25 +62,25 @@ void LaunchDomainResolver::record_unbound_store(int32_t unbound_dim)
     unbound_dim_ = unbound_dim;
 }
 
-std::unique_ptr<Domain> LaunchDomainResolver::resolve_launch_domain() const
+Domain LaunchDomainResolver::resolve_launch_domain() const
 {
-  if (must_be_sequential_ || launch_domains_.empty()) return nullptr;
+  if (must_be_sequential_ || launch_domains_.empty()) return Domain{};
   if (must_be_1d_) {
     if (unbound_dim_ != UNSET && unbound_dim_ > 1)
-      return nullptr;
+      return Domain{};
     else {
       if (LegateDefined(LEGATE_USE_DEBUG)) { assert(launch_volumes_.size() == 1); }
       int64_t volume = *launch_volumes_.begin();
-      return std::make_unique<Domain>(0, volume - 1);
+      return Domain{0, volume - 1};
     }
   } else {
     if (LegateDefined(LEGATE_USE_DEBUG)) { assert(launch_domains_.size() == 1); }
     auto& launch_domain = *launch_domains_.begin();
     if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) {
       int64_t volume = *launch_volumes_.begin();
-      return std::make_unique<Domain>(0, volume - 1);
+      return Domain{0, volume - 1};
     }
-    return std::make_unique<Domain>(launch_domain);
+    return launch_domain;
   }
 }
 
@@ -90,16 +90,12 @@ std::unique_ptr<Domain> LaunchDomainResolver::resolve_launch_domain() const
 
 Strategy::Strategy() {}
 
-bool Strategy::parallel(const Operation* op) const
-{
-  auto finder = launch_domains_.find(op);
-  return finder != launch_domains_.end() && finder->second != nullptr;
-}
+bool Strategy::parallel(const Operation* op) const { return launch_domain(op).is_valid(); }
 
-const Domain* Strategy::launch_domain(const Operation* op) const
+Domain Strategy::launch_domain(const Operation* op) const
 {
   auto finder = launch_domains_.find(op);
-  return finder != launch_domains_.end() ? finder->second.get() : nullptr;
+  return finder != launch_domains_.end() ? finder->second : Domain{};
 }
 
 void Strategy::set_launch_shape(const Operation* op, const Shape& shape)
@@ -107,7 +103,7 @@ void Strategy::set_launch_shape(const Operation* op, const Shape& shape)
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(launch_domains_.find(op) == launch_domains_.end());
   }
-  launch_domains_.insert({op, std::make_unique<Domain>(to_domain(shape))});
+  launch_domains_.insert({op, to_domain(shape)});
 }
 
 void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition)
@@ -161,10 +157,11 @@ void Strategy::dump() const
   for (const auto& [symbol, fspace] : field_spaces_)
     log_legate.debug() << symbol.to_string() << ": " << fspace;
   for (const auto& [op, domain] : launch_domains_) {
-    if (nullptr == domain)
+    if (!domain.is_valid()) {
       log_legate.debug() << op->to_string() << ": (sequential)";
-    else
-      log_legate.debug() << op->to_string() << ": " << *domain;
+    } else {
+      log_legate.debug() << op->to_string() << ": " << domain;
+    }
   }
   log_legate.debug("====================");
 }

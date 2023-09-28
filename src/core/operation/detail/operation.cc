@@ -59,7 +59,7 @@ void Operation::record_partition(const Variable* variable, std::shared_ptr<Logic
 }
 
 std::unique_ptr<ProjectionInfo> Operation::create_projection_info(const Strategy& strategy,
-                                                                  const Domain* launch_domain,
+                                                                  const Domain& launch_domain,
                                                                   const StoreArg& arg) const
 {
   auto store_partition = arg.store->create_partition(strategy[arg.variable]);

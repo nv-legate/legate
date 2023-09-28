@@ -144,7 +144,7 @@ class StoragePartition : public std::enable_shared_from_this<StoragePartition> {
   int32_t level() const { return level_; }
 
  public:
-  bool is_disjoint_for(const Domain* launch_domain) const;
+  bool is_disjoint_for(const Domain& launch_domain) const;
 
  private:
   bool complete_;
@@ -242,10 +242,10 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   void pack(BufferBuilder& buffer) const;
   std::unique_ptr<Analyzable> to_launcher_arg(const Variable* variable,
                                               const Strategy& strategy,
-                                              const Domain* launch_domain,
+                                              const Domain& launch_domain,
                                               Legion::PrivilegeMode privilege,
                                               int32_t redop = -1);
-  std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(const Domain* launch_domain,
+  std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(const Domain& launch_domain,
                                                         Legion::PrivilegeMode privilege);
 
  public:
@@ -274,8 +274,8 @@ class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePa
   std::shared_ptr<StoragePartition> storage_partition() const { return storage_partition_; }
   std::shared_ptr<LogicalStore> store() const { return store_; }
   std::unique_ptr<ProjectionInfo> create_projection_info(
-    const Domain* launch_domain, std::optional<proj::SymbolicFunctor> proj_fn = nullptr);
-  bool is_disjoint_for(const Domain* launch_domain) const;
+    const Domain& launch_domain, std::optional<proj::SymbolicFunctor> proj_fn = nullptr);
+  bool is_disjoint_for(const Domain& launch_domain) const;
 
  private:
   std::shared_ptr<Partition> partition_;
