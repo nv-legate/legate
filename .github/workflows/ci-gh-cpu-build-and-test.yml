@@ -1,4 +1,4 @@
-name: Build and test CPU legate.core.internal on GH
+name: Build and test CPU legate.core on GH
 
 concurrency:
   group: ci-cpu-on-${{ github.event_name }}-from-${{ github.ref_name }}
@@ -8,7 +8,7 @@ on:
   push:
     branches:
       - "pull-request/[0-9]+"
-      - "cpp-branch-*"
+      - "*branch-*"
 
 jobs:
   build-cpu:
@@ -16,13 +16,15 @@ jobs:
       fail-fast: false
       matrix:
         cmake-preset: [debug-gcc, debug-sanitizer-gcc]
+    if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
       ./.github/workflows/gh-build.yml
     with:
       build-target: cpu
       cmake-preset: ${{ matrix.cmake-preset }}
       # Ref: https://docs.rapids.ai/resources/github-actions/#cpu-labels for `linux-amd64-cpu4`
-      runs-on: ${{ github.repository == 'nv-legate/legate.core.internal' && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
+      repos-name: ${{ github.event.repository.name }}
+      runs-on: ${{ contains(github.repository, 'nv-legate/legate.core') && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
       sha: ${{ github.sha }}
 
   test-cpu:
@@ -40,7 +42,8 @@ jobs:
       ./.github/workflows/gh-test.yml
     with:
       build-target: cpu
-      runs-on: ${{ github.repository == 'nv-legate/legate.core.internal' && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
+      repos-name: ${{ github.event.repository.name }}
+      runs-on: ${{ contains(github.repository, 'nv-legate/legate.core') && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
       sha: ${{ github.sha }}
       cmake-preset: ${{ matrix.cmake-preset }}
       test-scope: ${{ matrix.test-scope }}

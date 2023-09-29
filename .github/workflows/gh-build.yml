@@ -6,6 +6,9 @@ on:
       build-target:
         required: true
         type: string
+      repos-name:
+        required: true
+        type: string
       runs-on:
         required: true
         type: string
@@ -18,8 +21,8 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  BASE_IMAGE: rapidsai/devcontainers:23.06-cpp-cuda11.8-mambaforge-ubuntu22.04
-  IMAGE_NAME: legate.core.internal_pkg-${{ inputs.build-target }}-${{ inputs.cmake-preset }}
+  BASE_IMAGE: rapidsai/devcontainers:23.06-cpp-mambaforge-ubuntu22.04
+  IMAGE_NAME: ${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}
   USE_CUDA: ${{ (inputs.build-target == 'cpu' && 'OFF') || 'ON' }}
   LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
 
@@ -35,7 +38,7 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
 
     steps:
-      - name: Checkout legate.core.internal (= this repo)
+      - name: Checkout ${{ inputs.repos-name }} (= this repo)
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -105,6 +108,6 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: "legate.core.internal-${{ inputs.build-target }}-${{ inputs.cmake-preset }}-${{ inputs.sha }}"
+          name: "${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}-${{ inputs.sha }}"
           path: |
             artifacts
