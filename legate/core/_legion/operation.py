@@ -1263,7 +1263,7 @@ class Detach(Dispatchable[Future]):
                     context,
                     self.physical_region.handle,
                     self.flush,
-                    unordered,
+                    True,
                 )
             )
 
@@ -1426,7 +1426,7 @@ class IndexDetach(Dispatchable[Future]):
                 context,
                 self.external_resources.handle,
                 self.flush,
-                False,  # unordered
+                True,  # unordered
             )
         )
 

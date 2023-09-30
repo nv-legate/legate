@@ -78,9 +78,8 @@ class LocalProcessorRange {
 
  public:
   bool empty() const { return procs_.size() == 0; }
-
- public:
   std::string to_string() const;
+  uint32_t total_proc_count() const { return total_proc_count_; }
 
  private:
   uint32_t offset_;

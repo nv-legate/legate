@@ -295,7 +295,7 @@ class Runtime {
   std::map<ProjectionDesc, Legion::ProjectionID> registered_projections_{};
 
  private:
-  using ShardingDesc = std::tuple<Legion::ProjectionID, uint32_t, uint32_t, uint32_t, uint32_t>;
+  using ShardingDesc = std::pair<Legion::ProjectionID, mapping::ProcessorRange>;
   int64_t next_sharding_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
   std::map<ShardingDesc, Legion::ShardingID> registered_shardings_{};
 

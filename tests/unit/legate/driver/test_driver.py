@@ -90,7 +90,6 @@ class TestDriver:
         config = genconfig(["--launcher", launch, "--dry-run"])
         driver = m.LegateDriver(config, SYSTEM)
 
-        mocker.patch.object(m, "process_logs")
         mock_run = mocker.patch.object(m, "run")
 
         driver.run()
@@ -104,7 +103,6 @@ class TestDriver:
         config = genconfig(["--launcher", launch])
         driver = m.LegateDriver(config, SYSTEM)
 
-        mocker.patch.object(m, "process_logs")
         mock_run = mocker.patch.object(m, "run")
 
         driver.run()
@@ -171,7 +169,6 @@ class TestDriver:
         launch: str,
     ) -> None:
         mocker.patch("platform.system", return_value="Darwin")
-        mocker.patch.object(m, "process_logs")
 
         system = m.System()
 

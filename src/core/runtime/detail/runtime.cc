@@ -958,9 +958,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   if (Realm::Network::max_node_id == 0) return 0;
 
   auto& proc_range = machine.processor_range();
-  auto [low, high] = proc_range.get_node_range();
-  auto offset      = proc_range.low % proc_range.per_node_count;
-  ShardingDesc key{proj_id, low, high, offset, proc_range.per_node_count};
+  ShardingDesc key{proj_id, proc_range};
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate.debug() << "Query sharding {proj_id: " << proj_id
@@ -982,7 +980,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create sharding " << sharding_id; }
 
   legate_create_sharding_functor_using_projection(
-    sharding_id, proj_id, low, high, offset, proc_range.per_node_count);
+    sharding_id, proj_id, proc_range.low, proc_range.high, proc_range.per_node_count);
 
   return sharding_id;
 }

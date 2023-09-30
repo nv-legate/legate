@@ -57,7 +57,7 @@ endif()
 ##############################################################################
 # - Download and initialize RAPIDS CMake helpers -----------------------------
 
-set(legate_core_version 23.09.00)
+set(legate_core_version 23.11.00)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/legate_helper_functions.cmake)
 

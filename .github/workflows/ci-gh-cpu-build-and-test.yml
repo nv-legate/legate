@@ -38,6 +38,7 @@ jobs:
           - { name: Pytest Unit Tests, test-scope: unit }
           - { name: mypy, test-scope: mypy }
     name: ${{ matrix.name }}
+    if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
       ./.github/workflows/gh-test.yml
     with:

@@ -77,9 +77,13 @@ class Field:
         self.field_id = field_id
         self.field_size = field_size
         self.shape = shape
+        self.detach_future: Optional[Future] = None
 
     def same_handle(self, other: Field) -> bool:
         return type(self) == type(other) and self.field_id == other.field_id
+
+    def add_detach_future(self, future: Future) -> None:
+        self.detach_future = future
 
     def __str__(self) -> str:
         return f"Field({self.field_id})"
@@ -91,6 +95,7 @@ class Field:
             self.field_id,
             self.field_size,
             self.shape,
+            self.detach_future,
         )
 
 
@@ -150,6 +155,11 @@ class RegionField:
         assert self.parent is None
         # If we already have some memory attached, detach it first
         if self.attached_alloc is not None:
+            raise RuntimeError("A RegionField cannot be re-attached")
+        if (
+            self.field.detach_future is not None
+            and not self.field.detach_future.is_ready()
+        ):
             raise RuntimeError("A RegionField cannot be re-attached")
         # All inline mappings should have been unmapped by now
         assert self.physical_region_refs == 0
@@ -243,13 +253,15 @@ class RegionField:
         assert self.attached_alloc is not None
         detach = attachment_manager.remove_detachment(self.detach_key)
         detach.unordered = unordered  # type: ignore[union-attr]
-        attachment_manager.detach_external_allocation(
-            self.attached_alloc, detach, defer
+        detach_future = attachment_manager.detach_external_allocation(
+            self.attached_alloc, detach, defer, dependent_field=self.field
         )
         self.physical_region = None
         self.physical_region_mapped = False
         self.physical_region_refs = 0
         self.attached_alloc = None
+        if detach_future is not None:
+            self.field.add_detach_future(detach_future)
 
     def get_inline_mapped_region(self) -> PhysicalRegion:
         if self.parent is None:

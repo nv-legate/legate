@@ -404,11 +404,7 @@ def cmd_log_levels(
     if config.core.gpus > 0:
         levels += ("gpu=5",)
 
-    if (
-        config.debugging.dataflow
-        or config.debugging.event
-        or config.debugging.collective
-    ):
+    if config.debugging.spy:
         opts += ("-lg:spy",)
         levels += ("legion_spy=2",)
 
