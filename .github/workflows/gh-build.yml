@@ -108,11 +108,5 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-<<<<<<< HEAD
           name: "${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}-${{ inputs.sha }}"
-          path: |
-            artifacts
-=======
-          name: "${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.sha }}"
           path: artifacts
->>>>>>> branch-23.11
