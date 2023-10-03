@@ -106,7 +106,7 @@ void register_tasks()
 
 TEST(TreeReduce, Unique)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);

@@ -49,7 +49,7 @@ void print_store(legate::LogicalStore store)
 
 TEST(Integration, ManualSimple)
 {
-  legate::Core::perform_registration<task::simple::register_tasks>();
+  task::simple::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::simple::library_name);

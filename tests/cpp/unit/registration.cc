@@ -49,9 +49,6 @@ void test_out_of_bounds_task_id()
   EXPECT_THROW(test_registration::CPUVariantTask<1>::register_variants(library), std::out_of_range);
 }
 
-TEST(Registration, Duplicate) { legate::Core::perform_registration<test_duplicates>(); }
+TEST(Registration, Duplicate) { test_duplicates(); }
 
-TEST(Registration, TaskIDOutOfBounds)
-{
-  legate::Core::perform_registration<test_out_of_bounds_task_id>();
-}
+TEST(Registration, TaskIDOutOfBounds) { test_out_of_bounds_task_id(); }

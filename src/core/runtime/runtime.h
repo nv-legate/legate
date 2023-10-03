@@ -45,47 +45,6 @@ extern uint32_t extract_env(const char* env_name,
 
 /**
  * @ingroup runtime
- * @brief A utility class that collects static members shared by all Legate libraries
- */
-struct Core {
- public:
-  static void parse_config(void);
-  static void shutdown(void);
-  static void show_progress(const Legion::Task* task,
-                            Legion::Context ctx,
-                            Legion::Runtime* runtime);
-  static void report_unexpected_exception(const Legion::Task* task, const TaskException& e);
-
- public:
-  /**
-   * @brief Type signature for registration callbacks
-   */
-  using RegistrationCallback = void (*)();
-
-  /**
-   * @brief Performs a registration callback. Libraries must perform
-   * registration of tasks and other components through this function.
-   *
-   * @tparam CALLBACK Registration callback to perform
-   */
-  template <RegistrationCallback CALLBACK>
-  static void perform_registration();
-
- private:
-  static void perform_callback(Legion::RegistrationCallbackFnptr callback);
-
- public:
-  // Configuration settings
-  static bool show_progress_requested;
-  static bool use_empty_task;
-  static bool synchronize_stream_view;
-  static bool log_mapping_decisions;
-  static bool has_socket_mem;
-  static bool warmup_nccl;
-};
-
-/**
- * @ingroup runtime
  * @brief Class that implements the Legate runtime
  *
  * The legate runtime provides common services, including as library registration,
@@ -509,5 +468,3 @@ int32_t finish();
 mapping::Machine get_machine();
 
 }  // namespace legate
-
-#include "core/runtime/runtime.inl"

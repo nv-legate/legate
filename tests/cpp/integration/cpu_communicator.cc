@@ -87,7 +87,7 @@ void test_cpu_communicator_manual(int32_t ndim)
 // Test case with single unbound store
 TEST(Integration, CPUCommunicator)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
 
   for (int32_t ndim : {1, 3}) {
     test_cpu_communicator_auto(ndim);

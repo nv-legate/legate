@@ -22,105 +22,6 @@ namespace legate {
 
 extern Logger log_legate;
 
-/*static*/ bool Core::show_progress_requested = false;
-
-/*static*/ bool Core::use_empty_task = false;
-
-/*static*/ bool Core::synchronize_stream_view = false;
-
-/*static*/ bool Core::log_mapping_decisions = false;
-
-/*static*/ bool Core::has_socket_mem = false;
-
-/*static*/ bool Core::warmup_nccl = false;
-
-/*static*/ void Core::parse_config(void)
-{
-  if (!LegateDefined(LEGATE_USE_CUDA)) {
-    const char* need_cuda = getenv("LEGATE_NEED_CUDA");
-    if (need_cuda != nullptr) {
-      fprintf(stderr,
-              "Legate was run with GPUs but was not built with GPU support. "
-              "Please install Legate again with the \"--cuda\" flag.\n");
-      exit(1);
-    }
-  }
-  if (!LegateDefined(LEGATE_USE_OPENMP)) {
-    const char* need_openmp = getenv("LEGATE_NEED_OPENMP");
-    if (need_openmp != nullptr) {
-      fprintf(stderr,
-              "Legate was run on multiple nodes but was not built with networking "
-              "support. Please install Legate again with \"--network\".\n");
-      exit(1);
-    }
-  }
-  if (!LegateDefined(LEGATE_USE_NETWORK)) {
-    const char* need_network = getenv("LEGATE_NEED_NETWORK");
-    if (need_network != nullptr) {
-      fprintf(stderr,
-              "Legate was run on multiple nodes but was not built with networking "
-              "support. Please install Legate again with \"--network\".\n");
-      exit(1);
-    }
-  }
-
-  auto parse_variable = [](const char* variable, bool& result) {
-    const char* value = getenv(variable);
-    if (value != nullptr && atoi(value) > 0) result = true;
-  };
-
-  parse_variable("LEGATE_SHOW_PROGRESS", show_progress_requested);
-  parse_variable("LEGATE_EMPTY_TASK", use_empty_task);
-  parse_variable("LEGATE_SYNC_STREAM_VIEW", synchronize_stream_view);
-  parse_variable("LEGATE_LOG_MAPPING", log_mapping_decisions);
-  parse_variable("LEGATE_WARMUP_NCCL", warmup_nccl);
-}
-
-/*static*/ void Core::shutdown(void)
-{
-  // Nothing to do here yet...
-}
-
-/*static*/ void Core::show_progress(const Legion::Task* task,
-                                    Legion::Context ctx,
-                                    Legion::Runtime* runtime)
-{
-  if (!Core::show_progress_requested) return;
-  const auto exec_proc     = runtime->get_executing_processor(ctx);
-  const auto proc_kind_str = (exec_proc.kind() == Processor::LOC_PROC)   ? "CPU"
-                             : (exec_proc.kind() == Processor::TOC_PROC) ? "GPU"
-                                                                         : "OpenMP";
-
-  std::stringstream point_str;
-  const auto& point = task->index_point;
-  point_str << point[0];
-  for (int32_t dim = 1; dim < point.dim; ++dim) point_str << "," << point[dim];
-
-  log_legate.print("%s %s task [%s], pt = (%s), proc = " IDFMT,
-                   task->get_task_name(),
-                   proc_kind_str,
-                   task->get_provenance_string().c_str(),
-                   point_str.str().c_str(),
-                   exec_proc.id);
-}
-
-/*static*/ void Core::report_unexpected_exception(const Legion::Task* task,
-                                                  const legate::TaskException& e)
-{
-  log_legate.error(
-    "Task %s threw an exception \"%s\", but the task did not declare any exception. "
-    "Please specify a Python exception that you want this exception to be re-thrown with "
-    "using 'throws_exception'.",
-    task->get_task_name(),
-    e.error_message().c_str());
-  LEGATE_ABORT;
-}
-
-/*static*/ void Core::perform_callback(Legion::RegistrationCallbackFnptr callback)
-{
-  Legion::Runtime::perform_registration_callback(callback, true /*global*/);
-}
-
 Library Runtime::find_library(const std::string& library_name) const
 {
   return Library(impl_->find_library(library_name, false));
@@ -136,7 +37,8 @@ Library Runtime::create_library(const std::string& library_name,
                                 const ResourceConfig& config,
                                 std::unique_ptr<mapping::Mapper> mapper)
 {
-  return Library(impl_->create_library(library_name, config, std::move(mapper)));
+  return Library(
+    impl_->create_library(library_name, config, std::move(mapper), false /*in_callback*/));
 }
 
 Library Runtime::find_or_create_library(const std::string& library_name,
@@ -144,7 +46,8 @@ Library Runtime::find_or_create_library(const std::string& library_name,
                                         std::unique_ptr<mapping::Mapper> mapper,
                                         bool* created)
 {
-  return Library(impl_->find_or_create_library(library_name, config, std::move(mapper), created));
+  return Library(impl_->find_or_create_library(
+    library_name, config, std::move(mapper), created, false /*in_callback*/));
 }
 
 AutoTask Runtime::create_task(Library library, int64_t task_id)
@@ -335,7 +238,8 @@ void legate_core_perform_registration()
 {
   // Tell the runtime about our registration callback so we can register ourselves
   // Make sure it is global so this shared object always gets loaded on all nodes
-  Legion::Runtime::perform_registration_callback(legate::detail::registration_callback_for_python,
+  Legion::Runtime::perform_registration_callback(legate::detail::initialize_core_library_callback,
                                                  true /*global*/);
+  legate::detail::Runtime::get_runtime()->initialize(Legion::Runtime::get_context());
 }
 }

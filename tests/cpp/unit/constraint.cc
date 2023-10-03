@@ -37,7 +37,7 @@ void register_tasks()
 
 TEST(Variable, BasicMethods)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -73,7 +73,7 @@ TEST(Variable, BasicMethods)
 
 TEST(Alignment, BasicMethods)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -101,7 +101,7 @@ TEST(Alignment, BasicMethods)
 
 TEST(Broadcast, BasicMethods)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -126,7 +126,7 @@ TEST(Broadcast, BasicMethods)
 
 TEST(ImageConstraint, BasicMethods)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime    = legate::Runtime::get_runtime();
   auto context    = runtime->find_library(library_name);

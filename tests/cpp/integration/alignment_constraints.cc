@@ -228,31 +228,31 @@ void test_invalid_alignment()
 
 TEST(Alignment, Basic)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_alignment();
 }
 
 TEST(Alignment, WithBroadcast)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_alignment_and_broadcast();
 }
 
 TEST(Alignment, WithTransform)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_alignment_transformed();
 }
 
 TEST(Alignment, Redundant)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_redundant_alignment();
 }
 
 TEST(Alignment, Invalid)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_invalid_alignment();
 }
 

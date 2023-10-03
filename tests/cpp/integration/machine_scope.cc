@@ -133,7 +133,7 @@ void test_cpu_only(legate::Library library)
 
 TEST(Integration, MachineScope)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);

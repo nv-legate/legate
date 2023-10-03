@@ -101,7 +101,7 @@ void test_nccl_manual(int32_t ndim)
 // Test case with single unbound store
 TEST(Integration, NCCL)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
 
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();

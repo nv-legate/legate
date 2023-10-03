@@ -176,14 +176,14 @@ void test_pending()
 
 TEST(Exception, Single)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
 
   test_single();
 }
 
 TEST(Exception, Multi)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
 
   test_multi(true /* use_auto_task */);
   test_multi(false /* use_auto_task */);
@@ -191,7 +191,7 @@ TEST(Exception, Multi)
 
 TEST(Exception, Pending)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
 
   test_pending();
 }

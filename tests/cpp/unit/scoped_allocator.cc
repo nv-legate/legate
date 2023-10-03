@@ -109,7 +109,7 @@ TEST(ScopedAllocatorUnit, EmptyAllocate)
 
 TEST(ScopedAllocatorUnit, Allocate)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000, 16);
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::NO_MEMKIND, true, 1000, 16);
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, false, 0, 16);
@@ -123,7 +123,7 @@ TEST(ScopedAllocatorUnit, Allocate)
 
 TEST(ScopedAllocatorUnit, DoubleDeallocate)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_allocator(BufferOpCode::DOUBLE_DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000);
 }
 
@@ -134,7 +134,7 @@ TEST(ScopedAllocatorUnit, InvalidDeallocate)
   EXPECT_THROW(allocator.deallocate(data.data()), std::runtime_error);
 
   // invalid deallocate in task launch
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_allocator(BufferOpCode::INVALID_DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000);
 }
 }  // namespace scoped_allocator_test

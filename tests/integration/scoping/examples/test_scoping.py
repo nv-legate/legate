@@ -92,7 +92,8 @@ def test_cpu_only():
 
 def test_shifted_slices():
     m = get_machine()
-    num_nodes = len(m.get_node_range())
+    (node_lo, node_hi) = m.get_node_range()
+    num_nodes = node_hi - node_lo
     per_node_count = int((len(m) + num_nodes - 1) / num_nodes)
     # this will test processor slicing of the machine
     for i in range(len(m)):

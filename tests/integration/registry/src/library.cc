@@ -40,5 +40,5 @@ void registration_callback()
 
 extern "C" {
 
-void perform_registration(void) { legate::Core::perform_registration<rg::registration_callback>(); }
+void perform_registration(void) { rg::registration_callback(); }
 }

@@ -15,16 +15,15 @@
 #include "core/mapping/detail/base_mapper.h"
 #include "core/mapping/machine.h"
 #include "core/mapping/mapping.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 
 #include "mappers/logging_wrapper.h"
 
 namespace legate::detail {
 
-Library::Library(const std::string& library_name,
-                 const ResourceConfig& config,
-                 std::unique_ptr<mapping::Mapper> mapper)
-  : runtime_(Legion::Runtime::get_runtime()), library_name_(library_name)
+Library::Library(const std::string& library_name, const ResourceConfig& config)
+  : runtime_(Legion::Runtime::get_runtime()), library_name_(library_name), legion_mapper_{nullptr}
 {
   task_scope_ = ResourceIdScope(
     runtime_->generate_library_task_ids(library_name.c_str(), config.max_tasks), config.max_tasks);
@@ -38,8 +37,6 @@ Library::Library(const std::string& library_name,
     runtime_->generate_library_sharding_ids(library_name.c_str(), config.max_shardings),
     config.max_shardings);
   mapper_id_ = runtime_->generate_library_mapper_ids(library_name.c_str(), 1);
-
-  register_mapper(std::move(mapper));
 }
 
 const std::string& Library::get_library_name() const { return library_name_; }
@@ -122,17 +119,38 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
   return find_task(local_task_id)->name();
 }
 
-void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper)
+namespace {
+
+void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
+{
+  const std::string library_name(static_cast<const char*>(args.buffer.get_ptr()));
+
+  auto* library       = Runtime::get_runtime()->find_library(library_name, false /*can_fail*/);
+  auto* legion_mapper = library->get_legion_mapper();
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(legion_mapper != nullptr); }
+  Legion::Runtime::get_runtime()->add_mapper(library->get_mapper_id(), legion_mapper);
+}
+
+}  // namespace
+
+void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback)
 {
   // Hold the pointer to the mapper to keep it alive
   mapper_ = std::move(mapper);
 
   auto base_mapper =
     new mapping::detail::BaseMapper(mapper_.get(), runtime_->get_mapper_runtime(), this);
-  Legion::Mapping::Mapper* legion_mapper = base_mapper;
-  if (Core::log_mapping_decisions)
-    legion_mapper = new Legion::Mapping::LoggingWrapper(base_mapper, &base_mapper->logger);
-  runtime_->add_mapper(mapper_id_, legion_mapper);
+  legion_mapper_ = base_mapper;
+  if (Config::log_mapping_decisions)
+    legion_mapper_ = new Legion::Mapping::LoggingWrapper(base_mapper, &base_mapper->logger);
+
+  if (in_callback) {
+    Legion::Runtime::get_runtime()->add_mapper(get_mapper_id(), legion_mapper_);
+  } else {
+    Legion::UntypedBuffer args{library_name_.c_str(), library_name_.size() + 1};
+    Legion::Runtime::perform_registration_callback(
+      register_mapper_callback, args, true /*global*/, false /*duplicate*/);
+  }
 }
 
 void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)

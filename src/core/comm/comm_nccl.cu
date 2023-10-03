@@ -26,6 +26,12 @@
 #include <nccl.h>
 #include <chrono>
 
+namespace legate::detail {
+
+void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
+
+}  // namespace legate::detail
+
 namespace legate::comm::nccl {
 
 struct _Payload {
@@ -117,7 +123,7 @@ static ncclUniqueId init_nccl_id(const Legion::Task* task,
 {
   legate::nvtx::Range auto_range("core::comm::nccl::init_id");
 
-  Core::show_progress(task, context, runtime);
+  legate::detail::show_progress(task, context, runtime);
 
   ncclUniqueId id;
   CHECK_NCCL(ncclGetUniqueId(&id));
@@ -132,7 +138,7 @@ static ncclComm_t* init_nccl(const Legion::Task* task,
 {
   legate::nvtx::Range auto_range("core::comm::nccl::init");
 
-  Core::show_progress(task, context, runtime);
+  legate::detail::show_progress(task, context, runtime);
 
   assert(task->futures.size() == 1);
 
@@ -154,7 +160,7 @@ static ncclComm_t* init_nccl(const Legion::Task* task,
 
   if (num_ranks == 1) return comm;
 
-  if (!Core::warmup_nccl) return comm;
+  if (!detail::Config::warmup_nccl) return comm;
 
   auto stream = cuda::StreamPool::get_stream_pool().get_stream();
 
@@ -207,7 +213,7 @@ static void finalize_nccl(const Legion::Task* task,
 {
   legate::nvtx::Range auto_range("core::comm::nccl::finalize");
 
-  Core::show_progress(task, context, runtime);
+  legate::detail::show_progress(task, context, runtime);
 
   assert(task->futures.size() == 1);
   auto comm = task->futures[0].get_result<ncclComm_t*>();

@@ -116,25 +116,25 @@ void test_invalid()
 
 TEST(ScaleConstraint, 1D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_scale({{3}, {10}, {29}});
 }
 
 TEST(ScaleConstraint, 2D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_scale({{4, 5}, {2, 7}, {10, 30}});
 }
 
 TEST(ScaleConstraint, 3D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_scale({{2, 3, 4}, {5, 5, 5}, {10, 15, 20}});
 }
 
 TEST(ScaleConstraint, Invalid)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_invalid();
 }
 

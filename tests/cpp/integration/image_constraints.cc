@@ -276,43 +276,43 @@ void test_invalid()
 
 TEST(ImageConstraint, Point1D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_image({{9}, {100}, false});
 }
 
 TEST(ImageConstraint, Point2D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_image({{4, 4}, {10, 10}, false});
 }
 
 TEST(ImageConstraint, Point3D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_image({{2, 3, 4}, {5, 5, 5}, false});
 }
 
 TEST(ImageConstraint, Rect1D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_image({{9}, {100}, true});
 }
 
 TEST(ImageConstraint, Rect2D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_image({{4, 4}, {10, 10}, true});
 }
 
 TEST(ImageConstraint, Rect3D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_image({{2, 3, 4}, {5, 5, 5}, true});
 }
 
 TEST(ImageConstraint, Invalid)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_invalid();
 }
 

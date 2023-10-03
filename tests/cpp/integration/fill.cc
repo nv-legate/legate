@@ -179,7 +179,7 @@ void test_invalid()
 
 TEST(Fill, Index)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_fill_index(1, SIZE);
   test_fill_index(2, SIZE);
   test_fill_index(3, SIZE);
@@ -190,7 +190,7 @@ TEST(Fill, Index)
 
 TEST(Fill, Single)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_fill_single(1, SIZE);
   test_fill_single(2, SIZE);
   test_fill_single(3, SIZE);
@@ -201,7 +201,7 @@ TEST(Fill, Single)
 
 TEST(Fill, Slice)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_fill_slice(1, SIZE);
   test_fill_slice(2, SIZE);
   test_fill_slice(3, SIZE);

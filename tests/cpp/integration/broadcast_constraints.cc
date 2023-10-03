@@ -122,19 +122,19 @@ void test_invalid_broadcast()
 
 TEST(Broadcast, Basic)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_normal_store();
 }
 
 TEST(Broadcast, WithPromotion)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_promoted_store();
 }
 
 TEST(Broadcast, Invalid)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_invalid_broadcast();
 }
 

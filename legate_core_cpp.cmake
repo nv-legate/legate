@@ -122,7 +122,6 @@ include(cmake/thirdparty/get_thrust.cmake)
 set(legate_core_SOURCES "")
 
 list(APPEND legate_core_SOURCES
-  src/core/legate_c.cc
   src/core/comm/comm.cc
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
@@ -433,7 +432,6 @@ if (legate_core_BUILD_DOCS)
       # runtime
       src/core/runtime/library.h
       src/core/runtime/runtime.h
-      src/core/runtime/runtime.inl
       # operation
       src/core/operation/task.h
       # partitioning
@@ -542,7 +540,6 @@ install(
         src/core/runtime/library.inl
         src/core/runtime/resource.h
         src/core/runtime/runtime.h
-        src/core/runtime/runtime.inl
         src/core/runtime/tracker.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/runtime)
 

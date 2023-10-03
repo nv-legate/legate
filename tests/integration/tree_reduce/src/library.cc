@@ -36,8 +36,5 @@ void registration_callback()
 
 extern "C" {
 
-void perform_registration(void)
-{
-  legate::Core::perform_registration<tree_reduce::registration_callback>();
-}
+void perform_registration(void) { tree_reduce::registration_callback(); }
 }

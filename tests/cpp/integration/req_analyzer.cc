@@ -80,13 +80,13 @@ void test_isomorphic_transformed_stores()
 
 TEST(ReqAnalyzer, InoutStore)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_inout_store();
 }
 
 TEST(ReqAnalyzer, IsomorphicTransformedStores)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_isomorphic_transformed_stores();
 }
 

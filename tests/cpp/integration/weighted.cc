@@ -102,7 +102,7 @@ void test_weighted(uint32_t num_stores)
 // Test case with single unbound store
 TEST(Integration, WeightedSingle)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
 
   test_weighted(1);
 }
@@ -110,7 +110,7 @@ TEST(Integration, WeightedSingle)
 // Test case with multiple unbound stores
 TEST(Integration, WeightedMultiple)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
 
   test_weighted(3);
 }

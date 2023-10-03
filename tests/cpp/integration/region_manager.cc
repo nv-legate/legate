@@ -19,7 +19,7 @@ namespace region_manager {
 
 TEST(Integration, RegionManager)
 {
-  legate::Core::perform_registration<task::region_manager::register_tasks>();
+  task::region_manager::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(task::region_manager::library_name);

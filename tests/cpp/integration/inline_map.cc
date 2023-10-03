@@ -111,7 +111,7 @@ TEST(InlineMap, RegionAndSlice) { test_inline_map_region_and_slice(); }
 
 TEST(InlineMap, WithTask)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_inline_map_and_task();
 }
 

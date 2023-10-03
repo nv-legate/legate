@@ -147,33 +147,33 @@ void test_gather(const GatherSpec& spec)
 
 TEST(Copy, Gather2Dto1D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   std::vector<size_t> shape1d{5};
   test_gather(GatherSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123))});
 }
 
 TEST(Copy, Gather3Dto2D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_gather(GatherSpec{{3, 7}, {3, 2, 5}, legate::Scalar(uint32_t(456))});
 }
 
 TEST(Copy, Gather1Dto3D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   std::vector<size_t> shape1d{5};
   test_gather(GatherSpec{{2, 5, 4}, shape1d, legate::Scalar(789.0)});
 }
 
 TEST(Copy, Gather2Dto2D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_gather(GatherSpec{{4, 5}, {10, 11}, legate::Scalar(int64_t(12))});
 }
 
 TEST(Copy, Gather2Dto3D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_gather(GatherSpec{{100, 100, 100}, {10, 10}, legate::Scalar(7.0)});
 }
 

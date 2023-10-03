@@ -171,7 +171,7 @@ void test_scatter(const ScatterSpec& spec)
 // duplicate updates on the same element, whose semantics is undefined.
 TEST(Copy, Scatter1Dto2D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   std::vector<size_t> shape1d{5};
   test_scatter(
     ScatterSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
@@ -179,21 +179,21 @@ TEST(Copy, Scatter1Dto2D)
 
 TEST(Copy, Scatter2Dto3D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_scatter(
     ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
 }
 
 TEST(Copy, Scatter2Dto2D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_scatter(
     ScatterSpec{{4, 5}, {10, 11}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
 }
 
 TEST(Copy, Scatter3Dto2D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_scatter(
     ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar(int64_t(1)), legate::Scalar(int64_t(42))});
 }

@@ -60,9 +60,7 @@ class Library {
 
  private:
   friend class Runtime;
-  Library(const std::string& library_name,
-          const ResourceConfig& config,
-          std::unique_ptr<mapping::Mapper> mapper);
+  Library(const std::string& library_name, const ResourceConfig& config);
 
  public:
   Library(const Library&) = delete;
@@ -94,22 +92,13 @@ class Library {
   int64_t get_new_task_id() { return task_scope_.generate_id(); }
 
  public:
-  /**
-   * @brief Returns the name of a task
-   *
-   * @param local_task_id Task id
-   * @return Name of the task
-   */
   const std::string& get_task_name(int64_t local_task_id) const;
-  void register_mapper(std::unique_ptr<mapping::Mapper> mapper);
+  void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);
+  Legion::Mapping::Mapper* get_legion_mapper() const { return legion_mapper_; }
 
  public:
   void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
   const TaskInfo* find_task(int64_t local_task_id) const;
-
- private:
-  void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                        Legion::UntypedBuffer buffer);
 
  private:
   Legion::Runtime* runtime_;
@@ -122,6 +111,7 @@ class Library {
  private:
   Legion::MapperID mapper_id_;
   std::unique_ptr<mapping::Mapper> mapper_;
+  Legion::Mapping::Mapper* legion_mapper_;
   std::unordered_map<int64_t, std::unique_ptr<TaskInfo>> tasks_;
 };
 

@@ -13,13 +13,14 @@
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #include "core/mapping/machine.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 
 namespace legate::cuda {
 
 StreamView::~StreamView()
 {
-  if (valid_ && Core::synchronize_stream_view) {
+  if (valid_ && detail::Config::synchronize_stream_view) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       CHECK_CUDA_STREAM(stream_);
     } else {

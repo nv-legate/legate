@@ -89,7 +89,7 @@ void register_tasks()
 
 TEST(TreeReduce, AutoProducer)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -111,7 +111,7 @@ TEST(TreeReduce, AutoProducer)
 
 TEST(TreeReduce, ManualProducer)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -133,7 +133,7 @@ TEST(TreeReduce, ManualProducer)
 
 TEST(TreeReduce, ManualProducerMultiLevel)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -155,7 +155,7 @@ TEST(TreeReduce, ManualProducerMultiLevel)
 
 TEST(TreeReduce, ManualProducerUnbound)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -174,7 +174,7 @@ TEST(TreeReduce, ManualProducerUnbound)
 
 TEST(TreeReduce, ManualProducerSingle)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -192,7 +192,7 @@ TEST(TreeReduce, ManualProducerSingle)
 
 TEST(TreeReduce, AutoProducerSingle)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);

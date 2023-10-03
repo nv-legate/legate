@@ -39,7 +39,7 @@ struct Thing {
 TEST(Integration, ConsensusMatch)
 {
   auto runtime = legate::Runtime::get_runtime();
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   auto context = runtime->find_library(library_name);
   static_cast<void>(context);
 

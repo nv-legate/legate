@@ -177,7 +177,7 @@ void test_gather_scatter(const GatherScatterSpec& spec)
 
 TEST(Copy, GatherScatter1Dto3Dvia2D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   std::vector<size_t> shape1d{5};
   test_gather_scatter(GatherScatterSpec{
     shape1d, {7, 11}, {10, 10, 10}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
@@ -185,7 +185,7 @@ TEST(Copy, GatherScatter1Dto3Dvia2D)
 
 TEST(Copy, GatherScatter2Dto1Dvia3D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   std::vector<size_t> shape1d{1000};
   test_gather_scatter(GatherScatterSpec{
     {3, 7}, {3, 6, 5}, shape1d, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
@@ -193,7 +193,7 @@ TEST(Copy, GatherScatter2Dto1Dvia3D)
 
 TEST(Copy, GatherScatter3Dto2Dvia1D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   std::vector<size_t> shape1d{100};
   test_gather_scatter(GatherScatterSpec{
     {4, 5, 2}, shape1d, {50, 50}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
@@ -201,7 +201,7 @@ TEST(Copy, GatherScatter3Dto2Dvia1D)
 
 TEST(Copy, GatherScatter3Dto3Dvia3D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_gather_scatter(GatherScatterSpec{{10, 10, 10},
                                         {5, 4, 2},
                                         {10, 10, 10},
@@ -211,7 +211,7 @@ TEST(Copy, GatherScatter3Dto3Dvia3D)
 
 TEST(Copy, GatherScatter2Dto3Dvia2D)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_gather_scatter(GatherScatterSpec{
     {27, 33}, {11, 7}, {132, 121, 3}, legate::Scalar(int64_t(2)), legate::Scalar(int64_t(84))});
 }

@@ -44,17 +44,30 @@ namespace legate {
 
 Logger log_legate("legate");
 
-// This is the unique string name for our library which can be used from both C++ and Python to
-// generate IDs
-const char* const core_library_name = "legate.core";
-
 }  // namespace legate
 
 namespace legate::detail {
 
+void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
+
+/*static*/ bool Config::show_progress_requested = false;
+
+/*static*/ bool Config::use_empty_task = false;
+
+/*static*/ bool Config::synchronize_stream_view = false;
+
+/*static*/ bool Config::log_mapping_decisions = false;
+
+/*static*/ bool Config::has_socket_mem = false;
+
+/*static*/ bool Config::warmup_nccl = false;
+
 namespace {
 
-const char* TOPLEVEL_NAME = "Legate Core Toplevel Task";
+// This is the unique string name for our library which can be used from both C++ and Python to
+// generate IDs
+const char* const CORE_LIBRARY_NAME = "legate.core";
+const char* const TOPLEVEL_NAME     = "Legate Core Toplevel Task";
 
 }  // namespace
 
@@ -72,15 +85,17 @@ Runtime::~Runtime() {}
 
 Library* Runtime::create_library(const std::string& library_name,
                                  const ResourceConfig& config,
-                                 std::unique_ptr<mapping::Mapper> mapper)
+                                 std::unique_ptr<mapping::Mapper> mapper,
+                                 bool in_callback)
 {
   if (libraries_.find(library_name) != libraries_.end())
     throw std::invalid_argument("Library " + library_name + " already exists");
 
   log_legate.debug("Library %s is created", library_name.c_str());
   if (nullptr == mapper) mapper = std::make_unique<mapping::detail::DefaultMapper>();
-  auto context             = new Library(library_name, config, std::move(mapper));
+  auto context             = new Library(library_name, config);
   libraries_[library_name] = context;
+  context->register_mapper(std::move(mapper), in_callback);
   return context;
 }
 
@@ -97,14 +112,15 @@ Library* Runtime::find_library(const std::string& library_name, bool can_fail /*
 Library* Runtime::find_or_create_library(const std::string& library_name,
                                          const ResourceConfig& config,
                                          std::unique_ptr<mapping::Mapper> mapper,
-                                         bool* created)
+                                         bool* created,
+                                         bool in_callback)
 {
   Library* result = find_library(library_name, true /*can_fail*/);
   if (result != nullptr) {
     if (created != nullptr) *created = false;
     return result;
   }
-  result = create_library(library_name, config, std::move(mapper));
+  result = create_library(library_name, config, std::move(mapper), in_callback);
   if (created != nullptr) *created = true;
   return result;
 }
@@ -151,12 +167,12 @@ void Runtime::initialize(Legion::Context legion_context)
   if (initialized_) throw std::runtime_error("Legate runtime has already been initialized");
   initialized_          = true;
   legion_context_       = legion_context;
-  core_library_         = find_library(core_library_name, false /*can_fail*/);
+  core_library_         = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
   communicator_manager_ = new CommunicatorManager();
   partition_manager_    = new PartitionManager(this);
   machine_manager_      = new MachineManager();
   provenance_manager_   = new ProvenanceManager();
-  Core::has_socket_mem =
+  Config::has_socket_mem =
     get_tunable<bool>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM);
   initialize_toplevel_machine();
   comm::register_builtin_communicator_factories(core_library_);
@@ -1000,7 +1016,8 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
   if (!Legion::Runtime::has_runtime()) {
     Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);
 
-    Legion::Runtime::add_registration_callback(registration_callback);
+    Legion::Runtime::perform_registration_callback(initialize_core_library_callback,
+                                                   true /*global*/);
 
     handle_legate_args(argc, argv);
 
@@ -1009,8 +1026,10 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
       log_legate.error("Legion Runtime failed to start.");
       return result;
     }
-  } else
-    Legion::Runtime::perform_registration_callback(registration_callback, true /*global*/);
+  } else {
+    Legion::Runtime::perform_registration_callback(initialize_core_library_callback,
+                                                   true /*global*/);
+  }
 
   // Get the runtime now that we've started it
   auto legion_runtime = Legion::Runtime::get_runtime();
@@ -1018,9 +1037,9 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
   Legion::Context legion_context;
   // If the context already exists, that means that some other driver started the top-level task,
   // so here we just grab it to initialize the Legate runtime
-  if (Legion::Runtime::has_context())
+  if (Legion::Runtime::has_context()) {
     legion_context = Legion::Runtime::get_context();
-  else {
+  } else {
     // Otherwise we  make this thread into an implicit top-level task
     legion_context = legion_runtime->begin_implicit_task(LEGATE_CORE_TOPLEVEL_TASK_ID,
                                                          0 /*mapper id*/,
@@ -1104,7 +1123,7 @@ static void extract_scalar_task(
   Legion::Runtime* runtime;
   Legion::Runtime::legion_task_preamble(args, arglen, p, task, regions, legion_context, runtime);
 
-  Core::show_progress(task, legion_context, runtime);
+  legate::detail::show_progress(task, legion_context, runtime);
 
   detail::TaskContext context(task, *regions);
   auto idx            = context.scalars()[0].value<int32_t>();
@@ -1114,9 +1133,7 @@ static void extract_scalar_task(
   value_and_size.finalize(legion_context);
 }
 
-void register_legate_core_tasks(Legion::Machine machine,
-                                Legion::Runtime* runtime,
-                                Library* core_lib)
+void register_legate_core_tasks(Legion::Runtime* runtime, Library* core_lib)
 {
   auto task_info                       = std::make_unique<TaskInfo>("core::extract_scalar");
   auto register_extract_scalar_variant = [&](auto variant_id) {
@@ -1183,10 +1200,56 @@ void register_builtin_reduction_ops()
 
 extern void register_exception_reduction_op(Legion::Runtime* runtime, const Library* context);
 
-void core_library_registration(Legion::Machine machine,
-                               Legion::Runtime* legion_runtime,
-                               const std::set<Processor>& local_procs)
+namespace {
+
+void parse_config()
 {
+  if (!LegateDefined(LEGATE_USE_CUDA)) {
+    const char* need_cuda = getenv("LEGATE_NEED_CUDA");
+    if (need_cuda != nullptr) {
+      fprintf(stderr,
+              "Legate was run with GPUs but was not built with GPU support. "
+              "Please install Legate again with the \"--cuda\" flag.\n");
+      exit(1);
+    }
+  }
+  if (!LegateDefined(LEGATE_USE_OPENMP)) {
+    const char* need_openmp = getenv("LEGATE_NEED_OPENMP");
+    if (need_openmp != nullptr) {
+      fprintf(stderr,
+              "Legate was run on multiple nodes but was not built with networking "
+              "support. Please install Legate again with \"--network\".\n");
+      exit(1);
+    }
+  }
+  if (!LegateDefined(LEGATE_USE_NETWORK)) {
+    const char* need_network = getenv("LEGATE_NEED_NETWORK");
+    if (need_network != nullptr) {
+      fprintf(stderr,
+              "Legate was run on multiple nodes but was not built with networking "
+              "support. Please install Legate again with \"--network\".\n");
+      exit(1);
+    }
+  }
+
+  auto parse_variable = [](const char* variable, bool& result) {
+    const char* value = getenv(variable);
+    if (value != nullptr && atoi(value) > 0) result = true;
+  };
+
+  parse_variable("LEGATE_SHOW_PROGRESS", Config::show_progress_requested);
+  parse_variable("LEGATE_EMPTY_TASK", Config::use_empty_task);
+  parse_variable("LEGATE_SYNC_STREAM_VIEW", Config::synchronize_stream_view);
+  parse_variable("LEGATE_LOG_MAPPING", Config::log_mapping_decisions);
+  parse_variable("LEGATE_WARMUP_NCCL", Config::warmup_nccl);
+}
+
+}  // namespace
+
+void initialize_core_library()
+{
+  parse_config();
+
   ResourceConfig config;
   config.max_tasks       = LEGATE_CORE_NUM_TASK_IDS;
   config.max_projections = LEGATE_CORE_MAX_FUNCTOR_ID;
@@ -1195,9 +1258,10 @@ void core_library_registration(Legion::Machine machine,
   config.max_reduction_ops = LEGATE_CORE_MAX_REDUCTION_OP_ID;
 
   auto core_lib = Runtime::get_runtime()->create_library(
-    core_library_name, config, mapping::detail::create_core_mapper());
+    CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), true /*in_callback*/);
 
-  register_legate_core_tasks(machine, legion_runtime, core_lib);
+  auto legion_runtime = Legion::Runtime::get_runtime();
+  register_legate_core_tasks(legion_runtime, core_lib);
 
   register_builtin_reduction_ops();
 
@@ -1208,22 +1272,9 @@ void core_library_registration(Legion::Machine machine,
   register_legate_core_sharding_functors(legion_runtime, core_lib);
 }
 
-void registration_callback(Legion::Machine machine,
-                           Legion::Runtime* legion_runtime,
-                           const std::set<Processor>& local_procs)
+void initialize_core_library_callback(Legion::Machine, Legion::Runtime*, const std::set<Processor>&)
 {
-  core_library_registration(machine, legion_runtime, local_procs);
-
-  Core::parse_config();
-}
-
-void registration_callback_for_python(Legion::Machine machine,
-                                      Legion::Runtime* legion_runtime,
-                                      const std::set<Processor>& local_procs)
-{
-  core_library_registration(machine, legion_runtime, local_procs);
-
-  Runtime::get_runtime()->initialize(Legion::Runtime::get_context());
+  initialize_core_library();
 }
 
 // Simple wrapper for variables with default values
@@ -1337,11 +1388,14 @@ void handle_legate_args(int32_t argc, char** argv)
   try_set_property(rt, "cuda", "fbmem", fbmem, "unable to set --fbmem");
   try_set_property(rt, "cuda", "zcmem", zcmem, "unable to set --zcmem");
 
+  if (gpus.value() > 0) { setenv("LEGATE_NEED_CUDA", "1", true); }
+
   // Set OpenMP configuration properties
   if (omps.value() > 0 && ompthreads.value() == 0) {
     log_legate.error("--omps configured with zero threads");
     LEGATE_ABORT;
   }
+  if (omps.value() > 0) { setenv("LEGATE_NEED_OPENMP", "1", true); }
   try_set_property(rt, "openmp", "ocpu", omps, "unable to set --omps");
   try_set_property(rt, "openmp", "othr", ompthreads, "unable to set --ompthreads");
 

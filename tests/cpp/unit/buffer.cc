@@ -92,7 +92,7 @@ void register_tasks()
 
 TEST(BufferUnit, CreateBuffer)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   // Todo: need to add tests for REGDMA_MEM
   test_buffer(1, 10, legate::Memory::SYSTEM_MEM);
@@ -103,7 +103,7 @@ TEST(BufferUnit, CreateBuffer)
 
 TEST(BufferUnit, NegativeTest)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
 
   test_buffer(1, 0, legate::Memory::SYSTEM_MEM);
   test_buffer(2, 10, legate::Memory::SYSTEM_MEM, 0);

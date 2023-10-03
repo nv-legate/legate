@@ -137,9 +137,6 @@ typedef enum legate_core_reduction_op_id_t {
 extern "C" {
 #endif
 
-void legate_parse_config(void);
-void legate_shutdown(void);
-
 void legate_core_perform_registration(void);
 
 void legate_register_affine_projection_functor(

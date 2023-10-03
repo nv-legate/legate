@@ -40,7 +40,6 @@ class CoreLib(Library):
 
     def initialize(self, shared_lib: Any) -> None:
         self._lib = shared_lib
-        shared_lib.legate_parse_config()
 
     def get_registration_callback(self) -> str:
         return "legate_core_perform_registration"
@@ -48,7 +47,6 @@ class CoreLib(Library):
     def destroy(self) -> None:
         if not self._lib:
             raise RuntimeError("CoreLib was never initialized")
-        self._lib.legate_shutdown()
 
 
 core_library = CoreLib()

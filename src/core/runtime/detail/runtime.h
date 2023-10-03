@@ -47,6 +47,15 @@ class ManualTask;
 class Operation;
 class StructLogicalArray;
 
+struct Config {
+  static bool show_progress_requested;
+  static bool use_empty_task;
+  static bool synchronize_stream_view;
+  static bool log_mapping_decisions;
+  static bool has_socket_mem;
+  static bool warmup_nccl;
+};
+
 class Runtime {
  public:
   Runtime();
@@ -55,12 +64,14 @@ class Runtime {
  public:
   Library* create_library(const std::string& library_name,
                           const ResourceConfig& config,
-                          std::unique_ptr<mapping::Mapper> mapper);
+                          std::unique_ptr<mapping::Mapper> mapper,
+                          bool in_callback);
   Library* find_library(const std::string& library_name, bool can_fail) const;
   Library* find_or_create_library(const std::string& library_name,
                                   const ResourceConfig& config,
                                   std::unique_ptr<mapping::Mapper> mapper,
-                                  bool* created);
+                                  bool* created,
+                                  bool in_callback);
 
  public:
   void record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id);
@@ -325,13 +336,11 @@ class Runtime {
   std::deque<TaskException> outstanding_exceptions_{};
 };
 
-void registration_callback(Legion::Machine machine,
-                           Legion::Runtime* legion_runtime,
-                           const std::set<Processor>& local_procs);
+void initialize_core_library();
 
-void registration_callback_for_python(Legion::Machine machine,
-                                      Legion::Runtime* legion_runtime,
-                                      const std::set<Processor>& local_procs);
+void initialize_core_library_callback(Legion::Machine,
+                                      Legion::Runtime*,
+                                      const std::set<Processor>&);
 
 void handle_legate_args(int32_t argc, char** argv);
 

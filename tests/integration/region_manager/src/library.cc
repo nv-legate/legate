@@ -27,8 +27,5 @@ void registration_callback()
 
 extern "C" {
 
-void perform_registration(void)
-{
-  legate::Core::perform_registration<region_manager::registration_callback>();
-}
+void perform_registration(void) { region_manager::registration_callback(); }
 }

@@ -133,25 +133,25 @@ void test_invalid()
 
 TEST(BloatConstraint, 1D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_bloat({{10}, {2}, {4}});
 }
 
 TEST(BloatConstraint, 2D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_bloat({{9, 9}, {2, 3}, {3, 4}});
 }
 
 TEST(BloatConstraint, 3D)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_bloat({{10, 10, 10}, {2, 3, 4}, {4, 3, 2}});
 }
 
 TEST(BloatConstraint, Invalid)
 {
-  legate::Core::perform_registration<prepare>();
+  prepare();
   test_invalid();
 }
 

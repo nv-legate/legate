@@ -208,7 +208,7 @@ void test_normal_copy_reduction(const NormalCopyReductionSpec& spec)
 
 TEST(Copy, Single)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_normal_copy({{4, 7}, legate::int64(), legate::Scalar(int64_t(12))});
   test_normal_copy({{1000, 100}, legate::uint32(), legate::Scalar(uint32_t(3))});
   test_normal_copy({{1}, legate::int64(), legate::Scalar(int64_t(12))});
@@ -216,7 +216,7 @@ TEST(Copy, Single)
 
 TEST(Copy, SingleReduction)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   test_normal_copy_reduction(
     {{4, 7}, legate::int64(), legate::Scalar(int64_t(12)), legate::ReductionOpKind::ADD});
   test_normal_copy_reduction(

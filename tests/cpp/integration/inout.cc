@@ -33,7 +33,7 @@ void test_inout()
 
 TEST(Integration, InOut)
 {
-  legate::Core::perform_registration<task::simple::register_tasks>();
+  task::simple::register_tasks();
   test_inout();
 }
 

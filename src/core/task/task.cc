@@ -16,6 +16,7 @@
 
 #include "realm/faults.h"
 
+#include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/task/detail/return.h"
 #include "core/task/detail/task_context.h"
@@ -26,7 +27,34 @@
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 
+namespace legate {
+
+extern Logger log_legate;
+
+}  // namespace legate
+
 namespace legate::detail {
+
+void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime)
+{
+  if (!Config::show_progress_requested) return;
+  const auto exec_proc     = runtime->get_executing_processor(ctx);
+  const auto proc_kind_str = (exec_proc.kind() == Processor::LOC_PROC)   ? "CPU"
+                             : (exec_proc.kind() == Processor::TOC_PROC) ? "GPU"
+                                                                         : "OpenMP";
+
+  std::stringstream point_str;
+  const auto& point = task->index_point;
+  point_str << point[0];
+  for (int32_t dim = 1; dim < point.dim; ++dim) point_str << "," << point[dim];
+
+  log_legate.print("%s %s task [%s], pt = (%s), proc = " IDFMT,
+                   task->get_task_name(),
+                   proc_kind_str,
+                   task->get_provenance_string().c_str(),
+                   point_str.str().c_str(),
+                   exec_proc.id);
+}
 
 std::string generate_task_name(const std::type_info& ti)
 {
@@ -62,23 +90,28 @@ void task_wrapper(VariantImpl variant_impl,
     nvtx::Range auto_range(msg.c_str());
   }
 
-  Core::show_progress(task, legion_context, runtime);
+  show_progress(task, legion_context, runtime);
 
   detail::TaskContext context(task, *regions);
 
   ReturnValues return_values{};
   try {
     legate::TaskContext ctx(&context);
-    if (!Core::use_empty_task) (*variant_impl)(ctx);
+    if (!Config::use_empty_task) (*variant_impl)(ctx);
     return_values = context.pack_return_values();
   } catch (legate::TaskException& e) {
     if (context.can_raise_exception()) {
       context.make_all_unbound_stores_empty();
       return_values = context.pack_return_values_with_exception(e.index(), e.error_message());
-    } else
+    } else {
       // If a Legate exception is thrown by a task that does not declare any exception,
       // this is a bug in the library that needs to be reported to the developer
-      Core::report_unexpected_exception(task, e);
+      log_legate.error(
+        "Task %s threw an exception \"%s\", but the task did not declare any exception.",
+        task->get_task_name(),
+        e.error_message().c_str());
+      LEGATE_ABORT;
+    }
   }
 
   // Legion postamble

@@ -87,7 +87,7 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
 
 void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper)
 {
-  impl_->register_mapper(std::move(mapper));
+  impl_->register_mapper(std::move(mapper), false /*in_callback*/);
 }
 
 void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
