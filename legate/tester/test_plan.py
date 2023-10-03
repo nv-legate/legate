@@ -85,12 +85,23 @@ class TestPlan:
         except RuntimeError:
             gpus = "N/A"
 
+        if self._config.mpi_rank or self._config.gtest_file:
+            details = (
+                f"* Feature stages       : {', '.join(yellow(x) for x in self._config.features)}",  # noqa E501
+                f"* Test files per stage : {yellow(str(len(self._config.gtest_tests)))}",  # noqa E501
+                f"* TestSystem description   : {yellow(str(cpus) + ' cpus')} / {yellow(str(gpus) + ' gpus')}",  # noqa E501
+            )
+            return banner(
+                f"Test Suite Configuration ({'OpenMPI' if self._config.mpi_rank else 'GTest'})",  # noqa E501
+                details=details,
+            )
+
         details = (
             f"* Feature stages       : {', '.join(yellow(x) for x in self._config.features)}",  # noqa E501
             f"* Test files per stage : {yellow(str(len(self._config.test_files)))}",  # noqa E501
             f"* TestSystem description   : {yellow(str(cpus) + ' cpus')} / {yellow(str(gpus) + ' gpus')}",  # noqa E501
         )
-        return banner("Test Suite Configuration", details=details)
+        return banner("Test Suite Configuration (Python)", details=details)
 
     def outro(self, total: int, passed: int) -> str:
         """An informative banner to display at test run end.

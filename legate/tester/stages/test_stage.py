@@ -12,12 +12,15 @@
 from __future__ import annotations
 
 import multiprocessing
+import os
 import queue
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from typing_extensions import Protocol
+
+from legate.driver.launcher import LAUNCHER_VAR_PREFIXES
 
 from ...util.colors import yellow
 from ...util.types import ArgList, EnvDict
@@ -222,7 +225,29 @@ class TestStage(Protocol):
 
         return args
 
-    def run(
+    def _run_common(
+        self,
+        cmd: ArgList,
+        test_description: Path,
+        config: Config,
+        system: TestSystem,
+        shard: Shard,
+    ) -> ProcessResult:
+        self.delay(shard, config, system)
+
+        result = system.run(
+            cmd,
+            test_description,
+            env=self._env(config, system),
+            timeout=config.timeout,
+        )
+        log_proc(self.name, result, config, verbose=config.verbose)
+
+        self.shards.put(shard)
+
+        return result
+
+    def run_python(
         self,
         test_file: Path,
         config: Config,
@@ -271,19 +296,113 @@ class TestStage(Protocol):
         if custom_args:
             cmd += custom_args
 
-        self.delay(shard, config, system)
+        return self._run_common(cmd, test_file, config, system, shard)
 
-        result = system.run(
-            cmd,
-            test_file,
-            env=self._env(config, system),
-            timeout=config.timeout,
+    def run_gtest(
+        self,
+        test_file: str,
+        arg_test: str,
+        config: Config,
+        system: TestSystem,
+        *,
+        custom_args: ArgList | None = None,
+    ) -> ProcessResult:
+        """Execute a single test within gtest with appropriate environment and
+        command-line options for a feature test stage.
+
+        Parameters
+        ----------
+        test_file : str
+            Test file to execute
+
+        arg_test : str
+            Test name to be executed
+
+        config: Config
+            Test runner configuration
+
+        system: TestSystem
+            Process execution wrapper
+
+        """
+
+        shard = self.shards.get()
+
+        cov_args = self.cov_args(config)
+
+        stage_args = self.args + self.shard_args(shard, config)
+
+        cmd = (
+            [test_file]
+            + [f"--gtest_filter={arg_test}"]
+            + stage_args
+            + cov_args
+            + config.extra_args
         )
-        log_proc(self.name, result, config, verbose=config.verbose)
 
-        self.shards.put(shard)
+        if custom_args:
+            cmd += custom_args
 
-        return result
+        return self._run_common(cmd, Path(arg_test), config, system, shard)
+
+    def run_mpi(
+        self,
+        test_file: str,
+        arg_test: str,
+        config: Config,
+        system: TestSystem,
+        *,
+        custom_args: ArgList | None = None,
+    ) -> ProcessResult:
+        """Execute a single test within gtest with appropriate environment and
+        command-line options for a feature test stage.
+
+        Parameters
+        ----------
+        test_file : str
+            Test file to execute
+
+        arg_test : str
+            Test name to be executed
+
+        config: Config
+            Test runner configuration
+
+        system: TestSystem
+            Process execution wrapper
+
+        """
+
+        shard = self.shards.get()
+
+        cov_args = self.cov_args(config)
+
+        stage_args = self.args + self.shard_args(shard, config)
+
+        mpi_args = []
+        mpi_args += ["mpirun", "-n", str(config.ranks)]
+        mpi_args += ["--output-filename", config.mpi_output_filename]
+        mpi_args += ["--merge-stderr-to-stdout"]
+
+        for var in dict(os.environ):
+            if var.endswith("PATH") or any(
+                var.startswith(prefix) for prefix in LAUNCHER_VAR_PREFIXES
+            ):
+                mpi_args += ["-x", var]
+
+        cmd = (
+            mpi_args
+            + [test_file]
+            + [f"--gtest_filter={arg_test}"]
+            + stage_args
+            + cov_args
+            + config.extra_args
+        )
+
+        if custom_args:
+            cmd += custom_args
+
+        return self._run_common(cmd, Path(arg_test), config, system, shard)
 
     def _env(self, config: Config, system: TestSystem) -> EnvDict:
         env = dict(config.env)
@@ -308,10 +427,26 @@ class TestStage(Protocol):
     ) -> list[ProcessResult]:
         pool = multiprocessing.pool.ThreadPool(self.spec.workers)
 
-        jobs = [
-            pool.apply_async(self.run, (path, config, system))
-            for path in config.test_files
-        ]
+        if config.mpi_rank:
+            jobs = [
+                pool.apply_async(
+                    self.run_mpi, (config.gtest_file, arg, config, system)
+                )
+                for arg in config.gtest_tests
+            ]
+        elif config.gtest_file:
+            jobs = [
+                pool.apply_async(
+                    self.run_gtest,
+                    (config.gtest_file, arg, config, system),
+                )
+                for arg in config.gtest_tests
+            ]
+        else:
+            jobs = [
+                pool.apply_async(self.run_python, (path, config, system))
+                for path in config.test_files
+            ]
         pool.close()
 
         sharded_results = [job.get() for job in jobs]
@@ -319,7 +454,7 @@ class TestStage(Protocol):
         custom = (x for x in CUSTOM_FILES if x.kind == self.kind)
 
         custom_results = [
-            self.run(Path(x.file), config, system, custom_args=x.args)
+            self.run_python(Path(x.file), config, system, custom_args=x.args)
             for x in custom
         ]
 

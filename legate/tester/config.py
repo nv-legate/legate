@@ -48,7 +48,15 @@ class Config:
 
         colors.ENABLED = args.color
 
-        # which tests to run
+        # mpi configuration
+        self.mpi_rank = args.mpi_rank
+        self.mpi_output_filename = args.mpi_output_filename
+
+        # gtest configuration
+        self.gtest_file = args.gtest_file
+        self.gtest_tests = args.gtest_tests
+
+        # python configuration for which tests to run
         self.examples = False if args.cov_bin else True
         self.integration = True
         self.unit = args.unit

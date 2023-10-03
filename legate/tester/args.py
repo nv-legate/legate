@@ -294,10 +294,44 @@ test_opts.add_argument(
     help="Print out the commands that are to be executed",
 )
 
+
 parser.add_argument(
     "--color",
     dest="color",
     action="store_true",
     required=False,
     help="Whether to use color terminal output (if colorama is installed)",
+)
+
+
+parser.add_argument(
+    "--gtest-file",
+    dest="gtest_file",
+    default=None,
+    help="Path to gtest binary",
+)
+
+
+parser.add_argument(
+    "--gtest-tests",
+    dest="gtest_tests",
+    nargs="+",
+    default=None,
+    help="Explicit list of test names to run against",
+)
+
+
+parser.add_argument(
+    "--mpi-rank",
+    dest="mpi_rank",
+    default=None,
+    help="Runs mpirun with rank if non-zero",
+)
+
+
+parser.add_argument(
+    "--mpi-output-filename",
+    dest="mpi_output_filename",
+    default=None,
+    help="Path to mpirun results",
 )
