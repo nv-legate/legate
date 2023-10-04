@@ -85,14 +85,14 @@ class TestPlan:
         except RuntimeError:
             gpus = "N/A"
 
-        if self._config.mpi_rank or self._config.gtest_file:
+        if self._config.gtest_file:
             details = (
                 f"* Feature stages       : {', '.join(yellow(x) for x in self._config.features)}",  # noqa E501
                 f"* Test files per stage : {yellow(str(len(self._config.gtest_tests)))}",  # noqa E501
                 f"* TestSystem description   : {yellow(str(cpus) + ' cpus')} / {yellow(str(gpus) + ' gpus')}",  # noqa E501
             )
             return banner(
-                f"Test Suite Configuration ({'OpenMPI' if self._config.mpi_rank else 'GTest'})",  # noqa E501
+                f"Test Suite Configuration ({'OpenMPI' if self._config.ranks_per_node > 1 else 'GTest'})",  # noqa E501
                 details=details,
             )
 

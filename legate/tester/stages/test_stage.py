@@ -380,8 +380,10 @@ class TestStage(Protocol):
         stage_args = self.args + self.shard_args(shard, config)
 
         mpi_args = []
-        mpi_args += ["mpirun", "-n", str(config.ranks)]
-        mpi_args += ["--output-filename", config.mpi_output_filename]
+        mpi_args += ["mpirun", "-n", str(config.ranks_per_node)]
+        mpi_args += ["--npernode", str(config.ranks_per_node)]
+        if config.mpi_output_filename:
+            mpi_args += ["--output-filename", config.mpi_output_filename]
         mpi_args += ["--merge-stderr-to-stdout"]
 
         for var in dict(os.environ):
@@ -427,21 +429,22 @@ class TestStage(Protocol):
     ) -> list[ProcessResult]:
         pool = multiprocessing.pool.ThreadPool(self.spec.workers)
 
-        if config.mpi_rank:
-            jobs = [
-                pool.apply_async(
-                    self.run_mpi, (config.gtest_file, arg, config, system)
-                )
-                for arg in config.gtest_tests
-            ]
-        elif config.gtest_file:
-            jobs = [
-                pool.apply_async(
-                    self.run_gtest,
-                    (config.gtest_file, arg, config, system),
-                )
-                for arg in config.gtest_tests
-            ]
+        if config.gtest_file:
+            if config.ranks_per_node > 1:
+                jobs = [
+                    pool.apply_async(
+                        self.run_mpi, (config.gtest_file, arg, config, system)
+                    )
+                    for arg in config.gtest_tests
+                ]
+            else:
+                jobs = [
+                    pool.apply_async(
+                        self.run_gtest,
+                        (config.gtest_file, arg, config, system),
+                    )
+                    for arg in config.gtest_tests
+                ]
         else:
             jobs = [
                 pool.apply_async(self.run_python, (path, config, system))

@@ -49,7 +49,6 @@ class Config:
         colors.ENABLED = args.color
 
         # mpi configuration
-        self.mpi_rank = args.mpi_rank
         self.mpi_output_filename = args.mpi_output_filename
 
         # gtest configuration
@@ -77,7 +76,7 @@ class Config:
         self.gpu_delay = args.gpu_delay
         self.ompthreads = args.ompthreads
         self.numamem = args.numamem
-        self.ranks = args.ranks
+        self.ranks_per_node = args.ranks_per_node
 
         # test run configuration
         self.timeout = args.timeout

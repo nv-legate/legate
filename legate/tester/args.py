@@ -188,7 +188,7 @@ feature_opts.add_argument(
 
 feature_opts.add_argument(
     "--ranks-per-node",
-    dest="ranks",
+    dest="ranks_per_node",
     type=int,
     default=DEFAULT_RANKS_PER_NODE,
     help="Number of ranks per node to use",
@@ -315,17 +315,9 @@ parser.add_argument(
 parser.add_argument(
     "--gtest-tests",
     dest="gtest_tests",
-    nargs="+",
-    default=None,
-    help="Explicit list of test names to run against",
-)
-
-
-parser.add_argument(
-    "--mpi-rank",
-    dest="mpi_rank",
-    default=None,
-    help="Runs mpirun with rank if non-zero",
+    nargs="*",
+    default=[],
+    help="Explicit list of test names to run",
 )
 
 
@@ -333,5 +325,5 @@ parser.add_argument(
     "--mpi-output-filename",
     dest="mpi_output_filename",
     default=None,
-    help="Path to mpirun results",
+    help="Directory to dump mpirun output",
 )

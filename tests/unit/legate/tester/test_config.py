@@ -84,8 +84,7 @@ class TestConfig:
         assert c.cov_src_path is None
 
         assert c.gtest_file is None
-        assert c.gtest_tests is None
-        assert c.mpi_rank is None
+        assert c.gtest_tests == []
         assert c.mpi_output_filename is None
 
     def test_color_arg(self) -> None:
