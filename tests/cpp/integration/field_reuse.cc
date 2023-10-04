@@ -19,8 +19,11 @@
 #include "core/data/detail/logical_store.h"
 #include "core/runtime/detail/runtime.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace field_reuse {
+
+using Integration = DefaultFixture;
 
 static const char* library_name = "field_reuse";
 
@@ -39,7 +42,7 @@ void check_field_is_new(Legion::FieldID fid)
   EXPECT_EQ(unique_fields.size(), prev_size + 1);
 }
 
-TEST(Integration, FieldReuse)
+TEST_F(Integration, FieldReuse)
 {
   // TODO: Also test the reuse of a field originally returned by an unbounded-output task.
 

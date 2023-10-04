@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace fill {
+
+using Fill = DefaultFixture;
 
 static const char* library_name = "test_fill";
 
@@ -180,7 +183,7 @@ void test_invalid()
   EXPECT_THROW(runtime->issue_fill(store1, scalar_v), std::invalid_argument);
 }
 
-TEST(Fill, Index)
+TEST_F(Fill, Index)
 {
   register_tasks();
   test_fill_index(1, SIZE);
@@ -191,7 +194,7 @@ TEST(Fill, Index)
   test_fill_index(3, 1);
 }
 
-TEST(Fill, Single)
+TEST_F(Fill, Single)
 {
   register_tasks();
   test_fill_single(1, SIZE);
@@ -202,7 +205,7 @@ TEST(Fill, Single)
   test_fill_single(3, 1);
 }
 
-TEST(Fill, Slice)
+TEST_F(Fill, Slice)
 {
   register_tasks();
   test_fill_slice(1, SIZE);
@@ -210,6 +213,6 @@ TEST(Fill, Slice)
   test_fill_slice(3, SIZE);
 }
 
-TEST(Fill, Invalid) { test_invalid(); }
+TEST_F(Fill, Invalid) { test_invalid(); }
 
 }  // namespace fill

@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace req_analyzer {
+
+using ReqAnalyzer = DefaultFixture;
 
 static const char* library_name = "test_req_analyzer";
 
@@ -81,13 +84,13 @@ void test_isomorphic_transformed_stores()
   runtime->submit(std::move(task));
 }
 
-TEST(ReqAnalyzer, InoutStore)
+TEST_F(ReqAnalyzer, InoutStore)
 {
   prepare();
   test_inout_store();
 }
 
-TEST(ReqAnalyzer, IsomorphicTransformedStores)
+TEST_F(ReqAnalyzer, IsomorphicTransformedStores)
 {
   prepare();
   test_isomorphic_transformed_stores();

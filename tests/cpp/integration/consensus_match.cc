@@ -18,8 +18,11 @@
 
 #include "core/runtime/detail/runtime.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace consensus_match {
+
+using Integration = DefaultFixture;
 
 static const char* library_name = "consensus_match";
 
@@ -36,7 +39,7 @@ struct Thing {
   bool operator==(const Thing& other) const { return flag == other.flag && number == other.number; }
 };
 
-TEST(Integration, ConsensusMatch)
+TEST_F(Integration, ConsensusMatch)
 {
   auto runtime = legate::Runtime::get_runtime();
   register_tasks();

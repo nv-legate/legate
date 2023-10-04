@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace machine_scope {
+
+using Integration = DefaultFixture;
 
 static const char* library_name = "machine_scope";
 static legate::Logger logger(library_name);
@@ -131,7 +134,7 @@ void test_cpu_only(legate::Library library)
   }
 }
 
-TEST(Integration, MachineScope)
+TEST_F(Integration, MachineScope)
 {
   register_tasks();
 

@@ -13,6 +13,9 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
+
+using Registration = DefaultFixture;
 
 namespace test_registration {
 
@@ -49,6 +52,6 @@ void test_out_of_bounds_task_id()
   EXPECT_THROW(test_registration::CPUVariantTask<1>::register_variants(library), std::out_of_range);
 }
 
-TEST(Registration, Duplicate) { test_duplicates(); }
+TEST_F(Registration, Duplicate) { test_duplicates(); }
 
-TEST(Registration, TaskIDOutOfBounds) { test_out_of_bounds_task_id(); }
+TEST_F(Registration, TaskIDOutOfBounds) { test_out_of_bounds_task_id(); }

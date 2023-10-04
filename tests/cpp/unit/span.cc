@@ -12,8 +12,11 @@
 
 #include <gtest/gtest.h>
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace span_test {
+
+using SpanUnit = DefaultFixture;
 
 constexpr bool BOOL_VALUE       = true;
 constexpr int8_t INT8_VALUE     = 10;
@@ -55,7 +58,7 @@ void create(T value1, T value2, T value3)
   EXPECT_EQ(span[DATA_SIZE - 1], value3);
 }
 
-TEST(SpanUnit, Create)
+TEST_F(SpanUnit, Create)
 {
   create(BOOL_VALUE, BOOL_VALUE, !BOOL_VALUE);
   create(INT8_VALUE, static_cast<int8_t>(INT8_VALUE + 1), static_cast<int8_t>(INT8_VALUE + 2));
@@ -77,7 +80,7 @@ TEST(SpanUnit, Create)
   create(COMPLEX_DOUBLE_VALUE1, COMPLEX_DOUBLE_VALUE2, COMPLEX_DOUBLE_VALUE3);
 }
 
-TEST(SpanUnit, Subspan)
+TEST_F(SpanUnit, Subspan)
 {
   auto data_vec        = std::vector<uint64_t>(DATA_SIZE, UINT64_VALUE);
   const auto* data     = data_vec.data();

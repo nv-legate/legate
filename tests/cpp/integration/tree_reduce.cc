@@ -17,8 +17,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace tree_reduce {
+
+using TreeReduce = DefaultFixture;
 
 static const char* library_name = "test_tree_reduce";
 
@@ -90,7 +93,7 @@ void register_tasks()
   ReduceUnboundTask::register_variants(context);
 }
 
-TEST(TreeReduce, AutoProducer)
+TEST_F(TreeReduce, AutoProducer)
 {
   register_tasks();
 
@@ -112,7 +115,7 @@ TEST(TreeReduce, AutoProducer)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(TreeReduce, ManualProducer)
+TEST_F(TreeReduce, ManualProducer)
 {
   register_tasks();
 
@@ -134,7 +137,7 @@ TEST(TreeReduce, ManualProducer)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(TreeReduce, ManualProducerMultiLevel)
+TEST_F(TreeReduce, ManualProducerMultiLevel)
 {
   register_tasks();
 
@@ -156,7 +159,7 @@ TEST(TreeReduce, ManualProducerMultiLevel)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(TreeReduce, ManualProducerUnbound)
+TEST_F(TreeReduce, ManualProducerUnbound)
 {
   register_tasks();
 
@@ -175,7 +178,7 @@ TEST(TreeReduce, ManualProducerUnbound)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(TreeReduce, ManualProducerSingle)
+TEST_F(TreeReduce, ManualProducerSingle)
 {
   register_tasks();
 
@@ -193,7 +196,7 @@ TEST(TreeReduce, ManualProducerSingle)
   EXPECT_FALSE(result.unbound());
 }
 
-TEST(TreeReduce, AutoProducerSingle)
+TEST_F(TreeReduce, AutoProducerSingle)
 {
   register_tasks();
 

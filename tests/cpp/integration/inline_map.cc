@@ -14,8 +14,11 @@
 
 #include "core/runtime/detail/runtime.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace inline_map {
+
+using InlineMap = DefaultFixture;
 
 static const char* library_name = "test_inline_map";
 
@@ -83,11 +86,11 @@ void test_inline_map_and_task()
   EXPECT_EQ(acc[2], 43);
 }
 
-TEST(InlineMap, Future) { test_inline_map_future(); }
+TEST_F(InlineMap, Future) { test_inline_map_future(); }
 
-TEST(InlineMap, RegionAndSlice) { test_inline_map_region_and_slice(); }
+TEST_F(InlineMap, RegionAndSlice) { test_inline_map_region_and_slice(); }
 
-TEST(InlineMap, WithTask)
+TEST_F(InlineMap, WithTask)
 {
   register_tasks();
   test_inline_map_and_task();

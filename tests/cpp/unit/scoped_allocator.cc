@@ -12,8 +12,11 @@
 
 #include <gtest/gtest.h>
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace scoped_allocator_test {
+
+using ScopedAllocatorUnit = DefaultFixture;
 
 static const char* library_name     = "legate.scopedallocator";
 constexpr int64_t ALLOCATOR_TASK_ID = 1;
@@ -103,14 +106,14 @@ void register_tasks()
   ScopedAllocatorTask::register_variants(context);
 }
 
-TEST(ScopedAllocatorUnit, EmptyAllocate)
+TEST_F(ScopedAllocatorUnit, EmptyAllocate)
 {
   auto allocator = legate::ScopedAllocator(legate::Memory::SYSTEM_MEM, true);
   void* ptr      = allocator.allocate(0);
   EXPECT_EQ(ptr, nullptr);
 }
 
-TEST(ScopedAllocatorUnit, Allocate)
+TEST_F(ScopedAllocatorUnit, Allocate)
 {
   register_tasks();
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000, 16);
@@ -124,13 +127,13 @@ TEST(ScopedAllocatorUnit, Allocate)
   // test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, false, 1000, -1);
 }
 
-TEST(ScopedAllocatorUnit, DoubleDeallocate)
+TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 {
   register_tasks();
   test_allocator(BufferOpCode::DOUBLE_DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000);
 }
 
-TEST(ScopedAllocatorUnit, InvalidDeallocate)
+TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
 {
   auto allocator             = legate::ScopedAllocator(legate::Memory::SYSTEM_MEM, true);
   std::vector<uint64_t> data = {1, 2, 3};

@@ -15,10 +15,13 @@
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 #include <nccl.h>
 
 namespace nccl {
+
+using Integration = DefaultFixture;
 
 const char* library_name = "test_nccl";
 
@@ -99,7 +102,7 @@ void test_nccl_manual(int32_t ndim)
 }
 
 // Test case with single unbound store
-TEST(Integration, NCCL)
+TEST_F(Integration, NCCL)
 {
   prepare();
 

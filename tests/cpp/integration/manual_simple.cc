@@ -14,8 +14,11 @@
 
 #include "legate.h"
 #include "tasks/task_simple.h"
+#include "utilities/utilities.h"
 
 namespace manualsimple {
+
+using Integration = DefaultFixture;
 
 void test_auto_task(legate::Library library, legate::LogicalStore store)
 {
@@ -47,7 +50,7 @@ void print_store(legate::LogicalStore store)
   task::simple::logger.print() << ss.str();
 }
 
-TEST(Integration, ManualSimple)
+TEST_F(Integration, ManualSimple)
 {
   task::simple::register_tasks();
 

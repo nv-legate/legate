@@ -14,10 +14,13 @@
 
 #include "core/mapping/detail/mapping.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace unit {
 
-TEST(Mapping, DimOrdering)
+using Mapping = DefaultFixture;
+
+TEST_F(Mapping, DimOrdering)
 {
   // Default construct
   {
@@ -71,7 +74,7 @@ TEST(Mapping, DimOrdering)
   }
 }
 
-TEST(Mapping, InstanceMappingPolicy)
+TEST_F(Mapping, InstanceMappingPolicy)
 {
   // Empty InstanceMappingPolicy
   {

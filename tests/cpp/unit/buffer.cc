@@ -12,8 +12,11 @@
 
 #include <gtest/gtest.h>
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace buffer_test {
+
+using BufferUnit = DefaultFixture;
 
 static const char* library_name  = "legate.buffer";
 constexpr int64_t BUFFER_TASK_ID = 0;
@@ -93,7 +96,7 @@ void register_tasks()
   BufferTask::register_variants(context);
 }
 
-TEST(BufferUnit, CreateBuffer)
+TEST_F(BufferUnit, CreateBuffer)
 {
   register_tasks();
 
@@ -104,7 +107,7 @@ TEST(BufferUnit, CreateBuffer)
   test_buffer(4, 10, legate::Memory::SYSTEM_MEM);
 }
 
-TEST(BufferUnit, NegativeTest)
+TEST_F(BufferUnit, NegativeTest)
 {
   register_tasks();
 

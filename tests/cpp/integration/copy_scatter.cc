@@ -14,8 +14,11 @@
 
 #include "copy_util.inl"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace copy_scatter {
+
+using Copy = DefaultFixture;
 
 static const char* library_name = "test_copy_scatter";
 static legate::Logger logger(library_name);
@@ -172,7 +175,7 @@ void test_scatter(const ScatterSpec& spec)
 
 // Note that the volume of indirection field should be smaller than that of the target to avoid
 // duplicate updates on the same element, whose semantics is undefined.
-TEST(Copy, Scatter1Dto2D)
+TEST_F(Copy, Scatter1Dto2D)
 {
   register_tasks();
   std::vector<size_t> shape1d{5};
@@ -180,21 +183,21 @@ TEST(Copy, Scatter1Dto2D)
     ScatterSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
 }
 
-TEST(Copy, Scatter2Dto3D)
+TEST_F(Copy, Scatter2Dto3D)
 {
   register_tasks();
   test_scatter(
     ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
 }
 
-TEST(Copy, Scatter2Dto2D)
+TEST_F(Copy, Scatter2Dto2D)
 {
   register_tasks();
   test_scatter(
     ScatterSpec{{4, 5}, {10, 11}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
 }
 
-TEST(Copy, Scatter3Dto2D)
+TEST_F(Copy, Scatter3Dto2D)
 {
   register_tasks();
   test_scatter(

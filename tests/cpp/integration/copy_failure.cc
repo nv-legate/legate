@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace copy_failure {
+
+using Copy = DefaultFixture;
 
 void test_invalid_stores()
 {
@@ -117,14 +120,14 @@ void test_dimension_mismatch_failure()
                std::invalid_argument);
 }
 
-TEST(Copy, FailureInvalidStores) { test_invalid_stores(); }
+TEST_F(Copy, FailureInvalidStores) { test_invalid_stores(); }
 
-TEST(Copy, FailureDifferentTypes) { test_type_check_failure(); }
+TEST_F(Copy, FailureDifferentTypes) { test_type_check_failure(); }
 
-TEST(Copy, FailureDifferentShapes) { test_shape_check_failure(); }
+TEST_F(Copy, FailureDifferentShapes) { test_shape_check_failure(); }
 
-TEST(Copy, FailureNonPointTypes) { test_non_point_types_failure(); }
+TEST_F(Copy, FailureNonPointTypes) { test_non_point_types_failure(); }
 
-TEST(Copy, FailureDimensionMismatch) { test_dimension_mismatch_failure(); }
+TEST_F(Copy, FailureDimensionMismatch) { test_dimension_mismatch_failure(); }
 
 }  // namespace copy_failure

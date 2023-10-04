@@ -14,8 +14,11 @@
 
 #include "copy_util.inl"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace copy_gather_scatter {
+
+using Copy = DefaultFixture;
 
 static const char* library_name = "test_copy_gather_scatter";
 static legate::Logger logger(library_name);
@@ -178,7 +181,7 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   check_gather_scatter_output(library, src, tgt, src_ind, tgt_ind, spec.init);
 }
 
-TEST(Copy, GatherScatter1Dto3Dvia2D)
+TEST_F(Copy, GatherScatter1Dto3Dvia2D)
 {
   register_tasks();
   std::vector<size_t> shape1d{5};
@@ -186,7 +189,7 @@ TEST(Copy, GatherScatter1Dto3Dvia2D)
     shape1d, {7, 11}, {10, 10, 10}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
 }
 
-TEST(Copy, GatherScatter2Dto1Dvia3D)
+TEST_F(Copy, GatherScatter2Dto1Dvia3D)
 {
   register_tasks();
   std::vector<size_t> shape1d{1000};
@@ -194,7 +197,7 @@ TEST(Copy, GatherScatter2Dto1Dvia3D)
     {3, 7}, {3, 6, 5}, shape1d, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
 }
 
-TEST(Copy, GatherScatter3Dto2Dvia1D)
+TEST_F(Copy, GatherScatter3Dto2Dvia1D)
 {
   register_tasks();
   std::vector<size_t> shape1d{100};
@@ -202,7 +205,7 @@ TEST(Copy, GatherScatter3Dto2Dvia1D)
     {4, 5, 2}, shape1d, {50, 50}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
 }
 
-TEST(Copy, GatherScatter3Dto3Dvia3D)
+TEST_F(Copy, GatherScatter3Dto3Dvia3D)
 {
   register_tasks();
   test_gather_scatter(GatherScatterSpec{{10, 10, 10},
@@ -212,7 +215,7 @@ TEST(Copy, GatherScatter3Dto3Dvia3D)
                                         legate::Scalar(int64_t(42))});
 }
 
-TEST(Copy, GatherScatter2Dto3Dvia2D)
+TEST_F(Copy, GatherScatter2Dto3Dvia2D)
 {
   register_tasks();
   test_gather_scatter(GatherScatterSpec{

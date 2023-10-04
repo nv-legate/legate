@@ -14,6 +14,7 @@
 
 #include "core/type/type_info.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 #include "copy_util.inl"
 
@@ -26,6 +27,8 @@ extern void silence_unused_function_warnings()
 }
 
 namespace copy_normal {
+
+using Copy = DefaultFixture;
 
 static const char* library_name = "test_copy_normal";
 
@@ -209,7 +212,7 @@ void test_normal_copy_reduction(const NormalCopyReductionSpec& spec)
   check_copy_reduction_output(library, input, output, seed);
 }
 
-TEST(Copy, Single)
+TEST_F(Copy, Single)
 {
   register_tasks();
   test_normal_copy({{4, 7}, legate::int64(), legate::Scalar(int64_t(12))});
@@ -217,7 +220,7 @@ TEST(Copy, Single)
   test_normal_copy({{1}, legate::int64(), legate::Scalar(int64_t(12))});
 }
 
-TEST(Copy, SingleReduction)
+TEST_F(Copy, SingleReduction)
 {
   register_tasks();
   test_normal_copy_reduction(

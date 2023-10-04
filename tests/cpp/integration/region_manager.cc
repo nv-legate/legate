@@ -14,10 +14,13 @@
 
 #include "legate.h"
 #include "tasks/task_region_manager.h"
+#include "utilities/utilities.h"
 
 namespace region_manager {
 
-TEST(Integration, RegionManager)
+using Integration = DefaultFixture;
+
+TEST_F(Integration, RegionManager)
 {
   task::region_manager::register_tasks();
 

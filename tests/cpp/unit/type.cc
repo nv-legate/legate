@@ -12,8 +12,12 @@
 
 #include <gtest/gtest.h>
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace type_test {
+
+using TypeUnit = DefaultFixture;
+
 constexpr int32_t GLOBAL_OP_ID = 0x1F;
 
 const std::vector<legate::Type> PRIMITIVE_TYPE = {legate::bool_(),
@@ -145,7 +149,7 @@ void test_reduction_op(const legate::Type& type)
   EXPECT_THROW(type.find_reduction_operator(legate::ReductionOpKind::SUB), std::invalid_argument);
 }
 
-TEST(TypeUnit, PrimitiveType)
+TEST_F(TypeUnit, PrimitiveType)
 {
   test_primitive_type<bool>(legate::bool_(), "bool");
   test_primitive_type<int8_t>(legate::int8(), "int8");
@@ -184,9 +188,9 @@ TEST(TypeUnit, PrimitiveType)
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::LIST), std::invalid_argument);
 }
 
-TEST(TypeUnit, StringType) { test_string_type(legate::string_type()); }
+TEST_F(TypeUnit, StringType) { test_string_type(legate::string_type()); }
 
-TEST(TypeUnit, BinaryType)
+TEST_F(TypeUnit, BinaryType)
 {
   test_binary_type(legate::binary_type(123), 123);
   test_binary_type(legate::binary_type(45), 45);
@@ -196,7 +200,7 @@ TEST(TypeUnit, BinaryType)
   EXPECT_THROW(legate::binary_type(0xFFFFF + 1), std::out_of_range);
 }
 
-TEST(TypeUnit, FixedArrayType)
+TEST_F(TypeUnit, FixedArrayType)
 {
   // element type is a primitive type
   {
@@ -234,7 +238,7 @@ TEST(TypeUnit, FixedArrayType)
   EXPECT_THROW(legate::uint32().as_fixed_array_type(), std::invalid_argument);
 }
 
-TEST(TypeUnit, StructType)
+TEST_F(TypeUnit, StructType)
 {
   // aligned
   {
@@ -285,7 +289,7 @@ TEST(TypeUnit, StructType)
   EXPECT_THROW(legate::uint32().as_struct_type(), std::invalid_argument);
 }
 
-TEST(TypeUnit, PointType)
+TEST_F(TypeUnit, PointType)
 {
   for (uint32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     auto type = legate::point_type(idx);
@@ -310,7 +314,7 @@ TEST(TypeUnit, PointType)
   EXPECT_THROW(legate::point_type(LEGATE_MAX_DIM + 1), std::out_of_range);
 }
 
-TEST(TypeUnit, RectType)
+TEST_F(TypeUnit, RectType)
 {
   for (uint32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     auto type                             = legate::rect_type(idx);
@@ -338,7 +342,7 @@ TEST(TypeUnit, RectType)
   EXPECT_THROW(legate::rect_type(LEGATE_MAX_DIM + 1), std::out_of_range);
 }
 
-TEST(TypeUnit, ListType)
+TEST_F(TypeUnit, ListType)
 {
   test_list_type(legate::bool_(), "list(bool)");
   test_list_type(legate::int8(), "list(int8)");
@@ -369,7 +373,7 @@ TEST(TypeUnit, ListType)
   EXPECT_THROW(legate::string_type().as_struct_type(), std::invalid_argument);
 }
 
-TEST(TypeUnit, Uid)
+TEST_F(TypeUnit, Uid)
 {
   // fixed array type
   for (uint32_t idx = 0; idx < PRIMITIVE_TYPE.size(); ++idx) {
@@ -453,14 +457,14 @@ TEST(TypeUnit, Uid)
   }
 }
 
-TEST(TypeUnit, ReductionOperator)
+TEST_F(TypeUnit, ReductionOperator)
 {
   test_reduction_op(legate::string_type());
   test_reduction_op(legate::fixed_array_type(legate::int64(), 10));
   test_reduction_op(legate::struct_type(true, legate::int64(), legate::bool_(), legate::float64()));
 }
 
-TEST(TypeUnit, TypeCodeOf)
+TEST_F(TypeUnit, TypeCodeOf)
 {
   EXPECT_EQ(legate::legate_type_code_of<void>, legate::Type::Code::NIL);
   EXPECT_EQ(legate::legate_type_code_of<bool>, legate::Type::Code::BOOL);
@@ -480,7 +484,7 @@ TEST(TypeUnit, TypeCodeOf)
   EXPECT_EQ(legate::legate_type_code_of<std::string>, legate::Type::Code::STRING);
 }
 
-TEST(TypeUnit, TypeOf)
+TEST_F(TypeUnit, TypeOf)
 {
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::BOOL>, bool>));
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::INT8>, int8_t>));
@@ -506,7 +510,7 @@ TEST(TypeUnit, TypeOf)
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::LIST>, void>));
 }
 
-TEST(TypeUnit, TypeUtils)
+TEST_F(TypeUnit, TypeUtils)
 {
   // is_integral
   EXPECT_TRUE(legate::is_integral<legate::Type::Code::BOOL>::value);

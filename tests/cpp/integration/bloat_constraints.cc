@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace bloat_constraints {
+
+using BloatConstraint = DefaultFixture;
 
 static const char* library_name = "test_bloat_constraints";
 
@@ -134,25 +137,25 @@ void test_invalid()
   }
 }
 
-TEST(BloatConstraint, 1D)
+TEST_F(BloatConstraint, 1D)
 {
   prepare();
   test_bloat({{10}, {2}, {4}});
 }
 
-TEST(BloatConstraint, 2D)
+TEST_F(BloatConstraint, 2D)
 {
   prepare();
   test_bloat({{9, 9}, {2, 3}, {3, 4}});
 }
 
-TEST(BloatConstraint, 3D)
+TEST_F(BloatConstraint, 3D)
 {
   prepare();
   test_bloat({{10, 10, 10}, {2, 3, 4}, {4, 3, 2}});
 }
 
-TEST(BloatConstraint, Invalid)
+TEST_F(BloatConstraint, Invalid)
 {
   prepare();
   test_invalid();

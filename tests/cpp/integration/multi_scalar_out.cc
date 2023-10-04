@@ -14,8 +14,11 @@
 
 #include "legate.h"
 #include "tasks/task_simple.h"
+#include "utilities/utilities.h"
 
 namespace multiscalarout {
+
+using Integration = DefaultFixture;
 
 void test_writer_auto(legate::Library library,
                       legate::LogicalStore scalar1,
@@ -71,7 +74,7 @@ void validate_stores(legate::LogicalStore scalar1,
   EXPECT_EQ(v2, to_match2);
 }
 
-TEST(Integration, MultiScalarOut)
+TEST_F(Integration, MultiScalarOut)
 {
   task::simple::register_tasks();
 

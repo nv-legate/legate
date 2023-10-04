@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace weighted {
+
+using Integration = DefaultFixture;
 
 const char* library_name = "test_weighted";
 
@@ -103,7 +106,7 @@ void test_weighted(uint32_t num_stores)
 }
 
 // Test case with single unbound store
-TEST(Integration, WeightedSingle)
+TEST_F(Integration, WeightedSingle)
 {
   prepare();
 
@@ -111,7 +114,7 @@ TEST(Integration, WeightedSingle)
 }
 
 // Test case with multiple unbound stores
-TEST(Integration, WeightedMultiple)
+TEST_F(Integration, WeightedMultiple)
 {
   prepare();
 

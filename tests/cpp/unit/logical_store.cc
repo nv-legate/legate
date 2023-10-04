@@ -13,10 +13,13 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace unit {
 
-TEST(Store, Creation)
+using Store = DefaultFixture;
+
+TEST_F(Store, Creation)
 {
   // Bound
   {
@@ -41,7 +44,7 @@ TEST(Store, Creation)
   }
 }
 
-TEST(Store, Transform)
+TEST_F(Store, Transform)
 {
   // Bound
   auto runtime = legate::Runtime::get_runtime();
@@ -71,7 +74,7 @@ TEST(Store, Transform)
   EXPECT_TRUE(delinearized.transformed());
 }
 
-TEST(Store, InvalidTransform)
+TEST_F(Store, InvalidTransform)
 {
   // Bound
   {

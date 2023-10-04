@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace tunable {
+
+using Tunable = DefaultFixture;
 
 static const char* library_name = "test_tunable";
 
@@ -68,7 +71,7 @@ struct scalar_eq_fn {
   }
 };
 
-TEST(Tunable, Valid)
+TEST_F(Tunable, Valid)
 {
   prepare();
   auto runtime = legate::Runtime::get_runtime();
@@ -82,7 +85,7 @@ TEST(Tunable, Valid)
   }
 }
 
-TEST(Tunable, Invalid)
+TEST_F(Tunable, Invalid)
 {
   prepare();
   auto runtime = legate::Runtime::get_runtime();

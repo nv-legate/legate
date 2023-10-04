@@ -15,8 +15,11 @@
 #include "core/data/detail/scalar.h"
 #include "core/utilities/deserializer.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "utilities/utilities.h"
 
 namespace scalar_test {
+
+using ScalarUnit = DefaultFixture;
 
 constexpr bool BOOL_VALUE       = true;
 constexpr int8_t INT8_VALUE     = 10;
@@ -252,7 +255,7 @@ void check_pack_rect_scalar()
   check_pack(scalar);
 }
 
-TEST(ScalarUnit, CreateWithObject)
+TEST_F(ScalarUnit, CreateWithObject)
 {
   // constructor with Scalar object
   legate::Scalar scalar1(INT32_VALUE);
@@ -270,7 +273,7 @@ TEST(ScalarUnit, CreateWithObject)
   EXPECT_THROW(scalar2.values<int8_t>(), std::invalid_argument);
 }
 
-TEST(ScalarUnit, CreateSharedScalar)
+TEST_F(ScalarUnit, CreateSharedScalar)
 {
   // unowned
   {
@@ -301,7 +304,7 @@ TEST(ScalarUnit, CreateSharedScalar)
   }
 }
 
-TEST(ScalarUnit, CreateWithValue)
+TEST_F(ScalarUnit, CreateWithValue)
 {
   check_type(BOOL_VALUE, legate::bool_());
   check_type(INT8_VALUE, legate::int8());
@@ -322,7 +325,7 @@ TEST(ScalarUnit, CreateWithValue)
   EXPECT_THROW(legate::Scalar(FLOAT16_VALUE, legate::float32()), std::invalid_argument);
 }
 
-TEST(ScalarUnit, CreateBinary)
+TEST_F(ScalarUnit, CreateBinary)
 {
   {
     PaddingStructData value = {BOOL_VALUE, INT32_VALUE, UINT64_VALUE};
@@ -335,7 +338,7 @@ TEST(ScalarUnit, CreateBinary)
   }
 }
 
-TEST(ScalarUnit, CreateWithVector)
+TEST_F(ScalarUnit, CreateWithVector)
 {
   // constructor with arrays
   std::vector<int32_t> scalar_data{INT32_VALUE, INT32_VALUE};
@@ -359,7 +362,7 @@ TEST(ScalarUnit, CreateWithVector)
   EXPECT_THROW(scalar.values<std::string>(), std::invalid_argument);
 }
 
-TEST(ScalarUnit, CreateWithString)
+TEST_F(ScalarUnit, CreateWithString)
 {
   // constructor with string
   auto inputString = STRING_VALUE;
@@ -381,7 +384,7 @@ TEST(ScalarUnit, CreateWithString)
   EXPECT_THROW(scalar.values<int32_t>(), std::invalid_argument);
 }
 
-TEST(ScalarUnit, CreateWithStructType)
+TEST_F(ScalarUnit, CreateWithStructType)
 {
   // with struct padding
   {
@@ -396,7 +399,7 @@ TEST(ScalarUnit, CreateWithStructType)
   }
 }
 
-TEST(ScalarUnit, CreateWithPoint)
+TEST_F(ScalarUnit, CreateWithPoint)
 {
   {
     const int64_t bounds[] = {0};
@@ -422,7 +425,7 @@ TEST(ScalarUnit, CreateWithPoint)
   EXPECT_THROW(legate::Scalar{legate::Point<10>::ONES()}, std::out_of_range);
 }
 
-TEST(ScalarUnit, CreateWithRect)
+TEST_F(ScalarUnit, CreateWithRect)
 {
   {
     const int64_t lo[] = {1};
@@ -454,7 +457,7 @@ TEST(ScalarUnit, CreateWithRect)
     std::out_of_range);
 }
 
-TEST(ScalarUnit, OperatorEqual)
+TEST_F(ScalarUnit, OperatorEqual)
 {
   legate::Scalar scalar1(INT32_VALUE);
   legate::Scalar scalar2(UINT64_VALUE);
@@ -465,7 +468,7 @@ TEST(ScalarUnit, OperatorEqual)
   EXPECT_EQ(scalar2.values<int32_t>().size(), scalar1.values<int32_t>().size());
 }
 
-TEST(ScalarUnit, Pack)
+TEST_F(ScalarUnit, Pack)
 {
   // test pack for a fixed array scalar
   {

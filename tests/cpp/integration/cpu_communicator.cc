@@ -14,8 +14,11 @@
 
 #include "core/comm/coll.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace cpu_communicator {
+
+using Integration = DefaultFixture;
 
 const char* library_name = "test_cpu_communicator";
 
@@ -88,7 +91,7 @@ void test_cpu_communicator_manual(int32_t ndim)
 }
 
 // Test case with single unbound store
-TEST(Integration, CPUCommunicator)
+TEST_F(Integration, CPUCommunicator)
 {
   prepare();
 

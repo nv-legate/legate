@@ -11,14 +11,25 @@
  */
 
 #include <gtest/gtest.h>
+
 #include "legate.h"
 #include "utilities/utilities.h"
 
-int main(int argc, char** argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  DefaultFixture::init(argc, argv);
-  DeathTestFixture::init(argc, argv);
+namespace unit {
 
-  return RUN_ALL_TESTS();
+using DeathTestExample = DeathTestFixture;
+
+void KillProcess(int argc, char** argv)
+{
+  legate::start(0, NULL);
+  abort();
 }
+
+TEST_F(DeathTestExample, Simple)
+{
+  // We can't check that the subprocess dies with SIGABRT, because we run with REALM_BACKTRACE=1,
+  // and Realm's signal hanlder doesn't propagate the signal, instead it exits right away
+  EXPECT_EXIT(KillProcess(argc_, argv_), ::testing::ExitedWithCode(1), "");
+}
+
+}  // namespace unit

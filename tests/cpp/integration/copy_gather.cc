@@ -14,8 +14,11 @@
 
 #include "copy_util.inl"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace copy_gather {
+
+using Copy = DefaultFixture;
 
 static const char* library_name = "test_copy_gather";
 static legate::Logger logger(library_name);
@@ -148,33 +151,33 @@ void test_gather(const GatherSpec& spec)
   check_gather_output(library, src, tgt, ind);
 }
 
-TEST(Copy, Gather2Dto1D)
+TEST_F(Copy, Gather2Dto1D)
 {
   register_tasks();
   std::vector<size_t> shape1d{5};
   test_gather(GatherSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123))});
 }
 
-TEST(Copy, Gather3Dto2D)
+TEST_F(Copy, Gather3Dto2D)
 {
   register_tasks();
   test_gather(GatherSpec{{3, 7}, {3, 2, 5}, legate::Scalar(uint32_t(456))});
 }
 
-TEST(Copy, Gather1Dto3D)
+TEST_F(Copy, Gather1Dto3D)
 {
   register_tasks();
   std::vector<size_t> shape1d{5};
   test_gather(GatherSpec{{2, 5, 4}, shape1d, legate::Scalar(789.0)});
 }
 
-TEST(Copy, Gather2Dto2D)
+TEST_F(Copy, Gather2Dto2D)
 {
   register_tasks();
   test_gather(GatherSpec{{4, 5}, {10, 11}, legate::Scalar(int64_t(12))});
 }
 
-TEST(Copy, Gather2Dto3D)
+TEST_F(Copy, Gather2Dto3D)
 {
   register_tasks();
   test_gather(GatherSpec{{100, 100, 100}, {10, 10}, legate::Scalar(7.0)});

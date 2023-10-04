@@ -14,8 +14,11 @@
 
 #include "core/data/detail/logical_store.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace scale_constraints {
+
+using ScaleConstraint = DefaultFixture;
 
 static const char* library_name = "test_scale_constraints";
 
@@ -117,25 +120,25 @@ void test_invalid()
   }
 }
 
-TEST(ScaleConstraint, 1D)
+TEST_F(ScaleConstraint, 1D)
 {
   prepare();
   test_scale({{3}, {10}, {29}});
 }
 
-TEST(ScaleConstraint, 2D)
+TEST_F(ScaleConstraint, 2D)
 {
   prepare();
   test_scale({{4, 5}, {2, 7}, {10, 30}});
 }
 
-TEST(ScaleConstraint, 3D)
+TEST_F(ScaleConstraint, 3D)
 {
   prepare();
   test_scale({{2, 3, 4}, {5, 5, 5}, {10, 15, 20}});
 }
 
-TEST(ScaleConstraint, Invalid)
+TEST_F(ScaleConstraint, Invalid)
 {
   prepare();
   test_invalid();

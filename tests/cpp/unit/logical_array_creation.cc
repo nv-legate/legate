@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace array_test {
+
+using LogicalArray = DefaultFixture;
 
 void test_primitive_array(bool nullable)
 {
@@ -211,24 +214,24 @@ void test_invalid()
   EXPECT_THROW(runtime->create_array(legate::list_type(legate::int64()), 3), std::invalid_argument);
 }
 
-TEST(LogicalArray, CreatePrimitiveNonNullable) { test_primitive_array(false); }
+TEST_F(LogicalArray, CreatePrimitiveNonNullable) { test_primitive_array(false); }
 
-TEST(LogicalArray, CreatePrimitiveNullable) { test_primitive_array(true); }
+TEST_F(LogicalArray, CreatePrimitiveNullable) { test_primitive_array(true); }
 
-TEST(LogicalArray, CreateListNonNullable) { test_list_array(false); }
+TEST_F(LogicalArray, CreateListNonNullable) { test_list_array(false); }
 
-TEST(LogicalArray, CreateListNullable) { test_list_array(true); }
+TEST_F(LogicalArray, CreateListNullable) { test_list_array(true); }
 
-TEST(LogicalArray, CreateStructNonNullable) { test_struct_array(false); }
+TEST_F(LogicalArray, CreateStructNonNullable) { test_struct_array(false); }
 
-TEST(LogicalArray, CreateStructNullable) { test_struct_array(true); }
+TEST_F(LogicalArray, CreateStructNullable) { test_struct_array(true); }
 
-TEST(LogicalArray, CreateLike)
+TEST_F(LogicalArray, CreateLike)
 {
   test_isomorphic(false);
   test_isomorphic(true);
 }
 
-TEST(LogicalArray, CreateInvalid) { test_invalid(); }
+TEST_F(LogicalArray, CreateInvalid) { test_invalid(); }
 
 }  // namespace array_test

@@ -14,8 +14,15 @@
 
 #include "core/partitioning/detail/constraint.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace unit {
+
+using Variable        = DefaultFixture;
+using Alignment       = DefaultFixture;
+using Broadcast       = DefaultFixture;
+using ImageConstraint = DefaultFixture;
+
 static const char* library_name = "test_constraints";
 
 enum TaskIDs {
@@ -38,7 +45,7 @@ void register_tasks()
   Initializer::register_variants(context);
 }
 
-TEST(Variable, BasicMethods)
+TEST_F(Variable, BasicMethods)
 {
   register_tasks();
 
@@ -74,7 +81,7 @@ TEST(Variable, BasicMethods)
   EXPECT_TRUE(std::find(symbols.begin(), symbols.end(), part2_imp) != symbols.end());
 }
 
-TEST(Alignment, BasicMethods)
+TEST_F(Alignment, BasicMethods)
 {
   register_tasks();
 
@@ -102,7 +109,7 @@ TEST(Alignment, BasicMethods)
   EXPECT_TRUE(std::find(symbols.begin(), symbols.end(), part2.impl()) != symbols.end());
 }
 
-TEST(Broadcast, BasicMethods)
+TEST_F(Broadcast, BasicMethods)
 {
   register_tasks();
 
@@ -127,7 +134,7 @@ TEST(Broadcast, BasicMethods)
   EXPECT_TRUE(std::find(symbols.begin(), symbols.end(), part1.impl()) != symbols.end());
 }
 
-TEST(ImageConstraint, BasicMethods)
+TEST_F(ImageConstraint, BasicMethods)
 {
   register_tasks();
 

@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace broadcast_constraints {
+
+using Broadcast = DefaultFixture;
 
 static const char* library_name = "test_broadcast_constraints";
 
@@ -123,19 +126,19 @@ void test_invalid_broadcast()
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
 
-TEST(Broadcast, Basic)
+TEST_F(Broadcast, Basic)
 {
   prepare();
   test_normal_store();
 }
 
-TEST(Broadcast, WithPromotion)
+TEST_F(Broadcast, WithPromotion)
 {
   prepare();
   test_promoted_store();
 }
 
-TEST(Broadcast, Invalid)
+TEST_F(Broadcast, Invalid)
 {
   prepare();
   test_invalid_broadcast();

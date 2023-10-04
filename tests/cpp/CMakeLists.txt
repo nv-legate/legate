@@ -67,6 +67,7 @@ endif()
 
 add_executable(cpp_tests ${main_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC})
 
+target_include_directories(cpp_tests PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest)
 if(Legion_USE_CUDA)
 target_link_libraries(cpp_tests PRIVATE NCCL::NCCL)

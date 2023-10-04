@@ -14,8 +14,11 @@
 
 #include "core/data/detail/logical_store.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace image_constraints {
+
+using ImageConstraint = DefaultFixture;
 
 static const char* library_name = "test_image_constraints";
 
@@ -277,43 +280,43 @@ void test_invalid()
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
 
-TEST(ImageConstraint, Point1D)
+TEST_F(ImageConstraint, Point1D)
 {
   prepare();
   test_image({{9}, {100}, false});
 }
 
-TEST(ImageConstraint, Point2D)
+TEST_F(ImageConstraint, Point2D)
 {
   prepare();
   test_image({{4, 4}, {10, 10}, false});
 }
 
-TEST(ImageConstraint, Point3D)
+TEST_F(ImageConstraint, Point3D)
 {
   prepare();
   test_image({{2, 3, 4}, {5, 5, 5}, false});
 }
 
-TEST(ImageConstraint, Rect1D)
+TEST_F(ImageConstraint, Rect1D)
 {
   prepare();
   test_image({{9}, {100}, true});
 }
 
-TEST(ImageConstraint, Rect2D)
+TEST_F(ImageConstraint, Rect2D)
 {
   prepare();
   test_image({{4, 4}, {10, 10}, true});
 }
 
-TEST(ImageConstraint, Rect3D)
+TEST_F(ImageConstraint, Rect3D)
 {
   prepare();
   test_image({{2, 3, 4}, {5, 5, 5}, true});
 }
 
-TEST(ImageConstraint, Invalid)
+TEST_F(ImageConstraint, Invalid)
 {
   prepare();
   test_invalid();

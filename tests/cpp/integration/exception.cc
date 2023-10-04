@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace exception {
+
+using Exception = DefaultFixture;
 
 const char* library_name = "test_exception";
 
@@ -177,14 +180,14 @@ void test_pending()
   // Finish the test with a pending exception to check if the runtime cleans things up correctly
 }
 
-TEST(Exception, Single)
+TEST_F(Exception, Single)
 {
   prepare();
 
   test_single();
 }
 
-TEST(Exception, Multi)
+TEST_F(Exception, Multi)
 {
   prepare();
 
@@ -192,7 +195,7 @@ TEST(Exception, Multi)
   test_multi(false /* use_auto_task */);
 }
 
-TEST(Exception, Pending)
+TEST_F(Exception, Pending)
 {
   prepare();
 

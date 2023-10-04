@@ -13,10 +13,13 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace test_library {
 
-TEST(Library, Create)
+using Library = DefaultFixture;
+TEST_F(Library, Create)
+
 {
   const char* LIBNAME = "test_library.libA";
   auto* runtime       = legate::Runtime::get_runtime();
@@ -25,7 +28,7 @@ TEST(Library, Create)
   EXPECT_EQ(lib, runtime->maybe_find_library(LIBNAME).value());
 }
 
-TEST(Library, FindOrCreate)
+TEST_F(Library, FindOrCreate)
 {
   const char* LIBNAME = "test_library.libB";
 
@@ -46,7 +49,7 @@ TEST(Library, FindOrCreate)
   EXPECT_FALSE(p_lib2.valid_task_id(p_lib2.get_task_id(1)));
 }
 
-TEST(Library, FindNonExistent)
+TEST_F(Library, FindNonExistent)
 {
   const char* LIBNAME = "test_library.libC";
 

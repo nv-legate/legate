@@ -17,8 +17,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace tree_reduce_unique {
+
+using TreeReduce = DefaultFixture;
 
 static const char* library_name = "test_tree_reduce_unique";
 
@@ -104,7 +107,7 @@ void register_tasks()
   CheckTask::register_variants(context);
 }
 
-TEST(TreeReduce, Unique)
+TEST_F(TreeReduce, Unique)
 {
   register_tasks();
 

@@ -10,15 +10,35 @@
  * its affiliates is strictly prohibited.
  */
 
+#pragma once
+
 #include <gtest/gtest.h>
 #include "legate.h"
-#include "utilities/utilities.h"
 
-int main(int argc, char** argv)
-{
-  ::testing::InitGoogleTest(&argc, argv);
-  DefaultFixture::init(argc, argv);
-  DeathTestFixture::init(argc, argv);
+class DefaultFixture : public ::testing::Test {
+ public:
+  static void init(int argc, char** argv)
+  {
+    DefaultFixture::argc_ = argc;
+    DefaultFixture::argv_ = argv;
+  }
 
-  return RUN_ALL_TESTS();
-}
+  void SetUp() override { EXPECT_EQ(legate::start(argc_, argv_), 0); }
+  void TearDown() override { EXPECT_EQ(legate::finish(), 0); }
+
+ private:
+  inline static int argc_;
+  inline static char** argv_;
+};
+
+class DeathTestFixture : public ::testing::Test {
+ public:
+  static void init(int argc, char** argv)
+  {
+    argc_ = argc;
+    argv_ = argv;
+  }
+
+  inline static int argc_;
+  inline static char** argv_;
+};

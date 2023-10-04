@@ -14,8 +14,11 @@
 
 #include "legate.h"
 #include "tasks/task_simple.h"
+#include "utilities/utilities.h"
 
 namespace inout {
+
+using Integration = DefaultFixture;
 
 void test_inout()
 {
@@ -31,7 +34,7 @@ void test_inout()
   runtime->submit(std::move(task));
 }
 
-TEST(Integration, InOut)
+TEST_F(Integration, InOut)
 {
   task::simple::register_tasks();
   test_inout();

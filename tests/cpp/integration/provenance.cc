@@ -14,8 +14,11 @@
 
 #include "core/runtime/detail/runtime.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace provenance {
+
+using Integration = DefaultFixture;
 
 static const char* library_name = "test_provenance";
 
@@ -132,7 +135,7 @@ void test_manual_tracker(legate::Library library)
   runtime->submit(std::move(task));
 }
 
-TEST(Integration, Provenance)
+TEST_F(Integration, Provenance)
 {
   register_tasks();
 

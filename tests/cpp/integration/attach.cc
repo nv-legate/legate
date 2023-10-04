@@ -14,8 +14,12 @@
 
 #include "core/data/detail/logical_store.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace attach {
+
+using Attach          = DefaultFixture;
+using AttachDeathTest = DeathTestFixture;
 
 static const char* library_name = "test_attach";
 
@@ -168,7 +172,7 @@ void test_body(
   }
 }
 
-TEST(Attach, Positive)
+TEST_F(Attach, Positive)
 {
   register_tasks();
   // Do multiple operations in a row, with stores collected in-between, in hopes of triggering
@@ -183,7 +187,7 @@ TEST(Attach, Positive)
             test_body(dim, fortran, unordered, share, use_tasks, use_inline);
 }
 
-TEST(Attach, Negative)
+TEST_F(Attach, Negative)
 {
   register_tasks();
   auto runtime = legate::Runtime::get_runtime();
@@ -210,17 +214,22 @@ TEST(Attach, Negative)
   l_store.detach();
 }
 
-// TODO: GTest implements death tests by forking, and that is not going to work well with Realm
-// and MPI.
-TEST(DISABLED_AttachDeathTest, MissingManualDetach)
+TEST_F(AttachDeathTest, MissingManualDetach)
 {
-  register_tasks();
-  auto runtime = legate::Runtime::get_runtime();
-
   // Forgetting to detach a shared attachment
-  EXPECT_DEATH(runtime->create_store(
-                 SHAPE_1D, legate::int64(), new int64_t[SHAPE_1D.volume()], true /*share*/),
-               "must be manually detached");
+  // TODO: We can't check the actual error message, because it's reported using logging, and even
+  // though that's mirrored on stderr, it doesn't seem to be included in the death message.
+  EXPECT_DEATH(
+    {
+      legate::start(argc_, argv_);
+      register_tasks();
+      auto runtime = legate::Runtime::get_runtime();
+      auto context = runtime->find_library(library_name);
+      runtime->create_store(
+        SHAPE_1D, legate::int64(), new int64_t[SHAPE_1D.volume()], true /*share*/);
+      legate::finish();
+    },
+    "");
 }
 
 }  // namespace attach

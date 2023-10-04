@@ -13,8 +13,11 @@
 #include <gtest/gtest.h>
 
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace alignment_constraints {
+
+using Alignment = DefaultFixture;
 
 static const char* library_name = "test_alignment_constraints";
 
@@ -229,31 +232,31 @@ void test_invalid_alignment()
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
 
-TEST(Alignment, Basic)
+TEST_F(Alignment, Basic)
 {
   prepare();
   test_alignment();
 }
 
-TEST(Alignment, WithBroadcast)
+TEST_F(Alignment, WithBroadcast)
 {
   prepare();
   test_alignment_and_broadcast();
 }
 
-TEST(Alignment, WithTransform)
+TEST_F(Alignment, WithTransform)
 {
   prepare();
   test_alignment_transformed();
 }
 
-TEST(Alignment, Redundant)
+TEST_F(Alignment, Redundant)
 {
   prepare();
   test_redundant_alignment();
 }
 
-TEST(Alignment, Invalid)
+TEST_F(Alignment, Invalid)
 {
   prepare();
   test_invalid_alignment();

@@ -21,10 +21,13 @@
 #include "core/utilities/deserializer.h"
 #include "core/utilities/detail/buffer_builder.h"
 #include "legate.h"
+#include "utilities/utilities.h"
 
 namespace unit {
 
-TEST(Machine, ProcessorRange)
+using Machine = DefaultFixture;
+
+TEST_F(Machine, ProcessorRange)
 {
   // create nonempty
   {
@@ -132,7 +135,7 @@ TEST(Machine, ProcessorRange)
   }
 }
 
-TEST(Machine, MachineDesc)
+TEST_F(Machine, MachineDesc)
 {
   // test empty MachineDesc
   {
