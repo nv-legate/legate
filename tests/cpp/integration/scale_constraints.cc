@@ -53,6 +53,9 @@ struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
 
 void prepare()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   ScaleTester<1>::register_variants(context);

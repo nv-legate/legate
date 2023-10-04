@@ -173,6 +173,9 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 
 void prepare()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   InitializeFunction<1, true>::register_variants(context);

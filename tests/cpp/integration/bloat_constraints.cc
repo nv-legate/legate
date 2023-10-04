@@ -54,6 +54,9 @@ struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
 
 void prepare()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   BloatTester<1>::register_variants(context);

@@ -73,6 +73,9 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
 
 void register_tasks()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library(library_name);
   FillTask<1>::register_variants(library);

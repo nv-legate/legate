@@ -54,6 +54,9 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
 
 void prepare()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   ExceptionTask::register_variants(context, EXCEPTION_TASK);

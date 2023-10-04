@@ -38,6 +38,9 @@ struct Tester : public legate::LegateTask<Tester> {
 
 void prepare()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   Tester::register_variants(context);

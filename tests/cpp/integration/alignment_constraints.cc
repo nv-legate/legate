@@ -70,6 +70,9 @@ struct TransformedTester : public legate::LegateTask<TransformedTester<DIM>> {
 
 void prepare()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   Initializer::register_variants(context);

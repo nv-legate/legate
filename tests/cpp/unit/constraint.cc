@@ -30,6 +30,9 @@ struct Initializer : public legate::LegateTask<Initializer> {
 
 void register_tasks()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   Initializer::register_variants(context);

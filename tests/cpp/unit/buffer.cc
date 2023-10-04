@@ -85,6 +85,9 @@ void test_buffer(int32_t dim, uint64_t bytes, legate::Memory::Kind kind, size_t 
 
 void register_tasks()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   BufferTask::register_variants(context);

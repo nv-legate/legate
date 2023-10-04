@@ -79,6 +79,9 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
 
 void register_tasks()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   ProduceNormalTask::register_variants(context);

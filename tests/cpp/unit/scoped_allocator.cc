@@ -95,6 +95,9 @@ void test_allocator(
 
 void register_tasks()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   ScopedAllocatorTask::register_variants(context);
