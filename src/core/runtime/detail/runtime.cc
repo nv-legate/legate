@@ -62,6 +62,8 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 
 /*static*/ bool Config::warmup_nccl = false;
 
+/*static*/ bool Config::log_partitioning_decisions = false;
+
 namespace {
 
 // This is the unique string name for our library which can be used from both C++ and Python to
@@ -1275,6 +1277,7 @@ void parse_config()
   parse_variable("LEGATE_EMPTY_TASK", Config::use_empty_task);
   parse_variable("LEGATE_SYNC_STREAM_VIEW", Config::synchronize_stream_view);
   parse_variable("LEGATE_LOG_MAPPING", Config::log_mapping_decisions);
+  parse_variable("LEGATE_LOG_PARTITIONING", Config::log_partitioning_decisions);
   parse_variable("LEGATE_WARMUP_NCCL", Config::warmup_nccl);
 }
 

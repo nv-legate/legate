@@ -52,6 +52,7 @@ struct Config {
   static bool use_empty_task;
   static bool synchronize_stream_view;
   static bool log_mapping_decisions;
+  static bool log_partitioning_decisions;
   static bool has_socket_mem;
   static bool warmup_nccl;
 };

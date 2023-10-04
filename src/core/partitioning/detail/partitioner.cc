@@ -211,7 +211,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   solver.solve_constraints();
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) { solver.dump(); }
+  if (Config::log_partitioning_decisions) { solver.dump(); }
 
   auto strategy = std::make_unique<Strategy>();
 
@@ -257,7 +257,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   strategy->compute_launch_domains(solver);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) { strategy->dump(); }
+  if (Config::log_partitioning_decisions) { strategy->dump(); }
 
   return strategy;
 }
