@@ -48,7 +48,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar);
   // Create a Future-backed storage. Initialized eagerly.
   Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future);
-  // Create a RegionField-bakced sub-storage. Initialized lazily.
+  // Create a RegionField-backed sub-storage. Initialized lazily.
   Storage(Shape&& extents,
           std::shared_ptr<Type> type,
           std::shared_ptr<StoragePartition> parent,
@@ -71,7 +71,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   std::shared_ptr<Storage> get_root();
 
  public:
-  LogicalRegionField* get_region_field();
+  std::shared_ptr<LogicalRegionField> get_region_field();
   Legion::Future get_future() const;
   void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future);
@@ -160,9 +160,6 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
                const std::shared_ptr<Storage>& storage,
                std::shared_ptr<TransformStack>&& transform);
 
- public:
-  ~LogicalStore();
-
  private:
   LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
 
@@ -188,7 +185,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  public:
   const Storage* get_storage() const;
-  LogicalRegionField* get_region_field();
+  std::shared_ptr<LogicalRegionField> get_region_field();
   Legion::Future get_future();
   void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future);
@@ -207,6 +204,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
  public:
   std::shared_ptr<Store> get_physical_store();
+  void detach();
   // Informs the runtime that references to this store may be removed in non-deterministic order
   // (e.g. by an asynchronous garbage collector).
   //
@@ -218,7 +216,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   // drops to 0 (which triggers object destruction) is not deterministic.
   //
   // Before passing a store to a garbage collected language, it must first be marked using this
-  // function, so that the runtime knows to work around the potentially non-determintic removal of
+  // function, so that the runtime knows to work around the potentially non-deterministic removal of
   // references.
   void allow_out_of_order_destruction();
 

@@ -28,6 +28,8 @@ set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os")
 set(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O2 -g")
+# Needed to integrate with LLVM/clang tooling
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
 FetchContent_Declare(

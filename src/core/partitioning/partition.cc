@@ -373,7 +373,7 @@ std::unique_ptr<Partition> Image::bloat(const Shape& low_offsts, const Shape& hi
 Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool complete) const
 {
   if (!has_launch_domain()) { return Legion::LogicalPartition::NO_PART; }
-  auto* func_rf    = func_->get_region_field();
+  auto func_rf     = func_->get_region_field();
   auto func_region = func_rf->region();
   auto func_partition =
     func_partition_->construct(func_region, func_partition_->is_complete_for(func_->get_storage()));

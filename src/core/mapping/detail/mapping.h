@@ -45,8 +45,7 @@ struct DimOrdering {
   }
 
  public:
-  void populate_dimension_ordering(const Store* store,
-                                   std::vector<Legion::DimensionKind>& ordering) const;
+  void populate_dimension_ordering(int32_t dim, std::vector<Legion::DimensionKind>& ordering) const;
 
  public:
   Kind kind;

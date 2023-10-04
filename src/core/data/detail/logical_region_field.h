@@ -16,6 +16,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "core/data/detail/store.h"
 #include "legion.h"
 
 #include "core/data/shape.h"
@@ -53,6 +54,9 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   Legion::Domain domain() const;
 
  public:
+  RegionField map();
+  void attach(Legion::PhysicalRegion pr, void* buffer, bool share);
+  void detach();
   void allow_out_of_order_destruction();
 
  public:
@@ -70,6 +74,9 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   Legion::LogicalRegion lr_;
   Legion::FieldID fid_;
   std::shared_ptr<LogicalRegionField> parent_;
+  Legion::PhysicalRegion pr_;
+  void* attachment_{nullptr};
+  bool attachment_shared_{false};
   bool destroyed_out_of_order_{false};
   std::vector<std::function<void()>> callbacks_{};
 };

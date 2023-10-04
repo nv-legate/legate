@@ -146,6 +146,11 @@ class Runtime {
                                              std::shared_ptr<Type> type,
                                              bool optimize_scalar = false);
   std::shared_ptr<LogicalStore> create_store(const Scalar& scalar);
+  std::shared_ptr<LogicalStore> create_store(const Shape& extents,
+                                             std::shared_ptr<Type> type,
+                                             void* buffer,
+                                             bool share,
+                                             const mapping::detail::DimOrdering* ordering);
 
  private:
   void check_dimensionality(uint32_t dim);
@@ -167,11 +172,13 @@ class Runtime {
   std::shared_ptr<LogicalRegionField> import_region_field(Legion::LogicalRegion region,
                                                           Legion::FieldID field_id,
                                                           uint32_t field_size);
-  RegionField map_region_field(const LogicalRegionField* region_field);
+  Legion::PhysicalRegion map_region_field(Legion::LogicalRegion region, Legion::FieldID field_id);
+  void remap_physical_region(Legion::PhysicalRegion pr);
   void unmap_physical_region(Legion::PhysicalRegion pr);
-  size_t num_inline_mapped() const;
+  Legion::Future detach(Legion::PhysicalRegion pr, bool flush, bool unordered);
   uint32_t field_reuse_freq() const;
   bool consensus_match_required() const;
+  void progress_unordered_operations() const;
 
  public:
   RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
@@ -317,8 +324,6 @@ class Runtime {
 
  private:
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
-  std::map<RegionFieldID, Legion::PhysicalRegion> inline_mapped_;
-  MultiSet<Legion::PhysicalRegion> physical_region_refs_;
   uint64_t next_store_id_{1};
   uint64_t next_storage_id_{1};
   const uint32_t field_reuse_freq_;

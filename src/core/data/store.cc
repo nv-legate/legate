@@ -39,8 +39,6 @@ bool Store::is_future() const { return impl_->is_future(); }
 
 bool Store::is_unbound_store() const { return impl_->is_unbound_store(); }
 
-void Store::unmap() { impl_->unmap(); }
-
 Store::Store(const Array& array) : impl_(array.data().impl()) {}
 
 void Store::check_accessor_dimension(const int32_t dim) const

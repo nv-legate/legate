@@ -450,6 +450,46 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Scalar& scalar)
   return std::make_shared<detail::LogicalStore>(std::move(storage));
 }
 
+std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
+                                                    std::shared_ptr<Type> type,
+                                                    void* buffer,
+                                                    bool share,
+                                                    const mapping::detail::DimOrdering* ordering)
+{
+  if (type->variable_size())
+    throw std::invalid_argument(
+      "stores created by attaching to a buffer must have fixed-size type");
+  if (nullptr == buffer) throw std::invalid_argument("buffer to attach to cannot be NULL");
+
+  std::shared_ptr<LogicalStore> store    = create_store(extents, type, false /*optimize_scalar*/);
+  std::shared_ptr<LogicalRegionField> rf = store->get_region_field();
+
+  if (!share) {
+    auto nbytes = extents.volume() * type->size();
+    void* copy  = malloc(nbytes);
+    if (nullptr == copy) throw std::bad_alloc();
+    memcpy(copy, buffer, nbytes);
+    buffer = copy;
+  }
+
+  Legion::AttachLauncher launcher(
+    LEGION_EXTERNAL_INSTANCE, rf->region(), rf->region(), false /*restricted*/, false /*mapped*/);
+  // the value of column_major below is irrelevant; it will be updated using the ordering constraint
+  launcher.attach_array_soa(buffer, false /*column_major*/, {rf->field_id()});
+  launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
+  launcher.provenance = provenance_manager()->get_provenance();
+  launcher.constraints.ordering_constraint.ordering.clear();
+  ordering->populate_dimension_ordering(store->dim(),
+                                        launcher.constraints.ordering_constraint.ordering);
+  launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
+  Legion::PhysicalRegion pr = legion_runtime_->attach_external_resource(legion_context_, launcher);
+  // no need to wait on the returned PhysicalRegion, since we're not inline-mapping
+  // but we can keep it around and remap it later if the user asks
+  rf->attach(pr, buffer, share);
+
+  return store;
+}
+
 void Runtime::check_dimensionality(uint32_t dim)
 {
   if (dim > LEGATE_MAX_DIM) {
@@ -529,58 +569,54 @@ std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::Logical
   return fld_mgr->import_field(region, field_id);
 }
 
-RegionField Runtime::map_region_field(const LogicalRegionField* rf)
+Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
+                                                 Legion::FieldID field_id)
 {
-  auto root_region = rf->get_root().region();
-  auto field_id    = rf->field_id();
+  Legion::RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
+  req.add_field(field_id);
+  auto mapper_id = core_library_->get_mapper_id();
+  // TODO: We need to pass the metadata about logical store
+  Legion::InlineLauncher launcher(req, mapper_id);
+  launcher.provenance       = provenance_manager()->get_provenance();
+  Legion::PhysicalRegion pr = legion_runtime_->map_region(legion_context_, launcher);
+  pr.wait_until_valid(true /*silence_warnings*/);
+  return pr;
+}
 
-  Legion::PhysicalRegion pr;
-
-  RegionFieldID key(root_region, field_id);
-  auto finder = inline_mapped_.find(key);
-  if (inline_mapped_.end() == finder) {
-    Legion::RegionRequirement req(root_region, READ_WRITE, EXCLUSIVE, root_region);
-    req.add_field(field_id);
-
-    auto mapper_id = core_library_->get_mapper_id();
-    // TODO: We need to pass the metadata about logical store
-    Legion::InlineLauncher launcher(req, mapper_id);
-    pr                  = legion_runtime_->map_region(legion_context_, launcher);
-    inline_mapped_[key] = pr;
-  } else
-    pr = finder->second;
-  physical_region_refs_.add(pr);
-  return RegionField(rf->dim(), pr, field_id);
+void Runtime::remap_physical_region(Legion::PhysicalRegion pr)
+{
+  legion_runtime_->remap_region(
+    legion_context_, pr, provenance_manager()->get_provenance().c_str());
+  pr.wait_until_valid(true /*silence_warnings*/);
 }
 
 void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
 {
-  // TODO: Unmapping doesn't go through the Legion pipeline, so from that perspective it's not
-  // critical that all shards call `unmap_region` in the same order. However, if shard A unmaps
-  // region R and shard B doesn't, then both shards launch a task that uses R (or any region that
-  // overlaps with R), then B will unmap/remap around the task, whereas A will not. To be safe, we
-  // should consider delaying the unmapping until the field has gone through consensus match, or
-  // have a full consensus matching process just for unmapping.
-  if (physical_region_refs_.remove(pr)) {
-    // The last user of this inline mapping was removed, so remove it from our cache and unmap.
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
     std::vector<Legion::FieldID> fields;
     pr.get_fields(fields);
     assert(fields.size() == 1);
-    RegionFieldID key(pr.get_logical_region(), fields[0]);
-    auto finder = inline_mapped_.find(key);
-    assert(finder != inline_mapped_.end() && finder->second == pr);
-    inline_mapped_.erase(finder);
-    legion_runtime_->unmap_region(legion_context_, pr);
   }
+  legion_runtime_->unmap_region(legion_context_, pr);
 }
 
-size_t Runtime::num_inline_mapped() const { return inline_mapped_.size(); }
+Legion::Future Runtime::detach(Legion::PhysicalRegion pr, bool flush, bool unordered)
+{
+  assert(pr.exists() && !pr.is_mapped());
+  return legion_runtime_->detach_external_resource(
+    legion_context_, pr, flush, unordered, provenance_manager()->get_provenance().c_str());
+}
 
 uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
 
 bool Runtime::consensus_match_required() const
 {
   return force_consensus_match_ || Legion::Machine::get_machine().get_address_space_count() > 1;
+}
+
+void Runtime::progress_unordered_operations() const
+{
+  legion_runtime_->progress_unordered_operations(legion_context_);
 }
 
 RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
@@ -1095,8 +1131,6 @@ void Runtime::destroy()
 
   // Any STL containers holding Legion handles need to be cleared here, otherwise they cause
   // trouble when they get destroyed in the Legate runtime's destructor
-  inline_mapped_.clear();
-  physical_region_refs_.clear();
   pending_exceptions_.clear();
 
   // We finally deallocate managers

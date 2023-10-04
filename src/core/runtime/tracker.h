@@ -33,7 +33,7 @@ namespace legate {
  */
 struct ProvenanceTracker {
   /**
-   * @brief Creates a trakcer that sets a given provenance string for the scope
+   * @brief Creates a tracker that sets a given provenance string for the scope
    *
    * @param provenance Provenance information in string
    */

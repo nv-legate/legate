@@ -123,7 +123,7 @@ class FutureAnalyzer {
 
 struct StoreAnalyzer {
  public:
-  void insert(const LogicalRegionField* region_field,
+  void insert(std::shared_ptr<LogicalRegionField> region_field,
               Legion::PrivilegeMode privilege,
               const ProjectionInfo& proj_info)
   {

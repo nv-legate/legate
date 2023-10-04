@@ -63,19 +63,17 @@ LegateVariantCode to_variant_code(TaskTarget target)
   return LEGATE_CPU_VARIANT;
 }
 
-void DimOrdering::populate_dimension_ordering(const Store* store,
+void DimOrdering::populate_dimension_ordering(int32_t dim,
                                               std::vector<Legion::DimensionKind>& ordering) const
 {
   // TODO: We need to implement the relative dimension ordering
   switch (kind) {
     case Kind::C: {
-      auto dim = store->region_field().dim();
       for (int32_t idx = dim - 1; idx >= 0; --idx)
         ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
       break;
     }
     case Kind::FORTRAN: {
-      auto dim = store->region_field().dim();
       for (int32_t idx = 0; idx < dim; ++idx)
         ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
       break;
@@ -147,7 +145,8 @@ void StoreMapping::populate_layout_constraints(
   std::vector<Legion::DimensionKind> dimension_ordering{};
 
   if (policy.layout == InstLayout::AOS) dimension_ordering.push_back(DIM_F);
-  policy.ordering.impl()->populate_dimension_ordering(stores.front(), dimension_ordering);
+  policy.ordering.impl()->populate_dimension_ordering(stores.front()->region_field().dim(),
+                                                      dimension_ordering);
   if (policy.layout == InstLayout::SOA) dimension_ordering.push_back(DIM_F);
 
   layout_constraints.add_constraint(

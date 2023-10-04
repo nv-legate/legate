@@ -144,10 +144,10 @@ std::shared_ptr<Storage> Storage::get_root()
   return nullptr == parent_ ? shared_from_this() : parent_->get_root();
 }
 
-LogicalRegionField* Storage::get_region_field()
+std::shared_ptr<LogicalRegionField> Storage::get_region_field()
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::REGION_FIELD == kind_); }
-  if (region_field_ != nullptr) return region_field_.get();
+  if (region_field_ != nullptr) return region_field_;
 
   if (nullptr == parent_) {
     region_field_ = Runtime::get_runtime()->create_region_field(extents_, type_->size());
@@ -155,7 +155,7 @@ LogicalRegionField* Storage::get_region_field()
   } else
     region_field_ = parent_->get_child_data(color_);
 
-  return region_field_.get();
+  return region_field_;
 }
 
 Legion::Future Storage::get_future() const
@@ -187,7 +187,7 @@ void Storage::set_future(Legion::Future future) { future_ = future; }
 RegionField Storage::map()
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::REGION_FIELD == kind_); }
-  return Runtime::get_runtime()->map_region_field(get_region_field());
+  return get_region_field()->map();
 }
 
 void Storage::allow_out_of_order_destruction()
@@ -343,11 +343,6 @@ LogicalStore::LogicalStore(Shape&& extents,
   }
 }
 
-LogicalStore::~LogicalStore()
-{
-  if (mapped_ != nullptr) mapped_->unmap();
-}
-
 bool LogicalStore::unbound() const { return storage_->unbound(); }
 
 const Shape& LogicalStore::extents() const
@@ -378,7 +373,10 @@ uint64_t LogicalStore::id() const { return store_id_; }
 
 const Storage* LogicalStore::get_storage() const { return storage_.get(); }
 
-LogicalRegionField* LogicalStore::get_region_field() { return storage_->get_region_field(); }
+std::shared_ptr<LogicalRegionField> LogicalStore::get_region_field()
+{
+  return storage_->get_region_field();
+}
 
 Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
 
@@ -559,7 +557,19 @@ std::shared_ptr<Store> LogicalStore::get_physical_store()
   return mapped_;
 }
 
-void LogicalStore::allow_out_of_order_destruction() { storage_->allow_out_of_order_destruction(); }
+void LogicalStore::detach()
+{
+  if (transformed()) throw std::invalid_argument("Manual detach must be called on the root store");
+  if (has_scalar_storage() || unbound())
+    throw std::invalid_argument("Only stores created with share=true can be manually detached");
+  get_region_field()->detach();
+}
+
+void LogicalStore::allow_out_of_order_destruction()
+{
+  if (Runtime::get_runtime()->consensus_match_required())
+    storage_->allow_out_of_order_destruction();
+}
 
 Restrictions LogicalStore::compute_restrictions() const
 {

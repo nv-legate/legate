@@ -31,10 +31,14 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
   while (!ordered_free_fields_.empty() || !matches_.empty()) {
     // If there's a field that every shard is guaranteed to have, re-use that.
     if (!ordered_free_fields_.empty()) {
-      const auto& field = ordered_free_fields_.front();
-      auto* rf          = new LogicalRegionField(this, field.first, field.second);
+      const auto& info = ordered_free_fields_.front();
+      if (nullptr != info.attachment) {
+        info.can_dealloc.get_void_result(true /*silence_warnings*/);
+        free(info.attachment);
+      }
+      auto* rf = new LogicalRegionField(this, info.region, info.field_id);
       log_legate.debug(
-        "Field %u recycled in field manager %p", field.second, static_cast<void*>(this));
+        "Field %u recycled in field manager %p", info.field_id, static_cast<void*>(this));
       ordered_free_fields_.pop_front();
       return std::shared_ptr<LogicalRegionField>(rf);
     }
@@ -62,16 +66,18 @@ std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::Log
 
 void FieldManager::free_field(const Legion::LogicalRegion& region,
                               Legion::FieldID field_id,
+                              Legion::Future can_dealloc,
+                              void* attachment,
                               bool unordered)
 {
-  if (unordered && runtime_->consensus_match_required()) {
+  if (unordered) {
     log_legate.debug(
       "Field %u freed locally in field manager %p", field_id, static_cast<void*>(this));
-    unordered_free_fields_.push_back(FreeField(region, field_id));
+    unordered_free_fields_.push_back(FreeFieldInfo{region, field_id, can_dealloc, attachment});
   } else {
     log_legate.debug(
       "Field %u freed in-order in field manager %p", field_id, static_cast<void*>(this));
-    ordered_free_fields_.push_back(FreeField(region, field_id));
+    ordered_free_fields_.push_back(FreeFieldInfo{region, field_id, can_dealloc, attachment});
   }
 }
 
@@ -84,49 +90,54 @@ void FieldManager::issue_field_match()
   field_match_counter_ = 0;
   // We need to separately record the region that corresponds to each item in this match, because
   // the match itself only uses a subset of the full region info.
-  auto& regions = regions_for_match_items_.emplace_back();
+  auto& infos = info_for_match_items_.emplace_back();
   std::vector<MatchItem> input;
   input.reserve(unordered_free_fields_.size());
-  for (const auto& field : unordered_free_fields_) {
-    MatchItem item{field.first.get_tree_id(), field.second};
+  for (const auto& info : unordered_free_fields_) {
+    MatchItem item{info.region.get_tree_id(), info.field_id};
     input.push_back(item);
-    regions[item] = field.first;
+    infos[item] = info;
   }
-  assert(regions.size() == unordered_free_fields_.size());
+  assert(infos.size() == unordered_free_fields_.size());
   unordered_free_fields_.clear();
   // Dispatch the match and put it on the queue of outstanding matches, but don't block on it yet.
   // We'll do that when we run out of ordered fields.
   matches_.push_back(runtime_->issue_consensus_match(std::move(input)));
   log_legate.debug("Consensus match emitted with %zu local fields in field manager %p",
-                   regions.size(),
+                   infos.size(),
                    static_cast<void*>(this));
 }
 
 void FieldManager::process_next_field_match()
 {
   assert(!matches_.empty());
-  auto& match   = matches_.front();
-  auto& regions = regions_for_match_items_.front();
+  auto& match = matches_.front();
+  auto& infos = info_for_match_items_.front();
   match.wait();
   log_legate.debug("Consensus match result in field manager %p: %zu/%zu fields matched",
                    static_cast<void*>(this),
                    match.output().size(),
                    match.input().size());
+  // Ask the runtime to find all unordered operations that have been observed on all shards, and
+  // dispatch them right now. This will cover any unordered detachments on fields that all shards
+  // just matched on; if a LogicalRegionField has been destroyed on all shards, that means its
+  // detachment has also been emitted on all shards. This makes it safe to later block on any of
+  // those detachments, since they are all guaranteed to be in the task stream now, and will
+  // eventually complete.
+  runtime_->progress_unordered_operations();
   // Put all the matched fields into the ordered queue, in the same order as the match result,
   // which is the same order that all shards will see.
   for (const auto& item : match.output()) {
-    auto it = regions.find(item);
-    assert(it != regions.end());
-    ordered_free_fields_.push_back(FreeField(it->second, item.fid));
-    regions.erase(it);
+    auto it = infos.find(item);
+    assert(it != infos.end());
+    ordered_free_fields_.push_back(it->second);
+    infos.erase(it);
   }
   // All fields that weren't matched can go back into the unordered queue, to be included in the
   // next consensus match that we run.
-  for (const auto& [item, lr] : regions) {
-    unordered_free_fields_.push_back(FreeField(lr, item.fid));
-  }
+  for (const auto& [item, info] : infos) { unordered_free_fields_.push_back(info); }
   matches_.pop_front();
-  regions_for_match_items_.pop_front();
+  info_for_match_items_.pop_front();
 }
 
 }  // namespace legate::detail

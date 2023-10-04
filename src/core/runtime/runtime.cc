@@ -188,6 +188,15 @@ LogicalStore Runtime::create_store(const Scalar& scalar)
   return LogicalStore(impl_->create_store(*scalar.impl_));
 }
 
+LogicalStore Runtime::create_store(const Shape& extents,
+                                   const Type& type,
+                                   void* buffer,
+                                   bool share,
+                                   const mapping::DimOrdering& ordering)
+{
+  return LogicalStore(impl_->create_store(extents, type.impl(), buffer, share, ordering.impl()));
+}
+
 uint32_t Runtime::max_pending_exceptions() const { return impl_->max_pending_exceptions(); }
 
 void Runtime::set_max_pending_exceptions(uint32_t max_pending_exceptions)

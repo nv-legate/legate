@@ -41,18 +41,6 @@ void register_tasks()
   AdderTask::register_variants(context);
 }
 
-void test_mapped_regions_leak()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  {
-    auto l_store = runtime->create_store({5}, legate::int64());
-    auto p_store = l_store.get_physical_store();
-    EXPECT_FALSE(p_store.is_future());
-    EXPECT_EQ(runtime->impl()->num_inline_mapped(), 1);
-  }
-  EXPECT_EQ(runtime->impl()->num_inline_mapped(), 0);
-}
-
 void test_inline_map_future()
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -95,16 +83,6 @@ void test_inline_map_and_task()
   EXPECT_EQ(acc[2], 43);
 }
 
-void test_inline_map_unmap()
-{
-  auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store({1, 3}, legate::int64());
-  auto store         = logical_store.get_physical_store();
-  store.unmap();
-}
-
-TEST(InlineMap, MappedRegionsLeak) { test_mapped_regions_leak(); }
-
 TEST(InlineMap, Future) { test_inline_map_future(); }
 
 TEST(InlineMap, RegionAndSlice) { test_inline_map_region_and_slice(); }
@@ -114,7 +92,5 @@ TEST(InlineMap, WithTask)
   register_tasks();
   test_inline_map_and_task();
 }
-
-TEST(InlineMap, Unmap) { test_inline_map_unmap(); }
 
 }  // namespace inline_map

@@ -378,6 +378,30 @@ class Runtime {
    * @return Logical store
    */
   LogicalStore create_store(const Scalar& scalar);
+  /**
+   * @brief Creates a store by attaching to existing memory.
+   *
+   * If `share` is false, then Legate will make an internal copy of the passed buffer.
+   *
+   * If `share` is true, then the existing buffer will be reused, and Legate will update it
+   * according to any modifications made to the returned store. The caller must keep the buffer
+   * alive until they explicitly call `detach` on the result store. The contents of the attached
+   * buffer are only guaranteed to be up-to-date after `detach` returns.
+   *
+   * @param extents Shape of the store
+   * @param type Element type
+   * @param buffer Pointer to the beginning of the memory to attach to; memory must be contiguous,
+   * and cover the entire contents of the store (at least `extents.volume() * type.size()` bytes)
+   * @param ordering In what order the elements are laid out in the passed buffer
+   * @param share Whether to reuse the passed buffer in-place
+   *
+   * @return Logical store
+   */
+  LogicalStore create_store(const Shape& extents,
+                            const Type& type,
+                            void* buffer,
+                            bool share                           = false,
+                            const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
  public:
   /**

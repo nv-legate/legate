@@ -320,12 +320,6 @@ class Store {
 
  public:
   /**
-   * @brief Releases all inline allocations of the store
-   */
-  void unmap();
-
- public:
-  /**
    * @brief Constructs a store out of an array
    *
    * @throw std::invalid_argument If the array is nullable or has sub-arrays

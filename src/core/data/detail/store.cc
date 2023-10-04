@@ -73,8 +73,6 @@ struct get_domain_fn {
 
 Domain RegionField::domain() const { return dim_dispatch(dim_, get_domain_fn{}, pr_); }
 
-void RegionField::unmap() { detail::Runtime::get_runtime()->unmap_physical_region(pr_); }
-
 UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
   : num_elements_(
       Legion::UntypedDeferredValue(sizeof(size_t), find_memory_kind_for_executing_processor())),
@@ -339,12 +337,6 @@ Domain Store::domain() const
   if (!transform_->identity()) result = transform_->transform(result);
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(result.dim == dim_ || dim_ == 0); }
   return result;
-}
-
-void Store::unmap()
-{
-  if (is_future_ || is_unbound_store_) return;
-  region_field_.unmap();
 }
 
 void Store::bind_empty_data()
