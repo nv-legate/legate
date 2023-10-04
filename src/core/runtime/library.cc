@@ -85,6 +85,11 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
   return impl_->get_task_name(local_task_id);
 }
 
+Scalar Library::get_tunable(int64_t tunable_id, Type type)
+{
+  return Scalar{impl_->get_tunable(tunable_id, type.impl())};
+}
+
 void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper)
 {
   impl_->register_mapper(std::move(mapper), false /*in_callback*/);

@@ -46,13 +46,13 @@ void check_physical_store(const legate::Store& store, int32_t dim, int64_t count
   if (dim == 1) {
     auto shape = store.shape<1>();
     auto acc   = store.read_accessor<int64_t, 1>(shape);
-    for (int32_t i = 0; i < SHAPE_1D[0]; ++i) EXPECT_EQ(acc[i], counter++);
+    for (size_t i = 0; i < SHAPE_1D[0]; ++i) EXPECT_EQ(acc[i], counter++);
   } else {
     auto shape = store.shape<2>();
     auto acc   = store.read_accessor<int64_t, 2>(shape);
     // Legate should always see elements in the expected order
-    for (int32_t i = 0; i < SHAPE_2D[0]; ++i)
-      for (int32_t j = 0; j < SHAPE_2D[1]; ++j) EXPECT_EQ(acc[legate::Point<2>(i, j)], counter++);
+    for (size_t i = 0; i < SHAPE_2D[0]; ++i)
+      for (size_t j = 0; j < SHAPE_2D[1]; ++j) EXPECT_EQ(acc[legate::Point<2>(i, j)], counter++);
   }
 }
 
@@ -79,6 +79,9 @@ struct CheckerTask : public legate::LegateTask<CheckerTask> {
 
 void register_tasks()
 {
+  static bool prepared = false;
+  if (prepared) { return; }
+  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   AdderTask::register_variants(context);
@@ -91,11 +94,11 @@ int64_t* make_buffer(int32_t dim, bool fortran)
   int64_t counter = 0;
   if (dim == 1) {
     buffer = new int64_t[SHAPE_1D.volume()];
-    for (int32_t i = 0; i < SHAPE_1D[0]; ++i) buffer[i] = counter++;
+    for (size_t i = 0; i < SHAPE_1D[0]; ++i) buffer[i] = counter++;
   } else {
     buffer = new int64_t[SHAPE_2D.volume()];
-    for (int32_t i = 0; i < SHAPE_2D[0]; ++i)
-      for (int32_t j = 0; j < SHAPE_2D[1]; ++j)
+    for (size_t i = 0; i < SHAPE_2D[0]; ++i)
+      for (size_t j = 0; j < SHAPE_2D[1]; ++j)
         if (fortran)
           buffer[j * SHAPE_2D[0] + i] = counter++;
         else
@@ -107,10 +110,10 @@ int64_t* make_buffer(int32_t dim, bool fortran)
 void check_and_delete_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t counter)
 {
   if (dim == 1)
-    for (int32_t i = 0; i < SHAPE_1D[0]; ++i) EXPECT_EQ(buffer[i], counter++);
+    for (size_t i = 0; i < SHAPE_1D[0]; ++i) EXPECT_EQ(buffer[i], counter++);
   else
-    for (int32_t i = 0; i < SHAPE_2D[0]; ++i)
-      for (int32_t j = 0; j < SHAPE_2D[1]; ++j)
+    for (size_t i = 0; i < SHAPE_2D[0]; ++i)
+      for (size_t j = 0; j < SHAPE_2D[1]; ++j)
         if (fortran)
           EXPECT_EQ(buffer[j * SHAPE_2D[0] + i], counter++);
         else
@@ -184,7 +187,6 @@ TEST(Attach, Negative)
 {
   register_tasks();
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
 
   // Trying to detach a store without an attachment
   EXPECT_THROW(runtime->create_store(legate::Scalar(42)).detach(), std::invalid_argument);
@@ -214,7 +216,6 @@ TEST(DISABLED_AttachDeathTest, MissingManualDetach)
 {
   register_tasks();
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
 
   // Forgetting to detach a shared attachment
   EXPECT_DEATH(runtime->create_store(

@@ -15,6 +15,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "core/data/scalar.h"
 #include "core/runtime/resource.h"
 #include "core/task/task_info.h"
 #include "core/utilities/typedefs.h"
@@ -79,6 +80,15 @@ class Library {
    * @return Name of the task
    */
   const std::string& get_task_name(int64_t local_task_id) const;
+  /**
+   * @brief Retrieves a tunable parameter
+   *
+   * @param tunable_id ID of the tunable parameter
+   * @param type Type of the tunable value
+   *
+   * @return The value of tunable parameter in a `Scalar`
+   */
+  Scalar get_tunable(int64_t tunable_id, Type type);
   /**
    * @brief Registers a library specific reduction operator.
    *

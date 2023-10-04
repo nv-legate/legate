@@ -15,6 +15,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include "core/data/detail/scalar.h"
 #include "core/mapping/mapping.h"
 #include "core/runtime/resource.h"
 #include "core/task/task_info.h"
@@ -95,6 +96,7 @@ class Library {
 
  public:
   const std::string& get_task_name(int64_t local_task_id) const;
+  std::unique_ptr<Scalar> get_tunable(int64_t tunable_id, std::shared_ptr<Type> type);
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);
   Legion::Mapping::Mapper* get_legion_mapper() const { return legion_mapper_; }
 

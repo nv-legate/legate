@@ -119,6 +119,21 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
   return find_task(local_task_id)->name();
 }
 
+std::unique_ptr<Scalar> Library::get_tunable(int64_t tunable_id, std::shared_ptr<Type> type)
+{
+  if (type->variable_size()) {
+    throw std::invalid_argument("Tunable variables must have fixed-size types");
+  }
+  auto result        = Runtime::get_runtime()->get_tunable(mapper_id_, tunable_id, type->size());
+  size_t extents     = 0;
+  const void* buffer = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
+  if (extents != type->size()) {
+    throw std::invalid_argument("Size mismatch: expected " + std::to_string(type->size()) +
+                                " bytes but got " + std::to_string(extents) + " bytes");
+  }
+  return std::make_unique<Scalar>(std::move(type), buffer, true);
+}
+
 void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
 {
   const std::string library_name(static_cast<const char*>(args.buffer.get_ptr()));
