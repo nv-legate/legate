@@ -224,7 +224,6 @@ TEST_F(AttachDeathTest, MissingManualDetach)
       legate::start(argc_, argv_);
       register_tasks();
       auto runtime = legate::Runtime::get_runtime();
-      auto context = runtime->find_library(library_name);
       runtime->create_store(
         SHAPE_1D, legate::int64(), new int64_t[SHAPE_1D.volume()], true /*share*/);
       legate::finish();
