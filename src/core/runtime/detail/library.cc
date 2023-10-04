@@ -119,8 +119,6 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
   return find_task(local_task_id)->name();
 }
 
-namespace {
-
 void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
 {
   const std::string library_name(static_cast<const char*>(args.buffer.get_ptr()));
@@ -130,8 +128,6 @@ void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(legion_mapper != nullptr); }
   Legion::Runtime::get_runtime()->add_mapper(library->get_mapper_id(), legion_mapper);
 }
-
-}  // namespace
 
 void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback)
 {

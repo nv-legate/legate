@@ -167,7 +167,7 @@ void test_body(
 
 TEST(Attach, Positive)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   // Do multiple operations in a row, with stores collected in-between, in hopes of triggering
   // consensus match.
   // TODO: Also try keeping multiple stores alive at one time.
@@ -182,7 +182,7 @@ TEST(Attach, Positive)
 
 TEST(Attach, Negative)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
@@ -212,7 +212,7 @@ TEST(Attach, Negative)
 // and MPI.
 TEST(DISABLED_AttachDeathTest, MissingManualDetach)
 {
-  legate::Core::perform_registration<register_tasks>();
+  register_tasks();
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
