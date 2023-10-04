@@ -62,15 +62,15 @@ def main():
         default=0,
         help="Runs mpirun with rank if non-zero",
     )
-    config, extra_args = parser.parse_known_args()
+    args, extra_args = parser.parse_known_args()
 
-    if config.mpi_rank != 0:
-        extra_args += ["--mpi-rank", str(config.mpi_rank)]
+    if args.mpi_rank != 0:
+        extra_args += ["--mpi-rank", str(args.mpi_rank)]
         extra_args += ["--mpi-output-filename", "build/mpi_result"]
-    extra_args += ["--gtest-file", config.gtest_file]
-    extra_args += ["--gtest-tests"] + fetch_test_names(config.gtest_file)
+    extra_args += ["--gtest-file", args.gtest_file]
+    extra_args += ["--gtest-tests"] + fetch_test_names(args.gtest_file)
 
-    config = Config(extra_args)
+    config = Config([sys.argv[0]] + extra_args)
 
     system = TestSystem(dry_run=config.dry_run)
 
