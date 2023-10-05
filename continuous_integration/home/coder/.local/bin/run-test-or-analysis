@@ -17,9 +17,44 @@ run_test_or_analysis() {
     case "$1" in
         "unit")
             echo "Executing unit tests..."
+            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
+              echo "============================================================================"
+              echo "x ------------------------------------------------------------------------ x"
+              echo "Cannot yet handle running Python tests using Address Sanitizer, bailing!"
+              echo "x ------------------------------------------------------------------------ x"
+              echo "============================================================================"
+              return 0
+            fi
+
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge pytest pytest-mock ipython jupyter_client
             cd ~/legate/tests/unit
-            pytest
+            # Leaving this here in case we ever decide to enable this. If we don't do
+            # this, we get
+            # ImportError: could not load libasan.6.so
+            # when loading the Cython extension libs.
+            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-gcc ]]; then
+              # Trying to reproduce this on macOS? See
+              # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
+              #
+              # The TL;DR is, however:
+              #
+              # asan_lib='/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib'
+              #
+              # py_paths='/path/to/legate.core.internal' (optional, only if you are using a venv)
+              #
+              # DYLD_INSERT_LIBRARIES=$asan_lib PYTHONPATH=$py_paths
+              # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
+              # /path/to/your/file.py
+              GCC_ASAN_PRELOAD=$(gcc -print-file-name=libasan.so)
+              LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest
+            elif [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-clang ]]; then
+              echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
+              echo "See impls for GCC above"
+              return 1
+            else
+              pytest
+            fi
+
             ;;
         "mypy")
             echo "Executing mypy..."

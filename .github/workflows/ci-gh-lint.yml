@@ -1,0 +1,41 @@
+name: Lint legate.core on GH
+
+on:
+  push:
+    branches:
+      - "pull-request/[0-9]+"
+      - "*branch-*"
+
+jobs:
+  mypy:
+    runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: true
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    permissions:
+      contents: read  # This is required for actions/checkout
+
+    steps:
+      - name: List machine info
+        run: uname -a
+
+      - name: List python version
+        run: python3 --version
+
+      - name: Bootstrap pip
+        run: |
+          curl -O https://bootstrap.pypa.io/get-pip.py
+          python3 get-pip.py
+
+      - name: Install requisite python packages
+        run: |
+          python3 -m pip install -U pip setuptools wheel
+          python3 -m pip install -U numpy mypy traitlets
+
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run MyPy on the repository
+        run: python3 -m mypy ./legate

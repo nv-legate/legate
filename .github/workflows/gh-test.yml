@@ -22,6 +22,9 @@ on:
         required: true
         type: string
 
+env:
+  LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
+
 jobs:
   test:
     if: github.repository_owner == 'nv-legate'
