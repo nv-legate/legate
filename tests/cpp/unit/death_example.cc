@@ -27,9 +27,16 @@ void KillProcess(int argc, char** argv)
 
 TEST_F(DeathTestExample, Simple)
 {
-  // We can't check that the subprocess dies with SIGABRT, because we run with REALM_BACKTRACE=1,
-  // and Realm's signal hanlder doesn't propagate the signal, instead it exits right away
-  EXPECT_EXIT(KillProcess(argc_, argv_), ::testing::ExitedWithCode(1), "");
+  auto value           = getenv("REALM_BACKTRACE");
+  bool realm_backtrace = value != nullptr && atoi(value) != 0;
+
+  if (realm_backtrace) {
+    // We can't check that the subprocess dies with SIGABRT when we run with REALM_BACKTRACE=1,
+    // because Realm's signal handler doesn't propagate the signal, instead it exits right away
+    EXPECT_EXIT(KillProcess(argc_, argv_), ::testing::ExitedWithCode(1), "");
+  } else {
+    EXPECT_EXIT(KillProcess(argc_, argv_), ::testing::KilledBySignal(SIGABRT), "");
+  }
 }
 
 }  // namespace unit

@@ -108,7 +108,7 @@ void test_provenance_tracker(legate::Library library)
   auto runtime = legate::Runtime::get_runtime();
   // auto task
   auto task              = runtime->create_task(library, PROVENANCE);
-  std::string provenance = "provenance.cc:104";
+  std::string provenance = "provenance.cc:107";
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
@@ -120,7 +120,7 @@ void test_nested_provenance_tracker(legate::Library library)
   // The provenance string used by test_provenance_tracker should be popped out at this point
   auto runtime           = legate::Runtime::get_runtime();
   auto task              = runtime->create_task(library, PROVENANCE);
-  std::string provenance = "provenance.cc:115";
+  std::string provenance = "provenance.cc:118";
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
