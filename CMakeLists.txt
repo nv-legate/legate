@@ -68,8 +68,18 @@ legate_include_rapids()
 # -O3 to -O2 and removes -DNDEBUG
 # set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 # set(CMAKE_CUDA_FLAGS_DEBUG "-O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
-set(CMAKE_CUDA_FLAGS_RELEASE "-O2")
+# set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+if (NOT CMAKE_CXX_FLAGS_RELEASE)
+  # not being set by preset
+  set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+endif()
+
+# set(CMAKE_CUDA_FLAGS_RELEASE "-O2")
+if (NOT CMAKE_CUDA_FLAGS_RELEASE)
+  # not being set by preset
+  set(CMAKE_CUDA_FLAGS_RELEASE "-O2")
+endif()
+
 set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os")
 set(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")

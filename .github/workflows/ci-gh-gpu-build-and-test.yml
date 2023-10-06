@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cmake-preset: [debug-gcc, debug-sanitizer-gcc]
+        cmake-preset: [debug-gcc, debug-sanitizer-gcc, release-gcc]
     #if: ${{ github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'nv-legate' }}
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cmake-preset: [debug-gcc, debug-sanitizer-gcc]
+        cmake-preset: [debug-gcc, debug-sanitizer-gcc, release-gcc]
         runner: [linux-amd64-gpu-v100-latest-1, linux-amd64-2gpu ]
         test-config: [{ name: Pytest Unit Tests, test-scope: unit }]
     name: ${{ matrix.test-config.name }}
