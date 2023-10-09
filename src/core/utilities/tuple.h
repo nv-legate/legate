@@ -90,7 +90,8 @@ class tuple {
   friend std::ostream& operator<<(std::ostream& out, const tuple<_T>& tpl);
 
  public:
-  const std::vector<T>& data() const;
+  [[nodiscard]] std::vector<T>& data();
+  [[nodiscard]] const std::vector<T>& data() const;
 
  private:
   std::vector<T> data_{};

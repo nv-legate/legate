@@ -314,7 +314,7 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
   std::vector<std::unique_ptr<StoreMapping>> for_futures;
   std::vector<std::unique_ptr<StoreMapping>> for_unbound_stores;
   std::vector<std::unique_ptr<StoreMapping>> for_stores;
-  std::set<uint32_t> mapped_futures;
+  std::map<uint32_t, const StoreMapping*> mapped_futures;
   std::set<RegionField::Id> mapped_regions;
 
   for (auto& client_mapping : client_mappings) {
@@ -323,12 +323,14 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
       auto fut_idx = mapping->store()->future_index();
       // Only need to map Future-backed Stores corresponding to inputs (i.e. one of task.futures)
       if (fut_idx >= task.futures.size()) continue;
-      if (mapped_futures.count(fut_idx) > 0) {
+      auto finder = mapped_futures.find(fut_idx);
+      if (finder != mapped_futures.end() && finder->second->policy != mapping->policy) {
         logger.error("Mapper %s returned duplicate store mappings", get_mapper_name());
         LEGATE_ABORT;
+      } else {
+        mapped_futures.insert({fut_idx, mapping});
+        for_futures.emplace_back(client_mapping.release());
       }
-      mapped_futures.insert(fut_idx);
-      for_futures.emplace_back(client_mapping.release());
     } else if (mapping->for_unbound_store()) {
       mapped_regions.insert(mapping->store()->unique_region_field_id());
       for_unbound_stores.emplace_back(client_mapping.release());
@@ -369,7 +371,7 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
           // task.futures)
           if (fut_idx >= task.futures.size()) continue;
           if (mapped_futures.find(fut_idx) != mapped_futures.end()) continue;
-          mapped_futures.insert(fut_idx);
+          mapped_futures.insert({fut_idx, mapping.get()});
           for_futures.push_back(std::move(mapping));
         } else {
           auto key = store->unique_region_field_id();
@@ -390,7 +392,7 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
     assert(mapped_futures.size() <= task.futures.size());
     // The launching code should be packing all Store-backing Futures first.
     if (mapped_futures.size() > 0) {
-      uint32_t max_mapped_fut = *mapped_futures.rbegin();
+      uint32_t max_mapped_fut = mapped_futures.rbegin()->first;
       assert(mapped_futures.size() == max_mapped_fut + 1);
     }
   }

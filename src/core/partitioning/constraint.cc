@@ -30,6 +30,11 @@ Constraint align(Variable lhs, Variable rhs)
   return Constraint(detail::align(lhs.impl(), rhs.impl()).release());
 }
 
+Constraint broadcast(Variable variable)
+{
+  return Constraint{detail::broadcast(variable.impl()).release()};
+}
+
 Constraint broadcast(Variable variable, const tuple<int32_t>& axes)
 {
   return Constraint(detail::broadcast(variable.impl(), tuple<int32_t>(axes)).release());

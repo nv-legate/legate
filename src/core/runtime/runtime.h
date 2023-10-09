@@ -374,10 +374,11 @@ class Runtime {
    * @brief Creates a normal store out of a `Scalar` object
    *
    * @param scalar Value of the scalar to create a store with
+   * @param extents Shape of the store. The volume must be 1.
    *
    * @return Logical store
    */
-  LogicalStore create_store(const Scalar& scalar);
+  [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& extents = {1});
   /**
    * @brief Creates a store by attaching to existing memory.
    *

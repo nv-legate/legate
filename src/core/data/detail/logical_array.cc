@@ -151,7 +151,7 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
   std::unique_ptr<Analyzable> null_mask_arg = nullptr;
   if (nullable()) {
     auto null_redop =
-      privilege == REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
+      privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
     null_mask_arg = null_mask_->to_launcher_arg(
       mapping.at(null_mask_), strategy, launch_domain, privilege, null_redop);
   }
@@ -274,7 +274,8 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
-  auto desc_priv = (READ_ONLY == privilege || vardata_->unbound()) ? privilege : READ_WRITE;
+  auto desc_priv =
+    (LEGION_READ_ONLY == privilege || vardata_->unbound()) ? privilege : LEGION_READ_WRITE;
   auto descriptor_arg =
     descriptor_->to_launcher_arg(mapping, strategy, launch_domain, desc_priv, redop);
   auto vardata_arg = vardata_->to_launcher_arg(mapping, strategy, launch_domain, privilege, redop);
@@ -285,7 +286,7 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
 std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg_for_fixup(
   const Domain& launch_domain, Legion::PrivilegeMode privilege) const
 {
-  auto descriptor_arg = descriptor_->to_launcher_arg_for_fixup(launch_domain, READ_WRITE);
+  auto descriptor_arg = descriptor_->to_launcher_arg_for_fixup(launch_domain, LEGION_READ_WRITE);
   auto vardata_arg    = vardata_->to_launcher_arg_for_fixup(launch_domain, privilege);
 
   return std::make_unique<ListArrayArg>(type(), std::move(descriptor_arg), std::move(vardata_arg));
@@ -424,7 +425,7 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   std::unique_ptr<Analyzable> null_mask_arg = nullptr;
   if (nullable()) {
     auto null_redop =
-      privilege == REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
+      privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
     null_mask_arg = null_mask_->to_launcher_arg(
       mapping.at(null_mask_), strategy, launch_domain, privilege, null_redop);
   }

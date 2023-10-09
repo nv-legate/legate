@@ -76,13 +76,13 @@ void Reduce::launch(Strategy* p_strategy)
       for (auto& proj_fn : proj_fns) {
         auto proj_info = input_partition->create_projection_info(launch_domain, proj_fn);
         launcher.add_input(to_array_arg(
-          std::make_unique<RegionFieldArg>(input_.get(), READ_ONLY, std::move(proj_info))));
+          std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(proj_info))));
       }
     } else {
       // otherwise we just add an entire input region to the task
       auto proj_info = input_partition->create_projection_info(launch_domain);
       launcher.add_input(to_array_arg(
-        std::make_unique<RegionFieldArg>(input_.get(), READ_ONLY, std::move(proj_info))));
+        std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(proj_info))));
     }
 
     // calculating #of sub-tasks in the reduction task
@@ -122,8 +122,8 @@ void Reduce::validate() {}
 
 void Reduce::add_to_solver(detail::ConstraintSolver& solver)
 {
-  solver.add_partition_symbol(output_part_, true);
-  solver.add_partition_symbol(input_part_);
+  solver.add_partition_symbol(output_part_, IsOutput::Y);
+  solver.add_partition_symbol(input_part_, IsOutput::N);
 }
 
 std::string Reduce::to_string() const { return "Reduce:" + std::to_string(unique_id_); }

@@ -282,6 +282,12 @@ std::ostream& operator<<(std::ostream& out, const tuple<_T>& tpl)
 }
 
 template <typename T>
+std::vector<T>& tuple<T>::data()
+{
+  return data_;
+}
+
+template <typename T>
 const std::vector<T>& tuple<T>::data() const
 {
   return data_;

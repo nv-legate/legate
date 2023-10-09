@@ -170,6 +170,7 @@ class Alignment : public Constraint {
 
 class Broadcast : public Constraint {
  public:
+  explicit Broadcast(const Variable* variable);
   Broadcast(const Variable* variable, const tuple<int32_t>& axes);
 
  public:
@@ -197,7 +198,8 @@ class Broadcast : public Constraint {
 
  private:
   const Variable* variable_;
-  tuple<int32_t> axes_;
+  // Broadcast all dimensions when empty
+  tuple<std::int32_t> axes_{};
 };
 
 class ImageConstraint : public Constraint {
@@ -312,6 +314,8 @@ class BloatConstraint : public Constraint {
 };
 
 std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
+
+[[nodiscard]] std::unique_ptr<Broadcast> broadcast(const Variable* variable);
 
 std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes);
 

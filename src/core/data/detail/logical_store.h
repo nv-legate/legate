@@ -101,7 +101,6 @@ class Storage : public std::enable_shared_from_this<Storage> {
   bool destroyed_out_of_order_{false};
   int32_t dim_{-1};
   Shape extents_;
-  size_t volume_;
   std::shared_ptr<Type> type_{nullptr};
   Kind kind_{Kind::REGION_FIELD};
 

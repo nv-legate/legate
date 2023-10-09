@@ -24,13 +24,18 @@ namespace legate::detail {
 
 class Strategy;
 
+enum class IsOutput : bool {
+  Y = true,
+  N = false,
+};
+
 struct ConstraintSolver {
  public:
   ConstraintSolver();
   ~ConstraintSolver();
 
  public:
-  void add_partition_symbol(const Variable* partition_symbol, bool is_output = false);
+  void add_partition_symbol(const Variable* partition_symbol, IsOutput is_output);
   void add_constraint(std::unique_ptr<Constraint> constraint);
 
  public:

@@ -146,7 +146,8 @@ class Runtime {
   std::shared_ptr<LogicalStore> create_store(const Shape& extents,
                                              std::shared_ptr<Type> type,
                                              bool optimize_scalar = false);
-  std::shared_ptr<LogicalStore> create_store(const Scalar& scalar);
+  [[nodiscard]] std::shared_ptr<LogicalStore> create_store(const Scalar& scalar,
+                                                           const Shape& extents);
   std::shared_ptr<LogicalStore> create_store(const Shape& extents,
                                              std::shared_ptr<Type> type,
                                              void* buffer,

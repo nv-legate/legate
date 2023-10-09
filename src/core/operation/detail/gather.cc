@@ -92,9 +92,9 @@ void Gather::launch(Strategy* p_strategy)
 void Gather::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable);
-  solver.add_partition_symbol(source_.variable);
-  solver.add_partition_symbol(source_indirect_.variable);
+  solver.add_partition_symbol(target_.variable, IsOutput::Y);
+  solver.add_partition_symbol(source_.variable, IsOutput::N);
+  solver.add_partition_symbol(source_indirect_.variable, IsOutput::N);
 }
 
 std::string Gather::to_string() const { return "Gather:" + std::to_string(unique_id_); }

@@ -85,12 +85,26 @@ Constraint align(Variable lhs, Variable rhs);
 
 /**
  * @ingroup partitioning
- * @brief Creates a broadcast constraint on a variable
+ * @brief Creates a broadcast constraint on a variable.
+ *
+ * This constraint prevents all dimensions of the store from being partitioned.
+ *
+ * @param variable Partition symbol to constrain
+ *
+ * @return Broadcast constraint
+ */
+[[nodiscard]] Constraint broadcast(Variable variable);
+
+/**
+ * @ingroup partitioning
+ * @brief Creates a broadcast constraint on a variable.
  *
  * @param variable Partition symbol to constrain
  * @param axes List of dimensions to broadcast
  *
  * @return Broadcast constraint
+ *
+ * @throw std::invalid_argument If the list of axes is empty
  */
 Constraint broadcast(Variable variable, const tuple<int32_t>& axes);
 

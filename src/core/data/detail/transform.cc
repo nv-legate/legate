@@ -802,8 +802,8 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
         new_offsets.remove_inplace(dim_ + 1);
       }
 
-      new_tile_shape[dim_] *= strides_[dim_];
-      new_offsets[dim_] *= strides_[dim_];
+      new_tile_shape[dim_] *= strides_[0];
+      new_offsets[dim_] *= strides_[0];
 
       return create_tiling(
         std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));

@@ -129,7 +129,8 @@ using Domain = Legion::Domain;
  * for a complete list of supported operators.
  */
 template <typename FT, int N, typename T = coord_t>
-using AccessorRO = Legion::FieldAccessor<READ_ONLY, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
+using AccessorRO =
+  Legion::FieldAccessor<LEGION_READ_ONLY, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
 
 /**
  * @brief Write-only accessor
@@ -139,7 +140,8 @@ using AccessorRO = Legion::FieldAccessor<READ_ONLY, FT, N, T, Realm::AffineAcces
  * for a complete list of supported operators.
  */
 template <typename FT, int N, typename T = coord_t>
-using AccessorWO = Legion::FieldAccessor<WRITE_DISCARD, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
+using AccessorWO =
+  Legion::FieldAccessor<LEGION_WRITE_DISCARD, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
 
 /**
  * @brief Read-write accessor
@@ -149,7 +151,8 @@ using AccessorWO = Legion::FieldAccessor<WRITE_DISCARD, FT, N, T, Realm::AffineA
  * for a complete list of supported operators.
  */
 template <typename FT, int N, typename T = coord_t>
-using AccessorRW = Legion::FieldAccessor<READ_WRITE, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
+using AccessorRW =
+  Legion::FieldAccessor<LEGION_READ_WRITE, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
 
 /**
  * @brief Reduction accessor

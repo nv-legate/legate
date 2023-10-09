@@ -444,9 +444,11 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
   return std::make_shared<detail::LogicalStore>(std::move(storage));
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(const Scalar& scalar)
+std::shared_ptr<LogicalStore> Runtime::create_store(const Scalar& scalar, const Shape& extents)
 {
-  Shape extents{1};
+  if (extents.volume() != 1) {
+    throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};
+  }
   auto future  = create_future(scalar.data(), scalar.size());
   auto storage = std::make_shared<detail::Storage>(extents, scalar.type(), future);
   return std::make_shared<detail::LogicalStore>(std::move(storage));
@@ -574,7 +576,7 @@ std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::Logical
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
                                                  Legion::FieldID field_id)
 {
-  Legion::RegionRequirement req(region, READ_WRITE, EXCLUSIVE, region);
+  Legion::RegionRequirement req(region, LEGION_READ_WRITE, EXCLUSIVE, region);
   req.add_field(field_id);
   auto mapper_id = core_library_->get_mapper_id();
   // TODO: We need to pass the metadata about logical store

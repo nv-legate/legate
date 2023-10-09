@@ -65,6 +65,10 @@ void Fill::launch(Strategy* strategy)
 
 std::string Fill::to_string() const { return "Fill:" + std::to_string(unique_id_); }
 
-void Fill::add_to_solver(ConstraintSolver& solver) { solver.add_partition_symbol(lhs_var_); }
+void Fill::add_to_solver(ConstraintSolver& solver)
+{
+  solver.add_partition_symbol(lhs_var_, IsOutput::Y);
+  if (lhs_->has_scalar_storage()) solver.add_constraint(broadcast(lhs_var_));
+}
 
 }  // namespace legate::detail

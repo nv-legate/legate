@@ -79,6 +79,8 @@ std::string Alignment::to_string() const
   return std::move(ss).str();
 }
 
+Broadcast::Broadcast(const Variable* variable) : variable_{variable} {}
+
 Broadcast::Broadcast(const Variable* variable, const tuple<int32_t>& axes)
   : variable_(variable), axes_(axes)
 {
@@ -91,6 +93,7 @@ void Broadcast::find_partition_symbols(std::vector<const Variable*>& partition_s
 
 void Broadcast::validate() const
 {
+  if (axes_.empty()) return;
   auto store = variable_->operation()->find_store(variable_);
   for (auto axis : axes_.data()) {
     if (axis < 0 || axis >= store->dim())
@@ -102,7 +105,11 @@ void Broadcast::validate() const
 std::string Broadcast::to_string() const
 {
   std::stringstream ss;
-  ss << "Broadcast(" << variable_->to_string() << ", " << axes_.to_string() << ")";
+  if (axes_.empty()) {
+    ss << "Broadcast(" << variable_->to_string() << ")";
+  } else {
+    ss << "Broadcast(" << variable_->to_string() << ", " << axes_.to_string() << ")";
+  }
   return std::move(ss).str();
 }
 
@@ -246,9 +253,14 @@ std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
   return std::make_unique<Alignment>(lhs, rhs);
 }
 
-std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
-
+[[nodiscard]] std::unique_ptr<Broadcast> broadcast(const Variable* variable)
 {
+  return std::make_unique<Broadcast>(variable);
+}
+
+std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
+{
+  if (axes.empty()) { throw std::invalid_argument("List of axes to broadcast must not be empty"); }
   return std::make_unique<Broadcast>(variable, axes);
 }
 

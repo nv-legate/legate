@@ -183,9 +183,9 @@ LogicalStore Runtime::create_store(const Shape& extents,
   return LogicalStore(impl_->create_store(extents, type.impl(), optimize_scalar));
 }
 
-LogicalStore Runtime::create_store(const Scalar& scalar)
+LogicalStore Runtime::create_store(const Scalar& scalar, const Shape& extents)
 {
-  return LogicalStore(impl_->create_store(*scalar.impl_));
+  return LogicalStore{impl_->create_store(*scalar.impl_, extents)};
 }
 
 LogicalStore Runtime::create_store(const Shape& extents,

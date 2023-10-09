@@ -83,15 +83,17 @@ void Task::launch_task(Strategy* p_strategy)
   auto launch_domain = strategy.launch_domain(this);
 
   for (auto& [arr, mapping] : inputs_) {
-    launcher.add_input(arr->to_launcher_arg(mapping, strategy, launch_domain, READ_ONLY, -1));
+    launcher.add_input(
+      arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_READ_ONLY, -1));
   }
   for (auto& [arr, mapping] : outputs_) {
-    launcher.add_output(arr->to_launcher_arg(mapping, strategy, launch_domain, WRITE_ONLY, -1));
+    launcher.add_output(
+      arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_WRITE_ONLY, -1));
   }
   uint32_t idx = 0;
   for (auto& [arr, mapping] : reductions_) {
     launcher.add_reduction(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, REDUCE, reduction_ops_[idx++]));
+      arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_REDUCE, reduction_ops_[idx++]));
   }
 
   // Add by-value scalars
@@ -288,13 +290,16 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 {
   for (auto& constraint : constraints_) solver.add_constraint(std::move(constraint));
   for (auto& [_, mapping] : outputs_) {
-    for (auto& [_, symb] : mapping) solver.add_partition_symbol(symb, true);
+    for (auto& [store, symb] : mapping) {
+      solver.add_partition_symbol(symb, IsOutput::Y);
+      if (store->has_scalar_storage()) solver.add_constraint(broadcast(symb));
+    }
   }
   for (auto& [_, mapping] : inputs_) {
-    for (auto& [_, symb] : mapping) solver.add_partition_symbol(symb, false);
+    for (auto& [_, symb] : mapping) solver.add_partition_symbol(symb, IsOutput::N);
   }
   for (auto& [_, mapping] : reductions_) {
-    for (auto& [_, symb] : mapping) solver.add_partition_symbol(symb, false);
+    for (auto& [_, symb] : mapping) solver.add_partition_symbol(symb, IsOutput::N);
   }
 }
 

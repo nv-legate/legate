@@ -49,11 +49,10 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(extents),
-    volume_(extents.volume()),
     type_(std::move(type)),
     offsets_(dim_, 0)
 {
-  if (optimize_scalar && volume_ == 1) kind_ = Kind::FUTURE;
+  if (optimize_scalar && extents_.volume() == 1) kind_ = Kind::FUTURE;
   if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
 
@@ -61,7 +60,6 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(extents),
-    volume_(extents.volume()),
     type_(std::move(type)),
     kind_(Kind::FUTURE),
     future_(future),
@@ -78,7 +76,6 @@ Storage::Storage(Shape&& extents,
   : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
     dim_(extents.size()),
     extents_(std::move(extents)),
-    volume_(extents_.volume()),
     type_(std::move(type)),
     level_(parent->level() + 1),
     parent_(std::move(parent)),
@@ -608,7 +605,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
       key_partition_->satisfies_restrictions(restrictions))
     return key_partition_;
 
-  if (has_scalar_storage()) { return create_no_partition(); }
+  if (has_scalar_storage() || volume() == 0) { return create_no_partition(); }
 
   Partition* storage_part = nullptr;
   if (transform_->is_convertible())
@@ -685,9 +682,9 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
                                                           int32_t redop)
 {
   if (has_scalar_storage()) {
-    if (!launch_domain.is_valid() && REDUCE == privilege) { privilege = READ_WRITE; }
-    auto read_only   = privilege == READ_ONLY;
-    auto has_storage = privilege == READ_ONLY || privilege == READ_WRITE;
+    if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) { privilege = LEGION_READ_WRITE; }
+    auto read_only   = privilege == LEGION_READ_ONLY;
+    auto has_storage = get_future().valid() && privilege != LEGION_REDUCE;
     return std::make_unique<FutureStoreArg>(this, read_only, has_storage, redop);
   } else if (unbound()) {
     return std::make_unique<OutputRegionArg>(this, strategy.find_field_space(variable));
@@ -698,10 +695,10 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
     proj_info->is_key    = strategy.is_key_partition(variable);
     proj_info->redop     = redop;
 
-    if (privilege == REDUCE && store_partition->is_disjoint_for(launch_domain)) {
-      privilege = READ_WRITE;
+    if (privilege == LEGION_REDUCE && store_partition->is_disjoint_for(launch_domain)) {
+      privilege = LEGION_READ_WRITE;
     }
-    if (privilege == WRITE_ONLY || privilege == READ_WRITE) {
+    if (privilege == LEGION_WRITE_ONLY || privilege == LEGION_READ_WRITE) {
       set_key_partition(variable->operation()->machine(), partition.get());
     }
     return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));

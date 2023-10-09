@@ -27,7 +27,7 @@ template <Legion::PrivilegeMode, typename VAL>
 class ListArrayAccessor;
 
 template <typename VAL>
-class ListArrayAccessor<READ_ONLY, VAL> {
+class ListArrayAccessor<LEGION_READ_ONLY, VAL> {
  public:
   ListArrayAccessor(ListArray array);
   virtual ~ListArrayAccessor();
@@ -41,7 +41,7 @@ class ListArrayAccessor<READ_ONLY, VAL> {
 };
 
 template <typename VAL>
-class ListArrayAccessor<WRITE_DISCARD, VAL> {
+class ListArrayAccessor<LEGION_WRITE_DISCARD, VAL> {
  public:
   ListArrayAccessor(ListArray array);
   virtual ~ListArrayAccessor();
@@ -63,7 +63,7 @@ template <Legion::PrivilegeMode>
 class StringArrayAccessor;
 
 template <>
-struct StringArrayAccessor<READ_ONLY> : public ListArrayAccessor<READ_ONLY, int8_t> {
+struct StringArrayAccessor<LEGION_READ_ONLY> : public ListArrayAccessor<LEGION_READ_ONLY, int8_t> {
   StringArrayAccessor(StringArray array);
 
   using ListArrayAccessor::operator[];
@@ -71,7 +71,8 @@ struct StringArrayAccessor<READ_ONLY> : public ListArrayAccessor<READ_ONLY, int8
 };
 
 template <>
-struct StringArrayAccessor<WRITE_DISCARD> : public ListArrayAccessor<WRITE_DISCARD, int8_t> {
+struct StringArrayAccessor<LEGION_WRITE_DISCARD>
+  : public ListArrayAccessor<LEGION_WRITE_DISCARD, int8_t> {
   StringArrayAccessor(StringArray array);
 
   using ListArrayAccessor::insert;

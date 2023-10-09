@@ -48,9 +48,6 @@ struct Initializer : public legate::LegateTask<Initializer> {
 
 void prepare()
 {
-  static bool prepared = false;
-  if (prepared) { return; }
-  prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
   TesterTask::register_variants(context, TESTER);
@@ -62,7 +59,7 @@ void test_normal_store()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto launch_tester = [&](const std::vector<int32_t>& dims) {
+  auto launch_tester = [&](const std::vector<int32_t>& dims, bool omit_dims_in_broadcast) {
     std::vector<size_t> extents(3, EXT_SMALL);
     for (auto dim : dims) extents[dim] = EXT_LARGE;
     auto store = runtime->create_store(extents, legate::int64());
@@ -71,17 +68,22 @@ void test_normal_store()
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(dims));
     task.add_scalar_arg(legate::Scalar(false));
-    task.add_constraint(legate::broadcast(part, dims));
+    if (omit_dims_in_broadcast) {
+      task.add_constraint(legate::broadcast(part));
+    } else {
+      task.add_constraint(legate::broadcast(part, dims));
+    }
     runtime->submit(std::move(task));
   };
 
-  launch_tester({0});
-  launch_tester({1});
-  launch_tester({2});
-  launch_tester({0, 1});
-  launch_tester({1, 2});
-  launch_tester({0, 2});
-  launch_tester({0, 1, 2});
+  launch_tester({0}, false);
+  launch_tester({1}, false);
+  launch_tester({2}, false);
+  launch_tester({0, 1}, false);
+  launch_tester({1, 2}, false);
+  launch_tester({0, 2}, false);
+  launch_tester({0, 1, 2}, false);
+  launch_tester({0, 1, 2}, true);
 }
 
 void test_promoted_store()
@@ -122,6 +124,7 @@ void test_invalid_broadcast()
   auto task  = runtime->create_task(context, INITIALIZER);
   auto store = runtime->create_store({10}, legate::int64());
   auto part  = task.add_output(store);
+  EXPECT_THROW(task.add_constraint(legate::broadcast(part, {})), std::invalid_argument);
   task.add_constraint(legate::broadcast(part, {1}));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }

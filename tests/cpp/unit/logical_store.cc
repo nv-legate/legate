@@ -42,6 +42,27 @@ TEST_F(Store, Creation)
     EXPECT_FALSE(store.transformed());
     EXPECT_THROW(store.extents(), std::invalid_argument);
   }
+
+  // Scalar
+  {
+    auto runtime = legate::Runtime::get_runtime();
+    auto store   = runtime->create_store(legate::Scalar(int64_t{123}));
+    EXPECT_FALSE(store.unbound());
+    EXPECT_EQ(store.dim(), 1);
+    EXPECT_EQ(store.extents(), std::vector<size_t>{1});
+    EXPECT_EQ(store.type(), legate::int64());
+    EXPECT_FALSE(store.transformed());
+    for (const auto& extents : {legate::Shape{1}, legate::Shape{1, 1}, legate::Shape{1, 1, 1}}) {
+      auto store = runtime->create_store(legate::Scalar(int64_t{123}), extents);
+      EXPECT_FALSE(store.unbound());
+      EXPECT_EQ(store.dim(), extents.size());
+      EXPECT_EQ(store.extents(), extents);
+      EXPECT_EQ(store.type(), legate::int64());
+      EXPECT_FALSE(store.transformed());
+    }
+    EXPECT_THROW(runtime->create_store(legate::Scalar(int64_t{123}), {1, 2}),
+                 std::invalid_argument);
+  }
 }
 
 TEST_F(Store, Transform)

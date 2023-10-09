@@ -47,6 +47,10 @@ struct UnionFindEntry {
     end->size += other->size;
     return self;
   }
+  void restrict_all()
+  {
+    for (auto& restriction : restrictions.data()) restriction = Restriction::FORBID;
+  }
 
   const Variable* partition_symbol;
   Restrictions restrictions;
@@ -82,11 +86,10 @@ ConstraintSolver::~ConstraintSolver()
   for (auto equiv_class : equiv_classes_) delete equiv_class;
 }
 
-void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, bool is_output)
+void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, IsOutput is_output)
 {
   partition_symbols_.insert(partition_symbol);
-  is_output_.insert({*partition_symbol, is_output});
-  is_dependent_.insert({*partition_symbol, false});
+  is_output_.insert({*partition_symbol, static_cast<bool>(is_output)});
 }
 
 void ConstraintSolver::add_constraint(std::unique_ptr<Constraint> constraint)
@@ -103,16 +106,16 @@ void ConstraintSolver::solve_constraints()
   const auto& all_symbols = partition_symbols();
   entries.reserve(all_symbols.size());
 
-  auto initialize = [&entries, &table](const auto& all_symbols) {
+  [](auto& entries, auto& table, auto& is_dependent, const auto& all_symbols) {
     for (auto& symb : all_symbols) {
       // TODO: partition symbols can be independent of any stores of the operation
       //       (e.g., when a symbol subsumes a union of two other symbols)
       auto store = symb->operation()->find_store(symb);
       entries.emplace_back(symb, store.get());
       table.insert({*symb, &entries.back()});
+      is_dependent.insert({*symb, false});
     }
-  };
-  initialize(all_symbols);
+  }(entries, table, is_dependent_, all_symbols);
 
   // Unify equivalence classes based on alignment constraints
   auto handle_alignment = [&table](const Alignment* alignment) {
@@ -144,11 +147,17 @@ void ConstraintSolver::solve_constraints()
     auto* variable    = broadcast->variable();
     auto& axes        = broadcast->axes();
     auto* equiv_class = table.at(*variable);
+    if (axes.empty()) {
+      equiv_class->restrict_all();
+      return;
+    }
     for (uint32_t idx = 0; idx < axes.size(); ++idx) {
       uint32_t axis = axes[idx];
       // TODO: We want to check the axis eagerly and raise an exception
       // if it is out of bounds
-      if (axis >= equiv_class->restrictions.size()) continue;
+      if (LegateDefined(LEGATE_USE_DEBUG)) {
+        assert(0 <= axis && axis < equiv_class->restrictions.size());
+      }
       equiv_class->restrictions[axes[idx]] = Restriction::FORBID;
     }
   };
