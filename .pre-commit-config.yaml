@@ -29,6 +29,11 @@ repos:
       hooks:
       - id: cython-lint
       - id: double-quote-cython-strings
+    - repo: https://github.com/netromdk/vermin
+      rev: 'v1.5.2'
+      hooks:
+      - id: vermin
+        args: ['--config-file', './setup.cfg']
     - repo: local
       hooks:
         -   id: legate-defined

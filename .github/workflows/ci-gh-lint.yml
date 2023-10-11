@@ -30,12 +30,15 @@ jobs:
       - name: Install requisite python packages
         run: |
           python3 -m pip install -U pip setuptools wheel
-          python3 -m pip install -U numpy mypy traitlets
+          python3 -m pip install -U numpy mypy traitlets vermin
 
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Run vermin on the repository
+        run: vermin --config-file=./setup.cfg ./legate
 
       - name: Run MyPy on the repository
         run: python3 -m mypy ./legate
