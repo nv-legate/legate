@@ -102,6 +102,7 @@ ignore_errors = true
 [tool.pytest.ini_options]
 cache_dir = "./.cache/pytest"
 
+
 [tool.isort]
 line_length = 79
 multi_line_output = 3
