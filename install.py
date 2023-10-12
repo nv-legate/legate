@@ -15,6 +15,7 @@ import argparse
 import multiprocessing
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -269,6 +270,86 @@ def install_legion_jupyter_notebook(
         )
 
 
+def configure_cmake_preset(argparse_args):
+    def vprint(*args, flush=True, **kwargs):
+        if argparse_args.verbose:
+            print(*args, **kwargs, flush=flush)
+
+    def yield_compiler_guesses():
+        def try_guess_compiler(gen_fn, *args):
+            vprint(f"Trying: {gen_fn.__qualname__}{args}")
+            compiler = gen_fn(*args)
+            if not compiler:
+                return
+
+            vprint(compiler, "exists")
+            try:
+                stdout = subprocess.check_output(
+                    [compiler, "--version"]
+                ).decode()
+            except subprocess.CalledProcessError as cpe:
+                vprint(cpe)
+                return
+
+            vprint(stdout)
+            if re.search(r"clang\s+version", stdout):
+                vprint("Detected clang")
+                return "clang"
+            if re.search(
+                r"[gG][cC][cC].*Free\s+Software\s+Foundation",
+                stdout,
+                re.DOTALL,
+            ):
+                vprint("Detected GCC")
+                return "gcc"
+            vprint("Detected neither!")
+
+        for gen in (
+            (os.environ.get, "CMAKE_CXX_COMPILER", ""),
+            (os.environ.get, "CXX", ""),
+            # cmake likes to use cc and c++ to pick the compilers
+            (shutil.which, "c++"),
+            (os.environ.get, "CMAKE_C_COMPILER", ""),
+            (os.environ.get, "CC", ""),
+            (shutil.which, "cc"),
+        ):
+            yield try_guess_compiler(*gen)
+
+        # last resort
+        for compiler in ("clang", "gcc"):
+            vprint("Searching for compiler", compiler)
+            yield shutil.which(compiler)
+
+        raise RuntimeError("Could not find suitable compiler!")
+
+    cmake_preset = []
+    for attr, val in dict(vars(argparse_args)).items():
+        if not attr.startswith("preset_"):
+            continue
+
+        vprint("Found preset attr", attr, "=", val, end="")
+        delattr(argparse_args, attr)
+        vprint("... deleted")
+        if val:
+            cmake_preset = attr.split("_")[1:]  # skip "preset_"
+            vprint("Set cmake preset:", cmake_preset)
+
+    if not cmake_preset:
+        vprint("No cmake preset attr found, using default")
+        cmake_preset = ["release"]  # default to release if unset
+
+    vprint("Base cmake preset configured:", cmake_preset)
+    for guess in yield_compiler_guesses():
+        if guess:
+            vprint("Guess successful, using", guess)
+            cmake_preset.append(guess)
+            break
+
+    ret = "-".join(cmake_preset)
+    vprint("Final cmake preset set:", ret)
+    return ret
+
+
 def install(
     cmake_preset,
     networks,
@@ -290,8 +371,6 @@ def install(
     cuda_dir,
     maxdim,
     maxfields,
-    debug,
-    debug_release,
     check_bounds,
     clean_first,
     extra_flags,
@@ -344,8 +423,6 @@ def install(
         print(f"cuda_dir: {cuda_dir}")
         print(f"maxdim: {maxdim}")
         print(f"maxfields: {maxfields}")
-        print(f"debug: {debug}")
-        print(f"debug_release: {debug_release}")
         print(f"check_bounds: {check_bounds}")
         print(f"clean_first: {clean_first}")
         print(f"extra_flags: {extra_flags}")
@@ -445,9 +522,7 @@ def install(
     if clean_first:
         shutil.rmtree(skbuild_dir, ignore_errors=True)
         shutil.rmtree(join(legate_core_dir, "dist"), ignore_errors=True)
-        build_dir = join(legate_core_dir, "build")
-        if cmake_preset:
-            build_dir = join(build_dir, cmake_preset)
+        build_dir = join(legate_core_dir, "build", cmake_preset)
         shutil.rmtree(build_dir, ignore_errors=True)
         shutil.rmtree(
             join(legate_core_dir, "legate_core.egg-info"),
@@ -458,12 +533,14 @@ def install(
     pip_install_cmd = [sys.executable, "-m", "pip", "install"]
 
     # Use preexisting CMAKE_ARGS from conda if set
-    cmake_flags = []
+    cmake_flags = ["--preset", cmake_preset]
 
-    if cmake_preset:
-        cmake_flags.extend(["--preset", cmake_preset])
-
-    cmake_flags.extend(cmd_env.get("CMAKE_ARGS", "").split(" "))
+    if env_cmake_args := [
+        f
+        for f in cmd_env.get("CMAKE_ARGS", "").split()
+        if not f.startswith("-DCMAKE_BUILD_TYPE")
+    ]:
+        cmake_flags.extend(env_cmake_args)
 
     if unknown is None:
         unknown = []
@@ -498,13 +575,10 @@ def install(
     if verbose:
         pip_install_cmd += ["-vv"]
 
-    if debug or verbose:
-        cmake_flags += [f"--log-level={'DEBUG' if debug else 'VERBOSE'}"]
+    if cmake_preset.startswith("debug"):
+        cmake_flags += ["--log-level=DEBUG"]
 
     cmake_flags += f"""\
--DCMAKE_BUILD_TYPE={(
-    "Debug" if debug else "RelWithDebInfo" if debug_release else "Release"
-)}
 -DBUILD_SHARED_LIBS=ON
 -DBUILD_MARCH={march}
 -DLegion_MAX_DIM={str(maxdim)}
@@ -584,10 +658,6 @@ def install(
 
     # execute python -m pip install <args> .
     execute_command(pip_install_cmd, verbose, cwd=legate_core_dir, env=cmd_env)
-    print("=" * 90, flush=True)
-    print("=" * 90, flush=True)
-    print("=" * 90, flush=True)
-    print("=" * 90, flush=True)
     install_legion_python_bindings(
         verbose,
         cmake_exe,
@@ -609,31 +679,54 @@ def driver():
         "PREFIX" in os.environ and os.environ.get("CONDA_BUILD", "0") == "1"
     )
 
-    parser = argparse.ArgumentParser(description="Install Legate front end.")
-    parser.add_argument(
-        "--cmake-preset",
-        required=False,
-        default=os.environ.get("LEGATE_CORE_CMAKE_PRESET", ""),
-        help="Set a CMake Preset to use",
+    parser = argparse.ArgumentParser(
+        description="Install Legate front end.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
+
+    preset_group_super = parser.add_argument_group(
+        title="Build Presets",
+        description="Configure Legate core to a specific build preset",
+    )
+
+    # a bit of a hack to make this group have a title and description
+    preset_group = preset_group_super.add_mutually_exclusive_group()
+    preset_group.add_argument(
+        "--release",
+        dest="preset_release",
+        action="store_true",
+        required=False,
+        default=os.environ.get("RELEASE", "1") == "1",
+        help="Build Legate and Legion with full optimizations enabled",
+    )
+    preset_group.add_argument(
         "--debug",
-        dest="debug",
+        dest="preset_debug",
         action="store_true",
         required=False,
         default=os.environ.get("DEBUG", "0") == "1",
         help="Build Legate and Legion with no optimizations, and full "
         "debugging checks.",
     )
-    parser.add_argument(
+    preset_group.add_argument(
+        "--debug-sanitizer",
+        dest="preset_debug_sanitizer",
+        action="store_true",
+        required=False,
+        default=os.environ.get("DEBUG_SANITZER", "0") == "1",
+        help="Build Legate and Legion with no optimizations, and full "
+        "debugging checks with sanitizer support.",
+    )
+    preset_group.add_argument(
         "--debug-release",
-        dest="debug_release",
+        dest="preset_debug_release",
         action="store_true",
         required=False,
         default=os.environ.get("DEBUG_RELEASE", "0") == "1",
         help="Build Legate and Legion with optimizations enabled, but include "
         "debugging symbols.",
     )
+
     parser.add_argument(
         "--check-bounds",
         dest="check_bounds",
@@ -924,7 +1017,14 @@ def driver():
         print(f"Attempted to execute: {args.cmake_exe}")
         sys.exit(1)
 
-    install(unknown=unknown, is_conda=is_conda, **vars(args))
+    cmake_preset = configure_cmake_preset(args)
+
+    install(
+        unknown=unknown,
+        is_conda=is_conda,
+        cmake_preset=cmake_preset,
+        **vars(args),
+    )
 
 
 if __name__ == "__main__":
