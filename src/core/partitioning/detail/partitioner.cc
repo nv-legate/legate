@@ -76,10 +76,7 @@ Domain LaunchDomainResolver::resolve_launch_domain() const
   } else {
     if (LegateDefined(LEGATE_USE_DEBUG)) { assert(launch_domains_.size() == 1); }
     auto& launch_domain = *launch_domains_.begin();
-    if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) {
-      int64_t volume = *launch_volumes_.begin();
-      return Domain{0, volume - 1};
-    }
+    if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) return {};
     return launch_domain;
   }
 }
