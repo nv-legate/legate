@@ -35,11 +35,11 @@ const std::vector<legate::Type> PRIMITIVE_TYPE = {legate::bool_(),
                                                   legate::complex128()};
 
 template <typename T>
-void test_primitive_type(const legate::Type& type, std::string type_string)
+void test_primitive_type(const legate::Type& type, std::string type_string, uint32_t size)
 {
   EXPECT_EQ(type.code(), legate::legate_type_code_of<T>);
-  EXPECT_EQ(type.size(), sizeof(T));
-  EXPECT_EQ(type.alignment(), sizeof(T));
+  EXPECT_EQ(type.size(), size);
+  EXPECT_EQ(type.alignment(), size);
   EXPECT_FALSE(type.variable_size());
   EXPECT_TRUE(type.is_primitive());
   EXPECT_EQ(type.to_string(), type_string);
@@ -151,21 +151,23 @@ void test_reduction_op(const legate::Type& type)
 
 TEST_F(TypeUnit, PrimitiveType)
 {
-  test_primitive_type<bool>(legate::bool_(), "bool");
-  test_primitive_type<int8_t>(legate::int8(), "int8");
-  test_primitive_type<int16_t>(legate::int16(), "int16");
-  test_primitive_type<int32_t>(legate::int32(), "int32");
-  test_primitive_type<int64_t>(legate::int64(), "int64");
-  test_primitive_type<uint8_t>(legate::uint8(), "uint8");
-  test_primitive_type<uint16_t>(legate::uint16(), "uint16");
-  test_primitive_type<uint32_t>(legate::uint32(), "uint32");
-  test_primitive_type<uint64_t>(legate::uint64(), "uint64");
-  test_primitive_type<__half>(legate::float16(), "float16");
-  test_primitive_type<float>(legate::float32(), "float32");
-  test_primitive_type<double>(legate::float64(), "float64");
-  test_primitive_type<complex<float>>(legate::complex64(), "complex64");
-  test_primitive_type<complex<double>>(legate::complex128(), "complex128");
+  test_primitive_type<void>(legate::null_type(), "null_type", 0);
+  test_primitive_type<bool>(legate::bool_(), "bool", sizeof(bool));
+  test_primitive_type<int8_t>(legate::int8(), "int8", sizeof(int8_t));
+  test_primitive_type<int16_t>(legate::int16(), "int16", sizeof(int16_t));
+  test_primitive_type<int32_t>(legate::int32(), "int32", sizeof(int32_t));
+  test_primitive_type<int64_t>(legate::int64(), "int64", sizeof(int64_t));
+  test_primitive_type<uint8_t>(legate::uint8(), "uint8", sizeof(uint8_t));
+  test_primitive_type<uint16_t>(legate::uint16(), "uint16", sizeof(uint16_t));
+  test_primitive_type<uint32_t>(legate::uint32(), "uint32", sizeof(uint32_t));
+  test_primitive_type<uint64_t>(legate::uint64(), "uint64", sizeof(uint64_t));
+  test_primitive_type<__half>(legate::float16(), "float16", sizeof(__half));
+  test_primitive_type<float>(legate::float32(), "float32", sizeof(float));
+  test_primitive_type<double>(legate::float64(), "float64", sizeof(double));
+  test_primitive_type<complex<float>>(legate::complex64(), "complex64", sizeof(complex<float>));
+  test_primitive_type<complex<double>>(legate::complex128(), "complex128", sizeof(complex<double>));
 
+  EXPECT_EQ(legate::null_type(), legate::primitive_type(legate::Type::Code::NIL));
   EXPECT_EQ(legate::bool_(), legate::primitive_type(legate::Type::Code::BOOL));
   EXPECT_EQ(legate::int8(), legate::primitive_type(legate::Type::Code::INT8));
   EXPECT_EQ(legate::int16(), legate::primitive_type(legate::Type::Code::INT16));
@@ -181,11 +183,11 @@ TEST_F(TypeUnit, PrimitiveType)
   EXPECT_EQ(legate::complex64(), legate::primitive_type(legate::Type::Code::COMPLEX64));
   EXPECT_EQ(legate::complex128(), legate::primitive_type(legate::Type::Code::COMPLEX128));
 
-  EXPECT_THROW(legate::primitive_type(legate::Type::Code::BINARY), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::FIXED_ARRAY), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRUCT), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRING), std::invalid_argument);
   EXPECT_THROW(legate::primitive_type(legate::Type::Code::LIST), std::invalid_argument);
+  EXPECT_THROW(legate::primitive_type(legate::Type::Code::BINARY), std::invalid_argument);
 }
 
 TEST_F(TypeUnit, StringType) { test_string_type(legate::string_type()); }
@@ -194,7 +196,6 @@ TEST_F(TypeUnit, BinaryType)
 {
   test_binary_type(legate::binary_type(123), 123);
   test_binary_type(legate::binary_type(45), 45);
-  EXPECT_EQ(legate::binary_type(678).uid(), legate::binary_type(678).uid());
 
   EXPECT_THROW(legate::binary_type(0), std::out_of_range);
   EXPECT_THROW(legate::binary_type(0xFFFFF + 1), std::out_of_range);
@@ -455,6 +456,13 @@ TEST_F(TypeUnit, Uid)
     EXPECT_NE(list_type1.uid(), static_cast<int32_t>(element_type.code()));
     EXPECT_NE(list_type2.uid(), static_cast<int32_t>(element_type.code()));
   }
+
+  // binary type
+  auto binary_type      = legate::binary_type(678);
+  auto same_binary_type = legate::binary_type(678);
+  auto diff_binary_type = legate::binary_type(67);
+  EXPECT_EQ(binary_type.uid(), same_binary_type.uid());
+  EXPECT_NE(binary_type.uid(), diff_binary_type.uid());
 }
 
 TEST_F(TypeUnit, ReductionOperator)
@@ -462,6 +470,9 @@ TEST_F(TypeUnit, ReductionOperator)
   test_reduction_op(legate::string_type());
   test_reduction_op(legate::fixed_array_type(legate::int64(), 10));
   test_reduction_op(legate::struct_type(true, legate::int64(), legate::bool_(), legate::float64()));
+  test_reduction_op(
+    legate::struct_type(false, legate::int64(), legate::bool_(), legate::float64()));
+  test_reduction_op(legate::binary_type(10));
 }
 
 TEST_F(TypeUnit, TypeCodeOf)
@@ -508,6 +519,7 @@ TEST_F(TypeUnit, TypeOf)
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::FIXED_ARRAY>, void>));
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::STRUCT>, void>));
   EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::LIST>, void>));
+  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::BINARY>, void>));
 }
 
 TEST_F(TypeUnit, TypeUtils)
@@ -534,6 +546,7 @@ TEST_F(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::STRUCT>::value);
   EXPECT_FALSE(legate::is_integral<legate::Type::Code::LIST>::value);
+  EXPECT_FALSE(legate::is_integral<legate::Type::Code::BINARY>::value);
 
   // is_signed
   EXPECT_TRUE(legate::is_signed<legate::Type::Code::INT8>::value);
@@ -557,6 +570,7 @@ TEST_F(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::STRUCT>::value);
   EXPECT_FALSE(legate::is_signed<legate::Type::Code::LIST>::value);
+  EXPECT_FALSE(legate::is_signed<legate::Type::Code::BINARY>::value);
 
   // is_unsigned
   EXPECT_TRUE(legate::is_unsigned<legate::Type::Code::BOOL>::value);
@@ -580,6 +594,7 @@ TEST_F(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::STRUCT>::value);
   EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::LIST>::value);
+  EXPECT_FALSE(legate::is_unsigned<legate::Type::Code::BINARY>::value);
 
   // is_floating_point
   EXPECT_TRUE(legate::is_floating_point<legate::Type::Code::FLOAT16>::value);
@@ -603,6 +618,7 @@ TEST_F(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::STRUCT>::value);
   EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::LIST>::value);
+  EXPECT_FALSE(legate::is_floating_point<legate::Type::Code::BINARY>::value);
 
   // is_complex
   EXPECT_TRUE(legate::is_complex<legate::Type::Code::COMPLEX64>::value);
@@ -626,6 +642,7 @@ TEST_F(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::FIXED_ARRAY>::value);
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::STRUCT>::value);
   EXPECT_FALSE(legate::is_complex<legate::Type::Code::LIST>::value);
+  EXPECT_FALSE(legate::is_complex<legate::Type::Code::BINARY>::value);
 
   // is_complex_type
   EXPECT_TRUE(legate::is_complex_type<complex<float>>::value);
