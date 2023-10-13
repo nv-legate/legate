@@ -60,7 +60,7 @@ TEST_F(Store, Creation)
       EXPECT_EQ(store.type(), legate::int64());
       EXPECT_FALSE(store.transformed());
     }
-    EXPECT_THROW(runtime->create_store(legate::Scalar(int64_t{123}), {1, 2}),
+    EXPECT_THROW((void)runtime->create_store(legate::Scalar(int64_t{123}), {1, 2}),
                  std::invalid_argument);
   }
 }

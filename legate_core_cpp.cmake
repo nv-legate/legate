@@ -570,6 +570,11 @@ install(
         src/core/utilities/tuple.h
         src/core/utilities/tuple.inl
         src/core/utilities/typedefs.h
+        src/core/utilities/shared_ptr.h
+        src/core/utilities/shared_ptr.inl
+        src/core/utilities/internal_shared_ptr.h
+        src/core/utilities/internal_shared_ptr.inl
+        src/core/utilities/compressed_pair.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 ##############################################################################
