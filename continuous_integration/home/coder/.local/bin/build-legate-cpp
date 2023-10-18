@@ -4,7 +4,12 @@ build_legate_cpp() {
     set -xeuo pipefail;
 
     # Build + package legate.core C++ libs
-    local cmake_args=(${CMAKE_ARGS:-});
+    local global_cmake_args=(${CMAKE_ARGS:-})
+    local cmake_args=()
+    for value in "${global_cmake_args[@]}"; do
+      # the cmake preset will set this for us
+      [[ "${value}" != -DCMAKE_BUILD_TYPE=* ]] && cmake_args+=("${value}")
+    done
     cmake_args+=(-DBUILD_SHARED_LIBS=ON);
     cmake_args+=(-DBUILD_MARCH=${BUILD_MARCH:-haswell});
     cmake_args+=(-DLegion_CUDA_ARCH=all-major);

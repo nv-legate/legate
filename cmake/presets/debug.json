@@ -10,8 +10,8 @@
             "name": "base-debug",
             "environment": {
                 "LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS": "-O0 -g -g3",
-                "LEGATE_DEBUG_PRESET_CMAKE_CUDA_FLAGS": "-g -lineinfo --compiler-options='$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS}'",
-                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS": "-g -lineinfo --compiler-options='$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS}'"
+                "LEGATE_DEBUG_PRESET_CMAKE_CUDA_FLAGS": "-g --compiler-options='$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS}'",
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS": "-g --compiler-options='$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS}'"
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": {

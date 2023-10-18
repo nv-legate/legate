@@ -19,7 +19,13 @@ build_legate_wheel() {
     ninja_args+=("-v");
     ninja_args+=("-j${JOBS:-$(nproc --ignore=1)}");
 
-    local cmake_args=(${CMAKE_ARGS:-});
+    local global_cmake_args=(${CMAKE_ARGS:-})
+    local cmake_args=()
+    for value in "${global_cmake_args[@]}"; do
+      # the cmake preset will set this for us
+      [[ "${value}" != -DCMAKE_BUILD_TYPE=* ]] && cmake_args+=("${value}")
+    done
+
     cmake_args+=("-DFIND_LEGATE_CORE_CPP=ON");
     cmake_args+=("-Dlegate_core_ROOT=$HOME/legate/build/${LEGATE_CORE_CMAKE_PRESET}");
 

@@ -578,6 +578,9 @@ def install(
     if cmake_preset.startswith("debug"):
         cmake_flags += ["--log-level=DEBUG"]
 
+    # make "Debug" from debug-sanitizer-clang or "Release" from release-gcc
+    cmake_flags += [f"-DCMAKE_BUILD_TYPE={cmake_preset.split('-')[0].title()}"]
+
     cmake_flags += f"""\
 -DBUILD_SHARED_LIBS=ON
 -DBUILD_MARCH={march}
