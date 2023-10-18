@@ -77,7 +77,9 @@ Scalar::Scalar(T value, Type type) : impl_(create_impl(type, &value, true))
 template <typename T>
 Scalar::Scalar(const std::vector<T>& values)
   : impl_(create_impl(
-      fixed_array_type(primitive_type(detail::canonical_type_code_of<T>()), values.size()), values.data(), true))
+      fixed_array_type(primitive_type(detail::canonical_type_code_of<T>()), values.size()),
+      values.data(),
+      true))
 {
 }
 

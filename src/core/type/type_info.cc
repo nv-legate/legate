@@ -128,7 +128,9 @@ Type fixed_array_type(const Type& element_type, uint32_t N)
 Type struct_type(const std::vector<Type>& field_types, bool align)
 {
   std::vector<std::shared_ptr<detail::Type>> detail_field_types;
-  for (const auto& field_type : field_types) { detail_field_types.push_back(field_type.impl()); }
+
+  detail_field_types.reserve(field_types.size());
+  for (const auto& field_type : field_types) { detail_field_types.emplace_back(field_type.impl()); }
   return Type(detail::struct_type(std::move(detail_field_types), align));
 }
 

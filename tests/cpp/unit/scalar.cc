@@ -142,17 +142,25 @@ void check_struct_type_scalar(T& struct_data, bool align)
 
   // Check value
   T actual_data = scalar.value<T>();
-  EXPECT_EQ(actual_data.bool_data, struct_data.bool_data);
-  EXPECT_EQ(actual_data.int32_data, struct_data.int32_data);
-  EXPECT_EQ(actual_data.uint64_data, struct_data.uint64_data);
+  // When taking the address (or reference!) of a packed struct member, the resulting
+  // pointer/reference is _not_ aligned to its normal type. This is a problem when other
+  // functions (like EXPECT_EQ()) take their arguments by reference.
+  //
+  // So we need to make copies of the values (which will be properly aligned since they are
+  // locals), in order for this not to raise UBSAN errors.
+  auto compare = [](auto lhs, auto rhs) { EXPECT_EQ(lhs, rhs); };
+
+  compare(actual_data.bool_data, struct_data.bool_data);
+  compare(actual_data.int32_data, struct_data.int32_data);
+  compare(actual_data.uint64_data, struct_data.uint64_data);
 
   // Check values
   legate::Span actual_values(scalar.values<T>());
   legate::Span expected_values = legate::Span<const T>(&struct_data, 1);
   EXPECT_EQ(actual_values.size(), expected_values.size());
-  EXPECT_EQ(actual_values.begin()->bool_data, expected_values.begin()->bool_data);
-  EXPECT_EQ(actual_values.begin()->int32_data, expected_values.begin()->int32_data);
-  EXPECT_EQ(actual_values.begin()->uint64_data, expected_values.begin()->uint64_data);
+  compare(actual_values.begin()->bool_data, expected_values.begin()->bool_data);
+  compare(actual_values.begin()->int32_data, expected_values.begin()->int32_data);
+  compare(actual_values.begin()->uint64_data, expected_values.begin()->uint64_data);
   EXPECT_NE(actual_values.ptr(), expected_values.ptr());
 }
 

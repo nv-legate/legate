@@ -364,15 +364,17 @@ Type list_type(const Type& element_type);
  *
  * @return Type object
  */
-template <class... Types>
-std::enable_if_t<std::conjunction_v<std::is_same<Types, Type>...>, Type> struct_type(
-  bool align, Types... field_types)
+template <typename... Args>
+std::enable_if_t<std::conjunction_v<std::is_same<std::decay_t<Args>, Type>...>, Type> struct_type(
+  bool align, Args&&... field_types)
 {
   std::vector<Type> vec_field_types;
-  auto copy_field_type = [&vec_field_types](const auto& field_type) {
-    vec_field_types.push_back(field_type);
+  auto copy_field_type = [&vec_field_types](auto&& field_type) {
+    vec_field_types.emplace_back(field_type);
   };
-  (copy_field_type(field_types), ...);
+
+  vec_field_types.reserve(sizeof...(field_types));
+  (copy_field_type(std::forward<Args>(field_types)), ...);
   return struct_type(vec_field_types, align);
 }
 
