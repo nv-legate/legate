@@ -48,7 +48,7 @@ class Scalar {
   Scalar& operator=(Scalar&& other);
 
  private:
-  const void* copy_data(const void* data, size_t size);
+  static const void* copy_data(const void* data, size_t size);
 
  public:
   std::shared_ptr<Type> type() const { return type_; }
@@ -59,6 +59,8 @@ class Scalar {
   void pack(BufferBuilder& buffer) const;
 
  private:
+  void clear_data();
+
   bool own_;
   std::shared_ptr<Type> type_;
   const void* data_;
