@@ -15,6 +15,8 @@
 #include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
 
+#include <memory>
+
 namespace legate {
 
 struct VariantInfo {
@@ -25,7 +27,8 @@ struct VariantInfo {
 
 class TaskInfo {
  public:
-  TaskInfo(const std::string& task_name);
+  TaskInfo(std::string task_name);
+  ~TaskInfo();
 
  public:
   const std::string& name() const;
@@ -52,7 +55,8 @@ class TaskInfo {
 
  private:
   class Impl;
-  Impl* impl_;
+
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace legate

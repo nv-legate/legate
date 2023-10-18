@@ -29,7 +29,7 @@ const Processor::Kind VARIANT_PROC_KINDS[] = {
 
 class TaskInfo::Impl {
  public:
-  Impl(const std::string& task_name);
+  Impl(std::string task_name);
 
  public:
   const std::string& name() const { return task_name_; }
@@ -53,7 +53,7 @@ class TaskInfo::Impl {
   std::map<LegateVariantCode, VariantInfo> variants_{};
 };
 
-TaskInfo::Impl::Impl(const std::string& task_name) : task_name_(task_name) {}
+TaskInfo::Impl::Impl(std::string task_name) : task_name_{std::move(task_name)} {}
 
 const std::string& TaskInfo::name() const { return impl_->name(); }
 
@@ -91,7 +91,9 @@ void TaskInfo::Impl::register_task(Legion::TaskID task_id)
   }
 }
 
-TaskInfo::TaskInfo(const std::string& task_name) : impl_(new Impl(task_name)) {}
+TaskInfo::TaskInfo(std::string task_name) : impl_{std::make_unique<Impl>(std::move(task_name))} {}
+
+TaskInfo::~TaskInfo() = default;
 
 void TaskInfo::add_variant(LegateVariantCode vid,
                            VariantImpl body,
