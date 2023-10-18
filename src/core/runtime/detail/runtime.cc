@@ -1314,7 +1314,7 @@ void initialize_core_library_callback(Legion::Machine, Legion::Runtime*, const s
 }
 
 // Simple wrapper for variables with default values
-template <typename VAL, VAL DEFAULT, VAL SCALE = 1>
+template <auto DEFAULT, auto SCALE = decltype(DEFAULT){1}, typename VAL = decltype(DEFAULT)>
 class VarWithDefault {
  public:
   VAL value() const { return (has_value() ? value_ : DEFAULT) * SCALE; }
@@ -1330,7 +1330,7 @@ template <typename Runtime, typename Value, Value DEFAULT, Value SCALE>
 void try_set_property(Runtime& runtime,
                       const std::string& module_name,
                       const std::string& property_name,
-                      const VarWithDefault<Value, DEFAULT, SCALE>& var,
+                      const VarWithDefault<DEFAULT, SCALE, Value>& var,
                       const std::string& error_msg)
 {
   auto value = var.value();
@@ -1355,11 +1355,11 @@ void try_set_property(Runtime& runtime,
 
 namespace {
 
-constexpr int64_t DEFAULT_CPUS                = 1;
-constexpr int64_t DEFAULT_GPUS                = 0;
-constexpr int64_t DEFAULT_OMPS                = 0;
+constexpr int DEFAULT_CPUS                    = 1;
+constexpr int DEFAULT_GPUS                    = 0;
+constexpr int DEFAULT_OMPS                    = 0;
 constexpr int64_t DEFAULT_OMPTHREADS          = 2;
-constexpr int64_t DEFAULT_UTILITY             = 1;
+constexpr int DEFAULT_UTILITY                 = 1;
 constexpr int64_t DEFAULT_SYSMEM              = 4000;  // MB
 constexpr int64_t DEFAULT_NUMAMEM             = 0;     // MB
 constexpr int64_t DEFAULT_FBMEM               = 4000;  // MB
@@ -1373,17 +1373,17 @@ constexpr int64_t MB                          = 1024 * 1024;
 void handle_legate_args(int32_t argc, char** argv)
 {
   // Realm uses ints rather than unsigned ints
-  VarWithDefault<int64_t, DEFAULT_CPUS> cpus;
-  VarWithDefault<int64_t, DEFAULT_GPUS> gpus;
-  VarWithDefault<int64_t, DEFAULT_OMPS> omps;
-  VarWithDefault<int64_t, DEFAULT_OMPTHREADS> ompthreads;
-  VarWithDefault<int64_t, DEFAULT_UTILITY> util;
-  VarWithDefault<int64_t, DEFAULT_SYSMEM, MB> sysmem;
-  VarWithDefault<int64_t, DEFAULT_NUMAMEM, MB> numamem;
-  VarWithDefault<int64_t, DEFAULT_FBMEM, MB> fbmem;
-  VarWithDefault<int64_t, DEFAULT_ZCMEM, MB> zcmem;
-  VarWithDefault<int64_t, DEFAULT_REGMEM, MB> regmem;
-  VarWithDefault<int64_t, DEFAULT_EAGER_ALLOC_PERCENT> eager_alloc_percent;
+  VarWithDefault<DEFAULT_CPUS> cpus;
+  VarWithDefault<DEFAULT_GPUS> gpus;
+  VarWithDefault<DEFAULT_OMPS> omps;
+  VarWithDefault<DEFAULT_OMPTHREADS> ompthreads;
+  VarWithDefault<DEFAULT_UTILITY> util;
+  VarWithDefault<DEFAULT_SYSMEM, MB> sysmem;
+  VarWithDefault<DEFAULT_NUMAMEM, MB> numamem;
+  VarWithDefault<DEFAULT_FBMEM, MB> fbmem;
+  VarWithDefault<DEFAULT_ZCMEM, MB> zcmem;
+  VarWithDefault<DEFAULT_REGMEM, MB> regmem;
+  VarWithDefault<DEFAULT_EAGER_ALLOC_PERCENT> eager_alloc_percent;
 
   Realm::CommandLineParser cp;
   cp.add_option_int("--cpus", cpus.ref())
