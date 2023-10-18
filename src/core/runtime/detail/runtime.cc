@@ -1047,12 +1047,8 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 
 /*static*/ int32_t Runtime::start(int32_t argc, char** argv)
 {
-  static bool initialized = false;
-
-  if (initialized) return 0;
-  initialized = true;
-
   int32_t result = 0;
+
   if (!Legion::Runtime::has_runtime()) {
     Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);
 
@@ -1090,17 +1086,16 @@ MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 
   // We can now initialize the Legate runtime with the Legion context
   Runtime::get_runtime()->initialize(legion_context);
-
   return result;
 }
 
 int32_t Runtime::finish()
 {
+  if (!initialized()) return 0;
   destroy();
-
   // Mark that we are done excecuting the top-level task
   // After this call the context is no longer valid
-  Legion::Runtime::get_runtime()->finish_implicit_task(legion_context_);
+  Legion::Runtime::get_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
 
   // The previous call is asynchronous so we still need to
   // wait for the shutdown of the runtime to complete
@@ -1115,6 +1110,7 @@ int32_t Runtime::finish()
 
 void Runtime::destroy()
 {
+  if (!initialized()) return;
   // Flush any outstanding operations before we tear down the runtime
   flush_scheduling_window();
 
@@ -1145,10 +1141,11 @@ void Runtime::destroy()
   for (auto& [_, field_manager] : field_managers_) delete field_manager;
   field_managers_.clear();
 
-  delete communicator_manager_;
-  delete machine_manager_;
-  delete partition_manager_;
-  delete provenance_manager_;
+  delete std::exchange(communicator_manager_, nullptr);
+  delete std::exchange(machine_manager_, nullptr);
+  delete std::exchange(partition_manager_, nullptr);
+  delete std::exchange(provenance_manager_, nullptr);
+  initialized_ = false;
 }
 
 static void extract_scalar_task(
