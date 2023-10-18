@@ -1287,10 +1287,15 @@ void BaseMapper::select_tunable_value(const Legion::Mapping::MapperContext ctx,
                                       const SelectTunableInput& input,
                                       SelectTunableOutput& output)
 {
-  auto value   = legate_mapper_->tunable_value(input.tunable_id);
-  output.size  = value.size();
-  output.value = malloc(output.size);
-  memcpy(output.value, value.ptr(), output.size);
+  auto value = legate_mapper_->tunable_value(input.tunable_id);
+
+  output.size = value.size();
+  if (output.size) {
+    output.value = malloc(output.size);
+    memcpy(output.value, value.ptr(), output.size);
+  } else {
+    output.value = nullptr;
+  }
 }
 
 void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
