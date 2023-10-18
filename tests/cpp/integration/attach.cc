@@ -201,17 +201,23 @@ TEST_F(Attach, Negative)
   EXPECT_THROW(runtime->create_store(SHAPE_2D, legate::int64(), nullptr, true),
                std::invalid_argument);
 
-  // Trying to detach a non-shared attachment
-  EXPECT_THROW(
-    runtime->create_store(SHAPE_1D, legate::int64(), new int64_t[SHAPE_1D.volume()]).detach(),
-    std::invalid_argument);
+  {
+    auto mem = new int64_t[SHAPE_1D.volume()];
+    // Trying to detach a non-shared attachment
+    EXPECT_THROW(runtime->create_store(SHAPE_1D, legate::int64(), mem).detach(),
+                 std::invalid_argument);
+    delete[] mem;
+  }
 
-  // Trying to detach a sub-store
-  auto l_store = runtime->create_store(
-    SHAPE_1D, legate::int64(), new int64_t[SHAPE_1D.volume()], true /*share*/);
-  EXPECT_THROW(l_store.project(0, 1).detach(), std::invalid_argument);
-  // We have to properly detach this, to avoid the abort in the destructor
-  l_store.detach();
+  {
+    // Trying to detach a sub-store
+    auto mem     = new int64_t[SHAPE_1D.volume()];
+    auto l_store = runtime->create_store(SHAPE_1D, legate::int64(), mem, true /*share*/);
+    EXPECT_THROW(l_store.project(0, 1).detach(), std::invalid_argument);
+    // We have to properly detach this, to avoid the abort in the destructor
+    l_store.detach();
+    delete[] mem;
+  }
 }
 
 TEST_F(AttachDeathTest, MissingManualDetach)
