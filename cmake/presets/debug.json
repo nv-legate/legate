@@ -66,5 +66,17 @@
             "name": "debug-gcc",
             "configurePreset": "debug-gcc"
         }
+    ],
+    "testPresets": [
+        {
+            "inherits": "base",
+            "name": "debug-clang",
+            "configurePreset": "debug-clang"
+        },
+        {
+            "inherits": "base",
+            "name": "debug-gcc",
+            "configurePreset": "debug-gcc"
+        }
     ]
 }

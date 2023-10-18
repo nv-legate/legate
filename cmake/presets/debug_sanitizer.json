@@ -10,7 +10,7 @@
             "hidden": true,
             "environment": {
                 // base flags
-                "LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_FLAGS": "-fsanitize=address,undefined,bounds",
+                "LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_FLAGS": "-fsanitize=address,undefined,bounds -fno-sanitize-recover=undefined",
                 "LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_COMPILER_FLAGS": "$env{LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_FLAGS} -fno-omit-frame-pointer",
                 // CXX flags
                 "LEGATE_DEBUG_SANITIZER_PRESET_CMAKE_CXX_FLAGS": "$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS} $env{LEGATE_DEBUG_SANITIZER_PRESET_SANITIZER_COMPILER_FLAGS}",
@@ -53,7 +53,7 @@
         {
             "inherits": ["base-debug-sanitizer", "debug-gcc"],
             "name": "debug-sanitizer-gcc",
-            "displayName": "Debug GCC  Build With Sanitizers",
+            "displayName": "Debug GCC Build With Sanitizers",
             "description": "Debug GCC Build With Sanitizers"
         }
     ],
@@ -65,6 +65,18 @@
         },
         {
             "inherits": "debug-gcc",
+            "name": "debug-sanitizer-gcc",
+            "configurePreset": "debug-sanitizer-gcc"
+        }
+    ],
+    "testPresets": [
+        {
+            "inherits": "debug-clang",
+            "name": "debug-sanitizer-clang",
+            "configurePreset": "debug-sanitizer-clang"
+        },
+        {
+            "inherits": "debug-clang",
             "name": "debug-sanitizer-gcc",
             "configurePreset": "debug-sanitizer-gcc"
         }

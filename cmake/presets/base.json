@@ -56,5 +56,17 @@
             "configurePreset": "base",
             "jobs": 7
         }
+    ],
+    "testPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "jobs": 8
+            }
+        }
     ]
 }
