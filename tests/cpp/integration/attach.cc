@@ -36,11 +36,11 @@ void increment_physical_store(const legate::Store& store, int32_t dim)
 {
   if (dim == 1) {
     auto shape = store.shape<1>();
-    auto acc   = store.read_write_accessor<int64_t, 1>(shape);
+    auto acc   = store.read_write_accessor<int64_t, 1, true>(shape);
     for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) acc[*it] += 1;
   } else {
     auto shape = store.shape<2>();
-    auto acc   = store.read_write_accessor<int64_t, 2>(shape);
+    auto acc   = store.read_write_accessor<int64_t, 2, true>(shape);
     for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) acc[*it] += 1;
   }
 }
@@ -49,11 +49,11 @@ void check_physical_store(const legate::Store& store, int32_t dim, int64_t count
 {
   if (dim == 1) {
     auto shape = store.shape<1>();
-    auto acc   = store.read_accessor<int64_t, 1>(shape);
+    auto acc   = store.read_accessor<int64_t, 1, true>(shape);
     for (size_t i = 0; i < SHAPE_1D[0]; ++i) EXPECT_EQ(acc[i], counter++);
   } else {
     auto shape = store.shape<2>();
-    auto acc   = store.read_accessor<int64_t, 2>(shape);
+    auto acc   = store.read_accessor<int64_t, 2, true>(shape);
     // Legate should always see elements in the expected order
     for (size_t i = 0; i < SHAPE_2D[0]; ++i)
       for (size_t j = 0; j < SHAPE_2D[1]; ++j) EXPECT_EQ(acc[legate::Point<2>(i, j)], counter++);
@@ -122,7 +122,7 @@ void check_and_delete_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t
           EXPECT_EQ(buffer[j * SHAPE_2D[0] + i], counter++);
         else
           EXPECT_EQ(buffer[i * SHAPE_2D[1] + j], counter++);
-  delete buffer;
+  delete[] buffer;
 }
 
 void test_body(
@@ -131,7 +131,7 @@ void test_body(
   auto runtime    = legate::Runtime::get_runtime();
   auto context    = runtime->find_library(library_name);
   int64_t counter = 0;
-  int64_t* buffer = make_buffer(dim, fortran);
+  auto buffer     = make_buffer(dim, fortran);
   auto l_store    = runtime->create_store(dim == 1 ? SHAPE_1D : SHAPE_2D,
                                        legate::int64(),
                                        buffer,
@@ -140,7 +140,7 @@ void test_body(
                                                : legate::mapping::DimOrdering::c_order());
   if (unordered) l_store.impl()->allow_out_of_order_destruction();
   if (!share) check_and_delete_buffer(buffer, dim, fortran, counter);
-  for (int32_t iter = 0; iter < 2; ++iter) {
+  for (auto iter = 0; iter < 2; ++iter) {
     if (use_tasks) {
       auto task = runtime->create_task(context, ADDER, {1});
       task.add_input(l_store);
