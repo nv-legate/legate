@@ -26,7 +26,10 @@ run_test_or_analysis() {
               return 0
             fi
 
+            set +eou pipefail
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge pytest pytest-mock ipython jupyter_client
+            set -eou pipefail
+
             cd ~/legate/tests/unit
             # Leaving this here in case we ever decide to enable this. If we don't do
             # this, we get
@@ -62,7 +65,9 @@ run_test_or_analysis() {
             # reason we don't read it directly here is because when this is run in CI, it
             # is done on a job which does not checkout the repo (and hence cannot read the
             # .pre-commit.yaml).
+            set +eou pipefail
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" mypy=1.5.1
+            set -eou pipefail
             cd ~/legate
             mypy legate
             ;;

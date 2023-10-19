@@ -7,6 +7,11 @@
   {# We need to have a default value for the initial pass over the recipe #}
   {% set gpu_enabled_bool = false %}
 {% endif %}
+{% if debug_enabled == "true" %}
+  {% set debug_enabled_bool = true %}
+{% else %}
+  {% set debug_enabled_bool = false %}
+{% endif %}
 {% set default_env_var = '' %}
 {% if build_number is defined %}
     {# do nothing if defined #}
@@ -90,14 +95,26 @@ build:
     - cuda-nvcc
 {% endif %}
 
+# Note clang must go first! gxx is also in clangxx!!!!!
+{% if "clangxx" in compiler("cxx") %}
+  {% set compiler_version = 16 %}
+  {% set sanitizer_lib = "compiler-rt" %}
+{% elif "gxx" in compiler("cxx") %}
+  {% set compiler_version = 11.2 %}
+  {% set sanitizer_lib = "libsanitizer" %}
+{% endif %}
+
 requirements:
   build:
     - make
     - rust
     - ninja
     - cmake {{ cmake_version }}
-    - {{ compiler('c') }} =11.2
-    - {{ compiler('cxx') }} =11.2
+    - {{ compiler('c') }} ={{ compiler_version }}
+    - {{ compiler('cxx') }} ={{ compiler_version }}
+{% if gpu_enabled_bool %}
+    - cuda-nvcc ={{ cuda_version }}
+{% endif %}
   host:
     - zlib
     - python
@@ -107,9 +124,11 @@ requirements:
     - numpy {{ numpy_version }}
     - elfutils # [linux]
     - libdwarf # [linux]
+{% if debug_enabled_bool %}
+    - {{ sanitizer_lib }} ={{ compiler_version }}
+{% endif %}
 {% if gpu_enabled_bool %}
     - nccl
-    - cuda-nvcc ={{ cuda_version }}
     - cuda-nvtx ={{ cuda_version }}
     - cuda-cccl ={{ cuda_version }}
     - cuda-cudart ={{ cuda_version }}
@@ -124,6 +143,9 @@ requirements:
     - typing_extensions
     - elfutils # [linux]
     - libdwarf # [linux]
+{% if debug_enabled_bool %}
+    - {{ sanitizer_lib }} ={{ compiler_version }}
+{% endif %}
 {% if gpu_enabled_bool %}
     - cuda-cudart  >={{ cuda_version }},<{{ cuda_major+1 }}
     - cuda-version >={{ cuda_version }},<{{ cuda_major+1 }}
