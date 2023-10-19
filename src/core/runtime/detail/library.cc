@@ -160,7 +160,7 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
   } else {
     Legion::UntypedBuffer args{library_name_.c_str(), library_name_.size() + 1};
     Legion::Runtime::perform_registration_callback(
-      register_mapper_callback, args, true /*global*/, false /*duplicate*/);
+      register_mapper_callback, args, false /*global*/, false /*duplicate*/);
   }
 }
 

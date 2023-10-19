@@ -104,13 +104,12 @@ int MPINetwork::init_comm()
   int id = 0;
   collGetUniqueId(&id);
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    int mpi_rank;
     int send_id = id;
     // check if all ranks get the same unique id
     CHECK_MPI(MPI_Bcast(&send_id, 1, MPI_INT, 0, MPI_COMM_WORLD));
     assert(send_id == id);
   }
-  assert(mpi_comms.size() == id);
+  assert(static_cast<int>(mpi_comms.size()) == id);
   // create mpi comm
   MPI_Comm mpi_comm;
   CHECK_MPI(MPI_Comm_dup(MPI_COMM_WORLD, &mpi_comm));
@@ -130,7 +129,6 @@ int MPINetwork::comm_create(CollComm global_comm,
   global_comm->status           = true;
   global_comm->unique_id        = unique_id;
   int mpi_rank, mpi_comm_size;
-  int *tag_ub, flag;
   int compare_result;
   MPI_Comm comm = mpi_comms[unique_id];
   CHECK_MPI(MPI_Comm_compare(comm, MPI_COMM_WORLD, &compare_result));
@@ -297,8 +295,7 @@ int MPINetwork::alltoall(
 int MPINetwork::allgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
+  int total_size = global_comm->global_comm_size;
 
   MPI_Datatype mpi_type = dtypeToMPIDtype(type);
 
@@ -369,7 +366,7 @@ int MPINetwork::gather(
         i,
         global_rank,
         global_comm->mpi_rank,
-        dst,
+        static_cast<void*>(dst),
         i,
         recvfrom_mpi_rank,
         tag);
