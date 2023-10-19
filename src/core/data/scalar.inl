@@ -67,27 +67,23 @@ Scalar::Scalar(T value) : Scalar{detail::canonical_value_of(std::move(value)), p
 }
 
 template <typename T>
-Scalar::Scalar(T value, Type type) : impl_(create_impl(type, &value, true))
+Scalar::Scalar(T value, Type type)
+  : impl_{checked_create_impl(std::move(type), std::addressof(value), true, sizeof(T))}
 {
-  if (type.code() == Type::Code::NIL) throw std::invalid_argument("Null type cannot be used");
-  if (type.size() != sizeof(T))
-    throw std::invalid_argument("Size of the value doesn't match with the type");
 }
 
 template <typename T>
 Scalar::Scalar(const std::vector<T>& values)
-  : impl_(create_impl(
+  : impl_(checked_create_impl(
       fixed_array_type(primitive_type(detail::canonical_type_code_of<T>()), values.size()),
       values.data(),
-      true))
+      true,
+      values.size() * sizeof(T)))
 {
 }
 
 template <typename T>
-Scalar::Scalar(const tuple<T>& values)
-  : impl_(create_impl(fixed_array_type(detail::canonical_type_code_of<T>(), values.size()),
-                      values.data().data(),
-                      true))
+Scalar::Scalar(const tuple<T>& values) : Scalar{values.data()}
 {
 }
 

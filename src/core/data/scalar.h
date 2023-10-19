@@ -180,6 +180,10 @@ class Scalar {
   detail::Scalar* impl() const { return impl_; }
 
  private:
+  static detail::Scalar* checked_create_impl(Type type,
+                                             const void* data,
+                                             bool copy,
+                                             std::size_t size);
   static detail::Scalar* create_impl(Type type, const void* data, bool copy);
 
   struct private_tag {};

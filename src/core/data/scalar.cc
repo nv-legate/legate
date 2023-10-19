@@ -13,6 +13,8 @@
 #include "core/data/scalar.h"
 #include "core/data/detail/scalar.h"
 
+#include <stdexcept>
+
 namespace legate {
 
 Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_(impl.release()) {}
@@ -41,9 +43,21 @@ size_t Scalar::size() const { return impl_->size(); }
 
 const void* Scalar::ptr() const { return impl_->data(); }
 
+/*static*/ detail::Scalar* Scalar::checked_create_impl(Type type,
+                                                       const void* data,
+                                                       bool copy,
+                                                       std::size_t size)
+{
+  if (type.code() == Type::Code::NIL) throw std::invalid_argument{"Null type cannot be used"};
+  if (type.size() != size)
+    throw std::invalid_argument{"Size of the value doesn't match with the type"};
+
+  return create_impl(std::move(type), data, copy);
+}
+
 /*static*/ detail::Scalar* Scalar::create_impl(Type type, const void* data, bool copy)
 {
-  return new detail::Scalar(type.impl(), data, copy);
+  return new detail::Scalar{type.impl(), data, copy};
 }
 
 Scalar null() { return Scalar(); }
