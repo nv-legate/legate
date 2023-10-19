@@ -121,6 +121,8 @@ function(find_or_configure_legion)
     string(APPEND CMAKE_CUDA_FLAGS ${Legion_CUDA_FLAGS})
     string(APPEND CMAKE_LINKER_FLAGS ${Legion_LINKER_FLAGS})
 
+    set(no_dev_warnings_backup "$CACHE{CMAKE_SUPPRESS_DEVELOPER_WARNINGS}")
+    set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON CACHE INTERNAL "" FORCE)
     rapids_cpm_find(Legion ${version} ${FIND_PKG_ARGS}
         CPM_ARGS
           ${legion_cpm_git_args}
@@ -138,7 +140,9 @@ function(find_or_configure_legion)
                                  "Legion_REDOP_HALF ON"
                                  "Legion_REDOP_COMPLEX ON"
                                  "Legion_BUILD_RUST_PROFILER ON"
+                                 "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON"
     )
+    set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ${no_dev_warnings_backup} CACHE INTERNAL "" FORCE)
   endif()
 
   set(Legion_USE_CUDA ${Legion_USE_CUDA} PARENT_SCOPE)
