@@ -383,25 +383,6 @@ target_include_directories(legate_core
     $<INSTALL_INTERFACE:include/legate>
 )
 
-if (((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
-    AND (CMAKE_SYSTEM_NAME STREQUAL "Darwin"))
-  # Both clang and gcc will automatically generate a <TARGET>.dSYM directory (the debug
-  # symbols) when creating single executables, but refuse to do so when creating
-  # libraries. So we must do this ourselves...
-  find_program(DSYMUTIL dsymutil)
-  if (DSYMUTIL)
-    get_target_property(LEGATE_CORE_LIB_DIR legate_core LIBRARY_OUTPUT_DIRECTORY)
-    get_target_property(LEGATE_CORE_BIN_DIR legate_core BINARY_DIR)
-
-    add_custom_command(
-      TARGET legate_core POST_BUILD
-      COMMAND "${DSYMUTIL}" "$<TARGET_FILE_NAME:legate_core>"
-      WORKING_DIRECTORY "${LEGATE_CORE_BIN_DIR}/${LEGATE_CORE_LIB_DIR}"
-      DEPENDS legate_core
-    )
-  endif()
-endif()
-
 ##############################################################################
 # - Doxygen target------------------------------------------------------------
 
@@ -576,6 +557,10 @@ install(
         src/core/utilities/internal_shared_ptr.inl
         src/core/utilities/compressed_pair.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/debug_symbols.cmake)
+
+legate_core_debug_syms(legate_core INSTALL_DIR ${lib_dir})
 
 ##############################################################################
 # - install export -----------------------------------------------------------
