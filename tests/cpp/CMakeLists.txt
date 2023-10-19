@@ -12,6 +12,10 @@
 
 cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
+cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/../../")
+
+include(${LEGATE_CORE_DIR}/cmake/policies.cmake NO_POLICY_SCOPE)
+
 project(cpp_tests VERSION 0.1 LANGUAGES C CXX)
 
 cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/../../")
