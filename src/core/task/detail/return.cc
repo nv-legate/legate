@@ -13,12 +13,17 @@
 #include "core/task/detail/return.h"
 
 #include "core/runtime/detail/library.h"
+#include "core/utilities/deserializer.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
 #if LegateDefined(LEGATE_USE_CUDA)
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #endif
+
+#include <cstdint>
+#include <cstring>
+#include <limits>
 
 namespace legate::detail {
 
@@ -67,39 +72,91 @@ std::optional<TaskException> ReturnedException::to_task_exception() const
     return TaskException(index_, error_message_);
 }
 
-size_t ReturnedException::legion_buffer_size() const
+namespace {
+
+template <typename T>
+constexpr std::size_t max_aligned_size_for_type()
 {
-  size_t size = sizeof(bool);
-  if (raised_) size += sizeof(int32_t) + sizeof(uint32_t) + error_message_.size();
+  return sizeof(T) + alignof(T) - 1;
+}
+
+}  // namespace
+
+// Note, this function returns an upper bound on the size of the type as it also incorporates
+// alignment requirements for each member. It cannot know how much of the extra alignment
+// padding it needs because that depends on how the input pointer is aligned when it goes to
+// pack.
+std::size_t ReturnedException::legion_buffer_size() const
+{
+  std::size_t size = max_aligned_size_for_type<bool>();
+
+  if (raised_) {
+    size += max_aligned_size_for_type<std::int32_t>();
+    size += max_aligned_size_for_type<std::uint32_t>();
+    size += error_message_.size();
+  }
   return size;
 }
 
+namespace {
+
+// REVIEW: why no BufferBuilder? Then we don't have to repeat this logic
+template <typename T>
+[[nodiscard]] std::pair<void*, std::size_t> pack_buffer(void* buf,
+                                                        std::size_t remaining_cap,
+                                                        T&& value)
+{
+  const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
+
+  *static_cast<std::decay_t<T>*>(ptr) = std::forward<T>(value);
+  return {(char*)ptr + sizeof(T), remaining_cap - sizeof(T) - align_offset};
+}
+
+}  // namespace
+
 void ReturnedException::legion_serialize(void* buffer) const
 {
-  int8_t* ptr                   = static_cast<int8_t*>(buffer);
-  *reinterpret_cast<bool*>(ptr) = raised_;
+  auto rem_cap = legion_buffer_size();
+
+  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, raised_);
   if (raised_) {
-    ptr += sizeof(bool);
-    *reinterpret_cast<int32_t*>(ptr) = index_;
-    ptr += sizeof(int32_t);
-    uint32_t error_len                = static_cast<uint32_t>(error_message_.size());
-    *reinterpret_cast<uint32_t*>(ptr) = error_len;
-    ptr += sizeof(uint32_t);
-    memcpy(ptr, error_message_.c_str(), error_len);
+    const auto error_len = static_cast<std::uint32_t>(error_message_.size());
+
+    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, index_);
+    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, error_len);
+    std::memcpy(buffer, error_message_.c_str(), error_len);
   }
 }
 
+namespace {
+
+template <typename T>
+[[nodiscard]] std::pair<void*, std::size_t> unpack_buffer(void* buf,
+                                                          std::size_t remaining_cap,
+                                                          T* value)
+{
+  const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
+
+  *value = *static_cast<std::decay_t<T>*>(ptr);
+  return {(char*)ptr + sizeof(T), remaining_cap - sizeof(T) - align_offset};
+}
+
+}  // namespace
+
 void ReturnedException::legion_deserialize(const void* buffer)
 {
-  const int8_t* ptr = static_cast<const int8_t*>(buffer);
-  raised_           = *reinterpret_cast<const bool*>(ptr);
+  // There is no information about the size of the buffer, nor can we know how much we need
+  // until we pack all of it. So we just lie and say we have infinite memory.
+  auto rem_cap = std::numeric_limits<std::size_t>::max();
+  auto ptr     = const_cast<void*>(buffer);
+
+  std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &raised_);
   if (raised_) {
-    ptr += sizeof(bool);
-    index_ = *reinterpret_cast<const int32_t*>(ptr);
-    ptr += sizeof(int32_t);
-    uint32_t error_len = *reinterpret_cast<const uint32_t*>(ptr);
-    ptr += sizeof(uint32_t);
-    error_message_ = std::string(ptr, ptr + error_len);
+    std::uint32_t error_len;
+
+    std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &index_);
+    std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &error_len);
+    error_message_ = std::string{static_cast<char*>(ptr), static_cast<char*>(ptr) + error_len};
   }
 }
 

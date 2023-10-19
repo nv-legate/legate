@@ -15,6 +15,9 @@
 // Useful for IDEs
 #include "core/utilities/deserializer.h"
 
+#include <cstddef>
+#include <cstdint>
+
 namespace legate {
 
 template <typename Deserializer>
@@ -38,10 +41,62 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
 {
   // this unpack_type call must be in a separate line from the following one because they both
   // read and update the buffer location.
-  auto type   = unpack_type();
-  auto result = std::make_unique<detail::Scalar>(
-    type, type->code == Type::Code::NIL ? nullptr : args_.ptr(), false /*copy*/);
-  args_ = args_.subspan(result->size());
+  auto type = unpack_type();
+
+  const auto unpack_scalar_value = [&](const auto& type,
+                                       const signed char* vptr,
+                                       std::size_t capacity) -> std::pair<void*, std::size_t> {
+    const auto ptr = static_cast<void*>(const_cast<signed char*>(vptr));
+
+    switch (type->code) {
+      case Type::Code::NIL:
+        return {nullptr, 0};
+
+#define CASE_TYPE_CODE_(CODE) \
+  case Type::Code::CODE:      \
+    return detail::align_for_unpack<legate_type_of<Type::Code::CODE>>(ptr, capacity)
+
+        CASE_TYPE_CODE_(BOOL);
+        CASE_TYPE_CODE_(INT8);
+        CASE_TYPE_CODE_(INT16);
+        CASE_TYPE_CODE_(INT32);
+        CASE_TYPE_CODE_(INT64);
+        CASE_TYPE_CODE_(UINT8);
+        CASE_TYPE_CODE_(UINT16);
+        CASE_TYPE_CODE_(UINT32);
+        CASE_TYPE_CODE_(UINT64);
+        CASE_TYPE_CODE_(FLOAT16);
+        CASE_TYPE_CODE_(FLOAT32);
+        CASE_TYPE_CODE_(FLOAT64);
+        CASE_TYPE_CODE_(COMPLEX64);
+        CASE_TYPE_CODE_(COMPLEX128);
+
+#undef CASE_TYPE_CODE_
+
+      case Type::Code::BINARY:       // fall-through
+      case Type::Code::FIXED_ARRAY:  // fall-through
+      case Type::Code::STRUCT:
+        return detail::align_for_unpack<std::byte>(ptr, capacity, type->size(), type->alignment());
+      case Type::Code::STRING:
+        // The size is an approximation here. We cannot know the true size of the string until
+        // we have aligned the pointer, but we cannot align the pointer without knowing the
+        // true size of the string... so we give a lower bound
+        return detail::align_for_unpack<std::byte>(
+          ptr, capacity, sizeof(std::uint32_t) + sizeof(char), alignof(std::max_align_t));
+      case Type::Code::LIST:
+        // don't know how to handle these yet
+        break;
+        // do not add a default clause! compilers will warn about missing enum values if there is
+        // ever a new value added to Type::Code. We want to catch that!
+    }
+    LEGATE_ABORT;
+    return {nullptr, 0};
+  };
+
+  auto [ptr, align_offset] = unpack_scalar_value(type, args_.ptr(), args_.size());
+  auto result              = std::make_unique<detail::Scalar>(type, ptr, false /*copy*/);
+
+  args_ = args_.subspan(align_offset + result->size());
   return result;
 }
 

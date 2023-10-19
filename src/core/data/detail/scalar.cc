@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <utility>
 
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -94,7 +95,7 @@ Scalar& Scalar::operator=(Scalar&& other)
   return *this;
 }
 
-const void* Scalar::copy_data(const void* data, size_t size)
+const void* Scalar::copy_data(const void* data, std::size_t size)
 {
   void* buffer = nullptr;
 
@@ -116,7 +117,10 @@ size_t Scalar::size() const
 void Scalar::pack(BufferBuilder& buffer) const
 {
   type_->pack(buffer);
-  buffer.pack_buffer(data_, size());
+  buffer.pack_buffer(
+    data_,
+    size(),
+    type_->code == Type::Code::STRING ? alignof(std::max_align_t) : type_->alignment());
 }
 
 }  // namespace legate::detail

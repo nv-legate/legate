@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "legion.h"
 
 #include "core/comm/communicator.h"
@@ -30,9 +28,32 @@
 #include "core/type/type_traits.h"
 #include "core/utilities/span.h"
 #include "core/utilities/typedefs.h"
-#include "legate_defines.h"
+
+#include <memory>
+#include <utility>
 
 namespace legate {
+
+namespace detail {
+
+template <typename T>
+std::pair<void*, std::size_t> align_for_unpack(void* ptr,
+                                               std::size_t capacity,
+                                               std::size_t bytes = sizeof(T),
+                                               std::size_t align = alignof(T))
+{
+  const auto orig_avail_space = std::min(bytes + align - 1, capacity);
+  auto avail_space            = orig_avail_space;
+
+  if (!std::align(align, bytes, ptr, avail_space)) {
+    // If we get here, it means that someone did not pack the value correctly, likely without
+    // first aligning the pointer!
+    throw std::runtime_error{"Failed to align pointer to unpack value"};
+  }
+  return {ptr, orig_avail_space - avail_space};
+}
+
+}  // namespace detail
 
 template <typename Deserializer>
 class BaseDeserializer {
@@ -52,8 +73,26 @@ class BaseDeserializer {
   template <typename T, std::enable_if_t<legate_type_code_of<T> != Type::Code::NIL>* = nullptr>
   void _unpack(T& value)
   {
-    value = *reinterpret_cast<const T*>(args_.ptr());
-    args_ = args_.subspan(sizeof(T));
+    const auto vptr          = static_cast<void*>(const_cast<int8_t*>(args_.ptr()));
+    auto [ptr, align_offset] = detail::align_for_unpack<T>(vptr, args_.size());
+
+    // We need to align-up the incoming args_.ptr() since the value was stored according to
+    // alignof(T). So we ultimately get 2 pointers:
+    //
+    //      ____ vptr (args_.ptr() on entry)
+    //     /
+    //    /           ___ ptr                            args_.ptr() on exit
+    //   /           /                                          |
+    //  v           v                                           v
+    //  X --------- X ========================================= X
+    //   ^~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+    //        |                        |
+    //   align_offset               sizeof(T)
+    //
+    //
+    // Note align_offset may be zero if vptr was already properly aligned.
+    value = *static_cast<const T*>(ptr);
+    args_ = args_.subspan(align_offset + sizeof(T));
   }
 
  public:

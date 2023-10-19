@@ -20,7 +20,7 @@ namespace legate::detail {
 template <typename T>
 void BufferBuilder::pack(const T& value)
 {
-  pack_buffer(reinterpret_cast<const int8_t*>(&value), sizeof(T));
+  pack_buffer(reinterpret_cast<const int8_t*>(std::addressof(value)), sizeof(T), alignof(T));
 }
 
 template <typename T>
@@ -28,7 +28,7 @@ void BufferBuilder::pack(const std::vector<T>& values)
 {
   uint32_t size = values.size();
   pack(size);
-  pack_buffer(values.data(), size * sizeof(T));
+  pack_buffer(values.data(), size * sizeof(T), alignof(T));
 }
 
 template <typename T>

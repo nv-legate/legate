@@ -56,10 +56,11 @@ class BufferBuilder {
    *
    * The caller should make sure that `(char*)buffer + (size - 1)` is a valid address.
    *
-   * @param buffer Buffer to serialize
+   * @param mem Buffer to serialize
    * @param size Size of the buffer
+   * @param align Alignment of mem (must be a power of 2)
    */
-  void pack_buffer(const void* buffer, size_t size);
+  void pack_buffer(const void* mem, std::size_t size, std::size_t align);
 
  public:
   /**
