@@ -68,10 +68,16 @@ class CPU(TestStage):
         cpus = system.cpus
 
         procs = config.cpus + config.utility + int(config.cpu_pin == "strict")
-        workers = adjust_workers(
-            len(cpus) // (procs * config.ranks_per_node),
-            config.requested_workers,
-        )
+
+        workers = len(cpus) // (procs * config.ranks_per_node)
+
+        if workers == 0:
+            raise RuntimeError(
+                f"{len(cpus)} detected core(s) not enough for "
+                f"{config.ranks_per_node} rank(s) per node, each reserving "
+                f"{procs} core(s)"
+            )
+        workers = adjust_workers(workers, config.requested_workers)
 
         shards: list[Shard] = []
         for i in range(workers):
