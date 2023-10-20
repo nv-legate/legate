@@ -10,26 +10,6 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-macro(legate_include_rapids)
-  if(NOT rapids-cmake-version)
-    # default
-    set(rapids-cmake-version 23.10)
-  endif()
-  if (NOT _LEGATE_HAS_RAPIDS)
-    if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-      file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
-           ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-    endif()
-    include(${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-    include(rapids-cmake)
-    include(rapids-cpm)
-    include(rapids-cuda)
-    include(rapids-export)
-    include(rapids-find)
-    set(_LEGATE_HAS_RAPIDS ON)
-  endif()
-endmacro()
-
 function(legate_default_cpp_install target)
   set(options)
   set(one_value_args EXPORT)
@@ -45,6 +25,8 @@ function(legate_default_cpp_install target)
   if (NOT LEGATE_OPT_EXPORT)
     message(FATAL_ERROR "Need EXPORT name for legate_default_install")
   endif()
+
+  include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/include_rapids.cmake")
 
   legate_include_rapids()
 
@@ -220,6 +202,8 @@ function(legate_default_python_install target)
             DESTINATION ${lib_dir}
             EXPORT ${LEGATE_OPT_EXPORT})
 
+    include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/include_rapids.cmake")
+
     legate_include_rapids()
     rapids_export(
       INSTALL ${target}_python
@@ -251,6 +235,8 @@ function(legate_add_cpp_subdirectory dir)
   endif()
   # abbreviate for the function
   set(target ${LEGATE_OPT_TARGET})
+
+  include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/include_rapids.cmake")
 
   legate_include_rapids()
 

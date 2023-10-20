@@ -65,6 +65,8 @@ enable_language(CUDA)
 file(GLOB integration_GPU_SRC ${PROJECT_SOURCE_DIR}/integration/*.cu)
 list(APPEND integration_SRC ${integration_GPU_SRC})
 
+include(${LEGATE_CORE_DIR}/cmake/Modules/include_rapids.cmake)
+
 legate_include_rapids()
 
 include(cmake/thirdparty/get_nccl.cmake)

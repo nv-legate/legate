@@ -19,7 +19,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/policies.cmake NO_POLICY_SCOPE)
 
 set(legate_core_version 23.11.00)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/legate_helper_functions.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/include_rapids.cmake)
 
 legate_include_rapids()
 
