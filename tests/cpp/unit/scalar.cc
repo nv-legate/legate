@@ -480,6 +480,11 @@ TEST_F(ScalarUnit, Pack)
 {
   // test pack for a fixed array scalar
   {
+    check_pack(legate::Scalar{});
+  }
+
+  // test pack for a fixed array scalar
+  {
     legate::Scalar scalar(std::vector<uint32_t>{UINT32_VALUE, UINT32_VALUE});
     check_pack(scalar);
   }

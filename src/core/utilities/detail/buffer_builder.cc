@@ -30,6 +30,8 @@ BufferBuilder::BufferBuilder()
 
 void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t align)
 {
+  if (!size) return;
+
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     constexpr auto is_power_of_2 = [](std::size_t v) { return v && !(v & (v - 1)); };
 
