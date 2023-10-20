@@ -25,7 +25,10 @@
 namespace legate::detail {
 
 RegionField::RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid)
-  : dim_(dim), pr_(pr), fid_(fid)
+  : dim_{dim},
+    pr_{std::make_unique<Legion::PhysicalRegion>(pr)},
+    lr_{pr.get_logical_region()},
+    fid_{fid}
 {
   auto priv  = pr.get_privilege();
   readable_  = static_cast<bool>(priv & LEGION_READ_PRIV);
@@ -33,45 +36,72 @@ RegionField::RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::
   reducible_ = static_cast<bool>(priv & LEGION_REDUCE) || (readable_ && writable_);
 }
 
-RegionField::RegionField(RegionField&& other) noexcept
-  : dim_(other.dim_),
-    pr_(other.pr_),
-    fid_(other.fid_),
-    readable_(other.readable_),
-    writable_(other.writable_),
-    reducible_(other.reducible_)
-{
-}
-
-RegionField& RegionField::operator=(RegionField&& other) noexcept
-{
-  dim_       = other.dim_;
-  pr_        = other.pr_;
-  fid_       = other.fid_;
-  readable_  = other.readable_;
-  writable_  = other.writable_;
-  reducible_ = other.reducible_;
-  return *this;
-}
-
 bool RegionField::valid() const
 {
-  return pr_.get_logical_region() != Legion::LogicalRegion::NO_REGION;
+  return pr_ != nullptr && pr_->get_logical_region() != Legion::LogicalRegion::NO_REGION;
 }
 
 namespace {
 
-struct get_domain_fn {
-  template <int32_t DIM>
-  Domain operator()(const Legion::PhysicalRegion& pr)
+struct get_inline_alloc_fn {
+  template <typename Rect, typename Acc>
+  InlineAllocation create(const int32_t DIM, const Rect& rect, const Acc& acc)
   {
-    return Domain(pr.get_bounds<DIM, Legion::coord_t>());
+    std::vector<size_t> strides(DIM, 0);
+    auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
+    return {ptr, strides};
+  }
+
+  template <int32_t DIM>
+  InlineAllocation operator()(const Legion::PhysicalRegion& pr,
+                              const Legion::FieldID fid,
+                              size_t field_size)
+  {
+    Rect<DIM> rect{pr};
+    return create(
+      DIM, rect, AccessorRO<int8_t, DIM>(pr, fid, rect, field_size, false /*check_field_size*/));
+  }
+
+  template <int32_t M, int32_t N>
+  InlineAllocation operator()(const Legion::PhysicalRegion& pr,
+                              const Legion::FieldID fid,
+                              const Domain& domain,
+                              const Legion::AffineTransform<M, N>& transform,
+                              size_t field_size)
+  {
+    Rect<N> rect =
+      domain.dim > 0 ? Rect<N>(domain) : Rect<N>(Point<N>::ZEROES(), Point<N>::ZEROES());
+    return create(
+      N,
+      rect,
+      AccessorRO<int8_t, N>(pr, fid, transform, rect, field_size, false /*check_field_size*/));
   }
 };
 
 }  // namespace
 
-Domain RegionField::domain() const { return dim_dispatch(dim_, get_domain_fn{}, pr_); }
+Domain RegionField::domain() const
+{
+  return Legion::Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
+}
+
+InlineAllocation RegionField::get_inline_allocation(uint32_t field_size) const
+{
+  return dim_dispatch(dim_, get_inline_alloc_fn{}, *pr_, fid_, field_size);
+}
+
+InlineAllocation RegionField::get_inline_allocation(
+  uint32_t field_size, const Domain& domain, const Legion::DomainAffineTransform& transform) const
+{
+  return double_dispatch(transform.transform.m,
+                         transform.transform.n,
+                         get_inline_alloc_fn{},
+                         *pr_,
+                         fid_,
+                         domain,
+                         transform,
+                         field_size);
+}
 
 UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
   : num_elements_(
@@ -140,16 +170,19 @@ FutureWrapper::FutureWrapper(bool read_only,
                              Domain domain,
                              Legion::Future future,
                              bool initialize /*= false*/)
-  : read_only_(read_only), field_size_(field_size), domain_(domain), future_(future)
+  : read_only_(read_only),
+    field_size_(field_size),
+    domain_(domain),
+    future_{std::make_unique<Legion::Future>(future)}
 {
   if (!read_only) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(!initialize || future_.get_untyped_size() == field_size);
+      assert(!initialize || future_->get_untyped_size() == field_size);
     }
     auto mem_kind =
       find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB));
     if (initialize) {
-      auto p_init_value = future_.get_buffer(mem_kind);
+      auto p_init_value = future_->get_buffer(mem_kind);
 #if LegateDefined(LEGATE_USE_CUDA)
       if (mem_kind == Memory::Kind::GPU_FB_MEM) {
         // TODO: This should be done by Legion
@@ -166,26 +199,54 @@ FutureWrapper::FutureWrapper(bool read_only,
   }
 }
 
-FutureWrapper::FutureWrapper(const FutureWrapper& other) noexcept
-  : read_only_(other.read_only_),
-    field_size_(other.field_size_),
-    domain_(other.domain_),
-    future_(other.future_),
-    buffer_(other.buffer_)
-{
-}
-
-FutureWrapper& FutureWrapper::operator=(const FutureWrapper& other) noexcept
-{
-  read_only_  = other.read_only_;
-  field_size_ = other.field_size_;
-  domain_     = other.domain_;
-  future_     = other.future_;
-  buffer_     = other.buffer_;
-  return *this;
-}
-
 Domain FutureWrapper::domain() const { return domain_; }
+
+namespace {
+
+struct get_inline_alloc_from_future_fn {
+  template <int32_t DIM>
+  InlineAllocation operator()(const Legion::Future& future, const Domain& domain, size_t field_size)
+  {
+    Rect<DIM> rect =
+      domain.dim > 0 ? Rect<DIM>(domain) : Rect<DIM>(Point<DIM>::ZEROES(), Point<DIM>::ZEROES());
+    std::vector<size_t> strides(DIM, 0);
+    AccessorRO<int8_t, DIM> acc(
+      future, rect, Memory::Kind::NO_MEMKIND, field_size, false /*check_field_size*/);
+    auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
+    return InlineAllocation{ptr, std::move(strides)};
+  }
+
+  template <int32_t DIM>
+  InlineAllocation operator()(const Legion::UntypedDeferredValue& value,
+                              const Domain& domain,
+                              size_t field_size)
+  {
+    Rect<DIM> rect =
+      domain.dim > 0 ? Rect<DIM>(domain) : Rect<DIM>(Point<DIM>::ZEROES(), Point<DIM>::ZEROES());
+    std::vector<size_t> strides(DIM, 0);
+    AccessorRO<int8_t, DIM> acc(value, rect, field_size, false /*check_field_size*/);
+    auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
+    return InlineAllocation{ptr, std::move(strides)};
+  }
+};
+
+}  // namespace
+
+InlineAllocation FutureWrapper::get_inline_allocation(const Domain& domain) const
+{
+  if (is_read_only()) {
+    return dim_dispatch(
+      std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, *future_, domain, field_size_);
+  } else {
+    return dim_dispatch(
+      std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, buffer_, domain, field_size_);
+  }
+}
+
+InlineAllocation FutureWrapper::get_inline_allocation() const
+{
+  return get_inline_allocation(domain_);
+}
 
 void FutureWrapper::initialize_with_identity(int32_t redop_id)
 {
@@ -206,6 +267,11 @@ void FutureWrapper::initialize_with_identity(int32_t redop_id)
 
 ReturnValue FutureWrapper::pack() const { return ReturnValue(buffer_, field_size_); }
 
+Legion::Future FutureWrapper::get_future() const
+{
+  return future_ != nullptr ? *future_ : Legion::Future{};
+}
+
 Store::Store(int32_t dim,
              std::shared_ptr<Type> type,
              int32_t redop_id,
@@ -216,7 +282,7 @@ Store::Store(int32_t dim,
     dim_(dim),
     type_(std::move(type)),
     redop_id_(redop_id),
-    future_(future),
+    future_(std::move(future)),
     transform_(std::move(transform)),
     readable_(future.valid()),
     writable_(!future.is_read_only())
@@ -265,7 +331,7 @@ Store::Store(int32_t dim,
     dim_(dim),
     type_(std::move(type)),
     redop_id_(redop_id),
-    future_(future),
+    future_(std::move(future)),
     transform_(transform),
     readable_(true)
 {
@@ -289,42 +355,6 @@ Store::Store(int32_t dim,
   reducible_ = region_field_.is_reducible();
 }
 
-Store::Store(Store&& other) noexcept
-  : is_future_(other.is_future_),
-    is_unbound_store_(other.is_unbound_store_),
-    dim_(other.dim_),
-    type_(std::move(other.type_)),
-    redop_id_(other.redop_id_),
-    future_(other.future_),
-    region_field_(std::move(other.region_field_)),
-    unbound_field_(std::move(other.unbound_field_)),
-    transform_(std::move(other.transform_)),
-    readable_(other.readable_),
-    writable_(other.writable_),
-    reducible_(other.reducible_)
-{
-}
-
-Store& Store::operator=(Store&& other) noexcept
-{
-  is_future_        = other.is_future_;
-  is_unbound_store_ = other.is_unbound_store_;
-  dim_              = other.dim_;
-  type_             = std::move(other.type_);
-  redop_id_         = other.redop_id_;
-  if (is_future_)
-    future_ = other.future_;
-  else if (is_unbound_store_)
-    unbound_field_ = std::move(other.unbound_field_);
-  else
-    region_field_ = std::move(other.region_field_);
-  transform_ = std::move(other.transform_);
-  readable_  = other.readable_;
-  writable_  = other.writable_;
-  reducible_ = other.reducible_;
-  return *this;
-}
-
 bool Store::valid() const { return is_future_ || is_unbound_store_ || region_field_.valid(); }
 
 bool Store::transformed() const { return !transform_->identity(); }
@@ -337,6 +367,21 @@ Domain Store::domain() const
   if (!transform_->identity()) result = transform_->transform(result);
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(result.dim == dim_ || dim_ == 0); }
   return result;
+}
+
+InlineAllocation Store::get_inline_allocation() const
+{
+  if (is_unbound_store()) {
+    throw std::invalid_argument("Allocation info cannot be retrieved from an unbound store");
+  }
+
+  if (transformed()) {
+    if (is_future()) { return future_.get_inline_allocation(domain()); }
+    return region_field_.get_inline_allocation(type()->size(), domain(), get_inverse_transform());
+  } else {
+    if (is_future()) { return future_.get_inline_allocation(); }
+    return region_field_.get_inline_allocation(type()->size());
+  }
 }
 
 void Store::bind_empty_data()

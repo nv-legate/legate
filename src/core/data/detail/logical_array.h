@@ -66,6 +66,9 @@ struct LogicalArray {
     int32_t redop) const = 0;
   virtual std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const = 0;
+
+  [[nodiscard]] static std::shared_ptr<LogicalArray> from_store(
+    std::shared_ptr<LogicalStore> store);
 };
 
 class BaseLogicalArray : public LogicalArray {

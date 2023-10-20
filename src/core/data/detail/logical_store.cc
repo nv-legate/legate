@@ -62,7 +62,7 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
     extents_(extents),
     type_(std::move(type)),
     kind_(Kind::FUTURE),
-    future_(future),
+    future_{std::make_unique<Legion::Future>(future)},
     offsets_(dim_, 0)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
@@ -85,6 +85,15 @@ Storage::Storage(Shape&& extents,
   if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
 
+Storage::~Storage()
+{
+  if (!Runtime::get_runtime()->initialized()) {
+    // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
+    // this would be collected by the Legion runtime
+    future_.release();
+  }
+}
+
 const Shape& Storage::extents() const
 {
   if (unbound_) {
@@ -98,6 +107,29 @@ const Shape& Storage::offsets() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!unbound_); }
   return offsets_;
+}
+
+bool Storage::overlaps(const std::shared_ptr<Storage>& other) const
+{
+  const auto* lhs = this;
+  const auto* rhs = other.get();
+
+  if (lhs == rhs) return true;
+
+  if (lhs->get_root() != rhs->get_root()) return false;
+
+  if (lhs->volume() == 0 || rhs->volume() == 0) return false;
+
+  for (int32_t idx = 0; idx < dim_; ++idx) {
+    auto loff = lhs->offsets_[idx];
+    auto lext = lhs->extents_[idx];
+    auto roff = rhs->offsets_[idx];
+    auto rext = rhs->extents_[idx];
+
+    if (loff <= roff ? roff < loff + lext : loff < roff + rext) { continue; }
+    return false;
+  }
+  return true;
 }
 
 size_t Storage::volume() const { return extents().volume(); }
@@ -158,7 +190,7 @@ std::shared_ptr<LogicalRegionField> Storage::get_region_field()
 Legion::Future Storage::get_future() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::FUTURE == kind_); }
-  return future_;
+  return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
 void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
@@ -179,12 +211,19 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
   extents_ = extents;
 }
 
-void Storage::set_future(Legion::Future future) { future_ = future; }
+void Storage::set_future(Legion::Future future)
+{
+  future_ = std::make_unique<Legion::Future>(std::move(future));
+}
 
 RegionField Storage::map()
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::REGION_FIELD == kind_); }
-  return get_region_field()->map();
+  auto region_field = get_region_field();
+  auto mapped       = region_field->map();
+  // Set the right subregion so the physical store can see the right domain
+  mapped.set_logical_region(region_field->region());
+  return mapped;
 }
 
 void Storage::allow_out_of_order_destruction()
@@ -312,11 +351,20 @@ bool StoragePartition::is_disjoint_for(const Domain& launch_domain) const
 // legate::detail::LogicalStore
 ////////////////////////////////////////////////////
 
+void assert_fixed_storage_size(std::shared_ptr<Storage> storage)
+{
+  if (storage->type()->variable_size()) {
+    throw std::invalid_argument("Store cannot be created with variable size type " +
+                                storage->type()->to_string());
+  }
+}
+
 LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
   : store_id_(Runtime::get_runtime()->get_unique_store_id()),
     storage_(std::move(storage)),
     transform_(std::make_shared<TransformStack>())
 {
+  assert_fixed_storage_size(storage_);
   if (!unbound()) extents_ = storage_->extents();
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(transform_ != nullptr);
@@ -333,6 +381,7 @@ LogicalStore::LogicalStore(Shape&& extents,
     storage_(storage),
     transform_(std::move(transform))
 {
+  assert_fixed_storage_size(storage_);
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(transform_ != nullptr);
 
@@ -358,6 +407,11 @@ size_t LogicalStore::storage_size() const { return storage_->volume() * type()->
 int32_t LogicalStore::dim() const
 {
   return unbound() ? storage_->dim() : static_cast<int32_t>(extents().size());
+}
+
+bool LogicalStore::overlaps(const std::shared_ptr<LogicalStore>& other) const
+{
+  return storage_->overlaps(other->storage_);
 }
 
 bool LogicalStore::has_scalar_storage() const { return storage_->kind() == Storage::Kind::FUTURE; }
@@ -458,7 +512,13 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t idx, Slice slice)
 
   auto exts          = extents();
   auto [start, stop] = sanitize_slice(slice, exts[idx]);
-  exts[idx]          = stop - start;
+
+  if (start < stop && (start >= exts[idx] || stop > exts[idx])) {
+    throw std::invalid_argument("Out-of-bounds slicing on dimension " + std::to_string(dim()) +
+                                " for a store of shape " + extents().to_string());
+  }
+
+  exts[idx] = stop - start;
 
   if (exts[idx] == extents()[idx]) return shared_from_this();
 
@@ -545,7 +605,7 @@ std::shared_ptr<Store> LogicalStore::get_physical_store()
     FutureWrapper future(true, type()->size(), domain, storage_->get_future());
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    return std::make_shared<Store>(dim(), type(), -1, future, transform_);
+    return std::make_shared<Store>(dim(), type(), -1, std::move(future), transform_);
   }
 
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(storage_->kind() == Storage::Kind::REGION_FIELD); }
@@ -605,7 +665,7 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
       key_partition_->satisfies_restrictions(restrictions))
     return key_partition_;
 
-  if (has_scalar_storage() || volume() == 0) { return create_no_partition(); }
+  if (has_scalar_storage() || extents_.empty() || volume() == 0) { return create_no_partition(); }
 
   Partition* storage_part = nullptr;
   if (transform_->is_convertible())
@@ -761,5 +821,7 @@ bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const
 {
   return storage_partition_->is_disjoint_for(launch_domain);
 }
+
+const Shape& LogicalStorePartition::color_shape() const { return partition_->color_shape(); }
 
 }  // namespace legate::detail

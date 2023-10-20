@@ -52,7 +52,11 @@ const ProcessorRange& Machine::processor_range(TaskTarget target) const
 std::vector<TaskTarget> Machine::valid_targets() const
 {
   std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges) result.push_back(target);
+  result.reserve(processor_ranges.size());
+  for (auto& [target, range] : processor_ranges) {
+    if (range.empty()) continue;
+    result.push_back(target);
+  }
   return result;
 }
 
@@ -120,11 +124,11 @@ Machine Machine::operator[](const std::vector<TaskTarget>& targets) const { retu
 
 bool Machine::operator==(const Machine& other) const
 {
-  if (preferred_target != other.preferred_target) return false;
-  if (processor_ranges.size() != other.processor_ranges.size()) return false;
-  for (auto const& r : processor_ranges) {
-    auto finder = other.processor_ranges.find(r.first);
-    if (finder == other.processor_ranges.end() || r.second != finder->second) return false;
+  if (processor_ranges.size() < other.processor_ranges.size()) { return other.operator==(*this); }
+  for (auto const& [target, range] : processor_ranges) {
+    if (range.empty()) continue;
+    auto finder = other.processor_ranges.find(target);
+    if (finder == other.processor_ranges.end() || range != finder->second) return false;
   }
   return true;
 }

@@ -75,18 +75,18 @@ class Runtime {
                                   bool in_callback);
 
  public:
-  void record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id);
-  int32_t find_reduction_operator(int32_t type_uid, int32_t op_kind) const;
+  void record_reduction_operator(int32_t type_uid, int32_t op_kind, int64_t legion_op_id);
+  [[nodiscard]] int64_t find_reduction_operator(int32_t type_uid, int32_t op_kind) const;
 
  public:
   void initialize(Legion::Context legion_context);
 
  public:
   mapping::detail::Machine slice_machine_for_task(const Library* library, int64_t task_id);
-  std::unique_ptr<AutoTask> create_task(const Library* library, int64_t task_id);
-  std::unique_ptr<ManualTask> create_task(const Library* library,
-                                          int64_t task_id,
-                                          const Shape& launch_shape);
+  [[nodiscard]] std::shared_ptr<AutoTask> create_task(const Library* library, int64_t task_id);
+  [[nodiscard]] std::shared_ptr<ManualTask> create_task(const Library* library,
+                                                        int64_t task_id,
+                                                        const Shape& launch_shape);
   void issue_copy(std::shared_ptr<LogicalStore> target,
                   std::shared_ptr<LogicalStore> source,
                   std::optional<int32_t> redop);
@@ -110,7 +110,7 @@ class Runtime {
                    std::shared_ptr<LogicalStore> out_store,
                    int64_t radix);
   void flush_scheduling_window();
-  void submit(std::unique_ptr<Operation> op);
+  void submit(std::shared_ptr<Operation> op);
 
  public:
   std::shared_ptr<LogicalArray> create_array(std::shared_ptr<Type> type,
@@ -282,7 +282,7 @@ class Runtime {
                                   Legion::ProjectionID proj_id);
 
  private:
-  void schedule(std::vector<std::unique_ptr<Operation>> operations);
+  void schedule(std::vector<std::shared_ptr<Operation>> operations);
 
  public:
   static Runtime* get_runtime();
@@ -321,7 +321,7 @@ class Runtime {
   std::map<ShardingDesc, Legion::ShardingID> registered_shardings_{};
 
  private:
-  std::vector<std::unique_ptr<Operation>> operations_;
+  std::vector<std::shared_ptr<Operation>> operations_;
   size_t window_size_{1};
   uint64_t next_unique_id_{0};
 
@@ -336,7 +336,7 @@ class Runtime {
   std::map<std::string, Library*> libraries_{};
 
  private:
-  std::map<std::pair<int32_t, int32_t>, int32_t> reduction_ops_{};
+  std::map<std::pair<int32_t, int32_t>, int64_t> reduction_ops_{};
 
  private:
   uint32_t max_pending_exceptions_;

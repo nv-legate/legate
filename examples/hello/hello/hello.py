@@ -15,12 +15,12 @@ import struct
 from enum import IntEnum
 from typing import Any
 
-import numpy as np
-
 import legate.core.types as types
-from legate.core import Rect, Store, get_legate_runtime
+from legate.core import LogicalArray, LogicalStore, get_legate_runtime
 
-from .library import user_context, user_lib
+from .library import user_context as library, user_lib
+
+legate_runtime = get_legate_runtime()
 
 
 class HelloOpCode(IntEnum):
@@ -36,8 +36,8 @@ def print_hello(message: str) -> None:
     Args:
         message (str): The message to print
     """
-    task = user_context.create_auto_task(HelloOpCode.HELLO_WORLD)
-    task.add_scalar_arg(message, types.string)
+    task = legate_runtime.create_auto_task(library, HelloOpCode.HELLO_WORLD)
+    task.add_scalar_arg(message, types.string_type)
     task.execute()
 
 
@@ -49,15 +49,14 @@ def print_hellos(message: str, n: int) -> None:
         message (str): The message to print
         n (int): The number of times to print
     """
-    launch_domain = Rect(lo=[0], hi=[n])
-    task = user_context.create_manual_task(
-        HelloOpCode.HELLO_WORLD, launch_domain=launch_domain
+    task = legate_runtime.create_manual_task(
+        library, HelloOpCode.HELLO_WORLD, [n]
     )
-    task.add_scalar_arg(message, types.string)
+    task.add_scalar_arg(message, types.string_type)
     task.execute()
 
 
-def _get_legate_store(input: Any) -> Store:
+def _get_legate_store(input: Any) -> LogicalStore:
     """Extracts a Legate store from any object
        implementing the legete data interface
 
@@ -65,52 +64,59 @@ def _get_legate_store(input: Any) -> Store:
         input (Any): The input object
 
     Returns:
-        Store: The extracted Legate store
+        LogicalStore: The extracted Legate store
     """
-    if isinstance(input, Store):
+    if isinstance(input, LogicalStore):
         return input
+    if isinstance(input, LogicalArray):
+        assert not (input.nullable or input.nested)
+        return input.data
     data = input.__legate_data_interface__["data"]
     field = next(iter(data))
     array = data[field]
-    _, store = array.stores()
+    assert not (array.nullable or array.nested)
+    store = array.data
     return store
 
 
-def to_scalar(input: Store) -> float:
+def to_scalar(input: LogicalStore) -> float:
     """Extracts a Python scalar value from a Legate store
        encapsulating a single scalar
 
     Args:
-        input (Store): The Legate store encapsulating a scalar
+        input (LogicalStore): The Legate store encapsulating a scalar
 
     Returns:
         float: A Python scalar
     """
-    # This operation blocks until the data in the Store
+    # This operation blocks until the data in the LogicalStore
     # is available and correct
-    buf = input.storage.get_buffer(np.float32().itemsize)
-    result = np.frombuffer(buf, dtype=np.float32, count=1)
-    return float(result[0])
+
+    # TODO: Accessors
+    # print(type(input._cpp_store.get_physical_store().read_accessor()))
+    # auto acc      = p_scalar.read_accessor<float, 1>();
+    # float output  = static_cast<float>(acc[{0}]);
+    return 0
 
 
-def zero() -> Store:
+def zero() -> LogicalStore:
     """Creates a Legate store representing a single zero scalar
 
     Returns:
-        Store: A Legate store representing a scalar zero
+        LogicalStore: A Legate store representing a scalar zero
     """
     data = bytearray(4)
     buf = struct.pack(f"{len(data)}s", data)
-    future = get_legate_runtime().create_future(buf, len(buf))
-    return user_context.create_store(
+    scalar = get_legate_runtime().create_scalar(types.float32, buf)
+    return legate_runtime.create_store(
         types.float32,
         shape=(1,),
-        storage=future,
+        scalar=scalar,
         optimize_scalar=True,
     )
 
 
-def iota(size: int) -> Store:
+def iota(size: int) -> LogicalStore:
     """Enqueues a task that will generate a 1-D array
        1,2,...size.
 
@@ -118,14 +124,15 @@ def iota(size: int) -> Store:
         size (int): The number of elements to generate
 
     Returns:
-        Store: The Legate store that will hold the iota values
+        LogicalStore: The Legate store that will hold the iota values
     """
-    output = user_context.create_store(
+    output = legate_runtime.create_array(
         types.float32,
         shape=(size,),
         optimize_scalar=True,
     )
-    task = user_context.create_auto_task(
+    task = legate_runtime.create_auto_task(
+        library,
         HelloOpCode.IOTA,
     )
     task.add_output(output)
@@ -133,7 +140,7 @@ def iota(size: int) -> Store:
     return output
 
 
-def sum(input: Any) -> Store:
+def sum(input: Any) -> LogicalStore:
     """Sums a 1-D array into a single scalar
 
     Args:
@@ -141,11 +148,11 @@ def sum(input: Any) -> Store:
                      the Legate data interface.
 
     Returns:
-        Store: A Legate store encapsulating the array sum
+        LogicalStore: A Legate store encapsulating the array sum
     """
     input_store = _get_legate_store(input)
 
-    task = user_context.create_auto_task(HelloOpCode.SUM)
+    task = legate_runtime.create_manual_task(library, HelloOpCode.SUM, [1])
 
     # zero-initialize the output for the summation
     output = zero()
@@ -156,7 +163,7 @@ def sum(input: Any) -> Store:
     return output
 
 
-def square(input: Any) -> Store:
+def square(input: Any) -> LogicalStore:
     """Computes the elementwise square of a 1-D array
 
     Args:
@@ -164,15 +171,15 @@ def square(input: Any) -> Store:
                      the Legate data interface.
 
     Returns:
-        Store: A Legate store encapsulating a 1-D array
+        LogicalStore: A Legate store encapsulating a 1-D array
                holding the elementwise square values
     """
     input_store = _get_legate_store(input)
 
-    output = user_context.create_store(
+    output = legate_runtime.create_array(
         types.float32, shape=input_store.shape, optimize_scalar=True
     )
-    task = user_context.create_auto_task(HelloOpCode.SQUARE)
+    task = legate_runtime.create_auto_task(library, HelloOpCode.SQUARE)
 
     task.add_input(input_store)
     task.add_output(output)

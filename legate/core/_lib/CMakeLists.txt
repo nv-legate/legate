@@ -10,14 +10,23 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-set(cython_sources context.pyx types.pyx)
-set(linked_libraries legate::core)
+add_subdirectory(data)
+add_subdirectory(mapping)
+add_subdirectory(operation)
+add_subdirectory(partitioning)
+add_subdirectory(runtime)
+add_subdirectory(type)
+add_subdirectory(utilities)
+
+set(cython_sources
+    legate_c.pyx
+)
 
 rapids_cython_create_modules(
   CXX
   ASSOCIATED_TARGETS legate_core
   SOURCE_FILES "${cython_sources}"
-  LINKED_LIBRARIES "${linked_libraries}"
+  LINKED_LIBRARIES legate::core
 )
 
 find_package (Python3 REQUIRED COMPONENTS Development)

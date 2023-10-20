@@ -230,7 +230,7 @@ class ImageConstraint : public Constraint {
   const Variable* var_range() const { return var_range_; }
 
  public:
-  std::unique_ptr<Partition> resolve(const Strategy& strategy) const;
+  [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
 
  private:
   const Variable* var_function_;
@@ -265,7 +265,7 @@ class ScaleConstraint : public Constraint {
   const Variable* var_bigger() const { return var_bigger_; }
 
  public:
-  std::unique_ptr<Partition> resolve(const Strategy& strategy) const;
+  [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
 
  private:
   const Shape factors_;
@@ -304,7 +304,7 @@ class BloatConstraint : public Constraint {
   const Variable* var_bloat() const { return var_bloat_; }
 
  public:
-  std::unique_ptr<Partition> resolve(const Strategy& strategy) const;
+  [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
 
  private:
   const Variable* var_source_;
@@ -313,21 +313,23 @@ class BloatConstraint : public Constraint {
   const Shape high_offsets_;
 };
 
-std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
+[[nodiscard]] std::shared_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
 
-[[nodiscard]] std::unique_ptr<Broadcast> broadcast(const Variable* variable);
+[[nodiscard]] std::shared_ptr<Broadcast> broadcast(const Variable* variable);
 
-std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes);
+[[nodiscard]] std::shared_ptr<Broadcast> broadcast(const Variable* variable,
+                                                   const tuple<int32_t>& axes);
 
-std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range);
+[[nodiscard]] std::shared_ptr<ImageConstraint> image(const Variable* var_function,
+                                                     const Variable* var_range);
 
-std::unique_ptr<ScaleConstraint> scale(const Shape& factors,
-                                       const Variable* var_smaller,
-                                       const Variable* var_bigger);
+[[nodiscard]] std::shared_ptr<ScaleConstraint> scale(const Shape& factors,
+                                                     const Variable* var_smaller,
+                                                     const Variable* var_bigger);
 
-std::unique_ptr<BloatConstraint> bloat(const Variable* var_source,
-                                       const Variable* var_bloat,
-                                       const Shape& low_offsets,
-                                       const Shape& high_offsets);
+[[nodiscard]] std::shared_ptr<BloatConstraint> bloat(const Variable* var_source,
+                                                     const Variable* var_bloat,
+                                                     const Shape& low_offsets,
+                                                     const Shape& high_offsets);
 
 }  // namespace legate::detail

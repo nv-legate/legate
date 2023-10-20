@@ -54,6 +54,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
           std::shared_ptr<StoragePartition> parent,
           Shape&& color,
           Shape&& offsets);
+  ~Storage();
 
  public:
   bool unbound() const { return unbound_; }
@@ -61,6 +62,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   const Shape& offsets() const;
   size_t volume() const;
   int32_t dim() { return dim_; }
+  [[nodiscard]] bool overlaps(const std::shared_ptr<Storage>& other) const;
   std::shared_ptr<Type> type() const { return type_; }
   Kind kind() const { return kind_; }
   int32_t level() const { return level_; }
@@ -106,7 +108,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
 
  private:
   std::shared_ptr<LogicalRegionField> region_field_{nullptr};
-  Legion::Future future_{};
+  std::unique_ptr<Legion::Future> future_{};
 
  private:
   int32_t level_{0};
@@ -177,6 +179,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   // Size of the backing storage
   size_t storage_size() const;
   int32_t dim() const;
+  [[nodiscard]] bool overlaps(const std::shared_ptr<LogicalStore>& other) const;
   bool has_scalar_storage() const;
   std::shared_ptr<Type> type() const;
   bool transformed() const;
@@ -273,6 +276,7 @@ class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePa
   std::unique_ptr<ProjectionInfo> create_projection_info(
     const Domain& launch_domain, std::optional<proj::SymbolicFunctor> proj_fn = nullptr);
   bool is_disjoint_for(const Domain& launch_domain) const;
+  [[nodiscard]] const Shape& color_shape() const;
 
  private:
   std::shared_ptr<Partition> partition_;

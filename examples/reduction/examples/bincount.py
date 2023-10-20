@@ -11,9 +11,10 @@
 
 
 import cunumeric as np
-from reduction import bincount, user_context
+from reduction import bincount
 
 import legate.core.types as ty
+from legate.core import get_legate_runtime
 
 
 def test():
@@ -21,7 +22,7 @@ def test():
     num_bins = 10
 
     # Generate random inputs using cuNumeric
-    store = user_context.create_store(ty.uint64, size)
+    store = get_legate_runtime().create_store(ty.uint64, (size,))
     np.asarray(store)[:] = np.random.randint(
         low=0, high=num_bins - 1, size=size
     )

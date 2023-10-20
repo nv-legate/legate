@@ -21,8 +21,16 @@ namespace legate::detail {
 FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
   : runtime_(runtime), shape_(shape), field_size_(field_size)
 {
-  log_legate.debug() << "Field manager " << this << " created for shape " << shape
-                     << ", field_size " << field_size;
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    std::stringstream ss;
+    if (shape.is_valid()) {
+      ss << shape;
+    } else {
+      ss << "()";
+    }
+    log_legate.debug() << "Field manager " << this << " created for shape " << std::move(ss).str()
+                       << ", field_size " << field_size;
+  }
 }
 
 std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()

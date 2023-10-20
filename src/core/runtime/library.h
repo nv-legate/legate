@@ -145,7 +145,7 @@ class Library {
    * @return Global reduction operator ID
    */
   template <typename REDOP>
-  int32_t register_reduction_operator(int32_t redop_id);
+  [[nodiscard]] int64_t register_reduction_operator(int32_t redop_id);
   /**
    * @brief Registers a library mapper. Replaces the existing mapper if there already is one.
    *
@@ -155,11 +155,15 @@ class Library {
 
  public:
   void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+  const TaskInfo* find_task(int64_t local_task_id) const;
 
  public:
+  Library() = default;
   Library(detail::Library* impl);
-  Library(const Library&) = default;
-  Library(Library&&)      = default;
+  Library(const Library&)            = default;
+  Library& operator=(const Library&) = default;
+  Library(Library&&)                 = default;
+  Library& operator=(Library&&)      = default;
 
  public:
   bool operator==(const Library& other) const;
@@ -173,7 +177,7 @@ class Library {
                         Legion::UntypedBuffer buffer);
 
  private:
-  detail::Library* impl_;
+  detail::Library* impl_{nullptr};
 };
 
 }  // namespace legate

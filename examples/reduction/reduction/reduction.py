@@ -15,9 +15,11 @@ from enum import IntEnum
 import cunumeric as np
 
 import legate.core.types as ty
-from legate.core import Store
+from legate.core import LogicalStore, get_legate_runtime
 
-from .library import user_context as context, user_lib
+from .library import user_context as library, user_lib
+
+legate_runtime = get_legate_runtime()
 
 
 class OpCode(IntEnum):
@@ -39,20 +41,20 @@ def _sanitize_axis(axis: int, ndim: int) -> int:
     return sanitized
 
 
-def sum_over_axis(input: Store, axis: int) -> Store:
+def sum_over_axis(input: LogicalStore, axis: int) -> LogicalStore:
     """
     Sum values along the chosen axis
 
     Parameters
     ----------
-    input : Store
+    input : LogicalStore
         Input to sum
     axis : int
         Axis along which the summation should be done
 
     Returns
     -------
-    Store
+    LogicalStore
         Summation result
     """
     sanitized = _sanitize_axis(axis, input.ndim)
@@ -61,7 +63,7 @@ def sum_over_axis(input: Store, axis: int) -> Store:
     res_shape = tuple(
         ext for dim, ext in enumerate(input.shape) if dim != sanitized
     )
-    result = context.create_store(input.type, res_shape)
+    result = legate_runtime.create_store(input.type, res_shape)
     np.asarray(result).fill(0)
 
     # Broadcast the output along the contracting dimension
@@ -69,7 +71,7 @@ def sum_over_axis(input: Store, axis: int) -> Store:
 
     assert promoted.shape == input.shape
 
-    task = context.create_auto_task(OpCode.SUM_OVER_AXIS)
+    task = legate_runtime.create_auto_task(library, OpCode.SUM_OVER_AXIS)
     task.add_input(input)
     task.add_reduction(promoted, ty.ReductionOp.ADD)
     task.add_alignment(input, promoted)
@@ -79,13 +81,13 @@ def sum_over_axis(input: Store, axis: int) -> Store:
     return result
 
 
-def multiply(rhs1: Store, rhs2: Store) -> Store:
+def multiply(rhs1: LogicalStore, rhs2: LogicalStore) -> LogicalStore:
     if rhs1.type != rhs2.type or rhs1.shape != rhs2.shape:
         raise ValueError("Stores to add must have the same type and shape")
 
-    result = context.create_store(rhs1.type, rhs1.shape)
+    result = legate_runtime.create_store(rhs1.type, rhs1.shape)
 
-    task = context.create_auto_task(OpCode.MUL)
+    task = legate_runtime.create_auto_task(library, OpCode.MUL)
     task.add_input(rhs1)
     task.add_input(rhs2)
     task.add_output(result)
@@ -97,18 +99,18 @@ def multiply(rhs1: Store, rhs2: Store) -> Store:
     return result
 
 
-def matmul(rhs1: Store, rhs2: Store) -> Store:
+def matmul(rhs1: LogicalStore, rhs2: LogicalStore) -> LogicalStore:
     """
     Performs matrix multiplication
 
     Parameters
     ----------
-    rhs1, rhs2 : Store
+    rhs1, rhs2 : LogicalStore
         Matrices to multiply
 
     Returns
     -------
-    Store
+    LogicalStore
         Multiplication result
     """
     if rhs1.ndim != 2 or rhs2.ndim != 2:
@@ -127,7 +129,7 @@ def matmul(rhs1: Store, rhs2: Store) -> Store:
 
     # Multiplying an (m, k) matrix with a (k, n) matrix gives
     # an (m, n) matrix
-    result = context.create_store(rhs1.type, (m, n))
+    result = legate_runtime.create_store(rhs1.type, (m, n))
     np.asarray(result).fill(0)
 
     # Each store gets a fake dimension that it doesn't have
@@ -138,7 +140,7 @@ def matmul(rhs1: Store, rhs2: Store) -> Store:
     assert lhs.shape == rhs1.shape
     assert lhs.shape == rhs2.shape
 
-    task = context.create_auto_task(OpCode.MATMUL)
+    task = legate_runtime.create_auto_task(library, OpCode.MATMUL)
     task.add_input(rhs1)
     task.add_input(rhs2)
     task.add_reduction(lhs, ty.ReductionOp.ADD)
@@ -150,26 +152,26 @@ def matmul(rhs1: Store, rhs2: Store) -> Store:
     return result
 
 
-def bincount(input: Store, num_bins: int) -> Store:
+def bincount(input: LogicalStore, num_bins: int) -> LogicalStore:
     """
     Counts the occurrences of each bin index
 
     Parameters
     ----------
-    input : Store
+    input : LogicalStore
         Input to bin-count
     num_bins : int
         Number of bins
 
     Returns
     -------
-    Store
+    LogicalStore
         Counting result
     """
-    result = context.create_store(ty.uint64, (num_bins,))
+    result = legate_runtime.create_store(ty.uint64, (num_bins,))
     np.asarray(result).fill(0)
 
-    task = context.create_auto_task(OpCode.BINCOUNT)
+    task = legate_runtime.create_auto_task(library, OpCode.BINCOUNT)
     task.add_input(input)
     # Broadcast the result store. This commands the Legate runtime to give
     # the entire store to every task instantiated by this task descriptor
@@ -183,10 +185,10 @@ def bincount(input: Store, num_bins: int) -> Store:
     return result
 
 
-def categorize(input: Store, bins: Store) -> Store:
-    result = context.create_store(ty.uint64, input.shape)
+def categorize(input: LogicalStore, bins: LogicalStore) -> LogicalStore:
+    result = legate_runtime.create_store(ty.uint64, input.shape)
 
-    task = context.create_auto_task(OpCode.CATEGORIZE)
+    task = legate_runtime.create_auto_task(library, OpCode.CATEGORIZE)
     task.add_input(input)
     task.add_input(bins)
     task.add_output(result)
@@ -200,27 +202,27 @@ def categorize(input: Store, bins: Store) -> Store:
     return result
 
 
-def histogram(input: Store, bins: Store) -> Store:
+def histogram(input: LogicalStore, bins: LogicalStore) -> LogicalStore:
     """
     Constructs a histogram for the given bins
 
     Parameters
     ----------
-    input : Store
+    input : LogicalStore
         Input
     bins : int
         Bin edges
 
     Returns
     -------
-    Store
+    LogicalStore
         Histogram
     """
     num_bins = bins.shape[0] - 1
-    result = context.create_store(ty.uint64, (num_bins,))
+    result = legate_runtime.create_store(ty.uint64, (num_bins,))
     np.asarray(result).fill(0)
 
-    task = context.create_auto_task(OpCode.HISTOGRAM)
+    task = legate_runtime.create_auto_task(library, OpCode.HISTOGRAM)
     task.add_input(input)
     task.add_input(bins)
     task.add_reduction(result, ty.ReductionOp.ADD)
@@ -234,18 +236,18 @@ def histogram(input: Store, bins: Store) -> Store:
     return result
 
 
-def unique(input: Store, radix: int = 4) -> Store:
+def unique(input: LogicalStore, radix: int = 4) -> LogicalStore:
     """
     Finds unique elements in the input and returns them in a store
 
     Parameters
     ----------
-    input : Store
+    input : LogicalStore
         Input
 
     Returns
     -------
-    Store
+    LogicalStore
         Result that contains only the unique elements of the input
     """
 
@@ -264,13 +266,15 @@ def unique(input: Store, radix: int = 4) -> Store:
         )
 
     # Create an unbound store to collect local results
-    result = context.create_store(input.type, shape=None, ndim=1)
+    result = legate_runtime.create_store(input.type, shape=None, ndim=1)
 
-    task = context.create_auto_task(OpCode.UNIQUE)
+    task = legate_runtime.create_auto_task(library, OpCode.UNIQUE)
     task.add_input(input)
     task.add_output(result)
 
     task.execute()
 
     # Perform global reduction using a reduction tree
-    return context.tree_reduce(OpCode.UNIQUE, result, radix=radix)
+    return legate_runtime.tree_reduce(
+        library, OpCode.UNIQUE, result, radix=radix
+    )

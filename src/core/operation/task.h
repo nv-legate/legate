@@ -94,8 +94,10 @@ class AutoTask {
    *
    * @param array An array to add to the task as input
    * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
-  void add_input(LogicalArray array, Variable partition_symbol);
+  Variable add_input(LogicalArray array, Variable partition_symbol);
   /**
    * @brief Adds an array to the task as output
    *
@@ -104,8 +106,10 @@ class AutoTask {
    *
    * @param array An array to add to the task as output
    * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
-  void add_output(LogicalArray array, Variable partition_symbol);
+  Variable add_output(LogicalArray array, Variable partition_symbol);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -115,8 +119,10 @@ class AutoTask {
    * @param array An array to add to the task for reductions
    * @param redop ID of the reduction operator to use. The array's type must support the operator.
    * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
-  void add_reduction(LogicalArray array, ReductionOpKind redop, Variable partition_symbol);
+  Variable add_reduction(LogicalArray array, ReductionOpKind redop, Variable partition_symbol);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -126,8 +132,10 @@ class AutoTask {
    * @param array An array to add to the task for reductions
    * @param redop ID of the reduction operator to use. The array's type must support the operator.
    * @param partition_symbol A partition symbol for the array
+   *
+   * @return The partition symbol assigned to the array
    */
-  void add_reduction(LogicalArray array, int32_t redop, Variable partition_symbol);
+  Variable add_reduction(LogicalArray array, int32_t redop, Variable partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -145,7 +153,7 @@ class AutoTask {
    *
    * @param constraint A partitioning constraint
    */
-  void add_constraint(Constraint&& constraint);
+  void add_constraint(Constraint constraint);
 
  public:
   /**
@@ -202,20 +210,16 @@ class AutoTask {
   void add_communicator(const std::string& name);
 
  public:
-  AutoTask(AutoTask&&);
-  AutoTask& operator=(AutoTask&&);
-
- private:
-  AutoTask(const AutoTask&)            = delete;
-  AutoTask& operator=(const AutoTask&) = delete;
-
- public:
-  ~AutoTask();
+  AutoTask()                               = default;
+  AutoTask(AutoTask&&) noexcept            = default;
+  AutoTask& operator=(AutoTask&&) noexcept = default;
+  AutoTask(const AutoTask&)                = default;
+  AutoTask& operator=(const AutoTask&)     = default;
 
  private:
   friend class Runtime;
-  AutoTask(std::unique_ptr<detail::AutoTask> impl);
-  std::unique_ptr<detail::AutoTask> impl_;
+  explicit AutoTask(std::shared_ptr<detail::AutoTask> impl);
+  std::shared_ptr<detail::AutoTask> impl_{nullptr};
 };
 
 /**
@@ -338,20 +342,17 @@ class ManualTask {
   void add_communicator(const std::string& name);
 
  public:
-  ManualTask(ManualTask&&);
-  ManualTask& operator=(ManualTask&&);
-
- private:
-  ManualTask(const ManualTask&)            = delete;
-  ManualTask& operator=(const ManualTask&) = delete;
-
- public:
-  ~ManualTask();
+  ManualTask() = default;
+  ;
+  ManualTask(ManualTask&&) noexcept            = default;
+  ManualTask& operator=(ManualTask&&) noexcept = default;
+  ManualTask(const ManualTask&)                = default;
+  ManualTask& operator=(const ManualTask&)     = default;
 
  private:
   friend class Runtime;
-  ManualTask(std::unique_ptr<detail::ManualTask> impl);
-  std::unique_ptr<detail::ManualTask> impl_;
+  explicit ManualTask(std::shared_ptr<detail::ManualTask> impl);
+  std::shared_ptr<detail::ManualTask> impl_{nullptr};
 };
 
 }  // namespace legate

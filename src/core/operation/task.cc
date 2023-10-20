@@ -42,34 +42,37 @@ Variable AutoTask::add_reduction(LogicalArray array, int32_t redop)
   return Variable(impl_->add_reduction(array.impl(), redop));
 }
 
-void AutoTask::add_input(LogicalArray array, Variable partition_symbol)
+Variable AutoTask::add_input(LogicalArray array, Variable partition_symbol)
 {
   impl_->add_input(array.impl(), partition_symbol.impl());
+  return partition_symbol;
 }
 
-void AutoTask::add_output(LogicalArray array, Variable partition_symbol)
+Variable AutoTask::add_output(LogicalArray array, Variable partition_symbol)
 {
   impl_->add_output(array.impl(), partition_symbol.impl());
+  return partition_symbol;
 }
 
-void AutoTask::add_reduction(LogicalArray array, ReductionOpKind redop, Variable partition_symbol)
+Variable AutoTask::add_reduction(LogicalArray array,
+                                 ReductionOpKind redop,
+                                 Variable partition_symbol)
 {
   impl_->add_reduction(array.impl(), static_cast<int32_t>(redop), partition_symbol.impl());
+  return partition_symbol;
 }
 
-void AutoTask::add_reduction(LogicalArray array, int32_t redop, Variable partition_symbol)
+Variable AutoTask::add_reduction(LogicalArray array, int32_t redop, Variable partition_symbol)
 {
   impl_->add_reduction(array.impl(), redop, partition_symbol.impl());
+  return partition_symbol;
 }
 
 void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl_); }
 
 void AutoTask::add_scalar_arg(Scalar&& scalar) { impl_->add_scalar_arg(std::move(*scalar.impl_)); }
 
-void AutoTask::add_constraint(Constraint&& constraint)
-{
-  impl_->add_constraint(std::unique_ptr<detail::Constraint>(constraint.release()));
-}
+void AutoTask::add_constraint(Constraint constraint) { impl_->add_constraint(constraint.impl()); }
 
 Variable AutoTask::find_or_declare_partition(LogicalArray array)
 {
@@ -91,13 +94,7 @@ void AutoTask::throws_exception(bool can_throw_exception)
 
 void AutoTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
 
-AutoTask::AutoTask(AutoTask&&) = default;
-
-AutoTask& AutoTask::operator=(AutoTask&&) = default;
-
-AutoTask::~AutoTask() {}
-
-AutoTask::AutoTask(std::unique_ptr<detail::AutoTask> impl) : impl_(std::move(impl)) {}
+AutoTask::AutoTask(std::shared_ptr<detail::AutoTask> impl) : impl_(std::move(impl)) {}
 
 ////////////////////////////////////////////////////
 // legate::ManualTask
@@ -157,12 +154,6 @@ void ManualTask::throws_exception(bool can_throw_exception)
 
 void ManualTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
 
-ManualTask::ManualTask(ManualTask&&) = default;
-
-ManualTask& ManualTask::operator=(ManualTask&&) = default;
-
-ManualTask::~ManualTask() {}
-
-ManualTask::ManualTask(std::unique_ptr<detail::ManualTask> impl) : impl_(std::move(impl)) {}
+ManualTask::ManualTask(std::shared_ptr<detail::ManualTask> impl) : impl_(std::move(impl)) {}
 
 }  // namespace legate

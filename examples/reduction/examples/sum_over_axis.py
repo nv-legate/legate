@@ -11,13 +11,14 @@
 
 
 import cunumeric as np
-from reduction import sum_over_axis, user_context
+from reduction import sum_over_axis
 
 import legate.core.types as ty
+from legate.core import get_legate_runtime
 
 
 def test():
-    store = user_context.create_store(ty.int64, (4, 5))
+    store = get_legate_runtime().create_store(ty.int64, (4, 5))
     np.asarray(store).fill(1)
     print(np.asarray(store))
 

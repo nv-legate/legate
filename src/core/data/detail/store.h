@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/buffer.h"
+#include "core/data/inline_allocation.h"
 #include "core/task/detail/return.h"
 #include "core/type/detail/type_info.h"
 
@@ -30,8 +31,8 @@ class RegionField {
   RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid);
 
  public:
-  RegionField(RegionField&& other) noexcept;
-  RegionField& operator=(RegionField&& other) noexcept;
+  RegionField(RegionField&& other) noexcept            = default;
+  RegionField& operator=(RegionField&& other) noexcept = default;
 
  private:
   RegionField(const RegionField& other)            = delete;
@@ -45,6 +46,12 @@ class RegionField {
 
  public:
   Domain domain() const;
+  void set_logical_region(const Legion::LogicalRegion& lr) { lr_ = lr; }
+  [[nodiscard]] InlineAllocation get_inline_allocation(uint32_t field_size) const;
+  [[nodiscard]] InlineAllocation get_inline_allocation(
+    uint32_t field_size,
+    const Domain& domain,
+    const Legion::DomainAffineTransform& transform) const;
 
  public:
   bool is_readable() const { return readable_; }
@@ -52,12 +59,13 @@ class RegionField {
   bool is_reducible() const { return reducible_; }
 
  public:
-  Legion::PhysicalRegion get_physical_region() const { return pr_; }
+  [[nodiscard]] Legion::PhysicalRegion get_physical_region() const { return *pr_; }
   Legion::FieldID get_field_id() const { return fid_; }
 
  private:
   int32_t dim_{-1};
-  Legion::PhysicalRegion pr_{};
+  std::unique_ptr<Legion::PhysicalRegion> pr_{nullptr};
+  Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{-1U};
 
  private:
@@ -113,15 +121,21 @@ class FutureWrapper {
                 bool initialize = false);
 
  public:
-  FutureWrapper(const FutureWrapper& other) noexcept;
-  FutureWrapper& operator=(const FutureWrapper& other) noexcept;
+  FutureWrapper(FutureWrapper&& other) noexcept            = default;
+  FutureWrapper& operator=(FutureWrapper&& other) noexcept = default;
+
+ private:
+  FutureWrapper(const FutureWrapper& other)            = delete;
+  FutureWrapper& operator=(const FutureWrapper& other) = delete;
 
  public:
   int32_t dim() const { return domain_.dim; }
 
  public:
   Domain domain() const;
-  bool valid() const { return future_.valid(); }
+  [[nodiscard]] bool valid() const { return future_ != nullptr && future_->valid(); }
+  [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
+  [[nodiscard]] InlineAllocation get_inline_allocation() const;
 
  public:
   void initialize_with_identity(int32_t redop_id);
@@ -131,14 +145,14 @@ class FutureWrapper {
 
  public:
   bool is_read_only() const { return read_only_; }
-  Legion::Future get_future() const { return future_; }
+  [[nodiscard]] Legion::Future get_future() const;
   Legion::UntypedDeferredValue get_buffer() const { return buffer_; }
 
  private:
   bool read_only_{true};
   uint32_t field_size_{0};
   Domain domain_{};
-  Legion::Future future_{};
+  std::unique_ptr<Legion::Future> future_{nullptr};
   Legion::UntypedDeferredValue buffer_{};
 };
 
@@ -171,8 +185,8 @@ class Store {
         const std::shared_ptr<detail::TransformStack>& transform);
 
  public:
-  Store(Store&& other) noexcept;
-  Store& operator=(Store&& other) noexcept;
+  Store(Store&& other) noexcept            = default;
+  Store& operator=(Store&& other) noexcept = default;
 
  private:
   Store(const Store& other)            = delete;
@@ -188,6 +202,7 @@ class Store {
 
  public:
   Domain domain() const;
+  [[nodiscard]] InlineAllocation get_inline_allocation() const;
 
  public:
   bool is_readable() const { return readable_; }

@@ -50,7 +50,7 @@ class Scatter : public Operation {
   StoreArg target_;
   StoreArg target_indirect_;
   StoreArg source_;
-  std::unique_ptr<Constraint> constraint_;
+  std::shared_ptr<Constraint> constraint_;
   std::optional<int32_t> redop_;
 };
 

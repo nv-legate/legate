@@ -135,12 +135,12 @@ Machine Machine::only(TaskTarget target) const { return only(std::vector({target
 
 Machine Machine::only(const std::vector<TaskTarget>& targets) const
 {
-  return Machine(new detail::Machine(impl_->only(targets)));
+  return Machine(impl_->only(targets));
 }
 
 Machine Machine::slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others) const
 {
-  return Machine(new detail::Machine(impl_->slice(from, to, target, keep_others)));
+  return Machine(impl_->slice(from, to, target, keep_others));
 }
 
 Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
@@ -156,36 +156,20 @@ bool Machine::operator==(const Machine& other) const { return *impl_ == *other.i
 
 bool Machine::operator!=(const Machine& other) const { return !(*impl_ == *other.impl_); }
 
-Machine Machine::operator&(const Machine& other) const
-{
-  auto result = *impl_ & *other.impl_;
-  return Machine(new detail::Machine(std::move(result)));
-}
+Machine Machine::operator&(const Machine& other) const { return Machine(*impl_ & *other.impl_); }
 
 bool Machine::empty() const { return impl_->empty(); }
 
-Machine::Machine(detail::Machine* impl) : impl_(impl) {}
-
-Machine::Machine(const detail::Machine& impl) : impl_(new detail::Machine(impl)) {}
-
-Machine::Machine(const Machine& other) : impl_(new detail::Machine(*other.impl_)) {}
-
-Machine& Machine::operator=(const Machine& other)
+Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges)
+  : impl_(std::make_shared<detail::Machine>(std::move(ranges)))
 {
-  impl_ = new detail::Machine(*other.impl_);
-  return *this;
 }
 
-Machine::Machine(Machine&& other) : impl_(other.impl_) { other.impl_ = nullptr; }
+Machine::Machine(std::shared_ptr<detail::Machine> impl) : impl_(std::move(impl)) {}
 
-Machine& Machine::operator=(Machine&& other)
+Machine::Machine(detail::Machine impl) : impl_(std::make_shared<detail::Machine>(std::move(impl)))
 {
-  impl_       = other.impl_;
-  other.impl_ = nullptr;
-  return *this;
 }
-
-Machine::~Machine() { delete impl_; }
 
 std::ostream& operator<<(std::ostream& stream, const Machine& machine)
 {

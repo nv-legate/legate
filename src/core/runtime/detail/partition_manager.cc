@@ -13,7 +13,7 @@
 #include "core/runtime/detail/partition_manager.h"
 
 #include "core/legate_c.h"
-#include "core/mapping/machine.h"
+#include "core/mapping/detail/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
@@ -29,7 +29,7 @@ PartitionManager::PartitionManager(Runtime* runtime)
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(min_shard_volume_ > 0); }
 }
 
-const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::Machine& machine)
+const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail::Machine& machine)
 {
   uint32_t curr_num_pieces = machine.count();
 
@@ -51,7 +51,7 @@ const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::Machin
   return finder->second;
 }
 
-Shape PartitionManager::compute_launch_shape(const mapping::Machine& machine,
+Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
                                              const Restrictions& restrictions,
                                              const Shape& shape)
 {

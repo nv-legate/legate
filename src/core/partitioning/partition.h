@@ -175,9 +175,10 @@ class Tiling : public Partition {
 class Weighted : public Partition {
  public:
   Weighted(const Legion::FutureMap& weights, const Domain& color_domain);
+  ~Weighted();
 
  public:
-  Weighted(const Weighted&) = default;
+  Weighted(const Weighted&);
 
  public:
   bool operator==(const Weighted& other) const;
@@ -214,7 +215,7 @@ class Weighted : public Partition {
   const Shape& color_shape() const override { return color_shape_; }
 
  private:
-  Legion::FutureMap weights_;
+  std::unique_ptr<Legion::FutureMap> weights_{nullptr};
   Domain color_domain_;
   Shape color_shape_;
 };

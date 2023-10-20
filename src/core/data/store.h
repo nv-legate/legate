@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/buffer.h"
+#include "core/data/inline_allocation.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
 
@@ -258,6 +259,12 @@ class Store {
    * @return Store's domain in a dimension-erased domain type
    */
   Domain domain() const;
+  /**
+   * @brief Returns a raw pointer and strides to the allocation
+   *
+   * @return An `InlineAllocation` object holding a raw pointer and strides
+   */
+  [[nodiscard]] InlineAllocation get_inline_allocation() const;
 
  public:
   /**

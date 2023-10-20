@@ -238,7 +238,25 @@ Shape Tiling::get_child_offsets(const Shape& color)
 }
 
 Weighted::Weighted(const Legion::FutureMap& weights, const Domain& color_domain)
-  : weights_(weights), color_domain_(color_domain), color_shape_(from_domain(color_domain))
+  : weights_(std::make_unique<Legion::FutureMap>(weights)),
+    color_domain_(color_domain),
+    color_shape_(from_domain(color_domain))
+{
+}
+
+Weighted::~Weighted()
+{
+  if (!detail::Runtime::get_runtime()->initialized()) {
+    // FIXME: Leak the FutureMap handle if the runtime has already shut down, as there's no hope
+    // that this would be collected by the Legion runtime
+    weights_.release();
+  }
+}
+
+Weighted::Weighted(const Weighted& other)
+  : weights_(std::make_unique<Legion::FutureMap>(*other.weights_)),
+    color_domain_(other.color_domain_),
+    color_shape_(other.color_shape_)
 {
 }
 
@@ -246,10 +264,10 @@ bool Weighted::operator==(const Weighted& other) const
 {
   // Since both color_domain_ and color_shape_ are derived from weights_, they don't need to
   // be compared
-  return weights_ == other.weights_;
+  return *weights_ == *other.weights_;
 }
 
-bool Weighted::operator<(const Weighted& other) const { return weights_ < other.weights_; }
+bool Weighted::operator<(const Weighted& other) const { return *weights_ < *other.weights_; }
 
 bool Weighted::is_complete_for(const detail::Storage*) const
 {
@@ -295,7 +313,7 @@ Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool)
     return runtime->create_logical_partition(region, index_partition);
 
   auto color_space = runtime->find_or_create_index_space(color_domain_);
-  index_partition  = runtime->create_weighted_partition(index_space, color_space, weights_);
+  index_partition  = runtime->create_weighted_partition(index_space, color_space, *weights_);
   part_mgr->record_index_partition(index_space, *this, index_partition);
   return runtime->create_logical_partition(region, index_partition);
 }
@@ -306,7 +324,7 @@ Domain Weighted::launch_domain() const { return color_domain_; }
 
 std::unique_ptr<Partition> Weighted::clone() const
 {
-  return create_weighted(weights_, color_domain_);
+  return create_weighted(*weights_, color_domain_);
 }
 
 std::string Weighted::to_string() const
@@ -315,7 +333,7 @@ std::string Weighted::to_string() const
   ss << "Weighted({";
   for (Domain::DomainPointIterator it(color_domain_); it; ++it) {
     auto& p = *it;
-    ss << p << ":" << weights_.get_result<size_t>(p) << ",";
+    ss << p << ":" << weights_->get_result<size_t>(p) << ",";
   }
   ss << "})";
   return std::move(ss).str();

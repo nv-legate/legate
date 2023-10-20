@@ -398,16 +398,46 @@ set(file_template
 # its affiliates is strictly prohibited.
 
 from legate.core import (
-    Library,
     get_legate_runtime,
 )
 import os
+import platform
 from typing import Any
+from ctypes import CDLL, RTLD_GLOBAL
 
-class UserLibrary(Library):
+# TODO: Make sure we only have one ffi instance?
+from legion_cffi import ffi
+
+def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:
+    # Use an already-opened library handle, which cffi will convert to a
+    # regular FFI object (using the definitions previously added using
+    # ffi.cdef), but will not automatically dlclose() on collection.
+    lib = CDLL(lib_path, mode=RTLD_GLOBAL)
+    return ffi.dlopen(ffi.cast("void *", lib._handle))
+
+class UserLibrary:
     def __init__(self, name: str) -> None:
         self.name = name
         self.shared_object: Any = None
+
+        shared_lib_path = self.get_shared_library()
+        if shared_lib_path is not None:
+            header = self.get_c_header()
+            if header is not None:
+                ffi.cdef(header)
+            # Don't use ffi.dlopen(), because that will call dlclose()
+            # automatically when the object gets collected, thus removing
+            # symbols that may be needed when destroying C++ objects later
+            # (e.g. vtable entries, which will be queried for virtual
+            # destructors), causing errors at shutdown.
+            shared_lib = dlopen_no_autoclose(ffi, shared_lib_path)
+            self.initialize(shared_lib)
+            callback_name = self.get_registration_callback()
+            callback = getattr(shared_lib, callback_name)
+            callback()
+        else:
+            self.initialize(None)
+
 
     @property
     def cffi(self) -> Any:
@@ -434,8 +464,17 @@ class UserLibrary(Library):
     def destroy(self) -> None:
         pass
 
+    @staticmethod
+    def get_library_extension() -> str:
+        os_name = platform.system()
+        if os_name == "Linux":
+            return ".so"
+        elif os_name == "Darwin":
+            return ".dylib"
+        raise RuntimeError(f"unknown platform {os_name!r}")
+
 user_lib = UserLibrary("@target@")
-user_context = get_legate_runtime().register_library(user_lib)
+user_context = get_legate_runtime().find_library(user_lib.get_name())
 ]=])
   string(CONFIGURE "${file_template}" file_content @ONLY)
   file(WRITE "${fn_library}" "${file_content}")

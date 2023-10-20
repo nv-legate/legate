@@ -42,6 +42,7 @@ class Variable {
   std::string to_string() const;
 
  public:
+  Variable() = default;
   Variable(const detail::Variable* impl);
   ~Variable() = default;
 
@@ -49,7 +50,7 @@ class Variable {
   const detail::Variable* impl() const { return impl_; }
 
  private:
-  const detail::Variable* impl_;
+  const detail::Variable* impl_{nullptr};
 };
 
 /**
@@ -61,15 +62,18 @@ class Constraint {
   std::string to_string() const;
 
  public:
-  Constraint(detail::Constraint* impl);
-  ~Constraint() = default;
+  Constraint() = default;
+  Constraint(std::shared_ptr<detail::Constraint>&& impl);
+  Constraint(const Constraint&)                = default;
+  Constraint(Constraint&&) noexcept            = default;
+  Constraint& operator=(const Constraint&)     = default;
+  Constraint& operator=(Constraint&&) noexcept = default;
+  ~Constraint()                                = default;
+
+  const std::shared_ptr<detail::Constraint> impl() const { return impl_; }
 
  private:
-  friend class AutoTask;
-  detail::Constraint* release();
-
- private:
-  std::unique_ptr<detail::Constraint, default_delete<detail::Constraint>> impl_;
+  std::shared_ptr<detail::Constraint> impl_{nullptr};
 };
 
 /**

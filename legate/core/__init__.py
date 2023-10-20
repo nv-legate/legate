@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -32,105 +33,63 @@ if is_legion_python == False:
     legion_canonical_python_main(driver.cmd)
     atexit.register(legion_canonical_python_cleanup)
 
-from ._legion import (
-    LEGATE_MAX_DIM,
-    LEGATE_MAX_FIELDS,
-    Point,
-    Rect,
-    Domain,
-    Transform,
-    AffineTransform,
-    IndexAttach,
-    IndexDetach,
-    IndexSpace,
-    PartitionFunctor,
-    PartitionByDomain,
-    PartitionByRestriction,
-    PartitionByImage,
-    PartitionByImageRange,
-    EqualPartition,
-    PartitionByWeights,
-    IndexPartition,
-    FieldSpace,
-    FieldID,
-    Region,
-    Partition,
-    Fill,
-    IndexFill,
-    Copy,
-    IndexCopy,
-    Attach,
-    Detach,
-    Acquire,
-    Release,
-    Future,
-    OutputRegion,
-    PhysicalRegion,
-    InlineMapping,
-    Task,
-    FutureMap,
-    IndexTask,
-    Fence,
-    ArgumentMap,
-    BufferBuilder,
-    legate_task_preamble,
-    legate_task_progress,
-    legate_task_postamble,
-)
-
-# Import select types for Legate library construction
-from .allocation import DistributedAllocation
-from .legate import (
-    Array,
-    Field,
-    Library,
-    Table,
-)
-from .machine import (
+from .data_interface import Field, Table
+from ._lib.mapping.mapping import TaskTarget
+from ._lib.mapping.machine import (
     EmptyMachineError,
     Machine,
-    ProcessorKind,
     ProcessorRange,
     ProcessorSlice,
 )
-from .runtime import (
-    Annotation,
+from ._lib.runtime.runtime import (
+    Runtime,
     get_legate_runtime,
-    get_legion_context,
-    get_legion_runtime,
     get_machine,
-    legate_add_library,
     track_provenance,
 )
-from .store import Store
+
+get_legate_runtime()
+from .utils import (
+    Annotation,
+)
+from ._lib.legate_c import LEGATE_MAX_DIM
+from ._lib.data.logical_array import LogicalArray
+from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
+from ._lib.data.scalar import Scalar
+from ._lib.operation.task import AutoTask, ManualTask
+from ._lib.partitioning.constraint import align, bloat, broadcast, scale
+from ._lib.runtime.library import Library
+
 
 from .types import (
+    ReductionOp,
+    Type,
     array_type,
+    binary_type,
     bool_,
-    int8,
-    int16,
-    int32,
-    int64,
-    uint8,
-    uint16,
-    uint32,
-    uint64,
+    complex128,
+    complex64,
     float16,
     float32,
     float64,
-    complex64,
-    complex128,
+    int16,
+    int32,
+    int64,
+    int8,
+    null_type,
+    string_type,
     struct_type,
-    Dtype,
-    ReductionOp,
+    uint16,
+    uint32,
+    uint64,
+    uint8,
 )
-from .io import CustomSplit, TiledSplit, ingest
 
 import warnings
 import numpy as _np
 import random as _random
 from typing import Any
-from .runtime import AnyCallable
+from .utils import AnyCallable
 
 _np.random.seed(1234)
 _random.seed(1234)

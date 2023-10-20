@@ -148,9 +148,9 @@ LogicalStore Runtime::tree_reduce(Library library,
   return out_store;
 }
 
-void Runtime::submit(AutoTask&& task) { impl_->submit(std::move(task.impl_)); }
+void Runtime::submit(AutoTask task) { impl_->submit(std::move(task.impl_)); }
 
-void Runtime::submit(ManualTask&& task) { impl_->submit(std::move(task.impl_)); }
+void Runtime::submit(ManualTask task) { impl_->submit(std::move(task.impl_)); }
 
 LogicalArray Runtime::create_array(const Type& type, uint32_t dim, bool nullable)
 {
@@ -236,6 +236,8 @@ Runtime::Runtime(detail::Runtime* impl) : impl_(impl) {}
 int32_t start(int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
 
 int32_t finish() { return detail::Runtime::get_runtime()->finish(); }
+
+void destroy() { return detail::Runtime::get_runtime()->destroy(); }
 
 mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
 

@@ -13,15 +13,16 @@
 import argparse
 
 import cunumeric as np
-from reduction import matmul, multiply, sum_over_axis, user_context
+from reduction import matmul, multiply, sum_over_axis
 
 import legate.core.types as ty
+from legate.core import get_legate_runtime
 
 
 def test(m: int, n: int, k: int, print_stores: bool, matmul_only: bool):
     # Generate inputs using cuNumeric
-    rhs1 = user_context.create_store(ty.int64, (m, k))
-    rhs2 = user_context.create_store(ty.int64, (k, n))
+    rhs1 = get_legate_runtime().create_store(ty.int64, (m, k))
+    rhs2 = get_legate_runtime().create_store(ty.int64, (k, n))
     np.asarray(rhs1)[:] = np.arange(m * k).reshape(m, k)
     np.asarray(rhs2)[:] = np.arange(k * n).reshape(k, n)
 

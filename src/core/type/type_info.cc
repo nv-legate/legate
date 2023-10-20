@@ -50,22 +50,22 @@ ListType Type::as_list_type() const
   return ListType(impl_);
 }
 
-void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
+void Type::record_reduction_operator(int32_t op_kind, int64_t global_op_id) const
 {
   impl_->record_reduction_operator(op_kind, global_op_id);
 }
 
-void Type::record_reduction_operator(ReductionOpKind op_kind, int32_t global_op_id) const
+void Type::record_reduction_operator(ReductionOpKind op_kind, int64_t global_op_id) const
 {
   impl_->record_reduction_operator(static_cast<int32_t>(op_kind), global_op_id);
 }
 
-int32_t Type::find_reduction_operator(int32_t op_kind) const
+int64_t Type::find_reduction_operator(int32_t op_kind) const
 {
   return impl_->find_reduction_operator(op_kind);
 }
 
-int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
+int64_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
   return impl_->find_reduction_operator(static_cast<int32_t>(op_kind));
 }
@@ -105,6 +105,11 @@ Type StructType::field_type(uint32_t field_idx) const
 bool StructType::aligned() const
 {
   return static_cast<const detail::StructType*>(impl_.get())->aligned();
+}
+
+std::vector<uint32_t> StructType::offsets() const
+{
+  return static_cast<const detail::StructType*>(impl_.get())->offsets();
 }
 
 StructType::StructType(std::shared_ptr<detail::Type> type) : Type(std::move(type)) {}

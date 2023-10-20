@@ -281,7 +281,7 @@ const Variable* AutoTask::find_or_declare_partition(std::shared_ptr<LogicalArray
   return Operation::find_or_declare_partition(array->primary_store());
 }
 
-void AutoTask::add_constraint(std::unique_ptr<Constraint> constraint)
+void AutoTask::add_constraint(std::shared_ptr<Constraint> constraint)
 {
   constraints_.push_back(std::move(constraint));
 }

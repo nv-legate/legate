@@ -77,6 +77,7 @@ class LogicalStore {
   LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl);
 
  public:
+  LogicalStore()                                     = default;
   LogicalStore(const LogicalStore& other)            = default;
   LogicalStore& operator=(const LogicalStore& other) = default;
 
@@ -91,6 +92,20 @@ class LogicalStore {
    * @return The number of dimensions
    */
   int32_t dim() const;
+  /**
+   * @brief Indicates whether the store's storage is optimized for scalars
+   *
+   * @return true The store is backed by a scalar storage
+   * @return false The store is a backed by a normal region storage
+   */
+  [[nodiscard]] bool has_scalar_storage() const;
+  /**
+   * @brief Indicates whether this store overlaps with a given store
+   *
+   * @return true The stores overlap
+   * @return false The stores are disjoint
+   */
+  [[nodiscard]] bool overlaps(const LogicalStore& other) const;
   /**
    * @brief Returns the element type of the store.
    *
@@ -340,6 +355,9 @@ class LogicalStore {
   void detach();
 
  public:
+  [[nodiscard]] std::string to_string() const;
+
+ public:
   std::shared_ptr<detail::LogicalStore> impl() const { return impl_; }
 
  private:
@@ -350,6 +368,9 @@ class LogicalStorePartition {
  private:
   friend class LogicalStore;
   LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl);
+
+ public:
+  LogicalStorePartition() = default;
 
  public:
   LogicalStore store() const;

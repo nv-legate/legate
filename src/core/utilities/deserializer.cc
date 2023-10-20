@@ -100,7 +100,7 @@ std::shared_ptr<detail::Store> TaskDeserializer::unpack_store()
     auto fut = unpack<detail::FutureWrapper>();
     if (redop_id != -1 && !fut.valid()) fut.initialize_with_identity(redop_id);
     return std::make_shared<detail::Store>(
-      dim, std::move(type), redop_id, fut, std::move(transform));
+      dim, std::move(type), redop_id, std::move(fut), std::move(transform));
   } else if (!is_output_region) {
     auto rf = unpack<detail::RegionField>();
     return std::make_shared<detail::Store>(

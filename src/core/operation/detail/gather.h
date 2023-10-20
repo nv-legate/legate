@@ -50,7 +50,7 @@ class Gather : public Operation {
   StoreArg target_;
   StoreArg source_;
   StoreArg source_indirect_;
-  std::unique_ptr<Constraint> constraint_;
+  std::shared_ptr<Constraint> constraint_;
   std::optional<int32_t> redop_;
 };
 

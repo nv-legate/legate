@@ -16,9 +16,15 @@ from enum import IntEnum
 from typing import Any, Optional
 
 import legate.core.types as ty
-from legate.core import Array, Field, Rect, Store, get_machine
+from legate.core import (
+    Field,
+    LogicalArray,
+    LogicalStore,
+    get_legate_runtime,
+    get_machine,
+)
 
-from .library import user_context as context, user_lib
+from .library import user_context as library, user_lib
 
 
 class LegateIOOpCode(IntEnum):
@@ -53,6 +59,8 @@ _CODES_TO_DTYPES = dict(
     )
 )
 
+legate_runtime = get_legate_runtime()
+
 
 class IOArray:
     """
@@ -62,7 +70,7 @@ class IOArray:
     data interface.
     """
 
-    def __init__(self, store: Store, dtype: ty.Dtype) -> None:
+    def __init__(self, store: LogicalStore, dtype: ty.Type) -> None:
         self._store = store
         self._dtype = dtype
 
@@ -82,12 +90,11 @@ class IOArray:
         assert data["version"] == 1
         # For now, we assume that there's only one field in the container
         field: Field = next(iter(data["data"]))
-        stores = data["data"][field].stores()
+        array = data["data"][field]
 
         # We only support non-nullable arrays
-        assert len(stores) == 2 and stores[0] is None
-        _, store = stores
-        return IOArray(store, field.type)
+        assert not array.nullable and not array.nested
+        return IOArray(array.data, field.type)
 
     @property
     def __legate_data_interface__(self) -> dict[str, Any]:
@@ -97,7 +104,7 @@ class IOArray:
 
         # Every IOArray would be mapped to a non-nullable Legate array
         # of a fixed type
-        array = Array(self._dtype, [None, self._store])
+        array = LogicalArray.from_store(self._store)
 
         # Create a field metadata to populate the data field
         field = Field("Legate IO Array", self._dtype)
@@ -113,10 +120,12 @@ class IOArray:
 
         Only a single task will be launched by this call.
         """
-        task = context.create_auto_task(LegateIOOpCode.WRITE_FILE)
+        task = legate_runtime.create_auto_task(
+            library, LegateIOOpCode.WRITE_FILE
+        )
 
         task.add_input(self._store)
-        task.add_scalar_arg(filename, ty.string)
+        task.add_scalar_arg(filename, ty.string_type)
         # Request a broadcasting for the input. Since this is the only store
         # argument to the task, Legate will launch a single task from this
         # task descriptor.
@@ -134,10 +143,12 @@ class IOArray:
         """
         os.mkdir(path)
 
-        task = context.create_auto_task(LegateIOOpCode.WRITE_UNEVEN_TILES)
+        task = legate_runtime.create_auto_task(
+            library, LegateIOOpCode.WRITE_UNEVEN_TILES
+        )
 
         task.add_input(self._store)
-        task.add_scalar_arg(path, ty.string)
+        task.add_scalar_arg(path, ty.string_type)
         task.execute()
 
     def to_even_tiles(self, path: str, tile_shape: tuple[int, ...]) -> None:
@@ -158,15 +169,16 @@ class IOArray:
 
         # Use the partition's color shape as the launch shape so there will be
         # one task for each tile
-        launch_shape = store_partition.partition.color_shape
+        launch_shape = store_partition.color_shape
 
-        task = context.create_manual_task(
+        task = legate_runtime.create_manual_task(
+            library,
             LegateIOOpCode.WRITE_EVEN_TILES,
-            launch_domain=Rect(launch_shape),
+            launch_shape,
         )
 
         task.add_input(store_partition)
-        task.add_scalar_arg(path, ty.string)
+        task.add_scalar_arg(path, ty.string_type)
         # Pass the input shape and the tile shape so the task can generate a
         # header file
         task.add_scalar_arg(self._store.shape, (ty.int32,))
@@ -174,7 +186,7 @@ class IOArray:
         task.execute()
 
 
-def read_file(filename: str, dtype: ty.Dtype) -> IOArray:
+def read_file(filename: str, dtype: ty.Type) -> IOArray:
     """
     Reads a file into an IOArray.
 
@@ -195,11 +207,11 @@ def read_file(filename: str, dtype: ty.Dtype) -> IOArray:
     """
 
     # Create a 1D unbound store by passing None to the shape
-    output = context.create_store(dtype, shape=None, ndim=1)
-    task = context.create_auto_task(LegateIOOpCode.READ_FILE)
+    output = legate_runtime.create_store(dtype, shape=None, ndim=1)
+    task = legate_runtime.create_auto_task(library, LegateIOOpCode.READ_FILE)
 
     task.add_output(output)
-    task.add_scalar_arg(filename, ty.string)
+    task.add_scalar_arg(filename, ty.string_type)
 
     # Legate as it stands today will launch a single task from this request.
     # Here's why: the READ_FILE task only has one store argument that is
@@ -216,7 +228,7 @@ def read_file(filename: str, dtype: ty.Dtype) -> IOArray:
 
 
 def read_file_parallel(
-    filename: str, dtype: ty.Dtype, parallelism: Optional[int] = None
+    filename: str, dtype: ty.Type, parallelism: Optional[int] = None
 ) -> IOArray:
     """
     Reads a file into an IOArray using multiple tasks.
@@ -254,16 +266,17 @@ def read_file_parallel(
     #
     #   [0, 2), [2, 5), [5, 9), [9, 14)
     #
-    output = context.create_store(dtype, shape=None, ndim=1)
+    output = legate_runtime.create_store(dtype, shape=None, ndim=1)
 
     # Create a manually parallelized task
-    task = context.create_manual_task(
+    task = legate_runtime.create_manual_task(
+        library,
         LegateIOOpCode.READ_FILE,
-        launch_domain=Rect([parallelism]),
+        [parallelism],
     )
 
     task.add_output(output)
-    task.add_scalar_arg(filename, ty.string)
+    task.add_scalar_arg(filename, ty.string_type)
     task.execute()
 
     return IOArray(output, dtype)
@@ -322,15 +335,18 @@ def read_uneven_tiles(path: str) -> IOArray:
     #         +--------+------------+
     #
 
-    output = context.create_store(dtype, shape=None, ndim=len(color_shape))
+    output = legate_runtime.create_store(
+        dtype, shape=None, ndim=len(color_shape)
+    )
 
-    task = context.create_manual_task(
+    task = legate_runtime.create_manual_task(
+        library,
         LegateIOOpCode.READ_UNEVEN_TILES,
-        launch_domain=Rect(color_shape),
+        color_shape,
     )
 
     task.add_output(output)
-    task.add_scalar_arg(path, ty.string)
+    task.add_scalar_arg(path, ty.string_type)
     task.execute()
 
     return IOArray(output, dtype)
@@ -375,23 +391,20 @@ def read_even_tiles(path: str) -> IOArray:
     dtype = _CODES_TO_DTYPES[code]
 
     # Since the shape of the array is known, we can create a normal store,
-    output = context.create_store(dtype, shape=shape)
+    output = legate_runtime.create_store(dtype, shape=shape)
 
     # and partition the array into evenly shaped tiles
     output_partition = output.partition_by_tiling(tile_shape)
 
-    launch_shape = output_partition.partition.color_shape
-    task = context.create_manual_task(
+    launch_shape = output_partition.color_shape
+    task = legate_runtime.create_manual_task(
+        library,
         LegateIOOpCode.READ_EVEN_TILES,
-        launch_domain=Rect(launch_shape),
+        launch_shape,
     )
 
     task.add_output(output_partition)
-    task.add_scalar_arg(path, ty.string)
+    task.add_scalar_arg(path, ty.string_type)
     task.execute()
-
-    # Unlike AutoTask, manually parallelized tasks don't update the "key"
-    # partition for their outputs.
-    output.set_key_partition(output_partition.partition)
 
     return IOArray(output, dtype)

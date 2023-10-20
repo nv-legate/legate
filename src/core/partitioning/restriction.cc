@@ -25,6 +25,11 @@ tuple<Restriction> join(const tuple<Restriction>& lhs, const tuple<Restriction>&
 
 void join_inplace(Restrictions& lhs, const Restrictions& rhs)
 {
+  if (rhs.empty()) { return; }
+  if (lhs.empty()) {
+    lhs = rhs;
+    return;
+  }
   if (lhs.size() != rhs.size()) throw std::invalid_argument("Restrictions must have the same size");
   for (uint32_t idx = 0; idx < lhs.size(); ++idx) lhs[idx] = join(lhs[idx], rhs[idx]);
 }

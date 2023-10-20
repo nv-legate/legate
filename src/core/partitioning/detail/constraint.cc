@@ -66,7 +66,8 @@ void Alignment::validate() const
     throw std::invalid_argument("Alignment requires the stores to be all normal or all unbound");
   }
   if (lhs_store->unbound()) return;
-  if (lhs_store->extents() != rhs_store->extents())
+  if (!lhs_store->extents().empty() && !rhs_store->extents().empty() &&
+      lhs_store->extents() != rhs_store->extents())
     throw std::invalid_argument("Alignment requires the stores to have the same shape, but found " +
                                 lhs_store->extents().to_string() + " and " +
                                 rhs_store->extents().to_string());
@@ -145,7 +146,7 @@ std::string ImageConstraint::to_string() const
   return std::move(ss).str();
 }
 
-std::unique_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
+std::shared_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
 {
   const auto* src = var_function();
   auto src_part   = strategy[src];
@@ -194,7 +195,7 @@ std::string ScaleConstraint::to_string() const
   return std::move(ss).str();
 }
 
-std::unique_ptr<Partition> ScaleConstraint::resolve(const detail::Strategy& strategy) const
+std::shared_ptr<Partition> ScaleConstraint::resolve(const detail::Strategy& strategy) const
 {
   auto src_part = strategy[var_smaller()];
   return src_part->scale(factors_);
@@ -243,51 +244,46 @@ std::string BloatConstraint::to_string() const
   return std::move(ss).str();
 }
 
-std::unique_ptr<Partition> BloatConstraint::resolve(const detail::Strategy& strategy) const
+std::shared_ptr<Partition> BloatConstraint::resolve(const detail::Strategy& strategy) const
 {
   auto src_part = strategy[var_source()];
   return src_part->bloat(low_offsets_, high_offsets_);
 }
 
-std::unique_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
+std::shared_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
 {
-  return std::make_unique<Alignment>(lhs, rhs);
+  return std::make_shared<Alignment>(lhs, rhs);
 }
 
-[[nodiscard]] std::unique_ptr<Broadcast> broadcast(const Variable* variable)
+[[nodiscard]] std::shared_ptr<Broadcast> broadcast(const Variable* variable)
 {
-  return std::make_unique<Broadcast>(variable);
+  return std::make_shared<Broadcast>(variable);
 }
 
-std::unique_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
+std::shared_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
 {
   if (axes.empty()) { throw std::invalid_argument("List of axes to broadcast must not be empty"); }
-  return std::make_unique<Broadcast>(variable, axes);
+  return std::make_shared<Broadcast>(variable, axes);
 }
 
-std::unique_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
+std::shared_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
 {
-  return std::make_unique<ImageConstraint>(var_function, var_range);
+  return std::make_shared<ImageConstraint>(var_function, var_range);
 }
 
-std::unique_ptr<ScaleConstraint> scale(const Shape& factors,
+std::shared_ptr<ScaleConstraint> scale(const Shape& factors,
                                        const Variable* var_smaller,
                                        const Variable* var_bigger)
 {
-  return std::make_unique<ScaleConstraint>(factors, var_smaller, var_bigger);
+  return std::make_shared<ScaleConstraint>(factors, var_smaller, var_bigger);
 }
 
-std::unique_ptr<BloatConstraint> bloat(const Variable* var_source,
+std::shared_ptr<BloatConstraint> bloat(const Variable* var_source,
                                        const Variable* var_bloat,
                                        const Shape& low_offsets,
                                        const Shape& high_offsets)
 {
-  return std::make_unique<BloatConstraint>(var_source, var_bloat, low_offsets, high_offsets);
+  return std::make_shared<BloatConstraint>(var_source, var_bloat, low_offsets, high_offsets);
 }
 
 }  // namespace legate::detail
-
-// explicitly instantiate the deleter for std::unique_ptr<detail::Constraint>
-namespace legate {
-template struct default_delete<detail::Constraint>;
-}

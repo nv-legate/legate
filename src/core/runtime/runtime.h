@@ -301,7 +301,7 @@ class Runtime {
    *
    * @param task An AutoTask to execute
    */
-  void submit(AutoTask&& task);
+  void submit(AutoTask task);
   /**
    * @brief Submits a ManualTask for execution
    *
@@ -310,7 +310,7 @@ class Runtime {
    *
    * @param task A ManualTask to execute
    */
-  void submit(ManualTask&& task);
+  void submit(ManualTask task);
 
  public:
   /**
@@ -484,6 +484,8 @@ int32_t start(int32_t argc, char** argv);
  * @return Non-zero value when the runtime encountered a failure, 0 otherwise
  */
 int32_t finish();
+
+void destroy();
 
 /**
  * @brief Returns the machine for the current scope

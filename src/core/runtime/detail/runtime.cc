@@ -127,10 +127,10 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
   return result;
 }
 
-void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int32_t legion_op_id)
+void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int64_t legion_op_id)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate.debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %d)",
+    log_legate.debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %ld)",
                      type_uid,
                      op_kind,
                      legion_op_id);
@@ -145,7 +145,7 @@ void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int32
   reduction_ops_.emplace(std::make_pair(key, legion_op_id));
 }
 
-int32_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) const
+int64_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) const
 {
   auto key    = std::make_pair(type_uid, op_kind);
   auto finder = reduction_ops_.find(key);
@@ -159,7 +159,7 @@ int32_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) cons
   }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate.debug(
-      "Found reduction op %d (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
+      "Found reduction op %ld (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
   }
   return finder->second;
 }
@@ -202,14 +202,14 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
 }
 
 // This function should be moved to the library context
-std::unique_ptr<AutoTask> Runtime::create_task(const Library* library, int64_t task_id)
+std::shared_ptr<AutoTask> Runtime::create_task(const Library* library, int64_t task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
   auto task    = new AutoTask(library, task_id, next_unique_id_++, std::move(machine));
   return std::unique_ptr<AutoTask>(task);
 }
 
-std::unique_ptr<ManualTask> Runtime::create_task(const Library* library,
+std::shared_ptr<ManualTask> Runtime::create_task(const Library* library,
                                                  int64_t task_id,
                                                  const Shape& launch_shape)
 {
@@ -224,7 +224,7 @@ void Runtime::issue_copy(std::shared_ptr<LogicalStore> target,
                          std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_unique<Copy>(
+  submit(std::make_shared<Copy>(
     std::move(target), std::move(source), next_unique_id_++, std::move(machine), redop));
 }
 
@@ -234,7 +234,7 @@ void Runtime::issue_gather(std::shared_ptr<LogicalStore> target,
                            std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_unique<Gather>(std::move(target),
+  submit(std::make_shared<Gather>(std::move(target),
                                   std::move(source),
                                   std::move(source_indirect),
                                   next_unique_id_++,
@@ -248,7 +248,7 @@ void Runtime::issue_scatter(std::shared_ptr<LogicalStore> target,
                             std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_unique<Scatter>(std::move(target),
+  submit(std::make_shared<Scatter>(std::move(target),
                                    std::move(target_indirect),
                                    std::move(source),
                                    next_unique_id_++,
@@ -263,7 +263,7 @@ void Runtime::issue_scatter_gather(std::shared_ptr<LogicalStore> target,
                                    std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_unique<ScatterGather>(std::move(target),
+  submit(std::make_shared<ScatterGather>(std::move(target),
                                          std::move(target_indirect),
                                          std::move(source),
                                          std::move(source_indirect),
@@ -275,7 +275,7 @@ void Runtime::issue_scatter_gather(std::shared_ptr<LogicalStore> target,
 void Runtime::issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::unique_ptr<Fill>(
+  submit(std::shared_ptr<Fill>(
     new Fill(std::move(lhs), std::move(value), next_unique_id_++, std::move(machine))));
 }
 
@@ -286,7 +286,7 @@ void Runtime::tree_reduce(const Library* library,
                           int64_t radix)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::unique_ptr<Reduce>(new Reduce(library,
+  submit(std::shared_ptr<Reduce>(new Reduce(library,
                                             std::move(store),
                                             std::move(out_store),
                                             task_id,
@@ -299,19 +299,19 @@ void Runtime::flush_scheduling_window()
 {
   if (operations_.size() == 0) return;
 
-  std::vector<std::unique_ptr<Operation>> to_schedule;
+  std::vector<std::shared_ptr<Operation>> to_schedule;
   to_schedule.swap(operations_);
   schedule(std::move(to_schedule));
 }
 
-void Runtime::submit(std::unique_ptr<Operation> op)
+void Runtime::submit(std::shared_ptr<Operation> op)
 {
   op->validate();
   operations_.push_back(std::move(op));
   if (operations_.size() >= window_size_) { flush_scheduling_window(); }
 }
 
-void Runtime::schedule(std::vector<std::unique_ptr<Operation>> operations)
+void Runtime::schedule(std::vector<std::shared_ptr<Operation>> operations)
 {
   std::vector<Operation*> op_pointers{};
   op_pointers.reserve(operations.size());
@@ -477,7 +477,7 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
   }
 
   Legion::AttachLauncher launcher(
-    LEGION_EXTERNAL_INSTANCE, rf->region(), rf->region(), false /*restricted*/, false /*mapped*/);
+    LEGION_EXTERNAL_INSTANCE, rf->region(), rf->region(), false /*restricted*/, share /*mapped*/);
   // the value of column_major below is irrelevant; it will be updated using the ordering constraint
   launcher.attach_array_soa(buffer, false /*column_major*/, {rf->field_id()});
   launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
@@ -659,7 +659,8 @@ Legion::IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
   if (finder != index_spaces_.end())
     return finder->second;
   else {
-    auto is              = legion_runtime_->create_index_space(legion_context_, shape);
+    auto is              = legion_runtime_->create_index_space(legion_context_,
+                                                  shape.is_valid() ? shape : Domain(Rect<1>(0, 0)));
     index_spaces_[shape] = is;
     return is;
   }
@@ -1121,6 +1122,9 @@ int32_t Runtime::finish()
 void Runtime::destroy()
 {
   if (!initialized()) return;
+
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Destroying Legate runtime..."; }
+
   // Flush any outstanding operations before we tear down the runtime
   flush_scheduling_window();
 

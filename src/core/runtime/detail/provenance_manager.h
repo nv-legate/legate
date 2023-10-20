@@ -28,6 +28,8 @@ class ProvenanceManager {
 
   void reset_provenance();
 
+  [[nodiscard]] bool has_provenance() const;
+
   void push_provenance(const std::string& p);
 
   void pop_provenance();

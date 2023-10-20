@@ -219,6 +219,7 @@ class LogicalArray {
   StringLogicalArray as_string_array() const;
 
  public:
+  LogicalArray() = default;
   LogicalArray(std::shared_ptr<detail::LogicalArray> impl);
   virtual ~LogicalArray();
 

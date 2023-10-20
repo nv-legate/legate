@@ -22,9 +22,9 @@ class Tiling;
 class Weighted;
 }  // namespace legate
 
-namespace legate::mapping {
+namespace legate::mapping::detail {
 class Machine;
-}  // namespace legate::mapping
+}  // namespace legate::mapping::detail
 
 namespace legate::detail {
 
@@ -35,12 +35,12 @@ class PartitionManager {
   PartitionManager(Runtime* runtime);
 
  public:
-  const std::vector<uint32_t>& get_factors(const mapping::Machine& machine);
+  [[nodiscard]] const std::vector<uint32_t>& get_factors(const mapping::detail::Machine& machine);
 
  public:
-  Shape compute_launch_shape(const mapping::Machine& machine,
-                             const Restrictions& restrictions,
-                             const Shape& shape);
+  [[nodiscard]] Shape compute_launch_shape(const mapping::detail::Machine& machine,
+                                           const Restrictions& restrictions,
+                                           const Shape& shape);
   Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
   bool use_complete_tiling(const Shape& extents, const Shape& tile_shape) const;
 

@@ -92,7 +92,7 @@ void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, Is
   is_output_.insert({*partition_symbol, static_cast<bool>(is_output)});
 }
 
-void ConstraintSolver::add_constraint(std::unique_ptr<Constraint> constraint)
+void ConstraintSolver::add_constraint(std::shared_ptr<Constraint> constraint)
 {
   constraints_.push_back(std::move(constraint));
 }

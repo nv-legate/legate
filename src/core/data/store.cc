@@ -25,6 +25,8 @@ Type Store::type() const { return Type(impl_->type()); }
 
 Domain Store::domain() const { return impl_->domain(); }
 
+InlineAllocation Store::get_inline_allocation() const { return impl_->get_inline_allocation(); }
+
 bool Store::is_readable() const { return impl_->is_readable(); }
 
 bool Store::is_writable() const { return impl_->is_writable(); }

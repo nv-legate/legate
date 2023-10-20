@@ -13,20 +13,19 @@
 import argparse
 
 import cunumeric as np
-from reduction import bincount, categorize, histogram, user_context
+from reduction import bincount, categorize, histogram
 
 import legate.core.types as ty
+from legate.core import get_legate_runtime
 
 
 def test(size: int, num_bins: int):
-    input = user_context.create_store(ty.int32, size)
+    input = get_legate_runtime().create_store(ty.int32, (size,))
     np.asarray(input)[:] = np.random.randint(
         low=0, high=size - 1, size=size, dtype="int32"
     )
-    bins = user_context.create_store(ty.int32, (num_bins + 1,))
-    np.asarray(bins)[:] = np.array(
-        [size * v // num_bins for v in range(num_bins + 1)]
-    )
+    bins = get_legate_runtime().create_store(ty.int32, (num_bins + 1,))
+    np.asarray(bins)[:] = np.arange(num_bins + 1) * size // num_bins
     print("Input:")
     print(np.asarray(input))
     print("Bin edges:")

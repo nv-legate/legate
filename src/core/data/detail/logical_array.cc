@@ -25,6 +25,12 @@ std::shared_ptr<LogicalStore> LogicalArray::data() const
   return nullptr;
 }
 
+/*static*/ std::shared_ptr<LogicalArray> LogicalArray::from_store(
+  std::shared_ptr<LogicalStore> store)
+{
+  return std::make_shared<BaseLogicalArray>(std::move(store));
+}
+
 BaseLogicalArray::BaseLogicalArray(std::shared_ptr<LogicalStore> data,
                                    std::shared_ptr<LogicalStore> null_mask)
   : data_(std::move(data)), null_mask_(std::move(null_mask))

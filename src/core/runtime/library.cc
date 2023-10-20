@@ -100,6 +100,11 @@ void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> tas
   impl_->register_task(local_task_id, std::move(task_info));
 }
 
+const TaskInfo* Library::find_task(int64_t local_task_id) const
+{
+  return impl_->find_task(local_task_id);
+}
+
 Library::Library(detail::Library* impl) : impl_(impl) {}
 
 bool Library::operator==(const Library& other) const { return impl_ == other.impl_; }

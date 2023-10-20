@@ -46,8 +46,8 @@ Machine
 .. autosummary::
    :toctree: generated/
 
-   Machine.preferred_kind
-   Machine.kinds
+   Machine.preferred_target
+   Machine.valid_targets
    Machine.get_processor_range
    Machine.get_node_range
    Machine.only
@@ -66,6 +66,9 @@ A ``ProcessorRange`` is a half-open interval of global processor IDs.
 .. autosummary::
    :toctree: generated/
 
+   ProcessorRange.low
+   ProcessorRange.high
+   ProcessorRange.per_node_count
    ProcessorRange.empty
    ProcessorRange.get_node_range
    ProcessorRange.slice

@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <map>
 #include <tuple>
 
 #include "core/mapping/mapping.h"
@@ -31,8 +32,8 @@ namespace legate::mapping {
  * `NodeRange`s are half-open intervals of logical node IDs.
  */
 struct NodeRange {
-  const uint32_t low;
-  const uint32_t high;
+  uint32_t low{0};
+  uint32_t high{0};
 
   bool operator<(const NodeRange&) const;
   bool operator==(const NodeRange&) const;
@@ -270,23 +271,22 @@ class Machine {
   bool empty() const;
 
  public:
-  Machine(detail::Machine* impl);
-  Machine(const detail::Machine& impl);
+  Machine() = default;
+  explicit Machine(std::map<TaskTarget, ProcessorRange> ranges);
+  explicit Machine(std::shared_ptr<detail::Machine> impl);
+  explicit Machine(detail::Machine impl);
 
  public:
-  Machine(const Machine&);
-  Machine& operator=(const Machine&);
-  Machine(Machine&&);
-  Machine& operator=(Machine&&);
+  Machine(const Machine&)                = default;
+  Machine& operator=(const Machine&)     = default;
+  Machine(Machine&&) noexcept            = default;
+  Machine& operator=(Machine&&) noexcept = default;
 
  public:
-  ~Machine();
-
- public:
-  detail::Machine* impl() const { return impl_; }
+  [[nodiscard]] std::shared_ptr<detail::Machine> impl() const { return impl_; }
 
  private:
-  detail::Machine* impl_{nullptr};
+  std::shared_ptr<detail::Machine> impl_{nullptr};
 };
 
 std::ostream& operator<<(std::ostream& stream, const Machine& machine);

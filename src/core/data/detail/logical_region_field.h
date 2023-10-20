@@ -74,7 +74,7 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   Legion::LogicalRegion lr_;
   Legion::FieldID fid_;
   std::shared_ptr<LogicalRegionField> parent_;
-  Legion::PhysicalRegion pr_;
+  std::unique_ptr<Legion::PhysicalRegion> pr_{};
   void* attachment_{nullptr};
   bool attachment_shared_{false};
   bool destroyed_out_of_order_{false};

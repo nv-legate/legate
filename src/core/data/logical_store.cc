@@ -37,6 +37,13 @@ bool LogicalStore::unbound() const { return impl_->unbound(); }
 
 bool LogicalStore::transformed() const { return impl_->transformed(); }
 
+bool LogicalStore::has_scalar_storage() const { return impl_->has_scalar_storage(); }
+
+bool LogicalStore::overlaps(const LogicalStore& other) const
+{
+  return impl_->overlaps(other.impl_);
+}
+
 LogicalStore LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
 {
   return LogicalStore(impl_->promote(extra_dim, dim_size));
@@ -69,6 +76,8 @@ LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes
 
 Store LogicalStore::get_physical_store() const { return Store(impl_->get_physical_store()); }
 
+std::string LogicalStore::to_string() const { return impl_->to_string(); }
+
 void LogicalStore::detach() { impl_->detach(); }
 
 LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl)
@@ -78,9 +87,6 @@ LogicalStorePartition::LogicalStorePartition(std::shared_ptr<detail::LogicalStor
 
 LogicalStore LogicalStorePartition::store() const { return LogicalStore(impl_->store()); }
 
-const Shape& LogicalStorePartition::color_shape() const
-{
-  return impl_->partition()->color_shape();
-}
+const Shape& LogicalStorePartition::color_shape() const { return impl_->color_shape(); }
 
 }  // namespace legate

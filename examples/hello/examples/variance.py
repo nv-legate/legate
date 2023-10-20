@@ -15,13 +15,13 @@ from typing import Any
 
 from hello import iota, square, sum, to_scalar
 
-from legate.core import Store
+from legate.core import LogicalStore
 
 
 def mean_and_variance(a: Any, n: int) -> float:
-    a_sq: Store = square(a)  # A 1-D array of shape (4,)
-    sum_sq: Store = sum(a_sq)  # A scalar sum
-    sum_a: Store = sum(a)  # A scalar sum
+    a_sq: LogicalStore = square(a)  # A 1-D array of shape (4,)
+    sum_sq: LogicalStore = sum(a_sq)  # A scalar sum
+    sum_a: LogicalStore = sum(a)  # A scalar sum
 
     # Extract scalar values from the Legate stores
     mean_a: float = to_scalar(sum_a) / n

@@ -43,6 +43,8 @@ void ProvenanceManager::reset_provenance()
   provenance_.back() = BOTTOM;
 }
 
+bool ProvenanceManager::has_provenance() const { return provenance_.back() != BOTTOM; }
+
 void ProvenanceManager::push_provenance(const std::string& p) { provenance_.push_back(p); }
 
 void ProvenanceManager::pop_provenance()

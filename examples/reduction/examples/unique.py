@@ -13,14 +13,15 @@
 import argparse
 
 import cunumeric as np
-from reduction import unique, user_context
+from reduction import unique
 
 import legate.core.types as ty
+from legate.core import get_legate_runtime
 
 
 def test(n: int, radix: int, print_stores: bool):
     # Generate inputs using cuNumeric
-    input = user_context.create_store(ty.int32, n)
+    input = get_legate_runtime().create_store(ty.int32, (n,))
     np.asarray(input)[:] = np.random.randint(
         low=0, high=10, size=n, dtype="int32"
     )

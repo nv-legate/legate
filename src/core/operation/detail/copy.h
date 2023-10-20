@@ -44,7 +44,7 @@ class Copy : public Operation {
  private:
   StoreArg target_;
   StoreArg source_;
-  std::unique_ptr<Constraint> constraint_;
+  std::shared_ptr<Constraint> constraint_;
   std::optional<int32_t> redop_;
 };
 

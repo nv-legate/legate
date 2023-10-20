@@ -118,7 +118,7 @@ class AutoTask : public Task {
   const Variable* find_or_declare_partition(std::shared_ptr<LogicalArray> array);
 
  public:
-  void add_constraint(std::unique_ptr<Constraint> constraint);
+  void add_constraint(std::shared_ptr<Constraint> constraint);
   void add_to_solver(ConstraintSolver& solver) override;
 
  public:
@@ -129,7 +129,7 @@ class AutoTask : public Task {
   void fixup_ranges(Strategy& strategy);
 
  private:
-  std::vector<std::unique_ptr<Constraint>> constraints_{};
+  std::vector<std::shared_ptr<Constraint>> constraints_{};
   std::vector<LogicalArray*> arrays_to_fixup_{};
 };
 

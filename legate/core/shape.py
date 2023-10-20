@@ -12,13 +12,9 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import TYPE_CHECKING, Iterable, Iterator, Optional, Union, overload
+from typing import Iterable, Iterator, Optional, Union, overload
 
 from typing_extensions import TypeAlias
-
-if TYPE_CHECKING:
-    from . import IndexSpace
-    from .runtime import Runtime
 
 ExtentLike: TypeAlias = Union["Shape", int, Iterable[int]]
 
@@ -35,13 +31,11 @@ class _ShapeComparisonResult(tuple[bool, ...]):
 
 
 class Shape:
-    _extents: Union[tuple[int, ...], None]
-    _ispace: Union[IndexSpace, None]
+    _extents: tuple[int, ...]
 
     def __init__(
         self,
         extents: Optional[ExtentLike] = None,
-        ispace: Optional[IndexSpace] = None,
     ) -> None:
         """
         Constructs a new shape object
@@ -49,23 +43,13 @@ class Shape:
         Parameters
         ----------
         extents: int, Iterable[int], or Shape
-           Extents to construct the shape object with. Must be passed unless an
-           ``ispace`` is given.
-        ispace : IndexSpace, optional
-            A Legion index space handle to construct the shape object with.
-            Must not be used by clients explicitly, as they don't have access
-            to index spaces.
+           Extents to construct the shape object with
         """
+        assert extents is not None
         if isinstance(extents, int):
             self._extents = (extents,)
-            self._ispace = None
-        elif extents is not None:
-            self._extents = tuple(extents)
-            self._ispace = None
         else:
-            assert ispace is not None
-            self._extents = None
-            self._ispace = ispace
+            self._extents = tuple(extents)
 
     @property
     def extents(self) -> tuple[int, ...]:
@@ -81,18 +65,10 @@ class Shape:
         -----
         Can block on the producer task
         """
-        if self._extents is None:
-            assert self._ispace is not None
-            bounds = self._ispace.get_bounds()
-            hi = bounds.hi
-            self._extents = tuple(hi[idx] + 1 for idx in range(hi.dim))
         return self._extents
 
     def __str__(self) -> str:
-        if self._extents is not None:
-            return f"Shape({self._extents})"
-        else:
-            return f"Shape({self._ispace})"
+        return f"Shape({self._extents})"
 
     def __repr__(self) -> str:
         return str(self)
@@ -133,10 +109,6 @@ class Shape:
         return self._extents is not None
 
     @property
-    def ispace(self) -> Union[IndexSpace, None]:
-        return self._ispace
-
-    @property
     def ndim(self) -> int:
         """
         Dimension of the shape. Unlike the ``extents`` property, this is
@@ -147,23 +119,7 @@ class Shape:
         int
             Dimension of the shape
         """
-        if self._extents is None:
-            assert self._ispace is not None
-            return self._ispace.get_dim()
-        else:
-            return len(self._extents)
-
-    def get_index_space(self, runtime: Runtime) -> IndexSpace:
-        if self._ispace is None:
-            bounds = self._extents
-            assert bounds is not None
-            # 0-D index spaces are invalid in Legion, so we have to promote
-            # the bounds to 1-D
-            if bounds == ():
-                bounds = (1,)
-            return runtime.find_or_create_index_space(bounds)
-        else:
-            return self._ispace
+        return len(self._extents)
 
     def volume(self) -> int:
         """
@@ -196,10 +152,7 @@ class Shape:
         return reduce(lambda x, y: x + y, self.extents, 0)
 
     def __hash__(self) -> int:
-        if self._ispace is not None:
-            return hash((self.__class__, False, self._ispace))
-        else:
-            return hash((self.__class__, True, self._extents))
+        return hash((self.__class__, True, self._extents))
 
     def __eq__(self, other: object) -> bool:
         """
@@ -220,14 +173,7 @@ class Shape:
         Can block on the producer task
         """
         if isinstance(other, Shape):
-            if (
-                self._ispace is not None
-                and other._ispace is not None
-                and self._ispace is other._ispace
-            ):
-                return True
-            else:
-                return self.extents == other.extents
+            return self.extents == other.extents
         elif isinstance(other, (int, Iterable)):
             lh = self.extents
             rh = (

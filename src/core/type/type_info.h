@@ -157,7 +157,7 @@ class Type {
    * @param op_kind Reduction operator kind
    * @param global_op_id Global reduction operator ID
    */
-  void record_reduction_operator(int32_t op_kind, int32_t global_op_id) const;
+  void record_reduction_operator(int32_t op_kind, int64_t global_op_id) const;
   /**
    * @brief Records a reduction operator.
    *
@@ -167,7 +167,7 @@ class Type {
    * @param op_kind Reduction operator kind
    * @param global_op_id Global reduction operator ID
    */
-  void record_reduction_operator(ReductionOpKind op_kind, int32_t global_op_id) const;
+  void record_reduction_operator(ReductionOpKind op_kind, int64_t global_op_id) const;
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -177,7 +177,7 @@ class Type {
    *
    * @return Global reduction operator ID
    */
-  int32_t find_reduction_operator(int32_t op_kind) const;
+  [[nodiscard]] int64_t find_reduction_operator(int32_t op_kind) const;
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -187,7 +187,7 @@ class Type {
    *
    * @return Global reduction operator ID
    */
-  int32_t find_reduction_operator(ReductionOpKind op_kind) const;
+  [[nodiscard]] int64_t find_reduction_operator(ReductionOpKind op_kind) const;
   /**
    * @brief Equality check between types
    *
@@ -271,6 +271,12 @@ class StructType : public Type {
    * @return false Fields are compact
    */
   bool aligned() const;
+  /**
+   * @brief Returns offsets to fields
+   *
+   * @return Field offsets in a vector
+   */
+  [[nodiscard]] std::vector<uint32_t> offsets() const;
 
  private:
   friend class Type;
