@@ -27,6 +27,11 @@ const char* __asan_default_options()  // NOLINT(bugprone-reserved-identifier)
          "symbolize=1:";
 }
 
+const char* __ubsan_default_options()  // NOLINT(bugprone-reserved-identifier)
+{
+  return "print_stacktrace=1:";
+}
+
 const char* __lsan_default_suppressions()  // NOLINT(bugprone-reserved-identifier)
 {
   return "leak:librealm.*\n"
