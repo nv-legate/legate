@@ -15,6 +15,8 @@
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
 from argparse import Namespace
 from pathlib import Path
 
@@ -53,7 +55,7 @@ class Config:
 
         # gtest configuration
         self.gtest_file = args.gtest_file
-        self.gtest_tests = args.gtest_tests
+        self.gtest_tests = self._compute_gtest_tests(args)
 
         # python configuration for which tests to run
         self.examples = False if args.cov_bin else True
@@ -199,3 +201,50 @@ class Config:
                 return tuple(Path(line.strip()) for line in lines)
         except OSError:
             return ()
+
+    def _compute_gtest_tests(self, args: Namespace) -> list[str]:
+        if args.gtest_file is None:
+            return []
+
+        to_skip = set(args.gtest_skip_list)
+        if args.gtest_tests:
+            return [test for test in args.gtest_tests if test not in to_skip]
+
+        list_command = [args.gtest_file, "--gtest_list_tests"]
+        if args.gtest_filter is not None:
+            list_command.append(f"--gtest_filter={args.gtest_filter}")
+
+        try:
+            cmd_out = subprocess.check_output(
+                list_command, stderr=subprocess.STDOUT
+            )
+        except subprocess.CalledProcessError as cpe:
+            print("Failed to fetch GTest tests")
+            if cpe.stdout:
+                print(f"stdout:\n{cpe.stdout.decode()}")
+            if cpe.stderr:
+                print(f"stderr:\n{cpe.stderr.decode()}")
+            raise
+
+        result = cmd_out.decode(sys.stdout.encoding).split("\n")
+
+        test_group = ""
+        test_names = []
+        for line in result:
+            # Skip empty entry
+            if not line.strip():
+                continue
+
+            # Check if this is a test group
+            if line[0] != " ":
+                test_group = line.strip()
+                continue
+
+            test_name = test_group + line.strip()
+            if test_name in to_skip:
+                continue
+
+            # Assign test to test group
+            test_names.append(test_name)
+
+        return test_names

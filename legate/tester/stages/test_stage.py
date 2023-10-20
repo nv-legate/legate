@@ -382,6 +382,10 @@ class TestStage(Protocol):
         mpi_args = []
         mpi_args += ["mpirun", "-n", str(config.ranks_per_node)]
         mpi_args += ["--npernode", str(config.ranks_per_node)]
+        # FIXME: Turn off the binding until we properly pipe through the
+        # binding configuration to mpirun. Without this, each rank will be
+        # mapped to only one core, which slows down the tests a lot
+        mpi_args += ["--bind-to", "none"]
         if config.mpi_output_filename:
             mpi_args += ["--output-filename", config.mpi_output_filename]
         mpi_args += ["--merge-stderr-to-stdout"]

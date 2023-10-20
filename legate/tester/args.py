@@ -308,16 +308,34 @@ parser.add_argument(
     "--gtest-file",
     dest="gtest_file",
     default=None,
-    help="Path to gtest binary",
+    help="Path to GTest binary",
 )
 
+gtest_group = parser.add_mutually_exclusive_group()
 
-parser.add_argument(
+gtest_group.add_argument(
     "--gtest-tests",
     dest="gtest_tests",
     nargs="*",
     default=[],
-    help="Explicit list of test names to run",
+    help="List of GTest tests to run",
+)
+
+
+gtest_group.add_argument(
+    "--gtest-filter",
+    dest="gtest_filter",
+    default=None,
+    help="Pattern to filter GTest tests",
+)
+
+
+parser.add_argument(
+    "--gtest-skip-list",
+    dest="gtest_skip_list",
+    nargs="*",
+    default=[],
+    help="List of GTest tests to skip",
 )
 
 
