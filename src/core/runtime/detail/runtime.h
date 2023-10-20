@@ -205,7 +205,8 @@ class Runtime {
                                                 const Legion::LogicalRegion& func_region,
                                                 const Legion::LogicalPartition& func_partition,
                                                 Legion::FieldID func_field_id,
-                                                bool is_range);
+                                                bool is_range,
+                                                const mapping::detail::Machine& machine);
   Legion::FieldSpace create_field_space();
   Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
                                       const Legion::FieldSpace& field_space);

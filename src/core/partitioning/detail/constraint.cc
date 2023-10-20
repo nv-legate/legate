@@ -150,7 +150,8 @@ std::unique_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& stra
   const auto* src = var_function();
   auto src_part   = strategy[src];
   if (src_part->has_launch_domain()) {
-    return create_image(src->operation()->find_store(src), src_part);
+    auto* op = src->operation();
+    return create_image(op->find_store(src), src_part, op->machine());
   } else {
     return create_no_partition();
   }

@@ -36,6 +36,14 @@ from legate.tester.config import Config
 from legate.tester.test_plan import TestPlan
 from legate.tester.test_system import TestSystem
 
+# Skip these tests in mutli-node testing, as they don't pass with MPI; for some
+# reason the abort calls in these tests are not completely neutralized by Gtest
+# in an MPI environment.
+SKIP_LIST = {
+    "AttachDeathTest.MissingManualDetach",
+    "DeathTestExample.Simple",
+}
+
 
 def filter_parsed_args(action_list, parsed_args, argv):
     new_argv = []
@@ -77,7 +85,7 @@ def filter_parsed_args(action_list, parsed_args, argv):
     return new_argv
 
 
-def fetch_test_names(gtest_file, filter):
+def fetch_test_names(gtest_file, filter, multi_rank):
     list_command = [
         gtest_file,
         "--gtest_list_tests",
@@ -109,8 +117,11 @@ def fetch_test_names(gtest_file, filter):
             test_group = line.strip()
             continue
 
+        test_name = test_group + line.strip()
+        if multi_rank and test_name in SKIP_LIST:
+            continue
         # Assign test to test group
-        test_names += [test_group + line.strip()]
+        test_names.append(test_name)
 
     return test_names
 
@@ -149,7 +160,7 @@ def main():
         )
     if not args.gtest_tests:
         extra_args += ["--gtest-tests"] + fetch_test_names(
-            args.gtest_file, args.filter
+            args.gtest_file, args.filter, args.ranks_per_node > 1
         )
 
     argv = filter_parsed_args([filter_arg], args, sys.argv)

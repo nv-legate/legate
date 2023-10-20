@@ -321,8 +321,10 @@ std::string Weighted::to_string() const
   return std::move(ss).str();
 }
 
-Image::Image(std::shared_ptr<detail::LogicalStore> func, std::shared_ptr<Partition> func_partition)
-  : func_(std::move(func)), func_partition_(std::move(func_partition))
+Image::Image(std::shared_ptr<detail::LogicalStore> func,
+             std::shared_ptr<Partition> func_partition,
+             mapping::detail::Machine machine)
+  : func_(std::move(func)), func_partition_(std::move(func_partition)), machine_(std::move(machine))
 {
 }
 
@@ -391,7 +393,7 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool com
 
     auto field_id   = func_rf->field_id();
     index_partition = runtime->create_image_partition(
-      target, color_space, func_region, func_partition, field_id, is_range);
+      target, color_space, func_region, func_partition, field_id, is_range, machine_);
     part_mgr->record_image_partition(target, func_partition, field_id, index_partition);
     func_rf->add_invalidation_callback([target, func_partition, field_id]() {
       auto part_mgr = detail::Runtime::get_runtime()->partition_manager();
@@ -444,9 +446,10 @@ std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
 }
 
 std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
-                                    std::shared_ptr<Partition> func_partition)
+                                    std::shared_ptr<Partition> func_partition,
+                                    mapping::detail::Machine machine)
 {
-  return std::make_unique<Image>(std::move(func), std::move(func_partition));
+  return std::make_unique<Image>(std::move(func), std::move(func_partition), std::move(machine));
 }
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition)

@@ -690,13 +690,19 @@ Legion::IndexPartition Runtime::create_image_partition(
   const Legion::LogicalRegion& func_region,
   const Legion::LogicalPartition& func_partition,
   Legion::FieldID func_field_id,
-  bool is_range)
+  bool is_range,
+  const mapping::detail::Machine& machine)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate.debug() << "Create image partition {index_space: " << index_space
                        << ", func_partition: " << func_partition
                        << ", func_field_id: " << func_field_id << ", is_range: " << is_range << "}";
   }
+
+  BufferBuilder buffer;
+  machine.pack(buffer);
+  buffer.pack<uint32_t>(get_sharding(machine, 0));
+
   if (is_range)
     return legion_runtime_->create_partition_by_image_range(legion_context_,
                                                             index_space,
@@ -706,7 +712,9 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                             color_space,
                                                             LEGION_COMPUTE_KIND,
                                                             LEGION_AUTO_GENERATE_ID,
-                                                            core_library_->get_mapper_id());
+                                                            core_library_->get_mapper_id(),
+                                                            0,
+                                                            buffer.to_legion_buffer());
   else
     return legion_runtime_->create_partition_by_image(legion_context_,
                                                       index_space,
@@ -716,7 +724,9 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                       color_space,
                                                       LEGION_COMPUTE_KIND,
                                                       LEGION_AUTO_GENERATE_ID,
-                                                      core_library_->get_mapper_id());
+                                                      core_library_->get_mapper_id(),
+                                                      0,
+                                                      buffer.to_legion_buffer());
 }
 
 Legion::FieldSpace Runtime::create_field_space()

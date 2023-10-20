@@ -17,6 +17,7 @@
 #include "legion.h"
 
 #include "core/data/shape.h"
+#include "core/mapping/detail/machine.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/typedefs.h"
 
@@ -220,7 +221,9 @@ class Weighted : public Partition {
 
 class Image : public Partition {
  public:
-  Image(std::shared_ptr<detail::LogicalStore> func, std::shared_ptr<Partition> func_partition);
+  Image(std::shared_ptr<detail::LogicalStore> func,
+        std::shared_ptr<Partition> func_partition,
+        mapping::detail::Machine machine);
 
  public:
   Image(const Image&) = default;
@@ -262,6 +265,7 @@ class Image : public Partition {
  private:
   std::shared_ptr<detail::LogicalStore> func_;
   std::shared_ptr<Partition> func_partition_;
+  mapping::detail::Machine machine_;
 };
 
 std::unique_ptr<NoPartition> create_no_partition();
@@ -279,7 +283,8 @@ std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
                                           const Domain& color_domain);
 
 std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
-                                    std::shared_ptr<Partition> func_partition);
+                                    std::shared_ptr<Partition> func_partition,
+                                    mapping::detail::Machine machine);
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 
