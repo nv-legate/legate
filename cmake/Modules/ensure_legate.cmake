@@ -10,22 +10,18 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
+include_guard(GLOBAL)
 
-project(registry VERSION 0.1 LANGUAGES C CXX)
+macro(legate_ensure_legate)
+  if (legate_core_CMAKE_PRESET_NAME AND NOT legate_core_ROOT)
+    # If we are using a preset (and the user is not overriding the path anyways), then we
+    # know exactly where the root is
+    cmake_path(SET legate_core_ROOT NORMALIZE "${LEGATE_CORE_DIR}/build/${legate_core_CMAKE_PRESET_NAME}")
+  endif()
 
-set(CMAKE_CXX_STANDARD 17)
-set(BUILD_SHARED_LIBS ON)
-
-cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/../../../")
-
-include(${LEGATE_CORE_DIR}/cmake/Modules/ensure_legate.cmake)
-
-legate_ensure_legate()
-
-include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
-
-legate_add_cpp_subdirectory(src TARGET registry EXPORT registry-export)
-
-legate_add_cffi(${CMAKE_CURRENT_SOURCE_DIR}/src/registry_cffi.h TARGET registry)
-legate_default_python_install(registry EXPORT registry-export)
+  if(NOT (CMAKE_PROJECT_NAME STREQUAL "legate_core"))
+    # If CMAKE_PROJECT_NAME is not legate_core, then we are not configuring from
+    # top-level.
+    find_package(legate_core REQUIRED)
+  endif()
+endmacro()

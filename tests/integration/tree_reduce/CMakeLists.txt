@@ -19,9 +19,11 @@ set(BUILD_SHARED_LIBS ON)
 
 cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/../../../")
 
-include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
+include(${LEGATE_CORE_DIR}/cmake/Modules/ensure_legate.cmake)
 
 legate_ensure_legate()
+
+include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
 
 legate_add_cpp_subdirectory(src TARGET tree_reduce EXPORT tree_reduce-export)
 

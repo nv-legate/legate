@@ -46,6 +46,8 @@ FetchContent_MakeAvailable(googletest)
 
 include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
 
+include(${LEGATE_CORE_DIR}/cmake/Modules/ensure_legate.cmake)
+
 legate_ensure_legate()
 
 enable_testing()
