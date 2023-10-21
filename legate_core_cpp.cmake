@@ -490,6 +490,7 @@ install(
         src/core/data/array.h
         src/core/data/array.inl
         src/core/data/buffer.h
+        src/core/data/inline_allocation.h
         src/core/data/logical_array.h
         src/core/data/logical_store.h
         src/core/data/scalar.h
