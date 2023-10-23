@@ -43,10 +43,6 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   ~LogicalRegionField();
 
  public:
-  LogicalRegionField(const LogicalRegionField& other)            = default;
-  LogicalRegionField& operator=(const LogicalRegionField& other) = default;
-
- public:
   int32_t dim() const;
   const Legion::LogicalRegion& region() const { return lr_; }
   Legion::FieldID field_id() const { return fid_; }

@@ -23,7 +23,7 @@ class Weighted;
 }  // namespace legate
 
 namespace legate::mapping::detail {
-class Machine;
+struct Machine;
 }  // namespace legate::mapping::detail
 
 namespace legate::detail {

@@ -12,6 +12,7 @@
 
 #include "core/runtime/detail/runtime.h"
 
+#include <cinttypes>
 #include <limits>
 
 #include "core/comm/comm.h"
@@ -130,7 +131,7 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
 void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int64_t legion_op_id)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate.debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %ld)",
+    log_legate.debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %" PRId64 ")",
                      type_uid,
                      op_kind,
                      legion_op_id);
@@ -158,8 +159,10 @@ int64_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) cons
     throw std::invalid_argument(std::move(ss).str());
   }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate.debug(
-      "Found reduction op %ld (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
+    log_legate.debug("Found reduction op %" PRId64 " (type_uid: %d, op_kind: %d)",
+                     finder->second,
+                     type_uid,
+                     op_kind);
   }
   return finder->second;
 }

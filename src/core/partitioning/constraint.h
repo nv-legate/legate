@@ -44,7 +44,6 @@ class Variable {
  public:
   Variable() = default;
   Variable(const detail::Variable* impl);
-  ~Variable() = default;
 
  public:
   const detail::Variable* impl() const { return impl_; }
