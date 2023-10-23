@@ -276,11 +276,22 @@ def configure_cmake_preset(argparse_args):
             print(*args, **kwargs, flush=flush)
 
     def yield_compiler_guesses():
-        def try_guess_compiler(gen_fn, *args):
+        for gen_fn, *args in (
+            (os.environ.get, "CMAKE_CXX_COMPILER", ""),
+            (os.environ.get, "CXX", ""),
+            # cmake likes to use cc and c++ to pick the compilers
+            (shutil.which, "c++"),
+            (os.environ.get, "CMAKE_C_COMPILER", ""),
+            (os.environ.get, "CC", ""),
+            (shutil.which, "cc"),
+            # last resort
+            (shutil.which, "gcc"),
+            (shutil.which, "clang"),
+        ):
             vprint(f"Trying: {gen_fn.__qualname__}{args}")
             compiler = gen_fn(*args)
             if not compiler:
-                return
+                continue
 
             vprint(compiler, "exists")
             try:
@@ -289,36 +300,16 @@ def configure_cmake_preset(argparse_args):
                 ).decode()
             except subprocess.CalledProcessError as cpe:
                 vprint(cpe)
-                return
+                continue
 
             vprint(stdout)
             if re.search(r"clang\s+version", stdout):
                 vprint("Detected clang")
-                return "clang"
-            if re.search(
-                r"[gG][cC][cC].*Free\s+Software\s+Foundation",
-                stdout,
-                re.DOTALL,
-            ):
+                yield "clang"
+            if re.search(r"Free\s+Software\s+Foundation", stdout):
                 vprint("Detected GCC")
-                return "gcc"
+                yield "gcc"
             vprint("Detected neither!")
-
-        for gen in (
-            (os.environ.get, "CMAKE_CXX_COMPILER", ""),
-            (os.environ.get, "CXX", ""),
-            # cmake likes to use cc and c++ to pick the compilers
-            (shutil.which, "c++"),
-            (os.environ.get, "CMAKE_C_COMPILER", ""),
-            (os.environ.get, "CC", ""),
-            (shutil.which, "cc"),
-        ):
-            yield try_guess_compiler(*gen)
-
-        # last resort
-        for compiler in ("clang", "gcc"):
-            vprint("Searching for compiler", compiler)
-            yield shutil.which(compiler)
 
         raise RuntimeError("Could not find suitable compiler!")
 
