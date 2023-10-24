@@ -59,14 +59,16 @@ DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
 ForEachMacros:
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^<.*\.h>'
+  - Regex:           '^"core/.*\.h"'
     Priority:        1
-  - Regex:           '^<.*'
+  - Regex:           '^"legion.*'
     Priority:        2
-  - Regex:           '.*'
+  - Regex:           '^".*'
     Priority:        3
+  - Regex:           '^<.*'
+    Priority:        99
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
 IndentPPDirectives: None
