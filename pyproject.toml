@@ -95,8 +95,6 @@ exclude = ['tests/examples', 'tests/integration', 'tests/cpp']
 # ignore certain auto-generated and utility files
 module = [
     "legate._version",
-    "legate.__main__",
-    "legate.install_info",
     "legate._sphinxext.*",
     "legate.jupyter.*",
 ]
