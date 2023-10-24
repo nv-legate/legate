@@ -150,7 +150,7 @@ void _read_header_uneven(std::string path, std::vector<size_t>& color_shape)
   EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::INT8));
 
   int64_t data;
-  for (int i = 0; i < dim; i++) {
+  for (uint32_t i = 0; i < dim; i++) {
     in.read(reinterpret_cast<char*>(&data), sizeof(int64_t));
     color_shape.push_back(data);
   }
@@ -215,11 +215,11 @@ void _read_header_even(std::string path,
   EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::INT8));
 
   uint32_t data;
-  for (int i = 0; i < dim; i++) {
+  for (uint32_t i = 0; i < dim; i++) {
     in.read(reinterpret_cast<char*>(&data), sizeof(uint32_t));
     shape.push_back(data);
   }
-  for (int i = 0; i < dim; i++) {
+  for (uint32_t i = 0; i < dim; i++) {
     in.read(reinterpret_cast<char*>(&data), sizeof(uint32_t));
     tile_shape.push_back(data);
   }
@@ -256,7 +256,7 @@ IOArray read_even_tiles(legate::Library library, std::string path)
 
 TEST(Example, SingleFileIO)
 {
-  legate::Core::perform_registration<task::legateio::register_tasks>();
+  task::legateio::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::legateio::library_name);
@@ -290,7 +290,7 @@ TEST(Example, SingleFileIO)
 
 TEST(Example, EvenTilesIO)
 {
-  legate::Core::perform_registration<task::legateio::register_tasks>();
+  task::legateio::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::legateio::library_name);
@@ -325,7 +325,7 @@ TEST(Example, EvenTilesIO)
 
 TEST(Example, UnevenTilesIO)
 {
-  legate::Core::perform_registration<task::legateio::register_tasks>();
+  task::legateio::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::legateio::library_name);

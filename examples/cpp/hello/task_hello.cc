@@ -44,7 +44,7 @@ void register_tasks()
 
   float total = 0;
   // i is a global index for the complete array
-  for (size_t i = input_shape.lo; i <= input_shape.hi; ++i) { total += in[i]; }
+  for (int64_t i = input_shape.lo; i <= input_shape.hi; ++i) { total += in[i]; }
 
   /**
     The task launch as a whole will return a single value (Store of size 1)
@@ -85,7 +85,7 @@ void register_tasks()
   logger.info() << "Elementwise square [" << output_shape.lo << "," << output_shape.hi << "]";
 
   // i is a global index for the complete array
-  for (size_t i = input_shape.lo; i <= input_shape.hi; ++i) { out[i] = in[i] * in[i]; }
+  for (int64_t i = input_shape.lo; i <= input_shape.hi; ++i) { out[i] = in[i] * in[i]; }
 }
 
 /*static*/ void IotaTask::cpu_variant(legate::TaskContext context)
@@ -97,7 +97,7 @@ void register_tasks()
   logger.info() << "Iota task [" << output_shape.lo << "," << output_shape.hi << "]";
 
   // i is a global index for the complete array
-  for (size_t i = output_shape.lo; i <= output_shape.hi; ++i) { out[i] = i + 1; }
+  for (int64_t i = output_shape.lo; i <= output_shape.hi; ++i) { out[i] = i + 1; }
 }
 
 }  // namespace hello

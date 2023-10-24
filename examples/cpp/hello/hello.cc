@@ -60,7 +60,6 @@ legate::LogicalStore sum(legate::Library library, legate::LogicalStore input, co
 
 float to_scalar(legate::Library library, legate::LogicalStore scalar)
 {
-  auto runtime  = legate::Runtime::get_runtime();
   auto p_scalar = scalar.get_physical_store();
   auto acc      = p_scalar.read_accessor<float, 1>();
   float output  = static_cast<float>(acc[{0}]);
@@ -69,7 +68,7 @@ float to_scalar(legate::Library library, legate::LogicalStore scalar)
 
 TEST(Example, Hello)
 {
-  legate::Core::perform_registration<task::hello::register_tasks>();
+  task::hello::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::hello::library_name);

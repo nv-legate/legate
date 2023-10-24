@@ -37,7 +37,7 @@ void test_print_hellos(legate::Library library, std::string str, size_t count)
 
 TEST(Example, HelloPrint)
 {
-  legate::Core::perform_registration<task::hello::register_tasks>();
+  task::hello::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::hello::library_name);

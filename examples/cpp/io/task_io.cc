@@ -48,9 +48,6 @@ struct write_util_fn {
     auto extents =
       empty ? legate::Point<DIM>::ZEROES() : shape.hi - shape.lo + legate::Point<DIM>::ONES();
 
-    int32_t dim  = DIM;
-    int32_t code = store.code<int32_t>();
-
     logger.debug() << "Write a sub-array " << shape << " to " << path;
 
     std::ofstream out(path, std::ios::binary | std::ios::out | std::ios::trunc);
