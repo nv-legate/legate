@@ -620,6 +620,10 @@ rapids_export(
 
 set(legate_core_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/clang_tidy.cmake)
+
+legate_core_add_tidy_target(SOURCES ${legate_core_SOURCES})
+
 if(legate_core_BUILD_TESTS)
   add_subdirectory(tests/integration)
 endif()
