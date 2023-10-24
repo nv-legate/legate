@@ -40,6 +40,24 @@ const std::unordered_map<Type::Code, uint32_t> SIZEOF = {
   {Type::Code::NIL, 0},
 };
 
+const std::unordered_map<Type::Code, uint32_t> ALIGNOF = {
+  {Type::Code::BOOL, alignof(legate_type_of<Type::Code::BOOL>)},
+  {Type::Code::INT8, alignof(legate_type_of<Type::Code::INT8>)},
+  {Type::Code::INT16, alignof(legate_type_of<Type::Code::INT16>)},
+  {Type::Code::INT32, alignof(legate_type_of<Type::Code::INT32>)},
+  {Type::Code::INT64, alignof(legate_type_of<Type::Code::INT64>)},
+  {Type::Code::UINT8, alignof(legate_type_of<Type::Code::UINT8>)},
+  {Type::Code::UINT16, alignof(legate_type_of<Type::Code::UINT16>)},
+  {Type::Code::UINT32, alignof(legate_type_of<Type::Code::UINT32>)},
+  {Type::Code::UINT64, alignof(legate_type_of<Type::Code::UINT64>)},
+  {Type::Code::FLOAT16, alignof(legate_type_of<Type::Code::FLOAT16>)},
+  {Type::Code::FLOAT32, alignof(legate_type_of<Type::Code::FLOAT32>)},
+  {Type::Code::FLOAT64, alignof(legate_type_of<Type::Code::FLOAT64>)},
+  {Type::Code::COMPLEX64, alignof(legate_type_of<Type::Code::COMPLEX64>)},
+  {Type::Code::COMPLEX128, alignof(legate_type_of<Type::Code::COMPLEX128>)},
+  {Type::Code::NIL, 0},
+};
+
 const std::unordered_map<Type::Code, std::string> TYPE_NAMES = {
   {Type::Code::BOOL, "bool"},
   {Type::Code::INT8, "int8"},
@@ -133,7 +151,10 @@ int64_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 
 bool Type::operator==(const Type& other) const { return equal(other); }
 
-PrimitiveType::PrimitiveType(Code code) : Type(code), size_(SIZEOF.at(code)) {}
+PrimitiveType::PrimitiveType(Code code)
+  : Type{code}, size_{SIZEOF.at(code)}, alignment_{ALIGNOF.at(code)}
+{
+}
 
 int32_t PrimitiveType::uid() const { return static_cast<int32_t>(code); }
 

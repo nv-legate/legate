@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 #include "core/type/type_info.h"
 
 namespace legate::detail {
@@ -56,7 +58,7 @@ class PrimitiveType : public Type {
  public:
   PrimitiveType(Code code);
   uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return size_; }
+  uint32_t alignment() const override { return alignment_; }
   int32_t uid() const override;
   bool variable_size() const override { return false; }
   std::string to_string() const override;
@@ -66,15 +68,15 @@ class PrimitiveType : public Type {
  private:
   bool equal(const Type& other) const override;
 
- private:
-  const uint32_t size_;
+  uint32_t size_;
+  uint32_t alignment_;
 };
 
 class StringType : public Type {
  public:
   StringType();
   bool variable_size() const override { return true; }
-  uint32_t alignment() const override { return 0; }
+  uint32_t alignment() const override { return alignof(std::max_align_t); }
   int32_t uid() const override;
   std::string to_string() const override;
   bool is_primitive() const override { return false; }
@@ -98,7 +100,7 @@ class BinaryType : public ExtensionType {
  public:
   BinaryType(int32_t uid, uint32_t size);
   uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return size_; }
+  uint32_t alignment() const override { return alignof(std::max_align_t); }
   bool variable_size() const override { return false; }
   std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;

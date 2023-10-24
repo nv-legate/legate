@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/type/type_info.h"
+#include "legate_defines.h"
 
 #include <limits.h>
 
@@ -75,6 +76,13 @@ template <>
 PREFIX constexpr Type::Code legate_type_code_of<complex<float>> = Type::Code::COMPLEX64;
 template <>
 PREFIX constexpr Type::Code legate_type_code_of<complex<double>> = Type::Code::COMPLEX128;
+// When the CUDA build is off, complex<T> is an alias to std::complex<T>
+#if LegateDefined(LEGATE_USE_CUDA)
+template <>
+PREFIX constexpr Type::Code legate_type_code_of<std::complex<float>> = Type::Code::COMPLEX64;
+template <>
+PREFIX constexpr Type::Code legate_type_code_of<std::complex<double>> = Type::Code::COMPLEX128;
+#endif
 template <>
 PREFIX constexpr Type::Code legate_type_code_of<std::string> = Type::Code::STRING;
 
@@ -222,5 +230,14 @@ struct is_complex_type<complex<float>> : std::true_type {};
 
 template <>
 struct is_complex_type<complex<double>> : std::true_type {};
+
+// When the CUDA build is off, complex<T> is an alias to std::complex<T>
+#if LegateDefined(LEGATE_USE_CUDA)
+template <>
+struct is_complex_type<std::complex<float>> : std::true_type {};
+
+template <>
+struct is_complex_type<std::complex<double>> : std::true_type {};
+#endif
 
 }  // namespace legate

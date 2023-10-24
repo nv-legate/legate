@@ -117,10 +117,7 @@ size_t Scalar::size() const
 void Scalar::pack(BufferBuilder& buffer) const
 {
   type_->pack(buffer);
-  buffer.pack_buffer(
-    data_,
-    size(),
-    type_->code == Type::Code::STRING ? alignof(std::max_align_t) : type_->alignment());
+  buffer.pack_buffer(data_, size(), type_->alignment());
 }
 
 }  // namespace legate::detail

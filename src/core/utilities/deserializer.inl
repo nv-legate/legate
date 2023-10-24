@@ -52,9 +52,10 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
       case Type::Code::NIL:
         return {nullptr, 0};
 
-#define CASE_TYPE_CODE_(CODE) \
-  case Type::Code::CODE:      \
-    return detail::align_for_unpack<legate_type_of<Type::Code::CODE>>(ptr, capacity)
+#define CASE_TYPE_CODE_(CODE)                                          \
+  case Type::Code::CODE:                                               \
+    return detail::align_for_unpack<legate_type_of<Type::Code::CODE>>( \
+      ptr, capacity, type->size(), type->alignment())
 
         CASE_TYPE_CODE_(BOOL);
         CASE_TYPE_CODE_(INT8);

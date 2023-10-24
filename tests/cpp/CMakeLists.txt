@@ -53,6 +53,7 @@ legate_ensure_legate()
 enable_testing()
 
 file(GLOB main_SRC ${PROJECT_SOURCE_DIR}/main.cc)
+file(GLOB bug_SRC ${PROJECT_SOURCE_DIR}/bug/*.cc)
 file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
 file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
 file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
@@ -73,7 +74,7 @@ include(cmake/thirdparty/get_nccl.cmake)
 
 endif()
 
-add_executable(cpp_tests ${main_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC})
+add_executable(cpp_tests ${main_SRC} ${bug_SRC} ${integration_SRC} ${tasks_SRC} ${unit_SRC})
 
 target_include_directories(cpp_tests PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE GTest::gtest)
