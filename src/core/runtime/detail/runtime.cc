@@ -210,7 +210,7 @@ std::shared_ptr<AutoTask> Runtime::create_task(const Library* library, int64_t t
 {
   auto machine = slice_machine_for_task(library, task_id);
   auto task    = new AutoTask(library, task_id, next_unique_id_++, std::move(machine));
-  return std::unique_ptr<AutoTask>(task);
+  return std::unique_ptr<AutoTask>{task};
 }
 
 std::shared_ptr<ManualTask> Runtime::create_task(const Library* library,

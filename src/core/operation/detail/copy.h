@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include <memory>
-#include <optional>
-
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
+
+#include <memory>
+#include <optional>
 
 namespace legate::detail {
 
@@ -27,19 +27,16 @@ class Copy : public Operation {
  public:
   Copy(std::shared_ptr<LogicalStore> target,
        std::shared_ptr<LogicalStore> source,
-       int64_t unique_id,
+       uint64_t unique_id,
        mapping::detail::Machine&& machine,
        std::optional<int32_t> redop);
 
- public:
   void validate() override;
   void launch(Strategy* strategy) override;
 
- public:
   void add_to_solver(ConstraintSolver& solver) override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
  private:
   StoreArg target_;

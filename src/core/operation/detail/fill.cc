@@ -22,12 +22,12 @@ namespace legate::detail {
 
 Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
            std::shared_ptr<LogicalStore>&& value,
-           int64_t unique_id,
+           uint64_t unique_id,
            mapping::detail::Machine&& machine)
-  : Operation(unique_id, std::move(machine)),
-    lhs_var_(declare_partition()),
-    lhs_(std::move(lhs)),
-    value_(std::move(value))
+  : Operation{unique_id, std::move(machine)},
+    lhs_var_{declare_partition()},
+    lhs_{std::move(lhs)},
+    value_{std::move(value)}
 {
   store_mappings_[*lhs_var_] = lhs_;
   if (lhs_->unbound()) throw std::invalid_argument("Fill lhs must be a normal store");
@@ -50,10 +50,11 @@ void Fill::launch(Strategy* strategy)
     return;
   }
 
-  FillLauncher launcher(machine_);
+  auto launcher      = FillLauncher{machine_};
   auto launch_domain = strategy->launch_domain(this);
   auto part          = (*strategy)[lhs_var_];
   auto lhs_proj      = lhs_->create_partition(part)->create_projection_info(launch_domain);
+
   lhs_->set_key_partition(machine(), part.get());
 
   if (launch_domain.is_valid()) {

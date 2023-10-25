@@ -21,6 +21,9 @@
 
 #include "core/mapping/detail/machine.h"
 
+#include <memory>
+#include <string>
+
 namespace legate::detail {
 
 class Reduce : public Operation {
@@ -30,28 +33,26 @@ class Reduce : public Operation {
          std::shared_ptr<LogicalStore> store,
          std::shared_ptr<LogicalStore> out_store,
          int64_t task_id,
-         int64_t unique_id,
+         uint64_t unique_id,
          int64_t radix,
          mapping::detail::Machine&& machine);
 
  public:
   void launch(Strategy*) override;
 
- public:
-  void validate() override;
+  void validate() override {}
   void add_to_solver(ConstraintSolver& solver) override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
  private:
-  int64_t radix_;
-  const Library* library_;
-  int64_t task_id_;
-  std::shared_ptr<LogicalStore> input_;
-  std::shared_ptr<LogicalStore> output_;
-  const Variable* input_part_;
-  const Variable* output_part_;
+  int64_t radix_{};
+  const Library* library_{};
+  int64_t task_id_{};
+  std::shared_ptr<LogicalStore> input_{};
+  std::shared_ptr<LogicalStore> output_{};
+  const Variable* input_part_{};
+  const Variable* output_part_{};
 };
 
 }  // namespace legate::detail

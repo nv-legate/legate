@@ -22,39 +22,39 @@ namespace legate {
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-Variable AutoTask::add_input(LogicalArray array)
+Variable AutoTask::add_input(const LogicalArray& array)
 {
-  return Variable(impl_->add_input(array.impl()));
+  return Variable{impl_->add_input(array.impl())};
 }
 
-Variable AutoTask::add_output(LogicalArray array)
+Variable AutoTask::add_output(const LogicalArray& array)
 {
-  return Variable(impl_->add_output(array.impl()));
+  return Variable{impl_->add_output(array.impl())};
 }
 
-Variable AutoTask::add_reduction(LogicalArray array, ReductionOpKind redop)
+Variable AutoTask::add_reduction(const LogicalArray& array, ReductionOpKind redop)
 {
-  return Variable(impl_->add_reduction(array.impl(), static_cast<int32_t>(redop)));
+  return Variable{impl_->add_reduction(array.impl(), static_cast<int32_t>(redop))};
 }
 
-Variable AutoTask::add_reduction(LogicalArray array, int32_t redop)
+Variable AutoTask::add_reduction(const LogicalArray& array, int32_t redop)
 {
-  return Variable(impl_->add_reduction(array.impl(), redop));
+  return Variable{impl_->add_reduction(array.impl(), redop)};
 }
 
-Variable AutoTask::add_input(LogicalArray array, Variable partition_symbol)
+Variable AutoTask::add_input(const LogicalArray& array, Variable partition_symbol)
 {
   impl_->add_input(array.impl(), partition_symbol.impl());
   return partition_symbol;
 }
 
-Variable AutoTask::add_output(LogicalArray array, Variable partition_symbol)
+Variable AutoTask::add_output(const LogicalArray& array, Variable partition_symbol)
 {
   impl_->add_output(array.impl(), partition_symbol.impl());
   return partition_symbol;
 }
 
-Variable AutoTask::add_reduction(LogicalArray array,
+Variable AutoTask::add_reduction(const LogicalArray& array,
                                  ReductionOpKind redop,
                                  Variable partition_symbol)
 {
@@ -62,24 +62,29 @@ Variable AutoTask::add_reduction(LogicalArray array,
   return partition_symbol;
 }
 
-Variable AutoTask::add_reduction(LogicalArray array, int32_t redop, Variable partition_symbol)
+Variable AutoTask::add_reduction(const LogicalArray& array,
+                                 int32_t redop,
+                                 Variable partition_symbol)
 {
   impl_->add_reduction(array.impl(), redop, partition_symbol.impl());
   return partition_symbol;
 }
 
-void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl_); }
+void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl()); }
 
-void AutoTask::add_scalar_arg(Scalar&& scalar) { impl_->add_scalar_arg(std::move(*scalar.impl_)); }
+void AutoTask::add_scalar_arg(Scalar&& scalar) { impl_->add_scalar_arg(std::move(*scalar.impl())); }
 
-void AutoTask::add_constraint(Constraint constraint) { impl_->add_constraint(constraint.impl()); }
-
-Variable AutoTask::find_or_declare_partition(LogicalArray array)
+void AutoTask::add_constraint(const Constraint& constraint)
 {
-  return Variable(impl_->find_or_declare_partition(array.impl()));
+  impl_->add_constraint(constraint.impl());
 }
 
-Variable AutoTask::declare_partition() { return Variable(impl_->declare_partition()); }
+Variable AutoTask::find_or_declare_partition(const LogicalArray& array)
+{
+  return Variable{impl_->find_or_declare_partition(array.impl())};
+}
+
+Variable AutoTask::declare_partition() { return Variable{impl_->declare_partition()}; }
 
 const std::string& AutoTask::provenance() const { return impl_->provenance(); }
 
@@ -94,51 +99,53 @@ void AutoTask::throws_exception(bool can_throw_exception)
 
 void AutoTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
 
-AutoTask::AutoTask(std::shared_ptr<detail::AutoTask> impl) : impl_(std::move(impl)) {}
+AutoTask::AutoTask(std::shared_ptr<detail::AutoTask> impl) : impl_{std::move(impl)} {}
+
+AutoTask::~AutoTask() noexcept = default;
 
 ////////////////////////////////////////////////////
 // legate::ManualTask
 ////////////////////////////////////////////////////
 
-void ManualTask::add_input(LogicalStore store) { impl_->add_input(store.impl()); }
+void ManualTask::add_input(const LogicalStore& store) { impl_->add_input(store.impl()); }
 
-void ManualTask::add_input(LogicalStorePartition store_partition)
+void ManualTask::add_input(const LogicalStorePartition& store_partition)
 {
   impl_->add_input(store_partition.impl());
 }
 
-void ManualTask::add_output(LogicalStore store) { impl_->add_output(store.impl()); }
+void ManualTask::add_output(const LogicalStore& store) { impl_->add_output(store.impl()); }
 
-void ManualTask::add_output(LogicalStorePartition store_partition)
+void ManualTask::add_output(const LogicalStorePartition& store_partition)
 {
   impl_->add_output(store_partition.impl());
 }
 
-void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop)
+void ManualTask::add_reduction(const LogicalStore& store, ReductionOpKind redop)
 {
   impl_->add_reduction(store.impl(), static_cast<int32_t>(redop));
 }
 
-void ManualTask::add_reduction(LogicalStore store, int32_t redop)
+void ManualTask::add_reduction(const LogicalStore& store, int32_t redop)
 {
   impl_->add_reduction(store.impl(), redop);
 }
 
-void ManualTask::add_reduction(LogicalStorePartition store_partition, ReductionOpKind redop)
+void ManualTask::add_reduction(const LogicalStorePartition& store_partition, ReductionOpKind redop)
 {
   impl_->add_reduction(store_partition.impl(), static_cast<int32_t>(redop));
 }
 
-void ManualTask::add_reduction(LogicalStorePartition store_partition, int32_t redop)
+void ManualTask::add_reduction(const LogicalStorePartition& store_partition, int32_t redop)
 {
   impl_->add_reduction(store_partition.impl(), redop);
 }
 
-void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl_); }
+void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl()); }
 
 void ManualTask::add_scalar_arg(Scalar&& scalar)
 {
-  impl_->add_scalar_arg(std::move(*scalar.impl_));
+  impl_->add_scalar_arg(std::move(*scalar.impl()));
 }
 
 const std::string& ManualTask::provenance() const { return impl_->provenance(); }
@@ -154,6 +161,8 @@ void ManualTask::throws_exception(bool can_throw_exception)
 
 void ManualTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
 
-ManualTask::ManualTask(std::shared_ptr<detail::ManualTask> impl) : impl_(std::move(impl)) {}
+ManualTask::ManualTask(std::shared_ptr<detail::ManualTask> impl) : impl_{std::move(impl)} {}
+
+ManualTask::~ManualTask() noexcept = default;
 
 }  // namespace legate

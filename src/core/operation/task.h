@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/data/logical_array.h"
 #include "core/data/logical_store.h"
 #include "core/data/scalar.h"
-#include "core/mapping/machine.h"
 #include "core/partitioning/constraint.h"
+
+#include <memory>
+#include <string>
 
 /**
  * @file
@@ -48,7 +48,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_input(LogicalArray array);
+  Variable add_input(const LogicalArray& array);
   /**
    * @brief Adds an array to the task as output
    *
@@ -59,7 +59,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_output(LogicalArray array);
+  Variable add_output(const LogicalArray& array);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -71,7 +71,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(LogicalArray array, ReductionOpKind redop);
+  Variable add_reduction(const LogicalArray& array, ReductionOpKind redop);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -83,9 +83,8 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(LogicalArray array, int32_t redop);
+  Variable add_reduction(const LogicalArray& array, int32_t redop);
 
- public:
   /**
    * @brief Adds an array to the task as input
    *
@@ -97,7 +96,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_input(LogicalArray array, Variable partition_symbol);
+  Variable add_input(const LogicalArray& array, Variable partition_symbol);
   /**
    * @brief Adds an array to the task as output
    *
@@ -109,7 +108,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_output(LogicalArray array, Variable partition_symbol);
+  Variable add_output(const LogicalArray& array, Variable partition_symbol);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -122,7 +121,9 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(LogicalArray array, ReductionOpKind redop, Variable partition_symbol);
+  Variable add_reduction(const LogicalArray& array,
+                         ReductionOpKind redop,
+                         Variable partition_symbol);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -135,7 +136,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(LogicalArray array, int32_t redop, Variable partition_symbol);
+  Variable add_reduction(const LogicalArray& array, int32_t redop, Variable partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -153,9 +154,8 @@ class AutoTask {
    *
    * @param constraint A partitioning constraint
    */
-  void add_constraint(Constraint constraint);
+  void add_constraint(const Constraint& constraint);
 
- public:
   /**
    * @brief Finds or creates a partition symbol for the given array
    *
@@ -163,21 +163,20 @@ class AutoTask {
    *
    * @return The existing symbol if there is one for the array, a fresh symbol otherwise
    */
-  Variable find_or_declare_partition(LogicalArray array);
+  [[nodiscard]] Variable find_or_declare_partition(const LogicalArray& array);
   /**
    * @brief Declares partition symbol
    *
    * @return A new symbol that can be used when passing an array to an operation
    */
-  Variable declare_partition();
+  [[nodiscard]] Variable declare_partition();
   /**
    * @brief Returns the provenance information of this operation
    *
    * @return Provenance
    */
-  const std::string& provenance() const;
+  [[nodiscard]] const std::string& provenance() const;
 
- public:
   /**
    * @brief Sets whether the task needs a concurrent task launch.
    *
@@ -209,17 +208,17 @@ class AutoTask {
    */
   void add_communicator(const std::string& name);
 
- public:
   AutoTask()                               = default;
   AutoTask(AutoTask&&) noexcept            = default;
   AutoTask& operator=(AutoTask&&) noexcept = default;
   AutoTask(const AutoTask&)                = default;
   AutoTask& operator=(const AutoTask&)     = default;
+  ~AutoTask() noexcept;
 
  private:
   friend class Runtime;
   explicit AutoTask(std::shared_ptr<detail::AutoTask> impl);
-  std::shared_ptr<detail::AutoTask> impl_{nullptr};
+  std::shared_ptr<detail::AutoTask> impl_{};
 };
 
 /**
@@ -235,13 +234,13 @@ class ManualTask {
    *
    * @param store A store to add to the task as input
    */
-  void add_input(LogicalStore store);
+  void add_input(const LogicalStore& store);
   /**
    * @brief Adds a store partition to the task as input
    *
    * @param store_partition A store partition to add to the task as input
    */
-  void add_input(LogicalStorePartition store_partition);
+  void add_input(const LogicalStorePartition& store_partition);
   /**
    * @brief Adds a store to the task as output
    *
@@ -249,13 +248,13 @@ class ManualTask {
    *
    * @param store A store to add to the task as output
    */
-  void add_output(LogicalStore store);
+  void add_output(const LogicalStore& store);
   /**
    * @brief Adds a store partition to the task as output
    *
    * @param store_partition A store partition to add to the task as output
    */
-  void add_output(LogicalStorePartition store_partition);
+  void add_output(const LogicalStorePartition& store_partition);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -264,7 +263,7 @@ class ManualTask {
    * @param store A store to add to the task for reductions
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
    */
-  void add_reduction(LogicalStore store, ReductionOpKind redop);
+  void add_reduction(const LogicalStore& store, ReductionOpKind redop);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -273,21 +272,21 @@ class ManualTask {
    * @param store A store to add to the task for reductions
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
    */
-  void add_reduction(LogicalStore store, int32_t redop);
+  void add_reduction(const LogicalStore& store, int32_t redop);
   /**
    * @brief Adds a store partition to the task for reductions
    *
    * @param store_partition A store partition to add to the task for reductions
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
    */
-  void add_reduction(LogicalStorePartition store_partition, ReductionOpKind redop);
+  void add_reduction(const LogicalStorePartition& store_partition, ReductionOpKind redop);
   /**
    * @brief Adds a store partition to the task for reductions
    *
    * @param store_partition A store partition to add to the task for reductions
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
    */
-  void add_reduction(LogicalStorePartition store_partition, int32_t redop);
+  void add_reduction(const LogicalStorePartition& store_partition, int32_t redop);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -301,15 +300,13 @@ class ManualTask {
    */
   void add_scalar_arg(Scalar&& scalar);
 
- public:
   /**
    * @brief Returns the provenance information of this operation
    *
    * @return Provenance
    */
-  const std::string& provenance() const;
+  [[nodiscard]] const std::string& provenance() const;
 
- public:
   /**
    * @brief Sets whether the task needs a concurrent task launch.
    *
@@ -341,9 +338,8 @@ class ManualTask {
    */
   void add_communicator(const std::string& name);
 
- public:
-  ManualTask() = default;
-  ;
+  ~ManualTask() noexcept;
+  ManualTask()                                 = default;
   ManualTask(ManualTask&&) noexcept            = default;
   ManualTask& operator=(ManualTask&&) noexcept = default;
   ManualTask(const ManualTask&)                = default;
@@ -352,7 +348,7 @@ class ManualTask {
  private:
   friend class Runtime;
   explicit ManualTask(std::shared_ptr<detail::ManualTask> impl);
-  std::shared_ptr<detail::ManualTask> impl_{nullptr};
+  std::shared_ptr<detail::ManualTask> impl_{};
 };
 
 }  // namespace legate

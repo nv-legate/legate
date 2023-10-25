@@ -24,10 +24,10 @@ ScatterGather::ScatterGather(std::shared_ptr<LogicalStore> target,
                              std::shared_ptr<LogicalStore> target_indirect,
                              std::shared_ptr<LogicalStore> source,
                              std::shared_ptr<LogicalStore> source_indirect,
-                             int64_t unique_id,
+                             uint64_t unique_id,
                              mapping::detail::Machine&& machine,
                              std::optional<int32_t> redop)
-  : Operation(unique_id, std::move(machine)),
+  : Operation{unique_id, std::move(machine)},
     target_{target.get(), declare_partition()},
     target_indirect_{target_indirect.get(), declare_partition()},
     source_{source.get(), declare_partition()},
@@ -39,16 +39,6 @@ ScatterGather::ScatterGather(std::shared_ptr<LogicalStore> target,
   record_partition(target_indirect_.variable, std::move(target_indirect));
   record_partition(source_.variable, std::move(source));
   record_partition(source_indirect_.variable, std::move(source_indirect));
-}
-
-void ScatterGather::set_source_indirect_out_of_range(bool flag)
-{
-  source_indirect_out_of_range_ = flag;
-}
-
-void ScatterGather::set_target_indirect_out_of_range(bool flag)
-{
-  target_indirect_out_of_range_ = flag;
 }
 
 void ScatterGather::validate()
@@ -81,8 +71,8 @@ void ScatterGather::validate()
 
 void ScatterGather::launch(Strategy* p_strategy)
 {
-  auto& strategy = *p_strategy;
-  CopyLauncher launcher(machine_);
+  auto& strategy     = *p_strategy;
+  auto launcher      = CopyLauncher{machine_};
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.add_input(source_.store, create_projection_info(strategy, launch_domain, source_));
@@ -103,11 +93,8 @@ void ScatterGather::launch(Strategy* p_strategy)
   launcher.set_target_indirect_out_of_range(target_indirect_out_of_range_);
   launcher.set_source_indirect_out_of_range(source_indirect_out_of_range_);
 
-  if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
-  } else {
-    return launcher.execute_single();
-  }
+  if (launch_domain.is_valid()) return launcher.execute(launch_domain);
+  return launcher.execute_single();
 }
 
 void ScatterGather::add_to_solver(ConstraintSolver& solver)

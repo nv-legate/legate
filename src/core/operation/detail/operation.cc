@@ -19,9 +19,9 @@
 namespace legate::detail {
 
 Operation::Operation(uint64_t unique_id, mapping::detail::Machine&& machine)
-  : unique_id_(unique_id),
-    provenance_(Runtime::get_runtime()->provenance_manager()->get_provenance()),
-    machine_(std::move(machine))
+  : unique_id_{unique_id},
+    provenance_{Runtime::get_runtime()->provenance_manager()->get_provenance()},
+    machine_{std::move(machine)}
 {
 }
 
@@ -29,20 +29,21 @@ const Variable* Operation::find_or_declare_partition(std::shared_ptr<LogicalStor
 {
   auto finder = part_mappings_.find(store);
   if (finder != part_mappings_.end()) return finder->second;
-  const auto* symb = declare_partition();
-  part_mappings_.insert({std::move(store), symb});
+  const auto* symb                 = declare_partition();
+  part_mappings_[std::move(store)] = symb;
   return symb;
 }
 
 const Variable* Operation::declare_partition()
 {
-  partition_symbols_.emplace_back(new Variable(this, next_part_id_++));
-  return partition_symbols_.back().get();
+  return partition_symbols_
+    .emplace_back(std::make_unique<Variable>(this, static_cast<int32_t>(next_part_id_++)))
+    .get();
 }
 
-std::shared_ptr<LogicalStore> Operation::find_store(const Variable* part_symb) const
+std::shared_ptr<LogicalStore> Operation::find_store(const Variable* variable) const
 {
-  return store_mappings_.at(*part_symb);
+  return store_mappings_.at(*variable);
 }
 
 void Operation::record_partition(const Variable* variable, std::shared_ptr<LogicalStore> store)
@@ -55,12 +56,12 @@ void Operation::record_partition(const Variable* variable, std::shared_ptr<Logic
     return;
   }
   if (part_mappings_.find(store) == part_mappings_.end()) part_mappings_.insert({store, variable});
-  store_mappings_[*variable] = store;
+  store_mappings_[*variable] = std::move(store);
 }
 
 std::unique_ptr<ProjectionInfo> Operation::create_projection_info(const Strategy& strategy,
                                                                   const Domain& launch_domain,
-                                                                  const StoreArg& arg) const
+                                                                  const StoreArg& arg)
 {
   auto store_partition = arg.store->create_partition(strategy[arg.variable]);
   auto proj_info       = store_partition->create_projection_info(launch_domain);

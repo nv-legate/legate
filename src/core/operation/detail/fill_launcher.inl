@@ -12,34 +12,14 @@
 
 #pragma once
 
-#include "core/operation/detail/operation.h"
-
-#include <memory>
-#include <string>
+#include "core/operation/detail/fill_launcher.h"
 
 namespace legate::detail {
 
-class Fill : public Operation {
- private:
-  friend class Runtime;
-
-  Fill(std::shared_ptr<LogicalStore>&& lhs,
-       std::shared_ptr<LogicalStore>&& value,
-       uint64_t unique_id,
-       mapping::detail::Machine&& machine);
-
- public:
-  void validate() override;
-  void launch(Strategy* strategy) override;
-
-  void add_to_solver(ConstraintSolver& solver) override;
-
-  [[nodiscard]] std::string to_string() const override;
-
- private:
-  const Variable* lhs_var_;
-  std::shared_ptr<LogicalStore> lhs_;
-  std::shared_ptr<LogicalStore> value_;
-};
+inline FillLauncher::FillLauncher(const mapping::detail::Machine& machine, int64_t tag)
+  : machine_{machine}, tag_{tag}
+{
+  static_cast<void>(tag_);
+}
 
 }  // namespace legate::detail

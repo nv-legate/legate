@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace broadcast_constraints {
 
@@ -93,6 +93,7 @@ void test_promoted_store()
 
   auto initialize = [&](auto store) {
     auto task = runtime->create_task(context, INITIALIZER);
+
     task.add_output(store);
     runtime->submit(std::move(task));
   };

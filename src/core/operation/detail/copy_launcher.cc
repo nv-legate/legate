@@ -29,19 +29,14 @@ struct CopyArg : public Serializable {
           Legion::PrivilegeMode privilege,
           std::unique_ptr<ProjectionInfo> proj_info);
 
- public:
   void pack(BufferBuilder& buffer) const override;
 
- public:
   template <bool SINGLE>
   void populate_requirement(Legion::RegionRequirement& requirement)
   {
     proj_info_->template populate_requirement<SINGLE>(
       requirement, region_, {field_id_}, privilege_);
   }
-
- public:
-  ~CopyArg() {}
 
  private:
   uint32_t req_idx_;
@@ -57,12 +52,12 @@ CopyArg::CopyArg(uint32_t req_idx,
                  Legion::FieldID field_id,
                  Legion::PrivilegeMode privilege,
                  std::unique_ptr<ProjectionInfo> proj_info)
-  : req_idx_(req_idx),
-    store_(store),
-    region_(store_->get_region_field()->region()),
-    field_id_(field_id),
-    privilege_(privilege),
-    proj_info_(std::move(proj_info))
+  : req_idx_{req_idx},
+    store_{store},
+    region_{store_->get_region_field()->region()},
+    field_id_{field_id},
+    privilege_{privilege},
+    proj_info_{std::move(proj_info)}
 {
 }
 
@@ -74,11 +69,6 @@ void CopyArg::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(region_.get_dim());
   buffer.pack<uint32_t>(req_idx_);
   buffer.pack<uint32_t>(field_id_);
-}
-
-CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine, int64_t tag)
-  : machine_(machine), tag_(tag)
-{
 }
 
 CopyLauncher::~CopyLauncher()
@@ -94,11 +84,12 @@ void CopyLauncher::add_store(std::vector<CopyArg*>& args,
                              std::unique_ptr<ProjectionInfo> proj_info,
                              Legion::PrivilegeMode privilege)
 {
-  uint32_t req_idx  = args.size();
+  auto req_idx      = static_cast<uint32_t>(args.size());
   auto region_field = store->get_region_field();
   auto field_id     = region_field->field_id();
+
   if (proj_info->is_key) key_proj_id_ = proj_info->proj_id;
-  args.push_back(new CopyArg(req_idx, store, field_id, privilege, std::move(proj_info)));
+  args.emplace_back(new CopyArg{req_idx, store, field_id, privilege, std::move(proj_info)});
 }
 
 void CopyLauncher::add_input(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info)
@@ -137,32 +128,36 @@ void CopyLauncher::add_target_indirect(detail::LogicalStore* store,
 void CopyLauncher::execute(const Legion::Domain& launch_domain)
 {
   BufferBuilder mapper_arg;
+
   pack_args(mapper_arg);
-  auto* runtime    = Runtime::get_runtime();
-  auto& provenance = runtime->provenance_manager()->get_provenance();
-  Legion::IndexCopyLauncher index_copy(launch_domain,
-                                       Legion::Predicate::TRUE_PRED,
-                                       runtime->core_library()->get_mapper_id(),
-                                       tag_,
-                                       mapper_arg.to_legion_buffer(),
-                                       provenance.c_str());
+
+  const auto runtime = Runtime::get_runtime();
+  auto&& provenance  = runtime->provenance_manager()->get_provenance();
+  auto index_copy    = Legion::IndexCopyLauncher{launch_domain,
+                                              Legion::Predicate::TRUE_PRED,
+                                              runtime->core_library()->get_mapper_id(),
+                                              static_cast<Legion::MappingTagID>(tag_),
+                                              mapper_arg.to_legion_buffer(),
+                                              provenance.c_str()};
   populate_copy(index_copy);
-  Runtime::get_runtime()->dispatch(index_copy);
+  runtime->dispatch(index_copy);
 }
 
 void CopyLauncher::execute_single()
 {
   BufferBuilder mapper_arg;
+
   pack_args(mapper_arg);
-  auto* runtime    = Runtime::get_runtime();
-  auto& provenance = runtime->provenance_manager()->get_provenance();
-  Legion::CopyLauncher single_copy(Legion::Predicate::TRUE_PRED,
-                                   runtime->core_library()->get_mapper_id(),
-                                   tag_,
-                                   mapper_arg.to_legion_buffer(),
-                                   provenance.c_str());
+
+  const auto runtime = Runtime::get_runtime();
+  auto&& provenance  = runtime->provenance_manager()->get_provenance();
+  auto single_copy   = Legion::CopyLauncher{Legion::Predicate::TRUE_PRED,
+                                          runtime->core_library()->get_mapper_id(),
+                                          static_cast<Legion::MappingTagID>(tag_),
+                                          mapper_arg.to_legion_buffer(),
+                                          provenance.c_str()};
   populate_copy(single_copy);
-  return Runtime::get_runtime()->dispatch(single_copy);
+  runtime->dispatch(single_copy);
 }
 
 void CopyLauncher::pack_sharding_functor_id(BufferBuilder& buffer)
@@ -176,7 +171,7 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
   pack_sharding_functor_id(buffer);
 
   auto pack_args = [&buffer](const std::vector<CopyArg*>& args) {
-    buffer.pack<uint32_t>(args.size());
+    buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
     for (auto& arg : args) arg->pack(buffer);
   };
   pack_args(inputs_);
@@ -188,11 +183,11 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
 namespace {
 
 template <class Launcher>
-constexpr bool is_single = false;
+constexpr bool is_single_v = false;
 template <>
-constexpr bool is_single<Legion::CopyLauncher> = true;
+constexpr bool is_single_v<Legion::CopyLauncher> = true;
 template <>
-constexpr bool is_single<Legion::IndexCopyLauncher> = false;
+constexpr bool is_single_v<Legion::IndexCopyLauncher> = false;
 
 }  // namespace
 
@@ -204,7 +199,7 @@ void CopyLauncher::populate_copy(Launcher& launcher)
     for (uint32_t idx = 0; idx < args.size(); ++idx) {
       auto& req = requirements[idx];
       auto& arg = args[idx];
-      arg->template populate_requirement<is_single<Launcher>>(req);
+      arg->template populate_requirement<is_single_v<Launcher>>(req);
     }
   };
 

@@ -12,17 +12,14 @@
 
 #pragma once
 
-#include <tuple>
 #include "core/utilities/typedefs.h"
 
 namespace legate::detail {
 
 struct BaseProjectionInfo {
   BaseProjectionInfo() = default;
-  BaseProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
 
-  BaseProjectionInfo(const BaseProjectionInfo&)            = default;
-  BaseProjectionInfo& operator=(const BaseProjectionInfo&) = default;
+  BaseProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
 
   bool operator<(const BaseProjectionInfo& other) const;
   bool operator==(const BaseProjectionInfo& other) const;
@@ -37,28 +34,26 @@ struct BaseProjectionInfo {
                             Legion::PrivilegeMode privilege,
                             bool is_key) const;
 
-  void set_reduction_op(Legion::ReductionOpID _redop) { redop = _redop; }
+  void set_reduction_op(Legion::ReductionOpID _redop);
 
   Legion::LogicalPartition partition{Legion::LogicalPartition::NO_PART};
-  Legion::ProjectionID proj_id{0};
+  Legion::ProjectionID proj_id{};
   Legion::ReductionOpID redop{-1};
 };
 
-struct ProjectionInfo : public BaseProjectionInfo {
-  ProjectionInfo() = default;
-  ProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
-
-  ProjectionInfo(const ProjectionInfo&)            = default;
-  ProjectionInfo& operator=(const ProjectionInfo&) = default;
-
+struct ProjectionInfo : BaseProjectionInfo {
+  using BaseProjectionInfo::BaseProjectionInfo;
   using BaseProjectionInfo::populate_requirement;
+
   template <bool SINGLE>
   void populate_requirement(Legion::RegionRequirement& requirement,
                             const Legion::LogicalRegion& region,
                             const std::vector<Legion::FieldID>& fields,
                             Legion::PrivilegeMode privilege) const;
 
-  bool is_key{false};
+  bool is_key{};
 };
 
 }  // namespace legate::detail
+
+#include "core/operation/detail/projection.inl"

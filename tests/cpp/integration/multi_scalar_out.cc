@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "tasks/task_simple.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace multiscalarout {
 

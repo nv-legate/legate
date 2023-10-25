@@ -23,10 +23,10 @@ namespace legate::detail {
 Gather::Gather(std::shared_ptr<LogicalStore> target,
                std::shared_ptr<LogicalStore> source,
                std::shared_ptr<LogicalStore> source_indirect,
-               int64_t unique_id,
+               uint64_t unique_id,
                mapping::detail::Machine&& machine,
                std::optional<int32_t> redop)
-  : Operation(unique_id, std::move(machine)),
+  : Operation{unique_id, std::move(machine)},
     target_{target.get(), declare_partition()},
     source_{source.get(), declare_partition()},
     source_indirect_{source_indirect.get(), declare_partition()},
@@ -63,8 +63,8 @@ void Gather::validate()
 
 void Gather::launch(Strategy* p_strategy)
 {
-  auto& strategy = *p_strategy;
-  CopyLauncher launcher(machine_);
+  auto& strategy     = *p_strategy;
+  auto launcher      = CopyLauncher{machine_};
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.add_input(source_.store, create_projection_info(strategy, launch_domain, source_));
@@ -76,17 +76,15 @@ void Gather::launch(Strategy* p_strategy)
   } else {
     auto store_partition = target_.store->create_partition(strategy[target_.variable]);
     auto proj            = store_partition->create_projection_info(launch_domain);
+
     proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_.value()));
     launcher.add_reduction(target_.store, std::move(proj));
   }
 
   launcher.set_source_indirect_out_of_range(out_of_range_);
 
-  if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
-  } else {
-    return launcher.execute_single();
-  }
+  if (launch_domain.is_valid()) return launcher.execute(launch_domain);
+  return launcher.execute_single();
 }
 
 void Gather::add_to_solver(ConstraintSolver& solver)
@@ -96,7 +94,5 @@ void Gather::add_to_solver(ConstraintSolver& solver)
   solver.add_partition_symbol(source_.variable, IsOutput::N);
   solver.add_partition_symbol(source_indirect_.variable, IsOutput::N);
 }
-
-std::string Gather::to_string() const { return "Gather:" + std::to_string(unique_id_); }
 
 }  // namespace legate::detail

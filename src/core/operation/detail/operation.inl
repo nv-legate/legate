@@ -14,32 +14,10 @@
 
 #include "core/operation/detail/operation.h"
 
-#include <memory>
-#include <string>
-
 namespace legate::detail {
 
-class Fill : public Operation {
- private:
-  friend class Runtime;
+inline const mapping::detail::Machine& Operation::machine() const { return machine_; }
 
-  Fill(std::shared_ptr<LogicalStore>&& lhs,
-       std::shared_ptr<LogicalStore>&& value,
-       uint64_t unique_id,
-       mapping::detail::Machine&& machine);
-
- public:
-  void validate() override;
-  void launch(Strategy* strategy) override;
-
-  void add_to_solver(ConstraintSolver& solver) override;
-
-  [[nodiscard]] std::string to_string() const override;
-
- private:
-  const Variable* lhs_var_;
-  std::shared_ptr<LogicalStore> lhs_;
-  std::shared_ptr<LogicalStore> value_;
-};
+inline const std::string& Operation::provenance() const { return provenance_; }
 
 }  // namespace legate::detail

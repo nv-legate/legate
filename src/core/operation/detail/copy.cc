@@ -23,13 +23,13 @@ namespace legate::detail {
 
 Copy::Copy(std::shared_ptr<LogicalStore> target,
            std::shared_ptr<LogicalStore> source,
-           int64_t unique_id,
+           uint64_t unique_id,
            mapping::detail::Machine&& machine,
            std::optional<int32_t> redop)
-  : Operation(unique_id, std::move(machine)),
+  : Operation{unique_id, std::move(machine)},
     target_{target.get(), declare_partition()},
     source_{source.get(), declare_partition()},
-    constraint_(align(target_.variable, source_.variable)),
+    constraint_{align(target_.variable, source_.variable)},
     redop_{redop}
 {
   record_partition(target_.variable, std::move(target));
@@ -65,8 +65,8 @@ void Copy::launch(Strategy* p_strategy)
     target_.store->set_future(source_.store->get_future());
     return;
   }
-  auto& strategy = *p_strategy;
-  CopyLauncher launcher(machine_);
+  auto& strategy     = *p_strategy;
+  auto launcher      = CopyLauncher{machine_};
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.add_input(source_.store, create_projection_info(strategy, launch_domain, source_));
@@ -76,15 +76,13 @@ void Copy::launch(Strategy* p_strategy)
   } else {
     auto store_partition = target_.store->create_partition(strategy[target_.variable]);
     auto proj            = store_partition->create_projection_info(launch_domain);
+
     proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_.value()));
     launcher.add_reduction(target_.store, std::move(proj));
   }
 
-  if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
-  } else {
-    return launcher.execute_single();
-  }
+  if (launch_domain.is_valid()) return launcher.execute(launch_domain);
+  return launcher.execute_single();
 }
 
 void Copy::add_to_solver(ConstraintSolver& solver)

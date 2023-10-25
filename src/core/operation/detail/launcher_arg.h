@@ -12,12 +12,14 @@
 
 #pragma once
 
-#include <optional>
-
 #include "core/data/detail/logical_store.h"
 #include "core/data/detail/scalar.h"
 #include "core/data/scalar.h"
 #include "core/operation/detail/projection.h"
+
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace legate::detail {
 
@@ -27,27 +29,26 @@ struct StoreAnalyzer;
 class TaskLauncher;
 
 struct Serializable {
-  virtual ~Serializable() {}
+  virtual ~Serializable() = default;
+
   virtual void pack(BufferBuilder& buffer) const = 0;
 };
 
 struct Analyzable {
-  virtual ~Analyzable() {}
+  virtual ~Analyzable() = default;
+
   virtual void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const = 0;
   virtual void analyze(StoreAnalyzer& analyzer)                                 = 0;
-  virtual std::optional<Legion::ProjectionID> get_key_proj_id() const { return std::nullopt; }
-  virtual void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const {}
-  virtual void perform_invalidations() const {}
+
+  [[nodiscard]] virtual std::optional<Legion::ProjectionID> get_key_proj_id() const;
+  virtual void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const;
+  virtual void perform_invalidations() const;
 };
 
 struct ScalarArg : public Serializable {
  public:
-  ScalarArg(Scalar&& scalar) : scalar_(std::move(scalar)) {}
+  explicit ScalarArg(Scalar&& scalar);
 
- public:
-  ~ScalarArg() {}
-
- public:
   void pack(BufferBuilder& buffer) const override;
 
  private:
@@ -60,14 +61,10 @@ struct RegionFieldArg : public Analyzable {
                  Legion::PrivilegeMode privilege,
                  std::unique_ptr<ProjectionInfo> proj_info);
 
- public:
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
-  std::optional<Legion::ProjectionID> get_key_proj_id() const override;
+  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void perform_invalidations() const override;
-
- public:
-  ~RegionFieldArg() {}
 
  private:
   LogicalStore* store_;
@@ -79,19 +76,14 @@ struct OutputRegionArg : public Analyzable {
  public:
   OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space);
 
- public:
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
 
- public:
-  ~OutputRegionArg() {}
-
- public:
-  LogicalStore* store() const { return store_; }
-  const Legion::FieldSpace& field_space() const { return field_space_; }
-  Legion::FieldID field_id() const { return field_id_; }
-  uint32_t requirement_index() const { return requirement_index_; }
+  [[nodiscard]] LogicalStore* store() const;
+  [[nodiscard]] const Legion::FieldSpace& field_space() const;
+  [[nodiscard]] Legion::FieldID field_id() const;
+  [[nodiscard]] uint32_t requirement_index() const;
 
  private:
   LogicalStore* store_;
@@ -107,10 +99,6 @@ struct FutureStoreArg : public Analyzable {
                  bool has_storage,
                  Legion::ReductionOpID redop);
 
- public:
-  ~FutureStoreArg() {}
-
- public:
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
 
@@ -123,22 +111,19 @@ struct FutureStoreArg : public Analyzable {
 
 struct BaseArrayArg : public Analyzable {
  public:
-  BaseArrayArg(std::unique_ptr<Analyzable> data);
   BaseArrayArg(std::unique_ptr<Analyzable> data, std::unique_ptr<Analyzable> null_mask);
 
- public:
-  ~BaseArrayArg() {}
+  explicit BaseArrayArg(std::unique_ptr<Analyzable> data);
 
- public:
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
-  std::optional<Legion::ProjectionID> get_key_proj_id() const override;
+  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
  private:
-  std::unique_ptr<Analyzable> data_;
-  std::unique_ptr<Analyzable> null_mask_{nullptr};
+  std::unique_ptr<Analyzable> data_{};
+  std::unique_ptr<Analyzable> null_mask_{};
 };
 
 struct ListArrayArg : public Analyzable {
@@ -147,13 +132,9 @@ struct ListArrayArg : public Analyzable {
                std::unique_ptr<Analyzable> descriptor,
                std::unique_ptr<Analyzable> vardata);
 
- public:
-  ~ListArrayArg() {}
-
- public:
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
-  std::optional<Legion::ProjectionID> get_key_proj_id() const override;
+  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
@@ -169,13 +150,9 @@ struct StructArrayArg : public Analyzable {
                  std::unique_ptr<Analyzable> null_mask,
                  std::vector<std::unique_ptr<Analyzable>>&& fields);
 
- public:
-  ~StructArrayArg() {}
-
- public:
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
-  std::optional<Legion::ProjectionID> get_key_proj_id() const override;
+  [[nodiscard]] std::optional<Legion::ProjectionID> get_key_proj_id() const override;
   void record_unbound_stores(std::vector<const OutputRegionArg*>& args) const override;
   void perform_invalidations() const override;
 
@@ -186,3 +163,5 @@ struct StructArrayArg : public Analyzable {
 };
 
 }  // namespace legate::detail
+
+#include "core/operation/detail/launcher_arg.inl"

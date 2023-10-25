@@ -12,59 +12,59 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/projection.h"
+#include "core/partitioning/detail/constraint.h"
+
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace legate::detail {
 struct ConstraintSolver;
-class LogicalStore;
 class Strategy;
-class Variable;
 
 class Operation {
  protected:
   struct StoreArg {
-    LogicalStore* store;
-    const Variable* variable;
+    LogicalStore* store{};
+    const Variable* variable{};
   };
+
   Operation(uint64_t unique_id, mapping::detail::Machine&& machine);
 
  public:
-  virtual ~Operation() {}
+  virtual ~Operation() = default;
 
- public:
   virtual void validate()                              = 0;
   virtual void add_to_solver(ConstraintSolver& solver) = 0;
   virtual void launch(Strategy* strategy)              = 0;
-  virtual std::string to_string() const                = 0;
+  [[nodiscard]] virtual std::string to_string() const  = 0;
 
- public:
-  const Variable* find_or_declare_partition(std::shared_ptr<LogicalStore> store);
-  const Variable* declare_partition();
-  std::shared_ptr<LogicalStore> find_store(const Variable* variable) const;
+  [[nodiscard]] const Variable* find_or_declare_partition(std::shared_ptr<LogicalStore> store);
+  [[nodiscard]] const Variable* declare_partition();
+  [[nodiscard]] std::shared_ptr<LogicalStore> find_store(const Variable* variable) const;
 
- public:
-  const mapping::detail::Machine& machine() const { return machine_; }
-  const std::string& provenance() const { return provenance_; }
+  [[nodiscard]] const mapping::detail::Machine& machine() const;
+  [[nodiscard]] const std::string& provenance() const;
 
  protected:
   void record_partition(const Variable* variable, std::shared_ptr<LogicalStore> store);
   // Helper methods
-  std::unique_ptr<ProjectionInfo> create_projection_info(const Strategy& strategy,
-                                                         const Domain& launch_domain,
-                                                         const StoreArg& arg) const;
+  [[nodiscard]] static std::unique_ptr<ProjectionInfo> create_projection_info(
+    const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
 
- protected:
-  uint64_t unique_id_;
-  uint32_t next_part_id_{0};
+  uint64_t unique_id_{};
+  uint32_t next_part_id_{};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
   std::map<const Variable, std::shared_ptr<LogicalStore>> store_mappings_{};
   std::map<std::shared_ptr<LogicalStore>, const Variable*> part_mappings_{};
-  std::string provenance_;
-  mapping::detail::Machine machine_;
+  std::string provenance_{};
+  mapping::detail::Machine machine_{};
 };
 
 }  // namespace legate::detail
+
+#include "core/operation/detail/operation.inl"

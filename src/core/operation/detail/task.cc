@@ -12,20 +12,16 @@
 
 #include "core/operation/detail/task.h"
 
-#include <sstream>
-
-#include "core/data/scalar.h"
 #include "core/operation/detail/launcher_arg.h"
-#include "core/operation/detail/projection.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/detail/constraint_solver.h"
-#include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/library.h"
-#include "core/runtime/detail/provenance_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
+
+#include <sstream>
 
 namespace legate::detail {
 
@@ -37,7 +33,7 @@ Task::Task(const Library* library,
            int64_t task_id,
            uint64_t unique_id,
            mapping::detail::Machine&& machine)
-  : Operation(unique_id, std::move(machine)), library_(library), task_id_(task_id)
+  : Operation{unique_id, std::move(machine)}, library_{library}, task_id_{task_id}
 {
 }
 
@@ -78,18 +74,20 @@ void Task::record_scalar_reduction(std::shared_ptr<LogicalStore> store,
 
 void Task::launch_task(Strategy* p_strategy)
 {
-  auto& strategy = *p_strategy;
-  detail::TaskLauncher launcher(library_, machine_, provenance_, task_id_);
+  auto& strategy     = *p_strategy;
+  auto launcher      = detail::TaskLauncher{library_, machine_, provenance_, task_id_};
   auto launch_domain = strategy.launch_domain(this);
 
   for (auto& [arr, mapping] : inputs_) {
     launcher.add_input(
       arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_READ_ONLY, -1));
   }
+
   for (auto& [arr, mapping] : outputs_) {
     launcher.add_output(
       arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_WRITE_ONLY, -1));
   }
+
   uint32_t idx = 0;
   for (auto& [arr, mapping] : reductions_) {
     launcher.add_reduction(
@@ -103,9 +101,11 @@ void Task::launch_task(Strategy* p_strategy)
   if (launch_domain.is_valid()) {
     for (auto* factory : communicator_factories_) {
       auto target = machine_.preferred_target;
+
       if (!factory->is_supported_target(target)) continue;
       auto& processor_range = machine_.processor_range();
       auto communicator     = factory->find_or_create(target, processor_range, launch_domain);
+
       launcher.add_communicator(communicator);
       if (factory->needs_barrier()) launcher.set_insert_barrier(true);
     }
@@ -117,9 +117,11 @@ void Task::launch_task(Strategy* p_strategy)
 
   if (launch_domain.is_valid()) {
     auto result = launcher.execute(launch_domain);
+
     demux_scalar_stores(result, launch_domain);
   } else {
     auto result = launcher.execute_single();
+
     demux_scalar_stores(result);
   }
 }
@@ -132,26 +134,21 @@ void Task::demux_scalar_stores(const Legion::Future& result)
 
   auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
                static_cast<size_t>(can_throw_exception_);
-  if (0 == total)
-    return;
-  else if (1 == total) {
+  if (0 == total) return;
+  if (1 == total) {
     if (1 == num_scalar_outs) {
       scalar_outputs_.front()->set_future(result);
     } else if (1 == num_scalar_reds) {
-      auto& [store, _] = scalar_reductions_.front();
-      store->set_future(result);
+      scalar_reductions_.front().first->set_future(result);
     } else if (can_throw_exception_) {
-      auto* runtime = detail::Runtime::get_runtime();
-      runtime->record_pending_exception(result);
-    }
-#if LegateDefined(LEGATE_USE_DEBUG)
-    else {
+      detail::Runtime::get_runtime()->record_pending_exception(result);
+    } else if (LegateDefined(LEGATE_USE_DEBUG)) {
       assert(1 == num_unbound_outs);
     }
-#endif
   } else {
     auto* runtime = detail::Runtime::get_runtime();
-    uint32_t idx  = num_unbound_outs;
+    auto idx      = static_cast<uint32_t>(num_unbound_outs);
+
     for (auto& store : scalar_outputs_) {
       store->set_future(runtime->extract_scalar(result, idx++));
     }
@@ -174,28 +171,28 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   auto total = num_scalar_reds + num_unbound_outs + static_cast<size_t>(can_throw_exception_);
   if (0 == total) return;
 
-  auto* runtime = detail::Runtime::get_runtime();
+  const auto runtime = detail::Runtime::get_runtime();
   if (1 == total) {
     if (1 == num_scalar_reds) {
       auto& [store, redop] = scalar_reductions_.front();
+
       store->set_future(runtime->reduce_future_map(result, redop, store->get_future()));
     } else if (can_throw_exception_) {
-      auto* runtime = detail::Runtime::get_runtime();
       runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
-    }
-#if LegateDefined(LEGATE_USE_DEBUG)
-    else {
+    } else if (LegateDefined(LEGATE_USE_DEBUG)) {
       assert(1 == num_unbound_outs);
     }
-#endif
   } else {
-    uint32_t idx = num_unbound_outs;
+    auto idx = static_cast<uint32_t>(num_unbound_outs);
+
     for (auto& [store, redop] : scalar_reductions_) {
       auto values = runtime->extract_scalar(result, idx++, launch_domain);
+
       store->set_future(runtime->reduce_future_map(values, redop, store->get_future()));
     }
     if (can_throw_exception_) {
       auto exn_fm = runtime->extract_scalar(result, idx, launch_domain);
+
       runtime->record_pending_exception(runtime->reduce_exception_future_map(exn_fm));
     }
   }
@@ -211,14 +208,6 @@ std::string Task::to_string() const
 ////////////////////////////////////////////////////
 // legate::AutoTask
 ////////////////////////////////////////////////////
-
-AutoTask::AutoTask(const Library* library,
-                   int64_t task_id,
-                   uint64_t unique_id,
-                   mapping::detail::Machine&& machine)
-  : Task(library, task_id, unique_id, std::move(machine))
-{
-}
 
 const Variable* AutoTask::add_input(std::shared_ptr<LogicalArray> array)
 {
@@ -244,6 +233,7 @@ const Variable* AutoTask::add_reduction(std::shared_ptr<LogicalArray> array, int
 void AutoTask::add_input(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol)
 {
   auto& arg = inputs_.emplace_back(std::move(array));
+
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto& [store, symb] : arg.mapping) record_partition(symb, store);
 }
@@ -256,6 +246,7 @@ void AutoTask::add_output(std::shared_ptr<LogicalArray> array, const Variable* p
     arrays_to_fixup_.push_back(array.get());
   }
   auto& arg = outputs_.emplace_back(std::move(array));
+
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto& [store, symb] : arg.mapping) record_partition(symb, store);
 }
@@ -268,15 +259,17 @@ void AutoTask::add_reduction(std::shared_ptr<LogicalArray> array,
     throw std::invalid_argument("List/string arrays cannot be used for reduction");
   }
   auto legion_redop_id = array->type()->find_reduction_operator(redop);
+
   array->record_scalar_reductions(this, legion_redop_id);
   reduction_ops_.push_back(legion_redop_id);
 
   auto& arg = reductions_.emplace_back(std::move(array));
+
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto& [store, symb] : arg.mapping) record_partition(symb, store);
 }
 
-const Variable* AutoTask::find_or_declare_partition(std::shared_ptr<LogicalArray> array)
+const Variable* AutoTask::find_or_declare_partition(const std::shared_ptr<LogicalArray>& array)
 {
   return Operation::find_or_declare_partition(array->primary_store());
 }
@@ -320,7 +313,8 @@ void AutoTask::fixup_ranges(Strategy& strategy)
   if (!launch_domain.is_valid()) return;
 
   auto* core_lib = detail::Runtime::get_runtime()->core_library();
-  detail::TaskLauncher launcher(core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES);
+  auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES};
+
   for (auto* array : arrays_to_fixup_) {
     launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, NO_ACCESS));
   }
@@ -331,17 +325,15 @@ void AutoTask::fixup_ranges(Strategy& strategy)
 // legate::ManualTask
 ////////////////////////////////////////////////////
 
-ManualTask::~ManualTask() {}
-
 ManualTask::ManualTask(const Library* library,
                        int64_t task_id,
                        const Shape& launch_shape,
                        uint64_t unique_id,
                        mapping::detail::Machine&& machine)
-  : Task(library, task_id, unique_id, std::move(machine)),
+  : Task{library, task_id, unique_id, std::move(machine)},
     strategy_(std::make_unique<detail::Strategy>())
 {
-  if (!launch_shape.empty()) { strategy_->set_launch_shape(this, launch_shape); }
+  if (!launch_shape.empty()) strategy_->set_launch_shape(this, launch_shape);
 }
 
 void ManualTask::add_input(std::shared_ptr<LogicalStore> store)
@@ -349,7 +341,7 @@ void ManualTask::add_input(std::shared_ptr<LogicalStore> store)
   add_store(inputs_, std::move(store), create_no_partition());
 }
 
-void ManualTask::add_input(std::shared_ptr<LogicalStorePartition> store_partition)
+void ManualTask::add_input(const std::shared_ptr<LogicalStorePartition>& store_partition)
 {
   add_store(inputs_, store_partition->store(), store_partition->partition());
 }
@@ -364,7 +356,7 @@ void ManualTask::add_output(std::shared_ptr<LogicalStore> store)
   add_store(outputs_, std::move(store), create_no_partition());
 }
 
-void ManualTask::add_output(std::shared_ptr<LogicalStorePartition> store_partition)
+void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_partition)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     // TODO: We need to raise an exception for the user error in this case
@@ -384,10 +376,11 @@ void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redo
   reduction_ops_.push_back(legion_redop_id);
 }
 
-void ManualTask::add_reduction(std::shared_ptr<LogicalStorePartition> store_partition,
+void ManualTask::add_reduction(const std::shared_ptr<LogicalStorePartition>& store_partition,
                                int32_t redop)
 {
   auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop);
+
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_reduction(store_partition->store(), legion_redop_id);
   }
@@ -401,21 +394,15 @@ void ManualTask::add_store(std::vector<ArrayArg>& store_args,
 {
   auto partition_symbol = declare_partition();
   auto& arg             = store_args.emplace_back(std::make_shared<BaseLogicalArray>(store));
+
   arg.mapping.insert({store, partition_symbol});
   if (store->unbound()) {
     auto field_space = detail::Runtime::get_runtime()->create_field_space();
+
     strategy_->insert(partition_symbol, std::move(partition), field_space);
   } else {
     strategy_->insert(partition_symbol, std::move(partition));
   }
 }
-
-void ManualTask::validate() {}
-
-void ManualTask::launch(Strategy*) { launch(); }
-
-void ManualTask::launch() { launch_task(strategy_.get()); }
-
-void ManualTask::add_to_solver(ConstraintSolver& solver) {}
 
 }  // namespace legate::detail

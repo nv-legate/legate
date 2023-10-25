@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/mapping/detail/machine.h"
 
 namespace legate {
@@ -29,7 +27,6 @@ class FillLauncher {
  public:
   FillLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
 
- public:
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,
               const ProjectionInfo& lhs_proj,
@@ -39,9 +36,10 @@ class FillLauncher {
  private:
   void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);
 
- private:
   const mapping::detail::Machine& machine_;
   int64_t tag_;
 };
 
 }  // namespace legate::detail
+
+#include "core/operation/detail/fill_launcher.inl"

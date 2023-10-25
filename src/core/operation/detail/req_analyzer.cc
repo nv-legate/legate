@@ -51,11 +51,11 @@ uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
                                          const ProjectionInfo& proj_info,
                                          Legion::FieldID field_id) const
 {
-  auto finder = req_indices_.find(std::make_pair(Key{privilege, proj_info}, field_id));
+  auto finder = req_indices_.find({{privilege, proj_info}, field_id});
   if (req_indices_.end() == finder) {
-    finder = req_indices_.find(std::make_pair(Key{LEGION_READ_WRITE, proj_info}, field_id));
+    finder = req_indices_.find({{LEGION_READ_WRITE, proj_info}, field_id});
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != req_indices_.end()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != req_indices_.end());
   return finder->second;
 }
 
@@ -63,14 +63,14 @@ void FieldSet::coalesce()
 {
   for (const auto& [field_id, proj_set] : field_projs_) {
     for (const auto& proj_info : proj_set.proj_infos) {
-      auto& [fields, is_key] = coalesced_[Key{proj_set.privilege, proj_info}];
-      fields.push_back(field_id);
+      auto& [fields, is_key] = coalesced_[{proj_set.privilege, proj_info}];
+      fields.emplace_back(field_id);
       is_key = is_key || proj_set.is_key;
     }
   }
   uint32_t idx = 0;
   for (const auto& [key, entry] : coalesced_) {
-    for (const auto& field : entry.fields) { req_indices_[std::make_pair(key, field)] = idx; }
+    for (const auto& field : entry.fields) req_indices_[{key, field}] = idx;
     ++idx;
   }
 }
@@ -78,11 +78,11 @@ void FieldSet::coalesce()
 namespace {
 
 template <class Launcher>
-constexpr bool is_single = false;
+constexpr bool is_single_v = false;
 template <>
-constexpr bool is_single<Legion::TaskLauncher> = true;
+constexpr bool is_single_v<Legion::TaskLauncher> = true;
 template <>
-constexpr bool is_single<Legion::IndexTaskLauncher> = false;
+constexpr bool is_single_v<Legion::IndexTaskLauncher> = false;
 
 }  // namespace
 
@@ -92,9 +92,12 @@ void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& re
   for (auto& [key, entry] : coalesced_) {
     auto& [fields, is_key]       = entry;
     auto& [privilege, proj_info] = key;
-    task.region_requirements.push_back(Legion::RegionRequirement());
+
+    task.region_requirements.emplace_back(Legion::RegionRequirement());
+
     auto& requirement = task.region_requirements.back();
-    proj_info.template populate_requirement<is_single<Launcher>>(
+
+    proj_info.template populate_requirement<is_single_v<Launcher>>(
       requirement, region, fields, privilege, is_key);
   }
 }
@@ -117,7 +120,7 @@ uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion&
                                                     Legion::FieldID field_id) const
 {
   auto finder = field_sets_.find(region);
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != field_sets_.end()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != field_sets_.end());
   auto& [field_set, req_offset] = finder->second;
   return req_offset + field_set.get_requirement_index(privilege, proj_info, field_id);
 }
@@ -167,10 +170,10 @@ void OutputRequirementAnalyzer::insert(int32_t dim,
 }
 
 uint32_t OutputRequirementAnalyzer::get_requirement_index(const Legion::FieldSpace& field_space,
-                                                          Legion::FieldID field_id) const
+                                                          Legion::FieldID) const
 {
   auto finder = req_infos_.find(field_space);
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != req_infos_.end()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != req_infos_.end());
   return finder->second.req_idx;
 }
 
@@ -185,6 +188,7 @@ void OutputRequirementAnalyzer::populate_output_requirements(
 {
   for (auto& [field_space, fields] : field_groups_) {
     auto& [dim, _] = req_infos_.at(field_space);
+
     out_reqs.emplace_back(field_space, fields, dim, true /*global_indexing*/);
   }
 }
@@ -203,7 +207,7 @@ int32_t FutureAnalyzer::get_future_index(const Legion::Future& future) const
 void FutureAnalyzer::analyze_futures()
 {
   int32_t index = 0;
-  for (auto& future : futures_) {
+  for (auto&& future : futures_) {
     if (future_indices_.find(future) != future_indices_.end()) { continue; }
     future_indices_[future] = index++;
     coalesced_.push_back(future);
@@ -213,8 +217,9 @@ void FutureAnalyzer::analyze_futures()
 template <class Launcher>
 void FutureAnalyzer::_populate_launcher(Launcher& task) const
 {
-  for (auto& future : coalesced_) { task.add_future(future); }
+  for (auto& future : coalesced_) task.add_future(future);
 }
+
 void FutureAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {
   _populate_launcher(task);
