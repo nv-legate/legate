@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace test_library {
 
@@ -55,7 +55,7 @@ TEST_F(Library, FindNonExistent)
 
   auto* runtime = legate::Runtime::get_runtime();
 
-  EXPECT_THROW(runtime->find_library(LIBNAME), std::out_of_range);
+  EXPECT_THROW((void)runtime->find_library(LIBNAME), std::out_of_range);
 
   EXPECT_EQ(runtime->maybe_find_library(LIBNAME), std::nullopt);
 }

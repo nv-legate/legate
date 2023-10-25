@@ -13,30 +13,32 @@
 #include "core/runtime/detail/library.h"
 
 #include "core/mapping/detail/base_mapper.h"
-#include "core/mapping/machine.h"
 #include "core/mapping/mapping.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 
 #include "mappers/logging_wrapper.h"
 
+#include <sstream>
+
 namespace legate::detail {
 
 Library::Library(const std::string& library_name, const ResourceConfig& config)
-  : runtime_(Legion::Runtime::get_runtime()), library_name_(library_name), legion_mapper_{nullptr}
+  : runtime_{Legion::Runtime::get_runtime()},
+    library_name_{library_name},
+    task_scope_{runtime_->generate_library_task_ids(library_name.c_str(), config.max_tasks),
+                config.max_tasks},
+    redop_scope_{
+      runtime_->generate_library_reduction_ids(library_name.c_str(), config.max_reduction_ops),
+      config.max_reduction_ops},
+    proj_scope_{
+      runtime_->generate_library_projection_ids(library_name.c_str(), config.max_projections),
+      config.max_projections},
+    shard_scope_{
+      runtime_->generate_library_sharding_ids(library_name.c_str(), config.max_shardings),
+      config.max_shardings},
+    mapper_id_{runtime_->generate_library_mapper_ids(library_name.c_str(), 1)}
 {
-  task_scope_ = ResourceIdScope(
-    runtime_->generate_library_task_ids(library_name.c_str(), config.max_tasks), config.max_tasks);
-  redop_scope_ = ResourceIdScope(
-    runtime_->generate_library_reduction_ids(library_name.c_str(), config.max_reduction_ops),
-    config.max_reduction_ops);
-  proj_scope_ = ResourceIdScope(
-    runtime_->generate_library_projection_ids(library_name.c_str(), config.max_projections),
-    config.max_projections);
-  shard_scope_ = ResourceIdScope(
-    runtime_->generate_library_sharding_ids(library_name.c_str(), config.max_shardings),
-    config.max_shardings);
-  mapper_id_ = runtime_->generate_library_mapper_ids(library_name.c_str(), 1);
 }
 
 const std::string& Library::get_library_name() const { return library_name_; }
@@ -55,12 +57,9 @@ Legion::ReductionOpID Library::get_reduction_op_id(int64_t local_redop_id) const
 
 Legion::ProjectionID Library::get_projection_id(int64_t local_proj_id) const
 {
-  if (local_proj_id == 0)
-    return 0;
-  else {
-    assert(proj_scope_.valid());
-    return proj_scope_.translate(local_proj_id);
-  }
+  if (local_proj_id == 0) return 0;
+  assert(proj_scope_.valid());
+  return proj_scope_.translate(local_proj_id);
 }
 
 Legion::ShardingID Library::get_sharding_id(int64_t local_shard_id) const
@@ -83,12 +82,9 @@ int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
 
 int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) const
 {
-  if (proj_id == 0)
-    return 0;
-  else {
-    assert(proj_scope_.valid());
-    return proj_scope_.invert(proj_id);
-  }
+  if (proj_id == 0) return 0;
+  assert(proj_scope_.valid());
+  return proj_scope_.invert(proj_id);
 }
 
 int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
@@ -122,14 +118,14 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
 std::unique_ptr<Scalar> Library::get_tunable(int64_t tunable_id, std::shared_ptr<Type> type)
 {
   if (type->variable_size()) {
-    throw std::invalid_argument("Tunable variables must have fixed-size types");
+    throw std::invalid_argument{"Tunable variables must have fixed-size types"};
   }
   auto result        = Runtime::get_runtime()->get_tunable(mapper_id_, tunable_id, type->size());
   size_t extents     = 0;
   const void* buffer = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
   if (extents != type->size()) {
-    throw std::invalid_argument("Size mismatch: expected " + std::to_string(type->size()) +
-                                " bytes but got " + std::to_string(extents) + " bytes");
+    throw std::invalid_argument{"Size mismatch: expected " + std::to_string(type->size()) +
+                                " bytes but got " + std::to_string(extents) + " bytes"};
   }
   return std::make_unique<Scalar>(std::move(type), buffer, true);
 }
@@ -150,10 +146,10 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
   mapper_ = std::move(mapper);
 
   auto base_mapper =
-    new mapping::detail::BaseMapper(mapper_.get(), runtime_->get_mapper_runtime(), this);
+    new mapping::detail::BaseMapper{mapper_.get(), runtime_->get_mapper_runtime(), this};
   legion_mapper_ = base_mapper;
   if (Config::log_mapping_decisions)
-    legion_mapper_ = new Legion::Mapping::LoggingWrapper(base_mapper, &base_mapper->logger);
+    legion_mapper_ = new Legion::Mapping::LoggingWrapper{base_mapper, &base_mapper->logger};
 
   if (in_callback) {
     Legion::Runtime::get_runtime()->add_mapper(get_mapper_id(), legion_mapper_);
@@ -167,11 +163,13 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
 void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   auto task_id = get_task_id(local_task_id);
+
   if (!task_scope_.in_scope(task_id)) {
     std::stringstream ss;
+
     ss << "Task " << local_task_id << " is invalid for library '" << library_name_
        << "' (max local task id: " << (task_scope_.size() - 1) << ")";
-    throw std::out_of_range(std::move(ss).str());
+    throw std::out_of_range{std::move(ss).str()};
   }
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -179,8 +177,8 @@ void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> tas
                        << " (global id: " << task_id << "), " << *task_info;
   }
   if (tasks_.find(local_task_id) != tasks_.end())
-    throw std::invalid_argument("Task " + std::to_string(local_task_id) +
-                                " already exists in library " + library_name_);
+    throw std::invalid_argument{"Task " + std::to_string(local_task_id) +
+                                " already exists in library " + library_name_};
   task_info->register_task(task_id);
   tasks_.emplace(std::make_pair(local_task_id, std::move(task_info)));
 }
@@ -188,9 +186,10 @@ void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> tas
 const TaskInfo* Library::find_task(int64_t local_task_id) const
 {
   auto finder = tasks_.find(local_task_id);
+
   if (tasks_.end() == finder) {
-    throw std::out_of_range("Library " + get_library_name() + " does not have task " +
-                            std::to_string(local_task_id));
+    throw std::out_of_range{"Library " + get_library_name() + " does not have task " +
+                            std::to_string(local_task_id)};
   }
   return finder->second.get();
 }

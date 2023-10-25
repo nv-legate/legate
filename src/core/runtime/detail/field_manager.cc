@@ -19,7 +19,7 @@
 namespace legate::detail {
 
 FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
-  : runtime_(runtime), shape_(shape), field_size_(field_size)
+  : runtime_{runtime}, shape_{shape}, field_size_{field_size}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     std::stringstream ss;
@@ -48,7 +48,7 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
       log_legate.debug(
         "Field %u recycled in field manager %p", info.field_id, static_cast<void*>(this));
       ordered_free_fields_.pop_front();
-      return std::shared_ptr<LogicalRegionField>(rf);
+      return std::shared_ptr<LogicalRegionField>{rf};
     }
     // If there are any field matches we haven't processed yet, process the next one, then go back
     // and check if any fields were just added to the "ordered" queue.
@@ -57,9 +57,10 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
   // If there are no more field matches to process, then we completely failed to reuse a field.
   auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_);
   auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
-  auto* rf       = new LogicalRegionField(this, lr, fid);
+  auto* rf       = new LogicalRegionField{this, lr, fid};
+
   log_legate.debug("Field %u created in field manager %p", fid, static_cast<void*>(this));
-  return std::shared_ptr<LogicalRegionField>(rf);
+  return std::shared_ptr<LogicalRegionField>{rf};
 }
 
 std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::LogicalRegion& region,
@@ -67,6 +68,7 @@ std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::Log
 {
   // Import the region only if the region manager is created fresh
   auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
+
   if (!rgn_mgr->has_space()) rgn_mgr->import_region(region);
   log_legate.debug("Field %u imported in field manager %p", field_id, static_cast<void*>(this));
   return std::make_shared<LogicalRegionField>(this, region, field_id);
@@ -100,6 +102,7 @@ void FieldManager::issue_field_match()
   // the match itself only uses a subset of the full region info.
   auto& infos = info_for_match_items_.emplace_back();
   std::vector<MatchItem> input;
+
   input.reserve(unordered_free_fields_.size());
   for (const auto& info : unordered_free_fields_) {
     MatchItem item{info.region.get_tree_id(), info.field_id};

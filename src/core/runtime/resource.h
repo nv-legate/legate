@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace legate {
 
@@ -28,9 +28,9 @@ struct ResourceConfig {
   /**
    * @brief Maximum number of custom reduction operators that the library can register
    */
-  int64_t max_reduction_ops{0};
-  int64_t max_projections{0};
-  int64_t max_shardings{0};
+  int64_t max_reduction_ops{};
+  int64_t max_projections{};
+  int64_t max_shardings{};
 };
 
 }  // namespace legate

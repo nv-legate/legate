@@ -12,16 +12,15 @@
 
 #pragma once
 
-#include "legion.h"
+#include "core/runtime/detail/field_manager.h"
+
+#include <tuple>
 
 namespace legate::detail {
 
-class Library;
-
-void register_legate_core_sharding_functors(Legion::Runtime* runtime,
-                                            const detail::Library* core_library);
-
-[[nodiscard]] Legion::ShardingID find_sharding_functor_by_projection_functor(
-  Legion::ProjectionID proj_id);
+inline bool operator<(const MatchItem& l, const MatchItem& r)
+{
+  return std::tie(l.tid, l.fid) < std::tie(r.tid, r.fid);
+}
 
 }  // namespace legate::detail

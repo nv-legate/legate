@@ -198,7 +198,7 @@ TEST_F(Attach, Negative)
   EXPECT_THROW(runtime->create_store(legate::int64()).detach(), std::invalid_argument);
 
   // Trying to attach to a NULL buffer
-  EXPECT_THROW(runtime->create_store(SHAPE_2D, legate::int64(), nullptr, true),
+  EXPECT_THROW((void)runtime->create_store(SHAPE_2D, legate::int64(), nullptr, true),
                std::invalid_argument);
 
   {
@@ -227,12 +227,12 @@ TEST_F(AttachDeathTest, MissingManualDetach)
   // though that's mirrored on stderr, it doesn't seem to be included in the death message.
   EXPECT_DEATH(
     {
-      legate::start(argc_, argv_);
+      (void)legate::start(argc_, argv_);
       register_tasks();
       auto runtime = legate::Runtime::get_runtime();
-      runtime->create_store(
+      (void)runtime->create_store(
         SHAPE_1D, legate::int64(), new int64_t[SHAPE_1D.volume()], true /*share*/);
-      legate::finish();
+      (void)legate::finish();
     },
     "");
 }

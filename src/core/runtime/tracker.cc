@@ -12,10 +12,11 @@
 
 #include "core/runtime/tracker.h"
 
-#include "core/mapping/detail/machine.h"
 #include "core/runtime/detail/machine_manager.h"
 #include "core/runtime/detail/provenance_manager.h"
 #include "core/runtime/detail/runtime.h"
+
+#include <utility>
 
 namespace legate {
 
@@ -23,19 +24,17 @@ namespace legate {
 //  ProvenanceTracker
 //////////////////////////////////////
 
-ProvenanceTracker::ProvenanceTracker(const std::string& p)
+ProvenanceTracker::ProvenanceTracker(std::string p)
 {
-  auto* runtime = detail::Runtime::get_runtime();
-  runtime->provenance_manager()->push_provenance(p);
+  detail::Runtime::get_runtime()->provenance_manager()->push_provenance(std::move(p));
 }
 
 ProvenanceTracker::~ProvenanceTracker()
 {
-  auto* runtime = detail::Runtime::get_runtime();
-  runtime->provenance_manager()->pop_provenance();
+  detail::Runtime::get_runtime()->provenance_manager()->pop_provenance();
 }
 
-const std::string& ProvenanceTracker::get_current_provenance() const
+/*static*/ const std::string& ProvenanceTracker::get_current_provenance()
 {
   return detail::Runtime::get_runtime()->provenance_manager()->get_provenance();
 }
@@ -47,21 +46,21 @@ const std::string& ProvenanceTracker::get_current_provenance() const
 MachineTracker::MachineTracker(const mapping::Machine& machine)
 {
   auto* runtime = detail::Runtime::get_runtime();
-  auto result   = machine & mapping::Machine(runtime->get_machine());
+  auto result   = machine & mapping::Machine{runtime->get_machine()};
+
   if (result.count() == 0)
-    throw std::runtime_error("Empty machines cannot be used for resource scoping");
+    throw std::runtime_error{"Empty machines cannot be used for resource scoping"};
   runtime->machine_manager()->push_machine(std::move(*result.impl()));
 }
 
 MachineTracker::~MachineTracker()
 {
-  auto* runtime = detail::Runtime::get_runtime();
-  runtime->machine_manager()->pop_machine();
+  detail::Runtime::get_runtime()->machine_manager()->pop_machine();
 }
 
-mapping::Machine MachineTracker::get_current_machine() const
+/*static*/ mapping::Machine MachineTracker::get_current_machine()
 {
-  return mapping::Machine(detail::Runtime::get_runtime()->get_machine());
+  return mapping::Machine{detail::Runtime::get_runtime()->get_machine()};
 }
 
 }  // namespace legate

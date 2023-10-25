@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace tunable {
 
@@ -58,7 +58,7 @@ void prepare()
   if (prepared) { return; }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  runtime->create_library(
+  (void)runtime->create_library(
     library_name, legate::ResourceConfig{}, std::make_unique<LibraryMapper>());
 }
 
@@ -91,9 +91,9 @@ TEST_F(Tunable, Invalid)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
 
-  EXPECT_THROW(library.get_tunable(0, legate::string_type()), std::invalid_argument);
-  EXPECT_THROW(library.get_tunable(0, legate::int64()), std::invalid_argument);
-  EXPECT_THROW(library.get_tunable(TUNABLES.size(), legate::bool_()), std::invalid_argument);
+  EXPECT_THROW((void)library.get_tunable(0, legate::string_type()), std::invalid_argument);
+  EXPECT_THROW((void)library.get_tunable(0, legate::int64()), std::invalid_argument);
+  EXPECT_THROW((void)library.get_tunable(TUNABLES.size(), legate::bool_()), std::invalid_argument);
 }
 
 }  // namespace tunable

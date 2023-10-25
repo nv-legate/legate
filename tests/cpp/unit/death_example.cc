@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace unit {
 
@@ -21,7 +21,7 @@ using DeathTestExample = DeathTestFixture;
 
 void KillProcess(int argc, char** argv)
 {
-  legate::start(0, NULL);
+  (void)legate::start(0, NULL);
   abort();
 }
 

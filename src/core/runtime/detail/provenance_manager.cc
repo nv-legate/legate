@@ -12,53 +12,52 @@
 
 #include "core/runtime/detail/provenance_manager.h"
 
-#include "legion.h"
-
 #include "legate_defines.h"
 
-#include <assert.h>
 #include <stdexcept>
+#include <utility>
 
 namespace legate::detail {
 
-static const std::string BOTTOM = "";
+static const std::string BOTTOM;
 
-ProvenanceManager::ProvenanceManager() { provenance_.push_back(BOTTOM); }
+ProvenanceManager::ProvenanceManager() { push_provenance(BOTTOM); }
 
-const std::string& ProvenanceManager::get_provenance()
+const std::string& ProvenanceManager::get_provenance() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(provenance_.size() > 0); }
-  return provenance_.back();
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!provenance_.empty());
+  return provenance_.top();
 }
 
-void ProvenanceManager::set_provenance(const std::string& p)
+void ProvenanceManager::set_provenance(std::string p)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(provenance_.size() > 0); }
-  provenance_.back() = p;
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!provenance_.empty());
+  std::swap(provenance_.top(), p);
 }
 
 void ProvenanceManager::reset_provenance()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(provenance_.size() > 0); }
-  provenance_.back() = BOTTOM;
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!provenance_.empty());
+  provenance_.top() = BOTTOM;
 }
 
-bool ProvenanceManager::has_provenance() const { return provenance_.back() != BOTTOM; }
+bool ProvenanceManager::has_provenance() const { return get_provenance() != BOTTOM; }
 
-void ProvenanceManager::push_provenance(const std::string& p) { provenance_.push_back(p); }
+void ProvenanceManager::push_provenance(std::string p) { provenance_.push(std::move(p)); }
 
 void ProvenanceManager::pop_provenance()
 {
   if (provenance_.size() <= 1) {
-    throw std::underflow_error("can't pop from an empty provenance stack");
+    throw std::underflow_error{"can't pop from an empty provenance stack"};
   }
-  provenance_.pop_back();
+  provenance_.pop();
 }
 
 void ProvenanceManager::clear_all()
 {
-  provenance_.clear();
-  provenance_.push_back(BOTTOM);
+  // why std::stack has no .clear(), is beyond our ability to comprehend
+  provenance_ = {};
+  push_provenance(BOTTOM);
 }
 
 }  // namespace legate::detail

@@ -64,6 +64,8 @@ void register_reduction_callback(const Legion::RegistrationCallbackArgs& args)
 
 namespace legate {
 
+inline Library::Library(detail::Library* impl) : impl_{impl} {}
+
 template <typename REDOP>
 int64_t Library::register_reduction_operator(int32_t redop_id)
 {
@@ -78,5 +80,11 @@ int64_t Library::register_reduction_operator(int32_t redop_id)
                    Legion::UntypedBuffer(&legion_redop_id, sizeof(int32_t)));
   return legion_redop_id;
 }
+
+inline bool Library::operator==(const Library& other) const { return impl() == other.impl(); }
+
+inline bool Library::operator!=(const Library& other) const { return !(*this == other); }
+
+inline detail::Library* Library::impl() const { return impl_; }
 
 }  // namespace legate

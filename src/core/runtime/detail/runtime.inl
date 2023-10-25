@@ -22,12 +22,30 @@
 namespace legate::detail {
 
 template <typename T>
+T Runtime::get_tunable(Legion::MapperID mapper_id, int64_t tunable_id)
+{
+  return get_tunable(mapper_id, tunable_id, sizeof(T)).get_result<T>();
+}
+
+template <typename T>
+T Runtime::get_core_tunable(int64_t tunable_id)
+{
+  return get_tunable<T>(core_library_->get_mapper_id(), tunable_id);
+}
+
+inline bool Runtime::initialized() const { return initialized_; }
+
+inline const Library* Runtime::core_library() const { return core_library_; }
+
+// ==========================================================================================
+
+template <typename T>
 ConsensusMatchResult<T>::ConsensusMatchResult(std::vector<T>&& input,
                                               Legion::Context ctx,
                                               Legion::Runtime* runtime)
-  : input_(std::move(input)),
-    output_(input_.size()),
-    future_(runtime->consensus_match(ctx, input_.data(), output_.data(), input_.size(), sizeof(T)))
+  : input_{std::move(input)},
+    output_{input_.size()},
+    future_{runtime->consensus_match(ctx, input_.data(), output_.data(), input_.size(), sizeof(T))}
 {
 }
 
@@ -43,7 +61,7 @@ template <typename T>
 void ConsensusMatchResult<T>::wait()
 {
   if (complete_) return;
-  size_t num_matched = future_.get_result<size_t>();
+  auto num_matched = future_.get_result<std::size_t>();
   assert(num_matched <= output_.size());
   output_.resize(num_matched);
   complete_ = true;
@@ -65,7 +83,7 @@ const std::vector<T>& ConsensusMatchResult<T>::output() const
 template <typename T>
 ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 {
-  return ConsensusMatchResult<T>(std::move(input), legion_context_, legion_runtime_);
+  return {std::move(input), legion_context_, legion_runtime_};
 }
 
 }  // namespace legate::detail

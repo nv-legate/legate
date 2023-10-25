@@ -14,6 +14,8 @@
 
 #include "core/mapping/detail/machine.h"
 
+#include <stack>
+
 namespace legate::mapping::detail {
 struct Machine;
 }  // namespace legate::mapping::detail
@@ -22,14 +24,14 @@ namespace legate::detail {
 
 class MachineManager {
  public:
-  const mapping::detail::Machine& get_machine() const;
+  [[nodiscard]] const mapping::detail::Machine& get_machine() const noexcept;
 
   void push_machine(mapping::detail::Machine&& machine);
 
   void pop_machine();
 
  private:
-  std::vector<legate::mapping::detail::Machine> machines_;
+  std::stack<legate::mapping::detail::Machine> machines_{};
 };
 
 }  // namespace legate::detail

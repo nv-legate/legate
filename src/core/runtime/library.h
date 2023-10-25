@@ -12,13 +12,12 @@
 
 #pragma once
 
-#include <memory>
-#include <unordered_map>
-
 #include "core/data/scalar.h"
-#include "core/runtime/resource.h"
 #include "core/task/task_info.h"
 #include "core/utilities/typedefs.h"
+
+#include <memory>
+#include <string>
 
 /**
  * @file
@@ -48,38 +47,33 @@ class Library {
    *
    * @return Library name
    */
-  const std::string& get_library_name() const;
+  [[nodiscard]] const std::string& get_library_name() const;
 
- public:
-  Legion::TaskID get_task_id(int64_t local_task_id) const;
-  Legion::MapperID get_mapper_id() const;
-  Legion::ReductionOpID get_reduction_op_id(int64_t local_redop_id) const;
-  Legion::ProjectionID get_projection_id(int64_t local_proj_id) const;
-  Legion::ShardingID get_sharding_id(int64_t local_shard_id) const;
+  [[nodiscard]] Legion::TaskID get_task_id(int64_t local_task_id) const;
+  [[nodiscard]] Legion::MapperID get_mapper_id() const;
+  [[nodiscard]] Legion::ReductionOpID get_reduction_op_id(int64_t local_redop_id) const;
+  [[nodiscard]] Legion::ProjectionID get_projection_id(int64_t local_proj_id) const;
+  [[nodiscard]] Legion::ShardingID get_sharding_id(int64_t local_shard_id) const;
 
- public:
-  int64_t get_local_task_id(Legion::TaskID task_id) const;
-  int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
-  int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
-  int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
+  [[nodiscard]] int64_t get_local_task_id(Legion::TaskID task_id) const;
+  [[nodiscard]] int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
+  [[nodiscard]] int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
+  [[nodiscard]] int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
 
- public:
-  bool valid_task_id(Legion::TaskID task_id) const;
-  bool valid_reduction_op_id(Legion::ReductionOpID redop_id) const;
-  bool valid_projection_id(Legion::ProjectionID proj_id) const;
-  bool valid_sharding_id(Legion::ShardingID shard_id) const;
+  [[nodiscard]] bool valid_task_id(Legion::TaskID task_id) const;
+  [[nodiscard]] bool valid_reduction_op_id(Legion::ReductionOpID redop_id) const;
+  [[nodiscard]] bool valid_projection_id(Legion::ProjectionID proj_id) const;
+  [[nodiscard]] bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
- public:
-  int64_t get_new_task_id();
+  [[nodiscard]] int64_t get_new_task_id();
 
- public:
   /**
    * @brief Returns the name of a task
    *
    * @param local_task_id Task id
    * @return Name of the task
    */
-  const std::string& get_task_name(int64_t local_task_id) const;
+  [[nodiscard]] const std::string& get_task_name(int64_t local_task_id) const;
   /**
    * @brief Retrieves a tunable parameter
    *
@@ -88,7 +82,7 @@ class Library {
    *
    * @return The value of tunable parameter in a `Scalar`
    */
-  Scalar get_tunable(int64_t tunable_id, Type type);
+  [[nodiscard]] Scalar get_tunable(int64_t tunable_id, Type type);
   /**
    * @brief Registers a library specific reduction operator.
    *
@@ -153,31 +147,26 @@ class Library {
    */
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper);
 
- public:
   void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
-  const TaskInfo* find_task(int64_t local_task_id) const;
+  [[nodiscard]] const TaskInfo* find_task(int64_t local_task_id) const;
 
- public:
   Library() = default;
-  Library(detail::Library* impl);
+  explicit Library(detail::Library* impl);
   Library(const Library&)            = default;
   Library& operator=(const Library&) = default;
   Library(Library&&)                 = default;
   Library& operator=(Library&&)      = default;
 
- public:
   bool operator==(const Library& other) const;
   bool operator!=(const Library& other) const;
 
- public:
-  detail::Library* impl() const { return impl_; }
+  [[nodiscard]] detail::Library* impl() const;
 
  private:
-  void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                        Legion::UntypedBuffer buffer);
+  static void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
+                               const Legion::UntypedBuffer& buffer);
 
- private:
-  detail::Library* impl_{nullptr};
+  detail::Library* impl_{};
 };
 
 }  // namespace legate

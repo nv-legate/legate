@@ -14,6 +14,9 @@
 
 #include "core/utilities/typedefs.h"
 
+#include <utility>
+#include <vector>
+
 namespace legate::detail {
 
 class Runtime;
@@ -24,17 +27,15 @@ class RegionManager {
     static constexpr Legion::FieldID FIELD_ID_BASE = 10000;
     static constexpr int32_t MAX_NUM_FIELDS = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
 
-    ManagerEntry(const Legion::LogicalRegion& _region)
-      : region(_region), next_field_id(FIELD_ID_BASE)
-    {
-    }
-    bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
-    Legion::FieldID get_next_field_id() { return next_field_id++; }
+    explicit ManagerEntry(const Legion::LogicalRegion& _region) : region{_region} {}
 
-    void destroy(Runtime* runtime, bool unordered);
+    [[nodiscard]] bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
+    [[nodiscard]] Legion::FieldID get_next_field_id() { return next_field_id++; }
 
-    Legion::LogicalRegion region;
-    Legion::FieldID next_field_id;
+    void destroy(Runtime* runtime, bool unordered) const;
+
+    Legion::LogicalRegion region{};
+    Legion::FieldID next_field_id{FIELD_ID_BASE};
   };
 
  public:
@@ -42,18 +43,18 @@ class RegionManager {
   void destroy(bool unordered = false);
 
  private:
-  const ManagerEntry& active_entry() const { return entries_.back(); }
-  ManagerEntry& active_entry() { return entries_.back(); }
+  [[nodiscard]] const ManagerEntry& active_entry() const { return entries_.back(); }
+  [[nodiscard]] ManagerEntry& active_entry() { return entries_.back(); }
   void push_entry();
 
  public:
-  bool has_space() const;
-  std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(size_t field_size);
+  [[nodiscard]] bool has_space() const;
+  [[nodiscard]] std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(size_t field_size);
   void import_region(const Legion::LogicalRegion& region);
 
  private:
-  Runtime* runtime_;
-  Domain shape_;
+  Runtime* runtime_{};
+  Domain shape_{};
   std::vector<ManagerEntry> entries_{};
 };
 

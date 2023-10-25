@@ -12,44 +12,49 @@
 
 #pragma once
 
-#include <map>
-#include <unordered_map>
-
 #include "core/mapping/detail/machine.h"
 #include "core/utilities/typedefs.h"
+
+#include <map>
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 namespace legate::detail {
 
 // TODO: We need to expose this eventually so client libraries can register custom communicators
 class CommunicatorFactory {
- protected:
-  CommunicatorFactory();
-
  public:
-  virtual ~CommunicatorFactory();
+  CommunicatorFactory()                                               = default;
+  CommunicatorFactory(const CommunicatorFactory&) noexcept            = default;
+  CommunicatorFactory& operator=(const CommunicatorFactory&) noexcept = default;
+  CommunicatorFactory(CommunicatorFactory&&) noexcept                 = default;
+  CommunicatorFactory& operator=(CommunicatorFactory&&) noexcept      = default;
 
- public:
-  Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
-                                   const mapping::ProcessorRange& range,
-                                   const Domain& launch_domain);
+  virtual ~CommunicatorFactory() = default;
+
+  [[nodiscard]] Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
+                                                 const mapping::ProcessorRange& range,
+                                                 const Domain& launch_domain);
   void destroy();
 
  protected:
-  Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
-                                   const mapping::ProcessorRange& range,
-                                   uint32_t num_tasks);
-  Legion::FutureMap transform(const Legion::FutureMap& communicator, const Domain& launch_domain);
+  [[nodiscard]] Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
+                                                 const mapping::ProcessorRange& range,
+                                                 uint32_t num_tasks);
+  [[nodiscard]] Legion::FutureMap transform(const Legion::FutureMap& communicator,
+                                            const Domain& launch_domain);
 
  public:
-  virtual bool needs_barrier() const                                 = 0;
-  virtual bool is_supported_target(mapping::TaskTarget target) const = 0;
+  [[nodiscard]] virtual bool needs_barrier() const                                 = 0;
+  [[nodiscard]] virtual bool is_supported_target(mapping::TaskTarget target) const = 0;
 
  protected:
-  virtual Legion::FutureMap initialize(const mapping::detail::Machine& machine,
-                                       uint32_t num_tasks)     = 0;
+  [[nodiscard]] virtual Legion::FutureMap initialize(const mapping::detail::Machine& machine,
+                                                     uint32_t num_tasks) = 0;
   virtual void finalize(const mapping::detail::Machine& machine,
                         uint32_t num_tasks,
-                        const Legion::FutureMap& communicator) = 0;
+                        const Legion::FutureMap& communicator)           = 0;
 
  private:
   template <class Desc>
@@ -57,43 +62,29 @@ class CommunicatorFactory {
     Desc desc;
     mapping::TaskTarget target;
     mapping::ProcessorRange range;
-    mapping::detail::Machine get_machine() const
-    {
-      return mapping::detail::Machine({{target, range}});
-    }
-    bool operator==(const CacheKey& other) const
-    {
-      return desc == other.desc && target == other.target && range == other.range;
-    }
-    bool operator<(const CacheKey& other) const
-    {
-      if (desc < other.desc)
-        return true;
-      else if (other.desc < desc)
-        return false;
-      if (target < other.target)
-        return true;
-      else if (target > other.target)
-        return false;
-      return range < other.range;
-    }
+
+    [[nodiscard]] mapping::detail::Machine get_machine() const;
+    bool operator==(const CacheKey& other) const;
+    bool operator<(const CacheKey& other) const;
   };
   using CommKey  = CacheKey<uint32_t>;
   using AliasKey = CacheKey<Domain>;
-  std::map<CommKey, Legion::FutureMap> communicators_;
-  std::map<AliasKey, Legion::FutureMap> nd_aliases_;
+
+  std::map<CommKey, Legion::FutureMap> communicators_{};
+  std::map<AliasKey, Legion::FutureMap> nd_aliases_{};
 };
 
 class CommunicatorManager {
  public:
-  CommunicatorFactory* find_factory(const std::string& name);
+  [[nodiscard]] CommunicatorFactory* find_factory(const std::string& name);
   void register_factory(const std::string& name, std::unique_ptr<CommunicatorFactory> factory);
 
- public:
   void destroy();
 
  private:
-  std::unordered_map<std::string, std::unique_ptr<CommunicatorFactory>> factories_;
+  std::unordered_map<std::string, std::unique_ptr<CommunicatorFactory>> factories_{};
 };
 
 }  // namespace legate::detail
+
+#include "core/runtime/detail/communicator_manager.inl"

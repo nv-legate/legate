@@ -12,16 +12,12 @@
 
 #pragma once
 
-#include "legion.h"
+#include "core/runtime/runtime.h"
 
-namespace legate::detail {
+namespace legate {
 
-class Library;
+inline Runtime::Runtime(detail::Runtime* runtime) : impl_{runtime} {}
 
-void register_legate_core_sharding_functors(Legion::Runtime* runtime,
-                                            const detail::Library* core_library);
+inline detail::Runtime* Runtime::impl() { return impl_; }
 
-[[nodiscard]] Legion::ShardingID find_sharding_functor_by_projection_functor(
-  Legion::ProjectionID proj_id);
-
-}  // namespace legate::detail
+}  // namespace legate

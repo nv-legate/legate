@@ -130,7 +130,8 @@ void test_cpu_only(legate::Library library)
   // check `slice_machine_for_task` logic
   if (machine.count(legate::mapping::TaskTarget::GPU) > 0) {
     legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
-    EXPECT_THROW(runtime->create_task(library, CPU_VARIANT), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(runtime->create_task(library, CPU_VARIANT)),
+                 std::invalid_argument);
   }
 }
 

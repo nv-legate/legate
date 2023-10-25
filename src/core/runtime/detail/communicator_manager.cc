@@ -12,14 +12,9 @@
 
 #include "core/runtime/detail/communicator_manager.h"
 
-#include "core/runtime/detail/machine_manager.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
-
-CommunicatorFactory::CommunicatorFactory() {}
-
-CommunicatorFactory::~CommunicatorFactory() {}
 
 Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget& target,
                                                       const mapping::ProcessorRange& range,
@@ -39,8 +34,9 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
 
 void CommunicatorFactory::destroy()
 {
-  for (auto& [key, communicator] : communicators_)
+  for (auto& [key, communicator] : communicators_) {
     finalize(key.get_machine(), key.desc, communicator);
+  }
   communicators_.clear();
   nd_aliases_.clear();
 }

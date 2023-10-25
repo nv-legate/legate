@@ -10,60 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <mutex>
-#include <numeric>
-#include <sstream>
-#include <unordered_map>
-#include <unordered_set>
-
 #include "core/runtime/detail/projection.h"
 
 #include "core/runtime/detail/library.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/typedefs.h"
 
+#include <iostream>
+#include <mutex>
+#include <sstream>
+#include <unordered_map>
+#include <vector>
+
 extern Legion::Logger log_legate;
 
 namespace legate::proj {
-
-SymbolicExpr::SymbolicExpr(int32_t dim, int32_t weight, int32_t offset)
-  : dim_(dim), weight_(weight), offset_(offset)
-{
-}
-
-bool SymbolicExpr::is_identity(int32_t dim) const
-{
-  return dim_ == dim && weight_ == 1 && offset_ == 0;
-}
-
-bool SymbolicExpr::operator==(const SymbolicExpr& other) const
-{
-  return dim_ == other.dim_ && weight_ == other.weight_ && offset_ == other.offset_;
-}
-
-bool SymbolicExpr::operator<(const SymbolicExpr& other) const
-{
-  if (dim_ < other.dim_)
-    return true;
-  else if (dim_ > other.dim_)
-    return false;
-  if (weight_ < other.weight_)
-    return true;
-  else if (weight_ > other.weight_)
-    return false;
-  if (offset_ < other.offset_) return true;
-  return false;
-}
-
-SymbolicExpr SymbolicExpr::operator*(int32_t other) const
-{
-  return SymbolicExpr(dim_, weight_ * other, offset_ * other);
-}
-
-SymbolicExpr SymbolicExpr::operator+(int32_t other) const
-{
-  return SymbolicExpr(dim_, weight_, offset_ + other);
-}
 
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
 {
@@ -83,27 +44,22 @@ std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
   return out;
 }
 
-RadixProjectionFunctor::RadixProjectionFunctor(int32_t radix, int32_t offset)
-  : offset_(offset), radix_(radix)
+SymbolicPoint RadixProjectionFunctor::operator()(const SymbolicPoint& point) const
 {
-}
-
-SymbolicPoint RadixProjectionFunctor::operator()(const SymbolicPoint& in_p) const
-{
-  auto ndim = in_p.size();
   std::vector<SymbolicExpr> exprs;
-  exprs.resize(ndim);
-  for (std::size_t dim = 0; dim < ndim; ++dim) { exprs[dim] = in_p[dim] * radix_ + offset_; }
-  return SymbolicPoint(std::move(exprs));
+
+  exprs.reserve(point.size());
+  for (auto&& points : point.data()) exprs.emplace_back(points * radix_ + offset_);
+  return SymbolicPoint{std::move(exprs)};
 }
 
 SymbolicPoint create_symbolic_point(int32_t ndim)
 {
   std::vector<SymbolicExpr> exprs;
-  exprs.resize(ndim);
 
-  for (int32_t dim = 0; dim < ndim; ++dim) { exprs[dim] = proj::SymbolicExpr(dim); }
-  return SymbolicPoint(std::move(exprs));
+  exprs.reserve(ndim);
+  for (int32_t dim = 0; dim < ndim; ++dim) exprs.emplace_back(dim);
+  return SymbolicPoint{std::move(exprs)};
 }
 
 bool is_identity(int32_t src_ndim, const SymbolicPoint& point)
@@ -125,55 +81,45 @@ namespace legate::detail {
 // and the output will be linearized back to integers.
 class DelinearizationFunctor : public LegateProjectionFunctor {
  public:
-  DelinearizationFunctor(Legion::Runtime* runtime);
+  using LegateProjectionFunctor::LegateProjectionFunctor;
 
- public:
-  virtual Legion::LogicalRegion project(Legion::LogicalPartition upper_bound,
-                                        const DomainPoint& point,
-                                        const Domain& launch_domain) override;
+  [[nodiscard]] Legion::LogicalRegion project(Legion::LogicalPartition upper_bound,
+                                              const DomainPoint& point,
+                                              const Domain& launch_domain) override;
 
- public:
-  virtual DomainPoint project_point(const DomainPoint& point,
-                                    const Domain& launch_domain) const override;
+  [[nodiscard]] DomainPoint project_point(const DomainPoint& point,
+                                          const Domain& launch_domain) const override;
 };
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
 class AffineFunctor : public LegateProjectionFunctor {
  public:
-  AffineFunctor(Legion::Runtime* runtime, int32_t* dims, int32_t* weights, int32_t* offsets);
+  AffineFunctor(Legion::Runtime* runtime, int32_t* dims, int32_t* weights, const int32_t* offsets);
 
- public:
-  DomainPoint project_point(const DomainPoint& point, const Domain& launch_domain) const override;
+  [[nodiscard]] DomainPoint project_point(const DomainPoint& point,
+                                          const Domain& launch_domain) const override;
 
- public:
-  static Legion::Transform<TGT_DIM, SRC_DIM> create_transform(int32_t* dims, int32_t* weights);
+  [[nodiscard]] static Legion::Transform<TGT_DIM, SRC_DIM> create_transform(const int32_t* dims,
+                                                                            const int32_t* weights);
 
  private:
-  const Legion::Transform<TGT_DIM, SRC_DIM> transform_;
-  Point<TGT_DIM> offsets_;
+  Legion::Transform<TGT_DIM, SRC_DIM> transform_{};
+  Point<TGT_DIM> offsets_{};
 };
-
-LegateProjectionFunctor::LegateProjectionFunctor(Legion::Runtime* rt) : ProjectionFunctor(rt) {}
 
 Legion::LogicalRegion LegateProjectionFunctor::project(Legion::LogicalPartition upper_bound,
                                                        const DomainPoint& point,
                                                        const Domain& launch_domain)
 {
-  const DomainPoint dp = project_point(point, launch_domain);
+  const auto dp = project_point(point, launch_domain);
   if (runtime->has_logical_subregion_by_color(upper_bound, dp))
     return runtime->get_logical_subregion_by_color(upper_bound, dp);
-  else
-    return Legion::LogicalRegion::NO_REGION;
-}
-
-DelinearizationFunctor::DelinearizationFunctor(Legion::Runtime* runtime)
-  : LegateProjectionFunctor(runtime)
-{
+  return Legion::LogicalRegion::NO_REGION;
 }
 
 Legion::LogicalRegion DelinearizationFunctor::project(Legion::LogicalPartition upper_bound,
                                                       const DomainPoint& point,
-                                                      const Domain& launch_domain)
+                                                      const Domain& /*launch_domain*/)
 {
   const auto color_space =
     runtime->get_index_partition_color_space(upper_bound.get_index_partition());
@@ -188,8 +134,9 @@ Legion::LogicalRegion DelinearizationFunctor::project(Legion::LogicalPartition u
   }
 
   DomainPoint delinearized;
+  int64_t value = point[0];
+
   delinearized.dim = color_space.dim;
-  int64_t value    = point[0];
   for (int32_t dim = 0; dim < color_space.dim; ++dim) {
     delinearized[dim] = value / strides[dim];
     value             = value % strides[dim];
@@ -197,12 +144,11 @@ Legion::LogicalRegion DelinearizationFunctor::project(Legion::LogicalPartition u
 
   if (runtime->has_logical_subregion_by_color(upper_bound, delinearized))
     return runtime->get_logical_subregion_by_color(upper_bound, delinearized);
-  else
-    return Legion::LogicalRegion::NO_REGION;
+  return Legion::LogicalRegion::NO_REGION;
 }
 
 DomainPoint DelinearizationFunctor::project_point(const DomainPoint& point,
-                                                  const Domain& launch_domain) const
+                                                  const Domain& /*launch_domain*/) const
 {
   return point;
 }
@@ -211,22 +157,23 @@ template <int32_t SRC_DIM, int32_t TGT_DIM>
 AffineFunctor<SRC_DIM, TGT_DIM>::AffineFunctor(Legion::Runtime* runtime,
                                                int32_t* dims,
                                                int32_t* weights,
-                                               int32_t* offsets)
-  : LegateProjectionFunctor(runtime), transform_(create_transform(dims, weights))
+                                               const int32_t* offsets)
+  : LegateProjectionFunctor{runtime}, transform_{create_transform(dims, weights)}
+
 {
   for (int32_t dim = 0; dim < TGT_DIM; ++dim) offsets_[dim] = offsets[dim];
 }
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
 DomainPoint AffineFunctor<SRC_DIM, TGT_DIM>::project_point(const DomainPoint& point,
-                                                           const Domain& launch_domain) const
+                                                           const Domain& /*launch_domain*/) const
 {
-  return DomainPoint(transform_ * Point<SRC_DIM>(point) + offsets_);
+  return DomainPoint{transform_ * Point<SRC_DIM>{point} + offsets_};
 }
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
 /*static*/ Legion::Transform<TGT_DIM, SRC_DIM> AffineFunctor<SRC_DIM, TGT_DIM>::create_transform(
-  int32_t* dims, int32_t* weights)
+  const int32_t* dims, const int32_t* weights)
 {
   Legion::Transform<TGT_DIM, SRC_DIM> transform;
 
@@ -242,24 +189,29 @@ template <int32_t SRC_DIM, int32_t TGT_DIM>
 }
 
 struct IdentityFunctor : public LegateProjectionFunctor {
-  IdentityFunctor(Legion::Runtime* runtime) : LegateProjectionFunctor(runtime) {}
-  DomainPoint project_point(const DomainPoint& point, const Domain&) const override
+  using LegateProjectionFunctor::LegateProjectionFunctor;
+
+  [[nodiscard]] DomainPoint project_point(const DomainPoint& point, const Domain&) const override
   {
     return point;
   }
 };
 
-static LegateProjectionFunctor* identity_functor{nullptr};
-static std::unordered_map<Legion::ProjectionID, LegateProjectionFunctor*> functor_table{};
-static std::mutex functor_table_lock{};
+namespace {
+
+LegateProjectionFunctor* identity_functor{};
+std::unordered_map<Legion::ProjectionID, LegateProjectionFunctor*> functor_table{};
+std::mutex functor_table_lock{};
+
+}  // namespace
 
 struct create_affine_functor_fn {
   static void spec_to_string(std::stringstream& ss,
                              int32_t src_ndim,
                              int32_t tgt_ndim,
-                             int32_t* dims,
-                             int32_t* weights,
-                             int32_t* offsets)
+                             const int32_t* dims,
+                             const int32_t* weights,
+                             const int32_t* offsets)
   {
     ss << "\\(";
     for (int32_t idx = 0; idx < src_ndim; ++idx) {
@@ -268,10 +220,11 @@ struct create_affine_functor_fn {
     }
     ss << ")->(";
     for (int32_t idx = 0; idx < tgt_ndim; ++idx) {
-      if (idx != 0) ss << ",";
       auto dim    = dims[idx];
       auto weight = weights[idx];
       auto offset = offsets[idx];
+
+      if (idx != 0) ss << ",";
       if (dim != -1)
         if (weight != 0) {
           assert(dim != -1);
@@ -296,19 +249,22 @@ struct create_affine_functor_fn {
                   int32_t* offsets,
                   Legion::ProjectionID proj_id)
   {
-    auto functor = new AffineFunctor<SRC_DIM, TGT_DIM>(runtime, dims, weights, offsets);
+    auto functor = new AffineFunctor<SRC_DIM, TGT_DIM>{runtime, dims, weights, offsets};
+
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       std::stringstream ss;
+
       ss << "Register projection functor: functor: " << functor << ", id: " << proj_id << ", ";
       spec_to_string(ss, SRC_DIM, TGT_DIM, dims, weights, offsets);
-      log_legate.debug() << ss.str();
+      log_legate.debug() << std::move(ss).str();
     } else {
       log_legate.debug(
         "Register projection functor: functor: %p, id: %d", static_cast<void*>(functor), proj_id);
     }
     runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
 
-    const std::lock_guard<std::mutex> lock(functor_table_lock);
+    std::lock_guard<std::mutex> lock{functor_table_lock};
+
     functor_table[proj_id] = functor;
   }
 };
@@ -317,23 +273,27 @@ void register_legate_core_projection_functors(Legion::Runtime* runtime,
                                               const detail::Library* core_library)
 {
   auto proj_id = core_library->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
-  auto functor = new DelinearizationFunctor(runtime);
+  auto functor = new DelinearizationFunctor{runtime};
+
   log_legate.debug(
     "Register delinearizing functor: functor: %p, id: %d", static_cast<void*>(functor), proj_id);
   runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
   {
-    const std::lock_guard<std::mutex> lock(functor_table_lock);
+    std::lock_guard<std::mutex> lock{functor_table_lock};
+
     functor_table[proj_id] = functor;
   }
-  identity_functor = new IdentityFunctor(runtime);
+  identity_functor = new IdentityFunctor{runtime};
 }
 
 LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID proj_id,
                                                         bool allow_missing)
 {
   if (0 == proj_id) return identity_functor;
-  const std::lock_guard<std::mutex> lock(functor_table_lock);
+
+  std::lock_guard<std::mutex> lock{functor_table_lock};
   auto result = functor_table[proj_id];
+
   // If we're not OK with a missing projection functor, then throw an error.
   if (nullptr == result && !allow_missing) {
     log_legate.debug("Failed to find projection functor of id %d", proj_id);
@@ -344,11 +304,11 @@ LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID pro
 
 struct LinearizingPointTransformFunctor : public Legion::PointTransformFunctor {
   // This is actually an invertible functor, but we will not use this for inversion
-  virtual bool is_invertible(void) const { return false; }
+  [[nodiscard]] bool is_invertible() const override { return false; }
 
-  virtual DomainPoint transform_point(const DomainPoint& point,
-                                      const Domain& domain,
-                                      const Domain& range)
+  DomainPoint transform_point(const DomainPoint& point,
+                              const Domain& domain,
+                              const Domain& range) override
   {
     assert(range.dim == 1);
     DomainPoint result;
@@ -365,7 +325,11 @@ struct LinearizingPointTransformFunctor : public Legion::PointTransformFunctor {
   }
 };
 
-static auto* linearizing_point_transform_functor = new LinearizingPointTransformFunctor();
+namespace {
+
+auto* linearizing_point_transform_functor = new LinearizingPointTransformFunctor{};
+//
+}  // namespace
 
 }  // namespace legate::detail
 
@@ -389,8 +353,9 @@ void legate_register_affine_projection_functor(int32_t src_ndim,
                           proj_id);
 }
 
-void* legate_linearizing_point_transform_functor()
+[[nodiscard]] void* legate_linearizing_point_transform_functor()
 {
   return legate::detail::linearizing_point_transform_functor;
 }
+//
 }

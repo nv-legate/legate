@@ -12,8 +12,8 @@
 
 #pragma once
 
+#include <stack>
 #include <string>
-#include <vector>
 
 namespace legate::detail {
 
@@ -21,23 +21,22 @@ class ProvenanceManager {
  public:
   ProvenanceManager();
 
- public:
-  const std::string& get_provenance();
+  [[nodiscard]] const std::string& get_provenance() const;
 
-  void set_provenance(const std::string& p);
+  void set_provenance(std::string p);
 
   void reset_provenance();
 
   [[nodiscard]] bool has_provenance() const;
 
-  void push_provenance(const std::string& p);
+  void push_provenance(std::string p);
 
   void pop_provenance();
 
   void clear_all();
 
  private:
-  std::vector<std::string> provenance_;
+  std::stack<std::string> provenance_{};
 };
 
 }  // namespace legate::detail

@@ -11,59 +11,59 @@
  */
 
 #pragma once
-#include <optional>
-
-#include "legion.h"
 
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
+
+#include <functional>
+#include <iosfwd>
 
 namespace legate::proj {
 
 class SymbolicExpr {
  public:
-  SymbolicExpr(int32_t dim = -1, int32_t weight = 1, int32_t offset = 0);
+  SymbolicExpr() = default;
 
- public:
-  int32_t dim() const { return dim_; }
-  int32_t weight() const { return weight_; }
-  int32_t offset() const { return offset_; }
+  SymbolicExpr(int32_t dim, int32_t weight, int32_t offset = 0);
 
- public:
-  bool is_identity(int32_t dim) const;
+  explicit SymbolicExpr(int32_t dim);
 
- public:
+  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] int32_t weight() const;
+  [[nodiscard]] int32_t offset() const;
+
+  [[nodiscard]] bool is_identity(int32_t dim) const;
+
   bool operator==(const SymbolicExpr& other) const;
   bool operator<(const SymbolicExpr& other) const;
 
- public:
   SymbolicExpr operator*(int32_t other) const;
   SymbolicExpr operator+(int32_t other) const;
 
  private:
   int32_t dim_{-1};
   int32_t weight_{1};
-  int32_t offset_{0};
+  int32_t offset_{};
 };
 
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
 
 using SymbolicPoint   = tuple<SymbolicExpr>;
 using SymbolicFunctor = std::function<SymbolicPoint(const SymbolicPoint&)>;
-;
 
 struct RadixProjectionFunctor {
   RadixProjectionFunctor(int32_t radix, int32_t offset);
 
-  SymbolicPoint operator()(const SymbolicPoint& exprs) const;
+  [[nodiscard]] SymbolicPoint operator()(const SymbolicPoint& point) const;
 
  private:
-  int32_t offset_, radix_;
+  int32_t offset_{};
+  int32_t radix_{};
 };
 
-SymbolicPoint create_symbolic_point(int32_t ndim);
+[[nodiscard]] SymbolicPoint create_symbolic_point(int32_t ndim);
 
-bool is_identity(int32_t ndim, const SymbolicPoint& point);
+[[nodiscard]] bool is_identity(int32_t ndim, const SymbolicPoint& point);
 
 }  // namespace legate::proj
 
@@ -74,29 +74,28 @@ class Library;
 // Interface for Legate projection functors
 class LegateProjectionFunctor : public Legion::ProjectionFunctor {
  public:
-  LegateProjectionFunctor(Legion::Runtime* runtime);
+  explicit LegateProjectionFunctor(Legion::Runtime* runtime);
 
- public:
   using Legion::ProjectionFunctor::project;
-  virtual Legion::LogicalRegion project(Legion::LogicalPartition upper_bound,
-                                        const DomainPoint& point,
-                                        const Domain& launch_domain);
+  [[nodiscard]] Legion::LogicalRegion project(Legion::LogicalPartition upper_bound,
+                                              const DomainPoint& point,
+                                              const Domain& launch_domain) override;
 
- public:
   // legate projection functors are almost always functional and don't traverse the region tree
-  virtual bool is_functional(void) const { return true; }
-  virtual bool is_exclusive(void) const { return true; }
-  virtual unsigned get_depth(void) const { return 0; }
+  [[nodiscard]] bool is_functional() const override;
+  [[nodiscard]] bool is_exclusive() const override;
+  [[nodiscard]] unsigned get_depth() const override;
 
- public:
-  virtual DomainPoint project_point(const DomainPoint& point,
-                                    const Domain& launch_domain) const = 0;
+  [[nodiscard]] virtual DomainPoint project_point(const DomainPoint& point,
+                                                  const Domain& launch_domain) const = 0;
 };
 
 void register_legate_core_projection_functors(Legion::Runtime* runtime,
                                               const detail::Library* core_library);
 
-LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID proj_id,
-                                                        bool allow_missing = false);
+[[nodiscard]] LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID proj_id,
+                                                                      bool allow_missing = false);
 
 }  // namespace legate::detail
+
+#include "core/runtime/detail/projection.inl"

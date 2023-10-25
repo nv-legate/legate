@@ -12,9 +12,6 @@
 
 #include "core/runtime/detail/runtime.h"
 
-#include <cinttypes>
-#include <limits>
-
 #include "core/comm/comm.h"
 #include "core/data/detail/array_tasks.h"
 #include "core/data/detail/logical_array.h"
@@ -37,14 +34,19 @@
 #include "core/runtime/detail/shard.h"
 #include "core/runtime/runtime.h"
 #include "core/task/detail/task_context.h"
-#include "env_defaults.h"
 
+#include "env_defaults.h"
 #include "realm/cmdline.h"
 #include "realm/network.h"
 
+#include <cinttypes>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
+
 namespace legate {
 
-Logger log_legate("legate");
+Logger log_legate{"legate"};
 
 }  // namespace legate
 
@@ -70,22 +72,20 @@ namespace {
 
 // This is the unique string name for our library which can be used from both C++ and Python to
 // generate IDs
-const char* const CORE_LIBRARY_NAME = "legate.core";
-const char* const TOPLEVEL_NAME     = "Legate Core Toplevel Task";
+constexpr const char* const CORE_LIBRARY_NAME = "legate.core";
+constexpr const char* const TOPLEVEL_NAME     = "Legate Core Toplevel Task";
 
 }  // namespace
 
 Runtime::Runtime()
-  : legion_runtime_(Legion::Runtime::get_runtime()),
-    field_reuse_freq_(
-      extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)),
-    force_consensus_match_(extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)),
-    max_pending_exceptions_(extract_env(
-      "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST))
+  : legion_runtime_{Legion::Runtime::get_runtime()},
+    field_reuse_freq_{
+      extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)},
+    force_consensus_match_{!!extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)},
+    max_pending_exceptions_{extract_env(
+      "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST)}
 {
 }
-
-Runtime::~Runtime() {}
 
 Library* Runtime::create_library(const std::string& library_name,
                                  const ResourceConfig& config,
@@ -93,11 +93,11 @@ Library* Runtime::create_library(const std::string& library_name,
                                  bool in_callback)
 {
   if (libraries_.find(library_name) != libraries_.end())
-    throw std::invalid_argument("Library " + library_name + " already exists");
+    throw std::invalid_argument{"Library " + library_name + " already exists"};
 
   log_legate.debug("Library %s is created", library_name.c_str());
   if (nullptr == mapper) mapper = std::make_unique<mapping::detail::DefaultMapper>();
-  auto context             = new Library(library_name, config);
+  auto context             = new Library{library_name, config};
   libraries_[library_name] = context;
   context->register_mapper(std::move(mapper), in_callback);
   return context;
@@ -105,10 +105,11 @@ Library* Runtime::create_library(const std::string& library_name,
 
 Library* Runtime::find_library(const std::string& library_name, bool can_fail /*=false*/) const
 {
-  auto finder = libraries_.find(library_name);
+  const auto finder = libraries_.find(library_name);
+
   if (libraries_.end() == finder) {
-    if (!can_fail) throw std::out_of_range("Library " + library_name + " does not exist");
-    return nullptr;
+    if (!can_fail) throw std::out_of_range{"Library " + library_name + " does not exist"};
+    return {};
   }
   return finder->second;
 }
@@ -119,9 +120,10 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
                                          bool* created,
                                          bool in_callback)
 {
-  Library* result = find_library(library_name, true /*can_fail*/);
-  if (result != nullptr) {
-    if (created != nullptr) *created = false;
+  auto result = find_library(library_name, true /*can_fail*/);
+
+  if (result) {
+    if (created) *created = false;
     return result;
   }
   result = create_library(library_name, config, std::move(mapper), in_callback);
@@ -141,23 +143,24 @@ void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int64
   auto finder = reduction_ops_.find(key);
   if (finder != reduction_ops_.end()) {
     std::stringstream ss;
+
     ss << "Reduction op " << op_kind << " already exists for type " << type_uid;
-    throw std::invalid_argument(std::move(ss).str());
+    throw std::invalid_argument{std::move(ss).str()};
   }
-  reduction_ops_.emplace(std::make_pair(key, legion_op_id));
+  reduction_ops_[key] = legion_op_id;
 }
 
 int64_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) const
 {
-  auto key    = std::make_pair(type_uid, op_kind);
-  auto finder = reduction_ops_.find(key);
+  auto finder = reduction_ops_.find({type_uid, op_kind});
   if (reduction_ops_.end() == finder) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       log_legate.debug("Can't find reduction op (type_uid: %d, op_kind: %d)", type_uid, op_kind);
     }
     std::stringstream ss;
+
     ss << "Reduction op " << op_kind << " does not exist for type " << type_uid;
-    throw std::invalid_argument(std::move(ss).str());
+    throw std::invalid_argument{std::move(ss).str()};
   }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate.debug("Found reduction op %" PRId64 " (type_uid: %d, op_kind: %d)",
@@ -170,14 +173,14 @@ int64_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) cons
 
 void Runtime::initialize(Legion::Context legion_context)
 {
-  if (initialized_) throw std::runtime_error("Legate runtime has already been initialized");
+  if (initialized_) throw std::runtime_error{"Legate runtime has already been initialized"};
   initialized_          = true;
   legion_context_       = legion_context;
   core_library_         = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
-  communicator_manager_ = new CommunicatorManager();
-  partition_manager_    = new PartitionManager(this);
-  machine_manager_      = new MachineManager();
-  provenance_manager_   = new ProvenanceManager();
+  communicator_manager_ = new CommunicatorManager{};
+  partition_manager_    = new PartitionManager{this};
+  machine_manager_      = new MachineManager{};
+  provenance_manager_   = new ProvenanceManager{};
   Config::has_socket_mem =
     get_tunable<bool>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM);
   initialize_toplevel_machine();
@@ -187,9 +190,9 @@ void Runtime::initialize(Legion::Context legion_context)
 mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library, int64_t task_id)
 {
   auto* task_info = library->find_task(task_id);
-
+  auto& machine   = machine_manager_->get_machine();
   std::vector<mapping::TaskTarget> task_targets;
-  auto& machine = machine_manager_->get_machine();
+
   for (const auto& t : machine.valid_targets()) {
     if (task_info->has_variant(mapping::detail::to_variant_code(t))) task_targets.push_back(t);
   }
@@ -197,10 +200,11 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
 
   if (sliced.empty()) {
     std::stringstream ss;
+
     ss << "Task " << task_id << " (" << task_info->name() << ") of library "
        << library->get_library_name() << " does not have any valid variant for "
        << "the current machine configuration.";
-    throw std::invalid_argument(ss.str());
+    throw std::invalid_argument{std::move(ss).str()};
   }
   return sliced;
 }
@@ -209,7 +213,7 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
 std::shared_ptr<AutoTask> Runtime::create_task(const Library* library, int64_t task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
-  auto task    = new AutoTask(library, task_id, next_unique_id_++, std::move(machine));
+  auto task    = new AutoTask{library, task_id, next_unique_id_++, std::move(machine)};
   return std::unique_ptr<AutoTask>{task};
 }
 
@@ -217,9 +221,9 @@ std::shared_ptr<ManualTask> Runtime::create_task(const Library* library,
                                                  int64_t task_id,
                                                  const Shape& launch_shape)
 {
-  if (launch_shape.volume() == 0) { throw std::invalid_argument("Launch shape must not be empty"); }
+  if (launch_shape.volume() == 0) throw std::invalid_argument{"Launch shape must not be empty"};
   auto machine = slice_machine_for_task(library, task_id);
-  auto task = new ManualTask(library, task_id, launch_shape, next_unique_id_++, std::move(machine));
+  auto task = new ManualTask{library, task_id, launch_shape, next_unique_id_++, std::move(machine)};
   return std::unique_ptr<ManualTask>(task);
 }
 
@@ -280,7 +284,7 @@ void Runtime::issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<Logi
 {
   auto machine = machine_manager_->get_machine();
   submit(std::shared_ptr<Fill>(
-    new Fill(std::move(lhs), std::move(value), next_unique_id_++, std::move(machine))));
+    new Fill{std::move(lhs), std::move(value), next_unique_id_++, std::move(machine)}));
 }
 
 void Runtime::tree_reduce(const Library* library,
@@ -301,7 +305,7 @@ void Runtime::tree_reduce(const Library* library,
 
 void Runtime::flush_scheduling_window()
 {
-  if (operations_.size() == 0) return;
+  if (operations_.empty()) return;
 
   std::vector<std::shared_ptr<Operation>> to_schedule;
   to_schedule.swap(operations_);
@@ -312,16 +316,17 @@ void Runtime::submit(std::shared_ptr<Operation> op)
 {
   op->validate();
   operations_.push_back(std::move(op));
-  if (operations_.size() >= window_size_) { flush_scheduling_window(); }
+  if (operations_.size() >= window_size_) flush_scheduling_window();
 }
 
 void Runtime::schedule(std::vector<std::shared_ptr<Operation>> operations)
 {
   std::vector<Operation*> op_pointers{};
+
   op_pointers.reserve(operations.size());
   for (auto& op : operations) op_pointers.push_back(op.get());
 
-  Partitioner partitioner(std::move(op_pointers));
+  Partitioner partitioner{std::move(op_pointers)};
   auto strategy = partitioner.partition_stores();
 
   for (auto& op : operations) op->launch(strategy.get());
@@ -333,17 +338,19 @@ std::shared_ptr<LogicalArray> Runtime::create_array(std::shared_ptr<Type> type,
 {
   if (Type::Code::STRUCT == type->code) {
     return create_struct_array(std::move(type), dim, nullable);
-  } else if (type->variable_size()) {
-    if (dim != 1) { throw std::invalid_argument("List/string arrays can only be 1D"); }
+  }
+  if (type->variable_size()) {
+    if (dim != 1) throw std::invalid_argument{"List/string arrays can only be 1D"};
+
     auto elem_type =
       Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
     auto descriptor = create_base_array(rect_type(1), dim, nullable);
     auto vardata    = create_array(std::move(elem_type), 1, false);
+
     return std::make_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
-  } else {
-    return create_base_array(std::move(type), dim, nullable);
   }
+  return create_base_array(std::move(type), dim, nullable);
 }
 
 std::shared_ptr<LogicalArray> Runtime::create_array(const Shape& extents,
@@ -353,45 +360,46 @@ std::shared_ptr<LogicalArray> Runtime::create_array(const Shape& extents,
 {
   if (Type::Code::STRUCT == type->code) {
     return create_struct_array(extents, std::move(type), nullable, optimize_scalar);
-  } else if (type->variable_size()) {
-    if (extents.size() != 1) { throw std::invalid_argument("List/string arrays can only be 1D"); }
+  }
+
+  if (type->variable_size()) {
+    if (extents.size() != 1) throw std::invalid_argument{"List/string arrays can only be 1D"};
+
     auto elem_type =
       Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
     auto descriptor = create_base_array(extents, rect_type(1), nullable, optimize_scalar);
     auto vardata    = create_array(std::move(elem_type), 1, false);
+
     return std::make_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
-  } else {
-    return create_base_array(extents, std::move(type), nullable, optimize_scalar);
   }
+  return create_base_array(extents, std::move(type), nullable, optimize_scalar);
 }
 
 std::shared_ptr<LogicalArray> Runtime::create_array_like(std::shared_ptr<LogicalArray> array,
                                                          std::shared_ptr<Type> type)
 {
   if (Type::Code::STRUCT == type->code || type->variable_size()) {
-    throw std::runtime_error(
-      "create_array_like doesn't support variable size types or struct types");
+    throw std::runtime_error{
+      "create_array_like doesn't support variable size types or struct types"};
   }
+  if (array->unbound()) return create_array(std::move(type), array->dim(), array->nullable());
 
-  if (array->unbound()) {
-    return create_array(std::move(type), array->dim(), array->nullable());
-  } else {
-    bool optimize_scalar = array->data()->has_scalar_storage();
-    return create_array(array->extents(), std::move(type), array->nullable(), optimize_scalar);
-  }
+  bool optimize_scalar = array->data()->has_scalar_storage();
+  return create_array(array->extents(), std::move(type), array->nullable(), optimize_scalar);
 }
 
 std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(std::shared_ptr<Type> type,
                                                                  uint32_t dim,
                                                                  bool nullable)
 {
+  std::vector<std::shared_ptr<LogicalArray>> fields;
   const auto& st_type = type->as_struct_type();
   auto null_mask      = nullable ? create_store(bool_(), dim) : nullptr;
 
-  std::vector<std::shared_ptr<LogicalArray>> fields;
+  fields.reserve(st_type.field_types().size());
   for (auto& field_type : st_type.field_types()) {
-    fields.push_back(create_array(field_type, dim, false));
+    fields.emplace_back(create_array(field_type, dim, false));
   }
   return std::make_shared<StructLogicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
@@ -402,12 +410,13 @@ std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(const Shape& ex
                                                                  bool nullable,
                                                                  bool optimize_scalar)
 {
+  std::vector<std::shared_ptr<LogicalArray>> fields;
   const auto& st_type = type->as_struct_type();
   auto null_mask      = nullable ? create_store(extents, bool_(), optimize_scalar) : nullptr;
 
-  std::vector<std::shared_ptr<LogicalArray>> fields;
+  fields.reserve(st_type.field_types().size());
   for (auto& field_type : st_type.field_types()) {
-    fields.push_back(create_array(extents, field_type, false, optimize_scalar));
+    fields.emplace_back(create_array(extents, field_type, false, optimize_scalar));
   }
   return std::make_shared<StructLogicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
@@ -501,9 +510,9 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
 void Runtime::check_dimensionality(uint32_t dim)
 {
   if (dim > LEGATE_MAX_DIM) {
-    throw std::out_of_range("The maximum number of dimensions is " +
+    throw std::out_of_range{"The maximum number of dimensions is " +
                             std::to_string(LEGION_MAX_DIM) + ", but a " + std::to_string(dim) +
-                            "-D store is requested");
+                            "-D store is requested"};
   }
 }
 
@@ -527,6 +536,7 @@ std::optional<TaskException> Runtime::check_pending_task_exception()
   // If there's already an outstanding exception from the previous scan, we just return that.
   if (!outstanding_exceptions_.empty()) {
     std::optional<TaskException> result = outstanding_exceptions_.front();
+
     outstanding_exceptions_.pop_front();
     return result;
   }
@@ -535,7 +545,8 @@ std::optional<TaskException> Runtime::check_pending_task_exception()
   for (auto& pending_exception : pending_exceptions_) {
     auto returned_exception = pending_exception.get_result<ReturnedException>();
     auto result             = returned_exception.to_task_exception();
-    if (result.has_value()) outstanding_exceptions_.push_back(result.value());
+
+    if (result.has_value()) outstanding_exceptions_.emplace_back(std::move(result).value());
   }
   pending_exceptions_.clear();
   return outstanding_exceptions_.empty() ? std::nullopt : check_pending_task_exception();
@@ -561,7 +572,7 @@ std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& ex
   for (int32_t dim = 0; dim < lo.dim; ++dim) lo[dim] = 0;
   for (int32_t dim = 0; dim < lo.dim; ++dim) hi[dim] = extents[dim] - 1;
 
-  Domain shape(lo, hi);
+  Domain shape{lo, hi};
   auto fld_mgr = find_or_create_field_manager(shape, field_size);
   return fld_mgr->allocate_field();
 }
@@ -630,26 +641,22 @@ void Runtime::progress_unordered_operations() const
 RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
 {
   auto finder = region_managers_.find(shape);
-  if (finder != region_managers_.end())
-    return finder->second;
-  else {
-    auto rgn_mgr            = new RegionManager(this, shape);
-    region_managers_[shape] = rgn_mgr;
-    return rgn_mgr;
-  }
+  if (finder != region_managers_.end()) return finder->second;
+
+  auto rgn_mgr            = new RegionManager{this, shape};
+  region_managers_[shape] = rgn_mgr;
+  return rgn_mgr;
 }
 
 FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, uint32_t field_size)
 {
   auto key    = FieldManagerKey(shape, field_size);
   auto finder = field_managers_.find(key);
-  if (finder != field_managers_.end())
-    return finder->second;
-  else {
-    auto fld_mgr         = new FieldManager(this, shape, field_size);
-    field_managers_[key] = fld_mgr;
-    return fld_mgr;
-  }
+  if (finder != field_managers_.end()) return finder->second;
+
+  auto fld_mgr         = new FieldManager{this, shape, field_size};
+  field_managers_[key] = fld_mgr;
+  return fld_mgr;
 }
 
 PartitionManager* Runtime::partition_manager() const { return partition_manager_; }
@@ -660,14 +667,12 @@ Legion::IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
 {
   assert(nullptr != legion_context_);
   auto finder = index_spaces_.find(shape);
-  if (finder != index_spaces_.end())
-    return finder->second;
-  else {
-    auto is              = legion_runtime_->create_index_space(legion_context_,
-                                                  shape.is_valid() ? shape : Domain(Rect<1>(0, 0)));
-    index_spaces_[shape] = is;
-    return is;
-  }
+  if (finder != index_spaces_.end()) return finder->second;
+
+  auto is              = legion_runtime_->create_index_space(legion_context_,
+                                                shape.is_valid() ? shape : Domain(Rect<1>(0, 0)));
+  index_spaces_[shape] = is;
+  return is;
 }
 
 Legion::IndexPartition Runtime::create_restricted_partition(
@@ -720,18 +725,17 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                             core_library_->get_mapper_id(),
                                                             0,
                                                             buffer.to_legion_buffer());
-  else
-    return legion_runtime_->create_partition_by_image(legion_context_,
-                                                      index_space,
-                                                      func_partition,
-                                                      func_region,
-                                                      func_field_id,
-                                                      color_space,
-                                                      LEGION_COMPUTE_KIND,
-                                                      LEGION_AUTO_GENERATE_ID,
-                                                      core_library_->get_mapper_id(),
-                                                      0,
-                                                      buffer.to_legion_buffer());
+  return legion_runtime_->create_partition_by_image(legion_context_,
+                                                    index_space,
+                                                    func_partition,
+                                                    func_region,
+                                                    func_field_id,
+                                                    color_space,
+                                                    LEGION_COMPUTE_KIND,
+                                                    LEGION_AUTO_GENERATE_ID,
+                                                    core_library_->get_mapper_id(),
+                                                    0,
+                                                    buffer.to_legion_buffer());
 }
 
 Legion::FieldSpace Runtime::create_field_space()
@@ -837,7 +841,7 @@ std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> Runtime::create_barriers(s
 {
   auto arrival_barrier = legion_runtime_->create_phase_barrier(legion_context_, num_tasks);
   auto wait_barrier    = legion_runtime_->advance_phase_barrier(legion_context_, arrival_barrier);
-  return std::make_pair(arrival_barrier, wait_barrier);
+  return {arrival_barrier, wait_barrier};
 }
 
 void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
@@ -847,7 +851,7 @@ void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
 
 Legion::Future Runtime::get_tunable(Legion::MapperID mapper_id, int64_t tunable_id, size_t size)
 {
-  Legion::TunableLauncher launcher(tunable_id, mapper_id, 0, size);
+  Legion::TunableLauncher launcher{static_cast<Legion::TunableID>(tunable_id), mapper_id, 0, size};
   return legion_runtime_->select_tunable_value(legion_context_, launcher);
 }
 
@@ -894,8 +898,9 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result, uint32_t id
   auto& machine    = get_machine();
   auto& provenance = provenance_manager()->get_provenance();
   auto variant     = mapping::detail::to_variant_code(machine.preferred_target);
-  TaskLauncher launcher(
-    core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
+  auto launcher =
+    TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
+
   launcher.add_future(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute_single();
@@ -908,8 +913,9 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
   auto& machine    = get_machine();
   auto& provenance = provenance_manager()->get_provenance();
   auto variant     = mapping::detail::to_variant_code(machine.preferred_target);
-  TaskLauncher launcher(
-    core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant);
+  auto launcher =
+    TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
+
   launcher.add_future_map(result);
   launcher.add_scalar(Scalar(idx));
   return launcher.execute(launch_domain);
@@ -950,29 +956,27 @@ void Runtime::issue_execution_fence(bool block /*=false*/)
 
 void Runtime::initialize_toplevel_machine()
 {
-  auto mapper_id = core_library_->get_mapper_id();
-  auto num_nodes = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_NODES);
-
-  auto num_gpus = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_GPUS);
-  auto num_omps = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_OMPS);
-  auto num_cpus = get_tunable<int32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_CPUS);
-
-  auto create_range = [&num_nodes](int32_t num_procs) {
-    auto per_node_count = num_procs / num_nodes;
-    return mapping::ProcessorRange(0, num_procs, per_node_count);
+  auto mapper_id    = core_library_->get_mapper_id();
+  auto num_nodes    = get_tunable<uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_NODES);
+  auto num_gpus     = get_tunable<uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_GPUS);
+  auto num_omps     = get_tunable<uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_OMPS);
+  auto num_cpus     = get_tunable<uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_CPUS);
+  auto create_range = [&num_nodes](uint32_t num_procs) {
+    auto per_node_count = static_cast<uint32_t>(num_procs / num_nodes);
+    return mapping::ProcessorRange{0, num_procs, per_node_count};
   };
 
-  mapping::detail::Machine machine({{mapping::TaskTarget::GPU, create_range(num_gpus)},
+  mapping::detail::Machine machine{{{mapping::TaskTarget::GPU, create_range(num_gpus)},
                                     {mapping::TaskTarget::OMP, create_range(num_omps)},
-                                    {mapping::TaskTarget::CPU, create_range(num_cpus)}});
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(machine_manager_ != nullptr); }
+                                    {mapping::TaskTarget::CPU, create_range(num_cpus)}}};
 
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(machine_manager_ != nullptr);
   machine_manager_->push_machine(std::move(machine));
 }
 
 const mapping::detail::Machine& Runtime::get_machine() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(machine_manager_ != nullptr); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(machine_manager_ != nullptr);
   return machine_manager_->get_machine();
 }
 
@@ -990,7 +994,7 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
     return 0;
   }
 
-  ProjectionDesc key(src_ndim, point);
+  auto key    = ProjectionDesc{src_ndim, point};
   auto finder = registered_projections_.find(key);
   if (registered_projections_.end() != finder) return finder->second;
 
@@ -1000,6 +1004,10 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
   std::vector<int32_t> dims;
   std::vector<int32_t> weights;
   std::vector<int32_t> offsets;
+
+  dims.reserve(ndim);
+  weights.reserve(ndim);
+  offsets.reserve(ndim);
   for (auto& expr : point.data()) {
     dims.push_back(expr.dim());
     weights.push_back(expr.weight());
@@ -1048,7 +1056,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   auto sharding_id = core_library_->get_sharding_id(next_sharding_id_++);
   registered_shardings_.insert({key, sharding_id});
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create sharding " << sharding_id; }
+  if (LegateDefined(LEGATE_USE_DEBUG)) log_legate.debug() << "Create sharding " << sharding_id;
 
   legate_create_sharding_functor_using_projection(
     sharding_id, proj_id, proc_range.low, proc_range.high, proc_range.per_node_count);
@@ -1140,8 +1148,9 @@ void Runtime::destroy()
 
   // Destroy all Legion handles used by Legate
   for (auto& [_, region_manager] : region_managers_) region_manager->destroy(true /*unordered*/);
-  for (auto& [_, index_space] : index_spaces_)
+  for (auto& [_, index_space] : index_spaces_) {
     legion_runtime_->destroy_index_space(legion_context_, index_space, true /*unordered*/);
+  }
   index_spaces_.clear();
 
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
@@ -1166,8 +1175,13 @@ void Runtime::destroy()
   initialized_ = false;
 }
 
-static void extract_scalar_task(
-  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
+namespace {
+
+void extract_scalar_task(const void* args,
+                         size_t arglen,
+                         const void* /*userdata*/,
+                         size_t /*userlen*/,
+                         Legion::Processor p)
 {
   // Legion preamble
   const Legion::Task* task;
@@ -1178,13 +1192,15 @@ static void extract_scalar_task(
 
   legate::detail::show_progress(task, legion_context, runtime);
 
-  detail::TaskContext context(task, *regions);
+  detail::TaskContext context{task, *regions};
   auto idx            = context.scalars()[0].value<int32_t>();
   auto value_and_size = ReturnValues::extract(task->futures[0], idx);
 
   // Legion postamble
   value_and_size.finalize(legion_context);
 }
+
+}  // namespace
 
 void register_legate_core_tasks(Legion::Runtime* runtime, Library* core_lib)
 {
@@ -1335,9 +1351,9 @@ void initialize_core_library_callback(Legion::Machine, Legion::Runtime*, const s
 template <auto DEFAULT, auto SCALE = decltype(DEFAULT){1}, typename VAL = decltype(DEFAULT)>
 class VarWithDefault {
  public:
-  VAL value() const { return (has_value() ? value_ : DEFAULT) * SCALE; }
-  bool has_value() const { return value_ != UNSET; }
-  VAL& ref() { return value_; }
+  [[nodiscard]] VAL value() const { return (has_value() ? value_ : DEFAULT) * SCALE; }
+  [[nodiscard]] bool has_value() const { return value_ != UNSET; }
+  [[nodiscard]] VAL& ref() { return value_; }
 
  private:
   static constexpr VAL UNSET{std::numeric_limits<VAL>::max()};
@@ -1359,7 +1375,7 @@ void try_set_property(Runtime& runtime,
   auto config = runtime.get_module_config(module_name);
   if (nullptr == config) {
     // If the variable doesn't have a value, we don't care if the module is nonexistent
-    if (!var.has_value()) { return; }
+    if (!var.has_value()) return;
     const std::string msg = error_msg + " (the " + module_name + " module is not available)";
     log_legate.error("%s", msg.c_str());
     LEGATE_ABORT;
@@ -1458,9 +1474,9 @@ void handle_legate_args(int32_t argc, char** argv)
 
   // eager alloc has to be passed via env var
   const char* existing_default_args = getenv("LEGION_DEFAULT_ARGS");
-  const std::string eager_alloc_arg =
+  std::string eager_alloc_arg =
     " -lg:eager_alloc_percentage " + std::to_string(eager_alloc_percent.value());
-  const std::string new_default_args =
+  std::string new_default_args =
     (existing_default_args == nullptr ? "" : std::string(existing_default_args)) + eager_alloc_arg +
     " -lg:local 0";
   setenv("LEGION_DEFAULT_ARGS", new_default_args.c_str(), true);

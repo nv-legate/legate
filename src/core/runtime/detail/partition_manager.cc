@@ -18,36 +18,39 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace legate::detail {
 
 PartitionManager::PartitionManager(Runtime* runtime)
 {
   auto mapper_id = runtime->core_library()->get_mapper_id();
+
   min_shard_volume_ =
     runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(min_shard_volume_ > 0); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(min_shard_volume_ > 0);
 }
 
 const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail::Machine& machine)
 {
-  uint32_t curr_num_pieces = machine.count();
+  auto curr_num_pieces = machine.count();
+  auto finder          = all_factors_.find(curr_num_pieces);
 
-  auto finder = all_factors_.find(curr_num_pieces);
   if (all_factors_.end() == finder) {
-    uint32_t remaining_pieces = curr_num_pieces;
     std::vector<uint32_t> factors;
-    auto push_factors = [&factors, &remaining_pieces](uint32_t prime) {
+    auto remaining_pieces = curr_num_pieces;
+    auto push_factors     = [&factors, &remaining_pieces](uint32_t prime) {
       while (remaining_pieces % prime == 0) {
         factors.push_back(prime);
         remaining_pieces /= prime;
       }
     };
-    for (uint32_t factor : {11, 7, 5, 3, 2}) push_factors(factor);
+    for (auto factor : {11U, 7U, 5U, 3U, 2U}) push_factors(factor);
     all_factors_.insert({curr_num_pieces, std::move(factors)});
     finder = all_factors_.find(curr_num_pieces);
   }
-
   return finder->second;
 }
 
@@ -55,7 +58,7 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
                                              const Restrictions& restrictions,
                                              const Shape& shape)
 {
-  uint32_t curr_num_pieces = machine.count();
+  auto curr_num_pieces = machine.count();
   // Easy case if we only have one piece: no parallel launch space
   if (1 == curr_num_pieces) return {};
 
@@ -66,8 +69,12 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
   std::vector<size_t> temp_shape{};
   std::vector<uint32_t> temp_dims{};
   int64_t volume = 1;
+
+  temp_dims.reserve(shape.size());
+  temp_shape.reserve(shape.size());
   for (uint32_t dim = 0; dim < shape.size(); ++dim) {
     auto extent = shape[dim];
+
     if (1 == extent || restrictions[dim] == Restriction::FORBID) continue;
     temp_shape.push_back(extent);
     temp_dims.push_back(dim);
@@ -139,6 +146,7 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
     temp_result.resize(ndim);
     std::fill(temp_result.begin(), temp_result.end(), 1);
     size_t factor_prod = 1;
+
     for (auto factor : get_factors(machine)) {
       // Avoid exceeding the maximum number of pieces
       if (factor * factor_prod > static_cast<std::size_t>(max_pieces)) break;
@@ -176,7 +184,7 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
   std::vector<size_t> result(shape.size(), 1);
   for (uint32_t idx = 0; idx < ndim; ++idx) result[temp_dims[idx]] = temp_result[idx];
 
-  return Shape(std::move(result));
+  return Shape{std::move(result)};
 }
 
 Shape PartitionManager::compute_tile_shape(const Shape& extents, const Shape& launch_shape)
@@ -208,11 +216,10 @@ Legion::IndexPartition _find_index_partition(const Cache& cache,
                                              const Legion::IndexSpace& index_space,
                                              const Partition& partition)
 {
-  auto finder = cache.find(std::make_pair(index_space, partition));
-  if (finder != cache.end())
-    return finder->second;
-  else
-    return Legion::IndexPartition::NO_PART;
+  auto finder = cache.find({index_space, partition});
+
+  if (finder != cache.end()) return finder->second;
+  return Legion::IndexPartition::NO_PART;
 }
 
 }  // namespace
@@ -234,27 +241,24 @@ Legion::IndexPartition PartitionManager::find_image_partition(
   const Legion::LogicalPartition& func_partition,
   Legion::FieldID field_id) const
 {
-  ImageCacheKey key(index_space, func_partition, field_id);
-  auto finder = image_cache_.find(key);
-  if (finder != image_cache_.end()) {
-    return finder->second;
-  } else {
-    return Legion::IndexPartition::NO_PART;
-  }
+  auto finder = image_cache_.find({index_space, func_partition, field_id});
+
+  if (finder != image_cache_.end()) return finder->second;
+  return Legion::IndexPartition::NO_PART;
 }
 
 void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
                                               const Tiling& tiling,
                                               const Legion::IndexPartition& index_partition)
 {
-  tiling_cache_[std::make_pair(index_space, tiling)] = index_partition;
+  tiling_cache_[{index_space, tiling}] = index_partition;
 }
 
 void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
                                               const Weighted& weighted,
                                               const Legion::IndexPartition& index_partition)
 {
-  weighted_cache_[std::make_pair(index_space, weighted)] = index_partition;
+  weighted_cache_[{index_space, weighted}] = index_partition;
 }
 
 void PartitionManager::record_image_partition(const Legion::IndexSpace& index_space,
@@ -262,15 +266,16 @@ void PartitionManager::record_image_partition(const Legion::IndexSpace& index_sp
                                               Legion::FieldID field_id,
                                               const Legion::IndexPartition& index_partition)
 {
-  image_cache_[std::tie(index_space, func_partition, field_id)] = index_partition;
+  image_cache_[{index_space, func_partition, field_id}] = index_partition;
 }
 
 void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& index_space,
                                                   const Legion::LogicalPartition& func_partition,
                                                   Legion::FieldID field_id)
 {
-  auto finder = image_cache_.find(std::tie(index_space, func_partition, field_id));
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != image_cache_.end()); }
+  auto finder = image_cache_.find({index_space, func_partition, field_id});
+
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != image_cache_.end());
   image_cache_.erase(finder);
 }
 

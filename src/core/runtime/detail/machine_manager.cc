@@ -12,26 +12,29 @@
 
 #include "core/runtime/detail/machine_manager.h"
 
+#include <stdexcept>
+
 namespace legate::detail {
 
 ////////////////////////////////////////////
 // legate::detail::MachineManager
 ////////////////////////////////////////////
-const mapping::detail::Machine& MachineManager::get_machine() const
+
+const mapping::detail::Machine& MachineManager::get_machine() const noexcept
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(machines_.size() > 0); }
-  return machines_.back();
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!machines_.empty());
+  return machines_.top();
 }
 
 void MachineManager::push_machine(mapping::detail::Machine&& machine)
 {
-  machines_.push_back(std::move(machine));
+  machines_.emplace(std::move(machine));
 }
 
 void MachineManager::pop_machine()
 {
-  if (machines_.size() <= 1) throw std::underflow_error("can't pop from the empty machine stack");
-  machines_.pop_back();
+  if (machines_.size() <= 1) throw std::underflow_error{"can't pop from the empty machine stack"};
+  machines_.pop();
 }
 
 }  // namespace legate::detail

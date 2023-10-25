@@ -526,6 +526,7 @@ install(
         src/core/runtime/library.inl
         src/core/runtime/resource.h
         src/core/runtime/runtime.h
+        src/core/runtime/runtime.inl
         src/core/runtime/tracker.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/runtime)
 

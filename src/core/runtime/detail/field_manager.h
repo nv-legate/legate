@@ -12,11 +12,13 @@
 
 #pragma once
 
-#include <memory>
-
+#include "core/runtime/detail/consensus_match_result.h"
 #include "core/utilities/typedefs.h"
 
-#include "core/runtime/detail/consensus_match_result.h"
+#include <deque>
+#include <map>
+#include <memory>
+#include <vector>
 
 namespace legate::detail {
 
@@ -33,10 +35,8 @@ struct FreeFieldInfo {
 struct MatchItem {
   Legion::RegionTreeID tid;
   Legion::FieldID fid;
-  friend bool operator<(const MatchItem& l, const MatchItem& r)
-  {
-    return std::tie(l.tid, l.fid) < std::tie(r.tid, r.fid);
-  }
+
+  friend bool operator<(const MatchItem& l, const MatchItem& r);
 };
 
 class FieldManager {
@@ -46,10 +46,9 @@ class FieldManager {
  public:
   FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
 
- public:
-  std::shared_ptr<LogicalRegionField> allocate_field();
-  std::shared_ptr<LogicalRegionField> import_field(const Legion::LogicalRegion& region,
-                                                   Legion::FieldID field_id);
+  [[nodiscard]] std::shared_ptr<LogicalRegionField> allocate_field();
+  [[nodiscard]] std::shared_ptr<LogicalRegionField> import_field(
+    const Legion::LogicalRegion& region, Legion::FieldID field_id);
 
  private:
   void free_field(const Legion::LogicalRegion& region,
@@ -60,13 +59,11 @@ class FieldManager {
   void issue_field_match();
   void process_next_field_match();
 
- private:
-  Runtime* runtime_;
-  Domain shape_;
-  uint32_t field_size_;
-  uint32_t field_match_counter_{0};
+  Runtime* runtime_{};
+  Domain shape_{};
+  uint32_t field_size_{};
+  uint32_t field_match_counter_{};
 
- private:
   // This is a sanitized list of (region,field_id) pairs that is guaranteed to be ordered across all
   // the shards even with control replication.
   std::deque<FreeFieldInfo> ordered_free_fields_;
@@ -74,9 +71,10 @@ class FieldManager {
   // freed yet on other shards.
   std::vector<FreeFieldInfo> unordered_free_fields_;
 
- private:
   std::deque<ConsensusMatchResult<MatchItem>> matches_;
   std::deque<std::map<MatchItem, FreeFieldInfo>> info_for_match_items_;
 };
 
 }  // namespace legate::detail
+
+#include "core/runtime/detail/field_manager.inl"

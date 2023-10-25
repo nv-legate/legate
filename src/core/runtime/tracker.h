@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <string>
-
 #include "core/mapping/machine.h"
+
+#include <string>
 
 /**
  * @file
@@ -37,7 +37,7 @@ struct ProvenanceTracker {
    *
    * @param provenance Provenance information in string
    */
-  ProvenanceTracker(const std::string& provenance);
+  explicit ProvenanceTracker(std::string provenance);
 
   /**
    * @brief Pops out the provenance string set by this tracker
@@ -49,7 +49,7 @@ struct ProvenanceTracker {
    *
    * @return Provenance string
    */
-  const std::string& get_current_provenance() const;
+  [[nodiscard]] static const std::string& get_current_provenance();
 };
 
 /**
@@ -69,7 +69,7 @@ struct MachineTracker {
    *
    * @param machine Machine to use for the scope
    */
-  MachineTracker(const mapping::Machine& machine);
+  explicit MachineTracker(const mapping::Machine& machine);
 
   /**
    * @brief Pops out the machine set by this tracker
@@ -81,7 +81,7 @@ struct MachineTracker {
    *
    * @return Machine
    */
-  mapping::Machine get_current_machine() const;
+  [[nodiscard]] static mapping::Machine get_current_machine();
 };
 
 }  // namespace legate

@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include <vector>
+#include "legion.h"
 
-#include "core/runtime/library.h"  // Legion
+#include <vector>
 
 namespace legate::detail {
 
@@ -26,23 +26,21 @@ class ConsensusMatchResult {
 
  public:
   ~ConsensusMatchResult();
-  ConsensusMatchResult(ConsensusMatchResult&&)            = default;
-  ConsensusMatchResult& operator=(ConsensusMatchResult&&) = default;
+  ConsensusMatchResult(ConsensusMatchResult&&) noexcept            = default;
+  ConsensusMatchResult& operator=(ConsensusMatchResult&&) noexcept = default;
 
- private:
   ConsensusMatchResult(const ConsensusMatchResult&)            = delete;
   ConsensusMatchResult& operator=(const ConsensusMatchResult&) = delete;
 
- public:
   void wait();
-  const std::vector<T>& input() const;
-  const std::vector<T>& output() const;
+  [[nodiscard]] const std::vector<T>& input() const;
+  [[nodiscard]] const std::vector<T>& output() const;
 
  private:
-  std::vector<T> input_;
-  std::vector<T> output_;
-  Legion::Future future_;
-  bool complete_{false};
+  std::vector<T> input_{};
+  std::vector<T> output_{};
+  Legion::Future future_{};
+  bool complete_{};
 };
 
 }  // namespace legate::detail

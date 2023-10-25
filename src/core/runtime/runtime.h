@@ -12,20 +12,19 @@
 
 #pragma once
 
-#include <memory>
-#include <optional>
-
 #include "core/data/logical_array.h"
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
-#include "core/data/store.h"
 #include "core/mapping/machine.h"
 #include "core/operation/task.h"
 #include "core/runtime/library.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/type/type_info.h"
-#include "core/utilities/typedefs.h"
+
+#include <memory>
+#include <optional>
+#include <string>
 
 /** @defgroup runtime Runtime and library contexts
  */
@@ -75,9 +74,9 @@ class Runtime {
    *
    * @throw std::invalid_argument If a library already exists for a given name
    */
-  Library create_library(const std::string& library_name,
-                         const ResourceConfig& config            = ResourceConfig{},
-                         std::unique_ptr<mapping::Mapper> mapper = nullptr);
+  [[nodiscard]] Library create_library(const std::string& library_name,
+                                       const ResourceConfig& config            = ResourceConfig{},
+                                       std::unique_ptr<mapping::Mapper> mapper = nullptr);
   /**
    * @brief Finds a library
    *
@@ -87,7 +86,7 @@ class Runtime {
    *
    * @throw std::out_of_range If no library is found for a given name
    */
-  Library find_library(const std::string& library_name) const;
+  [[nodiscard]] Library find_library(const std::string& library_name) const;
   /**
    * @brief Attempts to find a library.
    *
@@ -97,7 +96,7 @@ class Runtime {
    *
    * @return Library object if a library exists for a given name, a null object otherwise
    */
-  std::optional<Library> maybe_find_library(const std::string& library_name) const;
+  [[nodiscard]] std::optional<Library> maybe_find_library(const std::string& library_name) const;
   /**
    * @brief Finds or creates a library.
    *
@@ -112,12 +111,11 @@ class Runtime {
    *
    * @return Context object for the library
    */
-  Library find_or_create_library(const std::string& library_name,
-                                 const ResourceConfig& config            = ResourceConfig{},
-                                 std::unique_ptr<mapping::Mapper> mapper = nullptr,
-                                 bool* created                           = nullptr);
+  [[nodiscard]] Library find_or_create_library(const std::string& library_name,
+                                               const ResourceConfig& config = ResourceConfig{},
+                                               std::unique_ptr<mapping::Mapper> mapper = nullptr,
+                                               bool* created                           = nullptr);
 
- public:
   /**
    * @brief Creates an AutoTask
    *
@@ -126,7 +124,7 @@ class Runtime {
    *
    * @return Task object
    */
-  AutoTask create_task(Library library, int64_t task_id);
+  [[nodiscard]] AutoTask create_task(Library library, int64_t task_id);
   /**
    * @brief Creates a ManualTask
    *
@@ -136,7 +134,7 @@ class Runtime {
    *
    * @return Task object
    */
-  ManualTask create_task(Library library, int64_t task_id, const Shape& launch_shape);
+  [[nodiscard]] ManualTask create_task(Library library, int64_t task_id, const Shape& launch_shape);
   /**
    * @brief Issues a copy between stores.
    *
@@ -149,8 +147,8 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_copy(LogicalStore target,
-                  LogicalStore source,
+  void issue_copy(LogicalStore& target,
+                  const LogicalStore& source,
                   std::optional<ReductionOpKind> redop = std::nullopt);
   /**
    * @brief Issues a copy between stores.
@@ -164,7 +162,7 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_copy(LogicalStore target, LogicalStore source, std::optional<int32_t> redop);
+  void issue_copy(LogicalStore& target, const LogicalStore& source, std::optional<int32_t> redop);
   /**
    * @brief Issues a gather copy between stores.
    *
@@ -178,9 +176,9 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_gather(LogicalStore target,
-                    LogicalStore source,
-                    LogicalStore source_indirect,
+  void issue_gather(LogicalStore& target,
+                    const LogicalStore& source,
+                    const LogicalStore& source_indirect,
                     std::optional<ReductionOpKind> redop = std::nullopt);
   /**
    * @brief Issues a gather copy between stores.
@@ -195,9 +193,9 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_gather(LogicalStore target,
-                    LogicalStore source,
-                    LogicalStore source_indirect,
+  void issue_gather(LogicalStore& target,
+                    const LogicalStore& source,
+                    const LogicalStore& source_indirect,
                     std::optional<int32_t> redop);
   /**
    * @brief Issues a scatter copy between stores.
@@ -212,9 +210,9 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_scatter(LogicalStore target,
-                     LogicalStore target_indirect,
-                     LogicalStore source,
+  void issue_scatter(LogicalStore& target,
+                     LogicalStore& target_indirect,
+                     const LogicalStore& source,
                      std::optional<ReductionOpKind> redop = std::nullopt);
   /**
    * @brief Issues a scatter copy between stores.
@@ -229,9 +227,9 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_scatter(LogicalStore target,
-                     LogicalStore target_indirect,
-                     LogicalStore source,
+  void issue_scatter(LogicalStore& target,
+                     LogicalStore& target_indirect,
+                     const LogicalStore& source,
                      std::optional<int32_t> redop);
   /**
    * @brief Issues a scatter-gather copy between stores.
@@ -247,10 +245,10 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_scatter_gather(LogicalStore target,
-                            LogicalStore target_indirect,
-                            LogicalStore source,
-                            LogicalStore source_indirect,
+  void issue_scatter_gather(LogicalStore& target,
+                            LogicalStore& target_indirect,
+                            const LogicalStore& source,
+                            const LogicalStore& source_indirect,
                             std::optional<ReductionOpKind> redop = std::nullopt);
   /**
    * @brief Issues a scatter-gather copy between stores.
@@ -266,10 +264,10 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_scatter_gather(LogicalStore target,
-                            LogicalStore target_indirect,
-                            LogicalStore source,
-                            LogicalStore source_indirect,
+  void issue_scatter_gather(LogicalStore& target,
+                            LogicalStore& target_indirect,
+                            const LogicalStore& source,
+                            const LogicalStore& source_indirect,
                             std::optional<int32_t> redop);
   /**
    * @brief Fills a given store with a constant
@@ -277,21 +275,24 @@ class Runtime {
    * @param lhs Logical store to fill
    * @param value Logical store that contains the constant value to fill the store with
    */
-  void issue_fill(LogicalStore lhs, LogicalStore value);
+  void issue_fill(LogicalStore& lhs, const LogicalStore& value);
   /**
    * @brief Fills a given store with a constant
    *
    * @param lhs Logical store to fill
    * @param value Value to fill the store with
    */
-  void issue_fill(LogicalStore lhs, const Scalar& value);
+  void issue_fill(LogicalStore& lhs, const Scalar& value);
   /**
    * @brief tree_reduce given store and task id
    *
    * @param task_id reduction task ID
    * @param store Logical store to reduce
    */
-  LogicalStore tree_reduce(Library library, int64_t task_id, LogicalStore store, int64_t radix = 4);
+  [[nodiscard]] LogicalStore tree_reduce(Library library,
+                                         int64_t task_id,
+                                         const LogicalStore& store,
+                                         int64_t radix = 4);
 
   /**
    * @brief Submits an AutoTask for execution
@@ -312,7 +313,6 @@ class Runtime {
    */
   void submit(ManualTask task);
 
- public:
   /**
    * @brief Creates an unbound array
    *
@@ -323,7 +323,9 @@ class Runtime {
    *
    * @return Logical array
    */
-  LogicalArray create_array(const Type& type, uint32_t dim = 1, bool nullable = false);
+  [[nodiscard]] LogicalArray create_array(const Type& type,
+                                          uint32_t dim  = 1,
+                                          bool nullable = false);
   /**
    * @brief Creates a normal array
    *
@@ -334,10 +336,10 @@ class Runtime {
    *
    * @return Logical array
    */
-  LogicalArray create_array(const Shape& extents,
-                            const Type& type,
-                            bool nullable        = false,
-                            bool optimize_scalar = false);
+  [[nodiscard]] LogicalArray create_array(const Shape& extents,
+                                          const Type& type,
+                                          bool nullable        = false,
+                                          bool optimize_scalar = false);
   /**
    * @brief Creates an array isomorphic to the given array
    *
@@ -346,10 +348,9 @@ class Runtime {
    *
    * @return Logical array isomorphic to the input
    */
-  LogicalArray create_array_like(const LogicalArray& to_mirror,
-                                 std::optional<Type> type = std::nullopt);
+  [[nodiscard]] LogicalArray create_array_like(const LogicalArray& to_mirror,
+                                               std::optional<Type> type = std::nullopt);
 
- public:
   /**
    * @brief Creates an unbound store
    *
@@ -358,7 +359,7 @@ class Runtime {
    *
    * @return Logical store
    */
-  LogicalStore create_store(const Type& type, uint32_t dim = 1);
+  [[nodiscard]] LogicalStore create_store(const Type& type, uint32_t dim = 1);
   /**
    * @brief Creates a normal store
    *
@@ -369,7 +370,9 @@ class Runtime {
    *
    * @return Logical store
    */
-  LogicalStore create_store(const Shape& extents, const Type& type, bool optimize_scalar = false);
+  [[nodiscard]] LogicalStore create_store(const Shape& extents,
+                                          const Type& type,
+                                          bool optimize_scalar = false);
   /**
    * @brief Creates a normal store out of a `Scalar` object
    *
@@ -378,7 +381,7 @@ class Runtime {
    *
    * @return Logical store
    */
-  [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& extents = {1});
+  [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& extents = Shape{1});
   /**
    * @brief Creates a store by attaching to existing memory.
    *
@@ -398,19 +401,19 @@ class Runtime {
    *
    * @return Logical store
    */
-  LogicalStore create_store(const Shape& extents,
-                            const Type& type,
-                            void* buffer,
-                            bool share                           = false,
-                            const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
+  [[nodiscard]] LogicalStore create_store(
+    const Shape& extents,
+    const Type& type,
+    void* buffer,
+    bool share                           = false,
+    const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
- public:
   /**
    * @brief Returns the maximum number of pending exceptions
    *
    * @return Maximum number of pending exceptions
    */
-  uint32_t max_pending_exceptions() const;
+  [[nodiscard]] uint32_t max_pending_exceptions() const;
   /**
    * @brief Updates the maximum number of pending exceptions
    *
@@ -427,9 +430,8 @@ class Runtime {
   /**
    * @brief Returns the first pending exception.
    */
-  std::optional<TaskException> check_pending_task_exception();
+  [[nodiscard]] std::optional<TaskException> check_pending_task_exception();
 
- public:
   /**
    * @brief Issues an execution fence
    *
@@ -441,27 +443,26 @@ class Runtime {
    */
   void issue_execution_fence(bool block = false);
 
- public:
   /**
    * @brief Returns the machine of the current scope
    *
    * @return Machine object
    */
-  mapping::Machine get_machine() const;
+  [[nodiscard]] mapping::Machine get_machine() const;
 
- public:
   /**
    * @brief Returns a singleton runtime object
    *
    * @return The runtime object
    */
-  static Runtime* get_runtime();
-  detail::Runtime* impl() { return impl_; }
+  [[nodiscard]] static Runtime* get_runtime();
+
+  [[nodiscard]] detail::Runtime* impl();
 
  private:
-  Runtime(detail::Runtime* runtime);
-  ~Runtime();
-  detail::Runtime* impl_{nullptr};
+  explicit Runtime(detail::Runtime* runtime);
+
+  detail::Runtime* impl_{};
 };
 
 /**
@@ -474,7 +475,7 @@ class Runtime {
  *
  * @return Non-zero value when the runtime start-up failed, 0 otherwise
  */
-int32_t start(int32_t argc, char** argv);
+[[nodiscard]] int32_t start(int32_t argc, char** argv);
 
 /**
  * @brief Waits for the runtime to finish
@@ -483,7 +484,7 @@ int32_t start(int32_t argc, char** argv);
  *
  * @return Non-zero value when the runtime encountered a failure, 0 otherwise
  */
-int32_t finish();
+[[nodiscard]] int32_t finish();
 
 void destroy();
 
@@ -492,6 +493,8 @@ void destroy();
  *
  * @return Machine object
  */
-mapping::Machine get_machine();
+[[nodiscard]] mapping::Machine get_machine();
 
 }  // namespace legate
+
+#include "core/runtime/runtime.inl"
