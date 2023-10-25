@@ -15,6 +15,8 @@
 #include "core/mapping/detail/mapping.h"
 #include "core/mapping/detail/store.h"
 
+#include <utility>
+
 namespace legate::mapping {
 
 std::ostream& operator<<(std::ostream& stream, const TaskTarget& target)
@@ -61,28 +63,28 @@ std::ostream& operator<<(std::ostream& stream, const StoreTarget& target)
 
 /*static*/ DimOrdering DimOrdering::c_order()
 {
-  static DimOrdering ordering(std::make_shared<detail::DimOrdering>(Kind::C));
+  static DimOrdering ordering{std::make_shared<detail::DimOrdering>(Kind::C)};
   return ordering;
 }
 
 /*static*/ DimOrdering DimOrdering::fortran_order()
 {
-  static DimOrdering ordering(std::make_shared<detail::DimOrdering>(Kind::FORTRAN));
+  static DimOrdering ordering{std::make_shared<detail::DimOrdering>(Kind::FORTRAN)};
   return ordering;
 }
 
-/*static*/ DimOrdering DimOrdering::custom_order(const std::vector<int32_t>& dims)
+/*static*/ DimOrdering DimOrdering::custom_order(std::vector<int32_t> dims)
 {
-  return DimOrdering(std::make_shared<detail::DimOrdering>(dims));
+  return DimOrdering{std::make_shared<detail::DimOrdering>(std::move(dims))};
 }
 
 void DimOrdering::set_c_order() { *this = c_order(); }
 
 void DimOrdering::set_fortran_order() { *this = fortran_order(); }
 
-void DimOrdering::set_custom_order(const std::vector<int32_t>& dims)
+void DimOrdering::set_custom_order(std::vector<int32_t> dims)
 {
-  impl_ = std::make_shared<detail::DimOrdering>(dims);
+  impl_ = std::make_shared<detail::DimOrdering>(std::move(dims));
 }
 
 DimOrdering::Kind DimOrdering::kind() const { return impl_->kind; }
@@ -90,20 +92,6 @@ DimOrdering::Kind DimOrdering::kind() const { return impl_->kind; }
 std::vector<int32_t> DimOrdering::dimensions() const { return impl_->dims; }
 
 bool DimOrdering::operator==(const DimOrdering& other) const { return *impl_ == *other.impl_; }
-
-DimOrdering::DimOrdering() { impl_ = std::move(c_order().impl_); }
-
-DimOrdering::DimOrdering(const DimOrdering&) = default;
-
-DimOrdering& DimOrdering::operator=(const DimOrdering&) = default;
-
-DimOrdering::DimOrdering(DimOrdering&&) = default;
-
-DimOrdering& DimOrdering::operator=(DimOrdering&&) = default;
-
-DimOrdering::DimOrdering(std::shared_ptr<detail::DimOrdering> impl) : impl_(std::move(impl)) {}
-
-const detail::DimOrdering* DimOrdering::impl() const { return impl_.get(); }
 
 InstanceMappingPolicy& InstanceMappingPolicy::with_target(StoreTarget _target) &
 {
@@ -113,7 +101,7 @@ InstanceMappingPolicy& InstanceMappingPolicy::with_target(StoreTarget _target) &
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_target(StoreTarget _target) const&
 {
-  return InstanceMappingPolicy(*this).with_target(_target);
+  return InstanceMappingPolicy{*this}.with_target(_target);
 }
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_target(StoreTarget _target) &&
@@ -130,7 +118,7 @@ InstanceMappingPolicy& InstanceMappingPolicy::with_allocation_policy(AllocPolicy
 InstanceMappingPolicy&& InstanceMappingPolicy::with_allocation_policy(
   AllocPolicy _allocation) const&
 {
-  return InstanceMappingPolicy(*this).with_allocation_policy(_allocation);
+  return InstanceMappingPolicy{*this}.with_allocation_policy(_allocation);
 }
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_allocation_policy(AllocPolicy _allocation) &&
@@ -146,7 +134,7 @@ InstanceMappingPolicy& InstanceMappingPolicy::with_instance_layout(InstLayout _l
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_instance_layout(InstLayout _layout) const&
 {
-  return InstanceMappingPolicy(*this).with_instance_layout(_layout);
+  return InstanceMappingPolicy{*this}.with_instance_layout(_layout);
 }
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_instance_layout(InstLayout _layout) &&
@@ -156,18 +144,18 @@ InstanceMappingPolicy&& InstanceMappingPolicy::with_instance_layout(InstLayout _
 
 InstanceMappingPolicy& InstanceMappingPolicy::with_ordering(DimOrdering _ordering) &
 {
-  set_ordering(_ordering);
+  set_ordering(std::move(_ordering));
   return *this;
 }
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_ordering(DimOrdering _ordering) const&
 {
-  return InstanceMappingPolicy(*this).with_ordering(_ordering);
+  return InstanceMappingPolicy{*this}.with_ordering(std::move(_ordering));
 }
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_ordering(DimOrdering _ordering) &&
 {
-  return std::move(this->with_ordering(_ordering));
+  return std::move(this->with_ordering(std::move(_ordering)));
 }
 
 InstanceMappingPolicy& InstanceMappingPolicy::with_exact(bool _exact) &
@@ -178,7 +166,7 @@ InstanceMappingPolicy& InstanceMappingPolicy::with_exact(bool _exact) &
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_exact(bool _exact) const&
 {
-  return InstanceMappingPolicy(*this).with_exact(_exact);
+  return InstanceMappingPolicy{*this}.with_exact(_exact);
 }
 
 InstanceMappingPolicy&& InstanceMappingPolicy::with_exact(bool _exact) &&
@@ -195,7 +183,7 @@ void InstanceMappingPolicy::set_allocation_policy(AllocPolicy _allocation)
 
 void InstanceMappingPolicy::set_instance_layout(InstLayout _layout) { layout = _layout; }
 
-void InstanceMappingPolicy::set_ordering(DimOrdering _ordering) { ordering = _ordering; }
+void InstanceMappingPolicy::set_ordering(DimOrdering _ordering) { ordering = std::move(_ordering); }
 
 void InstanceMappingPolicy::set_exact(bool _exact) { exact = _exact; }
 
@@ -205,18 +193,6 @@ bool InstanceMappingPolicy::subsumes(const InstanceMappingPolicy& other) const
   return target == other.target && layout == other.layout && ordering == other.ordering &&
          (exact || !other.exact);
 }
-
-InstanceMappingPolicy::InstanceMappingPolicy() {}
-
-InstanceMappingPolicy::~InstanceMappingPolicy() {}
-
-InstanceMappingPolicy::InstanceMappingPolicy(const InstanceMappingPolicy&) = default;
-
-InstanceMappingPolicy& InstanceMappingPolicy::operator=(const InstanceMappingPolicy&) = default;
-
-InstanceMappingPolicy::InstanceMappingPolicy(InstanceMappingPolicy&&) = default;
-
-InstanceMappingPolicy& InstanceMappingPolicy::operator=(InstanceMappingPolicy&&) = default;
 
 bool InstanceMappingPolicy::operator==(const InstanceMappingPolicy& other) const
 {
@@ -229,63 +205,50 @@ bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const
   return !operator==(other);
 }
 
-/*static*/ StoreMapping StoreMapping::default_mapping(Store store, StoreTarget target, bool exact)
+/*static*/ StoreMapping StoreMapping::default_mapping(const Store& store,
+                                                      StoreTarget target,
+                                                      bool exact)
 {
   return create(store, InstanceMappingPolicy{}.with_target(target).with_exact(exact));
 }
 
-/*static*/ StoreMapping StoreMapping::create(Store store, InstanceMappingPolicy&& policy)
+/*static*/ StoreMapping StoreMapping::create(const Store& store, InstanceMappingPolicy&& policy)
 {
-  return StoreMapping(detail::StoreMapping::create(store.impl(), std::move(policy)).release());
+  return StoreMapping{detail::StoreMapping::create(store.impl(), std::move(policy)).release()};
 }
 
 /*static*/ StoreMapping StoreMapping::create(const std::vector<Store>& stores,
                                              InstanceMappingPolicy&& policy)
 {
   if (stores.empty()) {
-    throw std::invalid_argument("Invalid to create a store mapping without any store");
+    throw std::invalid_argument{"Invalid to create a store mapping without any store"};
   }
-  auto mapping    = new detail::StoreMapping();
+  auto mapping = std::make_unique<detail::StoreMapping>();
+
   mapping->policy = std::move(policy);
-  for (auto& store : stores) { mapping->stores.push_back(store.impl()); }
-  return StoreMapping(mapping);
+  mapping->stores.reserve(stores.size());
+  for (auto&& store : stores) mapping->stores.emplace_back(store.impl());
+  return StoreMapping{mapping.release()};
 }
 
 InstanceMappingPolicy& StoreMapping::policy() { return impl_->policy; }
 
 const InstanceMappingPolicy& StoreMapping::policy() const { return impl_->policy; }
 
-Store StoreMapping::store() const { return Store(impl_->stores.front()); }
+Store StoreMapping::store() const { return Store{impl_->stores.front()}; }
 
 std::vector<Store> StoreMapping::stores() const
 {
-  std::vector<Store> result;
-  for (auto& store : impl_->stores) { result.emplace_back(store); }
-  return result;
+  return {impl_->stores.begin(), impl_->stores.end()};
 }
 
-void StoreMapping::add_store(Store store) { impl_->stores.push_back(store.impl()); }
+void StoreMapping::add_store(const Store& store) { impl_->stores.push_back(store.impl()); }
 
-StoreMapping::StoreMapping(detail::StoreMapping* impl) : impl_(impl) {}
+StoreMapping::StoreMapping(detail::StoreMapping* impl) noexcept : impl_{impl} {}
 
-const detail::StoreMapping* StoreMapping::impl() const { return impl_; }
-
-StoreMapping::StoreMapping(StoreMapping&& other) : impl_(other.impl_) { other.impl_ = nullptr; }
-
-StoreMapping& StoreMapping::operator=(StoreMapping&& other)
+void StoreMapping::StoreMappingImplDeleter::operator()(detail::StoreMapping* ptr) const noexcept
 {
-  impl_       = other.impl_;
-  other.impl_ = nullptr;
-  return *this;
-}
-
-StoreMapping::~StoreMapping() { delete impl_; }
-
-detail::StoreMapping* StoreMapping::release()
-{
-  auto result = impl_;
-  impl_       = nullptr;
-  return result;
+  delete ptr;
 }
 
 }  // namespace legate::mapping

@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate::mapping::detail {
@@ -34,37 +33,35 @@ class Store {
    * @return true The store is backed by a future
    * @return false The store is backed by a region field
    */
-  bool is_future() const;
+  [[nodiscard]] bool is_future() const;
   /**
    * @brief Indicates whether the store is unbound
    *
    * @return true The store is unbound
    * @return false The store is a normal store
    */
-  bool unbound() const;
+  [[nodiscard]] bool unbound() const;
   /**
    * @brief Returns the store's dimension
    *
    * @return Store's dimension
    */
-  int32_t dim() const;
+  [[nodiscard]] int32_t dim() const;
 
- public:
   /**
    * @brief Indicates whether the store is a reduction store
    *
    * @return true The store is a reduction store
    * @return false The store is either an input or output store
    */
-  bool is_reduction() const;
+  [[nodiscard]] bool is_reduction() const;
   /**
    * @brief Returns the reduction operator id for the store
    *
    * @return Reduction oeprator id
    */
-  int32_t redop() const;
+  [[nodiscard]] int32_t redop() const;
 
- public:
   /**
    * @brief Indicates whether the store can colocate in an instance with a given store
    *
@@ -73,41 +70,32 @@ class Store {
    * @return true The store can colocate with the input
    * @return false The store cannot colocate with the input
    */
-  bool can_colocate_with(const Store& other) const;
+  [[nodiscard]] bool can_colocate_with(const Store& other) const;
 
- public:
   /**
    * @brief Returns the store's domain
    *
    * @return Store's domain
    */
   template <int32_t DIM>
-  Rect<DIM> shape() const
-  {
-    return Rect<DIM>(domain());
-  }
+  [[nodiscard]] Rect<DIM> shape() const;
   /**
    * @brief Returns the store's domain in a dimension-erased domain type
    *
    * @return Store's domain in a dimension-erased domain type
    */
-  Domain domain() const;
+  [[nodiscard]] Domain domain() const;
 
- public:
-  Store(const detail::Store* impl);
-  const detail::Store* impl() const { return impl_; }
+  [[nodiscard]] const detail::Store* impl() const noexcept;
 
- public:
-  Store(const Store& other);
-  Store& operator=(const Store& other);
-  Store(Store&& other);
-  Store& operator=(Store&& other);
+  explicit Store(const detail::Store* impl) noexcept;
 
- public:
-  ~Store();
+  Store() = default;
 
  private:
-  const detail::Store* impl_{nullptr};
+  const detail::Store* impl_{};
 };
 
 }  // namespace legate::mapping
+
+#include "core/mapping/store.inl"

@@ -12,10 +12,12 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/mapping/detail/store.h"
 #include "core/mapping/mapping.h"
+
+#include <memory>
+#include <set>
+#include <vector>
 
 namespace legate::mapping::detail {
 
@@ -31,61 +33,39 @@ struct DimOrdering {
  public:
   using Kind = mapping::DimOrdering::Kind;
 
- public:
-  DimOrdering(Kind _kind) : kind(_kind) {}
-  DimOrdering(const std::vector<int32_t>& _dims) : kind(Kind::CUSTOM), dims(_dims) {}
+  explicit DimOrdering(Kind _kind);
+  explicit DimOrdering(std::vector<int32_t> _dims);
 
- public:
-  DimOrdering(const DimOrdering&) = default;
+  bool operator==(const DimOrdering& other) const;
 
- public:
-  bool operator==(const DimOrdering& other) const
-  {
-    return kind == other.kind && dims == other.dims;
-  }
-
- public:
   void populate_dimension_ordering(int32_t dim, std::vector<Legion::DimensionKind>& ordering) const;
 
- public:
   Kind kind;
   std::vector<int32_t> dims{};
 };
 
 struct StoreMapping {
  public:
-  std::vector<const Store*> stores{};
-  InstanceMappingPolicy policy;
+  [[nodiscard]] bool for_future() const;
+  [[nodiscard]] bool for_unbound_store() const;
+  [[nodiscard]] const Store* store() const;
 
- public:
-  StoreMapping() {}
+  [[nodiscard]] uint32_t requirement_index() const;
+  [[nodiscard]] std::set<uint32_t> requirement_indices() const;
+  [[nodiscard]] std::set<const Legion::RegionRequirement*> requirements() const;
 
- public:
-  StoreMapping(const StoreMapping&)            = default;
-  StoreMapping& operator=(const StoreMapping&) = default;
-
- public:
-  StoreMapping(StoreMapping&&)            = default;
-  StoreMapping& operator=(StoreMapping&&) = default;
-
- public:
-  bool for_future() const;
-  bool for_unbound_store() const;
-  const Store* store() const;
-
- public:
-  uint32_t requirement_index() const;
-  std::set<uint32_t> requirement_indices() const;
-  std::set<const Legion::RegionRequirement*> requirements() const;
-
- public:
   void populate_layout_constraints(Legion::LayoutConstraintSet& layout_constraints) const;
 
- public:
-  static std::unique_ptr<StoreMapping> default_mapping(const Store* store,
-                                                       StoreTarget target,
-                                                       bool exact = false);
-  static std::unique_ptr<StoreMapping> create(const Store* store, InstanceMappingPolicy&& policy);
+  [[nodiscard]] static std::unique_ptr<StoreMapping> default_mapping(const Store* store,
+                                                                     StoreTarget target,
+                                                                     bool exact = false);
+  [[nodiscard]] static std::unique_ptr<StoreMapping> create(const Store* store,
+                                                            InstanceMappingPolicy&& policy);
+
+  std::vector<const Store*> stores{};
+  InstanceMappingPolicy policy{};
 };
 
 }  // namespace legate::mapping::detail
+
+#include "core/mapping/detail/mapping.inl"

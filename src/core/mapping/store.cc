@@ -11,38 +11,26 @@
  */
 
 #include "core/mapping/store.h"
+
 #include "core/mapping/detail/store.h"
 
 namespace legate::mapping {
 
-bool Store::is_future() const { return impl_->is_future(); }
+bool Store::is_future() const { return impl()->is_future(); }
 
-bool Store::unbound() const { return impl_->unbound(); }
+bool Store::unbound() const { return impl()->unbound(); }
 
-int32_t Store::dim() const { return impl_->dim(); }
+int32_t Store::dim() const { return impl()->dim(); }
 
-bool Store::is_reduction() const { return impl_->is_reduction(); }
+bool Store::is_reduction() const { return impl()->is_reduction(); }
 
-int32_t Store::redop() const { return impl_->redop(); }
+int32_t Store::redop() const { return impl()->redop(); }
 
 bool Store::can_colocate_with(const Store& other) const
 {
-  return impl_->can_colocate_with(*other.impl_);
+  return impl()->can_colocate_with(*other.impl());
 }
 
-Domain Store::domain() const { return impl_->domain(); }
-
-Store::Store(const detail::Store* impl) : impl_(impl) {}
-
-Store::Store(const Store& other) = default;
-
-Store& Store::operator=(const Store& other) = default;
-
-Store::Store(Store&& other) = default;
-
-Store& Store::operator=(Store&& other) = default;
-
-// Don't need to release impl as it's held by the operation
-Store::~Store() {}
+Domain Store::domain() const { return impl()->domain(); }
 
 }  // namespace legate::mapping

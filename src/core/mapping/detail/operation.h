@@ -16,6 +16,10 @@
 #include "core/mapping/detail/array.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/store.h"
+#include "core/utilities/deserializer.h"
+
+#include <memory>
+#include <vector>
 
 namespace legate::detail {
 class Library;
@@ -29,19 +33,22 @@ using Stores = std::vector<Store>;
 }  // namespace
 
 class Mappable {
- protected:
-  Mappable();
-
  public:
-  Mappable(const Legion::Mappable* mappable);
+  explicit Mappable(const Legion::Mappable* mappable);
 
- public:
-  const mapping::detail::Machine& machine() const { return machine_; }
-  uint32_t sharding_id() const { return sharding_id_; }
+  [[nodiscard]] const mapping::detail::Machine& machine() const;
+  [[nodiscard]] uint32_t sharding_id() const;
 
  protected:
-  mapping::detail::Machine machine_;
-  uint32_t sharding_id_;
+  Mappable() = default;
+
+  mapping::detail::Machine machine_{};
+  uint32_t sharding_id_{};
+
+ private:
+  struct private_tag {};
+
+  Mappable(private_tag, MapperDataDeserializer dez);
 };
 
 class Task : public Mappable {
@@ -49,29 +56,26 @@ class Task : public Mappable {
   Task(const Legion::Task* task,
        const legate::detail::Library* library,
        Legion::Mapping::MapperRuntime* runtime,
-       const Legion::Mapping::MapperContext context);
+       Legion::Mapping::MapperContext context);
 
- public:
-  int64_t task_id() const;
+  [[nodiscard]] int64_t task_id() const;
 
- public:
-  const Arrays& inputs() const { return inputs_; }
-  const Arrays& outputs() const { return outputs_; }
-  const Arrays& reductions() const { return reductions_; }
-  const std::vector<Scalar>& scalars() const { return scalars_; }
+  [[nodiscard]] const Arrays& inputs() const;
+  [[nodiscard]] const Arrays& outputs() const;
+  [[nodiscard]] const Arrays& reductions() const;
+  [[nodiscard]] const std::vector<Scalar>& scalars() const;
 
- public:
-  DomainPoint point() const { return task_->index_point; }
+  [[nodiscard]] DomainPoint point() const;
 
- public:
-  TaskTarget target() const;
+  [[nodiscard]] TaskTarget target() const;
 
  private:
   const legate::detail::Library* library_;
   const Legion::Task* task_;
 
- private:
-  Arrays inputs_, outputs_, reductions_;
+  Arrays inputs_;
+  Arrays outputs_;
+  Arrays reductions_;
   std::vector<Scalar> scalars_;
 };
 
@@ -79,21 +83,18 @@ class Copy : public Mappable {
  public:
   Copy(const Legion::Copy* copy,
        Legion::Mapping::MapperRuntime* runtime,
-       const Legion::Mapping::MapperContext context);
+       Legion::Mapping::MapperContext context);
 
- public:
-  const Stores& inputs() const { return inputs_; }
-  const Stores& outputs() const { return outputs_; }
-  const Stores& input_indirections() const { return input_indirections_; }
-  const Stores& output_indirections() const { return output_indirections_; }
+  [[nodiscard]] const Stores& inputs() const;
+  [[nodiscard]] const Stores& outputs() const;
+  [[nodiscard]] const Stores& input_indirections() const;
+  [[nodiscard]] const Stores& output_indirections() const;
 
- public:
-  DomainPoint point() const { return copy_->index_point; }
+  [[nodiscard]] DomainPoint point() const;
 
  private:
   const Legion::Copy* copy_;
 
- private:
   Stores inputs_;
   Stores outputs_;
   Stores input_indirections_;
@@ -101,3 +102,5 @@ class Copy : public Mappable {
 };
 
 }  // namespace legate::mapping::detail
+
+#include "core/mapping/detail/operation.inl"

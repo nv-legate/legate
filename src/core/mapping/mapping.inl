@@ -14,20 +14,16 @@
 
 #include "core/mapping/mapping.h"
 
-#include <vector>
+namespace legate::mapping {
 
-namespace legate::mapping::detail {
+inline const detail::DimOrdering* DimOrdering::impl() const noexcept { return impl_.get(); }
 
-class DefaultMapper : public Mapper {
- public:
-  void set_machine(const MachineQueryInterface* machine) override;
-  TaskTarget task_target(const mapping::Task& task,
-                         const std::vector<TaskTarget>& options) override;
-  std::vector<mapping::StoreMapping> store_mappings(
-    const mapping::Task& task, const std::vector<StoreTarget>& options) override;
-  Scalar tunable_value(TunableID tunable_id) override;
-};
+inline DimOrdering::DimOrdering(std::shared_ptr<detail::DimOrdering> impl) : impl_{std::move(impl)}
+{
+}
 
-}  // namespace legate::mapping::detail
+inline const detail::StoreMapping* StoreMapping::impl() const noexcept { return impl_.get(); }
 
-#include "core/mapping/detail/default_mapper.inl"
+inline detail::StoreMapping* StoreMapping::release() noexcept { return impl_.release(); }
+
+}  // namespace legate::mapping

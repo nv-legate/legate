@@ -23,6 +23,7 @@
 #include "core/mapping/detail/core_mapper.h"
 #include "core/mapping/detail/default_mapper.h"
 #include "core/mapping/detail/machine.h"
+#include "core/mapping/detail/mapping.h"
 #include "core/operation/detail/copy.h"
 #include "core/operation/detail/fill.h"
 #include "core/operation/detail/gather.h"

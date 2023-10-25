@@ -11,48 +11,36 @@
  */
 
 #include "core/mapping/detail/instance_manager.h"
+
 #include "core/utilities/dispatch.h"
+
+#include <iostream>
+#include <unordered_set>
 
 namespace legate::mapping::detail {
 
 using RegionGroupP = std::shared_ptr<RegionGroup>;
 
-static Legion::Logger log_instmgr("instmgr");
+namespace {
 
-RegionGroup::RegionGroup(const std::set<Region>& rs, const Domain bound)
-  : regions(rs), bounding_box(bound)
-{
-}
-
-RegionGroup::RegionGroup(std::set<Region>&& rs, const Domain bound)
-  : regions(std::move(rs)), bounding_box(bound)
-{
-}
-
-std::vector<RegionGroup::Region> RegionGroup::get_regions() const
-{
-  std::vector<Region> result;
-  result.insert(result.end(), regions.begin(), regions.end());
-  return result;
+Legion::Logger log_instmgr("instmgr");
 }
 
 bool RegionGroup::subsumes(const RegionGroup* other)
 {
   if (regions.size() < other->regions.size()) return false;
-  if (other->regions.size() == 1) {
-    return regions.find(*other->regions.begin()) != regions.end();
-  } else {
-    auto finder = subsumption_cache.find(other);
-    if (finder != subsumption_cache.end()) return finder->second;
-    for (auto& region : other->regions)
-      if (regions.find(region) == regions.end()) {
-        subsumption_cache[other] = false;
-        return false;
-      }
+  if (other->regions.size() == 1) return regions.find(*other->regions.begin()) != regions.end();
 
-    subsumption_cache[other] = true;
-    return true;
-  }
+  auto finder = subsumption_cache.find(other);
+  if (finder != subsumption_cache.end()) return finder->second;
+  for (auto& region : other->regions)
+    if (regions.find(region) == regions.end()) {
+      subsumption_cache[other] = false;
+      return false;
+    }
+
+  subsumption_cache[other] = true;
+  return true;
 }
 
 std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group)
@@ -80,18 +68,19 @@ bool InstanceSet::find_instance(Region region,
   if (spec.policy.subsumes(policy)) {
     result = spec.instance;
     return true;
-  } else
-    return false;
+  }
+  return false;
 }
 
+namespace {
+
 // We define "too big" as the size of the "unused" points being bigger than the intersection
-static inline bool too_big(size_t union_volume,
-                           size_t my_volume,
-                           size_t group_volume,
-                           size_t intersect_volume)
+bool too_big(size_t union_volume, size_t my_volume, size_t group_volume, size_t intersect_volume)
 {
   return (union_volume - (my_volume + group_volume - intersect_volume)) > intersect_volume;
 }
+
+}  // namespace
 
 struct construct_overlapping_region_group_fn {
   template <int32_t DIM>
@@ -160,10 +149,9 @@ RegionGroupP InstanceSet::construct_overlapping_region_group(const Region& regio
   if (finder == groups_.end())
     return dim_dispatch(
       domain.get_dim(), construct_overlapping_region_group_fn{}, region, domain, instances_);
-  else {
-    if (!exact || finder->second->regions.size() == 1) return finder->second;
-    return std::make_shared<RegionGroup>(std::set<Region>{region}, domain);
-  }
+
+  if (!exact || finder->second->regions.size() == 1) return finder->second;
+  return std::make_shared<RegionGroup>(std::set<Region>{region}, domain);
 }
 
 std::set<InstanceSet::Instance> InstanceSet::record_instance(RegionGroupP group,
@@ -230,7 +218,7 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(RegionGroupP group,
   return replaced;
 }
 
-bool InstanceSet::erase(Instance inst)
+bool InstanceSet::erase(const Instance& inst)
 {
   std::set<RegionGroup*> filtered_groups;
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -245,18 +233,19 @@ bool InstanceSet::erase(Instance inst)
       auto to_erase = it++;
       filtered_groups.insert(to_erase->first);
       instances_.erase(to_erase);
-    } else
-      it++;
+    } else {
+      ++it;
+    }
   }
 
   std::set<Region> filtered_regions;
   for (RegionGroup* group : filtered_groups)
-    for (Region region : group->regions)
+    for (auto&& region : group->regions)
       if (groups_.at(region).get() == group)
         // We have to do this in two steps; we don't want to remove the last shared_ptr to a group
         // while iterating over the same group's regions
         filtered_regions.insert(region);
-  for (Region region : filtered_regions) groups_.erase(region);
+  for (auto&& region : filtered_regions) groups_.erase(region);
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
 #ifdef DEBUG_INSTANCE_MANAGER
@@ -282,7 +271,7 @@ void InstanceSet::dump_and_sanity_check() const
   for (auto& entry : instances_)
     log_instmgr.debug() << "  " << *entry.first << " ~> " << entry.second.instance;
 #endif
-  std::set<RegionGroup*> found_groups;
+  std::unordered_set<RegionGroup*> found_groups;
   for (auto& entry : groups_) {
     found_groups.insert(entry.second.get());
     assert(instances_.count(entry.second.get()) > 0);
@@ -302,8 +291,8 @@ bool ReductionInstanceSet::find_instance(ReductionOpID& redop,
   if (spec.policy == policy && spec.redop == redop) {
     result = spec.instance;
     return true;
-  } else
-    return false;
+  }
+  return false;
 }
 
 void ReductionInstanceSet::record_instance(ReductionOpID& redop,
@@ -315,21 +304,20 @@ void ReductionInstanceSet::record_instance(ReductionOpID& redop,
   if (finder != instances_.end()) {
     auto& spec = finder->second;
     if (spec.policy != policy || spec.redop != redop) {
-      instances_.insert_or_assign(region, ReductionInstanceSpec(redop, instance, policy));
+      instances_.insert_or_assign(region, ReductionInstanceSpec{redop, instance, policy});
     }
   } else {
-    instances_[region] = ReductionInstanceSpec(redop, instance, policy);
+    instances_[region] = {redop, instance, policy};
   }
 }
 
-bool ReductionInstanceSet::erase(Instance inst)
+bool ReductionInstanceSet::erase(const Instance& inst)
 {
   for (auto it = instances_.begin(); it != instances_.end(); /*nothing*/) {
     if (it->second.instance == inst) {
-      auto to_erase = it++;
-      instances_.erase(to_erase);
+      it = instances_.erase(it);
     } else
-      it++;
+      ++it;
   }
   return instances_.empty();
 }
@@ -340,7 +328,7 @@ bool InstanceManager::find_instance(Region region,
                                     Instance& result,
                                     const InstanceMappingPolicy& policy)
 {
-  auto finder = instance_sets_.find(FieldMemInfo(region.get_tree_id(), field_id, memory));
+  auto finder = instance_sets_.find({region.get_tree_id(), field_id, memory});
   return policy.allocation != AllocPolicy::MUST_ALLOC && finder != instance_sets_.end() &&
          finder->second.find_instance(region, result, policy);
 }
@@ -351,9 +339,8 @@ RegionGroupP InstanceManager::find_region_group(const Region& region,
                                                 Memory memory,
                                                 bool exact /*=false*/)
 {
-  FieldMemInfo key(region.get_tree_id(), field_id, memory);
-
-  RegionGroupP result{nullptr};
+  FieldMemInfo key{region.get_tree_id(), field_id, memory};
+  RegionGroupP result{};
 
   auto finder = instance_sets_.find(key);
   if (finder == instance_sets_.end() || exact)
@@ -370,36 +357,36 @@ RegionGroupP InstanceManager::find_region_group(const Region& region,
 }
 
 std::set<InstanceManager::Instance> InstanceManager::record_instance(
-  RegionGroupP group, FieldID fid, Instance instance, const InstanceMappingPolicy& policy)
+  RegionGroupP group,
+  FieldID field_id,
+  const Instance& instance,
+  const InstanceMappingPolicy& policy)
 {
-  const auto mem = instance.get_location();
-  const auto tid = instance.get_tree_id();
-
-  FieldMemInfo key(tid, fid, mem);
-  return instance_sets_[key].record_instance(group, instance, policy);
+  FieldMemInfo key{instance.get_tree_id(), field_id, instance.get_location()};
+  return instance_sets_[key].record_instance(std::move(group), instance, policy);
 }
 
-void InstanceManager::erase(Instance inst)
+void InstanceManager::erase(const Instance& inst)
 {
   const auto mem = inst.get_location();
   const auto tid = inst.get_tree_id();
 
   for (auto fit = instance_sets_.begin(); fit != instance_sets_.end(); /*nothing*/) {
     if ((fit->first.memory != mem) || (fit->first.tid != tid)) {
-      fit++;
+      ++fit;
       continue;
     }
     if (fit->second.erase(inst)) {
-      auto to_erase = fit++;
-      instance_sets_.erase(to_erase);
+      fit = instance_sets_.erase(fit);
     } else
-      fit++;
+      ++fit;
   }
 }
 
 std::map<Memory, size_t> InstanceManager::aggregate_instance_sizes() const
 {
   std::map<Memory, size_t> result;
+
   for (auto& pair : instance_sets_) {
     auto& memory = pair.first.memory;
     if (result.find(memory) == result.end()) result[memory] = 0;
@@ -423,46 +410,35 @@ bool ReductionInstanceManager::find_instance(ReductionOpID& redop,
                                              Instance& result,
                                              const InstanceMappingPolicy& policy)
 {
-  auto finder = instance_sets_.find(FieldMemInfo(region.get_tree_id(), field_id, memory));
+  auto finder = instance_sets_.find({region.get_tree_id(), field_id, memory});
   return policy.allocation != AllocPolicy::MUST_ALLOC && finder != instance_sets_.end() &&
          finder->second.find_instance(redop, region, result, policy);
 }
 
 void ReductionInstanceManager::record_instance(ReductionOpID& redop,
                                                Region region,
-                                               FieldID fid,
+                                               FieldID field_id,
                                                Instance instance,
                                                const InstanceMappingPolicy& policy)
 {
-  const auto mem = instance.get_location();
-  const auto tid = instance.get_tree_id();
-
-  FieldMemInfo key(tid, fid, mem);
-  auto finder = instance_sets_.find(key);
-  if (finder != instance_sets_.end())
-    instance_sets_[key].record_instance(redop, region, instance, policy);
-  else {
-    ReductionInstanceSet set;
-    set.record_instance(redop, region, instance, policy);
-    instance_sets_[key] = set;
-  }
+  FieldMemInfo key{instance.get_tree_id(), field_id, instance.get_location()};
+  instance_sets_[key].record_instance(redop, region, instance, policy);
 }
 
-void ReductionInstanceManager::erase(Instance inst)
+void ReductionInstanceManager::erase(const Instance& inst)
 {
   const auto mem = inst.get_location();
   const auto tid = inst.get_tree_id();
 
   for (auto fit = instance_sets_.begin(); fit != instance_sets_.end(); /*nothing*/) {
     if ((fit->first.memory != mem) || (fit->first.tid != tid)) {
-      fit++;
+      ++fit;
       continue;
     }
     if (fit->second.erase(inst)) {
-      auto to_erase = fit++;
-      instance_sets_.erase(to_erase);
+      fit = instance_sets_.erase(fit);
     } else
-      fit++;
+      ++fit;
   }
 }
 
@@ -470,7 +446,7 @@ void ReductionInstanceManager::erase(Instance inst)
 {
   static ReductionInstanceManager* manager{nullptr};
 
-  if (nullptr == manager) manager = new ReductionInstanceManager();
+  if (manager == nullptr) manager = new ReductionInstanceManager();
   return manager;
 }
 

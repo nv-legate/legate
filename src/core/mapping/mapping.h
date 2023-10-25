@@ -12,10 +12,12 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
 #include "core/data/scalar.h"
 #include "core/mapping/store.h"
+
+#include <iosfwd>
+#include <memory>
+#include <vector>
 
 /** @defgroup mapping Mapping API
  */
@@ -144,7 +146,6 @@ struct DimOrdering {
     CUSTOM = 3,
   };
 
- public:
   /**
    * @brief Creates a C ordering object
    *
@@ -164,9 +165,8 @@ struct DimOrdering {
    *
    * @return A `DimOrdering` object
    */
-  static DimOrdering custom_order(const std::vector<int32_t>& dims);
+  static DimOrdering custom_order(std::vector<int32_t> dims);
 
- public:
   /**
    * @brief Sets the dimension ordering to C
    */
@@ -180,36 +180,27 @@ struct DimOrdering {
    *
    * @param dims A vector that stores the order of dimensions.
    */
-  void set_custom_order(const std::vector<int32_t>& dims);
+  void set_custom_order(std::vector<int32_t> dims);
 
- public:
   /**
    * @brief Dimension ordering type
    */
-  Kind kind() const;
+  [[nodiscard]] Kind kind() const;
   /**
    * @brief Dimension list. Used only when the `kind` is `CUSTOM`.
    */
-  std::vector<int32_t> dimensions() const;
+  [[nodiscard]] std::vector<int32_t> dimensions() const;
 
- public:
   bool operator==(const DimOrdering&) const;
 
- private:
-  DimOrdering(std::shared_ptr<detail::DimOrdering> impl);
+  [[nodiscard]] const detail::DimOrdering* impl() const noexcept;
 
- public:
-  const detail::DimOrdering* impl() const;
-
- public:
-  DimOrdering();
-  DimOrdering(const DimOrdering&);
-  DimOrdering& operator=(const DimOrdering&);
-  DimOrdering(DimOrdering&&);
-  DimOrdering& operator=(DimOrdering&&);
+  DimOrdering() = default;
 
  private:
-  std::shared_ptr<detail::DimOrdering> impl_;
+  explicit DimOrdering(std::shared_ptr<detail::DimOrdering> impl);
+
+  std::shared_ptr<detail::DimOrdering> impl_{c_order().impl_};
 };
 
 /**
@@ -240,7 +231,6 @@ struct InstanceMappingPolicy {
    */
   bool exact{false};
 
- public:
   /**
    * @brief Changes the store target
    *
@@ -249,8 +239,8 @@ struct InstanceMappingPolicy {
    * @return This instance mapping policy
    */
   InstanceMappingPolicy& with_target(StoreTarget target) &;
-  InstanceMappingPolicy&& with_target(StoreTarget target) const&;
-  InstanceMappingPolicy&& with_target(StoreTarget target) &&;
+  [[nodiscard]] InstanceMappingPolicy&& with_target(StoreTarget target) const&;
+  [[nodiscard]] InstanceMappingPolicy&& with_target(StoreTarget target) &&;
   /**
    * @brief Changes the allocation policy
    *
@@ -259,8 +249,8 @@ struct InstanceMappingPolicy {
    * @return This instance mapping policy
    */
   InstanceMappingPolicy& with_allocation_policy(AllocPolicy allocation) &;
-  InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) const&;
-  InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) &&;
+  [[nodiscard]] InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) const&;
+  [[nodiscard]] InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) &&;
   /**
    * @brief Changes the instance layout
    *
@@ -269,8 +259,8 @@ struct InstanceMappingPolicy {
    * @return This instance mapping policy
    */
   InstanceMappingPolicy& with_instance_layout(InstLayout layout) &;
-  InstanceMappingPolicy&& with_instance_layout(InstLayout layout) const&;
-  InstanceMappingPolicy&& with_instance_layout(InstLayout layout) &&;
+  [[nodiscard]] InstanceMappingPolicy&& with_instance_layout(InstLayout layout) const&;
+  [[nodiscard]] InstanceMappingPolicy&& with_instance_layout(InstLayout layout) &&;
   /**
    * @brief Changes the dimension ordering
    *
@@ -279,8 +269,8 @@ struct InstanceMappingPolicy {
    * @return This instance mapping policy
    */
   InstanceMappingPolicy& with_ordering(DimOrdering ordering) &;
-  InstanceMappingPolicy&& with_ordering(DimOrdering ordering) const&;
-  InstanceMappingPolicy&& with_ordering(DimOrdering ordering) &&;
+  [[nodiscard]] InstanceMappingPolicy&& with_ordering(DimOrdering ordering) const&;
+  [[nodiscard]] InstanceMappingPolicy&& with_ordering(DimOrdering ordering) &&;
   /**
    * @brief Changes the value of `exact`
    *
@@ -289,10 +279,9 @@ struct InstanceMappingPolicy {
    * @return This instance mapping policy
    */
   InstanceMappingPolicy& with_exact(bool exact) &;
-  InstanceMappingPolicy&& with_exact(bool exact) const&;
-  InstanceMappingPolicy&& with_exact(bool exact) &&;
+  [[nodiscard]] InstanceMappingPolicy&& with_exact(bool exact) const&;
+  [[nodiscard]] InstanceMappingPolicy&& with_exact(bool exact) &&;
 
- public:
   /**
    * @brief Changes the store target
    *
@@ -324,7 +313,6 @@ struct InstanceMappingPolicy {
    */
   void set_exact(bool exact);
 
- public:
   /**
    * @brief Indicates whether this policy subsumes a given policy
    *
@@ -335,19 +323,8 @@ struct InstanceMappingPolicy {
    * @return true If this policy subsumes `other`
    * @return false Otherwise
    */
-  bool subsumes(const InstanceMappingPolicy& other) const;
+  [[nodiscard]] bool subsumes(const InstanceMappingPolicy& other) const;
 
- public:
-  InstanceMappingPolicy();
-  ~InstanceMappingPolicy();
-
- public:
-  InstanceMappingPolicy(const InstanceMappingPolicy&);
-  InstanceMappingPolicy& operator=(const InstanceMappingPolicy&);
-  InstanceMappingPolicy(InstanceMappingPolicy&&);
-  InstanceMappingPolicy& operator=(InstanceMappingPolicy&&);
-
- public:
   bool operator==(const InstanceMappingPolicy&) const;
   bool operator!=(const InstanceMappingPolicy&) const;
 };
@@ -367,7 +344,9 @@ struct StoreMapping {
    *
    * @return A store mapping
    */
-  static StoreMapping default_mapping(Store store, StoreTarget target, bool exact = false);
+  [[nodiscard]] static StoreMapping default_mapping(const Store& store,
+                                                    StoreTarget target,
+                                                    bool exact = false);
   /**
    * @brief Creates a mapping policy for the given store using the instance mapping policy
    *
@@ -376,7 +355,7 @@ struct StoreMapping {
    *
    * @return A store mapping
    */
-  static StoreMapping create(Store store, InstanceMappingPolicy&& policy);
+  [[nodiscard]] static StoreMapping create(const Store& store, InstanceMappingPolicy&& policy);
 
   /**
    * @brief Creates a mapping policy for the given set of stores using the instance mapping policy
@@ -386,23 +365,22 @@ struct StoreMapping {
    *
    * @return A store mapping
    */
-  static StoreMapping create(const std::vector<Store>& stores, InstanceMappingPolicy&& policy);
+  [[nodiscard]] static StoreMapping create(const std::vector<Store>& stores,
+                                           InstanceMappingPolicy&& policy);
 
- public:
   /**
    * @brief Returns the instance mapping policy of this `StoreMapping` object
    *
    * @return A reference to the `InstanceMappingPolicy` object
    */
-  InstanceMappingPolicy& policy();
+  [[nodiscard]] InstanceMappingPolicy& policy();
   /**
    * @brief Returns the instance mapping policy of this `StoreMapping` object
    *
    * @return A reference to the `InstanceMappingPolicy` object
    */
-  const InstanceMappingPolicy& policy() const;
+  [[nodiscard]] const InstanceMappingPolicy& policy() const;
 
- public:
   /**
    * @brief Returns the store for which this `StoreMapping` object describes a mapping policy.
    *
@@ -410,45 +388,47 @@ struct StoreMapping {
    *
    * @return A `Store` object
    */
-  Store store() const;
+  [[nodiscard]] Store store() const;
   /**
    * @brief Returns all the stores for which this `StoreMapping` object describes a mapping policy
    *
    * @return A vector of `Store` objects
    */
-  std::vector<Store> stores() const;
+  [[nodiscard]] std::vector<Store> stores() const;
 
- public:
   /**
    * @brief Adds a store to this `StoreMapping` object
    *
    * @param store Store to add
    */
-  void add_store(Store store);
+  void add_store(const Store& store);
 
- private:
-  StoreMapping(detail::StoreMapping* impl);
+  [[nodiscard]] const detail::StoreMapping* impl() const noexcept;
 
- public:
-  const detail::StoreMapping* impl() const;
-
- private:
-  StoreMapping(const StoreMapping&)            = delete;
-  StoreMapping& operator=(const StoreMapping&) = delete;
-
- public:
-  StoreMapping(StoreMapping&&);
-  StoreMapping& operator=(StoreMapping&&);
-
- public:
-  ~StoreMapping();
+  StoreMapping() = default;
 
  private:
   friend class detail::BaseMapper;
-  detail::StoreMapping* release();
+  detail::StoreMapping* release() noexcept;
 
- private:
-  detail::StoreMapping* impl_{nullptr};
+  explicit StoreMapping(detail::StoreMapping* impl) noexcept;
+
+  // Work-around for using unique_ptr for PIMPL. unique_ptr requires the type to be defined in
+  // its destructor, as required by delete. This is a problem because the implicitly declared
+  // destructor/move assignment/move constructor calls the unique_ptr destructor, and since we
+  // don't define them, they are implicitly defined inline above.
+  //
+  // One solution then is to manually define these functions out-of-line (can still be done
+  // trivially, i.e. StoreMapping::~StoreMapping() = default), but the whole point of using
+  // unique_ptr is that we *don't* want to write these functions!
+  //
+  // The better solution then is to hide the call to delete behind a custom deleter. Hence
+  // StoreMappingImplDeleter.
+  struct StoreMappingImplDeleter {
+    void operator()(detail::StoreMapping* ptr) const noexcept;
+  };
+
+  std::unique_ptr<detail::StoreMapping, StoreMappingImplDeleter> impl_{};
 };
 
 /**
@@ -457,31 +437,31 @@ struct StoreMapping {
  */
 class MachineQueryInterface {
  public:
-  virtual ~MachineQueryInterface() {}
+  virtual ~MachineQueryInterface() = default;
   /**
    * @brief Returns local CPUs
    *
    * @return A vector of processors
    */
-  virtual const std::vector<Processor>& cpus() const = 0;
+  [[nodiscard]] virtual const std::vector<Processor>& cpus() const = 0;
   /**
    * @brief Returns local GPUs
    *
    * @return A vector of processors
    */
-  virtual const std::vector<Processor>& gpus() const = 0;
+  [[nodiscard]] virtual const std::vector<Processor>& gpus() const = 0;
   /**
    * @brief Returns local OpenMP processors
    *
    * @return A vector of processors
    */
-  virtual const std::vector<Processor>& omps() const = 0;
+  [[nodiscard]] virtual const std::vector<Processor>& omps() const = 0;
   /**
    * @brief Returns the total number of nodes
    *
    * @return Total number of nodes
    */
-  virtual uint32_t total_nodes() const = 0;
+  [[nodiscard]] virtual uint32_t total_nodes() const = 0;
 };
 
 /**
@@ -492,7 +472,7 @@ class MachineQueryInterface {
  */
 class Mapper {
  public:
-  virtual ~Mapper() {}
+  virtual ~Mapper() = default;
   /**
    * @brief Sets a machine query interface. This call gives the mapper a chance
    * to cache the machine query interface.
@@ -508,7 +488,8 @@ class Mapper {
    *
    * @return A target processor type
    */
-  virtual TaskTarget task_target(const Task& task, const std::vector<TaskTarget>& options) = 0;
+  [[nodiscard]] virtual TaskTarget task_target(const Task& task,
+                                               const std::vector<TaskTarget>& options) = 0;
   /**
    * @brief Chooses mapping policies for the task's stores.
    *
@@ -520,8 +501,8 @@ class Mapper {
    *
    * @return A vector of store mappings
    */
-  virtual std::vector<StoreMapping> store_mappings(const Task& task,
-                                                   const std::vector<StoreTarget>& options) = 0;
+  [[nodiscard]] virtual std::vector<StoreMapping> store_mappings(
+    const Task& task, const std::vector<StoreTarget>& options) = 0;
   /**
    * @brief Returns a tunable value
    *
@@ -529,7 +510,9 @@ class Mapper {
    *
    * @return A tunable value in a `Scalar` object
    */
-  virtual Scalar tunable_value(TunableID tunable_id) = 0;
+  [[nodiscard]] virtual Scalar tunable_value(TunableID tunable_id) = 0;
 };
 
 }  // namespace legate::mapping
+
+#include "core/mapping/mapping.inl"

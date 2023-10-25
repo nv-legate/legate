@@ -12,17 +12,16 @@
 
 #include "core/mapping/detail/array.h"
 
+#include <algorithm>
+#include <stdexcept>
+#include <string>
+
 namespace legate::mapping::detail {
 
 std::shared_ptr<Store> Array::data() const
 {
   throw std::invalid_argument("Data store of a nested array cannot be retrieved");
-  return nullptr;
-}
-
-BaseArray::BaseArray(std::shared_ptr<Store> data, std::shared_ptr<Store> null_mask)
-  : data_(std::move(data)), null_mask_(std::move(null_mask))
-{
+  return {};
 }
 
 bool BaseArray::unbound() const
@@ -41,10 +40,10 @@ std::shared_ptr<Store> BaseArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<Array> BaseArray::child(uint32_t index) const
+std::shared_ptr<Array> BaseArray::child(uint32_t /*index*/) const
 {
   throw std::invalid_argument("Non-nested array has no child sub-array");
-  return nullptr;
+  return {};
 }
 
 void BaseArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
@@ -54,13 +53,6 @@ void BaseArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
 }
 
 Domain BaseArray::domain() const { return data_->domain(); }
-
-ListArray::ListArray(std::shared_ptr<legate::detail::Type> type,
-                     std::shared_ptr<BaseArray> descriptor,
-                     std::shared_ptr<Array> vardata)
-  : type_(std::move(type)), descriptor_(std::move(descriptor)), vardata_(std::move(vardata))
-{
-}
 
 int32_t ListArray::dim() const { return descriptor_->dim(); }
 
@@ -76,7 +68,7 @@ std::shared_ptr<Array> ListArray::child(uint32_t index) const
       break;
     }
   }
-  return nullptr;
+  return {};
 }
 
 void ListArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
@@ -86,13 +78,6 @@ void ListArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
 }
 
 Domain ListArray::domain() const { return descriptor_->domain(); }
-
-StructArray::StructArray(std::shared_ptr<legate::detail::Type> type,
-                         std::shared_ptr<Store> null_mask,
-                         std::vector<std::shared_ptr<Array>>&& fields)
-  : type_(std::move(type)), null_mask_(std::move(null_mask)), fields_(std::move(fields))
-{
-}
 
 int32_t StructArray::dim() const { return fields_.front()->dim(); }
 

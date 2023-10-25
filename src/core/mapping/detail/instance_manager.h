@@ -12,12 +12,16 @@
 
 #pragma once
 
-#include <memory>
-#include <mutex>
+#include "core/mapping/mapping.h"
 
 #include "legion.h"
 
-#include "core/mapping/mapping.h"
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <set>
+#include <utility>
+#include <vector>
 
 namespace legate::mapping::detail {
 
@@ -26,22 +30,16 @@ struct RegionGroup {
  public:
   using Region = Legion::LogicalRegion;
 
- public:
-  RegionGroup(const std::set<Region>& regions, const Domain bounding_box);
-  RegionGroup(std::set<Region>&& regions, const Domain bounding_box);
+  RegionGroup() = default;
 
- public:
-  RegionGroup(const RegionGroup&) = default;
-  RegionGroup(RegionGroup&&)      = default;
+  RegionGroup(std::set<Region> regions, Domain bounding_box);
 
- public:
-  std::vector<Region> get_regions() const;
-  bool subsumes(const RegionGroup* other);
+  [[nodiscard]] std::vector<Region> get_regions() const;
+  [[nodiscard]] bool subsumes(const RegionGroup* other);
 
- public:
-  std::set<Region> regions;
-  Domain bounding_box;
-  std::map<const RegionGroup*, bool> subsumption_cache;
+  std::set<Region> regions{};
+  Domain bounding_box{};
+  std::map<const RegionGroup*, bool> subsumption_cache{};
 };
 
 std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group);
@@ -52,40 +50,35 @@ struct InstanceSet {
   using Instance     = Legion::Mapping::PhysicalInstance;
   using RegionGroupP = std::shared_ptr<RegionGroup>;
 
- public:
   struct InstanceSpec {
-    InstanceSpec() {}
-    InstanceSpec(const Instance& inst, const InstanceMappingPolicy& po) : instance(inst), policy(po)
-    {
-    }
+    InstanceSpec() = default;
+
+    InstanceSpec(Instance inst, InstanceMappingPolicy po);
 
     Instance instance{};
     InstanceMappingPolicy policy{};
   };
 
- public:
-  bool find_instance(Region region, Instance& result, const InstanceMappingPolicy& policy) const;
-  RegionGroupP construct_overlapping_region_group(const Region& region,
-                                                  const Domain& domain,
-                                                  bool exact) const;
+  [[nodiscard]] bool find_instance(Region region,
+                                   Instance& result,
+                                   const InstanceMappingPolicy& policy) const;
+  [[nodiscard]] RegionGroupP construct_overlapping_region_group(const Region& region,
+                                                                const Domain& domain,
+                                                                bool exact) const;
 
- public:
-  std::set<Instance> record_instance(RegionGroupP group,
-                                     Instance instance,
-                                     const InstanceMappingPolicy& policy);
+  [[nodiscard]] std::set<Instance> record_instance(RegionGroupP group,
+                                                   Instance instance,
+                                                   const InstanceMappingPolicy& policy);
 
- public:
-  bool erase(Instance inst);
+  bool erase(const Instance& inst);
 
- public:
-  size_t get_instance_size() const;
+  [[nodiscard]] size_t get_instance_size() const;
 
  private:
   void dump_and_sanity_check() const;
 
- private:
-  std::map<RegionGroup*, InstanceSpec> instances_;
-  std::map<Legion::LogicalRegion, RegionGroupP> groups_;
+  std::map<RegionGroup*, InstanceSpec> instances_{};
+  std::map<Legion::LogicalRegion, RegionGroupP> groups_{};
 };
 
 class ReductionInstanceSet {
@@ -94,38 +87,29 @@ class ReductionInstanceSet {
   using Instance      = Legion::Mapping::PhysicalInstance;
   using ReductionOpID = Legion::ReductionOpID;
 
- public:
   struct ReductionInstanceSpec {
-    ReductionInstanceSpec() {}
-    ReductionInstanceSpec(const ReductionOpID& op,
-                          const Instance& inst,
-                          const InstanceMappingPolicy& po)
-      : redop(op), instance(inst), policy(po)
-    {
-    }
+    ReductionInstanceSpec() = default;
+    ReductionInstanceSpec(const ReductionOpID& op, Instance inst, InstanceMappingPolicy po);
 
     ReductionOpID redop{0};
     Instance instance{};
     InstanceMappingPolicy policy{};
   };
 
- public:
-  bool find_instance(ReductionOpID& redop,
-                     Region& region,
-                     Instance& result,
-                     const InstanceMappingPolicy& policy) const;
+  [[nodiscard]] bool find_instance(ReductionOpID& redop,
+                                   Region& region,
+                                   Instance& result,
+                                   const InstanceMappingPolicy& policy) const;
 
- public:
   void record_instance(ReductionOpID& redop,
                        Region& region,
                        Instance& instance,
                        const InstanceMappingPolicy& policy);
 
- public:
-  bool erase(Instance inst);
+  bool erase(const Instance& inst);
 
  private:
-  std::map<Region, ReductionInstanceSpec> instances_;
+  std::map<Region, ReductionInstanceSpec> instances_{};
 };
 
 class BaseInstanceManager {
@@ -135,35 +119,19 @@ class BaseInstanceManager {
   using Instance     = Legion::Mapping::PhysicalInstance;
   using FieldID      = Legion::FieldID;
 
- public:
   struct FieldMemInfo {
    public:
-    FieldMemInfo(RegionTreeID t, FieldID f, Memory m) : tid(t), fid(f), memory(m) {}
-    inline bool operator==(const FieldMemInfo& rhs) const
-    {
-      return tid == rhs.tid && fid == rhs.fid && memory == rhs.memory;
-    }
-    inline bool operator<(const FieldMemInfo& rhs) const
-    {
-      if (tid < rhs.tid)
-        return true;
-      else if (tid > rhs.tid)
-        return false;
-      if (fid < rhs.fid)
-        return true;
-      else if (fid > rhs.fid)
-        return false;
-      return memory < rhs.memory;
-    }
+    FieldMemInfo(RegionTreeID t, FieldID f, Memory m);
 
-   public:
+    bool operator==(const FieldMemInfo& rhs) const;
+    bool operator<(const FieldMemInfo& rhs) const;
+
     RegionTreeID tid;
     FieldID fid;
     Memory memory;
   };
 
- public:
-  Legion::Mapping::LocalLock& manager_lock() { return manager_lock_; }
+  [[nodiscard]] Legion::Mapping::LocalLock& manager_lock();
 
  private:
   Legion::Mapping::LocalLock manager_lock_{};
@@ -173,30 +141,26 @@ class InstanceManager : public BaseInstanceManager {
  public:
   using RegionGroupP = std::shared_ptr<RegionGroup>;
 
- public:
-  bool find_instance(Region region,
-                     FieldID field_id,
-                     Memory memory,
-                     Instance& result,
-                     const InstanceMappingPolicy& policy = {});
-  RegionGroupP find_region_group(const Region& region,
-                                 const Domain& domain,
-                                 FieldID field_id,
-                                 Memory memory,
-                                 bool exact = false);
-  std::set<Instance> record_instance(RegionGroupP group,
-                                     FieldID field_id,
-                                     Instance instance,
-                                     const InstanceMappingPolicy& policy = {});
+  [[nodiscard]] bool find_instance(Region region,
+                                   FieldID field_id,
+                                   Memory memory,
+                                   Instance& result,
+                                   const InstanceMappingPolicy& policy = {});
+  [[nodiscard]] RegionGroupP find_region_group(const Region& region,
+                                               const Domain& domain,
+                                               FieldID field_id,
+                                               Memory memory,
+                                               bool exact = false);
+  [[nodiscard]] std::set<Instance> record_instance(RegionGroupP group,
+                                                   FieldID field_id,
+                                                   const Instance& instance,
+                                                   const InstanceMappingPolicy& policy = {});
 
- public:
-  void erase(Instance inst);
+  void erase(const Instance& inst);
 
- public:
-  static InstanceManager* get_instance_manager();
+  [[nodiscard]] static InstanceManager* get_instance_manager();
 
- public:
-  std::map<Memory, size_t> aggregate_instance_sizes() const;
+  [[nodiscard]] std::map<Memory, size_t> aggregate_instance_sizes() const;
 
  private:
   std::map<FieldMemInfo, InstanceSet> instance_sets_{};
@@ -206,13 +170,12 @@ class ReductionInstanceManager : public BaseInstanceManager {
  public:
   using ReductionOpID = Legion::ReductionOpID;
 
- public:
-  bool find_instance(ReductionOpID& redop,
-                     Region region,
-                     FieldID field_id,
-                     Memory memory,
-                     Instance& result,
-                     const InstanceMappingPolicy& policy = {});
+  [[nodiscard]] bool find_instance(ReductionOpID& redop,
+                                   Region region,
+                                   FieldID field_id,
+                                   Memory memory,
+                                   Instance& result,
+                                   const InstanceMappingPolicy& policy = {});
 
   void record_instance(ReductionOpID& redop,
                        Region region,
@@ -220,14 +183,14 @@ class ReductionInstanceManager : public BaseInstanceManager {
                        Instance instance,
                        const InstanceMappingPolicy& policy = {});
 
- public:
-  void erase(Instance inst);
+  void erase(const Instance& inst);
 
- public:
-  static ReductionInstanceManager* get_instance_manager();
+  [[nodiscard]] static ReductionInstanceManager* get_instance_manager();
 
  private:
   std::map<FieldMemInfo, ReductionInstanceSet> instance_sets_{};
 };
 
 }  // namespace legate::mapping::detail
+
+#include "core/mapping/detail/instance_manager.inl"

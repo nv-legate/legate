@@ -11,8 +11,14 @@
  */
 
 #include "core/mapping/detail/machine.h"
+
 #include "core/utilities/detail/buffer_builder.h"
+
 #include "realm/network.h"
+
+#include <algorithm>
+#include <sstream>
+#include <utility>
 
 namespace legate::mapping::detail {
 
@@ -20,38 +26,45 @@ namespace legate::mapping::detail {
 // legate::mapping::detail::Machine
 //////////////////////////////////////////
 
-Machine::Machine(const std::map<TaskTarget, ProcessorRange>& ranges) : processor_ranges(ranges)
+Machine::Machine(private_tag, std::map<TaskTarget, ProcessorRange> ranges)
+  : processor_ranges{std::move(ranges)}
 {
-  for (auto& [target, processor_range] : processor_ranges)
+  for (auto&& [target, processor_range] : processor_ranges)
     if (!processor_range.empty()) {
       preferred_target = target;
       return;
     }
+}
+
+Machine::Machine(const std::map<TaskTarget, ProcessorRange>& ranges)
+  : Machine{private_tag{}, ranges}
+{
 }
 
 Machine::Machine(std::map<TaskTarget, ProcessorRange>&& ranges)
-  : processor_ranges(std::move(ranges))
+  : Machine{private_tag{}, std::move(ranges)}
 {
-  for (auto& [target, processor_range] : processor_ranges)
-    if (!processor_range.empty()) {
-      preferred_target = target;
-      return;
-    }
 }
 
 const ProcessorRange& Machine::processor_range() const { return processor_range(preferred_target); }
-static const ProcessorRange EMPTY_RANGE{};
+
+namespace {
+
+constexpr ProcessorRange EMPTY_RANGE{};
+// clang-format likes to gobble this space unless we put something here...
+}  // namespace
 
 const ProcessorRange& Machine::processor_range(TaskTarget target) const
 {
   auto finder = processor_ranges.find(target);
-  if (finder == processor_ranges.end()) { return EMPTY_RANGE; }
+  if (finder == processor_ranges.end()) return EMPTY_RANGE;
   return finder->second;
 }
 
 std::vector<TaskTarget> Machine::valid_targets() const
 {
   std::vector<TaskTarget> result;
+
   result.reserve(processor_ranges.size());
   for (auto& [target, range] : processor_ranges) {
     if (range.empty()) continue;
@@ -78,7 +91,7 @@ std::string Machine::to_string() const
   ss << "Machine(preferred_target: " << preferred_target;
   for (auto& [kind, range] : processor_ranges) ss << ", " << kind << ": " << range.to_string();
   ss << ")";
-  return ss.str();
+  return std::move(ss).str();
 }
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
@@ -93,24 +106,25 @@ void Machine::pack(legate::detail::BufferBuilder& buffer) const
   }
 }
 
-Machine Machine::only(TaskTarget target) const { return only(std::vector({target})); }
+Machine Machine::only(TaskTarget target) const { return only(std::vector<TaskTarget>{target}); }
 
 Machine Machine::only(const std::vector<TaskTarget>& targets) const
 {
   std::map<TaskTarget, ProcessorRange> new_processor_ranges;
-  for (auto t : targets) new_processor_ranges.insert({t, processor_range(t)});
+  for (auto&& t : targets) new_processor_ranges.insert({t, processor_range(t)});
 
-  return Machine(new_processor_ranges);
+  return Machine{std::move(new_processor_ranges)};
 }
 
 Machine Machine::slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others) const
 {
   if (keep_others) {
-    std::map<TaskTarget, ProcessorRange> new_ranges(processor_ranges);
+    std::map<TaskTarget, ProcessorRange> new_ranges{processor_ranges};
+
     new_ranges[target] = processor_range(target).slice(from, to);
-    return Machine(std::move(new_ranges));
-  } else
-    return Machine({{target, processor_range(target).slice(from, to)}});
+    return Machine{std::move(new_ranges)};
+  }
+  return Machine{{{target, processor_range(target).slice(from, to)}}};
 }
 
 Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
@@ -118,13 +132,10 @@ Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
   return slice(from, to, preferred_target, keep_others);
 }
 
-Machine Machine::operator[](TaskTarget target) const { return only(target); }
-
-Machine Machine::operator[](const std::vector<TaskTarget>& targets) const { return only(targets); }
-
 bool Machine::operator==(const Machine& other) const
 {
   if (processor_ranges.size() < other.processor_ranges.size()) { return other.operator==(*this); }
+
   for (auto const& [target, range] : processor_ranges) {
     if (range.empty()) continue;
     auto finder = other.processor_ranges.find(target);
@@ -144,14 +155,13 @@ Machine Machine::operator&(const Machine& other) const
       new_processor_ranges[target] = finder->second & range;
     }
   }
-  return Machine(new_processor_ranges);
+  return Machine{std::move(new_processor_ranges)};
 }
 
 bool Machine::empty() const
 {
-  for (const auto& r : processor_ranges)
-    if (!r.second.empty()) return false;
-  return true;
+  return std::all_of(
+    processor_ranges.begin(), processor_ranges.end(), [](auto& rng) { return rng.second.empty(); });
 }
 
 std::ostream& operator<<(std::ostream& stream, const Machine& machine)
@@ -164,25 +174,10 @@ std::ostream& operator<<(std::ostream& stream, const Machine& machine)
 // legate::mapping::LocalProcessorRange
 ///////////////////////////////////////////
 
-LocalProcessorRange::LocalProcessorRange() : offset_(0), total_proc_count_(0), procs_() {}
-
-LocalProcessorRange::LocalProcessorRange(const std::vector<Processor>& procs)
-  : offset_(0), total_proc_count_(procs.size()), procs_(procs.data(), procs.size())
-{
-}
-
-LocalProcessorRange::LocalProcessorRange(uint32_t offset,
-                                         uint32_t total_proc_count,
-                                         const Processor* local_procs,
-                                         size_t num_local_procs)
-  : offset_(offset), total_proc_count_(total_proc_count), procs_(local_procs, num_local_procs)
-{
-}
-
 const Processor& LocalProcessorRange::operator[](uint32_t idx) const
 {
   auto local_idx = idx - offset_;
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(local_idx >= 0 && local_idx < procs_.size()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(local_idx >= 0 && local_idx < procs_.size());
   return procs_[local_idx];
 }
 
@@ -206,11 +201,11 @@ std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range)
 // legate::mapping::LocalMachine
 ///////////////////////////////////////////
 LocalMachine::LocalMachine()
-  : node_id(Realm::Network::my_node_id),
-    total_nodes(Legion::Machine::get_machine().get_address_space_count())
+  : node_id{static_cast<uint32_t>(Realm::Network::my_node_id)},
+    total_nodes{static_cast<uint32_t>(Legion::Machine::get_machine().get_address_space_count())}
 {
   auto legion_machine = Legion::Machine::get_machine();
-  Legion::Machine::ProcessorQuery procs(legion_machine);
+  Legion::Machine::ProcessorQuery procs{legion_machine};
   // Query to find all our local processors
   procs.local_address_space();
   for (auto proc : procs) {
@@ -234,25 +229,30 @@ LocalMachine::LocalMachine()
   }
 
   // Now do queries to find all our local memories
-  Legion::Machine::MemoryQuery sysmem(legion_machine);
+  Legion::Machine::MemoryQuery sysmem{legion_machine};
   sysmem.local_address_space().only_kind(Legion::Memory::SYSTEM_MEM);
   assert(sysmem.count() > 0);
   system_memory_ = sysmem.first();
 
   if (!gpus_.empty()) {
-    Legion::Machine::MemoryQuery zcmem(legion_machine);
+    Legion::Machine::MemoryQuery zcmem{legion_machine};
+
     zcmem.local_address_space().only_kind(Legion::Memory::Z_COPY_MEM);
     assert(zcmem.count() > 0);
     zerocopy_memory_ = zcmem.first();
   }
+
   for (auto& gpu : gpus_) {
-    Legion::Machine::MemoryQuery framebuffer(legion_machine);
+    Legion::Machine::MemoryQuery framebuffer{legion_machine};
+
     framebuffer.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
     assert(framebuffer.count() > 0);
     frame_buffers_[gpu] = framebuffer.first();
   }
+
   for (auto& omp : omps_) {
-    Legion::Machine::MemoryQuery sockmem(legion_machine);
+    Legion::Machine::MemoryQuery sockmem{legion_machine};
+
     sockmem.local_address_space().only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);
     // If we have socket memories then use them
     if (sockmem.count() > 0) socket_memories_[omp] = sockmem.first();
@@ -302,28 +302,26 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 
   auto finder = machine.processor_ranges.find(target);
   if (machine.processor_ranges.end() == finder) {
-    if (fallback_to_global)
-      return LocalProcessorRange(local_procs);
-    else
-      return LocalProcessorRange();
+    if (fallback_to_global) return LocalProcessorRange{local_procs};
+    return {};
   }
 
   auto& global_range = finder->second;
 
-  uint32_t num_local_procs = local_procs.size();
-  uint32_t my_low          = num_local_procs * node_id;
-  ProcessorRange my_range(my_low, my_low + num_local_procs, global_range.per_node_count);
+  auto num_local_procs = local_procs.size();
+  auto my_low          = num_local_procs * node_id;
+  ProcessorRange my_range{static_cast<uint32_t>(my_low),
+                          static_cast<uint32_t>(my_low + num_local_procs),
+                          global_range.per_node_count};
 
   auto slice = global_range & my_range;
   if (slice.empty()) {
-    if (fallback_to_global)
-      return LocalProcessorRange(local_procs);
-    else
-      return LocalProcessorRange();
+    if (fallback_to_global) return LocalProcessorRange{local_procs};
+    return {};
   }
 
-  return LocalProcessorRange(
-    slice.low, global_range.count(), local_procs.data() + (slice.low - my_low), slice.count());
+  return {
+    slice.low, global_range.count(), local_procs.data() + (slice.low - my_low), slice.count()};
 }
 
 Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) const

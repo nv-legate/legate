@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#pragma once
+
 #include "core/mapping/detail/default_mapper.h"
 
 namespace legate::mapping::detail {
@@ -17,22 +19,21 @@ namespace legate::mapping::detail {
 // Default mapper doesn't use the machine query interface
 void DefaultMapper::set_machine(const MachineQueryInterface* machine) {}
 
-TaskTarget DefaultMapper::task_target(const mapping::Task& task,
-                                      const std::vector<TaskTarget>& options)
+TaskTarget DefaultMapper::task_target(const mapping::Task&, const std::vector<TaskTarget>& options)
 {
   return options.front();
 }
 
 std::vector<mapping::StoreMapping> DefaultMapper::store_mappings(
-  const mapping::Task& task, const std::vector<StoreTarget>& options)
+  const mapping::Task& /*task*/, const std::vector<StoreTarget>& /*options*/)
 {
   return {};
 }
 
-Scalar DefaultMapper::tunable_value(TunableID tunable_id)
+Scalar DefaultMapper::tunable_value(TunableID /*tunable_id*/)
 {
   LEGATE_ABORT;
-  return Scalar(0);
+  return Scalar{0};
 }
 
 }  // namespace legate::mapping::detail

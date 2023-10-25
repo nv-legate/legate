@@ -12,22 +12,22 @@
 
 #pragma once
 
-#include "core/mapping/mapping.h"
+#include "core/mapping/detail/mapping.h"
 
-#include <vector>
+#include <utility>
 
 namespace legate::mapping::detail {
 
-class DefaultMapper : public Mapper {
- public:
-  void set_machine(const MachineQueryInterface* machine) override;
-  TaskTarget task_target(const mapping::Task& task,
-                         const std::vector<TaskTarget>& options) override;
-  std::vector<mapping::StoreMapping> store_mappings(
-    const mapping::Task& task, const std::vector<StoreTarget>& options) override;
-  Scalar tunable_value(TunableID tunable_id) override;
-};
+inline DimOrdering::DimOrdering(Kind _kind) : kind{_kind} {}
+
+inline DimOrdering::DimOrdering(std::vector<int32_t> _dims)
+  : kind{Kind::CUSTOM}, dims{std::move(_dims)}
+{
+}
+
+inline bool DimOrdering::operator==(const DimOrdering& other) const
+{
+  return kind == other.kind && dims == other.dims;
+}
 
 }  // namespace legate::mapping::detail
-
-#include "core/mapping/detail/default_mapper.inl"

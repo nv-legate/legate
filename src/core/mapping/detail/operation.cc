@@ -16,22 +16,18 @@
 
 namespace legate::mapping::detail {
 
-Mappable::Mappable() {}
-
-Mappable::Mappable(const Legion::Mappable* mappable)
+Mappable::Mappable(private_tag, MapperDataDeserializer dez)
+  : machine_{dez.unpack<Machine>()}, sharding_id_{dez.unpack<uint32_t>()}
 {
-  MapperDataDeserializer dez(mappable);
-  machine_     = dez.unpack<Machine>();
-  sharding_id_ = dez.unpack<uint32_t>();
 }
 
 Task::Task(const Legion::Task* task,
            const legate::detail::Library* library,
            Legion::Mapping::MapperRuntime* runtime,
-           const Legion::Mapping::MapperContext context)
-  : Mappable(task), library_(library), task_(task)
+           Legion::Mapping::MapperContext context)
+  : Mappable{task}, library_{library}, task_{task}
 {
-  TaskDeserializer dez(task, runtime, context);
+  TaskDeserializer dez{task, runtime, context};
   inputs_     = dez.unpack_arrays();
   outputs_    = dez.unpack_arrays();
   reductions_ = dez.unpack_arrays();
@@ -56,16 +52,16 @@ TaskTarget Task::target() const
 
 Copy::Copy(const Legion::Copy* copy,
            Legion::Mapping::MapperRuntime* runtime,
-           const Legion::Mapping::MapperContext context)
-  : Mappable(), copy_(copy)
+           Legion::Mapping::MapperContext context)
+  : copy_{copy}
 {
-  CopyDeserializer dez(copy,
+  CopyDeserializer dez{copy,
                        {copy->src_requirements,
                         copy->dst_requirements,
                         copy->src_indirect_requirements,
                         copy->dst_indirect_requirements},
                        runtime,
-                       context);
+                       context};
   machine_     = dez.unpack<Machine>();
   sharding_id_ = dez.unpack<uint32_t>();
   inputs_      = dez.unpack<Stores>();

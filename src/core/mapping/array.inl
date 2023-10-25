@@ -10,30 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
+#pragma once
+
 #include "core/mapping/array.h"
-#include "core/mapping/detail/array.h"
 
 namespace legate::mapping {
 
-bool Array::nullable() const { return impl_->nullable(); }
-
-int32_t Array::dim() const { return impl_->dim(); }
-
-Type Array::type() const { return Type{impl_->type()}; }
-
-Store Array::data() const { return Store{impl_->data().get()}; }
-
-Store Array::null_mask() const { return Store{impl_->null_mask().get()}; }
-
-std::vector<Store> Array::stores() const
+template <int32_t DIM>
+Rect<DIM> Array::shape() const
 {
-  std::vector<Store> result;
-
-  result.push_back(data());
-  if (nullable()) result.push_back(null_mask());
-  return result;
+  return Rect<DIM>{domain()};
 }
 
-Domain Array::domain() const { return impl_->domain(); }
+inline Array::Array(const detail::Array* impl) : impl_{impl} {}
 
 }  // namespace legate::mapping

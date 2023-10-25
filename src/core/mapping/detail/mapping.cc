@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <unordered_set>
+
 #include "core/mapping/detail/mapping.h"
 
 namespace legate::mapping::detail {
@@ -79,6 +81,7 @@ void DimOrdering::populate_dimension_ordering(int32_t dim,
       break;
     }
     case Kind::CUSTOM: {
+      ordering.reserve(ordering.size() + dims.size());
       for (auto idx : dims) ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
       break;
     }
@@ -102,24 +105,27 @@ const Store* StoreMapping::store() const { return stores.front(); }
 uint32_t StoreMapping::requirement_index() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(stores.size() > 0);
     uint32_t result = -1U;
+
+    assert(!stores.empty());
     for (auto& store : stores) {
       auto idx = store->requirement_index();
+
       assert(result == -1U || result == idx);
       result = idx;
     }
     return result;
-  } else {
-    static constexpr uint32_t invalid = -1U;
-    if (stores.empty()) return invalid;
-    return stores.front()->requirement_index();
   }
+
+  static constexpr uint32_t invalid = -1U;
+  if (stores.empty()) return invalid;
+  return stores.front()->requirement_index();
 }
 
 std::set<uint32_t> StoreMapping::requirement_indices() const
 {
   std::set<uint32_t> indices;
+
   for (auto& store : stores) {
     if (store->is_future()) continue;
     indices.insert(store->region_field().index());
@@ -130,6 +136,7 @@ std::set<uint32_t> StoreMapping::requirement_indices() const
 std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
 {
   std::set<const Legion::RegionRequirement*> reqs;
+
   for (auto& store : stores) {
     if (store->is_future()) continue;
     auto* req = store->region_field().get_requirement();
@@ -156,7 +163,8 @@ void StoreMapping::populate_layout_constraints(
 
   std::vector<Legion::FieldID> fields{};
   if (stores.size() > 1) {
-    std::set<Legion::FieldID> field_set{};
+    std::unordered_set<Legion::FieldID> field_set{};
+
     for (auto& store : stores) {
       auto field_id = store->region_field().field_id();
       if (field_set.find(field_id) == field_set.end()) {

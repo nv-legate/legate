@@ -12,12 +12,18 @@
 
 #pragma once
 
-#include "core/mapping/mapping.h"
+#include "core/mapping/store.h"
 
-#include <memory>
+namespace legate::mapping {
 
-namespace legate::mapping::detail {
+template <int32_t DIM>
+Rect<DIM> Store::shape() const
+{
+  return Rect<DIM>{domain()};
+}
 
-[[nodiscard]] std::unique_ptr<Mapper> create_core_mapper();
+inline const detail::Store* Store::impl() const noexcept { return impl_; }
 
-}  // namespace legate::mapping::detail
+inline Store::Store(const detail::Store* impl) noexcept : impl_{impl} {}
+
+}  // namespace legate::mapping

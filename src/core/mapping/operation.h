@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/data/scalar.h"
 #include "core/mapping/array.h"
+
+#include <vector>
 
 /**
  * @file
@@ -39,27 +39,26 @@ class Task {
    *
    * @return Task id
    */
-  int64_t task_id() const;
+  [[nodiscard]] int64_t task_id() const;
 
- public:
   /**
    * @brief Returns metadata for the task's input arrays
    *
    * @return Vector of array metadata objects
    */
-  std::vector<Array> inputs() const;
+  [[nodiscard]] std::vector<Array> inputs() const;
   /**
    * @brief Returns metadata for the task's output arrays
    *
    * @return Vector of array metadata objects
    */
-  std::vector<Array> outputs() const;
+  [[nodiscard]] std::vector<Array> outputs() const;
   /**
    * @brief Returns metadata for the task's reduction arrays
    *
    * @return Vector of array metadata objects
    */
-  std::vector<Array> reductions() const;
+  [[nodiscard]] std::vector<Array> reductions() const;
   /**
    * @brief Returns the vector of the task's by-value arguments. Unlike `mapping::Array`
    * objects that have no access to data in the arrays, the returned `Scalar` objects
@@ -67,9 +66,8 @@ class Task {
    *
    * @return Vector of `Scalar` objects
    */
-  const std::vector<Scalar>& scalars() const;
+  [[nodiscard]] const std::vector<Scalar>& scalars() const;
 
- public:
   /**
    * @brief Returns metadata for the task's input array
    *
@@ -77,7 +75,7 @@ class Task {
    *
    * @return Array metadata object
    */
-  Array input(uint32_t index) const;
+  [[nodiscard]] Array input(uint32_t index) const;
   /**
    * @brief Returns metadata for the task's output array
    *
@@ -85,7 +83,7 @@ class Task {
    *
    * @return Array metadata object
    */
-  Array output(uint32_t index) const;
+  [[nodiscard]] Array output(uint32_t index) const;
   /**
    * @brief Returns metadata for the task's reduction array
    *
@@ -93,40 +91,40 @@ class Task {
    *
    * @return Array metadata object
    */
-  Array reduction(uint32_t index) const;
+  [[nodiscard]] Array reduction(uint32_t index) const;
 
- public:
   /**
    * @brief Returns the number of task's inputs
    *
    * @return Number of arrays
    */
-  size_t num_inputs() const;
+  [[nodiscard]] size_t num_inputs() const;
   /**
    * @brief Returns the number of task's outputs
    *
    * @return Number of arrays
    */
-  size_t num_outputs() const;
+  [[nodiscard]] size_t num_outputs() const;
   /**
    * @brief Returns the number of task's reductions
    *
    * @return Number of arrays
    */
-  size_t num_reductions() const;
+  [[nodiscard]] size_t num_reductions() const;
 
- public:
-  Task(detail::Task* impl_);
-  ~Task();
+  explicit Task(detail::Task* impl_);
 
- private:
   Task(const Task&)            = delete;
   Task& operator=(const Task&) = delete;
   Task(Task&&)                 = delete;
   Task& operator=(Task&&)      = delete;
 
  private:
-  detail::Task* impl_{nullptr};
+  [[nodiscard]] detail::Task* impl() const noexcept;
+
+  detail::Task* impl_{};
 };
 
 }  // namespace legate::mapping
+
+#include "core/mapping/operation.inl"

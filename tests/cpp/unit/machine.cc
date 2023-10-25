@@ -48,7 +48,7 @@ TEST_F(Machine, ProcessorRange)
     EXPECT_EQ(range.low, 0);
     EXPECT_EQ(range.high, 0);
     EXPECT_EQ(range.count(), 0);
-    EXPECT_THROW(range.get_node_range(), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(range.get_node_range()), std::invalid_argument);
   }
 
   // create another empty
@@ -59,7 +59,7 @@ TEST_F(Machine, ProcessorRange)
     EXPECT_EQ(range.low, 0);
     EXPECT_EQ(range.high, 0);
     EXPECT_EQ(range.count(), 0);
-    EXPECT_THROW(range.get_node_range(), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(range.get_node_range()), std::invalid_argument);
   }
 
   // check defaults

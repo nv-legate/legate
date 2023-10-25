@@ -148,7 +148,6 @@ list(APPEND legate_core_SOURCES
   src/core/mapping/detail/array.cc
   src/core/mapping/detail/base_mapper.cc
   src/core/mapping/detail/core_mapper.cc
-  src/core/mapping/detail/default_mapper.cc
   src/core/mapping/detail/instance_manager.cc
   src/core/mapping/detail/machine.cc
   src/core/mapping/detail/mapping.cc
@@ -503,10 +502,15 @@ install(
 
 install(
   FILES src/core/mapping/array.h
+        src/core/mapping/array.inl
         src/core/mapping/machine.h
+        src/core/mapping/machine.inl
         src/core/mapping/mapping.h
+        src/core/mapping/mapping.inl
         src/core/mapping/operation.h
+        src/core/mapping/operation.inl
         src/core/mapping/store.h
+        src/core/mapping/store.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/mapping)
 
 install(

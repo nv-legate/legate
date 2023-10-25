@@ -15,6 +15,10 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/typedefs.h"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 namespace legate::detail {
 struct TransformStack;
 }  // namespace legate::detail
@@ -25,39 +29,29 @@ class RegionField {
  public:
   using Id = std::tuple<bool, uint32_t, Legion::FieldID>;
 
- public:
-  RegionField() {}
+  RegionField() = default;
   RegionField(const Legion::RegionRequirement* req, int32_t dim, uint32_t idx, Legion::FieldID fid);
 
- public:
-  RegionField(const RegionField& other)            = default;
-  RegionField& operator=(const RegionField& other) = default;
+  [[nodiscard]] bool can_colocate_with(const RegionField& other) const;
 
- public:
-  bool can_colocate_with(const RegionField& other) const;
+  [[nodiscard]] Legion::Domain domain(Legion::Mapping::MapperRuntime* runtime,
+                                      Legion::Mapping::MapperContext context) const;
 
- public:
-  Legion::Domain domain(Legion::Mapping::MapperRuntime* runtime,
-                        const Legion::Mapping::MapperContext context) const;
-
- public:
+  // REVIEW: this is not defined anywhere
   bool operator==(const RegionField& other) const;
 
- public:
-  Id unique_id() const { return std::make_tuple(unbound(), idx_, fid_); }
+  [[nodiscard]] Id unique_id() const;
 
- public:
-  int32_t dim() const { return dim_; }
-  uint32_t index() const { return idx_; }
-  Legion::FieldID field_id() const { return fid_; }
-  bool unbound() const { return dim_ < 0; }
+  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] uint32_t index() const;
+  [[nodiscard]] Legion::FieldID field_id() const;
+  [[nodiscard]] bool unbound() const;
 
- public:
-  const Legion::RegionRequirement* get_requirement() const { return req_; }
-  Legion::IndexSpace get_index_space() const;
+  [[nodiscard]] const Legion::RegionRequirement* get_requirement() const;
+  [[nodiscard]] Legion::IndexSpace get_index_space() const;
 
  private:
-  const Legion::RegionRequirement* req_{nullptr};
+  const Legion::RegionRequirement* req_{};
   int32_t dim_{-1};
   uint32_t idx_{-1U};
   Legion::FieldID fid_{-1U};
@@ -65,19 +59,12 @@ class RegionField {
 
 class FutureWrapper {
  public:
-  FutureWrapper() {}
+  FutureWrapper() = default;
   FutureWrapper(uint32_t idx, const Legion::Domain& domain);
 
- public:
-  FutureWrapper(const FutureWrapper& other)            = default;
-  FutureWrapper& operator=(const FutureWrapper& other) = default;
-
- public:
-  int32_t dim() const { return domain_.dim; }
-  uint32_t index() const { return idx_; }
-
- public:
-  Legion::Domain domain() const;
+  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] uint32_t index() const;
+  [[nodiscard]] Legion::Domain domain() const;
 
  private:
   uint32_t idx_{-1U};
@@ -86,13 +73,13 @@ class FutureWrapper {
 
 class Store {
  public:
-  Store() {}
+  Store() = default;
   Store(int32_t dim,
         std::shared_ptr<legate::detail::Type> type,
         FutureWrapper future,
         std::shared_ptr<legate::detail::TransformStack>&& transform = nullptr);
   Store(Legion::Mapping::MapperRuntime* runtime,
-        const Legion::Mapping::MapperContext context,
+        Legion::Mapping::MapperContext context,
         int32_t dim,
         std::shared_ptr<legate::detail::Type> type,
         int32_t redop_id,
@@ -101,60 +88,45 @@ class Store {
         std::shared_ptr<legate::detail::TransformStack>&& transform = nullptr);
   // A special constructor to create a mapper view of a store from a region requirement
   Store(Legion::Mapping::MapperRuntime* runtime,
-        const Legion::Mapping::MapperContext context,
+        Legion::Mapping::MapperContext context,
         const Legion::RegionRequirement* requirement);
 
- public:
-  Store(const Store& other)            = default;
-  Store& operator=(const Store& other) = default;
+  [[nodiscard]] bool is_future() const;
+  [[nodiscard]] bool unbound() const;
+  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] std::shared_ptr<legate::detail::Type> type() const;
 
- public:
-  Store(Store&& other)            = default;
-  Store& operator=(Store&& other) = default;
+  [[nodiscard]] bool is_reduction() const;
+  [[nodiscard]] int32_t redop() const;
 
- public:
-  bool is_future() const { return is_future_; }
-  bool unbound() const { return is_unbound_store_; }
-  int32_t dim() const { return dim_; }
-  std::shared_ptr<legate::detail::Type> type() const { return type_; }
+  [[nodiscard]] bool can_colocate_with(const Store& other) const;
+  [[nodiscard]] const RegionField& region_field() const;
+  [[nodiscard]] const FutureWrapper& future() const;
 
- public:
-  bool is_reduction() const { return redop_id_ > 0; }
-  int32_t redop() const { return redop_id_; }
+  [[nodiscard]] RegionField::Id unique_region_field_id() const;
+  [[nodiscard]] uint32_t requirement_index() const;
+  [[nodiscard]] uint32_t future_index() const;
 
- public:
-  bool can_colocate_with(const Store& other) const;
-  const RegionField& region_field() const;
-  const FutureWrapper& future() const;
+  [[nodiscard]] Domain domain() const;
 
- public:
-  RegionField::Id unique_region_field_id() const;
-  uint32_t requirement_index() const;
-  uint32_t future_index() const;
-
- public:
-  Domain domain() const;
-
- public:
-  std::vector<int32_t> find_imaginary_dims() const;
+  [[nodiscard]] std::vector<int32_t> find_imaginary_dims() const;
 
  private:
-  bool is_future_{false};
-  bool is_unbound_store_{false};
+  bool is_future_{};
+  bool is_unbound_store_{};
   int32_t dim_{-1};
   std::shared_ptr<legate::detail::Type> type_{};
   int32_t redop_id_{-1};
 
- private:
   FutureWrapper future_;
   RegionField region_field_;
 
- private:
-  std::shared_ptr<legate::detail::TransformStack> transform_{nullptr};
+  std::shared_ptr<legate::detail::TransformStack> transform_{};
 
- private:
-  Legion::Mapping::MapperRuntime* runtime_{nullptr};
-  Legion::Mapping::MapperContext context_{nullptr};
+  Legion::Mapping::MapperRuntime* runtime_{};
+  Legion::Mapping::MapperContext context_{};
 };
 
 }  // namespace legate::mapping::detail
+
+#include "core/mapping/detail/store.inl"

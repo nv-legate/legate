@@ -20,7 +20,13 @@
 #include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/shard.h"
 #include "core/utilities/linearize.h"
+
 #include "mappers/mapping_utilities.h"
+
+#include <algorithm>
+#include <sstream>
+#include <unordered_map>
+#include <utility>
 
 namespace legate::mapping::detail {
 
@@ -28,7 +34,7 @@ namespace {
 
 const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
 {
-  static const std::map<Processor::Kind, std::vector<StoreTarget>> defaults = {
+  static const std::unordered_map<Processor::Kind, std::vector<StoreTarget>> defaults = {
     {Processor::Kind::TOC_PROC, {StoreTarget::FBMEM, StoreTarget::ZCMEM}},
     {Processor::Kind::OMP_PROC, {StoreTarget::SOCKETMEM, StoreTarget::SYSMEM}},
     {Processor::Kind::LOC_PROC, {StoreTarget::SYSMEM}},
@@ -41,7 +47,7 @@ const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
 
 std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = false)
 {
-  static const std::map<Legion::MappableType, std::string> prefixes = {
+  static const std::unordered_map<Legion::MappableType, std::string> prefixes = {
     {LEGION_TASK_MAPPABLE, "Task "},
     {LEGION_COPY_MAPPABLE, "Copy "},
     {LEGION_INLINE_MAPPABLE, "Inline mapping "},
@@ -53,7 +59,7 @@ std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = fa
 
   std::stringstream ss;
   ss << finder->second << mappable.get_unique_id();
-  return ss.str();
+  return std::move(ss).str();
 }
 
 }  // namespace
@@ -61,19 +67,18 @@ std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = fa
 BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
                        Legion::Mapping::MapperRuntime* _mapper_runtime,
                        const legate::detail::Library* _library)
-  : Mapper(_mapper_runtime),
-    legate_mapper_(legate_mapper),
-    mapper_runtime(_mapper_runtime),
-    legion_machine(Legion::Machine::get_machine()),
-    library(_library),
-    logger(create_logger_name().c_str()),
-    local_instances(InstanceManager::get_instance_manager()),
-    reduction_instances(ReductionInstanceManager::get_instance_manager()),
-    local_machine()
+  : Mapper{_mapper_runtime},
+    legate_mapper_{legate_mapper},
+    mapper_runtime{_mapper_runtime},
+    legion_machine{Legion::Machine::get_machine()},
+    library{_library},
+    logger{create_logger_name()},
+    local_instances{InstanceManager::get_instance_manager()},
+    reduction_instances{ReductionInstanceManager::get_instance_manager()}
 {
   std::stringstream ss;
   ss << library->get_library_name() << " on Node " << local_machine.node_id;
-  mapper_name = ss.str();
+  mapper_name = std::move(ss).str();
 
   legate_mapper_->set_machine(this);
 }
@@ -81,7 +86,8 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
 BaseMapper::~BaseMapper()
 {
   // Compute the size of all our remaining instances in each memory
-  const char* show_usage = getenv("LEGATE_SHOW_USAGE");
+  const auto show_usage = getenv("LEGATE_SHOW_USAGE");
+
   if (show_usage != nullptr && atoi(show_usage) > 0) {
     auto mem_sizes             = local_instances->aggregate_instance_sizes();
     const char* memory_kinds[] = {
@@ -109,17 +115,10 @@ std::string BaseMapper::create_logger_name() const
 {
   std::stringstream ss;
   ss << library->get_library_name() << ".mapper";
-  return ss.str();
+  return std::move(ss).str();
 }
 
-const char* BaseMapper::get_mapper_name() const { return mapper_name.c_str(); }
-
-Legion::Mapping::Mapper::MapperSyncModel BaseMapper::get_mapper_sync_model() const
-{
-  return SERIALIZED_REENTRANT_MAPPER_MODEL;
-}
-
-void BaseMapper::select_task_options(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
                                      const Legion::Task& task,
                                      TaskOptions& output)
 {
@@ -175,15 +174,15 @@ void BaseMapper::select_task_options(const Legion::Mapping::MapperContext ctx,
   output.valid_instances = false;
 }
 
-void BaseMapper::premap_task(const Legion::Mapping::MapperContext ctx,
-                             const Legion::Task& task,
-                             const PremapTaskInput& input,
-                             PremapTaskOutput& output)
+void BaseMapper::premap_task(Legion::Mapping::MapperContext /*ctx*/,
+                             const Legion::Task& /*task*/,
+                             const PremapTaskInput& /*input*/,
+                             PremapTaskOutput& /*output*/)
 {
   // NO-op since we know that all our futures should be mapped in the system memory
 }
 
-void BaseMapper::slice_task(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
                             const Legion::Task& task,
                             const SliceTaskInput& input,
                             SliceTaskOutput& output)
@@ -211,32 +210,35 @@ void BaseMapper::slice_task(const Legion::Mapping::MapperContext ctx,
   if (task.sharding_space.exists())
     sharding_domain = runtime->get_index_space_domain(ctx, task.sharding_space);
 
-  auto lo                    = key_functor->project_point(sharding_domain.lo(), sharding_domain);
-  auto hi                    = key_functor->project_point(sharding_domain.hi(), sharding_domain);
-  uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;
+  auto lo                = key_functor->project_point(sharding_domain.lo(), sharding_domain);
+  auto hi                = key_functor->project_point(sharding_domain.hi(), sharding_domain);
+  auto start_proc_id     = machine_desc.processor_range().low;
+  auto total_tasks_count = linearize(lo, hi, hi) + 1;
 
-  uint32_t start_proc_id = machine_desc.processor_range().low;
-  for (Domain::DomainPointIterator itr(input.domain); itr; itr++) {
+  for (Domain::DomainPointIterator itr{input.domain}; itr; itr++) {
     auto p = key_functor->project_point(itr.p, sharding_domain);
-    uint32_t idx =
+    auto idx =
       linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count + start_proc_id;
-    output.slices.push_back(
-      TaskSlice(Domain(itr.p, itr.p), local_range[idx], false /*recurse*/, false /*stealable*/));
+    output.slices.emplace_back(Domain{itr.p, itr.p},
+                               local_range[static_cast<uint32_t>(idx)],
+                               false /*recurse*/,
+                               false /*stealable*/);
   }
 }
 
-bool BaseMapper::has_variant(const Legion::Mapping::MapperContext ctx,
+bool BaseMapper::has_variant(Legion::Mapping::MapperContext ctx,
                              const Legion::Task& task,
                              TaskTarget target)
 {
   return find_variant(ctx, task, to_kind(target)).has_value();
 }
 
-std::optional<Legion::VariantID> BaseMapper::find_variant(const Legion::Mapping::MapperContext ctx,
+std::optional<Legion::VariantID> BaseMapper::find_variant(Legion::Mapping::MapperContext ctx,
                                                           const Legion::Task& task,
                                                           Processor::Kind kind)
 {
-  const VariantCacheKey key(task.task_id, kind);
+  const VariantCacheKey key{task.task_id, kind};
+
   auto finder = variants.find(key);
   if (finder != variants.end()) return finder->second;
 
@@ -260,7 +262,7 @@ std::optional<Legion::VariantID> BaseMapper::find_variant(const Legion::Mapping:
   return result;
 }
 
-void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                           const Legion::Task& task,
                           const MapTaskInput& input,
                           MapTaskOutput& output)
@@ -391,8 +393,9 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(mapped_futures.size() <= task.futures.size());
     // The launching code should be packing all Store-backing Futures first.
-    if (mapped_futures.size() > 0) {
-      uint32_t max_mapped_fut = mapped_futures.rbegin()->first;
+    if (!mapped_futures.empty()) {
+      const auto max_mapped_fut = mapped_futures.rbegin()->first;
+
       assert(mapped_futures.size() == max_mapped_fut + 1);
     }
   }
@@ -417,6 +420,8 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
       auto ndim = mapping->store()->dim();
       // FIXME: Unbound stores can have more than one dimension later
       std::vector<Legion::DimensionKind> dimension_ordering;
+
+      dimension_ordering.reserve(ndim + 1);
       for (int32_t dim = ndim - 1; dim >= 0; --dim)
         dimension_ordering.push_back(static_cast<Legion::DimensionKind>(
           static_cast<int32_t>(Legion::DimensionKind::LEGION_DIM_X) + dim));
@@ -436,16 +441,16 @@ void BaseMapper::map_task(const Legion::Mapping::MapperContext ctx,
   map_legate_stores(ctx, task, for_stores, task.target_proc, output_map);
 }
 
-void BaseMapper::map_replicate_task(const Legion::Mapping::MapperContext ctx,
-                                    const Legion::Task& task,
-                                    const MapTaskInput& input,
-                                    const MapTaskOutput& def_output,
-                                    MapReplicateTaskOutput& output)
+void BaseMapper::map_replicate_task(Legion::Mapping::MapperContext /*ctx*/,
+                                    const Legion::Task& /*task*/,
+                                    const MapTaskInput& /*input*/,
+                                    const MapTaskOutput& /*default_output*/,
+                                    MapReplicateTaskOutput& /*output*/)
 {
   LEGATE_ABORT;
 }
 
-void BaseMapper::map_legate_stores(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
                                    const Legion::Mappable& mappable,
                                    std::vector<std::unique_ptr<StoreMapping>>& mappings,
                                    Processor target_proc,
@@ -540,7 +545,7 @@ void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
   }
 }
 
-bool BaseMapper::map_legate_store(const Legion::Mapping::MapperContext ctx,
+bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
                                   const Legion::Mappable& mappable,
                                   const StoreMapping& mapping,
                                   const std::set<const Legion::RegionRequirement*>& reqs,
@@ -724,7 +729,7 @@ bool BaseMapper::map_legate_store(const Legion::Mapping::MapperContext ctx,
     if (!result.is_external_instance() && group != nullptr) {
       assert(fields.size() == 1);
       auto fid = fields.front();
-      local_instances->record_instance(group, fid, result, policy);
+      static_cast<void>(local_instances->record_instance(group, fid, result, policy));
     }
     runtime->enable_reentrant(ctx);
     // We made it so no need for an acquire
@@ -754,7 +759,7 @@ void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
 #undef MEM_NAMES
   };
 
-  std::string opname = "";
+  std::string opname;
   if (mappable.get_mappable_type() == Legion::Mappable::TASK_MAPPABLE) {
     const auto task = mappable.as_task();
     opname          = task->get_task_name();
@@ -798,7 +803,7 @@ void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_task_variant(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
                                      const Legion::Task& task,
                                      const SelectVariantInput& input,
                                      SelectVariantOutput& output)
@@ -808,17 +813,17 @@ void BaseMapper::select_task_variant(const Legion::Mapping::MapperContext ctx,
   output.chosen_variant = *variant;
 }
 
-void BaseMapper::postmap_task(const Legion::Mapping::MapperContext ctx,
-                              const Legion::Task& task,
-                              const PostMapInput& input,
-                              PostMapOutput& output)
+void BaseMapper::postmap_task(Legion::Mapping::MapperContext /*ctx*/,
+                              const Legion::Task& /*task*/,
+                              const PostMapInput& /*input*/,
+                              PostMapOutput& /*output*/)
 {
   // We should currently never get this call in Legate
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_task_sources(const Legion::Mapping::MapperContext ctx,
-                                     const Legion::Task& task,
+void BaseMapper::select_task_sources(Legion::Mapping::MapperContext ctx,
+                                     const Legion::Task& /*task*/,
                                      const SelectTaskSrcInput& input,
                                      SelectTaskSrcOutput& output)
 {
@@ -833,9 +838,10 @@ using Bandwidth = uint32_t;
 // Source instance annotated with the memory bandwidth
 struct AnnotatedSourceInstance {
   AnnotatedSourceInstance(Legion::Mapping::PhysicalInstance _instance, Bandwidth _bandwidth)
-    : instance(_instance), bandwidth(_bandwidth)
+    : instance{std::move(_instance)}, bandwidth{_bandwidth}
   {
   }
+
   Legion::Mapping::PhysicalInstance instance;
   Bandwidth bandwidth;
 };
@@ -872,7 +878,7 @@ void find_source_instance_bandwidth(
 }  // namespace
 
 void BaseMapper::legate_select_sources(
-  const Legion::Mapping::MapperContext ctx,
+  Legion::Mapping::MapperContext /*ctx*/,
   const Legion::Mapping::PhysicalInstance& target,
   const std::vector<Legion::Mapping::PhysicalInstance>& sources,
   const std::vector<Legion::Mapping::CollectiveView>& collective_sources,
@@ -886,13 +892,14 @@ void BaseMapper::legate_select_sources(
   // fill in a vector of the sources with their bandwidths
   std::vector<AnnotatedSourceInstance> all_sources;
 
-  for (uint32_t idx = 0; idx < sources.size(); idx++)
+  for (auto&& source : sources)
     find_source_instance_bandwidth(
-      all_sources, source_memory_bandwidths, sources[idx], target_memory, legion_machine);
+      all_sources, source_memory_bandwidths, source, target_memory, legion_machine);
 
-  for (uint32_t idx = 0; idx < collective_sources.size(); idx++) {
+  for (auto&& collective_source : collective_sources) {
     std::vector<Legion::Mapping::PhysicalInstance> source_instances;
-    collective_sources[idx].find_instances_nearest_memory(target_memory, source_instances);
+
+    collective_source.find_instances_nearest_memory(target_memory, source_instances);
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       // there must exist at least one instance in the collective view
       assert(!source_instances.empty());
@@ -914,9 +921,9 @@ void BaseMapper::legate_select_sources(
   for (auto& source : all_sources) ranking.emplace_back(source.instance);
 }
 
-void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
-                                  const Legion::Task& task,
-                                  const TaskProfilingInfo& input)
+void BaseMapper::report_profiling(Legion::Mapping::MapperContext,
+                                  const Legion::Task&,
+                                  const TaskProfilingInfo&)
 {
   // Shouldn't get any profiling feedback currently
   LEGATE_ABORT;
@@ -924,21 +931,22 @@ void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
 
 Legion::ShardingID BaseMapper::find_mappable_sharding_functor_id(const Legion::Mappable& mappable)
 {
-  Mappable legate_mappable(&mappable);
+  Mappable legate_mappable{&mappable};
+
   return static_cast<Legion::ShardingID>(legate_mappable.sharding_id());
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext,
                                          const Legion::Task& task,
-                                         const SelectShardingFunctorInput& input,
+                                         const SelectShardingFunctorInput&,
                                          SelectShardingFunctorOutput& output)
 {
   output.chosen_functor = find_mappable_sharding_functor_id(task);
 }
 
-void BaseMapper::map_inline(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
                             const Legion::InlineMapping& inline_op,
-                            const MapInlineInput& input,
+                            const MapInlineInput& /*input*/,
                             MapInlineOutput& output)
 {
   Processor target_proc{Processor::NO_PROC};
@@ -953,19 +961,21 @@ void BaseMapper::map_inline(const Legion::Mapping::MapperContext ctx,
     assert(inline_op.requirement.instance_fields.size() == 1);
   }
 
-  Store store(mapper_runtime, ctx, &inline_op.requirement);
+  Store store{mapper_runtime, ctx, &inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
+
   mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
 
   std::map<const Legion::RegionRequirement*, std::vector<Legion::Mapping::PhysicalInstance>*>
     output_map;
-  for (auto* req : mappings.front()->requirements()) output_map[req] = &output.chosen_instances;
+  auto&& reqs = mappings.front()->requirements();
+  for (auto* req : reqs) output_map[req] = &output.chosen_instances;
 
   map_legate_stores(ctx, inline_op, mappings, target_proc, output_map);
 }
 
-void BaseMapper::select_inline_sources(const Legion::Mapping::MapperContext ctx,
-                                       const Legion::InlineMapping& inline_op,
+void BaseMapper::select_inline_sources(Legion::Mapping::MapperContext ctx,
+                                       const Legion::InlineMapping& /*inline_op*/,
                                        const SelectInlineSrcInput& input,
                                        SelectInlineSrcOutput& output)
 {
@@ -973,20 +983,20 @@ void BaseMapper::select_inline_sources(const Legion::Mapping::MapperContext ctx,
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
-void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
-                                  const Legion::InlineMapping& inline_op,
-                                  const InlineProfilingInfo& input)
+void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
+                                  const Legion::InlineMapping& /*inline_op*/,
+                                  const InlineProfilingInfo& /*input*/)
 {
   // No profiling yet for inline mappings
   LEGATE_ABORT;
 }
 
-void BaseMapper::map_copy(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
                           const Legion::Copy& copy,
-                          const MapCopyInput& input,
+                          const MapCopyInput& /*input*/,
                           MapCopyOutput& output)
 {
-  Copy legate_copy(&copy, runtime, ctx);
+  Copy legate_copy{&copy, runtime, ctx};
   auto& machine_desc = legate_copy.machine();
   auto copy_target   = [&]() {
     // If we're mapping an indirect copy and have data resident in GPU memory,
@@ -1054,22 +1064,30 @@ void BaseMapper::map_copy(const Legion::Mapping::MapperContext ctx,
     output_map[&copy.dst_indirect_requirements.front()] = &output.dst_indirect_instances;
   }
 
+  auto&& inputs     = legate_copy.inputs();
+  auto&& outputs    = legate_copy.outputs();
+  auto&& input_ind  = legate_copy.input_indirections();
+  auto&& output_ind = legate_copy.output_indirections();
+
+  const auto stores_to_copy = {
+    std::ref(inputs), std::ref(outputs), std::ref(input_ind), std::ref(output_ind)};
+
+  size_t reserve_size = 0;
+  for (auto&& store : stores_to_copy) reserve_size += store.get().size();
+
   std::vector<std::unique_ptr<StoreMapping>> mappings;
 
-  for (auto& store : legate_copy.inputs())
-    mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
-  for (auto& store : legate_copy.outputs())
-    mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
-  for (auto& store : legate_copy.input_indirections())
-    mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
-  for (auto& store : legate_copy.output_indirections())
-    mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
-
+  mappings.reserve(reserve_size);
+  for (auto&& store_set : stores_to_copy) {
+    for (auto&& store : store_set.get()) {
+      mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false));
+    }
+  }
   map_legate_stores(ctx, copy, mappings, target_proc, output_map);
 }
 
-void BaseMapper::select_copy_sources(const Legion::Mapping::MapperContext ctx,
-                                     const Legion::Copy& copy,
+void BaseMapper::select_copy_sources(Legion::Mapping::MapperContext ctx,
+                                     const Legion::Copy& /*copy*/,
                                      const SelectCopySrcInput& input,
                                      SelectCopySrcOutput& output)
 {
@@ -1077,25 +1095,25 @@ void BaseMapper::select_copy_sources(const Legion::Mapping::MapperContext ctx,
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
-void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
-                                  const Legion::Copy& copy,
-                                  const CopyProfilingInfo& input)
+void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
+                                  const Legion::Copy& /*copy*/,
+                                  const CopyProfilingInfo& /*input*/)
 {
   // No profiling for copies yet
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const Legion::Copy& copy,
-                                         const SelectShardingFunctorInput& input,
+                                         const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& output)
 {
   // TODO: Copies can have key stores in the future
   output.chosen_functor = find_mappable_sharding_functor_id(copy);
 }
 
-void BaseMapper::select_close_sources(const Legion::Mapping::MapperContext ctx,
-                                      const Legion::Close& close,
+void BaseMapper::select_close_sources(Legion::Mapping::MapperContext ctx,
+                                      const Legion::Close& /*close*/,
                                       const SelectCloseSrcInput& input,
                                       SelectCloseSrcOutput& output)
 {
@@ -1103,56 +1121,56 @@ void BaseMapper::select_close_sources(const Legion::Mapping::MapperContext ctx,
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
-void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
-                                  const Legion::Close& close,
-                                  const CloseProfilingInfo& input)
+void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
+                                  const Legion::Close& /*close*/,
+                                  const CloseProfilingInfo& /*input*/)
 {
   // No profiling yet for legate
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
-                                         const Legion::Close& close,
-                                         const SelectShardingFunctorInput& input,
-                                         SelectShardingFunctorOutput& output)
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
+                                         const Legion::Close& /*close*/,
+                                         const SelectShardingFunctorInput& /*input*/,
+                                         SelectShardingFunctorOutput& /*output*/)
 {
   LEGATE_ABORT;
 }
 
-void BaseMapper::map_acquire(const Legion::Mapping::MapperContext ctx,
-                             const Legion::Acquire& acquire,
-                             const MapAcquireInput& input,
-                             MapAcquireOutput& output)
+void BaseMapper::map_acquire(Legion::Mapping::MapperContext /*ctx*/,
+                             const Legion::Acquire& /*acquire*/,
+                             const MapAcquireInput& /*input*/,
+                             MapAcquireOutput& /*output*/)
 {
   // Nothing to do
 }
 
-void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
-                                  const Legion::Acquire& acquire,
-                                  const AcquireProfilingInfo& input)
+void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
+                                  const Legion::Acquire& /*acquire*/,
+                                  const AcquireProfilingInfo& /*input*/)
 {
   // No profiling for legate yet
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
-                                         const Legion::Acquire& acquire,
-                                         const SelectShardingFunctorInput& input,
-                                         SelectShardingFunctorOutput& output)
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
+                                         const Legion::Acquire& /*acquire*/,
+                                         const SelectShardingFunctorInput& /*input*/,
+                                         SelectShardingFunctorOutput& /*output*/)
 {
   LEGATE_ABORT;
 }
 
-void BaseMapper::map_release(const Legion::Mapping::MapperContext ctx,
-                             const Legion::Release& release,
-                             const MapReleaseInput& input,
-                             MapReleaseOutput& output)
+void BaseMapper::map_release(Legion::Mapping::MapperContext /*ctx*/,
+                             const Legion::Release& /*release*/,
+                             const MapReleaseInput& /*input*/,
+                             MapReleaseOutput& /*output*/)
 {
   // Nothing to do
 }
 
-void BaseMapper::select_release_sources(const Legion::Mapping::MapperContext ctx,
-                                        const Legion::Release& release,
+void BaseMapper::select_release_sources(Legion::Mapping::MapperContext ctx,
+                                        const Legion::Release& /*release*/,
                                         const SelectReleaseSrcInput& input,
                                         SelectReleaseSrcOutput& output)
 {
@@ -1160,24 +1178,24 @@ void BaseMapper::select_release_sources(const Legion::Mapping::MapperContext ctx
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
-void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
-                                  const Legion::Release& release,
-                                  const ReleaseProfilingInfo& input)
+void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
+                                  const Legion::Release& /*release*/,
+                                  const ReleaseProfilingInfo& /*input*/)
 {
   // No profiling for legate yet
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
-                                         const Legion::Release& release,
-                                         const SelectShardingFunctorInput& input,
-                                         SelectShardingFunctorOutput& output)
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
+                                         const Legion::Release& /*release*/,
+                                         const SelectShardingFunctorInput& /*input*/,
+                                         SelectShardingFunctorOutput& /*output*/)
 {
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_partition_projection(const Legion::Mapping::MapperContext ctx,
-                                             const Legion::Partition& partition,
+void BaseMapper::select_partition_projection(Legion::Mapping::MapperContext /*ctx*/,
+                                             const Legion::Partition& /*partition*/,
                                              const SelectPartitionProjectionInput& input,
                                              SelectPartitionProjectionOutput& output)
 {
@@ -1188,9 +1206,9 @@ void BaseMapper::select_partition_projection(const Legion::Mapping::MapperContex
     output.chosen_partition = Legion::LogicalPartition::NO_PART;
 }
 
-void BaseMapper::map_partition(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
                                const Legion::Partition& partition,
-                               const MapPartitionInput& input,
+                               const MapPartitionInput&,
                                MapPartitionOutput& output)
 {
   Processor target_proc{Processor::NO_PROC};
@@ -1211,13 +1229,14 @@ void BaseMapper::map_partition(const Legion::Mapping::MapperContext ctx,
 
   std::map<const Legion::RegionRequirement*, std::vector<Legion::Mapping::PhysicalInstance>*>
     output_map;
-  for (auto* req : mappings.front()->requirements()) output_map[req] = &output.chosen_instances;
+  auto&& reqs = mappings.front()->requirements();
+  for (auto* req : reqs) output_map[req] = &output.chosen_instances;
 
   map_legate_stores(ctx, partition, mappings, target_proc, output_map);
 }
 
-void BaseMapper::select_partition_sources(const Legion::Mapping::MapperContext ctx,
-                                          const Legion::Partition& partition,
+void BaseMapper::select_partition_sources(Legion::Mapping::MapperContext ctx,
+                                          const Legion::Partition& /*partition*/,
                                           const SelectPartitionSrcInput& input,
                                           SelectPartitionSrcOutput& output)
 {
@@ -1225,38 +1244,38 @@ void BaseMapper::select_partition_sources(const Legion::Mapping::MapperContext c
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
-void BaseMapper::report_profiling(const Legion::Mapping::MapperContext ctx,
-                                  const Legion::Partition& partition,
-                                  const PartitionProfilingInfo& input)
+void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
+                                  const Legion::Partition& /*partition*/,
+                                  const PartitionProfilingInfo& /*input*/)
 {
   // No profiling yet
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const Legion::Partition& partition,
-                                         const SelectShardingFunctorInput& input,
+                                         const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& output)
 {
   output.chosen_functor = find_mappable_sharding_functor_id(partition);
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const Legion::Fill& fill,
-                                         const SelectShardingFunctorInput& input,
+                                         const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& output)
 {
   output.chosen_functor = find_mappable_sharding_functor_id(fill);
 }
 
-void BaseMapper::configure_context(const Legion::Mapping::MapperContext ctx,
-                                   const Legion::Task& task,
-                                   ContextConfigOutput& output)
+void BaseMapper::configure_context(Legion::Mapping::MapperContext /*ctx*/,
+                                   const Legion::Task& /*task*/,
+                                   ContextConfigOutput& /*output*/)
 {
   // Use the defaults currently
 }
 
-void BaseMapper::map_future_map_reduction(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/,
                                           const FutureMapReductionInput& input,
                                           FutureMapReductionOutput& output)
 {
@@ -1282,8 +1301,8 @@ void BaseMapper::map_future_map_reduction(const Legion::Mapping::MapperContext c
       output.destination_memories.push_back(pair.second);
 }
 
-void BaseMapper::select_tunable_value(const Legion::Mapping::MapperContext ctx,
-                                      const Legion::Task& task,
+void BaseMapper::select_tunable_value(Legion::Mapping::MapperContext /*ctx*/,
+                                      const Legion::Task& /*task*/,
                                       const SelectTunableInput& input,
                                       SelectTunableOutput& output)
 {
@@ -1298,71 +1317,71 @@ void BaseMapper::select_tunable_value(const Legion::Mapping::MapperContext ctx,
   }
 }
 
-void BaseMapper::select_sharding_functor(const Legion::Mapping::MapperContext ctx,
-                                         const Legion::MustEpoch& epoch,
-                                         const SelectShardingFunctorInput& input,
-                                         MustEpochShardingFunctorOutput& output)
+void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
+                                         const Legion::MustEpoch& /*epoch*/,
+                                         const SelectShardingFunctorInput& /*input*/,
+                                         MustEpochShardingFunctorOutput& /*output*/)
 {
   // No must epoch launches in legate
   LEGATE_ABORT;
 }
 
-void BaseMapper::memoize_operation(const Legion::Mapping::MapperContext ctx,
-                                   const Legion::Mappable& mappable,
-                                   const MemoizeInput& input,
-                                   MemoizeOutput& output)
+void BaseMapper::memoize_operation(Legion::Mapping::MapperContext /*ctx*/,
+                                   const Legion::Mappable& /*mappable*/,
+                                   const MemoizeInput& /*input*/,
+                                   MemoizeOutput& /*output*/)
 {
   LEGATE_ABORT;
 }
 
-void BaseMapper::map_must_epoch(const Legion::Mapping::MapperContext ctx,
-                                const MapMustEpochInput& input,
-                                MapMustEpochOutput& output)
+void BaseMapper::map_must_epoch(Legion::Mapping::MapperContext /*ctx*/,
+                                const MapMustEpochInput& /*input*/,
+                                MapMustEpochOutput& /*output*/)
 {
   // No must epoch launches in legate
   LEGATE_ABORT;
 }
 
-void BaseMapper::map_dataflow_graph(const Legion::Mapping::MapperContext ctx,
-                                    const MapDataflowGraphInput& input,
-                                    MapDataflowGraphOutput& output)
+void BaseMapper::map_dataflow_graph(Legion::Mapping::MapperContext /*ctx*/,
+                                    const MapDataflowGraphInput& /*input*/,
+                                    MapDataflowGraphOutput& /*output*/)
 {
   // Not supported yet
   LEGATE_ABORT;
 }
 
-void BaseMapper::select_tasks_to_map(const Legion::Mapping::MapperContext ctx,
+void BaseMapper::select_tasks_to_map(Legion::Mapping::MapperContext /*ctx*/,
                                      const SelectMappingInput& input,
                                      SelectMappingOutput& output)
 {
   // Just map all the ready tasks
-  for (auto task : input.ready_tasks) output.map_tasks.insert(task);
+  output.map_tasks.insert(input.ready_tasks.begin(), input.ready_tasks.end());
 }
 
-void BaseMapper::select_steal_targets(const Legion::Mapping::MapperContext ctx,
-                                      const SelectStealingInput& input,
-                                      SelectStealingOutput& output)
+void BaseMapper::select_steal_targets(Legion::Mapping::MapperContext /*ctx*/,
+                                      const SelectStealingInput& /*input*/,
+                                      SelectStealingOutput& /*output*/)
 {
   // Nothing to do, no stealing in the leagte mapper currently
 }
 
-void BaseMapper::permit_steal_request(const Legion::Mapping::MapperContext ctx,
-                                      const StealRequestInput& input,
-                                      StealRequestOutput& output)
+void BaseMapper::permit_steal_request(Legion::Mapping::MapperContext /*ctx*/,
+                                      const StealRequestInput& /*input*/,
+                                      StealRequestOutput& /*output*/)
 {
   // Nothing to do, no stealing in the legate mapper currently
   LEGATE_ABORT;
 }
 
-void BaseMapper::handle_message(const Legion::Mapping::MapperContext ctx,
-                                const MapperMessage& message)
+void BaseMapper::handle_message(Legion::Mapping::MapperContext /*ctx*/,
+                                const MapperMessage& /*message*/)
 {
   // We shouldn't be receiving any messages currently
   LEGATE_ABORT;
 }
 
-void BaseMapper::handle_task_result(const Legion::Mapping::MapperContext ctx,
-                                    const MapperTaskResult& result)
+void BaseMapper::handle_task_result(Legion::Mapping::MapperContext /*ctx*/,
+                                    const MapperTaskResult& /*result*/)
 {
   // Nothing to do since we should never get one of these
   LEGATE_ABORT;

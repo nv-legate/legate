@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include "core/mapping/mapping.h"
+#include "core/mapping/operation.h"
 
-#include <memory>
+namespace legate::mapping {
 
-namespace legate::mapping::detail {
+inline Task::Task(detail::Task* impl_) : impl_{impl_} {}
 
-[[nodiscard]] std::unique_ptr<Mapper> create_core_mapper();
+inline detail::Task* Task::impl() const noexcept { return impl_; }
 
-}  // namespace legate::mapping::detail
+}  // namespace legate::mapping

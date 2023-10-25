@@ -10,93 +10,58 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/mapping/machine.h"
 #include "core/mapping/detail/machine.h"
-#include "core/utilities/detail/buffer_builder.h"
+
+#include "core/mapping/machine.h"
+
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <utility>
 
 namespace legate::mapping {
-
-/////////////////////////////////////
-// legate::mapping::NodeRange
-/////////////////////////////////////
-
-bool NodeRange::operator<(const NodeRange& other) const
-{
-  return low < other.low || (low == other.low && high < other.high);
-}
-
-bool NodeRange::operator==(const NodeRange& other) const
-{
-  return low == other.low && high == other.high;
-}
-
-bool NodeRange::operator!=(const NodeRange& other) const { return !operator==(other); }
 
 /////////////////////////////////////
 // legate::mapping::ProcessorRange
 /////////////////////////////////////
 
-uint32_t ProcessorRange::count() const { return high - low; }
-
-bool ProcessorRange::empty() const { return high <= low; }
-
 ProcessorRange ProcessorRange::slice(uint32_t from, uint32_t to) const
 {
-  uint32_t new_low  = std::min<uint32_t>(low + from, high);
-  uint32_t new_high = std::min<uint32_t>(low + to, high);
-  return ProcessorRange(new_low, new_high, per_node_count);
+  auto new_low  = std::min(low + from, high);
+  auto new_high = std::min(low + to, high);
+  return {new_low, new_high, per_node_count};
 }
 
 NodeRange ProcessorRange::get_node_range() const
 {
   if (empty()) {
-    throw std::invalid_argument("Illegal to get a node range of an empty processor range");
+    throw std::invalid_argument{"Illegal to get a node range of an empty processor range"};
   }
-  return NodeRange{low / per_node_count, (high + per_node_count - 1) / per_node_count};
+  return {low / per_node_count, (high + per_node_count - 1) / per_node_count};
 }
 
 std::string ProcessorRange::to_string() const
 {
   std::stringstream ss;
   ss << "Proc([" << low << "," << high << "], " << per_node_count << " per node)";
-  return ss.str();
-}
-
-ProcessorRange::ProcessorRange() {}
-
-ProcessorRange::ProcessorRange(uint32_t _low, uint32_t _high, uint32_t _per_node_count)
-  : low(_low < _high ? _low : 0),
-    high(_low < _high ? _high : 0),
-    per_node_count(std::max<uint32_t>(1, _per_node_count))
-{
+  return std::move(ss).str();
 }
 
 ProcessorRange ProcessorRange::operator&(const ProcessorRange& other) const
 {
   if (other.per_node_count != per_node_count) {
-    throw std::invalid_argument(
-      "Invalid to compute an intersection between processor ranges with different per-node counts");
+    throw std::invalid_argument{
+      "Invalid to compute an intersection between processor ranges with different per-node counts"};
   }
-  return ProcessorRange(std::max(low, other.low), std::min(high, other.high), per_node_count);
+  return {std::max(low, other.low), std::min(high, other.high), per_node_count};
 }
 
-bool ProcessorRange::operator==(const ProcessorRange& other) const
+bool ProcessorRange::operator<(const ProcessorRange& other) const noexcept
 {
-  return other.low == low && other.high == high && other.per_node_count == per_node_count;
-}
-
-bool ProcessorRange::operator!=(const ProcessorRange& other) const { return !operator==(other); }
-
-bool ProcessorRange::operator<(const ProcessorRange& other) const
-{
-  if (low < other.low)
-    return true;
-  else if (low > other.low)
-    return false;
-  if (high < other.high)
-    return true;
-  else if (high > other.high)
-    return false;
+  if (low < other.low) return true;
+  if (low > other.low) return false;
+  if (high < other.high) return true;
+  if (high > other.high) return false;
   return per_node_count < other.per_node_count;
 }
 
@@ -110,64 +75,65 @@ std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range)
 // legate::mapping::Machine
 //////////////////////////////////////////
 
-TaskTarget Machine::preferred_target() const { return impl_->preferred_target; }
+TaskTarget Machine::preferred_target() const { return impl()->preferred_target; }
 
-ProcessorRange Machine::processor_range() const { return processor_range(impl_->preferred_target); }
+ProcessorRange Machine::processor_range() const { return processor_range(preferred_target()); }
+
 ProcessorRange Machine::processor_range(TaskTarget target) const
 {
-  return impl_->processor_range(target);
+  return impl()->processor_range(target);
 }
 
-std::vector<TaskTarget> Machine::valid_targets() const { return impl_->valid_targets(); }
+std::vector<TaskTarget> Machine::valid_targets() const { return impl()->valid_targets(); }
 
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
-  return impl_->valid_targets_except(to_exclude);
+  return impl()->valid_targets_except(to_exclude);
 }
 
-uint32_t Machine::count() const { return count(impl_->preferred_target); }
+uint32_t Machine::count() const { return count(preferred_target()); }
 
-uint32_t Machine::count(TaskTarget target) const { return impl_->count(target); }
+uint32_t Machine::count(TaskTarget target) const { return impl()->count(target); }
 
-std::string Machine::to_string() const { return impl_->to_string(); }
+std::string Machine::to_string() const { return impl()->to_string(); }
 
-Machine Machine::only(TaskTarget target) const { return only(std::vector({target})); }
+Machine Machine::only(TaskTarget target) const { return only(std::vector<TaskTarget>{target}); }
 
 Machine Machine::only(const std::vector<TaskTarget>& targets) const
 {
-  return Machine(impl_->only(targets));
+  return Machine{impl()->only(targets)};
 }
 
 Machine Machine::slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others) const
 {
-  return Machine(impl_->slice(from, to, target, keep_others));
+  return Machine{impl()->slice(from, to, target, keep_others)};
 }
 
 Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
 {
-  return slice(from, to, impl_->preferred_target, keep_others);
+  return slice(from, to, preferred_target(), keep_others);
 }
 
 Machine Machine::operator[](TaskTarget target) const { return only(target); }
 
 Machine Machine::operator[](const std::vector<TaskTarget>& targets) const { return only(targets); }
 
-bool Machine::operator==(const Machine& other) const { return *impl_ == *other.impl_; }
+bool Machine::operator==(const Machine& other) const { return *impl() == *other.impl(); }
 
-bool Machine::operator!=(const Machine& other) const { return !(*impl_ == *other.impl_); }
+bool Machine::operator!=(const Machine& other) const { return !(*impl() == *other.impl()); }
 
-Machine Machine::operator&(const Machine& other) const { return Machine(*impl_ & *other.impl_); }
+Machine Machine::operator&(const Machine& other) const { return Machine{*impl() & *other.impl()}; }
 
-bool Machine::empty() const { return impl_->empty(); }
+bool Machine::empty() const { return impl()->empty(); }
 
-Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges)
-  : impl_(std::make_shared<detail::Machine>(std::move(ranges)))
+Machine::Machine(std::shared_ptr<detail::Machine> impl) : impl_{std::move(impl)} {}
+
+Machine::Machine(detail::Machine impl) : Machine{std::make_shared<detail::Machine>(std::move(impl))}
 {
 }
 
-Machine::Machine(std::shared_ptr<detail::Machine> impl) : impl_(std::move(impl)) {}
-
-Machine::Machine(detail::Machine impl) : impl_(std::make_shared<detail::Machine>(std::move(impl)))
+Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges)
+  : Machine{detail::Machine{std::move(ranges)}}
 {
 }
 

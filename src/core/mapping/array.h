@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/mapping/store.h"
+#include "core/type/type_info.h"
 
 namespace legate::mapping::detail {
 class Array;
@@ -28,27 +29,25 @@ class Array {
    * @return true If the array is nullable
    * @return false Otherwise
    */
-  bool nullable() const;
+  [[nodiscard]] bool nullable() const;
   /**
    * @brief Returns the dimension of the array
    *
    * @return Array's dimension
    */
-  int32_t dim() const;
+  [[nodiscard]] int32_t dim() const;
   /**
    * @brief Returns the array's type
    *
    * @return Type
    */
-  Type type() const;
-
- public:
+  [[nodiscard]] Type type() const;
   /**
    * @brief Returns metadata of the store containing the array's data
    *
    * @return Store metadata
    */
-  Store data() const;
+  [[nodiscard]] Store data() const;
   /**
    * @brief Returns metadata of the store containing the array's null mask
    *
@@ -56,46 +55,33 @@ class Array {
    *
    * @throw std::invalid_argument If the array is not nullable
    */
-  Store null_mask() const;
+  [[nodiscard]] Store null_mask() const;
   /**
    * @brief Returns metadat of all stores associated with this array
    *
    * @return Vector of store metadata
    */
-  std::vector<Store> stores() const;
-
- public:
+  [[nodiscard]] std::vector<Store> stores() const;
   /**
    * @brief Returns the array's domain
    *
    * @return Array's domain
    */
   template <int32_t DIM>
-  Rect<DIM> shape() const
-  {
-    return Rect<DIM>(domain());
-  }
+  [[nodiscard]] Rect<DIM> shape() const;
   /**
    * @brief Returns the array's domain in a dimension-erased domain type
    *
    * @return Array's domain in a dimension-erased domain type
    */
-  Domain domain() const;
+  [[nodiscard]] Domain domain() const;
 
- public:
-  Array(const detail::Array* impl);
-
- public:
-  Array(const Array&);
-  Array& operator=(const Array&);
-  Array(Array&&);
-  Array& operator=(Array&&);
-
- public:
-  ~Array();
+  explicit Array(const detail::Array* impl);
 
  private:
-  const detail::Array* impl_{nullptr};
+  const detail::Array* impl_{};
 };
 
 }  // namespace legate::mapping
+
+#include "core/mapping/array.inl"

@@ -12,11 +12,13 @@
 
 #pragma once
 
-#include <map>
-#include <tuple>
-
 #include "core/mapping/mapping.h"
-#include "core/utilities/span.h"
+
+#include <iosfwd>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 /**
  * @file
@@ -35,9 +37,9 @@ struct NodeRange {
   uint32_t low{0};
   uint32_t high{0};
 
-  bool operator<(const NodeRange&) const;
-  bool operator==(const NodeRange&) const;
-  bool operator!=(const NodeRange&) const;
+  bool operator<(const NodeRange& other) const noexcept;
+  bool operator==(const NodeRange& other) const noexcept;
+  bool operator!=(const NodeRange& other) const noexcept;
 };
 
 /**
@@ -64,14 +66,14 @@ struct ProcessorRange {
    *
    * @return Processor count
    */
-  uint32_t count() const;
+  [[nodiscard]] uint32_t count() const noexcept;
   /**
    * @brief Checks if the processor range is empty
    *
    * @return true The range is empty
    * @return false The range is not empty
    */
-  bool empty() const;
+  [[nodiscard]] bool empty() const noexcept;
   /**
    * @brief Slices the processor range for a given sub-range
    *
@@ -80,23 +82,23 @@ struct ProcessorRange {
    *
    * @return Sliced procesor range
    */
-  ProcessorRange slice(uint32_t from, uint32_t to) const;
+  [[nodiscard]] ProcessorRange slice(uint32_t from, uint32_t to) const;
   /**
    * @brief Computes a range of node IDs for this processor range
    *
    * @return Node range in a pair
    */
-  NodeRange get_node_range() const;
+  [[nodiscard]] NodeRange get_node_range() const;
   /**
    * @brief Converts the range to a human-readable string
    *
    * @return Processor range in a string
    */
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
   /**
    * @brief Creates an empty processor range
    */
-  ProcessorRange();
+  ProcessorRange() = default;
   /**
    * @brief Creates a processor range
    *
@@ -104,11 +106,12 @@ struct ProcessorRange {
    * @param high End processor ID
    * @param per_node_count Number of per-node processors
    */
-  ProcessorRange(uint32_t low, uint32_t high, uint32_t per_node_count);
+  ProcessorRange(uint32_t low, uint32_t high, uint32_t per_node_count) noexcept;
+
   ProcessorRange operator&(const ProcessorRange&) const;
-  bool operator==(const ProcessorRange&) const;
-  bool operator!=(const ProcessorRange&) const;
-  bool operator<(const ProcessorRange&) const;
+  bool operator==(const ProcessorRange& other) const noexcept;
+  bool operator!=(const ProcessorRange& other) const noexcept;
+  bool operator<(const ProcessorRange& other) const noexcept;
 };
 
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
@@ -132,13 +135,13 @@ class Machine {
   /**
    * @brief Preferred processor type of this machine descriptor
    */
-  TaskTarget preferred_target() const;
+  [[nodiscard]] TaskTarget preferred_target() const;
   /**
    * @brief Returns the processor range for the preferred processor type in this descriptor
    *
    * @return A processor range
-   */
-  ProcessorRange processor_range() const;
+  ` */
+  [[nodiscard]] ProcessorRange processor_range() const;
   /**
    * @brief Returns the processor range for a given processor type
    *
@@ -148,13 +151,13 @@ class Machine {
    *
    * @return A processor range
    */
-  ProcessorRange processor_range(TaskTarget target) const;
+  [[nodiscard]] ProcessorRange processor_range(TaskTarget target) const;
   /**
    * @brief Returns the valid task targets within this machine descriptor
    *
    * @return Task targets
    */
-  std::vector<TaskTarget> valid_targets() const;
+  [[nodiscard]] std::vector<TaskTarget> valid_targets() const;
   /**
    * @brief Returns the valid task targets excluding a given set of targets
    *
@@ -162,13 +165,14 @@ class Machine {
    *
    * @return Task targets
    */
-  std::vector<TaskTarget> valid_targets_except(const std::set<TaskTarget>& to_exclude) const;
+  [[nodiscard]] std::vector<TaskTarget> valid_targets_except(
+    const std::set<TaskTarget>& to_exclude) const;
   /**
    * @brief Returns the number of preferred processors
    *
    * @return Processor count
    */
-  uint32_t count() const;
+  [[nodiscard]] uint32_t count() const;
   /**
    * @brief Returns the number of processors of a given type
    *
@@ -176,14 +180,14 @@ class Machine {
    *
    * @return Processor count
    */
-  uint32_t count(TaskTarget target) const;
+  [[nodiscard]] uint32_t count(TaskTarget target) const;
 
   /**
    * @brief Converts the machine descriptor to a human-readable string
    *
    * @return Machine descriptor in a string
    */
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
   /**
    * @brief Extracts the processor range for a given processor type and creates a fresh machine
    * descriptor with it
@@ -194,7 +198,7 @@ class Machine {
    *
    * @return Machine descriptor with the chosen processor range
    */
-  Machine only(TaskTarget target) const;
+  [[nodiscard]] Machine only(TaskTarget target) const;
   /**
    * @brief Extracts the processor ranges for a given set of processor types and creates a fresh
    * machine descriptor with them
@@ -206,7 +210,7 @@ class Machine {
    *
    * @return Machine descriptor with the chosen processor ranges
    */
-  Machine only(const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] Machine only(const std::vector<TaskTarget>& targets) const;
   /**
    * @brief Slices the processor range for a given processor type
    *
@@ -217,7 +221,10 @@ class Machine {
    *
    * @return Machine descriptor with the chosen procssor range sliced
    */
-  Machine slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others = false) const;
+  [[nodiscard]] Machine slice(uint32_t from,
+                              uint32_t to,
+                              TaskTarget target,
+                              bool keep_others = false) const;
   /**
    * @brief Slices the processor range for the preferred processor type of this machine descriptor
    *
@@ -227,7 +234,7 @@ class Machine {
    *
    * @return Machine descriptor with the preferred processor range sliced
    */
-  Machine slice(uint32_t from, uint32_t to, bool keep_others = false) const;
+  [[nodiscard]] Machine slice(uint32_t from, uint32_t to, bool keep_others = false) const;
   /**
    * @brief Selects the processor range for a given processor type and constructs a machine
    * descriptor with it.
@@ -268,22 +275,19 @@ class Machine {
    * @return true The machine descriptor is empty
    * @return false The machine descriptor is non-empty
    */
-  bool empty() const;
+  [[nodiscard]] bool empty() const;
 
- public:
   Machine() = default;
   explicit Machine(std::map<TaskTarget, ProcessorRange> ranges);
   explicit Machine(std::shared_ptr<detail::Machine> impl);
   explicit Machine(detail::Machine impl);
 
- public:
   Machine(const Machine&)                = default;
   Machine& operator=(const Machine&)     = default;
   Machine(Machine&&) noexcept            = default;
   Machine& operator=(Machine&&) noexcept = default;
 
- public:
-  [[nodiscard]] std::shared_ptr<detail::Machine> impl() const { return impl_; }
+  [[nodiscard]] const std::shared_ptr<detail::Machine>& impl() const;
 
  private:
   std::shared_ptr<detail::Machine> impl_{nullptr};
@@ -292,3 +296,5 @@ class Machine {
 std::ostream& operator<<(std::ostream& stream, const Machine& machine);
 
 }  // namespace legate::mapping
+
+#include "core/mapping/machine.inl"
