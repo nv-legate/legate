@@ -75,7 +75,7 @@ std::optional<TaskException> ReturnedException::to_task_exception() const
 namespace {
 
 template <typename T>
-constexpr std::size_t max_aligned_size_for_type()
+constexpr size_t max_aligned_size_for_type()
 {
   return sizeof(T) + alignof(T) - 1;
 }
@@ -86,13 +86,13 @@ constexpr std::size_t max_aligned_size_for_type()
 // alignment requirements for each member. It cannot know how much of the extra alignment
 // padding it needs because that depends on how the input pointer is aligned when it goes to
 // pack.
-std::size_t ReturnedException::legion_buffer_size() const
+size_t ReturnedException::legion_buffer_size() const
 {
-  std::size_t size = max_aligned_size_for_type<bool>();
+  size_t size = max_aligned_size_for_type<bool>();
 
   if (raised_) {
-    size += max_aligned_size_for_type<std::int32_t>();
-    size += max_aligned_size_for_type<std::uint32_t>();
+    size += max_aligned_size_for_type<int32_t>();
+    size += max_aligned_size_for_type<uint32_t>();
     size += error_message_.size();
   }
   return size;
@@ -102,9 +102,7 @@ namespace {
 
 // REVIEW: why no BufferBuilder? Then we don't have to repeat this logic
 template <typename T>
-[[nodiscard]] std::pair<void*, std::size_t> pack_buffer(void* buf,
-                                                        std::size_t remaining_cap,
-                                                        T&& value)
+[[nodiscard]] std::pair<void*, size_t> pack_buffer(void* buf, size_t remaining_cap, T&& value)
 {
   const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
 
@@ -120,7 +118,7 @@ void ReturnedException::legion_serialize(void* buffer) const
 
   std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, raised_);
   if (raised_) {
-    const auto error_len = static_cast<std::uint32_t>(error_message_.size());
+    const auto error_len = static_cast<uint32_t>(error_message_.size());
 
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, index_);
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, error_len);
@@ -131,9 +129,7 @@ void ReturnedException::legion_serialize(void* buffer) const
 namespace {
 
 template <typename T>
-[[nodiscard]] std::pair<void*, std::size_t> unpack_buffer(void* buf,
-                                                          std::size_t remaining_cap,
-                                                          T* value)
+[[nodiscard]] std::pair<void*, size_t> unpack_buffer(void* buf, size_t remaining_cap, T* value)
 {
   const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
 
@@ -147,12 +143,12 @@ void ReturnedException::legion_deserialize(const void* buffer)
 {
   // There is no information about the size of the buffer, nor can we know how much we need
   // until we pack all of it. So we just lie and say we have infinite memory.
-  auto rem_cap = std::numeric_limits<std::size_t>::max();
+  auto rem_cap = std::numeric_limits<size_t>::max();
   auto ptr     = const_cast<void*>(buffer);
 
   std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &raised_);
   if (raised_) {
-    std::uint32_t error_len;
+    uint32_t error_len;
 
     std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &index_);
     std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &error_len);

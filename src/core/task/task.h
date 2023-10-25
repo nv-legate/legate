@@ -18,6 +18,10 @@
 #include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
 
+#include <map>
+#include <memory>
+#include <string>
+
 /** @defgroup task Task
  */
 
@@ -107,7 +111,7 @@ struct LegateTask {
   static std::unique_ptr<TaskInfo> create_task_info(
     const std::map<LegateVariantCode, VariantOptions>& all_options);
 
-  static const std::string& task_name();
+  [[nodiscard]] static const std::string& task_name();
 };
 
 }  // namespace legate

@@ -12,13 +12,9 @@
 
 #pragma once
 
-#include <memory>
-
-#include "legion.h"
-
 #include "core/runtime/library.h"
-#include "core/task/variant_options.h"
-#include "core/utilities/typedefs.h"
+
+#include <memory>
 
 /**
  * @file
@@ -72,6 +68,12 @@ class TaskInfo;
  */
 class TaskRegistrar {
  public:
+  TaskRegistrar();
+  ~TaskRegistrar();
+
+  TaskRegistrar(TaskRegistrar&&)            = delete;
+  TaskRegistrar& operator=(TaskRegistrar&&) = delete;
+
   /**
    * @brief Registers all tasks recorded in this registrar. Typically invoked in a registration
    * callback of a library.
@@ -80,22 +82,11 @@ class TaskRegistrar {
    */
   void register_all_tasks(Library library);
 
- public:
   void record_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
-
- public:
-  TaskRegistrar();
-  ~TaskRegistrar();
-
- private:
-  TaskRegistrar(const TaskRegistrar&)            = delete;
-  TaskRegistrar& operator=(const TaskRegistrar&) = delete;
-  TaskRegistrar(TaskRegistrar&&)                 = delete;
-  TaskRegistrar& operator=(TaskRegistrar&&)      = delete;
 
  private:
   struct Impl;
-  Impl* impl_;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace legate

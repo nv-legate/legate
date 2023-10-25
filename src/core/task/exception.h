@@ -12,9 +12,10 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <exception>
 #include <string>
+#include <utility>
 
 /**
  * @file
@@ -42,8 +43,8 @@ class TaskException : public std::exception {
    * @param index Exception id
    * @param error_message Error message
    */
-  TaskException(int32_t index, const std::string& error_message)
-    : index_(index), error_message_(error_message)
+  TaskException(int32_t index, std::string error_message)
+    : index_{index}, error_message_{std::move(error_message)}
   {
   }
 
@@ -53,28 +54,26 @@ class TaskException : public std::exception {
    *
    * @param error_message Error message
    */
-  TaskException(const std::string& error_message) : index_(0), error_message_(error_message) {}
+  explicit TaskException(std::string error_message) : TaskException{0, std::move(error_message)} {}
 
- public:
-  virtual const char* what() const noexcept { return error_message_.c_str(); }
+  [[nodiscard]] const char* what() const noexcept override { return error_message().c_str(); }
 
- public:
   /**
    * @brief Returns the exception id
    *
    * @return The exception id
    */
-  int32_t index() const { return index_; }
+  [[nodiscard]] int32_t index() const noexcept { return index_; }
   /**
    * @brief Returns the error message
    *
    * @return The error message
    */
-  const std::string& error_message() const { return error_message_; }
+  [[nodiscard]] const std::string& error_message() const noexcept { return error_message_; }
 
  private:
   int32_t index_{-1};
-  std::string error_message_;
+  std::string error_message_{};
 };
 
 }  // namespace legate

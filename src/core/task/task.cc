@@ -12,10 +12,6 @@
 
 #include "core/task/task.h"
 
-#include <cxxabi.h>
-
-#include "realm/faults.h"
-
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/task/detail/return.h"
@@ -23,15 +19,12 @@
 #include "core/task/exception.h"
 #include "core/task/registrar.h"
 #include "core/task/task_context.h"
-#include "core/utilities/deserializer.h"
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 
-namespace legate {
+#include "realm/faults.h"
 
-extern Logger log_legate;
-
-}  // namespace legate
+#include <cxxabi.h>
 
 namespace legate::detail {
 
@@ -71,10 +64,9 @@ void task_wrapper(VariantImpl variant_impl,
                   const std::string& task_name,
                   const void* args,
                   size_t arglen,
-                  const void* userdata,
-                  size_t userlen,
+                  const void* /*userdata*/,
+                  size_t /*userlen*/,
                   Processor p)
-
 {
   // Legion preamble
   const Legion::Task* task;
@@ -83,24 +75,30 @@ void task_wrapper(VariantImpl variant_impl,
   Legion::Runtime* runtime;
   Legion::Runtime::legion_task_preamble(args, arglen, p, task, regions, legion_context, runtime);
 
-  if (LegateDefined(LEGATE_USE_CUDA)) {
-    std::stringstream ss;
-    ss << task_name;
-    if (!task->get_provenance_string().empty()) ss << " : " + task->get_provenance_string();
-    std::string msg = ss.str();
-    nvtx::Range auto_range(msg.c_str());
-  }
+  // Cannot use if (LegateDefined(...)) here since nvtx::Range is a RAII class which begins and
+  // ends a timer on construction and destruction. It must be in the same lexical scope as the
+  // task evaluation!
+#if LegateDefined(LEGATE_USE_CUDA)
+  std::stringstream ss;
+
+  ss << task_name;
+  if (!task->get_provenance_string().empty()) ss << " : " + task->get_provenance_string();
+  std::string msg = ss.str();
+  nvtx::Range auto_range(msg.c_str());
+#else
+  static_cast<void>(task_name);
+#endif
 
   show_progress(task, legion_context, runtime);
 
-  detail::TaskContext context(task, *regions);
+  detail::TaskContext context{task, *regions};
 
   ReturnValues return_values{};
   try {
-    legate::TaskContext ctx(&context);
+    legate::TaskContext ctx{&context};
     if (!Config::use_empty_task) (*variant_impl)(ctx);
     return_values = context.pack_return_values();
-  } catch (legate::TaskException& e) {
+  } catch (const legate::TaskException& e) {
     if (context.can_raise_exception()) {
       context.make_all_unbound_stores_empty();
       return_values = context.pack_return_values_with_exception(e.index(), e.error_message());
