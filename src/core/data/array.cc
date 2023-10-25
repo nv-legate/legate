@@ -19,7 +19,7 @@ bool Array::nullable() const { return impl_->nullable(); }
 
 int32_t Array::dim() const { return impl_->dim(); }
 
-Type Array::type() const { return Type(impl_->type()); }
+Type Array::type() const { return Type{impl_->type()}; }
 
 bool Array::nested() const { return impl_->nested(); }
 

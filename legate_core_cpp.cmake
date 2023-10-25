@@ -542,6 +542,7 @@ install(
 
 install(
   FILES src/core/type/type_info.h
+        src/core/type/type_info.inl
         src/core/type/type_traits.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/type)
 

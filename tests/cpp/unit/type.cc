@@ -58,7 +58,7 @@ void test_primitive_type(const legate::Type& type, std::string type_string, uint
 void test_string_type(const legate::Type& type)
 {
   EXPECT_EQ(type.code(), legate::Type::Code::STRING);
-  EXPECT_THROW(type.size(), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(type.size()), std::invalid_argument);
   EXPECT_EQ(type.alignment(), alignof(std::max_align_t));
   EXPECT_TRUE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
@@ -127,7 +127,7 @@ void test_list_type(const legate::Type& element_type, std::string to_string)
 {
   auto type = legate::list_type(element_type);
   EXPECT_EQ(type.code(), legate::Type::Code::LIST);
-  EXPECT_THROW(type.size(), std::invalid_argument);
+  EXPECT_THROW((void)type.size(), std::invalid_argument);
   EXPECT_EQ(type.alignment(), 0);
   EXPECT_TRUE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
@@ -193,11 +193,12 @@ TEST_F(TypeUnit, PrimitiveType)
   EXPECT_EQ(legate::complex64(), legate::primitive_type(legate::Type::Code::COMPLEX64));
   EXPECT_EQ(legate::complex128(), legate::primitive_type(legate::Type::Code::COMPLEX128));
 
-  EXPECT_THROW(legate::primitive_type(legate::Type::Code::FIXED_ARRAY), std::invalid_argument);
-  EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRUCT), std::invalid_argument);
-  EXPECT_THROW(legate::primitive_type(legate::Type::Code::STRING), std::invalid_argument);
-  EXPECT_THROW(legate::primitive_type(legate::Type::Code::LIST), std::invalid_argument);
-  EXPECT_THROW(legate::primitive_type(legate::Type::Code::BINARY), std::invalid_argument);
+  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::FIXED_ARRAY),
+               std::invalid_argument);
+  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::STRUCT), std::invalid_argument);
+  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::STRING), std::invalid_argument);
+  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::LIST), std::invalid_argument);
+  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::BINARY), std::invalid_argument);
 }
 
 TEST_F(TypeUnit, StringType) { test_string_type(legate::string_type()); }
@@ -207,8 +208,8 @@ TEST_F(TypeUnit, BinaryType)
   test_binary_type(legate::binary_type(123), 123);
   test_binary_type(legate::binary_type(45), 45);
 
-  EXPECT_THROW(legate::binary_type(0), std::out_of_range);
-  EXPECT_THROW(legate::binary_type(0xFFFFF + 1), std::out_of_range);
+  EXPECT_THROW((void)legate::binary_type(0), std::out_of_range);
+  EXPECT_THROW((void)legate::binary_type(0xFFFFF + 1), std::out_of_range);
 }
 
 TEST_F(TypeUnit, FixedArrayType)
@@ -239,14 +240,14 @@ TEST_F(TypeUnit, FixedArrayType)
 
   // N = 0
   {
-    EXPECT_THROW(legate::fixed_array_type(legate::int64(), 0), std::out_of_range);
+    EXPECT_THROW((void)legate::fixed_array_type(legate::int64(), 0), std::out_of_range);
   }
 
   // element type has variable size
-  EXPECT_THROW(legate::fixed_array_type(legate::string_type(), 10), std::invalid_argument);
+  EXPECT_THROW((void)legate::fixed_array_type(legate::string_type(), 10), std::invalid_argument);
 
   // invalid casts
-  EXPECT_THROW(legate::uint32().as_fixed_array_type(), std::invalid_argument);
+  EXPECT_THROW((void)legate::uint32().as_fixed_array_type(), std::invalid_argument);
 }
 
 TEST_F(TypeUnit, StructType)
@@ -290,14 +291,14 @@ TEST_F(TypeUnit, StructType)
   }
 
   // field type has variable size
-  EXPECT_THROW(legate::struct_type(true, legate::string_type(), legate::int16()),
+  EXPECT_THROW((void)legate::struct_type(true, legate::string_type(), legate::int16()),
                std::runtime_error);
-  EXPECT_THROW(legate::struct_type(false, legate::string_type()), std::runtime_error);
-  EXPECT_THROW(legate::struct_type(true), std::invalid_argument);
-  EXPECT_THROW(legate::struct_type(false), std::invalid_argument);
+  EXPECT_THROW((void)legate::struct_type(false, legate::string_type()), std::runtime_error);
+  EXPECT_THROW((void)legate::struct_type(true), std::invalid_argument);
+  EXPECT_THROW((void)legate::struct_type(false), std::invalid_argument);
 
   // invalid casts
-  EXPECT_THROW(legate::uint32().as_struct_type(), std::invalid_argument);
+  EXPECT_THROW((void)legate::uint32().as_struct_type(), std::invalid_argument);
 }
 
 TEST_F(TypeUnit, PointType)
@@ -320,9 +321,9 @@ TEST_F(TypeUnit, PointType)
   EXPECT_TRUE(legate::is_point_type(legate::int64(), 1));
 
   // invalid dim
-  EXPECT_THROW(legate::point_type(-1), std::out_of_range);
-  EXPECT_THROW(legate::point_type(0), std::out_of_range);
-  EXPECT_THROW(legate::point_type(LEGATE_MAX_DIM + 1), std::out_of_range);
+  EXPECT_THROW((void)legate::point_type(-1), std::out_of_range);
+  EXPECT_THROW((void)legate::point_type(0), std::out_of_range);
+  EXPECT_THROW((void)legate::point_type(LEGATE_MAX_DIM + 1), std::out_of_range);
 }
 
 TEST_F(TypeUnit, RectType)
@@ -348,9 +349,9 @@ TEST_F(TypeUnit, RectType)
   EXPECT_FALSE(legate::is_rect_type(legate::int64(), 1));
 
   // invalid dim
-  EXPECT_THROW(legate::rect_type(-1), std::out_of_range);
-  EXPECT_THROW(legate::rect_type(0), std::out_of_range);
-  EXPECT_THROW(legate::rect_type(LEGATE_MAX_DIM + 1), std::out_of_range);
+  EXPECT_THROW((void)legate::rect_type(-1), std::out_of_range);
+  EXPECT_THROW((void)legate::rect_type(0), std::out_of_range);
+  EXPECT_THROW((void)legate::rect_type(LEGATE_MAX_DIM + 1), std::out_of_range);
 }
 
 TEST_F(TypeUnit, ListType)
@@ -377,11 +378,11 @@ TEST_F(TypeUnit, ListType)
   test_list_type(legate::rect_type(2), "list({int64[2]:0,int64[2]:16})");
 
   // variable size types
-  EXPECT_THROW(legate::list_type(legate::string_type()), std::runtime_error);
-  EXPECT_THROW(legate::list_type(legate::list_type(legate::uint32())), std::runtime_error);
+  EXPECT_THROW((void)legate::list_type(legate::string_type()), std::runtime_error);
+  EXPECT_THROW((void)legate::list_type(legate::list_type(legate::uint32())), std::runtime_error);
 
   // invald casts
-  EXPECT_THROW(legate::string_type().as_struct_type(), std::invalid_argument);
+  EXPECT_THROW((void)legate::string_type().as_struct_type(), std::invalid_argument);
 }
 
 TEST_F(TypeUnit, Uid)

@@ -10,13 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <atomic>
-#include <numeric>
-#include <unordered_map>
+#include "core/type/detail/type_info.h"
 
 #include "core/runtime/detail/runtime.h"
-#include "core/type/detail/type_info.h"
 #include "core/utilities/detail/buffer_builder.h"
+
+#include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace legate::detail {
 
@@ -77,7 +85,8 @@ const std::unordered_map<Type::Code, std::string> TYPE_NAMES = {
   {Type::Code::NIL, "null_type"},
 };
 
-const char* _VARIABLE_SIZE_ERROR_MESSAGE = "Variable-size element type cannot be used";
+constexpr const char* const VARIABLE_SIZE_ERROR_MESSAGE =
+  "Variable-size element type cannot be used";
 
 // Some notes about these magic numbers:
 //
@@ -93,32 +102,30 @@ const char* _VARIABLE_SIZE_ERROR_MESSAGE = "Variable-size element type cannot be
 // * Rect types: [_BASE_RECT_TYPE_UID + 1, _BASE_RECT_TYPE_UID + LEGATE_MAX_DIM]
 //
 // where the <+> operator is a pairwise concatenation
-constexpr uint32_t _TYPE_CODE_OFFSET     = 8;
-constexpr uint32_t _BASE_POINT_TYPE_UID  = 0x10000000;
-constexpr uint32_t _BASE_RECT_TYPE_UID   = _BASE_POINT_TYPE_UID + LEGATE_MAX_DIM + 1;
-constexpr uint32_t _BASE_CUSTOM_TYPE_UID = _BASE_RECT_TYPE_UID + LEGATE_MAX_DIM + 1;
+constexpr uint32_t TYPE_CODE_OFFSET     = 8;
+constexpr uint32_t BASE_POINT_TYPE_UID  = 0x10000000;
+constexpr uint32_t BASE_RECT_TYPE_UID   = BASE_POINT_TYPE_UID + LEGATE_MAX_DIM + 1;
+constexpr uint32_t BASE_CUSTOM_TYPE_UID = BASE_RECT_TYPE_UID + LEGATE_MAX_DIM + 1;
 // Last byte of a static UID is a type code
-constexpr uint32_t _MAX_BINARY_TYPE_SIZE = 0x0FFFFF00 >> _TYPE_CODE_OFFSET;
+constexpr uint32_t MAX_BINARY_TYPE_SIZE = 0x0FFFFF00 >> TYPE_CODE_OFFSET;
 
 uint32_t get_next_uid()
 {
-  static std::atomic<uint32_t> next_uid = _BASE_CUSTOM_TYPE_UID;
+  static std::atomic<uint32_t> next_uid = BASE_CUSTOM_TYPE_UID;
   return next_uid++;
 }
 
 }  // namespace
 
-Type::Type(Code c) : code(c) {}
-
 uint32_t Type::size() const
 {
-  throw std::invalid_argument("Size of a variable size type is undefined");
-  return 0;
+  throw std::invalid_argument{"Size of a variable size type is undefined"};
+  return {};
 }
 
 const FixedArrayType& Type::as_fixed_array_type() const
 {
-  throw std::invalid_argument("Type is not a fixed array type");
+  throw std::invalid_argument{"Type is not a fixed array type"};
   return *static_cast<const FixedArrayType*>(nullptr);
 }
 
@@ -167,10 +174,13 @@ void PrimitiveType::pack(BufferBuilder& buffer) const
 
 bool PrimitiveType::equal(const Type& other) const { return code == other.code; }
 
-ExtensionType::ExtensionType(int32_t uid, Type::Code code) : Type(code), uid_(uid) {}
+ExtensionType::ExtensionType(int32_t uid, Type::Code code)
+  : Type{code}, uid_{static_cast<std::uint32_t>(uid)}
+{
+}
 
 BinaryType::BinaryType(int32_t uid, uint32_t size)
-  : ExtensionType(uid, Type::Code::BINARY), size_(size)
+  : ExtensionType{uid, Type::Code::BINARY}, size_{size}
 {
 }
 
@@ -188,17 +198,18 @@ bool BinaryType::equal(const Type& other) const
 }
 
 FixedArrayType::FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
-  : ExtensionType(uid, Type::Code::FIXED_ARRAY),
-    element_type_(std::move(element_type)),
-    N_(N),
-    size_(element_type_->size() * N)
+  : ExtensionType{uid, Type::Code::FIXED_ARRAY},
+    element_type_{std::move(element_type)},
+    N_{N},
+    size_{element_type_->size() * N}
 {
-  if (element_type_->variable_size()) throw std::invalid_argument(_VARIABLE_SIZE_ERROR_MESSAGE);
+  if (element_type_->variable_size()) throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
 }
 
 std::string FixedArrayType::to_string() const
 {
   std::stringstream ss;
+
   ss << element_type_->to_string() << "[" << N_ << "]";
   return std::move(ss).str();
 }
@@ -221,25 +232,24 @@ bool FixedArrayType::equal(const Type& other) const
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
-  } else {
-    // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-    return uid_ == casted.uid_;
   }
+  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+  return uid_ == casted.uid_;
 }
 
 StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
-  : ExtensionType(uid, Type::Code::STRUCT),
-    aligned_(align),
-    size_(0),
-    alignment_(1),
-    field_types_(std::move(field_types))
+  : ExtensionType{uid, Type::Code::STRUCT},
+    aligned_{align},
+    size_{0},
+    alignment_{1},
+    field_types_{std::move(field_types)}
 {
   if (std::any_of(
         field_types_.begin(), field_types_.end(), [](auto& ty) { return ty->variable_size(); })) {
-    throw std::runtime_error("Struct types can't have a variable size field");
+    throw std::runtime_error{"Struct types can't have a variable size field"};
   }
   if (field_types_.empty()) {
-    throw std::invalid_argument("Struct types must have at least one field");
+    throw std::invalid_argument{"Struct types must have at least one field"};
   }
 
   offsets_.reserve(field_types_.size());
@@ -249,18 +259,18 @@ StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_t
     };
 
     for (auto& field_type : field_types_) {
-      if (field_type->variable_size()) throw std::invalid_argument(_VARIABLE_SIZE_ERROR_MESSAGE);
-      uint32_t _my_align = field_type->alignment();
-      alignment_         = std::max(_my_align, alignment_);
+      if (field_type->variable_size()) throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+      const auto _my_align = field_type->alignment();
+      alignment_           = std::max(_my_align, alignment_);
 
-      uint32_t offset = align_offset(size_, _my_align);
+      const auto offset = align_offset(size_, _my_align);
       offsets_.push_back(offset);
       size_ = offset + field_type->size();
     }
     size_ = align_offset(size_, alignment_);
   } else {
     for (auto& field_type : field_types_) {
-      if (field_type->variable_size()) throw std::invalid_argument(_VARIABLE_SIZE_ERROR_MESSAGE);
+      if (field_type->variable_size()) throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
       offsets_.push_back(size_);
       size_ += field_type->size();
     }
@@ -270,6 +280,7 @@ StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_t
 std::string StructType::to_string() const
 {
   std::stringstream ss;
+
   ss << "{";
   for (uint32_t idx = 0; idx < field_types_.size(); ++idx) {
     if (idx > 0) ss << ",";
@@ -283,7 +294,7 @@ void StructType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(static_cast<int32_t>(code));
   buffer.pack<uint32_t>(uid_);
-  buffer.pack<uint32_t>(field_types_.size());
+  buffer.pack<uint32_t>(static_cast<std::uint32_t>(field_types_.size()));
   for (auto& field_type : field_types_) field_type->pack(buffer);
   buffer.pack<bool>(aligned_);
 }
@@ -298,15 +309,14 @@ bool StructType::equal(const Type& other) const
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     if (uid_ != casted.uid_) return false;
-    uint32_t nf = num_fields();
+    const auto nf = num_fields();
     if (nf != casted.num_fields()) return false;
     for (uint32_t idx = 0; idx < nf; ++idx)
       if (field_type(idx) != casted.field_type(idx)) return false;
     return true;
-  } else {
-    // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-    return uid_ == casted.uid_;
   }
+  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+  return uid_ == casted.uid_;
 }
 
 std::shared_ptr<Type> StructType::field_type(uint32_t field_idx) const
@@ -314,7 +324,7 @@ std::shared_ptr<Type> StructType::field_type(uint32_t field_idx) const
   return field_types_.at(field_idx);
 }
 
-StringType::StringType() : Type(Type::Code::STRING) {}
+StringType::StringType() : Type{Type::Code::STRING} {}
 
 int32_t StringType::uid() const { return static_cast<int32_t>(code); }
 
@@ -331,8 +341,8 @@ std::shared_ptr<Type> primitive_type(Type::Code code)
 {
   static std::unordered_map<Type::Code, std::shared_ptr<Type>> cache{};
   if (SIZEOF.find(code) == SIZEOF.end()) {
-    throw std::invalid_argument(std::to_string(static_cast<int32_t>(code)) +
-                                " is not a valid type code for a primitive type");
+    throw std::invalid_argument{std::to_string(static_cast<int32_t>(code)) +
+                                " is not a valid type code for a primitive type"};
   }
   auto finder = cache.find(code);
   if (finder != cache.end()) { return finder->second; }
@@ -342,16 +352,17 @@ std::shared_ptr<Type> primitive_type(Type::Code code)
 }
 
 ListType::ListType(int32_t uid, std::shared_ptr<Type> element_type)
-  : ExtensionType(uid, Type::Code::LIST), element_type_(std::move(element_type))
+  : ExtensionType{uid, Type::Code::LIST}, element_type_{std::move(element_type)}
 {
   if (element_type_->variable_size()) {
-    throw std::runtime_error("Nested variable size types are not implemented yet");
+    throw std::runtime_error{"Nested variable size types are not implemented yet"};
   }
 }
 
 std::string ListType::to_string() const
 {
   std::stringstream ss;
+
   ss << "list(" << element_type_->to_string() << ")";
   return std::move(ss).str();
 }
@@ -373,10 +384,9 @@ bool ListType::equal(const Type& other) const
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     return uid_ == casted.uid_ && element_type_ == casted.element_type_;
-  } else {
-    // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-    return uid_ == casted.uid_;
   }
+  // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
+  return uid_ == casted.uid_;
 }
 
 std::shared_ptr<Type> string_type()
@@ -388,27 +398,27 @@ std::shared_ptr<Type> string_type()
 std::shared_ptr<Type> binary_type(uint32_t size)
 {
   if (size == 0) {
-    throw std::out_of_range("Size for an opaque binary type must be greater than 0");
+    throw std::out_of_range{"Size for an opaque binary type must be greater than 0"};
   }
-  if (size > _MAX_BINARY_TYPE_SIZE) {
-    throw std::out_of_range("Maximum size for opaque binary types is " +
-                            std::to_string(_MAX_BINARY_TYPE_SIZE));
+  if (size > MAX_BINARY_TYPE_SIZE) {
+    throw std::out_of_range{"Maximum size for opaque binary types is " +
+                            std::to_string(MAX_BINARY_TYPE_SIZE)};
   }
-  int32_t uid = static_cast<int32_t>(Type::Code::BINARY) | (size << _TYPE_CODE_OFFSET);
+  auto uid = static_cast<int32_t>(Type::Code::BINARY) | (size << TYPE_CODE_OFFSET);
   return std::make_shared<BinaryType>(uid, size);
 }
 
 std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint32_t N)
 {
-  if (N == 0) { throw std::out_of_range("Size of array must be greater than 0"); }
+  if (N == 0) throw std::out_of_range{"Size of array must be greater than 0"};
   // We use UIDs of the following format for "common" fixed array types
   //    1B            1B
   // +--------+-------------------+
   // | length | element type code |
   // +--------+-------------------+
-  int32_t uid = [&N](const Type& elem_type) {
+  auto uid = [&N](const Type& elem_type) {
     if (!elem_type.is_primitive() || N > 0xFFU) return get_next_uid();
-    return static_cast<int32_t>(elem_type.code) | (N << _TYPE_CODE_OFFSET);
+    return static_cast<int32_t>(elem_type.code) | (N << TYPE_CODE_OFFSET);
   }(*element_type);
   return std::make_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
@@ -518,10 +528,10 @@ std::shared_ptr<Type> point_type(int32_t ndim)
   static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
 
   if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
-    throw std::out_of_range(std::to_string(ndim) + " is not a supported number of dimensions");
+    throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
   if (nullptr == cache[ndim]) {
     cache[ndim] =
-      std::make_shared<detail::FixedArrayType>(_BASE_POINT_TYPE_UID + ndim, int64(), ndim);
+      std::make_shared<detail::FixedArrayType>(BASE_POINT_TYPE_UID + ndim, int64(), ndim);
   }
   return cache[ndim];
 }
@@ -531,13 +541,14 @@ std::shared_ptr<Type> rect_type(int32_t ndim)
   static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
 
   if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
-    throw std::out_of_range(std::to_string(ndim) + " is not a supported number of dimensions");
+    throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
 
   if (nullptr == cache[ndim]) {
     auto pt_type = point_type(ndim);
     std::vector<std::shared_ptr<detail::Type>> field_types{pt_type, pt_type};
+
     cache[ndim] = std::make_shared<detail::StructType>(
-      _BASE_RECT_TYPE_UID + ndim, std::move(field_types), true /*align*/);
+      BASE_RECT_TYPE_UID + ndim, std::move(field_types), true /*align*/);
   }
   return cache[ndim];
 }

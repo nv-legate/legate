@@ -14,7 +14,10 @@
 
 #include "core/legate_c.h"
 
+#include <iosfwd>
 #include <memory>
+#include <string>
+#include <type_traits>
 #include <vector>
 
 /** @defgroup types Type system
@@ -79,51 +82,50 @@ class Type {
     LIST        = LIST_LT,        /*!< List type */
   };
 
- public:
   /**
    * @brief Code of the type
    *
    * @return Type code
    */
-  Code code() const;
+  [[nodiscard]] Code code() const;
   /**
    * @brief Size of the data type in bytes
    *
    * @return Data type size in bytes
    */
-  uint32_t size() const;
+  [[nodiscard]] uint32_t size() const;
   /**
    * @brief Alignment of the type
    *
    * @return Alignment in bytes
    */
-  uint32_t alignment() const;
+  [[nodiscard]] uint32_t alignment() const;
   /**
    * @brief Unique ID of the data type
    *
    * @return Unique ID
    */
-  int32_t uid() const;
+  [[nodiscard]] int32_t uid() const;
   /**
    * @brief Inidicates whether the data type is of varible size elements
    *
    * @return true Elements can be variable size
    * @return false Elements have fixed size
    */
-  bool variable_size() const;
+  [[nodiscard]] bool variable_size() const;
   /**
    * @brief Converts the data type into a string
    *
    * @return A string of the data type
    */
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
   /**
    * @brief Indicates whether the type is a primitive type
    *
    * @return true If the type is a primitive type
    * @return false Otherwise
    */
-  bool is_primitive() const;
+  [[nodiscard]] bool is_primitive() const;
   /**
    * @brief Dynamically casts the type into a fixed size array type.
    *
@@ -131,7 +133,7 @@ class Type {
    *
    * @return Type object
    */
-  FixedArrayType as_fixed_array_type() const;
+  [[nodiscard]] FixedArrayType as_fixed_array_type() const;
   /**
    * @brief Dynamically casts the type into a struct type.
    *
@@ -139,7 +141,7 @@ class Type {
    *
    * @return Type object
    */
-  StructType as_struct_type() const;
+  [[nodiscard]] StructType as_struct_type() const;
   /**
    * @brief Dynamically casts the type into a struct type.
    *
@@ -147,7 +149,7 @@ class Type {
    *
    * @return Type object
    */
-  ListType as_list_type() const;
+  [[nodiscard]] ListType as_list_type() const;
   /**
    * @brief Records a reduction operator.
    *
@@ -202,22 +204,20 @@ class Type {
   bool operator==(const Type& other) const;
   bool operator!=(const Type& other) const;
 
- public:
   Type();
-  Type(std::shared_ptr<detail::Type> impl);
-  Type(const Type&)            = default;
-  Type(Type&&)                 = default;
-  Type& operator=(const Type&) = default;
-  Type& operator=(Type&&)      = default;
+  Type(const Type&)                = default;
+  Type(Type&&) noexcept            = default;
+  Type& operator=(const Type&)     = default;
+  Type& operator=(Type&&) noexcept = default;
 
- public:
   virtual ~Type();
 
- public:
-  std::shared_ptr<detail::Type> impl() const { return impl_; }
+  explicit Type(std::shared_ptr<detail::Type> impl);
+
+  [[nodiscard]] const std::shared_ptr<detail::Type>& impl() const;
 
  protected:
-  std::shared_ptr<detail::Type> impl_{nullptr};
+  std::shared_ptr<detail::Type> impl_{};
 };
 
 /**
@@ -231,17 +231,17 @@ class FixedArrayType : public Type {
    *
    * @return Number of elements
    */
-  uint32_t num_elements() const;
+  [[nodiscard]] uint32_t num_elements() const;
   /**
    * @brief Returns the element type
    *
    * @return Element type
    */
-  Type element_type() const;
+  [[nodiscard]] Type element_type() const;
 
  private:
   friend class Type;
-  FixedArrayType(std::shared_ptr<detail::Type> type);
+  explicit FixedArrayType(std::shared_ptr<detail::Type> type);
 };
 
 /**
@@ -255,7 +255,7 @@ class StructType : public Type {
    *
    * @return Number of fields
    */
-  uint32_t num_fields() const;
+  [[nodiscard]] uint32_t num_fields() const;
   /**
    * @brief Returns the element type
    *
@@ -263,14 +263,14 @@ class StructType : public Type {
    *
    * @return Element type
    */
-  Type field_type(uint32_t field_idx) const;
+  [[nodiscard]] Type field_type(uint32_t field_idx) const;
   /**
    * @brief Indiciates whether the fields are aligned
    *
    * @return true Fields are aligned
    * @return false Fields are compact
    */
-  bool aligned() const;
+  [[nodiscard]] bool aligned() const;
   /**
    * @brief Returns offsets to fields
    *
@@ -280,7 +280,7 @@ class StructType : public Type {
 
  private:
   friend class Type;
-  StructType(std::shared_ptr<detail::Type> type);
+  explicit StructType(std::shared_ptr<detail::Type> type);
 };
 
 /**
@@ -294,11 +294,11 @@ class ListType : public Type {
    *
    * @return Element type
    */
-  Type element_type() const;
+  [[nodiscard]] Type element_type() const;
 
  private:
   friend class Type;
-  ListType(std::shared_ptr<detail::Type> type);
+  explicit ListType(std::shared_ptr<detail::Type> type);
 };
 
 /**
@@ -309,7 +309,7 @@ class ListType : public Type {
  *
  * @return Type object
  */
-Type primitive_type(Type::Code code);
+[[nodiscard]] Type primitive_type(Type::Code code);
 
 /**
  * @ingroup types
@@ -317,7 +317,7 @@ Type primitive_type(Type::Code code);
  *
  * @return Type object
  */
-Type string_type();
+[[nodiscard]] Type string_type();
 
 /**
  * @ingroup types
@@ -327,7 +327,7 @@ Type string_type();
  *
  * @return Type object
  */
-Type binary_type(uint32_t size);
+[[nodiscard]] Type binary_type(uint32_t size);
 
 /**
  * @ingroup types
@@ -338,7 +338,7 @@ Type binary_type(uint32_t size);
  *
  * @return Type object
  */
-Type fixed_array_type(const Type& element_type, uint32_t N);
+[[nodiscard]] Type fixed_array_type(const Type& element_type, uint32_t N);
 
 /**
  * @ingroup types
@@ -349,7 +349,7 @@ Type fixed_array_type(const Type& element_type, uint32_t N);
  *
  * @return Type object
  */
-Type struct_type(const std::vector<Type>& field_types, bool align = false);
+[[nodiscard]] Type struct_type(const std::vector<Type>& field_types, bool align = false);
 
 /**
  * @ingroup types
@@ -359,7 +359,7 @@ Type struct_type(const std::vector<Type>& field_types, bool align = false);
  *
  * @return Type object
  */
-Type list_type(const Type& element_type);
+[[nodiscard]] Type list_type(const Type& element_type);
 
 /**
  * @ingroup types
@@ -371,18 +371,8 @@ Type list_type(const Type& element_type);
  * @return Type object
  */
 template <typename... Args>
-std::enable_if_t<std::conjunction_v<std::is_same<std::decay_t<Args>, Type>...>, Type> struct_type(
-  bool align, Args&&... field_types)
-{
-  std::vector<Type> vec_field_types;
-  auto copy_field_type = [&vec_field_types](auto&& field_type) {
-    vec_field_types.emplace_back(field_type);
-  };
-
-  vec_field_types.reserve(sizeof...(field_types));
-  (copy_field_type(std::forward<Args>(field_types)), ...);
-  return struct_type(vec_field_types, align);
-}
+[[nodiscard]] std::enable_if_t<std::conjunction_v<std::is_same<std::decay_t<Args>, Type>...>, Type>
+struct_type(bool align, Args&&... field_types);
 
 std::ostream& operator<<(std::ostream&, const Type::Code&);
 
@@ -394,7 +384,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-Type bool_();
+[[nodiscard]] Type bool_();
 
 /**
  * @ingroup types
@@ -402,7 +392,7 @@ Type bool_();
  *
  * @return Type object
  */
-Type int8();
+[[nodiscard]] Type int8();
 
 /**
  * @ingroup types
@@ -410,7 +400,7 @@ Type int8();
  *
  * @return Type object
  */
-Type int16();
+[[nodiscard]] Type int16();
 
 /**
  * @ingroup types
@@ -418,7 +408,7 @@ Type int16();
  *
  * @return Type object
  */
-Type int32();
+[[nodiscard]] Type int32();
 
 /**
  * @ingroup types
@@ -426,7 +416,7 @@ Type int32();
  *
  * @return Type object
  */
-Type int64();
+[[nodiscard]] Type int64();
 
 /**
  * @ingroup types
@@ -434,7 +424,7 @@ Type int64();
  *
  * @return Type object
  */
-Type uint8();
+[[nodiscard]] Type uint8();
 
 /**
  * @ingroup types
@@ -442,7 +432,7 @@ Type uint8();
  *
  * @return Type object
  */
-Type uint16();
+[[nodiscard]] Type uint16();
 
 /**
  * @ingroup types
@@ -450,7 +440,7 @@ Type uint16();
  *
  * @return Type object
  */
-Type uint32();
+[[nodiscard]] Type uint32();
 
 /**
  * @ingroup types
@@ -458,7 +448,7 @@ Type uint32();
  *
  * @return Type object
  */
-Type uint64();
+[[nodiscard]] Type uint64();
 
 /**
  * @ingroup types
@@ -466,7 +456,7 @@ Type uint64();
  *
  * @return Type object
  */
-Type float16();
+[[nodiscard]] Type float16();
 
 /**
  * @ingroup types
@@ -474,7 +464,7 @@ Type float16();
  *
  * @return Type object
  */
-Type float32();
+[[nodiscard]] Type float32();
 
 /**
  * @ingroup types
@@ -482,7 +472,7 @@ Type float32();
  *
  * @return Type object
  */
-Type float64();
+[[nodiscard]] Type float64();
 
 /**
  * @ingroup types
@@ -490,7 +480,7 @@ Type float64();
  *
  * @return Type object
  */
-Type complex64();
+[[nodiscard]] Type complex64();
 
 /**
  * @ingroup types
@@ -498,7 +488,7 @@ Type complex64();
  *
  * @return Type object
  */
-Type complex128();
+[[nodiscard]] Type complex128();
 
 /**
  * @ingroup types
@@ -508,7 +498,7 @@ Type complex128();
  *
  * @return Type object
  */
-Type point_type(int32_t ndim);
+[[nodiscard]] Type point_type(int32_t ndim);
 
 /**
  * @ingroup types
@@ -518,7 +508,7 @@ Type point_type(int32_t ndim);
  *
  * @return Type object
  */
-Type rect_type(int32_t ndim);
+[[nodiscard]] Type rect_type(int32_t ndim);
 
 /**
  * @ingroup types
@@ -526,7 +516,7 @@ Type rect_type(int32_t ndim);
  *
  * @return Type object
  */
-Type null_type();
+[[nodiscard]] Type null_type();
 
 /**
  * @ingroup types
@@ -538,7 +528,7 @@ Type null_type();
  * @return true If the `type` is a point type
  * @return false Otherwise
  */
-bool is_point_type(const Type& type, int32_t ndim);
+[[nodiscard]] bool is_point_type(const Type& type, int32_t ndim);
 
 /**
  * @ingroup types
@@ -550,6 +540,8 @@ bool is_point_type(const Type& type, int32_t ndim);
  * @return true If the `type` is a rect type
  * @return false Otherwise
  */
-bool is_rect_type(const Type& type, int32_t ndim);
+[[nodiscard]] bool is_rect_type(const Type& type, int32_t ndim);
 
 }  // namespace legate
+
+#include "core/type/type_info.inl"

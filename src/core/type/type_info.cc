@@ -11,123 +11,118 @@
  */
 
 #include "core/type/type_info.h"
-#include "core/runtime/detail/runtime.h"
+
 #include "core/type/detail/type_info.h"
+
+#include <iostream>
+#include <stdexcept>
 
 namespace legate {
 
-Type::Code Type::code() const { return impl_->code; }
+Type::Code Type::code() const { return impl()->code; }
 
-uint32_t Type::size() const { return impl_->size(); }
+uint32_t Type::size() const { return impl()->size(); }
 
-uint32_t Type::alignment() const { return impl_->alignment(); }
+uint32_t Type::alignment() const { return impl()->alignment(); }
 
-int32_t Type::uid() const { return impl_->uid(); }
+int32_t Type::uid() const { return impl()->uid(); }
 
-bool Type::variable_size() const { return impl_->variable_size(); }
+bool Type::variable_size() const { return impl()->variable_size(); }
 
-std::string Type::to_string() const { return impl_->to_string(); }
+std::string Type::to_string() const { return impl()->to_string(); }
 
-bool Type::is_primitive() const { return impl_->is_primitive(); }
+bool Type::is_primitive() const { return impl()->is_primitive(); }
 
 FixedArrayType Type::as_fixed_array_type() const
 {
-  if (impl_->code != Code::FIXED_ARRAY) {
-    throw std::invalid_argument("Type is not a fixed array type");
+  if (code() != Code::FIXED_ARRAY) {
+    throw std::invalid_argument{"Type is not a fixed array type"};
   }
-  return FixedArrayType(impl_);
+  return FixedArrayType{impl()};
 }
 
 StructType Type::as_struct_type() const
 {
-  if (impl_->code != Code::STRUCT) { throw std::invalid_argument("Type is not a struct type"); }
-  return StructType(impl_);
+  if (code() != Code::STRUCT) throw std::invalid_argument{"Type is not a struct type"};
+  return StructType{impl()};
 }
 
 ListType Type::as_list_type() const
 {
-  if (impl_->code != Code::LIST) { throw std::invalid_argument("Type is not a list type"); }
-  return ListType(impl_);
+  if (code() != Code::LIST) throw std::invalid_argument{"Type is not a list type"};
+  return ListType{impl()};
 }
 
 void Type::record_reduction_operator(int32_t op_kind, int64_t global_op_id) const
 {
-  impl_->record_reduction_operator(op_kind, global_op_id);
+  impl()->record_reduction_operator(op_kind, global_op_id);
 }
 
 void Type::record_reduction_operator(ReductionOpKind op_kind, int64_t global_op_id) const
 {
-  impl_->record_reduction_operator(static_cast<int32_t>(op_kind), global_op_id);
+  impl()->record_reduction_operator(static_cast<int32_t>(op_kind), global_op_id);
 }
 
 int64_t Type::find_reduction_operator(int32_t op_kind) const
 {
-  return impl_->find_reduction_operator(op_kind);
+  return impl()->find_reduction_operator(op_kind);
 }
 
 int64_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
-  return impl_->find_reduction_operator(static_cast<int32_t>(op_kind));
+  return impl()->find_reduction_operator(static_cast<int32_t>(op_kind));
 }
 
-bool Type::operator==(const Type& other) const { return impl_->equal(*other.impl_); }
+bool Type::operator==(const Type& other) const { return impl()->equal(*other.impl_); }
 
 bool Type::operator!=(const Type& other) const { return !operator==(other); }
 
-Type::Type() {}
+Type::Type() = default;
 
-Type::Type(std::shared_ptr<detail::Type> impl) : impl_(std::move(impl)) {}
-
-Type::~Type() {}
+Type::~Type() = default;
 
 uint32_t FixedArrayType::num_elements() const
 {
-  return static_cast<const detail::FixedArrayType*>(impl_.get())->num_elements();
+  return static_cast<const detail::FixedArrayType*>(impl().get())->num_elements();
 }
 
 Type FixedArrayType::element_type() const
 {
-  return Type(static_cast<const detail::FixedArrayType*>(impl_.get())->element_type());
+  return Type{static_cast<const detail::FixedArrayType*>(impl().get())->element_type()};
 }
-
-FixedArrayType::FixedArrayType(std::shared_ptr<detail::Type> type) : Type(std::move(type)) {}
 
 uint32_t StructType::num_fields() const
 {
-  return static_cast<const detail::StructType*>(impl_.get())->num_fields();
+  return static_cast<const detail::StructType*>(impl().get())->num_fields();
 }
 
 Type StructType::field_type(uint32_t field_idx) const
 {
-  return Type(static_cast<const detail::StructType*>(impl_.get())->field_type(field_idx));
+  return Type{static_cast<const detail::StructType*>(impl().get())->field_type(field_idx)};
 }
 
 bool StructType::aligned() const
 {
-  return static_cast<const detail::StructType*>(impl_.get())->aligned();
+  return static_cast<const detail::StructType*>(impl().get())->aligned();
 }
 
 std::vector<uint32_t> StructType::offsets() const
 {
-  return static_cast<const detail::StructType*>(impl_.get())->offsets();
+  return static_cast<const detail::StructType*>(impl().get())->offsets();
 }
-
-StructType::StructType(std::shared_ptr<detail::Type> type) : Type(std::move(type)) {}
 
 Type ListType::element_type() const
 {
-  return Type(static_cast<const detail::ListType*>(impl_.get())->element_type());
+  return Type{static_cast<const detail::ListType*>(impl().get())->element_type()};
 }
 
-ListType::ListType(std::shared_ptr<detail::Type> type) : Type(std::move(type)) {}
+Type primitive_type(Type::Code code) { return Type{detail::primitive_type(code)}; }
 
-Type primitive_type(Type::Code code) { return Type(detail::primitive_type(code)); }
-
-Type string_type() { return Type(detail::string_type()); }
+Type string_type() { return Type{detail::string_type()}; }
 
 Type fixed_array_type(const Type& element_type, uint32_t N)
 {
-  return Type(detail::fixed_array_type(element_type.impl(), N));
+  return Type{detail::fixed_array_type(element_type.impl(), N)};
 }
 
 Type struct_type(const std::vector<Type>& field_types, bool align)
@@ -135,11 +130,11 @@ Type struct_type(const std::vector<Type>& field_types, bool align)
   std::vector<std::shared_ptr<detail::Type>> detail_field_types;
 
   detail_field_types.reserve(field_types.size());
-  for (const auto& field_type : field_types) { detail_field_types.emplace_back(field_type.impl()); }
-  return Type(detail::struct_type(std::move(detail_field_types), align));
+  for (const auto& field_type : field_types) detail_field_types.emplace_back(field_type.impl());
+  return Type{detail::struct_type(std::move(detail_field_types), align)};
 }
 
-Type list_type(const Type& element_type) { return Type(detail::list_type(element_type.impl())); }
+Type list_type(const Type& element_type) { return Type{detail::list_type(element_type.impl())}; }
 
 std::ostream& operator<<(std::ostream& ostream, const Type::Code& code)
 {
@@ -153,41 +148,41 @@ std::ostream& operator<<(std::ostream& ostream, const Type& type)
   return ostream;
 }
 
-Type bool_() { return Type(detail::bool_()); }
+Type bool_() { return Type{detail::bool_()}; }
 
-Type int8() { return Type(detail::int8()); }
+Type int8() { return Type{detail::int8()}; }
 
-Type int16() { return Type(detail::int16()); }
+Type int16() { return Type{detail::int16()}; }
 
-Type int32() { return Type(detail::int32()); }
+Type int32() { return Type{detail::int32()}; }
 
-Type int64() { return Type(detail::int64()); }
+Type int64() { return Type{detail::int64()}; }
 
-Type uint8() { return Type(detail::uint8()); }
+Type uint8() { return Type{detail::uint8()}; }
 
-Type uint16() { return Type(detail::uint16()); }
+Type uint16() { return Type{detail::uint16()}; }
 
-Type uint32() { return Type(detail::uint32()); }
+Type uint32() { return Type{detail::uint32()}; }
 
-Type uint64() { return Type(detail::uint64()); }
+Type uint64() { return Type{detail::uint64()}; }
 
-Type float16() { return Type(detail::float16()); }
+Type float16() { return Type{detail::float16()}; }
 
-Type float32() { return Type(detail::float32()); }
+Type float32() { return Type{detail::float32()}; }
 
-Type float64() { return Type(detail::float64()); }
+Type float64() { return Type{detail::float64()}; }
 
-Type complex64() { return Type(detail::complex64()); }
+Type complex64() { return Type{detail::complex64()}; }
 
-Type complex128() { return Type(detail::complex128()); }
+Type complex128() { return Type{detail::complex128()}; }
 
-Type binary_type(uint32_t size) { return Type(detail::binary_type(size)); }
+Type binary_type(uint32_t size) { return Type{detail::binary_type(size)}; }
 
-Type point_type(int32_t ndim) { return Type(detail::point_type(ndim)); }
+Type point_type(int32_t ndim) { return Type{detail::point_type(ndim)}; }
 
-Type rect_type(int32_t ndim) { return Type(detail::rect_type(ndim)); }
+Type rect_type(int32_t ndim) { return Type{detail::rect_type(ndim)}; }
 
-Type null_type() { return Type(detail::null_type()); }
+Type null_type() { return Type{detail::null_type()}; }
 
 bool is_point_type(const Type& type, int32_t ndim)
 {
