@@ -61,6 +61,7 @@ html_theme_options = {
     "secondary_sidebar_items": ["page-toc"],
     "show_nav_level": 2,
     "show_toc_level": 2,
+    "navigation_with_keys": False,
 }
 
 # -- Options for extensions --------------------------------------------------
