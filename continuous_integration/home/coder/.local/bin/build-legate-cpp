@@ -32,7 +32,7 @@ build_legate_cpp() {
     cmake_args+=(-DLegion_USE_OpenMP=${USE_OPENMP:-OFF});
     cmake_args+=(-Dlegate_core_BUILD_DOCS=ON);
     cmake_args+=(-DCMAKE_BUILD_PARALLEL_LEVEL=${JOBS:-$(nproc --ignore=1)});
-    cmake_args+=(--preset ${LEGATE_CORE_CMAKE_PRESET:-debug-gcc})
+    cmake_args+=(--preset ${LEGATE_CORE_CMAKE_PRESET:-debug-gcc});
     cmake_args+=(${@});
 
     sccache --stop-server >/dev/null 2>&1 || true;

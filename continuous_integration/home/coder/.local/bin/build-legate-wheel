@@ -27,7 +27,7 @@ build_legate_wheel() {
     done
 
     cmake_args+=("-DFIND_LEGATE_CORE_CPP=ON");
-    cmake_args+=("-Dlegate_core_ROOT=$HOME/legate/build/${LEGATE_CORE_CMAKE_PRESET}");
+    cmake_args+=("-Dlegate_core_ROOT=$HOME/legate/build/${LEGATE_CORE_CMAKE_PRESET:-debug-gcc}");
 
     # Build + package legate.core Python wheel
     time CMAKE_GENERATOR="Ninja" \

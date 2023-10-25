@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace type_test {
 
@@ -35,11 +36,18 @@ const std::vector<legate::Type> PRIMITIVE_TYPE = {legate::bool_(),
                                                   legate::complex128()};
 
 template <typename T>
+struct alignment_of : std::integral_constant<std::size_t, alignof(T)> {};
+
+template <>
+struct alignment_of<void> : std::integral_constant<std::size_t, 0> {};
+
+template <typename T>
 void test_primitive_type(const legate::Type& type, std::string type_string, uint32_t size)
 {
   EXPECT_EQ(type.code(), legate::legate_type_code_of<T>);
   EXPECT_EQ(type.size(), size);
-  EXPECT_EQ(type.alignment(), size);
+  // need extra layer of template indirection since alignof(void) (for null_type) is illegal
+  EXPECT_EQ(type.alignment(), alignment_of<T>::value);
   EXPECT_FALSE(type.variable_size());
   EXPECT_TRUE(type.is_primitive());
   EXPECT_EQ(type.to_string(), type_string);
@@ -51,7 +59,7 @@ void test_string_type(const legate::Type& type)
 {
   EXPECT_EQ(type.code(), legate::Type::Code::STRING);
   EXPECT_THROW(type.size(), std::invalid_argument);
-  EXPECT_EQ(type.alignment(), 0);
+  EXPECT_EQ(type.alignment(), alignof(std::max_align_t));
   EXPECT_TRUE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
   EXPECT_EQ(type.to_string(), "string");
@@ -63,7 +71,7 @@ void test_binary_type(const legate::Type& type, uint32_t size)
 {
   EXPECT_EQ(type.code(), legate::Type::Code::BINARY);
   EXPECT_EQ(type.size(), size);
-  EXPECT_EQ(type.alignment(), size);
+  EXPECT_EQ(type.alignment(), alignof(std::max_align_t));
   EXPECT_FALSE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
   EXPECT_EQ(type.to_string(), "binary(" + std::to_string(size) + ")");

@@ -101,7 +101,6 @@ jobs:
           mkdir -p artifacts
           docker run  -v "$(pwd)/artifacts:/home/coder/.artifacts" --rm -t $IMAGE_TAG copy-artifacts
 
-
       - name: Display structure of workdir
         run: ls -R
 

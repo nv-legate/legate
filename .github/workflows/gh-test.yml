@@ -36,11 +36,44 @@ jobs:
       env:
         PYTHONDONTWRITEBYTECODE: 1
         NVIDIA_VISIBLE_DEVICES: ${{ env.NVIDIA_VISIBLE_DEVICES }}
+        LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
 
     steps:
       - if: inputs.build-target == 'gpu'
         name: Run nvidia-smi to make sure GPU is working
         run: nvidia-smi
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+          name: "${{ inputs.repos-name }}-${{inputs.build-target}}-${{ inputs.cmake-preset }}-${{ inputs.sha }}"
+          path: /home/coder/artifacts
+
+      - name: Display structure of downloaded artifacts
+        run: |
+          pwd
+          ls -R
+        working-directory: ${{ steps.download.outputs.download-path }}
+
+      - name: Install legate core
+        shell: su coder {0}
+        run: |
+          mamba uninstall -y -n "${DEFAULT_CONDA_ENV:-legate}" numpy
+          mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c nvidia -c conda-forge -c /tmp/conda-build/legate_core legate-core
+
+      - name: Activate conda env
+        shell: su coder {0}
+        run: |
+          . /opt/conda/etc/profile.d/conda.sh
+          . /opt/conda/etc/profile.d/mamba.sh
+
+          conda activate ${DEFAULT_CONDA_ENV:-legate}
+
+      - name: Show conda env
+        shell: su coder {0}
+        run: |
+          conda info
 
       - name: Run legate.core test / analysis
         shell: su coder {0}

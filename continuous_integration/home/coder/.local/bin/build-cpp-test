@@ -5,15 +5,9 @@ build_cpp_tests() {
 
     cd ~/legate/tests/cpp
 
-    rm -rf build
-    cmake --preset ${LEGATE_CORE_CMAKE_PRESET}
-    cmake --build --preset ${LEGATE_CORE_CMAKE_PRESET}
-
-    (
-    cd ./build/${LEGATE_CORE_CMAKE_PRESET};
-    cpack -G TGZ;
-    cp cpp_tests*.tar.gz /tmp/out/;
-    );
+    cmake --fresh --preset ${LEGATE_CORE_CMAKE_PRESET}
+    cmake --build --preset ${LEGATE_CORE_CMAKE_PRESET} --target package --verbose
+    cp ./build/${LEGATE_CORE_CMAKE_PRESET}/cpp_tests.sh /tmp/out/
 
     { set +x; } 2>/dev/null;
 }

@@ -1,17 +1,6 @@
 #!/usr/bin/env bash
 
-. conda-utils
-
 run_test_or_analysis() {
-    set -x
-    cd ~/
-
-    install_legate_core_with_war;
-
-    activate_conda_env;
-
-    conda info;
-
     set -xeuo pipefail
 
     case "$1" in
@@ -68,8 +57,21 @@ run_test_or_analysis() {
             set +eou pipefail
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" mypy=1.5.1
             set -eou pipefail
+
             cd ~/legate
             mypy legate
+            ;;
+        "cpp")
+            echo "Running C++ unit tests..."
+
+            cd ~/legate/tests/cpp
+            mkdir -p ctest_install
+            sh ~/artifacts/out/cpp_tests.sh --prefix=`pwd`/ctest_install --exclude-subdir --skip-license
+
+            python3 ./run.py --gtest-file ./ctest_install/bin/cpp_tests --cpus 1
+            [ -f ./ctest_install/bin/gpu_tests ] && {
+              python3 ./run.py --gtest-file ./ctest_install/bin/gpu_tests --cpus 1
+            }
             ;;
         *)
             echo "Invalid command: $1"
