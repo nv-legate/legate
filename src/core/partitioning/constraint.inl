@@ -12,25 +12,16 @@
 
 #pragma once
 
-#include "core/utilities/tuple.h"
+#include "core/partitioning/constraint.h"
 
 namespace legate {
 
-/**
- * @brief Enum to describe partitioning preference on dimensions of a store
- */
-enum class Restriction : int32_t {
-  ALLOW  = 0, /*!< The dimension can be partitioned */
-  AVOID  = 1, /*!< The dimension can be partitioned, but other dimensions are preferred */
-  FORBID = 2, /*!< The dimension must not be partitioned */
-};
+inline Variable::Variable(const detail::Variable* impl) : impl_{impl} {}
 
-using Restrictions = tuple<Restriction>;
+inline const detail::Variable* Variable::impl() const { return impl_; }
 
-[[nodiscard]] Restriction join(Restriction lhs, Restriction rhs);
+// ==========================================================================================
 
-[[nodiscard]] tuple<Restriction> join(const Restrictions& lhs, const Restrictions& rhs);
-
-void join_inplace(Restrictions& lhs, const Restrictions& rhs);
+inline const std::shared_ptr<detail::Constraint>& Constraint::impl() const { return impl_; }
 
 }  // namespace legate

@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include <list>
-#include <map>
-#include <memory>
-#include <vector>
 #include "core/partitioning/detail/constraint.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/ordered_set.h"
+
+#include <map>
+#include <memory>
+#include <vector>
 
 namespace legate::detail {
 
@@ -31,39 +31,32 @@ enum class IsOutput : bool {
 
 struct ConstraintSolver {
  public:
-  ConstraintSolver();
   ~ConstraintSolver();
 
- public:
   void add_partition_symbol(const Variable* partition_symbol, IsOutput is_output);
   void add_constraint(std::shared_ptr<Constraint> constraint);
 
- public:
   void dump();
 
- public:
-  const std::vector<const Variable*>& partition_symbols() const;
+  [[nodiscard]] const std::vector<const Variable*>& partition_symbols() const;
 
- public:
   void solve_constraints();
   void solve_dependent_constraints(Strategy& strategy);
-  const std::vector<const Variable*>& find_equivalence_class(
+  [[nodiscard]] const std::vector<const Variable*>& find_equivalence_class(
     const Variable* partition_symbol) const;
-  const Restrictions& find_restrictions(const Variable* partition_symbol) const;
-  bool is_output(const Variable& partition_symbol) const;
-  bool is_dependent(const Variable& partition_symbol) const;
+  [[nodiscard]] const Restrictions& find_restrictions(const Variable* partition_symbol) const;
+  [[nodiscard]] bool is_output(const Variable& partition_symbol) const;
+  [[nodiscard]] bool is_dependent(const Variable& partition_symbol) const;
 
  private:
   ordered_set<const Variable*> partition_symbols_{};
   std::map<const Variable, bool> is_output_{};
   std::vector<std::shared_ptr<Constraint>> constraints_{};
 
- private:
   struct EquivClass;
   std::map<const Variable, EquivClass*> equiv_class_map_{};
   std::vector<EquivClass*> equiv_classes_{};
 
- private:
   std::map<const Variable, bool> is_dependent_{};
 };
 

@@ -12,10 +12,13 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/data/shape.h"
 #include "core/utilities/tuple.h"
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace legate {
 struct Partition;
@@ -47,70 +50,54 @@ struct Expr {
   Expr& operator=(Expr&&) noexcept = default;
 
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
-  virtual bool closed() const                                                                = 0;
-  virtual std::string to_string() const                                                      = 0;
-  virtual Kind kind() const                                                                  = 0;
-  virtual const Literal* as_literal() const                                                  = 0;
-  virtual const Variable* as_variable() const                                                = 0;
+  [[nodiscard]] virtual bool closed() const                                                  = 0;
+  [[nodiscard]] virtual std::string to_string() const                                        = 0;
+  [[nodiscard]] virtual Kind kind() const                                                    = 0;
+  [[nodiscard]] virtual const Literal* as_literal() const                                    = 0;
+  [[nodiscard]] virtual const Variable* as_variable() const                                  = 0;
 };
 
 class Literal : public Expr {
  public:
-  Literal(const std::shared_ptr<Partition>& partition);
+  explicit Literal(std::shared_ptr<Partition> partition);
 
- public:
-  Literal(const Literal&)            = default;
-  Literal& operator=(const Literal&) = default;
-
- public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
- public:
-  bool closed() const override { return true; }
-  std::string to_string() const override;
+  [[nodiscard]] bool closed() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  Kind kind() const override { return Kind::LITERAL; }
-  const Literal* as_literal() const override { return this; }
-  const Variable* as_variable() const override { return nullptr; }
+  [[nodiscard]] Kind kind() const override;
+  [[nodiscard]] const Literal* as_literal() const override;
+  [[nodiscard]] const Variable* as_variable() const override;
 
- public:
-  std::shared_ptr<Partition> partition() const { return partition_; }
+  [[nodiscard]] const std::shared_ptr<Partition>& partition() const;
 
  private:
-  std::shared_ptr<Partition> partition_;
+  std::shared_ptr<Partition> partition_{};
 };
 
 class Variable : public Expr {
  public:
   Variable(const Operation* op, int32_t id);
 
- public:
-  Variable(const Variable&)            = default;
-  Variable& operator=(const Variable&) = default;
-
- public:
   friend bool operator==(const Variable& lhs, const Variable& rhs);
+
   friend bool operator<(const Variable& lhs, const Variable& rhs);
 
- public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
- public:
-  bool closed() const override { return false; }
-  std::string to_string() const override;
+  [[nodiscard]] bool closed() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  Kind kind() const override { return Kind::VARIABLE; }
-  const Literal* as_literal() const override { return nullptr; }
-  const Variable* as_variable() const override { return this; }
+  [[nodiscard]] Kind kind() const override;
+  [[nodiscard]] const Literal* as_literal() const override;
+  [[nodiscard]] const Variable* as_variable() const override;
 
- public:
-  const Operation* operation() const { return op_; }
+  [[nodiscard]] const Operation* operation() const;
 
  private:
-  const Operation* op_;
-  int32_t id_;
+  const Operation* op_{};
+  int32_t id_{};
 };
 
 struct Constraint {
@@ -121,196 +108,163 @@ struct Constraint {
     SCALE     = 3,
     BLOAT     = 4,
   };
-  virtual ~Constraint() {}
+  virtual ~Constraint() = default;
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
-  virtual std::string to_string() const                                                      = 0;
-  virtual Kind kind() const                                                                  = 0;
+  [[nodiscard]] virtual std::string to_string() const                                        = 0;
+  [[nodiscard]] virtual Kind kind() const                                                    = 0;
   virtual void validate() const                                                              = 0;
-  virtual const Alignment* as_alignment() const                                              = 0;
-  virtual const Broadcast* as_broadcast() const                                              = 0;
-  virtual const ImageConstraint* as_image_constraint() const                                 = 0;
-  virtual const ScaleConstraint* as_scale_constraint() const                                 = 0;
-  virtual const BloatConstraint* as_bloat_constraint() const                                 = 0;
+  [[nodiscard]] virtual const Alignment* as_alignment() const                                = 0;
+  [[nodiscard]] virtual const Broadcast* as_broadcast() const                                = 0;
+  [[nodiscard]] virtual const ImageConstraint* as_image_constraint() const                   = 0;
+  [[nodiscard]] virtual const ScaleConstraint* as_scale_constraint() const                   = 0;
+  [[nodiscard]] virtual const BloatConstraint* as_bloat_constraint() const                   = 0;
 };
 
 class Alignment : public Constraint {
  public:
   Alignment(const Variable* lhs, const Variable* rhs);
 
- public:
-  Kind kind() const override { return Kind::ALIGNMENT; }
+  [[nodiscard]] Kind kind() const override;
 
- public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
- public:
   void validate() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Alignment* as_alignment() const override { return this; }
-  const Broadcast* as_broadcast() const override { return nullptr; }
-  const ImageConstraint* as_image_constraint() const override { return nullptr; }
-  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
-  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
+  [[nodiscard]] const Alignment* as_alignment() const override;
+  [[nodiscard]] const Broadcast* as_broadcast() const override;
+  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
+  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
+  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
- public:
-  const Variable* lhs() const { return lhs_; }
-  const Variable* rhs() const { return rhs_; }
+  [[nodiscard]] const Variable* lhs() const;
+  [[nodiscard]] const Variable* rhs() const;
 
- public:
-  bool is_trivial() const { return *lhs_ == *rhs_; }
+  [[nodiscard]] bool is_trivial() const;
 
  private:
-  const Variable* lhs_;
-  const Variable* rhs_;
+  const Variable* lhs_{};
+  const Variable* rhs_{};
 };
 
 class Broadcast : public Constraint {
  public:
   explicit Broadcast(const Variable* variable);
-  Broadcast(const Variable* variable, const tuple<int32_t>& axes);
 
- public:
-  Kind kind() const override { return Kind::BROADCAST; }
+  Broadcast(const Variable* variable, tuple<int32_t> axes);
 
- public:
+  [[nodiscard]] Kind kind() const override;
+
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
- public:
   void validate() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Alignment* as_alignment() const override { return nullptr; }
-  const Broadcast* as_broadcast() const override { return this; }
-  const ImageConstraint* as_image_constraint() const override { return nullptr; }
-  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
-  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
+  [[nodiscard]] const Alignment* as_alignment() const override;
+  [[nodiscard]] const Broadcast* as_broadcast() const override;
+  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
+  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
+  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
- public:
-  const Variable* variable() const { return variable_; }
-  const tuple<int32_t>& axes() const { return axes_; }
+  [[nodiscard]] const Variable* variable() const;
+  [[nodiscard]] const tuple<int32_t>& axes() const;
 
  private:
-  const Variable* variable_;
+  const Variable* variable_{};
   // Broadcast all dimensions when empty
-  tuple<std::int32_t> axes_{};
+  tuple<int32_t> axes_{};
 };
 
 class ImageConstraint : public Constraint {
  public:
   ImageConstraint(const Variable* var_function, const Variable* var_range);
 
- public:
-  Kind kind() const override { return Kind::IMAGE; }
+  [[nodiscard]] Kind kind() const override;
 
- public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
- public:
   void validate() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Alignment* as_alignment() const override { return nullptr; }
-  const Broadcast* as_broadcast() const override { return nullptr; }
-  const ImageConstraint* as_image_constraint() const override { return this; }
-  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
-  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
+  [[nodiscard]] const Alignment* as_alignment() const override;
+  [[nodiscard]] const Broadcast* as_broadcast() const override;
+  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
+  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
+  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
- public:
-  const Variable* var_function() const { return var_function_; }
-  const Variable* var_range() const { return var_range_; }
+  [[nodiscard]] const Variable* var_function() const;
+  [[nodiscard]] const Variable* var_range() const;
 
- public:
   [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
 
  private:
-  const Variable* var_function_;
-  const Variable* var_range_;
+  const Variable* var_function_{};
+  const Variable* var_range_{};
 };
 
 class ScaleConstraint : public Constraint {
  public:
-  ScaleConstraint(const Shape& factors, const Variable* var_smaller, const Variable* var_bigger);
+  ScaleConstraint(Shape factors, const Variable* var_smaller, const Variable* var_bigger);
 
- public:
-  Kind kind() const override { return Kind::SCALE; }
+  [[nodiscard]] Kind kind() const override;
 
- public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
- public:
   void validate() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Alignment* as_alignment() const override { return nullptr; }
-  const Broadcast* as_broadcast() const override { return nullptr; }
-  const ImageConstraint* as_image_constraint() const override { return nullptr; }
-  const ScaleConstraint* as_scale_constraint() const override { return this; }
-  const BloatConstraint* as_bloat_constraint() const override { return nullptr; }
+  [[nodiscard]] const Alignment* as_alignment() const override;
+  [[nodiscard]] const Broadcast* as_broadcast() const override;
+  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
+  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
+  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
- public:
-  const Variable* var_smaller() const { return var_smaller_; }
-  const Variable* var_bigger() const { return var_bigger_; }
+  [[nodiscard]] const Variable* var_smaller() const;
+  [[nodiscard]] const Variable* var_bigger() const;
 
- public:
   [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
 
  private:
-  const Shape factors_;
-  const Variable* var_smaller_;
-  const Variable* var_bigger_;
+  Shape factors_{};
+  const Variable* var_smaller_{};
+  const Variable* var_bigger_{};
 };
 
 class BloatConstraint : public Constraint {
  public:
   BloatConstraint(const Variable* var_source,
                   const Variable* var_bloat,
-                  const Shape& low_offsets,
-                  const Shape& high_offsets);
+                  Shape low_offsets,
+                  Shape high_offsets);
 
- public:
-  Kind kind() const override { return Kind::BLOAT; }
+  [[nodiscard]] Kind kind() const override;
 
- public:
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
- public:
   void validate() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Alignment* as_alignment() const override { return nullptr; }
-  const Broadcast* as_broadcast() const override { return nullptr; }
-  const ImageConstraint* as_image_constraint() const override { return nullptr; }
-  const ScaleConstraint* as_scale_constraint() const override { return nullptr; }
-  const BloatConstraint* as_bloat_constraint() const override { return this; }
+  [[nodiscard]] const Alignment* as_alignment() const override;
+  [[nodiscard]] const Broadcast* as_broadcast() const override;
+  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
+  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
+  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
- public:
-  const Variable* var_source() const { return var_source_; }
-  const Variable* var_bloat() const { return var_bloat_; }
+  [[nodiscard]] const Variable* var_source() const;
+  [[nodiscard]] const Variable* var_bloat() const;
 
- public:
   [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
 
  private:
-  const Variable* var_source_;
-  const Variable* var_bloat_;
-  const Shape low_offsets_;
-  const Shape high_offsets_;
+  const Variable* var_source_{};
+  const Variable* var_bloat_{};
+  Shape low_offsets_{};
+  Shape high_offsets_{};
 };
 
 [[nodiscard]] std::shared_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
@@ -333,3 +287,5 @@ class BloatConstraint : public Constraint {
                                                      const Shape& high_offsets);
 
 }  // namespace legate::detail
+
+#include "core/partitioning/detail/constraint.inl"

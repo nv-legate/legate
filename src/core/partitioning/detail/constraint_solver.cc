@@ -12,17 +12,9 @@
 
 #include "core/partitioning/detail/constraint_solver.h"
 
-#include <sstream>
-
-#include "legion.h"
-
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/detail/partitioner.h"
-
-namespace legate {
-extern Legion::Logger log_legate;
-}  // namespace legate
 
 namespace legate::detail {
 
@@ -30,11 +22,11 @@ namespace {
 
 struct UnionFindEntry {
   UnionFindEntry(const Variable* symb, const detail::LogicalStore* store)
-    : partition_symbol(symb), restrictions(store->compute_restrictions()), next(nullptr), size(1)
+    : partition_symbol{symb}, restrictions{store->compute_restrictions()}
   {
   }
 
-  UnionFindEntry* unify(UnionFindEntry* other)
+  [[nodiscard]] UnionFindEntry* unify(UnionFindEntry* other)
   {
     if (this == other) return this;
 
@@ -42,7 +34,8 @@ struct UnionFindEntry {
     if (self->size < other->size) std::swap(self, other);
 
     auto end = self;
-    while (end->next != nullptr) end = end->next;
+
+    while (end->next) end = end->next;
     end->next = other;
     end->size += other->size;
     return self;
@@ -52,34 +45,33 @@ struct UnionFindEntry {
     for (auto& restriction : restrictions.data()) restriction = Restriction::FORBID;
   }
 
-  const Variable* partition_symbol;
-  Restrictions restrictions;
-  UnionFindEntry* next;
-  size_t size;
+  const Variable* partition_symbol{};
+  Restrictions restrictions{};
+  UnionFindEntry* next{};
+  size_t size{1};
 };
 
 }  // namespace
 
 struct ConstraintSolver::EquivClass {
-  EquivClass(const UnionFindEntry* entry)
+  explicit EquivClass(const UnionFindEntry* entry)
   {
     partition_symbols.reserve(entry->size);
-    partition_symbols.push_back(entry->partition_symbol);
+    partition_symbols.emplace_back(entry->partition_symbol);
     restrictions = entry->restrictions;
 
     auto* next = entry->next;
-    while (next != nullptr) {
-      partition_symbols.push_back(next->partition_symbol);
+
+    while (next) {
+      partition_symbols.emplace_back(next->partition_symbol);
       join_inplace(restrictions, next->restrictions);
       next = next->next;
     }
   }
 
-  std::vector<const Variable*> partition_symbols;
-  Restrictions restrictions;
+  std::vector<const Variable*> partition_symbols{};
+  Restrictions restrictions{};
 };
-
-ConstraintSolver::ConstraintSolver() {}
 
 ConstraintSolver::~ConstraintSolver()
 {
@@ -104,8 +96,8 @@ void ConstraintSolver::solve_constraints()
 
   // Initialize the table by creating singleton equivalence classes
   const auto& all_symbols = partition_symbols();
-  entries.reserve(all_symbols.size());
 
+  entries.reserve(all_symbols.size());
   [](auto& entries, auto& table, auto& is_dependent, const auto& all_symbols) {
     for (auto& symb : all_symbols) {
       // TODO: partition symbols can be independent of any stores of the operation
@@ -127,12 +119,14 @@ void ConstraintSolver::solve_constraints()
     };
 
     std::vector<const Variable*> part_symbs_to_unify;
+
     alignment->find_partition_symbols(part_symbs_to_unify);
-    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!part_symbs_to_unify.empty()); }
+    if (LegateDefined(LEGATE_USE_DEBUG)) assert(!part_symbs_to_unify.empty());
 
     auto it           = part_symbs_to_unify.begin();
     auto* equiv_class = table[**it++];
-    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(equiv_class != nullptr); }
+
+    if (LegateDefined(LEGATE_USE_DEBUG)) assert(equiv_class != nullptr);
     for (; it != part_symbs_to_unify.end(); ++it) {
       auto* to_unify = table[**it];
       auto* result   = equiv_class->unify(to_unify);
@@ -202,12 +196,18 @@ void ConstraintSolver::solve_constraints()
 
   // Combine states of each union of equivalence classes into one
   std::unordered_set<UnionFindEntry*> distinct_entries;
+
+  // REVIEW: this is fishy, we are inserting the values of a map into a set, surely those
+  // values are already unique? Why do we need to create another set, especially since we just
+  // use this set to loop over below, why can't we just reuse the map?
+  distinct_entries.reserve(table.size());
   for (auto& [_, entry] : table) distinct_entries.insert(entry);
 
+  equiv_classes_.reserve(distinct_entries.size());
   for (auto* entry : distinct_entries) {
-    auto equiv_class = new EquivClass(entry);
+    auto equiv_class = new EquivClass{entry};
     for (auto* symb : equiv_class->partition_symbols) equiv_class_map_.insert({*symb, equiv_class});
-    equiv_classes_.push_back(equiv_class);
+    equiv_classes_.emplace_back(equiv_class);
   }
 }
 

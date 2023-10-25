@@ -12,14 +12,14 @@
 
 #pragma once
 
-#include <memory>
-
-#include "legion.h"
-
 #include "core/data/shape.h"
 #include "core/mapping/detail/machine.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/typedefs.h"
+
+#include <iosfwd>
+#include <memory>
+#include <string>
 
 namespace legate::detail {
 class LogicalStore;
@@ -31,13 +31,12 @@ namespace legate {
 struct Partition {
  public:
   enum class Kind : int32_t {
-    NO_PARTITION = 0,
-    TILING       = 1,
-    WEIGHTED     = 2,
-    IMAGE        = 3,
+    NO_PARTITION,
+    TILING,
+    WEIGHTED,
+    IMAGE,
   };
 
- public:
   Partition()                                = default;
   virtual ~Partition()                       = default;
   Partition(const Partition&)                = default;
@@ -45,75 +44,54 @@ struct Partition {
   Partition& operator=(const Partition&)     = default;
   Partition& operator=(Partition&&) noexcept = default;
 
- public:
-  virtual Kind kind() const = 0;
+  [[nodiscard]] virtual Kind kind() const = 0;
 
- public:
-  virtual bool is_complete_for(const detail::Storage* storage) const          = 0;
-  virtual bool is_disjoint_for(const Domain& launch_domain) const             = 0;
-  virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
-  virtual bool is_convertible() const                                         = 0;
+  [[nodiscard]] virtual bool is_complete_for(const detail::Storage* storage) const          = 0;
+  [[nodiscard]] virtual bool is_disjoint_for(const Domain& launch_domain) const             = 0;
+  [[nodiscard]] virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
+  [[nodiscard]] virtual bool is_convertible() const                                         = 0;
 
- public:
-  virtual std::unique_ptr<Partition> scale(const Shape& factors) const      = 0;
-  virtual std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                           const Shape& high_offsets) const = 0;
+  [[nodiscard]] virtual std::unique_ptr<Partition> scale(const Shape& factors) const      = 0;
+  [[nodiscard]] virtual std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                                         const Shape& high_offsets) const = 0;
 
- public:
-  virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
-                                             bool complete = false) const = 0;
+  [[nodiscard]] virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
+                                                           bool complete = false) const = 0;
 
- public:
-  virtual bool has_launch_domain() const = 0;
-  virtual Domain launch_domain() const   = 0;
+  [[nodiscard]] virtual bool has_launch_domain() const = 0;
+  [[nodiscard]] virtual Domain launch_domain() const   = 0;
 
- public:
-  virtual std::unique_ptr<Partition> clone() const = 0;
+  [[nodiscard]] virtual std::unique_ptr<Partition> clone() const = 0;
 
- public:
-  virtual std::string to_string() const = 0;
+  [[nodiscard]] virtual std::string to_string() const = 0;
 
- public:
-  virtual const Shape& color_shape() const = 0;
+  [[nodiscard]] virtual const Shape& color_shape() const = 0;
 };
 
 class NoPartition : public Partition {
  public:
-  NoPartition();
+  [[nodiscard]] Kind kind() const override;
 
- public:
-  Kind kind() const override { return Kind::NO_PARTITION; }
+  [[nodiscard]] bool is_complete_for(const detail::Storage* /*storage*/) const override;
+  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
+  [[nodiscard]] bool satisfies_restrictions(const Restrictions& /*restrictions*/) const override;
+  [[nodiscard]] bool is_convertible() const override;
 
- public:
-  bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain& launch_domain) const override;
-  bool satisfies_restrictions(const Restrictions& restrictions) const override;
-  bool is_convertible() const override { return true; }
+  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                                 const Shape& high_offsets) const override;
 
- public:
-  std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                   const Shape& high_offsets) const override;
+  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion /*region*/,
+                                                   bool /*complete*/) const override;
 
- public:
-  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
+  [[nodiscard]] bool has_launch_domain() const override;
+  [[nodiscard]] Domain launch_domain() const override;
 
- public:
-  bool has_launch_domain() const override;
-  Domain launch_domain() const override;
+  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
 
- public:
-  std::unique_ptr<Partition> clone() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  std::string to_string() const override;
-
- public:
-  const Shape& color_shape() const override
-  {
-    assert(false);
-    throw std::invalid_argument("NoPartition doesn't support color_shape");
-  }
+  [[nodiscard]] const Shape& color_shape() const override;
 };
 
 class Tiling : public Partition {
@@ -121,103 +99,82 @@ class Tiling : public Partition {
   Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets);
   Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets, Shape&& strides);
 
- public:
-  Tiling(const Tiling&) = default;
-
- public:
   bool operator==(const Tiling& other) const;
   bool operator<(const Tiling& other) const;
 
- public:
-  Kind kind() const override { return Kind::TILING; }
+  [[nodiscard]] Kind kind() const override;
 
- public:
-  bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain& launch_domain) const override;
-  bool satisfies_restrictions(const Restrictions& restrictions) const override;
-  bool is_convertible() const override { return true; }
+  [[nodiscard]] bool is_complete_for(const detail::Storage* storage) const override;
+  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
+  [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
+  [[nodiscard]] bool is_convertible() const override;
 
- public:
-  std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                   const Shape& high_offsets) const override;
+  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                                 const Shape& high_offsets) const override;
 
- public:
-  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
+  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
+                                                   bool complete) const override;
 
- public:
-  bool has_launch_domain() const override;
-  Domain launch_domain() const override;
+  [[nodiscard]] bool has_launch_domain() const override;
+  [[nodiscard]] Domain launch_domain() const override;
 
- public:
-  std::unique_ptr<Partition> clone() const override;
+  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Shape& tile_shape() const { return tile_shape_; }
-  const Shape& color_shape() const override { return color_shape_; }
-  const tuple<int64_t>& offsets() const { return offsets_; }
+  [[nodiscard]] const Shape& tile_shape() const;
+  [[nodiscard]] const Shape& color_shape() const override;
+  [[nodiscard]] const tuple<int64_t>& offsets() const;
 
- public:
-  Shape get_child_extents(const Shape& extents, const Shape& color);
-  Shape get_child_offsets(const Shape& color);
+  [[nodiscard]] Shape get_child_extents(const Shape& extents, const Shape& color);
+  [[nodiscard]] Shape get_child_offsets(const Shape& color);
 
  private:
-  bool overlapped_;
-  Shape tile_shape_;
-  Shape color_shape_;
-  tuple<int64_t> offsets_;
-  Shape strides_;
+  bool overlapped_{};
+  Shape tile_shape_{};
+  Shape color_shape_{};
+  tuple<int64_t> offsets_{};
+  Shape strides_{};
 };
 
 class Weighted : public Partition {
  public:
   Weighted(const Legion::FutureMap& weights, const Domain& color_domain);
-  ~Weighted();
+  ~Weighted() override;
 
- public:
   Weighted(const Weighted&);
 
- public:
   bool operator==(const Weighted& other) const;
   bool operator<(const Weighted& other) const;
 
- public:
-  Kind kind() const override { return Kind::WEIGHTED; }
+  [[nodiscard]] Kind kind() const override;
 
- public:
-  bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain& launch_domain) const override;
-  bool satisfies_restrictions(const Restrictions& restrictions) const override;
-  bool is_convertible() const override { return false; }
+  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
+  [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
+  [[nodiscard]] bool is_convertible() const override;
+  [[nodiscard]] bool is_complete_for(const detail::Storage* /*storage*/) const override;
 
- public:
-  std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                   const Shape& high_offsets) const override;
+  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                                 const Shape& high_offsets) const override;
 
- public:
-  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
+  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
+                                                   bool complete) const override;
 
- public:
-  bool has_launch_domain() const override;
-  Domain launch_domain() const override;
+  [[nodiscard]] bool has_launch_domain() const override;
+  [[nodiscard]] Domain launch_domain() const override;
 
- public:
-  std::unique_ptr<Partition> clone() const override;
+  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Shape& color_shape() const override { return color_shape_; }
+  [[nodiscard]] const Shape& color_shape() const override;
 
  private:
   std::unique_ptr<Legion::FutureMap> weights_{nullptr};
-  Domain color_domain_;
-  Shape color_shape_;
+  Domain color_domain_{};
+  Shape color_shape_{};
 };
 
 class Image : public Partition {
@@ -226,67 +183,58 @@ class Image : public Partition {
         std::shared_ptr<Partition> func_partition,
         mapping::detail::Machine machine);
 
- public:
-  Image(const Image&) = default;
-
- public:
   bool operator==(const Image& other) const;
   bool operator<(const Image& other) const;
 
- public:
-  Kind kind() const override { return Kind::IMAGE; }
+  [[nodiscard]] Kind kind() const override;
 
- public:
-  bool is_complete_for(const detail::Storage* storage) const override;
-  bool is_disjoint_for(const Domain& launch_domain) const override;
-  bool satisfies_restrictions(const Restrictions& restrictions) const override;
-  bool is_convertible() const override { return false; }
+  [[nodiscard]] bool is_complete_for(const detail::Storage* storage) const override;
+  [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
+  [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
+  [[nodiscard]] bool is_convertible() const override;
 
- public:
-  std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                   const Shape& high_offsets) const override;
+  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
+                                                 const Shape& high_offsets) const override;
 
- public:
-  Legion::LogicalPartition construct(Legion::LogicalRegion region, bool complete) const override;
+  [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
+                                                   bool complete) const override;
 
- public:
-  bool has_launch_domain() const override;
-  Domain launch_domain() const override;
+  [[nodiscard]] bool has_launch_domain() const override;
+  [[nodiscard]] Domain launch_domain() const override;
 
- public:
-  std::unique_ptr<Partition> clone() const override;
+  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
 
- public:
-  std::string to_string() const override;
+  [[nodiscard]] std::string to_string() const override;
 
- public:
-  const Shape& color_shape() const override;
+  [[nodiscard]] const Shape& color_shape() const override;
 
  private:
   std::shared_ptr<detail::LogicalStore> func_;
-  std::shared_ptr<Partition> func_partition_;
-  mapping::detail::Machine machine_;
+  std::shared_ptr<Partition> func_partition_{};
+  mapping::detail::Machine machine_{};
 };
 
-std::unique_ptr<NoPartition> create_no_partition();
+[[nodiscard]] std::unique_ptr<NoPartition> create_no_partition();
 
-std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
-                                      Shape&& color_shape,
-                                      tuple<int64_t>&& offsets = {});
+[[nodiscard]] std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
+                                                    Shape&& color_shape,
+                                                    tuple<int64_t>&& offsets = {});
 
-std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
-                                      Shape&& color_shape,
-                                      tuple<int64_t>&& offsets,
-                                      Shape&& strides);
+[[nodiscard]] std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
+                                                    Shape&& color_shape,
+                                                    tuple<int64_t>&& offsets,
+                                                    Shape&& strides);
 
-std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
-                                          const Domain& color_domain);
+[[nodiscard]] std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
+                                                        const Domain& color_domain);
 
-std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
-                                    std::shared_ptr<Partition> func_partition,
-                                    mapping::detail::Machine machine);
+[[nodiscard]] std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
+                                                  std::shared_ptr<Partition> func_partition,
+                                                  mapping::detail::Machine machine);
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 
 }  // namespace legate
+
+#include "core/partitioning/partition.inl"

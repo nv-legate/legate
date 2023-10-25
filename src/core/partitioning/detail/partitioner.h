@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include <memory>
-#include <optional>
-#include <unordered_map>
-
 #include "core/data/shape.h"
 #include "core/partitioning/detail/constraint.h"
-#include "core/partitioning/restriction.h"
+
+#include <map>
+#include <memory>
+#include <optional>
+#include <vector>
 
 namespace legate {
 struct Partition;
@@ -34,31 +34,25 @@ class Strategy {
   friend class Partitioner;
 
  public:
-  Strategy();
-
- public:
-  bool parallel(const Operation* op) const;
-  Domain launch_domain(const Operation* op) const;
+  [[nodiscard]] bool parallel(const Operation* op) const;
+  [[nodiscard]] Domain launch_domain(const Operation* op) const;
   void set_launch_shape(const Operation* op, const Shape& shape);
 
- public:
   void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);
   void insert(const Variable* partition_symbol,
               std::shared_ptr<Partition> partition,
               Legion::FieldSpace field_space);
-  bool has_assignment(const Variable* partition_symbol) const;
-  std::shared_ptr<Partition> operator[](const Variable* partition_symbol) const;
-  const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
-  bool is_key_partition(const Variable* partition_symbol) const;
+  [[nodiscard]] bool has_assignment(const Variable* partition_symbol) const;
+  [[nodiscard]] std::shared_ptr<Partition> operator[](const Variable* partition_symbol) const;
+  [[nodiscard]] const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
+  [[nodiscard]] bool is_key_partition(const Variable* partition_symbol) const;
 
- public:
   void dump() const;
 
  private:
   void compute_launch_domains(const ConstraintSolver& solver);
   void record_key_partition(const Variable* partition_symbol);
 
- private:
   std::map<const Variable, std::shared_ptr<Partition>> assignments_{};
   std::map<const Variable, Legion::FieldSpace> field_spaces_{};
   std::map<const Operation*, Domain> launch_domains_{};
@@ -69,19 +63,19 @@ class Partitioner {
  public:
   Partitioner(std::vector<Operation*>&& operations);
 
- public:
-  std::unique_ptr<Strategy> partition_stores();
+  [[nodiscard]] std::unique_ptr<Strategy> partition_stores();
 
  private:
   // Populates solutions for unbound stores in the `strategy` and returns remaining partition
   // symbols
-  std::vector<const Variable*> handle_unbound_stores(
+  [[nodiscard]] static std::vector<const Variable*> handle_unbound_stores(
     Strategy* strategy,
     const std::vector<const Variable*>& partition_symbols,
-    const ConstraintSolver& constraints);
+    const ConstraintSolver& solver);
 
- private:
-  std::vector<Operation*> operations_;
+  std::vector<Operation*> operations_{};
 };
 
 }  // namespace legate::detail
+
+#include "core/partitioning/detail/partitioner.inl"

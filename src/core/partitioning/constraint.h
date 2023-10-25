@@ -16,6 +16,8 @@
 #include "core/utilities/memory.h"
 #include "core/utilities/tuple.h"
 
+#include <string>
+
 /** @defgroup partitioning Partitioning
  */
 
@@ -39,17 +41,15 @@ extern template struct default_delete<detail::Constraint>;
  */
 class Variable {
  public:
-  std::string to_string() const;
-
- public:
   Variable() = default;
-  Variable(const detail::Variable* impl);
+  explicit Variable(const detail::Variable* impl);
 
- public:
-  const detail::Variable* impl() const { return impl_; }
+  [[nodiscard]] std::string to_string() const;
+
+  [[nodiscard]] const detail::Variable* impl() const;
 
  private:
-  const detail::Variable* impl_{nullptr};
+  const detail::Variable* impl_{};
 };
 
 /**
@@ -58,18 +58,17 @@ class Variable {
  */
 class Constraint {
  public:
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
 
- public:
   Constraint() = default;
-  Constraint(std::shared_ptr<detail::Constraint>&& impl);
+  explicit Constraint(std::shared_ptr<detail::Constraint>&& impl);
   Constraint(const Constraint&)                = default;
   Constraint(Constraint&&) noexcept            = default;
   Constraint& operator=(const Constraint&)     = default;
   Constraint& operator=(Constraint&&) noexcept = default;
   ~Constraint()                                = default;
 
-  const std::shared_ptr<detail::Constraint> impl() const { return impl_; }
+  [[nodiscard]] const std::shared_ptr<detail::Constraint>& impl() const;
 
  private:
   std::shared_ptr<detail::Constraint> impl_{nullptr};
@@ -84,7 +83,7 @@ class Constraint {
  *
  * @return Alignment constraint
  */
-Constraint align(Variable lhs, Variable rhs);
+[[nodiscard]] Constraint align(Variable lhs, Variable rhs);
 
 /**
  * @ingroup partitioning
@@ -109,7 +108,7 @@ Constraint align(Variable lhs, Variable rhs);
  *
  * @throw std::invalid_argument If the list of axes is empty
  */
-Constraint broadcast(Variable variable, const tuple<int32_t>& axes);
+[[nodiscard]] Constraint broadcast(Variable variable, const tuple<int32_t>& axes);
 
 /**
  * @ingroup partitioning
@@ -120,7 +119,7 @@ Constraint broadcast(Variable variable, const tuple<int32_t>& axes);
  *
  * @return Broadcast constraint
  */
-Constraint image(Variable var_function, Variable var_range);
+[[nodiscard]] Constraint image(Variable var_function, Variable var_range);
 
 /**
  * @ingroup partitioning
@@ -143,7 +142,7 @@ Constraint image(Variable var_function, Variable var_range);
  *
  * @return Scaling constraint
  */
-Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger);
+[[nodiscard]] Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger);
 
 /**
  * @ingroup partitioning
@@ -166,9 +165,11 @@ Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger
  *
  * @return Bloating constraint
  */
-Constraint bloat(Variable var_source,
-                 Variable var_bloat,
-                 const Shape& low_offsets,
-                 const Shape& high_offsets);
+[[nodiscard]] Constraint bloat(Variable var_source,
+                               Variable var_bloat,
+                               const Shape& low_offsets,
+                               const Shape& high_offsets);
 
 }  // namespace legate
+
+#include "core/partitioning/constraint.inl"

@@ -12,20 +12,23 @@
 
 #include "core/partitioning/restriction.h"
 
+#include <algorithm>
+
 namespace legate {
 
-Restriction join(Restriction lhs, Restriction rhs) { return std::max<Restriction>(lhs, rhs); }
+Restriction join(Restriction lhs, Restriction rhs) { return std::max(lhs, rhs); }
 
 tuple<Restriction> join(const tuple<Restriction>& lhs, const tuple<Restriction>& rhs)
 {
   auto result = lhs;
+
   join_inplace(result, rhs);
   return result;
 }
 
 void join_inplace(Restrictions& lhs, const Restrictions& rhs)
 {
-  if (rhs.empty()) { return; }
+  if (rhs.empty()) return;
   if (lhs.empty()) {
     lhs = rhs;
     return;
