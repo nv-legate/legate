@@ -121,14 +121,6 @@ class FutureWrapper {
                 bool initialize = false);
 
  public:
-  FutureWrapper(FutureWrapper&& other) noexcept            = default;
-  FutureWrapper& operator=(FutureWrapper&& other) noexcept = default;
-
- private:
-  FutureWrapper(const FutureWrapper& other)            = delete;
-  FutureWrapper& operator=(const FutureWrapper& other) = delete;
-
- public:
   int32_t dim() const { return domain_.dim; }
 
  public:
