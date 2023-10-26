@@ -141,6 +141,29 @@ class TestSingleRank:
         spec, vspec = m.CPU(c, s).spec, m.CPU(cv, s).spec
         assert vspec == spec
 
+    @pytest.mark.parametrize("cpus", (4, 5, 10, 20))
+    def test_oversubscription_with_pin(self, cpus: int) -> None:
+        args = ["test.py", "--cpus", str(cpus), "--cpu-pin", "strict"]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.raises(RuntimeError):
+            m.CPU(c, s)
+
+    @pytest.mark.parametrize("cpus", (4, 5, 10, 20))
+    def test_oversubscription_no_pin(self, cpus: int) -> None:
+        args = ["test.py", "--cpus", str(cpus), "--cpu-pin", "none"]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.warns():
+            stage = m.CPU(c, s)
+
+        assert stage.spec.workers == 1
+        assert stage.spec.shards == [
+            Shard([(0, 1, 2, 3)]),
+        ]
+
 
 class TestMultiRank:
     def test_shard_args(self) -> None:
@@ -224,3 +247,42 @@ class TestMultiRank:
         assert c.requested_workers > len(s.cpus)
         with pytest.raises(RuntimeError):
             m.CPU(c, s)
+
+    @pytest.mark.parametrize("cpus", (2, 3, 10, 20))
+    def test_oversubscription_with_pin(self, cpus: int) -> None:
+        args = [
+            "test.py",
+            "--cpus",
+            str(cpus),
+            "--ranks-per-node",
+            "2",
+            "--cpu-pin",
+            "strict",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.raises(RuntimeError):
+            m.CPU(c, s)
+
+    @pytest.mark.parametrize("cpus", (2, 3, 10, 20))
+    def test_oversubscription_no_pin(self, cpus: int) -> None:
+        args = [
+            "test.py",
+            "--cpus",
+            str(cpus),
+            "--ranks-per-node",
+            "2",
+            "--cpu-pin",
+            "none",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.warns():
+            stage = m.CPU(c, s)
+
+        assert stage.spec.workers == 1
+        assert stage.spec.shards == [
+            Shard([(0, 1, 2, 3)]),
+        ]

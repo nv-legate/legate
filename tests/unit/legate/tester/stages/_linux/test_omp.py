@@ -171,6 +171,45 @@ class TestSingleRank:
         spec, vspec = m.OMP(c, s).spec, m.OMP(cv, s).spec
         assert vspec == spec
 
+    @pytest.mark.parametrize("threads", (4, 5, 10, 20))
+    def test_oversubscription_with_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--cpu-pin",
+            "strict",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.raises(RuntimeError):
+            m.OMP(c, s)
+
+    @pytest.mark.parametrize("threads", (4, 5, 10, 20))
+    def test_oversubscription_no_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--cpu-pin",
+            "none",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.warns():
+            stage = m.OMP(c, s)
+
+        assert stage.spec.workers == 1
+        assert stage.spec.shards == [
+            Shard([(0, 1, 2, 3)]),
+        ]
+
 
 class TestMultiRank:
     @pytest.mark.parametrize(
@@ -313,4 +352,47 @@ class TestMultiRank:
         assert stage.spec.shards == [
             Shard([(0, 1), (2, 3)]),
             Shard([(4, 5), (6, 7)]),
+        ]
+
+    @pytest.mark.parametrize("threads", (2, 3, 10, 20))
+    def test_oversubscription_with_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--ranks-per-node",
+            "2",
+            "--cpu-pin",
+            "strict",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.raises(RuntimeError):
+            m.OMP(c, s)
+
+    @pytest.mark.parametrize("threads", (2, 3, 10, 20))
+    def test_oversubscription_no_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--ranks-per-node",
+            "2",
+            "--cpu-pin",
+            "none",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.warns():
+            stage = m.OMP(c, s)
+
+        assert stage.spec.workers == 1
+        assert stage.spec.shards == [
+            Shard([(0, 1, 2, 3)]),
         ]

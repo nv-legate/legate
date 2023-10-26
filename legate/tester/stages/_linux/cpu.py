@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import warnings
 from itertools import chain
 from typing import TYPE_CHECKING
 
@@ -72,11 +73,21 @@ class CPU(TestStage):
         workers = len(cpus) // (procs * config.ranks_per_node)
 
         if workers == 0:
-            raise RuntimeError(
-                f"{len(cpus)} detected core(s) not enough for "
-                f"{config.ranks_per_node} rank(s) per node, each reserving "
-                f"{procs} core(s)"
-            )
+            if config.cpu_pin == "strict":
+                raise RuntimeError(
+                    f"{len(cpus)} detected core(s) not enough for "
+                    f"{config.ranks_per_node} rank(s) per node, each "
+                    f"reserving {procs} core(s) with strict CPU pinning"
+                )
+            else:
+                warnings.warn(
+                    f"{len(cpus)} detected core(s) not enough for "
+                    f"{config.ranks_per_node} rank(s) per node, each "
+                    f"reserving {procs} core(s), running anyway."
+                )
+                all_cpus = tuple(range(len(cpus)))
+                return StageSpec(1, [Shard([all_cpus])])
+
         workers = adjust_workers(workers, config.requested_workers)
 
         shards: list[Shard] = []
