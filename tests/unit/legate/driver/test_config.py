@@ -443,17 +443,62 @@ class TestConfig:
         c = m.Config(["legate"] + list(args) + ["foo.py", "-a", "1"])
 
         assert c.user_opts == ("-a", "1")
-        assert c.user_script == "foo.py"
+        assert c.user_program == "foo.py"
 
-    def test_console_true(self) -> None:
+    USER_OPTS: tuple[list[str], ...] = (
+        [],
+        ["-a"],
+        ["-a", "-b", "1", "--long"],
+    )
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_exec_run_mode_with_prog(self, opts: list[str]) -> None:
+        c = m.Config(["legate", "--run-mode", "exec", "prog"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.run_mode == "exec"
+        assert not c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_python_run_mode_with_prog(self, opts: list[str]) -> None:
+        c = m.Config(["legate", "--run-mode", "python", "prog"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.run_mode == "python"
+        assert not c.console
+
+    def test_python_run_mode_no_prog(self) -> None:
+        c = m.Config(["legate", "--run-mode", "python"])
+
+        assert c.user_opts == ()
+        assert c.run_mode == "python"
+        assert c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_default_run_mode_with_script(self, opts: list[str]) -> None:
+        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "script.py"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.user_program == "script.py"
+        assert c.run_mode == "python"
+        assert not c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_default_run_mode_with_prog(self, opts: list[str]) -> None:
+        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "prog"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.user_program == "prog"
+        assert c.run_mode == "exec"
+        assert not c.console
+
+    def test_default_run_mode_no_prog(self) -> None:
         c = m.Config(["legate"])
 
         assert c.user_opts == ()
+        assert c.run_mode == "python"
         assert c.console
 
-    def test_console_false(self) -> None:
-        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "foo.py", "-a"])
-
-        assert c.user_opts == ("-a",)
-        assert c.user_script == "foo.py"
-        assert not c.console
+    def test_exec_run_mode_no_prog(self) -> None:
+        with pytest.raises(RuntimeError):
+            m.Config(["legate", "--run-mode", "exec"])

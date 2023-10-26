@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from .config import ConfigProtocol
     from .launcher import Launcher
 
-__all__ = ("CMD_PARTS_LEGION", "CMD_PARTS_CANONICAL")
+__all__ = ("CMD_PARTS_EXEC", "CMD_PARTS_LEGION", "CMD_PARTS_CANONICAL")
 
 
 # this will be replaced by bind.sh with the actual computed rank at runtime
@@ -436,10 +436,10 @@ def cmd_eager_alloc(
     return ("-lg:eager_alloc_percentage", str(eager_alloc))
 
 
-def cmd_user_script(
+def cmd_user_program(
     config: ConfigProtocol, system: System, launcher: Launcher
 ) -> CommandPart:
-    return () if config.user_script is None else (config.user_script,)
+    return () if config.user_program is None else (config.user_program,)
 
 
 def cmd_user_opts(
@@ -454,7 +454,24 @@ def cmd_python(
     return ("python",)
 
 
-_CMD_PARTS_SHARED = (
+_CMD_PARTS_PRE = (
+    cmd_bind,
+    # Add any user supplied (outer) wrappers
+    cmd_wrapper,
+    cmd_rlwrap,
+    cmd_gdb,
+    cmd_cuda_gdb,
+    cmd_nvprof,
+    cmd_nsys,
+    # Add memcheck right before the binary
+    cmd_memcheck,
+    # Add valgrind right before the binary
+    cmd_valgrind,
+    # Add any user supplied inner wrappers
+    cmd_wrapper_inner,
+)
+
+_CMD_PARTS_POST = (
     # This has to go before script name
     cmd_nocr,
     cmd_kthreads,
@@ -475,31 +492,18 @@ _CMD_PARTS_SHARED = (
 )
 
 CMD_PARTS_LEGION = (
-    (
-        cmd_bind,
-        # Add any user supplied (outer) wrappers
-        cmd_wrapper,
-        cmd_rlwrap,
-        cmd_gdb,
-        cmd_cuda_gdb,
-        cmd_nvprof,
-        cmd_nsys,
-        # Add memcheck right before the binary
-        cmd_memcheck,
-        # Add valgrind right before the binary
-        cmd_valgrind,
-        # Add any user supplied inner wrappers
-        cmd_wrapper_inner,
+    _CMD_PARTS_PRE
+    + (
         # Now we're ready to build the actual command to run
         cmd_legion,
         # This has to go before script name
         cmd_python_processor,
         cmd_module,
     )
-    + _CMD_PARTS_SHARED
+    + _CMD_PARTS_POST
     + (
         # User script
-        cmd_user_script,
+        cmd_user_program,
         # Append user flags so they can override whatever we provided
         cmd_user_opts,
     )
@@ -510,9 +514,22 @@ CMD_PARTS_CANONICAL = (
         # Executable name that will get stripped by the runtime
         cmd_python,
         # User script
-        cmd_user_script,
+        cmd_user_program,
     )
-    + _CMD_PARTS_SHARED
+    + _CMD_PARTS_POST
+    + (
+        # Append user flags so they can override whatever we provided
+        cmd_user_opts,
+    )
+)
+
+CMD_PARTS_EXEC = (
+    _CMD_PARTS_PRE
+    + (
+        # Now we're ready to build the actual command to run
+        cmd_user_program,
+    )
+    + _CMD_PARTS_POST
     + (
         # Append user flags so they can override whatever we provided
         cmd_user_opts,

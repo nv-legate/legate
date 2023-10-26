@@ -36,7 +36,7 @@ system = System()
 
 
 class Test_generate_kernel_spec:
-    def test_defatul(self) -> None:
+    def test_default(self) -> None:
         config = Config([])
         driver = LegateDriver(config, system)
 

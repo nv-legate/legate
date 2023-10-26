@@ -15,8 +15,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from legate.util.types import RunMode
 
 import legate.util.colors as colors
 from legate.driver.config import (
@@ -76,8 +80,11 @@ class Config:
         self.core = object_to_dataclass(args, Core)
         self.memory = object_to_dataclass(args, Memory)
 
+        # need to override explicitly since there is no user program or args
+        self._user_run_mode = "python"
+
         # turn everything else off
-        self.user_script: Optional[str] = None
+        self.user_program: Optional[str] = None
         self.user_opts: tuple[str, ...] = ()
         self.binding = Binding(None, None, None, None)
         self.profiling = Profiling(False, False, False, False, "", [])
@@ -93,3 +100,7 @@ class Config:
         )
         self.info = Info(False, False, self.verbose > 0, False)
         self.other = Other(False, [], [], None, False, False)
+
+    @cached_property
+    def run_mode(self) -> RunMode:
+        return "python"

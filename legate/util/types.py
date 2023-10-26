@@ -34,6 +34,7 @@ __all__ = (
     "LauncherType",
     "LegatePaths",
     "LegionPaths",
+    "RunMode",
     "object_to_dataclass",
 )
 
@@ -77,6 +78,10 @@ CommandPart: TypeAlias = Tuple[str, ...]
 
 #: Represent all the parts of a command-line command to execute
 Command: TypeAlias = Tuple[str, ...]
+
+
+#: Represent how to run the application -- as python script or binary
+RunMode: TypeAlias = Literal["python", "exec"]
 
 
 # This seems like it ought to be in stdlib

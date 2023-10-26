@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from ..util.system import System
 from ..util.types import DataclassMixin
 from ..util.ui import kvtable, rule, section, value, warn
-from .command import CMD_PARTS_CANONICAL, CMD_PARTS_LEGION
+from .command import CMD_PARTS_CANONICAL, CMD_PARTS_EXEC, CMD_PARTS_LEGION
 from .config import ConfigProtocol
 from .launcher import Launcher, SimpleLauncher
 
@@ -66,12 +66,16 @@ class LegateDriver:
 
     @property
     def cmd(self) -> Command:
-        """The full command invocation that should be used to start Legate."""
+        """The full command invocation to use to run the Legate program."""
         config = self.config
         launcher = self.launcher
         system = self.system
 
-        parts = (part(config, system, launcher) for part in CMD_PARTS_LEGION)
+        cmd_parts = (
+            CMD_PARTS_LEGION if config.run_mode == "python" else CMD_PARTS_EXEC
+        )
+
+        parts = (part(config, system, launcher) for part in cmd_parts)
         return launcher.cmd + sum(parts, ())
 
     @property

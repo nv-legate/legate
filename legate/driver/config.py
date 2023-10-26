@@ -26,6 +26,7 @@ from ..util.types import (
     ArgList,
     DataclassMixin,
     LauncherType,
+    RunMode,
     object_to_dataclass,
 )
 from ..util.ui import warn
@@ -149,7 +150,7 @@ class ConfigProtocol(Protocol):
 
     argv: ArgList
 
-    user_script: Optional[str]
+    user_program: Optional[str]
     user_opts: tuple[str, ...]
     multi_node: MultiNode
     binding: Binding
@@ -160,6 +161,10 @@ class ConfigProtocol(Protocol):
     debugging: Debugging
     info: Info
     other: Other
+
+    @cached_property
+    def run_mode(self) -> RunMode:
+        ...
 
 
 class Config:
@@ -183,8 +188,12 @@ class Config:
         # only saving this for help with testing
         self._args = args
 
-        self.user_script = args.command[0] if args.command else None
-        self.user_opts = tuple(args.command[1:]) if self.user_script else ()
+        self.user_program = args.command[0] if args.command else None
+        self.user_opts = tuple(args.command[1:]) if self.user_program else ()
+        self._user_run_mode = args.run_mode
+
+        if self.run_mode == "exec" and self.user_program is None:
+            raise RuntimeError("'exec' run mode requires a program to execute")
 
         # these may modify the args, so apply before dataclass conversions
         self._fixup_nocr(args)
@@ -203,7 +212,23 @@ class Config:
     @cached_property
     def console(self) -> bool:
         """Whether we are starting Legate as an interactive console."""
-        return self.user_script is None
+        return self.user_program is None and self.run_mode == "python"
+
+    @cached_property
+    def run_mode(self) -> RunMode:
+        # honor any explicit user configuration
+        if self._user_run_mode is not None:
+            return self._user_run_mode
+
+        # no user program, just run legion_python
+        if self.user_program is None:
+            return "python"
+
+        # otherwise assume .py means run with legion_python
+        if self.user_program.endswith(".py"):
+            return "python"
+
+        return "exec"
 
     def _fixup_nocr(self, args: Namespace) -> None:
         # this is slightly duplicative of MultiNode.ranks property, but fixup

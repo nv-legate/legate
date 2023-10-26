@@ -29,6 +29,7 @@ from .util import GenObjs
 
 def test___all__() -> None:
     assert m.__all__ == (
+        "CMD_PARTS_EXEC",
         "CMD_PARTS_LEGION",
         "CMD_PARTS_CANONICAL",
     )
@@ -68,7 +69,37 @@ def test_CMD_PARTS() -> None:
         m.cmd_log_levels,
         m.cmd_log_file,
         m.cmd_eager_alloc,
-        m.cmd_user_script,
+        m.cmd_user_program,
+        m.cmd_user_opts,
+    )
+
+    assert m.CMD_PARTS_EXEC == (
+        m.cmd_bind,
+        m.cmd_wrapper,
+        m.cmd_rlwrap,
+        m.cmd_gdb,
+        m.cmd_cuda_gdb,
+        m.cmd_nvprof,
+        m.cmd_nsys,
+        m.cmd_memcheck,
+        m.cmd_valgrind,
+        m.cmd_wrapper_inner,
+        m.cmd_user_program,
+        m.cmd_nocr,
+        m.cmd_kthreads,
+        m.cmd_cpus,
+        m.cmd_gpus,
+        m.cmd_openmp,
+        m.cmd_utility,
+        m.cmd_bgwork,
+        m.cmd_mem,
+        m.cmd_numamem,
+        m.cmd_fbmem,
+        m.cmd_regmem,
+        m.cmd_network,
+        m.cmd_log_levels,
+        m.cmd_log_file,
+        m.cmd_eager_alloc,
         m.cmd_user_opts,
     )
 
@@ -1570,8 +1601,8 @@ class Test_cmd_user_opts:
         config, system, launcher = genobjs(opts, fake_module=None)
 
         user_opts = m.cmd_user_opts(config, system, launcher)
-        user_script = m.cmd_user_script(config, system, launcher)
-        result = user_script + user_opts
+        user_program = m.cmd_user_program(config, system, launcher)
+        result = user_program + user_opts
 
         assert result == tuple(opts)
 
@@ -1582,8 +1613,8 @@ class Test_cmd_user_opts:
         config, system, launcher = genobjs(args, fake_module=None)
 
         user_opts = m.cmd_user_opts(config, system, launcher)
-        user_script = m.cmd_user_script(config, system, launcher)
-        result = user_script + user_opts
+        user_program = m.cmd_user_program(config, system, launcher)
+        result = user_program + user_opts
 
         assert result == tuple(opts)
 
