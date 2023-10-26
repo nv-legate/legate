@@ -46,7 +46,7 @@ SKIP_LIST = {
 def main():
     for action in tester_parser._actions:
         if action.dest == "gtest_file":
-            action.default = "build/cpp_tests"
+            action.default = "build/bin/cpp_tests"
         elif action.dest == "mpi_output_filename":
             action.default = "build/mpi_result"
 
