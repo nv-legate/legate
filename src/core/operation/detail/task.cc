@@ -232,6 +232,8 @@ const Variable* AutoTask::add_reduction(std::shared_ptr<LogicalArray> array, int
 
 void AutoTask::add_input(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol)
 {
+  if (array->unbound()) throw std::invalid_argument{"Unbound arrays cannot be used as input"};
+
   auto& arg = inputs_.emplace_back(std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
@@ -255,6 +257,8 @@ void AutoTask::add_reduction(std::shared_ptr<LogicalArray> array,
                              int32_t redop,
                              const Variable* partition_symbol)
 {
+  if (array->unbound()) throw std::invalid_argument{"Unbound arrays cannot be used for reductions"};
+
   if (array->type()->variable_size()) {
     throw std::invalid_argument("List/string arrays cannot be used for reduction");
   }
@@ -338,6 +342,8 @@ ManualTask::ManualTask(const Library* library,
 
 void ManualTask::add_input(std::shared_ptr<LogicalStore> store)
 {
+  if (store->unbound()) throw std::invalid_argument{"Unbound stores cannot be used as input"};
+
   add_store(inputs_, std::move(store), create_no_partition());
 }
 
@@ -349,6 +355,9 @@ void ManualTask::add_input(const std::shared_ptr<LogicalStorePartition>& store_p
 void ManualTask::add_output(std::shared_ptr<LogicalStore> store)
 {
   if (store->has_scalar_storage()) {
+    if (strategy_->parallel(this))
+      throw std::invalid_argument{
+        "Manual tasks with scalar outputs cannot have a launch domain with more than one point"};
     record_scalar_output(store);
   } else if (store->unbound()) {
     record_unbound_output(store);
@@ -363,6 +372,9 @@ void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_
     assert(!store_partition->store()->unbound());
   }
   if (store_partition->store()->has_scalar_storage()) {
+    if (strategy_->parallel(this))
+      throw std::invalid_argument{
+        "Manual tasks with scalar outputs cannot have a launch domain with more than one point"};
     record_scalar_output(store_partition->store());
   }
   add_store(outputs_, store_partition->store(), store_partition->partition());
@@ -370,6 +382,8 @@ void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_
 
 void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redop)
 {
+  if (store->unbound()) throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
+
   auto legion_redop_id = store->type()->find_reduction_operator(redop);
   if (store->has_scalar_storage()) { record_scalar_reduction(store, legion_redop_id); }
   add_store(reductions_, std::move(store), create_no_partition());
