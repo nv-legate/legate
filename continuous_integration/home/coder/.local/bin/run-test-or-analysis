@@ -4,8 +4,8 @@ run_test_or_analysis() {
     set -xeuo pipefail
 
     case "$1" in
-        "unit")
-            echo "Executing unit tests..."
+        "python")
+            echo "Executing python tests..."
             if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
               echo "============================================================================"
               echo "x ------------------------------------------------------------------------ x"
@@ -47,19 +47,6 @@ run_test_or_analysis() {
               pytest
             fi
 
-            ;;
-        "mypy")
-          echo "Executing mypy..."
-            # Keep mypy version identical to mypy version in .pre-commit.yaml. The only
-            # reason we don't read it directly here is because when this is run in CI, it
-            # is done on a job which does not checkout the repo (and hence cannot read the
-            # .pre-commit.yaml).
-            set +eou pipefail
-            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" mypy=1.5.1
-            set -eou pipefail
-
-            cd ~/legate
-            mypy legate
             ;;
         "cpp")
             echo "Running C++ unit tests..."
