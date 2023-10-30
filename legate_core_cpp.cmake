@@ -569,6 +569,12 @@ install(
         src/core/utilities/compressed_pair.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
+install(
+  DIRECTORY   cmake/Modules
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate_core"
+  FILES_MATCHING
+    PATTERN "*.cmake")
+
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/debug_symbols.cmake)
 
 legate_core_debug_syms(legate_core INSTALL_DIR ${lib_dir})
