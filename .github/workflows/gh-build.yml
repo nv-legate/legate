@@ -18,17 +18,24 @@ on:
       sha:
         required: true
         type: string
+      ucx-config:
+        required: true
+        type: string
+      ucx-string:
+        required: true
+        type: string        
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   BASE_IMAGE: rapidsai/devcontainers:23.06-cpp-mambaforge-ubuntu22.04
-  IMAGE_NAME: ${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}
+  UCX_ENABLED: ${{ (inputs.ucx-config == 'ucx' && 'ON') || 'OFF' }}
+  IMAGE_NAME: ${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}
   USE_CUDA: ${{ (inputs.build-target == 'cpu' && 'OFF') || 'ON' }}
   LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
 
 jobs:
   build:
-    name: build-${{ inputs.build-target }}-${{ inputs.cmake-preset }}-sub-workflow
+    name: build-${{ inputs.build-target }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}-sub-workflow
 
     permissions:
       id-token: write # This is required for configure-aws-credentials
@@ -61,6 +68,7 @@ jobs:
           echo BUILD_TARGET: ${{ inputs.build-target }}
           echo USE_CUDA: ${{ env.USE_CUDA }}
           echo LEGATE_CORE_CMAKE_PRESET: ${{ env.LEGATE_CORE_CMAKE_PRESET }}
+          echo UCX_ENABLED: ${{ env.UCX_ENABLED }}
 
           IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
 
@@ -107,5 +115,5 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}-${{ inputs.sha }}"
+          name: "${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}-${{ inputs.sha }}"
           path: artifacts

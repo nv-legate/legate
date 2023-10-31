@@ -20,7 +20,12 @@ jobs:
       fail-fast: false
       matrix:
         cmake-preset: [debug-gcc, debug-sanitizer-gcc, release-gcc]
-    #if: ${{ github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'nv-legate' }}
+        ucx-config: [ucx, no_ucx]
+        exclude:
+          - cmake-preset: debug-gcc
+            ucx-config: ucx
+          - cmake-preset: debug-sanitizer-gcc
+            ucx-config: ucx
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
       ./.github/workflows/gh-build.yml
@@ -31,6 +36,8 @@ jobs:
       repos-name: ${{ github.event.repository.name }}
       runs-on: ${{ contains(github.repository, 'nv-legate/legate.core') && 'linux-amd64-cpu4' || 'ubuntu-latest' }}
       sha: ${{ github.sha }}
+      ucx-config: ${{ matrix.ucx-config }}
+      ucx-string: ${{ (matrix.ucx-config == 'ucx' && '-ucx') || '' }}
 
   test-cpu:
     needs:
@@ -43,6 +50,12 @@ jobs:
           { name: Python Unit Tests, test-scope: python },
           { name: C++ Unit Tests, test-scope: cpp }
         ]
+        ucx-config: [ucx, no_ucx]
+        exclude:
+          - cmake-preset: debug-gcc
+            ucx-config: ucx
+          - cmake-preset: debug-sanitizer-gcc
+            ucx-config: ucx
     name: ${{ matrix.test-config.name }}
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
@@ -54,6 +67,8 @@ jobs:
       sha: ${{ github.sha }}
       cmake-preset: ${{ matrix.cmake-preset }}
       test-scope: ${{ matrix.test-config.test-scope }}
+      ucx-config: ${{ matrix.ucx-config }}
+      ucx-string: ${{ (matrix.ucx-config == 'ucx' && '-ucx') || '' }}
 
   cleanup:
     needs:

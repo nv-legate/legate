@@ -5,6 +5,8 @@ run_test_or_analysis() {
 
     case "$1" in
         "python")
+            ucx_libs=
+            [ "${UCX_ENABLED:-}" = "ON" ] && ucx_libs=ucx\ openmpi
             echo "Executing python tests..."
             if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
               echo "============================================================================"
@@ -16,7 +18,7 @@ run_test_or_analysis() {
             fi
 
             set +eou pipefail
-            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge pytest pytest-mock ipython jupyter_client
+            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge pytest pytest-mock ipython jupyter_client $ucx_libs
             set -eou pipefail
 
             cd ~/legate/tests/unit
@@ -51,6 +53,12 @@ run_test_or_analysis() {
         "cpp")
             echo "Running C++ unit tests..."
 
+            if [ "$UCX_ENABLED" = "ON" ]; then
+              set +eou pipefail
+              mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" ucx openmpi
+              set -eou pipefail
+            fi
+            
             cd ~/legate/tests/cpp
             mkdir -p ctest_install
             sh ~/artifacts/out/cpp_tests.sh --prefix=`pwd`/ctest_install --exclude-subdir --skip-license
