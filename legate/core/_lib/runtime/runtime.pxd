@@ -47,8 +47,8 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
         void issue_scatter_gather(
             _LogicalStore, _LogicalStore, _LogicalStore, _LogicalStore, int32_t
         ) except+
-        void issue_fill(_LogicalStore, _LogicalStore) except+
-        void issue_fill(_LogicalStore, _Scalar) except+
+        void issue_fill(_LogicalArray&, _LogicalStore) except+
+        void issue_fill(_LogicalArray&, _Scalar) except+
         _LogicalStore tree_reduce(
             _Library, int64_t, _LogicalStore, int64_t
         ) except+

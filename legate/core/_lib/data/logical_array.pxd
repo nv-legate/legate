@@ -47,3 +47,6 @@ cdef class LogicalArray:
 
     @staticmethod
     cdef LogicalArray from_handle(_LogicalArray)
+
+
+cdef _LogicalArray to_cpp_logical_array(object array_or_store)

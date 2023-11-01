@@ -280,11 +280,28 @@ void Runtime::issue_scatter_gather(std::shared_ptr<LogicalStore> target,
                                          redop));
 }
 
-void Runtime::issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value)
+void Runtime::issue_fill(std::shared_ptr<LogicalArray> lhs, std::shared_ptr<LogicalStore> value)
 {
-  auto machine = machine_manager_->get_machine();
-  submit(std::shared_ptr<Fill>(
-    new Fill{std::move(lhs), std::move(value), next_unique_id_++, std::move(machine)}));
+  if (lhs->kind() != ArrayKind::BASE)
+    throw std::runtime_error{"Fills on list or struct arrays are not supported yet"};
+
+  auto _issue_fill = [&](std::shared_ptr<LogicalStore> store, std::shared_ptr<LogicalStore> value) {
+    auto machine = machine_manager_->get_machine();
+
+    submit(std::make_shared<Fill>(
+      std::move(store), std::move(value), next_unique_id_++, std::move(machine)));
+  };
+
+  if (value->type()->code == Type::Code::NIL) {
+    if (!lhs->nullable())
+      throw std::invalid_argument{"Non-nullable arrays cannot be filled with null"};
+    _issue_fill(lhs->null_mask(), create_store(Scalar{false}));
+    return;
+  }
+
+  _issue_fill(lhs->data(), std::move(value));
+  if (!lhs->nullable()) return;
+  _issue_fill(lhs->null_mask(), create_store(Scalar{true}));
 }
 
 void Runtime::tree_reduce(const Library* library,

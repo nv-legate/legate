@@ -13,30 +13,48 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
+#include <cstdint>
 #include <gtest/gtest.h>
+#include <tuple>
 
-namespace fill {
+namespace fill_test {
 
-using Fill = DefaultFixture;
+constexpr const char* library_name = "test_fill";
 
-static const char* library_name = "test_fill";
-
-constexpr size_t SIZE = 10;
+constexpr std::size_t SIZE = 10;
 
 enum TaskIDs {
   CHECK_TASK       = 0,
   CHECK_SLICE_TASK = 3,
 };
 
-template <int32_t DIM>
+using FillTests = DefaultFixture;
+
+class Whole : public DefaultFixture,
+              public ::testing::WithParamInterface<std::tuple<bool, std::int32_t, std::size_t>> {};
+
+class Slice : public DefaultFixture,
+              public ::testing::WithParamInterface<std::tuple<bool, std::int32_t>> {};
+
+INSTANTIATE_TEST_SUITE_P(FillTests,
+                         Whole,
+                         ::testing::Combine(::testing::Bool(),
+                                            ::testing::Values(1, 2, 3),
+                                            ::testing::Values(1, SIZE)));
+
+INSTANTIATE_TEST_SUITE_P(FillTests,
+                         Slice,
+                         ::testing::Combine(::testing::Bool(), ::testing::Values(1, 2, 3)));
+
+template <std::int32_t DIM>
 struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
-  static const int32_t TASK_ID = CHECK_TASK + DIM;
+  static const std::int32_t TASK_ID = CHECK_TASK + DIM;
   static void cpu_variant(legate::TaskContext context);
 };
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
-  static const int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
+  static const std::int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -55,118 +73,131 @@ void register_tasks()
   CheckSliceTask<3>::register_variants(context);
 }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 /*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input    = context.input(0).data();
+  auto input    = context.input(0);
   auto shape    = input.shape<DIM>();
   int64_t value = context.scalar(0).value<int64_t>();
 
   if (shape.empty()) return;
 
-  auto acc = input.read_accessor<int64_t, DIM>(shape);
-  for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) { EXPECT_EQ(acc[*it], value); }
-}
-
-template <int32_t DIM>
-/*static*/ void CheckSliceTask<DIM>::cpu_variant(legate::TaskContext context)
-{
-  auto input                  = context.input(0).data();
-  auto shape                  = input.shape<DIM>();
-  int64_t value_in_slice      = context.scalar(0).value<int64_t>();
-  int64_t value_outside_slice = context.scalar(1).value<int64_t>();
-  int64_t offset              = context.scalar(2).value<int64_t>();
-
-  if (shape.empty()) return;
-
-  auto acc      = input.write_accessor<int64_t, DIM>(shape);
-  auto in_slice = [&offset](const auto& p) {
-    for (int32_t dim = 0; dim < DIM; ++dim)
-      if (p[dim] < offset) return false;
-    return true;
-  };
+  auto val_acc = input.data().read_accessor<int64_t, DIM>(shape);
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], in_slice(*it) ? value_in_slice : value_outside_slice);
+    EXPECT_EQ(val_acc[*it], value);
+  }
+
+  if (!input.nullable()) return;
+
+  auto mask_acc = input.null_mask().read_accessor<bool, DIM>(shape);
+  for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
+    EXPECT_EQ(mask_acc[*it], true);
   }
 }
 
-void check_output(legate::LogicalStore store, int64_t value)
+template <std::int32_t DIM>
+/*static*/ void CheckSliceTask<DIM>::cpu_variant(legate::TaskContext context)
+{
+  auto input               = context.input(0);
+  auto shape               = input.shape<DIM>();
+  auto value_in_slice      = context.scalar(0);
+  auto value_outside_slice = context.scalar(1);
+  auto offset              = context.scalar(2).value<int64_t>();
+
+  if (shape.empty()) return;
+
+  auto in_slice = [&offset](const auto& p) {
+    for (std::int32_t dim = 0; dim < DIM; ++dim)
+      if (p[dim] < offset) return false;
+    return true;
+  };
+
+  if (!input.nullable()) {
+    auto acc         = input.data().read_accessor<int64_t, DIM>(shape);
+    auto v_in_slice  = value_in_slice.value<int64_t>();
+    auto v_out_slice = value_outside_slice.value<int64_t>();
+    for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
+      EXPECT_EQ(acc[*it], in_slice(*it) ? v_in_slice : v_out_slice);
+    }
+    return;
+  }
+
+  auto val_acc    = input.data().read_accessor<int64_t, DIM>(shape);
+  auto mask_acc   = input.null_mask().read_accessor<bool, DIM>(shape);
+  auto v_in_slice = value_in_slice.value<int64_t>();
+  for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
+    if (in_slice(*it)) {
+      EXPECT_EQ(val_acc[*it], v_in_slice);
+      EXPECT_EQ(mask_acc[*it], true);
+    } else {
+      EXPECT_EQ(mask_acc[*it], false);
+    }
+  }
+}
+
+void check_output(const legate::LogicalArray& array, const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto task = runtime->create_task(context, CHECK_TASK + store.dim());
-  auto part = task.declare_partition();
-  task.add_input(store, part);
+  auto task = runtime->create_task(context, CHECK_TASK + array.dim());
+  task.add_input(array);
   task.add_scalar_arg(value);
   runtime->submit(std::move(task));
 }
 
-void check_output_slice(legate::LogicalStore store,
-                        int64_t value_in_slice,
-                        int64_t value_outside_slice,
+void check_output_slice(const legate::LogicalArray& array,
+                        const legate::Scalar& value_in_slice,
+                        const legate::Scalar& value_outside_slice,
                         int64_t offset)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto task = runtime->create_task(context, CHECK_SLICE_TASK + store.dim());
-  auto part = task.declare_partition();
-  task.add_input(store, part);
+  auto task = runtime->create_task(context, CHECK_SLICE_TASK + array.dim());
+  task.add_input(array);
   task.add_scalar_arg(value_in_slice);
   task.add_scalar_arg(value_outside_slice);
-  task.add_scalar_arg(offset);
+  task.add_scalar_arg(legate::Scalar{offset});
   runtime->submit(std::move(task));
 }
 
-void test_fill_index(int32_t dim, size_t size)
+void test_fill_index(std::int32_t dim, std::size_t size, bool nullable)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  static_cast<void>(context);
 
-  int64_t v = 10;
+  auto lhs = runtime->create_array(legate::full(static_cast<std::size_t>(dim), size),
+                                   legate::int64(),
+                                   nullable /*nullable*/,
+                                   true /*optimize_scalar*/);
+  auto v   = legate::Scalar{int64_t{10}};
 
-  auto lhs = runtime->create_store(
-    legate::full(static_cast<std::size_t>(dim), size), legate::int64(), true /*optimize_scalar*/);
-  auto value = runtime->create_store(legate::Scalar{v});
-
-  // fill input store with some values
-  runtime->issue_fill(lhs, value);
+  // fill input array with some values
+  runtime->issue_fill(lhs, v);
 
   // check the result of fill
   check_output(lhs, v);
 }
 
-void test_fill_single(int32_t dim, size_t size)
+void test_fill_slice(std::int32_t dim, std::size_t size, bool null_init)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto machine = runtime->get_machine();
-  legate::MachineTracker tracker(machine.slice(0, 1, legate::mapping::TaskTarget::CPU));
-  test_fill_index(dim, size);
-}
 
-void test_fill_slice(int32_t dim, size_t size)
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  static_cast<void>(context);
+  constexpr int64_t v1     = 100;
+  constexpr int64_t v2     = 200;
+  constexpr int64_t offset = 3;
 
-  int64_t v1     = 100;
-  int64_t v2     = 200;
-  int64_t offset = 3;
+  auto lhs = runtime->create_array(
+    legate::full(static_cast<std::size_t>(dim), size), legate::int64(), null_init);
+  auto value_in_slice      = legate::Scalar{v1};
+  auto value_outside_slice = null_init ? legate::Scalar{} : legate::Scalar{v2};
 
-  auto lhs =
-    runtime->create_store(legate::full(static_cast<std::size_t>(dim), size), legate::int64());
-  auto value_in_slice      = runtime->create_store(legate::Scalar{v1});
-  auto value_outside_slice = runtime->create_store(legate::Scalar{v2});
-
-  // First fill the entire store with v1
+  // First fill the entire store with v2
   runtime->issue_fill(lhs, value_outside_slice);
 
-  // Then fill a slice with v2
+  // Then fill a slice with v1
   auto sliced = lhs;
-  for (int32_t idx = 0; idx < dim; ++idx) sliced = sliced.slice(idx, legate::Slice(offset));
+  for (std::int32_t idx = 0; idx < dim; ++idx) sliced = sliced.slice(idx, legate::Slice{offset});
   runtime->issue_fill(sliced, value_in_slice);
 
   // check if the slice is filled correctly
@@ -175,45 +206,44 @@ void test_fill_slice(int32_t dim, size_t size)
 
 void test_invalid()
 {
-  auto runtime  = legate::Runtime::get_runtime();
-  auto store1   = runtime->create_store(legate::Shape{10, 10}, legate::int64());
-  auto store2   = runtime->create_store(legate::Scalar{10.0});
-  auto scalar_v = legate::Scalar(10.0);
+  auto runtime = legate::Runtime::get_runtime();
+  auto array   = runtime->create_array(legate::Shape{10, 10}, legate::int64(), false /*nullable*/);
+  auto v       = legate::Scalar{10.0};
 
-  EXPECT_THROW(runtime->issue_fill(store1, store2), std::invalid_argument);
-  EXPECT_THROW(runtime->issue_fill(store1, scalar_v), std::invalid_argument);
+  // Type mismatch
+  EXPECT_THROW(runtime->issue_fill(array, runtime->create_store(v)), std::invalid_argument);
+  EXPECT_THROW(runtime->issue_fill(array, v), std::invalid_argument);
+
+  // Nulliyfing a non-nullable array
+  EXPECT_THROW(runtime->issue_fill(array, legate::Scalar{}), std::invalid_argument);
 }
 
-TEST_F(Fill, Index)
+TEST_P(Whole, Index)
 {
   register_tasks();
-  test_fill_index(1, SIZE);
-  test_fill_index(2, SIZE);
-  test_fill_index(3, SIZE);
-  test_fill_index(1, 1);
-  test_fill_index(2, 1);
-  test_fill_index(3, 1);
+  const auto& [nullable, dim, size] = GetParam();
+  test_fill_index(dim, size, nullable);
 }
 
-TEST_F(Fill, Single)
+TEST_P(Whole, Single)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
+  legate::MachineTracker tracker(machine.slice(0, 1, legate::mapping::TaskTarget::CPU));
+
+  register_tasks();
+  const auto& [nullable, dim, size] = GetParam();
+  test_fill_index(dim, size, nullable);
+}
+
+TEST_P(Slice, Index)
 {
   register_tasks();
-  test_fill_single(1, SIZE);
-  test_fill_single(2, SIZE);
-  test_fill_single(3, SIZE);
-  test_fill_single(1, 1);
-  test_fill_single(2, 1);
-  test_fill_single(3, 1);
+  for (bool null_init : {false, true}) {
+    for (std::int32_t dim : {1, 2, 3}) { test_fill_slice(dim, SIZE, null_init); }
+  }
 }
 
-TEST_F(Fill, Slice)
-{
-  register_tasks();
-  test_fill_slice(1, SIZE);
-  test_fill_slice(2, SIZE);
-  test_fill_slice(3, SIZE);
-}
+TEST_F(FillTests, Invalid) { test_invalid(); }
 
-TEST_F(Fill, Invalid) { test_invalid(); }
-
-}  // namespace fill
+}  // namespace fill_test

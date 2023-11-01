@@ -118,3 +118,17 @@ cdef class LogicalArray:
 
     def raw_handle(self) -> uintptr_t:
         return <uintptr_t> &self._handle
+
+
+cdef _LogicalArray to_cpp_logical_array(object array_or_store):
+    cdef _LogicalArray result
+    if isinstance(array_or_store, LogicalArray):
+        result = (<LogicalArray> array_or_store)._handle
+    elif isinstance(array_or_store, LogicalStore):
+        result = _LogicalArray((<LogicalStore> array_or_store)._handle)
+    else:
+        raise ValueError(
+            "Expected a logical array or store but got "
+            f"{type(array_or_store)}"
+        )
+    return result

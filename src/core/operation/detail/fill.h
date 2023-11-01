@@ -20,15 +20,12 @@
 namespace legate::detail {
 
 class Fill : public Operation {
- private:
-  friend class Runtime;
-
+ public:
   Fill(std::shared_ptr<LogicalStore>&& lhs,
        std::shared_ptr<LogicalStore>&& value,
        uint64_t unique_id,
        mapping::detail::Machine&& machine);
 
- public:
   void validate() override;
   void launch(Strategy* strategy) override;
 

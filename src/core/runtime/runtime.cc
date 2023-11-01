@@ -125,12 +125,12 @@ void Runtime::issue_scatter_gather(LogicalStore& target,
     target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl(), redop);
 }
 
-void Runtime::issue_fill(LogicalStore& lhs, const LogicalStore& value)
+void Runtime::issue_fill(const LogicalArray& lhs, const LogicalStore& value)
 {
   impl_->issue_fill(lhs.impl(), value.impl());
 }
 
-void Runtime::issue_fill(LogicalStore& lhs, const Scalar& value)
+void Runtime::issue_fill(const LogicalArray& lhs, const Scalar& value)
 {
   issue_fill(lhs, create_store(value));
 }

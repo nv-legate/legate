@@ -102,7 +102,7 @@ class Runtime {
                             std::shared_ptr<LogicalStore> source,
                             std::shared_ptr<LogicalStore> source_indirect,
                             std::optional<int32_t> redop);
-  void issue_fill(std::shared_ptr<LogicalStore> lhs, std::shared_ptr<LogicalStore> value);
+  void issue_fill(std::shared_ptr<LogicalArray> lhs, std::shared_ptr<LogicalStore> value);
   void tree_reduce(const Library* library,
                    int64_t task_id,
                    std::shared_ptr<LogicalStore> store,
@@ -144,7 +144,7 @@ class Runtime {
                                                            std::shared_ptr<Type> type,
                                                            bool optimize_scalar = false);
   [[nodiscard]] std::shared_ptr<LogicalStore> create_store(const Scalar& scalar,
-                                                           const Shape& extents);
+                                                           const Shape& extents = {1});
   [[nodiscard]] std::shared_ptr<LogicalStore> create_store(
     const Shape& extents,
     std::shared_ptr<Type> type,

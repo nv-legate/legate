@@ -270,19 +270,19 @@ class Runtime {
                             const LogicalStore& source_indirect,
                             std::optional<int32_t> redop);
   /**
-   * @brief Fills a given store with a constant
+   * @brief Fills a given array with a constant
    *
-   * @param lhs Logical store to fill
-   * @param value Logical store that contains the constant value to fill the store with
+   * @param lhs Logical array to fill
+   * @param value Logical store that contains the constant value to fill the array with
    */
-  void issue_fill(LogicalStore& lhs, const LogicalStore& value);
+  void issue_fill(const LogicalArray& lhs, const LogicalStore& value);
   /**
-   * @brief Fills a given store with a constant
+   * @brief Fills a given array with a constant
    *
-   * @param lhs Logical store to fill
-   * @param value Value to fill the store with
+   * @param lhs Logical array to fill
+   * @param value Value to fill the array with
    */
-  void issue_fill(LogicalStore& lhs, const Scalar& value);
+  void issue_fill(const LogicalArray& lhs, const Scalar& value);
   /**
    * @brief tree_reduce given store and task id
    *

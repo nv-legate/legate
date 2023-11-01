@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include <optional>
-
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/store.h"
 #include "core/data/slice.h"
@@ -23,6 +21,8 @@
 #include "core/partitioning/restriction.h"
 #include "core/runtime/detail/projection.h"
 #include "core/utilities/detail/buffer_builder.h"
+
+#include <optional>
 
 namespace legate::detail {
 
@@ -57,6 +57,7 @@ class Storage : public std::enable_shared_from_this<Storage> {
   ~Storage();
 
  public:
+  [[nodiscard]] uint64_t id() const { return storage_id_; }
   bool unbound() const { return unbound_; }
   const Shape& extents() const;
   const Shape& offsets() const;

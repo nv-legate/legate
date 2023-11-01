@@ -783,10 +783,8 @@ std::string LogicalStore::to_string() const
     ss << "(unbound)";
   else
     ss << extents();
-  if (!transform_->identity())
-    ss << ", transform: " << *transform_ << "}";
-  else
-    ss << "}";
+  if (!transform_->identity()) ss << ", transform: " << *transform_ << ", ";
+  ss << "storage: " << storage_->id() << "}";
   return std::move(ss).str();
 }
 

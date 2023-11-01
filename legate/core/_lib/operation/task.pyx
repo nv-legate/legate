@@ -15,7 +15,11 @@ from libcpp.utility cimport move as std_move
 
 from typing import Any, Iterable, Union
 
-from ..data.logical_array cimport LogicalArray, _LogicalArray
+from ..data.logical_array cimport (
+    LogicalArray,
+    _LogicalArray,
+    to_cpp_logical_array,
+)
 from ..data.logical_store cimport LogicalStore, LogicalStorePartition
 from ..data.scalar cimport Scalar
 from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
@@ -23,6 +27,7 @@ from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
 from ..type.type_info import Type, array_type, null_type
 
 from ..utilities.tuple cimport tuple as _tuple
+
 from ...utils import is_iterable
 
 
@@ -41,20 +46,6 @@ def sanitized_scalar_arg_type(
     else:
         raise TypeError(f"Unsupported type: {dtype}")
     return sanitized
-
-
-cdef _LogicalArray to_logical_array(array_or_store):
-    cdef _LogicalArray result
-    if isinstance(array_or_store, LogicalArray):
-        result = (<LogicalArray> array_or_store)._handle
-    elif isinstance(array_or_store, LogicalStore):
-        result = _LogicalArray((<LogicalStore> array_or_store)._handle)
-    else:
-        raise ValueError(
-            "Expected a logical array or store but got "
-            f"{type(array_or_store)}"
-        )
-    return result
 
 
 cdef class AutoTask:
@@ -78,7 +69,7 @@ cdef class AutoTask:
             Partition to associate with the array/store. The default
             partition is picked if none is given.
         """
-        cdef _LogicalArray array = to_logical_array(array_or_store)
+        cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         if partition is None:
             return Variable.from_handle(self._handle.add_input(array))
         elif isinstance(partition, Variable):
@@ -102,7 +93,7 @@ cdef class AutoTask:
             Partition to associate with the array/store. The default
             partition is picked if none is given.
         """
-        cdef _LogicalArray array = to_logical_array(array_or_store)
+        cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         if partition is None:
             return Variable.from_handle(self._handle.add_output(array))
         elif isinstance(partition, Variable):
@@ -131,7 +122,7 @@ cdef class AutoTask:
             Partition to associate with the array/store. The default
             partition is picked if none is given.
         """
-        cdef _LogicalArray array = to_logical_array(array_or_store)
+        cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         if partition is None:
             return Variable.from_handle(
                 self._handle.add_reduction(array, redop)
@@ -232,8 +223,8 @@ cdef class AutoTask:
             If the stores don't have the same shape or only one of them is
             unbound
         """
-        array1 = to_logical_array(array_or_store1)
-        array2 = to_logical_array(array_or_store2)
+        array1 = to_cpp_logical_array(array_or_store1)
+        array2 = to_cpp_logical_array(array_or_store2)
         part1 = self._handle.find_or_declare_partition(array1)
         part2 = self._handle.find_or_declare_partition(array2)
         self._handle.add_constraint(_align(part1, part2))
@@ -260,7 +251,7 @@ cdef class AutoTask:
             Axes to broadcast. The entire logical_array is
             replicated if no axes are given.
         """
-        array = to_logical_array(array_or_store)
+        array = to_cpp_logical_array(array_or_store)
         part = self._handle.find_or_declare_partition(array)
 
         if axes is None:

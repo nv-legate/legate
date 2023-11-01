@@ -237,10 +237,10 @@ class Config:
 
             # Check if this is a test group
             if line[0] != " ":
-                test_group = line.strip()
+                test_group = line.split("#")[0].strip()
                 continue
 
-            test_name = test_group + line.strip()
+            test_name = test_group + line.split("#")[0].strip()
             if test_name in to_skip:
                 continue
 

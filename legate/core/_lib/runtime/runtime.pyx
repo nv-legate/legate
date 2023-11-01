@@ -29,7 +29,11 @@ from cython.cimports.libc.stdlib import malloc
 
 from legion_top import add_cleanup_item
 
-from ..data.logical_array cimport LogicalArray
+from ..data.logical_array cimport (
+    LogicalArray,
+    _LogicalArray,
+    to_cpp_logical_array,
+)
 from ..data.logical_store cimport LogicalStore
 from ..data.scalar cimport Scalar
 from ..data.shape cimport _Shape
@@ -214,30 +218,35 @@ cdef class Runtime:
                 <int32_t> redop,
             )
 
-    def issue_fill(self, LogicalStore lhs, object value) -> None:
+    def issue_fill(self, object array_or_store, object value) -> None:
         """
-        Fills the store with a constant value.
+        Fills the array or store with a constant value.
 
         Parameters
         ----------
-        lhs : LogicalStore
-            LogicalStore to fill
+        array_or_store : LogicalArray or LogicalStore
+            LogicalArray or LogicalStore to fill
 
-        value : LogicalStore
-            LogicalStore holding the constant value to fill the ``lhs`` with
+        value : LogicalStore or Scalar
+            The constant value to fill the ``array_or_store`` with
 
         Raises
         ------
         ValueError
-            If the ``value`` is not scalar or the ``lhs`` is either unbound or
-            scalar
+            Any of the following cases:
+            1) ``array_or_store`` is not a ``LogicalArray`` or
+               a ``LogicalStore``
+            2) ``array_or_store`` is unbound
+            3) ``value`` is not a ``Scalar`` or a scalar ``LogicalStore``
+            or the ``array_or_store`` is unbound
         """
+        cdef _LogicalArray arr = to_cpp_logical_array(array_or_store)
         if isinstance(value, LogicalStore):
             self._handle.issue_fill(
-                lhs._handle, (<LogicalStore> value)._handle
+                arr, (<LogicalStore> value)._handle
             )
         elif isinstance(value, Scalar):
-            self._handle.issue_fill(lhs._handle, (<Scalar> value)._handle)
+            self._handle.issue_fill(arr, (<Scalar> value)._handle)
         else:
             raise ValueError(
                 "Fill value must be a logical store or a scalar but "
