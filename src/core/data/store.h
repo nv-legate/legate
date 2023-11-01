@@ -322,7 +322,7 @@ class Store {
    *
    * @throw std::invalid_argument If the array is nullable or has sub-arrays
    */
-  explicit Store(const Array& array);
+  Store(const Array& array);
 
  private:
   void check_accessor_dimension(int32_t dim) const;
