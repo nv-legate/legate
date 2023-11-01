@@ -10,13 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/type/type_info.h"
+
+#include "copy_util.inl"
 #include "legate.h"
 #include "utilities/utilities.h"
 
-#include "copy_util.inl"
+#include <gtest/gtest.h>
 
 // extern so that compilers don't also complain that function is unused!
 extern void silence_unused_function_warnings()
@@ -97,10 +97,10 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
   static const int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
-    legate::Store source = context.input(0);
-    legate::Store target = context.input(1);
-    auto& seed           = context.scalar(0);
-    auto shape           = target.shape<DIM>();
+    auto source = legate::Store{context.input(0)};
+    auto target = legate::Store{context.input(1)};
+    auto& seed  = context.scalar(0);
+    auto shape  = target.shape<DIM>();
 
     if (shape.empty()) return;
 

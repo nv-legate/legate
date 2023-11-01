@@ -29,10 +29,9 @@ class ListArrayAccessor;
 template <typename VAL>
 class ListArrayAccessor<LEGION_READ_ONLY, VAL> {
  public:
-  ListArrayAccessor(ListArray array);
-  virtual ~ListArrayAccessor();
+  ListArrayAccessor(const ListArray& array);
+  virtual ~ListArrayAccessor() = default;
 
- public:
   Span<const VAL> operator[](const Point<1>& p);
 
  private:
@@ -43,16 +42,14 @@ class ListArrayAccessor<LEGION_READ_ONLY, VAL> {
 template <typename VAL>
 class ListArrayAccessor<LEGION_WRITE_DISCARD, VAL> {
  public:
-  ListArrayAccessor(ListArray array);
-  virtual ~ListArrayAccessor();
+  ListArrayAccessor(const ListArray& array);
+  virtual ~ListArrayAccessor() noexcept;
 
- public:
   void insert(const legate::Span<const VAL>& value);
 
  private:
   void check_overflow();
 
- private:
   Rect<1> desc_shape_;
   AccessorWO<Rect<1>, 1> desc_acc_;
   Store vardata_store_;
@@ -60,11 +57,11 @@ class ListArrayAccessor<LEGION_WRITE_DISCARD, VAL> {
 };
 
 template <Legion::PrivilegeMode>
-class StringArrayAccessor;
+struct StringArrayAccessor;
 
 template <>
 struct StringArrayAccessor<LEGION_READ_ONLY> : public ListArrayAccessor<LEGION_READ_ONLY, int8_t> {
-  StringArrayAccessor(StringArray array);
+  StringArrayAccessor(const StringArray& array);
 
   using ListArrayAccessor::operator[];
   std::string_view operator[](const Point<1>& p);
@@ -73,7 +70,7 @@ struct StringArrayAccessor<LEGION_READ_ONLY> : public ListArrayAccessor<LEGION_R
 template <>
 struct StringArrayAccessor<LEGION_WRITE_DISCARD>
   : public ListArrayAccessor<LEGION_WRITE_DISCARD, int8_t> {
-  StringArrayAccessor(StringArray array);
+  StringArrayAccessor(const StringArray& array);
 
   using ListArrayAccessor::insert;
   void insert(const std::string& value);

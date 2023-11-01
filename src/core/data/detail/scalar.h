@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/type/detail/type_info.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/detail/buffer_builder.h"
+
+#include <memory>
 
 namespace legate::detail {
 
@@ -25,45 +25,36 @@ class Type;
 class Scalar {
  public:
   Scalar(std::shared_ptr<Type> type, const void* data, bool copy);
-  Scalar(const std::string& value);
+  explicit Scalar(const std::string& value);
   ~Scalar();
 
- public:
   template <typename T>
-  Scalar(T value) : own_(true), type_(detail::primitive_type(legate_type_code_of<T>))
-  {
-    static_assert(legate_type_code_of<T> != Type::Code::FIXED_ARRAY);
-    static_assert(legate_type_code_of<T> != Type::Code::STRUCT);
-    static_assert(legate_type_code_of<T> != Type::Code::STRING);
-    static_assert(legate_type_code_of<T> != Type::Code::NIL);
-    data_ = copy_data(std::addressof(value), sizeof(T));
-  }
+  explicit Scalar(T value);
 
- public:
   Scalar(const Scalar& other);
-  Scalar(Scalar&& other);
+  Scalar(Scalar&& other) noexcept;
 
- public:
   Scalar& operator=(const Scalar& other);
-  Scalar& operator=(Scalar&& other);
+  Scalar& operator=(Scalar&& other) noexcept;
 
  private:
-  static const void* copy_data(const void* data, size_t size);
+  [[nodiscard]] static const void* copy_data(const void* data, size_t size);
 
  public:
-  std::shared_ptr<Type> type() const { return type_; }
-  const void* data() const { return data_; }
-  size_t size() const;
+  [[nodiscard]] const std::shared_ptr<Type>& type() const;
+  [[nodiscard]] const void* data() const;
+  [[nodiscard]] size_t size() const;
 
- public:
   void pack(BufferBuilder& buffer) const;
 
  private:
   void clear_data();
 
-  bool own_;
-  std::shared_ptr<Type> type_;
-  const void* data_;
+  bool own_{};
+  std::shared_ptr<Type> type_{};
+  const void* data_{};
 };
 
 }  // namespace legate::detail
+
+#include "core/data/detail/scalar.inl"

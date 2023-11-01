@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include <optional>
 
 /**
@@ -30,10 +30,10 @@ namespace legate {
  * from std::slice.
  */
 struct Slice {
-  static constexpr std::nullopt_t OPEN = std::nullopt;
+  static inline constexpr std::nullopt_t OPEN = std::nullopt;
 
   Slice(std::optional<int64_t> _start = OPEN, std::optional<int64_t> _stop = OPEN)
-    : start(_start), stop(_stop)
+    : start{std::move(_start)}, stop{std::move(_stop)}
   {
   }
 

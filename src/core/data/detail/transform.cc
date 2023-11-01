@@ -15,9 +15,91 @@
 #include "core/partitioning/partition.h"
 #include "core/utilities/detail/buffer_builder.h"
 
-#include <numeric>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
 
 namespace legate::detail {
+
+std::unique_ptr<Partition> TransformStack::convert(const Partition* partition) const
+{
+  if (identity()) return partition->clone();
+
+  if (parent_->identity()) return transform_->convert(partition);
+
+  auto result = parent_->convert(partition);
+  return transform_->convert(result.get());
+}
+
+std::unique_ptr<Partition> TransformStack::invert(const Partition* partition) const
+{
+  if (identity()) return partition->clone();
+
+  auto result = transform_->invert(partition);
+  if (parent_->identity()) return result;
+  return parent_->invert(result.get());
+}
+
+proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) const
+{
+  if (identity()) return point;
+
+  auto result = transform_->invert(point);
+  if (parent_->identity()) return result;
+  return parent_->invert(std::move(result));
+}
+
+Restrictions TransformStack::convert(const Restrictions& restrictions) const
+{
+  if (identity()) return restrictions;
+  if (parent_->identity()) return transform_->convert(restrictions);
+  return transform_->convert(parent_->convert(restrictions));
+}
+
+Restrictions TransformStack::invert(const Restrictions& restrictions) const
+{
+  if (identity()) return restrictions;
+
+  auto result = transform_->invert(restrictions);
+  if (parent_->identity()) return result;
+  return parent_->invert(std::move(result));
+}
+
+Shape TransformStack::invert_extents(const Shape& extents) const
+{
+  if (identity()) return extents;
+
+  auto result = transform_->invert_extents(extents);
+  if (parent_->identity()) return result;
+  return parent_->invert_extents(std::move(result));
+}
+
+Shape TransformStack::invert_point(const Shape& point) const
+{
+  if (identity()) return point;
+
+  auto result = transform_->invert_point(point);
+  if (parent_->identity()) return result;
+  return parent_->invert_point(std::move(result));
+}
+
+void TransformStack::pack(BufferBuilder& buffer) const
+{
+  if (identity()) {
+    buffer.pack<int32_t>(-1);
+  } else {
+    transform_->pack(buffer);
+    parent_->pack(buffer);
+  }
+}
+
+Legion::Domain TransformStack::transform(const Legion::Domain& input) const
+{
+  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
+  return transform_->transform(parent_->identity() ? input : parent_->transform(input));
+}
+
+namespace {
 
 Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
                                       const Legion::DomainAffineTransform& rhs)
@@ -30,101 +112,7 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
   return result;
 }
 
-TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
-                               const std::shared_ptr<TransformStack>& parent)
-  : transform_(std::move(transform)),
-    parent_(parent),
-    convertible_(transform_->is_convertible() && parent_->is_convertible())
-{
-}
-
-TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
-                               std::shared_ptr<TransformStack>&& parent)
-  : transform_(std::move(transform)),
-    parent_(std::move(parent)),
-    convertible_(transform_->is_convertible() && parent_->is_convertible())
-{
-}
-
-std::unique_ptr<Partition> TransformStack::convert(const Partition* partition) const
-{
-  if (identity()) return partition->clone();
-
-  if (parent_->identity())
-    return transform_->convert(partition);
-  else {
-    auto result = parent_->convert(partition);
-    return transform_->convert(result.get());
-  }
-}
-
-std::unique_ptr<Partition> TransformStack::invert(const Partition* partition) const
-{
-  if (identity()) return partition->clone();
-
-  auto result = transform_->invert(partition);
-  return parent_->identity() ? std::move(result) : parent_->invert(result.get());
-}
-
-proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) const
-{
-  if (identity()) return point;
-
-  auto result = transform_->invert(point);
-  return parent_->identity() ? result : parent_->invert(result);
-}
-
-Restrictions TransformStack::convert(const Restrictions& restrictions) const
-{
-  if (identity()) return restrictions;
-
-  if (parent_->identity())
-    return transform_->convert(restrictions);
-  else {
-    auto result = parent_->convert(restrictions);
-    return transform_->convert(result);
-  }
-}
-
-Restrictions TransformStack::invert(const Restrictions& restrictions) const
-{
-  if (identity()) return restrictions;
-
-  auto result = transform_->invert(restrictions);
-  return parent_->identity() ? std::move(result) : parent_->invert(result);
-}
-
-Shape TransformStack::invert_extents(const Shape& extents) const
-{
-  if (identity()) return extents;
-
-  auto result = transform_->invert_extents(extents);
-  return parent_->identity() ? std::move(result) : parent_->invert_extents(result);
-}
-
-Shape TransformStack::invert_point(const Shape& point) const
-{
-  if (identity()) return point;
-
-  auto result = transform_->invert_point(point);
-  return parent_->identity() ? std::move(result) : parent_->invert_point(result);
-}
-
-void TransformStack::pack(BufferBuilder& buffer) const
-{
-  if (identity())
-    buffer.pack<int32_t>(-1);
-  else {
-    transform_->pack(buffer);
-    parent_->pack(buffer);
-  }
-}
-
-Legion::Domain TransformStack::transform(const Legion::Domain& input) const
-{
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
-  return transform_->transform(parent_->identity() ? input : parent_->transform(input));
-}
+}  // namespace
 
 Legion::DomainAffineTransform TransformStack::inverse_transform(int32_t in_dim) const
 {
@@ -132,12 +120,10 @@ Legion::DomainAffineTransform TransformStack::inverse_transform(int32_t in_dim) 
   auto result  = transform_->inverse_transform(in_dim);
   auto out_dim = transform_->target_ndim(in_dim);
 
-  if (parent_->identity())
-    return result;
-  else {
-    auto parent = parent_->inverse_transform(out_dim);
-    return combine(parent, result);
-  }
+  if (parent_->identity()) return result;
+
+  auto parent = parent_->inverse_transform(out_dim);
+  return combine(parent, result);
 }
 
 void TransformStack::print(std::ostream& out) const
@@ -158,7 +144,7 @@ std::unique_ptr<StoreTransform> TransformStack::pop()
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
   auto result = std::move(transform_);
-  if (parent_ != nullptr) {
+  if (parent_) {
     transform_ = std::move(parent_->transform_);
     parent_    = std::move(parent_->parent_);
   }
@@ -175,12 +161,10 @@ void TransformStack::dump() const { std::cerr << *this << std::endl; }
 std::vector<int32_t> TransformStack::find_imaginary_dims() const
 {
   std::vector<int32_t> dims;
-  if (nullptr != parent_) { dims = parent_->find_imaginary_dims(); }
-  if (nullptr != transform_) transform_->find_imaginary_dims(dims);
+  if (parent_) dims = parent_->find_imaginary_dims();
+  if (transform_) transform_->find_imaginary_dims(dims);
   return dims;
 }
-
-Shift::Shift(int32_t dim, int64_t offset) : dim_(dim), offset_(offset) {}
 
 Domain Shift::transform(const Domain& input) const
 {
@@ -220,17 +204,14 @@ std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
     }
     case Partition::Kind::TILING: {
       auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(Shape(tiling->tile_shape()),
-                           Shape(tiling->color_shape()),
+      return create_tiling(Shape{tiling->tile_shape()},
+                           Shape{tiling->color_shape()},
                            tiling->offsets().update(dim_, offset_));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
@@ -242,27 +223,15 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
     case Partition::Kind::TILING: {
       auto tiling     = static_cast<const Tiling*>(partition);
       auto new_offset = tiling->offsets()[dim_] - offset_;
-      return create_tiling(Shape(tiling->tile_shape()),
-                           Shape(tiling->color_shape()),
+      return create_tiling(Shape{tiling->tile_shape()},
+                           Shape{tiling->color_shape()},
                            tiling->offsets().update(dim_, new_offset));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
-
-// the shift transform makes no change on the store's dimensions
-proj::SymbolicPoint Shift::invert(const proj::SymbolicPoint& point) const { return point; }
-
-Restrictions Shift::convert(const Restrictions& restrictions) const { return restrictions; }
-
-Restrictions Shift::invert(const Restrictions& restrictions) const { return restrictions; }
-
-Shape Shift::invert_extents(const Shape& extents) const { return extents; }
 
 Shape Shift::invert_point(const Shape& point) const
 {
@@ -280,17 +249,8 @@ void Shift::pack(BufferBuilder& buffer) const
 
 void Shift::print(std::ostream& out) const
 {
-  out << "Shift(";
-  out << "dim: " << dim_ << ", ";
-  out << "offset: " << offset_ << ")";
-}
-
-int32_t Shift::target_ndim(int32_t source_ndim) const { return source_ndim; }
-
-void Shift::find_imaginary_dims(std::vector<int32_t>&) const {}
-
-Promote::Promote(int32_t extra_dim, int64_t dim_size) : extra_dim_(extra_dim), dim_size_(dim_size)
-{
+  out << "Shift(dim: " << dim_ << ", "
+      << "offset: " << offset_ << ")";
 }
 
 Domain Promote::transform(const Domain& input) const
@@ -298,7 +258,7 @@ Domain Promote::transform(const Domain& input) const
   Domain output;
   output.dim = input.dim + 1;
 
-  for (int32_t out_dim = 0, in_dim = 0; out_dim < output.dim; ++out_dim)
+  for (int32_t out_dim = 0, in_dim = 0; out_dim < output.dim; ++out_dim) {
     if (out_dim == extra_dim_) {
       output.rect_data[out_dim]              = 0;
       output.rect_data[out_dim + output.dim] = dim_size_ - 1;
@@ -307,6 +267,7 @@ Domain Promote::transform(const Domain& input) const
       output.rect_data[out_dim + output.dim] = input.rect_data[in_dim + input.dim];
       ++in_dim;
     }
+  }
   return output;
 }
 
@@ -318,13 +279,15 @@ Legion::DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
   Legion::DomainTransform transform;
   transform.m = std::max<int32_t>(out_dim, 1);
   transform.n = in_dim;
-  for (int32_t i = 0; i < transform.m; ++i)
+  for (int32_t i = 0; i < transform.m; ++i) {
     for (int32_t j = 0; j < transform.n; ++j) transform.matrix[i * in_dim + j] = 0;
+  }
 
-  if (out_dim > 0)
-    for (int32_t j = 0, i = 0; j < transform.n; ++j)
+  if (out_dim > 0) {
+    for (int32_t j = 0, i = 0; j < transform.n; ++j) {
       if (j != extra_dim_) transform.matrix[i++ * in_dim + j] = 1;
-
+    }
+  }
   DomainPoint offset;
   offset.dim = std::max<int32_t>(out_dim, 1);
   for (int32_t i = 0; i < transform.m; ++i) offset[i] = 0;
@@ -347,13 +310,10 @@ std::unique_ptr<Partition> Promote::convert(const Partition* partition) const
                            tiling->color_shape().insert(extra_dim_, 1),
                            tiling->offsets().insert(extra_dim_, 0));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
@@ -368,13 +328,10 @@ std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
                            tiling->color_shape().remove(extra_dim_),
                            tiling->offsets().remove(extra_dim_));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 proj::SymbolicPoint Promote::invert(const proj::SymbolicPoint& point) const
@@ -410,28 +367,26 @@ void Promote::print(std::ostream& out) const
   out << "dim_size: " << dim_size_ << ")";
 }
 
-int32_t Promote::target_ndim(int32_t source_ndim) const { return source_ndim - 1; }
-
 void Promote::find_imaginary_dims(std::vector<int32_t>& dims) const
 {
-  for (auto& dim : dims)
+  for (auto& dim : dims) {
     if (dim >= extra_dim_) dim++;
+  }
   dims.push_back(extra_dim_);
 }
-
-Project::Project(int32_t dim, int64_t coord) : dim_(dim), coord_(coord) {}
 
 Domain Project::transform(const Domain& input) const
 {
   Domain output;
   output.dim = input.dim - 1;
 
-  for (int32_t in_dim = 0, out_dim = 0; in_dim < input.dim; ++in_dim)
+  for (int32_t in_dim = 0, out_dim = 0; in_dim < input.dim; ++in_dim) {
     if (in_dim != dim_) {
       output.rect_data[out_dim]              = input.rect_data[in_dim];
       output.rect_data[out_dim + output.dim] = input.rect_data[in_dim + input.dim];
       ++out_dim;
     }
+  }
   return output;
 }
 
@@ -476,13 +431,10 @@ std::unique_ptr<Partition> Project::convert(const Partition* partition) const
                            tiling->color_shape().remove(dim_),
                            tiling->offsets().remove(dim_));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 std::unique_ptr<Partition> Project::invert(const Partition* partition) const
@@ -497,13 +449,10 @@ std::unique_ptr<Partition> Project::invert(const Partition* partition) const
                            tiling->color_shape().insert(dim_, 1),
                            tiling->offsets().insert(dim_, coord_));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
@@ -539,8 +488,6 @@ void Project::print(std::ostream& out) const
   out << "coord: " << coord_ << ")";
 }
 
-int32_t Project::target_ndim(int32_t source_ndim) const { return source_ndim + 1; }
-
 void Project::find_imaginary_dims(std::vector<int32_t>& dims) const
 {
   auto finder = std::find(dims.begin(), dims.end(), dim_);
@@ -549,10 +496,18 @@ void Project::find_imaginary_dims(std::vector<int32_t>& dims) const
     if (dim > dim_) --dim;
 }
 
-Transpose::Transpose(std::vector<int32_t>&& axes) : axes_(std::move(axes))
+Transpose::Transpose(std::vector<int32_t>&& axes) : axes_{std::move(axes)}
 {
-  inverse_.resize(axes_.size());
-  std::iota(inverse_.begin(), inverse_.end(), 0);
+  const auto size = axes_.size();
+  // could alternatively do
+  //
+  // inverse_.resize(size);
+  // std::iota(inverse_.begin(), inverse_.end(), 0);
+  //
+  // but this results in 2 traversals of the array, once to initialize inverse_ to 0, and a
+  // second time to do the iota-ing
+  inverse_.reserve(size);
+  std::generate_n(std::back_inserter(inverse_), size, [n = 0]() mutable { return n++; });
   std::sort(inverse_.begin(), inverse_.end(), [&](const int32_t& idx1, const int32_t& idx2) {
     return axes_[idx1] < axes_[idx2];
   });
@@ -602,13 +557,10 @@ std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const
                            tiling->color_shape().map(axes_),
                            tiling->offsets().map(axes_));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
@@ -623,34 +575,37 @@ std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
                            tiling->color_shape().map(inverse_),
                            tiling->offsets().map(inverse_));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
 {
   std::vector<proj::SymbolicExpr> exprs;
-  for (int32_t idx : inverse_) { exprs.push_back(point[idx]); }
-  return proj::SymbolicPoint(std::move(exprs));
+
+  exprs.reserve(inverse_.size());
+  for (auto&& idx : inverse_) exprs.emplace_back(point[idx]);
+  return proj::SymbolicPoint{std::move(exprs)};
 }
 
 Restrictions Transpose::convert(const Restrictions& restrictions) const
 {
   std::vector<Restriction> result;
-  for (int32_t dim : axes_) result.push_back(restrictions[dim]);
-  return Restrictions(std::move(result));
+
+  result.reserve(axes_.size());
+  for (auto dim : axes_) result.emplace_back(restrictions[dim]);
+  return Restrictions{std::move(result)};
 }
 
 Restrictions Transpose::invert(const Restrictions& restrictions) const
 {
   std::vector<Restriction> result;
-  for (int32_t dim : inverse_) result.push_back(restrictions[dim]);
-  return Restrictions(std::move(result));
+
+  result.reserve(inverse_.size());
+  for (auto dim : inverse_) result.emplace_back(restrictions[dim]);
+  return Restrictions{std::move(result)};
 }
 
 Shape Transpose::invert_extents(const Shape& extents) const { return extents.map(inverse_); }
@@ -658,6 +613,7 @@ Shape Transpose::invert_extents(const Shape& extents) const { return extents.map
 Shape Transpose::invert_point(const Shape& point) const { return point.map(inverse_); }
 
 namespace {  // anonymous
+
 template <typename T>
 void print_vector(std::ostream& out, const std::vector<T>& vec)
 {
@@ -673,6 +629,7 @@ void print_vector(std::ostream& out, const std::vector<T>& vec)
   }
   out << "]";
 }
+
 }  // anonymous namespace
 
 void Transpose::pack(BufferBuilder& buffer) const
@@ -690,8 +647,6 @@ void Transpose::print(std::ostream& out) const
   out << ")";
 }
 
-int32_t Transpose::target_ndim(int32_t source_ndim) const { return source_ndim; }
-
 void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
 {
   // i should be added to X.tranpose(axes).promoted iff axes[i] is in X.promoted
@@ -704,10 +659,11 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
 }
 
 Delinearize::Delinearize(int32_t dim, std::vector<int64_t>&& sizes)
-  : dim_(dim), sizes_(std::move(sizes)), strides_(sizes_.size(), 1), volume_(1)
+  : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
 {
-  for (int32_t dim = sizes_.size() - 2; dim >= 0; --dim)
+  for (int32_t dim = sizes_.size() - 2; dim >= 0; --dim) {
     strides_[dim] = strides_[dim + 1] * sizes_[dim + 1];
+  }
   for (auto size : sizes_) volume_ *= size;
 }
 
@@ -763,10 +719,10 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) con
   return result;
 }
 
-std::unique_ptr<Partition> Delinearize::convert(const Partition* partition) const
+std::unique_ptr<Partition> Delinearize::convert(const Partition* /*partition*/) const
 {
-  throw NonInvertibleTransformation("Delinearize transform cannot be used in conversion");
-  return nullptr;
+  throw NonInvertibleTransformation{"Delinearize transform cannot be used in conversion"};
+  return {};
 }
 
 std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
@@ -791,9 +747,10 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
         return 1 == volume && 0 == sum_offset;
       };
 
-      if (!invertible(tiling))
-        throw NonInvertibleTransformation("Delinearize transform cannot invert this partition: " +
-                                          tiling->to_string());
+      if (!invertible(tiling)) {
+        throw NonInvertibleTransformation{"Delinearize transform cannot invert this partition: " +
+                                          tiling->to_string()};
+      }
 
       auto new_tile_shape  = tile_shape;
       auto new_color_shape = color_shape;
@@ -811,52 +768,57 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       return create_tiling(
         std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
     }
-    default: {
-      assert(false);
-      return nullptr;
-    }
+    default: break;
   }
   assert(false);
-  return nullptr;
+  return {};
 }
 
 proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
 {
   std::vector<proj::SymbolicExpr> exprs;
+
+  exprs.reserve(point.size() - (sizes_.size() - 1));
   for (int32_t dim = 0; dim < dim_ + 1; ++dim) exprs.push_back(point[dim]);
   for (auto dim = dim_ + sizes_.size(); dim < point.size(); ++dim) exprs.push_back(point[dim]);
-  return proj::SymbolicPoint(std::move(exprs));
+  return proj::SymbolicPoint{std::move(exprs)};
 }
 
 Restrictions Delinearize::convert(const Restrictions& restrictions) const
 {
   std::vector<Restriction> result;
-  for (int32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
-  for (uint32_t idx = 1; idx < sizes_.size(); ++idx) result.push_back(Restriction::FORBID);
-  for (uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim)
-    result.push_back(restrictions[dim]);
-  return Restrictions(std::move(result));
+
+  result.reserve(restrictions.size() + (sizes_.size() - 1));
+  for (auto dim = 0; dim <= dim_; ++dim) result.emplace_back(restrictions[dim]);
+  for (uint32_t idx = 1; idx < sizes_.size(); ++idx) result.emplace_back(Restriction::FORBID);
+  for (uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim) {
+    result.emplace_back(restrictions[dim]);
+  }
+  return Restrictions{std::move(result)};
 }
 
 Restrictions Delinearize::invert(const Restrictions& restrictions) const
 {
   std::vector<Restriction> result;
-  for (int32_t dim = 0; dim <= dim_; ++dim) result.push_back(restrictions[dim]);
-  for (uint32_t dim = dim_ + sizes_.size(); dim < restrictions.size(); ++dim)
-    result.push_back(restrictions[dim]);
-  return Restrictions(std::move(result));
+
+  result.reserve(restrictions.size() - (sizes_.size() - 1));
+  for (auto dim = 0; dim <= dim_; ++dim) result.emplace_back(restrictions[dim]);
+  for (auto dim = dim_ + sizes_.size(); dim < restrictions.size(); ++dim) {
+    result.emplace_back(restrictions[dim]);
+  }
+  return Restrictions{std::move(result)};
 }
 
-Shape Delinearize::invert_extents(const Shape& extents) const
+Shape Delinearize::invert_extents(const Shape& /*extents*/) const
 {
-  throw NonInvertibleTransformation();
-  return Shape();
+  throw NonInvertibleTransformation{};
+  return {};
 }
 
-Shape Delinearize::invert_point(const Shape& point) const
+Shape Delinearize::invert_point(const Shape& /*point*/) const
 {
-  throw NonInvertibleTransformation();
-  return Shape();
+  throw NonInvertibleTransformation{};
+  return {};
 }
 
 void Delinearize::pack(BufferBuilder& buffer) const
@@ -878,10 +840,8 @@ void Delinearize::print(std::ostream& out) const
 
 int32_t Delinearize::target_ndim(int32_t source_ndim) const
 {
-  return source_ndim - strides_.size() + 1;
+  return static_cast<int32_t>(source_ndim - strides_.size() + 1);
 }
-
-void Delinearize::find_imaginary_dims(std::vector<int32_t>&) const {}
 
 std::ostream& operator<<(std::ostream& out, const Transform& transform)
 {

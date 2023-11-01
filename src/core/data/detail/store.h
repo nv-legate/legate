@@ -13,144 +13,126 @@
 #pragma once
 
 #include "core/data/buffer.h"
+#include "core/data/detail/transform.h"
 #include "core/data/inline_allocation.h"
 #include "core/task/detail/return.h"
 #include "core/type/detail/type_info.h"
 
+#include <memory>
+
 namespace legate {
 class Store;
 }  // namespace legate
+
 namespace legate::detail {
 
 class BaseArray;
-struct TransformStack;
 
 class RegionField {
  public:
-  RegionField() {}
+  RegionField() = default;
   RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid);
 
- public:
   RegionField(RegionField&& other) noexcept            = default;
   RegionField& operator=(RegionField&& other) noexcept = default;
 
- private:
   RegionField(const RegionField& other)            = delete;
   RegionField& operator=(const RegionField& other) = delete;
 
- public:
-  bool valid() const;
+  [[nodiscard]] bool valid() const;
 
- public:
-  int32_t dim() const { return dim_; }
+  [[nodiscard]] int32_t dim() const;
 
- public:
-  Domain domain() const;
-  void set_logical_region(const Legion::LogicalRegion& lr) { lr_ = lr; }
+  [[nodiscard]] Domain domain() const;
+  void set_logical_region(const Legion::LogicalRegion& lr);
   [[nodiscard]] InlineAllocation get_inline_allocation(uint32_t field_size) const;
   [[nodiscard]] InlineAllocation get_inline_allocation(
     uint32_t field_size,
     const Domain& domain,
     const Legion::DomainAffineTransform& transform) const;
 
- public:
-  bool is_readable() const { return readable_; }
-  bool is_writable() const { return writable_; }
-  bool is_reducible() const { return reducible_; }
+  [[nodiscard]] bool is_readable() const;
+  [[nodiscard]] bool is_writable() const;
+  [[nodiscard]] bool is_reducible() const;
 
- public:
-  [[nodiscard]] Legion::PhysicalRegion get_physical_region() const { return *pr_; }
-  Legion::FieldID get_field_id() const { return fid_; }
+  [[nodiscard]] Legion::PhysicalRegion get_physical_region() const;
+  [[nodiscard]] Legion::FieldID get_field_id() const;
 
  private:
   int32_t dim_{-1};
-  std::unique_ptr<Legion::PhysicalRegion> pr_{nullptr};
+  std::unique_ptr<Legion::PhysicalRegion> pr_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{-1U};
 
- private:
-  bool readable_{false};
-  bool writable_{false};
-  bool reducible_{false};
+  bool readable_{};
+  bool writable_{};
+  bool reducible_{};
 };
 
 class UnboundRegionField {
  public:
-  UnboundRegionField() {}
+  UnboundRegionField() = default;
   UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid);
 
- public:
   UnboundRegionField(UnboundRegionField&& other) noexcept;
   UnboundRegionField& operator=(UnboundRegionField&& other) noexcept;
 
- private:
   UnboundRegionField(const UnboundRegionField& other)            = delete;
   UnboundRegionField& operator=(const UnboundRegionField& other) = delete;
 
- public:
-  bool bound() const { return bound_; }
+  [[nodiscard]] bool bound() const;
 
- public:
   void bind_empty_data(int32_t dim);
 
- public:
-  ReturnValue pack_weight() const;
+  [[nodiscard]] ReturnValue pack_weight() const;
 
- public:
-  void set_bound(bool bound) { bound_ = bound; }
+  void set_bound(bool bound);
   void update_num_elements(size_t num_elements);
 
- public:
-  Legion::OutputRegion get_output_region() const { return out_; }
-  Legion::FieldID get_field_id() const { return fid_; }
+  [[nodiscard]] Legion::OutputRegion get_output_region() const;
+  [[nodiscard]] Legion::FieldID get_field_id() const;
 
  private:
-  bool bound_{false};
-  Legion::UntypedDeferredValue num_elements_;
+  bool bound_{};
+  Legion::UntypedDeferredValue num_elements_{};
   Legion::OutputRegion out_{};
   Legion::FieldID fid_{-1U};
 };
 
 class FutureWrapper {
  public:
-  FutureWrapper() {}
+  FutureWrapper() = default;
   FutureWrapper(bool read_only,
                 uint32_t field_size,
                 Domain domain,
                 Legion::Future future,
                 bool initialize = false);
 
- public:
-  int32_t dim() const { return domain_.dim; }
+  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] Domain domain() const;
+  [[nodiscard]] bool valid() const;
 
- public:
-  Domain domain() const;
-  [[nodiscard]] bool valid() const { return future_ != nullptr && future_->valid(); }
   [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
 
- public:
   void initialize_with_identity(int32_t redop_id);
 
- public:
-  ReturnValue pack() const;
+  [[nodiscard]] ReturnValue pack() const;
 
- public:
-  bool is_read_only() const { return read_only_; }
+  [[nodiscard]] bool is_read_only() const;
   [[nodiscard]] Legion::Future get_future() const;
-  Legion::UntypedDeferredValue get_buffer() const { return buffer_; }
+  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
 
  private:
   bool read_only_{true};
-  uint32_t field_size_{0};
+  uint32_t field_size_{};
   Domain domain_{};
-  std::unique_ptr<Legion::Future> future_{nullptr};
+  std::unique_ptr<Legion::Future> future_{};
   Legion::UntypedDeferredValue buffer_{};
 };
 
 class Store {
  public:
-  Store() {}
   Store(int32_t dim,
         std::shared_ptr<Type> type,
         int32_t redop_id,
@@ -176,83 +158,71 @@ class Store {
         RegionField&& region_field,
         const std::shared_ptr<detail::TransformStack>& transform);
 
- public:
   Store(Store&& other) noexcept            = default;
   Store& operator=(Store&& other) noexcept = default;
 
- private:
   Store(const Store& other)            = delete;
   Store& operator=(const Store& other) = delete;
 
- public:
-  bool valid() const;
-  bool transformed() const;
+  [[nodiscard]] bool valid() const;
+  [[nodiscard]] bool transformed() const;
 
- public:
-  int32_t dim() const { return dim_; }
-  std::shared_ptr<Type> type() const { return type_; }
+  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] const std::shared_ptr<Type>& type() const;
 
- public:
-  Domain domain() const;
+  [[nodiscard]] Domain domain() const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
 
- public:
-  bool is_readable() const { return readable_; }
-  bool is_writable() const { return writable_; }
-  bool is_reducible() const { return reducible_; }
+  [[nodiscard]] bool is_readable() const;
+  [[nodiscard]] bool is_writable() const;
+  [[nodiscard]] bool is_reducible() const;
 
- public:
   void bind_empty_data();
 
- public:
-  bool is_future() const;
-  bool is_unbound_store() const;
-  ReturnValue pack() const { return future_.pack(); }
-  ReturnValue pack_weight() const { return unbound_field_.pack_weight(); }
+  [[nodiscard]] bool is_future() const;
+  [[nodiscard]] bool is_unbound_store() const;
+  [[nodiscard]] ReturnValue pack() const;
+  [[nodiscard]] ReturnValue pack_weight() const;
 
  private:
   friend class legate::Store;
   friend class legate::detail::BaseArray;
-  void check_accessor_dimension(const int32_t dim) const;
-  void check_buffer_dimension(const int32_t dim) const;
-  void check_shape_dimension(const int32_t dim) const;
+  void check_accessor_dimension(int32_t dim) const;
+  void check_buffer_dimension(int32_t dim) const;
+  void check_shape_dimension(int32_t dim) const;
   void check_valid_binding(bool bind_buffer) const;
   void check_write_access() const;
   void check_reduction_access() const;
-  Legion::DomainAffineTransform get_inverse_transform() const;
 
- private:
+  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
+
   void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  int32_t get_redop_id() const { return redop_id_; }
+  [[nodiscard]] int32_t get_redop_id() const;
 
- private:
-  bool is_read_only_future() const;
-  Legion::Future get_future() const;
-  Legion::UntypedDeferredValue get_buffer() const;
+  [[nodiscard]] bool is_read_only_future() const;
+  [[nodiscard]] Legion::Future get_future() const;
+  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
 
- private:
   void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
   void update_num_elements(size_t num_elements);
 
- private:
-  bool is_future_{false};
-  bool is_unbound_store_{false};
+  bool is_future_{};
+  bool is_unbound_store_{};
   int32_t dim_{-1};
   std::shared_ptr<Type> type_{};
   int32_t redop_id_{-1};
 
- private:
-  FutureWrapper future_;
-  RegionField region_field_;
-  UnboundRegionField unbound_field_;
+  FutureWrapper future_{};
+  RegionField region_field_{};
+  UnboundRegionField unbound_field_{};
 
- private:
-  std::shared_ptr<detail::TransformStack> transform_{nullptr};
+  std::shared_ptr<detail::TransformStack> transform_{};
 
- private:
-  bool readable_{false};
-  bool writable_{false};
-  bool reducible_{false};
+  bool readable_{};
+  bool writable_{};
+  bool reducible_{};
 };
 
 }  // namespace legate::detail
+
+#include "core/data/detail/store.inl"

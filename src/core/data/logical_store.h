@@ -12,13 +12,14 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/data/shape.h"
 #include "core/data/slice.h"
 #include "core/data/store.h"
 #include "core/type/type_info.h"
-#include "core/utilities/typedefs.h"
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 /**
  * @file
@@ -74,24 +75,23 @@ class LogicalStore {
   friend class Runtime;
   friend class LogicalArray;
   friend class LogicalStorePartition;
-  LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl);
 
  public:
   LogicalStore()                                     = default;
   LogicalStore(const LogicalStore& other)            = default;
   LogicalStore& operator=(const LogicalStore& other) = default;
 
- public:
   LogicalStore(LogicalStore&& other)            = default;
   LogicalStore& operator=(LogicalStore&& other) = default;
 
- public:
+  explicit LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl);
+
   /**
    * @brief Returns the number of dimensions of the store.
    *
    * @return The number of dimensions
    */
-  int32_t dim() const;
+  [[nodiscard]] int32_t dim() const;
   /**
    * @brief Indicates whether the store's storage is optimized for scalars
    *
@@ -111,7 +111,7 @@ class LogicalStore {
    *
    * @return Type of elements in the store
    */
-  Type type() const;
+  [[nodiscard]] Type type() const;
   /**
    * @brief Returns the shape of the store.
    *
@@ -119,7 +119,7 @@ class LogicalStore {
    *
    * @return The store's shape
    */
-  const Shape& extents() const;
+  [[nodiscard]] const Shape& extents() const;
   /**
    * @brief Returns the number of elements in the store.
    *
@@ -127,23 +127,22 @@ class LogicalStore {
    *
    * @return The number of elements in the store
    */
-  size_t volume() const;
+  [[nodiscard]] size_t volume() const;
   /**
    * @brief Indicates whether the store is unbound
    *
    * @return true The store is unbound
    * @return false The store is normal
    */
-  bool unbound() const;
+  [[nodiscard]] bool unbound() const;
   /**
    * @brief Indicates whether the store is transformed
    *
    * @return true The store is transformed
    * @return false The store is not transformed
    */
-  bool transformed() const;
+  [[nodiscard]] bool transformed() const;
 
- public:
   /**
    * @brief Adds an extra dimension to the store.
    *
@@ -175,7 +174,7 @@ class LogicalStore {
    *
    * @throw std::invalid_argument When `extra_dim` is not a valid dimension name
    */
-  LogicalStore promote(int32_t extra_dim, size_t dim_size) const;
+  [[nodiscard]] LogicalStore promote(int32_t extra_dim, size_t dim_size) const;
   /**
    * @brief Projects out a dimension of the store.
    *
@@ -193,7 +192,7 @@ class LogicalStore {
    *
    * @throw std::invalid_argument If `dim` is not a valid dimension name or `index` is out of bounds
    */
-  LogicalStore project(int32_t dim, int64_t index) const;
+  [[nodiscard]] LogicalStore project(int32_t dim, int64_t index) const;
   /**
    * @brief Slices a contiguous sub-section of the store.
    *
@@ -241,7 +240,7 @@ class LogicalStore {
    *
    * @throw std::invalid_argument If `dim` is not a valid dimension name
    */
-  LogicalStore slice(int32_t dim, Slice sl) const;
+  [[nodiscard]] LogicalStore slice(int32_t dim, Slice sl) const;
   /**
    * @brief Reorders dimensions of the store.
    *
@@ -282,7 +281,7 @@ class LogicalStore {
    * match the store's dimension; 2) `axes` has duplicates; 3) Any axis in `axes` is an invalid
    * axis name.
    */
-  LogicalStore transpose(std::vector<int32_t>&& axes) const;
+  [[nodiscard]] LogicalStore transpose(std::vector<int32_t>&& axes) const;
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
    *
@@ -319,9 +318,8 @@ class LogicalStore {
    * @throw std::invalid_argument If `dim` is invalid for the store or `sizes` does not preserve
    * the extent of the chosen dimenison
    */
-  LogicalStore delinearize(int32_t dim, std::vector<int64_t>&& sizes) const;
+  [[nodiscard]] LogicalStore delinearize(int32_t dim, std::vector<int64_t>&& sizes) const;
 
- public:
   /**
    * @brief Creates a tiled partition of the store
    *
@@ -329,9 +327,8 @@ class LogicalStore {
    *
    * @return A store partition
    */
-  LogicalStorePartition partition_by_tiling(std::vector<size_t> tile_shape) const;
+  [[nodiscard]] LogicalStorePartition partition_by_tiling(std::vector<size_t> tile_shape) const;
 
- public:
   /**
    * @brief Creates a physical store for this logical store
    *
@@ -340,7 +337,7 @@ class LogicalStore {
    *
    * @return A physical store of the logical store
    */
-  Store get_physical_store() const;
+  [[nodiscard]] Store get_physical_store() const;
 
   /**
    * @brief Detach a store from its attached memory
@@ -354,33 +351,32 @@ class LogicalStore {
    */
   void detach();
 
- public:
   [[nodiscard]] std::string to_string() const;
 
- public:
-  std::shared_ptr<detail::LogicalStore> impl() const { return impl_; }
+  [[nodiscard]] const std::shared_ptr<detail::LogicalStore>& impl() const;
 
  private:
-  std::shared_ptr<detail::LogicalStore> impl_{nullptr};
+  std::shared_ptr<detail::LogicalStore> impl_{};
 };
 
 class LogicalStorePartition {
  private:
   friend class LogicalStore;
-  LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl);
+
+  explicit LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl);
 
  public:
   LogicalStorePartition() = default;
 
- public:
-  LogicalStore store() const;
-  const Shape& color_shape() const;
+  [[nodiscard]] LogicalStore store() const;
+  [[nodiscard]] const Shape& color_shape() const;
 
- public:
-  std::shared_ptr<detail::LogicalStorePartition> impl() const { return impl_; }
+  [[nodiscard]] const std::shared_ptr<detail::LogicalStorePartition>& impl() const;
 
  private:
-  std::shared_ptr<detail::LogicalStorePartition> impl_{nullptr};
+  std::shared_ptr<detail::LogicalStorePartition> impl_{};
 };
 
 }  // namespace legate
+
+#include "core/data/logical_store.inl"

@@ -14,6 +14,9 @@
 
 #include "core/utilities/typedefs.h"
 
+#include <cstddef>
+#include <memory>
+
 /**
  * @file
  * @brief Class definition for legate::ScopedAllocator
@@ -32,6 +35,8 @@ namespace legate {
  */
 class ScopedAllocator {
  public:
+  static inline constexpr size_t DEFAULT_ALIGNMENT = 16;
+
   // Iff 'scoped', all allocations will be released upon destruction.
   // Otherwise this is up to the runtime after the task has finished.
   /**
@@ -43,10 +48,8 @@ class ScopedAllocator {
    * (and unless explicitly deallocated).
    * @param alignment Alignment for the allocations
    */
-  ScopedAllocator(Memory::Kind kind, bool scoped = true, size_t alignment = 16);
-  ~ScopedAllocator();
+  ScopedAllocator(Memory::Kind kind, bool scoped = true, size_t alignment = DEFAULT_ALIGNMENT);
 
- public:
   /**
    * @brief Allocates a contiguous buffer of the given Memory::Kind
    *
@@ -57,7 +60,7 @@ class ScopedAllocator {
    *
    * @return A raw pointer to the allocation
    */
-  void* allocate(size_t bytes);
+  [[nodiscard]] void* allocate(size_t bytes);
   /**
    * @brief Deallocates an allocation. The input pointer must be one that was previously
    * returned by an `allocate` call, otherwise the code will fail with an error message.
@@ -66,17 +69,15 @@ class ScopedAllocator {
    */
   void deallocate(void* ptr);
 
- public:
-  ScopedAllocator(ScopedAllocator&&);
-  ScopedAllocator& operator=(ScopedAllocator&&);
-
- private:
-  ScopedAllocator(const ScopedAllocator&)            = delete;
-  ScopedAllocator& operator=(const ScopedAllocator&) = delete;
-
  private:
   class Impl;
-  Impl* impl_;
+
+  // See StoreMapping::StoreMappingImplDeleter for why this this exists
+  struct ImplDeleter {
+    void operator()(Impl* ptr) const noexcept;
+  };
+
+  std::unique_ptr<Impl, ImplDeleter> impl_{};
 };
 
 }  // namespace legate

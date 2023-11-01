@@ -11,78 +11,70 @@
  */
 
 #include "core/data/array.h"
+
 #include "core/data/detail/array.h"
+#include "core/data/detail/array_kind.h"
+#include "core/data/store.h"
+#include "core/type/type_info.h"
+#include "core/utilities/typedefs.h"
+
+#include <cstdint>
+#include <stdexcept>
 
 namespace legate {
 
-bool Array::nullable() const { return impl_->nullable(); }
+bool Array::nullable() const noexcept { return impl_->nullable(); }
 
-int32_t Array::dim() const { return impl_->dim(); }
+int32_t Array::dim() const noexcept { return impl_->dim(); }
 
 Type Array::type() const { return Type{impl_->type()}; }
 
-bool Array::nested() const { return impl_->nested(); }
+bool Array::nested() const noexcept { return impl_->nested(); }
 
-Store Array::data() const { return Store(impl_->data()); }
+Store Array::data() const { return Store{impl_->data()}; }
 
-Store Array::null_mask() const { return Store(impl_->null_mask()); }
+Store Array::null_mask() const { return Store{impl_->null_mask()}; }
 
-Array Array::child(uint32_t index) const { return Array(impl_->child(index)); }
+Array Array::child(uint32_t index) const { return Array{impl_->child(index)}; }
 
 Domain Array::domain() const { return impl_->domain(); }
 
-void Array::check_shape_dimension(const int32_t dim) const { impl_->check_shape_dimension(dim); }
+void Array::check_shape_dimension(int32_t dim) const { impl_->check_shape_dimension(dim); }
 
 ListArray Array::as_list_array() const
 {
   if (impl_->kind() != detail::ArrayKind::LIST) {
-    throw std::invalid_argument("Array is not a list array");
+    throw std::invalid_argument{"Array is not a list array"};
   }
-  return ListArray(impl_);
+  return ListArray{impl_};
 }
 
 StringArray Array::as_string_array() const
 {
   if (type().code() != Type::Code::STRING) {
-    throw std::invalid_argument("Array is not a string array");
+    throw std::invalid_argument{"Array is not a string array"};
   }
-  return StringArray(impl_);
+  return StringArray{impl_};
 }
-
-Array::Array(std::shared_ptr<detail::Array> impl) : impl_(std::move(impl)) {}
-
-Array::Array(const Array&) = default;
-
-Array& Array::operator=(const Array&) = default;
-
-Array::Array(Array&&) = default;
-
-Array& Array::operator=(Array&&) = default;
-
-Array::~Array() {}
-
-ListArray::ListArray(std::shared_ptr<detail::Array> impl) : Array(std::move(impl)) {}
 
 Array ListArray::descriptor() const
 {
-  return Array(static_cast<const detail::ListArray*>(impl_.get())->descriptor());
+  return Array{static_cast<const detail::ListArray*>(impl_.get())->descriptor()};
 }
 
 Array ListArray::vardata() const
 {
-  return Array(static_cast<const detail::ListArray*>(impl_.get())->vardata());
+  return Array{static_cast<const detail::ListArray*>(impl_.get())->vardata()};
 }
-
-StringArray::StringArray(std::shared_ptr<detail::Array> impl) : Array(std::move(impl)) {}
 
 Array StringArray::ranges() const
 {
-  return Array(static_cast<const detail::ListArray*>(impl_.get())->descriptor());
+  return Array{static_cast<const detail::ListArray*>(impl_.get())->descriptor()};
 }
 
 Array StringArray::chars() const
 {
-  return Array(static_cast<const detail::ListArray*>(impl_.get())->vardata());
+  return Array{static_cast<const detail::ListArray*>(impl_.get())->vardata()};
 }
 
 }  // namespace legate

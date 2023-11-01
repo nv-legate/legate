@@ -10,18 +10,20 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/mapping/detail/machine.h"
+
+#include "core/mapping/machine.h"
+#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/buffer_builder.h"
+
+#include "legate.h"
+#include "utilities/utilities.h"
+
 #include <gtest/gtest.h>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <valarray>
-
-#include "core/mapping/detail/machine.h"
-#include "core/mapping/machine.h"
-#include "core/utilities/deserializer.h"
-#include "core/utilities/detail/buffer_builder.h"
-#include "legate.h"
-#include "utilities/utilities.h"
 
 namespace unit {
 

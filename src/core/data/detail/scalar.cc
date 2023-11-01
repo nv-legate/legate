@@ -11,15 +11,15 @@
  */
 
 #include "core/data/detail/scalar.h"
-#include "core/type/detail/type_info.h"
 
-#include <type_traits>
-#include <utility>
+#include "core/type/detail/type_info.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <type_traits>
+#include <utility>
 
 namespace legate::detail {
 
@@ -32,14 +32,14 @@ void Scalar::clear_data()
 }
 
 Scalar::Scalar(std::shared_ptr<Type> type, const void* data, bool copy)
-  : own_(copy), type_(std::move(type)), data_(data)
+  : own_{copy}, type_{std::move(type)}, data_{data}
 {
-  if (copy) { data_ = copy_data(data, size()); }
+  if (own_) data_ = copy_data(data, size());
 }
 
-Scalar::Scalar(const std::string& value) : own_(true), type_(string_type())
+Scalar::Scalar(const std::string& value) : own_{true}, type_{string_type()}
 {
-  const auto vsize     = static_cast<std::uint32_t>(value.size());
+  const auto vsize     = static_cast<uint32_t>(value.size());
   const auto data_size = sizeof(std::decay_t<decltype(value)>::value_type) * vsize;
   // If you change this, you must also change the pack() function below! The packed buffer must
   // be aligned the same way as it was allocated here, and new char[] aligns to
@@ -49,24 +49,6 @@ Scalar::Scalar(const std::string& value) : own_(true), type_(string_type())
   std::memcpy(buffer, &vsize, sizeof(vsize));
   std::memcpy(buffer + sizeof(vsize), value.data(), data_size);
   data_ = buffer;
-}
-
-Scalar::~Scalar() { clear_data(); }
-
-Scalar::Scalar(const Scalar& other) : own_(other.own_), type_(other.type_)
-{
-  if (other.own_) {
-    data_ = copy_data(other.data_, other.size());
-  } else {
-    data_ = other.data_;
-  }
-}
-
-Scalar::Scalar(Scalar&& other)
-  : own_{std::exchange(other.own_, false)},
-    type_{std::move(other.type_)},
-    data_{std::exchange(other.data_, nullptr)}
-{
 }
 
 Scalar& Scalar::operator=(const Scalar& other)
@@ -84,7 +66,7 @@ Scalar& Scalar::operator=(const Scalar& other)
   return *this;
 }
 
-Scalar& Scalar::operator=(Scalar&& other)
+Scalar& Scalar::operator=(Scalar&& other) noexcept
 {
   if (this != &other) {
     own_  = std::exchange(other.own_, false);
@@ -95,7 +77,7 @@ Scalar& Scalar::operator=(Scalar&& other)
   return *this;
 }
 
-const void* Scalar::copy_data(const void* data, std::size_t size)
+const void* Scalar::copy_data(const void* data, size_t size)
 {
   void* buffer = nullptr;
 
@@ -108,16 +90,16 @@ const void* Scalar::copy_data(const void* data, std::size_t size)
 
 size_t Scalar::size() const
 {
-  if (type_->code == Type::Code::STRING)
-    return *static_cast<const uint32_t*>(data_) + sizeof(uint32_t);
-  else
-    return type_->size();
+  if (type()->code == Type::Code::STRING) {
+    return *static_cast<const uint32_t*>(data()) + sizeof(uint32_t);
+  }
+  return type()->size();
 }
 
 void Scalar::pack(BufferBuilder& buffer) const
 {
-  type_->pack(buffer);
-  buffer.pack_buffer(data_, size(), type_->alignment());
+  type()->pack(buffer);
+  buffer.pack_buffer(data(), size(), type()->alignment());
 }
 
 }  // namespace legate::detail

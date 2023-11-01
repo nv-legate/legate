@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace machine_scope {
 
@@ -69,7 +69,7 @@ void test_scoping(legate::Library library)
   auto task    = runtime->create_task(library, MULTI_VARIANT);
   auto part    = task.declare_partition();
   task.add_output(store, part);
-  task.add_scalar_arg(machine.count());
+  task.add_scalar_arg(legate::Scalar{machine.count()});
   runtime->submit(std::move(task));
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
@@ -77,7 +77,7 @@ void test_scoping(legate::Library library)
     auto task_scoped = runtime->create_task(library, MULTI_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
-    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
+    task_scoped.add_scalar_arg(legate::Scalar{machine.count(legate::mapping::TaskTarget::CPU)});
     runtime->submit(std::move(task_scoped));
   }
 
@@ -86,7 +86,7 @@ void test_scoping(legate::Library library)
     auto task_scoped = runtime->create_task(library, MULTI_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
-    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::OMP));
+    task_scoped.add_scalar_arg(legate::Scalar{machine.count(legate::mapping::TaskTarget::OMP)});
     runtime->submit(std::move(task_scoped));
   }
 
@@ -95,7 +95,7 @@ void test_scoping(legate::Library library)
     auto task_scoped = runtime->create_task(library, MULTI_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
-    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::GPU));
+    task_scoped.add_scalar_arg(legate::Scalar{machine.count(legate::mapping::TaskTarget::GPU)});
     runtime->submit(std::move(task_scoped));
   }
 }
@@ -108,7 +108,7 @@ void test_cpu_only(legate::Library library)
   auto task    = runtime->create_task(library, CPU_VARIANT);
   auto part    = task.declare_partition();
   task.add_output(store, part);
-  task.add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
+  task.add_scalar_arg(legate::Scalar{machine.count(legate::mapping::TaskTarget::CPU)});
   runtime->submit(std::move(task));
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
@@ -116,7 +116,7 @@ void test_cpu_only(legate::Library library)
     auto task_scoped = runtime->create_task(library, CPU_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
-    task_scoped.add_scalar_arg(machine.count(legate::mapping::TaskTarget::CPU));
+    task_scoped.add_scalar_arg(legate::Scalar{machine.count(legate::mapping::TaskTarget::CPU)});
     runtime->submit(std::move(task_scoped));
   }
 

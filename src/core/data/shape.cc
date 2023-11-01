@@ -12,14 +12,19 @@
 
 #include "core/data/shape.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 namespace legate {
 
 Domain to_domain(const tuple<size_t>& shape)
 {
+  const auto ndim = static_cast<uint32_t>(shape.size());
   Domain domain;
-  auto ndim  = static_cast<int32_t>(shape.size());
-  domain.dim = ndim;
-  for (int32_t idx = 0; idx < ndim; ++idx) {
+
+  domain.dim = static_cast<int>(ndim);
+  for (uint32_t idx = 0; idx < ndim; ++idx) {
     domain.rect_data[idx]        = 0;
     domain.rect_data[idx + ndim] = static_cast<int64_t>(shape[idx]) - 1;
   }
@@ -28,20 +33,23 @@ Domain to_domain(const tuple<size_t>& shape)
 
 DomainPoint to_domain_point(const Shape& shape)
 {
+  const auto ndim = static_cast<uint32_t>(shape.size());
   DomainPoint point;
-  auto ndim = static_cast<int32_t>(shape.size());
-  point.dim = ndim;
-  for (int32_t idx = 0; idx < ndim; ++idx) point[idx] = static_cast<int64_t>(shape[idx]);
+
+  point.dim = static_cast<int>(ndim);
+  for (uint32_t idx = 0; idx < ndim; ++idx) point[idx] = static_cast<coord_t>(shape[idx]);
   return point;
 }
 
 Shape from_domain(const Domain& domain)
 {
   std::vector<size_t> result;
-  auto lo = domain.lo();
-  auto hi = domain.hi();
-  for (int32_t idx = 0; idx < domain.dim; ++idx) result.push_back(hi[idx] - lo[idx] + 1);
-  return Shape(std::move(result));
+  auto&& lo = domain.lo();
+  auto&& hi = domain.hi();
+
+  result.reserve(domain.dim);
+  for (int32_t idx = 0; idx < domain.dim; ++idx) result.emplace_back(hi[idx] - lo[idx] + 1);
+  return Shape{std::move(result)};
 }
 
 }  // namespace legate

@@ -12,10 +12,12 @@
 
 #include "core/data/detail/store.h"
 
-#include "core/data/detail/transform.h"
-#include "core/runtime/detail/runtime.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/machine.h"
+
+#include <cstring>  // std::memcpy
+#include <stdexcept>
+#include <string>
 
 #if LegateDefined(LEGATE_USE_CUDA)
 #include "core/cuda/cuda_help.h"
@@ -103,43 +105,24 @@ InlineAllocation RegionField::get_inline_allocation(
                          field_size);
 }
 
-UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
-  : num_elements_(
-      Legion::UntypedDeferredValue(sizeof(size_t), find_memory_kind_for_executing_processor())),
-    out_(out),
-    fid_(fid)
-{
-}
-
-UnboundRegionField::UnboundRegionField(UnboundRegionField&& other) noexcept
-  : bound_(other.bound_), num_elements_(other.num_elements_), out_(other.out_), fid_(other.fid_)
-{
-  other.bound_        = false;
-  other.out_          = Legion::OutputRegion();
-  other.fid_          = -1;
-  other.num_elements_ = Legion::UntypedDeferredValue();
-}
-
 UnboundRegionField& UnboundRegionField::operator=(UnboundRegionField&& other) noexcept
 {
-  bound_        = other.bound_;
-  out_          = other.out_;
-  fid_          = other.fid_;
-  num_elements_ = other.num_elements_;
-
-  other.bound_        = false;
-  other.out_          = Legion::OutputRegion();
-  other.fid_          = -1;
-  other.num_elements_ = Legion::UntypedDeferredValue();
-
+  if (this != &other) {
+    bound_        = std::exchange(other.bound_, false);
+    num_elements_ = std::exchange(other.num_elements_, Legion::UntypedDeferredValue());
+    out_          = std::exchange(other.out_, Legion::OutputRegion());
+    fid_          = std::exchange(other.fid_, -1);
+  }
   return *this;
 }
 
 void UnboundRegionField::bind_empty_data(int32_t ndim)
 {
   update_num_elements(0);
+
   DomainPoint extents;
   extents.dim = ndim;
+
   for (int32_t dim = 0; dim < ndim; ++dim) extents[dim] = 0;
   auto empty_buffer = create_buffer<int8_t>(0);
   out_.return_data(extents, fid_, empty_buffer.get_instance(), false);
@@ -156,12 +139,12 @@ ReturnValue UnboundRegionField::pack_weight() const
       LEGATE_ABORT;
     }
   }
-  return ReturnValue(num_elements_, sizeof(size_t));
+  return {num_elements_, sizeof(size_t)};
 }
 
 void UnboundRegionField::update_num_elements(size_t num_elements)
 {
-  AccessorWO<size_t, 1> acc(num_elements_, sizeof(size_t), false);
+  const AccessorWO<size_t, 1> acc{num_elements_, sizeof(num_elements), false};
   acc[0] = num_elements;
 }
 
@@ -170,10 +153,10 @@ FutureWrapper::FutureWrapper(bool read_only,
                              Domain domain,
                              Legion::Future future,
                              bool initialize /*= false*/)
-  : read_only_(read_only),
-    field_size_(field_size),
-    domain_(domain),
-    future_{std::make_unique<Legion::Future>(future)}
+  : read_only_{read_only},
+    field_size_{field_size},
+    domain_{std::move(domain)},
+    future_{std::make_unique<Legion::Future>(std::move(future))}
 {
   if (!read_only) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -198,8 +181,6 @@ FutureWrapper::FutureWrapper(bool read_only,
       buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
   }
 }
-
-Domain FutureWrapper::domain() const { return domain_; }
 
 namespace {
 
@@ -237,10 +218,9 @@ InlineAllocation FutureWrapper::get_inline_allocation(const Domain& domain) cons
   if (is_read_only()) {
     return dim_dispatch(
       std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, *future_, domain, field_size_);
-  } else {
-    return dim_dispatch(
-      std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, buffer_, domain, field_size_);
   }
+  return dim_dispatch(
+    std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, buffer_, domain, field_size_);
 }
 
 InlineAllocation FutureWrapper::get_inline_allocation() const
@@ -250,11 +230,11 @@ InlineAllocation FutureWrapper::get_inline_allocation() const
 
 void FutureWrapper::initialize_with_identity(int32_t redop_id)
 {
-  auto untyped_acc = AccessorWO<int8_t, 1>(buffer_, field_size_);
-  auto ptr         = untyped_acc.ptr(0);
+  const auto untyped_acc = AccessorWO<int8_t, 1>{buffer_, field_size_};
+  const auto ptr         = untyped_acc.ptr(0);
 
   auto redop = Legion::Runtime::get_reduction_op(redop_id);
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(redop->sizeof_lhs == field_size_); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(redop->sizeof_lhs == field_size_);
   auto identity = redop->identity;
 #if LegateDefined(LEGATE_USE_CUDA)
   if (buffer_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM) {
@@ -262,211 +242,124 @@ void FutureWrapper::initialize_with_identity(int32_t redop_id)
     CHECK_CUDA(cudaMemcpyAsync(ptr, identity, field_size_, cudaMemcpyHostToDevice, stream));
   } else
 #endif
-    memcpy(ptr, identity, field_size_);
+    std::memcpy(ptr, identity, field_size_);
 }
 
-ReturnValue FutureWrapper::pack() const { return ReturnValue(buffer_, field_size_); }
+ReturnValue FutureWrapper::pack() const { return {buffer_, field_size_}; }
 
 Legion::Future FutureWrapper::get_future() const
 {
   return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
-Store::Store(int32_t dim,
-             std::shared_ptr<Type> type,
-             int32_t redop_id,
-             FutureWrapper future,
-             std::shared_ptr<detail::TransformStack>&& transform)
-  : is_future_(true),
-    is_unbound_store_(false),
-    dim_(dim),
-    type_(std::move(type)),
-    redop_id_(redop_id),
-    future_(std::move(future)),
-    transform_(std::move(transform)),
-    readable_(future.valid()),
-    writable_(!future.is_read_only())
-{
-}
-
-Store::Store(int32_t dim,
-             std::shared_ptr<Type> type,
-             int32_t redop_id,
-             RegionField&& region_field,
-             std::shared_ptr<detail::TransformStack>&& transform)
-  : is_future_(false),
-    is_unbound_store_(false),
-    dim_(dim),
-    type_(std::move(type)),
-    redop_id_(redop_id),
-    region_field_(std::move(region_field)),
-    transform_(std::move(transform))
-{
-  readable_  = region_field_.is_readable();
-  writable_  = region_field_.is_writable();
-  reducible_ = region_field_.is_reducible();
-}
-
-Store::Store(int32_t dim,
-             std::shared_ptr<Type> type,
-             UnboundRegionField&& unbound_field,
-             std::shared_ptr<detail::TransformStack>&& transform)
-  : is_future_(false),
-    is_unbound_store_(true),
-    dim_(dim),
-    type_(std::move(type)),
-    redop_id_(-1),
-    unbound_field_(std::move(unbound_field)),
-    transform_(std::move(transform))
-{
-}
-
-Store::Store(int32_t dim,
-             std::shared_ptr<Type> type,
-             int32_t redop_id,
-             FutureWrapper future,
-             const std::shared_ptr<detail::TransformStack>& transform)
-  : is_future_(true),
-    is_unbound_store_(false),
-    dim_(dim),
-    type_(std::move(type)),
-    redop_id_(redop_id),
-    future_(std::move(future)),
-    transform_(transform),
-    readable_(true)
-{
-}
-
-Store::Store(int32_t dim,
-             std::shared_ptr<Type> type,
-             int32_t redop_id,
-             RegionField&& region_field,
-             const std::shared_ptr<detail::TransformStack>& transform)
-  : is_future_(false),
-    is_unbound_store_(false),
-    dim_(dim),
-    type_(std::move(type)),
-    redop_id_(redop_id),
-    region_field_(std::move(region_field)),
-    transform_(transform)
-{
-  readable_  = region_field_.is_readable();
-  writable_  = region_field_.is_writable();
-  reducible_ = region_field_.is_reducible();
-}
-
-bool Store::valid() const { return is_future_ || is_unbound_store_ || region_field_.valid(); }
+bool Store::valid() const { return is_future() || is_unbound_store() || region_field_.valid(); }
 
 bool Store::transformed() const { return !transform_->identity(); }
 
 Domain Store::domain() const
 {
-  if (is_unbound_store_)
-    throw std::invalid_argument("Invalid to retrieve the domain of an unbound store");
-  auto result = is_future_ ? future_.domain() : region_field_.domain();
+  if (is_unbound_store())
+    throw std::invalid_argument{"Invalid to retrieve the domain of an unbound store"};
+
+  auto result = is_future() ? future_.domain() : region_field_.domain();
   if (!transform_->identity()) result = transform_->transform(result);
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(result.dim == dim_ || dim_ == 0); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(result.dim == dim() || dim() == 0);
   return result;
 }
 
 InlineAllocation Store::get_inline_allocation() const
 {
   if (is_unbound_store()) {
-    throw std::invalid_argument("Allocation info cannot be retrieved from an unbound store");
+    throw std::invalid_argument{"Allocation info cannot be retrieved from an unbound store"};
   }
 
   if (transformed()) {
-    if (is_future()) { return future_.get_inline_allocation(domain()); }
+    if (is_future()) return future_.get_inline_allocation(domain());
     return region_field_.get_inline_allocation(type()->size(), domain(), get_inverse_transform());
-  } else {
-    if (is_future()) { return future_.get_inline_allocation(); }
-    return region_field_.get_inline_allocation(type()->size());
   }
+  if (is_future()) return future_.get_inline_allocation();
+  return region_field_.get_inline_allocation(type()->size());
 }
 
 void Store::bind_empty_data()
 {
   check_valid_binding(true);
-  unbound_field_.bind_empty_data(dim_);
+  unbound_field_.bind_empty_data(dim());
 }
 
-bool Store::is_future() const { return is_future_; }
-
-bool Store::is_unbound_store() const { return is_unbound_store_; }
-
-void Store::check_accessor_dimension(const int32_t dim) const
+void Store::check_accessor_dimension(int32_t dim) const
 {
-  if (!(dim == dim_ || (dim_ == 0 && dim == 1))) {
-    throw std::invalid_argument("Dimension mismatch: invalid to create a " + std::to_string(dim) +
-                                "-D accessor to a " + std::to_string(dim_) + "-D store");
+  if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
+    throw std::invalid_argument{"Dimension mismatch: invalid to create a " + std::to_string(dim) +
+                                "-D accessor to a " + std::to_string(this->dim()) + "-D store"};
   }
 }
 
-void Store::check_buffer_dimension(const int32_t dim) const
+void Store::check_buffer_dimension(int32_t dim) const
 {
-  if (dim != dim_) {
-    throw std::invalid_argument("Dimension mismatch: invalid to bind a " + std::to_string(dim) +
-                                "-D buffer to a " + std::to_string(dim_) + "-D store");
+  if (dim != this->dim()) {
+    throw std::invalid_argument{"Dimension mismatch: invalid to bind a " + std::to_string(dim) +
+                                "-D buffer to a " + std::to_string(this->dim()) + "-D store"};
   }
 }
 
-void Store::check_shape_dimension(const int32_t dim) const
+void Store::check_shape_dimension(int32_t dim) const
 {
-  if (!(dim == dim_ || (dim_ == 0 && dim == 1))) {
-    throw std::invalid_argument("Dimension mismatch: invalid to retrieve a " + std::to_string(dim) +
-                                "-D rect from a " + std::to_string(dim_) + "-D store");
+  if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
+    throw std::invalid_argument{"Dimension mismatch: invalid to retrieve a " + std::to_string(dim) +
+                                "-D rect from a " + std::to_string(this->dim()) + "-D store"};
   }
 }
 
 void Store::check_valid_binding(bool bind_buffer) const
 {
-  if (!is_unbound_store_) {
-    throw std::invalid_argument("Buffer can be bound only to an unbound store");
+  if (!is_unbound_store()) {
+    throw std::invalid_argument{"Buffer can be bound only to an unbound store"};
   }
   if (bind_buffer && unbound_field_.bound()) {
-    throw std::invalid_argument("A buffer has already been bound to the store");
+    throw std::invalid_argument{"A buffer has already been bound to the store"};
   }
 }
 
 void Store::check_write_access() const
 {
-  if (!writable_) { throw std::invalid_argument("Store isn't writable"); }
+  if (!is_writable()) throw std::invalid_argument{"Store isn't writable"};
 }
 
 void Store::check_reduction_access() const
 {
-  if (!(writable_ || reducible_)) { throw std::invalid_argument("Store isn't reducible"); }
+  if (!(is_writable() || is_reducible())) throw std::invalid_argument{"Store isn't reducible"};
 }
 
 Legion::DomainAffineTransform Store::get_inverse_transform() const
 {
-  return transform_->inverse_transform(dim_);
+  return transform_->inverse_transform(dim());
 }
 
 bool Store::is_read_only_future() const { return future_.is_read_only(); }
 
 void Store::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!(is_future() || is_unbound_store())); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!(is_future() || is_unbound_store()));
   pr  = region_field_.get_physical_region();
   fid = region_field_.get_field_id();
 }
 
 Legion::Future Store::get_future() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_future()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(is_future());
   return future_.get_future();
 }
 
 Legion::UntypedDeferredValue Store::get_buffer() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_future()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(is_future());
   return future_.get_buffer();
 }
 
 void Store::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_unbound_store()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) assert(is_unbound_store());
   out = unbound_field_.get_output_region();
   fid = unbound_field_.get_field_id();
 }

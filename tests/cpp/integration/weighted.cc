@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace weighted {
 
@@ -35,7 +35,8 @@ struct Initializer : public legate::LegateTask<Initializer> {
     auto outputs  = context.outputs();
     for (uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto output = outputs.at(idx).data();
-      output.create_output_buffer<int32_t, 1>(legate::Point<1>(task_idx + 10 * (idx + 1)), true);
+      (void)output.create_output_buffer<int32_t, 1>(legate::Point<1>(task_idx + 10 * (idx + 1)),
+                                                    true);
     }
   }
 };

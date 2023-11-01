@@ -26,8 +26,9 @@ struct trans_accessor_fn {
                  const Legion::AffineTransform<M, N>& transform,
                  const Rect<N>& bounds)
   {
-    return ACC(pr, fid, transform, bounds);
+    return {pr, fid, transform, bounds};
   }
+
   template <int32_t M>
   ACC operator()(const Legion::PhysicalRegion& pr,
                  Legion::FieldID fid,
@@ -35,7 +36,7 @@ struct trans_accessor_fn {
                  const Legion::AffineTransform<M, N>& transform,
                  const Rect<N>& bounds)
   {
-    return ACC(pr, fid, redop_id, transform, bounds);
+    return {pr, fid, redop_id, transform, bounds};
   }
 };
 
@@ -53,11 +54,8 @@ AccessorRO<T, DIM> Store::read_accessor() const
   }
 
   if (is_future()) {
-    if (is_read_only_future()) {
-      return AccessorRO<T, DIM>(get_future(), shape<DIM>(), Memory::Kind::NO_MEMKIND);
-    } else {
-      return AccessorRO<T, DIM>(get_buffer(), shape<DIM>());
-    }
+    if (is_read_only_future()) return {get_future(), shape<DIM>(), Memory::Kind::NO_MEMKIND};
+    return {get_buffer(), shape<DIM>()};
   }
 
   return create_field_accessor<AccessorRO<T, DIM>, DIM>(shape<DIM>());
@@ -73,7 +71,7 @@ AccessorWO<T, DIM> Store::write_accessor() const
 
   if (is_future()) {
     check_write_access();
-    return AccessorWO<T, DIM>(get_buffer(), shape<DIM>());
+    return {get_buffer(), shape<DIM>()};
   }
 
   return create_field_accessor<AccessorWO<T, DIM>, DIM>(shape<DIM>());
@@ -89,7 +87,7 @@ AccessorRW<T, DIM> Store::read_write_accessor() const
 
   if (is_future()) {
     check_write_access();
-    return AccessorRW<T, DIM>(get_buffer(), shape<DIM>());
+    return {get_buffer(), shape<DIM>()};
   }
 
   return create_field_accessor<AccessorRW<T, DIM>, DIM>(shape<DIM>());
@@ -106,7 +104,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor() const
 
   if (is_future()) {
     check_reduction_access();
-    return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), shape<DIM>());
+    return {get_buffer(), shape<DIM>()};
   }
 
   return create_reduction_accessor<AccessorRD<OP, EXCLUSIVE, DIM>, DIM>(shape<DIM>());
@@ -121,11 +119,8 @@ AccessorRO<T, DIM> Store::read_accessor(const Rect<DIM>& bounds) const
   }
 
   if (is_future()) {
-    if (is_read_only_future()) {
-      return AccessorRO<T, DIM>(get_future(), bounds, Memory::Kind::NO_MEMKIND);
-    } else {
-      return AccessorRO<T, DIM>(get_buffer(), bounds);
-    }
+    if (is_read_only_future()) return {get_future(), bounds, Memory::Kind::NO_MEMKIND};
+    return {get_buffer(), bounds};
   }
 
   return create_field_accessor<AccessorRO<T, DIM>, DIM>(bounds);
@@ -141,7 +136,7 @@ AccessorWO<T, DIM> Store::write_accessor(const Rect<DIM>& bounds) const
 
   if (is_future()) {
     check_write_access();
-    return AccessorWO<T, DIM>(get_buffer(), bounds);
+    return {get_buffer(), bounds};
   }
 
   return create_field_accessor<AccessorWO<T, DIM>, DIM>(bounds);
@@ -157,7 +152,7 @@ AccessorRW<T, DIM> Store::read_write_accessor(const Rect<DIM>& bounds) const
 
   if (is_future()) {
     check_write_access();
-    return AccessorRW<T, DIM>(get_buffer(), bounds);
+    return {get_buffer(), bounds};
   }
 
   return create_field_accessor<AccessorRW<T, DIM>, DIM>(bounds);
@@ -166,15 +161,14 @@ AccessorRW<T, DIM> Store::read_write_accessor(const Rect<DIM>& bounds) const
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
 AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Rect<DIM>& bounds) const
 {
-  using T = typename OP::LHS;
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
-    check_accessor_type<T>();
+    check_accessor_type<typename OP::LHS>();
   }
 
   if (is_future()) {
     check_reduction_access();
-    return AccessorRD<OP, EXCLUSIVE, DIM>(get_buffer(), bounds);
+    return {get_buffer(), bounds};
   }
 
   return create_reduction_accessor<AccessorRD<OP, EXCLUSIVE, DIM>, DIM>(bounds);
@@ -189,6 +183,7 @@ Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents,
 
   Legion::OutputRegion out;
   Legion::FieldID fid;
+
   get_output_field(out, fid);
 
   auto result = out.create_buffer<T, DIM>(extents, fid, nullptr, bind_buffer);
@@ -197,16 +192,20 @@ Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents,
   return result;
 }
 
+template <typename TYPE_CODE>
+inline TYPE_CODE Store::code() const
+{
+  return static_cast<TYPE_CODE>(type().code());
+}
+
 template <int32_t DIM>
 Rect<DIM> Store::shape() const
 {
   check_shape_dimension(DIM);
-  if (dim() > 0) {
-    return domain().bounds<DIM, coord_t>();
-  } else {
-    auto p = Point<DIM>::ZEROES();
-    return Rect<DIM>(p, p);
-  }
+  if (dim() > 0) return domain().bounds<DIM, coord_t>();
+
+  auto p = Point<DIM>::ZEROES();
+  return {p, p};
 }
 
 template <typename VAL>
@@ -215,11 +214,9 @@ VAL Store::scalar() const
   if (!is_future()) {
     throw std::invalid_argument("Scalars can be retrieved only from scalar stores");
   }
-  if (is_read_only_future()) {
-    return get_future().get_result<VAL>();
-  } else {
-    return get_buffer().operator Legion::DeferredValue<VAL>().read();
-  }
+  if (is_read_only_future()) return get_future().get_result<VAL>();
+
+  return get_buffer().operator Legion::DeferredValue<VAL>().read();
 }
 
 template <typename T, int32_t DIM>
@@ -230,6 +227,7 @@ void Store::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 
   Legion::OutputRegion out;
   Legion::FieldID fid;
+
   get_output_field(out, fid);
 
   out.return_data(extents, fid, buffer);
@@ -263,14 +261,14 @@ ACC Store::create_field_accessor(const Rect<DIM>& bounds) const
 {
   Legion::PhysicalRegion pr;
   Legion::FieldID fid;
-  get_region_field(pr, fid);
 
+  get_region_field(pr, fid);
   if (transformed()) {
     auto transform = get_inverse_transform();
     return dim_dispatch(
       transform.transform.m, detail::trans_accessor_fn<ACC, DIM>{}, pr, fid, transform, bounds);
   }
-  return ACC(pr, fid, bounds);
+  return {pr, fid, bounds};
 }
 
 template <typename ACC, int32_t DIM>
@@ -278,8 +276,8 @@ ACC Store::create_reduction_accessor(const Rect<DIM>& bounds) const
 {
   Legion::PhysicalRegion pr;
   Legion::FieldID fid;
-  get_region_field(pr, fid);
 
+  get_region_field(pr, fid);
   if (transformed()) {
     auto transform = get_inverse_transform();
     return dim_dispatch(transform.transform.m,
@@ -290,7 +288,11 @@ ACC Store::create_reduction_accessor(const Rect<DIM>& bounds) const
                         transform,
                         bounds);
   }
-  return ACC(pr, fid, get_redop_id(), bounds);
+  return {pr, fid, get_redop_id(), bounds};
 }
+
+inline Store::Store(std::shared_ptr<detail::Store> impl) : impl_{std::move(impl)} {}
+
+inline const std::shared_ptr<detail::Store>& Store::impl() const { return impl_; }
 
 }  // namespace legate

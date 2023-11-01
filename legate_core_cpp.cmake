@@ -491,7 +491,9 @@ install(
         src/core/data/buffer.h
         src/core/data/inline_allocation.h
         src/core/data/logical_array.h
+        src/core/data/logical_array.inl
         src/core/data/logical_store.h
+        src/core/data/logical_store.inl
         src/core/data/scalar.h
         src/core/data/scalar.inl
         src/core/data/shape.h

@@ -16,6 +16,10 @@
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/launcher_arg.h"
 
+#include <map>
+#include <memory>
+#include <vector>
+
 namespace legate::detail {
 
 struct Array;
@@ -26,29 +30,36 @@ class ListLogicalArray;
 class Variable;
 
 struct LogicalArray {
-  virtual ~LogicalArray() {}
-  virtual int32_t dim() const                = 0;
-  virtual ArrayKind kind() const             = 0;
-  virtual std::shared_ptr<Type> type() const = 0;
-  virtual const Shape& extents() const       = 0;
-  virtual size_t volume() const              = 0;
-  virtual bool unbound() const               = 0;
-  virtual bool nullable() const              = 0;
-  virtual bool nested() const                = 0;
-  virtual uint32_t num_children() const      = 0;
+  LogicalArray(const LogicalArray&)                        = default;
+  LogicalArray(LogicalArray&&)                             = delete;
+  LogicalArray& operator=(const LogicalArray&)             = default;
+  LogicalArray& operator=(LogicalArray&&)                  = delete;
+  LogicalArray()                                           = default;
+  virtual ~LogicalArray()                                  = default;
+  [[nodiscard]] virtual int32_t dim() const                = 0;
+  [[nodiscard]] virtual ArrayKind kind() const             = 0;
+  [[nodiscard]] virtual std::shared_ptr<Type> type() const = 0;
+  [[nodiscard]] virtual const Shape& extents() const       = 0;
+  [[nodiscard]] virtual size_t volume() const              = 0;
+  [[nodiscard]] virtual bool unbound() const               = 0;
+  [[nodiscard]] virtual bool nullable() const              = 0;
+  [[nodiscard]] virtual bool nested() const                = 0;
+  [[nodiscard]] virtual uint32_t num_children() const      = 0;
 
-  virtual std::shared_ptr<LogicalArray> promote(int32_t extra_dim, size_t dim_size) const    = 0;
-  virtual std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const            = 0;
-  virtual std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const                   = 0;
-  virtual std::shared_ptr<LogicalArray> transpose(const std::vector<int32_t>& axes) const    = 0;
-  virtual std::shared_ptr<LogicalArray> delinearize(int32_t dim,
-                                                    const std::vector<int64_t>& sizes) const = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalArray> promote(int32_t extra_dim,
+                                                              size_t dim_size) const            = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const        = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalArray> transpose(
+    const std::vector<int32_t>& axes) const = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalArray> delinearize(
+    int32_t dim, const std::vector<int64_t>& sizes) const = 0;
 
-  virtual std::shared_ptr<LogicalStore> data() const;
-  virtual std::shared_ptr<LogicalStore> null_mask() const           = 0;
-  virtual std::shared_ptr<Array> get_physical_array() const         = 0;
-  virtual std::shared_ptr<LogicalArray> child(uint32_t index) const = 0;
-  virtual std::shared_ptr<LogicalStore> primary_store() const       = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalStore> data() const;
+  [[nodiscard]] virtual std::shared_ptr<LogicalStore> null_mask() const           = 0;
+  [[nodiscard]] virtual std::shared_ptr<Array> get_physical_array() const         = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalArray> child(uint32_t index) const = 0;
+  [[nodiscard]] virtual std::shared_ptr<LogicalStore> primary_store() const       = 0;
 
   virtual void record_scalar_or_unbound_outputs(AutoTask* task) const                      = 0;
   virtual void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const = 0;
@@ -58,13 +69,13 @@ struct LogicalArray {
     std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Variable* partition_symbol) const = 0;
 
-  virtual std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] virtual std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const = 0;
-  virtual std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] virtual std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const = 0;
 
   [[nodiscard]] static std::shared_ptr<LogicalArray> from_store(
@@ -76,55 +87,51 @@ class BaseLogicalArray : public LogicalArray {
   BaseLogicalArray(std::shared_ptr<LogicalStore> data,
                    std::shared_ptr<LogicalStore> null_mask = nullptr);
 
- public:
-  int32_t dim() const override { return data_->dim(); }
-  ArrayKind kind() const override { return ArrayKind::BASE; }
-  std::shared_ptr<Type> type() const override { return data_->type(); }
-  const Shape& extents() const override { return data_->extents(); }
-  size_t volume() const override { return data_->volume(); }
-  bool unbound() const override;
-  bool nullable() const override { return null_mask_ != nullptr; }
-  bool nested() const override { return false; }
-  uint32_t num_children() const override { return 0; }
+  [[nodiscard]] int32_t dim() const override;
+  [[nodiscard]] ArrayKind kind() const override;
+  [[nodiscard]] std::shared_ptr<Type> type() const override;
+  [[nodiscard]] const Shape& extents() const override;
+  [[nodiscard]] size_t volume() const override;
+  [[nodiscard]] bool unbound() const override;
+  [[nodiscard]] bool nullable() const override;
+  [[nodiscard]] bool nested() const override;
+  [[nodiscard]] uint32_t num_children() const override;
 
- public:
-  std::shared_ptr<LogicalArray> promote(int32_t extra_dim, size_t dim_size) const override;
-  std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const override;
-  std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const override;
-  std::shared_ptr<LogicalArray> transpose(const std::vector<int32_t>& axes) const override;
-  std::shared_ptr<LogicalArray> delinearize(int32_t dim,
-                                            const std::vector<int64_t>& sizes) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> promote(int32_t extra_dim,
+                                                      size_t dim_size) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> transpose(
+    const std::vector<int32_t>& axes) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> delinearize(
+    int32_t dim, const std::vector<int64_t>& sizes) const override;
 
- public:
-  std::shared_ptr<LogicalStore> data() const override { return data_; }
-  std::shared_ptr<LogicalStore> null_mask() const override;
-  std::shared_ptr<Array> get_physical_array() const override;
-  std::shared_ptr<BaseArray> _get_physical_array() const;
-  std::shared_ptr<LogicalArray> child(uint32_t index) const override;
-  std::shared_ptr<LogicalStore> primary_store() const override { return data(); }
+  [[nodiscard]] std::shared_ptr<LogicalStore> data() const override;
+  [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
+  [[nodiscard]] std::shared_ptr<Array> get_physical_array() const override;
+  [[nodiscard]] std::shared_ptr<BaseArray> _get_physical_array() const;
+  [[nodiscard]] std::shared_ptr<LogicalArray> child(uint32_t index) const override;
+  [[nodiscard]] std::shared_ptr<LogicalStore> primary_store() const override;
 
- public:
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
 
- public:
   void generate_constraints(AutoTask* task,
                             std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
                             const Variable* partition_symbol) const override;
 
- public:
-  std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
-  std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
  private:
-  std::shared_ptr<LogicalStore> data_;
-  std::shared_ptr<LogicalStore> null_mask_;
+  std::shared_ptr<LogicalStore> data_{};
+  std::shared_ptr<LogicalStore> null_mask_{};
 };
 
 class ListLogicalArray : public LogicalArray {
@@ -133,59 +140,52 @@ class ListLogicalArray : public LogicalArray {
                    std::shared_ptr<BaseLogicalArray> descriptor,
                    std::shared_ptr<LogicalArray> vardata);
 
- public:
-  int32_t dim() const override { return descriptor_->dim(); }
-  ArrayKind kind() const override { return ArrayKind::LIST; }
-  std::shared_ptr<Type> type() const override { return type_; }
-  const Shape& extents() const override { return descriptor_->extents(); }
-  size_t volume() const override { return descriptor_->volume(); }
-  bool unbound() const override;
-  bool nullable() const override { return descriptor_->nullable(); }
-  bool nested() const override { return true; }
-  uint32_t num_children() const override { return 2; }
+  [[nodiscard]] int32_t dim() const override;
+  [[nodiscard]] ArrayKind kind() const override;
+  [[nodiscard]] std::shared_ptr<Type> type() const override;
+  [[nodiscard]] const Shape& extents() const override;
+  [[nodiscard]] size_t volume() const override;
+  [[nodiscard]] bool unbound() const override;
+  [[nodiscard]] bool nullable() const override;
+  [[nodiscard]] bool nested() const override;
+  [[nodiscard]] uint32_t num_children() const override;
 
- public:
-  std::shared_ptr<LogicalArray> promote(int32_t extra_dim, size_t dim_size) const override;
-  std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const override;
-  std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const override;
-  std::shared_ptr<LogicalArray> transpose(const std::vector<int32_t>& axes) const override;
-  std::shared_ptr<LogicalArray> delinearize(int32_t dim,
-                                            const std::vector<int64_t>& sizes) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> promote(int32_t extra_dim,
+                                                      size_t dim_size) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> transpose(
+    const std::vector<int32_t>& axes) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> delinearize(
+    int32_t dim, const std::vector<int64_t>& sizes) const override;
 
- public:
-  std::shared_ptr<LogicalStore> null_mask() const override { return descriptor_->null_mask(); }
-  std::shared_ptr<Array> get_physical_array() const override;
-  std::shared_ptr<LogicalArray> child(uint32_t index) const override;
-  std::shared_ptr<LogicalStore> primary_store() const override
-  {
-    return descriptor_->primary_store();
-  }
-  std::shared_ptr<BaseLogicalArray> descriptor() const;
-  std::shared_ptr<LogicalArray> vardata() const;
+  [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
+  [[nodiscard]] std::shared_ptr<Array> get_physical_array() const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> child(uint32_t index) const override;
+  [[nodiscard]] std::shared_ptr<LogicalStore> primary_store() const override;
+  [[nodiscard]] std::shared_ptr<BaseLogicalArray> descriptor() const;
+  [[nodiscard]] std::shared_ptr<LogicalArray> vardata() const;
 
- public:
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
 
- public:
   void generate_constraints(AutoTask* task,
                             std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
                             const Variable* partition_symbol) const override;
 
- public:
-  std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
-  std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
  private:
-  std::shared_ptr<Type> type_;
-  std::shared_ptr<BaseLogicalArray> descriptor_;
-  std::shared_ptr<LogicalArray> vardata_;
+  std::shared_ptr<Type> type_{};
+  std::shared_ptr<BaseLogicalArray> descriptor_{};
+  std::shared_ptr<LogicalArray> vardata_{};
 };
 
 class StructLogicalArray : public LogicalArray {
@@ -194,54 +194,52 @@ class StructLogicalArray : public LogicalArray {
                      std::shared_ptr<LogicalStore> null_mask,
                      std::vector<std::shared_ptr<LogicalArray>>&& fields);
 
- public:
-  int32_t dim() const override;
-  ArrayKind kind() const override { return ArrayKind::STRUCT; }
-  std::shared_ptr<Type> type() const override { return type_; }
-  const Shape& extents() const override;
-  size_t volume() const override;
-  bool unbound() const override;
-  bool nullable() const override { return null_mask_ != nullptr; }
-  bool nested() const override { return true; }
-  uint32_t num_children() const override { return fields_.size(); }
+  [[nodiscard]] int32_t dim() const override;
+  [[nodiscard]] ArrayKind kind() const override;
+  [[nodiscard]] std::shared_ptr<Type> type() const override;
+  [[nodiscard]] const Shape& extents() const override;
+  [[nodiscard]] size_t volume() const override;
+  [[nodiscard]] bool unbound() const override;
+  [[nodiscard]] bool nullable() const override;
+  [[nodiscard]] bool nested() const override;
+  [[nodiscard]] uint32_t num_children() const override;
 
- public:
-  std::shared_ptr<LogicalArray> promote(int32_t extra_dim, size_t dim_size) const override;
-  std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const override;
-  std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const override;
-  std::shared_ptr<LogicalArray> transpose(const std::vector<int32_t>& axes) const override;
-  std::shared_ptr<LogicalArray> delinearize(int32_t dim,
-                                            const std::vector<int64_t>& sizes) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> promote(int32_t extra_dim,
+                                                      size_t dim_size) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> project(int32_t dim, int64_t index) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> slice(int32_t dim, Slice sl) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> transpose(
+    const std::vector<int32_t>& axes) const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> delinearize(
+    int32_t dim, const std::vector<int64_t>& sizes) const override;
 
- public:
-  std::shared_ptr<LogicalStore> null_mask() const override;
-  std::shared_ptr<Array> get_physical_array() const override;
-  std::shared_ptr<LogicalArray> child(uint32_t index) const override;
-  std::shared_ptr<LogicalStore> primary_store() const override;
+  [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
+  [[nodiscard]] std::shared_ptr<Array> get_physical_array() const override;
+  [[nodiscard]] std::shared_ptr<LogicalArray> child(uint32_t index) const override;
+  [[nodiscard]] std::shared_ptr<LogicalStore> primary_store() const override;
 
- public:
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
 
- public:
   void generate_constraints(AutoTask* task,
                             std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
                             const Variable* partition_symbol) const override;
 
- public:
-  std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
-  std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
  private:
-  std::shared_ptr<Type> type_;
-  std::shared_ptr<LogicalStore> null_mask_;
-  std::vector<std::shared_ptr<LogicalArray>> fields_;
+  std::shared_ptr<Type> type_{};
+  std::shared_ptr<LogicalStore> null_mask_{};
+  std::vector<std::shared_ptr<LogicalArray>> fields_{};
 };
 
 }  // namespace legate::detail
+
+#include "core/data/detail/logical_array.inl"

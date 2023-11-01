@@ -17,6 +17,8 @@
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
+#include <memory>
+
 /**
  * @file
  * @brief Class definition for legate::Scalar
@@ -43,12 +45,12 @@ class Runtime;
  */
 class Scalar {
  public:
-  Scalar(std::unique_ptr<detail::Scalar> impl);
+  explicit Scalar(std::unique_ptr<detail::Scalar> impl);
+
   Scalar(const Scalar& other);
-  Scalar(Scalar&& other);
+  Scalar(Scalar&& other) noexcept;
   ~Scalar();
 
- public:
   /**
    * @brief Creates a null scalar
    */
@@ -61,7 +63,7 @@ class Scalar {
    * @param data Allocation containing the data.
    * @param copy If true, the scalar copies the data stored in the allocation and becomes owned.
    */
-  Scalar(Type type, const void* data, bool copy = false);
+  Scalar(const Type& type, const void* data, bool copy = false);
   /**
    * @brief Creates an owned scalar from a scalar value
    *
@@ -70,7 +72,7 @@ class Scalar {
    * @param value A scalar value to create a `Scalar` with
    */
   template <typename T>
-  Scalar(T value);
+  explicit Scalar(T value);
   /**
    * @brief Creates an owned scalar of a specified type from a scalar value
    *
@@ -80,14 +82,15 @@ class Scalar {
    * @param value A scalar value to create a `Scalar` with
    */
   template <typename T>
-  Scalar(T value, Type type);
+  Scalar(T value, const Type& type);
   /**
    * @brief Creates an owned scalar from a string. The value from the
    * original string will be copied.
    *
    * @param string A string to create a `Scalar` with
    */
-  Scalar(const std::string& string);
+  explicit Scalar(const std::string& string);
+
   /**
    * @brief Creates an owned scalar from a vector of scalars. The values in the input vector
    * will be copied.
@@ -95,7 +98,7 @@ class Scalar {
    * @param values Values to create a scalar with in a vector
    */
   template <typename T>
-  Scalar(const std::vector<T>& values);
+  explicit Scalar(const std::vector<T>& values);
   /**
    * @brief Creates an owned scalar from a tuple of scalars. The values in the input tuple
    * will be copied.
@@ -103,42 +106,38 @@ class Scalar {
    * @param values Values to create a scalar with in a tuple
    */
   template <typename T>
-  Scalar(const tuple<T>& values);
+  explicit Scalar(const tuple<T>& values);
 
- public:
   /**
    * @brief Creates a point scalar
    *
    * @param point A point from which the scalar should be constructed
    */
   template <int32_t DIM>
-  Scalar(const Point<DIM>& point);
+  explicit Scalar(const Point<DIM>& point);
   /**
    * @brief Creates a rect scalar
    *
    * @param rect A rect from which the scalar should be constructed
    */
   template <int32_t DIM>
-  Scalar(const Rect<DIM>& rect);
+  explicit Scalar(const Rect<DIM>& rect);
 
- public:
   Scalar& operator=(const Scalar& other);
 
- public:
   /**
    * @brief Returns the data type of the scalar
    *
    * @return Data type
    */
-  Type type() const;
+  [[nodiscard]] Type type() const;
   /**
    * @brief Returns the size of allocation for the `Scalar`.
    *
    * @return The size of allocation
    */
-  size_t size() const;
+  [[nodiscard]] size_t size() const;
 
- public:
   /**
    * @brief Returns a copy of the value stored in this `Scalar`.
    *
@@ -174,17 +173,16 @@ class Scalar {
    *
    * @return A raw pointer to the `Scalar`'s data
    */
-  const void* ptr() const;
+  [[nodiscard]] const void* ptr() const;
 
- public:
-  detail::Scalar* impl() const { return impl_; }
+  [[nodiscard]] detail::Scalar* impl() const;
 
  private:
-  static detail::Scalar* checked_create_impl(Type type,
+  static detail::Scalar* checked_create_impl(const Type& type,
                                              const void* data,
                                              bool copy,
-                                             std::size_t size);
-  static detail::Scalar* create_impl(Type type, const void* data, bool copy);
+                                             size_t size);
+  static detail::Scalar* create_impl(const Type& type, const void* data, bool copy);
 
   struct private_tag {};
 
@@ -194,10 +192,10 @@ class Scalar {
   friend class AutoTask;
   friend class ManualTask;
   friend class Runtime;
-  detail::Scalar* impl_{nullptr};
+  detail::Scalar* impl_{};
 };
 
-Scalar null();
+[[nodiscard]] Scalar null();
 
 }  // namespace legate
 

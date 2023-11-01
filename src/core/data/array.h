@@ -13,7 +13,11 @@
 #pragma once
 
 #include "core/data/store.h"
+#include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
+
+#include <cstdint>
+#include <memory>
 
 /**
  * @file
@@ -37,28 +41,27 @@ class Array {
    * @return true If the array is nullable
    * @return false Otherwise
    */
-  bool nullable() const;
+  [[nodiscard]] bool nullable() const noexcept;
   /**
    * @brief Returns the dimension of the array
    *
    * @return Array's dimension
    */
-  int32_t dim() const;
+  [[nodiscard]] int32_t dim() const noexcept;
   /**
    * @brief Returns the array's type
    *
    * @return Type
    */
-  Type type() const;
+  [[nodiscard]] Type type() const /* noexcept? */;
   /**
    * @brief Indicates if the array has child arrays
    *
    * @return true If the array has child arrays
    * @return false Otherwise
    */
-  bool nested() const;
+  [[nodiscard]] bool nested() const noexcept;
 
- public:
   /**
    * @brief Returns the store containing the array's data
    *
@@ -66,7 +69,7 @@ class Array {
    *
    * @throw std::invalid_argument If the array is not a base array
    */
-  Store data() const;
+  [[nodiscard]] Store data() const;
   /**
    * @brief Returns the store containing the array's null mask
    *
@@ -74,7 +77,7 @@ class Array {
    *
    * @throw std::invalid_argument If the array is not nullable
    */
-  Store null_mask() const;
+  [[nodiscard]] Store null_mask() const;
   /**
    * @brief Returns the sub-array of a given index
    *
@@ -85,24 +88,22 @@ class Array {
    * @throw std::invalid_argument If the array has no child arrays
    * @throw std::out_of_range If the index is out of range
    */
-  Array child(uint32_t index) const;
+  [[nodiscard]] Array child(uint32_t index) const;
 
- public:
   /**
    * @brief Returns the array's domain
    *
    * @return Array's domain
    */
   template <int32_t DIM>
-  Rect<DIM> shape() const;
+  [[nodiscard]] Rect<DIM> shape() const;
   /**
    * @brief Returns the array's domain in a dimension-erased domain type
    *
    * @return Array's domain in a dimension-erased domain type
    */
-  Domain domain() const;
+  [[nodiscard]] Domain domain() const;
 
- public:
   /**
    * @brief Casts this array as a list array
    *
@@ -110,7 +111,7 @@ class Array {
    *
    * @throw std::invalid_argument If the array is not a list array
    */
-  ListArray as_list_array() const;
+  [[nodiscard]] ListArray as_list_array() const;
   /**
    * @brief Casts this array as a string array
    *
@@ -118,26 +119,22 @@ class Array {
    *
    * @throw std::invalid_argument If the array is not a string array
    */
-  StringArray as_string_array() const;
+  [[nodiscard]] StringArray as_string_array() const;
+
+  explicit Array(std::shared_ptr<detail::Array> impl);
+
+  [[nodiscard]] const std::shared_ptr<detail::Array>& impl() const;
+
+  Array(const Array&) noexcept = default;
+  Array(Array&&) noexcept      = default;
+
+  virtual ~Array() noexcept = default;
 
  private:
-  void check_shape_dimension(const int32_t dim) const;
-
- public:
-  Array(std::shared_ptr<detail::Array> impl);
-  std::shared_ptr<detail::Array> impl() const { return impl_; }
-
- public:
-  Array(const Array&);
-  Array& operator=(const Array&);
-  Array(Array&&);
-  Array& operator=(Array&&);
-
- public:
-  virtual ~Array();
+  void check_shape_dimension(int32_t dim) const;
 
  protected:
-  std::shared_ptr<detail::Array> impl_{nullptr};
+  std::shared_ptr<detail::Array> impl_{};
 };
 
 class ListArray : public Array {
@@ -147,17 +144,18 @@ class ListArray : public Array {
    *
    * @return Store
    */
-  Array descriptor() const;
+  [[nodiscard]] Array descriptor() const;
   /**
    * @brief Returns the sub-array for variable size data
    *
    * @return Store
    */
-  Array vardata() const;
+  [[nodiscard]] Array vardata() const;
 
  private:
   friend class Array;
-  ListArray(std::shared_ptr<detail::Array> impl);
+
+  explicit ListArray(std::shared_ptr<detail::Array> impl);
 };
 
 class StringArray : public Array {
@@ -167,17 +165,18 @@ class StringArray : public Array {
    *
    * @return Store
    */
-  Array ranges() const;
+  [[nodiscard]] Array ranges() const;
   /**
    * @brief Returns the sub-array for characters
    *
    * @return Store
    */
-  Array chars() const;
+  [[nodiscard]] Array chars() const;
 
  private:
   friend class Array;
-  StringArray(std::shared_ptr<detail::Array> impl);
+
+  explicit StringArray(std::shared_ptr<detail::Array> impl);
 };
 
 }  // namespace legate

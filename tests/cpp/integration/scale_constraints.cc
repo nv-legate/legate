@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/data/detail/logical_store.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace scale_constraints {
 
@@ -84,8 +85,8 @@ void test_scale(const ScaleTestSpec& spec)
   auto part_smaller = task.add_output(smaller);
   auto part_bigger  = task.add_output(bigger);
   task.add_constraint(legate::scale(spec.factors, part_smaller, part_bigger));
-  task.add_scalar_arg(spec.bigger_extents);
-  task.add_scalar_arg(spec.factors.data());
+  task.add_scalar_arg(legate::Scalar{spec.bigger_extents});
+  task.add_scalar_arg(legate::Scalar{spec.factors.data()});
 
   runtime->submit(std::move(task));
 }

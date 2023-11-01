@@ -11,19 +11,12 @@
  */
 
 #include "core/data/detail/logical_region_field.h"
+
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
-
-LogicalRegionField::LogicalRegionField(FieldManager* manager,
-                                       const Legion::LogicalRegion& lr,
-                                       Legion::FieldID fid,
-                                       std::shared_ptr<LogicalRegionField> parent)
-  : manager_(manager), lr_(lr), fid_(fid), parent_(std::move(parent))
-{
-}
 
 LogicalRegionField::~LogicalRegionField()
 {
@@ -34,7 +27,7 @@ LogicalRegionField::~LogicalRegionField()
     if (!runtime->initialized()) {
       // FIXME: Leak the PhysicalRegion handle if the runtime has already shut down, as
       // there's no hope that this would be collected by the Legion runtime
-      pr_.release();
+      static_cast<void>(pr_.release());
       return;
     }
 
@@ -70,7 +63,7 @@ int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
 
 const LogicalRegionField& LogicalRegionField::get_root() const
 {
-  return parent_ != nullptr ? parent_->get_root() : *this;
+  return parent_ ? parent_->get_root() : *this;
 }
 
 Domain LogicalRegionField::domain() const
@@ -111,13 +104,15 @@ void LogicalRegionField::detach()
   if (!runtime->initialized()) {
     // FIXME: Leak the PhysicalRegion handle if the runtime has already shut down, as
     // there's no hope that this would be collected by the Legion runtime
-    pr_.release();
+    static_cast<void>(pr_.release());
     return;
   }
-  if (nullptr != parent_)
-    throw std::invalid_argument("Manual detach must be called on the root store");
-  if (!attachment_shared_)
-    throw std::invalid_argument("Only stores created with share=true can be manually detached");
+  if (nullptr != parent_) {
+    throw std::invalid_argument{"Manual detach must be called on the root store"};
+  }
+  if (!attachment_shared_) {
+    throw std::invalid_argument{"Only stores created with share=true can be manually detached"};
+  }
   assert(nullptr != attachment_ && pr_ && pr_->exists());
   if (pr_->is_mapped()) runtime->unmap_physical_region(*pr_);
   Legion::Future fut = runtime->detach(*pr_, true /*flush*/, false /*unordered*/);
@@ -129,10 +124,11 @@ void LogicalRegionField::detach()
 
 void LogicalRegionField::allow_out_of_order_destruction()
 {
-  if (parent_ != nullptr)
+  if (parent_) {
     parent_->allow_out_of_order_destruction();
-  else
+  } else {
     destroyed_out_of_order_ = true;
+  }
 }
 
 std::shared_ptr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* tiling,
@@ -143,7 +139,7 @@ std::shared_ptr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* 
   auto color_point      = to_domain_point(color);
   return std::make_shared<LogicalRegionField>(
     manager_,
-    Runtime::get_runtime()->get_subregion(legion_partition, color_point),
+    Runtime::get_runtime()->get_subregion(std::move(legion_partition), color_point),
     fid_,
     shared_from_this());
 }
@@ -156,23 +152,23 @@ Legion::LogicalPartition LogicalRegionField::get_legion_partition(const Partitio
 
 void LogicalRegionField::add_invalidation_callback(std::function<void()> callback)
 {
-  if (parent_ != nullptr) {
-    parent_->add_invalidation_callback(callback);
+  if (parent_) {
+    parent_->add_invalidation_callback(std::move(callback));
   } else {
-    callbacks_.push_back(callback);
+    callbacks_.emplace_back(std::move(callback));
   }
 }
 
 void LogicalRegionField::perform_invalidation_callbacks()
 {
-  if (parent_ != nullptr) {
+  if (parent_) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       // Callbacks should exist only in the root
       assert(callbacks_.empty());
     }
     parent_->perform_invalidation_callbacks();
   } else {
-    for (auto& callback : callbacks_) { callback(); }
+    for (auto&& callback : callbacks_) callback();
     callbacks_.clear();
   }
 }

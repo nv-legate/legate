@@ -201,7 +201,7 @@ void test_fill_slice(std::int32_t dim, std::size_t size, bool null_init)
   runtime->issue_fill(sliced, value_in_slice);
 
   // check if the slice is filled correctly
-  check_output_slice(lhs, v1, v2, offset);
+  check_output_slice(lhs, legate::Scalar{v1}, legate::Scalar{v2}, offset);
 }
 
 void test_invalid()

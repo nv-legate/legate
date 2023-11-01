@@ -11,7 +11,6 @@
  */
 
 #include "core/data/detail/array_tasks.h"
-#include "core/legate_c.h"
 #include "core/task/task_context.h"
 
 namespace legate::detail {

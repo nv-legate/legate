@@ -146,7 +146,7 @@ void test_body(
       auto task = runtime->create_task(context, ADDER, legate::Shape{1});
       task.add_input(l_store);
       task.add_output(l_store);
-      task.add_scalar_arg(dim);
+      task.add_scalar_arg(legate::Scalar{dim});
       runtime->submit(std::move(task));
       ++counter;
     }
@@ -159,8 +159,8 @@ void test_body(
   if (use_tasks) {
     auto task = runtime->create_task(context, CHECKER, legate::Shape{1});
     task.add_input(l_store);
-    task.add_scalar_arg(dim);
-    task.add_scalar_arg(counter);
+    task.add_scalar_arg(legate::Scalar{dim});
+    task.add_scalar_arg(legate::Scalar{counter});
     runtime->submit(std::move(task));
   }
   if (use_inline) {

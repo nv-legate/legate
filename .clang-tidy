@@ -48,4 +48,22 @@ CheckOptions:
   llvm-else-after-return.WarnOnConditionVariables: 'false'
   cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField: 'false'
   performance-move-const-arg.CheckTriviallyCopyableMove: 'false'
+  # The following is needed because clang tidy complains that TaskContext is always
+  # copied:
+  #
+  # class MyTask
+  # {
+  #   // clang-tidy warning: ctx copied every time, but only used as a reference.
+  #   // Consider making it a const reference
+  #   void cpu_task(legate::TaskContext ctx)
+  #   {
+  #     ...
+  #   }
+  # };
+  #
+  # But we can't do that, because the `task_wrapper` expects to find exactly the signature
+  # above. So we can either add `NOLINT` everywhere, or we can just ignore `TaskContext`
+  # copies wholesale (which is OK because they are just pimpls, and thus, very cheap to
+  # copy).
+  performance-unnecessary-value-param.AllowedTypes: 'legate::TaskContext'
 ...

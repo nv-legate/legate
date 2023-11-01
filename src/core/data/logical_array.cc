@@ -11,13 +11,14 @@
  */
 
 #include "core/data/logical_array.h"
+
 #include "core/data/detail/logical_array.h"
 
 namespace legate {
 
 int32_t LogicalArray::dim() const { return impl_->dim(); }
 
-Type LogicalArray::type() const { return Type(impl_->type()); }
+Type LogicalArray::type() const { return Type{impl_->type()}; }
 
 const Shape& LogicalArray::extents() const { return impl_->extents(); }
 
@@ -33,43 +34,43 @@ uint32_t LogicalArray::num_children() const { return impl_->num_children(); }
 
 LogicalArray LogicalArray::promote(int32_t extra_dim, size_t dim_size) const
 {
-  return LogicalArray(impl_->promote(extra_dim, dim_size));
+  return LogicalArray{impl_->promote(extra_dim, dim_size)};
 }
 
 LogicalArray LogicalArray::project(int32_t dim, int64_t index) const
 {
-  return LogicalArray(impl_->project(dim, index));
+  return LogicalArray{impl_->project(dim, index)};
 }
 
 LogicalArray LogicalArray::slice(int32_t dim, Slice sl) const
 {
-  return LogicalArray(impl_->slice(dim, sl));
+  return LogicalArray{impl_->slice(dim, sl)};
 }
 
 LogicalArray LogicalArray::transpose(const std::vector<int32_t>& axes) const
 {
-  return LogicalArray(impl_->transpose(axes));
+  return LogicalArray{impl_->transpose(axes)};
 }
 
 LogicalArray LogicalArray::delinearize(int32_t dim, const std::vector<int64_t>& sizes) const
 {
-  return LogicalArray(impl_->delinearize(dim, sizes));
+  return LogicalArray{impl_->delinearize(dim, sizes)};
 }
 
-LogicalStore LogicalArray::data() const { return LogicalStore(impl_->data()); }
+LogicalStore LogicalArray::data() const { return LogicalStore{impl_->data()}; }
 
-LogicalStore LogicalArray::null_mask() const { return LogicalStore(impl_->null_mask()); }
+LogicalStore LogicalArray::null_mask() const { return LogicalStore{impl_->null_mask()}; }
 
-LogicalArray LogicalArray::child(uint32_t index) const { return LogicalArray(impl_->child(index)); }
+LogicalArray LogicalArray::child(uint32_t index) const { return LogicalArray{impl_->child(index)}; }
 
-Array LogicalArray::get_physical_array() const { return Array(impl_->get_physical_array()); }
+Array LogicalArray::get_physical_array() const { return Array{impl_->get_physical_array()}; }
 
 ListLogicalArray LogicalArray::as_list_array() const
 {
   if (impl_->kind() != detail::ArrayKind::LIST) {
     throw std::invalid_argument("Array is not a list array");
   }
-  return ListLogicalArray(impl_);
+  return ListLogicalArray{impl_};
 }
 
 StringLogicalArray LogicalArray::as_string_array() const
@@ -77,51 +78,37 @@ StringLogicalArray LogicalArray::as_string_array() const
   if (type().code() != Type::Code::STRING) {
     throw std::invalid_argument("Array is not a string array");
   }
-  return StringLogicalArray(impl_);
+  return StringLogicalArray{impl_};
 }
 
-LogicalArray::LogicalArray(std::shared_ptr<detail::LogicalArray> impl) : impl_(std::move(impl)) {}
-
-LogicalArray::~LogicalArray() {}
-
-LogicalArray::LogicalArray(LogicalStore store)
-  : impl_(std::make_shared<detail::BaseLogicalArray>(store.impl()))
+LogicalArray::LogicalArray(const LogicalStore& store)
+  : impl_{std::make_shared<detail::BaseLogicalArray>(store.impl())}
 {
 }
 
-LogicalArray::LogicalArray(LogicalStore store, LogicalStore null_mask)
-  : impl_(std::make_shared<detail::BaseLogicalArray>(store.impl(), null_mask.impl()))
+LogicalArray::LogicalArray(const LogicalStore& store, const LogicalStore& null_mask)
+  : impl_{std::make_shared<detail::BaseLogicalArray>(store.impl(), null_mask.impl())}
 {
 }
 
 LogicalArray ListLogicalArray::descriptor() const
 {
-  return LogicalArray(static_cast<const detail::ListLogicalArray*>(impl_.get())->descriptor());
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->descriptor()};
 }
 
 LogicalArray ListLogicalArray::vardata() const
 {
-  return LogicalArray(static_cast<const detail::ListLogicalArray*>(impl_.get())->vardata());
-}
-
-ListLogicalArray::ListLogicalArray(std::shared_ptr<detail::LogicalArray> impl)
-  : LogicalArray(std::move(impl))
-{
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->vardata()};
 }
 
 LogicalArray StringLogicalArray::offsets() const
 {
-  return LogicalArray(static_cast<const detail::ListLogicalArray*>(impl_.get())->descriptor());
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->descriptor()};
 }
 
 LogicalArray StringLogicalArray::chars() const
 {
-  return LogicalArray(static_cast<const detail::ListLogicalArray*>(impl_.get())->vardata());
-}
-
-StringLogicalArray::StringLogicalArray(std::shared_ptr<detail::LogicalArray> impl)
-  : LogicalArray(std::move(impl))
-{
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->vardata()};
 }
 
 }  // namespace legate

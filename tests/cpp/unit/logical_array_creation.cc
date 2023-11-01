@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace array_test {
 
@@ -40,16 +40,16 @@ void test_primitive_array(bool nullable)
     EXPECT_EQ(store.volume(), 16);
     EXPECT_EQ(store.type(), legate::int64());
 
-    if (!nullable) { EXPECT_THROW(array.null_mask(), std::invalid_argument); }
-    EXPECT_THROW(array.child(0), std::invalid_argument);
+    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    EXPECT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
   }
   // Unbound
   {
     auto array = runtime->create_array(legate::int64(), 3, nullable);
     EXPECT_TRUE(array.unbound());
     EXPECT_EQ(array.dim(), 3);
-    EXPECT_THROW(array.extents(), std::invalid_argument);
-    EXPECT_THROW(array.volume(), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(array.extents()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(array.volume()), std::invalid_argument);
     EXPECT_EQ(array.type(), legate::int64());
     EXPECT_EQ(array.nullable(), nullable);
     EXPECT_EQ(array.num_children(), 0);
@@ -57,12 +57,12 @@ void test_primitive_array(bool nullable)
     auto store = array.data();
     EXPECT_TRUE(store.unbound());
     EXPECT_EQ(store.dim(), 3);
-    EXPECT_THROW(store.extents(), std::invalid_argument);
-    EXPECT_THROW(store.volume(), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(store.extents()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(store.volume()), std::invalid_argument);
     EXPECT_EQ(store.type(), legate::int64());
 
-    if (!nullable) { EXPECT_THROW(array.null_mask(), std::invalid_argument); }
-    EXPECT_THROW(array.child(0), std::invalid_argument);
+    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    EXPECT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
   }
 }
 
@@ -82,14 +82,14 @@ void test_list_array(bool nullable)
     EXPECT_EQ(array.nullable(), nullable);
     EXPECT_EQ(array.num_children(), 2);
 
-    EXPECT_THROW(array.data(), std::invalid_argument);
-    if (!nullable) { EXPECT_THROW(array.null_mask(), std::invalid_argument); }
+    EXPECT_THROW(static_cast<void>(array.data()), std::invalid_argument);
+    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
 
     auto list_array = array.as_list_array();
     // Sub-arrays of list arrays can be retrieved only when they are initialized first
-    EXPECT_THROW(list_array.descriptor(), std::invalid_argument);
-    EXPECT_THROW(list_array.vardata(), std::invalid_argument);
-    EXPECT_THROW(list_array.child(2), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(list_array.descriptor()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(list_array.vardata()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(list_array.child(2)), std::invalid_argument);
   }
   // Unbound
   {
@@ -100,14 +100,14 @@ void test_list_array(bool nullable)
     EXPECT_EQ(array.nullable(), nullable);
     EXPECT_EQ(array.num_children(), 2);
 
-    EXPECT_THROW(array.data(), std::invalid_argument);
-    if (!nullable) { EXPECT_THROW(array.null_mask(), std::invalid_argument); }
+    EXPECT_THROW(static_cast<void>(array.data()), std::invalid_argument);
+    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
 
     auto list_array = array.as_list_array();
     // Sub-arrays of list arrays can be retrieved only when they are initialized first
-    EXPECT_THROW(list_array.descriptor(), std::invalid_argument);
-    EXPECT_THROW(list_array.vardata(), std::invalid_argument);
-    EXPECT_THROW(list_array.child(2), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(list_array.descriptor()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(list_array.vardata()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(list_array.child(2)), std::invalid_argument);
   }
 }
 
@@ -128,8 +128,8 @@ void test_struct_array(bool nullable)
     EXPECT_EQ(array.nullable(), nullable);
     EXPECT_EQ(array.num_children(), st_type.num_fields());
 
-    if (!nullable) { EXPECT_THROW(array.null_mask(), std::invalid_argument); }
-    EXPECT_THROW(array.child(num_fields), std::out_of_range);
+    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    EXPECT_THROW(static_cast<void>(array.child(num_fields)), std::out_of_range);
     for (uint32_t idx = 0; idx < num_fields; ++idx) {
       auto field_type     = st_type.field_type(idx);
       auto field_subarray = array.child(idx);
@@ -154,8 +154,8 @@ void test_struct_array(bool nullable)
     EXPECT_EQ(array.nullable(), nullable);
     EXPECT_EQ(array.num_children(), st_type.num_fields());
 
-    if (!nullable) { EXPECT_THROW(array.null_mask(), std::invalid_argument); }
-    EXPECT_THROW(array.child(0), std::invalid_argument);
+    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    EXPECT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
   }
 }
 
@@ -187,16 +187,16 @@ void test_isomorphic(bool nullable)
     auto target1 = runtime->create_array_like(source);
     EXPECT_EQ(source.dim(), target1.dim());
     EXPECT_EQ(source.type(), target1.type());
-    EXPECT_THROW(target1.extents(), std::invalid_argument);
-    EXPECT_THROW(target1.volume(), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(target1.extents()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(target1.volume()), std::invalid_argument);
     EXPECT_EQ(source.unbound(), target1.unbound());
     EXPECT_EQ(source.nullable(), target1.nullable());
 
     auto target2 = runtime->create_array_like(source, legate::float64());
     EXPECT_EQ(source.dim(), target2.dim());
     EXPECT_EQ(target2.type(), target2.type());
-    EXPECT_THROW(target2.extents(), std::invalid_argument);
-    EXPECT_THROW(target2.volume(), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(target2.extents()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(target2.volume()), std::invalid_argument);
     EXPECT_EQ(source.unbound(), target2.unbound());
     EXPECT_EQ(source.nullable(), target2.nullable());
   }
@@ -213,8 +213,9 @@ void test_invalid()
   EXPECT_THROW(static_cast<void>(
                  runtime->create_array(legate::Shape{1, 2}, legate::list_type(legate::int64()))),
                std::invalid_argument);
-  EXPECT_THROW((void)runtime->create_array(legate::string_type(), 2), std::invalid_argument);
-  EXPECT_THROW((void)runtime->create_array(legate::list_type(legate::int64()), 3),
+  EXPECT_THROW(static_cast<void>(runtime->create_array(legate::string_type(), 2)),
+               std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(runtime->create_array(legate::list_type(legate::int64()), 3)),
                std::invalid_argument);
 }
 

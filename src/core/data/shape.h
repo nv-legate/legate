@@ -15,14 +15,16 @@
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
 
+#include <cstddef>
+
 namespace legate {
 
 using Shape = tuple<size_t>;
 
-Domain to_domain(const Shape& shape);
+[[nodiscard]] Domain to_domain(const Shape& shape);
 
-DomainPoint to_domain_point(const Shape& shape);
+[[nodiscard]] DomainPoint to_domain_point(const Shape& shape);
 
-Shape from_domain(const Domain& domain);
+[[nodiscard]] Shape from_domain(const Domain& domain);
 
 }  // namespace legate

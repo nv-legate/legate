@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/data/detail/logical_store.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace image_constraints {
 
@@ -207,8 +208,8 @@ void initialize_function(legate::LogicalStore func,
     context, INIT_FUNC + static_cast<int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
   auto part = task.declare_partition();
   task.add_output(func, part);
-  task.add_scalar_arg(range_extents);
-  task.add_scalar_arg(ascending);
+  task.add_scalar_arg(legate::Scalar{range_extents});
+  task.add_scalar_arg(legate::Scalar{ascending});
   task.add_constraint(legate::broadcast(part, legate::from_range(func.dim())));
   runtime->submit(std::move(task));
 

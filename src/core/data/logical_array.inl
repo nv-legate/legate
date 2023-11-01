@@ -12,32 +12,29 @@
 
 #pragma once
 
-// Useful for IDEs
-#include "core/data/array.h"
-
-#include <utility>
+#include "core/data/logical_array.h"
 
 namespace legate {
 
-inline Array::Array(std::shared_ptr<detail::Array> impl) : impl_{std::move(impl)} {}
-
-inline const std::shared_ptr<detail::Array>& Array::impl() const { return impl_; }
-
-template <int32_t DIM>
-Rect<DIM> Array::shape() const
+inline LogicalArray::LogicalArray(std::shared_ptr<detail::LogicalArray> impl)
+  : impl_(std::move(impl))
 {
-  check_shape_dimension(DIM);
-  if (dim() > 0) return domain().bounds<DIM, coord_t>();
-  auto p = Point<DIM>::ZEROES();
-  return {p, p};
+}
+
+inline const std::shared_ptr<detail::LogicalArray>& LogicalArray::impl() const { return impl_; }
+
+// ==========================================================================================
+
+inline ListLogicalArray::ListLogicalArray(std::shared_ptr<detail::LogicalArray> impl)
+  : LogicalArray{std::move(impl)}
+{
 }
 
 // ==========================================================================================
 
-inline ListArray::ListArray(std::shared_ptr<detail::Array> impl) : Array{std::move(impl)} {}
-
-// ==========================================================================================
-
-inline StringArray::StringArray(std::shared_ptr<detail::Array> impl) : Array{std::move(impl)} {}
+inline StringLogicalArray::StringLogicalArray(std::shared_ptr<detail::LogicalArray> impl)
+  : LogicalArray{std::move(impl)}
+{
+}
 
 }  // namespace legate

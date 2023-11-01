@@ -138,15 +138,15 @@ void fill_indirect(legate::Library library,
   auto domain = legate::to_domain(data.extents());
   switch (data.dim()) {
     case 1: {
-      task.add_scalar_arg(legate::Rect<1>(domain));
+      task.add_scalar_arg(legate::Scalar{legate::Rect<1>{domain}});
       break;
     }
     case 2: {
-      task.add_scalar_arg(legate::Rect<2>(domain));
+      task.add_scalar_arg(legate::Scalar{legate::Rect<2>{domain}});
       break;
     }
     case 3: {
-      task.add_scalar_arg(legate::Rect<3>(domain));
+      task.add_scalar_arg(legate::Scalar{legate::Rect<3>{domain}});
       break;
     }
     default: {

@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/data/array.h"
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
 #include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
+
+#include <memory>
 
 /**
  * @file
@@ -48,13 +48,13 @@ class LogicalArray {
    *
    * @return The number of dimensions
    */
-  int32_t dim() const;
+  [[nodiscard]] int32_t dim() const;
   /**
    * @brief Returns the element type of the array.
    *
    * @return Type of elements in the store
    */
-  Type type() const;
+  [[nodiscard]] Type type() const;
   /**
    * @brief Returns the shape of the array.
    *
@@ -62,7 +62,7 @@ class LogicalArray {
    *
    * @return The store's shape
    */
-  const Shape& extents() const;
+  [[nodiscard]] const Shape& extents() const;
   /**
    * @brief Returns the number of elements in the array.
    *
@@ -70,36 +70,35 @@ class LogicalArray {
    *
    * @return The number of elements in the store
    */
-  size_t volume() const;
+  [[nodiscard]] size_t volume() const;
   /**
    * @brief Indicates whether the array is unbound
    *
    * @return true The array is unbound
    * @return false The array is normal
    */
-  bool unbound() const;
+  [[nodiscard]] bool unbound() const;
   /**
    * @brief Indicates whether the array is nullable
    *
    * @return true The array is nullable
    * @return false The array is non-nullable
    */
-  bool nullable() const;
+  [[nodiscard]] bool nullable() const;
   /**
    * @brief Indicates whether the array has child arrays
    *
    * @return true The array has child arrays
    * @return false Otherwise
    */
-  bool nested() const;
+  [[nodiscard]] bool nested() const;
   /**
    * @brief Returns the number of child sub-arrays
    *
    * @return Number of child sub-arrays
    */
-  uint32_t num_children() const;
+  [[nodiscard]] uint32_t num_children() const;
 
- public:
   /**
    * @brief Adds an extra dimension to the array.
    *
@@ -111,7 +110,7 @@ class LogicalArray {
    * @throw std::invalid_argument When `extra_dim` is not a valid dimension name
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  LogicalArray promote(int32_t extra_dim, size_t dim_size) const;
+  [[nodiscard]] LogicalArray promote(int32_t extra_dim, size_t dim_size) const;
   /**
    * @brief Projects out a dimension of the array.
    *
@@ -123,7 +122,7 @@ class LogicalArray {
    * @throw std::invalid_argument If `dim` is not a valid dimension name or `index` is out of bounds
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  LogicalArray project(int32_t dim, int64_t index) const;
+  [[nodiscard]] LogicalArray project(int32_t dim, int64_t index) const;
   /**
    * @brief Slices a contiguous sub-section of the array.
    *
@@ -135,7 +134,7 @@ class LogicalArray {
    * @throw std::invalid_argument If `dim` is not a valid dimension name
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  LogicalArray slice(int32_t dim, Slice sl) const;
+  [[nodiscard]] LogicalArray slice(int32_t dim, Slice sl) const;
   /**
    * @brief Reorders dimensions of the array.
    *
@@ -148,7 +147,7 @@ class LogicalArray {
    * axis name.
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  LogicalArray transpose(const std::vector<int32_t>& axes) const;
+  [[nodiscard]] LogicalArray transpose(const std::vector<int32_t>& axes) const;
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
    *
@@ -161,21 +160,20 @@ class LogicalArray {
    * the extent of the chosen dimenison
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  LogicalArray delinearize(int32_t dim, const std::vector<int64_t>& sizes) const;
+  [[nodiscard]] LogicalArray delinearize(int32_t dim, const std::vector<int64_t>& sizes) const;
 
- public:
   /**
    * @brief Returns the store of this array
    *
    * @return Logical store
    */
-  LogicalStore data() const;
+  [[nodiscard]] LogicalStore data() const;
   /**
    * @brief Returns the store of this array
    *
    * @return Logical store
    */
-  LogicalStore null_mask() const;
+  [[nodiscard]] LogicalStore null_mask() const;
   /**
    * @brief Returns the sub-array of a given index
    *
@@ -187,9 +185,8 @@ class LogicalArray {
    * struct array
    * @throw std::out_of_range If the index is out of range
    */
-  LogicalArray child(uint32_t index) const;
+  [[nodiscard]] LogicalArray child(uint32_t index) const;
 
- public:
   /**
    * @brief Creates a physical array for this logical array
    *
@@ -198,9 +195,8 @@ class LogicalArray {
    *
    * @return A physical array of the logical array
    */
-  Array get_physical_array() const;
+  [[nodiscard]] Array get_physical_array() const;
 
- public:
   /**
    * @brief Casts this array as a list array
    *
@@ -208,7 +204,7 @@ class LogicalArray {
    *
    * @throw std::invalid_argument If the array is not a list array
    */
-  ListLogicalArray as_list_array() const;
+  [[nodiscard]] ListLogicalArray as_list_array() const;
   /**
    * @brief Casts this array as a string array
    *
@@ -216,25 +212,18 @@ class LogicalArray {
    *
    * @throw std::invalid_argument If the array is not a string array
    */
-  StringLogicalArray as_string_array() const;
+  [[nodiscard]] StringLogicalArray as_string_array() const;
 
- public:
   LogicalArray() = default;
-  LogicalArray(std::shared_ptr<detail::LogicalArray> impl);
-  virtual ~LogicalArray();
 
- public:
-  LogicalArray(const LogicalArray& other)            = default;
-  LogicalArray& operator=(const LogicalArray& other) = default;
-  LogicalArray(LogicalArray&& other)                 = default;
-  LogicalArray& operator=(LogicalArray&& other)      = default;
+  explicit LogicalArray(std::shared_ptr<detail::LogicalArray> impl);
 
- public:
-  LogicalArray(LogicalStore store);
-  LogicalArray(LogicalStore store, LogicalStore null_mask);
+  virtual ~LogicalArray() = default;
 
- public:
-  std::shared_ptr<detail::LogicalArray> impl() const { return impl_; }
+  LogicalArray(const LogicalStore& store);
+  LogicalArray(const LogicalStore& store, const LogicalStore& null_mask);
+
+  [[nodiscard]] const std::shared_ptr<detail::LogicalArray>& impl() const;
 
  protected:
   std::shared_ptr<detail::LogicalArray> impl_{nullptr};
@@ -247,17 +236,18 @@ class ListLogicalArray : public LogicalArray {
    *
    * @return Store
    */
-  LogicalArray descriptor() const;
+  [[nodiscard]] LogicalArray descriptor() const;
   /**
    * @brief Returns the sub-array for variable size data
    *
    * @return Store
    */
-  LogicalArray vardata() const;
+  [[nodiscard]] LogicalArray vardata() const;
 
  private:
   friend class LogicalArray;
-  ListLogicalArray(std::shared_ptr<detail::LogicalArray> impl);
+
+  explicit ListLogicalArray(std::shared_ptr<detail::LogicalArray> impl);
 };
 
 class StringLogicalArray : public LogicalArray {
@@ -267,17 +257,20 @@ class StringLogicalArray : public LogicalArray {
    *
    * @return Store
    */
-  LogicalArray offsets() const;
+  [[nodiscard]] LogicalArray offsets() const;
   /**
    * @brief Returns the sub-array for characters
    *
    * @return Store
    */
-  LogicalArray chars() const;
+  [[nodiscard]] LogicalArray chars() const;
 
  private:
   friend class LogicalArray;
-  StringLogicalArray(std::shared_ptr<detail::LogicalArray> impl);
+
+  explicit StringLogicalArray(std::shared_ptr<detail::LogicalArray> impl);
 };
 
 }  // namespace legate
+
+#include "core/data/logical_array.inl"

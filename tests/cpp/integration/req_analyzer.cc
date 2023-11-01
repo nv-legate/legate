@@ -31,10 +31,10 @@ struct Tester : public legate::LegateTask<Tester> {
   {
     auto inputs  = context.inputs();
     auto outputs = context.outputs();
-    for (auto& input : inputs) { input.data().read_accessor<int64_t, 2>(); }
+    for (auto& input : inputs) { (void)input.data().read_accessor<int64_t, 2>(); }
     for (auto& output : outputs) {
-      output.data().read_accessor<int64_t, 2>();
-      output.data().write_accessor<int64_t, 2>();
+      (void)output.data().read_accessor<int64_t, 2>();
+      (void)output.data().write_accessor<int64_t, 2>();
     }
   }
 };

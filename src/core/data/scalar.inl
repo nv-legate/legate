@@ -30,8 +30,8 @@ inline constexpr legate::Type::Code canonical_type_code_of() noexcept
 {
   using legate::Type;  // to disambiguate from legate::detail::Type;
 
-  if constexpr (std::is_same_v<std::size_t, T>) {
-    static_assert(sizeof(T) == sizeof(std::uint64_t));
+  if constexpr (std::is_same_v<size_t, T>) {
+    static_assert(sizeof(T) == sizeof(uint64_t));
     return Type::Code::UINT64;
   } else {
     constexpr auto ret = legate_type_code_of<T>;
@@ -50,9 +50,11 @@ inline decltype(auto) canonical_value_of(T&& v) noexcept
   return std::forward<T>(v);
 }
 
-inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return std::uint64_t{v}; }
+inline uint64_t canonical_value_of(size_t v) noexcept { return uint64_t{v}; }
 
 }  // namespace detail
+
+inline Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_{impl.release()} {}
 
 template <typename T>
 Scalar::Scalar(T value, private_tag)
@@ -67,18 +69,18 @@ Scalar::Scalar(T value) : Scalar{detail::canonical_value_of(std::move(value)), p
 }
 
 template <typename T>
-Scalar::Scalar(T value, Type type)
-  : impl_{checked_create_impl(std::move(type), std::addressof(value), true, sizeof(T))}
+Scalar::Scalar(T value, const Type& type)
+  : impl_{checked_create_impl(type, std::addressof(value), true, sizeof(T))}
 {
 }
 
 template <typename T>
 Scalar::Scalar(const std::vector<T>& values)
-  : impl_(checked_create_impl(
+  : impl_{checked_create_impl(
       fixed_array_type(primitive_type(detail::canonical_type_code_of<T>()), values.size()),
       values.data(),
       true,
-      values.size() * sizeof(T)))
+      values.size() * sizeof(T))}
 {
 }
 
@@ -88,19 +90,20 @@ Scalar::Scalar(const tuple<T>& values) : Scalar{values.data()}
 }
 
 template <int32_t DIM>
-Scalar::Scalar(const Point<DIM>& point) : impl_(create_impl(point_type(DIM), &point, true))
+Scalar::Scalar(const Point<DIM>& point) : impl_{create_impl(point_type(DIM), &point, true)}
 {
 }
 
 template <int32_t DIM>
-Scalar::Scalar(const Rect<DIM>& rect) : impl_(create_impl(rect_type(DIM), &rect, true))
+Scalar::Scalar(const Rect<DIM>& rect) : impl_{create_impl(rect_type(DIM), &rect, true)}
 {
 }
 
 template <typename VAL>
 VAL Scalar::value() const
 {
-  auto ty = type();
+  const auto ty = type();
+
   if (ty.code() == Type::Code::STRING)
     throw std::invalid_argument("String cannot be casted to other types");
   if (sizeof(VAL) != ty.size())
@@ -110,26 +113,20 @@ VAL Scalar::value() const
 }
 
 template <>
-inline std::string Scalar::value() const
-{
-  if (type().code() != Type::Code::STRING)
-    throw std::invalid_argument("Type of the scalar is not string");
-  const void* data  = ptr();
-  auto len          = *static_cast<const uint32_t*>(data);
-  const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
-  const auto* end   = begin + len;
-  return std::string(begin, end);
-}
-
-template <>
 inline std::string_view Scalar::value() const
 {
   if (type().code() != Type::Code::STRING)
     throw std::invalid_argument("Type of the scalar is not string");
   const void* data  = ptr();
   auto len          = *static_cast<const uint32_t*>(data);
-  const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
-  return std::string_view(begin, len);
+  const auto* begin = static_cast<const char*>(data) + sizeof(len);
+  return {begin, len};
+}
+
+template <>
+inline std::string Scalar::value() const
+{
+  return std::string{this->value<std::string_view>()};
 }
 
 template <typename VAL>
@@ -144,34 +141,36 @@ Span<const VAL> Scalar::values() const
         "The scalar's element type has size " + std::to_string(elem_type.size()) +
         ", but the requested element type has size " + std::to_string(sizeof(VAL)));
     auto size = arr_type.num_elements();
-    return Span<const VAL>(reinterpret_cast<const VAL*>(ptr()), size);
-  } else if (ty.code() == Type::Code::STRING) {
+    return {reinterpret_cast<const VAL*>(ptr()), size};
+  }
+
+  if (ty.code() == Type::Code::STRING) {
     if (sizeof(VAL) != 1)
       throw std::invalid_argument(
         "String scalar can only be converted into a span of a type whose size is 1 byte");
     auto data         = ptr();
     auto len          = *static_cast<const uint32_t*>(data);
     const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
-    return Span<const VAL>(reinterpret_cast<const VAL*>(begin), len);
-  } else if (ty.code() == Type::Code::NIL) {
-    return Span<const VAL>(nullptr, 0);
-  } else {
-    if (sizeof(VAL) != ty.size())
-      throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
-                                  ", but the requested element type has size " +
-                                  std::to_string(sizeof(VAL)));
-    return Span<const VAL>(static_cast<const VAL*>(ptr()), 1);
+    return {reinterpret_cast<const VAL*>(begin), len};
   }
+  if (ty.code() == Type::Code::NIL) return {nullptr, 0};
+  if (sizeof(VAL) != ty.size())
+    throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
+                                ", but the requested element type has size " +
+                                std::to_string(sizeof(VAL)));
+  return {static_cast<const VAL*>(ptr()), 1};
 }
 
 template <>
 inline Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
 {
   Legion::DomainPoint result;
-  auto span  = values<int64_t>();
-  result.dim = span.size();
+  const auto span = values<int64_t>();
+  result.dim      = span.size();
   for (auto idx = 0; idx < result.dim; ++idx) result[idx] = span[idx];
   return result;
 }
+
+inline detail::Scalar* Scalar::impl() const { return impl_; }
 
 }  // namespace legate

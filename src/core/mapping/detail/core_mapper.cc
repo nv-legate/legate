@@ -114,16 +114,16 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
       return Scalar{min_cpu_chunk};
     }
     case LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM: {
-      return machine.has_socket_memory();
+      return Scalar{machine.has_socket_memory()};
     }
     case LEGATE_CORE_TUNABLE_WINDOW_SIZE: {
-      return window_size;
+      return Scalar{window_size};
     }
     case LEGATE_CORE_TUNABLE_MAX_PENDING_EXCEPTIONS: {
-      return max_pending_exceptions;
+      return Scalar{max_pending_exceptions};
     }
     case LEGATE_CORE_TUNABLE_PRECISE_EXCEPTION_TRACE: {
-      return precise_exception_trace;
+      return Scalar{precise_exception_trace};
     }
     case LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: {
       // Multiply this by the total number of nodes and then scale by the frac
@@ -131,17 +131,17 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
         machine.has_gpus() ? machine.total_frame_buffer_size()
                            : (machine.has_socket_memory() ? machine.total_socket_memory_size()
                                                           : machine.system_memory().capacity());
-      return global_mem_size / field_reuse_frac;
+      return Scalar{global_mem_size / field_reuse_frac};
     }
     case LEGATE_CORE_TUNABLE_FIELD_REUSE_FREQUENCY: {
-      return field_reuse_freq;
+      return Scalar{field_reuse_freq};
     }
     case LEGATE_CORE_TUNABLE_MAX_LRU_LENGTH: {
-      return max_lru_length;
+      return Scalar{max_lru_length};
     }
     case LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER: {
-      return LegateDefined(LEGATE_USE_CUDA) ? machine.has_gpus() && comm::nccl::needs_barrier()
-                                            : false;
+      return Scalar{LegateDefined(LEGATE_USE_CUDA) && machine.has_gpus() &&
+                    comm::nccl::needs_barrier()};
     }
   }
   // Illegal tunable variable

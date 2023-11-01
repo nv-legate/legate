@@ -11,6 +11,7 @@
  */
 
 #include "core/data/detail/array_tasks.h"
+
 #include "core/legate_c.h"
 #include "core/task/task_context.h"
 
@@ -19,20 +20,18 @@ namespace legate::detail {
 /*static*/ void FixupRanges::cpu_variant(legate::TaskContext context)
 {
   if (context.get_task_index()[0] == 0) return;
-
-  auto outputs = context.outputs();
   // TODO: We need to extend this to nested cases
-  for (auto& output : outputs) {
+  for (auto&& output : context.outputs()) {
     auto list_arr = output.as_list_array();
 
     auto desc       = list_arr.descriptor();
     auto desc_shape = desc.shape<1>();
     if (desc_shape.empty()) continue;
 
-    auto vardata_lo = list_arr.vardata().shape<1>().lo;
-    auto desc_acc   = desc.data().read_write_accessor<Rect<1>, 1>();
+    const auto vardata_lo = list_arr.vardata().shape<1>().lo;
+    auto desc_acc         = desc.data().read_write_accessor<Rect<1>, 1>();
 
-    for (int64_t idx = desc_shape.lo[0]; idx <= desc_shape.hi[0]; ++idx) {
+    for (auto idx = desc_shape.lo[0]; idx <= desc_shape.hi[0]; ++idx) {
       auto& desc = desc_acc[idx];
       desc.lo += vardata_lo;
       desc.hi += vardata_lo;
@@ -42,21 +41,21 @@ namespace legate::detail {
 
 /*static*/ void OffsetsToRanges::cpu_variant(legate::TaskContext context)
 {
-  auto offsets = context.input(0).data();
-  auto vardata = context.input(1).data();
-  auto ranges  = context.output(0).data();
+  const auto offsets = context.input(0).data();
+  const auto vardata = context.input(1).data();
+  const auto ranges  = context.output(0).data();
 
-  auto shape = offsets.shape<1>();
+  const auto shape = offsets.shape<1>();
   assert(shape == ranges.shape<1>());
 
   if (shape.empty()) return;
 
-  auto vardata_shape = vardata.shape<1>();
-  auto vardata_lo    = vardata_shape.lo[0];
+  const auto vardata_shape = vardata.shape<1>();
+  const auto vardata_lo    = vardata_shape.lo[0];
 
-  auto offsets_acc = offsets.read_accessor<int32_t, 1>();
-  auto ranges_acc  = ranges.write_accessor<Rect<1>, 1>();
-  for (int64_t idx = shape.lo[0]; idx < shape.hi[0]; ++idx) {
+  const auto offsets_acc = offsets.read_accessor<int32_t, 1>();
+  const auto ranges_acc  = ranges.write_accessor<Rect<1>, 1>();
+  for (auto idx = shape.lo[0]; idx < shape.hi[0]; ++idx) {
     ranges_acc[idx].lo[0] = vardata_lo + offsets_acc[idx];
     ranges_acc[idx].hi[0] = vardata_lo + offsets_acc[idx + 1] - 1;
   }
@@ -66,19 +65,19 @@ namespace legate::detail {
 
 /*static*/ void RangesToOffsets::cpu_variant(legate::TaskContext context)
 {
-  auto ranges  = context.input(0).data();
-  auto offsets = context.output(0).data();
+  const auto ranges  = context.input(0).data();
+  const auto offsets = context.output(0).data();
 
-  auto shape = ranges.shape<1>();
+  const auto shape = ranges.shape<1>();
   assert(shape == offsets.shape<1>());
 
   if (shape.empty()) return;
 
-  auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
-  auto offsets_acc = offsets.write_accessor<int32_t, 1>();
-  auto lo          = ranges_acc[shape.lo].lo[0];
-  for (int64_t idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {
-    offsets_acc[idx] = ranges_acc[idx].lo[0] - lo;
+  const auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
+  const auto offsets_acc = offsets.write_accessor<int32_t, 1>();
+  const auto lo          = ranges_acc[shape.lo].lo[0];
+  for (auto idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {
+    offsets_acc[idx] = static_cast<int32_t>(ranges_acc[idx].lo[0] - lo);
   }
 }
 

@@ -41,16 +41,15 @@ bool Store::is_future() const { return impl_->is_future(); }
 
 bool Store::is_unbound_store() const { return impl_->is_unbound_store(); }
 
-Store::Store(const Array& array) : impl_(array.data().impl()) {}
+Store::Store() noexcept = default;
 
-void Store::check_accessor_dimension(const int32_t dim) const
-{
-  impl_->check_accessor_dimension(dim);
-}
+Store::Store(const Array& array) : impl_{array.data().impl()} {}
 
-void Store::check_buffer_dimension(const int32_t dim) const { impl_->check_buffer_dimension(dim); }
+void Store::check_accessor_dimension(int32_t dim) const { impl_->check_accessor_dimension(dim); }
 
-void Store::check_shape_dimension(const int32_t dim) const { impl_->check_shape_dimension(dim); }
+void Store::check_buffer_dimension(int32_t dim) const { impl_->check_buffer_dimension(dim); }
+
+void Store::check_shape_dimension(int32_t dim) const { impl_->check_shape_dimension(dim); }
 
 void Store::check_valid_binding(bool bind_buffer) const { impl_->check_valid_binding(bind_buffer); }
 
@@ -85,27 +84,5 @@ void Store::update_num_elements(size_t num_elements) const
 {
   impl_->update_num_elements(num_elements);
 }
-
-Store::Store() {}
-
-Store::Store(std::shared_ptr<detail::Store> impl) : impl_(std::move(impl)) {}
-
-Store::Store(const Store& other) : impl_(other.impl_) {}
-
-Store& Store::operator=(const Store& other)
-{
-  impl_ = other.impl_;
-  return *this;
-}
-
-Store::Store(Store&& other) : impl_(std::move(other.impl_)) {}
-
-Store& Store::operator=(Store&& other)
-{
-  impl_ = std::move(other.impl_);
-  return *this;
-}
-
-Store::~Store() {}
 
 }  // namespace legate

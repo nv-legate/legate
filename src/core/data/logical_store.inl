@@ -12,32 +12,28 @@
 
 #pragma once
 
-// Useful for IDEs
-#include "core/data/array.h"
-
-#include <utility>
+#include "core/data/logical_store.h"
 
 namespace legate {
 
-inline Array::Array(std::shared_ptr<detail::Array> impl) : impl_{std::move(impl)} {}
-
-inline const std::shared_ptr<detail::Array>& Array::impl() const { return impl_; }
-
-template <int32_t DIM>
-Rect<DIM> Array::shape() const
+inline LogicalStore::LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl)
+  : impl_{std::move(impl)}
 {
-  check_shape_dimension(DIM);
-  if (dim() > 0) return domain().bounds<DIM, coord_t>();
-  auto p = Point<DIM>::ZEROES();
-  return {p, p};
 }
 
-// ==========================================================================================
-
-inline ListArray::ListArray(std::shared_ptr<detail::Array> impl) : Array{std::move(impl)} {}
+inline const std::shared_ptr<detail::LogicalStore>& LogicalStore::impl() const { return impl_; }
 
 // ==========================================================================================
 
-inline StringArray::StringArray(std::shared_ptr<detail::Array> impl) : Array{std::move(impl)} {}
+inline LogicalStorePartition::LogicalStorePartition(
+  std::shared_ptr<detail::LogicalStorePartition>&& impl)
+  : impl_{std::move(impl)}
+{
+}
+
+inline const std::shared_ptr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const
+{
+  return impl_;
+}
 
 }  // namespace legate

@@ -56,7 +56,7 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
       auto shape = input.shape<1>();
       EXPECT_TRUE(shape.empty() || shape.volume() == TILE_SIZE);
     }
-    output.create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);
+    (void)output.create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);
   }
 };
 
@@ -72,7 +72,7 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
       ASSERT_EQ(shape.volume(), expected);
       ++expected;
     }
-    output.create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);
+    (void)output.create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);
   }
 };
 

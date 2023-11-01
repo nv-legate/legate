@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace unit {
 
@@ -40,7 +40,7 @@ TEST_F(Store, Creation)
     EXPECT_EQ(store.dim(), 1);
     EXPECT_EQ(store.type(), legate::int64());
     EXPECT_FALSE(store.transformed());
-    EXPECT_THROW(store.extents(), std::invalid_argument);
+    EXPECT_THROW((void)store.extents(), std::invalid_argument);
   }
 
   // Scalar
@@ -102,31 +102,31 @@ TEST_F(Store, InvalidTransform)
     auto runtime = legate::Runtime::get_runtime();
     auto store   = runtime->create_store(legate::Shape{4, 3}, legate::int64());
 
-    EXPECT_THROW(store.promote(3, 5), std::invalid_argument);
-    EXPECT_THROW(store.promote(-3, 5), std::invalid_argument);
+    EXPECT_THROW((void)store.promote(3, 5), std::invalid_argument);
+    EXPECT_THROW((void)store.promote(-3, 5), std::invalid_argument);
 
-    EXPECT_THROW(store.project(2, 1), std::invalid_argument);
-    EXPECT_THROW(store.project(-3, 1), std::invalid_argument);
-    EXPECT_THROW(store.project(0, 4), std::invalid_argument);
+    EXPECT_THROW((void)store.project(2, 1), std::invalid_argument);
+    EXPECT_THROW((void)store.project(-3, 1), std::invalid_argument);
+    EXPECT_THROW((void)store.project(0, 4), std::invalid_argument);
 
-    EXPECT_THROW(store.slice(2, legate::Slice(1, 3)), std::invalid_argument);
+    EXPECT_THROW((void)store.slice(2, legate::Slice(1, 3)), std::invalid_argument);
 
-    EXPECT_THROW(store.transpose({
+    EXPECT_THROW((void)store.transpose({
                    2,
                  }),
                  std::invalid_argument);
-    EXPECT_THROW(store.transpose({0, 0}), std::invalid_argument);
-    EXPECT_THROW(store.transpose({2, 0}), std::invalid_argument);
+    EXPECT_THROW((void)store.transpose({0, 0}), std::invalid_argument);
+    EXPECT_THROW((void)store.transpose({2, 0}), std::invalid_argument);
 
-    EXPECT_THROW(store.delinearize(2, {2, 3}), std::invalid_argument);
-    EXPECT_THROW(store.delinearize(0, {2, 3}), std::invalid_argument);
+    EXPECT_THROW((void)store.delinearize(2, {2, 3}), std::invalid_argument);
+    EXPECT_THROW((void)store.delinearize(0, {2, 3}), std::invalid_argument);
   }
 
   // Unbound
   {
     auto runtime = legate::Runtime::get_runtime();
     auto store   = runtime->create_store(legate::int64());
-    EXPECT_THROW(store.promote(1, 1), std::invalid_argument);
+    EXPECT_THROW((void)store.promote(1, 1), std::invalid_argument);
   }
 }
 
