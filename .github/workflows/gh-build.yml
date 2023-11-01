@@ -6,6 +6,7 @@ on:
       build-target:
         required: true
         type: string
+        description: One of CPU / GPU
       repos-name:
         required: true
         type: string
@@ -18,12 +19,17 @@ on:
       sha:
         required: true
         type: string
+        description: A unique identifier for labeling the images / artifacts
       ucx-config:
         required: true
         type: string
       ucx-string:
         required: true
         type: string        
+      build-type:
+        required: true
+        type: string
+        description: One of ci / release
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,6 +38,7 @@ env:
   IMAGE_NAME: ${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}
   USE_CUDA: ${{ (inputs.build-target == 'cpu' && 'OFF') || 'ON' }}
   LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
+  PUSH_IMAGE: ${{ inputs.build-type == 'ci' && 'true' || 'false'}}
 
 jobs:
   build:
@@ -75,21 +82,21 @@ jobs:
           continuous_integration/build-docker-image \
             --base-image "$BASE_IMAGE" \
             --image-tag "$IMAGE_TAG" \
-            --source-dir .
+            --use-cuda "$USE_CUDA" \
+            --source-dir . \
+            --build-type "${{ inputs.build-type }}"
 
       - name: Dump docker history of image before upload
         run: |
           IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
           docker history $IMAGE_TAG
 
-      - name: Dump docker history of image before upload
-        run: |
-          IMAGE_TAG=${{ env.IMAGE_NAME_CUNUMERIC }}:${{ inputs.sha }}
-
-      - name: Log in to container image registry
+      - if: env.PUSH_IMAGE == 'true'
+        name: Log in to container image registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
 
-      - name: Push image
+      - if: env.PUSH_IMAGE == 'true'
+        name: Push image
         run: |
           IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
 
@@ -107,7 +114,7 @@ jobs:
         run: |
           IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
           mkdir -p artifacts
-          docker run  -v "$(pwd)/artifacts:/home/coder/.artifacts" --rm -t $IMAGE_TAG copy-artifacts
+          docker run  -v "$(pwd)/artifacts:/home/coder/.artifacts" --rm -t $IMAGE_TAG copy-artifacts ${{ inputs.build-type }}
 
       - name: Display structure of workdir
         run: ls -R

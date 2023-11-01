@@ -79,6 +79,9 @@ class Config:
         self.ompthreads = args.ompthreads
         self.numamem = args.numamem
         self.ranks_per_node = args.ranks_per_node
+        self.launcher = args.launcher
+        self.launcher_extra = args.launcher_extra
+        self.nodes = args.nodes
 
         # test run configuration
         self.timeout = args.timeout

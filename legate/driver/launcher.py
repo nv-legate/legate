@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .. import install_info
@@ -170,9 +169,6 @@ class Launcher:
             extra_python_paths.append(
                 str(system.legion_paths.legion_jupyter_module)
             )
-
-        # Make sure the base directory for this file is in the python path
-        extra_python_paths.append(str(Path(__file__).parents[1]))
 
         env["PYTHONPATH"] = os.pathsep.join(extra_python_paths)
 

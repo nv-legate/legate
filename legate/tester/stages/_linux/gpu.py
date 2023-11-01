@@ -59,11 +59,7 @@ class GPU(TestStage):
             "--gpu-bind",
             str(shard),
         ]
-        if config.ranks_per_node > 1:
-            args += [
-                "--ranks-per-node",
-                str(config.ranks_per_node),
-            ]
+        args += self._handle_multi_node_args(config)
         return args
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
