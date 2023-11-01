@@ -184,8 +184,8 @@ void test_normal_copy(const NormalCopySpec& spec)
 
   auto& [shape, type, seed] = spec;
 
-  auto input  = runtime->create_store(shape, type, true /*optimize_scalar*/);
-  auto output = runtime->create_store(shape, type, true /*optimize_scalar*/);
+  auto input  = runtime->create_store(legate::Shape{shape}, type, true /*optimize_scalar*/);
+  auto output = runtime->create_store(legate::Shape{shape}, type, true /*optimize_scalar*/);
 
   fill_input(library, input, seed);
   runtime->issue_copy(output, input);
@@ -201,8 +201,8 @@ void test_normal_copy_reduction(const NormalCopyReductionSpec& spec)
 
   auto& [shape, type, seed, redop] = spec;
 
-  auto input  = runtime->create_store(shape, type);
-  auto output = runtime->create_store(shape, type);
+  auto input  = runtime->create_store(legate::Shape{shape}, type);
+  auto output = runtime->create_store(legate::Shape{shape}, type);
 
   fill_input(library, input, seed);
   fill_input(library, output, seed);

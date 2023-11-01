@@ -24,18 +24,9 @@ namespace legate {
 template <typename T>
 class ordered_set {
  public:
-  ordered_set() {}
-
- public:
-  void insert(const T& value)
-  {
-    if (element_set_.find(value) != element_set_.end()) return;
-    elements_.push_back(value);
-    element_set_.insert(value);
-  }
-
- public:
-  const std::vector<T>& elements() const { return elements_; }
+  void insert(const T& value);
+  void insert(T&& value);
+  [[nodiscard]] const std::vector<T>& elements() const;
 
  private:
   std::vector<T> elements_{};
@@ -43,3 +34,5 @@ class ordered_set {
 };
 
 }  // namespace legate
+
+#include "core/utilities/detail/ordered_set.inl"

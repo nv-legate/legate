@@ -14,7 +14,7 @@
 
 #include "core/partitioning/detail/constraint.h"
 #include "core/partitioning/restriction.h"
-#include "core/utilities/ordered_set.h"
+#include "core/utilities/detail/ordered_set.h"
 
 #include <map>
 #include <memory>

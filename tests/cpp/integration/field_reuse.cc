@@ -59,7 +59,7 @@ TEST_F(Integration, FieldReuse)
   uint32_t num_allocations = 0;
   auto make_store          = [&]() {
     ++num_allocations;
-    return runtime->create_store({5, 5}, legate::int64());
+    return runtime->create_store(legate::Shape{5, 5}, legate::int64());
   };
 
   // A Store freed in-order will be reused immediately.

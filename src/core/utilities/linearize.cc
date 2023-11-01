@@ -15,33 +15,45 @@
 
 namespace legate {
 
+namespace {
+
 struct linearize_fn {
   template <int32_t DIM>
-  size_t operator()(const DomainPoint& lo_dp, const DomainPoint& hi_dp, const DomainPoint& point_dp)
+  [[nodiscard]] size_t operator()(const DomainPoint& lo_dp,
+                                  const DomainPoint& hi_dp,
+                                  const DomainPoint& point_dp) const
   {
     Point<DIM> lo      = lo_dp;
     Point<DIM> hi      = hi_dp;
     Point<DIM> point   = point_dp;
     Point<DIM> extents = hi - lo + Point<DIM>::ONES();
     size_t idx         = 0;
+
     for (int32_t dim = 0; dim < DIM; ++dim) idx = idx * extents[dim] + point[dim] - lo[dim];
     return idx;
   }
 };
+
+}  // namespace
 
 size_t linearize(const DomainPoint& lo, const DomainPoint& hi, const DomainPoint& point)
 {
   return dim_dispatch(point.dim, linearize_fn{}, lo, hi, point);
 }
 
+namespace {
+
 struct delinearize_fn {
   template <int32_t DIM>
-  DomainPoint operator()(const DomainPoint& lo_dp, const DomainPoint& hi_dp, size_t idx)
+  [[nodiscard]] DomainPoint operator()(const DomainPoint& lo_dp,
+                                       const DomainPoint& hi_dp,
+                                       size_t idx) const
   {
     Point<DIM> lo      = lo_dp;
     Point<DIM> hi      = hi_dp;
     Point<DIM> extents = hi - lo + Point<DIM>::ONES();
     Point<DIM> point;
+
     for (int32_t dim = DIM - 1; dim >= 0; --dim) {
       point[dim] = idx % extents[dim] + lo[dim];
       idx /= extents[dim];
@@ -49,6 +61,8 @@ struct delinearize_fn {
     return point;
   }
 };
+
+}  // namespace
 
 DomainPoint delinearize(const DomainPoint& lo, const DomainPoint& hi, size_t idx)
 {

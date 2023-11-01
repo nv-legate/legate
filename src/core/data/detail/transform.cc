@@ -11,8 +11,11 @@
  */
 
 #include "core/data/detail/transform.h"
+
 #include "core/partitioning/partition.h"
 #include "core/utilities/detail/buffer_builder.h"
+
+#include <numeric>
 
 namespace legate::detail {
 

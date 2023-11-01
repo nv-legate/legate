@@ -62,7 +62,7 @@ void test_normal_store()
   auto launch_tester = [&](const std::vector<int32_t>& dims, bool omit_dims_in_broadcast) {
     std::vector<size_t> extents(3, EXT_SMALL);
     for (auto dim : dims) extents[dim] = EXT_LARGE;
-    auto store = runtime->create_store(extents, legate::int64());
+    auto store = runtime->create_store(legate::Shape{extents}, legate::int64());
     auto task  = runtime->create_task(context, TESTER);
     auto part  = task.add_output(store);
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
@@ -71,7 +71,7 @@ void test_normal_store()
     if (omit_dims_in_broadcast) {
       task.add_constraint(legate::broadcast(part));
     } else {
-      task.add_constraint(legate::broadcast(part, dims));
+      task.add_constraint(legate::broadcast(part, legate::tuple<std::int32_t>{dims}));
     }
     runtime->submit(std::move(task));
   };
@@ -101,7 +101,7 @@ void test_promoted_store()
   auto launch_tester = [&](const int32_t dim) {
     std::vector<size_t> extents(2, EXT_SMALL);
     extents[dim] = EXT_LARGE;
-    auto store   = runtime->create_store(extents, legate::int64());
+    auto store   = runtime->create_store(legate::Shape{extents}, legate::int64());
     initialize(store);
 
     auto task = runtime->create_task(context, TESTER);
@@ -109,7 +109,7 @@ void test_promoted_store()
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(std::vector<int32_t>{dim}));
     task.add_scalar_arg(legate::Scalar(true));
-    task.add_constraint(legate::broadcast(part, {dim}));
+    task.add_constraint(legate::broadcast(part, legate::tuple<std::int32_t>{dim}));
     runtime->submit(std::move(task));
   };
 
@@ -123,10 +123,10 @@ void test_invalid_broadcast()
   auto context = runtime->find_library(library_name);
 
   auto task  = runtime->create_task(context, INITIALIZER);
-  auto store = runtime->create_store({10}, legate::int64());
+  auto store = runtime->create_store(legate::Shape{10}, legate::int64());
   auto part  = task.add_output(store);
   EXPECT_THROW(task.add_constraint(legate::broadcast(part, {})), std::invalid_argument);
-  task.add_constraint(legate::broadcast(part, {1}));
+  task.add_constraint(legate::broadcast(part, legate::tuple<std::int32_t>{1}));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
 

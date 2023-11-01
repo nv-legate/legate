@@ -161,7 +161,6 @@ TEST_F(Machine, MachineDesc)
   legate::mapping::ProcessorRange cpu_range(1, 3, 4);
   legate::mapping::ProcessorRange omp_range(0, 3, 2);
   legate::mapping::ProcessorRange gpu_range(3, 6, 3);
-  legate::mapping::ProcessorRange empty_range;
 
   // test equal
   {

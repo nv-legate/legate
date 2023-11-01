@@ -12,46 +12,53 @@
 
 #pragma once
 
-// Useful for IDEs
-#include "core/utilities/multi_set.h"
+#include "core/utilities/span.h"
+
+#include <cassert>
 
 namespace legate {
 
 template <typename T>
-void MultiSet<T>::add(const T& value)
+Span<T>::Span(T* data, std::size_t size) : data_{data}, size_{size}
 {
-  auto finder = map_.find(value);
-
-  if (finder == map_.end()) {
-    map_[value] = 1;
-  } else {
-    finder->second++;
-  }
 }
 
 template <typename T>
-bool MultiSet<T>::remove(const T& value)
+std::size_t Span<T>::size() const
 {
-  auto finder = map_.find(value);
-  if (map_.end() == finder) return false;
-  finder->second--;
-  if (finder->second == 0) {
-    map_.erase(finder);
-    return true;
-  }
-  return false;
+  return size_;
 }
 
 template <typename T>
-bool MultiSet<T>::contains(const T& value) const noexcept
+decltype(auto) Span<T>::operator[](std::size_t pos) const
 {
-  return map_.contains(value);
+  assert(pos < size_);
+  return data_[pos];
 }
 
 template <typename T>
-void MultiSet<T>::clear() noexcept
+const T* Span<T>::begin() const
 {
-  map_.clear();
+  return data_;
+}
+
+template <typename T>
+const T* Span<T>::end() const
+{
+  return data_ + size_;
+}
+
+template <typename T>
+Span<T> Span<T>::subspan(std::size_t off)
+{
+  assert(off <= size_);
+  return {data_ + off, size_ - off};
+}
+
+template <typename T>
+const T* Span<T>::ptr() const
+{
+  return data_;
 }
 
 }  // namespace legate

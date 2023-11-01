@@ -88,8 +88,8 @@ void test_inout()
   auto library = runtime->find_library(library_name);
 
   std::vector<legate::LogicalStore> stores{
-    runtime->create_store({10, 10}, legate::int64()),
-    runtime->create_store(legate::Scalar(int64_t{0}), legate::Shape{1, 1}),
+    runtime->create_store(legate::Shape{10, 10}, legate::int64()),
+    runtime->create_store(legate::Scalar{int64_t{0}}, legate::Shape{1, 1}),
   };
 
   for (auto& store : stores) {

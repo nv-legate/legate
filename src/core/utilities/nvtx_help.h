@@ -26,8 +26,9 @@ namespace legate::nvtx {
 
 class Range {
  public:
-  Range(const char* message) { range_ = nvtxRangeStartA(message); }
-  ~Range() { nvtxRangeEnd(range_); }
+  Range(const char* message) noexcept : range_{nvtxRangeStartA(message)} {}
+
+  ~Range() noexcept { nvtxRangeEnd(range_); }
 
  private:
   nvtxRangeId_t range_;

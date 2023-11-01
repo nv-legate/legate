@@ -16,8 +16,10 @@
 
 namespace legate {
 
-size_t linearize(const DomainPoint& lo, const DomainPoint& hi, const DomainPoint& point);
+[[nodiscard]] size_t linearize(const DomainPoint& lo,
+                               const DomainPoint& hi,
+                               const DomainPoint& point);
 
-DomainPoint delinearize(const DomainPoint& lo, const DomainPoint& hi, size_t idx);
+[[nodiscard]] DomainPoint delinearize(const DomainPoint& lo, const DomainPoint& hi, size_t idx);
 
 }  // namespace legate

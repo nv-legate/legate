@@ -23,11 +23,10 @@
 #include "core/type/detail/type_info.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
+
 #include "legate_defines.h"
 
-namespace legate {
-extern Legion::Logger log_legate;
-}  // namespace legate
+#include <utility>
 
 namespace legate::detail {
 
@@ -36,21 +35,21 @@ namespace legate::detail {
 ////////////////////////////////////////////////////
 
 Storage::Storage(int32_t dim, std::shared_ptr<Type> type)
-  : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
-    unbound_(true),
-    dim_(dim),
-    type_(std::move(type)),
-    offsets_(dim_, 0)
+  : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
+    unbound_{true},
+    dim_{dim},
+    type_{std::move(type)},
+    offsets_{legate::full(dim_, size_t{0})}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
 
 Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar)
-  : storage_id_(Runtime::get_runtime()->get_unique_storage_id()),
-    dim_(extents.size()),
-    extents_(extents),
-    type_(std::move(type)),
-    offsets_(dim_, 0)
+  : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
+    dim_{static_cast<std::int32_t>(extents.size())},
+    extents_{extents},
+    type_{std::move(type)},
+    offsets_{legate::full(dim_, size_t{0})}
 {
   if (optimize_scalar && extents_.volume() == 1) kind_ = Kind::FUTURE;
   if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
@@ -63,7 +62,7 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
     type_(std::move(type)),
     kind_(Kind::FUTURE),
     future_{std::make_unique<Legion::Future>(future)},
-    offsets_(dim_, 0)
+    offsets_{legate::full(dim_, size_t{0})}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
 }
@@ -150,10 +149,10 @@ std::shared_ptr<Storage> Storage::slice(Shape tile_shape, Shape offsets)
   if (can_tile_completely) {
     color_shape    = shape / tile_shape;
     color          = offsets / tile_shape;
-    signed_offsets = tuple<int64_t>(0, shape.size());
+    signed_offsets = legate::full<int64_t>(shape.size(), 0);  // tuple<int64_t>(0, shape.size());
   } else {
-    color_shape    = Shape(shape.size(), 1);
-    color          = Shape(shape.size(), 0);
+    color_shape    = legate::full<size_t>(shape.size(), 1);
+    color          = legate::full<size_t>(shape.size(), 0);
     signed_offsets = apply([](size_t v) { return static_cast<int64_t>(v); }, offsets);
   }
 
@@ -208,7 +207,7 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
   auto hi     = domain.hi();
   std::vector<size_t> extents;
   for (int32_t idx = 0; idx < lo.dim; ++idx) extents.push_back(hi[idx] - lo[idx] + 1);
-  extents_ = extents;
+  extents_ = Shape{std::move(extents)};
 }
 
 void Storage::set_future(Legion::Future future)
@@ -243,7 +242,7 @@ void Storage::allow_out_of_order_destruction()
 
 Restrictions Storage::compute_restrictions() const
 {
-  return Restrictions(dim_, Restriction::ALLOW);
+  return legate::full<Restriction>(dim_, Restriction::ALLOW);
 }
 
 Partition* Storage::find_key_partition(const mapping::detail::Machine& machine,
@@ -470,10 +469,11 @@ std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
 
   auto new_extents = old_extents.remove(d);
   auto transform   = transform_->push(std::make_unique<Project>(d, index));
-  auto substorage  = volume() == 0
-                       ? storage_
-                       : storage_->slice(transform->invert_extents(new_extents),
-                                        transform->invert_point(Shape(new_extents.size(), 0)));
+  auto substorage =
+    volume() == 0
+      ? storage_
+      : storage_->slice(transform->invert_extents(new_extents),
+                        transform->invert_point(legate::full<size_t>(new_extents.size(), 0)));
   return std::make_shared<LogicalStore>(
     std::move(new_extents), std::move(substorage), std::move(transform));
 }
@@ -524,9 +524,10 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t idx, Slice slice)
 
   auto transform =
     (start == 0) ? transform_ : transform_->push(std::make_unique<Shift>(idx, -start));
-  auto substorage = volume() == 0 ? storage_
-                                  : storage_->slice(transform->invert_extents(exts),
-                                                    transform->invert_point(Shape(exts.size(), 0)));
+  auto substorage =
+    volume() == 0 ? storage_
+                  : storage_->slice(transform->invert_extents(exts),
+                                    transform->invert_point(legate::full<size_t>(exts.size(), 0)));
   return std::make_shared<LogicalStore>(
     std::move(exts), std::move(substorage), std::move(transform));
 }

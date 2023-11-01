@@ -21,7 +21,7 @@ namespace {  // anonymous
 
 struct print_dense_array_fn {
   template <Type::Code CODE, int DIM>
-  std::string operator()(const Store& store)
+  [[nodiscard]] std::string operator()(const Store& store) const
   {
     using T        = legate_type_of<CODE>;
     Rect<DIM> rect = store.shape<DIM>();

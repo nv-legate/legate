@@ -24,10 +24,10 @@ void test_primitive_array(bool nullable)
   auto runtime = legate::Runtime::get_runtime();
   // Bound
   {
-    auto array = runtime->create_array({4, 4}, legate::int64(), nullable);
+    auto array = runtime->create_array(legate::Shape{4, 4}, legate::int64(), nullable);
     EXPECT_FALSE(array.unbound());
     EXPECT_EQ(array.dim(), 2);
-    EXPECT_EQ(array.extents(), (std::vector<size_t>{4, 4}));
+    EXPECT_EQ(array.extents().data(), (std::vector<size_t>{4, 4}));
     EXPECT_EQ(array.volume(), 16);
     EXPECT_EQ(array.type(), legate::int64());
     EXPECT_EQ(array.nullable(), nullable);
@@ -36,7 +36,7 @@ void test_primitive_array(bool nullable)
     auto store = array.data();
     EXPECT_FALSE(store.unbound());
     EXPECT_EQ(store.dim(), 2);
-    EXPECT_EQ(store.extents(), (std::vector<size_t>{4, 4}));
+    EXPECT_EQ(store.extents().data(), (std::vector<size_t>{4, 4}));
     EXPECT_EQ(store.volume(), 16);
     EXPECT_EQ(store.type(), legate::int64());
 
@@ -72,11 +72,11 @@ void test_list_array(bool nullable)
   auto arr_type = legate::list_type(legate::int64()).as_list_type();
   // Bound descriptor
   {
-    auto array = runtime->create_array({7}, arr_type, nullable);
+    auto array = runtime->create_array(legate::Shape{7}, arr_type, nullable);
     // List arrays are unbound even with the fixed extents
     EXPECT_TRUE(array.unbound());
     EXPECT_EQ(array.dim(), 1);
-    EXPECT_EQ(array.extents(), (std::vector<size_t>{7}));
+    EXPECT_EQ(array.extents().data(), (std::vector<size_t>{7}));
     EXPECT_EQ(array.volume(), 7);
     EXPECT_EQ(array.type(), arr_type);
     EXPECT_EQ(array.nullable(), nullable);
@@ -119,10 +119,10 @@ void test_struct_array(bool nullable)
   auto num_fields = st_type.num_fields();
   // Bound
   {
-    auto array = runtime->create_array({4, 4}, st_type, nullable);
+    auto array = runtime->create_array(legate::Shape{4, 4}, st_type, nullable);
     EXPECT_FALSE(array.unbound());
     EXPECT_EQ(array.dim(), 2);
-    EXPECT_EQ(array.extents(), (std::vector<size_t>{4, 4}));
+    EXPECT_EQ(array.extents().data(), (std::vector<size_t>{4, 4}));
     EXPECT_EQ(array.volume(), 16);
     EXPECT_EQ(array.type(), st_type);
     EXPECT_EQ(array.nullable(), nullable);
@@ -164,7 +164,7 @@ void test_isomorphic(bool nullable)
   auto runtime = legate::Runtime::get_runtime();
   // Bound
   {
-    auto source  = runtime->create_array({4, 4}, legate::int64(), nullable);
+    auto source  = runtime->create_array(legate::Shape{4, 4}, legate::int64(), nullable);
     auto target1 = runtime->create_array_like(source);
     EXPECT_EQ(source.dim(), target1.dim());
     EXPECT_EQ(source.type(), target1.type());
@@ -207,11 +207,15 @@ void test_invalid()
   auto runtime = legate::Runtime::get_runtime();
 
   // Multi-dimensional list/string arrays are not allowed
-  EXPECT_THROW(runtime->create_array({1, 2, 3}, legate::string_type()), std::invalid_argument);
-  EXPECT_THROW(runtime->create_array({1, 2}, legate::list_type(legate::int64())),
+  EXPECT_THROW(
+    static_cast<void>(runtime->create_array(legate::Shape{1, 2, 3}, legate::string_type())),
+    std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(
+                 runtime->create_array(legate::Shape{1, 2}, legate::list_type(legate::int64()))),
                std::invalid_argument);
-  EXPECT_THROW(runtime->create_array(legate::string_type(), 2), std::invalid_argument);
-  EXPECT_THROW(runtime->create_array(legate::list_type(legate::int64()), 3), std::invalid_argument);
+  EXPECT_THROW((void)runtime->create_array(legate::string_type(), 2), std::invalid_argument);
+  EXPECT_THROW((void)runtime->create_array(legate::list_type(legate::int64()), 3),
+               std::invalid_argument);
 }
 
 TEST_F(LogicalArray, CreatePrimitiveNonNullable) { test_primitive_array(false); }

@@ -12,15 +12,30 @@
 
 #pragma once
 
-#include "core/utilities/memory.h"
+#include "core/utilities/detail/ordered_set.h"
 
 namespace legate {
 
 template <typename T>
-void default_delete<T>::operator()(T* ptr) const noexcept
+void ordered_set<T>::insert(const T& value)
 {
-  static_assert(sizeof(T) > 0, "default_delete cannot be instantiated for incomplete type");
-  delete ptr;
+  if (element_set_.find(value) != element_set_.end()) return;
+  elements_.emplace_back(value);
+  element_set_.insert(value);
+}
+
+template <typename T>
+void ordered_set<T>::insert(T&& value)
+{
+  if (element_set_.find(value) != element_set_.end()) return;
+  elements_.emplace_back(value);
+  element_set_.insert(std::move(value));
+}
+
+template <typename T>
+const std::vector<T>& ordered_set<T>::elements() const
+{
+  return elements_;
 }
 
 }  // namespace legate

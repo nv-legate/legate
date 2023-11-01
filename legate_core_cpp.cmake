@@ -553,12 +553,14 @@ install(
 
 install(
   FILES src/core/utilities/debug.h
+        src/core/utilities/debug.inl
         src/core/utilities/dispatch.h
         src/core/utilities/machine.h
         src/core/utilities/memory.h
         src/core/utilities/memory.inl
         src/core/utilities/nvtx_help.h
         src/core/utilities/span.h
+        src/core/utilities/span.inl
         src/core/utilities/tuple.h
         src/core/utilities/tuple.inl
         src/core/utilities/typedefs.h

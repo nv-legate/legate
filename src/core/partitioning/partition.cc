@@ -51,7 +51,7 @@ std::string NoPartition::to_string() const { return "NoPartition"; }
 Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets)
   : tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
-    offsets_{offsets.empty() ? tuple<int64_t>(tile_shape_.size(), 0) : std::move(offsets)},
+    offsets_{offsets.empty() ? legate::full<int64_t>(tile_shape_.size(), 0) : std::move(offsets)},
     strides_{tile_shape_}
 {
   assert(tile_shape_.size() == color_shape_.size());
@@ -62,7 +62,7 @@ Tiling::Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets
   : overlapped_{strides < tile_shape},
     tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
-    offsets_{offsets.empty() ? tuple<int64_t>(tile_shape_.size(), 0) : std::move(offsets)},
+    offsets_{offsets.empty() ? legate::full<int64_t>(tile_shape_.size(), 0) : std::move(offsets)},
     strides_{std::move(strides)}
 {
   if (!overlapped_) {

@@ -14,6 +14,9 @@
 
 #include "core/type/type_info.h"
 
+#include <stdexcept>
+#include <utility>
+
 /**
  * @file
  * @brief Definitions for dispatch routines
@@ -124,8 +127,9 @@ struct inner_dim_dispatch_fn {
         return f.template operator()<DIM, 9>(std::forward<Fnargs>(args)...);
       }
 #endif
+      default: break;
     }
-    throw std::runtime_error("Unsupported number of dimensions");
+    throw std::runtime_error{"Unsupported number of dimensions"};
     return f.template operator()<DIM, 1>(std::forward<Fnargs>(args)...);
   }
 };

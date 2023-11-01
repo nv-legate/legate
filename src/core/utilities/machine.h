@@ -12,12 +12,10 @@
 
 #pragma once
 
-#include "legion.h"
-
 #include "core/utilities/typedefs.h"
 
 namespace legate {
 
-Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible = true);
+[[nodiscard]] Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible = true);
 
 }  // namespace legate

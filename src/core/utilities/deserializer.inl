@@ -17,13 +17,87 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <stdexcept>
+
+namespace legate::detail {
+
+template <typename T>
+std::pair<void*, std::size_t> align_for_unpack(void* ptr,
+                                               std::size_t capacity,
+                                               std::size_t bytes,
+                                               std::size_t align)
+{
+  const auto orig_avail_space = std::min(bytes + align - 1, capacity);
+  auto avail_space            = orig_avail_space;
+
+  if (!std::align(align, bytes, ptr, avail_space)) {
+    // If we get here, it means that someone did not pack the value correctly, likely without
+    // first aligning the pointer!
+    throw std::runtime_error{"Failed to align pointer to unpack value"};
+  }
+  return {ptr, orig_avail_space - avail_space};
+}
+
+}  // namespace legate::detail
 
 namespace legate {
 
 template <typename Deserializer>
 BaseDeserializer<Deserializer>::BaseDeserializer(const void* args, size_t arglen)
-  : args_(Span<const int8_t>(static_cast<const int8_t*>(args), arglen))
+  : args_{Span<const int8_t>{static_cast<const int8_t*>(args), arglen}}
 {
+}
+
+template <typename Deserializer>
+template <typename T>
+inline T BaseDeserializer<Deserializer>::unpack()
+{
+  T value;
+  static_cast<Deserializer*>(this)->_unpack(value);
+  return value;
+}
+
+template <typename Deserializer>
+template <typename T, std::enable_if_t<legate_type_code_of<T> != Type::Code::NIL>*>
+void BaseDeserializer<Deserializer>::_unpack(T& value)
+{
+  const auto vptr          = static_cast<void*>(const_cast<int8_t*>(args_.ptr()));
+  auto [ptr, align_offset] = detail::align_for_unpack<T>(vptr, args_.size());
+
+  // We need to align-up the incoming args_.ptr() since the value was stored according to
+  // alignof(T). So we ultimately get 2 pointers:
+  //
+  //      ____ vptr (args_.ptr() on entry)
+  //     /
+  //    /           ___ ptr                            args_.ptr() on exit
+  //   /           /                                          |
+  //  v           v                                           v
+  //  X --------- X ========================================= X
+  //   ^~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+  //        |                        |
+  //   align_offset               sizeof(T)
+  //
+  //
+  // Note align_offset may be zero if vptr was already properly aligned.
+  value = *static_cast<const T*>(ptr);
+  args_ = args_.subspan(align_offset + sizeof(T));
+}
+
+template <typename Deserializer>
+template <typename T>
+void BaseDeserializer<Deserializer>::_unpack(std::vector<T>& values)
+{
+  auto size = unpack<uint32_t>();
+  values.reserve(size);
+  for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(unpack<T>());
+}
+
+template <typename Deserializer>
+template <typename T1, typename T2>
+void BaseDeserializer<Deserializer>::_unpack(std::pair<T1, T2>& values)
+{
+  values.first  = unpack<T1>();
+  values.second = unpack<T2>();
 }
 
 template <typename Deserializer>
@@ -31,8 +105,9 @@ std::vector<Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
 {
   std::vector<Scalar> values;
   auto size = unpack<uint32_t>();
+
   values.reserve(size);
-  for (uint32_t idx = 0; idx < size; ++idx) { values.emplace_back(unpack_scalar()); }
+  for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(unpack_scalar());
   return values;
 }
 
@@ -83,7 +158,7 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
         // we have aligned the pointer, but we cannot align the pointer without knowing the
         // true size of the string... so we give a lower bound
         return detail::align_for_unpack<std::byte>(
-          ptr, capacity, sizeof(std::uint32_t) + sizeof(char), alignof(std::max_align_t));
+          ptr, capacity, sizeof(uint32_t) + sizeof(char), alignof(std::max_align_t));
       case Type::Code::LIST:
         // don't know how to handle these yet
         break;
@@ -136,6 +211,12 @@ void BaseDeserializer<Deserializer>::_unpack(Domain& domain)
     domain.rect_data[idx]              = 0;
     domain.rect_data[idx + domain.dim] = coord - 1;
   }
+}
+
+template <typename Deserializer>
+Span<const int8_t> BaseDeserializer<Deserializer>::current_args() const
+{
+  return args_;
 }
 
 template <typename Deserializer>
@@ -194,6 +275,7 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
       auto uid  = unpack<uint32_t>();
       auto N    = unpack<uint32_t>();
       auto type = unpack_type();
+
       return std::make_shared<detail::FixedArrayType>(uid, std::move(type), N);
     }
     case Type::Code::STRUCT: {
@@ -201,6 +283,7 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
       auto num_fields = unpack<uint32_t>();
 
       std::vector<std::shared_ptr<detail::Type>> field_types;
+
       field_types.reserve(num_fields);
       for (uint32_t idx = 0; idx < num_fields; ++idx) field_types.emplace_back(unpack_type());
 
@@ -265,13 +348,10 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
     case Type::Code::STRING: {
       return std::make_shared<detail::StringType>();
     }
-    default: {
-      LEGATE_ABORT;
-      break;
-    }
+    default: break;
   }
   LEGATE_ABORT;
-  return nullptr;
+  return {};
 }
 
 }  // namespace legate

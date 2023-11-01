@@ -81,9 +81,9 @@ TEST_F(Integration, MultiScalarOut)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::simple::library_name);
 
-  auto scalar1 = runtime->create_store({1, 1}, legate::int32(), true);
-  auto scalar2 = runtime->create_store({1, 1, 1}, legate::int64(), true);
-  auto store   = runtime->create_store({5}, legate::int64());
+  auto scalar1 = runtime->create_store(legate::Shape{1, 1}, legate::int32(), true);
+  auto scalar2 = runtime->create_store(legate::Shape{1, 1, 1}, legate::int64(), true);
+  auto store   = runtime->create_store(legate::Shape{5}, legate::int64());
   runtime->issue_fill(store, legate::Scalar(int64_t(0)));
 
   test_writer_auto(library, scalar1, scalar2);

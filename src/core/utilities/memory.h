@@ -30,7 +30,7 @@ namespace legate {
 /// @endcode
 template <typename T>
 struct default_delete {
-  void operator()(T*) const;
+  void operator()(T*) const noexcept;
 };
 
 }  // namespace legate

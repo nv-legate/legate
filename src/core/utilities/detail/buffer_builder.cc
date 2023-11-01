@@ -81,7 +81,7 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
 
 Legion::UntypedBuffer BufferBuilder::to_legion_buffer() const
 {
-  return Legion::UntypedBuffer(buffer_.data(), buffer_.size());
+  return {buffer_.data(), buffer_.size()};
 }
 
 }  // namespace legate::detail

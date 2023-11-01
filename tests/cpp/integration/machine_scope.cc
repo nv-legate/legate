@@ -64,7 +64,7 @@ void register_tasks()
 void test_scoping(legate::Library library)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store({5, 5}, legate::int64());
+  auto store   = runtime->create_store(legate::Shape{5, 5}, legate::int64());
   auto machine = runtime->get_machine();
   auto task    = runtime->create_task(library, MULTI_VARIANT);
   auto part    = task.declare_partition();
@@ -103,7 +103,7 @@ void test_scoping(legate::Library library)
 void test_cpu_only(legate::Library library)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store({5, 5}, legate::int64());
+  auto store   = runtime->create_store(legate::Shape{5, 5}, legate::int64());
   auto machine = runtime->get_machine();
   auto task    = runtime->create_task(library, CPU_VARIANT);
   auto part    = task.declare_partition();

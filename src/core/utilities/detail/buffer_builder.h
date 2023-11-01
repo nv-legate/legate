@@ -12,9 +12,10 @@
 
 #pragma once
 
-#include "legion.h"
-
 #include "core/utilities/tuple.h"
+#include "core/utilities/typedefs.h"
+
+#include <vector>
 
 namespace legate::detail {
 
@@ -29,7 +30,6 @@ class BufferBuilder {
    */
   BufferBuilder();
 
- public:
   /**
    * @brief Serializes a value
    *
@@ -62,23 +62,16 @@ class BufferBuilder {
    */
   void pack_buffer(const void* mem, std::size_t size, std::size_t align);
 
- public:
   /**
    * @brief Wraps the `BufferBuilder`'s internal allocation with a Legion `UntypedBuffer`.
    *
    * Since `UntypedBuffer` does not make a copy of the input allocation, the returned buffer
    * is good to use only as long as this buffer builder is alive.
    */
-  Legion::UntypedBuffer to_legion_buffer() const;
-
- public:
-  BufferBuilder(const BufferBuilder&)            = default;
-  BufferBuilder& operator=(const BufferBuilder&) = default;
-  BufferBuilder(BufferBuilder&&)                 = default;
-  BufferBuilder& operator=(BufferBuilder&&)      = default;
+  [[nodiscard]] Legion::UntypedBuffer to_legion_buffer() const;
 
  private:
-  std::vector<int8_t> buffer_;
+  std::vector<int8_t> buffer_{};
 };
 
 }  // namespace legate::detail

@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace fill {
 
@@ -127,9 +127,9 @@ void test_fill_index(int32_t dim, size_t size)
 
   int64_t v = 10;
 
-  auto lhs =
-    runtime->create_store(legate::Shape(dim, size), legate::int64(), true /*optimize_scalar*/);
-  auto value = runtime->create_store(v);
+  auto lhs = runtime->create_store(
+    legate::full(static_cast<std::size_t>(dim), size), legate::int64(), true /*optimize_scalar*/);
+  auto value = runtime->create_store(legate::Scalar{v});
 
   // fill input store with some values
   runtime->issue_fill(lhs, value);
@@ -156,9 +156,10 @@ void test_fill_slice(int32_t dim, size_t size)
   int64_t v2     = 200;
   int64_t offset = 3;
 
-  auto lhs                 = runtime->create_store(legate::Shape(dim, size), legate::int64());
-  auto value_in_slice      = runtime->create_store(v1);
-  auto value_outside_slice = runtime->create_store(v2);
+  auto lhs =
+    runtime->create_store(legate::full(static_cast<std::size_t>(dim), size), legate::int64());
+  auto value_in_slice      = runtime->create_store(legate::Scalar{v1});
+  auto value_outside_slice = runtime->create_store(legate::Scalar{v2});
 
   // First fill the entire store with v1
   runtime->issue_fill(lhs, value_outside_slice);
@@ -175,8 +176,8 @@ void test_fill_slice(int32_t dim, size_t size)
 void test_invalid()
 {
   auto runtime  = legate::Runtime::get_runtime();
-  auto store1   = runtime->create_store({10, 10}, legate::int64());
-  auto store2   = runtime->create_store(10.0);
+  auto store1   = runtime->create_store(legate::Shape{10, 10}, legate::int64());
+  auto store2   = runtime->create_store(legate::Scalar{10.0});
   auto scalar_v = legate::Scalar(10.0);
 
   EXPECT_THROW(runtime->issue_fill(store1, store2), std::invalid_argument);

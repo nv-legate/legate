@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/data/detail/logical_store.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace attach {
 
@@ -142,7 +143,7 @@ void test_body(
   if (!share) check_and_delete_buffer(buffer, dim, fortran, counter);
   for (auto iter = 0; iter < 2; ++iter) {
     if (use_tasks) {
-      auto task = runtime->create_task(context, ADDER, {1});
+      auto task = runtime->create_task(context, ADDER, legate::Shape{1});
       task.add_input(l_store);
       task.add_output(l_store);
       task.add_scalar_arg(dim);
@@ -156,7 +157,7 @@ void test_body(
     }
   }
   if (use_tasks) {
-    auto task = runtime->create_task(context, CHECKER, {1});
+    auto task = runtime->create_task(context, CHECKER, legate::Shape{1});
     task.add_input(l_store);
     task.add_scalar_arg(dim);
     task.add_scalar_arg(counter);

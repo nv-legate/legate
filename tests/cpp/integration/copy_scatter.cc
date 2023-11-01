@@ -161,9 +161,10 @@ void test_scatter(const ScatterSpec& spec)
   auto library = runtime->find_library(library_name);
 
   auto type = spec.seed.type();
-  auto src  = runtime->create_store(spec.ind_shape, type);
-  auto tgt  = runtime->create_store(spec.data_shape, type);
-  auto ind  = runtime->create_store(spec.ind_shape, legate::point_type(spec.data_shape.size()));
+  auto src  = runtime->create_store(legate::Shape{spec.ind_shape}, type);
+  auto tgt  = runtime->create_store(legate::Shape{spec.data_shape}, type);
+  auto ind  = runtime->create_store(legate::Shape{spec.ind_shape},
+                                   legate::point_type(spec.data_shape.size()));
 
   fill_input(library, src, spec.seed);
   fill_indirect(library, ind, tgt);

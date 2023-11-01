@@ -12,8 +12,7 @@
 
 #pragma once
 
-#include <assert.h>
-#include <stddef.h>
+#include <cstddef>
 
 /**
  * @file
@@ -28,11 +27,9 @@ namespace legate {
  * std::span once we bump up the C++ standard version to C++20
  */
 template <typename T>
-struct Span {
+class Span {
  public:
   Span() = default;
-
- public:
   /**
    * @brief Creates a span with an existing pointer and a size.
    *
@@ -42,36 +39,27 @@ struct Span {
    * @param data Pointer to the data
    * @param size Number of elements
    */
-  Span(T* data, size_t size) : data_(data), size_(size) {}
-
- public:
+  Span(T* data, std::size_t size);
   /**
    * @brief Returns the number of elements
    *
    * @return The number of elements
    */
-  size_t size() const { return size_; }
+  [[nodiscard]] std::size_t size() const;
 
- public:
-  decltype(auto) operator[](size_t pos) const
-  {
-    assert(pos < size_);
-    return data_[pos];
-  }
+  [[nodiscard]] decltype(auto) operator[](std::size_t pos) const;
   /**
    * @brief Returns the pointer to the first element
    *
    * @return Pointer to the first element
    */
-  const T* begin() const { return data_; }
+  [[nodiscard]] const T* begin() const;
   /**
    * @brief Returns the pointer to the end of allocation
    *
    * @return Pointer to the end of allocation
    */
-  const T* end() const { return data_ + size_; }
-
- public:
+  [[nodiscard]] const T* end() const;
   /**
    * @brief Slices off the first `off` elements. Passing an `off` greater than
    * the size will fail with an assertion failure.
@@ -80,23 +68,19 @@ struct Span {
    *
    * @return A span for range `[off, size())`
    */
-  decltype(auto) subspan(size_t off)
-  {
-    assert(off <= size_);
-    return Span(data_ + off, size_ - off);
-  }
-
- public:
+  [[nodiscard]] Span subspan(std::size_t off);
   /**
    * @brief Returns a `const` pointer to the data
    *
    * @return Pointer to the data
    */
-  const T* ptr() const { return data_; }
+  [[nodiscard]] const T* ptr() const;
 
  private:
-  T* data_{nullptr};
-  size_t size_{0};
+  T* data_{};
+  std::size_t size_{};
 };
 
 }  // namespace legate
+
+#include "core/utilities/span.inl"

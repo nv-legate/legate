@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace tree_reduce {
 
@@ -99,9 +99,9 @@ TEST_F(TreeReduce, AutoProducer)
   size_t num_tasks = 3;
   size_t tile_size = TILE_SIZE;
 
-  auto store = runtime->create_store({num_tasks * tile_size}, legate::int64());
+  auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, {num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, legate::Shape{num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
@@ -121,9 +121,9 @@ TEST_F(TreeReduce, ManualProducer)
   size_t num_tasks = 3;
   size_t tile_size = TILE_SIZE;
 
-  auto store = runtime->create_store({num_tasks * tile_size}, legate::int64());
+  auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, {num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, legate::Shape{num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
@@ -143,9 +143,9 @@ TEST_F(TreeReduce, ManualProducerMultiLevel)
   size_t num_tasks = 6;
   size_t tile_size = TILE_SIZE;
 
-  auto store = runtime->create_store({num_tasks * tile_size}, legate::int64());
+  auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, {num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, legate::Shape{num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
@@ -166,11 +166,12 @@ TEST_F(TreeReduce, ManualProducerUnbound)
   auto store       = runtime->create_store(legate::int64());
   size_t num_tasks = 4;
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, {num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, legate::Shape{num_tasks});
   task.add_output(store);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, TASK_REDUCE_UNBOUND, store, num_tasks);
+  auto result =
+    runtime->tree_reduce(context, TASK_REDUCE_UNBOUND, store, static_cast<std::int64_t>(num_tasks));
   EXPECT_FALSE(result.unbound());
 }
 
@@ -184,7 +185,7 @@ TEST_F(TreeReduce, ManualProducerSingle)
   // unbound store
   auto store = runtime->create_store(legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, {1});
+  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, legate::Shape{1});
   task.add_output(store);
   runtime->submit(std::move(task));
 

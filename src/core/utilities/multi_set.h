@@ -22,9 +22,6 @@ namespace legate {
 template <typename T>
 class MultiSet {
  public:
-  MultiSet() {}
-
- public:
   /**
    * @brief Add a value to the container.
    */
@@ -40,15 +37,15 @@ class MultiSet {
   /**
    * @brief Test whether a value is present in the container (at least once).
    */
-  bool contains(const T& value) const;
+  [[nodiscard]] bool contains(const T& value) const noexcept;
 
   /**
    * @brief Clears the container
    */
-  void clear();
+  void clear() noexcept;
 
  private:
-  std::map<T, size_t> map_;
+  std::map<T, std::size_t> map_{};
 };
 
 }  // namespace legate

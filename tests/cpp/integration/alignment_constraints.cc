@@ -96,9 +96,9 @@ void test_alignment()
   auto context = runtime->find_library(library_name);
 
   auto launch_tester = [&](const std::vector<size_t>& extents) {
-    auto store1 = runtime->create_store(extents, legate::int64());
-    auto store2 = runtime->create_store(extents, legate::int64());
-    auto store3 = runtime->create_store(extents, legate::int64());
+    auto store1 = runtime->create_store(legate::Shape{extents}, legate::int64());
+    auto store2 = runtime->create_store(legate::Shape{extents}, legate::int64());
+    auto store3 = runtime->create_store(legate::Shape{extents}, legate::int64());
 
     auto task  = runtime->create_task(context, ALIGNMENT_TESTER + extents.size());
     auto part1 = task.add_output(store1);
@@ -122,8 +122,8 @@ void test_alignment_and_broadcast()
   auto context = runtime->find_library(library_name);
 
   auto launch_tester = [&](const std::vector<size_t>& extents) {
-    auto store1 = runtime->create_store(extents, legate::int64());
-    auto store2 = runtime->create_store(extents, legate::int64());
+    auto store1 = runtime->create_store(legate::Shape{extents}, legate::int64());
+    auto store2 = runtime->create_store(legate::Shape{extents}, legate::int64());
 
     auto task  = runtime->create_task(context, ALIGNMENT_BROADCAST_TESTER + extents.size());
     auto part1 = task.add_output(store1);
@@ -132,7 +132,7 @@ void test_alignment_and_broadcast()
     task.add_scalar_arg(legate::Scalar(extents[0]));
 
     task.add_constraint(legate::align(part1, part2));
-    task.add_constraint(legate::broadcast(part1, {0}));
+    task.add_constraint(legate::broadcast(part1, legate::tuple<std::int32_t>{0}));
 
     runtime->submit(std::move(task));
   };
@@ -171,10 +171,10 @@ void test_alignment_transformed()
   // TODO: Extents are chosen such that imaginary dimensions are not partitioned.
   // Such scenarios should be tested once we pass down partition metadata to the tasks
   // and have them compute extents on imaginary dimensions based on that
-  auto store1 = runtime->create_store({100}, legate::int64());
-  auto store2 = runtime->create_store({100, 10}, legate::int64());
-  auto store3 = runtime->create_store({100, 10, 2}, legate::int64());
-  auto store4 = runtime->create_store({10, 10}, legate::int64());
+  auto store1 = runtime->create_store(legate::Shape{100}, legate::int64());
+  auto store2 = runtime->create_store(legate::Shape{100, 10}, legate::int64());
+  auto store3 = runtime->create_store(legate::Shape{100, 10, 2}, legate::int64());
+  auto store4 = runtime->create_store(legate::Shape{10, 10}, legate::int64());
 
   initialize(store1);
   initialize(store2);
@@ -197,9 +197,10 @@ void test_redundant_alignment()
   auto context = runtime->find_library(library_name);
 
   const std::vector<size_t> extents = {10};
-  auto store1                       = runtime->create_store(extents, legate::int64());
-  auto store2                       = runtime->create_store(extents, legate::int64());
-  auto store3                       = runtime->create_store(extents, legate::int64());
+  auto shapes                       = legate::Shape{extents};
+  auto store1                       = runtime->create_store(shapes, legate::int64());
+  auto store2                       = runtime->create_store(shapes, legate::int64());
+  auto store3                       = runtime->create_store(shapes, legate::int64());
 
   auto task  = runtime->create_task(context, ALIGNMENT_TESTER + extents.size());
   auto part1 = task.add_output(store1);
@@ -222,8 +223,8 @@ void test_invalid_alignment()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto store1 = runtime->create_store({10}, legate::int64());
-  auto store2 = runtime->create_store({9}, legate::int64());
+  auto store1 = runtime->create_store(legate::Shape{10}, legate::int64());
+  auto store2 = runtime->create_store(legate::Shape{9}, legate::int64());
   auto task   = runtime->create_task(context, TRANSFORMED_TESTER + store1.dim());
 
   auto part1 = task.add_output(store1);

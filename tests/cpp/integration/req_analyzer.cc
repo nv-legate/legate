@@ -54,8 +54,8 @@ void test_inout_store()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto store1 = runtime->create_store({10, 5}, legate::int64());
-  auto store2 = runtime->create_store({10, 5}, legate::int64());
+  auto store1 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
+  auto store2 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
   runtime->issue_fill(store1, legate::Scalar(int64_t{0}));
   runtime->issue_fill(store2, legate::Scalar(int64_t{0}));
 
@@ -72,7 +72,7 @@ void test_isomorphic_transformed_stores()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto store = runtime->create_store({10}, legate::int64());
+  auto store = runtime->create_store(legate::Shape{10}, legate::int64());
   runtime->issue_fill(store, legate::Scalar(int64_t{0}));
 
   // Create aliased stores that are semantically equivalent

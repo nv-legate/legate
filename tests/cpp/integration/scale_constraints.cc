@@ -77,8 +77,8 @@ void test_scale(const ScaleTestSpec& spec)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto smaller = runtime->create_store(spec.smaller_extents, legate::float16());
-  auto bigger  = runtime->create_store(spec.bigger_extents, legate::int64());
+  auto smaller = runtime->create_store(legate::Shape{spec.smaller_extents}, legate::float16());
+  auto bigger  = runtime->create_store(legate::Shape{spec.bigger_extents}, legate::int64());
 
   auto task         = runtime->create_task(context, SCALE_TESTER + smaller.dim());
   auto part_smaller = task.add_output(smaller);
@@ -96,25 +96,25 @@ void test_invalid()
   auto context = runtime->find_library(library_name);
 
   {
-    auto smaller = runtime->create_store({1, 2}, legate::float16());
-    auto bigger  = runtime->create_store({2, 3, 4}, legate::int64());
+    auto smaller = runtime->create_store(legate::Shape{1, 2}, legate::float16());
+    auto bigger  = runtime->create_store(legate::Shape{2, 3, 4}, legate::int64());
 
     auto task         = runtime->create_task(context, SCALE_TESTER + 2);
     auto part_smaller = task.add_output(smaller);
     auto part_bigger  = task.add_output(bigger);
-    task.add_constraint(legate::scale({2, 3}, part_smaller, part_bigger));
+    task.add_constraint(legate::scale(legate::Shape{2, 3}, part_smaller, part_bigger));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
 
   {
-    auto smaller = runtime->create_store({1, 2, 3}, legate::float16());
-    auto bigger  = runtime->create_store({2, 3, 4}, legate::int64());
+    auto smaller = runtime->create_store(legate::Shape{1, 2, 3}, legate::float16());
+    auto bigger  = runtime->create_store(legate::Shape{2, 3, 4}, legate::int64());
 
     auto task         = runtime->create_task(context, SCALE_TESTER + 3);
     auto part_smaller = task.add_output(smaller);
     auto part_bigger  = task.add_output(bigger);
-    task.add_constraint(legate::scale({2, 3}, part_smaller, part_bigger));
+    task.add_constraint(legate::scale(legate::Shape{2, 3}, part_smaller, part_bigger));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
@@ -123,19 +123,19 @@ void test_invalid()
 TEST_F(ScaleConstraint, 1D)
 {
   prepare();
-  test_scale({{3}, {10}, {29}});
+  test_scale({legate::Shape{3}, {10}, {29}});
 }
 
 TEST_F(ScaleConstraint, 2D)
 {
   prepare();
-  test_scale({{4, 5}, {2, 7}, {10, 30}});
+  test_scale({legate::Shape{4, 5}, {2, 7}, {10, 30}});
 }
 
 TEST_F(ScaleConstraint, 3D)
 {
   prepare();
-  test_scale({{2, 3, 4}, {5, 5, 5}, {10, 15, 20}});
+  test_scale({legate::Shape{2, 3, 4}, {5, 5, 5}, {10, 15, 20}});
 }
 
 TEST_F(ScaleConstraint, Invalid)

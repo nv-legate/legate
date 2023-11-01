@@ -12,12 +12,10 @@
 
 #pragma once
 
-#include <algorithm>
-#include <functional>
+#include <cstdint>
 #include <initializer_list>
-#include <numeric>
-#include <sstream>
-#include <type_traits>
+#include <iosfwd>
+#include <string>
 #include <vector>
 
 namespace legate {
@@ -26,91 +24,118 @@ namespace legate {
 template <typename T>
 class tuple {
  public:
-  tuple();
-  tuple(const std::vector<T>& values);
-  tuple(std::vector<T>&& values);
+  using container_type = std::vector<T>;
+  using value_type     = typename container_type::value_type;
+  using size_type      = typename container_type::size_type;
+  using iterator       = typename container_type::iterator;
+  using const_iterator = typename container_type::const_iterator;
+
+  tuple() noexcept = default;
+
+  explicit tuple(const container_type& values);
+  explicit tuple(container_type&& values);
   tuple(std::initializer_list<T> list);
-  tuple(size_t size, T init);
 
- public:
-  tuple(const tuple<T>&)            = default;
-  tuple(tuple<T>&&)                 = default;
-  tuple& operator=(const tuple<T>&) = default;
-  tuple& operator=(tuple<T>&&)      = default;
+  tuple(const tuple&)                = default;
+  tuple(tuple&&) noexcept            = default;
+  tuple& operator=(const tuple&)     = default;
+  tuple& operator=(tuple&&) noexcept = default;
 
- public:
-  const T& operator[](uint32_t idx) const;
-  T& operator[](uint32_t idx);
+  [[nodiscard]] const T& operator[](uint32_t idx) const;
+  [[nodiscard]] T& operator[](uint32_t idx);
 
- public:
-  bool operator==(const tuple<T>& other) const;
-  bool operator!=(const tuple<T>& other) const;
-  bool operator<(const tuple<T>& other) const;
-  tuple<T> operator+(const tuple<T>& other) const;
-  tuple<T> operator+(const T& other) const;
-  tuple<T> operator-(const tuple<T>& other) const;
-  tuple<T> operator-(const T& other) const;
-  tuple<T> operator*(const tuple<T>& other) const;
-  tuple<T> operator*(const T& other) const;
-  tuple<T> operator%(const tuple<T>& other) const;
-  tuple<T> operator%(const T& other) const;
-  tuple<T> operator/(const tuple<T>& other) const;
-  tuple<T> operator/(const T& other) const;
+  bool operator==(const tuple& other) const;
+  bool operator!=(const tuple& other) const;
+  bool operator<(const tuple& other) const;
+  tuple operator+(const tuple& other) const;
+  tuple operator+(const T& other) const;
+  tuple operator-(const tuple& other) const;
+  tuple operator-(const T& other) const;
+  tuple operator*(const tuple& other) const;
+  tuple operator*(const T& other) const;
+  tuple operator%(const tuple& other) const;
+  tuple operator%(const T& other) const;
+  tuple operator/(const tuple& other) const;
+  tuple operator/(const T& other) const;
 
- public:
-  bool empty() const;
-  size_t size() const;
+  [[nodiscard]] bool empty() const;
+  [[nodiscard]] size_type size() const;
+  void reserve(size_type size);
 
- public:
-  tuple<T> insert(int32_t pos, const T& value) const;
-  tuple<T> append(const T& value) const;
-  tuple<T> remove(int32_t pos) const;
-  tuple<T> update(int32_t pos, const T& value) const;
+  template <typename U = T>
+  [[nodiscard]] tuple insert(int32_t pos, U&& value) const;
+  template <typename U = T>
+  [[nodiscard]] tuple append(U&& value) const;
+  [[nodiscard]] tuple remove(int32_t pos) const;
+  template <typename U = T>
+  [[nodiscard]] tuple update(int32_t pos, U&& value) const;
 
-  void insert_inplace(int32_t pos, const T& value);
-  void append_inplace(const T& value);
+  template <typename U = T>
+  void insert_inplace(int32_t pos, U&& value);
+  template <typename U = T>
+  void append_inplace(U&& value);
   void remove_inplace(int32_t pos);
 
- public:
-  template <typename FUNC>
-  T reduce(FUNC func, const T& init) const;
-  T sum() const;
-  T volume() const;
-  bool all() const;
+  template <typename FUNC, typename U>
+  [[nodiscard]] T reduce(FUNC&& func, U&& init) const;
+  [[nodiscard]] T sum() const;
+  [[nodiscard]] T volume() const;
+  [[nodiscard]] bool all() const;
   template <typename PRED>
-  bool all(PRED pred) const;
-  bool any() const;
+  [[nodiscard]] bool all(PRED&& pred) const;
+  [[nodiscard]] bool any() const;
   template <typename PRED>
-  bool any(PRED pred) const;
-  tuple<T> map(const std::vector<int32_t>& mapping) const;
+  [[nodiscard]] bool any(PRED&& pred) const;
+  [[nodiscard]] tuple map(const std::vector<int32_t>& mapping) const;
 
- public:
-  std::string to_string() const;
-  template <typename _T>
-  friend std::ostream& operator<<(std::ostream& out, const tuple<_T>& tpl);
+  [[nodiscard]] std::string to_string() const;
+  template <typename U>
+  friend std::ostream& operator<<(std::ostream& out, const tuple<U>& tpl);
 
- public:
-  [[nodiscard]] std::vector<T>& data();
-  [[nodiscard]] const std::vector<T>& data() const;
+  [[nodiscard]] container_type& data();
+  [[nodiscard]] const container_type& data() const;
+
+  [[nodiscard]] iterator begin();
+  [[nodiscard]] const_iterator cbegin() const;
+  [[nodiscard]] const_iterator begin() const;
+
+  [[nodiscard]] iterator end();
+  [[nodiscard]] const_iterator cend() const;
+  [[nodiscard]] const_iterator end() const;
 
  private:
-  std::vector<T> data_{};
+  container_type data_{};
 };
 
 template <typename T>
-tuple<T> from_range(T stop);
+[[nodiscard]] tuple<T> from_range(T stop);
 
 template <typename T>
-tuple<T> from_range(T start, T stop);
+[[nodiscard]] tuple<T> from_range(T start, T stop);
+
+namespace detail {
+
+template <typename T>
+struct type_identity {
+  using type = T;
+};
+
+template <typename T>
+using type_identity_t = typename type_identity<T>::type;
+
+}  // namespace detail
+
+template <typename T>
+[[nodiscard]] tuple<T> full(detail::type_identity_t<typename tuple<T>::size_type> size, T init);
 
 template <typename FUNC, typename T>
-auto apply(FUNC func, const tuple<T>& rhs);
+[[nodiscard]] auto apply(FUNC func, const tuple<T>& rhs);
 
 template <typename FUNC, typename T1, typename T2>
-auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
+[[nodiscard]] auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
 
 template <typename FUNC, typename T1, typename T2>
-auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2);
+[[nodiscard]] auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2);
 
 }  // namespace legate
 

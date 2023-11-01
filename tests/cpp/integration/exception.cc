@@ -136,7 +136,7 @@ void test_multi(bool use_auto_task)
   // Turn off immediate exception raise
   runtime->set_max_pending_exceptions(2);
 
-  auto store = runtime->create_store({SIZE, SIZE}, legate::int64());
+  auto store = runtime->create_store(legate::Shape{SIZE, SIZE}, legate::int64());
   if (use_auto_task) {
     auto task = runtime->create_task(context, EXCEPTION_TASK);
     auto part = task.declare_partition();
@@ -148,7 +148,7 @@ void test_multi(bool use_auto_task)
 
     runtime->submit(std::move(task));
   } else {
-    auto task = runtime->create_task(context, EXCEPTION_TASK, {2, 2});
+    auto task = runtime->create_task(context, EXCEPTION_TASK, legate::Shape{2, 2});
     auto part = store.partition_by_tiling({SIZE / 2, SIZE / 2});
     // Dummy store argument to trigger parallelization
     task.add_output(part);

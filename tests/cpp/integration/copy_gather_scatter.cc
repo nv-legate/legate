@@ -166,11 +166,13 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
 
-  auto type    = spec.seed.type();
-  auto src     = runtime->create_store(spec.src_shape, type);
-  auto tgt     = runtime->create_store(spec.tgt_shape, type);
-  auto src_ind = runtime->create_store(spec.ind_shape, legate::point_type(spec.src_shape.size()));
-  auto tgt_ind = runtime->create_store(spec.ind_shape, legate::point_type(spec.tgt_shape.size()));
+  auto type = spec.seed.type();
+  auto src  = runtime->create_store(legate::Shape{spec.src_shape}, type);
+  auto tgt  = runtime->create_store(legate::Shape{spec.tgt_shape}, type);
+  auto src_ind =
+    runtime->create_store(legate::Shape{spec.ind_shape}, legate::point_type(spec.src_shape.size()));
+  auto tgt_ind =
+    runtime->create_store(legate::Shape{spec.ind_shape}, legate::point_type(spec.tgt_shape.size()));
 
   fill_input(library, src, spec.seed);
   fill_indirect(library, src_ind, src);

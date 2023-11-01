@@ -189,7 +189,7 @@ static_assert(std::is_empty<Empty2>::value);
 static_assert(sizeof(Empty2) == 1);
 
 struct NotEmpty {
-  std::uint64_t d{};
+  uint64_t d{};
 };
 
 static_assert(!std::is_empty_v<NotEmpty>);

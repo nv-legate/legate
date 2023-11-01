@@ -66,12 +66,8 @@ void test_delinearize()
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
 
-  auto input = runtime->create_array(
-    {
-      16,
-    },
-    legate::int64());
-  auto output = runtime->create_array({1, 8, 2}, legate::int64());
+  auto input  = runtime->create_array(legate::Shape{16}, legate::int64());
+  auto output = runtime->create_array(legate::Shape{1, 8, 2}, legate::int64());
 
   {
     auto task = runtime->create_task(library, ARANGE);

@@ -245,10 +245,10 @@ void test_image(const ImageTestSpec& spec)
   auto context = runtime->find_library(library_name);
   static_cast<void>(context);
 
-  int32_t tgt_dim = spec.range_extents.size();
+  auto tgt_dim    = static_cast<std::int32_t>(spec.range_extents.size());
   auto image_type = spec.is_rect ? legate::rect_type(tgt_dim) : legate::point_type(tgt_dim);
-  auto func       = runtime->create_store(spec.domain_extents, std::move(image_type));
-  auto range      = runtime->create_store(spec.range_extents, legate::int64());
+  auto func  = runtime->create_store(legate::Shape{spec.domain_extents}, std::move(image_type));
+  auto range = runtime->create_store(legate::Shape{spec.range_extents}, legate::int64());
 
   initialize_function(func, spec.range_extents, true);
   runtime->issue_fill(range, legate::Scalar(int64_t(1234)));
@@ -266,8 +266,8 @@ void test_invalid()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto func  = runtime->create_store({10, 10}, legate::int32());
-  auto range = runtime->create_store({10, 10}, legate::int64());
+  auto func  = runtime->create_store(legate::Shape{10, 10}, legate::int32());
+  auto range = runtime->create_store(legate::Shape{10, 10}, legate::int64());
 
   auto task        = runtime->create_task(context, IMAGE_TESTER + 1);
   auto part_domain = task.declare_partition();

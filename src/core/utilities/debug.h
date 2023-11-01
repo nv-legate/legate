@@ -15,11 +15,7 @@
 #include "core/data/store.h"
 #include "core/utilities/typedefs.h"
 
-#if LegateDefined(LEGATE_USE_CUDA)
-#include <cuda_runtime_api.h>
-#endif
-
-#include <sstream>
+#include <string>
 
 /** @defgroup util Utilities
  */
@@ -41,68 +37,9 @@ namespace legate {
  * @return A string expressing the contents of the array
  */
 template <typename T, int DIM>
-std::string print_dense_array(const T* base, const Point<DIM>& extents, size_t strides[DIM])
-{
-  T* buf                        = nullptr;
-  const auto is_device_only_ptr = [](const void* ptr) {
-#if LegateDefined(LEGATE_USE_CUDA)
-    cudaPointerAttributes attrs;
-    auto res = cudaPointerGetAttributes(&attrs, ptr);
-    return res == cudaSuccess && attrs.type == cudaMemoryTypeDevice;
-#else
-    static_cast<void>(ptr);
-    return false;
-#endif
-  };
-
-  if (is_device_only_ptr(base)) {
-    const auto max_different_types = [](const auto& lhs, const auto& rhs) {
-      return lhs < rhs ? rhs : lhs;
-    };
-    size_t num_elems = 0;
-    for (size_t dim = 0; dim < DIM; ++dim) {
-      num_elems = max_different_types(num_elems, strides[dim] * extents[dim]);
-    }
-    buf = new T[num_elems];
-#if LegateDefined(LEGATE_USE_CUDA)
-    auto res = cudaMemcpy(buf, base, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
-    assert(res == cudaSuccess);
-#endif
-    base = buf;
-  }
-  std::stringstream ss;
-  for (int dim = 0; dim < DIM; ++dim) {
-    if (strides[dim] == 0) continue;
-    ss << "[";
-  }
-  ss << *base;
-  coord_t offset   = 0;
-  Point<DIM> point = Point<DIM>::ZEROES();
-  int dim;
-  do {
-    for (dim = DIM - 1; dim >= 0; --dim) {
-      if (strides[dim] == 0) continue;
-      if (point[dim] + 1 < extents[dim]) {
-        ++point[dim];
-        offset += strides[dim];
-        ss << ", ";
-        for (int i = dim + 1; i < DIM; ++i) {
-          if (strides[i] == 0) continue;
-          ss << "[";
-        }
-        ss << base[offset];
-        break;
-      } else {
-        offset -= point[dim] * strides[dim];
-        point[dim] = 0;
-        ss << "]";
-      }
-    }
-  } while (dim >= 0);
-  if (LegateDefined(LEGATE_USE_CUDA)) { delete buf; }  // LEGATE_USE_CUDA
-  return ss.str();
-}
-
+[[nodiscard]] std::string print_dense_array(const T* base,
+                                            const Point<DIM>& extents,
+                                            size_t strides[DIM]);
 /**
  * @ingroup util
  * @brief Converts the dense array into a string using an accessor
@@ -113,14 +50,7 @@ std::string print_dense_array(const T* base, const Point<DIM>& extents, size_t s
  * @return A string expressing the contents of the array
  */
 template <int DIM, typename ACC>
-std::string print_dense_array(ACC accessor, const Rect<DIM>& rect)
-{
-  Point<DIM> extents = rect.hi - rect.lo + Point<DIM>::ONES();
-  size_t strides[DIM];
-  const typename ACC::value_type* base = accessor.ptr(rect, strides);
-  return print_dense_array(base, extents, strides);
-}
-
+[[nodiscard]] std::string print_dense_array(ACC accessor, const Rect<DIM>& rect);
 /**
  * @ingroup util
  * @brief Converts the store to a string
@@ -129,6 +59,8 @@ std::string print_dense_array(ACC accessor, const Rect<DIM>& rect)
  *
  * @return A string expressing the contents of the store
  */
-std::string print_dense_array(const Store& store);
+[[nodiscard]] std::string print_dense_array(const Store& store);
 
 }  // namespace legate
+
+#include "core/utilities/debug.inl"

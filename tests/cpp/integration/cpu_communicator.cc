@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/comm/coll.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace cpu_communicator {
 
@@ -60,7 +61,7 @@ void test_cpu_communicator_auto(int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
-  auto store   = runtime->create_store(std::vector<size_t>(ndim, SIZE), legate::int32());
+  auto store   = runtime->create_store(legate::full<size_t>(ndim, SIZE), legate::int32());
 
   auto task = runtime->create_task(context, CPU_COMM_TESTER);
   auto part = task.declare_partition();
@@ -76,7 +77,7 @@ void test_cpu_communicator_manual(int32_t ndim)
   if (num_procs <= 1) return;
 
   auto context = runtime->find_library(library_name);
-  auto store   = runtime->create_store(std::vector<size_t>(ndim, SIZE), legate::int32());
+  auto store   = runtime->create_store(legate::full<size_t>(ndim, SIZE), legate::int32());
   std::vector<size_t> launch_shape(ndim, 1);
   std::vector<size_t> tile_shape(ndim, 1);
   launch_shape[0] = num_procs;
@@ -84,7 +85,8 @@ void test_cpu_communicator_manual(int32_t ndim)
 
   auto part = store.partition_by_tiling(std::move(tile_shape));
 
-  auto task = runtime->create_task(context, CPU_COMM_TESTER, std::move(launch_shape));
+  auto task =
+    runtime->create_task(context, CPU_COMM_TESTER, legate::Shape{std::move(launch_shape)});
   task.add_output(part);
   task.add_communicator("cpu");
   runtime->submit(std::move(task));
