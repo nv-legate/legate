@@ -3,6 +3,7 @@
 
 build_legate_all() {
     build-legate-cpp;
+    build-cpp-test;
     build-legate-wheel;
     build-legate-conda;
 }
