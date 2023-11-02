@@ -63,9 +63,9 @@ run_test_or_analysis() {
             mkdir -p ctest_install
             sh ~/artifacts/out/cpp_tests.sh --prefix=`pwd`/ctest_install --exclude-subdir --skip-license
 
-            python3 ./run.py --gtest-file ./ctest_install/bin/cpp_tests --cpus 1
+            python3 ./run.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1
             [ -f ./ctest_install/bin/gpu_tests ] && {
-              python3 ./run.py --gtest-file ./ctest_install/bin/gpu_tests --cpus 1
+              python3 ./run.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1
             }
             ;;
         *)

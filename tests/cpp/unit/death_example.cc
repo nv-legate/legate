@@ -9,11 +9,11 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
-
 #include "legate.h"
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>
+#include <unistd.h>
 
 namespace unit {
 
@@ -32,8 +32,12 @@ TEST_F(DeathTestExample, Simple)
 
   if (realm_backtrace) {
     // We can't check that the subprocess dies with SIGABRT when we run with REALM_BACKTRACE=1,
-    // because Realm's signal handler doesn't propagate the signal, instead it exits right away
-    EXPECT_EXIT(KillProcess(argc_, argv_), ::testing::ExitedWithCode(1), "");
+    // because Realm's signal handler doesn't propagate the signal, instead it does exit(1).
+    // Even worse, when ASAN is used this triggers a segfault in Realm's signal handler, which
+    // causes it to abort() instead of exit(1), so for now we just don't check the exit code
+    // at all.
+
+    EXPECT_DEATH(KillProcess(argc_, argv_), "");
   } else {
     EXPECT_EXIT(KillProcess(argc_, argv_), ::testing::KilledBySignal(SIGABRT), "");
   }

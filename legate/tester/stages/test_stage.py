@@ -12,15 +12,13 @@
 from __future__ import annotations
 
 import multiprocessing
-import os
 import queue
+import shlex
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from typing_extensions import Protocol
-
-from legate.driver.launcher import LAUNCHER_VAR_PREFIXES
 
 from ...util.colors import yellow
 from ...util.types import ArgList, EnvDict
@@ -300,7 +298,7 @@ class TestStage(Protocol):
 
     def run_gtest(
         self,
-        test_file: str,
+        test_file: Path,
         arg_test: str,
         config: Config,
         system: TestSystem,
@@ -331,12 +329,14 @@ class TestStage(Protocol):
         cov_args = self.cov_args(config)
 
         stage_args = self.args + self.shard_args(shard, config)
+        file_args = self.file_args(test_file, config)
 
         cmd = (
-            [test_file]
-            + [f"--gtest_filter={arg_test}"]
+            [str(config.legate_path)]
             + stage_args
             + cov_args
+            + [str(test_file), f"--gtest_filter={arg_test}"]
+            + file_args
             + config.extra_args
         )
 
@@ -347,7 +347,7 @@ class TestStage(Protocol):
 
     def run_mpi(
         self,
-        test_file: str,
+        test_file: Path,
         arg_test: str,
         config: Config,
         system: TestSystem,
@@ -378,30 +378,25 @@ class TestStage(Protocol):
         cov_args = self.cov_args(config)
 
         stage_args = self.args + self.shard_args(shard, config)
+        file_args = self.file_args(test_file, config)
 
-        mpi_args = []
-        mpi_args += ["mpirun", "-n", str(config.ranks_per_node)]
-        mpi_args += ["--npernode", str(config.ranks_per_node)]
-        # FIXME: Turn off the binding until we properly pipe through the
-        # binding configuration to mpirun. Without this, each rank will be
-        # mapped to only one core, which slows down the tests a lot
-        mpi_args += ["--bind-to", "none"]
+        launcher_args = (
+            ["--launcher=mpirun"]
+            + [f"--ranks-per-node={config.ranks_per_node}"]
+            + ["--launcher-extra=--merge-stderr-to-stdout"]
+        )
         if config.mpi_output_filename:
-            mpi_args += ["--output-filename", config.mpi_output_filename]
-        mpi_args += ["--merge-stderr-to-stdout"]
-
-        for var in dict(os.environ):
-            if var.endswith("PATH") or any(
-                var.startswith(prefix) for prefix in LAUNCHER_VAR_PREFIXES
-            ):
-                mpi_args += ["-x", var]
+            launcher_args += [
+                f"--launcher-extra=--output-filename={shlex.quote(config.mpi_output_filename)}"  # noqa
+            ]
 
         cmd = (
-            mpi_args
-            + [test_file]
-            + [f"--gtest_filter={arg_test}"]
+            [str(config.legate_path)]
+            + launcher_args
             + stage_args
             + cov_args
+            + [str(test_file), f"--gtest_filter={arg_test}"]
+            + file_args
             + config.extra_args
         )
 
