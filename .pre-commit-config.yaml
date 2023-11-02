@@ -34,6 +34,11 @@ repos:
       hooks:
       - id: vermin
         args: ['--config-file', './setup.cfg']
+    - repo: https://github.com/jumanjihouse/pre-commit-hooks
+      rev: '3.0.0'
+      hooks:
+        - id: shellcheck
+          args: ['--enable', 'all', '--color', 'always']
     - repo: local
       hooks:
         -   id: legate-defined
