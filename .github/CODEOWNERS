@@ -1,0 +1,25 @@
+# Global
+* @magnatelee
+
+# Python
+legate/core @magnatelee
+legate/timing @magnatelee
+legate/driver @bryevdv
+legate/tester @bryevdv
+legate/util @bryevdv
+legate/jupyter @eddy16112
+
+# cmake
+*.cmake @trxcllnt @jjwilke @Jacobfaib
+
+# CI
+.github/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
+scripts/ @trxcllnt @sandeepd-nv @mag1cp1n @m3vaz @marcinz
+
+# cpp
+src/ @magnatelee @Jacobfaib
+src/core/utilities/*shared_ptr.* @Jacobfaib
+src/core/utilities/compressed_pair.h @Jacobfaib
+
+# docs
+docs/ @magnatelee
