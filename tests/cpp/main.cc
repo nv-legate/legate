@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-#include "legate.h"
+#include "legate_defines.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 extern "C" {
 
@@ -23,6 +24,9 @@ const char* __asan_default_options()  // NOLINT(bugprone-reserved-identifier)
          "alloc_dealloc_mismatch=1:"
          "strict_string_checks=1:"
          "color=always:"
+#if LegateDefined(LEGATE_USE_CUDA)
+         "protect_shadow_gap=0:"
+#endif
          // note trailing ":", this is so that user may write ASAN_OPTIONS+="foo:bar:baz"
          "symbolize=1:";
 }
