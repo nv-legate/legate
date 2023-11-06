@@ -20,4 +20,6 @@ jobs:
       repos-name: ${{ github.event.repository.name }}
       runs-on: ${{ github.repository_owner == 'nv-legate' && 'linux-amd64-32cpu' || 'ubuntu-latest' }}
       sha: ${{ github.sha }}
+      ucx-config: no_ucx
+      ucx-string: ''
       build-type: release

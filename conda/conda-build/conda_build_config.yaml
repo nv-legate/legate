@@ -10,6 +10,10 @@ debug_enabled:
   - true
   - false
 
+ucx_configured:
+  - true
+  - false
+
 python:
   - 3.9
   - 3.10
