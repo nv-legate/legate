@@ -23,8 +23,9 @@ include(cmake/Modules/legate_core_options.cmake)
 # Write the version header
 rapids_cmake_write_version_file(include/legate/version_config.hpp)
 
-# Needed to integrate with LLVM/clang tooling
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/compile_commands.cmake)
+
+legate_core_export_compile_commands()
 
 ##############################################################################
 # - Build Type ---------------------------------------------------------------

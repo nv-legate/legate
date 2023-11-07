@@ -39,8 +39,9 @@ set(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O2 -g")
 
-# Needed to integrate with LLVM/clang tooling
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(${LEGATE_CORE_DIR}/cmake/Modules/compile_commands.cmake)
+
+legate_core_export_compile_commands()
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/ensure_legate.cmake)
 
