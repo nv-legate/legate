@@ -11,6 +11,7 @@ legate/jupyter @eddy16112
 
 # cmake
 *.cmake @trxcllnt @jjwilke @Jacobfaib
+CMakeLists.txt @trxcllnt @jjwilke @Jacobfaib
 
 # CI
 .github/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
