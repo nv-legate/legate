@@ -27,8 +27,7 @@ enum TaskIDs {
   EXCEPTION_TASK = 0,
 };
 
-const char* EXN_MSG   = "Exception Test";
-constexpr size_t SIZE = 10;
+const char* EXN_MSG = "Exception Test";
 
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
   static void cpu_variant(legate::TaskContext context)
