@@ -12,10 +12,12 @@
 
 #pragma once
 
-#include <optional>
-#include <vector>
 #include "core/task/exception.h"
 #include "core/utilities/typedefs.h"
+
+#include <array>
+#include <optional>
+#include <vector>
 
 namespace legate::detail {
 
@@ -51,6 +53,8 @@ struct ReturnedException {
   ReturnedException() {}
   ReturnedException(int32_t index, const std::string& error_message);
 
+  static inline constexpr auto MAX_MESSAGE_SIZE = 256;
+
  public:
   bool raised() const { return raised_; }
 
@@ -68,7 +72,8 @@ struct ReturnedException {
  private:
   bool raised_{false};
   int32_t index_{-1};
-  std::string error_message_{};
+  uint32_t message_size_{};
+  std::array<char, MAX_MESSAGE_SIZE> error_message_{};
 };
 
 struct ReturnValues {

@@ -21,6 +21,7 @@
 #include "core/cuda/stream_pool.h"
 #endif
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -60,8 +61,12 @@ const void* ReturnValue::ptr() const
 }
 
 ReturnedException::ReturnedException(int32_t index, const std::string& error_message)
-  : raised_(true), index_(index), error_message_(error_message)
+  : raised_(true), index_(index)
 {
+  std::strncpy(error_message_.data(), error_message.c_str(), error_message_.size());
+  error_message_.back() = '\0';  // always null-terminate
+  message_size_ =
+    static_cast<decltype(message_size_)>(std::min(error_message_.size() - 1, error_message.size()));
 }
 
 std::optional<TaskException> ReturnedException::to_task_exception() const
@@ -69,7 +74,7 @@ std::optional<TaskException> ReturnedException::to_task_exception() const
   if (!raised_)
     return std::nullopt;
   else
-    return TaskException(index_, error_message_);
+    return TaskException(index_, {error_message_.data(), error_message_.data() + message_size_});
 }
 
 namespace {
@@ -88,12 +93,12 @@ constexpr size_t max_aligned_size_for_type()
 // pack.
 size_t ReturnedException::legion_buffer_size() const
 {
-  size_t size = max_aligned_size_for_type<bool>();
+  auto size = max_aligned_size_for_type<decltype(raised_)>();
 
   if (raised_) {
-    size += max_aligned_size_for_type<int32_t>();
-    size += max_aligned_size_for_type<uint32_t>();
-    size += error_message_.size();
+    size += max_aligned_size_for_type<decltype(index_)>();
+    size += max_aligned_size_for_type<decltype(message_size_)>();
+    size += message_size_;
   }
   return size;
 }
@@ -118,11 +123,9 @@ void ReturnedException::legion_serialize(void* buffer) const
 
   std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, raised_);
   if (raised_) {
-    const auto error_len = static_cast<uint32_t>(error_message_.size());
-
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, index_);
-    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, error_len);
-    std::memcpy(buffer, error_message_.c_str(), error_len);
+    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, message_size_);
+    std::memcpy(buffer, error_message_.data(), message_size_);
   }
 }
 
@@ -148,11 +151,12 @@ void ReturnedException::legion_deserialize(const void* buffer)
 
   std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &raised_);
   if (raised_) {
-    uint32_t error_len;
-
     std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &index_);
-    std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &error_len);
-    error_message_ = std::string{static_cast<char*>(ptr), static_cast<char*>(ptr) + error_len};
+    std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &message_size_);
+    if (LegateDefined(LEGATE_USE_DEBUG)) assert(message_size_ <= error_message_.size());
+    std::memcpy(error_message_.data(), ptr, message_size_);
+    std::memset(error_message_.data() + message_size_, 0, error_message_.size() - message_size_);
+    error_message_.back() = '\0';  // always null-terminate, regardless of size
   }
 }
 
