@@ -20,6 +20,10 @@ inline Task::ArrayArg::ArrayArg(std::shared_ptr<LogicalArray> _array) : array{st
 
 // ==========================================================================================
 
+inline bool Task::always_flush() const { return can_throw_exception_; }
+
+// ==========================================================================================
+
 inline AutoTask::AutoTask(const Library* library,
                           int64_t task_id,
                           uint64_t unique_id,

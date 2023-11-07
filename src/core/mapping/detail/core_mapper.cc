@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <vector>
-
-#include "env_defaults.h"
-
 #include "core/mapping/detail/core_mapper.h"
 
 #include "core/comm/comm_nccl.h"
 #include "core/mapping/detail/machine.h"
+
+#include "env_defaults.h"
+
+#include <vector>
 
 namespace legate {
 
@@ -52,6 +52,7 @@ class CoreMapper : public Mapper {
 
  private:
   const LocalMachine machine{};
+  // TODO: Some of these should be moved to legate::detail::Config
   const int64_t min_gpu_chunk{
     extract_env("LEGATE_MIN_GPU_CHUNK", MIN_GPU_CHUNK_DEFAULT, MIN_GPU_CHUNK_TEST)};
   const int64_t min_cpu_chunk{
@@ -60,11 +61,6 @@ class CoreMapper : public Mapper {
     extract_env("LEGATE_MIN_OMP_CHUNK", MIN_OMP_CHUNK_DEFAULT, MIN_OMP_CHUNK_TEST)};
   const uint32_t window_size{
     extract_env("LEGATE_WINDOW_SIZE", WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
-  const uint32_t max_pending_exceptions{extract_env(
-    "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST)};
-  const bool precise_exception_trace{static_cast<bool>(extract_env("LEGATE_PRECISE_EXCEPTION_TRACE",
-                                                                   PRECISE_EXCEPTION_TRACE_DEFAULT,
-                                                                   PRECISE_EXCEPTION_TRACE_TEST))};
   const uint32_t field_reuse_frac{
     extract_env("LEGATE_FIELD_REUSE_FRAC", FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
   const uint32_t field_reuse_freq{
@@ -118,12 +114,6 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
     }
     case LEGATE_CORE_TUNABLE_WINDOW_SIZE: {
       return Scalar{window_size};
-    }
-    case LEGATE_CORE_TUNABLE_MAX_PENDING_EXCEPTIONS: {
-      return Scalar{max_pending_exceptions};
-    }
-    case LEGATE_CORE_TUNABLE_PRECISE_EXCEPTION_TRACE: {
-      return Scalar{precise_exception_trace};
     }
     case LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: {
       // Multiply this by the total number of nodes and then scale by the frac

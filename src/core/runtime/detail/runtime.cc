@@ -81,9 +81,7 @@ Runtime::Runtime()
   : legion_runtime_{Legion::Runtime::get_runtime()},
     field_reuse_freq_{
       extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)},
-    force_consensus_match_{!!extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)},
-    max_pending_exceptions_{extract_env(
-      "LEGATE_MAX_PENDING_EXCEPTIONS", MAX_PENDING_EXCEPTIONS_DEFAULT, MAX_PENDING_EXCEPTIONS_TEST)}
+    force_consensus_match_{!!extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)}
 {
 }
 
@@ -332,8 +330,8 @@ void Runtime::flush_scheduling_window()
 void Runtime::submit(std::shared_ptr<Operation> op)
 {
   op->validate();
-  operations_.push_back(std::move(op));
-  if (operations_.size() >= window_size_) flush_scheduling_window();
+  auto& submitted = operations_.emplace_back(std::move(op));
+  if (submitted->always_flush() || operations_.size() >= window_size_) flush_scheduling_window();
 }
 
 void Runtime::schedule(std::vector<std::shared_ptr<Operation>> operations)
@@ -533,15 +531,6 @@ void Runtime::check_dimensionality(uint32_t dim)
   }
 }
 
-uint32_t Runtime::max_pending_exceptions() const { return max_pending_exceptions_; }
-
-void Runtime::set_max_pending_exceptions(uint32_t max_pending_exceptions)
-{
-  uint32_t old_value      = max_pending_exceptions_;
-  max_pending_exceptions_ = max_pending_exceptions;
-  if (old_value > max_pending_exceptions_) raise_pending_task_exception();
-}
-
 void Runtime::raise_pending_task_exception()
 {
   auto exn = check_pending_task_exception();
@@ -572,8 +561,7 @@ std::optional<TaskException> Runtime::check_pending_task_exception()
 void Runtime::record_pending_exception(const Legion::Future& pending_exception)
 {
   pending_exceptions_.push_back(pending_exception);
-  if (outstanding_exceptions_.size() + pending_exceptions_.size() >= max_pending_exceptions_)
-    raise_pending_task_exception();
+  raise_pending_task_exception();
 }
 
 uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }

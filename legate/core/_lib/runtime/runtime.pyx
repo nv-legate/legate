@@ -62,6 +62,20 @@ class ShutdownCallbackManager:
 _shutdown_manager = ShutdownCallbackManager()
 
 
+create_legate_task_exception()
+LegateTaskException = <object> _LegateTaskException
+
+
+cdef void _reraise_legate_exception(tuple[type] exception_types, Exception e):
+    message, index = e.args
+    try:
+        exn = exception_types[index]
+    except IndexError:
+        raise RuntimeError(f"Invalid exception index {index}")
+
+    raise exn(message)
+
+
 cdef class Runtime:
     @staticmethod
     cdef Runtime from_handle(_Runtime* handle):
@@ -293,13 +307,21 @@ cdef class Runtime:
             )
         )
 
-    def submit(self, task) -> None:
-        if isinstance(task, AutoTask):
-            self._handle.submit((<AutoTask>task)._handle)
-        elif isinstance(task, ManualTask):
-            self._handle.submit((<ManualTask>task)._handle)
-        else:
-            raise RuntimeError(f"Unknown type of task: {type(task)}")
+    def submit(self, op) -> None:
+        if isinstance(op, AutoTask):
+            try:
+                self._handle.submit((<AutoTask> op)._handle)
+                return
+            except LegateTaskException as e:
+                _reraise_legate_exception(op.exception_types, e)
+        elif isinstance(op, ManualTask):
+            try:
+                self._handle.submit((<ManualTask> op)._handle)
+                return
+            except LegateTaskException as e:
+                _reraise_legate_exception(op.exception_types, e)
+
+        raise RuntimeError(f"Unknown type of operation: {type(op)}")
 
     def create_array(
         self,
@@ -474,20 +496,6 @@ cdef class Runtime:
             A new future
         """
         return Scalar.create_from_buffer(data, dtype)
-
-    @property
-    def max_pending_exceptions(self) -> uint32_t:
-        return self._handle.max_pending_exceptions()
-
-    @max_pending_exceptions.setter
-    def max_pending_exceptions(self, uint32_t num) -> None:
-        self._runtime.set_max_pending_exceptions(num)
-
-    def raise_pending_task_exception(self) -> None:
-        self._handle.raise_pending_task_exception()
-
-    # def check_pending_task_exception() -> TaskException:
-    #     pass
 
     def issue_execution_fence(self, bool block = False) -> None:
         self._handle.issue_execution_fence(block)

@@ -73,6 +73,7 @@ class Task : public Operation {
 
  public:
   [[nodiscard]] std::string to_string() const override;
+  [[nodiscard]] bool always_flush() const override;
 
  protected:
   const Library* library_{};

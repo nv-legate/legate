@@ -57,6 +57,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
 
 cdef class AutoTask:
     cdef _AutoTask _handle
+    cdef list[type] _exception_types
 
     @staticmethod
     cdef AutoTask from_handle(_AutoTask)
@@ -64,6 +65,7 @@ cdef class AutoTask:
 
 cdef class ManualTask:
     cdef _ManualTask _handle
+    cdef list[type] _exception_types
 
     @staticmethod
     cdef ManualTask from_handle(_ManualTask)

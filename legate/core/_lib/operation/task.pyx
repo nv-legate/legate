@@ -53,6 +53,7 @@ cdef class AutoTask:
     cdef AutoTask from_handle(_AutoTask handle):
         cdef AutoTask result = AutoTask.__new__(AutoTask)
         result._handle = std_move(handle)
+        result._exception_types = []
         return result
 
     def add_input(
@@ -182,8 +183,13 @@ cdef class AutoTask:
     def set_side_effect(self, bool has_side_effect) -> None:
         self._handle.set_side_effect(has_side_effect)
 
-    def throws_exception(self, bool can_throw_exception) -> None:
-        self._handle.throws_exception(can_throw_exception)
+    def throws_exception(self, type exception_type) -> None:
+        self._handle.throws_exception(True)
+        self._exception_types.append(exception_type)
+
+    @property
+    def exception_types(self) -> tuple[type]:
+        return tuple(self._exception_types)
 
     def add_communicator(self, str name) -> None:
         self._handle.add_communicator(name.encode())
@@ -289,6 +295,7 @@ cdef class ManualTask:
     cdef ManualTask from_handle(_ManualTask handle):
         cdef ManualTask result = ManualTask.__new__(ManualTask)
         result._handle = std_move(handle)
+        result._exception_types = []
         return result
 
     def add_input(
@@ -367,8 +374,13 @@ cdef class ManualTask:
     def set_side_effect(self, bool has_side_effect) -> None:
         self._handle.set_side_effect(has_side_effect)
 
-    def throws_exception(self, bool can_throw_exception) -> None:
-        self._handle.throws_exception(can_throw_exception)
+    def throws_exception(self, type exception_type) -> None:
+        self._handle.throws_exception(True)
+        self._exception_types.append(exception_type)
+
+    @property
+    def exception_types(self) -> tuple[type]:
+        return tuple(self._exception_types)
 
     def add_communicator(self, str name) -> None:
         self._handle.add_communicator(name.encode())

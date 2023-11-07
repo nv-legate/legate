@@ -409,30 +409,6 @@ class Runtime {
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
   /**
-   * @brief Returns the maximum number of pending exceptions
-   *
-   * @return Maximum number of pending exceptions
-   */
-  [[nodiscard]] uint32_t max_pending_exceptions() const;
-  /**
-   * @brief Updates the maximum number of pending exceptions
-   *
-   * If the new maximum number of pending exceptions is smaller than the previous value,
-   * `raise_pending_task_exception` will be invoked.
-   *
-   * @param max_pending_exceptions A new maximum number of pending exceptions
-   */
-  void set_max_pending_exceptions(uint32_t max_pending_exceptions);
-  /**
-   * @brief Inspects all pending exceptions and immediately raises the first one if there exists any
-   */
-  void raise_pending_task_exception();
-  /**
-   * @brief Returns the first pending exception.
-   */
-  [[nodiscard]] std::optional<TaskException> check_pending_task_exception();
-
-  /**
    * @brief Issues an execution fence
    *
    * An execution fence is a join point in the task graph. All operations prior to a fence must

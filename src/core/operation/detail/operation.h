@@ -42,6 +42,7 @@ class Operation {
   virtual void add_to_solver(ConstraintSolver& solver) = 0;
   virtual void launch(Strategy* strategy)              = 0;
   [[nodiscard]] virtual std::string to_string() const  = 0;
+  [[nodiscard]] virtual bool always_flush() const;
 
   [[nodiscard]] const Variable* find_or_declare_partition(std::shared_ptr<LogicalStore> store);
   [[nodiscard]] const Variable* declare_partition();

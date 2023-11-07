@@ -196,20 +196,6 @@ LogicalStore Runtime::create_store(const Shape& extents,
   return LogicalStore(impl_->create_store(extents, type.impl(), buffer, share, ordering.impl()));
 }
 
-uint32_t Runtime::max_pending_exceptions() const { return impl_->max_pending_exceptions(); }
-
-void Runtime::set_max_pending_exceptions(uint32_t max_pending_exceptions)
-{
-  impl_->set_max_pending_exceptions(max_pending_exceptions);
-}
-
-void Runtime::raise_pending_task_exception() { impl_->raise_pending_task_exception(); }
-
-std::optional<TaskException> Runtime::check_pending_task_exception()
-{
-  return impl_->check_pending_task_exception();
-}
-
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }
 
 mapping::Machine Runtime::get_machine() const { return mapping::Machine{impl_->get_machine()}; }

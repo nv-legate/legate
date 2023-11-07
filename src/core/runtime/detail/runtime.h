@@ -156,8 +156,6 @@ class Runtime {
   void check_dimensionality(uint32_t dim);
 
  public:
-  [[nodiscard]] uint32_t max_pending_exceptions() const;
-  void set_max_pending_exceptions(uint32_t max_pending_exceptions);
   void raise_pending_task_exception();
   [[nodiscard]] std::optional<TaskException> check_pending_task_exception();
   void record_pending_exception(const Legion::Future& pending_exception);
@@ -329,7 +327,7 @@ class Runtime {
 
   std::map<std::pair<int32_t, int32_t>, int64_t> reduction_ops_{};
 
-  uint32_t max_pending_exceptions_{};
+  // TODO: We keep some of the deferred exception code as we will put it back later
   std::vector<Legion::Future> pending_exceptions_{};
   std::deque<TaskException> outstanding_exceptions_{};
 };
