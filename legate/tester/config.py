@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 from argparse import Namespace
@@ -166,9 +167,23 @@ class Config:
     @property
     def legate_path(self) -> str:
         """Computed path to the legate driver script"""
-        if self.legate_dir is None:
-            return "legate"
-        return str(self.legate_dir / "bin" / "legate")
+        if not hasattr(self, "legate_path_"):
+
+            def compute_legate_path() -> str:
+                if self.legate_dir is not None:
+                    return str(self.legate_dir / "bin" / "legate")
+
+                if legate_bin := shutil.which("legate"):
+                    return legate_bin
+
+                return str(
+                    Path(__file__).resolve().parent.parent
+                    / "driver"
+                    / "driver_exec.py"
+                )
+
+            self.legate_path_ = compute_legate_path()
+        return self.legate_path_
 
     def _compute_features(self, args: Namespace) -> tuple[FeatureType, ...]:
         if args.features is not None:

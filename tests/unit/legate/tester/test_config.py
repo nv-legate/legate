@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path, PurePath
 
 import pytest
@@ -83,7 +84,7 @@ class TestConfig:
         # assert any("integration" in str(x) for x in c.test_files)
         # assert all("unit" not in str(x) for x in c.test_files)
 
-        assert c.legate_path == "legate"
+        assert c.legate_path == shutil.which("legate")
 
         assert c.cov_bin is None
         assert c.cov_args == "run -a --branch"
@@ -175,7 +176,7 @@ class TestConfig:
     def test_legate_dir(self) -> None:
         c = m.Config([])
         assert c.legate_dir is None
-        assert c.legate_path == "legate"
+        assert c.legate_path == shutil.which("legate")
         assert c._legate_source == "install"
 
     def test_cmd_legate_dir_good(self) -> None:

@@ -103,8 +103,15 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
     # Legion_BINARY_DIR and Legion_SOURCE_DIR from CMakeCache.txt
     legate_build_dir = legate_dir / "build"
     cmake_cache_txt = legate_build_dir.joinpath("CMakeCache.txt")
-    if legate_build_dir.exists() and cmake_cache_txt.exists():
-        return legate_build_dir
+    if legate_build_dir.exists():
+        if cmake_cache_txt.exists():
+            return legate_build_dir
+        import os
+
+        if (lg_arch := os.environ.get("LEGATE_CORE_ARCH")) and (
+            (lg_arch_dir := legate_build_dir / lg_arch) / "CMakeCache.txt"
+        ).exists():
+            return lg_arch_dir
 
     skbuild_dir = legate_dir / "_skbuild"
     if not skbuild_dir.exists():
