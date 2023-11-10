@@ -46,7 +46,10 @@ proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) con
 
   auto result = transform_->invert(point);
   if (parent_->identity()) return result;
-  return parent_->invert(std::move(result));
+  // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
+  // reference and returns a fresh SymbolicPoint (i.e. std::vector), we end up with a bunch of
+  // temporary objects and allocations. We should be std::move-ing this!
+  return parent_->invert(result);
 }
 
 Restrictions TransformStack::convert(const Restrictions& restrictions) const
@@ -62,7 +65,10 @@ Restrictions TransformStack::invert(const Restrictions& restrictions) const
 
   auto result = transform_->invert(restrictions);
   if (parent_->identity()) return result;
-  return parent_->invert(std::move(result));
+  // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
+  // reference and returns a fresh Restructions (i.e. std::vector), we end up with a bunch of
+  // temporary objects and allocations. We should be std::move-ing this!
+  return parent_->invert(result);
 }
 
 Shape TransformStack::invert_extents(const Shape& extents) const
@@ -71,7 +77,10 @@ Shape TransformStack::invert_extents(const Shape& extents) const
 
   auto result = transform_->invert_extents(extents);
   if (parent_->identity()) return result;
-  return parent_->invert_extents(std::move(result));
+  // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
+  // reference and returns a fresh Restructions (i.e. std::vector), we end up with a bunch of
+  // temporary objects and allocations. We should be std::move-ing this!
+  return parent_->invert_extents(result);
 }
 
 Shape TransformStack::invert_point(const Shape& point) const
@@ -80,7 +89,10 @@ Shape TransformStack::invert_point(const Shape& point) const
 
   auto result = transform_->invert_point(point);
   if (parent_->identity()) return result;
-  return parent_->invert_point(std::move(result));
+  // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
+  // reference and returns a fresh Restructions (i.e. std::vector), we end up with a bunch of
+  // temporary objects and allocations. We should be std::move-ing this!
+  return parent_->invert_point(result);
 }
 
 void TransformStack::pack(BufferBuilder& buffer) const
@@ -156,7 +168,12 @@ std::shared_ptr<TransformStack> TransformStack::push(std::unique_ptr<StoreTransf
   return std::make_shared<TransformStack>(std::move(transform), shared_from_this());
 }
 
-void TransformStack::dump() const { std::cerr << *this << std::endl; }
+void TransformStack::dump() const
+{
+  // We are printing to cerr, we absolutely want the stream to be synchronized with the
+  // underlying c lib streams
+  std::cerr << *this << std::endl;  // NOLINT(performance-avoid-endl)
+}
 
 std::vector<int32_t> TransformStack::find_imaginary_dims() const
 {
@@ -513,14 +530,14 @@ Transpose::Transpose(std::vector<int32_t>&& axes) : axes_{std::move(axes)}
   });
 }
 
-Domain Transpose::transform(const Domain& input) const
+Domain Transpose::transform(const Domain& domain) const
 {
   Domain output;
-  output.dim = input.dim;
+  output.dim = domain.dim;
   for (int32_t out_dim = 0; out_dim < output.dim; ++out_dim) {
     auto in_dim                            = axes_[out_dim];
-    output.rect_data[out_dim]              = input.rect_data[in_dim];
-    output.rect_data[out_dim + output.dim] = input.rect_data[in_dim + input.dim];
+    output.rect_data[out_dim]              = domain.rect_data[in_dim];
+    output.rect_data[out_dim + output.dim] = domain.rect_data[in_dim + domain.dim];
   }
   return output;
 }
@@ -654,20 +671,20 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
   for (auto& promoted : dims) {
     auto finder = std::find(axes_.begin(), axes_.end(), promoted);
     if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != axes_.end()); }
-    promoted = finder - axes_.begin();
+    promoted = static_cast<int32_t>(finder - axes_.begin());
   }
 }
 
 Delinearize::Delinearize(int32_t dim, std::vector<int64_t>&& sizes)
   : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
 {
-  for (int32_t dim = sizes_.size() - 2; dim >= 0; --dim) {
+  for (auto dim = static_cast<int32_t>(sizes_.size() - 2); dim >= 0; --dim) {
     strides_[dim] = strides_[dim + 1] * sizes_[dim + 1];
   }
   for (auto size : sizes_) volume_ *= size;
 }
 
-Domain Delinearize::transform(const Domain& input) const
+Domain Delinearize::transform(const Domain& domain) const
 {
   auto delinearize = [](const auto dim, const auto ndim, const auto& strides, const Domain& input) {
     Domain output;
@@ -691,23 +708,26 @@ Domain Delinearize::transform(const Domain& input) const
     }
     return output;
   };
-  return delinearize(dim_, sizes_.size(), strides_, input);
+  return delinearize(dim_, sizes_.size(), strides_, domain);
 }
 
 Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) const
 {
   Legion::DomainTransform transform;
-  int32_t out_dim = in_dim - strides_.size() + 1;
-  transform.m     = out_dim;
-  transform.n     = in_dim;
-  for (int32_t i = 0; i < out_dim; ++i)
+  const auto out_dim = static_cast<int32_t>(in_dim - strides_.size() + 1);
+  transform.m        = out_dim;
+  transform.n        = in_dim;
+  for (int32_t i = 0; i < out_dim; ++i) {
     for (int32_t j = 0; j < in_dim; ++j) transform.matrix[i * in_dim + j] = 0;
+  }
 
-  for (int32_t i = 0, j = 0; i < out_dim; ++i)
-    if (i == dim_)
+  for (int32_t i = 0, j = 0; i < out_dim; ++i) {
+    if (i == dim_) {
       for (auto stride : strides_) transform.matrix[i * in_dim + j++] = stride;
-    else
+    } else {
       transform.matrix[i * in_dim + j++] = 1;
+    }
+  }
 
   DomainPoint offset;
   offset.dim = out_dim;
@@ -732,12 +752,12 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       return create_no_partition();
     }
     case Partition::Kind::TILING: {
-      auto tiling       = static_cast<const Tiling*>(partition);
+      const auto tiling = static_cast<const Tiling*>(partition);
       auto& tile_shape  = tiling->tile_shape();
       auto& color_shape = tiling->color_shape();
       auto& offsets     = tiling->offsets();
 
-      auto invertible = [&](const Tiling* tiling) {
+      const auto invertible = [&] {
         size_t volume     = 1;
         size_t sum_offset = 0;
         for (uint32_t idx = 1; idx < sizes_.size(); ++idx) {
@@ -747,7 +767,7 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
         return 1 == volume && 0 == sum_offset;
       };
 
-      if (!invertible(tiling)) {
+      if (!invertible()) {
         throw NonInvertibleTransformation{"Delinearize transform cannot invert this partition: " +
                                           tiling->to_string()};
       }

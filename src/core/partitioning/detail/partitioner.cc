@@ -49,7 +49,8 @@ class LaunchDomainResolver {
 void LaunchDomainResolver::record_launch_domain(const Domain& launch_domain)
 {
   launch_domains_.insert(launch_domain);
-  launch_volumes_.insert(launch_domain.get_volume());
+  launch_volumes_.insert(
+    static_cast<decltype(launch_volumes_)::value_type>(launch_domain.get_volume()));
   if (launch_domains_.size() > 1) must_be_1d_ = true;
   if (launch_volumes_.size() > 1) must_be_sequential_ = true;
 }
@@ -68,7 +69,7 @@ Domain LaunchDomainResolver::resolve_launch_domain() const
   if (must_be_1d_) {
     if (unbound_dim_ != UNSET && unbound_dim_ > 1) return {};
     if (LegateDefined(LEGATE_USE_DEBUG)) assert(launch_volumes_.size() == 1);
-    int64_t volume = *launch_volumes_.begin();
+    const int64_t volume = *launch_volumes_.begin();
     return {0, volume - 1};
   }
 
@@ -143,19 +144,19 @@ bool Strategy::is_key_partition(const Variable* partition_symbol) const
 
 void Strategy::dump() const
 {
-  log_legate.debug("===== Solution =====");
+  log_legate().debug("===== Solution =====");
   for (const auto& [symbol, part] : assignments_)
-    log_legate.debug() << symbol.to_string() << ": " << part->to_string();
+    log_legate().debug() << symbol.to_string() << ": " << part->to_string();
   for (const auto& [symbol, fspace] : field_spaces_)
-    log_legate.debug() << symbol.to_string() << ": " << fspace;
+    log_legate().debug() << symbol.to_string() << ": " << fspace;
   for (const auto& [op, domain] : launch_domains_) {
     if (!domain.is_valid()) {
-      log_legate.debug() << op->to_string() << ": (sequential)";
+      log_legate().debug() << op->to_string() << ": (sequential)";
     } else {
-      log_legate.debug() << op->to_string() << ": " << domain;
+      log_legate().debug() << op->to_string() << ": " << domain;
     }
   }
-  log_legate.debug("====================");
+  log_legate().debug("====================");
 }
 
 void Strategy::compute_launch_domains(const ConstraintSolver& solver)
@@ -268,7 +269,7 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
     }
 
     auto equiv_class = solver.find_equivalence_class(part_symb);
-    std::shared_ptr<Partition> partition{create_no_partition()};
+    const std::shared_ptr<Partition> partition{create_no_partition()};
     auto field_space = runtime->create_field_space();
 
     for (auto symb : equiv_class) strategy->insert(symb, partition, field_space);

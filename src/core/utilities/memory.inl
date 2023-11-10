@@ -19,6 +19,7 @@ namespace legate {
 template <typename T>
 void default_delete<T>::operator()(T* ptr) const noexcept
 {
+  // NOLINTNEXTLINE(bugprone-sizeof-expression): comparing with 0 is the whole point here
   static_assert(sizeof(T) > 0, "default_delete cannot be instantiated for incomplete type");
   delete ptr;
 }

@@ -13,7 +13,6 @@
 #pragma once
 
 #include "core/type/detail/type_info.h"
-#include "core/type/type_traits.h"
 #include "core/utilities/detail/buffer_builder.h"
 
 #include <memory>

@@ -27,11 +27,11 @@ inline uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
 // ==========================================================================================
 
-inline const Arrays& Task::inputs() const { return inputs_; }
+inline const std::vector<std::shared_ptr<Array>>& Task::inputs() const { return inputs_; }
 
-inline const Arrays& Task::outputs() const { return outputs_; }
+inline const std::vector<std::shared_ptr<Array>>& Task::outputs() const { return outputs_; }
 
-inline const Arrays& Task::reductions() const { return reductions_; }
+inline const std::vector<std::shared_ptr<Array>>& Task::reductions() const { return reductions_; }
 
 inline const std::vector<Scalar>& Task::scalars() const { return scalars_; }
 
@@ -39,13 +39,13 @@ inline DomainPoint Task::point() const { return task_->index_point; }
 
 // ==========================================================================================
 
-inline const Stores& Copy::inputs() const { return inputs_; }
+inline const std::vector<Store>& Copy::inputs() const { return inputs_; }
 
-inline const Stores& Copy::outputs() const { return outputs_; }
+inline const std::vector<Store>& Copy::outputs() const { return outputs_; }
 
-inline const Stores& Copy::input_indirections() const { return input_indirections_; }
+inline const std::vector<Store>& Copy::input_indirections() const { return input_indirections_; }
 
-inline const Stores& Copy::output_indirections() const { return output_indirections_; }
+inline const std::vector<Store>& Copy::output_indirections() const { return output_indirections_; }
 
 inline DomainPoint Copy::point() const { return copy_->index_point; }
 

@@ -102,7 +102,7 @@ void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) co
   buffer.pack<int32_t>(static_cast<int32_t>(ArrayKind::BASE));
   data_->pack(buffer, analyzer);
 
-  bool nullable = null_mask_ != nullptr;
+  const bool nullable = null_mask_ != nullptr;
   buffer.pack<bool>(nullable);
   if (nullable) null_mask_->pack(buffer, analyzer);
 }
@@ -166,7 +166,7 @@ void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<int32_t>(static_cast<int32_t>(ArrayKind::STRUCT));
   type_->pack(buffer);
 
-  bool nullable = null_mask_ != nullptr;
+  const bool nullable = null_mask_ != nullptr;
   buffer.pack<bool>(nullable);
   if (nullable) null_mask_->pack(buffer, analyzer);
 

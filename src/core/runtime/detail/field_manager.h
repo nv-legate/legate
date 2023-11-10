@@ -26,15 +26,24 @@ class LogicalRegionField;
 class Runtime;
 
 struct FreeFieldInfo {
-  Legion::LogicalRegion region;
-  Legion::FieldID field_id;
-  Legion::Future can_dealloc;
-  void* attachment;
+  FreeFieldInfo() = default;
+  FreeFieldInfo(Legion::LogicalRegion region,
+                Legion::FieldID field_id,
+                Legion::Future can_dealloc,
+                void* attachment);
+
+  Legion::LogicalRegion region{};
+  Legion::FieldID field_id{};
+  Legion::Future can_dealloc{};
+  void* attachment{};
 };
 
 struct MatchItem {
-  Legion::RegionTreeID tid;
-  Legion::FieldID fid;
+  MatchItem() = default;
+  MatchItem(Legion::RegionTreeID tid, Legion::FieldID fid);
+
+  Legion::RegionTreeID tid{};
+  Legion::FieldID fid{};
 
   friend bool operator<(const MatchItem& l, const MatchItem& r);
 };

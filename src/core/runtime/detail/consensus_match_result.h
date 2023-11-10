@@ -25,7 +25,7 @@ class ConsensusMatchResult {
   ConsensusMatchResult(std::vector<T>&& input, Legion::Context ctx, Legion::Runtime* runtime);
 
  public:
-  ~ConsensusMatchResult();
+  ~ConsensusMatchResult() noexcept;
   ConsensusMatchResult(ConsensusMatchResult&&) noexcept            = default;
   ConsensusMatchResult& operator=(ConsensusMatchResult&&) noexcept = default;
 

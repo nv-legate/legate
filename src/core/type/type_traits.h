@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/type/type_info.h"
+
 #include "legate_defines.h"
 
 #include <limits.h>
@@ -166,7 +167,7 @@ using legate_type_of = typename LegateTypeOf<CODE>::type;
  */
 template <Type::Code CODE>
 struct is_integral {
-  static constexpr bool value = std::is_integral<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_integral_v<legate_type_of<CODE>>;
 };
 
 /**
@@ -175,7 +176,7 @@ struct is_integral {
  */
 template <Type::Code CODE>
 struct is_signed {
-  static constexpr bool value = std::is_signed<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_signed_v<legate_type_of<CODE>>;
 };
 template <>
 struct is_signed<Type::Code::FLOAT16> {
@@ -188,7 +189,7 @@ struct is_signed<Type::Code::FLOAT16> {
  */
 template <Type::Code CODE>
 struct is_unsigned {
-  static constexpr bool value = std::is_unsigned<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_unsigned_v<legate_type_of<CODE>>;
 };
 
 /**
@@ -197,7 +198,7 @@ struct is_unsigned {
  */
 template <Type::Code CODE>
 struct is_floating_point {
-  static constexpr bool value = std::is_floating_point<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_floating_point_v<legate_type_of<CODE>>;
 };
 
 template <>

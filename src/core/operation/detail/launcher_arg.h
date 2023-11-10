@@ -26,7 +26,6 @@ namespace legate::detail {
 class BufferBuilder;
 struct OutputRegionArg;
 struct StoreAnalyzer;
-class TaskLauncher;
 
 struct Serializable {
   virtual ~Serializable() = default;

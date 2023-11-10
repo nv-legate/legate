@@ -12,9 +12,10 @@
 
 #pragma once
 
+#include "core/legate_c.h"
+
 #include "legion.h"
 
-#include "core/legate_c.h"
 #include "legate_defines.h"
 
 /**
@@ -37,8 +38,6 @@ using LegateMappingTag  = legate_core_mapping_tag_t;
 using LegateMainFnPtr = void (*)(int32_t, char**);
 
 using Logger = Legion::Logger;
-
-extern Logger log_legate;
 
 // Re-export Legion types
 
@@ -336,5 +335,11 @@ template <typename T>
 using XorReduction = Legion::XorReduction<T>;
 
 /** @} */  // end of reduction
+
+namespace detail {
+
+[[nodiscard]] Logger& log_legate();
+
+}  // namespace detail
 
 }  // namespace legate

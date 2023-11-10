@@ -29,14 +29,15 @@
 namespace legate::detail {
 
 ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, size_t size)
-  : value_(value), size_(size)
+  : value_{std::move(value)},
+    size_{size},
+    is_device_value_{value_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM}
 {
-  is_device_value_ = value.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM;
 }
 
 /*static*/ ReturnValue ReturnValue::unpack(const void* ptr, size_t size, Memory::Kind memory_kind)
 {
-  ReturnValue result(Legion::UntypedDeferredValue(size, memory_kind), size);
+  ReturnValue result{Legion::UntypedDeferredValue{size, memory_kind}, size};
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!result.is_device_value()); }
   memcpy(result.ptr(), ptr, size);
 
@@ -50,31 +51,34 @@ void ReturnValue::finalize(Legion::Context legion_context) const
 
 void* ReturnValue::ptr()
 {
-  AccessorRW<int8_t, 1> acc(value_, size_, false);
+  const AccessorRW<int8_t, 1> acc{value_, size_, false};
   return acc.ptr(0);
 }
 
 const void* ReturnValue::ptr() const
 {
-  AccessorRO<int8_t, 1> acc(value_, size_, false);
+  const AccessorRO<int8_t, 1> acc{value_, size_, false};
   return acc.ptr(0);
 }
 
-ReturnedException::ReturnedException(int32_t index, const std::string& error_message)
-  : raised_(true), index_(index)
+ReturnedException::ReturnedException(int32_t index, std::string_view error_message)
+  : raised_{true}, index_{index}
 {
-  std::strncpy(error_message_.data(), error_message.c_str(), error_message_.size());
-  error_message_.back() = '\0';  // always null-terminate
   message_size_ =
     static_cast<decltype(message_size_)>(std::min(error_message_.size() - 1, error_message.size()));
+  std::memcpy(error_message_.data(), error_message.data(), message_size_);
+  if (message_size_ < error_message_.size()) {
+    std::memset(error_message_.data() + message_size_, 0, error_message_.size() - message_size_);
+  } else {
+    error_message_.back() = '\0';  // always null-terminate
+  }
 }
 
 std::optional<TaskException> ReturnedException::to_task_exception() const
 {
-  if (!raised_)
-    return std::nullopt;
-  else
-    return TaskException(index_, {error_message_.data(), error_message_.data() + message_size_});
+  if (!raised_) return std::nullopt;
+  return std::make_optional<TaskException>(
+    {index_, {error_message_.data(), error_message_.data() + message_size_}});
 }
 
 namespace {
@@ -82,6 +86,8 @@ namespace {
 template <typename T>
 constexpr size_t max_aligned_size_for_type()
 {
+  // NOLINTNEXTLINE(bugprone-sizeof-expression) // comparison to 0 is the point
+  static_assert(sizeof(T) > 0, "Cannot be used for incomplete type");
   return sizeof(T) + alignof(T) - 1;
 }
 
@@ -112,7 +118,7 @@ template <typename T>
   const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
 
   *static_cast<std::decay_t<T>*>(ptr) = std::forward<T>(value);
-  return {(char*)ptr + sizeof(T), remaining_cap - sizeof(T) - align_offset};
+  return {static_cast<char*>(ptr) + sizeof(T), remaining_cap - sizeof(T) - align_offset};
 }
 
 }  // namespace
@@ -137,7 +143,7 @@ template <typename T>
   const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
 
   *value = *static_cast<std::decay_t<T>*>(ptr);
-  return {(char*)ptr + sizeof(T), remaining_cap - sizeof(T) - align_offset};
+  return {static_cast<char*>(ptr) + sizeof(T), remaining_cap - sizeof(T) - align_offset};
 }
 
 }  // namespace
@@ -166,13 +172,11 @@ ReturnValue ReturnedException::pack() const
   auto mem_kind    = find_memory_kind_for_executing_processor();
   auto buffer      = Legion::UntypedDeferredValue(buffer_size, mem_kind);
 
-  AccessorWO<int8_t, 1> acc(buffer, buffer_size, false);
+  const AccessorWO<int8_t, 1> acc{buffer, buffer_size, false};
   legion_serialize(acc.ptr(0));
 
-  return ReturnValue(buffer, buffer_size);
+  return {buffer, buffer_size};
 }
-
-ReturnValues::ReturnValues() {}
 
 ReturnValues::ReturnValues(std::vector<ReturnValue>&& return_values)
   : return_values_(std::move(return_values))
@@ -180,13 +184,10 @@ ReturnValues::ReturnValues(std::vector<ReturnValue>&& return_values)
   if (return_values_.size() > 1) {
     buffer_size_ += sizeof(uint32_t);
     for (auto& ret : return_values_) buffer_size_ += sizeof(uint32_t) + ret.size();
-  } else if (return_values_.size() > 0)
+  } else if (!return_values_.empty()) {
     buffer_size_ = return_values_[0].size();
+  }
 }
-
-ReturnValue ReturnValues::operator[](int32_t idx) const { return return_values_[idx]; }
-
-size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
 
 void ReturnValues::legion_serialize(void* buffer) const
 {
@@ -235,19 +236,20 @@ void ReturnValues::legion_serialize(void* buffer) const
 #if LegateDefined(LEGATE_USE_CUDA)
   if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
-    for (auto ret : return_values_) {
-      uint32_t size = ret.size();
-      if (ret.is_device_value())
+    for (auto&& ret : return_values_) {
+      const auto size = ret.size();
+      if (ret.is_device_value()) {
         CHECK_CUDA(cudaMemcpyAsync(ptr, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
-      else
+      } else {
         memcpy(ptr, ret.ptr(), size);
+      }
       ptr += size;
     }
   } else
 #endif
   {
-    for (auto ret : return_values_) {
-      uint32_t size = ret.size();
+    for (auto&& ret : return_values_) {
+      const auto size = ret.size();
       memcpy(ptr, ret.ptr(), size);
       ptr += size;
     }
@@ -264,16 +266,15 @@ void ReturnValues::legion_deserialize(const void* buffer)
   auto offsets = reinterpret_cast<const uint32_t*>(ptr + sizeof(uint32_t));
   auto values  = ptr + sizeof(uint32_t) + sizeof(uint32_t) * num_values;
 
-  uint32_t offset = 0;
-  for (uint32_t idx = 0; idx < num_values; ++idx) {
-    uint32_t next_offset = offsets[idx];
-    uint32_t size        = next_offset - offset;
+  for (uint32_t idx = 0, offset = 0; idx < num_values; ++idx) {
+    const auto next_offset = offsets[idx];
+    const auto size        = next_offset - offset;
     return_values_.push_back(ReturnValue::unpack(values + offset, size, mem_kind));
     offset = next_offset;
   }
 }
 
-/*static*/ ReturnValue ReturnValues::extract(Legion::Future future, uint32_t to_extract)
+/*static*/ ReturnValue ReturnValues::extract(const Legion::Future& future, uint32_t to_extract)
 {
   auto kind          = find_memory_kind_for_executing_processor();
   const auto* buffer = future.get_buffer(kind);
@@ -284,9 +285,9 @@ void ReturnValues::legion_deserialize(const void* buffer)
   auto offsets = reinterpret_cast<const uint32_t*>(ptr + sizeof(uint32_t));
   auto values  = ptr + sizeof(uint32_t) + sizeof(uint32_t) * num_values;
 
-  uint32_t next_offset = offsets[to_extract];
-  uint32_t offset      = to_extract == 0 ? 0 : offsets[to_extract - 1];
-  uint32_t size        = next_offset - offset;
+  const uint32_t next_offset = offsets[to_extract];
+  const uint32_t offset      = to_extract == 0 ? 0 : offsets[to_extract - 1];
+  const uint32_t size        = next_offset - offset;
 
   return ReturnValue::unpack(values + offset, size, kind);
 }
@@ -296,7 +297,8 @@ void ReturnValues::finalize(Legion::Context legion_context) const
   if (return_values_.empty()) {
     Legion::Runtime::legion_task_postamble(legion_context);
     return;
-  } else if (return_values_.size() == 1) {
+  }
+  if (return_values_.size() == 1) {
     return_values_.front().finalize(legion_context);
     return;
   }
@@ -310,10 +312,10 @@ void ReturnValues::finalize(Legion::Context legion_context) const
   if (kind == Processor::TOC_PROC) CHECK_CUDA(cudaDeviceSynchronize());
 #endif
 
-  size_t return_size = legion_buffer_size();
+  const size_t return_size = legion_buffer_size();
   auto return_buffer =
     Legion::UntypedDeferredValue(return_size, find_memory_kind_for_executing_processor());
-  AccessorWO<int8_t, 1> acc(return_buffer, return_size, false);
+  const AccessorWO<int8_t, 1> acc{return_buffer, return_size, false};
   legion_serialize(acc.ptr(0));
   return_buffer.finalize(legion_context);
 }
@@ -329,7 +331,7 @@ struct JoinReturnedException {
   {
     if (LegateDefined(LEGATE_USE_DEBUG)) { assert(EXCLUSIVE); }
     if (lhs.raised() || !rhs.raised()) return;
-    lhs = rhs;
+    lhs = std::move(rhs);
   }
 
   template <bool EXCLUSIVE>
@@ -337,33 +339,41 @@ struct JoinReturnedException {
   {
     if (LegateDefined(LEGATE_USE_DEBUG)) { assert(EXCLUSIVE); }
     if (rhs1.raised() || !rhs2.raised()) return;
-    rhs1 = rhs2;
+    rhs1 = std::move(rhs2);
   }
 };
 
 /*static*/ const ReturnedException JoinReturnedException::identity;
 
-static void pack_returned_exception(const ReturnedException& value, void*& ptr, size_t& size)
+namespace {
+
+void pack_returned_exception(const ReturnedException& value, void*& ptr, size_t& size)
 {
   auto new_size = value.legion_buffer_size();
   if (new_size > size) {
-    size = new_size;
-    ptr  = realloc(ptr, new_size);
+    size         = new_size;
+    auto new_ptr = realloc(ptr, new_size);
+    assert(new_ptr);  // realloc returns nullptr on failure, so check before clobbering ptr
+    ptr = new_ptr;
   }
   value.legion_serialize(ptr);
 }
 
-static void returned_exception_init(const Legion::ReductionOp* reduction_op,
-                                    void*& ptr,
-                                    size_t& size)
+}  // namespace
+
+static void returned_exception_init(  // NOLINT(misc-use-anonymous-namespace)
+  const Legion::ReductionOp* /*reduction_op*/,
+  void*& ptr,
+  size_t& size)
 {
   pack_returned_exception(JoinReturnedException::identity, ptr, size);
 }
 
-static void returned_exception_fold(const Legion::ReductionOp* reduction_op,
-                                    void*& lhs_ptr,
-                                    size_t& lhs_size,
-                                    const void* rhs_ptr)
+static void returned_exception_fold(  // NOLINT(misc-use-anonymous-namespace)
+  const Legion::ReductionOp* /*reduction_op*/,
+  void*& lhs_ptr,
+  size_t& lhs_size,
+  const void* rhs_ptr)
 
 {
   ReturnedException lhs, rhs;
@@ -373,7 +383,7 @@ static void returned_exception_fold(const Legion::ReductionOp* reduction_op,
   pack_returned_exception(lhs, lhs_ptr, lhs_size);
 }
 
-void register_exception_reduction_op(Legion::Runtime* runtime, const Library* library)
+void register_exception_reduction_op(Legion::Runtime* /*runtime*/, const Library* library)
 {
   auto redop_id = library->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
   auto* redop   = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();

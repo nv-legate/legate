@@ -41,19 +41,19 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
   point_str << point[0];
   for (int32_t dim = 1; dim < point.dim; ++dim) point_str << "," << point[dim];
 
-  log_legate.print("%s %s task [%s], pt = (%s), proc = " IDFMT,
-                   task->get_task_name(),
-                   proc_kind_str,
-                   task->get_provenance_string().c_str(),
-                   point_str.str().c_str(),
-                   exec_proc.id);
+  log_legate().print("%s %s task [%s], pt = (%s), proc = " IDFMT,
+                     task->get_task_name(),
+                     proc_kind_str,
+                     task->get_provenance_string().c_str(),
+                     point_str.str().c_str(),
+                     exec_proc.id);
 }
 
 std::string generate_task_name(const std::type_info& ti)
 {
   std::string result;
   int status      = 0;
-  char* demangled = abi::__cxa_demangle(ti.name(), 0, 0, &status);
+  char* demangled = abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status);
   result          = demangled;
   free(demangled);
   assert(!status);
@@ -95,7 +95,8 @@ void task_wrapper(VariantImpl variant_impl,
 
   ReturnValues return_values{};
   try {
-    legate::TaskContext ctx{&context};
+    const legate::TaskContext ctx{&context};
+
     if (!Config::use_empty_task) (*variant_impl)(ctx);
     return_values = context.pack_return_values();
   } catch (const legate::TaskException& e) {
@@ -105,7 +106,7 @@ void task_wrapper(VariantImpl variant_impl,
     } else {
       // If a Legate exception is thrown by a task that does not declare any exception,
       // this is a bug in the library that needs to be reported to the developer
-      log_legate.error(
+      log_legate().error(
         "Task %s threw an exception \"%s\", but the task did not declare any exception.",
         task->get_task_name(),
         e.error_message().c_str());

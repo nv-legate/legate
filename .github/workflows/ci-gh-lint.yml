@@ -7,7 +7,7 @@ on:
       - "*branch-*"
 
 jobs:
-  mypy:
+  lint:
     runs-on: 'ubuntu-latest'
     strategy:
       fail-fast: true
@@ -17,7 +17,9 @@ jobs:
 
     steps:
       - name: List machine info
-        run: uname -a
+        run: |
+          uname -a
+          lsb_release -a
 
       - name: List python version
         run: python3 --version
@@ -50,3 +52,49 @@ jobs:
 
       - name: Run MyPy on the repository
         run: python3 -m mypy ./legate
+
+      - name: Install LLVM 17
+        working-directory: ~
+        run: |
+          # check if we can't install via apt-get, in which case we can remove all the
+          # lines below this
+          set -e
+          ret=$(sudo apt-get install -y clang-tidy-17 > /dev/null 2>&1; echo $?)
+          if [[ $ret -eq 0 ]]; then
+            echo 'Can install clang-tidy-17 with apt-get, no longer need to install it manually!';
+            exit 1;
+          fi
+          set +e
+          # can remove all this if we can install with apt-get
+          mkdir -p llvm-17
+          cd llvm-17
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x ./llvm.sh
+          sudo ./llvm.sh 17 all
+
+      - name: List clang-tidy version
+        run: |
+          clang-tidy-17 --version
+          # run-clang-tidy has no --version, so just print its location and help to make
+          # sure it's there
+          which run-clang-tidy-17
+          run-clang-tidy-17 --help
+
+      - name: Install Legion pre-reqs
+        run: |
+          # libdwarf
+          sudo apt-get install -y libdw-dev
+
+      - name: Configure legate.core
+        # CMake Error: CMake was unable to find a build program corresponding to "Ninja".
+        # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
+        # tool.
+        run: |
+          cmake \
+            --preset debug-clang \
+            -G "Unix Makefiles" \
+            -DLEGATE_CORE_CLANG_TIDY=clang-tidy-17 \
+            -DLEGATE_CORE_RUN_CLANG_TIDY=run-clang-tidy-17
+
+      - name: Run clang-tidy
+        run: cmake --build --preset debug-clang --target tidy

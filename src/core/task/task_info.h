@@ -30,30 +30,25 @@ class TaskInfo {
   TaskInfo(std::string task_name);
   ~TaskInfo();
 
- public:
-  const std::string& name() const;
+  [[nodiscard]] const std::string& name() const;
 
- public:
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options);
-  const VariantInfo& find_variant(LegateVariantCode vid) const;
-  bool has_variant(LegateVariantCode vid) const;
+  [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
+  [[nodiscard]] bool has_variant(LegateVariantCode vid) const;
 
- public:
   void register_task(Legion::TaskID task_id);
 
- private:
-  friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);
-
- private:
   TaskInfo(const TaskInfo&)            = delete;
   TaskInfo& operator=(const TaskInfo&) = delete;
   TaskInfo(TaskInfo&&)                 = delete;
   TaskInfo& operator=(TaskInfo&&)      = delete;
 
  private:
+  friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);
+
   class Impl;
 
   std::unique_ptr<Impl> impl_;

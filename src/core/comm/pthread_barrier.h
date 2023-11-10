@@ -21,51 +21,58 @@
 // for Mac OS, as Mac does not implement pthread barriers, and the Legate
 // implementation utilizes them when MPI is disabled.
 
-typedef int pthread_barrierattr_t;
-typedef struct {
+#define CHECK_PTHREAD_CALL(...)       \
+  do {                                \
+    const int cpc_ret_ = __VA_ARGS__; \
+    if (cpc_ret_) return cpc_ret_;    \
+  } while (0)
+
+using pthread_barrierattr_t = int;
+struct pthread_barrier_t {
   pthread_mutex_t mutex;
   pthread_cond_t cond;
   int count;
   int tripCount;
-} pthread_barrier_t;
+};
 
 inline int pthread_barrier_init(pthread_barrier_t* barrier,
-                                const pthread_barrierattr_t* attr,
+                                const pthread_barrierattr_t* /*attr*/,
                                 unsigned int count)
 {
   if (count == 0) { return -1; }
-  if (pthread_mutex_init(&barrier->mutex, 0) < 0) { return -1; }
-  if (pthread_cond_init(&barrier->cond, 0) < 0) {
-    pthread_mutex_destroy(&barrier->mutex);
-    return -1;
+  CHECK_PTHREAD_CALL(pthread_mutex_init(&barrier->mutex, nullptr));
+  if (const auto ret = pthread_cond_init(&barrier->cond, nullptr)) {
+    CHECK_PTHREAD_CALL(pthread_mutex_destroy(&barrier->mutex));
+    return ret;
   }
-  barrier->tripCount = count;
+  barrier->tripCount = static_cast<decltype(barrier->tripCount)>(count);
   barrier->count     = 0;
   return 0;
 }
 
 inline int pthread_barrier_destroy(pthread_barrier_t* barrier)
 {
-  pthread_cond_destroy(&barrier->cond);
-  pthread_mutex_destroy(&barrier->mutex);
+  CHECK_PTHREAD_CALL(pthread_cond_destroy(&barrier->cond));
+  CHECK_PTHREAD_CALL(pthread_mutex_destroy(&barrier->mutex));
   return 0;
 }
 
 inline int pthread_barrier_wait(pthread_barrier_t* barrier)
 {
-  pthread_mutex_lock(&barrier->mutex);
+  CHECK_PTHREAD_CALL(pthread_mutex_lock(&barrier->mutex));
   ++(barrier->count);
   if (barrier->count >= barrier->tripCount) {
     barrier->count = 0;
-    pthread_cond_broadcast(&barrier->cond);
-    pthread_mutex_unlock(&barrier->mutex);
+    CHECK_PTHREAD_CALL(pthread_cond_broadcast(&barrier->cond));
+    CHECK_PTHREAD_CALL(pthread_mutex_unlock(&barrier->mutex));
     return 1;
-  } else {
-    pthread_cond_wait(&barrier->cond, &(barrier->mutex));
-    pthread_mutex_unlock(&barrier->mutex);
-    return 0;
   }
+  CHECK_PTHREAD_CALL(pthread_cond_wait(&barrier->cond, &(barrier->mutex)));
+  CHECK_PTHREAD_CALL(pthread_mutex_unlock(&barrier->mutex));
+  return 0;
 }
+
+#undef CHECK_PTHREAD_CALL
 
 #endif  // PTHREAD_BARRIER_H_
 #endif  // _POSIX_BARRIERS

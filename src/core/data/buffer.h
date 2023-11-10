@@ -12,10 +12,12 @@
 
 #pragma once
 
-#include "legion.h"
-
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
+
+#include "legion.h"
+
+#include <cstddef>
 
 /**
  * @file
@@ -23,6 +25,8 @@
  */
 
 namespace legate {
+
+inline constexpr size_t DEFAULT_ALIGNMENT = 16;
 
 /**
  * @ingroup data
@@ -69,14 +73,13 @@ using Buffer = Legion::DeferredBuffer<VAL, DIM>;
 template <typename VAL, int32_t DIM>
 Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
                                Memory::Kind kind = Memory::Kind::NO_MEMKIND,
-                               size_t alignment  = 16)
+                               size_t alignment  = DEFAULT_ALIGNMENT)
 {
   if (Memory::Kind::NO_MEMKIND == kind) kind = find_memory_kind_for_executing_processor(false);
   auto hi = extents - Point<DIM>::ONES();
   // We just avoid creating empty buffers, as they cause all sorts of headaches.
   for (int32_t idx = 0; idx < DIM; ++idx) hi[idx] = std::max<int64_t>(hi[idx], 0);
-  Rect<DIM> bounds(Point<DIM>::ZEROES(), hi);
-  return Buffer<VAL, DIM>(bounds, kind, nullptr, alignment);
+  return Buffer<VAL, DIM>{Rect<DIM>{Point<DIM>::ZEROES(), std::move(hi)}, kind, nullptr, alignment};
 }
 
 /**
@@ -93,7 +96,7 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
 template <typename VAL>
 Buffer<VAL> create_buffer(size_t size,
                           Memory::Kind kind = Memory::Kind::NO_MEMKIND,
-                          size_t alignment  = 16)
+                          size_t alignment  = DEFAULT_ALIGNMENT)
 {
   return create_buffer<VAL, 1>(Point<1>(size), kind, alignment);
 }

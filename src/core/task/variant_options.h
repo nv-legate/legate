@@ -65,7 +65,7 @@ struct VariantOptions {
    */
   VariantOptions& with_return_size(size_t return_size);
 
-  void populate_registrar(Legion::TaskVariantRegistrar& registrar);
+  void populate_registrar(Legion::TaskVariantRegistrar& registrar) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options);

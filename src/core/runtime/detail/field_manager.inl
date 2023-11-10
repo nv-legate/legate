@@ -18,6 +18,21 @@
 
 namespace legate::detail {
 
+inline FreeFieldInfo::FreeFieldInfo(Legion::LogicalRegion region,
+                                    Legion::FieldID field_id,
+                                    Legion::Future can_dealloc,
+                                    void* attachment)
+  : region{std::move(region)},
+    field_id{std::move(field_id)},
+    can_dealloc{std::move(can_dealloc)},
+    attachment{attachment}
+{
+}
+
+// ==========================================================================================
+
+inline MatchItem::MatchItem(Legion::RegionTreeID tid, Legion::FieldID fid) : tid{tid}, fid{fid} {}
+
 inline bool operator<(const MatchItem& l, const MatchItem& r)
 {
   return std::tie(l.tid, l.fid) < std::tie(r.tid, r.fid);

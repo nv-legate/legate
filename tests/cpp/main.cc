@@ -17,7 +17,8 @@
 
 extern "C" {
 
-const char* __asan_default_options()  // NOLINT(bugprone-reserved-identifier)
+// NOLINTBEGIN(bugprone-reserved-identifier)
+const char* __asan_default_options()
 {
   return "check_initialization_order=1:"
          "detect_stack_use_after_return=1:"
@@ -31,17 +32,14 @@ const char* __asan_default_options()  // NOLINT(bugprone-reserved-identifier)
          "symbolize=1:";
 }
 
-const char* __ubsan_default_options()  // NOLINT(bugprone-reserved-identifier)
-{
-  return "print_stacktrace=1:";
-}
+const char* __ubsan_default_options() { return "print_stacktrace=1:"; }
 
-const char* __lsan_default_suppressions()  // NOLINT(bugprone-reserved-identifier)
+const char* __lsan_default_suppressions()
 {
   return "leak:librealm.*\n"
          "leak:liblegion.*\n";
 }
-//
+// NOLINTEND(bugprone-reserved-identifier)
 }
 
 int main(int argc, char** argv)

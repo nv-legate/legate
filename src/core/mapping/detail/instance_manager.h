@@ -14,13 +14,10 @@
 
 #include "core/mapping/mapping.h"
 
-#include "legion.h"
-
 #include <iosfwd>
 #include <map>
 #include <memory>
 #include <set>
-#include <utility>
 #include <vector>
 
 namespace legate::mapping::detail {
@@ -32,7 +29,7 @@ struct RegionGroup {
 
   RegionGroup() = default;
 
-  RegionGroup(std::set<Region> regions, Domain bounding_box);
+  RegionGroup(std::set<Region> regions, const Domain& bounding_box);
 
   [[nodiscard]] std::vector<Region> get_regions() const;
   [[nodiscard]] bool subsumes(const RegionGroup* other);
@@ -44,7 +41,21 @@ struct RegionGroup {
 
 std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group);
 
-struct InstanceSet {
+// FIXME: If clang-tidy ever lets us ignore warnings from specific headers, or fixes this, we
+// can remove the NOLINT. This NOLINT is added to work around a bogus clang-tidy warning:
+//
+// _deps/legion-src/runtime/legion/legion_types.h:2027:11: error: no definition found for
+// 'InstanceSet', but a definition with the same name 'InstanceSet' found in another namespace
+// 'legate::mapping::detail' [bugprone-forward-declaration-namespace,-warnings-as-errors]
+// 2027 | class InstanceSet;
+//      |       ^
+// legate.core.internal/src/core/mapping/detail/instance_manager.h:44:8: note: a definition of
+// 'InstanceSet' is found here
+//   44 | class InstanceSet {
+//      |       ^
+//
+// The only way (other than to disable the check wholesale), is to silence it for this class...
+class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
  public:
   using Region       = Legion::LogicalRegion;
   using Instance     = Legion::Mapping::PhysicalInstance;
@@ -66,8 +77,8 @@ struct InstanceSet {
                                                                 const Domain& domain,
                                                                 bool exact) const;
 
-  [[nodiscard]] std::set<Instance> record_instance(RegionGroupP group,
-                                                   Instance instance,
+  [[nodiscard]] std::set<Instance> record_instance(const RegionGroupP& group,
+                                                   const Instance& instance,
                                                    const InstanceMappingPolicy& policy);
 
   bool erase(const Instance& inst);
@@ -151,7 +162,7 @@ class InstanceManager : public BaseInstanceManager {
                                                FieldID field_id,
                                                Memory memory,
                                                bool exact = false);
-  [[nodiscard]] std::set<Instance> record_instance(RegionGroupP group,
+  [[nodiscard]] std::set<Instance> record_instance(const RegionGroupP& group,
                                                    FieldID field_id,
                                                    const Instance& instance,
                                                    const InstanceMappingPolicy& policy = {});

@@ -22,8 +22,6 @@
 #include <unordered_map>
 #include <vector>
 
-extern Legion::Logger log_legate;
-
 namespace legate::proj {
 
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
@@ -177,11 +175,12 @@ template <int32_t SRC_DIM, int32_t TGT_DIM>
 {
   Legion::Transform<TGT_DIM, SRC_DIM> transform;
 
-  for (int32_t tgt_dim = 0; tgt_dim < TGT_DIM; ++tgt_dim)
+  for (int32_t tgt_dim = 0; tgt_dim < TGT_DIM; ++tgt_dim) {
     for (int32_t src_dim = 0; src_dim < SRC_DIM; ++src_dim) transform[tgt_dim][src_dim] = 0;
+  }
 
   for (int32_t tgt_dim = 0; tgt_dim < TGT_DIM; ++tgt_dim) {
-    int32_t src_dim = dims[tgt_dim];
+    const int32_t src_dim = dims[tgt_dim];
     if (src_dim != -1) transform[tgt_dim][src_dim] = weights[tgt_dim];
   }
 
@@ -256,14 +255,14 @@ struct create_affine_functor_fn {
 
       ss << "Register projection functor: functor: " << functor << ", id: " << proj_id << ", ";
       spec_to_string(ss, SRC_DIM, TGT_DIM, dims, weights, offsets);
-      log_legate.debug() << std::move(ss).str();
+      log_legate().debug() << std::move(ss).str();
     } else {
-      log_legate.debug(
+      log_legate().debug(
         "Register projection functor: functor: %p, id: %d", static_cast<void*>(functor), proj_id);
     }
     runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
 
-    std::lock_guard<std::mutex> lock{functor_table_lock};
+    const std::lock_guard<std::mutex> lock{functor_table_lock};
 
     functor_table[proj_id] = functor;
   }
@@ -275,11 +274,11 @@ void register_legate_core_projection_functors(Legion::Runtime* runtime,
   auto proj_id = core_library->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
   auto functor = new DelinearizationFunctor{runtime};
 
-  log_legate.debug(
+  log_legate().debug(
     "Register delinearizing functor: functor: %p, id: %d", static_cast<void*>(functor), proj_id);
   runtime->register_projection_functor(proj_id, functor, true /*silence warnings*/);
   {
-    std::lock_guard<std::mutex> lock{functor_table_lock};
+    const std::lock_guard<std::mutex> lock{functor_table_lock};
 
     functor_table[proj_id] = functor;
   }
@@ -291,12 +290,12 @@ LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID pro
 {
   if (0 == proj_id) return identity_functor;
 
-  std::lock_guard<std::mutex> lock{functor_table_lock};
+  const std::lock_guard<std::mutex> lock{functor_table_lock};
   auto result = functor_table[proj_id];
 
   // If we're not OK with a missing projection functor, then throw an error.
   if (nullptr == result && !allow_missing) {
-    log_legate.debug("Failed to find projection functor of id %d", proj_id);
+    log_legate().debug("Failed to find projection functor of id %d", proj_id);
     LEGATE_ABORT;
   }
   return result;
@@ -314,22 +313,16 @@ struct LinearizingPointTransformFunctor : public Legion::PointTransformFunctor {
     DomainPoint result;
     result.dim = 1;
 
-    int32_t ndim = domain.dim;
-    int64_t idx  = point[0];
+    const int32_t ndim = domain.dim;
+    int64_t idx        = point[0];
     for (int32_t dim = 1; dim < ndim; ++dim) {
-      int64_t extent = domain.rect_data[dim + ndim] - domain.rect_data[dim] + 1;
-      idx            = idx * extent + point[dim];
+      const int64_t extent = domain.rect_data[dim + ndim] - domain.rect_data[dim] + 1;
+      idx                  = idx * extent + point[dim];
     }
     result[0] = idx;
     return result;
   }
 };
-
-namespace {
-
-auto* linearizing_point_transform_functor = new LinearizingPointTransformFunctor{};
-//
-}  // namespace
 
 }  // namespace legate::detail
 
@@ -355,7 +348,13 @@ void legate_register_affine_projection_functor(int32_t src_ndim,
 
 [[nodiscard]] void* legate_linearizing_point_transform_functor()
 {
-  return legate::detail::linearizing_point_transform_functor;
+  try {
+    static auto* functor = new legate::detail::LinearizingPointTransformFunctor{};
+
+    return functor;
+  } catch (...) {
+    std::terminate();
+  }
 }
 //
 }

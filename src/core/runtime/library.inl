@@ -72,7 +72,8 @@ int64_t Library::register_reduction_operator(int32_t redop_id)
   int64_t legion_redop_id = get_reduction_op_id(redop_id);
 #if !defined(REALM_COMPILER_IS_NVCC)
   if (LegateDefined(LEGATE_USE_CUDA)) {
-    log_legate.error("Reduction operators must be registered in a .cu file when CUDA is enabled");
+    detail::log_legate().error(
+      "Reduction operators must be registered in a .cu file when CUDA is enabled");
     LEGATE_ABORT;
   }
 #endif
@@ -85,6 +86,8 @@ inline bool Library::operator==(const Library& other) const { return impl() == o
 
 inline bool Library::operator!=(const Library& other) const { return !(*this == other); }
 
-inline detail::Library* Library::impl() const { return impl_; }
+inline const detail::Library* Library::impl() const { return impl_; }
+
+inline detail::Library* Library::impl() { return impl_; }
 
 }  // namespace legate

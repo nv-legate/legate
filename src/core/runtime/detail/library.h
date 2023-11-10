@@ -76,7 +76,8 @@ class Library {
   [[nodiscard]] int64_t get_new_task_id();
 
   [[nodiscard]] const std::string& get_task_name(int64_t local_task_id) const;
-  [[nodiscard]] std::unique_ptr<Scalar> get_tunable(int64_t tunable_id, std::shared_ptr<Type> type);
+  [[nodiscard]] std::unique_ptr<Scalar> get_tunable(int64_t tunable_id,
+                                                    std::shared_ptr<Type> type) const;
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);
   [[nodiscard]] Legion::Mapping::Mapper* get_legion_mapper() const;
 

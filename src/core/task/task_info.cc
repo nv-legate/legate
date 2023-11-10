@@ -31,22 +31,21 @@ class TaskInfo::Impl {
  public:
   Impl(std::string task_name);
 
- public:
-  const std::string& name() const { return task_name_; }
+  [[nodiscard]] const std::string& name() const { return task_name_; }
 
- public:
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options);
-  const VariantInfo& find_variant(LegateVariantCode vid) const;
-  bool has_variant(LegateVariantCode vid) const;
+  [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
+  [[nodiscard]] bool has_variant(LegateVariantCode vid) const;
 
- public:
   void register_task(Legion::TaskID task_id);
 
- public:
-  const std::map<LegateVariantCode, VariantInfo>& variants() const { return variants_; }
+  [[nodiscard]] const std::map<LegateVariantCode, VariantInfo>& variants() const
+  {
+    return variants_;
+  }
 
  private:
   std::string task_name_;
@@ -65,7 +64,7 @@ void TaskInfo::Impl::add_variant(LegateVariantCode vid,
   if (variants_.find(vid) != variants_.end())
     throw std::invalid_argument("Task " + task_name_ + " already has variant " +
                                 std::to_string(vid));
-  variants_.emplace(std::make_pair(vid, VariantInfo{body, code_desc, options}));
+  variants_.emplace(vid, VariantInfo{body, code_desc, options});
 }
 
 const VariantInfo& TaskInfo::Impl::find_variant(LegateVariantCode vid) const

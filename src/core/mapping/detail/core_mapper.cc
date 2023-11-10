@@ -14,22 +14,25 @@
 
 #include "core/comm/comm_nccl.h"
 #include "core/mapping/detail/machine.h"
+#include "core/utilities/detail/strtoll.h"
 
 #include "env_defaults.h"
 
+#include <cstdlib>
 #include <vector>
 
 namespace legate {
 
-uint32_t extract_env(const char* env_name, const uint32_t default_value, const uint32_t test_value)
+uint32_t extract_env(const char* env_name, uint32_t default_value, uint32_t test_value)
 {
   const char* env_value = getenv(env_name);
   if (nullptr == env_value) {
     const char* legate_test = getenv("LEGATE_TEST");
-    if (legate_test != nullptr && atoi(legate_test) > 0) return test_value;
+
+    if (legate_test != nullptr && detail::safe_strtoll(legate_test) > 0) return test_value;
     return default_value;
   }
-  return atoi(env_value);
+  return detail::safe_strtoll<uint32_t>(env_value);
 }
 
 }  // namespace legate
@@ -42,13 +45,13 @@ namespace legate::mapping::detail {
 class CoreMapper : public Mapper {
  public:
   void set_machine(const legate::mapping::MachineQueryInterface* machine) override;
-  legate::mapping::TaskTarget task_target(
+  [[nodiscard]] legate::mapping::TaskTarget task_target(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::TaskTarget>& options) override;
-  std::vector<legate::mapping::StoreMapping> store_mappings(
+  [[nodiscard]] std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override;
-  legate::Scalar tunable_value(legate::TunableID tunable_id) override;
+  [[nodiscard]] legate::Scalar tunable_value(legate::TunableID tunable_id) override;
 
  private:
   const LocalMachine machine{};
@@ -87,16 +90,16 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
 {
   switch (tunable_id) {
     case LEGATE_CORE_TUNABLE_TOTAL_CPUS: {
-      return Scalar{int32_t(machine.total_cpu_count())};  // assume symmetry
+      return Scalar{static_cast<int32_t>(machine.total_cpu_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_TOTAL_GPUS: {
-      return Scalar{int32_t(machine.total_gpu_count())};  // assume symmetry
+      return Scalar{static_cast<int32_t>(machine.total_gpu_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_TOTAL_OMPS: {
-      return Scalar{int32_t(machine.total_omp_count())};  // assume symmetry
+      return Scalar{static_cast<int32_t>(machine.total_omp_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_NUM_NODES: {
-      return Scalar{int32_t(machine.total_nodes)};
+      return Scalar{static_cast<int32_t>(machine.total_nodes)};
     }
     case LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME: {
       // TODO: make these profile guided
@@ -133,6 +136,7 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
       return Scalar{LegateDefined(LEGATE_USE_CUDA) && machine.has_gpus() &&
                     comm::nccl::needs_barrier()};
     }
+    default: break;
   }
   // Illegal tunable variable
   LEGATE_ABORT;

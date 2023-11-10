@@ -11,13 +11,14 @@
  */
 
 #include "core/comm/comm_cpu.h"
+
+#include "core/comm/coll.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
-
-#include "core/comm/coll.h"
+#include "core/utilities/detail/malloc.h"
 
 namespace legate::detail {
 
@@ -26,27 +27,26 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 }  // namespace legate::detail
 
 namespace legate::comm::cpu {
+using Legion::FutureMap;
 
 class Factory : public detail::CommunicatorFactory {
  public:
   Factory(const detail::Library* core_library);
 
- public:
-  bool needs_barrier() const override { return false; }
-  bool is_supported_target(mapping::TaskTarget target) const override;
+  [[nodiscard]] bool needs_barrier() const override { return false; }
+  [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
  protected:
-  Legion::FutureMap initialize(const mapping::detail::Machine& machine,
-                               uint32_t num_tasks) override;
+  FutureMap initialize(const mapping::detail::Machine& machine, uint32_t num_tasks) override;
   void finalize(const mapping::detail::Machine& machine,
                 uint32_t num_tasks,
                 const Legion::FutureMap& communicator) override;
 
  private:
-  const detail::Library* core_library_;
+  const detail::Library* core_library_{};
 };
 
-Factory::Factory(const detail::Library* core_library) : core_library_(core_library) {}
+Factory::Factory(const detail::Library* core_library) : core_library_{core_library} {}
 
 bool Factory::is_supported_target(mapping::TaskTarget target) const
 {
@@ -55,7 +55,7 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
 
 Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, uint32_t num_tasks)
 {
-  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+  const Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
   auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
 
@@ -63,20 +63,21 @@ Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, u
   auto comm_id = Legion::Future::from_value<int32_t>(coll::collInitComm());
 
   // Find a mapping of all participants
-  detail::TaskLauncher init_cpucoll_mapping_launcher(
-    core_library_, machine, LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID, tag);
+  detail::TaskLauncher init_cpucoll_mapping_launcher{
+    core_library_, machine, LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID, tag};
   init_cpucoll_mapping_launcher.add_future(comm_id);
   auto mapping = init_cpucoll_mapping_launcher.execute(launch_domain);
 
   // Then create communicators on participating processors
-  detail::TaskLauncher init_cpucoll_launcher(
-    core_library_, machine, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, tag);
+  detail::TaskLauncher init_cpucoll_launcher{
+    core_library_, machine, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, tag};
   init_cpucoll_launcher.add_future(comm_id);
   init_cpucoll_launcher.set_concurrent(true);
 
   auto domain = mapping.get_future_map_domain();
-  for (Domain::DomainPointIterator it(domain); it; ++it)
+  for (Domain::DomainPointIterator it{domain}; it; ++it) {
     init_cpucoll_launcher.add_future(mapping.get_future(*it));
+  }
   return init_cpucoll_launcher.execute(launch_domain);
 }
 
@@ -84,22 +85,25 @@ void Factory::finalize(const mapping::detail::Machine& machine,
                        uint32_t num_tasks,
                        const Legion::FutureMap& communicator)
 {
-  auto tag =
+  const auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
-  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
-  detail::TaskLauncher launcher(core_library_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag);
+  const Domain launch_domain{Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1))};
+  detail::TaskLauncher launcher{core_library_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag};
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
 }
 
-static int init_cpucoll_mapping(const Legion::Task* task,
-                                const std::vector<Legion::PhysicalRegion>& regions,
-                                Legion::Context context,
-                                Legion::Runtime* runtime)
+namespace {
+
+int init_cpucoll_mapping(const Legion::Task* task,
+                         const std::vector<Legion::PhysicalRegion>& /*regions*/,
+                         Legion::Context context,
+                         Legion::Runtime* runtime)
 {
   legate::detail::show_progress(task, context, runtime);
-  int mpi_rank = 0;
+  // clang-tidy cannot see the MPI_Comm_rank() call below
+  int mpi_rank = 0;  // NOLINT(misc-const-correctness)
 #if LegateDefined(LEGATE_USE_NETWORK)
   if (coll::backend_network->comm_type == coll::CollCommType::CollMPI) {
     MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
@@ -109,59 +113,67 @@ static int init_cpucoll_mapping(const Legion::Task* task,
   return mpi_rank;
 }
 
-static coll::CollComm init_cpucoll(const Legion::Task* task,
-                                   const std::vector<Legion::PhysicalRegion>& regions,
-                                   Legion::Context context,
-                                   Legion::Runtime* runtime)
+coll::CollComm init_cpucoll(const Legion::Task* task,
+                            const std::vector<Legion::PhysicalRegion>& /*regions*/,
+                            Legion::Context context,
+                            Legion::Runtime* runtime)
 {
   legate::detail::show_progress(task, context, runtime);
 
-  const int point = task->index_point[0];
-  int num_ranks   = task->index_domain.get_volume();
+  const auto point     = static_cast<int>(task->index_point[0]);
+  const auto num_ranks = static_cast<int>(task->index_domain.get_volume());
 
   assert(task->futures.size() == static_cast<size_t>(num_ranks + 1));
   const int unique_id = task->futures[0].get_result<int>();
 
-  coll::CollComm comm = (coll::CollComm)malloc(sizeof(coll::Coll_Comm));
+  coll::CollComm comm;
 
+  legate::detail::typed_malloc(&comm, 1);
   if (LegateDefined(LEGATE_USE_NETWORK) &&
       (coll::backend_network->comm_type == coll::CollCommType::CollMPI)) {
-    int* mapping_table = (int*)malloc(sizeof(int) * num_ranks);
+    int* mapping_table;
+
+    legate::detail::typed_malloc(&mapping_table, num_ranks);
     for (int i = 0; i < num_ranks; i++) {
-      const int mapping_table_element = task->futures[i + 1].get_result<int>();
-      mapping_table[i]                = mapping_table_element;
+      const auto mapping_table_element = task->futures[i + 1].get_result<int>();
+      mapping_table[i]                 = mapping_table_element;
     }
-    coll::collCommCreate(comm, num_ranks, point, unique_id, mapping_table);
+    auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, mapping_table);
+    assert(ret == coll::CollSuccess);
     assert(mapping_table[point] == comm->mpi_rank);
     free(mapping_table);
   } else {
-    coll::collCommCreate(comm, num_ranks, point, unique_id, nullptr);
+    auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, nullptr);
+    assert(ret == coll::CollSuccess);
   }
 
   return comm;
 }
 
-static void finalize_cpucoll(const Legion::Task* task,
-                             const std::vector<Legion::PhysicalRegion>& regions,
-                             Legion::Context context,
-                             Legion::Runtime* runtime)
+void finalize_cpucoll(const Legion::Task* task,
+                      const std::vector<Legion::PhysicalRegion>& /*regions*/,
+                      Legion::Context context,
+                      Legion::Runtime* runtime)
 {
   legate::detail::show_progress(task, context, runtime);
 
   assert(task->futures.size() == 1);
-  coll::CollComm comm = task->futures[0].get_result<coll::CollComm>();
-  const int point     = task->index_point[0];
+  auto comm        = task->futures[0].get_result<coll::CollComm>();
+  const auto point = static_cast<int>(task->index_point[0]);
   assert(comm->global_rank == point);
-  coll::collCommDestroy(comm);
+  auto ret = coll::collCommDestroy(comm);
+  assert(ret == coll::CollSuccess);
   free(comm);
   comm = nullptr;
 }
 
+}  // namespace
+
 void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library)
 {
   const auto& command_args = Legion::Runtime::get_input_args();
-  coll::collInit(command_args.argc, command_args.argv);
-
+  auto ret                 = coll::collInit(command_args.argc, command_args.argv);
+  assert(ret == coll::CollSuccess);
   auto init_cpucoll_mapping_task_id =
     core_library->get_task_id(LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID);
   const char* init_cpucoll_mapping_task_name = "core::comm::cpu::init_mapping";

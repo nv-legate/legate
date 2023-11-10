@@ -1,8 +1,27 @@
 ---
 Checks:
   # enable everything first
-  - 'performance*,modernize*,readability*,clang-analyzer*,clang-diagnostic-*,bugprone*,misc*,core*,mpi*'
+  - 'performance*'
+  - 'modernize*'
+  - 'readability*'
+  - 'clang-analyzer*'
+  - 'clang-diagnostic-*'
+  - 'bugprone*'
+  - 'misc*'
+  - 'core*'
+  - 'mpi*'
+  - 'cert-*'
+  - 'portability-*'
+  - 'cppcoreguidelines-pro-type-cstyle-cast'
   # then disable the stuff we don't want
+  - '-cert-dcl21-cpp' # returning non-const from operator-- or operator++
+  - '-cert-dcl50-cpp' # allow c-style variadics
+  # no reserved identifiers, both of these are aliased to bugprone-reserved-identifier,
+  # which we do enable. Leaving these enabled however, leads to needing to specify all
+  # three (bugprone-reserved-identifier, cert-dcl51-cpp, and cert-dcl37-c) in NOLINT lines
+  # which is a hassle. Since bugprone-reserved-identifier is enabled, the check still
+  # fires.
+  - '-cert-dcl51-cpp,-cert-dcl37-c,-cert-oop54-cpp'
   - '-modernize-use-trailing-return-type'
   - '-readability-function-cognitive-complexity'
   - '-readability-implicit-bool-conversion'
@@ -19,7 +38,12 @@ Checks:
   - '-misc-header-include-cycle'
   - '-modernize-macro-to-enum'
   - '-misc-no-recursion'
-WarningsAsErrors: ''
+  # Generally speaking if something is static then it has an express reason to be. 99% of
+  # the candidates identified by this check were because they just so happened not to
+  # touch any member variables, not because they are logically static. So we disable the
+  # check.
+  - '-readability-convert-member-functions-to-static'
+WarningsAsErrors: '*'
 HeaderFileExtensions:
   - ''
   - h
@@ -34,7 +58,7 @@ ImplementationFileExtensions:
   - cpp
   - cxx
   - cu
-HeaderFilterRegex: ''
+HeaderFilterRegex: 'src/core/.*\.(hp*|inl|cuh)'
 AnalyzeTemporaryDtors: false
 SystemHeaders: false
 CheckOptions:
@@ -66,4 +90,5 @@ CheckOptions:
   # copies wholesale (which is OK because they are just pimpls, and thus, very cheap to
   # copy).
   performance-unnecessary-value-param.AllowedTypes: 'legate::TaskContext'
+  performance-inefficient-vector-operation.VectorLikeClasses: 'legate::tuple;legate::Shape'
 ...

@@ -11,7 +11,10 @@
  */
 
 #include "core/runtime/detail/region_manager.h"
+
 #include "core/runtime/detail/runtime.h"
+
+#include <utility>
 
 namespace legate::detail {
 
@@ -20,7 +23,12 @@ void RegionManager::ManagerEntry::destroy(Runtime* runtime, bool unordered) cons
   runtime->destroy_region(region, unordered);
 }
 
-RegionManager::RegionManager(Runtime* runtime, const Domain& shape)
+// Silence pass-by-value since Legion::Domain is POD, and the move ctor just does the copy
+// anyways. Unfortunately there is no way to check this programatically (e.g. via a
+// static_assert).
+RegionManager::RegionManager(Runtime* runtime,
+                             const Domain& shape  // NOLINT(modernize-pass-by-value)
+                             )
   : runtime_{runtime}, shape_{shape}
 {
 }

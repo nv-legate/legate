@@ -130,7 +130,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   const auto runtime = Runtime::get_runtime();
 
   if (insert_barrier_) {
-    size_t num_tasks                     = launch_domain.get_volume();
+    const auto num_tasks                 = launch_domain.get_volume();
     auto [arrival_barrier, wait_barrier] = runtime->create_barriers(num_tasks);
 
     index_task.add_future(Legion::Future::from_value(arrival_barrier));

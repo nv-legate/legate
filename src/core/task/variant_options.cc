@@ -44,7 +44,7 @@ VariantOptions& VariantOptions::with_return_size(size_t _return_size)
   return *this;
 }
 
-void VariantOptions::populate_registrar(Legion::TaskVariantRegistrar& registrar)
+void VariantOptions::populate_registrar(Legion::TaskVariantRegistrar& registrar) const
 {
   registrar.set_leaf(leaf);
   registrar.set_inner(inner);

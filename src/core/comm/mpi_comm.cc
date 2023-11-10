@@ -10,13 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "coll.h"
-
+#include "core/utilities/detail/malloc.h"
+#include "core/utilities/detail/scope_guard.h"
 #include "core/utilities/typedefs.h"
 
-namespace legate::comm::coll {
+#include "coll.h"
 
-extern Logger log_coll;
+namespace legate::comm::coll {
 
 enum CollTag : int {
   BCAST_TAG     = 0,
@@ -26,431 +26,27 @@ enum CollTag : int {
   MAX_TAG       = 10,
 };
 
-static inline std::pair<int, int> mostFrequent(const int* arr, int n);
-static inline int match2ranks(int rank1, int rank2, CollComm global_comm);
+#define CHECK_COLL(...)                 \
+  do {                                  \
+    const auto ret = __VA_ARGS__;       \
+    if (ret != CollSuccess) return ret; \
+  } while (0)
 
-inline void check_mpi(int error, const char* file, int line)
-{
-  if (error != MPI_SUCCESS) {
-    fprintf(
-      stderr, "Internal MPI failure with error code %d in file %s at line %d\n", error, file, line);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(false);
-    } else {
-      exit(error);
-    }
-  }
-}
+namespace {
 
-#define CHECK_MPI(expr)                    \
-  do {                                     \
-    int result = (expr);                   \
-    check_mpi(result, __FILE__, __LINE__); \
-  } while (false)
-
-// public functions start from here
-
-MPINetwork::MPINetwork(int argc, char* argv[])
-  : BackendNetwork(), mpi_tag_ub(0), self_init_mpi(false)
-{
-  log_coll.debug("Enable MPINetwork");
-  assert(current_unique_id == 0);
-  int provided, init_flag = 0;
-  CHECK_MPI(MPI_Initialized(&init_flag));
-  if (!init_flag) {
-    log_coll.info("MPI being initialized by legate");
-    MPI_Init_thread(0, 0, MPI_THREAD_MULTIPLE, &provided);
-    self_init_mpi = true;
-  }
-  int mpi_thread_model;
-  MPI_Query_thread(&mpi_thread_model);
-  if (mpi_thread_model != MPI_THREAD_MULTIPLE) {
-    log_coll.fatal(
-      "MPI has been initialized by others, but is not initialized with "
-      "MPI_THREAD_MULTIPLE");
-    LEGATE_ABORT;
-  }
-  // check
-  int *tag_ub, flag;
-  CHECK_MPI(MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &tag_ub, &flag));
-  assert(flag);
-  mpi_tag_ub = *tag_ub;
-  assert(mpi_comms.empty());
-  BackendNetwork::coll_inited = true;
-  BackendNetwork::comm_type   = CollCommType::CollMPI;
-}
-
-MPINetwork::~MPINetwork()
-{
-  log_coll.debug("Finalize MPINetwork");
-  assert(BackendNetwork::coll_inited == true);
-  for (MPI_Comm& mpi_comm : mpi_comms) { CHECK_MPI(MPI_Comm_free(&mpi_comm)); }
-  mpi_comms.clear();
-  int fina_flag = 0;
-  CHECK_MPI(MPI_Finalized(&fina_flag));
-  if (fina_flag == 1) {
-    log_coll.fatal("MPI should not have been finalized");
-    LEGATE_ABORT;
-  }
-  if (self_init_mpi) {
-    MPI_Finalize();
-    log_coll.info("finalize mpi");
-  }
-  BackendNetwork::coll_inited = false;
-}
-
-int MPINetwork::init_comm()
-{
-  int id = 0;
-  collGetUniqueId(&id);
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    int send_id = id;
-    // check if all ranks get the same unique id
-    CHECK_MPI(MPI_Bcast(&send_id, 1, MPI_INT, 0, MPI_COMM_WORLD));
-    assert(send_id == id);
-  }
-  assert(static_cast<int>(mpi_comms.size()) == id);
-  // create mpi comm
-  MPI_Comm mpi_comm;
-  CHECK_MPI(MPI_Comm_dup(MPI_COMM_WORLD, &mpi_comm));
-  mpi_comms.push_back(mpi_comm);
-  log_coll.debug("Init comm id %d", id);
-  return id;
-}
-
-int MPINetwork::comm_create(CollComm global_comm,
-                            int global_comm_size,
-                            int global_rank,
-                            int unique_id,
-                            const int* mapping_table)
-{
-  global_comm->global_comm_size = global_comm_size;
-  global_comm->global_rank      = global_rank;
-  global_comm->status           = true;
-  global_comm->unique_id        = unique_id;
-  int mpi_rank, mpi_comm_size;
-  int compare_result;
-  MPI_Comm comm = mpi_comms[unique_id];
-  CHECK_MPI(MPI_Comm_compare(comm, MPI_COMM_WORLD, &compare_result));
-  assert(MPI_CONGRUENT == compare_result);
-
-  CHECK_MPI(MPI_Comm_rank(comm, &mpi_rank));
-  CHECK_MPI(MPI_Comm_size(comm, &mpi_comm_size));
-  global_comm->mpi_comm_size = mpi_comm_size;
-  global_comm->mpi_rank      = mpi_rank;
-  global_comm->mpi_comm      = comm;
-  assert(mapping_table != nullptr);
-  global_comm->mapping_table.global_rank = (int*)malloc(sizeof(int) * global_comm_size);
-  global_comm->mapping_table.mpi_rank    = (int*)malloc(sizeof(int) * global_comm_size);
-  memcpy(global_comm->mapping_table.mpi_rank, mapping_table, sizeof(int) * global_comm_size);
-  for (int i = 0; i < global_comm_size; i++) { global_comm->mapping_table.global_rank[i] = i; }
-  std::pair<int, int> p             = mostFrequent(mapping_table, global_comm_size);
-  global_comm->nb_threads           = p.first;
-  global_comm->mpi_comm_size_actual = p.second;
-  return CollSuccess;
-}
-
-int MPINetwork::comm_destroy(CollComm global_comm)
-{
-  if (global_comm->mapping_table.global_rank != nullptr) {
-    free(global_comm->mapping_table.global_rank);
-    global_comm->mapping_table.global_rank = nullptr;
-  }
-  if (global_comm->mapping_table.mpi_rank != nullptr) {
-    free(global_comm->mapping_table.mpi_rank);
-    global_comm->mapping_table.mpi_rank = nullptr;
-  }
-  global_comm->status = false;
-  return CollSuccess;
-}
-
-int MPINetwork::alltoallv(const void* sendbuf,
-                          const int sendcounts[],
-                          const int sdispls[],
-                          void* recvbuf,
-                          const int recvcounts[],
-                          const int rdispls[],
-                          CollDataType type,
-                          CollComm global_comm)
-{
-  MPI_Status status;
-
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
-
-  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
-
-  MPI_Aint lb, type_extent;
-  MPI_Type_get_extent(mpi_type, &lb, &type_extent);
-
-  int sendto_global_rank, recvfrom_global_rank, sendto_mpi_rank, recvfrom_mpi_rank;
-  for (int i = 1; i < total_size + 1; i++) {
-    sendto_global_rank   = (global_rank + i) % total_size;
-    recvfrom_global_rank = (global_rank + total_size - i) % total_size;
-    char* src            = static_cast<char*>(const_cast<void*>(sendbuf)) +
-                static_cast<ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent;
-    char* dst = static_cast<char*>(recvbuf) +
-                static_cast<ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
-    int scount        = sendcounts[sendto_global_rank];
-    int rcount        = recvcounts[recvfrom_global_rank];
-    sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
-    recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[recvfrom_global_rank];
-    assert(sendto_global_rank == global_comm->mapping_table.global_rank[sendto_global_rank]);
-    assert(recvfrom_global_rank == global_comm->mapping_table.global_rank[recvfrom_global_rank]);
-    // tag: seg idx + rank_idx + tag
-    int send_tag = generateAlltoallvTag(sendto_global_rank, global_rank, global_comm);
-    int recv_tag = generateAlltoallvTag(global_rank, recvfrom_global_rank, global_comm);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug(
-        "AlltoallvMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
-        "recv from %d (%d), "
-        "recv_tag %d",
-        i,
-        global_rank,
-        global_comm->mpi_rank,
-        sendto_global_rank,
-        sendto_mpi_rank,
-        send_tag,
-        recvfrom_global_rank,
-        recvfrom_mpi_rank,
-        recv_tag);
-    }
-    CHECK_MPI(MPI_Sendrecv(src,
-                           scount,
-                           mpi_type,
-                           sendto_mpi_rank,
-                           send_tag,
-                           dst,
-                           rcount,
-                           mpi_type,
-                           recvfrom_mpi_rank,
-                           recv_tag,
-                           global_comm->mpi_comm,
-                           &status));
-  }
-
-  return CollSuccess;
-}
-
-int MPINetwork::alltoall(
-  const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
-{
-  MPI_Status status;
-
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
-
-  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
-
-  MPI_Aint lb, type_extent;
-  MPI_Type_get_extent(mpi_type, &lb, &type_extent);
-
-  int sendto_global_rank, recvfrom_global_rank, sendto_mpi_rank, recvfrom_mpi_rank;
-  for (int i = 1; i < total_size + 1; i++) {
-    sendto_global_rank   = (global_rank + i) % total_size;
-    recvfrom_global_rank = (global_rank + total_size - i) % total_size;
-    char* src            = static_cast<char*>(const_cast<void*>(sendbuf)) +
-                static_cast<ptrdiff_t>(sendto_global_rank) * type_extent * count;
-    char* dst = static_cast<char*>(recvbuf) +
-                static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
-    sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
-    recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[recvfrom_global_rank];
-    assert(sendto_global_rank == global_comm->mapping_table.global_rank[sendto_global_rank]);
-    assert(recvfrom_global_rank == global_comm->mapping_table.global_rank[recvfrom_global_rank]);
-    // tag: seg idx + rank_idx + tag
-    int send_tag = generateAlltoallTag(sendto_global_rank, global_rank, global_comm);
-    int recv_tag = generateAlltoallTag(global_rank, recvfrom_global_rank, global_comm);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug(
-        "AlltoallMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
-        "recv from %d (%d), "
-        "recv_tag %d",
-        i,
-        global_rank,
-        global_comm->mpi_rank,
-        sendto_global_rank,
-        sendto_mpi_rank,
-        send_tag,
-        recvfrom_global_rank,
-        recvfrom_mpi_rank,
-        recv_tag);
-    }
-    CHECK_MPI(MPI_Sendrecv(src,
-                           count,
-                           mpi_type,
-                           sendto_mpi_rank,
-                           send_tag,
-                           dst,
-                           count,
-                           mpi_type,
-                           recvfrom_mpi_rank,
-                           recv_tag,
-                           global_comm->mpi_comm,
-                           &status));
-  }
-
-  return CollSuccess;
-}
-
-int MPINetwork::allgather(
-  const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
-{
-  int total_size = global_comm->global_comm_size;
-
-  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
-
-  MPI_Aint lb, type_extent;
-  MPI_Type_get_extent(mpi_type, &lb, &type_extent);
-
-  void* sendbuf_tmp = const_cast<void*>(sendbuf);
-
-  // MPI_IN_PLACE
-  if (sendbuf == recvbuf) { sendbuf_tmp = allocateInplaceBuffer(recvbuf, type_extent * count); }
-
-  gather(sendbuf_tmp, recvbuf, count, type, 0, global_comm);
-
-  bcast(recvbuf, count * total_size, type, 0, global_comm);
-
-  if (sendbuf == recvbuf) { free(sendbuf_tmp); }
-
-  return CollSuccess;
-}
-
-int MPINetwork::gather(
-  const void* sendbuf, void* recvbuf, int count, CollDataType type, int root, CollComm global_comm)
-{
-  MPI_Status status;
-
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
-
-  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
-
-  // Should not see inplace here
-  if (sendbuf == recvbuf) { assert(0); }
-
-  int root_mpi_rank = global_comm->mapping_table.mpi_rank[root];
-  assert(root == global_comm->mapping_table.global_rank[root]);
-
-  int tag;
-
-  // non-root
-  if (global_rank != root) {
-    tag = generateGatherTag(global_rank, global_comm);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug(
-        "GatherMPI: non-root send global_rank %d, mpi rank %d, send to %d (%d), tag %d",
-        global_rank,
-        global_comm->mpi_rank,
-        root,
-        root_mpi_rank,
-        tag);
-    }
-    CHECK_MPI(MPI_Send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
-    return CollSuccess;
-  }
-
-  // root
-  MPI_Aint incr, lb, type_extent;
-  MPI_Type_get_extent(mpi_type, &lb, &type_extent);
-  incr      = type_extent * static_cast<ptrdiff_t>(count);
-  char* dst = static_cast<char*>(recvbuf);
-  int recvfrom_mpi_rank;
-  for (int i = 0; i < total_size; i++) {
-    recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[i];
-    assert(i == global_comm->mapping_table.global_rank[i]);
-    tag = generateGatherTag(i, global_comm);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug(
-        "GatherMPI: root i %d === global_rank %d, mpi rank %d, recv %p, from %d (%d), tag %d",
-        i,
-        global_rank,
-        global_comm->mpi_rank,
-        static_cast<void*>(dst),
-        i,
-        recvfrom_mpi_rank,
-        tag);
-    }
-    assert(dst != nullptr);
-    if (global_rank == i) {
-      memcpy(dst, sendbuf, incr);
-    } else {
-      CHECK_MPI(
-        MPI_Recv(dst, count, mpi_type, recvfrom_mpi_rank, tag, global_comm->mpi_comm, &status));
-    }
-    dst += incr;
-  }
-
-  return CollSuccess;
-}
-
-int MPINetwork::bcast(void* buf, int count, CollDataType type, int root, CollComm global_comm)
-{
-  int tag;
-  MPI_Status status;
-
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
-
-  int root_mpi_rank = global_comm->mapping_table.mpi_rank[root];
-  assert(root == global_comm->mapping_table.global_rank[root]);
-
-  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
-
-  // non-root
-  if (global_rank != root) {
-    tag = generateBcastTag(global_rank, global_comm);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug("BcastMPI: non-root recv global_rank %d, mpi rank %d, send to %d (%d), tag %d",
-                     global_rank,
-                     global_comm->mpi_rank,
-                     root,
-                     root_mpi_rank,
-                     tag);
-    }
-    CHECK_MPI(MPI_Recv(buf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm, &status));
-    return CollSuccess;
-  }
-
-  // root
-  int sendto_mpi_rank;
-  for (int i = 0; i < total_size; i++) {
-    sendto_mpi_rank = global_comm->mapping_table.mpi_rank[i];
-    assert(i == global_comm->mapping_table.global_rank[i]);
-    tag = generateBcastTag(i, global_comm);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug("BcastMPI: root i %d === global_rank %d, mpi rank %d, send to %d (%d), tag %d",
-                     i,
-                     global_rank,
-                     global_comm->mpi_rank,
-                     i,
-                     sendto_mpi_rank,
-                     tag);
-    }
-    if (global_rank != i) {
-      CHECK_MPI(MPI_Send(buf, count, mpi_type, sendto_mpi_rank, tag, global_comm->mpi_comm));
-    }
-  }
-
-  return CollSuccess;
-}
-
-static inline std::pair<int, int> mostFrequent(const int* arr, int n)
+[[nodiscard]] std::pair<int, int> mostFrequent(const int* arr, int n)
 {
   std::unordered_map<int, int> hash;
   for (int i = 0; i < n; i++) hash[arr[i]]++;
 
   // find the max frequency
   int max_count = 0;
-  std::unordered_map<int, int>::iterator it;
-  for (it = hash.begin(); it != hash.end(); it++) {
-    if (max_count < it->second) { max_count = it->second; }
-  }
+  for (auto&& [_, count] : hash) max_count = std::max(count, max_count);
 
-  return std::make_pair(max_count, hash.size());
+  return {max_count, hash.size()};
 }
 
-static inline int match2ranks(int rank1, int rank2, CollComm global_comm)
+[[nodiscard]] int match2ranks(int rank1, int rank2, CollComm global_comm)
 {
   // tag: seg idx + rank_idx + tag
   // send_tag = sendto_global_rank * 10000 + global_rank (concat 2 ranks)
@@ -487,6 +83,415 @@ static inline int match2ranks(int rank1, int rank2, CollComm global_comm)
   return tag;
 }
 
+}  // namespace
+
+inline void check_mpi(int error, const char* file, int line)
+{
+  if (error != MPI_SUCCESS) {
+    static_cast<void>(fprintf(stderr,
+                              "Internal MPI failure with error code %d in file %s at line %d\n",
+                              error,
+                              file,
+                              line));
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(false);
+    } else {
+      exit(error);
+    }
+  }
+}
+
+#define CHECK_MPI(expr)                    \
+  do {                                     \
+    const int result = (expr);             \
+    check_mpi(result, __FILE__, __LINE__); \
+  } while (false)
+
+// public functions start from here
+
+MPINetwork::MPINetwork(int /*argc*/, char* /*argv*/[])
+{
+  detail::log_coll().debug("Enable MPINetwork");
+  assert(current_unique_id == 0);
+  int provided, init_flag = 0;
+  CHECK_MPI(MPI_Initialized(&init_flag));
+  if (!init_flag) {
+    detail::log_coll().info("MPI being initialized by legate");
+    CHECK_MPI(MPI_Init_thread(nullptr, nullptr, MPI_THREAD_MULTIPLE, &provided));
+    self_init_mpi = true;
+  }
+  int mpi_thread_model;
+  CHECK_MPI(MPI_Query_thread(&mpi_thread_model));
+  if (mpi_thread_model != MPI_THREAD_MULTIPLE) {
+    detail::log_coll().fatal(
+      "MPI has been initialized by others, but is not initialized with "
+      "MPI_THREAD_MULTIPLE");
+    LEGATE_ABORT;
+  }
+  // check
+  int *tag_ub, flag;
+  CHECK_MPI(MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &tag_ub, &flag));
+  assert(flag);
+  mpi_tag_ub = *tag_ub;
+  assert(mpi_comms.empty());
+  BackendNetwork::coll_inited = true;
+  BackendNetwork::comm_type   = CollCommType::CollMPI;
+}
+
+MPINetwork::~MPINetwork()
+{
+  detail::log_coll().debug("Finalize MPINetwork");
+  assert(BackendNetwork::coll_inited == true);
+  for (MPI_Comm& mpi_comm : mpi_comms) { CHECK_MPI(MPI_Comm_free(&mpi_comm)); }
+  mpi_comms.clear();
+  int fina_flag = 0;
+  CHECK_MPI(MPI_Finalized(&fina_flag));
+  if (fina_flag == 1) {
+    detail::log_coll().fatal("MPI should not have been finalized");
+    LEGATE_ABORT;
+  }
+  if (self_init_mpi) {
+    CHECK_MPI(MPI_Finalize());
+    detail::log_coll().info("finalize mpi");
+  }
+  BackendNetwork::coll_inited = false;
+}
+
+int MPINetwork::init_comm()
+{
+  int id = 0;
+  CHECK_COLL(collGetUniqueId(&id));
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    int send_id = id;
+    // check if all ranks get the same unique id
+    CHECK_MPI(MPI_Bcast(&send_id, 1, MPI_INT, 0, MPI_COMM_WORLD));
+    assert(send_id == id);
+  }
+  assert(static_cast<int>(mpi_comms.size()) == id);
+  // create mpi comm
+  MPI_Comm mpi_comm;
+  CHECK_MPI(MPI_Comm_dup(MPI_COMM_WORLD, &mpi_comm));
+  mpi_comms.push_back(mpi_comm);
+  detail::log_coll().debug("Init comm id %d", id);
+  return id;
+}
+
+int MPINetwork::comm_create(CollComm global_comm,
+                            int global_comm_size,
+                            int global_rank,
+                            int unique_id,
+                            const int* mapping_table)
+{
+  global_comm->global_comm_size = global_comm_size;
+  global_comm->global_rank      = global_rank;
+  global_comm->status           = true;
+  global_comm->unique_id        = unique_id;
+  int mpi_rank, mpi_comm_size;
+  int compare_result;
+  MPI_Comm comm = mpi_comms[unique_id];
+  CHECK_MPI(MPI_Comm_compare(comm, MPI_COMM_WORLD, &compare_result));
+  assert(MPI_CONGRUENT == compare_result);
+
+  CHECK_MPI(MPI_Comm_rank(comm, &mpi_rank));
+  CHECK_MPI(MPI_Comm_size(comm, &mpi_comm_size));
+  global_comm->mpi_comm_size = mpi_comm_size;
+  global_comm->mpi_rank      = mpi_rank;
+  global_comm->mpi_comm      = comm;
+  assert(mapping_table != nullptr);
+  legate::detail::typed_malloc(&(global_comm->mapping_table.global_rank), global_comm_size);
+  legate::detail::typed_malloc(&(global_comm->mapping_table.mpi_rank), global_comm_size);
+  memcpy(global_comm->mapping_table.mpi_rank, mapping_table, sizeof(int) * global_comm_size);
+  for (int i = 0; i < global_comm_size; i++) { global_comm->mapping_table.global_rank[i] = i; }
+  std::tie(global_comm->nb_threads, global_comm->mpi_comm_size_actual) =
+    mostFrequent(mapping_table, global_comm_size);
+  return CollSuccess;
+}
+
+int MPINetwork::comm_destroy(CollComm global_comm)
+{
+  if (global_comm->mapping_table.global_rank != nullptr) {
+    free(global_comm->mapping_table.global_rank);
+    global_comm->mapping_table.global_rank = nullptr;
+  }
+  if (global_comm->mapping_table.mpi_rank != nullptr) {
+    free(global_comm->mapping_table.mpi_rank);
+    global_comm->mapping_table.mpi_rank = nullptr;
+  }
+  global_comm->status = false;
+  return CollSuccess;
+}
+
+int MPINetwork::alltoallv(const void* sendbuf,
+                          const int sendcounts[],
+                          const int sdispls[],
+                          void* recvbuf,
+                          const int recvcounts[],
+                          const int rdispls[],
+                          CollDataType type,
+                          CollComm global_comm)
+{
+  MPI_Status status;
+
+  const int total_size  = global_comm->global_comm_size;
+  const int global_rank = global_comm->global_rank;
+
+  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
+
+  MPI_Aint lb, type_extent;
+  CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+
+  int sendto_global_rank, recvfrom_global_rank, sendto_mpi_rank, recvfrom_mpi_rank;
+  for (int i = 1; i < total_size + 1; i++) {
+    sendto_global_rank   = (global_rank + i) % total_size;
+    recvfrom_global_rank = (global_rank + total_size - i) % total_size;
+    char* src            = static_cast<char*>(const_cast<void*>(sendbuf)) +
+                static_cast<ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent;
+    char* dst = static_cast<char*>(recvbuf) +
+                static_cast<ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
+    const int scount  = sendcounts[sendto_global_rank];
+    const int rcount  = recvcounts[recvfrom_global_rank];
+    sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
+    recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[recvfrom_global_rank];
+    assert(sendto_global_rank == global_comm->mapping_table.global_rank[sendto_global_rank]);
+    assert(recvfrom_global_rank == global_comm->mapping_table.global_rank[recvfrom_global_rank]);
+    // tag: seg idx + rank_idx + tag
+    const int send_tag = generateAlltoallvTag(sendto_global_rank, global_rank, global_comm);
+    const int recv_tag = generateAlltoallvTag(global_rank, recvfrom_global_rank, global_comm);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      detail::log_coll().debug(
+        "AlltoallvMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
+        "recv from %d (%d), "
+        "recv_tag %d",
+        i,
+        global_rank,
+        global_comm->mpi_rank,
+        sendto_global_rank,
+        sendto_mpi_rank,
+        send_tag,
+        recvfrom_global_rank,
+        recvfrom_mpi_rank,
+        recv_tag);
+    }
+    CHECK_MPI(MPI_Sendrecv(src,
+                           scount,
+                           mpi_type,
+                           sendto_mpi_rank,
+                           send_tag,
+                           dst,
+                           rcount,
+                           mpi_type,
+                           recvfrom_mpi_rank,
+                           recv_tag,
+                           global_comm->mpi_comm,
+                           &status));
+  }
+
+  return CollSuccess;
+}
+
+int MPINetwork::alltoall(
+  const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
+{
+  const auto total_size  = global_comm->global_comm_size;
+  const auto global_rank = global_comm->global_rank;
+  const auto mpi_type    = dtypeToMPIDtype(type);
+
+  MPI_Aint lb, type_extent;
+  CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+
+  for (int i = 1; i < total_size + 1; i++) {
+    const auto sendto_global_rank   = (global_rank + i) % total_size;
+    const auto recvfrom_global_rank = (global_rank + total_size - i) % total_size;
+    const char* src                 = static_cast<char*>(const_cast<void*>(sendbuf)) +
+                      static_cast<ptrdiff_t>(sendto_global_rank) * type_extent * count;
+    char* dst = static_cast<char*>(recvbuf) +
+                static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
+    const auto sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
+    const auto recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[recvfrom_global_rank];
+    assert(sendto_global_rank == global_comm->mapping_table.global_rank[sendto_global_rank]);
+    assert(recvfrom_global_rank == global_comm->mapping_table.global_rank[recvfrom_global_rank]);
+    // tag: seg idx + rank_idx + tag
+    const int send_tag = generateAlltoallTag(sendto_global_rank, global_rank, global_comm);
+    const int recv_tag = generateAlltoallTag(global_rank, recvfrom_global_rank, global_comm);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      detail::log_coll().debug(
+        "AlltoallMPI i: %d === global_rank %d, mpi rank %d, send to %d (%d), send_tag %d, "
+        "recv from %d (%d), "
+        "recv_tag %d",
+        i,
+        global_rank,
+        global_comm->mpi_rank,
+        sendto_global_rank,
+        sendto_mpi_rank,
+        send_tag,
+        recvfrom_global_rank,
+        recvfrom_mpi_rank,
+        recv_tag);
+    }
+    MPI_Status status;
+
+    CHECK_MPI(MPI_Sendrecv(src,
+                           count,
+                           mpi_type,
+                           sendto_mpi_rank,
+                           send_tag,
+                           dst,
+                           count,
+                           mpi_type,
+                           recvfrom_mpi_rank,
+                           recv_tag,
+                           global_comm->mpi_comm,
+                           &status));
+  }
+
+  return CollSuccess;
+}
+
+int MPINetwork::allgather(
+  const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
+{
+  const int total_size = global_comm->global_comm_size;
+
+  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
+
+  MPI_Aint lb, type_extent;
+  CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+
+  void* sendbuf_tmp = const_cast<void*>(sendbuf);
+
+  // MPI_IN_PLACE
+  if (sendbuf == recvbuf) { sendbuf_tmp = allocateInplaceBuffer(recvbuf, type_extent * count); }
+
+  auto guard = legate::detail::make_scope_guard([&] {
+    if (sendbuf == recvbuf) { free(sendbuf_tmp); }
+  });
+
+  CHECK_COLL(gather(sendbuf_tmp, recvbuf, count, type, 0, global_comm));
+  CHECK_COLL(bcast(recvbuf, count * total_size, type, 0, global_comm));
+  return CollSuccess;
+}
+
+int MPINetwork::gather(
+  const void* sendbuf, void* recvbuf, int count, CollDataType type, int root, CollComm global_comm)
+{
+  MPI_Status status;
+
+  const int total_size  = global_comm->global_comm_size;
+  const int global_rank = global_comm->global_rank;
+
+  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
+
+  // Should not see inplace here
+  if (sendbuf == recvbuf) { assert(0); }
+
+  const int root_mpi_rank = global_comm->mapping_table.mpi_rank[root];
+  assert(root == global_comm->mapping_table.global_rank[root]);
+
+  int tag;
+
+  // non-root
+  if (global_rank != root) {
+    tag = generateGatherTag(global_rank, global_comm);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      detail::log_coll().debug(
+        "GatherMPI: non-root send global_rank %d, mpi rank %d, send to %d (%d), tag %d",
+        global_rank,
+        global_comm->mpi_rank,
+        root,
+        root_mpi_rank,
+        tag);
+    }
+    CHECK_MPI(MPI_Send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
+    return CollSuccess;
+  }
+
+  // root
+  MPI_Aint incr, lb, type_extent;
+  CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+  incr      = type_extent * static_cast<ptrdiff_t>(count);
+  char* dst = static_cast<char*>(recvbuf);
+  int recvfrom_mpi_rank;
+  for (int i = 0; i < total_size; i++) {
+    recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[i];
+    assert(i == global_comm->mapping_table.global_rank[i]);
+    tag = generateGatherTag(i, global_comm);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      detail::log_coll().debug(
+        "GatherMPI: root i %d === global_rank %d, mpi rank %d, recv %p, from %d (%d), tag %d",
+        i,
+        global_rank,
+        global_comm->mpi_rank,
+        static_cast<void*>(dst),
+        i,
+        recvfrom_mpi_rank,
+        tag);
+    }
+    assert(dst != nullptr);
+    if (global_rank == i) {
+      memcpy(dst, sendbuf, incr);
+    } else {
+      CHECK_MPI(
+        MPI_Recv(dst, count, mpi_type, recvfrom_mpi_rank, tag, global_comm->mpi_comm, &status));
+    }
+    dst += incr;
+  }
+
+  return CollSuccess;
+}
+
+int MPINetwork::bcast(void* buf, int count, CollDataType type, int root, CollComm global_comm)
+{
+  int tag;
+  MPI_Status status;
+
+  const int total_size  = global_comm->global_comm_size;
+  const int global_rank = global_comm->global_rank;
+
+  const int root_mpi_rank = global_comm->mapping_table.mpi_rank[root];
+  assert(root == global_comm->mapping_table.global_rank[root]);
+
+  MPI_Datatype mpi_type = dtypeToMPIDtype(type);
+
+  // non-root
+  if (global_rank != root) {
+    tag = generateBcastTag(global_rank, global_comm);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      detail::log_coll().debug(
+        "BcastMPI: non-root recv global_rank %d, mpi rank %d, send to %d (%d), tag %d",
+        global_rank,
+        global_comm->mpi_rank,
+        root,
+        root_mpi_rank,
+        tag);
+    }
+    CHECK_MPI(MPI_Recv(buf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm, &status));
+    return CollSuccess;
+  }
+
+  // root
+  int sendto_mpi_rank;
+  for (int i = 0; i < total_size; i++) {
+    sendto_mpi_rank = global_comm->mapping_table.mpi_rank[i];
+    assert(i == global_comm->mapping_table.global_rank[i]);
+    tag = generateBcastTag(i, global_comm);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      detail::log_coll().debug(
+        "BcastMPI: root i %d === global_rank %d, mpi rank %d, send to %d (%d), tag %d",
+        i,
+        global_rank,
+        global_comm->mpi_rank,
+        i,
+        sendto_mpi_rank,
+        tag);
+    }
+    if (global_rank != i) {
+      CHECK_MPI(MPI_Send(buf, count, mpi_type, sendto_mpi_rank, tag, global_comm->mpi_comm));
+    }
+  }
+
+  return CollSuccess;
+}
+
 // protected functions start from here
 
 MPI_Datatype MPINetwork::dtypeToMPIDtype(CollDataType dtype)
@@ -520,37 +525,38 @@ MPI_Datatype MPINetwork::dtypeToMPIDtype(CollDataType dtype)
       return MPI_DOUBLE;
     }
     default: {
-      log_coll.fatal("Unknown datatype");
+      detail::log_coll().fatal("Unknown datatype");
       LEGATE_ABORT;
       return MPI_BYTE;
     }
   }
 }
 
-int MPINetwork::generateAlltoallTag(int rank1, int rank2, CollComm global_comm)
+int MPINetwork::generateAlltoallTag(int rank1, int rank2, CollComm global_comm) const
 {
-  int tag = match2ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG + CollTag::ALLTOALL_TAG;
+  const int tag = match2ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG + CollTag::ALLTOALL_TAG;
   assert(tag <= mpi_tag_ub && tag > 0);
   return tag;
 }
 
-int MPINetwork::generateAlltoallvTag(int rank1, int rank2, CollComm global_comm)
+int MPINetwork::generateAlltoallvTag(int rank1, int rank2, CollComm global_comm) const
 {
-  int tag = match2ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG + CollTag::ALLTOALLV_TAG;
+  const int tag =
+    match2ranks(rank1, rank2, global_comm) * CollTag::MAX_TAG + CollTag::ALLTOALLV_TAG;
   assert(tag <= mpi_tag_ub && tag > 0);
   return tag;
 }
 
-int MPINetwork::generateBcastTag(int rank, CollComm global_comm)
+int MPINetwork::generateBcastTag(int rank, CollComm /*global_comm*/) const
 {
-  int tag = rank * CollTag::MAX_TAG + CollTag::BCAST_TAG;
+  const int tag = rank * CollTag::MAX_TAG + CollTag::BCAST_TAG;
   assert(tag <= mpi_tag_ub && tag >= 0);
   return tag;
 }
 
-int MPINetwork::generateGatherTag(int rank, CollComm global_comm)
+int MPINetwork::generateGatherTag(int rank, CollComm /*global_comm*/) const
 {
-  int tag = rank * CollTag::MAX_TAG + CollTag::GATHER_TAG;
+  const int tag = rank * CollTag::MAX_TAG + CollTag::GATHER_TAG;
   assert(tag <= mpi_tag_ub && tag > 0);
   return tag;
 }

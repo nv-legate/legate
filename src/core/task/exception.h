@@ -15,7 +15,6 @@
 #include <cstdint>
 #include <exception>
 #include <string>
-#include <utility>
 
 /**
  * @file
@@ -43,10 +42,7 @@ class TaskException : public std::exception {
    * @param index Exception id
    * @param error_message Error message
    */
-  TaskException(int32_t index, std::string error_message)
-    : index_{index}, error_message_{std::move(error_message)}
-  {
-  }
+  TaskException(int32_t index, std::string error_message);
 
   /**
    * @brief Constructs a `TaskException` object with an error message. The exception id
@@ -54,22 +50,22 @@ class TaskException : public std::exception {
    *
    * @param error_message Error message
    */
-  explicit TaskException(std::string error_message) : TaskException{0, std::move(error_message)} {}
+  explicit TaskException(std::string error_message);
 
-  [[nodiscard]] const char* what() const noexcept override { return error_message().c_str(); }
+  [[nodiscard]] const char* what() const noexcept override;
 
   /**
    * @brief Returns the exception id
    *
    * @return The exception id
    */
-  [[nodiscard]] int32_t index() const noexcept { return index_; }
+  [[nodiscard]] int32_t index() const noexcept;
   /**
    * @brief Returns the error message
    *
    * @return The error message
    */
-  [[nodiscard]] const std::string& error_message() const noexcept { return error_message_; }
+  [[nodiscard]] const std::string& error_message() const noexcept;
 
  private:
   int32_t index_{-1};
@@ -77,3 +73,5 @@ class TaskException : public std::exception {
 };
 
 }  // namespace legate
+
+#include "core/task/exception.inl"

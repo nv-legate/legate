@@ -46,7 +46,7 @@
 
 #define LEGATE_ABORT                                                                        \
   do {                                                                                      \
-    legate::log_legate.error(                                                               \
+    legate::detail::log_legate().error(                                                     \
       "Legate called abort in %s at line %d in function %s", __FILE__, __LINE__, __func__); \
     abort();                                                                                \
   } while (false)

@@ -40,7 +40,7 @@ Storage::Storage(int32_t dim, std::shared_ptr<Type> type)
     type_{std::move(type)},
     offsets_{legate::full(dim_, size_t{0})}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
 }
 
 Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar)
@@ -51,7 +51,7 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize
     offsets_{legate::full(dim_, size_t{0})}
 {
   if (optimize_scalar && extents_.volume() == 1) kind_ = Kind::FUTURE;
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
 }
 
 Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future)
@@ -63,7 +63,7 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
     future_{std::make_unique<Legion::Future>(future)},
     offsets_{legate::full(dim_, size_t{0})}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
 }
 
 Storage::Storage(Shape&& extents,
@@ -80,7 +80,7 @@ Storage::Storage(Shape&& extents,
     color_{std::move(color)},
     offsets_{std::move(offsets)}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate.debug() << "Create " << to_string(); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
 }
 
 Storage::~Storage()
@@ -88,7 +88,7 @@ Storage::~Storage()
   if (!Runtime::get_runtime()->initialized()) {
     // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
     // this would be collected by the Legion runtime
-    future_.release();
+    static_cast<void>(future_.release());
   }
 }
 
@@ -277,10 +277,11 @@ std::string Storage::to_string() const
   std::stringstream ss;
 
   ss << "Storage(" << storage_id_ << ") {shape: ";
-  if (unbound_)
+  if (unbound_) {
     ss << "(unbound)";
-  else
+  } else {
     ss << extents_;
+  }
   ss << ", dim: " << dim_ << ", kind: " << (kind_ == Kind::REGION_FIELD ? "Region" : "Future")
      << ", type: " << type_->to_string() << ", level: " << level_ << "}";
 
@@ -295,7 +296,7 @@ std::shared_ptr<const Storage> StoragePartition::get_root() const { return paren
 
 std::shared_ptr<Storage> StoragePartition::get_root() { return parent_->get_root(); }
 
-std::shared_ptr<Storage> StoragePartition::get_child_storage(const Shape& color)
+std::shared_ptr<Storage> StoragePartition::get_child_storage(Shape color)
 {
   if (partition_->kind() != Partition::Kind::TILING) {
     throw std::runtime_error{"Sub-storage is implemented only for tiling"};
@@ -307,7 +308,7 @@ std::shared_ptr<Storage> StoragePartition::get_child_storage(const Shape& color)
   return std::make_shared<Storage>(std::move(child_extents),
                                    parent_->type(),
                                    shared_from_this(),
-                                   Shape{color},
+                                   std::move(color),
                                    std::move(child_offsets));
 }
 
@@ -363,7 +364,7 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(transform_ != nullptr);
 
-    log_legate.debug() << "Create " << to_string();
+    log_legate().debug() << "Create " << to_string();
   }
 }
 
@@ -379,7 +380,7 @@ LogicalStore::LogicalStore(Shape&& extents,
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(transform_ != nullptr);
 
-    log_legate.debug() << "Create " << to_string();
+    log_legate().debug() << "Create " << to_string();
   }
 }
 
@@ -486,11 +487,11 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(Shape t
   return create_partition(std::move(partition), true);
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t idx, Slice slice)
+std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
 {
-  if (idx < 0 || idx >= dim()) {
-    throw std::invalid_argument{"Invalid slicing of dimension " + std::to_string(idx) + " for a " +
-                                std::to_string(dim()) + "-D store"};
+  if (dim < 0 || dim >= this->dim()) {
+    throw std::invalid_argument{"Invalid slicing of dimension " + std::to_string(dim) + " for a " +
+                                std::to_string(this->dim()) + "-D store"};
   }
 
   auto sanitize_slice = [](const Slice& slice, int64_t extent) {
@@ -504,19 +505,20 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t idx, Slice slice)
   };
 
   auto exts          = extents();
-  auto [start, stop] = sanitize_slice(slice, static_cast<int64_t>(exts[idx]));
+  auto [start, stop] = sanitize_slice(slice, static_cast<int64_t>(exts[dim]));
 
-  if (start < stop && (start >= exts[idx] || stop > exts[idx])) {
-    throw std::invalid_argument{"Out-of-bounds slicing on dimension " + std::to_string(dim()) +
-                                " for a store of shape " + extents().to_string()};
+  if (start < stop && (start >= exts[dim] || stop > exts[dim])) {
+    throw std::invalid_argument{"Out-of-bounds slicing on dimension " +
+                                std::to_string(this->dim()) + " for a store of shape " +
+                                extents().to_string()};
   }
 
-  exts[idx] = stop - start;
+  exts[dim] = stop - start;
 
-  if (exts[idx] == extents()[idx]) return shared_from_this();
+  if (exts[dim] == extents()[dim]) return shared_from_this();
 
   auto transform =
-    (start == 0) ? transform_ : transform_->push(std::make_unique<Shift>(idx, -start));
+    (start == 0) ? transform_ : transform_->push(std::make_unique<Shift>(dim, -start));
   auto substorage =
     volume() == 0 ? storage_
                   : storage_->slice(transform->invert_extents(exts),
@@ -637,8 +639,8 @@ Legion::ProjectionID LogicalStore::compute_projection(
   if (proj_fn) {
     assert(!transformed());
     assert(proj_fn != nullptr);
-    auto point = proj_fn.value()(proj::create_symbolic_point(launch_ndim));
-    return Runtime::get_runtime()->get_projection(launch_ndim, std::move(point));
+    const auto point = proj_fn.value()(proj::create_symbolic_point(launch_ndim));
+    return Runtime::get_runtime()->get_projection(launch_ndim, point);
   }
 
   if (transform_->identity()) {
@@ -647,10 +649,10 @@ Legion::ProjectionID LogicalStore::compute_projection(
   }
 
   const auto ndim = dim();
-  auto point      = transform_->invert(proj::create_symbolic_point(ndim));
   // TODO: We can't currently mix affine projections with delinearizing projections
   if (LegateDefined(LEGATE_USE_DEBUG)) assert(ndim == launch_ndim);
-  return Runtime::get_runtime()->get_projection(ndim, std::move(point));
+  return Runtime::get_runtime()->get_projection(
+    ndim, transform_->invert(proj::create_symbolic_point(ndim)));
 }
 
 std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(

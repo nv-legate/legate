@@ -11,6 +11,7 @@
  */
 
 #include "core/operation/detail/req_analyzer.h"
+
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
@@ -21,15 +22,17 @@ namespace legate::detail {
 
 void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const ProjectionInfo& proj_info)
 {
-  if (proj_infos.empty()) privilege = new_privilege;
-  // conflicting privileges are promoted to a single read-write privilege
-  else if (!(privilege == new_privilege || privilege == NO_ACCESS || new_privilege == NO_ACCESS))
+  if (proj_infos.empty()) {
+    privilege = new_privilege;
+    // conflicting privileges are promoted to a single read-write privilege
+  } else if (privilege != new_privilege && privilege != NO_ACCESS && new_privilege != NO_ACCESS) {
     privilege = LEGION_READ_WRITE;
+  }
   proj_infos.emplace(proj_info);
   is_key = is_key || proj_info.is_key;
 
   if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && proj_infos.size() > 1) {
-    log_legate.error("Interfering requirements are found");
+    log_legate().error("Interfering requirements are found");
     LEGATE_ABORT;
   }
 }

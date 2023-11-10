@@ -135,13 +135,15 @@ Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
 bool Machine::operator==(const Machine& other) const
 {
   if (processor_ranges.size() < other.processor_ranges.size()) { return other.operator==(*this); }
+  auto equal_ranges = [&](const auto& proc_range) {
+    const auto& [target, range] = proc_range;
 
-  for (auto const& [target, range] : processor_ranges) {
-    if (range.empty()) continue;
+    if (range.empty()) return true;
     auto finder = other.processor_ranges.find(target);
-    if (finder == other.processor_ranges.end() || range != finder->second) return false;
-  }
-  return true;
+    return !(finder == other.processor_ranges.end() || range != finder->second);
+  };
+
+  return std::all_of(processor_ranges.begin(), processor_ranges.end(), std::move(equal_ranges));
 }
 
 bool Machine::operator!=(const Machine& other) const { return !(*this == other); }
@@ -186,7 +188,7 @@ std::string LocalProcessorRange::to_string() const
   std::stringstream ss;
   ss << "{offset: " << offset_ << ", total processor count: " << total_proc_count_
      << ", processors: ";
-  for (uint32_t idx = 0; idx < procs_.size(); ++idx) ss << procs_[idx] << ",";
+  for (auto&& proc : procs_) ss << proc << ",";
   ss << "}";
   return std::move(ss).str();
 }
@@ -277,14 +279,15 @@ const std::vector<Processor>& LocalMachine::procs(TaskTarget target) const
 size_t LocalMachine::total_frame_buffer_size() const
 {
   // We assume that all memories of the same kind are symmetric in size
-  size_t per_node_size = frame_buffers_.size() * frame_buffers_.begin()->second.capacity();
+  const size_t per_node_size = frame_buffers_.size() * frame_buffers_.begin()->second.capacity();
   return per_node_size * total_nodes;
 }
 
 size_t LocalMachine::total_socket_memory_size() const
 {
   // We assume that all memories of the same kind are symmetric in size
-  size_t per_node_size = socket_memories_.size() * socket_memories_.begin()->second.capacity();
+  const size_t per_node_size =
+    socket_memories_.size() * socket_memories_.begin()->second.capacity();
   return per_node_size * total_nodes;
 }
 
@@ -310,9 +313,9 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 
   auto num_local_procs = local_procs.size();
   auto my_low          = num_local_procs * node_id;
-  ProcessorRange my_range{static_cast<uint32_t>(my_low),
-                          static_cast<uint32_t>(my_low + num_local_procs),
-                          global_range.per_node_count};
+  const ProcessorRange my_range{static_cast<uint32_t>(my_low),
+                                static_cast<uint32_t>(my_low + num_local_procs),
+                                global_range.per_node_count};
 
   auto slice = global_range & my_range;
   if (slice.empty()) {

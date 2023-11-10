@@ -10,8 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+// NOLINTBEGIN(bugprone-reserved-identifier)
 #ifndef __LEGATE_C_H__
 #define __LEGATE_C_H__
+// NOLINTEND(bugprone-reserved-identifier)
 
 #ifndef LEGATE_USE_PYTHON_CFFI
 #include "legion/legion_config.h"
@@ -19,6 +21,7 @@
 #include <cstdint>
 #endif
 
+// NOLINTBEGIN(modernize-use-using)
 typedef enum legate_core_task_id_t {
   LEGATE_CORE_TOPLEVEL_TASK_ID,
   LEGATE_CORE_EXTRACT_SCALAR_TASK_ID,
@@ -130,6 +133,7 @@ typedef enum legate_core_reduction_op_id_t {
   LEGATE_CORE_JOIN_EXCEPTION_OP   = 0,
   LEGATE_CORE_MAX_REDUCTION_OP_ID = 1,
 } legate_core_reduction_op_id_t;
+// NOLINTEND(modernize-use-using)
 
 #ifdef __cplusplus
 extern "C" {
@@ -146,7 +150,7 @@ void legate_create_sharding_functor_using_projection(
 // TODO: the return type should be legion_point_transform_functor_t
 void* legate_linearizing_point_transform_functor();
 
-void legate_cpucoll_finalize(void);
+int legate_cpucoll_finalize(void);
 
 int legate_cpucoll_initcomm(void);
 

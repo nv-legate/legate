@@ -22,9 +22,9 @@
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 
+#include <chrono>
 #include <cuda.h>
 #include <nccl.h>
-#include <chrono>
 
 namespace legate::detail {
 
@@ -116,10 +116,12 @@ void Factory::finalize(const mapping::detail::Machine& machine,
   launcher.execute(launch_domain);
 }
 
-static ncclUniqueId init_nccl_id(const Legion::Task* task,
-                                 const std::vector<Legion::PhysicalRegion>& regions,
-                                 Legion::Context context,
-                                 Legion::Runtime* runtime)
+namespace {
+
+ncclUniqueId init_nccl_id(const Legion::Task* task,
+                          const std::vector<Legion::PhysicalRegion>& regions,
+                          Legion::Context context,
+                          Legion::Runtime* runtime)
 {
   legate::nvtx::Range auto_range("core::comm::nccl::init_id");
 
@@ -131,10 +133,10 @@ static ncclUniqueId init_nccl_id(const Legion::Task* task,
   return id;
 }
 
-static ncclComm_t* init_nccl(const Legion::Task* task,
-                             const std::vector<Legion::PhysicalRegion>& regions,
-                             Legion::Context context,
-                             Legion::Runtime* runtime)
+ncclComm_t* init_nccl(const Legion::Task* task,
+                      const std::vector<Legion::PhysicalRegion>& regions,
+                      Legion::Context context,
+                      Legion::Runtime* runtime)
 {
   legate::nvtx::Range auto_range("core::comm::nccl::init");
 
@@ -156,7 +158,9 @@ static ncclComm_t* init_nccl(const Legion::Task* task,
 
   auto time_init = std::chrono::duration<double>(ts_init_stop - ts_init_start).count() * 1000.0;
 
-  if (0 == rank_id) { log_legate.debug("NCCL initialization took %lf ms", time_init); }
+  if (0 == rank_id) {
+    legate::detail::log_legate().debug("NCCL initialization took %lf ms", time_init);
+  }
 
   if (num_ranks == 1) return comm;
 
@@ -197,19 +201,20 @@ static ncclComm_t* init_nccl(const Legion::Task* task,
   CHECK_CUDA(cudaEventElapsedTime(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
 
   if (0 == rank_id) {
-    log_legate.debug("NCCL warm-up took %f ms (all-to-all: %f ms, all-gather: %f ms)",
-                     time_all_to_all + time_all_gather,
-                     time_all_to_all,
-                     time_all_gather);
+    legate::detail::log_legate().debug(
+      "NCCL warm-up took %f ms (all-to-all: %f ms, all-gather: %f ms)",
+      time_all_to_all + time_all_gather,
+      time_all_to_all,
+      time_all_gather);
   }
 
   return comm;
 }
 
-static void finalize_nccl(const Legion::Task* task,
-                          const std::vector<Legion::PhysicalRegion>& regions,
-                          Legion::Context context,
-                          Legion::Runtime* runtime)
+void finalize_nccl(const Legion::Task* task,
+                   const std::vector<Legion::PhysicalRegion>& regions,
+                   Legion::Context context,
+                   Legion::Runtime* runtime)
 {
   legate::nvtx::Range auto_range("core::comm::nccl::finalize");
 
@@ -220,6 +225,8 @@ static void finalize_nccl(const Legion::Task* task,
   CHECK_NCCL(ncclCommDestroy(*comm));
   delete comm;
 }
+
+}  // namespace
 
 void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library)
 {

@@ -38,9 +38,7 @@ namespace legate {
 class Scalar;
 class Type;
 
-extern uint32_t extract_env(const char* env_name,
-                            const uint32_t default_value,
-                            const uint32_t test_value);
+extern uint32_t extract_env(const char* env_name, uint32_t default_value, uint32_t test_value);
 
 /**
  * @ingroup runtime

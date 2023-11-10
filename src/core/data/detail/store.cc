@@ -47,7 +47,7 @@ namespace {
 
 struct get_inline_alloc_fn {
   template <typename Rect, typename Acc>
-  InlineAllocation create(const int32_t DIM, const Rect& rect, const Acc& acc)
+  InlineAllocation create(const int32_t DIM, const Rect& rect, Acc&& acc)
   {
     std::vector<size_t> strides(DIM, 0);
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
@@ -59,9 +59,9 @@ struct get_inline_alloc_fn {
                               const Legion::FieldID fid,
                               size_t field_size)
   {
-    Rect<DIM> rect{pr};
+    const Rect<DIM> rect{pr};
     return create(
-      DIM, rect, AccessorRO<int8_t, DIM>(pr, fid, rect, field_size, false /*check_field_size*/));
+      DIM, rect, AccessorRO<int8_t, DIM>{pr, fid, rect, field_size, false /*check_field_size*/});
   }
 
   template <int32_t M, int32_t N>
@@ -71,12 +71,12 @@ struct get_inline_alloc_fn {
                               const Legion::AffineTransform<M, N>& transform,
                               size_t field_size)
   {
-    Rect<N> rect =
+    const Rect<N> rect =
       domain.dim > 0 ? Rect<N>(domain) : Rect<N>(Point<N>::ZEROES(), Point<N>::ZEROES());
     return create(
       N,
       rect,
-      AccessorRO<int8_t, N>(pr, fid, transform, rect, field_size, false /*check_field_size*/));
+      AccessorRO<int8_t, N>{pr, fid, transform, rect, field_size, false /*check_field_size*/});
   }
 };
 
@@ -133,7 +133,7 @@ ReturnValue UnboundRegionField::pack_weight() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     if (!bound_) {
-      legate::log_legate.error(
+      log_legate().error(
         "Found an uninitialized unbound store. Please make sure you return buffers to all unbound "
         "stores in the task");
       LEGATE_ABORT;
@@ -148,14 +148,17 @@ void UnboundRegionField::update_num_elements(size_t num_elements)
   acc[0] = num_elements;
 }
 
+// Silence pass-by-value since Legion::Domain is POD, and the move ctor just does the copy
+// anyways. Unfortunately there is no way to check this programatically (e.g. via a
+// static_assert).
 FutureWrapper::FutureWrapper(bool read_only,
                              uint32_t field_size,
-                             Domain domain,
+                             const Domain& domain,  // NOLINT(modernize-pass-by-value)
                              Legion::Future future,
                              bool initialize /*= false*/)
   : read_only_{read_only},
     field_size_{field_size},
-    domain_{std::move(domain)},
+    domain_{domain},
     future_{std::make_unique<Legion::Future>(std::move(future))}
 {
   if (!read_only) {
@@ -188,11 +191,11 @@ struct get_inline_alloc_from_future_fn {
   template <int32_t DIM>
   InlineAllocation operator()(const Legion::Future& future, const Domain& domain, size_t field_size)
   {
-    Rect<DIM> rect =
+    const Rect<DIM> rect =
       domain.dim > 0 ? Rect<DIM>(domain) : Rect<DIM>(Point<DIM>::ZEROES(), Point<DIM>::ZEROES());
     std::vector<size_t> strides(DIM, 0);
-    AccessorRO<int8_t, DIM> acc(
-      future, rect, Memory::Kind::NO_MEMKIND, field_size, false /*check_field_size*/);
+    const AccessorRO<int8_t, DIM> acc{
+      future, rect, Memory::Kind::NO_MEMKIND, field_size, false /*check_field_size*/};
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
     return InlineAllocation{ptr, std::move(strides)};
   }
@@ -202,10 +205,10 @@ struct get_inline_alloc_from_future_fn {
                               const Domain& domain,
                               size_t field_size)
   {
-    Rect<DIM> rect =
+    const Rect<DIM> rect =
       domain.dim > 0 ? Rect<DIM>(domain) : Rect<DIM>(Point<DIM>::ZEROES(), Point<DIM>::ZEROES());
     std::vector<size_t> strides(DIM, 0);
-    AccessorRO<int8_t, DIM> acc(value, rect, field_size, false /*check_field_size*/);
+    const AccessorRO<int8_t, DIM> acc{value, rect, field_size, false /*check_field_size*/};
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
     return InlineAllocation{ptr, std::move(strides)};
   }

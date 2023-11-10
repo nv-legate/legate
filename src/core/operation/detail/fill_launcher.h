@@ -14,14 +14,11 @@
 
 #include "core/mapping/detail/machine.h"
 
-namespace legate {
-class BufferBuilder;
-}  // namespace legate
-
 namespace legate::detail {
 
 class LogicalStore;
 struct ProjectionInfo;
+class BufferBuilder;
 
 class FillLauncher {
  public:

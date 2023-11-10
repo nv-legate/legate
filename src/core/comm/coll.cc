@@ -10,21 +10,28 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <assert.h>
-#include <limits.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <string.h>
-#include <atomic>
-#include <cstdlib>
-#include <unordered_map>
-
 #include "coll.h"
-#include "core/utilities/typedefs.h"
+
+#include "core/utilities/detail/strtoll.h"
+
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <pthread.h>
 
 namespace legate::comm::coll {
 
-Logger log_coll("coll");
+namespace detail {
+
+Logger& log_coll()
+{
+  static Logger log{"coll"};
+
+  return log;
+}
+
+}  // namespace detail
 
 BackendNetwork* backend_network = nullptr;
 
@@ -52,10 +59,10 @@ int collAlltoallv(const void* sendbuf,
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
-    log_coll.error("Do not support inplace Alltoallv");
+    detail::log_coll().error("Do not support inplace Alltoallv");
     LEGATE_ABORT;
   }
-  log_coll.debug(
+  detail::log_coll().debug(
     "Alltoallv: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
     "mpi_comm_size %d %d, nb_threads %d",
     global_comm->global_rank,
@@ -74,10 +81,10 @@ int collAlltoall(
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
-    log_coll.error("Do not support inplace Alltoall");
+    detail::log_coll().error("Do not support inplace Alltoall");
     LEGATE_ABORT;
   }
-  log_coll.debug(
+  detail::log_coll().debug(
     "Alltoall: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
     "mpi_comm_size %d %d, nb_threads %d",
     global_comm->global_rank,
@@ -93,7 +100,7 @@ int collAlltoall(
 int collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
-  log_coll.debug(
+  detail::log_coll().debug(
     "Allgather: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
     "mpi_comm_size %d %d, nb_threads %d",
     global_comm->global_rank,
@@ -112,16 +119,16 @@ int collInit(int argc, char* argv[])
   if (LegateDefined(LEGATE_USE_NETWORK)) {
     char* network    = getenv("LEGATE_NEED_NETWORK");
     int need_network = 0;
-    if (network != nullptr) { need_network = atoi(network); }
+    if (network != nullptr) { need_network = legate::detail::safe_strtoll<int>(network); }
     if (need_network) {
 #if LegateDefined(LEGATE_USE_NETWORK)
-      backend_network = new MPINetwork(argc, argv);
+      backend_network = new MPINetwork{argc, argv};
 #endif
     } else {
-      backend_network = new LocalNetwork(argc, argv);
+      backend_network = new LocalNetwork{argc, argv};
     }
   } else {
-    backend_network = new LocalNetwork(argc, argv);
+    backend_network = new LocalNetwork{argc, argv};
   }
   return CollSuccess;
 }
@@ -133,10 +140,6 @@ int collFinalize()
 }
 
 int collInitComm() { return backend_network->init_comm(); }
-
-BackendNetwork::BackendNetwork() : coll_inited(false), current_unique_id(0) {}
-
-BackendNetwork::~BackendNetwork() {}
 
 int BackendNetwork::collGetUniqueId(int* id)
 {
@@ -157,7 +160,11 @@ void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, size_t size)
 
 extern "C" {
 
-void legate_cpucoll_finalize(void) { legate::comm::coll::collFinalize(); }
+int legate_cpucoll_finalize(void)
+{
+  // REVIEW: this should be returned?
+  return legate::comm::coll::collFinalize();
+}
 
 int legate_cpucoll_initcomm(void) { return legate::comm::coll::collInitComm(); }
 }

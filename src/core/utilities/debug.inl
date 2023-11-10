@@ -90,7 +90,7 @@ template <typename T, int DIM>
 template <int DIM, typename ACC>
 [[nodiscard]] std::string print_dense_array(ACC accessor, const Rect<DIM>& rect)
 {
-  Point<DIM> extents = rect.hi - rect.lo + Point<DIM>::ONES();
+  const Point<DIM> extents = rect.hi - rect.lo + Point<DIM>::ONES();
   size_t strides[DIM];
   const typename ACC::value_type* base = accessor.ptr(rect, strides);
   return print_dense_array(base, extents, strides);

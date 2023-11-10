@@ -77,7 +77,8 @@ void Copy::launch(Strategy* p_strategy)
     auto store_partition = target_.store->create_partition(strategy[target_.variable]);
     auto proj            = store_partition->create_projection_info(launch_domain);
 
-    proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_.value()));
+    proj->set_reduction_op(static_cast<Legion::ReductionOpID>(
+      target_.store->type()->find_reduction_operator(redop_.value())));
     launcher.add_reduction(target_.store, std::move(proj));
   }
 

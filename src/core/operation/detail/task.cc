@@ -69,7 +69,7 @@ void Task::record_unbound_output(std::shared_ptr<LogicalStore> store)
 void Task::record_scalar_reduction(std::shared_ptr<LogicalStore> store,
                                    Legion::ReductionOpID legion_redop_id)
 {
-  scalar_reductions_.push_back(std::make_pair(std::move(store), legion_redop_id));
+  scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
 
 void Task::launch_task(Strategy* p_strategy)
@@ -260,12 +260,12 @@ void AutoTask::add_reduction(std::shared_ptr<LogicalArray> array,
   if (array->unbound()) throw std::invalid_argument{"Unbound arrays cannot be used for reductions"};
 
   if (array->type()->variable_size()) {
-    throw std::invalid_argument("List/string arrays cannot be used for reduction");
+    throw std::invalid_argument{"List/string arrays cannot be used for reduction"};
   }
   auto legion_redop_id = array->type()->find_reduction_operator(redop);
 
-  array->record_scalar_reductions(this, legion_redop_id);
-  reduction_ops_.push_back(legion_redop_id);
+  array->record_scalar_reductions(this, static_cast<Legion::ReductionOpID>(legion_redop_id));
+  reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 
   auto& arg = reductions_.emplace_back(std::move(array));
 
@@ -355,9 +355,10 @@ void ManualTask::add_input(const std::shared_ptr<LogicalStorePartition>& store_p
 void ManualTask::add_output(std::shared_ptr<LogicalStore> store)
 {
   if (store->has_scalar_storage()) {
-    if (strategy_->parallel(this))
+    if (strategy_->parallel(this)) {
       throw std::invalid_argument{
         "Manual tasks with scalar outputs cannot have a launch domain with more than one point"};
+    }
     record_scalar_output(store);
   } else if (store->unbound()) {
     record_unbound_output(store);
@@ -372,9 +373,10 @@ void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_
     assert(!store_partition->store()->unbound());
   }
   if (store_partition->store()->has_scalar_storage()) {
-    if (strategy_->parallel(this))
+    if (strategy_->parallel(this)) {
       throw std::invalid_argument{
         "Manual tasks with scalar outputs cannot have a launch domain with more than one point"};
+    }
     record_scalar_output(store_partition->store());
   }
   add_store(outputs_, store_partition->store(), store_partition->partition());
@@ -385,9 +387,11 @@ void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redo
   if (store->unbound()) throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
 
   auto legion_redop_id = store->type()->find_reduction_operator(redop);
-  if (store->has_scalar_storage()) { record_scalar_reduction(store, legion_redop_id); }
+  if (store->has_scalar_storage()) {
+    record_scalar_reduction(store, static_cast<Legion::ReductionOpID>(legion_redop_id));
+  }
   add_store(reductions_, std::move(store), create_no_partition());
-  reduction_ops_.push_back(legion_redop_id);
+  reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 }
 
 void ManualTask::add_reduction(const std::shared_ptr<LogicalStorePartition>& store_partition,
@@ -396,10 +400,11 @@ void ManualTask::add_reduction(const std::shared_ptr<LogicalStorePartition>& sto
   auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop);
 
   if (store_partition->store()->has_scalar_storage()) {
-    record_scalar_reduction(store_partition->store(), legion_redop_id);
+    record_scalar_reduction(store_partition->store(),
+                            static_cast<Legion::ReductionOpID>(legion_redop_id));
   }
   add_store(reductions_, store_partition->store(), store_partition->partition());
-  reduction_ops_.push_back(legion_redop_id);
+  reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 }
 
 void ManualTask::add_store(std::vector<ArrayArg>& store_args,
@@ -408,9 +413,10 @@ void ManualTask::add_store(std::vector<ArrayArg>& store_args,
 {
   auto partition_symbol = declare_partition();
   auto& arg             = store_args.emplace_back(std::make_shared<BaseLogicalArray>(store));
+  const auto unbound    = store->unbound();
 
-  arg.mapping.insert({store, partition_symbol});
-  if (store->unbound()) {
+  arg.mapping.insert({std::move(store), partition_symbol});
+  if (unbound) {
     auto field_space = detail::Runtime::get_runtime()->create_field_space();
 
     strategy_->insert(partition_symbol, std::move(partition), field_space);

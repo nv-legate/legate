@@ -104,7 +104,7 @@ class FutureWrapper {
   FutureWrapper() = default;
   FutureWrapper(bool read_only,
                 uint32_t field_size,
-                Domain domain,
+                const Domain& domain,
                 Legion::Future future,
                 bool initialize = false);
 

@@ -273,7 +273,8 @@ tuple<T> tuple<T>::map(const std::vector<int32_t>& mapping) const
 template <typename T>
 std::string tuple<T>::to_string() const
 {
-  std::stringstream ss;
+  // clang-tidy says we can make this const, but that's wrong?
+  std::stringstream ss;  // NOLINT(misc-const-correctness)
 
   ss << *this;
   return std::move(ss).str();

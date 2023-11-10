@@ -477,6 +477,7 @@ install(
 install(
   FILES src/core/comm/coll.h
         src/core/comm/communicator.h
+        src/core/comm/communicator.inl
         src/core/comm/pthread_barrier.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/comm)
 
@@ -539,10 +540,12 @@ install(
 
 install(
   FILES src/core/task/exception.h
+        src/core/task/exception.inl
         src/core/task/registrar.h
         src/core/task/task.h
         src/core/task/task.inl
         src/core/task/task_context.h
+        src/core/task/task_context.inl
         src/core/task/task_info.h
         src/core/task/variant_helper.h
         src/core/task/variant_options.h

@@ -103,12 +103,11 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   const auto ndim = static_cast<uint32_t>(storage_exts.size());
 
   for (uint32_t dim = 0; dim < ndim; ++dim) {
-    int64_t my_lo = offsets_[dim];
-    int64_t my_hi = my_lo + static_cast<int64_t>(strides_[dim] * color_shape_[dim]);
+    const int64_t my_lo = offsets_[dim];
+    const int64_t my_hi = my_lo + static_cast<int64_t>(strides_[dim] * color_shape_[dim]);
+    const auto soff     = static_cast<int64_t>(storage_offs[dim]);
 
-    if (static_cast<int64_t>(storage_offs[dim]) < my_lo &&
-        my_hi < static_cast<int64_t>(storage_offs[dim] + storage_exts[dim]))
-      return false;
+    if (soff < my_lo && my_hi < (soff + static_cast<int64_t>(storage_exts[dim]))) return false;
   }
   return true;
 }
@@ -165,7 +164,9 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
   transform.m = ndim;
   transform.n = ndim;
   for (int32_t idx = 0; idx < ndim * ndim; ++idx) transform.matrix[idx] = 0;
-  for (int32_t idx = 0; idx < ndim; ++idx) transform.matrix[ndim * idx + idx] = strides_[idx];
+  for (int32_t idx = 0; idx < ndim; ++idx) {
+    transform.matrix[ndim * idx + idx] = static_cast<Legion::coord_t>(strides_[idx]);
+  }
 
   auto extent = to_domain(tile_shape_);
   for (int32_t idx = 0; idx < ndim; ++idx) {
@@ -201,8 +202,8 @@ Shape Tiling::get_child_extents(const Shape& extents, const Shape& color)
 {
   auto lo = apply(std::plus<int64_t>{}, tile_shape_ * color, offsets_);
   auto hi = apply(std::plus<int64_t>{}, tile_shape_ * (color + 1), offsets_);
-  lo      = apply([](int64_t v) { return std::max<int64_t>(0, v); }, lo);
-  hi      = apply([](size_t a, int64_t b) { return std::min<int64_t>(a, b); }, extents, hi);
+  lo      = apply([](int64_t v) { return std::max(static_cast<int64_t>(0), v); }, lo);
+  hi = apply([](size_t a, int64_t b) { return std::min(static_cast<int64_t>(a), b); }, extents, hi);
   return apply([](int64_t h, int64_t l) { return static_cast<size_t>(h - l); }, hi, lo);
 }
 
@@ -225,7 +226,7 @@ Weighted::~Weighted()
   if (!detail::Runtime::get_runtime()->initialized()) {
     // FIXME: Leak the FutureMap handle if the runtime has already shut down, as there's no hope
     // that this would be collected by the Legion runtime
-    weights_.release();
+    static_cast<void>(weights_.release());
   }
 }
 
@@ -377,8 +378,8 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
     part_mgr->find_image_partition(target, func_partition, func_rf->field_id());
 
   if (Legion::IndexPartition::NO_PART == index_partition) {
-    bool is_range    = func_->type()->code == Type::Code::STRUCT;
-    auto color_space = runtime->find_or_create_index_space(to_domain(color_shape()));
+    const bool is_range = func_->type()->code == Type::Code::STRUCT;
+    auto color_space    = runtime->find_or_create_index_space(to_domain(color_shape()));
 
     auto field_id   = func_rf->field_id();
     index_partition = runtime->create_image_partition(

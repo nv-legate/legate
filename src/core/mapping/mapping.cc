@@ -63,13 +63,13 @@ std::ostream& operator<<(std::ostream& stream, const StoreTarget& target)
 
 /*static*/ DimOrdering DimOrdering::c_order()
 {
-  static DimOrdering ordering{std::make_shared<detail::DimOrdering>(Kind::C)};
+  static const DimOrdering ordering{std::make_shared<detail::DimOrdering>(Kind::C)};
   return ordering;
 }
 
 /*static*/ DimOrdering DimOrdering::fortran_order()
 {
-  static DimOrdering ordering{std::make_shared<detail::DimOrdering>(Kind::FORTRAN)};
+  static const DimOrdering ordering{std::make_shared<detail::DimOrdering>(Kind::FORTRAN)};
   return ordering;
 }
 
@@ -92,100 +92,6 @@ DimOrdering::Kind DimOrdering::kind() const { return impl_->kind; }
 std::vector<int32_t> DimOrdering::dimensions() const { return impl_->dims; }
 
 bool DimOrdering::operator==(const DimOrdering& other) const { return *impl_ == *other.impl_; }
-
-InstanceMappingPolicy& InstanceMappingPolicy::with_target(StoreTarget _target) &
-{
-  set_target(_target);
-  return *this;
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_target(StoreTarget _target) const&
-{
-  return InstanceMappingPolicy{*this}.with_target(_target);
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_target(StoreTarget _target) &&
-{
-  return std::move(this->with_target(_target));
-}
-
-InstanceMappingPolicy& InstanceMappingPolicy::with_allocation_policy(AllocPolicy _allocation) &
-{
-  set_allocation_policy(_allocation);
-  return *this;
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_allocation_policy(
-  AllocPolicy _allocation) const&
-{
-  return InstanceMappingPolicy{*this}.with_allocation_policy(_allocation);
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_allocation_policy(AllocPolicy _allocation) &&
-{
-  return std::move(this->with_allocation_policy(_allocation));
-}
-
-InstanceMappingPolicy& InstanceMappingPolicy::with_instance_layout(InstLayout _layout) &
-{
-  set_instance_layout(_layout);
-  return *this;
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_instance_layout(InstLayout _layout) const&
-{
-  return InstanceMappingPolicy{*this}.with_instance_layout(_layout);
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_instance_layout(InstLayout _layout) &&
-{
-  return std::move(this->with_instance_layout(_layout));
-}
-
-InstanceMappingPolicy& InstanceMappingPolicy::with_ordering(DimOrdering _ordering) &
-{
-  set_ordering(std::move(_ordering));
-  return *this;
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_ordering(DimOrdering _ordering) const&
-{
-  return InstanceMappingPolicy{*this}.with_ordering(std::move(_ordering));
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_ordering(DimOrdering _ordering) &&
-{
-  return std::move(this->with_ordering(std::move(_ordering)));
-}
-
-InstanceMappingPolicy& InstanceMappingPolicy::with_exact(bool _exact) &
-{
-  set_exact(_exact);
-  return *this;
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_exact(bool _exact) const&
-{
-  return InstanceMappingPolicy{*this}.with_exact(_exact);
-}
-
-InstanceMappingPolicy&& InstanceMappingPolicy::with_exact(bool _exact) &&
-{
-  return std::move(this->with_exact(_exact));
-}
-
-void InstanceMappingPolicy::set_target(StoreTarget _target) { target = _target; }
-
-void InstanceMappingPolicy::set_allocation_policy(AllocPolicy _allocation)
-{
-  allocation = _allocation;
-}
-
-void InstanceMappingPolicy::set_instance_layout(InstLayout _layout) { layout = _layout; }
-
-void InstanceMappingPolicy::set_ordering(DimOrdering _ordering) { ordering = std::move(_ordering); }
-
-void InstanceMappingPolicy::set_exact(bool _exact) { exact = _exact; }
 
 bool InstanceMappingPolicy::subsumes(const InstanceMappingPolicy& other) const
 {

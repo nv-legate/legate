@@ -125,7 +125,7 @@ class StoragePartition : public std::enable_shared_from_this<StoragePartition> {
   [[nodiscard]] std::shared_ptr<Partition> partition() const;
   [[nodiscard]] std::shared_ptr<const Storage> get_root() const;
   [[nodiscard]] std::shared_ptr<Storage> get_root();
-  [[nodiscard]] std::shared_ptr<Storage> get_child_storage(const Shape& color);
+  [[nodiscard]] std::shared_ptr<Storage> get_child_storage(Shape color);
   [[nodiscard]] std::shared_ptr<LogicalRegionField> get_child_data(const Shape& color);
 
   [[nodiscard]] Partition* find_key_partition(const mapping::detail::Machine& machine,

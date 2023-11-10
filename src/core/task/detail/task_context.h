@@ -18,53 +18,53 @@
 #include "core/mapping/detail/machine.h"
 #include "core/task/detail/return.h"
 
+#include <memory>
+#include <string_view>
+#include <vector>
+
 namespace legate::detail {
 
 class TaskContext {
  public:
   TaskContext(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions);
 
- public:
-  std::vector<std::shared_ptr<Array>>& inputs() { return inputs_; }
-  std::vector<std::shared_ptr<Array>>& outputs() { return outputs_; }
-  std::vector<std::shared_ptr<Array>>& reductions() { return reductions_; }
-  const std::vector<legate::Scalar>& scalars() { return scalars_; }
-  std::vector<comm::Communicator>& communicators() { return comms_; }
+  [[nodiscard]] std::vector<std::shared_ptr<Array>>& inputs();
+  [[nodiscard]] std::vector<std::shared_ptr<Array>>& outputs();
+  [[nodiscard]] std::vector<std::shared_ptr<Array>>& reductions();
+  [[nodiscard]] const std::vector<legate::Scalar>& scalars();
+  [[nodiscard]] std::vector<comm::Communicator>& communicators();
 
- public:
-  bool is_single_task() const { return !task_->is_index_space; }
-  bool can_raise_exception() const { return can_raise_exception_; }
-  DomainPoint get_task_index() const { return task_->index_point; }
-  Domain get_launch_domain() const { return task_->index_domain; }
+  [[nodiscard]] bool is_single_task() const;
+  [[nodiscard]] bool can_raise_exception() const;
+  [[nodiscard]] DomainPoint get_task_index() const;
+  [[nodiscard]] Domain get_launch_domain() const;
 
- public:
-  const mapping::detail::Machine& machine() const { return machine_; }
-  const std::string& get_provenance() const { return task_->get_provenance_string(); }
+  [[nodiscard]] const mapping::detail::Machine& machine() const;
+  [[nodiscard]] const std::string& get_provenance() const;
 
- public:
   /**
    * @brief Makes all of unbound output stores of this task empty
    */
   void make_all_unbound_stores_empty();
-  ReturnValues pack_return_values() const;
-  ReturnValues pack_return_values_with_exception(int32_t index,
-                                                 const std::string& error_message) const;
+  [[nodiscard]] ReturnValues pack_return_values() const;
+  [[nodiscard]] ReturnValues pack_return_values_with_exception(
+    int32_t index, std::string_view error_message) const;
 
  private:
-  std::vector<ReturnValue> get_return_values() const;
+  [[nodiscard]] std::vector<ReturnValue> get_return_values() const;
 
- private:
-  const Legion::Task* task_;
+  const Legion::Task* task_{};
   const std::vector<Legion::PhysicalRegion>& regions_;
 
- private:
-  std::vector<std::shared_ptr<Array>> inputs_, outputs_, reductions_;
-  std::vector<std::shared_ptr<Store>> unbound_stores_;
-  std::vector<std::shared_ptr<Store>> scalar_stores_;
-  std::vector<legate::Scalar> scalars_;
-  std::vector<comm::Communicator> comms_;
-  bool can_raise_exception_;
-  mapping::detail::Machine machine_;
+  std::vector<std::shared_ptr<Array>> inputs_{}, outputs_{}, reductions_{};
+  std::vector<std::shared_ptr<Store>> unbound_stores_{};
+  std::vector<std::shared_ptr<Store>> scalar_stores_{};
+  std::vector<legate::Scalar> scalars_{};
+  std::vector<comm::Communicator> comms_{};
+  bool can_raise_exception_{};
+  mapping::detail::Machine machine_{};
 };
 
 }  // namespace legate::detail
+
+#include "core/task/detail/task_context.inl"

@@ -191,10 +191,7 @@ class ListType : public ExtensionType {
 [[nodiscard]] std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type,
                                                      uint32_t N);
 
-[[nodiscard]] std::shared_ptr<Type> struct_type(
-  const std::vector<std::shared_ptr<Type>>& field_types, bool align);
-
-[[nodiscard]] std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>>&& field_types,
+[[nodiscard]] std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>> field_types,
                                                 bool align);
 
 [[nodiscard]] std::shared_ptr<Type> list_type(std::shared_ptr<Type> element_type);

@@ -30,60 +30,77 @@ namespace legate::detail {
 
 namespace {
 
-const std::unordered_map<Type::Code, uint32_t> SIZEOF = {
-  {Type::Code::BOOL, sizeof(legate_type_of<Type::Code::BOOL>)},
-  {Type::Code::INT8, sizeof(legate_type_of<Type::Code::INT8>)},
-  {Type::Code::INT16, sizeof(legate_type_of<Type::Code::INT16>)},
-  {Type::Code::INT32, sizeof(legate_type_of<Type::Code::INT32>)},
-  {Type::Code::INT64, sizeof(legate_type_of<Type::Code::INT64>)},
-  {Type::Code::UINT8, sizeof(legate_type_of<Type::Code::UINT8>)},
-  {Type::Code::UINT16, sizeof(legate_type_of<Type::Code::UINT16>)},
-  {Type::Code::UINT32, sizeof(legate_type_of<Type::Code::UINT32>)},
-  {Type::Code::UINT64, sizeof(legate_type_of<Type::Code::UINT64>)},
-  {Type::Code::FLOAT16, sizeof(legate_type_of<Type::Code::FLOAT16>)},
-  {Type::Code::FLOAT32, sizeof(legate_type_of<Type::Code::FLOAT32>)},
-  {Type::Code::FLOAT64, sizeof(legate_type_of<Type::Code::FLOAT64>)},
-  {Type::Code::COMPLEX64, sizeof(legate_type_of<Type::Code::COMPLEX64>)},
-  {Type::Code::COMPLEX128, sizeof(legate_type_of<Type::Code::COMPLEX128>)},
-  {Type::Code::NIL, 0},
-};
+// To pacify "cert-err58-cpp: initialization of 'SIZEOF'|'ALIGNOF'|'TYPE_NAMES' with static
+// storage duration may throw an exception that cannot be caught" we place them in functions.
+//
+// We mark this function as noexcept because if this map fails to initialize, then we are so
+// well and truly beansed that the program must abort.
+[[nodiscard]] const std::unordered_map<Type::Code, uint32_t>& SIZEOF() noexcept
+{
+  static const std::unordered_map<Type::Code, uint32_t> map = {
+    {Type::Code::BOOL, sizeof(legate_type_of<Type::Code::BOOL>)},
+    {Type::Code::INT8, sizeof(legate_type_of<Type::Code::INT8>)},
+    {Type::Code::INT16, sizeof(legate_type_of<Type::Code::INT16>)},
+    {Type::Code::INT32, sizeof(legate_type_of<Type::Code::INT32>)},
+    {Type::Code::INT64, sizeof(legate_type_of<Type::Code::INT64>)},
+    {Type::Code::UINT8, sizeof(legate_type_of<Type::Code::UINT8>)},
+    {Type::Code::UINT16, sizeof(legate_type_of<Type::Code::UINT16>)},
+    {Type::Code::UINT32, sizeof(legate_type_of<Type::Code::UINT32>)},
+    {Type::Code::UINT64, sizeof(legate_type_of<Type::Code::UINT64>)},
+    {Type::Code::FLOAT16, sizeof(legate_type_of<Type::Code::FLOAT16>)},
+    {Type::Code::FLOAT32, sizeof(legate_type_of<Type::Code::FLOAT32>)},
+    {Type::Code::FLOAT64, sizeof(legate_type_of<Type::Code::FLOAT64>)},
+    {Type::Code::COMPLEX64, sizeof(legate_type_of<Type::Code::COMPLEX64>)},
+    {Type::Code::COMPLEX128, sizeof(legate_type_of<Type::Code::COMPLEX128>)},
+    {Type::Code::NIL, 0},
+  };
+  return map;
+}
 
-const std::unordered_map<Type::Code, uint32_t> ALIGNOF = {
-  {Type::Code::BOOL, alignof(legate_type_of<Type::Code::BOOL>)},
-  {Type::Code::INT8, alignof(legate_type_of<Type::Code::INT8>)},
-  {Type::Code::INT16, alignof(legate_type_of<Type::Code::INT16>)},
-  {Type::Code::INT32, alignof(legate_type_of<Type::Code::INT32>)},
-  {Type::Code::INT64, alignof(legate_type_of<Type::Code::INT64>)},
-  {Type::Code::UINT8, alignof(legate_type_of<Type::Code::UINT8>)},
-  {Type::Code::UINT16, alignof(legate_type_of<Type::Code::UINT16>)},
-  {Type::Code::UINT32, alignof(legate_type_of<Type::Code::UINT32>)},
-  {Type::Code::UINT64, alignof(legate_type_of<Type::Code::UINT64>)},
-  {Type::Code::FLOAT16, alignof(legate_type_of<Type::Code::FLOAT16>)},
-  {Type::Code::FLOAT32, alignof(legate_type_of<Type::Code::FLOAT32>)},
-  {Type::Code::FLOAT64, alignof(legate_type_of<Type::Code::FLOAT64>)},
-  {Type::Code::COMPLEX64, alignof(legate_type_of<Type::Code::COMPLEX64>)},
-  {Type::Code::COMPLEX128, alignof(legate_type_of<Type::Code::COMPLEX128>)},
-  {Type::Code::NIL, 0},
-};
+[[nodiscard]] const std::unordered_map<Type::Code, uint32_t>& ALIGNOF() noexcept
+{
+  static const std::unordered_map<Type::Code, uint32_t> map = {
+    {Type::Code::BOOL, alignof(legate_type_of<Type::Code::BOOL>)},
+    {Type::Code::INT8, alignof(legate_type_of<Type::Code::INT8>)},
+    {Type::Code::INT16, alignof(legate_type_of<Type::Code::INT16>)},
+    {Type::Code::INT32, alignof(legate_type_of<Type::Code::INT32>)},
+    {Type::Code::INT64, alignof(legate_type_of<Type::Code::INT64>)},
+    {Type::Code::UINT8, alignof(legate_type_of<Type::Code::UINT8>)},
+    {Type::Code::UINT16, alignof(legate_type_of<Type::Code::UINT16>)},
+    {Type::Code::UINT32, alignof(legate_type_of<Type::Code::UINT32>)},
+    {Type::Code::UINT64, alignof(legate_type_of<Type::Code::UINT64>)},
+    {Type::Code::FLOAT16, alignof(legate_type_of<Type::Code::FLOAT16>)},
+    {Type::Code::FLOAT32, alignof(legate_type_of<Type::Code::FLOAT32>)},
+    {Type::Code::FLOAT64, alignof(legate_type_of<Type::Code::FLOAT64>)},
+    {Type::Code::COMPLEX64, alignof(legate_type_of<Type::Code::COMPLEX64>)},
+    {Type::Code::COMPLEX128, alignof(legate_type_of<Type::Code::COMPLEX128>)},
+    {Type::Code::NIL, 0},
+  };
+  return map;
+}
 
-const std::unordered_map<Type::Code, std::string> TYPE_NAMES = {
-  {Type::Code::BOOL, "bool"},
-  {Type::Code::INT8, "int8"},
-  {Type::Code::INT16, "int16"},
-  {Type::Code::INT32, "int32"},
-  {Type::Code::INT64, "int64"},
-  {Type::Code::UINT8, "uint8"},
-  {Type::Code::UINT16, "uint16"},
-  {Type::Code::UINT32, "uint32"},
-  {Type::Code::UINT64, "uint64"},
-  {Type::Code::FLOAT16, "float16"},
-  {Type::Code::FLOAT32, "float32"},
-  {Type::Code::FLOAT64, "float64"},
-  {Type::Code::COMPLEX64, "complex64"},
-  {Type::Code::COMPLEX128, "complex128"},
-  {Type::Code::STRING, "string"},
-  {Type::Code::NIL, "null_type"},
-};
+[[nodiscard]] const std::unordered_map<Type::Code, std::string_view>& TYPE_NAMES() noexcept
+{
+  static const std::unordered_map<Type::Code, std::string_view> map = {
+    {Type::Code::BOOL, "bool"},
+    {Type::Code::INT8, "int8"},
+    {Type::Code::INT16, "int16"},
+    {Type::Code::INT32, "int32"},
+    {Type::Code::INT64, "int64"},
+    {Type::Code::UINT8, "uint8"},
+    {Type::Code::UINT16, "uint16"},
+    {Type::Code::UINT32, "uint32"},
+    {Type::Code::UINT64, "uint64"},
+    {Type::Code::FLOAT16, "float16"},
+    {Type::Code::FLOAT32, "float32"},
+    {Type::Code::FLOAT64, "float64"},
+    {Type::Code::COMPLEX64, "complex64"},
+    {Type::Code::COMPLEX128, "complex128"},
+    {Type::Code::STRING, "string"},
+    {Type::Code::NIL, "null_type"},
+  };
+  return map;
+}
 
 constexpr const char* const VARIABLE_SIZE_ERROR_MESSAGE =
   "Variable-size element type cannot be used";
@@ -126,19 +143,19 @@ uint32_t Type::size() const
 const FixedArrayType& Type::as_fixed_array_type() const
 {
   throw std::invalid_argument{"Type is not a fixed array type"};
-  return *static_cast<const FixedArrayType*>(nullptr);
+  return *reinterpret_cast<const FixedArrayType*>(this);
 }
 
 const StructType& Type::as_struct_type() const
 {
-  throw std::invalid_argument("Type is not a struct type");
-  return *static_cast<const StructType*>(nullptr);
+  throw std::invalid_argument{"Type is not a struct type"};
+  return *reinterpret_cast<const StructType*>(this);
 }
 
 const ListType& Type::as_list_type() const
 {
-  throw std::invalid_argument("Type is not a list type");
-  return *static_cast<const ListType*>(nullptr);
+  throw std::invalid_argument{"Type is not a list type"};
+  return *reinterpret_cast<const ListType*>(this);
 }
 
 void Type::record_reduction_operator(int32_t op_kind, int64_t global_op_id) const
@@ -159,29 +176,15 @@ int64_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 bool Type::operator==(const Type& other) const { return equal(other); }
 
 PrimitiveType::PrimitiveType(Code code)
-  : Type{code}, size_{SIZEOF.at(code)}, alignment_{ALIGNOF.at(code)}
+  : Type{code}, size_{SIZEOF().at(code)}, alignment_{ALIGNOF().at(code)}
 {
 }
 
-int32_t PrimitiveType::uid() const { return static_cast<int32_t>(code); }
-
-std::string PrimitiveType::to_string() const { return TYPE_NAMES.at(code); }
+std::string PrimitiveType::to_string() const { return std::string{TYPE_NAMES().at(code)}; }
 
 void PrimitiveType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(static_cast<int32_t>(code));
-}
-
-bool PrimitiveType::equal(const Type& other) const { return code == other.code; }
-
-ExtensionType::ExtensionType(int32_t uid, Type::Code code)
-  : Type{code}, uid_{static_cast<std::uint32_t>(uid)}
-{
-}
-
-BinaryType::BinaryType(int32_t uid, uint32_t size)
-  : ExtensionType{uid, Type::Code::BINARY}, size_{size}
-{
 }
 
 std::string BinaryType::to_string() const { return "binary(" + std::to_string(size_) + ")"; }
@@ -190,11 +193,6 @@ void BinaryType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(static_cast<int32_t>(code));
   buffer.pack<uint32_t>(size_);
-}
-
-bool BinaryType::equal(const Type& other) const
-{
-  return static_cast<int32_t>(uid_) == other.uid();
 }
 
 FixedArrayType::FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
@@ -222,8 +220,6 @@ void FixedArrayType::pack(BufferBuilder& buffer) const
   element_type_->pack(buffer);
 }
 
-const FixedArrayType& FixedArrayType::as_fixed_array_type() const { return *this; }
-
 bool FixedArrayType::equal(const Type& other) const
 {
   if (code != other.code) return false;
@@ -240,7 +236,6 @@ bool FixedArrayType::equal(const Type& other) const
 StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
   : ExtensionType{uid, Type::Code::STRUCT},
     aligned_{align},
-    size_{0},
     alignment_{1},
     field_types_{std::move(field_types)}
 {
@@ -299,8 +294,6 @@ void StructType::pack(BufferBuilder& buffer) const
   buffer.pack<bool>(aligned_);
 }
 
-const StructType& StructType::as_struct_type() const { return *this; }
-
 bool StructType::equal(const Type& other) const
 {
   if (code != other.code) return false;
@@ -324,23 +317,15 @@ std::shared_ptr<Type> StructType::field_type(uint32_t field_idx) const
   return field_types_.at(field_idx);
 }
 
-StringType::StringType() : Type{Type::Code::STRING} {}
-
-int32_t StringType::uid() const { return static_cast<int32_t>(code); }
-
-std::string StringType::to_string() const { return "string"; }
-
 void StringType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(static_cast<int32_t>(code));
 }
 
-bool StringType::equal(const Type& other) const { return code == other.code; }
-
 std::shared_ptr<Type> primitive_type(Type::Code code)
 {
   static std::unordered_map<Type::Code, std::shared_ptr<Type>> cache{};
-  if (SIZEOF.find(code) == SIZEOF.end()) {
+  if (SIZEOF().find(code) == SIZEOF().end()) {
     throw std::invalid_argument{std::to_string(static_cast<int32_t>(code)) +
                                 " is not a valid type code for a primitive type"};
   }
@@ -373,8 +358,6 @@ void ListType::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(uid_);
   element_type_->pack(buffer);
 }
-
-const ListType& ListType::as_list_type() const { return *this; }
 
 bool ListType::equal(const Type& other) const
 {
@@ -417,19 +400,15 @@ std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint3
   // | length | element type code |
   // +--------+-------------------+
   auto uid = [&N](const Type& elem_type) {
-    if (!elem_type.is_primitive() || N > 0xFFU) return get_next_uid();
+    constexpr auto MAX_ELEMENTS = 0xFFU;
+
+    if (!elem_type.is_primitive() || N > MAX_ELEMENTS) return get_next_uid();
     return static_cast<int32_t>(elem_type.code) | (N << TYPE_CODE_OFFSET);
   }(*element_type);
   return std::make_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
 
-std::shared_ptr<Type> struct_type(const std::vector<std::shared_ptr<Type>>& field_types, bool align)
-{
-  return std::make_shared<StructType>(
-    get_next_uid(), std::vector<std::shared_ptr<Type>>(field_types), align);
-}
-
-std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>>&& field_types, bool align)
+std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>> field_types, bool align)
 {
   return std::make_shared<StructType>(get_next_uid(), std::move(field_types), align);
 }
@@ -527,8 +506,9 @@ std::shared_ptr<Type> point_type(int32_t ndim)
 {
   static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
 
-  if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
+  if (ndim <= 0 || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
+  }
   if (nullptr == cache[ndim]) {
     cache[ndim] =
       std::make_shared<detail::FixedArrayType>(BASE_POINT_TYPE_UID + ndim, int64(), ndim);
@@ -540,8 +520,9 @@ std::shared_ptr<Type> rect_type(int32_t ndim)
 {
   static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
 
-  if (ndim <= 0 || ndim > LEGATE_MAX_DIM)
+  if (ndim <= 0 || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
+  }
 
   if (nullptr == cache[ndim]) {
     auto pt_type = point_type(ndim);

@@ -12,7 +12,6 @@
 
 #include "core/task/detail/task_context.h"
 
-#include "core/data/detail/store.h"
 #include "core/utilities/deserializer.h"
 
 #if LegateDefined(LEGATE_USE_CUDA)
@@ -23,14 +22,14 @@ namespace legate::detail {
 
 TaskContext::TaskContext(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& regions)
-  : task_(task), regions_(regions)
+  : task_{task}, regions_{regions}
 {
   {
-    mapping::MapperDataDeserializer dez(task);
+    mapping::MapperDataDeserializer dez{task};
     machine_ = dez.unpack<mapping::detail::Machine>();
   }
 
-  TaskDeserializer dez(task, regions_);
+  TaskDeserializer dez{task, regions_};
   inputs_     = dez.unpack_arrays();
   outputs_    = dez.unpack_arrays();
   reductions_ = dez.unpack_arrays();
@@ -111,27 +110,28 @@ ReturnValues TaskContext::pack_return_values() const
 {
   auto return_values = get_return_values();
   if (can_raise_exception_) {
-    ReturnedException exn{};
+    const ReturnedException exn{};
     return_values.push_back(exn.pack());
   }
-  return ReturnValues(std::move(return_values));
+  return ReturnValues{std::move(return_values)};
 }
 
 ReturnValues TaskContext::pack_return_values_with_exception(int32_t index,
-                                                            const std::string& error_message) const
+                                                            std::string_view error_message) const
 {
   auto return_values = get_return_values();
   if (can_raise_exception_) {
-    ReturnedException exn(index, error_message);
+    const ReturnedException exn{index, std::move(error_message)};
     return_values.push_back(exn.pack());
   }
-  return ReturnValues(std::move(return_values));
+  return ReturnValues{std::move(return_values)};
 }
 
 std::vector<ReturnValue> TaskContext::get_return_values() const
 {
   std::vector<ReturnValue> return_values;
 
+  return_values.reserve(unbound_stores_.size() + scalar_stores_.size() + can_raise_exception_);
   for (auto& store : unbound_stores_) { return_values.push_back(store->pack_weight()); }
   for (auto& store : scalar_stores_) { return_values.push_back(store->pack()); }
 
@@ -139,7 +139,7 @@ std::vector<ReturnValue> TaskContext::get_return_values() const
   // the Python code relies on.
   if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
     if (return_values.size() != 1 || unbound_stores_.size() != 1) {
-      legate::log_legate.error("Reduction tasks must have only one unbound output and no others");
+      log_legate().error("Reduction tasks must have only one unbound output and no others");
       LEGATE_ABORT;
     }
   }

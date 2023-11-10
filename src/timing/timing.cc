@@ -12,25 +12,24 @@
 
 #include "timing/timing.h"
 
-#include <optional>
-
 #include "legion.h"
+
+#include <optional>
 
 namespace legate::timing {
 
 class Time::Impl {
  public:
-  explicit Impl(const Legion::Future& future) : future_{future} {}
+  explicit Impl(Legion::Future future) : future_{std::move(future)} {}
 
- public:
-  int64_t value()
+  [[nodiscard]] int64_t value()
   {
     if (!value_) { value_ = future_.get_result<int64_t>(); }
     return *value_;
   }
 
  private:
-  Legion::Future future_;
+  Legion::Future future_{};
   std::optional<int64_t> value_{std::nullopt};
 };
 
@@ -43,7 +42,7 @@ Time measure_microseconds()
 
   auto future = runtime->get_current_time_in_microseconds(context);
 
-  return Time{std::make_shared<Time::Impl>(future)};
+  return Time{std::make_shared<Time::Impl>(std::move(future))};
 }
 
 Time measure_nanoseconds()
@@ -53,7 +52,7 @@ Time measure_nanoseconds()
 
   auto future = runtime->get_current_time_in_nanoseconds(context);
 
-  return Time{std::make_shared<Time::Impl>(future)};
+  return Time{std::make_shared<Time::Impl>(std::move(future))};
 }
 
 }  // namespace legate::timing

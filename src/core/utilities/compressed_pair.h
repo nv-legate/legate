@@ -185,7 +185,7 @@ static_assert(sizeof(Empty) == 1);
 
 struct Empty2 {};
 
-static_assert(std::is_empty<Empty2>::value);
+static_assert(std::is_empty_v<Empty2>);
 static_assert(sizeof(Empty2) == 1);
 
 struct NotEmpty {

@@ -85,7 +85,7 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
   return impl()->get_task_name(local_task_id);
 }
 
-Scalar Library::get_tunable(int64_t tunable_id, Type type)
+Scalar Library::get_tunable(int64_t tunable_id, const Type& type)
 {
   return Scalar{impl()->get_tunable(tunable_id, type.impl())};
 }

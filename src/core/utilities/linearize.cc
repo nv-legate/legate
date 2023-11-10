@@ -11,6 +11,7 @@
  */
 
 #include "core/utilities/linearize.h"
+
 #include "core/utilities/dispatch.h"
 
 namespace legate {
@@ -23,11 +24,11 @@ struct linearize_fn {
                                   const DomainPoint& hi_dp,
                                   const DomainPoint& point_dp) const
   {
-    Point<DIM> lo      = lo_dp;
-    Point<DIM> hi      = hi_dp;
-    Point<DIM> point   = point_dp;
-    Point<DIM> extents = hi - lo + Point<DIM>::ONES();
-    size_t idx         = 0;
+    const Point<DIM> lo      = lo_dp;
+    const Point<DIM> hi      = hi_dp;
+    const Point<DIM> point   = point_dp;
+    const Point<DIM> extents = hi - lo + Point<DIM>::ONES();
+    size_t idx               = 0;
 
     for (int32_t dim = 0; dim < DIM; ++dim) idx = idx * extents[dim] + point[dim] - lo[dim];
     return idx;
@@ -49,9 +50,9 @@ struct delinearize_fn {
                                        const DomainPoint& hi_dp,
                                        size_t idx) const
   {
-    Point<DIM> lo      = lo_dp;
-    Point<DIM> hi      = hi_dp;
-    Point<DIM> extents = hi - lo + Point<DIM>::ONES();
+    const Point<DIM> lo      = lo_dp;
+    const Point<DIM> hi      = hi_dp;
+    const Point<DIM> extents = hi - lo + Point<DIM>::ONES();
     Point<DIM> point;
 
     for (int32_t dim = DIM - 1; dim >= 0; --dim) {

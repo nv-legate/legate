@@ -39,8 +39,8 @@ class PartitionManager {
   [[nodiscard]] Shape compute_launch_shape(const mapping::detail::Machine& machine,
                                            const Restrictions& restrictions,
                                            const Shape& shape);
-  Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
-  bool use_complete_tiling(const Shape& extents, const Shape& tile_shape) const;
+  [[nodiscard]] Shape compute_tile_shape(const Shape& extents, const Shape& launch_shape);
+  [[nodiscard]] bool use_complete_tiling(const Shape& extents, const Shape& tile_shape);
 
   [[nodiscard]] Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
                                                             const Tiling& tiling) const;

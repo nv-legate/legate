@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <unordered_set>
-
 #include "core/mapping/detail/mapping.h"
+
+#include <unordered_set>
 
 namespace legate::mapping::detail {
 
@@ -172,10 +172,11 @@ void StoreMapping::populate_layout_constraints(
         field_set.insert(field_id);
       }
     }
-  } else
+  } else {
     fields.push_back(stores.front()->region_field().field_id());
+  }
   layout_constraints.add_constraint(
-    Legion::FieldConstraint(fields, false /*contiguous*/, false /*inorder*/));
+    Legion::FieldConstraint{fields, false /*contiguous*/, false /*inorder*/});
 }
 
 /*static*/ std::unique_ptr<StoreMapping> StoreMapping::default_mapping(const Store* store,

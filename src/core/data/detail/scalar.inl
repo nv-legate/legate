@@ -13,6 +13,9 @@
 #pragma once
 
 #include "core/data/detail/scalar.h"
+#include "core/type/type_traits.h"
+
+#include <utility>
 
 namespace legate::detail {
 

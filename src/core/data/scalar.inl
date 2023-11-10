@@ -166,7 +166,7 @@ inline Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
 {
   Legion::DomainPoint result;
   const auto span = values<int64_t>();
-  result.dim      = span.size();
+  result.dim      = static_cast<decltype(result.dim)>(span.size());
   for (auto idx = 0; idx < result.dim; ++idx) result[idx] = span[idx];
   return result;
 }

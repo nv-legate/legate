@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -33,28 +34,32 @@ struct Machine {
   [[nodiscard]] const ProcessorRange& processor_range() const;
   [[nodiscard]] const ProcessorRange& processor_range(TaskTarget target) const;
 
-  std::vector<TaskTarget> valid_targets() const;
-  std::vector<TaskTarget> valid_targets_except(const std::set<TaskTarget>& to_exclude) const;
+  [[nodiscard]] std::vector<TaskTarget> valid_targets() const;
+  [[nodiscard]] std::vector<TaskTarget> valid_targets_except(
+    const std::set<TaskTarget>& to_exclude) const;
 
-  uint32_t count() const;
-  uint32_t count(TaskTarget target) const;
+  [[nodiscard]] uint32_t count() const;
+  [[nodiscard]] uint32_t count(TaskTarget target) const;
 
-  std::string to_string() const;
+  [[nodiscard]] std::string to_string() const;
 
   void pack(legate::detail::BufferBuilder& buffer) const;
 
-  Machine only(TaskTarget target) const;
-  Machine only(const std::vector<TaskTarget>& targets) const;
-  Machine slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others = false) const;
-  Machine slice(uint32_t from, uint32_t to, bool keep_others = false) const;
+  [[nodiscard]] Machine only(TaskTarget target) const;
+  [[nodiscard]] Machine only(const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] Machine slice(uint32_t from,
+                              uint32_t to,
+                              TaskTarget target,
+                              bool keep_others = false) const;
+  [[nodiscard]] Machine slice(uint32_t from, uint32_t to, bool keep_others = false) const;
 
-  Machine operator[](TaskTarget target) const;
-  Machine operator[](const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] Machine operator[](TaskTarget target) const;
+  [[nodiscard]] Machine operator[](const std::vector<TaskTarget>& targets) const;
   bool operator==(const Machine& other) const;
   bool operator!=(const Machine& other) const;
-  Machine operator&(const Machine& other) const;
+  [[nodiscard]] Machine operator&(const Machine& other) const;
 
-  bool empty() const;
+  [[nodiscard]] bool empty() const;
 
   TaskTarget preferred_target{TaskTarget::CPU};
   std::map<TaskTarget, ProcessorRange> processor_ranges{};

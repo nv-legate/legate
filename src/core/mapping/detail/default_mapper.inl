@@ -17,20 +17,21 @@
 namespace legate::mapping::detail {
 
 // Default mapper doesn't use the machine query interface
-void DefaultMapper::set_machine(const MachineQueryInterface* machine) {}
+inline void DefaultMapper::set_machine(const MachineQueryInterface* machine) {}
 
-TaskTarget DefaultMapper::task_target(const mapping::Task&, const std::vector<TaskTarget>& options)
+inline TaskTarget DefaultMapper::task_target(const mapping::Task&,
+                                             const std::vector<TaskTarget>& options)
 {
   return options.front();
 }
 
-std::vector<mapping::StoreMapping> DefaultMapper::store_mappings(
+inline std::vector<mapping::StoreMapping> DefaultMapper::store_mappings(
   const mapping::Task& /*task*/, const std::vector<StoreTarget>& /*options*/)
 {
   return {};
 }
 
-Scalar DefaultMapper::tunable_value(TunableID /*tunable_id*/)
+inline Scalar DefaultMapper::tunable_value(TunableID /*tunable_id*/)
 {
   LEGATE_ABORT;
   return Scalar{0};

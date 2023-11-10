@@ -19,6 +19,7 @@
 #include "core/mapping/operation.h"
 #include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/shard.h"
+#include "core/utilities/detail/strtoll.h"
 #include "core/utilities/linearize.h"
 
 #include "mappers/mapping_utilities.h"
@@ -86,9 +87,18 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
 BaseMapper::~BaseMapper()
 {
   // Compute the size of all our remaining instances in each memory
-  const auto show_usage = getenv("LEGATE_SHOW_USAGE");
+  const auto lg_show_usage = getenv("LEGATE_SHOW_USAGE");
 
-  if (show_usage != nullptr && atoi(show_usage) > 0) {
+  if (lg_show_usage == nullptr) return;
+  bool show_usage;
+
+  try {
+    show_usage = legate::detail::safe_strtoll(lg_show_usage) > 0;
+  } catch (const std::exception& excn) {
+    logger.error() << excn.what();
+    LEGATE_ABORT;
+  }
+  if (show_usage) {
     auto mem_sizes             = local_instances->aggregate_instance_sizes();
     const char* memory_kinds[] = {
 #define MEM_NAMES(name, desc) desc,
@@ -106,7 +116,7 @@ BaseMapper::~BaseMapper()
         memory_kinds[mem.kind()],
         mem.id,
         capacity,
-        100.0 * double(pair.second) / capacity);
+        100.0 * static_cast<double>(pair.second) / static_cast<double>(capacity));
     }
   }
 }
@@ -130,8 +140,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
       auto stores = array->stores();
       for (auto& store : stores) {
         if (store->is_future()) continue;
-        std::vector<int32_t> promoted_dims = store->find_imaginary_dims();
-        for (auto& d : promoted_dims) {
+        for (auto&& d : store->find_imaginary_dims()) {
           if ((hi[d] - lo[d]) >= 1) {
             output.check_collective_regions.insert(store->requirement_index());
             break;
@@ -187,7 +196,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
                             const SliceTaskInput& input,
                             SliceTaskOutput& output)
 {
-  Task legate_task(&task, library, runtime, ctx);
+  const Task legate_task{&task, library, runtime, ctx};
 
   auto& machine_desc = legate_task.machine();
   auto local_range   = local_machine.slice(legate_task.target(), machine_desc);
@@ -264,7 +273,7 @@ std::optional<Legion::VariantID> BaseMapper::find_variant(Legion::Mapping::Mappe
 
 void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                           const Legion::Task& task,
-                          const MapTaskInput& input,
+                          const MapTaskInput& /*input*/,
                           MapTaskOutput& output)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -484,10 +493,10 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
                          << " for reqs:" << reqs_ss.str();
         }
         if ((*reqs.begin())->redop != 0) {
-          Legion::Mapping::AutoLock lock(ctx, reduction_instances->manager_lock());
+          const Legion::Mapping::AutoLock lock(ctx, reduction_instances->manager_lock());
           reduction_instances->erase(result);
         } else {
-          Legion::Mapping::AutoLock lock(ctx, local_instances->manager_lock());
+          const Legion::Mapping::AutoLock lock(ctx, local_instances->manager_lock());
           local_instances->erase(result);
         }
         result = NO_INST;
@@ -530,8 +539,8 @@ void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
     // If the policy is exact, there's nothing we can tighten
     if (mapping->policy.exact) continue;
 
-    int32_t priv = LEGION_NO_ACCESS;
-    for (auto* req : mapping->requirements()) priv |= req->privilege;
+    auto priv = static_cast<std::underlying_type_t<Legion::PrivilegeMode>>(LEGION_NO_ACCESS);
+    for (const auto* req : mapping->requirements()) priv |= req->privilege;
     // We tighten only write requirements
     if (!(priv & LEGION_WRITE_PRIV)) continue;
 
@@ -588,7 +597,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
   if (redop != 0) {
     // We need to hold the instance manager lock as we're about to try
     // to find an instance
-    Legion::Mapping::AutoLock reduction_lock(ctx, reduction_instances->manager_lock());
+    const Legion::Mapping::AutoLock reduction_lock{ctx, reduction_instances->manager_lock()};
 
     // This whole process has to appear atomic
     runtime->disable_reentrant(ctx);
@@ -646,7 +655,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     return true;
   }
 
-  Legion::Mapping::AutoLock lock(ctx, local_instances->manager_lock());
+  const Legion::Mapping::AutoLock lock{ctx, local_instances->manager_lock()};
   runtime->disable_reentrant(ctx);
   // See if we already have it in our local instances
   if (fields.size() == 1 && regions.size() == 1 &&
@@ -853,8 +862,8 @@ void find_source_instance_bandwidth(
   const Memory& target_memory,
   const Legion::Machine& legion_machine)
 {
-  Memory source_memory = source_instance.get_location();
-  auto finder          = source_memory_bandwidths.find(source_memory);
+  const Memory source_memory = source_instance.get_location();
+  auto finder                = source_memory_bandwidths.find(source_memory);
 
   uint32_t bandwidth{0};
   if (source_memory_bandwidths.end() == finder) {
@@ -888,13 +897,14 @@ void BaseMapper::legate_select_sources(
   // For right now we'll rank instances by the bandwidth of the memory
   // they are in to the destination.
   // TODO: consider layouts when ranking source to help out the DMA system
-  Memory target_memory = target.get_location();
+  const Memory target_memory = target.get_location();
   // fill in a vector of the sources with their bandwidths
   std::vector<AnnotatedSourceInstance> all_sources;
 
-  for (auto&& source : sources)
+  for (auto&& source : sources) {
     find_source_instance_bandwidth(
       all_sources, source_memory_bandwidths, source, target_memory, legion_machine);
+  }
 
   for (auto&& collective_source : collective_sources) {
     std::vector<Legion::Mapping::PhysicalInstance> source_instances;
@@ -931,7 +941,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext,
 
 Legion::ShardingID BaseMapper::find_mappable_sharding_functor_id(const Legion::Mappable& mappable)
 {
-  Mappable legate_mappable{&mappable};
+  const Mappable legate_mappable{&mappable};
 
   return static_cast<Legion::ShardingID>(legate_mappable.sharding_id());
 }
@@ -961,7 +971,7 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
     assert(inline_op.requirement.instance_fields.size() == 1);
   }
 
-  Store store{mapper_runtime, ctx, &inline_op.requirement};
+  const Store store{mapper_runtime, ctx, &inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
 
   mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
@@ -996,7 +1006,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
                           const MapCopyInput& /*input*/,
                           MapCopyOutput& output)
 {
-  Copy legate_copy{&copy, runtime, ctx};
+  const Copy legate_copy{&copy, runtime, ctx};
   auto& machine_desc = legate_copy.machine();
   auto copy_target   = [&]() {
     // If we're mapping an indirect copy and have data resident in GPU memory,
@@ -1030,8 +1040,8 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     auto hi           = key_functor->project_point(sharding_domain.hi(), sharding_domain);
     auto p            = key_functor->project_point(copy.index_point, sharding_domain);
 
-    uint32_t start_proc_id     = machine_desc.processor_range().low;
-    uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;
+    const uint32_t start_proc_id     = machine_desc.processor_range().low;
+    const uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;
     auto idx =
       linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count + start_proc_id;
     target_proc = local_range[idx];
@@ -1212,10 +1222,11 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
                                MapPartitionOutput& output)
 {
   Processor target_proc{Processor::NO_PROC};
-  if (local_machine.has_omps())
+  if (local_machine.has_omps()) {
     target_proc = local_machine.omps().front();
-  else
+  } else {
     target_proc = local_machine.cpus().front();
+  }
 
   auto store_target = default_store_targets(target_proc.kind()).front();
 
@@ -1223,7 +1234,7 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
     assert(partition.requirement.instance_fields.size() == 1);
   }
 
-  Store store(mapper_runtime, ctx, &partition.requirement);
+  const Store store{mapper_runtime, ctx, &partition.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
   mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
 

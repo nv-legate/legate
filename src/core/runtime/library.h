@@ -82,7 +82,7 @@ class Library {
    *
    * @return The value of tunable parameter in a `Scalar`
    */
-  [[nodiscard]] Scalar get_tunable(int64_t tunable_id, Type type);
+  [[nodiscard]] Scalar get_tunable(int64_t tunable_id, const Type& type);
   /**
    * @brief Registers a library specific reduction operator.
    *
@@ -160,7 +160,8 @@ class Library {
   bool operator==(const Library& other) const;
   bool operator!=(const Library& other) const;
 
-  [[nodiscard]] detail::Library* impl() const;
+  [[nodiscard]] const detail::Library* impl() const;
+  [[nodiscard]] detail::Library* impl();
 
  private:
   static void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,

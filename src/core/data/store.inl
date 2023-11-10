@@ -15,8 +15,7 @@
 // Useful for IDEs
 #include "core/data/store.h"
 
-namespace legate::detail {
-namespace {
+namespace legate::detail::store_detail {
 
 template <typename ACC, int32_t N>
 struct trans_accessor_fn {
@@ -40,8 +39,7 @@ struct trans_accessor_fn {
   }
 };
 
-}  // namespace
-}  // namespace legate::detail
+}  // namespace legate::detail::store_detail
 
 namespace legate {
 
@@ -265,8 +263,12 @@ ACC Store::create_field_accessor(const Rect<DIM>& bounds) const
   get_region_field(pr, fid);
   if (transformed()) {
     auto transform = get_inverse_transform();
-    return dim_dispatch(
-      transform.transform.m, detail::trans_accessor_fn<ACC, DIM>{}, pr, fid, transform, bounds);
+    return dim_dispatch(transform.transform.m,
+                        detail::store_detail::trans_accessor_fn<ACC, DIM>{},
+                        pr,
+                        fid,
+                        transform,
+                        bounds);
   }
   return {pr, fid, bounds};
 }
@@ -281,7 +283,7 @@ ACC Store::create_reduction_accessor(const Rect<DIM>& bounds) const
   if (transformed()) {
     auto transform = get_inverse_transform();
     return dim_dispatch(transform.transform.m,
-                        detail::trans_accessor_fn<ACC, DIM>{},
+                        detail::store_detail::trans_accessor_fn<ACC, DIM>{},
                         pr,
                         fid,
                         get_redop_id(),

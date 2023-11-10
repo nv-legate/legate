@@ -42,7 +42,6 @@ namespace legate::detail {
 
 class AutoTask;
 class BaseLogicalArray;
-class Copy;
 class Library;
 struct LogicalArray;
 class LogicalRegionField;
@@ -118,8 +117,8 @@ class Runtime {
                                                            std::shared_ptr<Type> type,
                                                            bool nullable,
                                                            bool optimize_scalar);
-  [[nodiscard]] std::shared_ptr<LogicalArray> create_array_like(std::shared_ptr<LogicalArray> array,
-                                                                std::shared_ptr<Type> type);
+  [[nodiscard]] std::shared_ptr<LogicalArray> create_array_like(
+    const std::shared_ptr<LogicalArray>& array, std::shared_ptr<Type> type);
 
  private:
   [[nodiscard]] std::shared_ptr<StructLogicalArray> create_struct_array(std::shared_ptr<Type> type,
@@ -153,7 +152,7 @@ class Runtime {
     const mapping::detail::DimOrdering* ordering);
 
  private:
-  void check_dimensionality(uint32_t dim);
+  static void check_dimensionality(uint32_t dim);
 
  public:
   void raise_pending_task_exception();
@@ -212,7 +211,7 @@ class Runtime {
   [[nodiscard]] Legion::LogicalRegion get_subregion(const Legion::LogicalPartition& partition,
                                                     const Legion::DomainPoint& color);
   [[nodiscard]] Legion::LogicalRegion find_parent_region(const Legion::LogicalRegion& region);
-  [[nodiscard]] Legion::Future create_future(const void* data, size_t datalen) const;
+  [[nodiscard]] Legion::Future create_future(const void* data, size_t datalen);
   [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
                                                size_t field_size);
   [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
@@ -279,7 +278,7 @@ class Runtime {
                                                 Legion::ProjectionID proj_id);
 
  private:
-  void schedule(std::vector<std::shared_ptr<Operation>> operations);
+  static void schedule(const std::vector<std::shared_ptr<Operation>>& operations);
 
  public:
   [[nodiscard]] static Runtime* get_runtime();
@@ -296,8 +295,8 @@ class Runtime {
   Library* core_library_{};
 
   using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
-  std::map<FieldManagerKey, FieldManager*> field_managers_{};
-  std::map<Legion::Domain, RegionManager*> region_managers_{};
+  std::map<FieldManagerKey, std::unique_ptr<FieldManager>> field_managers_{};
+  std::map<Legion::Domain, std::unique_ptr<RegionManager>> region_managers_{};
   CommunicatorManager* communicator_manager_{};
   MachineManager* machine_manager_{};
   PartitionManager* partition_manager_{};
@@ -323,7 +322,7 @@ class Runtime {
   uint32_t field_reuse_freq_{};
   bool force_consensus_match_{};
 
-  std::map<std::string, Library*> libraries_{};
+  std::map<std::string, std::unique_ptr<Library>> libraries_{};
 
   std::map<std::pair<int32_t, int32_t>, int64_t> reduction_ops_{};
 

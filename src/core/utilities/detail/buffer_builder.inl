@@ -26,7 +26,7 @@ void BufferBuilder::pack(const T& value)
 template <typename T>
 void BufferBuilder::pack(const std::vector<T>& values)
 {
-  uint32_t size = values.size();
+  const uint32_t size = values.size();
   pack(size);
   pack_buffer(values.data(), size * sizeof(T), alignof(T));
 }

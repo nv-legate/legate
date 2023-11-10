@@ -24,8 +24,9 @@ namespace legate::detail {
 
 BufferBuilder::BufferBuilder()
 {
+  constexpr auto DEFAULT_INIT_SIZE = 4096;
   // Reserve 4KB to minimize resizing while packing the arguments.
-  buffer_.reserve(4096);
+  buffer_.reserve(DEFAULT_INIT_SIZE);
 }
 
 void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t align)

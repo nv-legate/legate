@@ -34,14 +34,12 @@ namespace legate::comm {
  */
 class Communicator {
  public:
-  Communicator() {}
-  Communicator(Legion::Future future) : future_(future) {}
+  Communicator() = default;
+  Communicator(Legion::Future future);
 
- public:
   Communicator(const Communicator&)            = default;
   Communicator& operator=(const Communicator&) = default;
 
- public:
   /**
    * @brief Returns the communicator stored in the wrapper
    *
@@ -50,13 +48,12 @@ class Communicator {
    * @return A communicator
    */
   template <typename T>
-  T get() const
-  {
-    return future_.get_result<T>();
-  }
+  [[nodiscard]] T get() const;
 
  private:
   Legion::Future future_{};
 };
 
 }  // namespace legate::comm
+
+#include "core/comm/communicator.inl"

@@ -238,9 +238,10 @@ struct InstanceMappingPolicy {
    *
    * @return This instance mapping policy
    */
-  InstanceMappingPolicy& with_target(StoreTarget target) &;
-  [[nodiscard]] InstanceMappingPolicy&& with_target(StoreTarget target) const&;
+  [[nodiscard]] InstanceMappingPolicy& with_target(StoreTarget target) &;
+  [[nodiscard]] InstanceMappingPolicy with_target(StoreTarget target) const&;
   [[nodiscard]] InstanceMappingPolicy&& with_target(StoreTarget target) &&;
+
   /**
    * @brief Changes the allocation policy
    *
@@ -248,9 +249,10 @@ struct InstanceMappingPolicy {
    *
    * @return This instance mapping policy
    */
-  InstanceMappingPolicy& with_allocation_policy(AllocPolicy allocation) &;
-  [[nodiscard]] InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) const&;
+  [[nodiscard]] InstanceMappingPolicy& with_allocation_policy(AllocPolicy allocation) &;
+  [[nodiscard]] InstanceMappingPolicy with_allocation_policy(AllocPolicy allocation) const&;
   [[nodiscard]] InstanceMappingPolicy&& with_allocation_policy(AllocPolicy allocation) &&;
+
   /**
    * @brief Changes the instance layout
    *
@@ -258,9 +260,10 @@ struct InstanceMappingPolicy {
    *
    * @return This instance mapping policy
    */
-  InstanceMappingPolicy& with_instance_layout(InstLayout layout) &;
-  [[nodiscard]] InstanceMappingPolicy&& with_instance_layout(InstLayout layout) const&;
+  [[nodiscard]] InstanceMappingPolicy& with_instance_layout(InstLayout layout) &;
+  [[nodiscard]] InstanceMappingPolicy with_instance_layout(InstLayout layout) const&;
   [[nodiscard]] InstanceMappingPolicy&& with_instance_layout(InstLayout layout) &&;
+
   /**
    * @brief Changes the dimension ordering
    *
@@ -268,9 +271,10 @@ struct InstanceMappingPolicy {
    *
    * @return This instance mapping policy
    */
-  InstanceMappingPolicy& with_ordering(DimOrdering ordering) &;
-  [[nodiscard]] InstanceMappingPolicy&& with_ordering(DimOrdering ordering) const&;
+  [[nodiscard]] InstanceMappingPolicy& with_ordering(DimOrdering ordering) &;
+  [[nodiscard]] InstanceMappingPolicy with_ordering(DimOrdering ordering) const&;
   [[nodiscard]] InstanceMappingPolicy&& with_ordering(DimOrdering ordering) &&;
+
   /**
    * @brief Changes the value of `exact`
    *
@@ -278,8 +282,8 @@ struct InstanceMappingPolicy {
    *
    * @return This instance mapping policy
    */
-  InstanceMappingPolicy& with_exact(bool exact) &;
-  [[nodiscard]] InstanceMappingPolicy&& with_exact(bool exact) const&;
+  [[nodiscard]] InstanceMappingPolicy& with_exact(bool exact) &;
+  [[nodiscard]] InstanceMappingPolicy with_exact(bool exact) const&;
   [[nodiscard]] InstanceMappingPolicy&& with_exact(bool exact) &&;
 
   /**

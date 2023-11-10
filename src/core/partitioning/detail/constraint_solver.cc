@@ -145,14 +145,14 @@ void ConstraintSolver::solve_constraints()
       equiv_class->restrict_all();
       return;
     }
-    for (uint32_t idx = 0; idx < axes.size(); ++idx) {
-      uint32_t axis = axes[idx];
+    for (auto&& ax : axes) {
+      auto axis = static_cast<uint32_t>(ax);
       // TODO: We want to check the axis eagerly and raise an exception
       // if it is out of bounds
       if (LegateDefined(LEGATE_USE_DEBUG)) {
         assert(0 <= axis && axis < equiv_class->restrictions.size());
       }
-      equiv_class->restrictions[axes[idx]] = Restriction::FORBID;
+      equiv_class->restrictions[axis] = Restriction::FORBID;
     }
   };
 
@@ -272,18 +272,18 @@ bool ConstraintSolver::is_dependent(const Variable& partition_symbol) const
 
 void ConstraintSolver::dump()
 {
-  log_legate.debug("===== Constraint Graph =====");
-  log_legate.debug() << "Stores:";
+  log_legate().debug("===== Constraint Graph =====");
+  log_legate().debug() << "Stores:";
   for (auto& symbol : partition_symbols_.elements()) {
     auto store = symbol->operation()->find_store(symbol);
-    log_legate.debug() << "  " << symbol->to_string() << " ~> " << store->to_string();
+    log_legate().debug() << "  " << symbol->to_string() << " ~> " << store->to_string();
   }
-  log_legate.debug() << "Variables:";
+  log_legate().debug() << "Variables:";
   for (auto& symbol : partition_symbols_.elements())
-    log_legate.debug() << "  " << symbol->to_string();
-  log_legate.debug() << "Constraints:";
-  for (auto& constraint : constraints_) log_legate.debug() << "  " << constraint->to_string();
-  log_legate.debug("============================");
+    log_legate().debug() << "  " << symbol->to_string();
+  log_legate().debug() << "Constraints:";
+  for (auto& constraint : constraints_) log_legate().debug() << "  " << constraint->to_string();
+  log_legate().debug("============================");
 }
 
 const std::vector<const Variable*>& ConstraintSolver::partition_symbols() const

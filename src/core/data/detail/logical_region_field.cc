@@ -31,13 +31,23 @@ LogicalRegionField::~LogicalRegionField()
       return;
     }
 
-    perform_invalidation_callbacks();
+    try {
+      // TODO: make perform_invalidation_callbacks() noexcept
+      static_assert(
+        !noexcept(perform_invalidation_callbacks()),
+        "Can remove this try-catch since perform_invalidation_callbacks() is noexcept now");
+      perform_invalidation_callbacks();
+    } catch (const std::exception& exn) {
+      // can't throw exceptions in dtors, so we simply die instead
+      log_legate().error() << exn.what();
+      LEGATE_ABORT;
+    }
 
     // This is a misuse of the Legate API, so it should technically throw an exception, but we
     // shouldn't throw exceptions in destructors, so we just abort.
     if (attachment_shared_) {
-      log_legate.error() << "stores created by attaching to a buffer with share=true must be "
-                         << "manually detached";
+      log_legate().error() << "stores created by attaching to a buffer with share=true must be "
+                           << "manually detached";
       LEGATE_ABORT;
     }
 
@@ -45,17 +55,18 @@ LogicalRegionField::~LogicalRegionField()
     // out-of-order, this unmapping might happen at different times on different shards. Unmapping
     // doesn't go through the Legion pipeline, so from that perspective it's not critical that all
     // shards unmap a region in the same order. The only problematic case is when shard A unmaps
-    // region R and shard B doesn't, then both shards launch a task that uses R (or any region that
-    // overlaps with R). Then B will unmap/remap around the task, whereas A will not. This shouldn't
-    // be an issue in Legate, because once a shard has (locally) freed a root RegionField, there
-    // should be no Stores remaining that use it (or any of its sub-regions). Moreover, the field
-    // will only start to get reused once all shards have agreed that it's been collected.
+    // region R and shard B doesn't, then both shards launch a task that uses R (or any region
+    // that overlaps with R). Then B will unmap/remap around the task, whereas A will not. This
+    // shouldn't be an issue in Legate, because once a shard has (locally) freed a root
+    // RegionField, there should be no Stores remaining that use it (or any of its sub-regions).
+    // Moreover, the field will only start to get reused once all shards have agreed that it's
+    // been collected.
     if (pr_ && pr_->is_mapped()) runtime->unmap_physical_region(*pr_);
     Legion::Future can_dealloc =
       (nullptr == attachment_) ? Legion::Future()  // waiting on this is a noop
                                : Runtime::get_runtime()->detach(
                                    *pr_, false /*flush*/, destroyed_out_of_order_ /*unordered*/);
-    manager_->free_field(lr_, fid_, can_dealloc, attachment_, destroyed_out_of_order_);
+    manager_->free_field(lr_, fid_, std::move(can_dealloc), attachment_, destroyed_out_of_order_);
   }
 }
 
@@ -93,7 +104,7 @@ void LogicalRegionField::attach(Legion::PhysicalRegion pr, void* buffer, bool sh
     assert(nullptr != buffer && pr.exists());
     assert(nullptr == attachment_ && !pr_);
   }
-  pr_                = std::make_unique<Legion::PhysicalRegion>(pr);
+  pr_                = std::make_unique<Legion::PhysicalRegion>(std::move(pr));
   attachment_        = buffer;
   attachment_shared_ = share;
 }
@@ -115,7 +126,7 @@ void LogicalRegionField::detach()
   }
   assert(nullptr != attachment_ && pr_ && pr_->exists());
   if (pr_->is_mapped()) runtime->unmap_physical_region(*pr_);
-  Legion::Future fut = runtime->detach(*pr_, true /*flush*/, false /*unordered*/);
+  const Legion::Future fut = runtime->detach(*pr_, true /*flush*/, false /*unordered*/);
   fut.get_void_result(true /*silence_warnings*/);
   pr_                = nullptr;
   attachment_        = nullptr;

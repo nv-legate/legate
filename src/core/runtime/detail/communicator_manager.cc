@@ -28,7 +28,7 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
 
   auto communicator = find_or_create(target, range, launch_domain.get_volume());
   communicator      = transform(communicator, launch_domain);
-  nd_aliases_.insert({key, communicator});
+  nd_aliases_.insert({std::move(key), communicator});
   return communicator;
 }
 
@@ -50,7 +50,7 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
   if (finder != communicators_.end()) return finder->second;
 
   auto communicator = initialize(key.get_machine(), num_tasks);
-  communicators_.insert({key, communicator});
+  communicators_.insert({std::move(key), communicator});
   return communicator;
 }
 

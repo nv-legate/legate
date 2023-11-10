@@ -78,7 +78,7 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
     if (1 == extent || restrictions[dim] == Restriction::FORBID) continue;
     temp_shape.push_back(extent);
     temp_dims.push_back(dim);
-    volume *= extent;
+    volume *= static_cast<int64_t>(extent);
   }
 
   // Figure out how many shards we can make with this array
@@ -93,7 +93,7 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
   max_pieces = curr_num_pieces;
 
   // First compute the N-th root of the number of pieces
-  uint32_t ndim = temp_shape.size();
+  const auto ndim = temp_shape.size();
   assert(ndim > 0);
   std::vector<size_t> temp_result{};
 
@@ -111,13 +111,15 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
       auto ny   = temp_shape[1];
       auto swap = nx > ny;
       if (swap) std::swap(nx, ny);
-      auto n = std::sqrt(static_cast<double>(max_pieces) * nx / ny);
+      auto n = std::sqrt(static_cast<double>(max_pieces * nx) / static_cast<double>(ny));
 
       // Need to constraint n to be an integer with numpcs % n == 0
       // try rounding n both up and down
-      auto n1 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n + 1e-12)));
+      constexpr auto EPSILON = 1e-12;
+
+      auto n1 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n + EPSILON)));
       while (max_pieces % n1 != 0) --n1;
-      auto n2 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n - 1e-12)));
+      auto n2 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n - EPSILON)));
       while (max_pieces % n2 != 0) ++n2;
 
       // pick whichever of n1 and n2 gives blocks closest to square
@@ -154,26 +156,33 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
       factor_prod *= factor;
 
       std::vector<size_t> remaining;
-      for (uint32_t idx = 0; idx < temp_shape.size(); ++idx)
+
+      remaining.reserve(temp_shape.size());
+      for (uint32_t idx = 0; idx < temp_shape.size(); ++idx) {
         remaining.push_back((temp_shape[idx] + temp_result[idx] - 1) / temp_result[idx]);
-      uint32_t big_dim = std::max_element(remaining.begin(), remaining.end()) - remaining.begin();
+      }
+      const uint32_t big_dim =
+        std::max_element(remaining.begin(), remaining.end()) - remaining.begin();
       if (big_dim < ndim - 1) {
         // Not the last dimension, so do it
         temp_result[big_dim] *= factor;
       } else {
+        // REVIEW: why 32? no idea
+        constexpr auto MAGIC_NUMBER = 32;
         // Last dim so see if it still bigger than 32
-        if (remaining[big_dim] / factor >= 32) {
+        if (remaining[big_dim] / factor >= MAGIC_NUMBER) {
           // go ahead and do it
           temp_result[big_dim] *= factor;
         } else {
           // Won't be see if we can do it with one of the other dimensions
-          uint32_t next_big_dim =
+          const uint32_t next_big_dim =
             std::max_element(remaining.begin(), remaining.end() - 1) - remaining.begin();
-          if (remaining[next_big_dim] / factor > 0)
+          if (remaining[next_big_dim] / factor > 0) {
             temp_result[next_big_dim] *= factor;
-          else
+          } else {
             // Fine just do it on the last dimension
             temp_result[big_dim] *= factor;
+          }
         }
       }
     }
@@ -199,14 +208,16 @@ Shape PartitionManager::compute_tile_shape(const Shape& extents, const Shape& la
   return tile_shape;
 }
 
-bool PartitionManager::use_complete_tiling(const Shape& extents, const Shape& tile_shape) const
+bool PartitionManager::use_complete_tiling(const Shape& extents, const Shape& tile_shape)
 {
   // If it would generate a very large number of elements then
   // we'll apply a heuristic for now and not actually tile it
   // TODO: A better heuristic for this in the future
-  auto num_tiles  = (extents / tile_shape).volume();
-  auto num_pieces = Runtime::get_runtime()->get_machine().count();
-  return !(num_tiles > 256 && num_tiles > 16 * num_pieces);
+  constexpr auto MAX_TILES_HEURISTIC  = 256;
+  constexpr auto MAX_PIECES_HEURISTIC = 16;
+  const auto num_tiles                = (extents / tile_shape).volume();
+  const auto num_pieces               = Runtime::get_runtime()->get_machine().count();
+  return num_tiles <= MAX_TILES_HEURISTIC || num_tiles <= MAX_PIECES_HEURISTIC * num_pieces;
 }
 
 namespace {

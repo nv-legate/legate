@@ -98,6 +98,7 @@ class SeparateControlBlock final : public ControlBlockBase {
 
   void destroy() noexcept final
   {
+    // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
     static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
     if (LegateDefined(LEGATE_USE_DEBUG)) assert(ptr_);
     deleter_()(ptr_);
@@ -163,6 +164,7 @@ class InplaceControlBlock final : public ControlBlockBase {
 
   void destroy() noexcept final
   {
+    // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
     static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
     auto alloc = rebind_alloc<value_type>();
 
@@ -340,7 +342,8 @@ inline InternalSharedPtr<T>::InternalSharedPtr(const InternalSharedPtr& other) n
 }
 
 template <typename T>
-inline InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(
+inline InternalSharedPtr<T>&
+InternalSharedPtr<T>::operator=(  // NOLINT(bugprone-unhandled-self-assignment): yes it does
   const InternalSharedPtr& other) noexcept
 {
   InternalSharedPtr tmp{other};

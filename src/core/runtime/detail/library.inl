@@ -51,6 +51,8 @@ inline int64_t Library::ResourceIdScope::size() const { return size_; }
 
 // ==========================================================================================
 
+inline const std::string& Library::get_library_name() const { return library_name_; }
+
 inline Legion::MapperID Library::get_mapper_id() const { return mapper_id_; }
 
 inline int64_t Library::get_new_task_id() { return task_scope_.generate_id(); }

@@ -10,23 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "core/comm/coll.h"
+#include "core/utilities/detail/malloc.h"
 
-#include "coll.h"
-#include "core/utilities/typedefs.h"
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 namespace legate::comm::coll {
 
-extern Logger log_coll;
-
 // public functions start from here
 
-LocalNetwork::LocalNetwork(int argc, char* argv[]) : BackendNetwork()
+LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
 {
-  log_coll.debug("Enable LocalNetwork");
+  detail::log_coll().debug("Enable LocalNetwork");
   assert(current_unique_id == 0);
   assert(thread_comms.empty());
   BackendNetwork::coll_inited = true;
@@ -35,7 +33,7 @@ LocalNetwork::LocalNetwork(int argc, char* argv[]) : BackendNetwork()
 
 LocalNetwork::~LocalNetwork()
 {
-  log_coll.debug("Finalize LocalNetwork");
+  detail::log_coll().debug("Finalize LocalNetwork");
   assert(BackendNetwork::coll_inited == true);
   for (ThreadComm* thread_comm : thread_comms) {
     assert(!thread_comm->ready_flag);
@@ -60,13 +58,11 @@ int LocalNetwork::comm_create(CollComm global_comm,
   global_comm->mpi_comm_size_actual = 1;
   global_comm->mpi_rank             = 0;
   if (global_comm->global_rank == 0) {
-    pthread_barrier_init((pthread_barrier_t*)&(thread_comms[global_comm->unique_id]->barrier),
-                         nullptr,
-                         global_comm->global_comm_size);
-    thread_comms[global_comm->unique_id]->buffers =
-      (const void**)malloc(sizeof(void*) * global_comm_size);
-    thread_comms[global_comm->unique_id]->displs =
-      (const int**)malloc(sizeof(int*) * global_comm_size);
+    pthread_barrier_init(
+      &(thread_comms[global_comm->unique_id]->barrier), nullptr, global_comm->global_comm_size);
+    legate::detail::typed_malloc(&(thread_comms[global_comm->unique_id]->buffers),
+                                 global_comm_size);
+    legate::detail::typed_malloc(&(thread_comms[global_comm->unique_id]->displs), global_comm_size);
     for (int i = 0; i < global_comm_size; i++) {
       thread_comms[global_comm->unique_id]->buffers[i] = nullptr;
       thread_comms[global_comm->unique_id]->displs[i]  = nullptr;
@@ -76,7 +72,7 @@ int LocalNetwork::comm_create(CollComm global_comm,
   }
   __sync_synchronize();
   volatile ThreadComm* data = thread_comms[global_comm->unique_id];
-  while (data->ready_flag != true) { data = thread_comms[global_comm->unique_id]; }
+  while (!data->ready_flag) { data = thread_comms[global_comm->unique_id]; }
   global_comm->local_comm = thread_comms[global_comm->unique_id];
   barrierLocal(global_comm);
   assert(global_comm->local_comm->ready_flag == true);
@@ -90,7 +86,7 @@ int LocalNetwork::comm_destroy(CollComm global_comm)
 {
   barrierLocal(global_comm);
   if (global_comm->global_rank == 0) {
-    pthread_barrier_destroy((pthread_barrier_t*)&(thread_comms[global_comm->unique_id]->barrier));
+    pthread_barrier_destroy(&(thread_comms[global_comm->unique_id]->barrier));
     free(thread_comms[global_comm->unique_id]->buffers);
     thread_comms[global_comm->unique_id]->buffers = nullptr;
     free(thread_comms[global_comm->unique_id]->displs);
@@ -100,28 +96,31 @@ int LocalNetwork::comm_destroy(CollComm global_comm)
   }
   __sync_synchronize();
   volatile ThreadComm* data = thread_comms[global_comm->unique_id];
-  while (data->ready_flag != false) { data = thread_comms[global_comm->unique_id]; }
+  while (!data->ready_flag) { data = thread_comms[global_comm->unique_id]; }
   global_comm->status = false;
   return CollSuccess;
 }
 
 int LocalNetwork::init_comm()
 {
-  int id = 0;
-  collGetUniqueId(&id);
+  int id   = 0;
+  auto ret = collGetUniqueId(&id);
+  assert(ret == CollSuccess);
   assert(id >= 0 && thread_comms.size() == static_cast<std::size_t>(id));
   // create thread comm
-  ThreadComm* thread_comm = (ThreadComm*)malloc(sizeof(ThreadComm));
+  ThreadComm* thread_comm;
+
+  legate::detail::typed_malloc(&thread_comm, 1);
   thread_comm->ready_flag = false;
   thread_comm->buffers    = nullptr;
   thread_comm->displs     = nullptr;
   thread_comms.push_back(thread_comm);
-  log_coll.debug("Init comm id %d", id);
+  detail::log_coll().debug("Init comm id %d", id);
   return id;
 }
 
 int LocalNetwork::alltoallv(const void* sendbuf,
-                            const int sendcounts[],
+                            const int /*sendcounts*/[],
                             const int sdispls[],
                             void* recvbuf,
                             const int recvcounts[],
@@ -129,19 +128,19 @@ int LocalNetwork::alltoallv(const void* sendbuf,
                             CollDataType type,
                             CollComm global_comm)
 {
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
+  const int total_size  = global_comm->global_comm_size;
+  const int global_rank = global_comm->global_rank;
 
-  int type_extent = getDtypeSize(type);
+  const auto type_extent = getDtypeSize(type);
 
   global_comm->local_comm->displs[global_rank]  = sdispls;
   global_comm->local_comm->buffers[global_rank] = sendbuf;
   __sync_synchronize();
 
   int recvfrom_global_rank;
-  int recvfrom_seg_id  = global_rank;
-  const void* src_base = nullptr;
-  const int* displs    = nullptr;
+  const int recvfrom_seg_id = global_rank;
+  const void* src_base      = nullptr;
+  const int* displs         = nullptr;
   for (int i = 1; i < total_size + 1; i++) {
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     // wait for other threads to update the buffer address
@@ -155,8 +154,8 @@ int LocalNetwork::alltoallv(const void* sendbuf,
     char* dst = static_cast<char*>(recvbuf) +
                 static_cast<ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug(
-        "AlltoallvLocal i: %d === global_rank %d, dtype %d, copy rank %d (seg %d, sdispls %d, %p) "
+      detail::log_coll().debug(
+        "AlltoallvLocal i: %d === global_rank %d, dtype %zu, copy rank %d (seg %d, sdispls %d, %p) "
         "to rank %d (seg %d, rdispls %d, %p)",
         i,
         global_rank,
@@ -186,17 +185,17 @@ int LocalNetwork::alltoallv(const void* sendbuf,
 int LocalNetwork::alltoall(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
+  const int total_size  = global_comm->global_comm_size;
+  const int global_rank = global_comm->global_rank;
 
-  int type_extent = getDtypeSize(type);
+  const auto type_extent = getDtypeSize(type);
 
   global_comm->local_comm->buffers[global_rank] = sendbuf;
   __sync_synchronize();
 
   int recvfrom_global_rank;
-  int recvfrom_seg_id  = global_rank;
-  const void* src_base = nullptr;
+  const int recvfrom_seg_id = global_rank;
+  const void* src_base      = nullptr;
   for (int i = 1; i < total_size + 1; i++) {
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     // wait for other threads to update the buffer address
@@ -208,8 +207,8 @@ int LocalNetwork::alltoall(
     char* dst = static_cast<char*>(recvbuf) +
                 static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug(
-        "AlltoallLocal i: %d === global_rank %d, dtype %d, copy rank %d (seg %d, %p) to rank %d "
+      detail::log_coll().debug(
+        "AlltoallLocal i: %d === global_rank %d, dtype %zu, copy rank %d (seg %d, %p) to rank %d "
         "(seg %d, %p)",
         i,
         global_rank,
@@ -237,10 +236,9 @@ int LocalNetwork::alltoall(
 int LocalNetwork::allgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
-  int total_size  = global_comm->global_comm_size;
-  int global_rank = global_comm->global_rank;
-
-  int type_extent = getDtypeSize(type);
+  const int total_size   = global_comm->global_comm_size;
+  const int global_rank  = global_comm->global_rank;
+  const auto type_extent = getDtypeSize(type);
 
   const void* sendbuf_tmp = sendbuf;
 
@@ -258,8 +256,8 @@ int LocalNetwork::allgather(
     char* dst       = static_cast<char*>(recvbuf) +
                 static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
-      log_coll.debug(
-        "AllgatherLocal i: %d === global_rank %d, dtype %d, copy rank %d (%p) to rank %d (%p)",
+      detail::log_coll().debug(
+        "AllgatherLocal i: %d === global_rank %d, dtype %zu, copy rank %d (%p) to rank %d (%p)",
         recvfrom_global_rank,
         global_rank,
         type_extent,
@@ -313,7 +311,7 @@ size_t LocalNetwork::getDtypeSize(CollDataType dtype)
       return sizeof(double);
     }
     default: {
-      log_coll.fatal("Unknown datatype");
+      detail::log_coll().fatal("Unknown datatype");
       LEGATE_ABORT;
       return 0;
     }
@@ -322,7 +320,7 @@ size_t LocalNetwork::getDtypeSize(CollDataType dtype)
 
 void LocalNetwork::resetLocalBuffer(CollComm global_comm)
 {
-  int global_rank                               = global_comm->global_rank;
+  const int global_rank                         = global_comm->global_rank;
   global_comm->local_comm->buffers[global_rank] = nullptr;
   global_comm->local_comm->displs[global_rank]  = nullptr;
 }

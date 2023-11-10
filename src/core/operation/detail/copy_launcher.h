@@ -18,7 +18,6 @@
 #include <vector>
 
 namespace legate {
-class BufferBuilder;
 class Scalar;
 }  // namespace legate
 
@@ -29,6 +28,7 @@ class LogicalStore;
 struct ProjectionInfo;
 class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
+class BufferBuilder;
 
 class CopyLauncher {
  public:

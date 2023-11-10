@@ -127,7 +127,7 @@ void BaseLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reductio
   if (data_->has_scalar_storage()) { task->record_scalar_reduction(data_, redop); }
   if (nullable() && null_mask_->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
-    task->record_scalar_reduction(null_mask_, null_redop);
+    task->record_scalar_reduction(null_mask_, static_cast<Legion::ReductionOpID>(null_redop));
   }
 }
 
@@ -415,7 +415,7 @@ void StructLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reduct
   for (auto& field : fields_) { field->record_scalar_reductions(task, redop); }
   if (nullable() && null_mask_->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
-    task->record_scalar_reduction(null_mask_, null_redop);
+    task->record_scalar_reduction(null_mask_, static_cast<Legion::ReductionOpID>(null_redop));
   }
 }
 

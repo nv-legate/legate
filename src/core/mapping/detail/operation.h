@@ -27,11 +27,6 @@ class Library;
 
 namespace legate::mapping::detail {
 
-namespace {
-using Arrays = std::vector<std::shared_ptr<Array>>;
-using Stores = std::vector<Store>;
-}  // namespace
-
 class Mappable {
  public:
   explicit Mappable(const Legion::Mappable* mappable);
@@ -60,9 +55,9 @@ class Task : public Mappable {
 
   [[nodiscard]] int64_t task_id() const;
 
-  [[nodiscard]] const Arrays& inputs() const;
-  [[nodiscard]] const Arrays& outputs() const;
-  [[nodiscard]] const Arrays& reductions() const;
+  [[nodiscard]] const std::vector<std::shared_ptr<Array>>& inputs() const;
+  [[nodiscard]] const std::vector<std::shared_ptr<Array>>& outputs() const;
+  [[nodiscard]] const std::vector<std::shared_ptr<Array>>& reductions() const;
   [[nodiscard]] const std::vector<Scalar>& scalars() const;
 
   [[nodiscard]] DomainPoint point() const;
@@ -73,9 +68,9 @@ class Task : public Mappable {
   const legate::detail::Library* library_;
   const Legion::Task* task_;
 
-  Arrays inputs_;
-  Arrays outputs_;
-  Arrays reductions_;
+  std::vector<std::shared_ptr<Array>> inputs_;
+  std::vector<std::shared_ptr<Array>> outputs_;
+  std::vector<std::shared_ptr<Array>> reductions_;
   std::vector<Scalar> scalars_;
 };
 
@@ -85,20 +80,20 @@ class Copy : public Mappable {
        Legion::Mapping::MapperRuntime* runtime,
        Legion::Mapping::MapperContext context);
 
-  [[nodiscard]] const Stores& inputs() const;
-  [[nodiscard]] const Stores& outputs() const;
-  [[nodiscard]] const Stores& input_indirections() const;
-  [[nodiscard]] const Stores& output_indirections() const;
+  [[nodiscard]] const std::vector<Store>& inputs() const;
+  [[nodiscard]] const std::vector<Store>& outputs() const;
+  [[nodiscard]] const std::vector<Store>& input_indirections() const;
+  [[nodiscard]] const std::vector<Store>& output_indirections() const;
 
   [[nodiscard]] DomainPoint point() const;
 
  private:
   const Legion::Copy* copy_;
 
-  Stores inputs_;
-  Stores outputs_;
-  Stores input_indirections_;
-  Stores output_indirections_;
+  std::vector<Store> inputs_;
+  std::vector<Store> outputs_;
+  std::vector<Store> input_indirections_;
+  std::vector<Store> output_indirections_;
 };
 
 }  // namespace legate::mapping::detail

@@ -71,7 +71,7 @@ template <typename T>
 template <typename T>
 /*static*/ const std::string& LegateTask<T>::task_name()
 {
-  static std::string result = detail::generate_task_name(typeid(T));
+  static const std::string result = detail::generate_task_name(typeid(T));
   return result;
 }
 

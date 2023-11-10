@@ -11,6 +11,7 @@
  */
 
 #include "core/mapping/detail/operation.h"
+
 #include "core/runtime/detail/library.h"
 #include "core/utilities/deserializer.h"
 
@@ -64,13 +65,13 @@ Copy::Copy(const Legion::Copy* copy,
                        context};
   machine_     = dez.unpack<Machine>();
   sharding_id_ = dez.unpack<uint32_t>();
-  inputs_      = dez.unpack<Stores>();
+  inputs_      = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();
-  outputs_ = dez.unpack<Stores>();
+  outputs_ = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();
-  input_indirections_ = dez.unpack<Stores>();
+  input_indirections_ = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();
-  output_indirections_ = dez.unpack<Stores>();
+  output_indirections_ = dez.unpack<std::vector<Store>>();
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     for (auto& input : inputs_) assert(!input.is_future());
     for (auto& output : outputs_) assert(!output.is_future());
