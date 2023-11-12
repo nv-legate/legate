@@ -96,7 +96,7 @@ int LocalNetwork::comm_destroy(CollComm global_comm)
   }
   __sync_synchronize();
   volatile ThreadComm* data = thread_comms[global_comm->unique_id];
-  while (!data->ready_flag) { data = thread_comms[global_comm->unique_id]; }
+  while (data->ready_flag) { data = thread_comms[global_comm->unique_id]; }
   global_comm->status = false;
   return CollSuccess;
 }
