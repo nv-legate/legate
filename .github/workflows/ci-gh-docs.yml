@@ -1,4 +1,9 @@
 name: Build legate.core documentation
+
+concurrency:
+  group: ci-docs-on-${{ github.event_name }}-from-${{ github.ref_name }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:

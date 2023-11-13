@@ -1,5 +1,9 @@
 name: Lint legate.core on GH
 
+concurrency:
+  group: ci-lint-on-${{ github.event_name }}-from-${{ github.ref_name }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
