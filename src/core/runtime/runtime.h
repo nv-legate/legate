@@ -209,7 +209,7 @@ class Runtime {
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
   void issue_scatter(LogicalStore& target,
-                     LogicalStore& target_indirect,
+                     const LogicalStore& target_indirect,
                      const LogicalStore& source,
                      std::optional<ReductionOpKind> redop = std::nullopt);
   /**
@@ -226,7 +226,7 @@ class Runtime {
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
   void issue_scatter(LogicalStore& target,
-                     LogicalStore& target_indirect,
+                     const LogicalStore& target_indirect,
                      const LogicalStore& source,
                      std::optional<int32_t> redop);
   /**
@@ -244,7 +244,7 @@ class Runtime {
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
   void issue_scatter_gather(LogicalStore& target,
-                            LogicalStore& target_indirect,
+                            const LogicalStore& target_indirect,
                             const LogicalStore& source,
                             const LogicalStore& source_indirect,
                             std::optional<ReductionOpKind> redop = std::nullopt);
@@ -263,7 +263,7 @@ class Runtime {
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
   void issue_scatter_gather(LogicalStore& target,
-                            LogicalStore& target_indirect,
+                            const LogicalStore& target_indirect,
                             const LogicalStore& source,
                             const LogicalStore& source_indirect,
                             std::optional<int32_t> redop);
