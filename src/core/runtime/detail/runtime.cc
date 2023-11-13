@@ -68,6 +68,8 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 
 /*static*/ bool Config::has_socket_mem = false;
 
+/*static*/ uint64_t Config::max_field_reuse_size = 0;
+
 /*static*/ bool Config::warmup_nccl = false;
 
 /*static*/ bool Config::log_partitioning_decisions = false;
@@ -187,6 +189,8 @@ void Runtime::initialize(Legion::Context legion_context)
   provenance_manager_   = new ProvenanceManager{};
   Config::has_socket_mem =
     get_tunable<bool>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM);
+  Config::max_field_reuse_size =
+    get_tunable<decltype(Config::max_field_reuse_size)>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE);
   initialize_toplevel_machine();
   comm::register_builtin_communicator_factories(core_library_);
 }

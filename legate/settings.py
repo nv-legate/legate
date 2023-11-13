@@ -177,7 +177,7 @@ class LegateRuntimeSettings(Settings):
         "field_reuse_frac",
         "LEGATE_FIELD_REUSE_FRAC",
         default=256,
-        test_default=256,
+        test_default=1,
         convert=convert_int,
         help="""
         Any allocation for more than 1/frac of available memory will count as

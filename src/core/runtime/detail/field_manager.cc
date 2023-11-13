@@ -21,6 +21,9 @@ namespace legate::detail {
 FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
   : runtime_{runtime}, shape_{shape}, field_size_{field_size}
 {
+  auto size = shape.get_volume() * field_size;
+  if (size > Config::max_field_reuse_size)
+    field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     std::stringstream ss;
     if (shape.is_valid()) {
@@ -96,7 +99,8 @@ void FieldManager::issue_field_match()
   // Check if there are any freed fields that are shared across all the shards. We have to
   // test this deterministically no matter what, even if we don't have any fields to offer
   // ourselves, because this is a collective with other shards.
-  if (++field_match_counter_ < runtime_->field_reuse_freq()) return;
+  field_match_counter_ += field_match_credit_;
+  if (field_match_counter_ < runtime_->field_reuse_freq()) return;
   field_match_counter_ = 0;
   // We need to separately record the region that corresponds to each item in this match, because
   // the match itself only uses a subset of the full region info.

@@ -72,6 +72,7 @@ class FieldManager {
   Domain shape_{};
   uint32_t field_size_{};
   uint32_t field_match_counter_{};
+  uint32_t field_match_credit_{1};
 
   // This is a sanitized list of (region,field_id) pairs that is guaranteed to be ordered across all
   // the shards even with control replication.

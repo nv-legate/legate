@@ -66,8 +66,6 @@ class CoreMapper : public Mapper {
     extract_env("LEGATE_WINDOW_SIZE", WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
   const uint32_t field_reuse_frac{
     extract_env("LEGATE_FIELD_REUSE_FRAC", FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
-  const uint32_t field_reuse_freq{
-    extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)};
   const uint32_t max_lru_length{
     extract_env("LEGATE_MAX_LRU_LENGTH", MAX_LRU_LENGTH_DEFAULT, MAX_LRU_LENGTH_TEST)};
 };
@@ -125,9 +123,6 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
                            : (machine.has_socket_memory() ? machine.total_socket_memory_size()
                                                           : machine.system_memory().capacity());
       return Scalar{global_mem_size / field_reuse_frac};
-    }
-    case LEGATE_CORE_TUNABLE_FIELD_REUSE_FREQUENCY: {
-      return Scalar{field_reuse_freq};
     }
     case LEGATE_CORE_TUNABLE_MAX_LRU_LENGTH: {
       return Scalar{max_lru_length};

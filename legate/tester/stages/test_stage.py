@@ -387,7 +387,8 @@ class TestStage(Protocol):
         )
         if config.mpi_output_filename:
             launcher_args += [
-                f"--launcher-extra=--output-filename={shlex.quote(config.mpi_output_filename)}"  # noqa
+                '--launcher-extra="--output-filename"',
+                f"--launcher-extra={shlex.quote(config.mpi_output_filename)}",
             ]
 
         cmd = (

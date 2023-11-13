@@ -56,6 +56,7 @@ struct Config {
   static bool log_mapping_decisions;
   static bool log_partitioning_decisions;
   static bool has_socket_mem;
+  static uint64_t max_field_reuse_size;
   static bool warmup_nccl;
 };
 
