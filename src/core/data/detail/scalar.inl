@@ -22,13 +22,13 @@ namespace legate::detail {
 template <typename T>
 inline Scalar::Scalar(T value)
   : own_{true},
-    type_{detail::primitive_type(legate_type_code_of<T>)},
+    type_{detail::primitive_type(type_code_of<T>)},
     data_{copy_data(std::addressof(value), sizeof(T))}
 {
-  static_assert(legate_type_code_of<T> != Type::Code::FIXED_ARRAY);
-  static_assert(legate_type_code_of<T> != Type::Code::STRUCT);
-  static_assert(legate_type_code_of<T> != Type::Code::STRING);
-  static_assert(legate_type_code_of<T> != Type::Code::NIL);
+  static_assert(type_code_of<T> != Type::Code::FIXED_ARRAY);
+  static_assert(type_code_of<T> != Type::Code::STRUCT);
+  static_assert(type_code_of<T> != Type::Code::STRING);
+  static_assert(type_code_of<T> != Type::Code::NIL);
 }
 
 inline Scalar::~Scalar() { clear_data(); }

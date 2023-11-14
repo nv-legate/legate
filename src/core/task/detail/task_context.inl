@@ -16,11 +16,14 @@
 
 namespace legate::detail {
 
-inline std::vector<std::shared_ptr<Array>>& TaskContext::inputs() { return inputs_; }
+inline std::vector<std::shared_ptr<PhysicalArray>>& TaskContext::inputs() { return inputs_; }
 
-inline std::vector<std::shared_ptr<Array>>& TaskContext::outputs() { return outputs_; }
+inline std::vector<std::shared_ptr<PhysicalArray>>& TaskContext::outputs() { return outputs_; }
 
-inline std::vector<std::shared_ptr<Array>>& TaskContext::reductions() { return reductions_; }
+inline std::vector<std::shared_ptr<PhysicalArray>>& TaskContext::reductions()
+{
+  return reductions_;
+}
 
 inline const std::vector<legate::Scalar>& TaskContext::scalars() { return scalars_; }
 

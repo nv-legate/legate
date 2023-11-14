@@ -13,9 +13,9 @@
 set(cython_sources
     logical_array.pyx
     logical_store.pyx
+    physical_store.pyx
     scalar.pyx
     slice.pyx
-    store.pyx
 )
 
 rapids_cython_create_modules(

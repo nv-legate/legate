@@ -12,17 +12,17 @@
 
 #pragma once
 
-#include "core/data/array.h"
 #include "core/data/detail/array_kind.h"
-#include "core/data/detail/store.h"
+#include "core/data/detail/physical_store.h"
+#include "core/data/physical_array.h"
 
 #include <memory>
 #include <vector>
 
 namespace legate::detail {
 
-struct Array {
-  virtual ~Array()                                         = default;
+struct PhysicalArray {
+  virtual ~PhysicalArray()                                 = default;
   [[nodiscard]] virtual int32_t dim() const                = 0;
   [[nodiscard]] virtual ArrayKind kind() const             = 0;
   [[nodiscard]] virtual std::shared_ptr<Type> type() const = 0;
@@ -31,20 +31,20 @@ struct Array {
   [[nodiscard]] virtual bool nested() const                = 0;
   [[nodiscard]] virtual bool valid() const                 = 0;
 
-  [[nodiscard]] virtual std::shared_ptr<Store> data() const;
-  [[nodiscard]] virtual std::shared_ptr<Store> null_mask() const           = 0;
-  [[nodiscard]] virtual std::shared_ptr<Array> child(uint32_t index) const = 0;
-  virtual void _stores(std::vector<std::shared_ptr<Store>>& result) const  = 0;
+  [[nodiscard]] virtual std::shared_ptr<PhysicalStore> data() const;
+  [[nodiscard]] virtual std::shared_ptr<PhysicalStore> null_mask() const           = 0;
+  [[nodiscard]] virtual std::shared_ptr<PhysicalArray> child(uint32_t index) const = 0;
+  virtual void _stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const  = 0;
 
-  [[nodiscard]] std::vector<std::shared_ptr<Store>> stores() const;
+  [[nodiscard]] std::vector<std::shared_ptr<PhysicalStore>> stores() const;
 
   [[nodiscard]] virtual Domain domain() const           = 0;
   virtual void check_shape_dimension(int32_t dim) const = 0;
 };
 
-class BaseArray : public Array {
+class BasePhysicalArray : public PhysicalArray {
  public:
-  BaseArray(std::shared_ptr<Store> data, std::shared_ptr<Store> null_mask);
+  BasePhysicalArray(std::shared_ptr<PhysicalStore> data, std::shared_ptr<PhysicalStore> null_mask);
 
   [[nodiscard]] int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
@@ -54,24 +54,24 @@ class BaseArray : public Array {
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] bool valid() const override;
 
-  [[nodiscard]] std::shared_ptr<Store> data() const override;
-  [[nodiscard]] std::shared_ptr<Store> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> child(uint32_t index) const override;
-  void _stores(std::vector<std::shared_ptr<Store>>& result) const override;
+  [[nodiscard]] std::shared_ptr<PhysicalStore> data() const override;
+  [[nodiscard]] std::shared_ptr<PhysicalStore> null_mask() const override;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> child(uint32_t index) const override;
+  void _stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(int32_t dim) const override;
 
  private:
-  std::shared_ptr<Store> data_{};
-  std::shared_ptr<Store> null_mask_{};
+  std::shared_ptr<PhysicalStore> data_{};
+  std::shared_ptr<PhysicalStore> null_mask_{};
 };
 
-class ListArray : public Array {
+class ListPhysicalArray : public PhysicalArray {
  public:
-  ListArray(std::shared_ptr<Type> type,
-            std::shared_ptr<BaseArray> descriptor,
-            std::shared_ptr<Array> vardata);
+  ListPhysicalArray(std::shared_ptr<Type> type,
+                    std::shared_ptr<BasePhysicalArray> descriptor,
+                    std::shared_ptr<PhysicalArray> vardata);
 
   [[nodiscard]] int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
@@ -81,26 +81,26 @@ class ListArray : public Array {
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] bool valid() const override;
 
-  [[nodiscard]] std::shared_ptr<Store> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> child(uint32_t index) const override;
-  void _stores(std::vector<std::shared_ptr<Store>>& result) const override;
-  [[nodiscard]] std::shared_ptr<Array> descriptor() const;
-  [[nodiscard]] std::shared_ptr<Array> vardata() const;
+  [[nodiscard]] std::shared_ptr<PhysicalStore> null_mask() const override;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> child(uint32_t index) const override;
+  void _stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const override;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> descriptor() const;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> vardata() const;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(int32_t dim) const override;
 
  private:
   std::shared_ptr<Type> type_{};
-  std::shared_ptr<BaseArray> descriptor_{};
-  std::shared_ptr<Array> vardata_{};
+  std::shared_ptr<BasePhysicalArray> descriptor_{};
+  std::shared_ptr<PhysicalArray> vardata_{};
 };
 
-class StructArray : public Array {
+class StructPhysicalArray : public PhysicalArray {
  public:
-  StructArray(std::shared_ptr<Type> type,
-              std::shared_ptr<Store> null_mask,
-              std::vector<std::shared_ptr<Array>>&& fields);
+  StructPhysicalArray(std::shared_ptr<Type> type,
+                      std::shared_ptr<PhysicalStore> null_mask,
+                      std::vector<std::shared_ptr<PhysicalArray>>&& fields);
 
   [[nodiscard]] int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
@@ -110,19 +110,19 @@ class StructArray : public Array {
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] bool valid() const override;
 
-  [[nodiscard]] std::shared_ptr<Store> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> child(uint32_t index) const override;
-  void _stores(std::vector<std::shared_ptr<Store>>& result) const override;
+  [[nodiscard]] std::shared_ptr<PhysicalStore> null_mask() const override;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> child(uint32_t index) const override;
+  void _stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(int32_t dim) const override;
 
  private:
   std::shared_ptr<Type> type_{};
-  std::shared_ptr<Store> null_mask_{};
-  std::vector<std::shared_ptr<Array>> fields_{};
+  std::shared_ptr<PhysicalStore> null_mask_{};
+  std::vector<std::shared_ptr<PhysicalArray>> fields_{};
 };
 
 }  // namespace legate::detail
 
-#include "core/data/detail/array.inl"
+#include "core/data/detail/physical_array.inl"

@@ -13,7 +13,7 @@
 #include "core/data/logical_store.h"
 
 #include "core/data/detail/logical_store.h"
-#include "core/data/store.h"
+#include "core/data/physical_store.h"
 
 namespace legate {
 
@@ -66,7 +66,10 @@ LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes
   return LogicalStore{impl_->delinearize(dim, std::move(sizes))};
 }
 
-Store LogicalStore::get_physical_store() const { return Store{impl_->get_physical_store()}; }
+PhysicalStore LogicalStore::get_physical_store() const
+{
+  return PhysicalStore{impl_->get_physical_store()};
+}
 
 std::string LogicalStore::to_string() const { return impl_->to_string(); }
 

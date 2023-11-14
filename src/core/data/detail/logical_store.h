@@ -13,9 +13,9 @@
 #pragma once
 
 #include "core/data/detail/logical_region_field.h"
-#include "core/data/detail/store.h"
+#include "core/data/detail/physical_store.h"
+#include "core/data/physical_store.h"
 #include "core/data/slice.h"
-#include "core/data/store.h"
 #include "core/mapping/detail/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
@@ -34,7 +34,7 @@ class LogicalStorePartition;
 struct ProjectionInfo;
 class Strategy;
 class StoragePartition;
-class Store;
+class PhysicalStore;
 class Variable;
 
 class Storage : public std::enable_shared_from_this<Storage> {
@@ -187,7 +187,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
   [[nodiscard]] std::shared_ptr<LogicalStorePartition> partition_by_tiling(Shape tile_shape);
 
-  [[nodiscard]] std::shared_ptr<Store> get_physical_store();
+  [[nodiscard]] std::shared_ptr<PhysicalStore> get_physical_store();
   void detach();
   // Informs the runtime that references to this store may be removed in non-deterministic order
   // (e.g. by an asynchronous garbage collector).
@@ -238,7 +238,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
   uint32_t num_pieces_{};
   std::shared_ptr<Partition> key_partition_{};
-  std::shared_ptr<Store> mapped_{};
+  std::shared_ptr<PhysicalStore> mapped_{};
 };
 
 class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePartition> {

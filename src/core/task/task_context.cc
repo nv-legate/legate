@@ -18,9 +18,10 @@ namespace legate {
 
 namespace {
 
-std::vector<Array> to_arrays(const std::vector<std::shared_ptr<detail::Array>>& array_impls)
+std::vector<PhysicalArray> to_arrays(
+  const std::vector<std::shared_ptr<detail::PhysicalArray>>& array_impls)
 {
-  std::vector<Array> result;
+  std::vector<PhysicalArray> result;
 
   result.reserve(array_impls.size());
   for (const auto& array_impl : array_impls) { result.emplace_back(array_impl); }
@@ -29,17 +30,29 @@ std::vector<Array> to_arrays(const std::vector<std::shared_ptr<detail::Array>>& 
 
 }  // namespace
 
-Array TaskContext::input(uint32_t index) const { return Array{impl_->inputs().at(index)}; }
+PhysicalArray TaskContext::input(uint32_t index) const
+{
+  return PhysicalArray{impl_->inputs().at(index)};
+}
 
-std::vector<Array> TaskContext::inputs() const { return to_arrays(impl_->inputs()); }
+std::vector<PhysicalArray> TaskContext::inputs() const { return to_arrays(impl_->inputs()); }
 
-Array TaskContext::output(uint32_t index) const { return Array{impl_->outputs().at(index)}; }
+PhysicalArray TaskContext::output(uint32_t index) const
+{
+  return PhysicalArray{impl_->outputs().at(index)};
+}
 
-std::vector<Array> TaskContext::outputs() const { return to_arrays(impl_->outputs()); }
+std::vector<PhysicalArray> TaskContext::outputs() const { return to_arrays(impl_->outputs()); }
 
-Array TaskContext::reduction(uint32_t index) const { return Array{impl_->reductions().at(index)}; }
+PhysicalArray TaskContext::reduction(uint32_t index) const
+{
+  return PhysicalArray{impl_->reductions().at(index)};
+}
 
-std::vector<Array> TaskContext::reductions() const { return to_arrays(impl_->reductions()); }
+std::vector<PhysicalArray> TaskContext::reductions() const
+{
+  return to_arrays(impl_->reductions());
+}
 
 const Scalar& TaskContext::scalar(uint32_t index) const { return impl_->scalars().at(index); }
 

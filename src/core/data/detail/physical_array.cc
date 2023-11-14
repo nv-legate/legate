@@ -10,19 +10,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/data/detail/array.h"
+#include "core/data/detail/physical_array.h"
 
 #include <stdexcept>
 
 namespace legate::detail {
 
-std::shared_ptr<Store> Array::data() const
+std::shared_ptr<PhysicalStore> PhysicalArray::data() const
 {
   throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
   return {};
 }
 
-bool BaseArray::unbound() const
+bool BasePhysicalArray::unbound() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(!nullable() || data_->is_unbound_store() == null_mask_->is_unbound_store());
@@ -30,7 +30,7 @@ bool BaseArray::unbound() const
   return data_->is_unbound_store();
 }
 
-std::shared_ptr<Store> BaseArray::null_mask() const
+std::shared_ptr<PhysicalStore> BasePhysicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -38,30 +38,30 @@ std::shared_ptr<Store> BaseArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<Array> BaseArray::child(uint32_t /*index*/) const
+std::shared_ptr<PhysicalArray> BasePhysicalArray::child(uint32_t /*index*/) const
 {
   throw std::invalid_argument{"Non-nested array has no child sub-array"};
   return {};
 }
 
-void BaseArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
+void BasePhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
 {
   result.push_back(data_);
   if (nullable()) result.push_back(null_mask_);
 }
 
-void BaseArray::check_shape_dimension(int32_t dim) const
+void BasePhysicalArray::check_shape_dimension(int32_t dim) const
 {
   return data_->check_shape_dimension(dim);
 }
 
-bool ListArray::valid() const
+bool ListPhysicalArray::valid() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(descriptor_->valid() == vardata_->valid()); }
   return descriptor_->valid();
 }
 
-std::shared_ptr<Array> ListArray::child(uint32_t index) const
+std::shared_ptr<PhysicalArray> ListPhysicalArray::child(uint32_t index) const
 {
   switch (index) {
     case 0: return descriptor_;
@@ -74,23 +74,23 @@ std::shared_ptr<Array> ListArray::child(uint32_t index) const
   return {};
 }
 
-void ListArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
+void ListPhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
 {
   descriptor_->_stores(result);
   vardata_->_stores(result);
 }
 
-void ListArray::check_shape_dimension(int32_t dim) const
+void ListPhysicalArray::check_shape_dimension(int32_t dim) const
 {
   descriptor_->check_shape_dimension(dim);
 }
 
-bool StructArray::unbound() const
+bool StructPhysicalArray::unbound() const
 {
   return std::any_of(fields_.begin(), fields_.end(), [](auto& field) { return field->unbound(); });
 }
 
-bool StructArray::valid() const
+bool StructPhysicalArray::valid() const
 {
   auto result =
     std::all_of(fields_.begin(), fields_.end(), [](auto& field) { return field->valid(); });
@@ -98,7 +98,7 @@ bool StructArray::valid() const
   return result;
 }
 
-std::shared_ptr<Store> StructArray::null_mask() const
+std::shared_ptr<PhysicalStore> StructPhysicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -106,16 +106,19 @@ std::shared_ptr<Store> StructArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<Array> StructArray::child(uint32_t index) const { return fields_.at(index); }
+std::shared_ptr<PhysicalArray> StructPhysicalArray::child(uint32_t index) const
+{
+  return fields_.at(index);
+}
 
-void StructArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
+void StructPhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
 {
   std::for_each(fields_.begin(), fields_.end(), [&result](auto& field) { field->_stores(result); });
 }
 
-Domain StructArray::domain() const { return fields_.front()->domain(); }
+Domain StructPhysicalArray::domain() const { return fields_.front()->domain(); }
 
-void StructArray::check_shape_dimension(int32_t dim) const
+void StructPhysicalArray::check_shape_dimension(int32_t dim) const
 {
   fields_.front()->check_shape_dimension(dim);
 }

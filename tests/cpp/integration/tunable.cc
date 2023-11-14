@@ -66,7 +66,7 @@ struct scalar_eq_fn {
   template <legate::Type::Code CODE>
   bool operator()(const legate::Scalar& lhs, const legate::Scalar& rhs)
   {
-    using VAL = legate::legate_type_of<CODE>;
+    using VAL = legate::type_of<CODE>;
     return lhs.value<VAL>() == rhs.value<VAL>();
   }
 };

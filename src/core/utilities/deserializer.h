@@ -13,12 +13,12 @@
 #pragma once
 
 #include "core/comm/communicator.h"
-#include "core/data/detail/array.h"
+#include "core/data/detail/physical_array.h"
+#include "core/data/detail/physical_store.h"
 #include "core/data/detail/scalar.h"
-#include "core/data/detail/store.h"
 #include "core/data/detail/transform.h"
+#include "core/data/physical_store.h"
 #include "core/data/scalar.h"
-#include "core/data/store.h"
 #include "core/mapping/detail/array.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/store.h"
@@ -50,7 +50,7 @@ class BaseDeserializer {
   template <typename T>
   [[nodiscard]] T unpack();
 
-  template <typename T, std::enable_if_t<legate_type_code_of<T> != Type::Code::NIL>* = nullptr>
+  template <typename T, std::enable_if_t<type_code_of<T> != Type::Code::NIL>* = nullptr>
   void _unpack(T& value);
 
   template <typename T>
@@ -81,12 +81,12 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
 
   using BaseDeserializer::_unpack;
 
-  [[nodiscard]] std::vector<std::shared_ptr<detail::Array>> unpack_arrays();
-  [[nodiscard]] std::shared_ptr<detail::Array> unpack_array();
-  [[nodiscard]] std::shared_ptr<detail::BaseArray> unpack_base_array();
-  [[nodiscard]] std::shared_ptr<detail::ListArray> unpack_list_array();
-  [[nodiscard]] std::shared_ptr<detail::StructArray> unpack_struct_array();
-  [[nodiscard]] std::shared_ptr<detail::Store> unpack_store();
+  [[nodiscard]] std::vector<std::shared_ptr<detail::PhysicalArray>> unpack_arrays();
+  [[nodiscard]] std::shared_ptr<detail::PhysicalArray> unpack_array();
+  [[nodiscard]] std::shared_ptr<detail::BasePhysicalArray> unpack_base_array();
+  [[nodiscard]] std::shared_ptr<detail::ListPhysicalArray> unpack_list_array();
+  [[nodiscard]] std::shared_ptr<detail::StructPhysicalArray> unpack_struct_array();
+  [[nodiscard]] std::shared_ptr<detail::PhysicalStore> unpack_store();
 
   void _unpack(detail::FutureWrapper& value);
   void _unpack(detail::RegionField& value);

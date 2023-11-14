@@ -21,7 +21,7 @@ class InlineAllocation:
     @property
     def shape(self) -> tuple[int, ...]: ...
 
-class Store:
+class PhysicalStore:
     @property
     def ndim(self) -> int: ...
     @property

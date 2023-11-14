@@ -63,7 +63,10 @@ LogicalStore LogicalArray::null_mask() const { return LogicalStore{impl_->null_m
 
 LogicalArray LogicalArray::child(uint32_t index) const { return LogicalArray{impl_->child(index)}; }
 
-Array LogicalArray::get_physical_array() const { return Array{impl_->get_physical_array()}; }
+PhysicalArray LogicalArray::get_physical_array() const
+{
+  return PhysicalArray{impl_->get_physical_array()};
+}
 
 ListLogicalArray LogicalArray::as_list_array() const
 {

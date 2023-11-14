@@ -13,18 +13,21 @@
 #pragma once
 
 // Useful for IDEs
-#include "core/data/array.h"
+#include "core/data/physical_array.h"
 
 #include <utility>
 
 namespace legate {
 
-inline Array::Array(std::shared_ptr<detail::Array> impl) : impl_{std::move(impl)} {}
+inline PhysicalArray::PhysicalArray(std::shared_ptr<detail::PhysicalArray> impl)
+  : impl_{std::move(impl)}
+{
+}
 
-inline const std::shared_ptr<detail::Array>& Array::impl() const { return impl_; }
+inline const std::shared_ptr<detail::PhysicalArray>& PhysicalArray::impl() const { return impl_; }
 
 template <int32_t DIM>
-Rect<DIM> Array::shape() const
+Rect<DIM> PhysicalArray::shape() const
 {
   check_shape_dimension(DIM);
   if (dim() > 0) return domain().bounds<DIM, coord_t>();
@@ -34,10 +37,16 @@ Rect<DIM> Array::shape() const
 
 // ==========================================================================================
 
-inline ListArray::ListArray(std::shared_ptr<detail::Array> impl) : Array{std::move(impl)} {}
+inline ListPhysicalArray::ListPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl)
+  : PhysicalArray{std::move(impl)}
+{
+}
 
 // ==========================================================================================
 
-inline StringArray::StringArray(std::shared_ptr<detail::Array> impl) : Array{std::move(impl)} {}
+inline StringPhysicalArray::StringPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl)
+  : PhysicalArray{std::move(impl)}
+{
+}
 
 }  // namespace legate

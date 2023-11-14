@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/data/detail/store.h"
+#include "core/data/detail/physical_store.h"
 
 #include "core/utilities/dispatch.h"
 #include "core/utilities/machine.h"
@@ -255,11 +255,14 @@ Legion::Future FutureWrapper::get_future() const
   return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
-bool Store::valid() const { return is_future() || is_unbound_store() || region_field_.valid(); }
+bool PhysicalStore::valid() const
+{
+  return is_future() || is_unbound_store() || region_field_.valid();
+}
 
-bool Store::transformed() const { return !transform_->identity(); }
+bool PhysicalStore::transformed() const { return !transform_->identity(); }
 
-Domain Store::domain() const
+Domain PhysicalStore::domain() const
 {
   if (is_unbound_store())
     throw std::invalid_argument{"Invalid to retrieve the domain of an unbound store"};
@@ -270,7 +273,7 @@ Domain Store::domain() const
   return result;
 }
 
-InlineAllocation Store::get_inline_allocation() const
+InlineAllocation PhysicalStore::get_inline_allocation() const
 {
   if (is_unbound_store()) {
     throw std::invalid_argument{"Allocation info cannot be retrieved from an unbound store"};
@@ -284,13 +287,13 @@ InlineAllocation Store::get_inline_allocation() const
   return region_field_.get_inline_allocation(type()->size());
 }
 
-void Store::bind_empty_data()
+void PhysicalStore::bind_empty_data()
 {
   check_valid_binding(true);
   unbound_field_.bind_empty_data(dim());
 }
 
-void Store::check_accessor_dimension(int32_t dim) const
+void PhysicalStore::check_accessor_dimension(int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
     throw std::invalid_argument{"Dimension mismatch: invalid to create a " + std::to_string(dim) +
@@ -298,7 +301,7 @@ void Store::check_accessor_dimension(int32_t dim) const
   }
 }
 
-void Store::check_buffer_dimension(int32_t dim) const
+void PhysicalStore::check_buffer_dimension(int32_t dim) const
 {
   if (dim != this->dim()) {
     throw std::invalid_argument{"Dimension mismatch: invalid to bind a " + std::to_string(dim) +
@@ -306,7 +309,7 @@ void Store::check_buffer_dimension(int32_t dim) const
   }
 }
 
-void Store::check_shape_dimension(int32_t dim) const
+void PhysicalStore::check_shape_dimension(int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
     throw std::invalid_argument{"Dimension mismatch: invalid to retrieve a " + std::to_string(dim) +
@@ -314,7 +317,7 @@ void Store::check_shape_dimension(int32_t dim) const
   }
 }
 
-void Store::check_valid_binding(bool bind_buffer) const
+void PhysicalStore::check_valid_binding(bool bind_buffer) const
 {
   if (!is_unbound_store()) {
     throw std::invalid_argument{"Buffer can be bound only to an unbound store"};
@@ -324,50 +327,50 @@ void Store::check_valid_binding(bool bind_buffer) const
   }
 }
 
-void Store::check_write_access() const
+void PhysicalStore::check_write_access() const
 {
   if (!is_writable()) throw std::invalid_argument{"Store isn't writable"};
 }
 
-void Store::check_reduction_access() const
+void PhysicalStore::check_reduction_access() const
 {
   if (!(is_writable() || is_reducible())) throw std::invalid_argument{"Store isn't reducible"};
 }
 
-Legion::DomainAffineTransform Store::get_inverse_transform() const
+Legion::DomainAffineTransform PhysicalStore::get_inverse_transform() const
 {
   return transform_->inverse_transform(dim());
 }
 
-bool Store::is_read_only_future() const { return future_.is_read_only(); }
+bool PhysicalStore::is_read_only_future() const { return future_.is_read_only(); }
 
-void Store::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
+void PhysicalStore::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) assert(!(is_future() || is_unbound_store()));
   pr  = region_field_.get_physical_region();
   fid = region_field_.get_field_id();
 }
 
-Legion::Future Store::get_future() const
+Legion::Future PhysicalStore::get_future() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) assert(is_future());
   return future_.get_future();
 }
 
-Legion::UntypedDeferredValue Store::get_buffer() const
+Legion::UntypedDeferredValue PhysicalStore::get_buffer() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) assert(is_future());
   return future_.get_buffer();
 }
 
-void Store::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid)
+void PhysicalStore::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) assert(is_unbound_store());
   out = unbound_field_.get_output_region();
   fid = unbound_field_.get_field_id();
 }
 
-void Store::update_num_elements(size_t num_elements)
+void PhysicalStore::update_num_elements(size_t num_elements)
 {
   unbound_field_.update_num_elements(num_elements);
   unbound_field_.set_bound(true);

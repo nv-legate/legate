@@ -36,7 +36,7 @@ void register_tasks()
 
 /*static*/ void SumTask::cpu_variant(legate::TaskContext context)
 {
-  legate::Store input         = context.input(0);
+  legate::PhysicalStore input = context.input(0);
   legate::Rect<1> input_shape = input.shape<1>();  // should be a 1-Dim array
   auto in                     = input.read_accessor<float, 1>();
 
@@ -54,9 +54,9 @@ void register_tasks()
     to add our local contribution. After all point tasks return, the runtime
     will make sure to combine all their buffers into the single final result.
   */
-  using Reduce         = Legion::SumReduction<float>;
-  legate::Store output = context.reduction(0);
-  auto sum             = output.reduce_accessor<Reduce, true, 1>();
+  using Reduce                 = Legion::SumReduction<float>;
+  legate::PhysicalStore output = context.reduction(0);
+  auto sum                     = output.reduce_accessor<Reduce, true, 1>();
   // Best-practice is to validate types
   assert(output.code() == legate::Type::Code::FLOAT32);
   assert(output.dim() == 1);
@@ -66,14 +66,14 @@ void register_tasks()
 
 /*static*/ void SquareTask::cpu_variant(legate::TaskContext context)
 {
-  legate::Store output = context.output(0);
+  legate::PhysicalStore output = context.output(0);
   // Best-practice to validate the store types
   assert(output.code() == legate::Type::Code::FLOAT32);
   assert(output.dim() == 1);
   legate::Rect<1> output_shape = output.shape<1>();
   auto out                     = output.write_accessor<float, 1>();
 
-  legate::Store input = context.input(0);
+  legate::PhysicalStore input = context.input(0);
   // Best-practice to validate the store types
   assert(input.code() == legate::Type::Code::FLOAT32);
   assert(input.dim() == 1);
@@ -90,7 +90,7 @@ void register_tasks()
 
 /*static*/ void IotaTask::cpu_variant(legate::TaskContext context)
 {
-  legate::Store output         = context.output(0);
+  legate::PhysicalStore output = context.output(0);
   legate::Rect<1> output_shape = output.shape<1>();
   auto out                     = output.write_accessor<float, 1>();
 

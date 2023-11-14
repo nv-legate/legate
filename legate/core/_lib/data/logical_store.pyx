@@ -19,8 +19,8 @@ from ...shape import Shape
 from ...utils import is_iterable
 
 from ..type.type_info cimport Type
+from .physical_store cimport PhysicalStore
 from .slice cimport from_python_slice
-from .store cimport Store
 
 
 cdef class LogicalStore:
@@ -382,8 +382,8 @@ cdef class LogicalStore:
             self._handle.partition_by_tiling(std_move(tile_shape))
         )
 
-    def get_physical_store(self) -> Store:
-        return Store.from_handle(self._handle.get_physical_store())
+    def get_physical_store(self) -> PhysicalStore:
+        return PhysicalStore.from_handle(self._handle.get_physical_store())
 
     def detach(self) -> None:
         self._handle.detach()

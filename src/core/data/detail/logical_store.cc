@@ -12,7 +12,7 @@
 
 #include "core/data/detail/logical_store.h"
 
-#include "core/data/detail/store.h"
+#include "core/data/detail/physical_store.h"
 #include "core/data/detail/transform.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/operation.h"
@@ -593,7 +593,7 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-std::shared_ptr<Store> LogicalStore::get_physical_store()
+std::shared_ptr<PhysicalStore> LogicalStore::get_physical_store()
 {
   if (unbound()) throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
   if (mapped_) return mapped_;
@@ -603,12 +603,12 @@ std::shared_ptr<Store> LogicalStore::get_physical_store()
     auto future = FutureWrapper{true, type()->size(), domain, storage_->get_future()};
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    return std::make_shared<Store>(dim(), type(), -1, std::move(future), transform_);
+    return std::make_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
   }
 
   if (LegateDefined(LEGATE_USE_DEBUG)) { assert(storage_->kind() == Storage::Kind::REGION_FIELD); }
   auto region_field = storage_->map();
-  mapped_ = std::make_shared<Store>(dim(), type(), -1, std::move(region_field), transform_);
+  mapped_ = std::make_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
   return mapped_;
 }
 

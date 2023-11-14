@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/data/store.h"
+#include "core/data/physical_store.h"
 #include "core/utilities/typedefs.h"
 
 #include <string>
@@ -59,7 +59,7 @@ template <int DIM, typename ACC>
  *
  * @return A string expressing the contents of the store
  */
-[[nodiscard]] std::string print_dense_array(const Store& store);
+[[nodiscard]] std::string print_dense_array(const PhysicalStore& store);
 
 }  // namespace legate
 

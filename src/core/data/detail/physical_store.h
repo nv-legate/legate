@@ -21,12 +21,12 @@
 #include <memory>
 
 namespace legate {
-class Store;
+class PhysicalStore;
 }  // namespace legate
 
 namespace legate::detail {
 
-class BaseArray;
+class BasePhysicalArray;
 
 class RegionField {
  public:
@@ -131,38 +131,38 @@ class FutureWrapper {
   Legion::UntypedDeferredValue buffer_{};
 };
 
-class Store {
+class PhysicalStore {
  public:
-  Store(int32_t dim,
-        std::shared_ptr<Type> type,
-        int32_t redop_id,
-        FutureWrapper future,
-        std::shared_ptr<detail::TransformStack>&& transform = nullptr);
-  Store(int32_t dim,
-        std::shared_ptr<Type> type,
-        int32_t redop_id,
-        RegionField&& region_field,
-        std::shared_ptr<detail::TransformStack>&& transform = nullptr);
-  Store(int32_t dim,
-        std::shared_ptr<Type> type,
-        UnboundRegionField&& unbound_field,
-        std::shared_ptr<detail::TransformStack>&& transform = nullptr);
-  Store(int32_t dim,
-        std::shared_ptr<Type> type,
-        int32_t redop_id,
-        FutureWrapper future,
-        const std::shared_ptr<detail::TransformStack>& transform);
-  Store(int32_t dim,
-        std::shared_ptr<Type> type,
-        int32_t redop_id,
-        RegionField&& region_field,
-        const std::shared_ptr<detail::TransformStack>& transform);
+  PhysicalStore(int32_t dim,
+                std::shared_ptr<Type> type,
+                int32_t redop_id,
+                FutureWrapper future,
+                std::shared_ptr<detail::TransformStack>&& transform = nullptr);
+  PhysicalStore(int32_t dim,
+                std::shared_ptr<Type> type,
+                int32_t redop_id,
+                RegionField&& region_field,
+                std::shared_ptr<detail::TransformStack>&& transform = nullptr);
+  PhysicalStore(int32_t dim,
+                std::shared_ptr<Type> type,
+                UnboundRegionField&& unbound_field,
+                std::shared_ptr<detail::TransformStack>&& transform = nullptr);
+  PhysicalStore(int32_t dim,
+                std::shared_ptr<Type> type,
+                int32_t redop_id,
+                FutureWrapper future,
+                const std::shared_ptr<detail::TransformStack>& transform);
+  PhysicalStore(int32_t dim,
+                std::shared_ptr<Type> type,
+                int32_t redop_id,
+                RegionField&& region_field,
+                const std::shared_ptr<detail::TransformStack>& transform);
 
-  Store(Store&& other) noexcept            = default;
-  Store& operator=(Store&& other) noexcept = default;
+  PhysicalStore(PhysicalStore&& other) noexcept            = default;
+  PhysicalStore& operator=(PhysicalStore&& other) noexcept = default;
 
-  Store(const Store& other)            = delete;
-  Store& operator=(const Store& other) = delete;
+  PhysicalStore(const PhysicalStore& other)            = delete;
+  PhysicalStore& operator=(const PhysicalStore& other) = delete;
 
   [[nodiscard]] bool valid() const;
   [[nodiscard]] bool transformed() const;
@@ -185,8 +185,8 @@ class Store {
   [[nodiscard]] ReturnValue pack_weight() const;
 
  private:
-  friend class legate::Store;
-  friend class legate::detail::BaseArray;
+  friend class legate::PhysicalStore;
+  friend class legate::detail::BasePhysicalArray;
   void check_accessor_dimension(int32_t dim) const;
   void check_buffer_dimension(int32_t dim) const;
   void check_shape_dimension(int32_t dim) const;
@@ -225,4 +225,4 @@ class Store {
 
 }  // namespace legate::detail
 
-#include "core/data/detail/store.inl"
+#include "core/data/detail/physical_store.inl"

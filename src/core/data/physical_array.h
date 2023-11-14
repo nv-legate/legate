@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/data/store.h"
+#include "core/data/physical_store.h"
 #include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
 
@@ -21,19 +21,19 @@
 
 /**
  * @file
- * @brief Class definition for legate::Array
+ * @brief Class definition for legate::PhysicalArray
  */
 
 namespace legate {
 
 namespace detail {
-struct Array;
+struct PhysicalArray;
 }  // namespace detail
 
-class ListArray;
-class StringArray;
+class ListPhysicalArray;
+class StringPhysicalArray;
 
-class Array {
+class PhysicalArray {
  public:
   /**
    * @brief Indicates if the array is nullable
@@ -65,19 +65,19 @@ class Array {
   /**
    * @brief Returns the store containing the array's data
    *
-   * @return Store
+   * @return Physical store
    *
    * @throw std::invalid_argument If the array is not a base array
    */
-  [[nodiscard]] Store data() const;
+  [[nodiscard]] PhysicalStore data() const;
   /**
    * @brief Returns the store containing the array's null mask
    *
-   * @return Store
+   * @return Physical store
    *
    * @throw std::invalid_argument If the array is not nullable
    */
-  [[nodiscard]] Store null_mask() const;
+  [[nodiscard]] PhysicalStore null_mask() const;
   /**
    * @brief Returns the sub-array of a given index
    *
@@ -88,7 +88,7 @@ class Array {
    * @throw std::invalid_argument If the array has no child arrays
    * @throw std::out_of_range If the index is out of range
    */
-  [[nodiscard]] Array child(uint32_t index) const;
+  [[nodiscard]] PhysicalArray child(uint32_t index) const;
 
   /**
    * @brief Returns the array's domain
@@ -111,7 +111,7 @@ class Array {
    *
    * @throw std::invalid_argument If the array is not a list array
    */
-  [[nodiscard]] ListArray as_list_array() const;
+  [[nodiscard]] ListPhysicalArray as_list_array() const;
   /**
    * @brief Casts this array as a string array
    *
@@ -119,66 +119,66 @@ class Array {
    *
    * @throw std::invalid_argument If the array is not a string array
    */
-  [[nodiscard]] StringArray as_string_array() const;
+  [[nodiscard]] StringPhysicalArray as_string_array() const;
 
-  explicit Array(std::shared_ptr<detail::Array> impl);
+  explicit PhysicalArray(std::shared_ptr<detail::PhysicalArray> impl);
 
-  [[nodiscard]] const std::shared_ptr<detail::Array>& impl() const;
+  [[nodiscard]] const std::shared_ptr<detail::PhysicalArray>& impl() const;
 
-  Array(const Array&) noexcept = default;
-  Array(Array&&) noexcept      = default;
+  PhysicalArray(const PhysicalArray&) noexcept = default;
+  PhysicalArray(PhysicalArray&&) noexcept      = default;
 
-  virtual ~Array() noexcept = default;
+  virtual ~PhysicalArray() noexcept = default;
 
  private:
   void check_shape_dimension(int32_t dim) const;
 
  protected:
-  std::shared_ptr<detail::Array> impl_{};
+  std::shared_ptr<detail::PhysicalArray> impl_{};
 };
 
-class ListArray : public Array {
+class ListPhysicalArray : public PhysicalArray {
  public:
   /**
    * @brief Returns the sub-array for descriptors
    *
-   * @return Store
+   * @return Array
    */
-  [[nodiscard]] Array descriptor() const;
+  [[nodiscard]] PhysicalArray descriptor() const;
   /**
    * @brief Returns the sub-array for variable size data
    *
-   * @return Store
+   * @return Array
    */
-  [[nodiscard]] Array vardata() const;
+  [[nodiscard]] PhysicalArray vardata() const;
 
  private:
-  friend class Array;
+  friend class PhysicalArray;
 
-  explicit ListArray(std::shared_ptr<detail::Array> impl);
+  explicit ListPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl);
 };
 
-class StringArray : public Array {
+class StringPhysicalArray : public PhysicalArray {
  public:
   /**
    * @brief Returns the sub-array for ranges
    *
-   * @return Store
+   * @return Array
    */
-  [[nodiscard]] Array ranges() const;
+  [[nodiscard]] PhysicalArray ranges() const;
   /**
    * @brief Returns the sub-array for characters
    *
-   * @return Store
+   * @return Array
    */
-  [[nodiscard]] Array chars() const;
+  [[nodiscard]] PhysicalArray chars() const;
 
  private:
-  friend class Array;
+  friend class PhysicalArray;
 
-  explicit StringArray(std::shared_ptr<detail::Array> impl);
+  explicit StringPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl);
 };
 
 }  // namespace legate
 
-#include "core/data/array.inl"
+#include "core/data/physical_array.inl"

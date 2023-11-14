@@ -17,9 +17,9 @@ from libcpp.vector cimport vector as std_vector
 
 from ..type.type_info cimport _Type
 from .detail.logical_store cimport _LogicalStoreImpl
+from .physical_store cimport _PhysicalStore
 from .shape cimport _Shape
 from .slice cimport _Slice
-from .store cimport _Store
 
 
 cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
@@ -42,7 +42,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition partition_by_tiling(
             std_vector[size_t] tile_shape
         )
-        _Store get_physical_store()
+        _PhysicalStore get_physical_store()
         void detach()
         std_string to_string()
         std_shared_ptr[_LogicalStoreImpl] impl() const

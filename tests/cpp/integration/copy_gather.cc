@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "copy_util.inl"
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace copy_gather {
 
@@ -31,7 +31,7 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
     template <legate::Type::Code CODE>
     void operator()(legate::TaskContext context)
     {
-      using VAL = legate::legate_type_of<CODE>;
+      using VAL = legate::type_of<CODE>;
 
       auto src_store = context.input(0).data();
       auto tgt_store = context.input(1).data();

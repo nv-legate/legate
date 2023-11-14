@@ -10,12 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-#include <fstream>
-
 #include "cunumeric.h"
 #include "legate.h"
 #include "task_io.h"
+
+#include <fstream>
+#include <gtest/gtest.h>
 
 namespace legateio {
 
@@ -242,7 +242,7 @@ IOArray read_even_tiles(legate::Library library, std::string path)
   _read_header_even(path + "/.header", shape, tile_shape);
 
   auto runtime          = legate::Runtime::get_runtime();
-  auto output           = runtime->create_store(shape, legate::int8());
+  auto output           = runtime->create_store(legate::Shape{shape}, legate::int8());
   auto output_partition = output.partition_by_tiling(tile_shape);
   auto launch_shape     = output_partition.color_shape();
   auto task = runtime->create_task(library, task::legateio::READ_EVEN_TILES, launch_shape);

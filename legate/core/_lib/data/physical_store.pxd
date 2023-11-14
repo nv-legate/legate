@@ -22,24 +22,24 @@ cdef extern from "core/data/inline_allocation.h" namespace "legate" nogil:
         std_vector[size_t] strides
 
 
-cdef extern from "core/data/store.h" namespace "legate" nogil:
-    cdef cppclass _Store "legate::Store":
+cdef extern from "core/data/physical_store.h" namespace "legate" nogil:
+    cdef cppclass _PhysicalStore "legate::PhysicalStore":
         int32_t dim()
         _Type type()
         _Domain domain()
         _InlineAllocation get_inline_allocation()
 
 
-cdef class Store:
-    cdef _Store _handle
+cdef class PhysicalStore:
+    cdef _PhysicalStore _handle
 
     @staticmethod
-    cdef Store from_handle(_Store)
+    cdef PhysicalStore from_handle(_PhysicalStore)
 
 
 cdef class InlineAllocation:
     cdef _InlineAllocation _handle
-    cdef Store _store
+    cdef PhysicalStore _store
 
     @staticmethod
-    cdef InlineAllocation create(Store store, _InlineAllocation handle)
+    cdef InlineAllocation create(PhysicalStore store, _InlineAllocation handle)

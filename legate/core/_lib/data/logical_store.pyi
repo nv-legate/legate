@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from ...data_interface import Field, LegateDataInterfaceItem
     from ...shape import Shape
     from ..type.type_info import Type
-    from .store import Store
+    from .physical_store import PhysicalStore
 
 class LogicalStore:
     @property
@@ -48,7 +48,7 @@ class LogicalStore:
     def partition_by_tiling(
         self, shape: Iterable[int]
     ) -> LogicalStorePartition: ...
-    def get_physical_store(self) -> Store: ...
+    def get_physical_store(self) -> PhysicalStore: ...
     def detach(self) -> None: ...
     def raw_handle(self) -> int: ...
 

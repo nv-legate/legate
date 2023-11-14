@@ -11,6 +11,7 @@
  */
 
 #include "core/data/detail/logical_store.h"
+
 #include "legate.h"
 
 namespace {
@@ -48,9 +49,9 @@ template <int32_t DIM>
 struct FillTask : public legate::LegateTask<FillTask<DIM>> {
   struct FillTaskBody {
     template <legate::Type::Code CODE>
-    void operator()(legate::Store& output, legate::Rect<DIM>& shape, legate::Scalar& seed)
+    void operator()(legate::PhysicalStore& output, legate::Rect<DIM>& shape, legate::Scalar& seed)
     {
-      using VAL    = legate::legate_type_of<CODE>;
+      using VAL    = legate::type_of<CODE>;
       auto acc     = output.write_accessor<VAL, DIM>(shape);
       auto to_fill = seed.value<VAL>();
       size_t i     = 1;

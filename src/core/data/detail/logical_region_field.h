@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/data/detail/store.h"
+#include "core/data/detail/physical_store.h"
 #include "core/data/shape.h"
 #include "core/runtime/detail/field_manager.h"
 

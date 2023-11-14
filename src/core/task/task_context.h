@@ -13,7 +13,7 @@
 #pragma once
 
 #include "core/comm/communicator.h"
-#include "core/data/array.h"
+#include "core/data/physical_array.h"
 #include "core/data/scalar.h"
 #include "core/mapping/machine.h"
 
@@ -44,13 +44,13 @@ class TaskContext {
    *
    * @return Array
    */
-  [[nodiscard]] Array input(uint32_t index) const;
+  [[nodiscard]] PhysicalArray input(uint32_t index) const;
   /**
    * @brief Returns all input arrays of the task
    *
    * @return Vector of arrays
    */
-  [[nodiscard]] std::vector<Array> inputs() const;
+  [[nodiscard]] std::vector<PhysicalArray> inputs() const;
   /**
    * @brief Returns an output array of the task
    *
@@ -58,13 +58,13 @@ class TaskContext {
    *
    * @return Array
    */
-  [[nodiscard]] Array output(uint32_t index) const;
+  [[nodiscard]] PhysicalArray output(uint32_t index) const;
   /**
    * @brief Returns all output arrays of the task
    *
    * @return Vector of arrays
    */
-  [[nodiscard]] std::vector<Array> outputs() const;
+  [[nodiscard]] std::vector<PhysicalArray> outputs() const;
   /**
    * @brief Returns a reduction array of the task
    *
@@ -72,13 +72,13 @@ class TaskContext {
    *
    * @return Array
    */
-  [[nodiscard]] Array reduction(uint32_t index) const;
+  [[nodiscard]] PhysicalArray reduction(uint32_t index) const;
   /**
    * @brief Returns all reduction arrays of the task
    *
    * @return Vector of arrays
    */
-  [[nodiscard]] std::vector<Array> reductions() const;
+  [[nodiscard]] std::vector<PhysicalArray> reductions() const;
   /**
    * @brief Returns by-value arguments of the task
    *

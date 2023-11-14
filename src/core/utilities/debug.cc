@@ -21,9 +21,9 @@ namespace {  // anonymous
 
 struct print_dense_array_fn {
   template <Type::Code CODE, int DIM>
-  [[nodiscard]] std::string operator()(const Store& store) const
+  [[nodiscard]] std::string operator()(const PhysicalStore& store) const
   {
-    using T              = legate_type_of<CODE>;
+    using T              = type_of<CODE>;
     const Rect<DIM> rect = store.shape<DIM>();
     return print_dense_array(store.read_accessor<T>(rect), rect);
   }
@@ -31,7 +31,7 @@ struct print_dense_array_fn {
 
 }  // namespace
 
-std::string print_dense_array(const Store& store)
+std::string print_dense_array(const PhysicalStore& store)
 {
   assert(store.is_readable());
   return double_dispatch(store.dim(), store.code(), print_dense_array_fn{}, store);

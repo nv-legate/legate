@@ -12,7 +12,7 @@
 
 #include "core/data/detail/logical_array.h"
 
-#include "core/data/detail/array.h"
+#include "core/data/detail/physical_array.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/task.h"
 #include "core/partitioning/detail/constraint.h"
@@ -88,17 +88,17 @@ std::shared_ptr<LogicalStore> BaseLogicalArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<Array> BaseLogicalArray::get_physical_array() const
+std::shared_ptr<PhysicalArray> BaseLogicalArray::get_physical_array() const
 {
   return _get_physical_array();
 }
 
-std::shared_ptr<BaseArray> BaseLogicalArray::_get_physical_array() const
+std::shared_ptr<BasePhysicalArray> BaseLogicalArray::_get_physical_array() const
 {
   auto data_store = data_->get_physical_store();
-  std::shared_ptr<Store> null_mask_store{};
+  std::shared_ptr<PhysicalStore> null_mask_store{};
   if (null_mask_ != nullptr) { null_mask_store = null_mask_->get_physical_store(); }
-  return std::make_shared<BaseArray>(std::move(data_store), std::move(null_mask_store));
+  return std::make_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
 }
 
 std::shared_ptr<LogicalArray> BaseLogicalArray::child(uint32_t /*index*/) const
@@ -204,11 +204,11 @@ std::shared_ptr<LogicalArray> ListLogicalArray::delinearize(int32_t,
   return {};
 }
 
-std::shared_ptr<Array> ListLogicalArray::get_physical_array() const
+std::shared_ptr<PhysicalArray> ListLogicalArray::get_physical_array() const
 {
   auto desc_arr    = descriptor_->_get_physical_array();
   auto vardata_arr = vardata_->get_physical_array();
-  return std::make_shared<ListArray>(type_, std::move(desc_arr), std::move(vardata_arr));
+  return std::make_shared<ListPhysicalArray>(type_, std::move(desc_arr), std::move(vardata_arr));
 }
 
 std::shared_ptr<LogicalArray> ListLogicalArray::child(uint32_t index) const
@@ -374,15 +374,16 @@ std::shared_ptr<LogicalStore> StructLogicalArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<Array> StructLogicalArray::get_physical_array() const
+std::shared_ptr<PhysicalArray> StructLogicalArray::get_physical_array() const
 {
-  std::shared_ptr<Store> null_mask_store = nullptr;
+  std::shared_ptr<PhysicalStore> null_mask_store = nullptr;
   if (null_mask_ != nullptr) { null_mask_store = null_mask_->get_physical_store(); }
 
-  auto field_arrays = make_array_from_op<std::shared_ptr<Array>>(
+  auto field_arrays = make_array_from_op<std::shared_ptr<PhysicalArray>>(
     fields_, [&](auto& field) { return field->get_physical_array(); });
 
-  return std::make_shared<StructArray>(type_, std::move(null_mask_store), std::move(field_arrays));
+  return std::make_shared<StructPhysicalArray>(
+    type_, std::move(null_mask_store), std::move(field_arrays));
 }
 
 std::shared_ptr<LogicalArray> StructLogicalArray::child(uint32_t index) const

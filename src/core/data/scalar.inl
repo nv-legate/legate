@@ -34,7 +34,7 @@ inline constexpr legate::Type::Code canonical_type_code_of() noexcept
     static_assert(sizeof(T) == sizeof(uint64_t));
     return Type::Code::UINT64;
   } else {
-    constexpr auto ret = legate_type_code_of<T>;
+    constexpr auto ret = type_code_of<T>;
 
     static_assert(ret != Type::Code::FIXED_ARRAY);
     static_assert(ret != Type::Code::STRUCT);

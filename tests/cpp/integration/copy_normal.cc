@@ -40,9 +40,11 @@ template <int32_t DIM>
 struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
   struct CheckCopyTaskBody {
     template <legate::Type::Code CODE>
-    void operator()(legate::Store& source, legate::Store& target, legate::Rect<DIM>& shape)
+    void operator()(legate::PhysicalStore& source,
+                    legate::PhysicalStore& target,
+                    legate::Rect<DIM>& shape)
     {
-      using VAL = legate::legate_type_of<CODE>;
+      using VAL = legate::type_of<CODE>;
       auto src  = source.read_accessor<VAL, DIM>(shape);
       auto tgt  = target.read_accessor<VAL, DIM>(shape);
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
@@ -70,12 +72,12 @@ template <int32_t DIM>
 struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask<DIM>> {
   struct CheckCopyReductionTaskBody {
     template <legate::Type::Code CODE, std::enable_if_t<legate::is_integral<CODE>::value, int> = 0>
-    void operator()(legate::Store& source,
-                    legate::Store& target,
+    void operator()(legate::PhysicalStore& source,
+                    legate::PhysicalStore& target,
                     const legate::Scalar& seed,
                     legate::Rect<DIM>& shape)
     {
-      using VAL = legate::legate_type_of<CODE>;
+      using VAL = legate::type_of<CODE>;
       auto src  = source.read_accessor<VAL, DIM>(shape);
       auto tgt  = target.read_accessor<VAL, DIM>(shape);
       legate::PointInRectIterator<DIM> it(shape);
@@ -85,8 +87,8 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
       }
     }
     template <legate::Type::Code CODE, std::enable_if_t<!legate::is_integral<CODE>::value, int> = 0>
-    void operator()(legate::Store& source,
-                    legate::Store& target,
+    void operator()(legate::PhysicalStore& source,
+                    legate::PhysicalStore& target,
                     const legate::Scalar& seed,
                     legate::Rect<DIM>& shape)
     {
@@ -97,8 +99,8 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
   static const int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
-    auto source = legate::Store{context.input(0)};
-    auto target = legate::Store{context.input(1)};
+    auto source = legate::PhysicalStore{context.input(0)};
+    auto target = legate::PhysicalStore{context.input(1)};
     auto& seed  = context.scalar(0);
     auto shape  = target.shape<DIM>();
 

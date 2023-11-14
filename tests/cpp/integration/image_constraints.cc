@@ -47,7 +47,9 @@ template <int32_t DIM, bool RECT>
 struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RECT>> {
   struct InitializeRects {
     template <int32_t TGT_DIM>
-    void operator()(legate::Store& output, const legate::Scalar& extents_scalar, bool ascending)
+    void operator()(legate::PhysicalStore& output,
+                    const legate::Scalar& extents_scalar,
+                    bool ascending)
     {
       auto shape   = output.shape<DIM>();
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
@@ -78,7 +80,9 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
   struct InitializePoints {
     template <int32_t TGT_DIM>
-    void operator()(legate::Store& output, const legate::Scalar& extents_scalar, bool ascending)
+    void operator()(legate::PhysicalStore& output,
+                    const legate::Scalar& extents_scalar,
+                    bool ascending)
     {
       auto shape   = output.shape<DIM>();
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
@@ -122,7 +126,7 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
   static const int32_t TASK_ID = IMAGE_TESTER + static_cast<int32_t>(RECT) * TEST_MAX_DIM + DIM;
   struct CheckRects {
     template <int32_t TGT_DIM>
-    void operator()(legate::Store& func, const legate::Domain& range)
+    void operator()(legate::PhysicalStore& func, const legate::Domain& range)
     {
       auto shape = func.shape<DIM>();
       if (shape.empty()) return;
@@ -138,7 +142,7 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
   };
   struct CheckPoints {
     template <int32_t TGT_DIM>
-    void operator()(legate::Store& func, const legate::Domain& range)
+    void operator()(legate::PhysicalStore& func, const legate::Domain& range)
     {
       auto shape = func.shape<DIM>();
       if (shape.empty()) return;

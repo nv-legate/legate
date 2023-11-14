@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/data/detail/store.h"
+#include "core/data/detail/physical_store.h"
 
 #include <utility>
 
@@ -72,11 +72,11 @@ inline Legion::UntypedDeferredValue FutureWrapper::get_buffer() const { return b
 
 // ==========================================================================================
 
-inline Store::Store(int32_t dim,
-                    std::shared_ptr<Type> type,
-                    int32_t redop_id,
-                    FutureWrapper future,
-                    std::shared_ptr<detail::TransformStack>&& transform)
+inline PhysicalStore::PhysicalStore(int32_t dim,
+                                    std::shared_ptr<Type> type,
+                                    int32_t redop_id,
+                                    FutureWrapper future,
+                                    std::shared_ptr<detail::TransformStack>&& transform)
   : is_future_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -88,11 +88,11 @@ inline Store::Store(int32_t dim,
 {
 }
 
-inline Store::Store(int32_t dim,
-                    std::shared_ptr<Type> type,
-                    int32_t redop_id,
-                    RegionField&& region_field,
-                    std::shared_ptr<detail::TransformStack>&& transform)
+inline PhysicalStore::PhysicalStore(int32_t dim,
+                                    std::shared_ptr<Type> type,
+                                    int32_t redop_id,
+                                    RegionField&& region_field,
+                                    std::shared_ptr<detail::TransformStack>&& transform)
   : dim_{dim},
     type_{std::move(type)},
     redop_id_{redop_id},
@@ -104,10 +104,10 @@ inline Store::Store(int32_t dim,
 {
 }
 
-inline Store::Store(int32_t dim,
-                    std::shared_ptr<Type> type,
-                    UnboundRegionField&& unbound_field,
-                    std::shared_ptr<detail::TransformStack>&& transform)
+inline PhysicalStore::PhysicalStore(int32_t dim,
+                                    std::shared_ptr<Type> type,
+                                    UnboundRegionField&& unbound_field,
+                                    std::shared_ptr<detail::TransformStack>&& transform)
   : is_unbound_store_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -116,11 +116,11 @@ inline Store::Store(int32_t dim,
 {
 }
 
-inline Store::Store(int32_t dim,
-                    std::shared_ptr<Type> type,
-                    int32_t redop_id,
-                    FutureWrapper future,
-                    const std::shared_ptr<detail::TransformStack>& transform)
+inline PhysicalStore::PhysicalStore(int32_t dim,
+                                    std::shared_ptr<Type> type,
+                                    int32_t redop_id,
+                                    FutureWrapper future,
+                                    const std::shared_ptr<detail::TransformStack>& transform)
   : is_future_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -131,11 +131,11 @@ inline Store::Store(int32_t dim,
 {
 }
 
-inline Store::Store(int32_t dim,
-                    std::shared_ptr<Type> type,
-                    int32_t redop_id,
-                    RegionField&& region_field,
-                    const std::shared_ptr<detail::TransformStack>& transform)
+inline PhysicalStore::PhysicalStore(int32_t dim,
+                                    std::shared_ptr<Type> type,
+                                    int32_t redop_id,
+                                    RegionField&& region_field,
+                                    const std::shared_ptr<detail::TransformStack>& transform)
   : dim_{dim},
     type_{std::move(type)},
     redop_id_{redop_id},
@@ -147,24 +147,24 @@ inline Store::Store(int32_t dim,
 {
 }
 
-inline int32_t Store::dim() const { return dim_; }
+inline int32_t PhysicalStore::dim() const { return dim_; }
 
-inline const std::shared_ptr<Type>& Store::type() const { return type_; }
+inline const std::shared_ptr<Type>& PhysicalStore::type() const { return type_; }
 
-inline bool Store::is_readable() const { return readable_; }
+inline bool PhysicalStore::is_readable() const { return readable_; }
 
-inline bool Store::is_writable() const { return writable_; }
+inline bool PhysicalStore::is_writable() const { return writable_; }
 
-inline bool Store::is_reducible() const { return reducible_; }
+inline bool PhysicalStore::is_reducible() const { return reducible_; }
 
-inline bool Store::is_future() const { return is_future_; }
+inline bool PhysicalStore::is_future() const { return is_future_; }
 
-inline bool Store::is_unbound_store() const { return is_unbound_store_; }
+inline bool PhysicalStore::is_unbound_store() const { return is_unbound_store_; }
 
-inline ReturnValue Store::pack() const { return future_.pack(); }
+inline ReturnValue PhysicalStore::pack() const { return future_.pack(); }
 
-inline ReturnValue Store::pack_weight() const { return unbound_field_.pack_weight(); }
+inline ReturnValue PhysicalStore::pack_weight() const { return unbound_field_.pack_weight(); }
 
-inline int32_t Store::get_redop_id() const { return redop_id_; }
+inline int32_t PhysicalStore::get_redop_id() const { return redop_id_; }
 
 }  // namespace legate::detail

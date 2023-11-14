@@ -58,7 +58,7 @@ inline T BaseDeserializer<Deserializer>::unpack()
 }
 
 template <typename Deserializer>
-template <typename T, std::enable_if_t<legate_type_code_of<T> != Type::Code::NIL>*>
+template <typename T, std::enable_if_t<type_code_of<T> != Type::Code::NIL>*>
 void BaseDeserializer<Deserializer>::_unpack(T& value)
 {
   const auto vptr          = static_cast<void*>(const_cast<int8_t*>(args_.ptr()));
@@ -127,9 +127,9 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
       case Type::Code::NIL:
         return {nullptr, 0};
 
-#define CASE_TYPE_CODE_(CODE)                                          \
-  case Type::Code::CODE:                                               \
-    return detail::align_for_unpack<legate_type_of<Type::Code::CODE>>( \
+#define CASE_TYPE_CODE_(CODE)                                   \
+  case Type::Code::CODE:                                        \
+    return detail::align_for_unpack<type_of<Type::Code::CODE>>( \
       ptr, capacity, type->size(), type->alignment())
 
         CASE_TYPE_CODE_(BOOL);

@@ -14,13 +14,13 @@ from libc.stdint cimport int32_t, uintptr_t
 
 from ..type.type_info cimport Type
 from ..utilities.typedefs cimport Domain, DomainPoint
-from .store cimport _Store
+from .physical_store cimport _PhysicalStore
 
 
-cdef class Store:
+cdef class PhysicalStore:
     @staticmethod
-    cdef Store from_handle(_Store handle):
-        cdef Store result = Store.__new__(Store)
+    cdef PhysicalStore from_handle(_PhysicalStore handle):
+        cdef PhysicalStore result = PhysicalStore.__new__(PhysicalStore)
         result._handle = handle
         return result
 
@@ -45,7 +45,9 @@ cdef class Store:
 
 cdef class InlineAllocation:
     @staticmethod
-    cdef InlineAllocation create(Store store, _InlineAllocation handle):
+    cdef InlineAllocation create(
+        PhysicalStore store, _InlineAllocation handle
+    ):
         cdef InlineAllocation result = InlineAllocation.__new__(
             InlineAllocation
         )

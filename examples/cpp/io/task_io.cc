@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "task_io.h"
+
 #include <filesystem>
 #include <fstream>
-
-#include "task_io.h"
 
 namespace fs = std::filesystem;
 
@@ -39,7 +39,7 @@ namespace utils {
 
 struct write_util_fn {
   template <legate::Type::Code CODE, int32_t DIM>
-  void operator()(const legate::Store& store, const fs::path& path)
+  void operator()(const legate::PhysicalStore& store, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
 
@@ -89,7 +89,7 @@ std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext c
 
 void write_to_file(legate::TaskContext task_context,
                    const std::string& dirname,
-                   const legate::Store& store)
+                   const legate::PhysicalStore& store)
 {
   auto path = get_unique_path_for_task_index(task_context, store.dim(), dirname);
   // double_dispatch converts the first two arguments to non-type template arguments
@@ -100,7 +100,7 @@ void write_to_file(legate::TaskContext task_context,
 
 struct read_even_fn {
   template <legate::Type::Code CODE, int32_t DIM>
-  void operator()(legate::Store& output, const fs::path& path)
+  void operator()(legate::PhysicalStore& output, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
 
@@ -140,7 +140,7 @@ struct read_even_fn {
 
 struct read_fn {
   template <legate::Type::Code CODE>
-  void operator()(legate::Store& output,
+  void operator()(legate::PhysicalStore& output,
                   const std::string& filename,
                   int64_t my_id,
                   int64_t num_readers)
@@ -207,7 +207,7 @@ struct read_fn {
 
 struct read_uneven_fn {
   template <legate::Type::Code CODE, int32_t DIM>
-  void operator()(legate::Store& output, const fs::path& path)
+  void operator()(legate::PhysicalStore& output, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
 
@@ -282,7 +282,7 @@ void write_header(std::ofstream& out,
 
 struct write_fn {
   template <legate::Type::Code CODE>
-  void operator()(const legate::Store& input, const std::string& filename)
+  void operator()(const legate::PhysicalStore& input, const std::string& filename)
   {
     using VAL = legate::legate_type_of<CODE>;
 

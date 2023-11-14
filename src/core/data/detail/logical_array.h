@@ -22,7 +22,7 @@
 
 namespace legate::detail {
 
-struct Array;
+struct PhysicalArray;
 class AutoTask;
 class BaseArray;
 struct ConstraintSolver;
@@ -57,7 +57,7 @@ struct LogicalArray {
 
   [[nodiscard]] virtual std::shared_ptr<LogicalStore> data() const;
   [[nodiscard]] virtual std::shared_ptr<LogicalStore> null_mask() const           = 0;
-  [[nodiscard]] virtual std::shared_ptr<Array> get_physical_array() const         = 0;
+  [[nodiscard]] virtual std::shared_ptr<PhysicalArray> get_physical_array() const = 0;
   [[nodiscard]] virtual std::shared_ptr<LogicalArray> child(uint32_t index) const = 0;
   [[nodiscard]] virtual std::shared_ptr<LogicalStore> primary_store() const       = 0;
 
@@ -108,8 +108,8 @@ class BaseLogicalArray : public LogicalArray {
 
   [[nodiscard]] std::shared_ptr<LogicalStore> data() const override;
   [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> get_physical_array() const override;
-  [[nodiscard]] std::shared_ptr<BaseArray> _get_physical_array() const;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> get_physical_array() const override;
+  [[nodiscard]] std::shared_ptr<BasePhysicalArray> _get_physical_array() const;
   [[nodiscard]] std::shared_ptr<LogicalArray> child(uint32_t index) const override;
   [[nodiscard]] std::shared_ptr<LogicalStore> primary_store() const override;
 
@@ -160,7 +160,7 @@ class ListLogicalArray : public LogicalArray {
     int32_t dim, const std::vector<int64_t>& sizes) const override;
 
   [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> get_physical_array() const override;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> get_physical_array() const override;
   [[nodiscard]] std::shared_ptr<LogicalArray> child(uint32_t index) const override;
   [[nodiscard]] std::shared_ptr<LogicalStore> primary_store() const override;
   [[nodiscard]] std::shared_ptr<BaseLogicalArray> descriptor() const;
@@ -214,7 +214,7 @@ class StructLogicalArray : public LogicalArray {
     int32_t dim, const std::vector<int64_t>& sizes) const override;
 
   [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> get_physical_array() const override;
+  [[nodiscard]] std::shared_ptr<PhysicalArray> get_physical_array() const override;
   [[nodiscard]] std::shared_ptr<LogicalArray> child(uint32_t index) const override;
   [[nodiscard]] std::shared_ptr<LogicalStore> primary_store() const override;
 

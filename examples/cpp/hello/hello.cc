@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "task_hello.h"
+
+#include <gtest/gtest.h>
 
 namespace hello {
 
@@ -32,7 +32,7 @@ legate::LogicalStore square(legate::Library library, legate::LogicalStore input)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, task::hello::SQUARE);
-  auto output  = runtime->create_store(input.extents().data(), legate::float32(), true);
+  auto output  = runtime->create_store(input.extents(), legate::float32(), true);
   auto part1   = task.declare_partition();
   auto part2   = task.declare_partition();
 

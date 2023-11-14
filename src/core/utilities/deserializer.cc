@@ -12,8 +12,8 @@
 
 #include "core/utilities/deserializer.h"
 
-#include "core/data/detail/store.h"
-#include "core/data/store.h"
+#include "core/data/detail/physical_store.h"
+#include "core/data/physical_store.h"
 #include "core/utilities/typedefs.h"
 
 #include "legion/legion_c.h"
@@ -32,9 +32,9 @@ TaskDeserializer::TaskDeserializer(const Legion::Task* task,
   runtime->get_output_regions(ctx, outputs_);
 }
 
-std::vector<std::shared_ptr<detail::Array>> TaskDeserializer::unpack_arrays()
+std::vector<std::shared_ptr<detail::PhysicalArray>> TaskDeserializer::unpack_arrays()
 {
-  std::vector<std::shared_ptr<detail::Array>> arrays;
+  std::vector<std::shared_ptr<detail::PhysicalArray>> arrays;
   auto size = unpack<uint32_t>();
 
   arrays.reserve(size);
@@ -42,7 +42,7 @@ std::vector<std::shared_ptr<detail::Array>> TaskDeserializer::unpack_arrays()
   return arrays;
 }
 
-std::shared_ptr<detail::Array> TaskDeserializer::unpack_array()
+std::shared_ptr<detail::PhysicalArray> TaskDeserializer::unpack_array()
 {
   auto kind = static_cast<detail::ArrayKind>(unpack<int32_t>());
 
@@ -55,41 +55,41 @@ std::shared_ptr<detail::Array> TaskDeserializer::unpack_array()
   return {};
 }
 
-std::shared_ptr<detail::BaseArray> TaskDeserializer::unpack_base_array()
+std::shared_ptr<detail::BasePhysicalArray> TaskDeserializer::unpack_base_array()
 {
   auto data      = unpack_store();
   auto nullable  = unpack<bool>();
   auto null_mask = nullable ? unpack_store() : nullptr;
-  return std::make_shared<detail::BaseArray>(std::move(data), std::move(null_mask));
+  return std::make_shared<detail::BasePhysicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<detail::ListArray> TaskDeserializer::unpack_list_array()
+std::shared_ptr<detail::ListPhysicalArray> TaskDeserializer::unpack_list_array()
 {
   auto type = unpack_type();
   static_cast<void>(unpack<int32_t>());  // Unpack kind
   auto descriptor = unpack_base_array();
   auto vardata    = unpack_array();
-  return std::make_shared<detail::ListArray>(
+  return std::make_shared<detail::ListPhysicalArray>(
     std::move(type), std::move(descriptor), std::move(vardata));
 }
 
-std::shared_ptr<detail::StructArray> TaskDeserializer::unpack_struct_array()
+std::shared_ptr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_array()
 {
   auto type = unpack_type();
   if (LegateDefined(LEGATE_USE_DEBUG)) assert(type->code == Type::Code::STRUCT);
 
-  std::vector<std::shared_ptr<detail::Array>> fields;
+  std::vector<std::shared_ptr<detail::PhysicalArray>> fields;
   const auto& st_type = type->as_struct_type();
   auto nullable       = unpack<bool>();
   auto null_mask      = nullable ? unpack_store() : nullptr;
 
   fields.reserve(st_type.num_fields());
   for (uint32_t idx = 0; idx < st_type.num_fields(); ++idx) fields.emplace_back(unpack_array());
-  return std::make_shared<detail::StructArray>(
+  return std::make_shared<detail::StructPhysicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<detail::Store> TaskDeserializer::unpack_store()
+std::shared_ptr<detail::PhysicalStore> TaskDeserializer::unpack_store()
 {
   auto is_future        = unpack<bool>();
   auto is_output_region = unpack<bool>();
@@ -102,19 +102,19 @@ std::shared_ptr<detail::Store> TaskDeserializer::unpack_store()
     auto fut = unpack<detail::FutureWrapper>();
 
     if (redop_id != -1 && !fut.valid()) fut.initialize_with_identity(redop_id);
-    return std::make_shared<detail::Store>(
+    return std::make_shared<detail::PhysicalStore>(
       dim, std::move(type), redop_id, std::move(fut), std::move(transform));
   }
   if (!is_output_region) {
     auto rf = unpack<detail::RegionField>();
 
-    return std::make_shared<detail::Store>(
+    return std::make_shared<detail::PhysicalStore>(
       dim, std::move(type), redop_id, std::move(rf), std::move(transform));
   }
   assert(redop_id == -1);
   auto out = unpack<detail::UnboundRegionField>();
 
-  return std::make_shared<detail::Store>(
+  return std::make_shared<detail::PhysicalStore>(
     dim, std::move(type), std::move(out), std::move(transform));
 }
 

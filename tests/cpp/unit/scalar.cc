@@ -10,12 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/data/detail/scalar.h"
+
 #include "core/utilities/deserializer.h"
 #include "core/utilities/detail/buffer_builder.h"
+
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace scalar_test {
 
@@ -101,7 +103,7 @@ void check_type(T value, legate::Type type)
 {
   {
     legate::Scalar scalar(value);
-    EXPECT_EQ(scalar.type().code(), legate::legate_type_code_of<T>);
+    EXPECT_EQ(scalar.type().code(), legate::type_code_of<T>);
     EXPECT_EQ(scalar.size(), sizeof(T));
     EXPECT_EQ(scalar.value<T>(), value);
     EXPECT_EQ(scalar.values<T>().size(), 1);

@@ -12,6 +12,7 @@
 
 #include "core/task/detail/task_context.h"
 
+#include "core/data/detail/physical_store.h"
 #include "core/utilities/deserializer.h"
 
 #if LegateDefined(LEGATE_USE_CUDA)
@@ -70,7 +71,7 @@ TaskContext::TaskContext(const Legion::Task* task,
   // when the number of subregions isn't a multiple of the chosen radix.
   // To simplify the programming mode, we filter out those "invalid" stores out.
   if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
-    std::vector<std::shared_ptr<Array>> inputs;
+    std::vector<std::shared_ptr<PhysicalArray>> inputs;
     for (auto& input : inputs_)
       if (input->valid()) inputs.push_back(std::move(input));
     inputs_.swap(inputs);

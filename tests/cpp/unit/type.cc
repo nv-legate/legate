@@ -44,7 +44,7 @@ struct alignment_of<void> : std::integral_constant<std::size_t, 0> {};
 template <typename T>
 void test_primitive_type(const legate::Type& type, std::string type_string, uint32_t size)
 {
-  EXPECT_EQ(type.code(), legate::legate_type_code_of<T>);
+  EXPECT_EQ(type.code(), legate::type_code_of<T>);
   EXPECT_EQ(type.size(), size);
   // need extra layer of template indirection since alignof(void) (for null_type) is illegal
   EXPECT_EQ(type.alignment(), alignment_of<T>::value);
@@ -488,49 +488,47 @@ TEST_F(TypeUnit, ReductionOperator)
 
 TEST_F(TypeUnit, TypeCodeOf)
 {
-  EXPECT_EQ(legate::legate_type_code_of<void>, legate::Type::Code::NIL);
-  EXPECT_EQ(legate::legate_type_code_of<bool>, legate::Type::Code::BOOL);
-  EXPECT_EQ(legate::legate_type_code_of<int8_t>, legate::Type::Code::INT8);
-  EXPECT_EQ(legate::legate_type_code_of<int16_t>, legate::Type::Code::INT16);
-  EXPECT_EQ(legate::legate_type_code_of<int32_t>, legate::Type::Code::INT32);
-  EXPECT_EQ(legate::legate_type_code_of<int64_t>, legate::Type::Code::INT64);
-  EXPECT_EQ(legate::legate_type_code_of<uint8_t>, legate::Type::Code::UINT8);
-  EXPECT_EQ(legate::legate_type_code_of<uint16_t>, legate::Type::Code::UINT16);
-  EXPECT_EQ(legate::legate_type_code_of<uint32_t>, legate::Type::Code::UINT32);
-  EXPECT_EQ(legate::legate_type_code_of<uint64_t>, legate::Type::Code::UINT64);
-  EXPECT_EQ(legate::legate_type_code_of<__half>, legate::Type::Code::FLOAT16);
-  EXPECT_EQ(legate::legate_type_code_of<float>, legate::Type::Code::FLOAT32);
-  EXPECT_EQ(legate::legate_type_code_of<double>, legate::Type::Code::FLOAT64);
-  EXPECT_EQ(legate::legate_type_code_of<complex<float>>, legate::Type::Code::COMPLEX64);
-  EXPECT_EQ(legate::legate_type_code_of<complex<double>>, legate::Type::Code::COMPLEX128);
-  EXPECT_EQ(legate::legate_type_code_of<std::string>, legate::Type::Code::STRING);
+  EXPECT_EQ(legate::type_code_of<void>, legate::Type::Code::NIL);
+  EXPECT_EQ(legate::type_code_of<bool>, legate::Type::Code::BOOL);
+  EXPECT_EQ(legate::type_code_of<int8_t>, legate::Type::Code::INT8);
+  EXPECT_EQ(legate::type_code_of<int16_t>, legate::Type::Code::INT16);
+  EXPECT_EQ(legate::type_code_of<int32_t>, legate::Type::Code::INT32);
+  EXPECT_EQ(legate::type_code_of<int64_t>, legate::Type::Code::INT64);
+  EXPECT_EQ(legate::type_code_of<uint8_t>, legate::Type::Code::UINT8);
+  EXPECT_EQ(legate::type_code_of<uint16_t>, legate::Type::Code::UINT16);
+  EXPECT_EQ(legate::type_code_of<uint32_t>, legate::Type::Code::UINT32);
+  EXPECT_EQ(legate::type_code_of<uint64_t>, legate::Type::Code::UINT64);
+  EXPECT_EQ(legate::type_code_of<__half>, legate::Type::Code::FLOAT16);
+  EXPECT_EQ(legate::type_code_of<float>, legate::Type::Code::FLOAT32);
+  EXPECT_EQ(legate::type_code_of<double>, legate::Type::Code::FLOAT64);
+  EXPECT_EQ(legate::type_code_of<complex<float>>, legate::Type::Code::COMPLEX64);
+  EXPECT_EQ(legate::type_code_of<complex<double>>, legate::Type::Code::COMPLEX128);
+  EXPECT_EQ(legate::type_code_of<std::string>, legate::Type::Code::STRING);
 }
 
 TEST_F(TypeUnit, TypeOf)
 {
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::BOOL>, bool>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::INT8>, int8_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::INT16>, int16_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::INT32>, int32_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::INT64>, int64_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::UINT8>, uint8_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::UINT16>, uint16_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::UINT32>, uint32_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::UINT64>, uint64_t>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::FLOAT16>, __half>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::FLOAT32>, float>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::FLOAT64>, double>));
-  EXPECT_TRUE(
-    (std::is_same_v<legate::legate_type_of<legate::Type::Code::COMPLEX64>, complex<float>>));
-  EXPECT_TRUE(
-    (std::is_same_v<legate::legate_type_of<legate::Type::Code::COMPLEX128>, complex<double>>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::STRING>, std::string>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::BOOL>, bool>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::INT8>, int8_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::INT16>, int16_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::INT32>, int32_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::INT64>, int64_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::UINT8>, uint8_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::UINT16>, uint16_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::UINT32>, uint32_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::UINT64>, uint64_t>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::FLOAT16>, __half>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::FLOAT32>, float>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::FLOAT64>, double>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::COMPLEX64>, complex<float>>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::COMPLEX128>, complex<double>>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::STRING>, std::string>));
 
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::NIL>, void>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::FIXED_ARRAY>, void>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::STRUCT>, void>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::LIST>, void>));
-  EXPECT_TRUE((std::is_same_v<legate::legate_type_of<legate::Type::Code::BINARY>, void>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::NIL>, void>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::FIXED_ARRAY>, void>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::STRUCT>, void>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::LIST>, void>));
+  EXPECT_TRUE((std::is_same_v<legate::type_of<legate::Type::Code::BINARY>, void>));
 }
 
 TEST_F(TypeUnit, TypeUtils)

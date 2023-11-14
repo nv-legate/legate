@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "core/data/array.h"
 #include "core/data/logical_store.h"
+#include "core/data/physical_array.h"
 #include "core/data/shape.h"
 #include "core/type/type_info.h"
 #include "core/utilities/typedefs.h"
@@ -195,7 +195,7 @@ class LogicalArray {
    *
    * @return A physical array of the logical array
    */
-  [[nodiscard]] Array get_physical_array() const;
+  [[nodiscard]] PhysicalArray get_physical_array() const;
 
   /**
    * @brief Casts this array as a list array
@@ -234,13 +234,13 @@ class ListLogicalArray : public LogicalArray {
   /**
    * @brief Returns the sub-array for descriptors
    *
-   * @return Store
+   * @return Array
    */
   [[nodiscard]] LogicalArray descriptor() const;
   /**
    * @brief Returns the sub-array for variable size data
    *
-   * @return Store
+   * @return Array
    */
   [[nodiscard]] LogicalArray vardata() const;
 
@@ -255,13 +255,13 @@ class StringLogicalArray : public LogicalArray {
   /**
    * @brief Returns the sub-array for offsets
    *
-   * @return Store
+   * @return Array
    */
   [[nodiscard]] LogicalArray offsets() const;
   /**
    * @brief Returns the sub-array for characters
    *
-   * @return Store
+   * @return Array
    */
   [[nodiscard]] LogicalArray chars() const;
 

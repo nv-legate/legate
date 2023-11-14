@@ -33,7 +33,7 @@ static legate::Shape SHAPE_1D{5};
 
 static legate::Shape SHAPE_2D{3, 4};
 
-void increment_physical_store(const legate::Store& store, int32_t dim)
+void increment_physical_store(const legate::PhysicalStore& store, int32_t dim)
 {
   if (dim == 1) {
     auto shape = store.shape<1>();
@@ -46,7 +46,7 @@ void increment_physical_store(const legate::Store& store, int32_t dim)
   }
 }
 
-void check_physical_store(const legate::Store& store, int32_t dim, int64_t counter)
+void check_physical_store(const legate::PhysicalStore& store, int32_t dim, int64_t counter)
 {
   if (dim == 1) {
     auto shape = store.shape<1>();

@@ -24,23 +24,23 @@
 
 /**
  * @file
- * @brief Class definition for legate::Store
+ * @brief Class definition for legate::PhysicalStore
  */
 
 namespace legate::detail {
-class Store;
+class PhysicalStore;
 }  // namespace legate::detail
 
 namespace legate {
 
-class Array;
+class PhysicalArray;
 
 /**
  * @ingroup data
  *
  * @brief A multi-dimensional data container storing task data
  */
-class Store {
+class PhysicalStore {
  public:
   /**
    * @brief Returns a read-only accessor to the store for the entire domain.
@@ -322,7 +322,7 @@ class Store {
    *
    * @throw std::invalid_argument If the array is nullable or has sub-arrays
    */
-  Store(const Array& array);
+  PhysicalStore(const PhysicalArray& array);
 
  private:
   void check_accessor_dimension(int32_t dim) const;
@@ -350,15 +350,15 @@ class Store {
   void update_num_elements(size_t num_elements) const;
 
  public:
-  Store() noexcept;
+  PhysicalStore() noexcept;
 
-  explicit Store(std::shared_ptr<detail::Store> impl);
-  [[nodiscard]] const std::shared_ptr<detail::Store>& impl() const;
+  explicit PhysicalStore(std::shared_ptr<detail::PhysicalStore> impl);
+  [[nodiscard]] const std::shared_ptr<detail::PhysicalStore>& impl() const;
 
  private:
-  std::shared_ptr<detail::Store> impl_{};
+  std::shared_ptr<detail::PhysicalStore> impl_{};
 };
 
 }  // namespace legate
 
-#include "core/data/store.inl"
+#include "core/data/physical_store.inl"

@@ -13,7 +13,7 @@
 #pragma once
 
 #include "core/comm/communicator.h"
-#include "core/data/detail/array.h"
+#include "core/data/detail/physical_array.h"
 #include "core/data/scalar.h"
 #include "core/mapping/detail/machine.h"
 #include "core/task/detail/return.h"
@@ -28,9 +28,9 @@ class TaskContext {
  public:
   TaskContext(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions);
 
-  [[nodiscard]] std::vector<std::shared_ptr<Array>>& inputs();
-  [[nodiscard]] std::vector<std::shared_ptr<Array>>& outputs();
-  [[nodiscard]] std::vector<std::shared_ptr<Array>>& reductions();
+  [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& inputs();
+  [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& outputs();
+  [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& reductions();
   [[nodiscard]] const std::vector<legate::Scalar>& scalars();
   [[nodiscard]] std::vector<comm::Communicator>& communicators();
 
@@ -56,9 +56,9 @@ class TaskContext {
   const Legion::Task* task_{};
   const std::vector<Legion::PhysicalRegion>& regions_;
 
-  std::vector<std::shared_ptr<Array>> inputs_{}, outputs_{}, reductions_{};
-  std::vector<std::shared_ptr<Store>> unbound_stores_{};
-  std::vector<std::shared_ptr<Store>> scalar_stores_{};
+  std::vector<std::shared_ptr<PhysicalArray>> inputs_{}, outputs_{}, reductions_{};
+  std::vector<std::shared_ptr<PhysicalStore>> unbound_stores_{};
+  std::vector<std::shared_ptr<PhysicalStore>> scalar_stores_{};
   std::vector<legate::Scalar> scalars_{};
   std::vector<comm::Communicator> comms_{};
   bool can_raise_exception_{};

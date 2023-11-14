@@ -22,8 +22,8 @@
 // legion.h has to go before these
 #include "core/data/allocator.h"
 #include "core/data/logical_store.h"
+#include "core/data/physical_store.h"
 #include "core/data/scalar.h"
-#include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/mapping/mapping.h"
 #include "core/mapping/operation.h"
@@ -39,4 +39,5 @@
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/typedefs.h"
+
 #include "legate_defines.h"

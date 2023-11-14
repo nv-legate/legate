@@ -127,19 +127,19 @@ list(APPEND legate_core_SOURCES
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
   src/core/data/allocator.cc
-  src/core/data/array.cc
   src/core/data/logical_array.cc
   src/core/data/logical_store.cc
   src/core/data/scalar.cc
   src/core/data/shape.cc
-  src/core/data/store.cc
-  src/core/data/detail/array.cc
+  src/core/data/physical_array.cc
+  src/core/data/physical_store.cc
   src/core/data/detail/array_tasks.cc
   src/core/data/detail/logical_array.cc
   src/core/data/detail/logical_region_field.cc
   src/core/data/detail/logical_store.cc
   src/core/data/detail/scalar.cc
-  src/core/data/detail/store.cc
+  src/core/data/detail/physical_array.cc
+  src/core/data/detail/physical_store.cc
   src/core/data/detail/transform.cc
   src/core/mapping/array.cc
   src/core/mapping/machine.cc
@@ -402,14 +402,14 @@ if (legate_core_BUILD_DOCS)
       src/core/task/exception.h
       src/core/cuda/stream_pool.h
       # data
-      src/core/data/array.h
-      src/core/data/store.h
+      src/core/data/logical_array.h
+      src/core/data/logical_store.h
+      src/core/data/physical_array.h
+      src/core/data/physical_store.h
       src/core/data/scalar.h
       src/core/data/buffer.h
       src/core/utilities/span.h
       src/core/data/allocator.h
-      src/core/data/logical_array.h
-      src/core/data/logical_store.h
       # runtime
       src/core/runtime/library.h
       src/core/runtime/runtime.h
@@ -488,20 +488,20 @@ install(
 
 install(
   FILES src/core/data/allocator.h
-        src/core/data/array.h
-        src/core/data/array.inl
         src/core/data/buffer.h
         src/core/data/inline_allocation.h
         src/core/data/logical_array.h
         src/core/data/logical_array.inl
         src/core/data/logical_store.h
         src/core/data/logical_store.inl
+        src/core/data/physical_array.h
+        src/core/data/physical_array.inl
+        src/core/data/physical_store.h
+        src/core/data/physical_store.inl
         src/core/data/scalar.h
         src/core/data/scalar.inl
         src/core/data/shape.h
         src/core/data/slice.h
-        src/core/data/store.h
-        src/core/data/store.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/data)
 
 install(

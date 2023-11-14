@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/data/array.h"
+#include "core/data/physical_array.h"
 #include "core/utilities/span.h"
 #include "core/utilities/typedefs.h"
 

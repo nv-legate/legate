@@ -13,7 +13,7 @@
 #pragma once
 
 // Useful for IDEs
-#include "core/data/store.h"
+#include "core/data/physical_store.h"
 
 namespace legate::detail::store_detail {
 
@@ -44,7 +44,7 @@ struct trans_accessor_fn {
 namespace legate {
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRO<T, DIM> Store::read_accessor() const
+AccessorRO<T, DIM> PhysicalStore::read_accessor() const
 {
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
@@ -60,7 +60,7 @@ AccessorRO<T, DIM> Store::read_accessor() const
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorWO<T, DIM> Store::write_accessor() const
+AccessorWO<T, DIM> PhysicalStore::write_accessor() const
 {
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
@@ -76,7 +76,7 @@ AccessorWO<T, DIM> Store::write_accessor() const
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRW<T, DIM> Store::read_write_accessor() const
+AccessorRW<T, DIM> PhysicalStore::read_write_accessor() const
 {
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
@@ -92,7 +92,7 @@ AccessorRW<T, DIM> Store::read_write_accessor() const
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
-AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor() const
+AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor() const
 {
   using T = typename OP::LHS;
   if constexpr (VALIDATE_TYPE) {
@@ -109,7 +109,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor() const
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRO<T, DIM> Store::read_accessor(const Rect<DIM>& bounds) const
+AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
 {
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
@@ -125,7 +125,7 @@ AccessorRO<T, DIM> Store::read_accessor(const Rect<DIM>& bounds) const
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorWO<T, DIM> Store::write_accessor(const Rect<DIM>& bounds) const
+AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
 {
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
@@ -141,7 +141,7 @@ AccessorWO<T, DIM> Store::write_accessor(const Rect<DIM>& bounds) const
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
-AccessorRW<T, DIM> Store::read_write_accessor(const Rect<DIM>& bounds) const
+AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) const
 {
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
@@ -157,7 +157,7 @@ AccessorRW<T, DIM> Store::read_write_accessor(const Rect<DIM>& bounds) const
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
-AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Rect<DIM>& bounds) const
+AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& bounds) const
 {
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
@@ -173,8 +173,8 @@ AccessorRD<OP, EXCLUSIVE, DIM> Store::reduce_accessor(const Rect<DIM>& bounds) c
 }
 
 template <typename T, int32_t DIM>
-Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents,
-                                           bool bind_buffer /*= false*/) const
+Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
+                                                   bool bind_buffer /*= false*/) const
 {
   check_valid_binding(bind_buffer);
   check_buffer_dimension(DIM);
@@ -191,13 +191,13 @@ Buffer<T, DIM> Store::create_output_buffer(const Point<DIM>& extents,
 }
 
 template <typename TYPE_CODE>
-inline TYPE_CODE Store::code() const
+inline TYPE_CODE PhysicalStore::code() const
 {
   return static_cast<TYPE_CODE>(type().code());
 }
 
 template <int32_t DIM>
-Rect<DIM> Store::shape() const
+Rect<DIM> PhysicalStore::shape() const
 {
   check_shape_dimension(DIM);
   if (dim() > 0) return domain().bounds<DIM, coord_t>();
@@ -207,7 +207,7 @@ Rect<DIM> Store::shape() const
 }
 
 template <typename VAL>
-VAL Store::scalar() const
+VAL PhysicalStore::scalar() const
 {
   if (!is_future()) {
     throw std::invalid_argument("Scalars can be retrieved only from scalar stores");
@@ -218,7 +218,7 @@ VAL Store::scalar() const
 }
 
 template <typename T, int32_t DIM>
-void Store::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
+void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 {
   check_valid_binding(true);
   check_buffer_dimension(DIM);
@@ -234,9 +234,9 @@ void Store::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 }
 
 template <typename T>
-void Store::check_accessor_type() const
+void PhysicalStore::check_accessor_type() const
 {
-  auto in_type = legate_type_code_of<T>;
+  auto in_type = type_code_of<T>;
   if (in_type == this->code()) return;
   // Test exact match for primitive types
   if (in_type != Type::Code::NIL) {
@@ -255,7 +255,7 @@ void Store::check_accessor_type() const
 }
 
 template <typename ACC, int32_t DIM>
-ACC Store::create_field_accessor(const Rect<DIM>& bounds) const
+ACC PhysicalStore::create_field_accessor(const Rect<DIM>& bounds) const
 {
   Legion::PhysicalRegion pr;
   Legion::FieldID fid;
@@ -274,7 +274,7 @@ ACC Store::create_field_accessor(const Rect<DIM>& bounds) const
 }
 
 template <typename ACC, int32_t DIM>
-ACC Store::create_reduction_accessor(const Rect<DIM>& bounds) const
+ACC PhysicalStore::create_reduction_accessor(const Rect<DIM>& bounds) const
 {
   Legion::PhysicalRegion pr;
   Legion::FieldID fid;
@@ -293,8 +293,11 @@ ACC Store::create_reduction_accessor(const Rect<DIM>& bounds) const
   return {pr, fid, get_redop_id(), bounds};
 }
 
-inline Store::Store(std::shared_ptr<detail::Store> impl) : impl_{std::move(impl)} {}
+inline PhysicalStore::PhysicalStore(std::shared_ptr<detail::PhysicalStore> impl)
+  : impl_{std::move(impl)}
+{
+}
 
-inline const std::shared_ptr<detail::Store>& Store::impl() const { return impl_; }
+inline const std::shared_ptr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }
 
 }  // namespace legate
