@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <filesystem>
-#include <fstream>
+#include "core/utilities/span.h"
 
 #include "legate_library.h"
 #include "legateio.h"
 #include "util.h"
 
-#include "core/utilities/span.h"
+#include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -35,8 +35,12 @@ void write_header(std::ofstream& out,
   // Dump the type code, the array's shape and the tile shape to the header
   out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
   out.write(reinterpret_cast<const char*>(&dim), sizeof(int32_t));
-  for (auto& v : shape) out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
-  for (auto& v : tile_shape) out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  for (auto& v : shape) {
+    out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  }
+  for (auto& v : tile_shape) {
+    out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  }
 }
 
 }  // namespace

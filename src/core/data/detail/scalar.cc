@@ -34,7 +34,9 @@ void Scalar::clear_data()
 Scalar::Scalar(std::shared_ptr<Type> type, const void* data, bool copy)
   : own_{copy}, type_{std::move(type)}, data_{data}
 {
-  if (own_) data_ = copy_data(data, size());
+  if (own_) {
+    data_ = copy_data(data, size());
+  }
 }
 
 Scalar::Scalar(const std::string& value) : own_{true}, type_{string_type()}

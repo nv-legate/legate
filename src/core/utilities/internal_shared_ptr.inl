@@ -50,13 +50,17 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_ref() no
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_deref() noexcept
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(strong_refs_ > 0);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(strong_refs_ > 0);
+  }
   return --strong_refs_;
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_deref() noexcept
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(user_refs_ > 0);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(user_refs_ > 0);
+  }
   return --user_refs_;
 }
 
@@ -100,7 +104,9 @@ class SeparateControlBlock final : public ControlBlockBase {
   {
     // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
     static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(ptr_);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(ptr_);
+    }
     deleter_()(ptr_);
   }
 
@@ -259,7 +265,9 @@ template <typename T>
 void InternalSharedPtr<T>::strong_dereference_() noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(get());
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(get());
+    }
     ctrl_->strong_deref();
     maybe_destroy_();
   }
@@ -281,7 +289,9 @@ template <typename T>
 void InternalSharedPtr<T>::user_dereference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(get());
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(get());
+    }
     ctrl_->user_deref();
     maybe_destroy_();
   }

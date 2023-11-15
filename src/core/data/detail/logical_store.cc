@@ -40,7 +40,9 @@ Storage::Storage(int32_t dim, std::shared_ptr<Type> type)
     type_{std::move(type)},
     offsets_{legate::full(dim_, size_t{0})}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Create " << to_string();
+  }
 }
 
 Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar)
@@ -50,8 +52,12 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize
     type_{std::move(type)},
     offsets_{legate::full(dim_, size_t{0})}
 {
-  if (optimize_scalar && extents_.volume() == 1) kind_ = Kind::FUTURE;
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
+  if (optimize_scalar && extents_.volume() == 1) {
+    kind_ = Kind::FUTURE;
+  }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Create " << to_string();
+  }
 }
 
 Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future)
@@ -63,7 +69,9 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
     future_{std::make_unique<Legion::Future>(future)},
     offsets_{legate::full(dim_, size_t{0})}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Create " << to_string();
+  }
 }
 
 Storage::Storage(Shape&& extents,
@@ -80,7 +88,9 @@ Storage::Storage(Shape&& extents,
     color_{std::move(color)},
     offsets_{std::move(offsets)}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { log_legate().debug() << "Create " << to_string(); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Create " << to_string();
+  }
 }
 
 Storage::~Storage()
@@ -96,14 +106,18 @@ const Shape& Storage::extents() const
 {
   if (unbound_) {
     Runtime::get_runtime()->flush_scheduling_window();
-    if (unbound_) throw std::invalid_argument{"Illegal to access an uninitialized unbound store"};
+    if (unbound_) {
+      throw std::invalid_argument{"Illegal to access an uninitialized unbound store"};
+    }
   }
   return extents_;
 }
 
 const Shape& Storage::offsets() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!unbound_);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!unbound_);
+  }
   return offsets_;
 }
 
@@ -112,11 +126,17 @@ bool Storage::overlaps(const std::shared_ptr<Storage>& other) const
   const auto* lhs = this;
   const auto* rhs = other.get();
 
-  if (lhs == rhs) return true;
+  if (lhs == rhs) {
+    return true;
+  }
 
-  if (lhs->get_root() != rhs->get_root()) return false;
+  if (lhs->get_root() != rhs->get_root()) {
+    return false;
+  }
 
-  if (lhs->volume() == 0 || rhs->volume() == 0) return false;
+  if (lhs->volume() == 0 || rhs->volume() == 0) {
+    return false;
+  }
 
   for (int32_t idx = 0; idx < dim_; ++idx) {
     auto loff = lhs->offsets_[idx];
@@ -124,7 +144,9 @@ bool Storage::overlaps(const std::shared_ptr<Storage>& other) const
     auto roff = rhs->offsets_[idx];
     auto rext = rhs->extents_[idx];
 
-    if (loff <= roff ? roff < loff + lext : loff < roff + rext) { continue; }
+    if (loff <= roff ? roff < loff + lext : loff < roff + rext) {
+      continue;
+    }
     return false;
   }
   return true;
@@ -132,7 +154,9 @@ bool Storage::overlaps(const std::shared_ptr<Storage>& other) const
 
 std::shared_ptr<Storage> Storage::slice(Shape tile_shape, const Shape& offsets)
 {
-  if (Kind::FUTURE == kind_) return shared_from_this();
+  if (Kind::FUTURE == kind_) {
+    return shared_from_this();
+  }
 
   const auto root  = get_root();
   const auto shape = root->extents();
@@ -171,12 +195,18 @@ std::shared_ptr<Storage> Storage::get_root()
 
 std::shared_ptr<LogicalRegionField> Storage::get_region_field()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(Kind::REGION_FIELD == kind_);
-  if (region_field_ != nullptr) return region_field_;
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(Kind::REGION_FIELD == kind_);
+  }
+  if (region_field_ != nullptr) {
+    return region_field_;
+  }
 
   if (nullptr == parent_) {
     region_field_ = Runtime::get_runtime()->create_region_field(extents_, type_->size());
-    if (destroyed_out_of_order_) region_field_->allow_out_of_order_destruction();
+    if (destroyed_out_of_order_) {
+      region_field_->allow_out_of_order_destruction();
+    }
   } else {
     region_field_ = parent_->get_child_data(color_);
   }
@@ -185,7 +215,9 @@ std::shared_ptr<LogicalRegionField> Storage::get_region_field()
 
 Legion::Future Storage::get_future() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::FUTURE == kind_); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(Kind::FUTURE == kind_);
+  }
   return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
@@ -196,7 +228,9 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
 
   unbound_      = false;
   region_field_ = std::move(region_field);
-  if (destroyed_out_of_order_) region_field_->allow_out_of_order_destruction();
+  if (destroyed_out_of_order_) {
+    region_field_->allow_out_of_order_destruction();
+  }
 
   // TODO: this is a blocking operation
   auto domain = region_field_->domain();
@@ -204,7 +238,9 @@ void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_fiel
   auto hi     = domain.hi();
 
   extents_.data().resize(lo.dim);
-  for (int32_t idx = 0; idx < lo.dim; ++idx) extents_[idx] = hi[idx] - lo[idx] + 1;
+  for (int32_t idx = 0; idx < lo.dim; ++idx) {
+    extents_[idx] = hi[idx] - lo[idx] + 1;
+  }
 }
 
 void Storage::set_future(Legion::Future future)
@@ -214,7 +250,9 @@ void Storage::set_future(Legion::Future future)
 
 RegionField Storage::map()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(Kind::REGION_FIELD == kind_); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(Kind::REGION_FIELD == kind_);
+  }
   auto region_field = get_region_field();
   auto mapped       = region_field->map();
   // Set the right subregion so the physical store can see the right domain
@@ -233,7 +271,9 @@ void Storage::allow_out_of_order_destruction()
     get_root()->allow_out_of_order_destruction();
   } else if (!destroyed_out_of_order_) {
     destroyed_out_of_order_ = true;
-    if (region_field_) region_field_->allow_out_of_order_destruction();
+    if (region_field_) {
+      region_field_->allow_out_of_order_destruction();
+    }
   }
 }
 
@@ -251,7 +291,9 @@ Partition* Storage::find_key_partition(const mapping::detail::Machine& machine,
       key_partition_->satisfies_restrictions(restrictions)) {
     return key_partition_.get();
   }
-  if (parent_) return parent_->find_key_partition(machine, restrictions);
+  if (parent_) {
+    return parent_->find_key_partition(machine, restrictions);
+  }
   return {};
 }
 
@@ -267,7 +309,9 @@ void Storage::reset_key_partition() noexcept { key_partition_.reset(); }
 std::shared_ptr<StoragePartition> Storage::create_partition(std::shared_ptr<Partition> partition,
                                                             std::optional<bool> complete)
 {
-  if (!complete.has_value()) complete = partition->is_complete_for(this);
+  if (!complete.has_value()) {
+    complete = partition->is_complete_for(this);
+  }
   return std::make_shared<StoragePartition>(
     shared_from_this(), std::move(partition), complete.value());
 }
@@ -360,7 +404,9 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
     transform_{std::make_shared<TransformStack>()}
 {
   assert_fixed_storage_size(storage_);
-  if (!unbound()) extents_ = storage_->extents();
+  if (!unbound()) {
+    extents_ = storage_->extents();
+  }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(transform_ != nullptr);
 
@@ -390,7 +436,9 @@ const Shape& LogicalStore::extents() const
 {
   if (unbound()) {
     Runtime::get_runtime()->flush_scheduling_window();
-    if (unbound()) throw std::invalid_argument{"Illegal to access an uninitialized unbound store"};
+    if (unbound()) {
+      throw std::invalid_argument{"Illegal to access an uninitialized unbound store"};
+    }
   }
   return extents_;
 }
@@ -424,14 +472,18 @@ Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
 
 void LogicalStore::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!has_scalar_storage()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!has_scalar_storage());
+  }
   storage_->set_region_field(std::move(region_field));
   extents_ = storage_->extents();
 }
 
 void LogicalStore::set_future(Legion::Future future)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(has_scalar_storage());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(has_scalar_storage());
+  }
   storage_->set_future(std::move(future));
 }
 
@@ -498,8 +550,12 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
     int64_t start = slice.start.value_or(0);
     int64_t stop  = slice.stop.value_or(extent);
 
-    if (start < 0) start += extent;
-    if (stop < 0) stop += extent;
+    if (start < 0) {
+      start += extent;
+    }
+    if (stop < 0) {
+      stop += extent;
+    }
 
     return std::make_pair<size_t, size_t>(std::max(int64_t{0}, start), std::max(int64_t{0}, stop));
   };
@@ -515,7 +571,9 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
 
   exts[dim] = stop - start;
 
-  if (exts[dim] == extents()[dim]) return shared_from_this();
+  if (exts[dim] == extents()[dim]) {
+    return shared_from_this();
+  }
 
   auto transform =
     (start == 0) ? transform_ : transform_->push(std::make_unique<Shift>(dim, -start));
@@ -552,7 +610,9 @@ std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axe
 
   auto old_extents = extents();
   auto new_extents = Shape();
-  for (auto&& ax_i : axes) new_extents.append_inplace(old_extents[ax_i]);
+  for (auto&& ax_i : axes) {
+    new_extents.append_inplace(old_extents[ax_i]);
+  }
 
   auto transform = transform_->push(std::make_unique<Transpose>(std::move(axes)));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
@@ -573,7 +633,9 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector
 
   auto old_extents = extents();
   int64_t volume   = 1;
-  for (auto&& size : sizes) volume *= size;
+  for (auto&& size : sizes) {
+    volume *= size;
+  }
 
   if (static_cast<int64_t>(old_extents[dim]) != volume) {
     throw std::invalid_argument{"Dimension of size " + std::to_string(old_extents[dim]) +
@@ -583,8 +645,12 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector
 
   auto new_extents = Shape{};
 
-  for (int i = 0; i < dim; i++) { new_extents.append_inplace(old_extents[i]); }
-  for (auto&& size : sizes) { new_extents.append_inplace(size); }
+  for (int i = 0; i < dim; i++) {
+    new_extents.append_inplace(old_extents[i]);
+  }
+  for (auto&& size : sizes) {
+    new_extents.append_inplace(size);
+  }
   for (auto i = static_cast<uint32_t>(dim + 1); i < old_extents.size(); i++) {
     new_extents.append_inplace(old_extents[i]);
   }
@@ -595,8 +661,12 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector
 
 std::shared_ptr<PhysicalStore> LogicalStore::get_physical_store()
 {
-  if (unbound()) throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
-  if (mapped_) return mapped_;
+  if (unbound()) {
+    throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
+  }
+  if (mapped_) {
+    return mapped_;
+  }
   if (storage_->kind() == Storage::Kind::FUTURE) {
     // TODO: future wrappers from inline mappings are read-only for now
     auto domain = to_domain(storage_->extents());
@@ -606,7 +676,9 @@ std::shared_ptr<PhysicalStore> LogicalStore::get_physical_store()
     return std::make_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(storage_->kind() == Storage::Kind::REGION_FIELD); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(storage_->kind() == Storage::Kind::REGION_FIELD);
+  }
   auto region_field = storage_->map();
   mapped_ = std::make_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
   return mapped_;
@@ -614,7 +686,9 @@ std::shared_ptr<PhysicalStore> LogicalStore::get_physical_store()
 
 void LogicalStore::detach()
 {
-  if (transformed()) throw std::invalid_argument{"Manual detach must be called on the root store"};
+  if (transformed()) {
+    throw std::invalid_argument{"Manual detach must be called on the root store"};
+  }
   if (has_scalar_storage() || unbound()) {
     throw std::invalid_argument{"Only stores created with share=true can be manually detached"};
   }
@@ -644,13 +718,17 @@ Legion::ProjectionID LogicalStore::compute_projection(
   }
 
   if (transform_->identity()) {
-    if (launch_ndim != dim()) return Runtime::get_runtime()->get_delinearizing_projection();
+    if (launch_ndim != dim()) {
+      return Runtime::get_runtime()->get_delinearizing_projection();
+    }
     return 0;
   }
 
   const auto ndim = dim();
   // TODO: We can't currently mix affine projections with delinearizing projections
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(ndim == launch_ndim);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(ndim == launch_ndim);
+  }
   return Runtime::get_runtime()->get_projection(
     ndim, transform_->invert(proj::create_symbolic_point(ndim)));
 }
@@ -665,7 +743,9 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
     return key_partition_;
   }
 
-  if (has_scalar_storage() || extents_.empty() || volume() == 0) return create_no_partition();
+  if (has_scalar_storage() || extents_.empty() || volume() == 0) {
+    return create_no_partition();
+  }
 
   Partition* storage_part{};
 
@@ -687,7 +767,9 @@ std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
     }
   } else {
     store_part = transform_->convert(storage_part);
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(store_part);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(store_part);
+    }
   }
   return store_part;
 }
@@ -724,7 +806,9 @@ void LogicalStore::reset_key_partition()
 std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
   std::shared_ptr<Partition> partition, std::optional<bool> complete)
 {
-  if (unbound()) throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
+  if (unbound()) {
+    throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
+  }
   auto storage_partition =
     storage_->create_partition(transform_->invert(partition.get()), complete);
   return std::make_shared<LogicalStorePartition>(
@@ -747,7 +831,9 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
                                                           int64_t redop)
 {
   if (has_scalar_storage()) {
-    if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) { privilege = LEGION_READ_WRITE; }
+    if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
+      privilege = LEGION_READ_WRITE;
+    }
     auto read_only   = privilege == LEGION_READ_ONLY;
     auto has_storage = get_future().valid() && privilege != LEGION_REDUCE;
 
@@ -777,7 +863,9 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(const Domain& launch_domain,
                                                                     Legion::PrivilegeMode privilege)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(key_partition_ != nullptr);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(key_partition_ != nullptr);
+  }
   auto store_partition = create_partition(key_partition_);
   auto proj_info       = store_partition->create_projection_info(launch_domain);
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));
@@ -793,7 +881,9 @@ std::string LogicalStore::to_string() const
   } else {
     ss << extents();
   }
-  if (!transform_->identity()) ss << ", transform: " << *transform_ << ", ";
+  if (!transform_->identity()) {
+    ss << ", transform: " << *transform_ << ", ";
+  }
   ss << "storage: " << storage_->id() << "}";
   return std::move(ss).str();
 }
@@ -806,9 +896,13 @@ std::string LogicalStore::to_string() const
 std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
   const Domain& launch_domain, std::optional<proj::SymbolicFunctor> proj_fn)
 {
-  if (store_->has_scalar_storage()) return std::make_unique<ProjectionInfo>();
+  if (store_->has_scalar_storage()) {
+    return std::make_unique<ProjectionInfo>();
+  }
 
-  if (!partition_->has_launch_domain()) return std::make_unique<ProjectionInfo>();
+  if (!partition_->has_launch_domain()) {
+    return std::make_unique<ProjectionInfo>();
+  }
 
   // We're about to create a legion partition for this store, so the store should have its region
   // created.

@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/mapping/detail/mapping.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace unit {
 
@@ -131,14 +132,15 @@ TEST_F(Mapping, InstanceMappingPolicy)
   {
     auto judge_subsumes = [](auto policy_a, auto policy_b) {
       auto expect_result = true;
-      if (!(policy_a.target == policy_b.target))
+      if (!(policy_a.target == policy_b.target)) {
         expect_result = false;
-      else if (!(policy_a.layout == policy_b.layout))
+      } else if (!(policy_a.layout == policy_b.layout)) {
         expect_result = false;
-      else if (!(policy_a.ordering == policy_b.ordering))
+      } else if (!(policy_a.ordering == policy_b.ordering)) {
         expect_result = false;
-      else if (!(policy_a.exact == policy_b.exact) && !policy_a.exact)
+      } else if (!(policy_a.exact == policy_b.exact) && !policy_a.exact) {
         expect_result = false;
+      }
 
       EXPECT_EQ(policy_a.subsumes(policy_b), expect_result);
     };

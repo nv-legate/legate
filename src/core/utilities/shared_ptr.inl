@@ -44,7 +44,9 @@ inline SharedPtr<T>::SharedPtr(move_tag,
 {
   // Only update refcount if we are constructing from a bare InternalSharedPointer, since
   // the previous owning SharedPtr gives ownership entirely
-  if (from_internal_ptr) reference_();
+  if (from_internal_ptr) {
+    reference_();
+  }
 }
 
 template <typename T>

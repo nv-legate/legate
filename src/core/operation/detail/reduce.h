@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "core/operation/detail/operation.h"
-
 #include "core/mapping/detail/machine.h"
+#include "core/operation/detail/operation.h"
 
 #include <memory>
 #include <string>

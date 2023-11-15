@@ -55,7 +55,9 @@ Legion::ReductionOpID Library::get_reduction_op_id(int64_t local_redop_id) const
 
 Legion::ProjectionID Library::get_projection_id(int64_t local_proj_id) const
 {
-  if (local_proj_id == 0) return 0;
+  if (local_proj_id == 0) {
+    return 0;
+  }
   assert(proj_scope_.valid());
   return static_cast<Legion::ProjectionID>(proj_scope_.translate(local_proj_id));
 }
@@ -80,7 +82,9 @@ int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
 
 int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) const
 {
-  if (proj_id == 0) return 0;
+  if (proj_id == 0) {
+    return 0;
+  }
   assert(proj_scope_.valid());
   return proj_scope_.invert(proj_id);
 }
@@ -134,7 +138,9 @@ void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
 
   auto* library       = Runtime::get_runtime()->find_library(library_name, false /*can_fail*/);
   auto* legion_mapper = library->get_legion_mapper();
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(legion_mapper != nullptr); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(legion_mapper != nullptr);
+  }
   Legion::Runtime::get_runtime()->add_mapper(library->get_mapper_id(), legion_mapper);
 }
 

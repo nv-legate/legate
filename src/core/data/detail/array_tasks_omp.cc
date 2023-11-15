@@ -17,7 +17,9 @@ namespace legate::detail {
 
 /*static*/ void FixupRanges::omp_variant(legate::TaskContext context)
 {
-  if (context.get_task_index()[0] == 0) return;
+  if (context.get_task_index()[0] == 0) {
+    return;
+  }
 
   auto outputs = context.outputs();
   // TODO: We need to extend this to nested cases
@@ -26,7 +28,9 @@ namespace legate::detail {
 
     auto desc       = list_arr.descriptor();
     auto desc_shape = desc.shape<1>();
-    if (desc_shape.empty()) continue;
+    if (desc_shape.empty()) {
+      continue;
+    }
 
     auto vardata_lo = list_arr.vardata().shape<1>().lo;
     auto desc_acc   = desc.data().read_write_accessor<Rect<1>, 1>();
@@ -49,7 +53,9 @@ namespace legate::detail {
   auto shape = offsets.shape<1>();
   assert(shape == ranges.shape<1>());
 
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   auto vardata_shape = vardata.shape<1>();
   auto vardata_lo    = vardata_shape.lo[0];
@@ -73,7 +79,9 @@ namespace legate::detail {
   auto shape = ranges.shape<1>();
   assert(shape == offsets.shape<1>());
 
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
   auto offsets_acc = offsets.write_accessor<int32_t, 1>();

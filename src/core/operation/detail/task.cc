@@ -95,19 +95,25 @@ void Task::launch_task(Strategy* p_strategy)
   }
 
   // Add by-value scalars
-  for (auto& scalar : scalars_) launcher.add_scalar(std::move(scalar));
+  for (auto& scalar : scalars_) {
+    launcher.add_scalar(std::move(scalar));
+  }
 
   // Add communicators
   if (launch_domain.is_valid()) {
     for (auto* factory : communicator_factories_) {
       auto target = machine_.preferred_target;
 
-      if (!factory->is_supported_target(target)) continue;
+      if (!factory->is_supported_target(target)) {
+        continue;
+      }
       auto& processor_range = machine_.processor_range();
       auto communicator     = factory->find_or_create(target, processor_range, launch_domain);
 
       launcher.add_communicator(communicator);
-      if (factory->needs_barrier()) launcher.set_insert_barrier(true);
+      if (factory->needs_barrier()) {
+        launcher.set_insert_barrier(true);
+      }
     }
   }
 
@@ -134,7 +140,9 @@ void Task::demux_scalar_stores(const Legion::Future& result)
 
   auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
                static_cast<size_t>(can_throw_exception_);
-  if (0 == total) return;
+  if (0 == total) {
+    return;
+  }
   if (1 == total) {
     if (1 == num_scalar_outs) {
       scalar_outputs_.front()->set_future(result);
@@ -155,8 +163,9 @@ void Task::demux_scalar_stores(const Legion::Future& result)
     for (auto& [store, _] : scalar_reductions_) {
       store->set_future(runtime->extract_scalar(result, idx++));
     }
-    if (can_throw_exception_)
+    if (can_throw_exception_) {
       runtime->record_pending_exception(runtime->extract_scalar(result, idx));
+    }
   }
 }
 
@@ -169,7 +178,9 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   auto num_unbound_outs = unbound_outputs_.size();
 
   auto total = num_scalar_reds + num_unbound_outs + static_cast<size_t>(can_throw_exception_);
-  if (0 == total) return;
+  if (0 == total) {
+    return;
+  }
 
   const auto runtime = detail::Runtime::get_runtime();
   if (1 == total) {
@@ -232,12 +243,16 @@ const Variable* AutoTask::add_reduction(std::shared_ptr<LogicalArray> array, int
 
 void AutoTask::add_input(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol)
 {
-  if (array->unbound()) throw std::invalid_argument{"Unbound arrays cannot be used as input"};
+  if (array->unbound()) {
+    throw std::invalid_argument{"Unbound arrays cannot be used as input"};
+  }
 
   auto& arg = inputs_.emplace_back(std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
-  for (auto& [store, symb] : arg.mapping) record_partition(symb, store);
+  for (auto& [store, symb] : arg.mapping) {
+    record_partition(symb, store);
+  }
 }
 
 void AutoTask::add_output(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol)
@@ -250,14 +265,18 @@ void AutoTask::add_output(std::shared_ptr<LogicalArray> array, const Variable* p
   auto& arg = outputs_.emplace_back(std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
-  for (auto& [store, symb] : arg.mapping) record_partition(symb, store);
+  for (auto& [store, symb] : arg.mapping) {
+    record_partition(symb, store);
+  }
 }
 
 void AutoTask::add_reduction(std::shared_ptr<LogicalArray> array,
                              int32_t redop,
                              const Variable* partition_symbol)
 {
-  if (array->unbound()) throw std::invalid_argument{"Unbound arrays cannot be used for reductions"};
+  if (array->unbound()) {
+    throw std::invalid_argument{"Unbound arrays cannot be used for reductions"};
+  }
 
   if (array->type()->variable_size()) {
     throw std::invalid_argument{"List/string arrays cannot be used for reduction"};
@@ -270,7 +289,9 @@ void AutoTask::add_reduction(std::shared_ptr<LogicalArray> array,
   auto& arg = reductions_.emplace_back(std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
-  for (auto& [store, symb] : arg.mapping) record_partition(symb, store);
+  for (auto& [store, symb] : arg.mapping) {
+    record_partition(symb, store);
+  }
 }
 
 const Variable* AutoTask::find_or_declare_partition(const std::shared_ptr<LogicalArray>& array)
@@ -285,36 +306,50 @@ void AutoTask::add_constraint(std::shared_ptr<Constraint> constraint)
 
 void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 {
-  for (auto& constraint : constraints_) solver.add_constraint(std::move(constraint));
+  for (auto& constraint : constraints_) {
+    solver.add_constraint(std::move(constraint));
+  }
   for (auto& [_, mapping] : outputs_) {
     for (auto& [store, symb] : mapping) {
       solver.add_partition_symbol(symb, IsOutput::Y);
-      if (store->has_scalar_storage()) solver.add_constraint(broadcast(symb));
+      if (store->has_scalar_storage()) {
+        solver.add_constraint(broadcast(symb));
+      }
     }
   }
   for (auto& [_, mapping] : inputs_) {
-    for (auto& [_, symb] : mapping) solver.add_partition_symbol(symb, IsOutput::N);
+    for (auto& [_, symb] : mapping) {
+      solver.add_partition_symbol(symb, IsOutput::N);
+    }
   }
   for (auto& [_, mapping] : reductions_) {
-    for (auto& [_, symb] : mapping) solver.add_partition_symbol(symb, IsOutput::N);
+    for (auto& [_, symb] : mapping) {
+      solver.add_partition_symbol(symb, IsOutput::N);
+    }
   }
 }
 
 void AutoTask::validate()
 {
-  for (auto& constraint : constraints_) constraint->validate();
+  for (auto& constraint : constraints_) {
+    constraint->validate();
+  }
 }
 
 void AutoTask::launch(Strategy* p_strategy)
 {
   launch_task(p_strategy);
-  if (!arrays_to_fixup_.empty()) fixup_ranges(*p_strategy);
+  if (!arrays_to_fixup_.empty()) {
+    fixup_ranges(*p_strategy);
+  }
 }
 
 void AutoTask::fixup_ranges(Strategy& strategy)
 {
   auto launch_domain = strategy.launch_domain(this);
-  if (!launch_domain.is_valid()) return;
+  if (!launch_domain.is_valid()) {
+    return;
+  }
 
   auto* core_lib = detail::Runtime::get_runtime()->core_library();
   auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES};
@@ -337,12 +372,16 @@ ManualTask::ManualTask(const Library* library,
   : Task{library, task_id, unique_id, std::move(machine)},
     strategy_(std::make_unique<detail::Strategy>())
 {
-  if (!launch_shape.empty()) strategy_->set_launch_shape(this, launch_shape);
+  if (!launch_shape.empty()) {
+    strategy_->set_launch_shape(this, launch_shape);
+  }
 }
 
 void ManualTask::add_input(std::shared_ptr<LogicalStore> store)
 {
-  if (store->unbound()) throw std::invalid_argument{"Unbound stores cannot be used as input"};
+  if (store->unbound()) {
+    throw std::invalid_argument{"Unbound stores cannot be used as input"};
+  }
 
   add_store(inputs_, std::move(store), create_no_partition());
 }
@@ -384,7 +423,9 @@ void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_
 
 void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redop)
 {
-  if (store->unbound()) throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
+  if (store->unbound()) {
+    throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
+  }
 
   auto legion_redop_id = store->type()->find_reduction_operator(redop);
   if (store->has_scalar_storage()) {

@@ -43,13 +43,17 @@ FixedArrayType Type::as_fixed_array_type() const
 
 StructType Type::as_struct_type() const
 {
-  if (code() != Code::STRUCT) throw std::invalid_argument{"Type is not a struct type"};
+  if (code() != Code::STRUCT) {
+    throw std::invalid_argument{"Type is not a struct type"};
+  }
   return StructType{impl()};
 }
 
 ListType Type::as_list_type() const
 {
-  if (code() != Code::LIST) throw std::invalid_argument{"Type is not a list type"};
+  if (code() != Code::LIST) {
+    throw std::invalid_argument{"Type is not a list type"};
+  }
   return ListType{impl()};
 }
 
@@ -130,7 +134,9 @@ Type struct_type(const std::vector<Type>& field_types, bool align)
   std::vector<std::shared_ptr<detail::Type>> detail_field_types;
 
   detail_field_types.reserve(field_types.size());
-  for (const auto& field_type : field_types) detail_field_types.emplace_back(field_type.impl());
+  for (const auto& field_type : field_types) {
+    detail_field_types.emplace_back(field_type.impl());
+  }
   return Type{detail::struct_type(std::move(detail_field_types), align)};
 }
 

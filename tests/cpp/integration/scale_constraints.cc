@@ -43,7 +43,9 @@ struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
     auto smaller_shape = smaller.shape<DIM>();
     auto bigger_shape  = bigger.shape<DIM>();
 
-    if (bigger_shape.empty()) return;
+    if (bigger_shape.empty()) {
+      return;
+    }
 
     for (int32_t idx = 0; idx < DIM; ++idx) {
       EXPECT_EQ(smaller_shape.lo[idx] * factors[idx], bigger_shape.lo[idx]);
@@ -58,7 +60,9 @@ struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

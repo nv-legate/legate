@@ -119,7 +119,9 @@ int collInit(int argc, char* argv[])
   if (LegateDefined(LEGATE_USE_NETWORK)) {
     char* network    = getenv("LEGATE_NEED_NETWORK");
     int need_network = 0;
-    if (network != nullptr) { need_network = legate::detail::safe_strtoll<int>(network); }
+    if (network != nullptr) {
+      need_network = legate::detail::safe_strtoll<int>(network);
+    }
     if (need_network) {
 #if LegateDefined(LEGATE_USE_NETWORK)
       backend_network = new MPINetwork{argc, argv};

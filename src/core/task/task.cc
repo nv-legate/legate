@@ -30,7 +30,9 @@ namespace legate::detail {
 
 void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime)
 {
-  if (!Config::show_progress_requested) return;
+  if (!Config::show_progress_requested) {
+    return;
+  }
   const auto exec_proc     = runtime->get_executing_processor(ctx);
   const auto proc_kind_str = (exec_proc.kind() == Processor::LOC_PROC)   ? "CPU"
                              : (exec_proc.kind() == Processor::TOC_PROC) ? "GPU"
@@ -39,7 +41,9 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
   std::stringstream point_str;
   const auto& point = task->index_point;
   point_str << point[0];
-  for (int32_t dim = 1; dim < point.dim; ++dim) point_str << "," << point[dim];
+  for (int32_t dim = 1; dim < point.dim; ++dim) {
+    point_str << "," << point[dim];
+  }
 
   log_legate().print("%s %s task [%s], pt = (%s), proc = " IDFMT,
                      task->get_task_name(),
@@ -82,7 +86,9 @@ void task_wrapper(VariantImpl variant_impl,
   std::stringstream ss;
 
   ss << task_name;
-  if (!task->get_provenance_string().empty()) ss << " : " + task->get_provenance_string();
+  if (!task->get_provenance_string().empty()) {
+    ss << " : " + task->get_provenance_string();
+  }
   std::string msg = ss.str();
   nvtx::Range auto_range(msg.c_str());
 #else
@@ -97,7 +103,9 @@ void task_wrapper(VariantImpl variant_impl,
   try {
     const legate::TaskContext ctx{&context};
 
-    if (!Config::use_empty_task) (*variant_impl)(ctx);
+    if (!Config::use_empty_task) {
+      (*variant_impl)(ctx);
+    }
     return_values = context.pack_return_values();
   } catch (const legate::TaskException& e) {
     if (context.can_raise_exception()) {

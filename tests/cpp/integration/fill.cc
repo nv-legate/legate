@@ -61,7 +61,9 @@ struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
@@ -80,14 +82,18 @@ template <std::int32_t DIM>
   auto shape    = input.shape<DIM>();
   int64_t value = context.scalar(0).value<int64_t>();
 
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   auto val_acc = input.data().read_accessor<int64_t, DIM>(shape);
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
     EXPECT_EQ(val_acc[*it], value);
   }
 
-  if (!input.nullable()) return;
+  if (!input.nullable()) {
+    return;
+  }
 
   auto mask_acc = input.null_mask().read_accessor<bool, DIM>(shape);
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
@@ -104,11 +110,16 @@ template <std::int32_t DIM>
   auto value_outside_slice = context.scalar(1);
   auto offset              = context.scalar(2).value<int64_t>();
 
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   auto in_slice = [&offset](const auto& p) {
-    for (std::int32_t dim = 0; dim < DIM; ++dim)
-      if (p[dim] < offset) return false;
+    for (std::int32_t dim = 0; dim < DIM; ++dim) {
+      if (p[dim] < offset) {
+        return false;
+      }
+    }
     return true;
   };
 
@@ -197,7 +208,9 @@ void test_fill_slice(std::int32_t dim, std::size_t size, bool null_init)
 
   // Then fill a slice with v1
   auto sliced = lhs;
-  for (std::int32_t idx = 0; idx < dim; ++idx) sliced = sliced.slice(idx, legate::Slice{offset});
+  for (std::int32_t idx = 0; idx < dim; ++idx) {
+    sliced = sliced.slice(idx, legate::Slice{offset});
+  }
   runtime->issue_fill(sliced, value_in_slice);
 
   // check if the slice is filled correctly
@@ -240,7 +253,9 @@ TEST_P(Slice, Index)
 {
   register_tasks();
   for (bool null_init : {false, true}) {
-    for (std::int32_t dim : {1, 2, 3}) { test_fill_slice(dim, SIZE, null_init); }
+    for (std::int32_t dim : {1, 2, 3}) {
+      test_fill_slice(dim, SIZE, null_init);
+    }
   }
 }
 

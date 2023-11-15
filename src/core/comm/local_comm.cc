@@ -72,7 +72,9 @@ int LocalNetwork::comm_create(CollComm global_comm,
   }
   __sync_synchronize();
   volatile ThreadComm* data = thread_comms[global_comm->unique_id];
-  while (!data->ready_flag) { data = thread_comms[global_comm->unique_id]; }
+  while (!data->ready_flag) {
+    data = thread_comms[global_comm->unique_id];
+  }
   global_comm->local_comm = thread_comms[global_comm->unique_id];
   barrierLocal(global_comm);
   assert(global_comm->local_comm->ready_flag == true);
@@ -96,7 +98,9 @@ int LocalNetwork::comm_destroy(CollComm global_comm)
   }
   __sync_synchronize();
   volatile ThreadComm* data = thread_comms[global_comm->unique_id];
-  while (data->ready_flag) { data = thread_comms[global_comm->unique_id]; }
+  while (data->ready_flag) {
+    data = thread_comms[global_comm->unique_id];
+  }
   global_comm->status = false;
   return CollSuccess;
 }
@@ -243,7 +247,9 @@ int LocalNetwork::allgather(
   const void* sendbuf_tmp = sendbuf;
 
   // MPI_IN_PLACE
-  if (sendbuf == recvbuf) { sendbuf_tmp = allocateInplaceBuffer(recvbuf, type_extent * count); }
+  if (sendbuf == recvbuf) {
+    sendbuf_tmp = allocateInplaceBuffer(recvbuf, type_extent * count);
+  }
 
   global_comm->local_comm->buffers[global_rank] = sendbuf_tmp;
   __sync_synchronize();
@@ -270,7 +276,9 @@ int LocalNetwork::allgather(
   }
 
   barrierLocal(global_comm);
-  if (sendbuf == recvbuf) { free(const_cast<void*>(sendbuf_tmp)); }
+  if (sendbuf == recvbuf) {
+    free(const_cast<void*>(sendbuf_tmp));
+  }
 
   __sync_synchronize();
 

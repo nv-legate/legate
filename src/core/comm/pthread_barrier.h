@@ -39,7 +39,9 @@ inline int pthread_barrier_init(pthread_barrier_t* barrier,
                                 const pthread_barrierattr_t* /*attr*/,
                                 unsigned int count)
 {
-  if (count == 0) { return -1; }
+  if (count == 0) {
+    return -1;
+  }
   CHECK_PTHREAD_CALL(pthread_mutex_init(&barrier->mutex, nullptr));
   if (const auto ret = pthread_cond_init(&barrier->cond, nullptr)) {
     CHECK_PTHREAD_CALL(pthread_mutex_destroy(&barrier->mutex));

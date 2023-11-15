@@ -84,7 +84,9 @@ void Gather::launch(Strategy* p_strategy)
 
   launcher.set_source_indirect_out_of_range(out_of_range_);
 
-  if (launch_domain.is_valid()) return launcher.execute(launch_domain);
+  if (launch_domain.is_valid()) {
+    return launcher.execute(launch_domain);
+  }
   return launcher.execute_single();
 }
 

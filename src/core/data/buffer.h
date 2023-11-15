@@ -75,10 +75,14 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
                                Memory::Kind kind = Memory::Kind::NO_MEMKIND,
                                size_t alignment  = DEFAULT_ALIGNMENT)
 {
-  if (Memory::Kind::NO_MEMKIND == kind) kind = find_memory_kind_for_executing_processor(false);
+  if (Memory::Kind::NO_MEMKIND == kind) {
+    kind = find_memory_kind_for_executing_processor(false);
+  }
   auto hi = extents - Point<DIM>::ONES();
   // We just avoid creating empty buffers, as they cause all sorts of headaches.
-  for (int32_t idx = 0; idx < DIM; ++idx) hi[idx] = std::max<int64_t>(hi[idx], 0);
+  for (int32_t idx = 0; idx < DIM; ++idx) {
+    hi[idx] = std::max<int64_t>(hi[idx], 0);
+  }
   return Buffer<VAL, DIM>{Rect<DIM>{Point<DIM>::ZEROES(), std::move(hi)}, kind, nullptr, alignment};
 }
 

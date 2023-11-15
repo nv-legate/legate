@@ -30,7 +30,9 @@ template <int32_t DIM>
 Rect<DIM> PhysicalArray::shape() const
 {
   check_shape_dimension(DIM);
-  if (dim() > 0) return domain().bounds<DIM, coord_t>();
+  if (dim() > 0) {
+    return domain().bounds<DIM, coord_t>();
+  }
   auto p = Point<DIM>::ZEROES();
   return {p, p};
 }

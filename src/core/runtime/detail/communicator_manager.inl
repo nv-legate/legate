@@ -31,10 +31,18 @@ bool CommunicatorFactory::CacheKey<Desc>::operator==(const CacheKey& other) cons
 template <class Desc>
 bool CommunicatorFactory::CacheKey<Desc>::operator<(const CacheKey& other) const
 {
-  if (desc < other.desc) return true;
-  if (other.desc < desc) return false;
-  if (target < other.target) return true;
-  if (target > other.target) return false;
+  if (desc < other.desc) {
+    return true;
+  }
+  if (other.desc < desc) {
+    return false;
+  }
+  if (target < other.target) {
+    return true;
+  }
+  if (target > other.target) {
+    return false;
+  }
   return range < other.range;
 }
 

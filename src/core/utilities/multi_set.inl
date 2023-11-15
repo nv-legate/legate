@@ -33,7 +33,9 @@ template <typename T>
 bool MultiSet<T>::remove(const T& value)
 {
   auto finder = map_.find(value);
-  if (map_.end() == finder) return false;
+  if (map_.end() == finder) {
+    return false;
+  }
   finder->second--;
   if (finder->second == 0) {
     map_.erase(finder);

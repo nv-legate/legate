@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace span_test {
 
@@ -89,6 +90,8 @@ TEST_F(SpanUnit, Subspan)
   EXPECT_EQ(subspan.ptr(), &data[DATA_SIZE - 1]);
   EXPECT_EQ(subspan.size(), 1);
   EXPECT_EQ(subspan.end() - subspan.begin(), 1);
-  for (auto& to_compare : span) EXPECT_EQ(UINT64_VALUE, to_compare);
+  for (auto& to_compare : span) {
+    EXPECT_EQ(UINT64_VALUE, to_compare);
+  }
 }
 }  // namespace span_test

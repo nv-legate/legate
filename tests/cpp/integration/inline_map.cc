@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/runtime/detail/runtime.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace inline_map {
 
@@ -33,7 +34,9 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
     auto output = context.output(0).data();
     auto shape  = output.shape<1>();
     auto acc    = output.read_write_accessor<int64_t, 1>(shape);
-    for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) acc[*it] += 1;
+    for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
+      acc[*it] += 1;
+    }
   }
 };
 

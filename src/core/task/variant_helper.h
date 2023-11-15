@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legion.h"
-
 #include "core/task/task_info.h"
 #include "core/task/variant_options.h"
+
+#include "legion.h"
 
 namespace legate::detail {
 

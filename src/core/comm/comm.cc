@@ -23,15 +23,21 @@ namespace legate::comm {
 
 void register_tasks(Legion::Runtime* runtime, const detail::Library* library)
 {
-  if (LegateDefined(LEGATE_USE_CUDA)) { nccl::register_tasks(runtime, library); }
+  if (LegateDefined(LEGATE_USE_CUDA)) {
+    nccl::register_tasks(runtime, library);
+  }
   const bool disable_mpi =
     static_cast<bool>(extract_env("LEGATE_DISABLE_MPI", DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST));
-  if (!disable_mpi) { cpu::register_tasks(runtime, library); }
+  if (!disable_mpi) {
+    cpu::register_tasks(runtime, library);
+  }
 }
 
 void register_builtin_communicator_factories(const detail::Library* library)
 {
-  if (LegateDefined(LEGATE_USE_CUDA)) { nccl::register_factory(library); }
+  if (LegateDefined(LEGATE_USE_CUDA)) {
+    nccl::register_factory(library);
+  }
   cpu::register_factory(library);
 }
 

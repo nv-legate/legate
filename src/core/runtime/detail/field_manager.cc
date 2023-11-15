@@ -22,8 +22,9 @@ FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field
   : runtime_{runtime}, shape_{shape}, field_size_{field_size}
 {
   auto size = shape.get_volume() * field_size;
-  if (size > Config::max_field_reuse_size)
+  if (size > Config::max_field_reuse_size) {
     field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
+  }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     std::stringstream ss;
     if (shape.is_valid()) {
@@ -72,7 +73,9 @@ std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::Log
   // Import the region only if the region manager is created fresh
   auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
 
-  if (!rgn_mgr->has_space()) rgn_mgr->import_region(region);
+  if (!rgn_mgr->has_space()) {
+    rgn_mgr->import_region(region);
+  }
   log_legate().debug("Field %u imported in field manager %p", field_id, static_cast<void*>(this));
   return std::make_shared<LogicalRegionField>(this, region, field_id);
 }
@@ -100,7 +103,9 @@ void FieldManager::issue_field_match()
   // test this deterministically no matter what, even if we don't have any fields to offer
   // ourselves, because this is a collective with other shards.
   field_match_counter_ += field_match_credit_;
-  if (field_match_counter_ < runtime_->field_reuse_freq()) return;
+  if (field_match_counter_ < runtime_->field_reuse_freq()) {
+    return;
+  }
   field_match_counter_ = 0;
   // We need to separately record the region that corresponds to each item in this match, because
   // the match itself only uses a subset of the full region info.
@@ -149,7 +154,9 @@ void FieldManager::process_next_field_match()
   }
   // All fields that weren't matched can go back into the unordered queue, to be included in the
   // next consensus match that we run.
-  for (const auto& [item, info] : infos) { unordered_free_fields_.push_back(info); }
+  for (const auto& [item, info] : infos) {
+    unordered_free_fields_.push_back(info);
+  }
   matches_.pop_front();
   info_for_match_items_.pop_front();
 }

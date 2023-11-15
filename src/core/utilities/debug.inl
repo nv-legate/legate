@@ -57,7 +57,9 @@ template <typename T, int DIM>
   std::stringstream ss;
 
   for (int dim = 0; dim < DIM; ++dim) {
-    if (strides[dim] != 0) ss << "[";
+    if (strides[dim] != 0) {
+      ss << "[";
+    }
   }
   ss << *base;
 
@@ -66,14 +68,18 @@ template <typename T, int DIM>
   int dim;
   do {
     for (dim = DIM - 1; dim >= 0; --dim) {
-      if (strides[dim] == 0) continue;
+      if (strides[dim] == 0) {
+        continue;
+      }
       if (point[dim] + 1 < extents[dim]) {
         ++point[dim];
         offset += strides[dim];
         ss << ", ";
 
         for (auto i = dim + 1; i < DIM; ++i) {
-          if (strides[i] != 0) ss << "[";
+          if (strides[i] != 0) {
+            ss << "[";
+          }
         }
         ss << base[offset];
         break;
@@ -83,7 +89,9 @@ template <typename T, int DIM>
       ss << "]";
     }
   } while (dim >= 0);
-  if (LegateDefined(LEGATE_USE_CUDA)) delete[] buf;  // LEGATE_USE_CUDA
+  if (LegateDefined(LEGATE_USE_CUDA)) {
+    delete[] buf;  // LEGATE_USE_CUDA
+  }
   return ss.str();
 }
 

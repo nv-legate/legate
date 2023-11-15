@@ -11,6 +11,7 @@
  */
 
 #include "core/mapping/array.h"
+
 #include "core/mapping/detail/array.h"
 
 namespace legate::mapping {
@@ -30,7 +31,9 @@ std::vector<Store> Array::stores() const
   std::vector<Store> result;
 
   result.push_back(data());
-  if (nullable()) result.push_back(null_mask());
+  if (nullable()) {
+    result.push_back(null_mask());
+  }
   return result;
 }
 

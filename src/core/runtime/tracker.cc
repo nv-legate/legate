@@ -48,8 +48,9 @@ MachineTracker::MachineTracker(const mapping::Machine& machine)
   auto* runtime = detail::Runtime::get_runtime();
   auto result   = machine & mapping::Machine{runtime->get_machine()};
 
-  if (result.count() == 0)
+  if (result.count() == 0) {
     throw std::runtime_error{"Empty machines cannot be used for resource scoping"};
+  }
   runtime->machine_manager()->push_machine(std::move(*result.impl()));
 }
 

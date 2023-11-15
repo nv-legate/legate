@@ -55,8 +55,9 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
       auto acc     = output.write_accessor<VAL, DIM>(shape);
       auto to_fill = seed.value<VAL>();
       size_t i     = 1;
-      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it, ++i)
+      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it, ++i) {
         acc[*it] = i * to_fill;
+      }
     }
   };
 
@@ -67,7 +68,9 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
     auto shape  = output.shape<DIM>();
     auto seed   = context.scalar(0);
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     type_dispatch_for_test(output.type().code(), FillTaskBody{}, output, shape, seed);
   }
@@ -98,7 +101,9 @@ struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DA
     size_t data_vol = data_shape.volume();
     size_t ind_vol  = ind_shape.volume();
 
-    if (0 == ind_vol) return;
+    if (0 == ind_vol) {
+      return;
+    }
 
     auto data_extents = data_shape.hi - data_shape.lo + legate::Point<DATA_DIM>::ONES();
     auto acc          = output.write_accessor<legate::Point<DATA_DIM>, IND_DIM>(ind_shape);
@@ -168,7 +173,9 @@ std::string to_string(const std::vector<size_t>& shape)
 {
   std::stringstream ss;
   ss << "(";
-  for (auto& ext : shape) ss << ext << ",";
+  for (auto& ext : shape) {
+    ss << ext << ",";
+  }
   ss << ")";
   return std::move(ss).str();
 }

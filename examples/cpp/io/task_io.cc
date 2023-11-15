@@ -52,10 +52,13 @@ struct write_util_fn {
 
     std::ofstream out(path, std::ios::binary | std::ios::out | std::ios::trunc);
     // Each file for a chunk starts with the extents
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
 
-    if (empty) return;
+    if (empty) {
+      return;
+    }
     auto acc = store.read_accessor<VAL, DIM>();
     // The iteration order here should be consistent with that in the reader task, otherwise
     // the read data can be transposed.
@@ -79,7 +82,9 @@ std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext c
 
   std::stringstream ss;
   for (int32_t idx = 0; idx < task_index.dim; ++idx) {
-    if (idx != 0) ss << ".";
+    if (idx != 0) {
+      ss << ".";
+    }
     ss << task_index[idx];
   }
   auto filename = ss.str();
@@ -106,13 +111,16 @@ struct read_even_fn {
 
     legate::Rect<DIM> shape = output.shape<DIM>();
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     std::ifstream in(path, std::ios::binary | std::ios::in);
 
     legate::Point<DIM> extents;
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (int32_t idx = 0; idx < DIM; ++idx) {
       in.read(reinterpret_cast<char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
 
     // Since the shape is already fixed on the Python side, the sub-store's extents should be the
     // same as what's stored in the file
@@ -170,7 +178,9 @@ struct read_fn {
     auto buf       = output.create_output_buffer<VAL, 1>(legate::Point<1>(my_ext));
 
     // Skip to the right offset where the data assigned to this reader task actually starts
-    if (my_lo != 0) in.seekg(my_lo * sizeof(VAL), std::ios_base::cur);
+    if (my_lo != 0) {
+      in.seekg(my_lo * sizeof(VAL), std::ios_base::cur);
+    }
     for (int64_t idx = 0; idx < my_ext; ++idx) {
       auto ptr = buf.ptr(legate::Point<1>(idx));
       in.read(reinterpret_cast<char*>(ptr), sizeof(VAL));
@@ -215,20 +225,22 @@ struct read_uneven_fn {
 
     // Read the header of each file to extract the extents
     legate::Point<DIM> extents;
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (int32_t idx = 0; idx < DIM; ++idx) {
       in.read(reinterpret_cast<char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
 
     logger.debug() << "Read a sub-array of extents " << extents << " from " << path;
 
     // Use the extents to create an output buffer
     auto buf = output.create_output_buffer<VAL, DIM>(extents);
     legate::Rect<DIM> shape(legate::Point<DIM>::ZEROES(), extents - legate::Point<DIM>::ONES());
-    if (!shape.empty())
+    if (!shape.empty()) {
       // Read the file data. The iteration order here should be the same as in the writer task
       for (legate::PointInRectIterator<DIM> it(shape, false /*fortran_order*/); it.valid(); ++it) {
         auto ptr = buf.ptr(*it);
         in.read(reinterpret_cast<char*>(ptr), sizeof(VAL));
       }
+    }
 
     // Finally, bind the output buffer to the store
     output.bind_data(buf, extents);
@@ -255,8 +267,12 @@ void write_header(std::ofstream& out,
   // Dump the type code, the array's shape and the tile shape to the header
   out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
   out.write(reinterpret_cast<const char*>(&dim), sizeof(int32_t));
-  for (auto& v : shape) out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
-  for (auto& v : tile_shape) out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  for (auto& v : shape) {
+    out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  }
+  for (auto& v : tile_shape) {
+    out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  }
 }
 
 /*static*/ void WriteEvenTilesTask::cpu_variant(legate::TaskContext context)
@@ -324,8 +340,9 @@ struct header_write_fn {
     // The header contains the type code and the launch shape
     out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
     out.write(reinterpret_cast<const char*>(&launch_domain.dim), sizeof(int32_t));
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
   }
 };
 

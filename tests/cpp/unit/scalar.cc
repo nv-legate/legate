@@ -179,7 +179,9 @@ void check_point_scalar(const int64_t bounds[])
   // Check values
   legate::Span expectedValues = legate::Span<const int64_t>(bounds, DIM);
   legate::Span actualValues(scalar.values<int64_t>());
-  for (int i = 0; i < DIM; i++) { EXPECT_EQ(actualValues[i], expectedValues[i]); }
+  for (int i = 0; i < DIM; i++) {
+    EXPECT_EQ(actualValues[i], expectedValues[i]);
+  }
   EXPECT_EQ(actualValues.size(), DIM);
   EXPECT_EQ(actualValues.size(), expectedValues.size());
 

@@ -12,8 +12,9 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
 #include "legate.h"
+
+#include <gtest/gtest.h>
 
 class DefaultFixture : public ::testing::Test {
  public:

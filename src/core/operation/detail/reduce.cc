@@ -61,7 +61,9 @@ void Reduce::launch(Strategy* p_strategy)
   std::vector<proj::RadixProjectionFunctor> proj_fns;
   if (n_tasks > 1) {
     proj_fns.reserve(radix_);
-    for (int64_t i = 0; i < radix_; i++) proj_fns.emplace_back(radix_, i);
+    for (int64_t i = 0; i < radix_; i++) {
+      proj_fns.emplace_back(radix_, i);
+    }
   }
 
   auto to_array_arg = [](auto&& arg) {

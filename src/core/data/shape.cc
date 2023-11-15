@@ -37,7 +37,9 @@ DomainPoint to_domain_point(const Shape& shape)
   DomainPoint point;
 
   point.dim = static_cast<int>(ndim);
-  for (uint32_t idx = 0; idx < ndim; ++idx) point[idx] = static_cast<coord_t>(shape[idx]);
+  for (uint32_t idx = 0; idx < ndim; ++idx) {
+    point[idx] = static_cast<coord_t>(shape[idx]);
+  }
   return point;
 }
 
@@ -48,7 +50,9 @@ Shape from_domain(const Domain& domain)
   auto&& hi = domain.hi();
 
   result.reserve(domain.dim);
-  for (int32_t idx = 0; idx < domain.dim; ++idx) result.emplace_back(hi[idx] - lo[idx] + 1);
+  for (int32_t idx = 0; idx < domain.dim; ++idx) {
+    result.emplace_back(hi[idx] - lo[idx] + 1);
+  }
   return Shape{std::move(result)};
 }
 

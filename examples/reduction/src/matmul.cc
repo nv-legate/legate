@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/dispatch.h"
+
 #include "legate_library.h"
 #include "reduction_cffi.h"
-
-#include "core/utilities/dispatch.h"
 
 namespace reduction {
 
@@ -27,7 +27,9 @@ struct matmul_fn {
 
     auto shape = rhs1.shape<3>().intersection(rhs2.shape<3>());
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     auto rhs1_acc = rhs1.read_accessor<VAL, 3>();
     auto rhs2_acc = rhs2.read_accessor<VAL, 3>();

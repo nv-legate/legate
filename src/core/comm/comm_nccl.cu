@@ -162,9 +162,13 @@ ncclComm_t* init_nccl(const Legion::Task* task,
     legate::detail::log_legate().debug("NCCL initialization took %lf ms", time_init);
   }
 
-  if (num_ranks == 1) return comm;
+  if (num_ranks == 1) {
+    return comm;
+  }
 
-  if (!detail::Config::warmup_nccl) return comm;
+  if (!detail::Config::warmup_nccl) {
+    return comm;
+  }
 
   auto stream = cuda::StreamPool::get_stream_pool().get_stream();
 

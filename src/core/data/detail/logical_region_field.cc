@@ -61,7 +61,9 @@ LogicalRegionField::~LogicalRegionField()
     // RegionField, there should be no Stores remaining that use it (or any of its sub-regions).
     // Moreover, the field will only start to get reused once all shards have agreed that it's
     // been collected.
-    if (pr_ && pr_->is_mapped()) runtime->unmap_physical_region(*pr_);
+    if (pr_ && pr_->is_mapped()) {
+      runtime->unmap_physical_region(*pr_);
+    }
     Legion::Future can_dealloc =
       (nullptr == attachment_) ? Legion::Future()  // waiting on this is a noop
                                : Runtime::get_runtime()->detach(
@@ -85,7 +87,9 @@ Domain LogicalRegionField::domain() const
 RegionField LogicalRegionField::map()
 {
   if (parent_ != nullptr) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(!pr_);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(!pr_);
+    }
     return parent_->map();
   }
   if (!pr_) {
@@ -125,7 +129,9 @@ void LogicalRegionField::detach()
     throw std::invalid_argument{"Only stores created with share=true can be manually detached"};
   }
   assert(nullptr != attachment_ && pr_ && pr_->exists());
-  if (pr_->is_mapped()) runtime->unmap_physical_region(*pr_);
+  if (pr_->is_mapped()) {
+    runtime->unmap_physical_region(*pr_);
+  }
   const Legion::Future fut = runtime->detach(*pr_, true /*flush*/, false /*unordered*/);
   fut.get_void_result(true /*silence_warnings*/);
   pr_                = nullptr;
@@ -179,7 +185,9 @@ void LogicalRegionField::perform_invalidation_callbacks()
     }
     parent_->perform_invalidation_callbacks();
   } else {
-    for (auto&& callback : callbacks_) callback();
+    for (auto&& callback : callbacks_) {
+      callback();
+    }
     callbacks_.clear();
   }
 }

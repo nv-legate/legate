@@ -29,11 +29,12 @@ namespace legate::mapping::detail {
 Machine::Machine(private_tag, std::map<TaskTarget, ProcessorRange> ranges)
   : processor_ranges{std::move(ranges)}
 {
-  for (auto&& [target, processor_range] : processor_ranges)
+  for (auto&& [target, processor_range] : processor_ranges) {
     if (!processor_range.empty()) {
       preferred_target = target;
       return;
     }
+  }
 }
 
 Machine::Machine(const std::map<TaskTarget, ProcessorRange>& ranges)
@@ -57,7 +58,9 @@ constexpr ProcessorRange EMPTY_RANGE{};
 const ProcessorRange& Machine::processor_range(TaskTarget target) const
 {
   auto finder = processor_ranges.find(target);
-  if (finder == processor_ranges.end()) return EMPTY_RANGE;
+  if (finder == processor_ranges.end()) {
+    return EMPTY_RANGE;
+  }
   return finder->second;
 }
 
@@ -67,7 +70,9 @@ std::vector<TaskTarget> Machine::valid_targets() const
 
   result.reserve(processor_ranges.size());
   for (auto& [target, range] : processor_ranges) {
-    if (range.empty()) continue;
+    if (range.empty()) {
+      continue;
+    }
     result.push_back(target);
   }
   return result;
@@ -76,8 +81,11 @@ std::vector<TaskTarget> Machine::valid_targets() const
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
   std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges)
-    if (to_exclude.find(target) == to_exclude.end()) result.push_back(target);
+  for (auto& [target, _] : processor_ranges) {
+    if (to_exclude.find(target) == to_exclude.end()) {
+      result.push_back(target);
+    }
+  }
   return result;
 }
 
@@ -89,7 +97,9 @@ std::string Machine::to_string() const
 {
   std::stringstream ss;
   ss << "Machine(preferred_target: " << preferred_target;
-  for (auto& [kind, range] : processor_ranges) ss << ", " << kind << ": " << range.to_string();
+  for (auto& [kind, range] : processor_ranges) {
+    ss << ", " << kind << ": " << range.to_string();
+  }
   ss << ")";
   return std::move(ss).str();
 }
@@ -111,7 +121,9 @@ Machine Machine::only(TaskTarget target) const { return only(std::vector<TaskTar
 Machine Machine::only(const std::vector<TaskTarget>& targets) const
 {
   std::map<TaskTarget, ProcessorRange> new_processor_ranges;
-  for (auto&& t : targets) new_processor_ranges.insert({t, processor_range(t)});
+  for (auto&& t : targets) {
+    new_processor_ranges.insert({t, processor_range(t)});
+  }
 
   return Machine{std::move(new_processor_ranges)};
 }
@@ -134,11 +146,15 @@ Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
 
 bool Machine::operator==(const Machine& other) const
 {
-  if (processor_ranges.size() < other.processor_ranges.size()) { return other.operator==(*this); }
+  if (processor_ranges.size() < other.processor_ranges.size()) {
+    return other.operator==(*this);
+  }
   auto equal_ranges = [&](const auto& proc_range) {
     const auto& [target, range] = proc_range;
 
-    if (range.empty()) return true;
+    if (range.empty()) {
+      return true;
+    }
     auto finder = other.processor_ranges.find(target);
     return !(finder == other.processor_ranges.end() || range != finder->second);
   };
@@ -179,7 +195,9 @@ std::ostream& operator<<(std::ostream& stream, const Machine& machine)
 const Processor& LocalProcessorRange::operator[](uint32_t idx) const
 {
   auto local_idx = idx - offset_;
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(local_idx >= 0 && local_idx < procs_.size());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(local_idx >= 0 && local_idx < procs_.size());
+  }
   return procs_[local_idx];
 }
 
@@ -188,7 +206,9 @@ std::string LocalProcessorRange::to_string() const
   std::stringstream ss;
   ss << "{offset: " << offset_ << ", total processor count: " << total_proc_count_
      << ", processors: ";
-  for (auto&& proc : procs_) ss << proc << ",";
+  for (auto&& proc : procs_) {
+    ss << proc << ",";
+  }
   ss << "}";
   return std::move(ss).str();
 }
@@ -257,10 +277,13 @@ LocalMachine::LocalMachine()
 
     sockmem.local_address_space().only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);
     // If we have socket memories then use them
-    if (sockmem.count() > 0) socket_memories_[omp] = sockmem.first();
+    if (sockmem.count() > 0) {
+      socket_memories_[omp] = sockmem.first();
+    }
     // Otherwise we just use the local system memory
-    else
+    else {
       socket_memories_[omp] = system_memory_;
+    }
   }
 }
 
@@ -305,7 +328,9 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 
   auto finder = machine.processor_ranges.find(target);
   if (machine.processor_ranges.end() == finder) {
-    if (fallback_to_global) return LocalProcessorRange{local_procs};
+    if (fallback_to_global) {
+      return LocalProcessorRange{local_procs};
+    }
     return {};
   }
 
@@ -319,7 +344,9 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 
   auto slice = global_range & my_range;
   if (slice.empty()) {
-    if (fallback_to_global) return LocalProcessorRange{local_procs};
+    if (fallback_to_global) {
+      return LocalProcessorRange{local_procs};
+    }
     return {};
   }
 

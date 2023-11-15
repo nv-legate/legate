@@ -11,6 +11,7 @@
  */
 
 #include "hello_world.h"
+
 #include "legate_library.h"
 
 namespace hello {

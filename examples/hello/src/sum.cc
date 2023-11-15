@@ -27,7 +27,9 @@ class SumTask : public Task<SumTask, SUM> {
 
     float total = 0;
     // i is a global index for the complete array
-    for (size_t i = input_shape.lo; i <= input_shape.hi; ++i) { total += in[i]; }
+    for (size_t i = input_shape.lo; i <= input_shape.hi; ++i) {
+      total += in[i];
+    }
 
     /**
       The task launch as a whole will return a single value (Store of size 1)

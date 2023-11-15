@@ -22,7 +22,9 @@ namespace legate::detail {
 
 const mapping::detail::Machine& MachineManager::get_machine() const noexcept
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!machines_.empty());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!machines_.empty());
+  }
   return machines_.top();
 }
 
@@ -33,7 +35,9 @@ void MachineManager::push_machine(mapping::detail::Machine&& machine)
 
 void MachineManager::pop_machine()
 {
-  if (machines_.size() <= 1) throw std::underflow_error{"can't pop from the empty machine stack"};
+  if (machines_.size() <= 1) {
+    throw std::underflow_error{"can't pop from the empty machine stack"};
+  }
   machines_.pop();
 }
 

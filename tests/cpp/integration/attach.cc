@@ -38,11 +38,15 @@ void increment_physical_store(const legate::PhysicalStore& store, int32_t dim)
   if (dim == 1) {
     auto shape = store.shape<1>();
     auto acc   = store.read_write_accessor<int64_t, 1, true>(shape);
-    for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) acc[*it] += 1;
+    for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
+      acc[*it] += 1;
+    }
   } else {
     auto shape = store.shape<2>();
     auto acc   = store.read_write_accessor<int64_t, 2, true>(shape);
-    for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) acc[*it] += 1;
+    for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
+      acc[*it] += 1;
+    }
   }
 }
 
@@ -51,13 +55,18 @@ void check_physical_store(const legate::PhysicalStore& store, int32_t dim, int64
   if (dim == 1) {
     auto shape = store.shape<1>();
     auto acc   = store.read_accessor<int64_t, 1, true>(shape);
-    for (size_t i = 0; i < SHAPE_1D[0]; ++i) EXPECT_EQ(acc[i], counter++);
+    for (size_t i = 0; i < SHAPE_1D[0]; ++i) {
+      EXPECT_EQ(acc[i], counter++);
+    }
   } else {
     auto shape = store.shape<2>();
     auto acc   = store.read_accessor<int64_t, 2, true>(shape);
     // Legate should always see elements in the expected order
-    for (size_t i = 0; i < SHAPE_2D[0]; ++i)
-      for (size_t j = 0; j < SHAPE_2D[1]; ++j) EXPECT_EQ(acc[legate::Point<2>(i, j)], counter++);
+    for (size_t i = 0; i < SHAPE_2D[0]; ++i) {
+      for (size_t j = 0; j < SHAPE_2D[1]; ++j) {
+        EXPECT_EQ(acc[legate::Point<2>(i, j)], counter++);
+      }
+    }
   }
 }
 
@@ -85,7 +94,9 @@ struct CheckerTask : public legate::LegateTask<CheckerTask> {
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
@@ -99,30 +110,41 @@ int64_t* make_buffer(int32_t dim, bool fortran)
   int64_t counter = 0;
   if (dim == 1) {
     buffer = new int64_t[SHAPE_1D.volume()];
-    for (size_t i = 0; i < SHAPE_1D[0]; ++i) buffer[i] = counter++;
+    for (size_t i = 0; i < SHAPE_1D[0]; ++i) {
+      buffer[i] = counter++;
+    }
   } else {
     buffer = new int64_t[SHAPE_2D.volume()];
-    for (size_t i = 0; i < SHAPE_2D[0]; ++i)
-      for (size_t j = 0; j < SHAPE_2D[1]; ++j)
-        if (fortran)
+    for (size_t i = 0; i < SHAPE_2D[0]; ++i) {
+      for (size_t j = 0; j < SHAPE_2D[1]; ++j) {
+        if (fortran) {
           buffer[j * SHAPE_2D[0] + i] = counter++;
-        else
+        } else {
           buffer[i * SHAPE_2D[1] + j] = counter++;
+        }
+      }
+    }
   }
   return buffer;
 }
 
 void check_and_delete_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t counter)
 {
-  if (dim == 1)
-    for (size_t i = 0; i < SHAPE_1D[0]; ++i) EXPECT_EQ(buffer[i], counter++);
-  else
-    for (size_t i = 0; i < SHAPE_2D[0]; ++i)
-      for (size_t j = 0; j < SHAPE_2D[1]; ++j)
-        if (fortran)
+  if (dim == 1) {
+    for (size_t i = 0; i < SHAPE_1D[0]; ++i) {
+      EXPECT_EQ(buffer[i], counter++);
+    }
+  } else {
+    for (size_t i = 0; i < SHAPE_2D[0]; ++i) {
+      for (size_t j = 0; j < SHAPE_2D[1]; ++j) {
+        if (fortran) {
           EXPECT_EQ(buffer[j * SHAPE_2D[0] + i], counter++);
-        else
+        } else {
           EXPECT_EQ(buffer[i * SHAPE_2D[1] + j], counter++);
+        }
+      }
+    }
+  }
   delete[] buffer;
 }
 
@@ -139,8 +161,12 @@ void test_body(
                                        share,
                                        fortran ? legate::mapping::DimOrdering::fortran_order()
                                                : legate::mapping::DimOrdering::c_order());
-  if (unordered) l_store.impl()->allow_out_of_order_destruction();
-  if (!share) check_and_delete_buffer(buffer, dim, fortran, counter);
+  if (unordered) {
+    l_store.impl()->allow_out_of_order_destruction();
+  }
+  if (!share) {
+    check_and_delete_buffer(buffer, dim, fortran, counter);
+  }
   for (auto iter = 0; iter < 2; ++iter) {
     if (use_tasks) {
       auto task = runtime->create_task(context, ADDER, legate::Shape{1});
@@ -180,12 +206,17 @@ TEST_F(Attach, Positive)
   // consensus match.
   // TODO: Also try keeping multiple stores alive at one time.
   for (auto& [dim, fortran] : std::vector<std::pair<int32_t, bool>>{
-         std::make_pair(1, false), std::make_pair(2, false), std::make_pair(2, true)})
-    for (bool unordered : {false, true})
-      for (bool share : {false, true})
-        for (bool use_tasks : {false, true})
-          for (bool use_inline : {false, true})
+         std::make_pair(1, false), std::make_pair(2, false), std::make_pair(2, true)}) {
+    for (bool unordered : {false, true}) {
+      for (bool share : {false, true}) {
+        for (bool use_tasks : {false, true}) {
+          for (bool use_inline : {false, true}) {
             test_body(dim, fortran, unordered, share, use_tasks, use_inline);
+          }
+        }
+      }
+    }
+  }
 }
 
 TEST_F(Attach, Negative)

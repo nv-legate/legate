@@ -44,7 +44,9 @@ StreamView& StreamView::operator=(StreamView&& rhs)
 
 StreamPool::~StreamPool()
 {
-  if (cached_stream_ != nullptr) CHECK_CUDA(cudaStreamDestroy(*cached_stream_));
+  if (cached_stream_ != nullptr) {
+    CHECK_CUDA(cudaStreamDestroy(*cached_stream_));
+  }
 }
 
 StreamView StreamPool::get_stream()

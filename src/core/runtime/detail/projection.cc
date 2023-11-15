@@ -30,14 +30,17 @@ std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
   auto offset = expr.offset();
 
   if (weight != 0) {
-    if (weight != 1) out << weight << "*";
+    if (weight != 1) {
+      out << weight << "*";
+    }
     out << "COORD" << expr.dim();
   }
   if (offset != 0) {
-    if (offset > 0)
+    if (offset > 0) {
       out << "+" << offset;
-    else
+    } else {
       out << "-" << -offset;
+    }
   }
   return out;
 }
@@ -47,7 +50,9 @@ SymbolicPoint RadixProjectionFunctor::operator()(const SymbolicPoint& point) con
   std::vector<SymbolicExpr> exprs;
 
   exprs.reserve(point.size());
-  for (auto&& points : point.data()) exprs.emplace_back(points * radix_ + offset_);
+  for (auto&& points : point.data()) {
+    exprs.emplace_back(points * radix_ + offset_);
+  }
   return SymbolicPoint{std::move(exprs)};
 }
 
@@ -56,16 +61,23 @@ SymbolicPoint create_symbolic_point(int32_t ndim)
   std::vector<SymbolicExpr> exprs;
 
   exprs.reserve(ndim);
-  for (int32_t dim = 0; dim < ndim; ++dim) exprs.emplace_back(dim);
+  for (int32_t dim = 0; dim < ndim; ++dim) {
+    exprs.emplace_back(dim);
+  }
   return SymbolicPoint{std::move(exprs)};
 }
 
 bool is_identity(int32_t src_ndim, const SymbolicPoint& point)
 {
   auto ndim = static_cast<int32_t>(point.size());
-  if (src_ndim != ndim) return false;
-  for (int32_t dim = 0; dim < ndim; ++dim)
-    if (!point[dim].is_identity(dim)) return false;
+  if (src_ndim != ndim) {
+    return false;
+  }
+  for (int32_t dim = 0; dim < ndim; ++dim) {
+    if (!point[dim].is_identity(dim)) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -110,8 +122,9 @@ Legion::LogicalRegion LegateProjectionFunctor::project(Legion::LogicalPartition 
                                                        const Domain& launch_domain)
 {
   const auto dp = project_point(point, launch_domain);
-  if (runtime->has_logical_subregion_by_color(upper_bound, dp))
+  if (runtime->has_logical_subregion_by_color(upper_bound, dp)) {
     return runtime->get_logical_subregion_by_color(upper_bound, dp);
+  }
   return Legion::LogicalRegion::NO_REGION;
 }
 
@@ -140,8 +153,9 @@ Legion::LogicalRegion DelinearizationFunctor::project(Legion::LogicalPartition u
     value             = value % strides[dim];
   }
 
-  if (runtime->has_logical_subregion_by_color(upper_bound, delinearized))
+  if (runtime->has_logical_subregion_by_color(upper_bound, delinearized)) {
     return runtime->get_logical_subregion_by_color(upper_bound, delinearized);
+  }
   return Legion::LogicalRegion::NO_REGION;
 }
 
@@ -159,7 +173,9 @@ AffineFunctor<SRC_DIM, TGT_DIM>::AffineFunctor(Legion::Runtime* runtime,
   : LegateProjectionFunctor{runtime}, transform_{create_transform(dims, weights)}
 
 {
-  for (int32_t dim = 0; dim < TGT_DIM; ++dim) offsets_[dim] = offsets[dim];
+  for (int32_t dim = 0; dim < TGT_DIM; ++dim) {
+    offsets_[dim] = offsets[dim];
+  }
 }
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
@@ -176,12 +192,16 @@ template <int32_t SRC_DIM, int32_t TGT_DIM>
   Legion::Transform<TGT_DIM, SRC_DIM> transform;
 
   for (int32_t tgt_dim = 0; tgt_dim < TGT_DIM; ++tgt_dim) {
-    for (int32_t src_dim = 0; src_dim < SRC_DIM; ++src_dim) transform[tgt_dim][src_dim] = 0;
+    for (int32_t src_dim = 0; src_dim < SRC_DIM; ++src_dim) {
+      transform[tgt_dim][src_dim] = 0;
+    }
   }
 
   for (int32_t tgt_dim = 0; tgt_dim < TGT_DIM; ++tgt_dim) {
     const int32_t src_dim = dims[tgt_dim];
-    if (src_dim != -1) transform[tgt_dim][src_dim] = weights[tgt_dim];
+    if (src_dim != -1) {
+      transform[tgt_dim][src_dim] = weights[tgt_dim];
+    }
   }
 
   return transform;
@@ -214,7 +234,9 @@ struct create_affine_functor_fn {
   {
     ss << "\\(";
     for (int32_t idx = 0; idx < src_ndim; ++idx) {
-      if (idx != 0) ss << ",";
+      if (idx != 0) {
+        ss << ",";
+      }
       ss << "x" << idx;
     }
     ss << ")->(";
@@ -223,20 +245,27 @@ struct create_affine_functor_fn {
       auto weight = weights[idx];
       auto offset = offsets[idx];
 
-      if (idx != 0) ss << ",";
-      if (dim != -1)
+      if (idx != 0) {
+        ss << ",";
+      }
+      if (dim != -1) {
         if (weight != 0) {
           assert(dim != -1);
-          if (weight != 1) ss << weight << "*";
+          if (weight != 1) {
+            ss << weight << "*";
+          }
           ss << "x" << dim;
         }
+      }
       if (offset != 0) {
-        if (offset > 0)
+        if (offset > 0) {
           ss << "+" << offset;
-        else
+        } else {
           ss << "-" << -offset;
-      } else if (weight == 0)
+        }
+      } else if (weight == 0) {
         ss << "0";
+      }
     }
     ss << ")";
   }
@@ -288,7 +317,9 @@ void register_legate_core_projection_functors(Legion::Runtime* runtime,
 LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID proj_id,
                                                         bool allow_missing)
 {
-  if (0 == proj_id) return identity_functor;
+  if (0 == proj_id) {
+    return identity_functor;
+  }
 
   const std::lock_guard<std::mutex> lock{functor_table_lock};
   auto result = functor_table[proj_id];

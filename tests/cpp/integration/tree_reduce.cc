@@ -42,7 +42,9 @@ struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
     auto output = context.output(0).data();
     auto size   = context.get_task_index()[0] + 1;
     auto buffer = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true /*bind*/);
-    for (int64_t idx = 0; idx < size; ++idx) buffer[idx] = size;
+    for (int64_t idx = 0; idx < size; ++idx) {
+      buffer[idx] = size;
+    }
   }
 };
 
@@ -79,7 +81,9 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

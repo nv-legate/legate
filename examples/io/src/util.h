@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include <filesystem>
-
 #include "core/data/store.h"
 #include "core/task/task_context.h"
+
+#include <filesystem>
 
 namespace legateio {
 

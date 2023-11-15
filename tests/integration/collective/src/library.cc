@@ -11,6 +11,7 @@
  */
 
 #include "library.h"
+
 #include "collective_test.h"
 
 namespace collective {

@@ -58,7 +58,9 @@ uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
   if (req_indices_.end() == finder) {
     finder = req_indices_.find({{LEGION_READ_WRITE, proj_info}, field_id});
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != req_indices_.end());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(finder != req_indices_.end());
+  }
   return finder->second;
 }
 
@@ -73,7 +75,9 @@ void FieldSet::coalesce()
   }
   uint32_t idx = 0;
   for (const auto& [key, entry] : coalesced_) {
-    for (const auto& field : entry.fields) req_indices_[{key, field}] = idx;
+    for (const auto& field : entry.fields) {
+      req_indices_[{key, field}] = idx;
+    }
     ++idx;
   }
 }
@@ -123,7 +127,9 @@ uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion&
                                                     Legion::FieldID field_id) const
 {
   auto finder = field_sets_.find(region);
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != field_sets_.end());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(finder != field_sets_.end());
+  }
   auto& [field_set, req_offset] = finder->second;
   return req_offset + field_set.get_requirement_index(privilege, proj_info, field_id);
 }
@@ -152,7 +158,9 @@ void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 template <class Launcher>
 void RequirementAnalyzer::_populate_launcher(Launcher& task) const
 {
-  for (auto& [region, entry] : field_sets_) entry.first.populate_launcher(task, region);
+  for (auto& [region, entry] : field_sets_) {
+    entry.first.populate_launcher(task, region);
+  }
 }
 
 ////////////////////////////
@@ -176,14 +184,18 @@ uint32_t OutputRequirementAnalyzer::get_requirement_index(const Legion::FieldSpa
                                                           Legion::FieldID) const
 {
   auto finder = req_infos_.find(field_space);
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != req_infos_.end());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(finder != req_infos_.end());
+  }
   return finder->second.req_idx;
 }
 
 void OutputRequirementAnalyzer::analyze_requirements()
 {
   uint32_t idx = 0;
-  for (const auto& [field_space, _] : field_groups_) req_infos_[field_space].req_idx = idx++;
+  for (const auto& [field_space, _] : field_groups_) {
+    req_infos_[field_space].req_idx = idx++;
+  }
 }
 
 void OutputRequirementAnalyzer::populate_output_requirements(
@@ -211,7 +223,9 @@ void FutureAnalyzer::analyze_futures()
 {
   int32_t index = 0;
   for (auto&& future : futures_) {
-    if (future_indices_.find(future) != future_indices_.end()) { continue; }
+    if (future_indices_.find(future) != future_indices_.end()) {
+      continue;
+    }
     future_indices_[future] = index++;
     coalesced_.push_back(future);
   }
@@ -220,7 +234,9 @@ void FutureAnalyzer::analyze_futures()
 template <class Launcher>
 void FutureAnalyzer::_populate_launcher(Launcher& task) const
 {
-  for (auto& future : coalesced_) task.add_future(future);
+  for (auto& future : coalesced_) {
+    task.add_future(future);
+  }
 }
 
 void FutureAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const

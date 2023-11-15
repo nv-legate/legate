@@ -31,17 +31,23 @@ BufferBuilder::BufferBuilder()
 
 void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t align)
 {
-  if (!size) return;
+  if (!size) {
+    return;
+  }
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     constexpr auto is_power_of_2 = [](std::size_t v) { return v && !(v & (v - 1)); };
 
-    if (!align) throw std::invalid_argument{"alignment cannot be 0"};
+    if (!align) {
+      throw std::invalid_argument{"alignment cannot be 0"};
+    }
     if (!is_power_of_2(align)) {
       throw std::invalid_argument{"alignment is not a power of 2: " + std::to_string(align)};
     }
   }
-  if (!size) return;
+  if (!size) {
+    return;
+  }
 
   const auto orig_buf_size = buffer_.size();
   void* aligned_ptr        = nullptr;

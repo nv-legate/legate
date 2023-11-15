@@ -24,7 +24,9 @@ std::vector<PhysicalArray> to_arrays(
   std::vector<PhysicalArray> result;
 
   result.reserve(array_impls.size());
-  for (const auto& array_impl : array_impls) { result.emplace_back(array_impl); }
+  for (const auto& array_impl : array_impls) {
+    result.emplace_back(array_impl);
+  }
   return result;
 }
 

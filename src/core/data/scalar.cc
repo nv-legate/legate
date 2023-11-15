@@ -35,7 +35,9 @@ Scalar::Scalar(const std::string& string) : impl_{new detail::Scalar{string}} {}
 
 Scalar& Scalar::operator=(const Scalar& other)
 {
-  if (this != &other) *impl_ = *other.impl_;
+  if (this != &other) {
+    *impl_ = *other.impl_;
+  }
   return *this;
 }
 
@@ -50,9 +52,12 @@ const void* Scalar::ptr() const { return impl_->data(); }
                                                        bool copy,
                                                        size_t size)
 {
-  if (type.code() == Type::Code::NIL) throw std::invalid_argument{"Null type cannot be used"};
-  if (type.size() != size)
+  if (type.code() == Type::Code::NIL) {
+    throw std::invalid_argument{"Null type cannot be used"};
+  }
+  if (type.size() != size) {
     throw std::invalid_argument{"Size of the value doesn't match with the type"};
+  }
 
   return create_impl(type, data, copy);
 }

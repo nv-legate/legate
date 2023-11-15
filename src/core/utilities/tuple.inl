@@ -153,9 +153,13 @@ tuple<T> tuple<T>::insert(int32_t pos, U&& value) const
   tuple new_values;
 
   new_values.reserve(len + 1);
-  for (int32_t idx = 0; idx < pos; ++idx) new_values.append_inplace(data()[idx]);
+  for (int32_t idx = 0; idx < pos; ++idx) {
+    new_values.append_inplace(data()[idx]);
+  }
   new_values.append_inplace(std::forward<U>(value));
-  for (int32_t idx = pos; idx < len; ++idx) new_values.append_inplace(data()[idx]);
+  for (int32_t idx = pos; idx < len; ++idx) {
+    new_values.append_inplace(data()[idx]);
+  }
   return new_values;
 }
 
@@ -176,8 +180,12 @@ tuple<T> tuple<T>::remove(int32_t pos) const
 
   if (const auto len = static_cast<int32_t>(size())) {
     new_values.reserve(len - 1);
-    for (int32_t idx = 0; idx < pos; ++idx) new_values.append_inplace(data()[idx]);
-    for (int32_t idx = pos + 1; idx < len; ++idx) new_values.append_inplace(data()[idx]);
+    for (int32_t idx = 0; idx < pos; ++idx) {
+      new_values.append_inplace(data()[idx]);
+    }
+    for (int32_t idx = pos + 1; idx < len; ++idx) {
+      new_values.append_inplace(data()[idx]);
+    }
   }
   return new_values;
 }
@@ -218,7 +226,9 @@ T tuple<T>::reduce(FUNC&& func, U&& init) const
 {
   T agg{std::forward<U>(init)};
 
-  for (auto&& value : data()) agg = func(agg, value);
+  for (auto&& value : data()) {
+    agg = func(agg, value);
+  }
   return agg;
 }
 
@@ -266,7 +276,9 @@ tuple<T> tuple<T>::map(const std::vector<int32_t>& mapping) const
   tuple new_values;
 
   new_values.reserve(mapping.size());
-  for (auto idx : mapping) new_values.append_inplace(data()[idx]);
+  for (auto idx : mapping) {
+    new_values.append_inplace(data()[idx]);
+  }
   return new_values;
 }
 
@@ -284,7 +296,9 @@ template <typename U>
 std::ostream& operator<<(std::ostream& out, const tuple<U>& tpl)
 {
   out << '(';
-  for (auto&& value : tpl) out << value << ',';
+  for (auto&& value : tpl) {
+    out << value << ',';
+  }
   out << ')';
   return out;
 }
@@ -351,7 +365,9 @@ tuple<T> from_range(T start, T stop)
   tuple<T> values;
 
   values.reserve(stop - start);
-  for (; start != stop; ++start) values.append_inplace(start);
+  for (; start != stop; ++start) {
+    values.append_inplace(start);
+  }
   return values;
 }
 
@@ -373,7 +389,9 @@ auto apply(FUNC func, const tuple<T>& rhs)
   tuple<VAL> result;
 
   result.reserve(rhs.size());
-  for (auto&& v : rhs) result.append_inplace(func(v));
+  for (auto&& v : rhs) {
+    result.append_inplace(func(v));
+  }
   return result;
 }
 
@@ -383,7 +401,9 @@ auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
   using VAL = std::invoke_result_t<FUNC, T1, T2>;
   tuple<VAL> result;
 
-  if (rhs1.size() != rhs2.size()) throw std::invalid_argument{"Operands should have the same size"};
+  if (rhs1.size() != rhs2.size()) {
+    throw std::invalid_argument{"Operands should have the same size"};
+  }
   result.reserve(rhs1.size());
   for (uint32_t idx = 0; idx < rhs1.size(); ++idx) {
     result.append_inplace(func(rhs1[idx], rhs2[idx]));
@@ -398,7 +418,9 @@ auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2)
   tuple<VAL> result;
 
   result.reserve(rhs1.size());
-  for (auto&& rhs1_v : rhs1) result.append_inplace(func(rhs1_v, rhs2));
+  for (auto&& rhs1_v : rhs1) {
+    result.append_inplace(func(rhs1_v, rhs2));
+  }
   return result;
 }
 

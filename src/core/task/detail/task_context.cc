@@ -50,7 +50,9 @@ TaskContext::TaskContext(const Legion::Task* task,
   for (auto& reduction : reductions_) {
     auto stores = reduction->stores();
     for (auto& store : stores) {
-      if (store->is_future()) { scalar_stores_.push_back(std::move(store)); }
+      if (store->is_future()) {
+        scalar_stores_.push_back(std::move(store));
+      }
     }
   }
 
@@ -72,8 +74,11 @@ TaskContext::TaskContext(const Legion::Task* task,
   // To simplify the programming mode, we filter out those "invalid" stores out.
   if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
     std::vector<std::shared_ptr<PhysicalArray>> inputs;
-    for (auto& input : inputs_)
-      if (input->valid()) inputs.push_back(std::move(input));
+    for (auto& input : inputs_) {
+      if (input->valid()) {
+        inputs.push_back(std::move(input));
+      }
+    }
     inputs_.swap(inputs);
   }
 
@@ -89,7 +94,7 @@ TaskContext::TaskContext(const Legion::Task* task,
   if (LegateDefined(LEGATE_USE_CUDA)) {
     // If the task is running on a GPU and there is at least one scalar store for reduction,
     // we need to wait for all the host-to-device copies for initialization to finish
-    if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC)
+    if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
       for (auto& reduction : reductions_) {
         auto reduction_store = reduction->data();
         if (reduction_store->is_future()) {
@@ -99,12 +104,15 @@ TaskContext::TaskContext(const Legion::Task* task,
           break;
         }
       }
+    }
   }
 }
 
 void TaskContext::make_all_unbound_stores_empty()
 {
-  for (auto& store : unbound_stores_) { store->bind_empty_data(); }
+  for (auto& store : unbound_stores_) {
+    store->bind_empty_data();
+  }
 }
 
 ReturnValues TaskContext::pack_return_values() const
@@ -133,8 +141,12 @@ std::vector<ReturnValue> TaskContext::get_return_values() const
   std::vector<ReturnValue> return_values;
 
   return_values.reserve(unbound_stores_.size() + scalar_stores_.size() + can_raise_exception_);
-  for (auto& store : unbound_stores_) { return_values.push_back(store->pack_weight()); }
-  for (auto& store : scalar_stores_) { return_values.push_back(store->pack()); }
+  for (auto& store : unbound_stores_) {
+    return_values.push_back(store->pack_weight());
+  }
+  for (auto& store : scalar_stores_) {
+    return_values.push_back(store->pack());
+  }
 
   // If this is a reduction task, we do sanity checks on the invariants
   // the Python code relies on.

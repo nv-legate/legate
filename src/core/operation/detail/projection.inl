@@ -24,11 +24,21 @@ inline BaseProjectionInfo::BaseProjectionInfo(Legion::LogicalPartition _partitio
 
 inline bool BaseProjectionInfo::operator<(const BaseProjectionInfo& other) const
 {
-  if (partition < other.partition) return true;
-  if (other.partition < partition) return false;
-  if (proj_id < other.proj_id) return true;
-  if (proj_id > other.proj_id) return false;
-  if (redop < other.redop) return true;
+  if (partition < other.partition) {
+    return true;
+  }
+  if (other.partition < partition) {
+    return false;
+  }
+  if (proj_id < other.proj_id) {
+    return true;
+  }
+  if (proj_id > other.proj_id) {
+    return false;
+  }
+  if (redop < other.redop) {
+    return true;
+  }
   return false;
 }
 

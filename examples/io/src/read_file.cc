@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <fstream>
-
 #include "legate_library.h"
 #include "legateio.h"
+
+#include <fstream>
 
 namespace legateio {
 
@@ -51,7 +51,9 @@ struct read_fn {
     auto buf       = output.create_output_buffer<VAL, 1>(legate::Point<1>(my_ext));
 
     // Skip to the right offset where the data assigned to this reader task actually starts
-    if (my_lo != 0) in.seekg(my_lo * sizeof(VAL), std::ios_base::cur);
+    if (my_lo != 0) {
+      in.seekg(my_lo * sizeof(VAL), std::ios_base::cur);
+    }
     for (int64_t idx = 0; idx < my_ext; ++idx) {
       auto ptr = buf.ptr(legate::Point<1>(idx));
       in.read(reinterpret_cast<char*>(ptr), sizeof(VAL));

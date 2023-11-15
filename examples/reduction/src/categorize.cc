@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/dispatch.h"
+
 #include "legate_library.h"
 #include "reduction_cffi.h"
-
-#include "core/utilities/dispatch.h"
 
 namespace reduction {
 
@@ -29,7 +29,9 @@ struct categorize_fn {
     auto bin_shape = bins.shape<1>();
 
     assert(!bin_shape.empty());
-    if (in_shape.empty()) return;
+    if (in_shape.empty()) {
+      return;
+    }
 
     auto num_bins = bin_shape.hi[0] - bin_shape.lo[0];
 

@@ -104,19 +104,22 @@ VAL Scalar::value() const
 {
   const auto ty = type();
 
-  if (ty.code() == Type::Code::STRING)
+  if (ty.code() == Type::Code::STRING) {
     throw std::invalid_argument("String cannot be casted to other types");
-  if (sizeof(VAL) != ty.size())
+  }
+  if (sizeof(VAL) != ty.size()) {
     throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
                                 ", but the requested type has size " + std::to_string(sizeof(VAL)));
+  }
   return *static_cast<const VAL*>(ptr());
 }
 
 template <>
 inline std::string_view Scalar::value() const
 {
-  if (type().code() != Type::Code::STRING)
+  if (type().code() != Type::Code::STRING) {
     throw std::invalid_argument("Type of the scalar is not string");
+  }
   const void* data  = ptr();
   auto len          = *static_cast<const uint32_t*>(data);
   const auto* begin = static_cast<const char*>(data) + sizeof(len);
@@ -136,28 +139,33 @@ Span<const VAL> Scalar::values() const
   if (ty.code() == Type::Code::FIXED_ARRAY) {
     auto arr_type  = ty.as_fixed_array_type();
     auto elem_type = arr_type.element_type();
-    if (sizeof(VAL) != elem_type.size())
+    if (sizeof(VAL) != elem_type.size()) {
       throw std::invalid_argument(
         "The scalar's element type has size " + std::to_string(elem_type.size()) +
         ", but the requested element type has size " + std::to_string(sizeof(VAL)));
+    }
     auto size = arr_type.num_elements();
     return {reinterpret_cast<const VAL*>(ptr()), size};
   }
 
   if (ty.code() == Type::Code::STRING) {
-    if (sizeof(VAL) != 1)
+    if (sizeof(VAL) != 1) {
       throw std::invalid_argument(
         "String scalar can only be converted into a span of a type whose size is 1 byte");
+    }
     auto data         = ptr();
     auto len          = *static_cast<const uint32_t*>(data);
     const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
     return {reinterpret_cast<const VAL*>(begin), len};
   }
-  if (ty.code() == Type::Code::NIL) return {nullptr, 0};
-  if (sizeof(VAL) != ty.size())
+  if (ty.code() == Type::Code::NIL) {
+    return {nullptr, 0};
+  }
+  if (sizeof(VAL) != ty.size()) {
     throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
                                 ", but the requested element type has size " +
                                 std::to_string(sizeof(VAL)));
+  }
   return {static_cast<const VAL*>(ptr()), 1};
 }
 
@@ -167,7 +175,9 @@ inline Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
   Legion::DomainPoint result;
   const auto span = values<int64_t>();
   result.dim      = static_cast<decltype(result.dim)>(span.size());
-  for (auto idx = 0; idx < result.dim; ++idx) result[idx] = span[idx];
+  for (auto idx = 0; idx < result.dim; ++idx) {
+    result[idx] = span[idx];
+  }
   return result;
 }
 

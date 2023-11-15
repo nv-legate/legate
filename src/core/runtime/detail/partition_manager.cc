@@ -30,7 +30,9 @@ PartitionManager::PartitionManager(Runtime* runtime)
   min_shard_volume_ =
     runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(min_shard_volume_ > 0);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(min_shard_volume_ > 0);
+  }
 }
 
 const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail::Machine& machine)
@@ -47,7 +49,9 @@ const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail
         remaining_pieces /= prime;
       }
     };
-    for (auto factor : {11U, 7U, 5U, 3U, 2U}) push_factors(factor);
+    for (auto factor : {11U, 7U, 5U, 3U, 2U}) {
+      push_factors(factor);
+    }
     all_factors_.insert({curr_num_pieces, std::move(factors)});
     finder = all_factors_.find(curr_num_pieces);
   }
@@ -60,10 +64,14 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
 {
   auto curr_num_pieces = machine.count();
   // Easy case if we only have one piece: no parallel launch space
-  if (1 == curr_num_pieces) return {};
+  if (1 == curr_num_pieces) {
+    return {};
+  }
 
   // If we only have one point then we never do parallel launches
-  if (shape.all([](auto extent) { return 1 == extent; })) return {};
+  if (shape.all([](auto extent) { return 1 == extent; })) {
+    return {};
+  }
 
   // Prune out any dimensions that are 1
   std::vector<size_t> temp_shape{};
@@ -75,7 +83,9 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
   for (uint32_t dim = 0; dim < shape.size(); ++dim) {
     auto extent = shape[dim];
 
-    if (1 == extent || restrictions[dim] == Restriction::FORBID) continue;
+    if (1 == extent || restrictions[dim] == Restriction::FORBID) {
+      continue;
+    }
     temp_shape.push_back(extent);
     temp_dims.push_back(dim);
     volume *= static_cast<int64_t>(extent);
@@ -85,7 +95,9 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
   int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
   assert(volume == 0 || max_pieces > 0);
   // If we can only make one piece return that now
-  if (max_pieces <= 1) return {};
+  if (max_pieces <= 1) {
+    return {};
+  }
 
   // Otherwise we need to compute it ourselves
   // TODO: a better heuristic here.
@@ -110,7 +122,9 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
       auto nx   = temp_shape[0];
       auto ny   = temp_shape[1];
       auto swap = nx > ny;
-      if (swap) std::swap(nx, ny);
+      if (swap) {
+        std::swap(nx, ny);
+      }
       auto n = std::sqrt(static_cast<double>(max_pieces * nx) / static_cast<double>(ny));
 
       // Need to constraint n to be an integer with numpcs % n == 0
@@ -118,9 +132,13 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
       constexpr auto EPSILON = 1e-12;
 
       auto n1 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n + EPSILON)));
-      while (max_pieces % n1 != 0) --n1;
+      while (max_pieces % n1 != 0) {
+        --n1;
+      }
       auto n2 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n - EPSILON)));
-      while (max_pieces % n2 != 0) ++n2;
+      while (max_pieces % n2 != 0) {
+        ++n2;
+      }
 
       // pick whichever of n1 and n2 gives blocks closest to square
       // i.e. gives the shortest long side
@@ -151,7 +169,9 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
 
     for (auto factor : get_factors(machine)) {
       // Avoid exceeding the maximum number of pieces
-      if (factor * factor_prod > static_cast<std::size_t>(max_pieces)) break;
+      if (factor * factor_prod > static_cast<std::size_t>(max_pieces)) {
+        break;
+      }
 
       factor_prod *= factor;
 
@@ -191,7 +211,9 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
   // Project back onto the original number of dimensions
   assert(temp_result.size() == ndim);
   std::vector<size_t> result(shape.size(), 1);
-  for (uint32_t idx = 0; idx < ndim; ++idx) result[temp_dims[idx]] = temp_result[idx];
+  for (uint32_t idx = 0; idx < ndim; ++idx) {
+    result[temp_dims[idx]] = temp_result[idx];
+  }
 
   return Shape{std::move(result)};
 }
@@ -229,7 +251,9 @@ Legion::IndexPartition _find_index_partition(const Cache& cache,
 {
   auto finder = cache.find({index_space, partition});
 
-  if (finder != cache.end()) return finder->second;
+  if (finder != cache.end()) {
+    return finder->second;
+  }
   return Legion::IndexPartition::NO_PART;
 }
 
@@ -254,7 +278,9 @@ Legion::IndexPartition PartitionManager::find_image_partition(
 {
   auto finder = image_cache_.find({index_space, func_partition, field_id});
 
-  if (finder != image_cache_.end()) return finder->second;
+  if (finder != image_cache_.end()) {
+    return finder->second;
+  }
   return Legion::IndexPartition::NO_PART;
 }
 
@@ -286,7 +312,9 @@ void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& inde
 {
   auto finder = image_cache_.find({index_space, func_partition, field_id});
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != image_cache_.end());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(finder != image_cache_.end());
+  }
   image_cache_.erase(finder);
 }
 

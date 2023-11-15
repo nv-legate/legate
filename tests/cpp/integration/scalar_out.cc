@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace scalarout {
 
@@ -32,7 +32,9 @@ struct Copy : public legate::LegateTask<Copy> {
     auto input  = context.input(0).data();
     auto output = context.output(0).data();
     auto shape  = output.shape<1>();
-    if (shape.empty()) { return; }
+    if (shape.empty()) {
+      return;
+    }
     auto out_acc = output.write_accessor<int64_t, 1>();
     auto in_acc  = input.read_accessor<int64_t, 1>();
     out_acc[0]   = in_acc[0];

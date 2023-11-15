@@ -10,13 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <fstream>
-
-#include "legateio.h"
 #include "util.h"
 
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
+
+#include "legateio.h"
+
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -42,10 +43,13 @@ struct write_fn {
 
     std::ofstream out(path, std::ios::binary | std::ios::out | std::ios::trunc);
     // Each file for a chunk starts with the extents
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
 
-    if (empty) return;
+    if (empty) {
+      return;
+    }
     auto acc = store.read_accessor<VAL, DIM>();
     // The iteration order here should be consistent with that in the reader task, otherwise
     // the read data can be transposed.
@@ -71,7 +75,9 @@ std::filesystem::path get_unique_path_for_task_index(legate::TaskContext context
 
   std::stringstream ss;
   for (int32_t idx = 0; idx < task_index.dim; ++idx) {
-    if (idx != 0) ss << ".";
+    if (idx != 0) {
+      ss << ".";
+    }
     ss << task_index[idx];
   }
   auto filename = ss.str();

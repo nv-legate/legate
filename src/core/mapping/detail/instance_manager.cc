@@ -34,16 +34,23 @@ namespace {
 
 bool RegionGroup::subsumes(const RegionGroup* other)
 {
-  if (regions.size() < other->regions.size()) return false;
-  if (other->regions.size() == 1) return regions.find(*other->regions.begin()) != regions.end();
+  if (regions.size() < other->regions.size()) {
+    return false;
+  }
+  if (other->regions.size() == 1) {
+    return regions.find(*other->regions.begin()) != regions.end();
+  }
 
   auto finder = subsumption_cache.find(other);
-  if (finder != subsumption_cache.end()) return finder->second;
-  for (auto& region : other->regions)
+  if (finder != subsumption_cache.end()) {
+    return finder->second;
+  }
+  for (auto& region : other->regions) {
     if (regions.find(region) == regions.end()) {
       subsumption_cache[other] = false;
       return false;
     }
+  }
 
   subsumption_cache[other] = true;
   return true;
@@ -52,7 +59,9 @@ bool RegionGroup::subsumes(const RegionGroup* other)
 std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group)
 {
   os << "RegionGroup(" << region_group.bounding_box << ": {";
-  for (const auto& region : region_group.regions) os << region << ",";
+  for (const auto& region : region_group.regions) {
+    os << region << ",";
+  }
   os << "})";
   return os;
 }
@@ -62,10 +71,14 @@ bool InstanceSet::find_instance(Region region,
                                 const InstanceMappingPolicy& policy) const
 {
   auto finder = groups_.find(region);
-  if (finder == groups_.end()) return false;
+  if (finder == groups_.end()) {
+    return false;
+  }
 
   auto& group = finder->second;
-  if (policy.exact && group->regions.size() > 1) return false;
+  if (policy.exact && group->regions.size() > 1) {
+    return false;
+  }
 
   auto ifinder = instances_.find(group.get());
   assert(ifinder != instances_.end());
@@ -112,7 +125,9 @@ struct construct_overlapping_region_group_fn {
       }
       auto intersect = bound.intersection(group_bbox);
       if (intersect.empty()) {
-        if (LegateDefined(LEGATE_USE_DEBUG)) { log_instmgr().debug() << "    no intersection"; }
+        if (LegateDefined(LEGATE_USE_DEBUG)) {
+          log_instmgr().debug() << "    no intersection";
+        }
         continue;
       }
 
@@ -152,11 +167,14 @@ RegionGroupP InstanceSet::construct_overlapping_region_group(const Region& regio
                                                              bool exact) const
 {
   auto finder = groups_.find(region);
-  if (finder == groups_.end())
+  if (finder == groups_.end()) {
     return dim_dispatch(
       domain.get_dim(), construct_overlapping_region_group_fn{}, region, domain, instances_);
+  }
 
-  if (!exact || finder->second->regions.size() == 1) return finder->second;
+  if (!exact || finder->second->regions.size() == 1) {
+    return finder->second;
+  }
   return std::make_shared<RegionGroup>(std::set<Region>{region}, domain);
 }
 
@@ -255,7 +273,9 @@ bool InstanceSet::erase(const Instance& inst)
       }
     }
   }
-  for (auto&& region : filtered_regions) groups_.erase(region);
+  for (auto&& region : filtered_regions) {
+    groups_.erase(region);
+  }
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
 #ifdef DEBUG_INSTANCE_MANAGER
@@ -270,17 +290,21 @@ bool InstanceSet::erase(const Instance& inst)
 size_t InstanceSet::get_instance_size() const
 {
   size_t sum = 0;
-  for (auto& pair : instances_) sum += pair.second.instance.get_instance_size();
+  for (auto& pair : instances_) {
+    sum += pair.second.instance.get_instance_size();
+  }
   return sum;
 }
 
 void InstanceSet::dump_and_sanity_check() const
 {
 #ifdef DEBUG_INSTANCE_MANAGER
-  for (auto& entry : groups_)
+  for (auto& entry : groups_) {
     log_instmgr().debug() << "  " << entry.first << " ~> " << *entry.second;
-  for (auto& entry : instances_)
+  }
+  for (auto& entry : instances_) {
     log_instmgr().debug() << "  " << *entry.first << " ~> " << entry.second.instance;
+  }
 #endif
   std::unordered_set<RegionGroup*> found_groups;
   for (auto& entry : groups_) {
@@ -288,7 +312,9 @@ void InstanceSet::dump_and_sanity_check() const
     assert(instances_.count(entry.second.get()) > 0);
     assert(entry.second->regions.count(entry.first) > 0);
   }
-  for (auto& entry : instances_) assert(found_groups.count(entry.first) > 0);
+  for (auto& entry : instances_) {
+    assert(found_groups.count(entry.first) > 0);
+  }
 }
 
 bool ReductionInstanceSet::find_instance(ReductionOpID& redop,
@@ -297,7 +323,9 @@ bool ReductionInstanceSet::find_instance(ReductionOpID& redop,
                                          const InstanceMappingPolicy& policy) const
 {
   auto finder = instances_.find(region);
-  if (finder == instances_.end()) return false;
+  if (finder == instances_.end()) {
+    return false;
+  }
   auto& spec = finder->second;
   if (spec.policy == policy && spec.redop == redop) {
     result = spec.instance;
@@ -402,7 +430,9 @@ std::map<Memory, size_t> InstanceManager::aggregate_instance_sizes() const
 
   for (auto& pair : instance_sets_) {
     auto& memory = pair.first.memory;
-    if (result.find(memory) == result.end()) result[memory] = 0;
+    if (result.find(memory) == result.end()) {
+      result[memory] = 0;
+    }
     result[memory] += pair.second.get_instance_size();
   }
   return result;
@@ -412,7 +442,9 @@ std::map<Memory, size_t> InstanceManager::aggregate_instance_sizes() const
 {
   static InstanceManager* manager{nullptr};
 
-  if (nullptr == manager) manager = new InstanceManager{};
+  if (nullptr == manager) {
+    manager = new InstanceManager{};
+  }
   return manager;
 }
 
@@ -460,7 +492,9 @@ void ReductionInstanceManager::erase(const Instance& inst)
 {
   static ReductionInstanceManager* manager{nullptr};
 
-  if (manager == nullptr) manager = new ReductionInstanceManager{};
+  if (manager == nullptr) {
+    manager = new ReductionInstanceManager{};
+  }
   return manager;
 }
 

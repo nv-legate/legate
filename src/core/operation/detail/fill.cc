@@ -30,10 +30,13 @@ Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
     value_{std::move(value)}
 {
   store_mappings_[*lhs_var_] = lhs_;
-  if (lhs_->unbound()) throw std::invalid_argument("Fill lhs must be a normal store");
+  if (lhs_->unbound()) {
+    throw std::invalid_argument("Fill lhs must be a normal store");
+  }
 
-  if (!value_->has_scalar_storage())
+  if (!value_->has_scalar_storage()) {
     throw std::invalid_argument("Fill value should be a Future-back store");
+  }
 }
 
 void Fill::validate()
@@ -69,7 +72,9 @@ std::string Fill::to_string() const { return "Fill:" + std::to_string(unique_id_
 void Fill::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_partition_symbol(lhs_var_, IsOutput::Y);
-  if (lhs_->has_scalar_storage()) solver.add_constraint(broadcast(lhs_var_));
+  if (lhs_->has_scalar_storage()) {
+    solver.add_constraint(broadcast(lhs_var_));
+  }
 }
 
 }  // namespace legate::detail

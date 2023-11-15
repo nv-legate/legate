@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/dispatch.h"
+
 #include "legate_library.h"
 #include "reduction_cffi.h"
-
-#include "core/utilities/dispatch.h"
 
 namespace reduction {
 
@@ -27,7 +27,9 @@ struct reduction_fn {
 
     auto shape = input.shape<DIM>();
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     auto in_acc  = input.read_accessor<VAL, DIM>();
     auto red_acc = ouptut.reduce_accessor<legate::SumReduction<VAL>, true, DIM>();

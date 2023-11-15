@@ -12,13 +12,12 @@
 
 #pragma once
 
-#include <gtest/gtest.h>
-
 #include "core/utilities/memory.h"
 
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <gtest/gtest.h>
 #include <vector>
 
 struct UserType {
@@ -50,8 +49,12 @@ struct UserType {
   void check_mem_corruption() const
   {
     // to test for corruption
-    for (auto&& v : before_padding) { ASSERT_EQ(v, 0); }
-    for (auto&& v : after_padding) { ASSERT_EQ(v, 0); }
+    for (auto&& v : before_padding) {
+      ASSERT_EQ(v, 0);
+    }
+    for (auto&& v : after_padding) {
+      ASSERT_EQ(v, 0);
+    }
   }
 };
 
@@ -96,7 +99,9 @@ inline void test_create_with_copy_n(std::vector<std::reference_wrapper<SharedPtr
   for (std::size_t i = 0; i < ptrs.size(); ++i) {
     ASSERT_EQ(ptrs[i].get().use_count(), ptrs.size()) << "idx: " << i;
   }
-  for (std::size_t i = 0; i < ptrs.size(); ++i) { ASSERT_TRUE(ptrs[i].get()) << "idx: " << i; }
+  for (std::size_t i = 0; i < ptrs.size(); ++i) {
+    ASSERT_TRUE(ptrs[i].get()) << "idx: " << i;
+  }
   for (std::size_t i = 0; i < ptrs.size(); ++i) {
     ASSERT_EQ(ptrs[i].get().get(), bare_ptr) << "idx: " << i;
   }
@@ -147,7 +152,9 @@ struct Base {
 
   virtual void check_mem_corruption() const
   {
-    for (auto&& v : padding) { ASSERT_EQ(v, 0); }
+    for (auto&& v : padding) {
+      ASSERT_EQ(v, 0);
+    }
   }
 };
 
@@ -167,7 +174,9 @@ struct BasicDerived : Base {
   {
     // to test for corruption
     Base::check_mem_corruption();
-    for (auto&& v : more_padding) { ASSERT_EQ(v, 0); }
+    for (auto&& v : more_padding) {
+      ASSERT_EQ(v, 0);
+    }
   }
 };
 

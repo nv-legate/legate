@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <filesystem>
-#include <fstream>
+#include "core/utilities/dispatch.h"
 
 #include "legate_library.h"
 #include "legateio.h"
 #include "util.h"
 
-#include "core/utilities/dispatch.h"
+#include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -37,8 +37,9 @@ struct header_write_fn {
     // The header contains the type code and the launch shape
     out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
     out.write(reinterpret_cast<const char*>(&launch_domain.dim), sizeof(int32_t));
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
   }
 };
 

@@ -27,7 +27,9 @@ std::vector<Array> convert_arrays(const Arrays& arrays)
   std::vector<Array> result;
 
   result.reserve(arrays.size());
-  for (auto&& array : arrays) result.emplace_back(array.get());
+  for (auto&& array : arrays) {
+    result.emplace_back(array.get());
+  }
   return result;
 }
 

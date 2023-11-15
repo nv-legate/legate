@@ -38,7 +38,9 @@ ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, size_t size)
 /*static*/ ReturnValue ReturnValue::unpack(const void* ptr, size_t size, Memory::Kind memory_kind)
 {
   ReturnValue result{Legion::UntypedDeferredValue{size, memory_kind}, size};
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!result.is_device_value()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!result.is_device_value());
+  }
   memcpy(result.ptr(), ptr, size);
 
   return result;
@@ -76,7 +78,9 @@ ReturnedException::ReturnedException(int32_t index, std::string_view error_messa
 
 std::optional<TaskException> ReturnedException::to_task_exception() const
 {
-  if (!raised_) return std::nullopt;
+  if (!raised_) {
+    return std::nullopt;
+  }
   return std::make_optional<TaskException>(
     {index_, {error_message_.data(), error_message_.data() + message_size_}});
 }
@@ -159,7 +163,9 @@ void ReturnedException::legion_deserialize(const void* buffer)
   if (raised_) {
     std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &index_);
     std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &message_size_);
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(message_size_ <= error_message_.size());
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(message_size_ <= error_message_.size());
+    }
     std::memcpy(error_message_.data(), ptr, message_size_);
     std::memset(error_message_.data() + message_size_, 0, error_message_.size() - message_size_);
     error_message_.back() = '\0';  // always null-terminate, regardless of size
@@ -183,7 +189,9 @@ ReturnValues::ReturnValues(std::vector<ReturnValue>&& return_values)
 {
   if (return_values_.size() > 1) {
     buffer_size_ += sizeof(uint32_t);
-    for (auto& ret : return_values_) buffer_size_ += sizeof(uint32_t) + ret.size();
+    for (auto& ret : return_values_) {
+      buffer_size_ += sizeof(uint32_t) + ret.size();
+    }
   } else if (!return_values_.empty()) {
     buffer_size_ = return_values_[0].size();
   }
@@ -309,7 +317,9 @@ void ReturnValues::finalize(Legion::Context legion_context) const
   //        as doing so would require the packing to be chained up with all preceding kernels,
   //        potentially launched with different streams, within the task. Until we find
   //        the right approach, we simply synchronize the device before proceeding.
-  if (kind == Processor::TOC_PROC) CHECK_CUDA(cudaDeviceSynchronize());
+  if (kind == Processor::TOC_PROC) {
+    CHECK_CUDA(cudaDeviceSynchronize());
+  }
 #endif
 
   const size_t return_size = legion_buffer_size();
@@ -329,16 +339,24 @@ struct JoinReturnedException {
   template <bool EXCLUSIVE>
   static void apply(LHS& lhs, RHS rhs)
   {
-    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(EXCLUSIVE); }
-    if (lhs.raised() || !rhs.raised()) return;
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(EXCLUSIVE);
+    }
+    if (lhs.raised() || !rhs.raised()) {
+      return;
+    }
     lhs = std::move(rhs);
   }
 
   template <bool EXCLUSIVE>
   static void fold(RHS& rhs1, RHS rhs2)
   {
-    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(EXCLUSIVE); }
-    if (rhs1.raised() || !rhs2.raised()) return;
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(EXCLUSIVE);
+    }
+    if (rhs1.raised() || !rhs2.raised()) {
+      return;
+    }
     rhs1 = std::move(rhs2);
   }
 };

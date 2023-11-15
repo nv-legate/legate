@@ -61,9 +61,10 @@ void TaskInfo::Impl::add_variant(LegateVariantCode vid,
                                  const Legion::CodeDescriptor& code_desc,
                                  const VariantOptions& options)
 {
-  if (variants_.find(vid) != variants_.end())
+  if (variants_.find(vid) != variants_.end()) {
     throw std::invalid_argument("Task " + task_name_ + " already has variant " +
                                 std::to_string(vid));
+  }
   variants_.emplace(vid, VariantInfo{body, code_desc, options});
 }
 
@@ -123,8 +124,9 @@ std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
 {
   std::stringstream ss;
   ss << info.name() << " {";
-  for (auto [vid, vinfo] : info.impl_->variants())
+  for (auto [vid, vinfo] : info.impl_->variants()) {
     ss << VARIANT_NAMES[vid] << ":[" << vinfo << "],";
+  }
   ss << "}";
   os << std::move(ss).str();
   return os;

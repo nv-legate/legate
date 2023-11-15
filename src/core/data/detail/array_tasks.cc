@@ -19,14 +19,18 @@ namespace legate::detail {
 
 /*static*/ void FixupRanges::cpu_variant(legate::TaskContext context)
 {
-  if (context.get_task_index()[0] == 0) return;
+  if (context.get_task_index()[0] == 0) {
+    return;
+  }
   // TODO: We need to extend this to nested cases
   for (auto&& output : context.outputs()) {
     auto list_arr = output.as_list_array();
 
     auto desc       = list_arr.descriptor();
     auto desc_shape = desc.shape<1>();
-    if (desc_shape.empty()) continue;
+    if (desc_shape.empty()) {
+      continue;
+    }
 
     const auto vardata_lo = list_arr.vardata().shape<1>().lo;
     auto desc_acc         = desc.data().read_write_accessor<Rect<1>, 1>();
@@ -48,7 +52,9 @@ namespace legate::detail {
   const auto shape = offsets.shape<1>();
   assert(shape == ranges.shape<1>());
 
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   const auto vardata_shape = vardata.shape<1>();
   const auto vardata_lo    = vardata_shape.lo[0];
@@ -71,7 +77,9 @@ namespace legate::detail {
   const auto shape = ranges.shape<1>();
   assert(shape == offsets.shape<1>());
 
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   const auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
   const auto offsets_acc = offsets.write_accessor<int32_t, 1>();

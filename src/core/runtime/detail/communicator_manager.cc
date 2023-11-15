@@ -20,11 +20,15 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
                                                       const mapping::ProcessorRange& range,
                                                       const Domain& launch_domain)
 {
-  if (launch_domain.dim == 1) return find_or_create(target, range, launch_domain.get_volume());
+  if (launch_domain.dim == 1) {
+    return find_or_create(target, range, launch_domain.get_volume());
+  }
 
   AliasKey key{launch_domain, target, range};
   auto finder = nd_aliases_.find(key);
-  if (finder != nd_aliases_.end()) return finder->second;
+  if (finder != nd_aliases_.end()) {
+    return finder->second;
+  }
 
   auto communicator = find_or_create(target, range, launch_domain.get_volume());
   communicator      = transform(communicator, launch_domain);
@@ -47,7 +51,9 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
 {
   CommKey key{num_tasks, target, range};
   auto finder = communicators_.find(key);
-  if (finder != communicators_.end()) return finder->second;
+  if (finder != communicators_.end()) {
+    return finder->second;
+  }
 
   auto communicator = initialize(key.get_machine(), num_tasks);
   communicators_.insert({std::move(key), communicator});
@@ -75,7 +81,9 @@ void CommunicatorManager::register_factory(const std::string& name,
 
 void CommunicatorManager::destroy()
 {
-  for (auto& [_, factory] : factories_) factory->destroy();
+  for (auto& [_, factory] : factories_) {
+    factory->destroy();
+  }
   factories_.clear();
 }
 

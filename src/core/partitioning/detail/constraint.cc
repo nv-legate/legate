@@ -48,19 +48,24 @@ void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_s
 
 void Alignment::validate() const
 {
-  if (is_trivial()) return;
+  if (is_trivial()) {
+    return;
+  }
 
   auto lhs_store = lhs_->operation()->find_store(lhs_);
   auto rhs_store = rhs_->operation()->find_store(rhs_);
   if (lhs_store->unbound() != rhs_store->unbound()) {
     throw std::invalid_argument{"Alignment requires the stores to be all normal or all unbound"};
   }
-  if (lhs_store->unbound()) return;
+  if (lhs_store->unbound()) {
+    return;
+  }
   if (!lhs_store->extents().empty() && !rhs_store->extents().empty() &&
-      lhs_store->extents() != rhs_store->extents())
+      lhs_store->extents() != rhs_store->extents()) {
     throw std::invalid_argument{"Alignment requires the stores to have the same shape, but found " +
                                 lhs_store->extents().to_string() + " and " +
                                 rhs_store->extents().to_string()};
+  }
 }
 
 std::string Alignment::to_string() const
@@ -78,12 +83,15 @@ void Broadcast::find_partition_symbols(std::vector<const Variable*>& partition_s
 
 void Broadcast::validate() const
 {
-  if (axes_.empty()) return;
+  if (axes_.empty()) {
+    return;
+  }
   auto store = variable_->operation()->find_store(variable_);
   for (auto axis : axes_.data()) {
-    if (axis < 0 || axis >= store->dim())
+    if (axis < 0 || axis >= store->dim()) {
       throw std::invalid_argument{"Invalid broadcasting dimension " + std::to_string(axis) +
                                   " for a " + std::to_string(store->dim()) + "-D store"};
+    }
   }
 }
 
@@ -226,7 +234,9 @@ std::shared_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
 
 std::shared_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
 {
-  if (axes.empty()) { throw std::invalid_argument("List of axes to broadcast must not be empty"); }
+  if (axes.empty()) {
+    throw std::invalid_argument("List of axes to broadcast must not be empty");
+  }
   return std::make_shared<Broadcast>(variable, axes);
 }
 

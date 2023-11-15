@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/dispatch.h"
+
 #include "legate_library.h"
 #include "reduction_cffi.h"
-
-#include "core/utilities/dispatch.h"
 
 namespace reduction {
 
@@ -27,7 +27,9 @@ struct mul_fn {
 
     auto shape = lhs.shape<DIM>();
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     auto rhs1_acc = rhs1.read_accessor<VAL, DIM>();
     auto rhs2_acc = rhs2.read_accessor<VAL, DIM>();

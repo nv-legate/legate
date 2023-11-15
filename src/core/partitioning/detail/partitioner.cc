@@ -51,31 +51,46 @@ void LaunchDomainResolver::record_launch_domain(const Domain& launch_domain)
   launch_domains_.insert(launch_domain);
   launch_volumes_.insert(
     static_cast<decltype(launch_volumes_)::value_type>(launch_domain.get_volume()));
-  if (launch_domains_.size() > 1) must_be_1d_ = true;
-  if (launch_volumes_.size() > 1) must_be_sequential_ = true;
+  if (launch_domains_.size() > 1) {
+    must_be_1d_ = true;
+  }
+  if (launch_volumes_.size() > 1) {
+    must_be_sequential_ = true;
+  }
 }
 
 void LaunchDomainResolver::record_unbound_store(int32_t unbound_dim)
 {
-  if (unbound_dim_ != UNSET && unbound_dim_ != unbound_dim)
+  if (unbound_dim_ != UNSET && unbound_dim_ != unbound_dim) {
     must_be_sequential_ = true;
-  else
+  } else {
     unbound_dim_ = unbound_dim;
+  }
 }
 
 Domain LaunchDomainResolver::resolve_launch_domain() const
 {
-  if (must_be_sequential_ || launch_domains_.empty()) return {};
+  if (must_be_sequential_ || launch_domains_.empty()) {
+    return {};
+  }
   if (must_be_1d_) {
-    if (unbound_dim_ != UNSET && unbound_dim_ > 1) return {};
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(launch_volumes_.size() == 1);
+    if (unbound_dim_ != UNSET && unbound_dim_ > 1) {
+      return {};
+    }
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(launch_volumes_.size() == 1);
+    }
     const int64_t volume = *launch_volumes_.begin();
     return {0, volume - 1};
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(launch_domains_.size() == 1);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(launch_domains_.size() == 1);
+  }
   auto& launch_domain = *launch_domains_.begin();
-  if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) return {};
+  if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) {
+    return {};
+  }
   return launch_domain;
 }
 
@@ -125,7 +140,9 @@ std::shared_ptr<Partition> Strategy::operator[](const Variable* partition_symbol
 {
   auto finder = assignments_.find(*partition_symbol);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != assignments_.end());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(finder != assignments_.end());
+  }
   return finder->second;
 }
 
@@ -133,7 +150,9 @@ const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_s
 {
   auto finder = field_spaces_.find(*partition_symbol);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(finder != field_spaces_.end());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(finder != field_spaces_.end());
+  }
   return finder->second;
 }
 
@@ -145,10 +164,12 @@ bool Strategy::is_key_partition(const Variable* partition_symbol) const
 void Strategy::dump() const
 {
   log_legate().debug("===== Solution =====");
-  for (const auto& [symbol, part] : assignments_)
+  for (const auto& [symbol, part] : assignments_) {
     log_legate().debug() << symbol.to_string() << ": " << part->to_string();
-  for (const auto& [symbol, fspace] : field_spaces_)
+  }
+  for (const auto& [symbol, fspace] : field_spaces_) {
     log_legate().debug() << symbol.to_string() << ": " << fspace;
+  }
   for (const auto& [op, domain] : launch_domains_) {
     if (!domain.is_valid()) {
       log_legate().debug() << op->to_string() << ": (sequential)";
@@ -173,19 +194,23 @@ void Strategy::compute_launch_domains(const ConstraintSolver& solver)
     }
 
     auto store = op->find_store(&part_symb);
-    if (store->unbound())
+    if (store->unbound()) {
       domain_resolver.record_unbound_store(store->dim());
-    else if (solver.is_output(part_symb))
+    } else if (solver.is_output(part_symb)) {
       domain_resolver.set_must_be_sequential(true);
+    }
   }
 
-  for (auto& [op, domain_resolver] : domain_resolvers)
+  for (auto& [op, domain_resolver] : domain_resolvers) {
     launch_domains_[op] = domain_resolver.resolve_launch_domain();
+  }
 }
 
 void Strategy::record_key_partition(const Variable* partition_symbol)
 {
-  if (!key_partition_) key_partition_ = partition_symbol;
+  if (!key_partition_) {
+    key_partition_ = partition_symbol;
+  }
 }
 
 ////////////////////////////////////////////////////
@@ -196,11 +221,15 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 {
   ConstraintSolver solver;
 
-  for (auto op : operations_) op->add_to_solver(solver);
+  for (auto op : operations_) {
+    op->add_to_solver(solver);
+  }
 
   solver.solve_constraints();
 
-  if (Config::log_partitioning_decisions) solver.dump();
+  if (Config::log_partitioning_decisions) {
+    solver.dump();
+  }
 
   auto strategy = std::make_unique<Strategy>();
 
@@ -215,7 +244,9 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto has_key_part =
       store->has_key_partition(op->machine(), solver.find_restrictions(part_symb));
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(!store->unbound());
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(!store->unbound());
+    }
     return std::make_pair(store->storage_size(), has_key_part);
   };
 
@@ -226,7 +257,9 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
                    });
 
   for (auto& part_symb : remaining_symbols) {
-    if (strategy->has_assignment(part_symb) || solver.is_dependent(*part_symb)) continue;
+    if (strategy->has_assignment(part_symb) || solver.is_dependent(*part_symb)) {
+      continue;
+    }
 
     const auto& equiv_class  = solver.find_equivalence_class(part_symb);
     const auto& restrictions = solver.find_restrictions(part_symb);
@@ -236,15 +269,21 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto partition = store->find_or_create_key_partition(op->machine(), restrictions);
 
     strategy->record_key_partition(part_symb);
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(partition != nullptr);
-    for (auto symb : equiv_class) strategy->insert(symb, partition);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(partition != nullptr);
+    }
+    for (auto symb : equiv_class) {
+      strategy->insert(symb, partition);
+    }
   }
 
   solver.solve_dependent_constraints(*strategy);
 
   strategy->compute_launch_domains(solver);
 
-  if (Config::log_partitioning_decisions) strategy->dump();
+  if (Config::log_partitioning_decisions) {
+    strategy->dump();
+  }
 
   return strategy;
 }
@@ -272,7 +311,9 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
     const std::shared_ptr<Partition> partition{create_no_partition()};
     auto field_space = runtime->create_field_space();
 
-    for (auto symb : equiv_class) strategy->insert(symb, partition, field_space);
+    for (auto symb : equiv_class) {
+      strategy->insert(symb, partition, field_space);
+    }
   }
 
   return filtered;

@@ -35,7 +35,9 @@ RegionManager::RegionManager(Runtime* runtime,
 
 void RegionManager::destroy(bool unordered)
 {
-  for (auto& entry : entries_) entry.destroy(runtime_, unordered);
+  for (auto& entry : entries_) {
+    entry.destroy(runtime_, unordered);
+  }
 }
 
 void RegionManager::push_entry()
@@ -50,7 +52,9 @@ bool RegionManager::has_space() const { return !entries_.empty() && active_entry
 
 std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(size_t field_size)
 {
-  if (!has_space()) push_entry();
+  if (!has_space()) {
+    push_entry();
+  }
 
   auto& entry = active_entry();
   auto fid =

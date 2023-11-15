@@ -24,7 +24,9 @@ class Time::Impl {
 
   [[nodiscard]] int64_t value()
   {
-    if (!value_) { value_ = future_.get_result<int64_t>(); }
+    if (!value_) {
+      value_ = future_.get_result<int64_t>();
+    }
     return *value_;
   }
 

@@ -201,7 +201,9 @@ FixedArrayType::FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, 
     N_{N},
     size_{element_type_->size() * N}
 {
-  if (element_type_->variable_size()) throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+  if (element_type_->variable_size()) {
+    throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+  }
 }
 
 std::string FixedArrayType::to_string() const
@@ -222,7 +224,9 @@ void FixedArrayType::pack(BufferBuilder& buffer) const
 
 bool FixedArrayType::equal(const Type& other) const
 {
-  if (code != other.code) return false;
+  if (code != other.code) {
+    return false;
+  }
   auto& casted = static_cast<const FixedArrayType&>(other);
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -254,7 +258,9 @@ StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_t
     };
 
     for (auto& field_type : field_types_) {
-      if (field_type->variable_size()) throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+      if (field_type->variable_size()) {
+        throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+      }
       const auto _my_align = field_type->alignment();
       alignment_           = std::max(_my_align, alignment_);
 
@@ -265,7 +271,9 @@ StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_t
     size_ = align_offset(size_, alignment_);
   } else {
     for (auto& field_type : field_types_) {
-      if (field_type->variable_size()) throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+      if (field_type->variable_size()) {
+        throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+      }
       offsets_.push_back(size_);
       size_ += field_type->size();
     }
@@ -278,7 +286,9 @@ std::string StructType::to_string() const
 
   ss << "{";
   for (uint32_t idx = 0; idx < field_types_.size(); ++idx) {
-    if (idx > 0) ss << ",";
+    if (idx > 0) {
+      ss << ",";
+    }
     ss << field_types_.at(idx)->to_string() << ":" << offsets_.at(idx);
   }
   ss << "}";
@@ -290,22 +300,33 @@ void StructType::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(static_cast<int32_t>(code));
   buffer.pack<uint32_t>(uid_);
   buffer.pack<uint32_t>(static_cast<std::uint32_t>(field_types_.size()));
-  for (auto& field_type : field_types_) field_type->pack(buffer);
+  for (auto& field_type : field_types_) {
+    field_type->pack(buffer);
+  }
   buffer.pack<bool>(aligned_);
 }
 
 bool StructType::equal(const Type& other) const
 {
-  if (code != other.code) return false;
+  if (code != other.code) {
+    return false;
+  }
   auto& casted = static_cast<const StructType&>(other);
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
-    if (uid_ != casted.uid_) return false;
+    if (uid_ != casted.uid_) {
+      return false;
+    }
     const auto nf = num_fields();
-    if (nf != casted.num_fields()) return false;
-    for (uint32_t idx = 0; idx < nf; ++idx)
-      if (field_type(idx) != casted.field_type(idx)) return false;
+    if (nf != casted.num_fields()) {
+      return false;
+    }
+    for (uint32_t idx = 0; idx < nf; ++idx) {
+      if (field_type(idx) != casted.field_type(idx)) {
+        return false;
+      }
+    }
     return true;
   }
   // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
@@ -330,7 +351,9 @@ std::shared_ptr<Type> primitive_type(Type::Code code)
                                 " is not a valid type code for a primitive type"};
   }
   auto finder = cache.find(code);
-  if (finder != cache.end()) { return finder->second; }
+  if (finder != cache.end()) {
+    return finder->second;
+  }
   auto result = std::make_shared<PrimitiveType>(code);
   cache[code] = result;
   return result;
@@ -361,7 +384,9 @@ void ListType::pack(BufferBuilder& buffer) const
 
 bool ListType::equal(const Type& other) const
 {
-  if (code != other.code) return false;
+  if (code != other.code) {
+    return false;
+  }
   auto& casted = static_cast<const ListType&>(other);
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -393,7 +418,9 @@ std::shared_ptr<Type> binary_type(uint32_t size)
 
 std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint32_t N)
 {
-  if (N == 0) throw std::out_of_range{"Size of array must be greater than 0"};
+  if (N == 0) {
+    throw std::out_of_range{"Size of array must be greater than 0"};
+  }
   // We use UIDs of the following format for "common" fixed array types
   //    1B            1B
   // +--------+-------------------+
@@ -402,7 +429,9 @@ std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint3
   auto uid = [&N](const Type& elem_type) {
     constexpr auto MAX_ELEMENTS = 0xFFU;
 
-    if (!elem_type.is_primitive() || N > MAX_ELEMENTS) return get_next_uid();
+    if (!elem_type.is_primitive() || N > MAX_ELEMENTS) {
+      return get_next_uid();
+    }
     return static_cast<int32_t>(elem_type.code) | (N << TYPE_CODE_OFFSET);
   }(*element_type);
   return std::make_shared<FixedArrayType>(uid, std::move(element_type), N);
@@ -556,7 +585,9 @@ bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim)
 
 bool is_rect_type(const std::shared_ptr<Type>& type, int32_t ndim)
 {
-  if (type->code != Type::Code::STRUCT) return false;
+  if (type->code != Type::Code::STRUCT) {
+    return false;
+  }
   const auto& st_type = type->as_struct_type();
   return st_type.num_fields() == 2 && is_point_type(st_type.field_type(0), ndim) &&
          is_point_type(st_type.field_type(1), ndim);

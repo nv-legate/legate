@@ -11,7 +11,9 @@
  */
 
 #include "library.h"
+
 #include "core/mapping/mapping.h"
+
 #include "world.h"
 
 namespace rg {

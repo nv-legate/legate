@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace buffer_test {
 
@@ -89,7 +90,9 @@ void test_buffer(int32_t dim, uint64_t bytes, legate::Memory::Kind kind, size_t 
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

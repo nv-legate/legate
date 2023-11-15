@@ -47,7 +47,9 @@ std::shared_ptr<PhysicalArray> BasePhysicalArray::child(uint32_t /*index*/) cons
 void BasePhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
 {
   result.push_back(data_);
-  if (nullable()) result.push_back(null_mask_);
+  if (nullable()) {
+    result.push_back(null_mask_);
+  }
 }
 
 void BasePhysicalArray::check_shape_dimension(int32_t dim) const
@@ -57,7 +59,9 @@ void BasePhysicalArray::check_shape_dimension(int32_t dim) const
 
 bool ListPhysicalArray::valid() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(descriptor_->valid() == vardata_->valid()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(descriptor_->valid() == vardata_->valid());
+  }
   return descriptor_->valid();
 }
 
@@ -94,7 +98,9 @@ bool StructPhysicalArray::valid() const
 {
   auto result =
     std::all_of(fields_.begin(), fields_.end(), [](auto& field) { return field->valid(); });
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(null_mask_->valid() == result); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(null_mask_->valid() == result);
+  }
   return result;
 }
 

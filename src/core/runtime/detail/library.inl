@@ -36,7 +36,9 @@ inline int64_t Library::ResourceIdScope::invert(int64_t resource_id) const
 
 inline int64_t Library::ResourceIdScope::generate_id()
 {
-  if (next_ == size_) throw std::overflow_error{"The scope ran out of IDs"};
+  if (next_ == size_) {
+    throw std::overflow_error{"The scope ran out of IDs"};
+  }
   return next_++;
 }
 

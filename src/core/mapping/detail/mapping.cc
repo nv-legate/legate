@@ -71,18 +71,22 @@ void DimOrdering::populate_dimension_ordering(int32_t dim,
   // TODO: We need to implement the relative dimension ordering
   switch (kind) {
     case Kind::C: {
-      for (int32_t idx = dim - 1; idx >= 0; --idx)
+      for (int32_t idx = dim - 1; idx >= 0; --idx) {
         ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
+      }
       break;
     }
     case Kind::FORTRAN: {
-      for (int32_t idx = 0; idx < dim; ++idx)
+      for (int32_t idx = 0; idx < dim; ++idx) {
         ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
+      }
       break;
     }
     case Kind::CUSTOM: {
       ordering.reserve(ordering.size() + dims.size());
-      for (auto idx : dims) ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
+      for (auto idx : dims) {
+        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
+      }
       break;
     }
   }
@@ -90,13 +94,17 @@ void DimOrdering::populate_dimension_ordering(int32_t dim,
 
 bool StoreMapping::for_future() const
 {
-  for (auto& store : stores) return store->is_future();
+  for (auto& store : stores) {
+    return store->is_future();
+  }
   return false;
 }
 
 bool StoreMapping::for_unbound_store() const
 {
-  for (auto& store : stores) return store->unbound();
+  for (auto& store : stores) {
+    return store->unbound();
+  }
   return false;
 }
 
@@ -118,7 +126,9 @@ uint32_t StoreMapping::requirement_index() const
   }
 
   static constexpr uint32_t invalid = -1U;
-  if (stores.empty()) return invalid;
+  if (stores.empty()) {
+    return invalid;
+  }
   return stores.front()->requirement_index();
 }
 
@@ -127,7 +137,9 @@ std::set<uint32_t> StoreMapping::requirement_indices() const
   std::set<uint32_t> indices;
 
   for (auto& store : stores) {
-    if (store->is_future()) continue;
+    if (store->is_future()) {
+      continue;
+    }
     indices.insert(store->region_field().index());
   }
   return indices;
@@ -138,9 +150,13 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
   std::set<const Legion::RegionRequirement*> reqs;
 
   for (auto& store : stores) {
-    if (store->is_future()) continue;
+    if (store->is_future()) {
+      continue;
+    }
     auto* req = store->region_field().get_requirement();
-    if (!req->region.exists()) continue;
+    if (!req->region.exists()) {
+      continue;
+    }
     reqs.insert(req);
   }
   return reqs;
@@ -151,10 +167,14 @@ void StoreMapping::populate_layout_constraints(
 {
   std::vector<Legion::DimensionKind> dimension_ordering{};
 
-  if (policy.layout == InstLayout::AOS) dimension_ordering.push_back(DIM_F);
+  if (policy.layout == InstLayout::AOS) {
+    dimension_ordering.push_back(DIM_F);
+  }
   policy.ordering.impl()->populate_dimension_ordering(stores.front()->region_field().dim(),
                                                       dimension_ordering);
-  if (policy.layout == InstLayout::SOA) dimension_ordering.push_back(DIM_F);
+  if (policy.layout == InstLayout::SOA) {
+    dimension_ordering.push_back(DIM_F);
+  }
 
   layout_constraints.add_constraint(
     Legion::OrderingConstraint(dimension_ordering, false /*contiguous*/));

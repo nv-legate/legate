@@ -41,7 +41,9 @@ struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
   {
     auto outputs = context.outputs();
     auto shape   = outputs.at(0).shape<DIM>();
-    for (auto& output : outputs) EXPECT_EQ(shape, output.shape<DIM>());
+    for (auto& output : outputs) {
+      EXPECT_EQ(shape, output.shape<DIM>());
+    }
   }
 };
 
@@ -74,7 +76,9 @@ struct TransformedTester : public legate::LegateTask<TransformedTester<DIM>> {
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

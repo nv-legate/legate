@@ -38,7 +38,9 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
       auto ind_store = context.input(2).data();
 
       auto ind_shape = ind_store.shape<IND_DIM>();
-      if (ind_shape.empty()) return;
+      if (ind_shape.empty()) {
+        return;
+      }
 
       auto src_acc = src_store.read_accessor<VAL, SRC_DIM>();
       auto tgt_acc = tgt_store.read_accessor<VAL, IND_DIM>();
@@ -63,7 +65,9 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

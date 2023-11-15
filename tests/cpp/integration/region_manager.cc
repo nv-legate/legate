@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "tasks/task_region_manager.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace region_manager {
 

@@ -37,19 +37,20 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
     auto index = context.scalar(1).value<int32_t>();
     // Make sure only some of the  point tasks raise an exception
     if (raise && (context.is_single_task() || context.get_task_index()[0] == 0)) {
-      if (context.is_single_task())
+      if (context.is_single_task()) {
         logger.debug() << "Raise an exception for index " << index;
-      else
+      } else {
         logger.debug() << "Raise an exception for index " << index << " (task "
                        << context.get_task_index() << ")";
+      }
       throw legate::TaskException(index, EXN_MSG);
     } else {
-      if (context.is_single_task())
+      if (context.is_single_task()) {
         logger.debug() << "Don't raise an exception for index " << index;
-      else
+      } else {
         logger.debug() << "Don't raise an exception for index " << index << " (task "
                        << context.get_task_index() << ")";
-      ;
+      };
     }
   }
 };
@@ -57,7 +58,9 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

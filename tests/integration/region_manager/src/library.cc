@@ -11,6 +11,7 @@
  */
 
 #include "library.h"
+
 #include "tester.h"
 
 namespace region_manager {

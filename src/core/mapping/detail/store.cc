@@ -10,10 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <utility>
+#include "core/mapping/detail/store.h"
 
 #include "core/data/detail/transform.h"
-#include "core/mapping/detail/store.h"
+
+#include <utility>
 
 namespace legate::mapping::detail {
 
@@ -77,8 +78,12 @@ Store::Store(Legion::Mapping::MapperRuntime* runtime,
 
 bool Store::can_colocate_with(const Store& other) const
 {
-  if (is_future() || other.is_future()) return false;
-  if (unbound() || other.unbound()) return false;
+  if (is_future() || other.is_future()) {
+    return false;
+  }
+  if (unbound() || other.unbound()) {
+    return false;
+  }
   if (is_reduction() || other.is_reduction()) {
     return redop() == other.redop() && region_field().can_colocate_with(other.region_field());
   }
@@ -87,13 +92,17 @@ bool Store::can_colocate_with(const Store& other) const
 
 const RegionField& Store::region_field() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(!is_future()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!is_future());
+  }
   return region_field_;
 }
 
 const FutureWrapper& Store::future() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(is_future()); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(is_future());
+  }
   return future_;
 }
 
@@ -101,14 +110,18 @@ Domain Store::domain() const
 {
   assert(!unbound());
   auto result = is_future() ? future().domain() : region_field().domain(runtime_, context_);
-  if (transform_) result = transform_->transform(result);
+  if (transform_) {
+    result = transform_->transform(result);
+  }
   assert(result.dim == dim());
   return result;
 }
 
 std::vector<int32_t> Store::find_imaginary_dims() const
 {
-  if (transform_) return transform_->find_imaginary_dims();
+  if (transform_) {
+    return transform_->find_imaginary_dims();
+  }
   return {};
 }
 

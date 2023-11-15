@@ -11,6 +11,7 @@
  */
 
 #include "core/mapping/mapping.h"
+
 #include "legate.h"
 #include "scoping_cffi.h"
 
@@ -29,7 +30,9 @@ namespace {
 
 void validate(legate::TaskContext context)
 {
-  if (context.is_single_task()) return;
+  if (context.is_single_task()) {
+    return;
+  }
 
   int32_t num_tasks = context.get_launch_domain().get_volume();
   auto to_compare   = context.scalars().at(0).value<int32_t>();

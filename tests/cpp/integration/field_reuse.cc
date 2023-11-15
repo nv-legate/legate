@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/data/detail/logical_store.h"
 #include "core/runtime/detail/runtime.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace field_reuse {
 
@@ -52,7 +53,9 @@ TEST_F(Integration, FieldReuse)
   Legion::ShardID sid             = legion_runtime->get_shard_id(legion_context, true);
   std::vector<legate::LogicalStore> shard_local_stores;
 
-  if (legion_runtime->get_num_shards(legion_context, true) < 2) return;
+  if (legion_runtime->get_num_shards(legion_context, true) < 2) {
+    return;
+  }
 
   uint32_t field_reuse_freq = runtime->impl()->field_reuse_freq();
   EXPECT_GE(field_reuse_freq, 7);  // otherwise the consensus match would be triggered too early
@@ -88,7 +91,9 @@ TEST_F(Integration, FieldReuse)
     store.impl()->allow_out_of_order_destruction();
     fid3 = store.impl()->get_region_field()->field_id();
     check_field_is_new(fid3);
-    if (sid % 2 == 0) shard_local_stores.push_back(store);
+    if (sid % 2 == 0) {
+      shard_local_stores.push_back(store);
+    }
   }
 
   // This store is only freed on odd shards.
@@ -98,7 +103,9 @@ TEST_F(Integration, FieldReuse)
     store.impl()->allow_out_of_order_destruction();
     fid4 = store.impl()->get_region_field()->field_id();
     check_field_is_new(fid4);
-    if (sid % 2 == 1) shard_local_stores.push_back(store);
+    if (sid % 2 == 1) {
+      shard_local_stores.push_back(store);
+    }
   }
 
   // This store is kept alive on all shards.
@@ -119,8 +126,9 @@ TEST_F(Integration, FieldReuse)
     if (fid6 == 0) {
       fid6 = store.impl()->get_region_field()->field_id();
       check_field_is_new(fid6);
-    } else
+    } else {
       EXPECT_EQ(fid6, store.impl()->get_region_field()->field_id());
+    }
   }
 
   // At this point the consensus match has been triggered, but fid6 is still available, so the next
@@ -144,8 +152,9 @@ TEST_F(Integration, FieldReuse)
     if (fid7 == 0) {
       fid7 = store.impl()->get_region_field()->field_id();
       check_field_is_new(fid7);
-    } else
+    } else {
       EXPECT_EQ(fid7, store.impl()->get_region_field()->field_id());
+    }
   }
 
   // At this point the consensus match has been triggered, but fid7 is still available, so the next
@@ -157,8 +166,9 @@ TEST_F(Integration, FieldReuse)
   // allocations should reuse fid3, fid4 and fid5, but in an undefined order.
   std::vector<legate::LogicalStore> stores345 = {make_store(), make_store(), make_store()};
   std::set<Legion::FieldID> fields345;
-  for (const auto& store : stores345)
+  for (const auto& store : stores345) {
     fields345.insert(store.impl()->get_region_field()->field_id());
+  }
   EXPECT_TRUE(fields345.count(fid3) && fields345.count(fid4) && fields345.count(fid5));
 
   // The next allocation will need to create a new field.

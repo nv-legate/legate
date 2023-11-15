@@ -58,10 +58,18 @@ ProcessorRange ProcessorRange::operator&(const ProcessorRange& other) const
 
 bool ProcessorRange::operator<(const ProcessorRange& other) const noexcept
 {
-  if (low < other.low) return true;
-  if (low > other.low) return false;
-  if (high < other.high) return true;
-  if (high > other.high) return false;
+  if (low < other.low) {
+    return true;
+  }
+  if (low > other.low) {
+    return false;
+  }
+  if (high < other.high) {
+    return true;
+  }
+  if (high > other.high) {
+    return false;
+  }
   return per_node_count < other.per_node_count;
 }
 

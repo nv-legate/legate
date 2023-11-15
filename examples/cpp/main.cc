@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
 #include "cunumeric.h"
 #include "legate.h"
+
+#include <gtest/gtest.h>
 
 class Environment : public ::testing::Environment {
  public:

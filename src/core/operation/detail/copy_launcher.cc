@@ -73,10 +73,18 @@ void CopyArg::pack(BufferBuilder& buffer) const
 
 CopyLauncher::~CopyLauncher()
 {
-  for (auto& arg : inputs_) delete arg;
-  for (auto& arg : outputs_) delete arg;
-  for (auto& arg : source_indirect_) delete arg;
-  for (auto& arg : target_indirect_) delete arg;
+  for (auto& arg : inputs_) {
+    delete arg;
+  }
+  for (auto& arg : outputs_) {
+    delete arg;
+  }
+  for (auto& arg : source_indirect_) {
+    delete arg;
+  }
+  for (auto& arg : target_indirect_) {
+    delete arg;
+  }
 }
 
 void CopyLauncher::add_store(std::vector<CopyArg*>& args,
@@ -88,7 +96,9 @@ void CopyLauncher::add_store(std::vector<CopyArg*>& args,
   auto region_field = store->get_region_field();
   auto field_id     = region_field->field_id();
 
-  if (proj_info->is_key) key_proj_id_ = proj_info->proj_id;
+  if (proj_info->is_key) {
+    key_proj_id_ = proj_info->proj_id;
+  }
   args.emplace_back(new CopyArg{req_idx, store, field_id, privilege, std::move(proj_info)});
 }
 
@@ -172,7 +182,9 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
 
   auto pack_args = [&buffer](const std::vector<CopyArg*>& args) {
     buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
-    for (auto& arg : args) arg->pack(buffer);
+    for (auto& arg : args) {
+      arg->pack(buffer);
+    }
   };
   pack_args(inputs_);
   pack_args(outputs_);

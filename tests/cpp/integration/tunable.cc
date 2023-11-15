@@ -55,7 +55,9 @@ class LibraryMapper : public legate::mapping::Mapper {
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   (void)runtime->create_library(

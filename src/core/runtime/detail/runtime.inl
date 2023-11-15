@@ -37,7 +37,9 @@ ConsensusMatchResult<T>::~ConsensusMatchResult() noexcept
 {
   // Make sure the consensus match operation has completed, because it will be scribbling over the
   // buffers in this object.
-  if (!future_.valid()) return;
+  if (!future_.valid()) {
+    return;
+  }
   try {
     wait();
   } catch (const std::exception& excn) {
@@ -49,7 +51,9 @@ ConsensusMatchResult<T>::~ConsensusMatchResult() noexcept
 template <typename T>
 void ConsensusMatchResult<T>::wait()
 {
-  if (complete_) return;
+  if (complete_) {
+    return;
+  }
   const auto num_matched = future_.get_result<std::size_t>();
   assert(num_matched <= output_.size());
   output_.resize(num_matched);

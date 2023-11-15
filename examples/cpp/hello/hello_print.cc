@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "task_hello.h"
+
+#include <gtest/gtest.h>
 
 namespace helloprint {
 

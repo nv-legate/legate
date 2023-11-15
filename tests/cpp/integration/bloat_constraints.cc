@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace bloat_constraints {
 
@@ -42,7 +42,9 @@ struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
     auto source_shape  = source.shape<DIM>();
     auto bloated_shape = bloated.shape<DIM>();
 
-    if (source_shape.empty()) return;
+    if (source_shape.empty()) {
+      return;
+    }
 
     for (int32_t idx = 0; idx < DIM; ++idx) {
       auto low =
@@ -58,7 +60,9 @@ struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

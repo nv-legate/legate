@@ -51,8 +51,10 @@ ListArrayAccessor<LEGION_WRITE_DISCARD, VAL>::~ListArrayAccessor() noexcept
     // this line can throw!
     auto total_size = [&] {
       int64_t size = 0;
-      
-      for (auto& value : values_) size += value.size();
+
+      for (auto& value : values_) {
+        size += value.size();
+      }
       return size;
     }();
     auto buffer = vardata_store_.create_output_buffer<VAL>(Point<1>{total_size}, true);

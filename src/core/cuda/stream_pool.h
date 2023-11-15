@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include <memory>
+#include "legion.h"
 
 #include <cuda_runtime.h>
-#include "legion.h"
+#include <memory>
 
 /**
  * @file

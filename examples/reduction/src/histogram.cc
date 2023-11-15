@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/dispatch.h"
+
 #include "legate_library.h"
 #include "reduction_cffi.h"
-
-#include "core/utilities/dispatch.h"
 
 namespace reduction {
 
@@ -29,7 +29,9 @@ struct histogram_fn {
     auto bin_shape = bins.shape<1>();
 
     assert(!bin_shape.empty());
-    if (in_shape.empty()) return;
+    if (in_shape.empty()) {
+      return;
+    }
 
     auto num_bins = bin_shape.hi[0] - bin_shape.lo[0];
 
@@ -40,11 +42,12 @@ struct histogram_fn {
     for (legate::PointInRectIterator<1> it(in_shape); it.valid(); ++it) {
       auto& value = in_acc[*it];
       // Use a naive algorithm that loops all bin edges to find a match
-      for (auto bin_idx = 0; bin_idx < num_bins; ++bin_idx)
+      for (auto bin_idx = 0; bin_idx < num_bins; ++bin_idx) {
         if (bin_acc[bin_idx] <= value && value < bin_acc[bin_idx + 1]) {
           res_acc.reduce(bin_idx, 1);
           break;
         }
+      }
     }
   }
 

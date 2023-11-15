@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace tree_reduce_unique {
 
@@ -33,7 +33,9 @@ struct FillTask : public legate::LegateTask<FillTask> {
     auto rect   = output.shape<1>();
     auto volume = rect.volume();
     auto out    = output.write_accessor<int64_t, 1>(rect);
-    for (size_t idx = 0; idx < volume; ++idx) { out[idx] = idx / 2; }
+    for (size_t idx = 0; idx < volume; ++idx) {
+      out[idx] = idx / 2;
+    }
   }
 };
 
@@ -47,11 +49,15 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
     auto volume = rect.volume();
     auto in     = input.read_accessor<int64_t, 1>(rect);
     std::set<int64_t> dedup_set;
-    for (size_t idx = 0; idx < volume; ++idx) dedup_set.insert(in[idx]);
+    for (size_t idx = 0; idx < volume; ++idx) {
+      dedup_set.insert(in[idx]);
+    }
 
     auto result = output.create_output_buffer<int64_t, 1>(dedup_set.size(), true);
     size_t pos  = 0;
-    for (auto e : dedup_set) result[pos++] = e;
+    for (auto e : dedup_set) {
+      result[pos++] = e;
+    }
   }
 };
 
@@ -70,13 +76,17 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
     for (auto& pair : inputs) {
       auto& input = pair.first;
       auto& shape = pair.second;
-      for (auto idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) dedup_set.insert(input[idx]);
+      for (auto idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {
+        dedup_set.insert(input[idx]);
+      }
     }
 
     size_t size = dedup_set.size();
     size_t pos  = 0;
     auto result = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
-    for (auto e : dedup_set) result[pos++] = e;
+    for (auto e : dedup_set) {
+      result[pos++] = e;
+    }
   }
 };
 
@@ -89,7 +99,9 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
     auto volume = rect.volume();
     auto in     = input.read_accessor<int64_t, 1>(rect);
     ASSERT_EQ(volume, TILE_SIZE / 2);
-    for (size_t idx = 0; idx < volume; ++idx) { ASSERT_EQ(in[idx], idx); }
+    for (size_t idx = 0; idx < volume; ++idx) {
+      ASSERT_EQ(in[idx], idx);
+    }
   }
 };
 

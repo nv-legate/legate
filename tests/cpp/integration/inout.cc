@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace inout {
 
@@ -60,7 +60,9 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
     auto output = context.output(0).data();
     auto shape  = output.shape<2>();
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     auto acc = output.read_write_accessor<int64_t, 2>(shape);
     for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
@@ -74,7 +76,9 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library(

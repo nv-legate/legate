@@ -46,7 +46,9 @@ struct CheckGatherScatterTask
       auto ind_shape = src_ind_store.shape<IND_DIM>();
 
       legate::Buffer<bool, TGT_DIM> mask(tgt_shape, legate::Memory::Kind::SYSTEM_MEM);
-      for (legate::PointInRectIterator<TGT_DIM> it(tgt_shape); it.valid(); ++it) mask[*it] = false;
+      for (legate::PointInRectIterator<TGT_DIM> it(tgt_shape); it.valid(); ++it) {
+        mask[*it] = false;
+      }
 
       auto src_acc     = src_store.read_accessor<VAL, SRC_DIM>();
       auto tgt_acc     = tgt_store.read_accessor<VAL, TGT_DIM>();
@@ -64,7 +66,9 @@ struct CheckGatherScatterTask
 
       for (legate::PointInRectIterator<TGT_DIM> it(tgt_shape); it.valid(); ++it) {
         auto p = *it;
-        if (mask[p]) continue;
+        if (mask[p]) {
+          continue;
+        }
         EXPECT_EQ(tgt_acc[p], init);
       }
     }
@@ -100,7 +104,9 @@ struct GatherScatterSpec {
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library(library_name);

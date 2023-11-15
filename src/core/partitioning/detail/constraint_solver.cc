@@ -28,21 +28,29 @@ struct UnionFindEntry {
 
   [[nodiscard]] UnionFindEntry* unify(UnionFindEntry* other)
   {
-    if (this == other) return this;
+    if (this == other) {
+      return this;
+    }
 
     UnionFindEntry* self = this;
-    if (self->size < other->size) std::swap(self, other);
+    if (self->size < other->size) {
+      std::swap(self, other);
+    }
 
     auto end = self;
 
-    while (end->next) end = end->next;
+    while (end->next) {
+      end = end->next;
+    }
     end->next = other;
     end->size += other->size;
     return self;
   }
   void restrict_all()
   {
-    for (auto& restriction : restrictions.data()) restriction = Restriction::FORBID;
+    for (auto& restriction : restrictions.data()) {
+      restriction = Restriction::FORBID;
+    }
   }
 
   const Variable* partition_symbol{};
@@ -75,7 +83,9 @@ struct ConstraintSolver::EquivClass {
 
 ConstraintSolver::~ConstraintSolver()
 {
-  for (auto equiv_class : equiv_classes_) delete equiv_class;
+  for (auto equiv_class : equiv_classes_) {
+    delete equiv_class;
+  }
 }
 
 void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, IsOutput is_output)
@@ -121,18 +131,26 @@ void ConstraintSolver::solve_constraints()
     std::vector<const Variable*> part_symbs_to_unify;
 
     alignment->find_partition_symbols(part_symbs_to_unify);
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(!part_symbs_to_unify.empty());
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(!part_symbs_to_unify.empty());
+    }
 
     auto it           = part_symbs_to_unify.begin();
     auto* equiv_class = table[**it++];
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(equiv_class != nullptr);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(equiv_class != nullptr);
+    }
     for (; it != part_symbs_to_unify.end(); ++it) {
       auto* to_unify = table[**it];
       auto* result   = equiv_class->unify(to_unify);
 
-      if (result != equiv_class) update_table(equiv_class, result);
-      if (result != to_unify) update_table(to_unify, result);
+      if (result != equiv_class) {
+        update_table(equiv_class, result);
+      }
+      if (result != to_unify) {
+        update_table(to_unify, result);
+      }
     }
   };
 
@@ -172,7 +190,9 @@ void ConstraintSolver::solve_constraints()
     switch (constraint->kind()) {
       case Constraint::Kind::ALIGNMENT: {
         auto* alignment = constraint->as_alignment();
-        if (!alignment->is_trivial()) handle_alignment(alignment);
+        if (!alignment->is_trivial()) {
+          handle_alignment(alignment);
+        }
         break;
       }
       case Constraint::Kind::BROADCAST: {
@@ -201,12 +221,16 @@ void ConstraintSolver::solve_constraints()
   // values are already unique? Why do we need to create another set, especially since we just
   // use this set to loop over below, why can't we just reuse the map?
   distinct_entries.reserve(table.size());
-  for (auto& [_, entry] : table) distinct_entries.insert(entry);
+  for (auto& [_, entry] : table) {
+    distinct_entries.insert(entry);
+  }
 
   equiv_classes_.reserve(distinct_entries.size());
   for (auto* entry : distinct_entries) {
     auto equiv_class = new EquivClass{entry};
-    for (auto* symb : equiv_class->partition_symbols) equiv_class_map_.insert({*symb, equiv_class});
+    for (auto* symb : equiv_class->partition_symbols) {
+      equiv_class_map_.insert({*symb, equiv_class});
+    }
     equiv_classes_.emplace_back(equiv_class);
   }
 }
@@ -279,10 +303,13 @@ void ConstraintSolver::dump()
     log_legate().debug() << "  " << symbol->to_string() << " ~> " << store->to_string();
   }
   log_legate().debug() << "Variables:";
-  for (auto& symbol : partition_symbols_.elements())
+  for (auto& symbol : partition_symbols_.elements()) {
     log_legate().debug() << "  " << symbol->to_string();
+  }
   log_legate().debug() << "Constraints:";
-  for (auto& constraint : constraints_) log_legate().debug() << "  " << constraint->to_string();
+  for (auto& constraint : constraints_) {
+    log_legate().debug() << "  " << constraint->to_string();
+  }
   log_legate().debug("============================");
 }
 

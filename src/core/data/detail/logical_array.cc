@@ -97,7 +97,9 @@ std::shared_ptr<BasePhysicalArray> BaseLogicalArray::_get_physical_array() const
 {
   auto data_store = data_->get_physical_store();
   std::shared_ptr<PhysicalStore> null_mask_store{};
-  if (null_mask_ != nullptr) { null_mask_store = null_mask_->get_physical_store(); }
+  if (null_mask_ != nullptr) {
+    null_mask_store = null_mask_->get_physical_store();
+  }
   return std::make_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
 }
 
@@ -109,22 +111,28 @@ std::shared_ptr<LogicalArray> BaseLogicalArray::child(uint32_t /*index*/) const
 
 void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
-  if (data_->unbound())
+  if (data_->unbound()) {
     task->record_unbound_output(data_);
-  else if (data_->has_scalar_storage())
+  } else if (data_->has_scalar_storage()) {
     task->record_scalar_output(data_);
+  }
 
-  if (!nullable()) return;
+  if (!nullable()) {
+    return;
+  }
 
-  if (null_mask_->unbound())
+  if (null_mask_->unbound()) {
     task->record_unbound_output(null_mask_);
-  else if (null_mask_->has_scalar_storage())
+  } else if (null_mask_->has_scalar_storage()) {
     task->record_scalar_output(null_mask_);
+  }
 }
 
 void BaseLogicalArray::record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const
 {
-  if (data_->has_scalar_storage()) { task->record_scalar_reduction(data_, redop); }
+  if (data_->has_scalar_storage()) {
+    task->record_scalar_reduction(data_, redop);
+  }
   if (nullable() && null_mask_->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
     task->record_scalar_reduction(null_mask_, static_cast<Legion::ReductionOpID>(null_redop));
@@ -138,7 +146,9 @@ void BaseLogicalArray::generate_constraints(
 {
   mapping.try_emplace(data_, partition_symbol);
 
-  if (!nullable()) return;
+  if (!nullable()) {
+    return;
+  }
   auto part_null_mask = task->declare_partition();
   mapping.try_emplace(null_mask_, part_null_mask);
   task->add_constraint(align(partition_symbol, part_null_mask));
@@ -262,7 +272,9 @@ void ListLogicalArray::generate_constraints(
   descriptor_->generate_constraints(task, mapping, partition_symbol);
   auto part_vardata = task->declare_partition();
   vardata_->generate_constraints(task, mapping, part_vardata);
-  if (!unbound()) { task->add_constraint(image(partition_symbol, part_vardata)); }
+  if (!unbound()) {
+    task->add_constraint(image(partition_symbol, part_vardata));
+  }
 }
 
 std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
@@ -377,7 +389,9 @@ std::shared_ptr<LogicalStore> StructLogicalArray::null_mask() const
 std::shared_ptr<PhysicalArray> StructLogicalArray::get_physical_array() const
 {
   std::shared_ptr<PhysicalStore> null_mask_store = nullptr;
-  if (null_mask_ != nullptr) { null_mask_store = null_mask_->get_physical_store(); }
+  if (null_mask_ != nullptr) {
+    null_mask_store = null_mask_->get_physical_store();
+  }
 
   auto field_arrays = make_array_from_op<std::shared_ptr<PhysicalArray>>(
     fields_, [&](auto& field) { return field->get_physical_array(); });
@@ -401,19 +415,26 @@ std::shared_ptr<LogicalStore> StructLogicalArray::primary_store() const
 
 void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
-  for (auto& field : fields_) { field->record_scalar_or_unbound_outputs(task); }
+  for (auto& field : fields_) {
+    field->record_scalar_or_unbound_outputs(task);
+  }
 
-  if (!nullable()) return;
+  if (!nullable()) {
+    return;
+  }
 
-  if (null_mask_->unbound())
+  if (null_mask_->unbound()) {
     task->record_unbound_output(null_mask_);
-  else if (null_mask_->has_scalar_storage())
+  } else if (null_mask_->has_scalar_storage()) {
     task->record_scalar_output(null_mask_);
+  }
 }
 
 void StructLogicalArray::record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const
 {
-  for (auto& field : fields_) { field->record_scalar_reductions(task, redop); }
+  for (auto& field : fields_) {
+    field->record_scalar_reductions(task, redop);
+  }
   if (nullable() && null_mask_->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
     task->record_scalar_reduction(null_mask_, static_cast<Legion::ReductionOpID>(null_redop));

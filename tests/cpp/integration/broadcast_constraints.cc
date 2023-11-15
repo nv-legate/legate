@@ -61,7 +61,9 @@ void test_normal_store()
 
   auto launch_tester = [&](const std::vector<int32_t>& dims, bool omit_dims_in_broadcast) {
     std::vector<size_t> extents(3, EXT_SMALL);
-    for (auto dim : dims) extents[dim] = EXT_LARGE;
+    for (auto dim : dims) {
+      extents[dim] = EXT_LARGE;
+    }
     auto store = runtime->create_store(legate::Shape{extents}, legate::int64());
     auto task  = runtime->create_task(context, TESTER);
     auto part  = task.add_output(store);

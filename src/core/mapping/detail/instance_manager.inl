@@ -63,10 +63,18 @@ inline bool BaseInstanceManager::FieldMemInfo::operator==(const FieldMemInfo& rh
 
 inline bool BaseInstanceManager::FieldMemInfo::operator<(const FieldMemInfo& rhs) const
 {
-  if (tid < rhs.tid) return true;
-  if (tid > rhs.tid) return false;
-  if (fid < rhs.fid) return true;
-  if (fid > rhs.fid) return false;
+  if (tid < rhs.tid) {
+    return true;
+  }
+  if (tid > rhs.tid) {
+    return false;
+  }
+  if (fid < rhs.fid) {
+    return true;
+  }
+  if (fid > rhs.fid) {
+    return false;
+  }
   return memory < rhs.memory;
 }
 

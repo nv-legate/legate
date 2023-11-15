@@ -52,7 +52,9 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor() const
   }
 
   if (is_future()) {
-    if (is_read_only_future()) return {get_future(), shape<DIM>(), Memory::Kind::NO_MEMKIND};
+    if (is_read_only_future()) {
+      return {get_future(), shape<DIM>(), Memory::Kind::NO_MEMKIND};
+    }
     return {get_buffer(), shape<DIM>()};
   }
 
@@ -117,7 +119,9 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
   }
 
   if (is_future()) {
-    if (is_read_only_future()) return {get_future(), bounds, Memory::Kind::NO_MEMKIND};
+    if (is_read_only_future()) {
+      return {get_future(), bounds, Memory::Kind::NO_MEMKIND};
+    }
     return {get_buffer(), bounds};
   }
 
@@ -186,7 +190,9 @@ Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
 
   auto result = out.create_buffer<T, DIM>(extents, fid, nullptr, bind_buffer);
   // We will use this value only when the unbound store is 1D
-  if (bind_buffer) update_num_elements(extents[0]);
+  if (bind_buffer) {
+    update_num_elements(extents[0]);
+  }
   return result;
 }
 
@@ -200,7 +206,9 @@ template <int32_t DIM>
 Rect<DIM> PhysicalStore::shape() const
 {
   check_shape_dimension(DIM);
-  if (dim() > 0) return domain().bounds<DIM, coord_t>();
+  if (dim() > 0) {
+    return domain().bounds<DIM, coord_t>();
+  }
 
   auto p = Point<DIM>::ZEROES();
   return {p, p};
@@ -212,7 +220,9 @@ VAL PhysicalStore::scalar() const
   if (!is_future()) {
     throw std::invalid_argument("Scalars can be retrieved only from scalar stores");
   }
-  if (is_read_only_future()) return get_future().get_result<VAL>();
+  if (is_read_only_future()) {
+    return get_future().get_result<VAL>();
+  }
 
   return get_buffer().operator Legion::DeferredValue<VAL>().read();
 }
@@ -237,7 +247,9 @@ template <typename T>
 void PhysicalStore::check_accessor_type() const
 {
   auto in_type = type_code_of<T>;
-  if (in_type == this->code()) return;
+  if (in_type == this->code()) {
+    return;
+  }
   // Test exact match for primitive types
   if (in_type != Type::Code::NIL) {
     throw std::invalid_argument(

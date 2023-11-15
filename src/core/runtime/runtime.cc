@@ -24,7 +24,9 @@ Library Runtime::find_library(const std::string& library_name) const
 
 std::optional<Library> Runtime::maybe_find_library(const std::string& library_name) const
 {
-  if (auto result = impl_->find_library(library_name, true)) return {Library{std::move(result)}};
+  if (auto result = impl_->find_library(library_name, true)) {
+    return {Library{std::move(result)}};
+  }
   return std::nullopt;
 }
 
@@ -207,9 +209,10 @@ mapping::Machine Runtime::get_machine() const { return mapping::Machine{impl_->g
   if (!the_runtime) {
     auto* impl = detail::Runtime::get_runtime();
 
-    if (!impl->initialized())
+    if (!impl->initialized()) {
       throw std::runtime_error{
         "Legate runtime has not been initialized. Please invoke legate::start to use the runtime"};
+    }
 
     the_runtime = new Runtime{impl};
   }

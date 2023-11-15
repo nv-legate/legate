@@ -21,7 +21,9 @@ Legion::Logger logger(library_name);
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
@@ -35,11 +37,14 @@ void register_tasks()
   auto output = context.output(0).data();
   auto shape  = output.shape<2>();
 
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   auto acc = output.write_accessor<int64_t, 2>(shape);
-  for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it)
+  for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
     acc[*it] = (*it)[0] + (*it)[1] * 1000;
+  }
 }
 
 /*static*/ void WriterTask::cpu_variant(legate::TaskContext context)
@@ -61,7 +66,9 @@ void register_tasks()
   auto red2 = context.reduction(1).data();
 
   auto shape = in.shape<1>();
-  if (shape.empty()) return;
+  if (shape.empty()) {
+    return;
+  }
 
   auto red_acc1 = red1.reduce_accessor<legate::SumReduction<int32_t>, true, 2>();
   auto red_acc2 = red2.reduce_accessor<legate::ProdReduction<int64_t>, true, 3>();

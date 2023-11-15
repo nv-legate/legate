@@ -58,7 +58,9 @@ struct Tester : public legate::LegateTask<Tester> {
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library(library_name);
@@ -73,7 +75,9 @@ void initialize(legate::Runtime* runtime,
   auto task = runtime->create_task(library, INIT, legate::Shape{NUM_TASKS});
 
   std::vector<const legate::Variable*> parts;
-  for (auto& output : outputs) task.add_output(output);
+  for (auto& output : outputs) {
+    task.add_output(output);
+  }
 
   runtime->submit(std::move(task));
 }
@@ -100,8 +104,9 @@ void test_weighted(uint32_t num_stores)
   auto library = runtime->find_library(library_name);
 
   std::vector<legate::LogicalStore> stores;
-  for (uint32_t idx = 0; idx < num_stores; ++idx)
+  for (uint32_t idx = 0; idx < num_stores; ++idx) {
     stores.push_back(runtime->create_store(legate::int32()));
+  }
   initialize(runtime, library, stores);
   check(runtime, library, stores);
 }

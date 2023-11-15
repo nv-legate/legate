@@ -82,7 +82,9 @@ void Copy::launch(Strategy* p_strategy)
     launcher.add_reduction(target_.store, std::move(proj));
   }
 
-  if (launch_domain.is_valid()) return launcher.execute(launch_domain);
+  if (launch_domain.is_valid()) {
+    return launcher.execute(launch_domain);
+  }
   return launcher.execute_single();
 }
 
@@ -90,7 +92,9 @@ void Copy::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
   solver.add_partition_symbol(target_.variable, IsOutput::Y);
-  if (target_.store->has_scalar_storage()) solver.add_constraint(broadcast(target_.variable));
+  if (target_.store->has_scalar_storage()) {
+    solver.add_constraint(broadcast(target_.variable));
+  }
   solver.add_partition_symbol(source_.variable, IsOutput::N);
 }
 

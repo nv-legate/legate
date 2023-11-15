@@ -40,7 +40,9 @@ void test_primitive_array(bool nullable)
     EXPECT_EQ(store.volume(), 16);
     EXPECT_EQ(store.type(), legate::int64());
 
-    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    if (!nullable) {
+      EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    }
     EXPECT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
   }
   // Unbound
@@ -61,7 +63,9 @@ void test_primitive_array(bool nullable)
     EXPECT_THROW(static_cast<void>(store.volume()), std::invalid_argument);
     EXPECT_EQ(store.type(), legate::int64());
 
-    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    if (!nullable) {
+      EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    }
     EXPECT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
   }
 }
@@ -83,7 +87,9 @@ void test_list_array(bool nullable)
     EXPECT_EQ(array.num_children(), 2);
 
     EXPECT_THROW(static_cast<void>(array.data()), std::invalid_argument);
-    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    if (!nullable) {
+      EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    }
 
     auto list_array = array.as_list_array();
     // Sub-arrays of list arrays can be retrieved only when they are initialized first
@@ -101,7 +107,9 @@ void test_list_array(bool nullable)
     EXPECT_EQ(array.num_children(), 2);
 
     EXPECT_THROW(static_cast<void>(array.data()), std::invalid_argument);
-    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    if (!nullable) {
+      EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    }
 
     auto list_array = array.as_list_array();
     // Sub-arrays of list arrays can be retrieved only when they are initialized first
@@ -128,7 +136,9 @@ void test_struct_array(bool nullable)
     EXPECT_EQ(array.nullable(), nullable);
     EXPECT_EQ(array.num_children(), st_type.num_fields());
 
-    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    if (!nullable) {
+      EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    }
     EXPECT_THROW(static_cast<void>(array.child(num_fields)), std::out_of_range);
     for (uint32_t idx = 0; idx < num_fields; ++idx) {
       auto field_type     = st_type.field_type(idx);
@@ -154,7 +164,9 @@ void test_struct_array(bool nullable)
     EXPECT_EQ(array.nullable(), nullable);
     EXPECT_EQ(array.num_children(), st_type.num_fields());
 
-    if (!nullable) { EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument); }
+    if (!nullable) {
+      EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+    }
     EXPECT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
   }
 }

@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/dispatch.h"
+
 #include "legate_library.h"
 #include "reduction_cffi.h"
-
-#include "core/utilities/dispatch.h"
 
 namespace reduction {
 
@@ -34,7 +34,9 @@ class BincountTask : public Task<BincountTask, BINCOUNT> {
       auto& value = in_acc[*it];
       legate::Point<1> pos_reduce(static_cast<int64_t>(value));
 
-      if (out_shape.contains(pos_reduce)) out_acc.reduce(pos_reduce, 1);
+      if (out_shape.contains(pos_reduce)) {
+        out_acc.reduce(pos_reduce, 1);
+      }
     }
   }
 };

@@ -38,7 +38,9 @@ std::vector<std::shared_ptr<detail::PhysicalArray>> TaskDeserializer::unpack_arr
   auto size = unpack<uint32_t>();
 
   arrays.reserve(size);
-  for (uint32_t idx = 0; idx < size; ++idx) arrays.emplace_back(unpack_array());
+  for (uint32_t idx = 0; idx < size; ++idx) {
+    arrays.emplace_back(unpack_array());
+  }
   return arrays;
 }
 
@@ -76,7 +78,9 @@ std::shared_ptr<detail::ListPhysicalArray> TaskDeserializer::unpack_list_array()
 std::shared_ptr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_array()
 {
   auto type = unpack_type();
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(type->code == Type::Code::STRUCT);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(type->code == Type::Code::STRUCT);
+  }
 
   std::vector<std::shared_ptr<detail::PhysicalArray>> fields;
   const auto& st_type = type->as_struct_type();
@@ -84,7 +88,9 @@ std::shared_ptr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_arr
   auto null_mask      = nullable ? unpack_store() : nullptr;
 
   fields.reserve(st_type.num_fields());
-  for (uint32_t idx = 0; idx < st_type.num_fields(); ++idx) fields.emplace_back(unpack_array());
+  for (uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
+    fields.emplace_back(unpack_array());
+  }
   return std::make_shared<detail::StructPhysicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
 }
@@ -101,7 +107,9 @@ std::shared_ptr<detail::PhysicalStore> TaskDeserializer::unpack_store()
   if (is_future) {
     auto fut = unpack<detail::FutureWrapper>();
 
-    if (redop_id != -1 && !fut.valid()) fut.initialize_with_identity(redop_id);
+    if (redop_id != -1 && !fut.valid()) {
+      fut.initialize_with_identity(redop_id);
+    }
     return std::make_shared<detail::PhysicalStore>(
       dim, std::move(type), redop_id, std::move(fut), std::move(transform));
   }
@@ -185,7 +193,9 @@ std::vector<std::shared_ptr<detail::Array>> TaskDeserializer::unpack_arrays()
   auto size = unpack<uint32_t>();
 
   arrays.reserve(size);
-  for (uint32_t idx = 0; idx < size; ++idx) arrays.emplace_back(unpack_array());
+  for (uint32_t idx = 0; idx < size; ++idx) {
+    arrays.emplace_back(unpack_array());
+  }
   return arrays;
 }
 
@@ -224,7 +234,9 @@ std::shared_ptr<detail::ListArray> TaskDeserializer::unpack_list_array()
 std::shared_ptr<detail::StructArray> TaskDeserializer::unpack_struct_array()
 {
   auto type = unpack_type();
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(type->code == Type::Code::STRUCT);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(type->code == Type::Code::STRUCT);
+  }
 
   std::vector<std::shared_ptr<detail::Array>> fields;
   const auto& st_type = type->as_struct_type();
@@ -232,7 +244,9 @@ std::shared_ptr<detail::StructArray> TaskDeserializer::unpack_struct_array()
   auto null_mask      = nullable ? unpack_store() : nullptr;
 
   fields.reserve(st_type.num_fields());
-  for (uint32_t idx = 0; idx < st_type.num_fields(); ++idx) fields.emplace_back(unpack_array());
+  for (uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
+    fields.emplace_back(unpack_array());
+  }
   return std::make_shared<detail::StructArray>(
     std::move(type), std::move(null_mask), std::move(fields));
 }
@@ -295,7 +309,9 @@ CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
 
 void CopyDeserializer::next_requirement_list()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(curr_reqs_ != all_reqs_.end());
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(curr_reqs_ != all_reqs_.end());
+  }
   req_index_offset_ += curr_reqs_->get().size();
   ++curr_reqs_;
 }
@@ -309,7 +325,9 @@ void CopyDeserializer::_unpack(detail::Store& store)
 
   auto transform = unpack_transform();
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) assert(!is_future && !is_output_region);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!is_future && !is_output_region);
+  }
   auto redop_id = unpack<int32_t>();
   detail::RegionField rf;
 

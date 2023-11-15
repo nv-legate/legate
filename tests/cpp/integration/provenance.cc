@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <gtest/gtest.h>
-
 #include "core/runtime/detail/runtime.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
+
+#include <gtest/gtest.h>
 
 namespace provenance {
 
@@ -108,7 +109,7 @@ void test_provenance_tracker(legate::Library library)
   auto runtime = legate::Runtime::get_runtime();
   // auto task
   auto task              = runtime->create_task(library, PROVENANCE);
-  std::string provenance = "provenance.cc:107";
+  std::string provenance = "provenance.cc:" + std::to_string(__LINE__ - 4);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
@@ -120,7 +121,7 @@ void test_nested_provenance_tracker(legate::Library library)
   // The provenance string used by test_provenance_tracker should be popped out at this point
   auto runtime           = legate::Runtime::get_runtime();
   auto task              = runtime->create_task(library, PROVENANCE);
-  std::string provenance = "provenance.cc:118";
+  std::string provenance = "provenance.cc:" + std::to_string(__LINE__ - 5);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }

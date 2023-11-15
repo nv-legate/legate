@@ -56,8 +56,12 @@ std::ostream& operator<<(std::ostream& os, const VariantOptions& options)
 {
   std::stringstream ss;
   ss << "(";
-  if (options.leaf) ss << "leaf,";
-  if (options.concurrent) ss << "concurrent,";
+  if (options.leaf) {
+    ss << "leaf,";
+  }
+  if (options.concurrent) {
+    ss << "concurrent,";
+  }
   ss << options.return_size << ")";
   os << std::move(ss).str();
   return os;

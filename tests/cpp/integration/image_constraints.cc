@@ -57,11 +57,16 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
       size_t vol     = shape.volume();
       size_t tgt_vol = 1;
-      for (int32_t dim = 0; dim < TGT_DIM; ++dim) tgt_vol *= extents[dim];
+      for (int32_t dim = 0; dim < TGT_DIM; ++dim) {
+        tgt_vol *= extents[dim];
+      }
 
       auto in_bounds = [&](const auto& point) {
-        for (int32_t dim = 0; dim < TGT_DIM; ++dim)
-          if (point[dim] >= extents[dim]) return false;
+        for (int32_t dim = 0; dim < TGT_DIM; ++dim) {
+          if (point[dim] >= extents[dim]) {
+            return false;
+          }
+        }
         return true;
       };
       int64_t idx  = ascending ? 0 : vol - 1;
@@ -69,10 +74,11 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
         auto lo = delinearize(idx * tgt_vol / vol, extents);
         auto hi = lo + legate::Point<TGT_DIM>::ONES();
-        if (in_bounds(hi))
+        if (in_bounds(hi)) {
           acc[*it] = legate::Rect<TGT_DIM>(lo, hi);
-        else
+        } else {
           acc[*it] = legate::Rect<TGT_DIM>(lo, lo);
+        }
         idx += diff;
       }
     }
@@ -90,7 +96,9 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
       size_t vol     = shape.volume();
       size_t tgt_vol = 1;
-      for (int32_t dim = 0; dim < TGT_DIM; ++dim) tgt_vol *= extents[dim];
+      for (int32_t dim = 0; dim < TGT_DIM; ++dim) {
+        tgt_vol *= extents[dim];
+      }
 
       int64_t idx  = ascending ? 0 : vol - 1;
       int64_t diff = ascending ? 1 : -1;
@@ -129,7 +137,9 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
     void operator()(legate::PhysicalStore& func, const legate::Domain& range)
     {
       auto shape = func.shape<DIM>();
-      if (shape.empty()) return;
+      if (shape.empty()) {
+        return;
+      }
 
       auto acc = func.read_accessor<legate::Rect<TGT_DIM>, DIM>();
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
@@ -145,7 +155,9 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
     void operator()(legate::PhysicalStore& func, const legate::Domain& range)
     {
       auto shape = func.shape<DIM>();
-      if (shape.empty()) return;
+      if (shape.empty()) {
+        return;
+      }
 
       auto acc = func.read_accessor<legate::Point<TGT_DIM>, DIM>();
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
@@ -182,7 +194,9 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);

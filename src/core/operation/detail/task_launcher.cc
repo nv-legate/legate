@@ -66,7 +66,9 @@ namespace {
 
 void analyze(StoreAnalyzer& analyzer, const std::vector<std::unique_ptr<Analyzable>>& args)
 {
-  for (auto& arg : args) arg->analyze(analyzer);
+  for (auto& arg : args) {
+    arg->analyze(analyzer);
+  }
 }
 
 void pack_args(BufferBuilder& buffer,
@@ -74,13 +76,17 @@ void pack_args(BufferBuilder& buffer,
                const std::vector<std::unique_ptr<Analyzable>>& args)
 {
   buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
-  for (auto& arg : args) arg->pack(buffer, analyzer);
+  for (auto& arg : args) {
+    arg->pack(buffer, analyzer);
+  }
 }
 
 void pack_args(BufferBuilder& buffer, const std::vector<std::unique_ptr<ScalarArg>>& args)
 {
   buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
-  for (auto& arg : args) arg->pack(buffer);
+  for (auto& arg : args) {
+    arg->pack(buffer);
+  }
 }
 
 }  // namespace
@@ -92,7 +98,9 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   analyze(analyzer, inputs_);
   analyze(analyzer, outputs_);
   analyze(analyzer, reductions_);
-  for (auto& future : futures_) analyzer.insert(future);
+  for (auto& future : futures_) {
+    analyzer.insert(future);
+  }
 
   // Coalesce region requirements before packing task arguments
   // as the latter requires requirement indices to be finalized
@@ -138,15 +146,21 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
     runtime->destroy_barrier(arrival_barrier);
     runtime->destroy_barrier(wait_barrier);
   }
-  for (auto& communicator : communicators_) index_task.point_futures.emplace_back(communicator);
-  for (auto& future_map : future_maps_) index_task.point_futures.emplace_back(future_map);
+  for (auto& communicator : communicators_) {
+    index_task.point_futures.emplace_back(communicator);
+  }
+  for (auto& future_map : future_maps_) {
+    index_task.point_futures.emplace_back(future_map);
+  }
 
   index_task.concurrent = concurrent_ || !communicators_.empty();
 
   auto result = runtime->dispatch(index_task, output_requirements);
 
   post_process_unbound_stores(result, launch_domain, output_requirements);
-  for (auto& arg : outputs_) arg->perform_invalidations();
+  for (auto& arg : outputs_) {
+    arg->perform_invalidations();
+  }
   return result;
 }
 
@@ -157,7 +171,9 @@ Legion::Future TaskLauncher::execute_single()
   analyze(analyzer, inputs_);
   analyze(analyzer, outputs_);
   analyze(analyzer, reductions_);
-  for (auto& future : futures_) analyzer.insert(future);
+  for (auto& future : futures_) {
+    analyzer.insert(future);
+  }
 
   // Coalesce region requirements before packing task arguments
   // as the latter requires requirement indices to be finalized
@@ -195,7 +211,9 @@ Legion::Future TaskLauncher::execute_single()
 
   auto result = Runtime::get_runtime()->dispatch(single_task, output_requirements);
   post_process_unbound_stores(output_requirements);
-  for (auto& arg : outputs_) arg->perform_invalidations();
+  for (auto& arg : outputs_) {
+    arg->perform_invalidations();
+  }
   return result;
 }
 
@@ -207,27 +225,39 @@ void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
   auto find_key_proj_id = [&key_proj_id](auto& args) {
     for (auto& arg : args) {
       key_proj_id = arg->get_key_proj_id();
-      if (key_proj_id) break;
+      if (key_proj_id) {
+        break;
+      }
     }
   };
 
   find_key_proj_id(inputs_);
-  if (!key_proj_id) find_key_proj_id(outputs_);
-  if (!key_proj_id) find_key_proj_id(reductions_);
-  if (!key_proj_id) key_proj_id.emplace(0);
+  if (!key_proj_id) {
+    find_key_proj_id(outputs_);
+  }
+  if (!key_proj_id) {
+    find_key_proj_id(reductions_);
+  }
+  if (!key_proj_id) {
+    key_proj_id.emplace(0);
+  }
   buffer.pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
 }
 
 void TaskLauncher::post_process_unbound_stores(
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  if (unbound_stores_.empty()) return;
+  if (unbound_stores_.empty()) {
+    return;
+  }
 
   auto* runtime = Runtime::get_runtime();
   auto no_part  = create_no_partition();
 
   for (auto& arg : unbound_stores_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(arg->requirement_index() != -1U);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(arg->requirement_index() != -1U);
+    }
     auto* store = arg->store();
     auto& req   = output_requirements[arg->requirement_index()];
     auto region_field =
@@ -243,7 +273,9 @@ void TaskLauncher::post_process_unbound_stores(
   const Legion::Domain& launch_domain,
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  if (unbound_stores_.empty()) return;
+  if (unbound_stores_.empty()) {
+    return;
+  }
 
   auto* runtime  = Runtime::get_runtime();
   auto* part_mgr = runtime->partition_manager();
@@ -257,7 +289,9 @@ void TaskLauncher::post_process_unbound_stores(
       store->set_region_field(std::move(region_field));
 
       // TODO: Need to handle key partitions for multi-dimensional unbound stores
-      if (store->dim() > 1) return;
+      if (store->dim() > 1) {
+        return;
+      }
 
       auto partition = create_weighted(weights, launch_domain);
       store->set_key_partition(machine, partition.get());

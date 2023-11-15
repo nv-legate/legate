@@ -49,7 +49,9 @@ std::shared_ptr<Array> BaseArray::child(uint32_t /*index*/) const
 void BaseArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
 {
   result.push_back(data_);
-  if (nullable()) result.push_back(null_mask_);
+  if (nullable()) {
+    result.push_back(null_mask_);
+  }
 }
 
 Domain BaseArray::domain() const { return data_->domain(); }

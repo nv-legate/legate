@@ -41,11 +41,21 @@ inline bool SymbolicExpr::operator==(const SymbolicExpr& other) const
 
 inline bool SymbolicExpr::operator<(const SymbolicExpr& other) const
 {
-  if (dim() < other.dim()) return true;
-  if (dim() > other.dim()) return false;
-  if (weight() < other.weight()) return true;
-  if (weight() > other.weight()) return false;
-  if (offset() < other.offset()) return true;
+  if (dim() < other.dim()) {
+    return true;
+  }
+  if (dim() > other.dim()) {
+    return false;
+  }
+  if (weight() < other.weight()) {
+    return true;
+  }
+  if (weight() > other.weight()) {
+    return false;
+  }
+  if (offset() < other.offset()) {
+    return true;
+  }
   return false;
 }
 

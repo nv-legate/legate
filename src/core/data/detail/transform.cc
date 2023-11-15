@@ -23,9 +23,13 @@ namespace legate::detail {
 
 std::unique_ptr<Partition> TransformStack::convert(const Partition* partition) const
 {
-  if (identity()) return partition->clone();
+  if (identity()) {
+    return partition->clone();
+  }
 
-  if (parent_->identity()) return transform_->convert(partition);
+  if (parent_->identity()) {
+    return transform_->convert(partition);
+  }
 
   auto result = parent_->convert(partition);
   return transform_->convert(result.get());
@@ -33,19 +37,27 @@ std::unique_ptr<Partition> TransformStack::convert(const Partition* partition) c
 
 std::unique_ptr<Partition> TransformStack::invert(const Partition* partition) const
 {
-  if (identity()) return partition->clone();
+  if (identity()) {
+    return partition->clone();
+  }
 
   auto result = transform_->invert(partition);
-  if (parent_->identity()) return result;
+  if (parent_->identity()) {
+    return result;
+  }
   return parent_->invert(result.get());
 }
 
 proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) const
 {
-  if (identity()) return point;
+  if (identity()) {
+    return point;
+  }
 
   auto result = transform_->invert(point);
-  if (parent_->identity()) return result;
+  if (parent_->identity()) {
+    return result;
+  }
   // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
   // reference and returns a fresh SymbolicPoint (i.e. std::vector), we end up with a bunch of
   // temporary objects and allocations. We should be std::move-ing this!
@@ -54,17 +66,25 @@ proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) con
 
 Restrictions TransformStack::convert(const Restrictions& restrictions) const
 {
-  if (identity()) return restrictions;
-  if (parent_->identity()) return transform_->convert(restrictions);
+  if (identity()) {
+    return restrictions;
+  }
+  if (parent_->identity()) {
+    return transform_->convert(restrictions);
+  }
   return transform_->convert(parent_->convert(restrictions));
 }
 
 Restrictions TransformStack::invert(const Restrictions& restrictions) const
 {
-  if (identity()) return restrictions;
+  if (identity()) {
+    return restrictions;
+  }
 
   auto result = transform_->invert(restrictions);
-  if (parent_->identity()) return result;
+  if (parent_->identity()) {
+    return result;
+  }
   // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
   // reference and returns a fresh Restructions (i.e. std::vector), we end up with a bunch of
   // temporary objects and allocations. We should be std::move-ing this!
@@ -73,10 +93,14 @@ Restrictions TransformStack::invert(const Restrictions& restrictions) const
 
 Shape TransformStack::invert_extents(const Shape& extents) const
 {
-  if (identity()) return extents;
+  if (identity()) {
+    return extents;
+  }
 
   auto result = transform_->invert_extents(extents);
-  if (parent_->identity()) return result;
+  if (parent_->identity()) {
+    return result;
+  }
   // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
   // reference and returns a fresh Restructions (i.e. std::vector), we end up with a bunch of
   // temporary objects and allocations. We should be std::move-ing this!
@@ -85,10 +109,14 @@ Shape TransformStack::invert_extents(const Shape& extents) const
 
 Shape TransformStack::invert_point(const Shape& point) const
 {
-  if (identity()) return point;
+  if (identity()) {
+    return point;
+  }
 
   auto result = transform_->invert_point(point);
-  if (parent_->identity()) return result;
+  if (parent_->identity()) {
+    return result;
+  }
   // FIXME: This is very inefficient if the stack is large. Since each invert() takes by const
   // reference and returns a fresh Restructions (i.e. std::vector), we end up with a bunch of
   // temporary objects and allocations. We should be std::move-ing this!
@@ -107,7 +135,9 @@ void TransformStack::pack(BufferBuilder& buffer) const
 
 Legion::Domain TransformStack::transform(const Legion::Domain& input) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(transform_ != nullptr);
+  }
   return transform_->transform(parent_->identity() ? input : parent_->transform(input));
 }
 
@@ -128,11 +158,15 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
 
 Legion::DomainAffineTransform TransformStack::inverse_transform(int32_t in_dim) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(transform_ != nullptr);
+  }
   auto result  = transform_->inverse_transform(in_dim);
   auto out_dim = transform_->target_ndim(in_dim);
 
-  if (parent_->identity()) return result;
+  if (parent_->identity()) {
+    return result;
+  }
 
   auto parent = parent_->inverse_transform(out_dim);
   return combine(parent, result);
@@ -154,7 +188,9 @@ void TransformStack::print(std::ostream& out) const
 
 std::unique_ptr<StoreTransform> TransformStack::pop()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) { assert(transform_ != nullptr); }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(transform_ != nullptr);
+  }
   auto result = std::move(transform_);
   if (parent_) {
     transform_ = std::move(parent_->transform_);
@@ -178,8 +214,12 @@ void TransformStack::dump() const
 std::vector<int32_t> TransformStack::find_imaginary_dims() const
 {
   std::vector<int32_t> dims;
-  if (parent_) dims = parent_->find_imaginary_dims();
-  if (transform_) transform_->find_imaginary_dims(dims);
+  if (parent_) {
+    dims = parent_->find_imaginary_dims();
+  }
+  if (transform_) {
+    transform_->find_imaginary_dims(dims);
+  }
   return dims;
 }
 
@@ -199,13 +239,17 @@ Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   Legion::DomainTransform transform;
   transform.m = out_dim;
   transform.n = in_dim;
-  for (int32_t i = 0; i < out_dim; ++i)
-    for (int32_t j = 0; j < in_dim; ++j)
+  for (int32_t i = 0; i < out_dim; ++i) {
+    for (int32_t j = 0; j < in_dim; ++j) {
       transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);
+    }
+  }
 
   DomainPoint offset;
   offset.dim = out_dim;
-  for (int32_t i = 0; i < out_dim; ++i) offset[i] = i == dim_ ? -offset_ : 0;
+  for (int32_t i = 0; i < out_dim; ++i) {
+    offset[i] = i == dim_ ? -offset_ : 0;
+  }
 
   Legion::DomainAffineTransform result;
   result.transform = transform;
@@ -297,17 +341,23 @@ Legion::DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
   transform.m = std::max<int32_t>(out_dim, 1);
   transform.n = in_dim;
   for (int32_t i = 0; i < transform.m; ++i) {
-    for (int32_t j = 0; j < transform.n; ++j) transform.matrix[i * in_dim + j] = 0;
+    for (int32_t j = 0; j < transform.n; ++j) {
+      transform.matrix[i * in_dim + j] = 0;
+    }
   }
 
   if (out_dim > 0) {
     for (int32_t j = 0, i = 0; j < transform.n; ++j) {
-      if (j != extra_dim_) transform.matrix[i++ * in_dim + j] = 1;
+      if (j != extra_dim_) {
+        transform.matrix[i++ * in_dim + j] = 1;
+      }
     }
   }
   DomainPoint offset;
   offset.dim = std::max<int32_t>(out_dim, 1);
-  for (int32_t i = 0; i < transform.m; ++i) offset[i] = 0;
+  for (int32_t i = 0; i < transform.m; ++i) {
+    offset[i] = 0;
+  }
 
   Legion::DomainAffineTransform result;
   result.transform = transform;
@@ -387,7 +437,9 @@ void Promote::print(std::ostream& out) const
 void Promote::find_imaginary_dims(std::vector<int32_t>& dims) const
 {
   for (auto& dim : dims) {
-    if (dim >= extra_dim_) dim++;
+    if (dim >= extra_dim_) {
+      dim++;
+    }
   }
   dims.push_back(extra_dim_);
 }
@@ -419,16 +471,24 @@ Legion::DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
     transform.matrix[0] = 0;
   } else {
     transform.n = in_dim;
-    for (int32_t i = 0; i < out_dim; ++i)
-      for (int32_t j = 0; j < in_dim; ++j) transform.matrix[i * in_dim + j] = 0;
+    for (int32_t i = 0; i < out_dim; ++i) {
+      for (int32_t j = 0; j < in_dim; ++j) {
+        transform.matrix[i * in_dim + j] = 0;
+      }
+    }
 
-    for (int32_t i = 0, j = 0; i < out_dim; ++i)
-      if (i != dim_) transform.matrix[i * in_dim + j++] = 1;
+    for (int32_t i = 0, j = 0; i < out_dim; ++i) {
+      if (i != dim_) {
+        transform.matrix[i * in_dim + j++] = 1;
+      }
+    }
   }
 
   DomainPoint offset;
   offset.dim = out_dim;
-  for (int32_t i = 0; i < out_dim; ++i) offset[i] = i == dim_ ? coord_ : 0;
+  for (int32_t i = 0; i < out_dim; ++i) {
+    offset[i] = i == dim_ ? coord_ : 0;
+  }
 
   Legion::DomainAffineTransform result;
   result.transform = transform;
@@ -508,9 +568,14 @@ void Project::print(std::ostream& out) const
 void Project::find_imaginary_dims(std::vector<int32_t>& dims) const
 {
   auto finder = std::find(dims.begin(), dims.end(), dim_);
-  if (finder != dims.end()) { dims.erase(finder); }
-  for (auto& dim : dims)
-    if (dim > dim_) --dim;
+  if (finder != dims.end()) {
+    dims.erase(finder);
+  }
+  for (auto& dim : dims) {
+    if (dim > dim_) {
+      --dim;
+    }
+  }
 }
 
 Transpose::Transpose(std::vector<int32_t>&& axes) : axes_{std::move(axes)}
@@ -547,14 +612,21 @@ Legion::DomainAffineTransform Transpose::inverse_transform(int32_t in_dim) const
   Legion::DomainTransform transform;
   transform.m = in_dim;
   transform.n = in_dim;
-  for (int32_t i = 0; i < in_dim; ++i)
-    for (int32_t j = 0; j < in_dim; ++j) transform.matrix[i * in_dim + j] = 0;
+  for (int32_t i = 0; i < in_dim; ++i) {
+    for (int32_t j = 0; j < in_dim; ++j) {
+      transform.matrix[i * in_dim + j] = 0;
+    }
+  }
 
-  for (int32_t j = 0; j < in_dim; ++j) transform.matrix[axes_[j] * in_dim + j] = 1;
+  for (int32_t j = 0; j < in_dim; ++j) {
+    transform.matrix[axes_[j] * in_dim + j] = 1;
+  }
 
   DomainPoint offset;
   offset.dim = in_dim;
-  for (int32_t i = 0; i < in_dim; ++i) offset[i] = 0;
+  for (int32_t i = 0; i < in_dim; ++i) {
+    offset[i] = 0;
+  }
 
   Legion::DomainAffineTransform result;
   result.transform = transform;
@@ -603,7 +675,9 @@ proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
   std::vector<proj::SymbolicExpr> exprs;
 
   exprs.reserve(inverse_.size());
-  for (auto&& idx : inverse_) exprs.emplace_back(point[idx]);
+  for (auto&& idx : inverse_) {
+    exprs.emplace_back(point[idx]);
+  }
   return proj::SymbolicPoint{std::move(exprs)};
 }
 
@@ -612,7 +686,9 @@ Restrictions Transpose::convert(const Restrictions& restrictions) const
   std::vector<Restriction> result;
 
   result.reserve(axes_.size());
-  for (auto dim : axes_) result.emplace_back(restrictions[dim]);
+  for (auto dim : axes_) {
+    result.emplace_back(restrictions[dim]);
+  }
   return Restrictions{std::move(result)};
 }
 
@@ -621,7 +697,9 @@ Restrictions Transpose::invert(const Restrictions& restrictions) const
   std::vector<Restriction> result;
 
   result.reserve(inverse_.size());
-  for (auto dim : inverse_) result.emplace_back(restrictions[dim]);
+  for (auto dim : inverse_) {
+    result.emplace_back(restrictions[dim]);
+  }
   return Restrictions{std::move(result)};
 }
 
@@ -653,7 +731,9 @@ void Transpose::pack(BufferBuilder& buffer) const
 {
   buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_TRANSPOSE);
   buffer.pack<uint32_t>(axes_.size());
-  for (auto axis : axes_) buffer.pack<int32_t>(axis);
+  for (auto axis : axes_) {
+    buffer.pack<int32_t>(axis);
+  }
 }
 
 void Transpose::print(std::ostream& out) const
@@ -670,7 +750,9 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
   // e.g. X.promoted = [0] => X.transpose((1,2,0)).promoted = [2]
   for (auto& promoted : dims) {
     auto finder = std::find(axes_.begin(), axes_.end(), promoted);
-    if (LegateDefined(LEGATE_USE_DEBUG)) { assert(finder != axes_.end()); }
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(finder != axes_.end());
+    }
     promoted = static_cast<int32_t>(finder - axes_.begin());
   }
 }
@@ -681,7 +763,9 @@ Delinearize::Delinearize(int32_t dim, std::vector<int64_t>&& sizes)
   for (auto dim = static_cast<int32_t>(sizes_.size() - 2); dim >= 0; --dim) {
     strides_[dim] = strides_[dim + 1] * sizes_[dim + 1];
   }
-  for (auto size : sizes_) volume_ *= size;
+  for (auto size : sizes_) {
+    volume_ *= size;
+  }
 }
 
 Domain Delinearize::transform(const Domain& domain) const
@@ -718,12 +802,16 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) con
   transform.m        = out_dim;
   transform.n        = in_dim;
   for (int32_t i = 0; i < out_dim; ++i) {
-    for (int32_t j = 0; j < in_dim; ++j) transform.matrix[i * in_dim + j] = 0;
+    for (int32_t j = 0; j < in_dim; ++j) {
+      transform.matrix[i * in_dim + j] = 0;
+    }
   }
 
   for (int32_t i = 0, j = 0; i < out_dim; ++i) {
     if (i == dim_) {
-      for (auto stride : strides_) transform.matrix[i * in_dim + j++] = stride;
+      for (auto stride : strides_) {
+        transform.matrix[i * in_dim + j++] = stride;
+      }
     } else {
       transform.matrix[i * in_dim + j++] = 1;
     }
@@ -731,7 +819,9 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) con
 
   DomainPoint offset;
   offset.dim = out_dim;
-  for (int32_t i = 0; i < out_dim; ++i) offset[i] = 0;
+  for (int32_t i = 0; i < out_dim; ++i) {
+    offset[i] = 0;
+  }
 
   Legion::DomainAffineTransform result;
   result.transform = transform;
@@ -799,8 +889,12 @@ proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
   std::vector<proj::SymbolicExpr> exprs;
 
   exprs.reserve(point.size() - (sizes_.size() - 1));
-  for (int32_t dim = 0; dim < dim_ + 1; ++dim) exprs.push_back(point[dim]);
-  for (auto dim = dim_ + sizes_.size(); dim < point.size(); ++dim) exprs.push_back(point[dim]);
+  for (int32_t dim = 0; dim < dim_ + 1; ++dim) {
+    exprs.push_back(point[dim]);
+  }
+  for (auto dim = dim_ + sizes_.size(); dim < point.size(); ++dim) {
+    exprs.push_back(point[dim]);
+  }
   return proj::SymbolicPoint{std::move(exprs)};
 }
 
@@ -809,8 +903,12 @@ Restrictions Delinearize::convert(const Restrictions& restrictions) const
   std::vector<Restriction> result;
 
   result.reserve(restrictions.size() + (sizes_.size() - 1));
-  for (auto dim = 0; dim <= dim_; ++dim) result.emplace_back(restrictions[dim]);
-  for (uint32_t idx = 1; idx < sizes_.size(); ++idx) result.emplace_back(Restriction::FORBID);
+  for (auto dim = 0; dim <= dim_; ++dim) {
+    result.emplace_back(restrictions[dim]);
+  }
+  for (uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    result.emplace_back(Restriction::FORBID);
+  }
   for (uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim) {
     result.emplace_back(restrictions[dim]);
   }
@@ -822,7 +920,9 @@ Restrictions Delinearize::invert(const Restrictions& restrictions) const
   std::vector<Restriction> result;
 
   result.reserve(restrictions.size() - (sizes_.size() - 1));
-  for (auto dim = 0; dim <= dim_; ++dim) result.emplace_back(restrictions[dim]);
+  for (auto dim = 0; dim <= dim_; ++dim) {
+    result.emplace_back(restrictions[dim]);
+  }
   for (auto dim = dim_ + sizes_.size(); dim < restrictions.size(); ++dim) {
     result.emplace_back(restrictions[dim]);
   }
@@ -846,7 +946,9 @@ void Delinearize::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_DELINEARIZE);
   buffer.pack<int32_t>(dim_);
   buffer.pack<uint32_t>(sizes_.size());
-  for (auto extent : sizes_) buffer.pack<int64_t>(extent);
+  for (auto extent : sizes_) {
+    buffer.pack<int64_t>(extent);
+  }
 }
 
 void Delinearize::print(std::ostream& out) const

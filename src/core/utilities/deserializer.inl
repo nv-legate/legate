@@ -89,7 +89,9 @@ void BaseDeserializer<Deserializer>::_unpack(std::vector<T>& values)
 {
   auto size = unpack<uint32_t>();
   values.reserve(size);
-  for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(unpack<T>());
+  for (uint32_t idx = 0; idx < size; ++idx) {
+    values.emplace_back(unpack<T>());
+  }
 }
 
 template <typename Deserializer>
@@ -107,7 +109,9 @@ std::vector<Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
   auto size = unpack<uint32_t>();
 
   values.reserve(size);
-  for (uint32_t idx = 0; idx < size; ++idx) values.emplace_back(unpack_scalar());
+  for (uint32_t idx = 0; idx < size; ++idx) {
+    values.emplace_back(unpack_scalar());
+  }
   return values;
 }
 
@@ -198,7 +202,9 @@ void BaseDeserializer<Deserializer>::_unpack(mapping::detail::Machine& value)
   for (uint32_t idx = 0; idx < num_ranges; ++idx) {
     auto kind  = unpack<mapping::TaskTarget>();
     auto range = unpack<mapping::ProcessorRange>();
-    if (!range.empty()) value.processor_ranges.insert({kind, range});
+    if (!range.empty()) {
+      value.processor_ranges.insert({kind, range});
+    }
   }
 }
 
@@ -285,7 +291,9 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
       std::vector<std::shared_ptr<detail::Type>> field_types;
 
       field_types.reserve(num_fields);
-      for (uint32_t idx = 0; idx < num_fields; ++idx) field_types.emplace_back(unpack_type());
+      for (uint32_t idx = 0; idx < num_fields; ++idx) {
+        field_types.emplace_back(unpack_type());
+      }
 
       auto align = unpack<bool>();
 

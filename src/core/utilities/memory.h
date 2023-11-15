@@ -35,7 +35,7 @@ struct default_delete {
 
 }  // namespace legate
 
-#include "core/utilities/memory.inl"
-
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
+
+#include "core/utilities/memory.inl"

@@ -10,12 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <fstream>
+#include "core/utilities/dispatch.h"
 
 #include "legate_library.h"
 #include "legateio.h"
 
-#include "core/utilities/dispatch.h"
+#include <fstream>
 
 namespace legateio {
 

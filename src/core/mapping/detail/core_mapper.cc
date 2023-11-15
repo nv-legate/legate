@@ -29,7 +29,9 @@ uint32_t extract_env(const char* env_name, uint32_t default_value, uint32_t test
   if (nullptr == env_value) {
     const char* legate_test = getenv("LEGATE_TEST");
 
-    if (legate_test != nullptr && detail::safe_strtoll(legate_test) > 0) return test_value;
+    if (legate_test != nullptr && detail::safe_strtoll(legate_test) > 0) {
+      return test_value;
+    }
     return default_value;
   }
   return detail::safe_strtoll<uint32_t>(env_value);
@@ -101,12 +103,14 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
     }
     case LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME: {
       // TODO: make these profile guided
-      if (machine.has_gpus())
+      if (machine.has_gpus()) {
         // Make sure we can get at least 1M elements on each GPU
         return Scalar{min_gpu_chunk};
-      if (machine.has_omps())
+      }
+      if (machine.has_omps()) {
         // Make sure we get at least 128K elements on each OpenMP
         return Scalar{min_omp_chunk};
+      }
       // Make sure we can get at least 8KB elements on each CPU
       return Scalar{min_cpu_chunk};
     }

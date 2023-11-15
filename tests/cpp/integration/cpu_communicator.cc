@@ -34,7 +34,9 @@ struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> 
   {
     EXPECT_TRUE((context.is_single_task() && context.communicators().empty()) ||
                 context.communicators().size() == 1);
-    if (context.is_single_task()) return;
+    if (context.is_single_task()) {
+      return;
+    }
     auto comm = context.communicators().at(0).get<legate::comm::coll::CollComm>();
 
     int64_t value    = 12345;
@@ -43,14 +45,18 @@ struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> 
     auto result = collAllgather(
       &value, recv_buffer.data(), 1, legate::comm::coll::CollDataType::CollInt64, comm);
     EXPECT_EQ(result, legate::comm::coll::CollSuccess);
-    for (auto v : recv_buffer) EXPECT_EQ(v, 12345);
+    for (auto v : recv_buffer) {
+      EXPECT_EQ(v, 12345);
+    }
   }
 };
 
 void prepare()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
@@ -74,7 +80,9 @@ void test_cpu_communicator_manual(int32_t ndim)
 {
   auto runtime     = legate::Runtime::get_runtime();
   size_t num_procs = runtime->get_machine().count();
-  if (num_procs <= 1) return;
+  if (num_procs <= 1) {
+    return;
+  }
 
   auto context = runtime->find_library(library_name);
   auto store   = runtime->create_store(legate::full<size_t>(ndim, SIZE), legate::int32());

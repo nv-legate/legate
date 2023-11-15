@@ -10,12 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <filesystem>
-#include <fstream>
-
 #include "legate_library.h"
 #include "legateio.h"
 #include "util.h"
+
+#include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -31,13 +31,16 @@ struct read_fn {
 
     legate::Rect<DIM> shape = output.shape<DIM>();
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     std::ifstream in(path, std::ios::binary | std::ios::in);
 
     legate::Point<DIM> extents;
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (int32_t idx = 0; idx < DIM; ++idx) {
       in.read(reinterpret_cast<char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
 
     // Since the shape is already fixed on the Python side, the sub-store's extents should be the
     // same as what's stored in the file

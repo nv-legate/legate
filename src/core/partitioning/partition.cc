@@ -80,13 +80,27 @@ bool Tiling::operator==(const Tiling& other) const
 
 bool Tiling::operator<(const Tiling& other) const
 {
-  if (tile_shape_ < other.tile_shape_) return true;
-  if (other.tile_shape_ < tile_shape_) return false;
-  if (color_shape_ < other.color_shape_) return true;
-  if (other.color_shape_ < color_shape_) return false;
-  if (offsets_ < other.offsets_) return true;
-  if (other.offsets_ < offsets_) return false;
-  if (strides_ < other.strides_) return true;
+  if (tile_shape_ < other.tile_shape_) {
+    return true;
+  }
+  if (other.tile_shape_ < tile_shape_) {
+    return false;
+  }
+  if (color_shape_ < other.color_shape_) {
+    return true;
+  }
+  if (other.color_shape_ < color_shape_) {
+    return false;
+  }
+  if (offsets_ < other.offsets_) {
+    return true;
+  }
+  if (other.offsets_ < offsets_) {
+    return false;
+  }
+  if (strides_ < other.strides_) {
+    return true;
+  }
   return false;
 }
 
@@ -107,7 +121,9 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
     const int64_t my_hi = my_lo + static_cast<int64_t>(strides_[dim] * color_shape_[dim]);
     const auto soff     = static_cast<int64_t>(storage_offs[dim]);
 
-    if (soff < my_lo && my_hi < (soff + static_cast<int64_t>(storage_exts[dim]))) return false;
+    if (soff < my_lo && my_hi < (soff + static_cast<int64_t>(storage_exts[dim]))) {
+      return false;
+    }
   }
   return true;
 }
@@ -155,15 +171,18 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
   auto part_mgr        = runtime->partition_manager();
   auto index_partition = part_mgr->find_index_partition(index_space, *this);
 
-  if (index_partition != Legion::IndexPartition::NO_PART)
+  if (index_partition != Legion::IndexPartition::NO_PART) {
     return runtime->create_logical_partition(region, index_partition);
+  }
 
   auto ndim = static_cast<int32_t>(tile_shape_.size());
 
   Legion::DomainTransform transform;
   transform.m = ndim;
   transform.n = ndim;
-  for (int32_t idx = 0; idx < ndim * ndim; ++idx) transform.matrix[idx] = 0;
+  for (int32_t idx = 0; idx < ndim * ndim; ++idx) {
+    transform.matrix[idx] = 0;
+  }
   for (int32_t idx = 0; idx < ndim; ++idx) {
     transform.matrix[ndim * idx + idx] = static_cast<Legion::coord_t>(strides_[idx]);
   }
@@ -282,8 +301,9 @@ Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool)
   const auto& index_space = region.get_index_space();
   auto index_partition    = part_mgr->find_index_partition(index_space, *this);
 
-  if (index_partition != Legion::IndexPartition::NO_PART)
+  if (index_partition != Legion::IndexPartition::NO_PART) {
     return runtime->create_logical_partition(region, index_partition);
+  }
 
   auto color_space = runtime->find_or_create_index_space(color_domain_);
 
@@ -364,7 +384,9 @@ std::unique_ptr<Partition> Image::bloat(const Shape& /*low_offsts*/,
 
 Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*complete*/) const
 {
-  if (!has_launch_domain()) return Legion::LogicalPartition::NO_PART;
+  if (!has_launch_domain()) {
+    return Legion::LogicalPartition::NO_PART;
+  }
   auto func_rf     = func_->get_region_field();
   auto func_region = func_rf->region();
   auto func_partition =

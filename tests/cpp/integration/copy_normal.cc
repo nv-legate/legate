@@ -60,7 +60,9 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
     auto target = context.input(1).data();
     auto shape  = source.shape<DIM>();
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     type_dispatch(source.type().code(), CheckCopyTaskBody{}, source, target, shape);
   }
@@ -104,7 +106,9 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
     auto& seed  = context.scalar(0);
     auto shape  = target.shape<DIM>();
 
-    if (shape.empty()) return;
+    if (shape.empty()) {
+      return;
+    }
 
     type_dispatch(target.type().code(), CheckCopyReductionTaskBody{}, source, target, seed, shape);
   }
@@ -113,7 +117,9 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
 void register_tasks()
 {
   static bool prepared = false;
-  if (prepared) { return; }
+  if (prepared) {
+    return;
+  }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library(library_name);

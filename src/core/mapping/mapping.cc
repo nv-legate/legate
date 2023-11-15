@@ -133,7 +133,9 @@ bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const
 
   mapping->policy = std::move(policy);
   mapping->stores.reserve(stores.size());
-  for (auto&& store : stores) mapping->stores.emplace_back(store.impl());
+  for (auto&& store : stores) {
+    mapping->stores.emplace_back(store.impl());
+  }
   return StoreMapping{mapping.release()};
 }
 

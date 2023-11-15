@@ -13,9 +13,8 @@
 #pragma once
 
 #include <memory>
-#include <utility>
-
 #include <stdint.h>
+#include <utility>
 
 /**
  * @file

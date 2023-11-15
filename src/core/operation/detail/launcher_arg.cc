@@ -94,7 +94,9 @@ void FutureStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
 
 void FutureStoreArg::analyze(StoreAnalyzer& analyzer)
 {
-  if (has_storage_) analyzer.insert(store_->get_future());
+  if (has_storage_) {
+    analyzer.insert(store_->get_future());
+  }
 }
 
 void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
@@ -104,13 +106,17 @@ void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) co
 
   const bool nullable = null_mask_ != nullptr;
   buffer.pack<bool>(nullable);
-  if (nullable) null_mask_->pack(buffer, analyzer);
+  if (nullable) {
+    null_mask_->pack(buffer, analyzer);
+  }
 }
 
 void BaseArrayArg::analyze(StoreAnalyzer& analyzer)
 {
   data_->analyze(analyzer);
-  if (null_mask_) null_mask_->analyze(analyzer);
+  if (null_mask_) {
+    null_mask_->analyze(analyzer);
+  }
 }
 
 std::optional<Legion::ProjectionID> BaseArrayArg::get_key_proj_id() const
@@ -121,7 +127,9 @@ std::optional<Legion::ProjectionID> BaseArrayArg::get_key_proj_id() const
 void BaseArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
 {
   data_->record_unbound_stores(args);
-  if (null_mask_ != nullptr) null_mask_->record_unbound_stores(args);
+  if (null_mask_ != nullptr) {
+    null_mask_->record_unbound_stores(args);
+  }
 }
 
 void BaseArrayArg::perform_invalidations() const
@@ -168,36 +176,54 @@ void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
 
   const bool nullable = null_mask_ != nullptr;
   buffer.pack<bool>(nullable);
-  if (nullable) null_mask_->pack(buffer, analyzer);
+  if (nullable) {
+    null_mask_->pack(buffer, analyzer);
+  }
 
-  for (auto& field : fields_) field->pack(buffer, analyzer);
+  for (auto& field : fields_) {
+    field->pack(buffer, analyzer);
+  }
 }
 
 void StructArrayArg::analyze(StoreAnalyzer& analyzer)
 {
-  if (null_mask_) null_mask_->analyze(analyzer);
-  for (auto& field : fields_) field->analyze(analyzer);
+  if (null_mask_) {
+    null_mask_->analyze(analyzer);
+  }
+  for (auto& field : fields_) {
+    field->analyze(analyzer);
+  }
 }
 
 std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
 {
   for (auto& field : fields_) {
     auto proj_id = field->get_key_proj_id();
-    if (proj_id.has_value()) return proj_id;
+    if (proj_id.has_value()) {
+      return proj_id;
+    }
   }
   return std::nullopt;
 }
 
 void StructArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
 {
-  if (null_mask_) null_mask_->record_unbound_stores(args);
-  for (auto& field : fields_) field->record_unbound_stores(args);
+  if (null_mask_) {
+    null_mask_->record_unbound_stores(args);
+  }
+  for (auto& field : fields_) {
+    field->record_unbound_stores(args);
+  }
 }
 
 void StructArrayArg::perform_invalidations() const
 {
-  if (null_mask_) null_mask_->perform_invalidations();
-  for (auto& field : fields_) field->perform_invalidations();
+  if (null_mask_) {
+    null_mask_->perform_invalidations();
+  }
+  for (auto& field : fields_) {
+    field->perform_invalidations();
+  }
 }
 
 }  // namespace legate::detail

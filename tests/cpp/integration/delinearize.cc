@@ -49,7 +49,9 @@ struct Copy : public legate::LegateTask<Copy> {
     auto shape   = output.shape<3>();
     auto out_acc = output.write_accessor<int64_t, 3>();
     auto in_acc  = input.read_accessor<int64_t, 3>();
-    for (legate::PointInRectIterator<3> it(shape); it.valid(); ++it) { out_acc[*it] = in_acc[*it]; }
+    for (legate::PointInRectIterator<3> it(shape); it.valid(); ++it) {
+      out_acc[*it] = in_acc[*it];
+    }
   }
 };
 

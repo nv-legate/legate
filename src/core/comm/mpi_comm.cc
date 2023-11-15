@@ -37,11 +37,15 @@ namespace {
 [[nodiscard]] std::pair<int, int> mostFrequent(const int* arr, int n)
 {
   std::unordered_map<int, int> hash;
-  for (int i = 0; i < n; i++) hash[arr[i]]++;
+  for (int i = 0; i < n; i++) {
+    hash[arr[i]]++;
+  }
 
   // find the max frequency
   int max_count = 0;
-  for (auto&& [_, count] : hash) max_count = std::max(count, max_count);
+  for (auto&& [_, count] : hash) {
+    max_count = std::max(count, max_count);
+  }
 
   return {max_count, hash.size()};
 }
@@ -142,7 +146,9 @@ MPINetwork::~MPINetwork()
 {
   detail::log_coll().debug("Finalize MPINetwork");
   assert(BackendNetwork::coll_inited == true);
-  for (MPI_Comm& mpi_comm : mpi_comms) { CHECK_MPI(MPI_Comm_free(&mpi_comm)); }
+  for (MPI_Comm& mpi_comm : mpi_comms) {
+    CHECK_MPI(MPI_Comm_free(&mpi_comm));
+  }
   mpi_comms.clear();
   int fina_flag = 0;
   CHECK_MPI(MPI_Finalized(&fina_flag));
@@ -201,7 +207,9 @@ int MPINetwork::comm_create(CollComm global_comm,
   legate::detail::typed_malloc(&(global_comm->mapping_table.global_rank), global_comm_size);
   legate::detail::typed_malloc(&(global_comm->mapping_table.mpi_rank), global_comm_size);
   memcpy(global_comm->mapping_table.mpi_rank, mapping_table, sizeof(int) * global_comm_size);
-  for (int i = 0; i < global_comm_size; i++) { global_comm->mapping_table.global_rank[i] = i; }
+  for (int i = 0; i < global_comm_size; i++) {
+    global_comm->mapping_table.global_rank[i] = i;
+  }
   std::tie(global_comm->nb_threads, global_comm->mpi_comm_size_actual) =
     mostFrequent(mapping_table, global_comm_size);
   return CollSuccess;
@@ -360,10 +368,14 @@ int MPINetwork::allgather(
   void* sendbuf_tmp = const_cast<void*>(sendbuf);
 
   // MPI_IN_PLACE
-  if (sendbuf == recvbuf) { sendbuf_tmp = allocateInplaceBuffer(recvbuf, type_extent * count); }
+  if (sendbuf == recvbuf) {
+    sendbuf_tmp = allocateInplaceBuffer(recvbuf, type_extent * count);
+  }
 
   auto guard = legate::detail::make_scope_guard([&] {
-    if (sendbuf == recvbuf) { free(sendbuf_tmp); }
+    if (sendbuf == recvbuf) {
+      free(sendbuf_tmp);
+    }
   });
 
   CHECK_COLL(gather(sendbuf_tmp, recvbuf, count, type, 0, global_comm));
@@ -382,7 +394,9 @@ int MPINetwork::gather(
   MPI_Datatype mpi_type = dtypeToMPIDtype(type);
 
   // Should not see inplace here
-  if (sendbuf == recvbuf) { assert(0); }
+  if (sendbuf == recvbuf) {
+    assert(0);
+  }
 
   const int root_mpi_rank = global_comm->mapping_table.mpi_rank[root];
   assert(root == global_comm->mapping_table.global_rank[root]);

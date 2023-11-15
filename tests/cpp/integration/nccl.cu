@@ -36,7 +36,9 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
   {
     EXPECT_TRUE((context.is_single_task() && context.communicators().empty()) ||
                 context.communicators().size() == 1);
-    if (context.is_single_task()) return;
+    if (context.is_single_task()) {
+      return;
+    }
     auto comm = context.communicators().at(0).get<ncclComm_t*>();
 
     size_t num_tasks = context.get_launch_domain().get_volume();
@@ -47,14 +49,18 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     auto* p_recv = recv_buffer.ptr(0);
     auto* p_send = send_buffer.ptr(0);
 
-    for (uint32_t idx = 0; idx < num_tasks; ++idx) p_recv[idx] = 0;
+    for (uint32_t idx = 0; idx < num_tasks; ++idx) {
+      p_recv[idx] = 0;
+    }
     *p_send = 12345;
 
     auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
     auto result = ncclAllGather(p_send, p_recv, 1, ncclUint64, *comm, stream);
     EXPECT_EQ(result, ncclSuccess);
     CHECK_CUDA(cudaStreamSynchronize(stream));
-    for (uint32_t idx = 0; idx < num_tasks; ++idx) EXPECT_EQ(p_recv[idx], 12345);
+    for (uint32_t idx = 0; idx < num_tasks; ++idx) {
+      EXPECT_EQ(p_recv[idx], 12345);
+    }
   }
 };
 
@@ -83,7 +89,9 @@ void test_nccl_manual(int32_t ndim)
 {
   auto runtime     = legate::Runtime::get_runtime();
   size_t num_procs = runtime->get_machine().count();
-  if (num_procs <= 1) return;
+  if (num_procs <= 1) {
+    return;
+  }
 
   auto context = runtime->find_library(library_name);
   auto store   = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
@@ -108,7 +116,9 @@ TEST_F(Integration, NCCL)
 
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  if (machine.count(legate::mapping::TaskTarget::GPU) == 0) return;
+  if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
+    return;
+  }
   legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
 
   for (int32_t ndim : {1, 3}) {

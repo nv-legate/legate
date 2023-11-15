@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include <assert.h>
-#include <cuda_runtime.h>
-#include <stdio.h>
-
 #include "legion.h"
 
 #include "legate_defines.h"
+
+#include <assert.h>
+#include <cuda_runtime.h>
+#include <stdio.h>
 
 #define THREADS_PER_BLOCK 128
 #define CHECK_CUDA(expr)                                      \

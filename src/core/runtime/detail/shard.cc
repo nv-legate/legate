@@ -69,7 +69,9 @@ class LinearizingShardingFunctor : public Legion::ShardingFunctor {
     const size_t chunk = (size + total_shards - 1) / total_shards;
     size_t idx         = shard * chunk;
     const size_t lim   = std::min((shard + 1) * chunk, size);
-    if (idx >= lim) return;
+    if (idx >= lim) {
+      return;
+    }
 
     auto point = delinearize(shard_domain.lo(), shard_domain.hi(), idx);
 
@@ -128,7 +130,9 @@ class LegateShardingFunctor : public Legion::ShardingFunctor {
     auto proc_count     = end_proc_id_ - start_proc_id_;
     auto global_proc_id = (linearize(lo, hi, point) * proc_count) / task_count + start_proc_id_;
     auto shard_id       = global_proc_id / per_node_count_;
-    if (LegateDefined(LEGATE_USE_DEBUG)) assert(shard_id < total_shards);
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(shard_id < total_shards);
+    }
     return static_cast<Legion::ShardID>(shard_id);
   }
 

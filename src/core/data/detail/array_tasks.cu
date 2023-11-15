@@ -10,10 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/data/detail/array_tasks.h"
-
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
+#include "core/data/detail/array_tasks.h"
 #include "core/task/task_context.h"
 
 namespace legate::detail {
@@ -32,7 +31,9 @@ __global__ void fixup_ranges(size_t desc_volume,
                              DescAcc desc_acc)
 {
   auto tid = global_tid_1d();
-  if (tid >= desc_volume) return;
+  if (tid >= desc_volume) {
+    return;
+  }
   auto& desc = desc_acc[desc_lo + tid];
   desc.lo += vardata_lo;
   desc.hi += vardata_lo;
@@ -42,7 +43,9 @@ __global__ void fixup_ranges(size_t desc_volume,
 
 /*static*/ void FixupRanges::gpu_variant(legate::TaskContext context)
 {
-  if (context.get_task_index()[0] == 0) return;
+  if (context.get_task_index()[0] == 0) {
+    return;
+  }
 
   auto outputs = context.outputs();
   auto stream  = legate::cuda::StreamPool::get_stream_pool().get_stream();
@@ -53,7 +56,9 @@ __global__ void fixup_ranges(size_t desc_volume,
 
     auto desc       = list_arr.descriptor();
     auto desc_shape = desc.shape<1>();
-    if (desc_shape.empty()) continue;
+    if (desc_shape.empty()) {
+      continue;
+    }
 
     auto vardata_lo = list_arr.vardata().shape<1>().lo;
     auto desc_acc   = desc.data().read_write_accessor<Rect<1>, 1>();
@@ -75,7 +80,9 @@ __global__ void offsets_to_ranges(size_t offsets_volume,
                                   OffsetsAcc offsets_acc)
 {
   auto tid = global_tid_1d();
-  if (tid >= offsets_volume) return;
+  if (tid >= offsets_volume) {
+    return;
+  }
   auto p      = offsets_lo + tid;
   auto& range = ranges_acc[p];
   range.lo[0] = vardata_lo + offsets_acc[p];
@@ -93,7 +100,9 @@ __global__ void offsets_to_ranges(size_t offsets_volume,
   auto offsets_shape = offsets.shape<1>();
   assert(offsets_shape == ranges.shape<1>());
 
-  if (offsets_shape.empty()) return;
+  if (offsets_shape.empty()) {
+    return;
+  }
 
   auto vardata_shape = vardata.shape<1>();
   auto vardata_lo    = vardata_shape.lo[0];
@@ -120,7 +129,9 @@ __global__ void ranges_to_offsets(size_t ranges_volume,
                                   RangesAcc ranges_acc)
 {
   auto tid = global_tid_1d();
-  if (tid >= ranges_volume) return;
+  if (tid >= ranges_volume) {
+    return;
+  }
   auto p         = ranges_lo + tid;
   offsets_acc[p] = ranges_acc[p].lo[0] - ranges_acc[ranges_lo].lo[0];
 }
@@ -135,7 +146,9 @@ __global__ void ranges_to_offsets(size_t ranges_volume,
   auto ranges_shape = ranges.shape<1>();
   assert(ranges_shape == offsets.shape<1>());
 
-  if (ranges_shape.empty()) return;
+  if (ranges_shape.empty()) {
+    return;
+  }
 
   auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
   auto offsets_acc = offsets.write_accessor<int32_t, 1>();
