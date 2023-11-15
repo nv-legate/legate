@@ -21,8 +21,9 @@ namespace legate::detail {
 FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
   : runtime_{runtime}, shape_{shape}, field_size_{field_size}
 {
-  auto size = shape.get_volume() * field_size;
+  auto size = shape.dim == 0 ? 1 : (shape.get_volume() * field_size);
   if (size > Config::max_field_reuse_size) {
+    assert(Config::max_field_reuse_size > 0);
     field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
   }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
