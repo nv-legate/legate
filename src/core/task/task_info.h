@@ -15,6 +15,7 @@
 #include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
 
+#include <map>
 #include <memory>
 
 namespace legate {
@@ -36,6 +37,10 @@ class TaskInfo {
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options);
+  void add_variant(LegateVariantCode vid,
+                   VariantImpl body,
+                   RealmCallbackFn entry,
+                   const std::map<LegateVariantCode, VariantOptions>& all_options = {});
   [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
   [[nodiscard]] bool has_variant(LegateVariantCode vid) const;
 

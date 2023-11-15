@@ -15,24 +15,15 @@
 // Useful for IDEs
 #include "core/task/task.h"
 
+#include <typeinfo>
+
 namespace legate::detail {
 
-std::string generate_task_name(const std::type_info&);
+[[nodiscard]] std::string generate_task_name(const std::type_info&);
 
-void task_wrapper(
-  VariantImpl, const std::string&, const void*, size_t, const void*, size_t, Legion::Processor);
-
-};  // namespace legate::detail
+}  // namespace legate::detail
 
 namespace legate {
-
-template <typename T>
-template <VariantImpl VARIANT_IMPL>
-/*static*/ void LegateTask<T>::legate_task_wrapper(
-  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
-{
-  detail::task_wrapper(VARIANT_IMPL, task_name(), args, arglen, userdata, userlen, p);
-}
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
@@ -73,6 +64,15 @@ template <typename T>
 {
   static const std::string result = detail::generate_task_name(typeid(T));
   return result;
+}
+
+template <typename T>
+template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+/*static*/ void LegateTask<T>::task_wrapper_(
+  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
+{
+  detail::task_wrapper(
+    variant_fn, variant_kind, task_name(), args, arglen, userdata, userlen, std::move(p));
 }
 
 }  // namespace legate

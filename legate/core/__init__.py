@@ -56,9 +56,13 @@ from ._lib.legate_c import LEGATE_MAX_DIM
 from ._lib.data.logical_array import LogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
 from ._lib.data.scalar import Scalar
+from ._lib.data.physical_store import PhysicalStore
+from ._lib.data.physical_array import PhysicalArray
 from ._lib.operation.task import AutoTask, ManualTask
 from ._lib.partitioning.constraint import align, bloat, broadcast, scale
 from ._lib.runtime.library import Library
+from ._lib.task.task_context import TaskContext
+from ._lib.task.task_info import TaskInfo
 
 
 from .types import (
@@ -98,8 +102,8 @@ _random.seed(1234)
 def _warn_seed(func: AnyCallable) -> AnyCallable:
     def wrapper(*args: Any, **kw: Any) -> Any:
         msg = """
-        Seeding the random number generator with a non-constant value 
-        inside Legate can lead to undefined behavior and/or errors when 
+        Seeding the random number generator with a non-constant value
+        inside Legate can lead to undefined behavior and/or errors when
         the program is executed with multiple ranks."""
         warnings.warn(msg, Warning)
         return func(*args, **kw)

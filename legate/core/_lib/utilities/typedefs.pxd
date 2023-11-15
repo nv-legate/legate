@@ -8,8 +8,10 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-
+from libc.stddef cimport size_t
 from libc.stdint cimport int32_t, int64_t
+
+from ..task.task_context cimport _TaskContext
 
 
 cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
@@ -24,6 +26,15 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
         _DomainPoint lo()
         _DomainPoint hi()
 
+    cdef cppclass _Processor "legate::Processor":
+        pass
+
+# note missing nogil!
+cdef extern from "core/utilities/typedefs.h" namespace "legate":
+    ctypedef void (*VariantImpl)(_TaskContext) except +
+    ctypedef void (*RealmCallbackFn)(
+        const void *, size_t, const void *, size_t, _Processor
+    ) except +
 
 cdef class DomainPoint:
     cdef _DomainPoint _handle

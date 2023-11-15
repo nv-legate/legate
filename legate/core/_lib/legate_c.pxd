@@ -52,7 +52,7 @@ cdef extern from "core/legate_c.h" nogil:
         _AND "AND_LT"
         _XOR "XOR_LT"
 
-    ctypedef enum legate_core_variant_t:
+    cpdef enum legate_core_variant_t:
         _LEGATE_NO_VARIANT "LEGATE_NO_VARIANT"
         _LEGATE_CPU_VARIANT "LEGATE_CPU_VARIANT"
         _LEGATE_GPU_VARIANT "LEGATE_GPU_VARIANT"

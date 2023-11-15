@@ -66,7 +66,9 @@ create_legate_task_exception()
 LegateTaskException = <object> _LegateTaskException
 
 
-cdef void _reraise_legate_exception(tuple[type] exception_types, Exception e):
+cdef void _reraise_legate_exception(
+    tuple[type] exception_types, Exception e
+) except *:
     message, index = e.args
     try:
         exn = exception_types[index]
@@ -310,13 +312,15 @@ cdef class Runtime:
     def submit(self, op) -> None:
         if isinstance(op, AutoTask):
             try:
-                self._handle.submit((<AutoTask> op)._handle)
+                with nogil:
+                    self._handle.submit((<AutoTask> op)._handle)
                 return
             except LegateTaskException as e:
                 _reraise_legate_exception(op.exception_types, e)
         elif isinstance(op, ManualTask):
             try:
-                self._handle.submit((<ManualTask> op)._handle)
+                with nogil:
+                    self._handle.submit((<ManualTask> op)._handle)
                 return
             except LegateTaskException as e:
                 _reraise_legate_exception(op.exception_types, e)
@@ -498,7 +502,10 @@ cdef class Runtime:
         return Scalar.create_from_buffer(data, dtype)
 
     def issue_execution_fence(self, bool block = False) -> None:
-        self._handle.issue_execution_fence(block)
+        with cython.nogil:
+            # Must release the GIL in case we have in-flight python tasks,
+            # since those can't run if we are stuck here holding the bag.
+            self._handle.issue_execution_fence(block)
 
     def get_machine(self) -> Machine:
         return Machine.from_handle(self._handle.get_machine())

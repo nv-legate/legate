@@ -10,17 +10,14 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-set(cython_sources
-    logical_array.pyx
-    logical_store.pyx
-    physical_store.pyx
-    scalar.pyx
-    slice.pyx
+set(
+  cython_sources
+  logical_array.pyx
+  logical_store.pyx
+  physical_array.pyx
+  physical_store.pyx
+  scalar.pyx
+  slice.pyx
 )
 
-rapids_cython_create_modules(
-  CXX
-  ASSOCIATED_TARGETS legate_core
-  SOURCE_FILES "${cython_sources}"
-  LINKED_LIBRARIES legate::core
-)
+legate_core_create_cython_modules(SOURCES "${cython_sources}")

@@ -26,6 +26,10 @@ struct ResourceConfig {
    */
   int64_t max_tasks{1024};  // NOLINT(readability-magic-numbers)
   /**
+   * @brief Maximum number of dynamic tasks that the library can register (cannot exceed max_tasks)
+   */
+  int64_t max_dyn_tasks{0};
+  /**
    * @brief Maximum number of custom reduction operators that the library can register
    */
   int64_t max_reduction_ops{};

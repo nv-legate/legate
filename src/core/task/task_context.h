@@ -17,6 +17,7 @@
 #include "core/data/scalar.h"
 #include "core/mapping/machine.h"
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -37,6 +38,18 @@ namespace legate {
  */
 class TaskContext {
  public:
+  /**
+   * @brief Returns the global ID of the task
+   *
+   * @return The global task id
+   */
+  [[nodiscard]] int64_t task_id() const noexcept;
+  /**
+   * @brief Returns the Legate variant kind of the task
+   *
+   * @return The variant kind
+   */
+  [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
   /**
    * @brief Returns an input array of the task
    *
@@ -156,7 +169,7 @@ class TaskContext {
 
   [[nodiscard]] detail::TaskContext* impl() const;
 
-  TaskContext(detail::TaskContext* impl);
+  explicit TaskContext(detail::TaskContext* impl);
 
   TaskContext(const TaskContext&)            = default;
   TaskContext& operator=(const TaskContext&) = default;

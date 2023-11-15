@@ -272,7 +272,7 @@ class EnvConfig:
 
 # --- Setup -------------------------------------------------------------------
 
-PYTHON_VERSIONS = ("3.9", "3.10", "3.11")
+PYTHON_VERSIONS = ("3.10", "3.11")
 
 CTK_VERSIONS = (
     "none",
@@ -301,7 +301,7 @@ channels:
   - nvidia
 dependencies:
 
-  - python={python},!=3.9.7  # avoid https://bugs.python.org/issue45121
+  - python={python}
 
 {conda_sections}{pip}
 """

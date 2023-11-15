@@ -101,17 +101,15 @@ struct LegateTask {
   template <typename, template <typename...> typename, bool>
   friend struct detail::VariantHelper;
 
-  // A wrapper that wraps all Legate task variant implementations. Provides
-  // common functionalities and instrumentations
-  template <VariantImpl VARIANT_IMPL>
-  static void legate_task_wrapper(
-    const void* args, size_t arglen, const void* userdata, size_t userlen, Processor p);
-
   // A helper to find and register all variants of a task
-  static std::unique_ptr<TaskInfo> create_task_info(
+  [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info(
     const std::map<LegateVariantCode, VariantOptions>& all_options);
 
   [[nodiscard]] static const std::string& task_name();
+
+  template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+  static void task_wrapper_(
+    const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p);
 };
 
 }  // namespace legate

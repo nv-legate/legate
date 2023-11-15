@@ -14,13 +14,21 @@
 
 #include "core/runtime/detail/library.h"
 
+#include <sstream>
 #include <stdexcept>
 
 namespace legate::detail {
 
-inline Library::ResourceIdScope::ResourceIdScope(int64_t base, int64_t size)
-  : base_{base}, size_{size}
+inline Library::ResourceIdScope::ResourceIdScope(int64_t base, int64_t size, int64_t dyn_size)
+  : base_{base}, size_{size}, next_{size - dyn_size}
 {
+  if (LegateDefined(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
+    std::stringstream ss;
+
+    ss << "Number of dynamic resource IDs " << dyn_size << " > total number of IDs "
+       << this->size();
+    throw std::out_of_range{std::move(ss).str()};
+  }
 }
 
 inline int64_t Library::ResourceIdScope::translate(int64_t local_resource_id) const

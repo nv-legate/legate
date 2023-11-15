@@ -125,10 +125,12 @@ class PhysicalArray {
 
   [[nodiscard]] const std::shared_ptr<detail::PhysicalArray>& impl() const;
 
-  PhysicalArray(const PhysicalArray&) noexcept = default;
-  PhysicalArray(PhysicalArray&&) noexcept      = default;
-
-  virtual ~PhysicalArray() noexcept = default;
+  PhysicalArray()                                    = default;
+  virtual ~PhysicalArray() noexcept                  = default;
+  PhysicalArray(const PhysicalArray&) noexcept       = default;
+  PhysicalArray& operator=(const PhysicalArray&)     = default;
+  PhysicalArray(PhysicalArray&&) noexcept            = default;
+  PhysicalArray& operator=(PhysicalArray&&) noexcept = default;
 
  private:
   void check_shape_dimension(int32_t dim) const;

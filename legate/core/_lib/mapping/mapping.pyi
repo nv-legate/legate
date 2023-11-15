@@ -16,3 +16,5 @@ class TaskTarget(IntEnum):
     GPU: int
     OMP: int
     CPU: int
+
+TASK_TARGET_TO_VARIANT_KIND: dict[TaskTarget, int]

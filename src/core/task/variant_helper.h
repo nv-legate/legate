@@ -17,7 +17,26 @@
 
 #include "legion.h"
 
+#include <optional>
+#include <string_view>
+
 namespace legate::detail {
+
+void task_wrapper(VariantImpl,
+                  LegateVariantCode,
+                  std::optional<std::string_view>,
+                  const void*,
+                  size_t,
+                  const void*,
+                  size_t,
+                  Legion::Processor);
+
+template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+inline void task_wrapper_dyn_name(
+  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
+{
+  task_wrapper(variant_fn, variant_kind, {}, args, arglen, userdata, userlen, std::move(p));
+}
 
 template <typename T>
 using void_t = void;
@@ -64,14 +83,11 @@ struct VariantHelper<T, SELECTOR, true> {
   {
     // Construct the code descriptor for this task so that the library
     // can register it later when it is ready
-    constexpr auto VARIANT_IMPL = SELECTOR<T>::variant;
-    constexpr auto WRAPPER      = T::BASE::template legate_task_wrapper<VARIANT_IMPL>;
-    constexpr auto VARIANT_ID   = SELECTOR<T>::id;
-    auto finder                 = all_options.find(VARIANT_ID);
-    task_info->add_variant(VARIANT_ID,
-                           VARIANT_IMPL,
-                           Legion::CodeDescriptor(WRAPPER),
-                           finder != all_options.end() ? finder->second : VariantOptions{});
+    constexpr auto variant_impl = SELECTOR<T>::variant;
+    constexpr auto variant_kind = SELECTOR<T>::id;
+    constexpr auto entry        = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
+
+    task_info->add_variant(variant_kind, variant_impl, entry, all_options);
   }
 };
 

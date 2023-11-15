@@ -25,6 +25,8 @@
 #include "realm/faults.h"
 
 #include <cxxabi.h>
+#include <optional>
+#include <string_view>
 
 namespace legate::detail {
 
@@ -65,7 +67,8 @@ std::string generate_task_name(const std::type_info& ti)
 }
 
 void task_wrapper(VariantImpl variant_impl,
-                  const std::string& task_name,
+                  LegateVariantCode variant_kind,
+                  std::optional<std::string_view> task_name,
                   const void* args,
                   size_t arglen,
                   const void* /*userdata*/,
@@ -78,48 +81,57 @@ void task_wrapper(VariantImpl variant_impl,
   Legion::Context legion_context;
   Legion::Runtime* runtime;
   Legion::Runtime::legion_task_preamble(args, arglen, p, task, regions, legion_context, runtime);
+  const auto get_task_name = [&] {
+    return task_name.has_value() ? task_name.value() : task->get_task_name();
+  };
 
   // Cannot use if (LegateDefined(...)) here since nvtx::Range is a RAII class which begins and
   // ends a timer on construction and destruction. It must be in the same lexical scope as the
   // task evaluation!
 #if LegateDefined(LEGATE_USE_CUDA)
   std::stringstream ss;
-
-  ss << task_name;
+  ss << get_task_name();
   if (!task->get_provenance_string().empty()) {
     ss << " : " + task->get_provenance_string();
   }
-  std::string msg = ss.str();
+  std::string msg = std::move(ss).str();
   nvtx::Range auto_range(msg.c_str());
-#else
-  static_cast<void>(task_name);
 #endif
 
   show_progress(task, legion_context, runtime);
 
-  detail::TaskContext context{task, *regions};
+  detail::TaskContext context{task, variant_kind, *regions};
 
   ReturnValues return_values{};
+
+  const auto handle_exception = [&](const legate::TaskException& excn) {
+    if (context.can_raise_exception()) {
+      context.make_all_unbound_stores_empty();
+      return_values = context.pack_return_values_with_exception(excn.index(), excn.error_message());
+    } else {
+      // If a Legate exception is thrown by a task that does not declare any exception,
+      // this is a bug in the library that needs to be reported to the developer
+      log_legate().error(
+        "Task %s threw an exception \"%s\", but the task did not declare any exception.",
+        get_task_name().data(),
+        excn.error_message().c_str());
+      LEGATE_ABORT;
+    }
+  };
+
   try {
     const legate::TaskContext ctx{&context};
 
     if (!Config::use_empty_task) {
       (*variant_impl)(ctx);
     }
-    return_values = context.pack_return_values();
-  } catch (const legate::TaskException& e) {
-    if (context.can_raise_exception()) {
-      context.make_all_unbound_stores_empty();
-      return_values = context.pack_return_values_with_exception(e.index(), e.error_message());
+    if (auto& excn = ctx.impl()->get_exception(); excn.has_value()) {
+      handle_exception(legate::TaskException{*std::move(excn)});
     } else {
-      // If a Legate exception is thrown by a task that does not declare any exception,
-      // this is a bug in the library that needs to be reported to the developer
-      log_legate().error(
-        "Task %s threw an exception \"%s\", but the task did not declare any exception.",
-        task->get_task_name(),
-        e.error_message().c_str());
-      LEGATE_ABORT;
+      return_values = context.pack_return_values();
     }
+  } catch (const legate::TaskException& e) {
+    handle_exception(e);
   }
 
   // Legion postamble

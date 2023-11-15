@@ -22,8 +22,9 @@
 namespace legate::detail {
 
 TaskContext::TaskContext(const Legion::Task* task,
+                         LegateVariantCode variant_kind,
                          const std::vector<Legion::PhysicalRegion>& regions)
-  : task_{task}, regions_{regions}
+  : task_{task}, variant_kind_{variant_kind}, regions_{regions}
 {
   {
     mapping::MapperDataDeserializer dez{task};

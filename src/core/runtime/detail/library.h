@@ -33,7 +33,7 @@ class Library {
   class ResourceIdScope {
    public:
     ResourceIdScope() = default;
-    ResourceIdScope(int64_t base, int64_t size);
+    ResourceIdScope(int64_t base, int64_t size, int64_t dyn_size = 0);
 
     [[nodiscard]] int64_t translate(int64_t local_resource_id) const;
     [[nodiscard]] int64_t invert(int64_t resource_id) const;

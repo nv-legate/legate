@@ -21,16 +21,14 @@ namespace {
 std::vector<PhysicalArray> to_arrays(
   const std::vector<std::shared_ptr<detail::PhysicalArray>>& array_impls)
 {
-  std::vector<PhysicalArray> result;
-
-  result.reserve(array_impls.size());
-  for (const auto& array_impl : array_impls) {
-    result.emplace_back(array_impl);
-  }
-  return result;
+  return {array_impls.begin(), array_impls.end()};
 }
 
 }  // namespace
+
+int64_t TaskContext::task_id() const noexcept { return impl_->task_id(); }
+
+LegateVariantCode TaskContext::variant_kind() const noexcept { return impl_->variant_kind(); }
 
 PhysicalArray TaskContext::input(uint32_t index) const
 {

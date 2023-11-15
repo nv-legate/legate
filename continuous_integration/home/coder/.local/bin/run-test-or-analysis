@@ -40,13 +40,17 @@ run_test_or_analysis() {
               # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
               # /path/to/your/file.py
               GCC_ASAN_PRELOAD=$(gcc -print-file-name=libasan.so)
-              LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest
+              for test_file in $(find . -name 'test_*.py'); do
+                LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest ${test_file}
+              done
             elif [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-clang ]]; then
               echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
               echo "See impls for GCC above"
               return 1
             else
-              pytest
+              for test_file in $(find . -name 'test_*.py'); do
+                pytest ${test_file}
+              done
             fi
 
             ;;

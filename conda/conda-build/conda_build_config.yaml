@@ -15,7 +15,6 @@ ucx_configured:
   - false
 
 python:
-  - 3.9
   - 3.10
   - 3.11
 

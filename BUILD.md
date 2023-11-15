@@ -133,7 +133,7 @@ contributions that fix such incompatibilities.
 | C++ compiler     | gcc 8, clang 7, nvc++ 19.1      | any compiler with C++17 support      |
 | GPU architecture | Volta                           | Pascal                               |
 | CUDA toolkit     | 11.4                            | 10.0                                 |
-| Python           | 3.9                             |                                      |
+| Python           | 3.10                            |                                      |
 | NumPy            | 1.22                            |                                      |
 
 ## Dependency listing

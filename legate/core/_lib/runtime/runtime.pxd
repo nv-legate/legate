@@ -55,11 +55,11 @@ cdef extern from *:
         PyObject* message = PyUnicode_FromString(exn.what());
         PyObject* index = PyLong_FromLong(static_cast<long>(exn.index()));
 
-        int result = 0;
-        result = PyTuple_SetItem(args, 0, message);
+        int result = PyTuple_SetItem(args, 0, message);
         assert(result == 0);
         result = PyTuple_SetItem(args, 1, index);
         assert(result == 0);
+        static_cast<void>(result);
 
         PyErr_SetObject(_LegateTaskException, args);
 

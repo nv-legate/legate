@@ -1269,6 +1269,7 @@ void Runtime::destroy()
 
 namespace {
 
+template <LegateVariantCode variant_kind>
 void extract_scalar_task(const void* args,
                          size_t arglen,
                          const void* /*userdata*/,
@@ -1284,7 +1285,7 @@ void extract_scalar_task(const void* args,
 
   legate::detail::show_progress(task, legion_context, runtime);
 
-  detail::TaskContext context{task, *regions};
+  detail::TaskContext context{task, variant_kind, *regions};
   auto idx            = context.scalars()[0].value<int32_t>();
   auto value_and_size = ReturnValues::extract(task->futures[0], idx);
 
@@ -1292,29 +1293,26 @@ void extract_scalar_task(const void* args,
   value_and_size.finalize(legion_context);
 }
 
+template <LegateVariantCode variant_id>
+void register_extract_scalar_variant(const std::unique_ptr<TaskInfo>& task_info)
+{
+  // TODO: We could support Legion & Realm calling convensions so we don't pass nullptr here
+  task_info->add_variant(
+    variant_id, nullptr, Legion::CodeDescriptor{extract_scalar_task<variant_id>}, VariantOptions{});
+}
+
 }  // namespace
 
 void register_legate_core_tasks(Legion::Runtime* runtime, Library* core_lib)
 {
-  auto task_info                       = std::make_unique<TaskInfo>("core::extract_scalar");
-  auto register_extract_scalar_variant = [&](auto variant_id) {
-    // If Legion::CodeDescriptor ever becomes move constructible, we can delete the NOLINT
-    // lines below
-    static_assert(!traits::detail::is_pure_move_constructible_v<Legion::CodeDescriptor>,
-                  "Can remove the NOLINT lines below!");
-    // NOLINTNEXTLINE(misc-const-correctness)
-    Legion::CodeDescriptor desc{extract_scalar_task};
-    // TODO: We could support Legion & Realm calling convensions so we don't pass nullptr here
-    // NOLINTNEXTLINE(performance-move-const-arg)
-    task_info->add_variant(variant_id, nullptr, std::move(desc), VariantOptions{});
-  };
-  register_extract_scalar_variant(LEGATE_CPU_VARIANT);
-  if (LegateDefined(LEGATE_USE_CUDA)) {
-    register_extract_scalar_variant(LEGATE_GPU_VARIANT);
-  }
-  if (LegateDefined(LEGATE_USE_OPENMP)) {
-    register_extract_scalar_variant(LEGATE_OMP_VARIANT);
-  }
+  auto task_info = std::make_unique<TaskInfo>("core::extract_scalar");
+  register_extract_scalar_variant<LEGATE_CPU_VARIANT>(task_info);
+#if LegateDefined(LEGATE_USE_CUDA)
+  register_extract_scalar_variant<LEGATE_GPU_VARIANT>(task_info);
+#endif
+#if LegateDefined(LEGATE_USE_OPENMP)
+  register_extract_scalar_variant<LEGATE_OMP_VARIANT>(task_info);
+#endif
   core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
 
   register_array_tasks(core_lib);
@@ -1433,7 +1431,8 @@ void initialize_core_library()
   parse_config();
 
   ResourceConfig config;
-  config.max_tasks       = LEGATE_CORE_NUM_TASK_IDS;
+  config.max_tasks       = LEGATE_CORE_MAX_TASK_ID;
+  config.max_dyn_tasks   = config.max_tasks - LEGATE_CORE_FIRST_DYNAMIC_TASK_ID;
   config.max_projections = LEGATE_CORE_MAX_FUNCTOR_ID;
   // We register one sharding functor for each new projection functor
   config.max_shardings     = LEGATE_CORE_MAX_FUNCTOR_ID;

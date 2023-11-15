@@ -27,7 +27,8 @@ Library::Library(const std::string& library_name, const ResourceConfig& config)
   : runtime_{Legion::Runtime::get_runtime()},
     library_name_{library_name},
     task_scope_{runtime_->generate_library_task_ids(library_name.c_str(), config.max_tasks),
-                config.max_tasks},
+                config.max_tasks,
+                config.max_dyn_tasks},
     redop_scope_{
       runtime_->generate_library_reduction_ids(library_name.c_str(), config.max_reduction_ops),
       config.max_reduction_ops},

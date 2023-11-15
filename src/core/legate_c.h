@@ -34,7 +34,13 @@ typedef enum legate_core_task_id_t {
   LEGATE_CORE_FIXUP_RANGES,
   LEGATE_CORE_OFFSETS_TO_RANGES,
   LEGATE_CORE_RANGES_TO_OFFSETS,
-  LEGATE_CORE_NUM_TASK_IDS,  // must be last
+  LEGATE_CORE_FIRST_DYNAMIC_TASK_ID,
+  // Legate core runtime allocates LEGATE_CORE_MAX_TASK_ID tasks from Legion upfront. All ID's
+  // prior to LEGATE_CORE_FIRST_DYNAMIC_TASK_ID are for specific, bespoke
+  // tasks. LEGATE_CORE_MAX_TASK_ID - LEGATE_CORE_FIRST_DYNAMIC_TASK_ID are for "dynamic"
+  // tasks, e.g. those created from Python or elsewhere. Hence we make LEGATE_CORE_MAX_TASK_ID
+  // large enough so that theres enough slack
+  LEGATE_CORE_MAX_TASK_ID = 512,  // must be last
 } legate_core_task_id_t;
 
 typedef enum legate_core_proj_id_t {

@@ -20,7 +20,7 @@ requires = [
 
 [tool.black]
 line-length = 79
-target-version = ["py36"]
+target-version = ["py310"]
 include = '\.py?$'
 exclude = '''
 /(
@@ -102,6 +102,7 @@ ignore_errors = true
 
 [tool.pytest.ini_options]
 cache_dir = "./.cache/pytest"
+required_plugins = "pytest-mock"
 
 
 [tool.isort]

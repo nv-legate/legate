@@ -19,6 +19,8 @@
 #include "core/task/detail/return.h"
 
 #include <memory>
+#include <optional>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -26,7 +28,9 @@ namespace legate::detail {
 
 class TaskContext {
  public:
-  TaskContext(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions);
+  TaskContext(const Legion::Task* task,
+              LegateVariantCode variant_kind,
+              const std::vector<Legion::PhysicalRegion>& regions);
 
   [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& inputs();
   [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& outputs();
@@ -34,10 +38,15 @@ class TaskContext {
   [[nodiscard]] const std::vector<legate::Scalar>& scalars();
   [[nodiscard]] std::vector<comm::Communicator>& communicators();
 
+  [[nodiscard]] int64_t task_id() const noexcept;
+  [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
   [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] bool can_raise_exception() const;
   [[nodiscard]] DomainPoint get_task_index() const;
   [[nodiscard]] Domain get_launch_domain() const;
+
+  void set_exception(std::string what);
+  [[nodiscard]] std::optional<std::string>& get_exception() noexcept;
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] const std::string& get_provenance() const;
@@ -54,6 +63,7 @@ class TaskContext {
   [[nodiscard]] std::vector<ReturnValue> get_return_values() const;
 
   const Legion::Task* task_{};
+  LegateVariantCode variant_kind_{};
   const std::vector<Legion::PhysicalRegion>& regions_;
 
   std::vector<std::shared_ptr<PhysicalArray>> inputs_{}, outputs_{}, reductions_{};
@@ -63,6 +73,7 @@ class TaskContext {
   std::vector<comm::Communicator> comms_{};
   bool can_raise_exception_{};
   mapping::detail::Machine machine_{};
+  std::optional<std::string> excn_{std::nullopt};
 };
 
 }  // namespace legate::detail

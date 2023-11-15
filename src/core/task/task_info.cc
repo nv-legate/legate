@@ -103,6 +103,19 @@ void TaskInfo::add_variant(LegateVariantCode vid,
   impl_->add_variant(vid, body, code_desc, options);
 }
 
+void TaskInfo::add_variant(LegateVariantCode vid,
+                           VariantImpl body,
+                           RealmCallbackFn entry,
+                           const std::map<LegateVariantCode, VariantOptions>& all_options)
+{
+  const auto finder = all_options.find(vid);
+
+  add_variant(vid,
+              body,
+              Legion::CodeDescriptor{entry},
+              finder == all_options.end() ? VariantOptions{} : finder->second);
+}
+
 const VariantInfo& TaskInfo::find_variant(LegateVariantCode vid) const
 {
   return impl_->find_variant(vid);

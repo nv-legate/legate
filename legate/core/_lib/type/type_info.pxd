@@ -15,6 +15,13 @@ from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
 
+# Yes this is a hack. No, you cannot get it to work any other way. Declaring the enum
+# inline within Type leads to confusing
+#
+#  error: use of undeclared identifier '__pyx_e_4Type_INT8'
+# __pyx_t_3 = __Pyx_PyInt_From_legate_3a__3a_Type_3a__3a_Code(__pyx_e_4Type_INT8);
+#
+# because cython mangles the name of the enum
 cdef extern from "core/type/type_info.h" namespace "legate::Type" nogil:
     cdef enum class Code:
         NIL

@@ -9,4 +9,10 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Intentionally left blank, so that cpdef enum is generated from the .pxd file
+# Note import, not cimport. We want the Python version of the enum
+from ..legate_c import legate_core_variant_t
+
+TASK_TARGET_TO_VARIANT_KIND: dict[TaskTarget, legate_core_variant_t] = {
+    target: getattr(legate_core_variant_t, f"_LEGATE_{target.name}_VARIANT")
+    for target in TaskTarget
+}

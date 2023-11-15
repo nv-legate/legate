@@ -10,13 +10,9 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-set(cython_sources
-    constraint.pyx
+set(
+  cython_sources
+  constraint.pyx
 )
 
-rapids_cython_create_modules(
-  CXX
-  ASSOCIATED_TARGETS legate_core
-  SOURCE_FILES "${cython_sources}"
-  LINKED_LIBRARIES legate::core
-)
+legate_core_create_cython_modules(SOURCES "${cython_sources}")

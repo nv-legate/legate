@@ -43,7 +43,6 @@ setup(
         "Topic :: Scientific/Engineering",
         "License :: Proprietary :: Nvidia Proprietary",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
     ],
