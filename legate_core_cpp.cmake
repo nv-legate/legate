@@ -442,6 +442,7 @@ if (legate_core_BUILD_DOCS)
     set(DOXYGEN_USE_MATHJAX YES)
     set(DOXYGEN_MATHJAX_VERSION MathJax_3)
     set(DOXYGEN_STRIP_FROM_INC_PATH ${CMAKE_SOURCE_DIR}/src)
+    set(DOXYGEN_EXAMPLE_PATH tests/cpp)
     doxygen_add_docs("doxygen_legate" ALL
       ${legate_core_DOC_SOURCES}
       COMMENT "Custom command for building Doxygen docs."
