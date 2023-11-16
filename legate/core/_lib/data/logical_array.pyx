@@ -9,6 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from cython.operator cimport dereference
 from libc.stdint cimport int32_t, int64_t, uint32_t, uintptr_t
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
@@ -31,6 +32,10 @@ cdef class LogicalArray:
     @staticmethod
     def from_store(LogicalStore store) -> LogicalArray:
         return LogicalArray.from_handle(_LogicalArray(store._handle))
+
+    @staticmethod
+    def from_raw_handle(uintptr_t raw_handle):
+        return LogicalArray.from_handle(dereference(<_LogicalArray*> raw_handle))
 
     @property
     def shape(self) -> Shape:
