@@ -24,6 +24,7 @@ env:
   PYTHONUNBUFFERED: 1
 jobs:
   build:
+    if: ${{ github.repository_owner == 'nv-legate' }}
     runs-on: ubuntu-latest
     steps:
       - name: Dump GitHub context
