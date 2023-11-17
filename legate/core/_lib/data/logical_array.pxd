@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t, int64_t, uint32_t, uintptr_t
+from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t, uintptr_t
 from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 
@@ -33,7 +33,7 @@ cdef extern from "core/data/logical_array.h" namespace "legate" nogil:
         _LogicalArray project(int32_t, int64_t) except+
         _LogicalArray slice(int32_t, _Slice) except+
         _LogicalArray transpose(std_vector[int32_t]) except+
-        _LogicalArray delinearize(int32_t, std_vector[int64_t]) except+
+        _LogicalArray delinearize(int32_t, std_vector[uint64_t]) except+
         _LogicalStore data() except+
         _LogicalStore null_mask() except+
         _LogicalArray child(uint32_t) except+

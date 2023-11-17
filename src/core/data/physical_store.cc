@@ -46,7 +46,12 @@ bool PhysicalStore::is_unbound_store() const { return impl_->is_unbound_store();
 
 PhysicalStore::PhysicalStore() noexcept = default;
 
-PhysicalStore::PhysicalStore(const PhysicalArray& array) : impl_{array.data().impl()} {}
+PhysicalStore::PhysicalStore(const PhysicalArray& array)
+  : impl_{array.nullable()
+            ? throw std::invalid_argument{"Nullable array cannot be converted to a store"}
+            : array.data().impl()}
+{
+}
 
 void PhysicalStore::check_accessor_dimension(int32_t dim) const
 {

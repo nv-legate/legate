@@ -72,8 +72,8 @@ std::shared_ptr<LogicalArray> BaseLogicalArray::transpose(const std::vector<int3
   return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<LogicalArray> BaseLogicalArray::delinearize(int32_t dim,
-                                                            const std::vector<int64_t>& sizes) const
+std::shared_ptr<LogicalArray> BaseLogicalArray::delinearize(
+  int32_t dim, const std::vector<uint64_t>& sizes) const
 {
   auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
   auto data      = data_->delinearize(dim, sizes);
@@ -208,7 +208,7 @@ std::shared_ptr<LogicalArray> ListLogicalArray::transpose(const std::vector<int3
 }
 
 std::shared_ptr<LogicalArray> ListLogicalArray::delinearize(int32_t,
-                                                            const std::vector<int64_t>&) const
+                                                            const std::vector<uint64_t>&) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
@@ -370,7 +370,7 @@ std::shared_ptr<LogicalArray> StructLogicalArray::transpose(const std::vector<in
 }
 
 std::shared_ptr<LogicalArray> StructLogicalArray::delinearize(
-  int32_t dim, const std::vector<int64_t>& sizes) const
+  int32_t dim, const std::vector<uint64_t>& sizes) const
 {
   auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
   auto fields =
@@ -453,6 +453,13 @@ void StructLogicalArray::generate_constraints(
     (*it)->generate_constraints(task, mapping, part_field);
     task->add_constraint(image(partition_symbol, part_field));
   }
+
+  if (!nullable()) {
+    return;
+  }
+  auto part_null_mask = task->declare_partition();
+  mapping.try_emplace(null_mask_, part_null_mask);
+  task->add_constraint(align(partition_symbol, part_null_mask));
 }
 
 std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(

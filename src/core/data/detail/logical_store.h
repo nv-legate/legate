@@ -180,10 +180,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   [[nodiscard]] std::shared_ptr<LogicalStore> slice(int32_t dim, Slice sl);
   [[nodiscard]] std::shared_ptr<LogicalStore> transpose(const std::vector<int32_t>& axes);
   [[nodiscard]] std::shared_ptr<LogicalStore> transpose(std::vector<int32_t>&& axes);
-  [[nodiscard]] std::shared_ptr<LogicalStore> delinearize(int32_t dim,
-                                                          const std::vector<int64_t>& sizes);
-  [[nodiscard]] std::shared_ptr<LogicalStore> delinearize(int32_t dim,
-                                                          std::vector<int64_t>&& sizes);
+  [[nodiscard]] std::shared_ptr<LogicalStore> delinearize(int32_t dim, std::vector<uint64_t> sizes);
 
   [[nodiscard]] std::shared_ptr<LogicalStorePartition> partition_by_tiling(Shape tile_shape);
 

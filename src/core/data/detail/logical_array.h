@@ -53,7 +53,7 @@ struct LogicalArray {
   [[nodiscard]] virtual std::shared_ptr<LogicalArray> transpose(
     const std::vector<int32_t>& axes) const = 0;
   [[nodiscard]] virtual std::shared_ptr<LogicalArray> delinearize(
-    int32_t dim, const std::vector<int64_t>& sizes) const = 0;
+    int32_t dim, const std::vector<uint64_t>& sizes) const = 0;
 
   [[nodiscard]] virtual std::shared_ptr<LogicalStore> data() const;
   [[nodiscard]] virtual std::shared_ptr<LogicalStore> null_mask() const           = 0;
@@ -104,7 +104,7 @@ class BaseLogicalArray : public LogicalArray {
   [[nodiscard]] std::shared_ptr<LogicalArray> transpose(
     const std::vector<int32_t>& axes) const override;
   [[nodiscard]] std::shared_ptr<LogicalArray> delinearize(
-    int32_t dim, const std::vector<int64_t>& sizes) const override;
+    int32_t dim, const std::vector<uint64_t>& sizes) const override;
 
   [[nodiscard]] std::shared_ptr<LogicalStore> data() const override;
   [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
@@ -157,7 +157,7 @@ class ListLogicalArray : public LogicalArray {
   [[nodiscard]] std::shared_ptr<LogicalArray> transpose(
     const std::vector<int32_t>& axes) const override;
   [[nodiscard]] std::shared_ptr<LogicalArray> delinearize(
-    int32_t dim, const std::vector<int64_t>& sizes) const override;
+    int32_t dim, const std::vector<uint64_t>& sizes) const override;
 
   [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
   [[nodiscard]] std::shared_ptr<PhysicalArray> get_physical_array() const override;
@@ -211,7 +211,7 @@ class StructLogicalArray : public LogicalArray {
   [[nodiscard]] std::shared_ptr<LogicalArray> transpose(
     const std::vector<int32_t>& axes) const override;
   [[nodiscard]] std::shared_ptr<LogicalArray> delinearize(
-    int32_t dim, const std::vector<int64_t>& sizes) const override;
+    int32_t dim, const std::vector<uint64_t>& sizes) const override;
 
   [[nodiscard]] std::shared_ptr<LogicalStore> null_mask() const override;
   [[nodiscard]] std::shared_ptr<PhysicalArray> get_physical_array() const override;

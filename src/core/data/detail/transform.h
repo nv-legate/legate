@@ -207,7 +207,7 @@ class Transpose : public StoreTransform {
 
 class Delinearize : public StoreTransform {
  public:
-  Delinearize(int32_t dim, std::vector<int64_t>&& sizes);
+  Delinearize(int32_t dim, std::vector<uint64_t>&& sizes);
 
   [[nodiscard]] Domain transform(const Domain& domain) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
@@ -228,9 +228,9 @@ class Delinearize : public StoreTransform {
 
  private:
   int32_t dim_{};
-  std::vector<int64_t> sizes_{};
-  std::vector<int64_t> strides_{};
-  int64_t volume_{};
+  std::vector<uint64_t> sizes_{};
+  std::vector<uint64_t> strides_{};
+  uint64_t volume_{};
 };
 
 std::ostream& operator<<(std::ostream& out, const Transform& transform);

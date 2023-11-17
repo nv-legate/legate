@@ -75,8 +75,8 @@ class Runtime {
                                                 bool* created,
                                                 bool in_callback);
 
-  void record_reduction_operator(int32_t type_uid, int32_t op_kind, int64_t legion_op_id);
-  [[nodiscard]] int64_t find_reduction_operator(int32_t type_uid, int32_t op_kind) const;
+  void record_reduction_operator(uint32_t type_uid, int32_t op_kind, int64_t legion_op_id);
+  [[nodiscard]] int64_t find_reduction_operator(uint32_t type_uid, int32_t op_kind) const;
 
   void initialize(Legion::Context legion_context);
 
@@ -120,6 +120,10 @@ class Runtime {
                                                            bool optimize_scalar);
   [[nodiscard]] std::shared_ptr<LogicalArray> create_array_like(
     const std::shared_ptr<LogicalArray>& array, std::shared_ptr<Type> type);
+  [[nodiscard]] std::shared_ptr<LogicalArray> create_list_array(
+    std::shared_ptr<Type> type,
+    const std::shared_ptr<LogicalArray>& descriptor,
+    std::shared_ptr<LogicalArray> vardata);
 
  private:
   [[nodiscard]] std::shared_ptr<StructLogicalArray> create_struct_array(std::shared_ptr<Type> type,
@@ -325,7 +329,7 @@ class Runtime {
 
   std::map<std::string, std::unique_ptr<Library>> libraries_{};
 
-  std::map<std::pair<int32_t, int32_t>, int64_t> reduction_ops_{};
+  std::map<std::pair<uint32_t, int32_t>, int64_t> reduction_ops_{};
 
   // TODO: We keep some of the deferred exception code as we will put it back later
   std::vector<Legion::Future> pending_exceptions_{};

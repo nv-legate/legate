@@ -26,7 +26,7 @@ inline uint32_t PrimitiveType::size() const { return size_; }
 
 inline uint32_t PrimitiveType::alignment() const { return alignment_; }
 
-inline int32_t PrimitiveType::uid() const { return static_cast<int32_t>(code); }
+inline uint32_t PrimitiveType::uid() const { return static_cast<uint32_t>(code); }
 
 inline bool PrimitiveType::variable_size() const { return false; }
 
@@ -42,7 +42,7 @@ inline bool StringType::variable_size() const { return true; }
 
 inline uint32_t StringType::alignment() const { return alignof(std::max_align_t); }
 
-inline int32_t StringType::uid() const { return static_cast<int32_t>(code); }
+inline uint32_t StringType::uid() const { return static_cast<uint32_t>(code); }
 
 inline std::string StringType::to_string() const { return "string"; }
 
@@ -52,18 +52,15 @@ inline bool StringType::equal(const Type& other) const { return code == other.co
 
 // ==========================================================================================
 
-inline ExtensionType::ExtensionType(int32_t uid, Type::Code code)
-  : Type{code}, uid_{static_cast<std::uint32_t>(uid)}
-{
-}
+inline ExtensionType::ExtensionType(uint32_t uid, Type::Code code) : Type{code}, uid_{uid} {}
 
-inline int32_t ExtensionType::uid() const { return static_cast<std::int32_t>(uid_); }
+inline uint32_t ExtensionType::uid() const { return uid_; }
 
 inline bool ExtensionType::is_primitive() const { return false; }
 
 // ==========================================================================================
 
-inline BinaryType::BinaryType(int32_t uid, uint32_t size)
+inline BinaryType::BinaryType(uint32_t uid, uint32_t size)
   : ExtensionType{uid, Type::Code::BINARY}, size_{size}
 {
 }
@@ -74,10 +71,7 @@ inline uint32_t BinaryType::alignment() const { return alignof(std::max_align_t)
 
 inline bool BinaryType::variable_size() const { return false; }
 
-inline bool BinaryType::equal(const Type& other) const
-{
-  return static_cast<int32_t>(uid_) == other.uid();
-}
+inline bool BinaryType::equal(const Type& other) const { return uid_ == other.uid(); }
 
 // ==========================================================================================
 

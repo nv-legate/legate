@@ -52,7 +52,7 @@ LogicalArray LogicalArray::transpose(const std::vector<int32_t>& axes) const
   return LogicalArray{impl_->transpose(axes)};
 }
 
-LogicalArray LogicalArray::delinearize(int32_t dim, const std::vector<int64_t>& sizes) const
+LogicalArray LogicalArray::delinearize(int32_t dim, const std::vector<uint64_t>& sizes) const
 {
   return LogicalArray{impl_->delinearize(dim, sizes)};
 }

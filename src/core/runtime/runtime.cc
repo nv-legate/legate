@@ -172,6 +172,23 @@ LogicalArray Runtime::create_array_like(const LogicalArray& to_mirror, std::opti
   return LogicalArray{impl_->create_array_like(to_mirror.impl(), std::move(ty))};
 }
 
+StringLogicalArray Runtime::create_string_array(const LogicalArray& descriptor,
+                                                const LogicalArray& vardata)
+{
+  return LogicalArray{
+    impl_->create_list_array(detail::string_type(), descriptor.impl(), vardata.impl())}
+    .as_string_array();
+}
+
+ListLogicalArray Runtime::create_list_array(const LogicalArray& descriptor,
+                                            const LogicalArray& vardata,
+                                            std::optional<Type> ty /*=std::nullopt*/)
+{
+  auto type = ty ? ty->impl() : detail::list_type(vardata.type().impl());
+  return LogicalArray{impl_->create_list_array(std::move(type), descriptor.impl(), vardata.impl())}
+    .as_list_array();
+}
+
 LogicalStore Runtime::create_store(const Type& type, uint32_t dim)
 {
   return LogicalStore{impl_->create_store(type.impl(), dim)};

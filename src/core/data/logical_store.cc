@@ -61,7 +61,7 @@ LogicalStore LogicalStore::transpose(std::vector<int32_t>&& axes) const
   return LogicalStore{impl_->transpose(std::move(axes))};
 }
 
-LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes) const
+LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<uint64_t> sizes) const
 {
   return LogicalStore{impl_->delinearize(dim, std::move(sizes))};
 }

@@ -143,6 +143,26 @@ void test_list_array(bool nullable)
     EXPECT_THROW(static_cast<void>(list_array.vardata()), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(list_array.child(2)), std::invalid_argument);
   }
+  // create_list_array
+  {
+    auto type       = legate::list_type(legate::int64());
+    auto descriptor = runtime->create_array(legate::Shape{7}, legate::rect_type(1), nullable);
+    auto vardata    = runtime->create_array(legate::Shape{10}, legate::int64());
+    auto array      = runtime->create_list_array(descriptor, vardata, type);
+
+    EXPECT_FALSE(array.unbound());
+    EXPECT_EQ(array.dim(), 1);
+    EXPECT_EQ(array.extents().data(), (std::vector<size_t>{7}));
+    EXPECT_EQ(array.volume(), 7);
+    EXPECT_EQ(array.type(), type);
+    EXPECT_EQ(array.nullable(), nullable);
+    EXPECT_EQ(array.num_children(), 2);
+
+    auto list_array = array.as_list_array();
+    // Sub-arrays can be accessed
+    static_cast<void>(list_array.descriptor());
+    static_cast<void>(list_array.vardata());
+  }
 }
 
 void test_string_array(bool nullable)
@@ -336,6 +356,67 @@ void test_invalid()
   auto unbound_array = runtime->create_array(legate::int64(), 2, false);
   EXPECT_THROW(static_cast<void>(unbound_array.as_list_array()), std::invalid_argument);
   EXPECT_THROW(static_cast<void>(unbound_array.as_string_array()), std::invalid_argument);
+}
+
+void test_invalid_create_list_array()
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto arr_unbound_rect1 = runtime->create_array(legate::rect_type(1));
+  auto arr_unbound_int8  = runtime->create_array(legate::int8());
+  auto arr_2d_rect1      = runtime->create_array(legate::Shape{10, 10}, legate::rect_type(1));
+  auto arr_2d_int8       = runtime->create_array(legate::Shape{10, 10}, legate::int8());
+  auto arr_nullable_int8 =
+    runtime->create_array(legate::Shape{10}, legate::int8(), true /*nullable*/);
+  auto arr_rect1 = runtime->create_array(legate::Shape{10}, legate::rect_type(1));
+  auto arr_int8  = runtime->create_array(legate::Shape{10}, legate::int8());
+  auto arr_int64 = runtime->create_array(legate::Shape{10}, legate::int64());
+
+  // Tests for create_string_array
+  {
+    // Unbound sub-arrays
+    EXPECT_THROW(static_cast<void>(runtime->create_string_array(arr_unbound_rect1, arr_int8)),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(runtime->create_string_array(arr_rect1, arr_unbound_int8)),
+                 std::invalid_argument);
+    // Multi-dimensional sub-arrays
+    EXPECT_THROW(static_cast<void>(runtime->create_string_array(arr_2d_rect1, arr_int8)),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(runtime->create_string_array(arr_rect1, arr_2d_int8)),
+                 std::invalid_argument);
+    // Incorrect descriptor type
+    EXPECT_THROW(static_cast<void>(runtime->create_string_array(arr_int64, arr_int8)),
+                 std::invalid_argument);
+    // Nullable vardata
+    EXPECT_THROW(static_cast<void>(runtime->create_string_array(arr_rect1, arr_nullable_int8)),
+                 std::invalid_argument);
+    // Incorrect vardata type
+    EXPECT_THROW(static_cast<void>(runtime->create_string_array(arr_rect1, arr_int64)),
+                 std::invalid_argument);
+  }
+
+  // Tests for create_list_array
+  {
+    // Incorrect type
+    EXPECT_THROW(
+      static_cast<void>(runtime->create_list_array(arr_unbound_rect1, arr_int8, legate::int64())),
+      std::invalid_argument);
+    // Unbound sub-arrays
+    EXPECT_THROW(static_cast<void>(runtime->create_list_array(arr_unbound_rect1, arr_int8)),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(runtime->create_list_array(arr_rect1, arr_unbound_int8)),
+                 std::invalid_argument);
+    // Incorrect descriptor type
+    EXPECT_THROW(static_cast<void>(runtime->create_list_array(arr_int64, arr_int8)),
+                 std::invalid_argument);
+    // Nullable vardata
+    EXPECT_THROW(static_cast<void>(runtime->create_list_array(arr_rect1, arr_nullable_int8)),
+                 std::invalid_argument);
+    // Incorrect vardata type
+    EXPECT_THROW(static_cast<void>(runtime->create_list_array(
+                   arr_rect1, arr_int64, legate::list_type(legate::int8()))),
+                 std::invalid_argument);
+  }
 }
 
 void test_physical_array(bool nullable)
@@ -689,23 +770,21 @@ void test_delinearize(bool nullable)
   // primitive array
   {
     auto bound_array  = runtime->create_array({1, 2, 3, 4}, legate::int64(), nullable);
-    auto delinearized = bound_array.delinearize(0, (std::vector<int64_t>{1, 1}));
+    auto delinearized = bound_array.delinearize(0, {1, 1});
     EXPECT_EQ(delinearized.extents().data(), (std::vector<size_t>{1, 1, 2, 3, 4}));
 
-    delinearized = bound_array.delinearize(3, (std::vector<int64_t>{4}));
+    delinearized = bound_array.delinearize(3, {4});
     EXPECT_EQ(delinearized.extents().data(), (std::vector<size_t>{1, 2, 3, 4}));
 
-    delinearized = bound_array.delinearize(3, (std::vector<int64_t>{2, 1, 2, 1}));
+    delinearized = bound_array.delinearize(3, {2, 1, 2, 1});
     EXPECT_EQ(delinearized.extents().data(), (std::vector<size_t>{1, 2, 3, 2, 1, 2, 1}));
 
     // invalid dim
-    EXPECT_THROW(static_cast<void>(bound_array.delinearize(4, (std::vector<int64_t>{1, 1}))),
-                 std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(bound_array.delinearize(-1, (std::vector<int64_t>{1, 1}))),
-                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(bound_array.delinearize(4, {1, 1})), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(bound_array.delinearize(-1, {1, 1})), std::invalid_argument);
     // invalid sizes
     EXPECT_THROW(static_cast<void>(bound_array.delinearize(0, {1, 2})), std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(bound_array.delinearize(0, {-1, 1})), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(bound_array.delinearize(0, {-1UL, 1})), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(bound_array.delinearize(3, {2})), std::invalid_argument);
 
     // Note: gitlab issue #16 unexpected: delinearized.extents is
@@ -713,8 +792,7 @@ void test_delinearize(bool nullable)
     // delinearized = bound_array.delinearize(0, (std::vector<int64_t>{-1, -1}));
 
     auto unbound_array = runtime->create_array(legate::int64(), 3, nullable);
-    EXPECT_THROW(static_cast<void>(unbound_array.delinearize(0, (std::vector<int64_t>{1, 1}))),
-                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(unbound_array.delinearize(0, {1, 1})), std::invalid_argument);
   }
 
   // list array
@@ -742,32 +820,28 @@ void test_delinearize(bool nullable)
     auto st_type = legate::struct_type(true, legate::uint16(), legate::int64(), legate::float32())
                      .as_struct_type();
     auto bound_array  = runtime->create_array({4, 5, 6}, st_type, nullable);
-    auto delinearized = bound_array.delinearize(0, (std::vector<int64_t>{2, 2}));
+    auto delinearized = bound_array.delinearize(0, {2, 2});
     EXPECT_EQ(delinearized.extents().data(), (std::vector<size_t>{2, 2, 5, 6}));
 
-    delinearized = bound_array.delinearize(2, (std::vector<int64_t>{6}));
+    delinearized = bound_array.delinearize(2, {6});
     EXPECT_EQ(delinearized.extents().data(), (std::vector<size_t>{4, 5, 6}));
 
-    delinearized = bound_array.delinearize(2, (std::vector<int64_t>{2, 3, 1}));
+    delinearized = bound_array.delinearize(2, {2, 3, 1});
     EXPECT_EQ(delinearized.extents().data(), (std::vector<size_t>{4, 5, 2, 3, 1}));
 
     // invalid dim
-    EXPECT_THROW(static_cast<void>(bound_array.delinearize(4, (std::vector<int64_t>{1, 1}))),
-                 std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(bound_array.delinearize(-1, (std::vector<int64_t>{1, 1}))),
-                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(bound_array.delinearize(4, {1, 1})), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(bound_array.delinearize(-1, {1, 1})), std::invalid_argument);
     // invalid sizes
     EXPECT_THROW(static_cast<void>(bound_array.delinearize(0, {1, 2})), std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(bound_array.delinearize(0, {-1, 1})), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(bound_array.delinearize(0, {-1UL, 1})), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(bound_array.delinearize(2, {2})), std::invalid_argument);
 
-    // Note: gitlab issue #16 unexpected: delinearized.extents is
-    // (18446744073709551615,18446744073709551615,2,3,4,)
-    // delinearized = bound_array.delinearize(0, (std::vector<int64_t>{-2, -2}));
+    EXPECT_THROW(static_cast<void>(bound_array.delinearize(0, {-2UL, -2UL})),
+                 std::invalid_argument);
 
     auto unbound_array = runtime->create_array(st_type, 3, nullable);
-    EXPECT_THROW(static_cast<void>(unbound_array.delinearize(0, (std::vector<int64_t>{1, 1}))),
-                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(unbound_array.delinearize(0, {1, 1})), std::invalid_argument);
   }
 }
 
@@ -794,6 +868,8 @@ TEST_F(LogicalArrayUnit, CreateLike)
 }
 
 TEST_F(LogicalArrayUnit, CreateInvalid) { test_invalid(); }
+
+TEST_F(LogicalArrayUnit, CreateInvalidList) { test_invalid_create_list_array(); }
 
 TEST_F(LogicalArrayUnit, PhsicalArray)
 {

@@ -195,7 +195,7 @@ void BinaryType::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(size_);
 }
 
-FixedArrayType::FixedArrayType(int32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
+FixedArrayType::FixedArrayType(uint32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
   : ExtensionType{uid, Type::Code::FIXED_ARRAY},
     element_type_{std::move(element_type)},
     N_{N},
@@ -237,7 +237,7 @@ bool FixedArrayType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-StructType::StructType(int32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
+StructType::StructType(uint32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
   : ExtensionType{uid, Type::Code::STRUCT},
     aligned_{align},
     alignment_{1},
@@ -359,7 +359,7 @@ std::shared_ptr<Type> primitive_type(Type::Code code)
   return result;
 }
 
-ListType::ListType(int32_t uid, std::shared_ptr<Type> element_type)
+ListType::ListType(uint32_t uid, std::shared_ptr<Type> element_type)
   : ExtensionType{uid, Type::Code::LIST}, element_type_{std::move(element_type)}
 {
   if (element_type_->variable_size()) {
@@ -583,14 +583,15 @@ bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim)
   return false;
 }
 
+bool is_rect_type(const std::shared_ptr<Type>& type)
+{
+  auto uid = type->uid();
+  return uid > BASE_RECT_TYPE_UID && uid <= BASE_RECT_TYPE_UID + LEGATE_MAX_DIM;
+}
+
 bool is_rect_type(const std::shared_ptr<Type>& type, int32_t ndim)
 {
-  if (type->code != Type::Code::STRUCT) {
-    return false;
-  }
-  const auto& st_type = type->as_struct_type();
-  return st_type.num_fields() == 2 && is_point_type(st_type.field_type(0), ndim) &&
-         is_point_type(st_type.field_type(1), ndim);
+  return type->uid() == BASE_RECT_TYPE_UID + ndim;
 }
 
 }  // namespace legate::detail

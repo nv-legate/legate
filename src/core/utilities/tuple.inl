@@ -296,8 +296,12 @@ template <typename U>
 std::ostream& operator<<(std::ostream& out, const tuple<U>& tpl)
 {
   out << '(';
+  size_t idx = 0;
   for (auto&& value : tpl) {
-    out << value << ',';
+    if (idx++ > 0) {
+      out << ',';
+    }
+    out << value;
   }
   out << ')';
   return out;

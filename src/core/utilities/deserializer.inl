@@ -262,7 +262,7 @@ std::shared_ptr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack_t
     }
     case LEGATE_CORE_TRANSFORM_DELINEARIZE: {
       auto dim    = unpack<int32_t>();
-      auto sizes  = unpack<std::vector<int64_t>>();
+      auto sizes  = unpack<std::vector<uint64_t>>();
       auto parent = unpack_transform();
       return std::make_shared<detail::TransformStack>(
         std::make_unique<detail::Delinearize>(dim, std::move(sizes)), std::move(parent));

@@ -145,7 +145,7 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
   return result;
 }
 
-void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int64_t legion_op_id)
+void Runtime::record_reduction_operator(uint32_t type_uid, int32_t op_kind, int64_t legion_op_id)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate().debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %" PRId64 ")",
@@ -164,7 +164,7 @@ void Runtime::record_reduction_operator(int32_t type_uid, int32_t op_kind, int64
   reduction_ops_[key] = legion_op_id;
 }
 
-int64_t Runtime::find_reduction_operator(int32_t type_uid, int32_t op_kind) const
+int64_t Runtime::find_reduction_operator(uint32_t type_uid, int32_t op_kind) const
 {
   auto finder = reduction_ops_.find({type_uid, op_kind});
   if (reduction_ops_.end() == finder) {
@@ -390,7 +390,9 @@ std::shared_ptr<LogicalArray> Runtime::create_array(std::shared_ptr<Type> type,
                                                     uint32_t dim,
                                                     bool nullable)
 {
-  if (Type::Code::STRUCT == type->code) {
+  // TODO: We should be able to control colocation of fields for struct types,
+  //       instead of special-casing rect types here
+  if (Type::Code::STRUCT == type->code && !is_rect_type(type)) {
     return create_struct_array(std::move(type), dim, nullable);
   }
   if (type->variable_size()) {
@@ -414,7 +416,9 @@ std::shared_ptr<LogicalArray> Runtime::create_array(const Shape& extents,
                                                     bool nullable,
                                                     bool optimize_scalar)
 {
-  if (Type::Code::STRUCT == type->code) {
+  // TODO: We should be able to control colocation of fields for struct types,
+  //       instead of special-casing rect types here
+  if (Type::Code::STRUCT == type->code && !is_rect_type(type)) {
     return create_struct_array(extents, std::move(type), nullable, optimize_scalar);
   }
 
@@ -447,6 +451,39 @@ std::shared_ptr<LogicalArray> Runtime::create_array_like(const std::shared_ptr<L
 
   const bool optimize_scalar = array->data()->has_scalar_storage();
   return create_array(array->extents(), std::move(type), array->nullable(), optimize_scalar);
+}
+
+std::shared_ptr<LogicalArray> Runtime::create_list_array(
+  std::shared_ptr<Type> type,
+  const std::shared_ptr<LogicalArray>& descriptor,
+  std::shared_ptr<LogicalArray> vardata)
+{
+  if (Type::Code::STRING != type->code && Type::Code::LIST != type->code) {
+    throw std::invalid_argument{"Expected a list type but got " + type->to_string()};
+  }
+  if (descriptor->unbound() || vardata->unbound()) {
+    throw std::invalid_argument("Sub-arrays should not be unbound");
+  }
+  if (descriptor->dim() != 1 || vardata->dim() != 1) {
+    throw std::invalid_argument("Sub-arrays should be 1D");
+  }
+  if (!is_rect_type(descriptor->type(), 1)) {
+    throw std::invalid_argument{"Descriptor array does not have a 1D rect type"};
+  }
+  // If this doesn't hold, something bad happened (and will happen below)
+  assert(!descriptor->nested());
+  if (vardata->nullable()) {
+    throw std::invalid_argument{"Vardata should not be nullable"};
+  }
+
+  auto elem_type = Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
+  if (*vardata->type() != *elem_type) {
+    throw std::invalid_argument{"Expected a vardata array of type " + elem_type->to_string() +
+                                " but got " + vardata->type()->to_string()};
+  }
+
+  return std::make_shared<ListLogicalArray>(
+    std::move(type), std::static_pointer_cast<BaseLogicalArray>(descriptor), std::move(vardata));
 }
 
 std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(std::shared_ptr<Type> type,

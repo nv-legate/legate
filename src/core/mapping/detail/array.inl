@@ -55,7 +55,7 @@ inline legate::detail::ArrayKind ListArray::kind() const { return legate::detail
 
 inline std::shared_ptr<legate::detail::Type> ListArray::type() const { return type_; }
 
-inline bool ListArray::nullable() const { return vardata_->nullable(); }
+inline bool ListArray::nullable() const { return descriptor_->nullable(); }
 
 inline bool ListArray::nested() const { return true; }
 

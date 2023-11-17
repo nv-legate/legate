@@ -318,7 +318,7 @@ class LogicalStore {
    * @throw std::invalid_argument If `dim` is invalid for the store or `sizes` does not preserve
    * the extent of the chosen dimenison
    */
-  [[nodiscard]] LogicalStore delinearize(int32_t dim, std::vector<int64_t>&& sizes) const;
+  [[nodiscard]] LogicalStore delinearize(int32_t dim, std::vector<uint64_t> sizes) const;
 
   /**
    * @brief Creates a tiled partition of the store

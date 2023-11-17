@@ -105,7 +105,7 @@ class Type {
    *
    * @return Unique ID
    */
-  [[nodiscard]] int32_t uid() const;
+  [[nodiscard]] uint32_t uid() const;
   /**
    * @brief Inidicates whether the data type is of varible size elements
    *

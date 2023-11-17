@@ -67,7 +67,7 @@ inline bool ListPhysicalArray::unbound() const
   return descriptor_->unbound() || vardata_->unbound();
 }
 
-inline bool ListPhysicalArray::nullable() const { return vardata_->nullable(); }
+inline bool ListPhysicalArray::nullable() const { return descriptor_->nullable(); }
 
 inline bool ListPhysicalArray::nested() const { return true; }
 

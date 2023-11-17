@@ -350,6 +350,49 @@ class Runtime {
                                                std::optional<Type> type = std::nullopt);
 
   /**
+   * @brief Creates a string array from the existing sub-arrays
+   *
+   * The caller is responsible for making sure that the vardata sub-array is valid for all the
+   * descriptors in the descriptor sub-array
+   *
+   * @param descriptor Sub-array for descriptors
+   * @param vardata Sub-array for characters
+   *
+   * @return String logical array
+   *
+   * @throw std::invalid_argument When any of the following is true:
+   * 1) `descriptor` or `vardata` is unbound or N-D where N > 1
+   * 2) `descriptor` does not have a 1D rect type
+   * 3) `vardata` is nullable
+   * 4) `vardata` does not have an int8 type
+   */
+  [[nodiscard]] StringLogicalArray create_string_array(const LogicalArray& descriptor,
+                                                       const LogicalArray& vardata);
+
+  /**
+   * @brief Creates a list array from the existing sub-arrays
+   *
+   * The caller is responsible for making sure that the vardata sub-array is valid for all the
+   * descriptors in the descriptor sub-array
+   *
+   * @param descriptor Sub-array for descriptors
+   * @param vardata Sub-array for vardata
+   * @param type Optional list type the returned array would have
+   *
+   * @return List logical array
+   *
+   * @throw std::invalid_argument When any of the following is true:
+   * 1) `type` is not a list type
+   * 2) `descriptor` or `vardata` is unbound or N-D where N > 1
+   * 3) `descriptor` does not have a 1D rect type
+   * 4) `vardata` is nullable
+   * 5) `vardata` and `type` have different element types
+   */
+  [[nodiscard]] ListLogicalArray create_list_array(const LogicalArray& descriptor,
+                                                   const LogicalArray& vardata,
+                                                   std::optional<Type> type = std::nullopt);
+
+  /**
    * @brief Creates an unbound store
    *
    * @param type Element type

@@ -352,7 +352,7 @@ cdef class LogicalStore:
         """
         if dim < 0:
             dim += self.ndim
-        cdef std_vector[int64_t] sizes = std_vector[int64_t]()
+        cdef std_vector[uint64_t] sizes = std_vector[uint64_t]()
         for value in shape:
             sizes.push_back(value)
         return LogicalStore.from_handle(

@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t, int64_t, uint32_t
+from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.memory cimport shared_ptr as std_shared_ptr
 from libcpp.string cimport string as std_string
@@ -38,7 +38,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore project(int32_t, int64_t) except+
         _LogicalStore slice(int32_t, _Slice) except+
         _LogicalStore transpose(std_vector[int32_t]) except+
-        _LogicalStore delinearize(int32_t, std_vector[int64_t]) except+
+        _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
         _LogicalStorePartition partition_by_tiling(
             std_vector[size_t] tile_shape
         )

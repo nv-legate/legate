@@ -24,6 +24,8 @@
 
 #include "legate_defines.h"
 
+#include <algorithm>
+#include <numeric>
 #include <stdexcept>
 #include <utility>
 
@@ -170,7 +172,7 @@ std::shared_ptr<Storage> Storage::slice(Shape tile_shape, const Shape& offsets)
   if (can_tile_completely) {
     color_shape    = shape / tile_shape;
     color          = offsets / tile_shape;
-    signed_offsets = legate::full<int64_t>(shape.size(), 0);  // tuple<int64_t>(0, shape.size());
+    signed_offsets = legate::full<int64_t>(shape.size(), 0);
   } else {
     color_shape    = legate::full<size_t>(shape.size(), 1);
     color          = legate::full<size_t>(shape.size(), 0);
@@ -569,10 +571,14 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
                                 extents().to_string()};
   }
 
-  exts[dim] = stop - start;
+  exts[dim] = (start < stop) ? (stop - start) : 0;
 
   if (exts[dim] == extents()[dim]) {
     return shared_from_this();
+  }
+
+  if (0 == exts[dim]) {
+    return Runtime::get_runtime()->create_store(exts, type());
   }
 
   auto transform =
@@ -618,13 +624,7 @@ std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axe
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim,
-                                                        const std::vector<int64_t>& sizes)
-{
-  return delinearize(dim, std::vector<int64_t>{sizes});
-}
-
-std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector<int64_t>&& sizes)
+std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector<uint64_t> sizes)
 {
   if (dim < 0 || dim >= this->dim()) {
     throw std::invalid_argument{"Invalid delinearization on dimension " + std::to_string(dim) +
@@ -632,15 +632,19 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector
   }
 
   auto old_extents = extents();
-  int64_t volume   = 1;
-  for (auto&& size : sizes) {
-    volume *= size;
-  }
 
-  if (static_cast<int64_t>(old_extents[dim]) != volume) {
+  auto delinearizable = [](auto&& to_match, const auto& new_dim_extents) {
+    auto begin = new_dim_extents.begin();
+    auto end   = new_dim_extents.end();
+    return std::reduce(begin, end, size_t{1}, std::multiplies<>{}) == to_match &&
+           // overflow check
+           std::all_of(begin, end, [&to_match](auto size) { return size <= to_match; });
+  };
+
+  if (!delinearizable(old_extents[dim], sizes)) {
     throw std::invalid_argument{"Dimension of size " + std::to_string(old_extents[dim]) +
-                                " cannot be delinearized into shape with volume " +
-                                std::to_string(volume)};
+                                " cannot be delinearized into " +
+                                tuple<uint64_t>{sizes}.to_string()};
   }
 
   auto new_extents = Shape{};

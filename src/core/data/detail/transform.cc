@@ -241,7 +241,7 @@ Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   transform.n = in_dim;
   for (int32_t i = 0; i < out_dim; ++i) {
     for (int32_t j = 0; j < in_dim; ++j) {
-      transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);
+      transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);      
     }
   }
 
@@ -757,7 +757,7 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
   }
 }
 
-Delinearize::Delinearize(int32_t dim, std::vector<int64_t>&& sizes)
+Delinearize::Delinearize(int32_t dim, std::vector<uint64_t>&& sizes)
   : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
 {
   for (auto dim = static_cast<int32_t>(sizes_.size() - 2); dim >= 0; --dim) {
@@ -810,7 +810,7 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) con
   for (int32_t i = 0, j = 0; i < out_dim; ++i) {
     if (i == dim_) {
       for (auto stride : strides_) {
-        transform.matrix[i * in_dim + j++] = stride;
+        transform.matrix[i * in_dim + j++] = static_cast<coord_t>(stride);        
       }
     } else {
       transform.matrix[i * in_dim + j++] = 1;
@@ -873,7 +873,7 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       }
 
       new_tile_shape[dim_] *= strides_[0];
-      new_offsets[dim_] *= strides_[0];
+      new_offsets[dim_] *= static_cast<int64_t>(strides_[0]);
 
       return create_tiling(
         std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
@@ -947,7 +947,7 @@ void Delinearize::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(dim_);
   buffer.pack<uint32_t>(sizes_.size());
   for (auto extent : sizes_) {
-    buffer.pack<int64_t>(extent);
+    buffer.pack<uint64_t>(extent);
   }
 }
 

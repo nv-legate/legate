@@ -25,7 +25,7 @@ uint32_t Type::size() const { return impl()->size(); }
 
 uint32_t Type::alignment() const { return impl()->alignment(); }
 
-int32_t Type::uid() const { return impl()->uid(); }
+uint32_t Type::uid() const { return impl()->uid(); }
 
 bool Type::variable_size() const { return impl()->variable_size(); }
 

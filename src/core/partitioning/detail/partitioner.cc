@@ -299,6 +299,7 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
 
   filtered.reserve(partition_symbols.size());
   for (auto* part_symb : partition_symbols) {
+    if (strategy->has_assignment(part_symb)) { continue; }
     auto* op   = part_symb->operation();
     auto store = op->find_store(part_symb);
 

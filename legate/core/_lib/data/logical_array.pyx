@@ -103,7 +103,8 @@ cdef class LogicalArray:
     def delinearize(self, int32_t dim, object shape) -> LogicalArray:
         if not is_iterable(shape):
             raise ValueError(f"Expected an iterable but got {type(shape)}")
-        cdef std_vector[int64_t] sizes = std_vector[int64_t]()
+        cdef std_vector[uint64_t] sizes = std_vector[uint64_t]()
+        sizes.reserve(len(shape))
         for value in shape:
             sizes.push_back(value)
         return LogicalArray.from_handle(

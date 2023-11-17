@@ -160,7 +160,7 @@ class LogicalArray {
    * the extent of the chosen dimenison
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray delinearize(int32_t dim, const std::vector<int64_t>& sizes) const;
+  [[nodiscard]] LogicalArray delinearize(int32_t dim, const std::vector<uint64_t>& sizes) const;
 
   /**
    * @brief Returns the store of this array
