@@ -81,7 +81,7 @@ create_containers_from_reference(const std::vector<T>& ref,
   std::map<int, double> map;
 
   auto flit = flist.before_begin();
-  T val;
+  T val{};
   for (std::size_t i = 0; i < expected_size.value_or(ref.size()); ++i) {
     if (i < ref.size()) {
       val = ref.at(i);
