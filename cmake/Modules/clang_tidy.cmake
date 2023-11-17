@@ -62,7 +62,7 @@ function(legate_core_add_tidy_target)
         ${LEGATE_CORE_RUN_CLANG_TIDY}
         -config-file ${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
         -clang-tidy-binary ${LEGATE_CORE_CLANG_TIDY}
-        -p ${CMAKE_CURRENT_BINARY_DIR}
+        -p ${CMAKE_BINARY_DIR}
         -use-color
         -quiet
         ${_TIDY_SOURCES}
@@ -103,7 +103,7 @@ function(legate_core_add_tidy_target)
         ${LEGATE_CORE_CLANG_TIDY_DIFF}
         -p 1
         -clang-tidy-binary ${LEGATE_CORE_CLANG_TIDY}
-        -path ${CMAKE_CURRENT_BINARY_DIR}
+        -path ${CMAKE_BINARY_DIR}
         -use-color
         -quiet
     )
