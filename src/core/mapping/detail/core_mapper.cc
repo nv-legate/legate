@@ -44,7 +44,7 @@ namespace legate::mapping::detail {
 // This is a custom mapper implementation that only has to map
 // start-up tasks associated with the Legate core, no one else
 // should be overriding this mapper so we burry it in here
-class CoreMapper : public Mapper {
+class CoreMapper final : public Mapper {
  public:
   void set_machine(const legate::mapping::MachineQueryInterface* machine) override;
   [[nodiscard]] legate::mapping::TaskTarget task_target(

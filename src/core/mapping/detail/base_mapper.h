@@ -32,7 +32,7 @@ namespace legate::mapping::detail {
 class InstanceManager;
 class ReductionInstanceManager;
 
-class BaseMapper : public Legion::Mapping::Mapper, public MachineQueryInterface {
+class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInterface {
  public:
   BaseMapper(mapping::Mapper* legate_mapper,
              Legion::Mapping::MapperRuntime* mapper_runtime,

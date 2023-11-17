@@ -57,7 +57,7 @@ inline void check_nccl(ncclResult_t error, const char* file, int line)
   }
 }
 
-class Factory : public detail::CommunicatorFactory {
+class Factory final : public detail::CommunicatorFactory {
  public:
   Factory(const detail::Library* core_library);
 

@@ -92,7 +92,7 @@ class Task : public Operation {
   std::vector<CommunicatorFactory*> communicator_factories_{};
 };
 
-class AutoTask : public Task {
+class AutoTask final : public Task {
  private:
   friend class Runtime;
   AutoTask(const Library* library,
@@ -127,7 +127,7 @@ class AutoTask : public Task {
   std::vector<LogicalArray*> arrays_to_fixup_{};
 };
 
-class ManualTask : public Task {
+class ManualTask final : public Task {
  private:
   friend class Runtime;
   ManualTask(const Library* library,

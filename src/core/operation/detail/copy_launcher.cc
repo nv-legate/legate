@@ -21,7 +21,7 @@
 
 namespace legate::detail {
 
-struct CopyArg : public Serializable {
+struct CopyArg final : public Serializable {
  public:
   CopyArg(uint32_t req_idx,
           LogicalStore* store,

@@ -89,7 +89,7 @@ namespace legate::detail {
 // to know the the target color space for delinearization. Also note that this functor's
 // project_point passes through input points, as we already know they are always 1D points
 // and the output will be linearized back to integers.
-class DelinearizationFunctor : public LegateProjectionFunctor {
+class DelinearizationFunctor final : public LegateProjectionFunctor {
  public:
   using LegateProjectionFunctor::LegateProjectionFunctor;
 
@@ -207,7 +207,7 @@ template <int32_t SRC_DIM, int32_t TGT_DIM>
   return transform;
 }
 
-struct IdentityFunctor : public LegateProjectionFunctor {
+struct IdentityFunctor final : public LegateProjectionFunctor {
   using LegateProjectionFunctor::LegateProjectionFunctor;
 
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point, const Domain&) const override
@@ -332,7 +332,7 @@ LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID pro
   return result;
 }
 
-struct LinearizingPointTransformFunctor : public Legion::PointTransformFunctor {
+struct LinearizingPointTransformFunctor final : public Legion::PointTransformFunctor {
   // This is actually an invertible functor, but we will not use this for inversion
   [[nodiscard]] bool is_invertible() const override { return false; }
 

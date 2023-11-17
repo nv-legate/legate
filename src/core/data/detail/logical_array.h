@@ -82,7 +82,7 @@ struct LogicalArray {
     std::shared_ptr<LogicalStore> store);
 };
 
-class BaseLogicalArray : public LogicalArray {
+class BaseLogicalArray final : public LogicalArray {
  public:
   BaseLogicalArray(std::shared_ptr<LogicalStore> data,
                    std::shared_ptr<LogicalStore> null_mask = nullptr);
@@ -134,7 +134,7 @@ class BaseLogicalArray : public LogicalArray {
   std::shared_ptr<LogicalStore> null_mask_{};
 };
 
-class ListLogicalArray : public LogicalArray {
+class ListLogicalArray final : public LogicalArray {
  public:
   ListLogicalArray(std::shared_ptr<Type> type,
                    std::shared_ptr<BaseLogicalArray> descriptor,
@@ -188,7 +188,7 @@ class ListLogicalArray : public LogicalArray {
   std::shared_ptr<LogicalArray> vardata_{};
 };
 
-class StructLogicalArray : public LogicalArray {
+class StructLogicalArray final : public LogicalArray {
  public:
   StructLogicalArray(std::shared_ptr<Type> type,
                      std::shared_ptr<LogicalStore> null_mask,

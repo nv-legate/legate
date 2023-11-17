@@ -30,7 +30,7 @@ std::mutex functor_table_lock{};
 
 }  // namespace
 
-class ToplevelTaskShardingFunctor : public Legion::ShardingFunctor {
+class ToplevelTaskShardingFunctor final : public Legion::ShardingFunctor {
  public:
   [[nodiscard]] Legion::ShardID shard(const DomainPoint& p,
                                       const Domain& launch_space,
@@ -45,7 +45,7 @@ class ToplevelTaskShardingFunctor : public Legion::ShardingFunctor {
   }
 };
 
-class LinearizingShardingFunctor : public Legion::ShardingFunctor {
+class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
  public:
   [[nodiscard]] Legion::ShardID shard(const DomainPoint& p,
                                       const Domain& launch_space,
@@ -106,7 +106,7 @@ void register_legate_core_sharding_functors(Legion::Runtime* runtime,
   functor_id_table[core_library->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID)] = sharding_id;
 }
 
-class LegateShardingFunctor : public Legion::ShardingFunctor {
+class LegateShardingFunctor final : public Legion::ShardingFunctor {
  public:
   LegateShardingFunctor(LegateProjectionFunctor* proj_functor,
                         uint32_t start_proc_id,

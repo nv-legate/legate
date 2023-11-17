@@ -44,7 +44,7 @@ struct Analyzable {
   virtual void perform_invalidations() const;
 };
 
-struct ScalarArg : public Serializable {
+struct ScalarArg final : public Serializable {
  public:
   explicit ScalarArg(Scalar&& scalar);
 
@@ -54,7 +54,7 @@ struct ScalarArg : public Serializable {
   Scalar scalar_;
 };
 
-struct RegionFieldArg : public Analyzable {
+struct RegionFieldArg final : public Analyzable {
  public:
   RegionFieldArg(LogicalStore* store,
                  Legion::PrivilegeMode privilege,
@@ -71,7 +71,7 @@ struct RegionFieldArg : public Analyzable {
   std::unique_ptr<ProjectionInfo> proj_info_;
 };
 
-struct OutputRegionArg : public Analyzable {
+struct OutputRegionArg final : public Analyzable {
  public:
   OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space);
 
@@ -91,7 +91,7 @@ struct OutputRegionArg : public Analyzable {
   mutable uint32_t requirement_index_{-1U};
 };
 
-struct FutureStoreArg : public Analyzable {
+struct FutureStoreArg final : public Analyzable {
  public:
   FutureStoreArg(LogicalStore* store,
                  bool read_only,
@@ -108,7 +108,7 @@ struct FutureStoreArg : public Analyzable {
   Legion::ReductionOpID redop_;
 };
 
-struct BaseArrayArg : public Analyzable {
+struct BaseArrayArg final : public Analyzable {
  public:
   BaseArrayArg(std::unique_ptr<Analyzable> data, std::unique_ptr<Analyzable> null_mask);
 
@@ -125,7 +125,7 @@ struct BaseArrayArg : public Analyzable {
   std::unique_ptr<Analyzable> null_mask_{};
 };
 
-struct ListArrayArg : public Analyzable {
+struct ListArrayArg final : public Analyzable {
  public:
   ListArrayArg(std::shared_ptr<Type> type,
                std::unique_ptr<Analyzable> descriptor,
@@ -143,7 +143,7 @@ struct ListArrayArg : public Analyzable {
   std::unique_ptr<Analyzable> vardata_;
 };
 
-struct StructArrayArg : public Analyzable {
+struct StructArrayArg final : public Analyzable {
  public:
   StructArrayArg(std::shared_ptr<Type> type,
                  std::unique_ptr<Analyzable> null_mask,

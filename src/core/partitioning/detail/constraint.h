@@ -57,7 +57,7 @@ struct Expr {
   [[nodiscard]] virtual const Variable* as_variable() const                                  = 0;
 };
 
-class Literal : public Expr {
+class Literal final : public Expr {
  public:
   explicit Literal(std::shared_ptr<Partition> partition);
 
@@ -76,7 +76,7 @@ class Literal : public Expr {
   std::shared_ptr<Partition> partition_{};
 };
 
-class Variable : public Expr {
+class Variable final : public Expr {
  public:
   Variable(const Operation* op, int32_t id);
 
@@ -120,7 +120,7 @@ struct Constraint {
   [[nodiscard]] virtual const BloatConstraint* as_bloat_constraint() const                   = 0;
 };
 
-class Alignment : public Constraint {
+class Alignment final : public Constraint {
  public:
   Alignment(const Variable* lhs, const Variable* rhs);
 
@@ -148,7 +148,7 @@ class Alignment : public Constraint {
   const Variable* rhs_{};
 };
 
-class Broadcast : public Constraint {
+class Broadcast final : public Constraint {
  public:
   explicit Broadcast(const Variable* variable);
 
@@ -177,7 +177,7 @@ class Broadcast : public Constraint {
   tuple<int32_t> axes_{};
 };
 
-class ImageConstraint : public Constraint {
+class ImageConstraint final : public Constraint {
  public:
   ImageConstraint(const Variable* var_function, const Variable* var_range);
 
@@ -205,7 +205,7 @@ class ImageConstraint : public Constraint {
   const Variable* var_range_{};
 };
 
-class ScaleConstraint : public Constraint {
+class ScaleConstraint final : public Constraint {
  public:
   ScaleConstraint(Shape factors, const Variable* var_smaller, const Variable* var_bigger);
 
@@ -234,7 +234,7 @@ class ScaleConstraint : public Constraint {
   const Variable* var_bigger_{};
 };
 
-class BloatConstraint : public Constraint {
+class BloatConstraint final : public Constraint {
  public:
   BloatConstraint(const Variable* var_source,
                   const Variable* var_bloat,

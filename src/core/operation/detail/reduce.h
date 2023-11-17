@@ -25,7 +25,7 @@
 
 namespace legate::detail {
 
-class Reduce : public Operation {
+class Reduce final : public Operation {
  private:
   friend class Runtime;
   Reduce(const Library* library,

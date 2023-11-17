@@ -55,7 +55,7 @@ class Type {
   Code code;
 };
 
-class PrimitiveType : public Type {
+class PrimitiveType final : public Type {
  public:
   explicit PrimitiveType(Code code);
 
@@ -74,7 +74,7 @@ class PrimitiveType : public Type {
   uint32_t alignment_{};
 };
 
-class StringType : public Type {
+class StringType final : public Type {
  public:
   StringType();
 
@@ -99,7 +99,7 @@ class ExtensionType : public Type {
   uint32_t uid_{};
 };
 
-class BinaryType : public ExtensionType {
+class BinaryType final : public ExtensionType {
  public:
   BinaryType(uint32_t uid, uint32_t size);
 
@@ -115,7 +115,7 @@ class BinaryType : public ExtensionType {
   uint32_t size_{};
 };
 
-class FixedArrayType : public ExtensionType {
+class FixedArrayType final : public ExtensionType {
  public:
   FixedArrayType(uint32_t uid, std::shared_ptr<Type> element_type, uint32_t N);
 
@@ -137,7 +137,7 @@ class FixedArrayType : public ExtensionType {
   uint32_t size_{};
 };
 
-class StructType : public ExtensionType {
+class StructType final : public ExtensionType {
  public:
   StructType(uint32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align = false);
 
@@ -164,7 +164,7 @@ class StructType : public ExtensionType {
   std::vector<uint32_t> offsets_{};
 };
 
-class ListType : public ExtensionType {
+class ListType final : public ExtensionType {
  public:
   ListType(uint32_t uid, std::shared_ptr<Type> element_type);
 

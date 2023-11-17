@@ -24,7 +24,7 @@ namespace legate::detail {
 
 struct ConstraintSolver;
 
-class ScatterGather : public Operation {
+class ScatterGather final : public Operation {
  public:
   ScatterGather(std::shared_ptr<LogicalStore> target,
                 std::shared_ptr<LogicalStore> target_indirect,

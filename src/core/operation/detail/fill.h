@@ -19,7 +19,7 @@
 
 namespace legate::detail {
 
-class Fill : public Operation {
+class Fill final : public Operation {
  public:
   Fill(std::shared_ptr<LogicalStore>&& lhs,
        std::shared_ptr<LogicalStore>&& value,
@@ -34,9 +34,9 @@ class Fill : public Operation {
   [[nodiscard]] std::string to_string() const override;
 
  private:
-  const Variable* lhs_var_;
-  std::shared_ptr<LogicalStore> lhs_;
-  std::shared_ptr<LogicalStore> value_;
+  const Variable* lhs_var_{};
+  std::shared_ptr<LogicalStore> lhs_{};
+  std::shared_ptr<LogicalStore> value_{};
 };
 
 }  // namespace legate::detail

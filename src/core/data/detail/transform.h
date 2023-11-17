@@ -29,7 +29,7 @@ struct Partition;
 
 namespace legate::detail {
 
-class NonInvertibleTransformation : public std::exception {
+class NonInvertibleTransformation final : public std::exception {
  public:
   explicit NonInvertibleTransformation(std::string error_message = "Non-invertible transformation");
 
@@ -60,7 +60,7 @@ struct StoreTransform : public Transform {
   virtual void find_imaginary_dims(std::vector<int32_t>&) const        = 0;
 };
 
-struct TransformStack : public Transform, std::enable_shared_from_this<TransformStack> {
+struct TransformStack final : public Transform, std::enable_shared_from_this<TransformStack> {
  public:
   TransformStack() = default;
   TransformStack(std::unique_ptr<StoreTransform>&& transform,
@@ -101,7 +101,7 @@ struct TransformStack : public Transform, std::enable_shared_from_this<Transform
   bool convertible_{true};
 };
 
-class Shift : public StoreTransform {
+class Shift final : public StoreTransform {
  public:
   Shift(int32_t dim, int64_t offset);
 
@@ -127,7 +127,7 @@ class Shift : public StoreTransform {
   int64_t offset_{};
 };
 
-class Promote : public StoreTransform {
+class Promote final : public StoreTransform {
  public:
   Promote(int32_t extra_dim, int64_t dim_size);
 
@@ -153,7 +153,7 @@ class Promote : public StoreTransform {
   int64_t dim_size_{};
 };
 
-class Project : public StoreTransform {
+class Project final : public StoreTransform {
  public:
   Project(int32_t dim, int64_t coord);
 
@@ -179,7 +179,7 @@ class Project : public StoreTransform {
   int64_t coord_{};
 };
 
-class Transpose : public StoreTransform {
+class Transpose final : public StoreTransform {
  public:
   explicit Transpose(std::vector<int32_t>&& axes);
 
@@ -205,7 +205,7 @@ class Transpose : public StoreTransform {
   std::vector<int32_t> inverse_{};
 };
 
-class Delinearize : public StoreTransform {
+class Delinearize final : public StoreTransform {
  public:
   Delinearize(int32_t dim, std::vector<uint64_t>&& sizes);
 

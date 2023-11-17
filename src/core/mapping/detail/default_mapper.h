@@ -32,7 +32,7 @@ namespace legate::mapping::detail {
 //      |       ^
 //
 // The only way (other than to disable the check wholesale), is to silence it for this class...
-class DefaultMapper : public Mapper {  // NOLINT(bugprone-forward-declaration-namespace)
+class DefaultMapper final : public Mapper {  // NOLINT(bugprone-forward-declaration-namespace)
  public:
   void set_machine(const MachineQueryInterface* machine) override;
   [[nodiscard]] TaskTarget task_target(const mapping::Task& task,

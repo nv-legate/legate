@@ -44,7 +44,7 @@ class Array {
   std::shared_ptr<Store> null_mask_{};
 };
 
-class BaseArray : public Array {
+class BaseArray final : public Array {
  public:
   BaseArray(std::shared_ptr<Store> data, std::shared_ptr<Store> null_mask);
 
@@ -67,7 +67,7 @@ class BaseArray : public Array {
   std::shared_ptr<Store> null_mask_{};
 };
 
-class ListArray : public Array {
+class ListArray final : public Array {
  public:
   ListArray(std::shared_ptr<legate::detail::Type> type,
             std::shared_ptr<BaseArray> descriptor,
@@ -93,7 +93,7 @@ class ListArray : public Array {
   std::shared_ptr<Array> vardata_{};
 };
 
-class StructArray : public Array {
+class StructArray final : public Array {
  public:
   StructArray(std::shared_ptr<legate::detail::Type> type,
               std::shared_ptr<Store> null_mask,

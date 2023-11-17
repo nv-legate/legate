@@ -29,7 +29,7 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 namespace legate::comm::cpu {
 using Legion::FutureMap;
 
-class Factory : public detail::CommunicatorFactory {
+class Factory final : public detail::CommunicatorFactory {
  public:
   Factory(const detail::Library* core_library);
 

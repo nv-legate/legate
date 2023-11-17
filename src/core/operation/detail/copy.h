@@ -23,7 +23,7 @@ namespace legate::detail {
 
 struct ConstraintSolver;
 
-class Copy : public Operation {
+class Copy final : public Operation {
  public:
   Copy(std::shared_ptr<LogicalStore> target,
        std::shared_ptr<LogicalStore> source,

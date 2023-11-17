@@ -42,7 +42,7 @@ struct PhysicalArray {
   virtual void check_shape_dimension(int32_t dim) const = 0;
 };
 
-class BasePhysicalArray : public PhysicalArray {
+class BasePhysicalArray final : public PhysicalArray {
  public:
   BasePhysicalArray(std::shared_ptr<PhysicalStore> data, std::shared_ptr<PhysicalStore> null_mask);
 
@@ -67,7 +67,7 @@ class BasePhysicalArray : public PhysicalArray {
   std::shared_ptr<PhysicalStore> null_mask_{};
 };
 
-class ListPhysicalArray : public PhysicalArray {
+class ListPhysicalArray final : public PhysicalArray {
  public:
   ListPhysicalArray(std::shared_ptr<Type> type,
                     std::shared_ptr<BasePhysicalArray> descriptor,
@@ -96,7 +96,7 @@ class ListPhysicalArray : public PhysicalArray {
   std::shared_ptr<PhysicalArray> vardata_{};
 };
 
-class StructPhysicalArray : public PhysicalArray {
+class StructPhysicalArray final : public PhysicalArray {
  public:
   StructPhysicalArray(std::shared_ptr<Type> type,
                       std::shared_ptr<PhysicalStore> null_mask,
