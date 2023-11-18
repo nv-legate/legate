@@ -318,7 +318,7 @@ class Runtime {
   std::map<ShardingDesc, Legion::ShardingID> registered_shardings_{};
 
   std::vector<std::shared_ptr<Operation>> operations_;
-  size_t window_size_{1};
+  size_t window_size_{};
   uint64_t next_unique_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;

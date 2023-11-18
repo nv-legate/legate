@@ -24,15 +24,9 @@ _expected_settings = (
     "cycle_check",
     "future_leak_check",
     "test",
-    "min_gpu_chunk",
-    "min_cpu_chunk",
-    "min_omp_chunk",
     "window_size",
-    "max_pending_exceptions",
-    "precise_exception_trace",
     "field_reuse_frac",
     "field_reuse_freq",
-    "max_lru_length",
     "disable_mpi",
 )
 
@@ -60,16 +54,9 @@ class TestSettings:
 
 
 _settings_with_test_defaults = (
-    "min_gpu_chunk",
-    "min_cpu_chunk",
-    "min_omp_chunk",
     "window_size",
-    # skipping due to LEGATE_DEBUG conditioning
-    # "max_pending_exceptions",
-    "precise_exception_trace",
     "field_reuse_frac",
     "field_reuse_freq",
-    "max_lru_length",
 )
 
 

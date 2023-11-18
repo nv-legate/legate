@@ -28,12 +28,8 @@ struct Machine;
 
 namespace legate::detail {
 
-class Runtime;
-
 class PartitionManager {
  public:
-  PartitionManager(Runtime* runtime);
-
   [[nodiscard]] const std::vector<uint32_t>& get_factors(const mapping::detail::Machine& machine);
 
   [[nodiscard]] Shape compute_launch_shape(const mapping::detail::Machine& machine,
@@ -67,7 +63,6 @@ class PartitionManager {
                                   Legion::FieldID field_id);
 
  private:
-  int64_t min_shard_volume_{};
   std::unordered_map<uint32_t, std::vector<uint32_t>> all_factors_{};
 
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
