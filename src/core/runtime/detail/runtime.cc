@@ -145,10 +145,10 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
   return result;
 }
 
-void Runtime::record_reduction_operator(uint32_t type_uid, int32_t op_kind, int64_t legion_op_id)
+void Runtime::record_reduction_operator(uint32_t type_uid, int32_t op_kind, int32_t legion_op_id)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate().debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %" PRId64 ")",
+    log_legate().debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %d)",
                        type_uid,
                        op_kind,
                        legion_op_id);
@@ -164,7 +164,7 @@ void Runtime::record_reduction_operator(uint32_t type_uid, int32_t op_kind, int6
   reduction_ops_[key] = legion_op_id;
 }
 
-int64_t Runtime::find_reduction_operator(uint32_t type_uid, int32_t op_kind) const
+int32_t Runtime::find_reduction_operator(uint32_t type_uid, int32_t op_kind) const
 {
   auto finder = reduction_ops_.find({type_uid, op_kind});
   if (reduction_ops_.end() == finder) {
@@ -177,10 +177,8 @@ int64_t Runtime::find_reduction_operator(uint32_t type_uid, int32_t op_kind) con
     throw std::invalid_argument{std::move(ss).str()};
   }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate().debug("Found reduction op %" PRId64 " (type_uid: %d, op_kind: %d)",
-                       finder->second,
-                       type_uid,
-                       op_kind);
+    log_legate().debug(
+      "Found reduction op %d (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
   }
   return finder->second;
 }

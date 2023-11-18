@@ -46,9 +46,9 @@ class Type {
   [[nodiscard]] virtual const ListType& as_list_type() const;
   [[nodiscard]] virtual bool equal(const Type& other) const = 0;
 
-  void record_reduction_operator(int32_t op_kind, int64_t global_op_id) const;
-  [[nodiscard]] int64_t find_reduction_operator(int32_t op_kind) const;
-  [[nodiscard]] int64_t find_reduction_operator(ReductionOpKind op_kind) const;
+  void record_reduction_operator(int32_t op_kind, int32_t global_op_id) const;
+  [[nodiscard]] int32_t find_reduction_operator(int32_t op_kind) const;
+  [[nodiscard]] int32_t find_reduction_operator(ReductionOpKind op_kind) const;
   bool operator==(const Type& other) const;
   bool operator!=(const Type& other) const;
 

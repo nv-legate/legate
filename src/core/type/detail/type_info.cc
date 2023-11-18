@@ -158,17 +158,17 @@ const ListType& Type::as_list_type() const
   return *reinterpret_cast<const ListType*>(this);
 }
 
-void Type::record_reduction_operator(int32_t op_kind, int64_t global_op_id) const
+void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
 {
   detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
 }
 
-int64_t Type::find_reduction_operator(int32_t op_kind) const
+int32_t Type::find_reduction_operator(int32_t op_kind) const
 {
   return detail::Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
 }
 
-int64_t Type::find_reduction_operator(ReductionOpKind op_kind) const
+int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
   return find_reduction_operator(static_cast<int32_t>(op_kind));
 }
