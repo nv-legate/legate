@@ -1188,14 +1188,14 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   int32_t result = 0;
 
   if (!Legion::Runtime::has_runtime()) {
-    Legion::Runtime::initialize(&argc, &argv, true /*filter legion and realm args*/);
+    Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
 
     Legion::Runtime::perform_registration_callback(initialize_core_library_callback,
                                                    true /*global*/);
 
     handle_legate_args(argc, argv);
 
-    result = Legion::Runtime::start(argc, argv, true);
+    result = Legion::Runtime::start(argc, argv, /*background=*/true);
     if (result != 0) {
       log_legate().error("Legion Runtime failed to start.");
       return result;
@@ -1632,10 +1632,10 @@ void handle_legate_args(int32_t argc, char** argv)
   std::stringstream ss;
 
   // eager alloc has to be passed via env var
+  ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
   if (const char* existing_default_args = getenv("LEGION_DEFAULT_ARGS")) {
     ss << existing_default_args;
   }
-  ss << " -lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0";
   setenv("LEGION_DEFAULT_ARGS", ss.str().c_str(), true);
 }
 
