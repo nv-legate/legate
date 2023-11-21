@@ -12,37 +12,9 @@
 
 #pragma once
 
+#include "core/utilities/cpp_version.h"
+
 #include "legion.h"
-
-#ifdef __cplusplus
-#if __cplusplus <= 199711L
-#ifdef _MSC_VER
-// Unless a special flag is set, MSVC always reports C++ standard as C++98. But the floor is in
-// fact C++14, so we assume that that is the case.
-// See https://learn.microsoft.com/en-us/cpp/build/reference/zc-cplusplus?view=msvc-170#remarks
-#define LEGATE_CPP_VERSION 14
-#else
-// wrap C++98 to 0 since comparisons would otherwise fail
-#define LEGATE_CPP_VERSION 0
-#endif
-#elif __cplusplus <= 201103L
-#define LEGATE_CPP_VERSION 11
-#elif __cplusplus <= 201402L
-#define LEGATE_CPP_VERSION 14
-#elif __cplusplus <= 201703L
-#define LEGATE_CPP_VERSION 17
-#elif __cplusplus <= 202002L
-#define LEGATE_CPP_VERSION 20
-#else
-#define LEGATE_CPP_VERSION 23  // current year, or date of c++2b ratification
-#endif
-#else
-#define LEGATE_CPP_VERSION 0  // no C++
-#endif                        // __cplusplus
-
-#if defined(__cplusplus) && LEGATE_CPP_VERSION < 17
-#error "Legate requires C++17"
-#endif
 
 #define LEGATE_ABORT                                                                        \
   do {                                                                                      \

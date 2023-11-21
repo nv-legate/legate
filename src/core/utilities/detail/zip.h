@@ -12,11 +12,17 @@
 
 #pragma once
 
+#include "core/utilities/cpp_version.h"
+
 #include <cstddef>
 #include <iterator>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+static_assert(
+  LEGATE_CPP_MIN_VERSION < 23,  // NOLINT(readability-magic-numbers) std::zip since C++23
+  "Can remove this module in favor of std::ranges::views::zip and/or std::ranges::zip_view");
 
 /**
  * @file

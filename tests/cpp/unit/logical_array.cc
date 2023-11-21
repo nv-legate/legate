@@ -253,7 +253,7 @@ void test_struct_array(bool nullable)
       EXPECT_EQ(null_mask.type(), legate::bool_());
       EXPECT_EQ(null_mask.dim(), array.dim());
     }
-    EXPECT_THROW(array.child(num_fields), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(array.child(num_fields)), std::out_of_range);
     for (uint32_t idx = 0; idx < num_fields; ++idx) {
       auto field_type     = st_type.field_type(idx);
       auto field_subarray = array.child(idx);
@@ -725,20 +725,20 @@ void test_transpose(bool nullable)
   {
     auto list_type   = legate::list_type(legate::int64()).as_list_type();
     auto bound_array = runtime->create_array({7}, list_type, nullable);
-    EXPECT_THROW(bound_array.transpose({0}), std::runtime_error);
+    EXPECT_THROW(static_cast<void>(bound_array.transpose({0})), std::runtime_error);
 
     auto unbound_array = runtime->create_array(list_type, 1, nullable);
-    EXPECT_THROW(unbound_array.transpose({0}), std::runtime_error);
+    EXPECT_THROW(static_cast<void>(unbound_array.transpose({0})), std::runtime_error);
   }
 
   // string array
   {
     auto str_type    = legate::string_type();
     auto bound_array = runtime->create_array({6}, str_type, nullable);
-    EXPECT_THROW(bound_array.transpose({0}), std::runtime_error);
+    EXPECT_THROW(static_cast<void>(bound_array.transpose({0})), std::runtime_error);
 
     auto unbound_array = runtime->create_array(str_type, 1, nullable);
-    EXPECT_THROW(unbound_array.transpose({0}), std::runtime_error);
+    EXPECT_THROW(static_cast<void>(unbound_array.transpose({0})), std::runtime_error);
   }
 
   // struct array

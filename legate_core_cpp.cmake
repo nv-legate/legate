@@ -576,6 +576,7 @@ install(
         src/core/utilities/internal_shared_ptr.h
         src/core/utilities/internal_shared_ptr.inl
         src/core/utilities/compressed_pair.h
+        src/core/utilities/cpp_version.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 install(
