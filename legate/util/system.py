@@ -84,22 +84,7 @@ class System:
     def cpus(self) -> tuple[CPUInfo, ...]:
         """A list of CPUs on the system."""
 
-        N = multiprocessing.cpu_count()
-
-        if sys.platform == "darwin":
-            return tuple(CPUInfo((i,)) for i in range(N))
-        else:
-            # This explicit else is needed for mypy to not raise a type
-            # error on MacOS.
-            sibling_sets: set[tuple[int, ...]] = set()
-            for i in range(N):
-                line = open(
-                    f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list"  # noqa E501
-                ).read()
-                sibling_sets.add(extract_values(line.strip()))
-            return tuple(
-                CPUInfo(siblings) for siblings in sorted(sibling_sets)
-            )
+        return darwin_cpus() if sys.platform == "darwin" else linux_cpus()
 
     @cached_property
     def gpus(self) -> tuple[GPUInfo, ...]:
@@ -155,3 +140,29 @@ def extract_values(line: str) -> tuple[int, ...]:
             )
         )
     )
+
+
+def darwin_cpus() -> tuple[CPUInfo, ...]:
+    N = multiprocessing.cpu_count()
+    return tuple(CPUInfo((i,)) for i in range(N))
+
+
+def linux_load_sibling_sets() -> set[tuple[int, ...]]:
+    N = multiprocessing.cpu_count()
+
+    sibling_sets: set[tuple[int, ...]] = set()
+    for i in range(N):
+        line = open(
+            f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list"
+        ).read()
+        sibling_sets.add(extract_values(line.strip()))
+
+    return sibling_sets
+
+
+def linux_cpus() -> tuple[CPUInfo, ...]:
+    all_sets = linux_load_sibling_sets()
+
+    available_sets = (s for s in all_sets if s[0] in os.sched_getaffinity(0))
+
+    return tuple(CPUInfo(x) for x in sorted(available_sets))

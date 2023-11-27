@@ -18,6 +18,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import legate.util.system as m
+from legate.util.types import CPUInfo
 
 
 def test___all__() -> None:
@@ -181,3 +182,13 @@ class Test_extract_values:
     @pytest.mark.parametrize("val,expected", testdata_mixed)
     def test_mixed(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
+
+
+def test_linux_cpus_repects_affinity(mocker: MockerFixture) -> None:
+    mocker.patch(
+        "legate.util.system.linux_load_sibling_sets",
+        return_value={(0, 2), (1, 3)},
+    )
+    mocker.patch("os.sched_getaffinity", return_value={0})
+
+    assert m.linux_cpus() == (CPUInfo((0, 2)),)

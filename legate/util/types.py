@@ -43,7 +43,7 @@ __all__ = (
 class CPUInfo:
     """Encapsulate information about a single CPU"""
 
-    #: IDs of hypterthreading sibling cores for a given physscal core
+    #: IDs of hypterthreading sibling cores for a given physical core
     ids: tuple[int, ...]
 
 
