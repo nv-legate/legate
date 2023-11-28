@@ -97,7 +97,7 @@ function(legate_core_add_tidy_target)
       COMMANDS
         ${GIT_EXECUTABLE} diff
         -U0
-        `${GIT_EXECUTABLE} remote show origin \| sed -n "/HEAD branch/s/.*: //p"`
+        `${GIT_EXECUTABLE} remote show origin \| sed -n "/HEAD branch/s/.*: //p" `
         HEAD
         \|
         ${LEGATE_CORE_CLANG_TIDY_DIFF}

@@ -31,6 +31,7 @@ build_legate_cpp() {
     cmake_args+=(-DLegion_USE_LLVM=${USE_LLVM:-OFF});
     cmake_args+=(-DLegion_USE_OpenMP=${USE_OPENMP:-OFF});
     cmake_args+=(-Dlegate_core_BUILD_DOCS=ON);
+    cmake_args+=(-Dlegate_core_BUILD_TESTS=ON);
     cmake_args+=(-DCMAKE_BUILD_PARALLEL_LEVEL=${JOBS:-$(nproc --ignore=1)});
     cmake_args+=(--preset ${LEGATE_CORE_CMAKE_PRESET:-debug-gcc});
     cmake_args+=(${@});
@@ -52,16 +53,17 @@ build_legate_cpp() {
     sccache --show-stats;
 
     time CMAKE_BUILD_PARALLEL_LEVEL=${JOBS:-$(nproc --ignore=1)} \
-    cmake --build --preset ${LEGATE_CORE_CMAKE_PRESET} --verbose --parallel ${JOBS:-$(nproc --ignore=1)};
+         cmake \
+         --build \
+         --preset ${LEGATE_CORE_CMAKE_PRESET} \
+         --verbose \
+         --target package \
+         --parallel ${JOBS:-$(nproc --ignore=1)};
 
     sccache --show-stats;
 
-    (
     mkdir -p /tmp/out;
-    cd ~/legate/build/${LEGATE_CORE_CMAKE_PRESET};
-    cpack -G TGZ;
-    cp ./*-Linux.tar.gz /tmp/out/;
-    );
+    cp ~/legate/build/${LEGATE_CORE_CMAKE_PRESET}/*-Linux.sh /tmp/out/;
 
     { set +x; } 2>/dev/null;
 }

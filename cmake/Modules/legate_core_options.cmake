@@ -10,6 +10,9 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+option(legate_core_BUILD_TESTS "Whether to build the C++ tests")
+option(legate_core_BUILD_INTEGRATION "Whether to build the C++ integration tests")
+option(legate_core_BUILD_EXAMPLES "Whether to build the C++/python examples")
 option(BUILD_SHARED_LIBS "Build legate.core shared libraries" ON)
 
 function(set_or_default var_name var_env)
@@ -78,7 +81,6 @@ option(legate_core_STATIC_CUDA_RUNTIME "Statically link the cuda runtime library
 option(legate_core_EXCLUDE_LEGION_FROM_ALL "Exclude Legion targets from legate.core's 'all' target" OFF)
 option(legate_core_COLLECTIVE "Use of collective instances" ON)
 option(legate_core_BUILD_DOCS "Build doxygen docs" OFF)
-
 
 set_or_default(NCCL_DIR NCCL_PATH)
 set_or_default(Thrust_DIR THRUST_PATH)

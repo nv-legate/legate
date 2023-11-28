@@ -38,7 +38,7 @@ repos:
       rev: '3.0.0'
       hooks:
         - id: shellcheck
-          args: ['--enable', 'all', '--color', 'always']
+          args: ['--enable=all', '--color=always', '-x']
     - repo: local
       hooks:
         -   id: legate-defined

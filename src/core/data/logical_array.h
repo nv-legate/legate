@@ -218,7 +218,11 @@ class LogicalArray {
 
   explicit LogicalArray(std::shared_ptr<detail::LogicalArray> impl);
 
-  virtual ~LogicalArray() = default;
+  virtual ~LogicalArray()                      = default;
+  LogicalArray(const LogicalArray&)            = default;
+  LogicalArray& operator=(const LogicalArray&) = default;
+  LogicalArray(LogicalArray&&)                 = default;
+  LogicalArray& operator=(LogicalArray&&)      = default;
 
   LogicalArray(const LogicalStore& store);
   LogicalArray(const LogicalStore& store, const LogicalStore& null_mask);

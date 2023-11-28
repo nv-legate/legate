@@ -76,9 +76,9 @@ fi
 
     cat <<EOF > /tmp/legate/conda/conda-build/build.sh
 # Install legate_core C++ libs
-tar -C "\$PREFIX" --exclude="*.a" --strip-components=1 -xf /tmp/out/legate_core-*-Linux.tar.gz;
+sh /tmp/out/legate_core-*-Linux.sh --skip-license --exclude-subdir --prefix="\$PREFIX"
 sed -E -i "s@$HOME/\.conda/envs/legate@\$PREFIX@g" "\$PREFIX/share/Legion/cmake/LegionConfigCommon.cmake";
-sed -E -i "s@$HOME/legate/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/Linux/TGZ/legate_core-(.*)-Linux@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
+sed -E -i "s@$HOME/legate/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/Linux/STGZ/legate_core-(.*)-Linux@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
 
 # Install legate_core Python wheel
 pip install --no-deps --root / --prefix "\$PREFIX" /tmp/out/legate_core-*.whl;

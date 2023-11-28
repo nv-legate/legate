@@ -14,6 +14,8 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/policies.cmake NO_POLICY_SCOPE)
 
+set(LEGATE_CORE_DIR ${CMAKE_CURRENT_LIST_DIR})
+
 ##############################################################################
 # - Download and initialize RAPIDS CMake helpers -----------------------------
 

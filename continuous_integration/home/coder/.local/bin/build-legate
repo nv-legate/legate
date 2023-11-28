@@ -3,7 +3,6 @@
 
 build_legate_all() {
     build-legate-cpp;
-    build-cpp-test;
     build-legate-wheel;
     build-legate-conda;
 }
@@ -11,6 +10,7 @@ build_legate_all() {
 build_legate_release() {
     # export CONDA_BUILD_THREADS=1
     # export NVCC_PREPEND_FLAGS='--verbose'
+    # shellcheck source=continuous_integration/home/coder/.local/bin/conda-utils
     . conda-utils
     activate_conda_env
     mkdir -p /tmp/env_yaml /tmp/conda-build

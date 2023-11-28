@@ -13,8 +13,6 @@
 ##############################################################################
 # - User Options  ------------------------------------------------------------
 
-option(legate_core_BUILD_TESTS OFF)
-option(legate_core_BUILD_EXAMPLES OFF)
 include(cmake/Modules/legate_core_options.cmake)
 
 ##############################################################################
@@ -70,7 +68,7 @@ if(Legion_USE_Python)
   endif()
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/cuda_arch_helpers.cmake)
+include(${LEGATE_CORE_DIR}/cmake/Modules/cuda_arch_helpers.cmake)
 
 if(Legion_USE_CUDA)
   # Needs to run before find_package(Legion)
@@ -86,7 +84,7 @@ endif()
 # these features based on how Legion was configured (it doesn't make sense to
 # build legate.core's Python bindings if Legion's bindings weren't compiled).
 ###
-include(cmake/thirdparty/get_legion.cmake)
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_legion.cmake)
 
 # If Legion_USE_Python was toggled ON by find_package(Legion), find Python3
 if(Legion_USE_Python AND (NOT Python3_FOUND))
@@ -111,11 +109,11 @@ if(Legion_USE_CUDA)
     INSTALL_EXPORT_SET legate-core-exports
   )
   # Find NCCL
-  include(cmake/thirdparty/get_nccl.cmake)
+  include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_nccl.cmake)
 endif()
 
 # Find or install Thrust
-include(cmake/thirdparty/get_thrust.cmake)
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_thrust.cmake)
 
 ##############################################################################
 # - legate.core --------------------------------------------------------------
@@ -235,7 +233,7 @@ set(legate_core_CXX_OPTIONS "")
 set(legate_core_CUDA_OPTIONS "")
 set(legate_core_LINKER_OPTIONS "")
 
-include(cmake/Modules/set_cpu_arch_flags.cmake)
+include(${LEGATE_CORE_DIR}/cmake/Modules/set_cpu_arch_flags.cmake)
 set_cpu_arch_flags(legate_core_CXX_OPTIONS)
 
 if (legate_core_COLLECTIVE)
@@ -287,16 +285,16 @@ endif()
 # endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(platform_rpath_origin "\$ORIGIN")
+  set(LEGATE_CORE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  set(platform_rpath_origin "@loader_path")
+  set(LEGATE_CORE_PLATFORM_RPATH_ORIGIN "@loader_path")
 endif ()
 
 set_target_properties(legate_core
            PROPERTIES EXPORT_NAME                         core
                       LIBRARY_OUTPUT_NAME                 lgcore
-                      BUILD_RPATH                         "${platform_rpath_origin}"
-                      INSTALL_RPATH                       "${platform_rpath_origin}"
+                      BUILD_RPATH                         "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}"
+                      INSTALL_RPATH                       "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}"
                       CXX_STANDARD                        17
                       CXX_STANDARD_REQUIRED               ON
                       CUDA_STANDARD                       17
@@ -340,7 +338,7 @@ target_compile_definitions(legate_core
 ##############################################################################
 # - Custom User Flags --------------------------------------------------------
 
-macro(legate_core_add_target_compile_option OPTION_LANG VIS OPTION_NAME)
+macro(legate_core_add_target_compile_option TARGET_NAME OPTION_LANG VIS OPTION_NAME)
   if (NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
     # Using this form of separate_arguments() makes sure that quotes are respected when
     # the list is formed. Otherwise stuff like
@@ -355,26 +353,26 @@ macro(legate_core_add_target_compile_option OPTION_LANG VIS OPTION_NAME)
     separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
   endif()
   if(${OPTION_NAME})
-    target_compile_options(legate_core ${VIS} "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
+    target_compile_options(${TARGET_NAME} ${VIS} "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
   endif()
 endmacro()
 
-macro(legate_core_add_target_link_option VIS OPTION_NAME)
+macro(legate_core_add_target_link_option TARGET_NAME VIS OPTION_NAME)
   if (NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
     separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
   endif()
   if(${OPTION_NAME})
-    target_link_options(legate_core ${VIS} "${${OPTION_NAME}}")
+    target_link_options(${TARGET_NAME} ${VIS} "${${OPTION_NAME}}")
   endif()
 endmacro()
 
-legate_core_add_target_compile_option(CXX PRIVATE legate_core_CXX_OPTIONS)
-legate_core_add_target_compile_option(CUDA PRIVATE legate_core_CUDA_OPTIONS)
+legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_OPTIONS)
+legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_OPTIONS)
 
-legate_core_add_target_compile_option(CXX PUBLIC legate_core_CXX_FLAGS)
-legate_core_add_target_compile_option(CUDA PUBLIC legate_core_CUDA_FLAGS)
+legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_FLAGS)
+legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_FLAGS)
 
-legate_core_add_target_link_option(INTERFACE legate_core_LINKER_FLAGS)
+legate_core_add_target_link_option(legate_core INTERFACE legate_core_LINKER_FLAGS)
 
 target_include_directories(legate_core
   PUBLIC
@@ -441,7 +439,7 @@ if (legate_core_BUILD_DOCS)
     set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
     set(DOXYGEN_USE_MATHJAX YES)
     set(DOXYGEN_MATHJAX_VERSION MathJax_3)
-    set(DOXYGEN_STRIP_FROM_INC_PATH ${CMAKE_SOURCE_DIR}/src)
+    set(DOXYGEN_STRIP_FROM_INC_PATH ${LEGATE_CORE_DIR}/src)
     set(DOXYGEN_EXAMPLE_PATH tests/cpp)
     doxygen_add_docs("doxygen_legate" ALL
       ${legate_core_DOC_SOURCES}
@@ -580,12 +578,12 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 install(
-  DIRECTORY   cmake/Modules
+  DIRECTORY   ${LEGATE_CORE_DIR}/cmake/Modules
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate_core"
   FILES_MATCHING
     PATTERN "*.cmake")
 
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/Modules/debug_symbols.cmake)
+include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 
 legate_core_debug_syms(legate_core INSTALL_DIR ${lib_dir})
 
@@ -601,7 +599,7 @@ Imported Targets:
 
 ]=])
 
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/cmake/legate_helper_functions.cmake helper_functions)
+file(READ ${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake helper_functions)
 
 string(JOIN "\n" code_string
 [=[
@@ -646,14 +644,38 @@ rapids_export(
 
 set(legate_core_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/clang_tidy.cmake)
+include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)
 
 legate_core_add_tidy_target(SOURCES ${legate_core_SOURCES})
 
 if(legate_core_BUILD_TESTS)
-  add_subdirectory(tests/integration)
+  include(CTest)
+
+  add_subdirectory(${LEGATE_CORE_DIR}/tests/cpp)
+endif()
+
+if(legate_core_BUILD_INTEGRATION)
+  # TODO:
+  # This is broken!
+  #
+  # CMake Error at build/test-build/legate_core-config.cmake:196 (include):
+  # include could not find requested file:
+  #
+  #   /path/to/legate.core.internal/build/test-build/Modules/include_rapids.cmake
+  # Call Stack (most recent call first):
+  # cmake/legate_helper_functions.cmake:265 (legate_default_cpp_install)
+  # tests/integration/collective/CMakeLists.txt:32 (legate_add_cpp_subdirectory)
+  add_subdirectory(${LEGATE_CORE_DIR}/tests/integration)
 endif()
 
 if(legate_core_BUILD_EXAMPLES)
-  add_subdirectory(examples)
+  add_subdirectory(${LEGATE_CORE_DIR}/examples)
+endif()
+
+# touch these variables so they are not marked as "unused"
+set(legate_core_maybe_ignored_variables_ "${legate_core_CMAKE_PRESET_NAME};${CMAKE_BUILD_PARALLEL_LEVEL};")
+if(NOT Legion_USE_CUDA)
+  list(APPEND legate_core_maybe_ignored_variables_ "${legate_core_CUDA_FLAGS}")
+  list(APPEND legate_core_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_DEBUG}")
+  list(APPEND legate_core_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_RELEASE}")
 endif()

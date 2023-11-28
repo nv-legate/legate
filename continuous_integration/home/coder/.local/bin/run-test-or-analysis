@@ -18,7 +18,7 @@ run_test_or_analysis() {
             fi
 
             set +eou pipefail
-            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge pytest pytest-mock ipython jupyter_client $ucx_libs
+            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge pytest pytest-mock ipython jupyter_client ${ucx_libs}
             set -eou pipefail
 
             cd ~/legate/tests/unit
@@ -57,19 +57,22 @@ run_test_or_analysis() {
         "cpp")
             echo "Running C++ unit tests..."
 
-            if [ "$UCX_ENABLED" = "ON" ]; then
+            if [[ "${UCX_ENABLED}" = "ON" ]]; then
               set +eou pipefail
               mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" ucx openmpi
               set -eou pipefail
             fi
-            
-            cd ~/legate/tests/cpp
-            mkdir -p ctest_install
-            sh ~/artifacts/out/cpp_tests.sh --prefix=`pwd`/ctest_install --exclude-subdir --skip-license
 
-            python3 ./run.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1
-            [ -f ./ctest_install/bin/gpu_tests ] && {
-              python3 ./run.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1
+            cd "${HOME}"
+            mkdir -p ctest_install
+            sh "${HOME}"/artifacts/out/legate_core-*-Linux.sh \
+               --prefix="${HOME}/ctest_install" \
+               --exclude-subdir \
+               --skip-license
+
+            python3 "${HOME}"/legate/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1
+            [[ -f ./ctest_install/bin/gpu_tests ]] && {
+              python3 "${HOME}"/legate/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1
             }
             ;;
         *)
