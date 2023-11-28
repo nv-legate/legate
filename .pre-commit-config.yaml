@@ -30,7 +30,7 @@ repos:
       - id: cython-lint
       - id: double-quote-cython-strings
     - repo: https://github.com/netromdk/vermin
-      rev: 'v1.5.2'
+      rev: 'v1.6.0'
       hooks:
       - id: vermin
         args: ['--config-file', './setup.cfg']

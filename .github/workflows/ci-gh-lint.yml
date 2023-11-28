@@ -47,12 +47,7 @@ jobs:
 
       - name: Run vermin on the repository
         run: |
-          # can remove --exclude-regex flag (and un-comment the corresponding
-          # exclusion_regex configuration in setup.cfg) once
-          # https://github.com/netromdk/vermin/issues/236 is resolved, so insert version
-          # check here so that we don't forget!
-          [ $(vermin --version) == '1.5.2' ]
-          vermin --config-file=./setup.cfg --exclude-regex 'build/' .
+          vermin --config-file=./setup.cfg .
 
       - name: Run MyPy on the repository
         run: python3 -m mypy ./legate
