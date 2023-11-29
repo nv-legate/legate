@@ -10,21 +10,34 @@
  * its affiliates is strictly prohibited.
  */
 
-#pragma once
+#include "core/operation/projection.h"
 
-#include "core/runtime/detail/projection.h"
+namespace legate {
 
-namespace legate::detail {
-
-inline LegateProjectionFunctor::LegateProjectionFunctor(Legion::Runtime* runtime)
-  : ProjectionFunctor{runtime}
+std::string SymbolicExpr::to_string() const
 {
+  std::stringstream ss;
+
+  if (weight_ != 0) {
+    if (weight_ != 1) {
+      ss << weight_ << "*";
+    }
+    ss << "COORD" << dim_;
+  }
+  if (offset_ != 0) {
+    if (offset_ > 0) {
+      ss << "+" << offset_;
+    } else {
+      ss << "-" << -offset_;
+    }
+  }
+  return std::move(ss).str();
 }
 
-inline bool LegateProjectionFunctor::is_functional() const { return true; }
+std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
+{
+  out << expr.to_string();
+  return out;
+}
 
-inline bool LegateProjectionFunctor::is_exclusive() const { return true; }
-
-inline unsigned LegateProjectionFunctor::get_depth() const { return 0; }
-
-}  // namespace legate::detail
+}  // namespace legate

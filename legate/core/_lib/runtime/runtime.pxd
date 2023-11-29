@@ -23,6 +23,7 @@ from ..mapping.machine cimport _Machine
 from ..operation.task cimport _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
 from ..type.type_info cimport _Type
+from ..utilities.typedefs cimport _Domain
 from .detail.runtime cimport _RuntimeImpl
 from .library cimport _Library
 from .resource cimport _ResourceConfig
@@ -99,6 +100,7 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
         _Library find_library(std_string)
         _AutoTask create_task(_Library, int64_t)
         _ManualTask create_task(_Library, int64_t, const _Shape&)
+        _ManualTask create_task(_Library, int64_t, const _Domain&)
         void issue_copy(_LogicalStore, _LogicalStore) except+
         void issue_copy(_LogicalStore, _LogicalStore, int32_t) except+
         void issue_gather(_LogicalStore, _LogicalStore, _LogicalStore) except+

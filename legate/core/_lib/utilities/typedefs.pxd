@@ -22,6 +22,7 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
 
     cdef cppclass _Domain "legate::Domain":
         _Domain()
+        _Domain(const _DomainPoint&, const _DomainPoint)
         int32_t get_dim()
         _DomainPoint lo()
         _DomainPoint hi()

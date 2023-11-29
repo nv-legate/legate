@@ -36,7 +36,7 @@ class Strategy {
  public:
   [[nodiscard]] bool parallel(const Operation* op) const;
   [[nodiscard]] Domain launch_domain(const Operation* op) const;
-  void set_launch_shape(const Operation* op, const Shape& shape);
+  void set_launch_domain(const Operation* op, const Domain& domain);
 
   void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);
   void insert(const Variable* partition_symbol,

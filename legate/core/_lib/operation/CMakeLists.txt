@@ -12,6 +12,7 @@
 
 set(
   cython_sources
+  projection.pyx
   task.pyx
 )
 

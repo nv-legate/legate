@@ -53,6 +53,7 @@ class TaskLauncher {
   void set_concurrent(bool is_concurrent);
   void set_insert_barrier(bool insert_barrier);
   void throws_exception(bool can_throw_exception);
+  void relax_interference_checks(bool relax);
 
   Legion::FutureMap execute(const Legion::Domain& launch_domain);
   Legion::Future execute_single();
@@ -66,6 +67,8 @@ class TaskLauncher {
     const Legion::Domain& launch_domain,
     const std::vector<Legion::OutputRequirement>& output_requirements);
 
+  void report_interfering_stores() const;
+
   const Library* library_{};
   int64_t task_id_{};
   int64_t tag_{};
@@ -76,6 +79,7 @@ class TaskLauncher {
   bool concurrent_{};
   bool insert_barrier_{};
   bool can_throw_exception_{};
+  bool relax_interference_checks_{};
 
   std::vector<std::unique_ptr<Analyzable>> inputs_{};
   std::vector<std::unique_ptr<Analyzable>> outputs_{};

@@ -15,6 +15,7 @@
 #include "core/data/logical_array.h"
 #include "core/data/logical_store.h"
 #include "core/data/scalar.h"
+#include "core/operation/projection.h"
 #include "core/partitioning/constraint.h"
 
 #include <memory>
@@ -239,8 +240,11 @@ class ManualTask {
    * @brief Adds a store partition to the task as input
    *
    * @param store_partition A store partition to add to the task as input
+   * @param projection An optional symbolic point describing a mapping between points in the
+   * launch domain and substores in the partition
    */
-  void add_input(const LogicalStorePartition& store_partition);
+  void add_input(const LogicalStorePartition& store_partition,
+                 std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a store to the task as output
    *
@@ -253,8 +257,11 @@ class ManualTask {
    * @brief Adds a store partition to the task as output
    *
    * @param store_partition A store partition to add to the task as output
+   * @param projection An optional symbolic point describing a mapping between points in the
+   * launch domain and substores in the partition
    */
-  void add_output(const LogicalStorePartition& store_partition);
+  void add_output(const LogicalStorePartition& store_partition,
+                  std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -278,15 +285,23 @@ class ManualTask {
    *
    * @param store_partition A store partition to add to the task for reductions
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   * @param projection An optional symbolic point describing a mapping between points in the
+   * launch domain and substores in the partition
    */
-  void add_reduction(const LogicalStorePartition& store_partition, ReductionOpKind redop);
+  void add_reduction(const LogicalStorePartition& store_partition,
+                     ReductionOpKind redop,
+                     std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a store partition to the task for reductions
    *
    * @param store_partition A store partition to add to the task for reductions
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   * @param projection An optional symbolic point describing a mapping between points in the
+   * launch domain and substores in the partition
    */
-  void add_reduction(const LogicalStorePartition& store_partition, int32_t redop);
+  void add_reduction(const LogicalStorePartition& store_partition,
+                     int32_t redop,
+                     std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a by-value scalar argument to the task
    *

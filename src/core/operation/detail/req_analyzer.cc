@@ -20,7 +20,9 @@ namespace legate::detail {
 // ProjectionSet
 ////////////////
 
-void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const ProjectionInfo& proj_info)
+void ProjectionSet::insert(Legion::PrivilegeMode new_privilege,
+                           const ProjectionInfo& proj_info,
+                           bool relax_interference_checks)
 {
   if (proj_infos.empty()) {
     privilege = new_privilege;
@@ -31,9 +33,9 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const Projection
   proj_infos.emplace(proj_info);
   is_key = is_key || proj_info.is_key;
 
-  if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && proj_infos.size() > 1) {
-    log_legate().error("Interfering requirements are found");
-    LEGATE_ABORT;
+  if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && proj_infos.size() > 1 &&
+      !relax_interference_checks) {
+    throw InterferingStoreError{};
   }
 }
 
@@ -43,9 +45,10 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege, const Projection
 
 void FieldSet::insert(Legion::FieldID field_id,
                       Legion::PrivilegeMode privilege,
-                      const ProjectionInfo& proj_info)
+                      const ProjectionInfo& proj_info,
+                      bool relax_interference_checks)
 {
-  field_projs_[field_id].insert(privilege, proj_info);
+  field_projs_[field_id].insert(privilege, proj_info, relax_interference_checks);
 }
 
 uint32_t FieldSet::num_requirements() const { return static_cast<uint32_t>(coalesced_.size()); }
@@ -118,7 +121,7 @@ void RequirementAnalyzer::insert(const Legion::LogicalRegion& region,
                                  Legion::PrivilegeMode privilege,
                                  const ProjectionInfo& proj_info)
 {
-  field_sets_[region].first.insert(field_id, privilege, proj_info);
+  field_sets_[region].first.insert(field_id, privilege, proj_info, relax_interference_checks_);
 }
 
 uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion& region,

@@ -54,4 +54,9 @@ inline void TaskLauncher::throws_exception(bool can_throw_exception)
   can_throw_exception_ = can_throw_exception;
 }
 
+inline void TaskLauncher::relax_interference_checks(bool relax)
+{
+  relax_interference_checks_ = relax;
+}
+
 }  // namespace legate::detail

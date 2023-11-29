@@ -104,12 +104,12 @@ Domain Strategy::launch_domain(const Operation* op) const
   return finder != launch_domains_.end() ? finder->second : Domain{};
 }
 
-void Strategy::set_launch_shape(const Operation* op, const Shape& shape)
+void Strategy::set_launch_domain(const Operation* op, const Domain& domain)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(launch_domains_.find(op) == launch_domains_.end());
   }
-  launch_domains_.insert({op, to_domain(shape)});
+  launch_domains_.insert({op, domain});
 }
 
 void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition)

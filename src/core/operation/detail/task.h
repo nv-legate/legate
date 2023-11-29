@@ -41,9 +41,11 @@ class Task : public Operation {
  protected:
   struct ArrayArg {
     explicit ArrayArg(std::shared_ptr<LogicalArray> _array);
+    ArrayArg(std::shared_ptr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
 
     std::shared_ptr<LogicalArray> array{};
     std::map<std::shared_ptr<LogicalStore>, const Variable*> mapping{};
+    std::optional<SymbolicPoint> projection{};
   };
 
   Task(const Library* library,
@@ -132,23 +134,27 @@ class ManualTask final : public Task {
   friend class Runtime;
   ManualTask(const Library* library,
              int64_t task_id,
-             const Shape& launch_shape,
+             const Domain& launch_domain,
              uint64_t unique_id,
              mapping::detail::Machine&& machine);
 
  public:
-  void add_input(std::shared_ptr<LogicalStore> store);
-  void add_input(const std::shared_ptr<LogicalStorePartition>& store_partition);
-  void add_output(std::shared_ptr<LogicalStore> store);
-  void add_output(const std::shared_ptr<LogicalStorePartition>& store_partition);
-  void add_reduction(std::shared_ptr<LogicalStore> store, Legion::ReductionOpID redop);
+  void add_input(const std::shared_ptr<LogicalStore>& store);
+  void add_input(const std::shared_ptr<LogicalStorePartition>& store_partition,
+                 std::optional<SymbolicPoint> projection);
+  void add_output(const std::shared_ptr<LogicalStore>& store);
+  void add_output(const std::shared_ptr<LogicalStorePartition>& store_partition,
+                  std::optional<SymbolicPoint> projection);
+  void add_reduction(const std::shared_ptr<LogicalStore>& store, Legion::ReductionOpID redop);
   void add_reduction(const std::shared_ptr<LogicalStorePartition>& store_partition,
-                     Legion::ReductionOpID redop);
+                     Legion::ReductionOpID redop,
+                     std::optional<SymbolicPoint> projection);
 
  private:
   void add_store(std::vector<ArrayArg>& store_args,
-                 std::shared_ptr<LogicalStore> store,
-                 std::shared_ptr<Partition> partition);
+                 const std::shared_ptr<LogicalStore>& store,
+                 std::shared_ptr<Partition> partition,
+                 std::optional<SymbolicPoint> projection = {});
 
  public:
   void validate() override;

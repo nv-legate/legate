@@ -48,6 +48,7 @@ struct Transform {
   [[nodiscard]] virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const    = 0;
   [[nodiscard]] virtual Restrictions convert(const Restrictions& restrictions) const          = 0;
   [[nodiscard]] virtual Restrictions invert(const Restrictions& restrictions) const           = 0;
+  [[nodiscard]] virtual Shape invert_color(Shape color) const                                 = 0;
   [[nodiscard]] virtual Shape invert_extents(const Shape& extents) const                      = 0;
   [[nodiscard]] virtual Shape invert_point(const Shape& point) const                          = 0;
   [[nodiscard]] virtual bool is_convertible() const                                           = 0;
@@ -75,6 +76,7 @@ struct TransformStack final : public Transform, std::enable_shared_from_this<Tra
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
   [[nodiscard]] Shape invert_point(const Shape& point) const override;
   [[nodiscard]] bool is_convertible() const override;
@@ -112,6 +114,7 @@ class Shift final : public StoreTransform {
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
   [[nodiscard]] Shape invert_point(const Shape& point) const override;
   [[nodiscard]] bool is_convertible() const override;
@@ -138,6 +141,7 @@ class Promote final : public StoreTransform {
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
   [[nodiscard]] Shape invert_point(const Shape& point) const override;
   [[nodiscard]] bool is_convertible() const override;
@@ -164,6 +168,7 @@ class Project final : public StoreTransform {
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
   [[nodiscard]] Shape invert_point(const Shape& point) const override;
   [[nodiscard]] bool is_convertible() const override;
@@ -190,6 +195,7 @@ class Transpose final : public StoreTransform {
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
   [[nodiscard]] Shape invert_point(const Shape& point) const override;
   [[nodiscard]] bool is_convertible() const override;
@@ -216,6 +222,7 @@ class Delinearize final : public StoreTransform {
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
   [[nodiscard]] Shape invert_point(const Shape& point) const override;
   [[nodiscard]] bool is_convertible() const override;

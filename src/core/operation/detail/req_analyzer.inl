@@ -18,6 +18,11 @@ namespace legate::detail {
 
 inline bool RequirementAnalyzer::empty() const { return field_sets_.empty(); }
 
+inline void RequirementAnalyzer::relax_interference_checks(bool relax)
+{
+  relax_interference_checks_ = relax;
+}
+
 // ==========================================================================================
 
 inline bool OutputRequirementAnalyzer::empty() const { return field_groups_.empty(); }
@@ -78,6 +83,11 @@ inline void StoreAnalyzer::populate(Launcher& launcher,
 inline bool StoreAnalyzer::can_be_local_function_task() const
 {
   return req_analyzer_.empty() && out_analyzer_.empty();
+}
+
+inline void StoreAnalyzer::relax_interference_checks(bool relax)
+{
+  req_analyzer_.relax_interference_checks(relax);
 }
 
 }  // namespace legate::detail

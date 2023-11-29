@@ -9,21 +9,21 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libcpp.vector cimport vector as std_vector
+class SymbolicExpr:
+    @property
+    def dim(self) -> int: ...
+    @property
+    def weight(self) -> int: ...
+    @property
+    def offset(self) -> int: ...
+    def is_identity(self, dim: int) -> bool: ...
+    def __eq__(self, other: object) -> bool: ...
+    def __mul(self, other: int) -> SymbolicExpr: ...
+    def __add__(self, other: int) -> SymbolicExpr: ...
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...
 
-from ..utilities.typedefs cimport _Domain, _DomainPoint
+def dimension(dim: int) -> SymbolicExpr: ...
+def constant(value: int) -> SymbolicExpr: ...
 
-
-cdef extern from "core/data/shape.h" namespace "legate" nogil:
-    cdef cppclass _Shape "legate::Shape":
-        _Shape()
-        _Shape(const std_vector[size_t]&)
-        void append_inplace(const size_t& value)
-        const std_vector[size_t]& data() const
-        void reserve(size_t)
-
-    cdef _Domain to_domain(const _Shape&)
-
-    cdef _DomainPoint to_domain_point(const _Shape&)
-
-    cdef _Shape from_domain(const _Domain&)
+SymbolicPoint = tuple[SymbolicExpr, ...]

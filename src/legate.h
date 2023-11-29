@@ -27,6 +27,7 @@
 #include "core/legate_c.h"
 #include "core/mapping/mapping.h"
 #include "core/mapping/operation.h"
+#include "core/operation/projection.h"
 #include "core/operation/task.h"
 #include "core/partitioning/constraint.h"
 #include "core/runtime/library.h"

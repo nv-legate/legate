@@ -109,16 +109,18 @@ AutoTask::~AutoTask() noexcept = default;
 
 void ManualTask::add_input(const LogicalStore& store) { impl_->add_input(store.impl()); }
 
-void ManualTask::add_input(const LogicalStorePartition& store_partition)
+void ManualTask::add_input(const LogicalStorePartition& store_partition,
+                           std::optional<SymbolicPoint> projection)
 {
-  impl_->add_input(store_partition.impl());
+  impl_->add_input(store_partition.impl(), std::move(projection));
 }
 
 void ManualTask::add_output(const LogicalStore& store) { impl_->add_output(store.impl()); }
 
-void ManualTask::add_output(const LogicalStorePartition& store_partition)
+void ManualTask::add_output(const LogicalStorePartition& store_partition,
+                            std::optional<SymbolicPoint> projection)
 {
-  impl_->add_output(store_partition.impl());
+  impl_->add_output(store_partition.impl(), std::move(projection));
 }
 
 void ManualTask::add_reduction(const LogicalStore& store, ReductionOpKind redop)
@@ -131,14 +133,18 @@ void ManualTask::add_reduction(const LogicalStore& store, int32_t redop)
   impl_->add_reduction(store.impl(), redop);
 }
 
-void ManualTask::add_reduction(const LogicalStorePartition& store_partition, ReductionOpKind redop)
+void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
+                               ReductionOpKind redop,
+                               std::optional<SymbolicPoint> projection)
 {
-  impl_->add_reduction(store_partition.impl(), static_cast<int32_t>(redop));
+  impl_->add_reduction(store_partition.impl(), static_cast<int32_t>(redop), std::move(projection));
 }
 
-void ManualTask::add_reduction(const LogicalStorePartition& store_partition, int32_t redop)
+void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
+                               int32_t redop,
+                               std::optional<SymbolicPoint> projection)
 {
-  impl_->add_reduction(store_partition.impl(), redop);
+  impl_->add_reduction(store_partition.impl(), redop, std::move(projection));
 }
 
 void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(*scalar.impl()); }

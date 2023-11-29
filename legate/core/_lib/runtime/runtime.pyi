@@ -31,6 +31,7 @@ class Runtime:
         library: Library,
         task_id: int,
         launch_shape: Iterable[int],
+        lower_bounds: Optional[Iterable[int]] = None,
     ) -> ManualTask: ...
     def issue_copy(
         self,

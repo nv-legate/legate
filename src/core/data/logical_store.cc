@@ -79,4 +79,9 @@ LogicalStore LogicalStorePartition::store() const { return LogicalStore{impl_->s
 
 const Shape& LogicalStorePartition::color_shape() const { return impl_->color_shape(); }
 
+LogicalStore LogicalStorePartition::get_child_store(const Shape& color) const
+{
+  return LogicalStore{impl_->get_child_store(color)};
+}
+
 }  // namespace legate

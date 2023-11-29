@@ -18,6 +18,12 @@ namespace legate::detail {
 
 inline Task::ArrayArg::ArrayArg(std::shared_ptr<LogicalArray> _array) : array{std::move(_array)} {}
 
+inline Task::ArrayArg::ArrayArg(std::shared_ptr<LogicalArray> _array,
+                                std::optional<SymbolicPoint> _projection)
+  : array{std::move(_array)}, projection{std::move(_projection)}
+{
+}
+
 // ==========================================================================================
 
 inline bool Task::always_flush() const { return can_throw_exception_; }

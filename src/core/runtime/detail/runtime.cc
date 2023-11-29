@@ -239,13 +239,14 @@ std::shared_ptr<AutoTask> Runtime::create_task(const Library* library, int64_t t
 
 std::shared_ptr<ManualTask> Runtime::create_task(const Library* library,
                                                  int64_t task_id,
-                                                 const Shape& launch_shape)
+                                                 const Domain& launch_domain)
 {
-  if (launch_shape.volume() == 0) {
-    throw std::invalid_argument{"Launch shape must not be empty"};
+  if (launch_domain.empty()) {
+    throw std::invalid_argument{"Launch domain must not be empty"};
   }
   auto machine = slice_machine_for_task(library, task_id);
-  auto task = new ManualTask{library, task_id, launch_shape, next_unique_id_++, std::move(machine)};
+  auto task =
+    new ManualTask{library, task_id, launch_domain, next_unique_id_++, std::move(machine)};
   return std::unique_ptr<ManualTask>(task);
 }
 
@@ -336,8 +337,12 @@ void Runtime::tree_reduce(const Library* library,
                           int64_t task_id,
                           std::shared_ptr<LogicalStore> store,
                           std::shared_ptr<LogicalStore> out_store,
-                          int64_t radix)
+                          int32_t radix)
 {
+  if (store->dim() != 1) {
+    throw std::runtime_error{"Multi-dimensional stores are not supported"};
+  }
+
   auto machine = machine_manager_->get_machine();
   auto op      = std::shared_ptr<Operation>{new Reduce{library,
                                                   std::move(store),
@@ -1099,7 +1104,7 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
                          << "}";
   }
 
-  if (is_identity(src_ndim, point)) {
+  if (proj::is_identity(src_ndim, point)) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       log_legate().debug() << "Identity projection {src_ndim: " << src_ndim << ", point: " << point
                            << "}";

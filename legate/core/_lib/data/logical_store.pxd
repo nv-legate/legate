@@ -52,6 +52,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition(const _LogicalStorePartition&)
         _LogicalStore store()
         const _Shape& color_shape() except+
+        _LogicalStore get_child_store(const _Shape&)
 
 
 cdef class LogicalStore:

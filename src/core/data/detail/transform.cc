@@ -91,6 +91,19 @@ Restrictions TransformStack::invert(const Restrictions& restrictions) const
   return parent_->invert(result);
 }
 
+Shape TransformStack::invert_color(Shape color) const
+{
+  if (identity()) {
+    return color;
+  }
+
+  auto result = transform_->invert_color(std::move(color));
+  if (parent_->identity()) {
+    return result;
+  }
+  return parent_->invert_color(std::move(result));
+}
+
 Shape TransformStack::invert_extents(const Shape& extents) const
 {
   if (identity()) {
@@ -241,7 +254,7 @@ Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   transform.n = in_dim;
   for (int32_t i = 0; i < out_dim; ++i) {
     for (int32_t j = 0; j < in_dim; ++j) {
-      transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);      
+      transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);
     }
   }
 
@@ -547,6 +560,8 @@ Restrictions Project::invert(const Restrictions& restrictions) const
   return restrictions.insert(dim_, Restriction::ALLOW);
 }
 
+Shape Project::invert_color(Shape color) const { return color.insert(dim_, 0); }
+
 Shape Project::invert_extents(const Shape& extents) const { return extents.insert(dim_, 1); }
 
 Shape Project::invert_point(const Shape& point) const { return point.insert(dim_, coord_); }
@@ -810,7 +825,7 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) con
   for (int32_t i = 0, j = 0; i < out_dim; ++i) {
     if (i == dim_) {
       for (auto stride : strides_) {
-        transform.matrix[i * in_dim + j++] = static_cast<coord_t>(stride);        
+        transform.matrix[i * in_dim + j++] = static_cast<coord_t>(stride);
       }
     } else {
       transform.matrix[i * in_dim + j++] = 1;
@@ -927,6 +942,12 @@ Restrictions Delinearize::invert(const Restrictions& restrictions) const
     result.emplace_back(restrictions[dim]);
   }
   return Restrictions{std::move(result)};
+}
+
+Shape Delinearize::invert_color(Shape /*color*/) const
+{
+  throw NonInvertibleTransformation{};
+  return {};
 }
 
 Shape Delinearize::invert_extents(const Shape& /*extents*/) const

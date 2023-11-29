@@ -17,9 +17,9 @@
 #include "core/data/physical_store.h"
 #include "core/data/slice.h"
 #include "core/mapping/detail/machine.h"
+#include "core/operation/projection.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
-#include "core/runtime/detail/projection.h"
 #include "core/utilities/detail/buffer_builder.h"
 
 #include <memory>
@@ -147,7 +147,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
  public:
   explicit LogicalStore(std::shared_ptr<Storage>&& storage);
   LogicalStore(Shape&& extents,
-               const std::shared_ptr<Storage>& storage,
+               std::shared_ptr<Storage> storage,
                std::shared_ptr<TransformStack>&& transform);
 
  private:
@@ -166,6 +166,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   [[nodiscard]] bool overlaps(const std::shared_ptr<LogicalStore>& other) const;
   [[nodiscard]] bool has_scalar_storage() const;
   [[nodiscard]] std::shared_ptr<Type> type() const;
+  [[nodiscard]] const std::shared_ptr<TransformStack>& transform() const;
   [[nodiscard]] bool transformed() const;
   [[nodiscard]] uint64_t id() const;
 
@@ -214,14 +215,16 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   [[nodiscard]] std::shared_ptr<LogicalStorePartition> create_partition(
     std::shared_ptr<Partition> partition, std::optional<bool> complete = std::nullopt);
   [[nodiscard]] Legion::ProjectionID compute_projection(
-    int32_t launch_ndim, std::optional<proj::SymbolicFunctor> proj_fn = std::nullopt) const;
+    int32_t launch_ndim, const std::optional<SymbolicPoint>& projection = {}) const;
 
   void pack(BufferBuilder& buffer) const;
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(const Variable* variable,
-                                                            const Strategy& strategy,
-                                                            const Domain& launch_domain,
-                                                            Legion::PrivilegeMode privilege,
-                                                            int64_t redop = -1);
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
+    const Variable* variable,
+    const Strategy& strategy,
+    const Domain& launch_domain,
+    const std::optional<SymbolicPoint>& projection,
+    Legion::PrivilegeMode privilege,
+    int64_t redop = -1);
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege);
 
@@ -247,8 +250,9 @@ class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePa
   [[nodiscard]] std::shared_ptr<Partition> partition() const;
   [[nodiscard]] std::shared_ptr<StoragePartition> storage_partition() const;
   [[nodiscard]] std::shared_ptr<LogicalStore> store() const;
+  [[nodiscard]] std::shared_ptr<LogicalStore> get_child_store(const Shape& color) const;
   [[nodiscard]] std::unique_ptr<ProjectionInfo> create_projection_info(
-    const Domain& launch_domain, std::optional<proj::SymbolicFunctor> proj_fn = std::nullopt);
+    const Domain& launch_domain, const std::optional<SymbolicPoint>& projection = {});
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] const Shape& color_shape() const;
 

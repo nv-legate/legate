@@ -158,18 +158,19 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
   const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
+  const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
-  auto data_arg =
-    data_->to_launcher_arg(mapping.at(data_), strategy, launch_domain, privilege, redop);
+  auto data_arg = data_->to_launcher_arg(
+    mapping.at(data_), strategy, launch_domain, projection, privilege, redop);
   std::unique_ptr<Analyzable> null_mask_arg{};
 
   if (nullable()) {
     auto null_redop =
       privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
     null_mask_arg = null_mask_->to_launcher_arg(
-      mapping.at(null_mask_), strategy, launch_domain, privilege, null_redop);
+      mapping.at(null_mask_), strategy, launch_domain, projection, privilege, null_redop);
   }
 
   return std::make_unique<BaseArrayArg>(std::move(data_arg), std::move(null_mask_arg));
@@ -281,14 +282,16 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
   const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
+  const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
   const auto desc_priv =
     (LEGION_READ_ONLY == privilege || vardata_->unbound()) ? privilege : LEGION_READ_WRITE;
   auto descriptor_arg =
-    descriptor_->to_launcher_arg(mapping, strategy, launch_domain, desc_priv, redop);
-  auto vardata_arg = vardata_->to_launcher_arg(mapping, strategy, launch_domain, privilege, redop);
+    descriptor_->to_launcher_arg(mapping, strategy, launch_domain, projection, desc_priv, redop);
+  auto vardata_arg =
+    vardata_->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop);
 
   return std::make_unique<ListArrayArg>(type(), std::move(descriptor_arg), std::move(vardata_arg));
 }
@@ -466,6 +469,7 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
+  const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
@@ -474,11 +478,11 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
     auto null_redop =
       privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
     null_mask_arg = null_mask_->to_launcher_arg(
-      mapping.at(null_mask_), strategy, launch_domain, privilege, null_redop);
+      mapping.at(null_mask_), strategy, launch_domain, projection, privilege, null_redop);
   }
 
   auto field_args = make_array_from_op<std::unique_ptr<Analyzable>>(fields_, [&](auto& field) {
-    return field->to_launcher_arg(mapping, strategy, launch_domain, privilege, redop);
+    return field->to_launcher_arg(mapping, strategy, launch_domain, projection, privilege, redop);
   });
 
   return std::make_unique<StructArrayArg>(type(), std::move(null_mask_arg), std::move(field_args));

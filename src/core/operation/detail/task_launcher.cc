@@ -94,10 +94,15 @@ void pack_args(BufferBuilder& buffer, const std::vector<std::unique_ptr<ScalarAr
 Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 {
   StoreAnalyzer analyzer;
+  analyzer.relax_interference_checks(relax_interference_checks_);
 
-  analyze(analyzer, inputs_);
-  analyze(analyzer, outputs_);
-  analyze(analyzer, reductions_);
+  try {
+    analyze(analyzer, inputs_);
+    analyze(analyzer, outputs_);
+    analyze(analyzer, reductions_);
+  } catch (const InterferingStoreError&) {
+    report_interfering_stores();
+  }
   for (auto& future : futures_) {
     analyzer.insert(future);
   }
@@ -166,6 +171,8 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
 Legion::Future TaskLauncher::execute_single()
 {
+  // Note that we don't need to relax the interference checks in this code path, as the stores are
+  // not partitioned and mixed-mode accesses on a store would get mapped to read-write permission.
   StoreAnalyzer analyzer;
 
   analyze(analyzer, inputs_);
@@ -320,6 +327,18 @@ void TaskLauncher::post_process_unbound_stores(
       ++idx;
     }
   }
+}
+
+void TaskLauncher::report_interfering_stores() const
+{
+  log_legate().error()
+    << "Task " << library_->get_task_name(task_id_)
+    << " has interfering "
+       "store arguments. This means the task tries to access the same store via multiple "
+       "partitions "
+       "in mixed modes, which is illegal in Legate. Make sure to make a copy of the store so there "
+       "would be no interference.";
+  LEGATE_ABORT;
 }
 
 }  // namespace legate::detail

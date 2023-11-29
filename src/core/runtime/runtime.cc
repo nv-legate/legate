@@ -54,7 +54,12 @@ AutoTask Runtime::create_task(Library library, int64_t task_id)
 
 ManualTask Runtime::create_task(Library library, int64_t task_id, const Shape& launch_shape)
 {
-  return ManualTask{impl_->create_task(library.impl(), task_id, launch_shape)};
+  return create_task(library, task_id, to_domain(launch_shape));
+}
+
+ManualTask Runtime::create_task(Library library, int64_t task_id, const Domain& launch_domain)
+{
+  return ManualTask{impl_->create_task(library.impl(), task_id, launch_domain)};
 }
 
 void Runtime::issue_copy(LogicalStore& target,
@@ -140,7 +145,7 @@ void Runtime::issue_fill(const LogicalArray& lhs, const Scalar& value)
 LogicalStore Runtime::tree_reduce(Library library,
                                   int64_t task_id,
                                   const LogicalStore& store,
-                                  int64_t radix)
+                                  int32_t radix)
 {
   auto out_store = create_store(store.type(), 1);
 

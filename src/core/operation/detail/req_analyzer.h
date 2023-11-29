@@ -22,9 +22,13 @@
 
 namespace legate::detail {
 
+struct InterferingStoreError : public std::exception {};
+
 class ProjectionSet {
  public:
-  void insert(Legion::PrivilegeMode new_privilege, const ProjectionInfo& proj_info);
+  void insert(Legion::PrivilegeMode new_privilege,
+              const ProjectionInfo& proj_info,
+              bool relax_interference_checks);
 
   Legion::PrivilegeMode privilege{};
   std::set<BaseProjectionInfo> proj_infos{};
@@ -37,7 +41,8 @@ class FieldSet {
 
   void insert(Legion::FieldID field_id,
               Legion::PrivilegeMode privilege,
-              const ProjectionInfo& proj_info);
+              const ProjectionInfo& proj_info,
+              bool relax_interference_checks);
   [[nodiscard]] uint32_t num_requirements() const;
   [[nodiscard]] uint32_t get_requirement_index(Legion::PrivilegeMode privilege,
                                                const ProjectionInfo& proj_info,
@@ -71,6 +76,8 @@ class RequirementAnalyzer {
   [[nodiscard]] bool empty() const;
 
   void analyze_requirements();
+  void relax_interference_checks(bool relax);
+
   void populate_launcher(Legion::IndexTaskLauncher& task) const;
   void populate_launcher(Legion::TaskLauncher& task) const;
 
@@ -78,6 +85,7 @@ class RequirementAnalyzer {
   template <class Launcher>
   void _populate_launcher(Launcher& task) const;
 
+  bool relax_interference_checks_{};
   std::map<Legion::LogicalRegion, std::pair<FieldSet, uint32_t>> field_sets_{};
 };
 
@@ -139,6 +147,7 @@ struct StoreAnalyzer {
   void populate(Launcher& launcher, std::vector<Legion::OutputRequirement>& out_reqs);
 
   [[nodiscard]] bool can_be_local_function_task() const;
+  void relax_interference_checks(bool relax);
 
  private:
   RequirementAnalyzer req_analyzer_{};

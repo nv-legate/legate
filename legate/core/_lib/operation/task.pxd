@@ -10,12 +10,15 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport int32_t
+from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
 from ..data.logical_array cimport _LogicalArray
 from ..data.logical_store cimport _LogicalStore, _LogicalStorePartition
 from ..data.scalar cimport _Scalar
 from ..partitioning.constraint cimport _Constraint, _Variable
+from ..utilities.tuple cimport tuple as _tuple
+from .projection cimport _SymbolicPoint
 
 
 cdef extern from "core/operation/task.h" namespace "legate" nogil:
@@ -42,11 +45,17 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         _ManualTask()
         _ManualTask(const _ManualTask&)
         void add_input(_LogicalStore) except+
-        void add_input(_LogicalStorePartition) except+
+        void add_input(
+            _LogicalStorePartition, std_optional[_SymbolicPoint]
+        ) except+
         void add_output(_LogicalStore) except+
-        void add_output(_LogicalStorePartition) except+
+        void add_output(
+            _LogicalStorePartition, std_optional[_SymbolicPoint]
+        ) except+
         void add_reduction(_LogicalStore, int32_t) except+
-        void add_reduction(_LogicalStorePartition, int32_t) except+
+        void add_reduction(
+            _LogicalStorePartition, int32_t, std_optional[_SymbolicPoint]
+        ) except+
         void add_scalar_arg(const _Scalar& scalar)
         const std_string provenance() const
         void set_concurrent(bool)

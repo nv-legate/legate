@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from ..data.logical_store import LogicalStore, LogicalStorePartition
     from ..partitioning.constraint import Constraint, Variable
     from ..type.type_info import Type
+    from .projection import SymbolicPoint
 
 class AutoTask:
     def add_input(
@@ -64,13 +65,20 @@ class AutoTask:
 
 class ManualTask:
     def add_input(
-        self, arg: Union[LogicalStore, LogicalStorePartition]
+        self,
+        arg: Union[LogicalStore, LogicalStorePartition],
+        projection: Optional[SymbolicPoint],
     ) -> None: ...
     def add_output(
-        self, arg: Union[LogicalStore, LogicalStorePartition]
+        self,
+        arg: Union[LogicalStore, LogicalStorePartition],
+        projection: Optional[SymbolicPoint],
     ) -> None: ...
     def add_reduction(
-        self, arg: Union[LogicalStore, LogicalStorePartition], redop: int
+        self,
+        arg: Union[LogicalStore, LogicalStorePartition],
+        redop: int,
+        projection: Optional[SymbolicPoint],
     ) -> None: ...
     def add_scalar_arg(
         self,

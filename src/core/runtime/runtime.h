@@ -134,6 +134,22 @@ class Runtime {
    */
   [[nodiscard]] ManualTask create_task(Library library, int64_t task_id, const Shape& launch_shape);
   /**
+   * @brief Creates a ManualTask
+   *
+   * This overload should be used when the lower bounds of the task's launch domain should be
+   * non-zero. Note that the upper bounds of the launch domain are inclusive (whereas the
+   * `launch_shape` in the other overload is exlusive).
+   *
+   * @param library Library to query the task
+   * @param task_id Library-local Task ID
+   * @param launch_domain Launch domain for the task
+   *
+   * @return Task object
+   */
+  [[nodiscard]] ManualTask create_task(Library library,
+                                       int64_t task_id,
+                                       const Domain& launch_domain);
+  /**
    * @brief Issues a copy between stores.
    *
    * The source and target stores must have the same shape.
@@ -290,7 +306,7 @@ class Runtime {
   [[nodiscard]] LogicalStore tree_reduce(Library library,
                                          int64_t task_id,
                                          const LogicalStore& store,
-                                         int64_t radix = 4);
+                                         int32_t radix = 4);
 
   /**
    * @brief Submits an AutoTask for execution

@@ -36,7 +36,7 @@ from ..data.logical_array cimport (
 )
 from ..data.logical_store cimport LogicalStore
 from ..data.scalar cimport Scalar
-from ..data.shape cimport _Shape
+from ..data.shape cimport _Shape, to_domain_point
 from ..mapping.machine cimport Machine
 from ..operation.task cimport AutoTask, ManualTask
 from ..type.type_info cimport Type
@@ -76,6 +76,14 @@ cdef void _reraise_legate_exception(
         raise RuntimeError(f"Invalid exception index {index}")
 
     raise exn(message)
+
+
+cdef _Shape to_cpp_shape(object iterable):
+    cdef _Shape shape
+    shape.reserve(len(iterable))
+    for value in iterable:
+        shape.append_inplace(<size_t>value)
+    return std_move(shape)
 
 
 cdef class Runtime:
@@ -121,10 +129,15 @@ cdef class Runtime:
         self,
         Library library,
         int64_t task_id,
-        launch_shape,
+        object launch_shape,
+        object lower_bounds = None,
     ) -> ManualTask:
         """
         Creates a manual task.
+
+        When ``lower_bounds`` is None, the task's launch domain is ``[0,
+        launch_shape)``. Otherwise, the launch domain is ``[lower_bounds,
+        launch_shape)``.
 
         Parameters
         ----------
@@ -136,8 +149,11 @@ cdef class Runtime:
             libraries can use the same task id. There must be a task
             implementation corresponding to the task id.
 
-        launch_domain : tuple, optional
-            Launch domain of the task.
+        launch_shape : tuple
+            Launch shape of the task
+
+        lower_bounds : tuple, optional
+            Optional lower bounds for the launch domain
 
         Returns
         -------
@@ -147,13 +163,26 @@ cdef class Runtime:
         if not is_iterable(launch_shape):
             raise ValueError("Launch space must be iterable")
 
-        cdef _Shape shape = _Shape()
-        for value in launch_shape:
-            shape.append_inplace(<size_t>value)
+        if lower_bounds is not None and not is_iterable(lower_bounds):
+            raise ValueError("Lower bounds must be iterable")
 
-        return ManualTask.from_handle(
-            self._handle.create_task(library._handle, task_id, shape)
-        )
+        if lower_bounds is None:
+            return ManualTask.from_handle(
+                self._handle.create_task(
+                    library._handle, task_id, to_cpp_shape(launch_shape)
+                )
+            )
+        else:
+            return ManualTask.from_handle(
+                self._handle.create_task(
+                    library._handle, task_id, _Domain(
+                        to_domain_point(to_cpp_shape(lower_bounds)),
+                        to_domain_point(
+                            to_cpp_shape(tuple(v - 1 for v in launch_shape))
+                        ),
+                    )
+                )
+            )
 
     def issue_copy(
         self,

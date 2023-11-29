@@ -15,9 +15,11 @@
 #include "core/data/detail/array_kind.h"
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/launcher_arg.h"
+#include "core/operation/projection.h"
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace legate::detail {
@@ -73,6 +75,7 @@ struct LogicalArray {
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
+    const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     int32_t redop) const = 0;
   [[nodiscard]] virtual std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
@@ -124,6 +127,7 @@ class BaseLogicalArray final : public LogicalArray {
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
+    const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
@@ -177,6 +181,7 @@ class ListLogicalArray final : public LogicalArray {
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
+    const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
@@ -229,6 +234,7 @@ class StructLogicalArray final : public LogicalArray {
     const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
+    const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     int32_t redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(

@@ -11,6 +11,7 @@
 
 from libc.stdint cimport int32_t
 from libcpp cimport bool
+from libcpp.optional cimport make_optional, optional as std_optional
 from libcpp.utility cimport move as std_move
 
 from typing import Any, Iterable, Union
@@ -23,6 +24,7 @@ from ..data.logical_array cimport (
 from ..data.logical_store cimport LogicalStore, LogicalStorePartition
 from ..data.scalar cimport Scalar
 from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
+from .projection cimport SymbolicExpr, _SymbolicPoint
 
 from ..type.type_info import Type, array_type, null_type
 
@@ -290,6 +292,17 @@ cdef class AutoTask:
         self.add_communicator("cpu")
 
 
+cdef std_optional[_SymbolicPoint] to_cpp_projection(object projection):
+    if projection is None:
+        return std_optional[_SymbolicPoint]()
+    if not isinstance(projection, tuple):
+        raise ValueError(f"Expected a tuple, but got {type(projection)}")
+    cdef _SymbolicPoint result
+    for expr in projection:
+        result.append_inplace((<SymbolicExpr> expr)._handle)
+    return make_optional[_SymbolicPoint](std_move(result))
+
+
 cdef class ManualTask:
     @staticmethod
     cdef ManualTask from_handle(_ManualTask handle):
@@ -299,12 +312,17 @@ cdef class ManualTask:
         return result
 
     def add_input(
-        self, arg: Union[LogicalStore, LogicalStorePartition]
+        self,
+        arg: Union[LogicalStore, LogicalStorePartition],
+        projection: Optional[tuple[SymbolicExpr, ...]] = None,
     ) -> None:
         if isinstance(arg, LogicalStore):
             self._handle.add_input((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
-            self._handle.add_input((<LogicalStorePartition> arg)._handle)
+            self._handle.add_input(
+                (<LogicalStorePartition> arg)._handle,
+                to_cpp_projection(projection),
+            )
         else:
             raise ValueError(
                 "Expected a logical store or store partition "
@@ -312,12 +330,17 @@ cdef class ManualTask:
             )
 
     def add_output(
-        self, arg: Union[LogicalStore, LogicalStorePartition]
+        self,
+        arg: Union[LogicalStore, LogicalStorePartition],
+        projection: Optional[tuple[SymbolicExpr, ...]] = None,
     ) -> None:
         if isinstance(arg, LogicalStore):
             self._handle.add_output((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
-            self._handle.add_output((<LogicalStorePartition> arg)._handle)
+            self._handle.add_output(
+                (<LogicalStorePartition> arg)._handle,
+                to_cpp_projection(projection),
+            )
         else:
             raise ValueError(
                 "Expected a logical store or store partition "
@@ -325,13 +348,18 @@ cdef class ManualTask:
             )
 
     def add_reduction(
-        self, arg: Union[LogicalStore, LogicalStorePartition], int32_t redop
+        self,
+        arg: Union[LogicalStore, LogicalStorePartition],
+        int32_t redop,
+        projection: Optional[tuple[SymbolicExpr, ...]] = None,
     ) -> None:
         if isinstance(arg, LogicalStore):
             self._handle.add_reduction((<LogicalStore> arg)._handle, redop)
         elif isinstance(arg, LogicalStorePartition):
             self._handle.add_reduction(
-                (<LogicalStorePartition> arg)._handle, redop
+                (<LogicalStorePartition> arg)._handle,
+                redop,
+                to_cpp_projection(projection),
             )
         else:
             raise ValueError(

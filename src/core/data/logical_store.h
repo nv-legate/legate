@@ -370,6 +370,7 @@ class LogicalStorePartition {
 
   [[nodiscard]] LogicalStore store() const;
   [[nodiscard]] const Shape& color_shape() const;
+  [[nodiscard]] LogicalStore get_child_store(const Shape& color) const;
 
   [[nodiscard]] const std::shared_ptr<detail::LogicalStorePartition>& impl() const;
 

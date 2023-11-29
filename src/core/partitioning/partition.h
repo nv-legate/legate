@@ -127,8 +127,8 @@ class Tiling : public Partition {
   [[nodiscard]] const Shape& color_shape() const override;
   [[nodiscard]] const tuple<int64_t>& offsets() const;
 
-  [[nodiscard]] Shape get_child_extents(const Shape& extents, const Shape& color);
-  [[nodiscard]] Shape get_child_offsets(const Shape& color);
+  [[nodiscard]] Shape get_child_extents(const Shape& extents, const Shape& color) const;
+  [[nodiscard]] Shape get_child_offsets(const Shape& color) const;
 
  private:
   bool overlapped_{};

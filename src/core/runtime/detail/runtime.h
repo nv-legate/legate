@@ -85,7 +85,7 @@ class Runtime {
   [[nodiscard]] std::shared_ptr<AutoTask> create_task(const Library* library, int64_t task_id);
   [[nodiscard]] std::shared_ptr<ManualTask> create_task(const Library* library,
                                                         int64_t task_id,
-                                                        const Shape& launch_shape);
+                                                        const Domain& launch_domain);
   void issue_copy(std::shared_ptr<LogicalStore> target,
                   std::shared_ptr<LogicalStore> source,
                   std::optional<int32_t> redop);
@@ -107,7 +107,7 @@ class Runtime {
                    int64_t task_id,
                    std::shared_ptr<LogicalStore> store,
                    std::shared_ptr<LogicalStore> out_store,
-                   int64_t radix);
+                   int32_t radix);
   void flush_scheduling_window();
   void submit(std::shared_ptr<Operation> op);
 

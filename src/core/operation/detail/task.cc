@@ -78,20 +78,20 @@ void Task::launch_task(Strategy* p_strategy)
   auto launcher      = detail::TaskLauncher{library_, machine_, provenance_, task_id_};
   auto launch_domain = strategy.launch_domain(this);
 
-  for (auto& [arr, mapping] : inputs_) {
+  for (auto& [arr, mapping, projection] : inputs_) {
     launcher.add_input(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_READ_ONLY, -1));
+      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, -1));
   }
 
-  for (auto& [arr, mapping] : outputs_) {
+  for (auto& [arr, mapping, projection] : outputs_) {
     launcher.add_output(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_WRITE_ONLY, -1));
+      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, -1));
   }
 
   uint32_t idx = 0;
-  for (auto& [arr, mapping] : reductions_) {
-    launcher.add_reduction(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, LEGION_REDUCE, reduction_ops_[idx++]));
+  for (auto& [arr, mapping, projection] : reductions_) {
+    launcher.add_reduction(arr->to_launcher_arg(
+      mapping, strategy, launch_domain, projection, LEGION_REDUCE, reduction_ops_[idx++]));
   }
 
   // Add by-value scalars
@@ -120,6 +120,15 @@ void Task::launch_task(Strategy* p_strategy)
   launcher.set_side_effect(has_side_effect_);
   launcher.set_concurrent(concurrent_);
   launcher.throws_exception(can_throw_exception_);
+
+  // TODO: Once we implement a precise interference checker, this workaround can be removed
+  auto has_projection = [](auto& args) {
+    return std::any_of(
+      args.begin(), args.end(), [](const auto& arg) { return arg.projection.has_value(); });
+  };
+  launcher.relax_interference_checks(
+    launch_domain.is_valid() &&
+    (has_projection(inputs_) || has_projection(outputs_) || has_projection(reductions_)));
 
   if (launch_domain.is_valid()) {
     auto result = launcher.execute(launch_domain);
@@ -309,21 +318,21 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
   for (auto& constraint : constraints_) {
     solver.add_constraint(std::move(constraint));
   }
-  for (auto& [_, mapping] : outputs_) {
-    for (auto& [store, symb] : mapping) {
+  for (auto& output : outputs_) {
+    for (auto& [store, symb] : output.mapping) {
       solver.add_partition_symbol(symb, IsOutput::Y);
       if (store->has_scalar_storage()) {
         solver.add_constraint(broadcast(symb));
       }
     }
   }
-  for (auto& [_, mapping] : inputs_) {
-    for (auto& [_, symb] : mapping) {
+  for (auto& input : inputs_) {
+    for (auto& [_, symb] : input.mapping) {
       solver.add_partition_symbol(symb, IsOutput::N);
     }
   }
-  for (auto& [_, mapping] : reductions_) {
-    for (auto& [_, symb] : mapping) {
+  for (auto& reduction : reductions_) {
+    for (auto& [_, symb] : reduction.mapping) {
       solver.add_partition_symbol(symb, IsOutput::N);
     }
   }
@@ -355,6 +364,8 @@ void AutoTask::fixup_ranges(Strategy& strategy)
   auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES};
 
   for (auto* array : arrays_to_fixup_) {
+    // TODO: We should pass projection functors here once we start supporting string/list legate
+    // arrays in ManualTasks
     launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, NO_ACCESS));
   }
   launcher.execute(launch_domain);
@@ -366,32 +377,31 @@ void AutoTask::fixup_ranges(Strategy& strategy)
 
 ManualTask::ManualTask(const Library* library,
                        int64_t task_id,
-                       const Shape& launch_shape,
+                       const Domain& launch_domain,
                        uint64_t unique_id,
                        mapping::detail::Machine&& machine)
   : Task{library, task_id, unique_id, std::move(machine)},
     strategy_(std::make_unique<detail::Strategy>())
 {
-  if (!launch_shape.empty()) {
-    strategy_->set_launch_shape(this, launch_shape);
-  }
+  strategy_->set_launch_domain(this, launch_domain);
 }
 
-void ManualTask::add_input(std::shared_ptr<LogicalStore> store)
+void ManualTask::add_input(const std::shared_ptr<LogicalStore>& store)
 {
   if (store->unbound()) {
     throw std::invalid_argument{"Unbound stores cannot be used as input"};
   }
 
-  add_store(inputs_, std::move(store), create_no_partition());
+  add_store(inputs_, store, create_no_partition());
 }
 
-void ManualTask::add_input(const std::shared_ptr<LogicalStorePartition>& store_partition)
+void ManualTask::add_input(const std::shared_ptr<LogicalStorePartition>& store_partition,
+                           std::optional<SymbolicPoint> projection)
 {
-  add_store(inputs_, store_partition->store(), store_partition->partition());
+  add_store(inputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
-void ManualTask::add_output(std::shared_ptr<LogicalStore> store)
+void ManualTask::add_output(const std::shared_ptr<LogicalStore>& store)
 {
   if (store->has_scalar_storage()) {
     if (strategy_->parallel(this)) {
@@ -402,10 +412,11 @@ void ManualTask::add_output(std::shared_ptr<LogicalStore> store)
   } else if (store->unbound()) {
     record_unbound_output(store);
   }
-  add_store(outputs_, std::move(store), create_no_partition());
+  add_store(outputs_, store, create_no_partition());
 }
 
-void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_partition)
+void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_partition,
+                            std::optional<SymbolicPoint> projection)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     // TODO: We need to raise an exception for the user error in this case
@@ -418,10 +429,11 @@ void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_
     }
     record_scalar_output(store_partition->store());
   }
-  add_store(outputs_, store_partition->store(), store_partition->partition());
+  add_store(
+    outputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
-void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redop)
+void ManualTask::add_reduction(const std::shared_ptr<LogicalStore>& store, int32_t redop)
 {
   if (store->unbound()) {
     throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
@@ -431,32 +443,37 @@ void ManualTask::add_reduction(std::shared_ptr<LogicalStore> store, int32_t redo
   if (store->has_scalar_storage()) {
     record_scalar_reduction(store, static_cast<Legion::ReductionOpID>(legion_redop_id));
   }
-  add_store(reductions_, std::move(store), create_no_partition());
+  add_store(reductions_, store, create_no_partition());
   reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 }
 
 void ManualTask::add_reduction(const std::shared_ptr<LogicalStorePartition>& store_partition,
-                               int32_t redop)
+                               int32_t redop,
+                               std::optional<SymbolicPoint> projection)
 {
-  auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop);
+  auto legion_redop_id =
+    static_cast<int32_t>(store_partition->store()->type()->find_reduction_operator(redop));
 
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_reduction(store_partition->store(),
                             static_cast<Legion::ReductionOpID>(legion_redop_id));
   }
-  add_store(reductions_, store_partition->store(), store_partition->partition());
+  add_store(
+    reductions_, store_partition->store(), store_partition->partition(), std::move(projection));
   reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 }
 
 void ManualTask::add_store(std::vector<ArrayArg>& store_args,
-                           std::shared_ptr<LogicalStore> store,
-                           std::shared_ptr<Partition> partition)
+                           const std::shared_ptr<LogicalStore>& store,
+                           std::shared_ptr<Partition> partition,
+                           std::optional<SymbolicPoint> projection)
 {
   auto partition_symbol = declare_partition();
-  auto& arg             = store_args.emplace_back(std::make_shared<BaseLogicalArray>(store));
-  const auto unbound    = store->unbound();
+  auto& arg =
+    store_args.emplace_back(std::make_shared<BaseLogicalArray>(store), std::move(projection));
+  const auto unbound = store->unbound();
 
-  arg.mapping.insert({std::move(store), partition_symbol});
+  arg.mapping.insert({store, partition_symbol});
   if (unbound) {
     auto field_space = detail::Runtime::get_runtime()->create_field_space();
 

@@ -152,6 +152,7 @@ list(APPEND legate_core_SOURCES
   src/core/mapping/detail/mapping.cc
   src/core/mapping/detail/operation.cc
   src/core/mapping/detail/store.cc
+  src/core/operation/projection.cc
   src/core/operation/task.cc
   src/core/operation/detail/copy.cc
   src/core/operation/detail/copy_launcher.cc
@@ -412,6 +413,7 @@ if (legate_core_BUILD_DOCS)
       src/core/runtime/library.h
       src/core/runtime/runtime.h
       # operation
+      src/core/operation/projection.h
       src/core/operation/task.h
       # partitioning
       src/core/partitioning/constraint.h
@@ -517,7 +519,8 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/mapping)
 
 install(
-  FILES src/core/operation/task.h
+  FILES src/core/operation/projection.h
+        src/core/operation/task.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/operation)
 
 install(

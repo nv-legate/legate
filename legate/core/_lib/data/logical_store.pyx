@@ -408,3 +408,11 @@ cdef class LogicalStorePartition:
     @property
     def color_shape(self) -> list:
         return self._handle.color_shape().data()
+
+    def get_child_store(self, *color) -> LogicalStore:
+        cdef _Shape cpp_color
+        for coord in color:
+            cpp_color.append_inplace(<size_t> coord)
+        return LogicalStore.from_handle(
+            self._handle.get_child_store(cpp_color)
+        )

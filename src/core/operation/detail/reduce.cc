@@ -19,6 +19,7 @@
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/projection.h"
 #include "core/operation/detail/task_launcher.h"
+#include "core/operation/projection.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/partitioning/detail/constraint_solver.h"
 #include "core/partitioning/detail/partitioner.h"
@@ -33,7 +34,7 @@ Reduce::Reduce(const Library* library,
                std::shared_ptr<LogicalStore> out_store,
                int64_t task_id,
                uint64_t unique_id,
-               int64_t radix,
+               int32_t radix,
                mapping::detail::Machine&& machine)
   : Operation{unique_id, std::move(machine)},
     radix_{radix},
@@ -54,15 +55,19 @@ void Reduce::launch(Strategy* p_strategy)
   auto launch_domain = strategy.launch_domain(this);
   auto n_tasks       = launch_domain.is_valid() ? launch_domain.get_volume() : 1;
 
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!launch_domain.is_valid() || launch_domain.dim == 1);
+  }
+
   auto input_part      = strategy[input_part_];
   auto input_partition = input_->create_partition(input_part);
 
   // generating projection functions to use in tree_reduction task
-  std::vector<proj::RadixProjectionFunctor> proj_fns;
+  std::vector<proj::SymbolicPoint> projections;
   if (n_tasks > 1) {
-    proj_fns.reserve(radix_);
-    for (int64_t i = 0; i < radix_; i++) {
-      proj_fns.emplace_back(radix_, i);
+    projections.reserve(static_cast<size_t>(radix_));
+    for (int32_t i = 0; i < radix_; i++) {
+      projections.emplace_back(std::initializer_list<SymbolicExpr>{SymbolicExpr{0, radix_, i}});
     }
   }
 
@@ -82,8 +87,8 @@ void Reduce::launch(Strategy* p_strategy)
     if (n_tasks > 1) {
       // if there are more than 1 sub-task, we add several slices of the input
       // for each sub-task
-      for (auto& proj_fn : proj_fns) {
-        auto proj_info = input_partition->create_projection_info(launch_domain, proj_fn);
+      for (auto& projection : projections) {
+        auto proj_info = input_partition->create_projection_info(launch_domain, projection);
 
         launcher.add_input(to_array_arg(
           std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(proj_info))));

@@ -18,6 +18,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/operation/detail/projection.h"
 #include "core/partitioning/detail/partitioner.h"
+#include "core/partitioning/partition.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
@@ -417,11 +418,11 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
 }
 
 LogicalStore::LogicalStore(Shape&& extents,
-                           const std::shared_ptr<Storage>& storage,
+                           std::shared_ptr<Storage> storage,
                            std::shared_ptr<TransformStack>&& transform)
   : store_id_{Runtime::get_runtime()->get_unique_store_id()},
     extents_{std::move(extents)},
-    storage_{storage},
+    storage_{std::move(storage)},
     transform_{std::move(transform)}
 {
   assert_fixed_storage_size(storage_);
@@ -712,13 +713,11 @@ Restrictions LogicalStore::compute_restrictions() const
 }
 
 Legion::ProjectionID LogicalStore::compute_projection(
-  int32_t launch_ndim, std::optional<proj::SymbolicFunctor> proj_fn) const
+  int32_t launch_ndim, const std::optional<SymbolicPoint>& projection) const
 {
-  if (proj_fn) {
+  if (projection) {
     assert(!transformed());
-    assert(proj_fn != nullptr);
-    const auto point = proj_fn.value()(proj::create_symbolic_point(launch_ndim));
-    return Runtime::get_runtime()->get_projection(launch_ndim, point);
+    return Runtime::get_runtime()->get_projection(launch_ndim, *projection);
   }
 
   if (transform_->identity()) {
@@ -828,11 +827,13 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   transform_->pack(buffer);
 }
 
-std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variable,
-                                                          const Strategy& strategy,
-                                                          const Domain& launch_domain,
-                                                          Legion::PrivilegeMode privilege,
-                                                          int64_t redop)
+std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
+  const Variable* variable,
+  const Strategy& strategy,
+  const Domain& launch_domain,
+  const std::optional<SymbolicPoint>& projection,
+  Legion::PrivilegeMode privilege,
+  int64_t redop)
 {
   if (has_scalar_storage()) {
     if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
@@ -850,7 +851,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(const Variable* variab
 
   auto partition       = strategy[variable];
   auto store_partition = create_partition(partition);
-  auto proj_info       = store_partition->create_projection_info(launch_domain);
+  auto proj_info       = store_partition->create_projection_info(launch_domain, projection);
   proj_info->is_key    = strategy.is_key_partition(variable);
   proj_info->redop     = static_cast<Legion::ReductionOpID>(redop);
 
@@ -896,9 +897,34 @@ std::string LogicalStore::to_string() const
 // legate::detail::LogicalStorePartition
 ////////////////////////////////////////////////////
 
-// FIXME pass projection functor
+std::shared_ptr<LogicalStore> LogicalStorePartition::get_child_store(const Shape& color) const
+{
+  if (partition_->kind() != Partition::Kind::TILING) {
+    throw std::runtime_error{"Child stores can be retrieved only from tile partitions"};
+  }
+  const auto* tiling = static_cast<const Tiling*>(partition_.get());
+
+  auto transform      = store_->transform();
+  auto inverted_color = transform->invert_color(color);
+  auto child_storage  = storage_partition_->get_child_storage(inverted_color);
+
+  auto child_extents = tiling->get_child_extents(store_->extents(), inverted_color);
+  auto child_offsets = tiling->get_child_offsets(inverted_color);
+
+  for (uint32_t dim = 0; dim < child_offsets.size(); ++dim) {
+    if (child_offsets[dim] == 0) {
+      continue;
+    }
+    transform = std::make_shared<TransformStack>(std::make_unique<Shift>(dim, -child_offsets[dim]),
+                                                 std::move(transform));
+  }
+
+  return std::make_shared<LogicalStore>(
+    std::move(child_extents), std::move(child_storage), std::move(transform));
+}
+
 std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
-  const Domain& launch_domain, std::optional<proj::SymbolicFunctor> proj_fn)
+  const Domain& launch_domain, const std::optional<SymbolicPoint>& projection)
 {
   if (store_->has_scalar_storage()) {
     return std::make_unique<ProjectionInfo>();
@@ -911,9 +937,8 @@ std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
   auto legion_partition = storage_partition_->get_legion_partition();
-  auto proj_id          = launch_domain.is_valid()
-                            ? store_->compute_projection(launch_domain.dim, std::move(proj_fn))
-                            : 0;
+  auto proj_id =
+    launch_domain.is_valid() ? store_->compute_projection(launch_domain.dim, projection) : 0;
   return std::make_unique<ProjectionInfo>(std::move(legion_partition), proj_id);
 }
 

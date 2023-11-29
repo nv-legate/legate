@@ -50,6 +50,8 @@ inline int32_t StoragePartition::level() const { return level_; }
 
 inline size_t LogicalStore::volume() const { return extents().volume(); }
 
+inline const std::shared_ptr<TransformStack>& LogicalStore::transform() const { return transform_; }
+
 inline uint64_t LogicalStore::id() const { return store_id_; }
 
 inline std::shared_ptr<Partition> LogicalStore::get_current_key_partition() const

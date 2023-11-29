@@ -24,38 +24,6 @@
 
 namespace legate::proj {
 
-std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
-{
-  auto weight = expr.weight();
-  auto offset = expr.offset();
-
-  if (weight != 0) {
-    if (weight != 1) {
-      out << weight << "*";
-    }
-    out << "COORD" << expr.dim();
-  }
-  if (offset != 0) {
-    if (offset > 0) {
-      out << "+" << offset;
-    } else {
-      out << "-" << -offset;
-    }
-  }
-  return out;
-}
-
-SymbolicPoint RadixProjectionFunctor::operator()(const SymbolicPoint& point) const
-{
-  std::vector<SymbolicExpr> exprs;
-
-  exprs.reserve(point.size());
-  for (auto&& points : point.data()) {
-    exprs.emplace_back(points * radix_ + offset_);
-  }
-  return SymbolicPoint{std::move(exprs)};
-}
-
 SymbolicPoint create_symbolic_point(int32_t ndim)
 {
   std::vector<SymbolicExpr> exprs;

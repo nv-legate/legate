@@ -12,54 +12,15 @@
 
 #pragma once
 
-#include "core/utilities/tuple.h"
-#include "core/utilities/typedefs.h"
+#include "core/operation/projection.h"
 
 #include <functional>
 #include <iosfwd>
 
 namespace legate::proj {
 
-class SymbolicExpr {
- public:
-  SymbolicExpr() = default;
-
-  SymbolicExpr(int32_t dim, int32_t weight, int32_t offset = 0);
-
-  explicit SymbolicExpr(int32_t dim);
-
-  [[nodiscard]] int32_t dim() const;
-  [[nodiscard]] int32_t weight() const;
-  [[nodiscard]] int32_t offset() const;
-
-  [[nodiscard]] bool is_identity(int32_t dim) const;
-
-  bool operator==(const SymbolicExpr& other) const;
-  bool operator<(const SymbolicExpr& other) const;
-
-  SymbolicExpr operator*(int32_t other) const;
-  SymbolicExpr operator+(int32_t other) const;
-
- private:
-  int32_t dim_{-1};
-  int32_t weight_{1};
-  int32_t offset_{};
-};
-
-std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
-
-using SymbolicPoint   = tuple<SymbolicExpr>;
-using SymbolicFunctor = std::function<SymbolicPoint(const SymbolicPoint&)>;
-
-struct RadixProjectionFunctor {
-  RadixProjectionFunctor(int32_t radix, int32_t offset);
-
-  [[nodiscard]] SymbolicPoint operator()(const SymbolicPoint& point) const;
-
- private:
-  int32_t offset_{};
-  int32_t radix_{};
-};
+using SymbolicExpr  = legate::SymbolicExpr;
+using SymbolicPoint = legate::SymbolicPoint;
 
 [[nodiscard]] SymbolicPoint create_symbolic_point(int32_t ndim);
 

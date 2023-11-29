@@ -33,7 +33,7 @@ class Reduce final : public Operation {
          std::shared_ptr<LogicalStore> out_store,
          int64_t task_id,
          uint64_t unique_id,
-         int64_t radix,
+         int32_t radix,
          mapping::detail::Machine&& machine);
 
  public:
@@ -45,7 +45,7 @@ class Reduce final : public Operation {
   [[nodiscard]] std::string to_string() const override;
 
  private:
-  int64_t radix_{};
+  int32_t radix_{};
   const Library* library_{};
   int64_t task_id_{};
   std::shared_ptr<LogicalStore> input_{};

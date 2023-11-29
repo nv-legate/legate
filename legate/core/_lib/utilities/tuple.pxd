@@ -9,6 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from libc.stddef cimport size_t
 from libcpp.vector cimport vector as std_vector
 
 
@@ -16,3 +17,4 @@ cdef extern from "core/utilities/tuple.h" namespace "legate" nogil:
     cdef cppclass tuple[T]:
         void append_inplace(const T& value)
         const std_vector[T]& data() const
+        void reserve(size_t)

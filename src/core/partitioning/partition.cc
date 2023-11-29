@@ -217,7 +217,7 @@ std::string Tiling::to_string() const
   return std::move(ss).str();
 }
 
-Shape Tiling::get_child_extents(const Shape& extents, const Shape& color)
+Shape Tiling::get_child_extents(const Shape& extents, const Shape& color) const
 {
   auto lo = apply(std::plus<int64_t>{}, tile_shape_ * color, offsets_);
   auto hi = apply(std::plus<int64_t>{}, tile_shape_ * (color + 1), offsets_);
@@ -226,7 +226,7 @@ Shape Tiling::get_child_extents(const Shape& extents, const Shape& color)
   return apply([](int64_t h, int64_t l) { return static_cast<size_t>(h - l); }, hi, lo);
 }
 
-Shape Tiling::get_child_offsets(const Shape& color)
+Shape Tiling::get_child_offsets(const Shape& color) const
 {
   return apply([](size_t a, int64_t b) { return static_cast<size_t>(static_cast<int64_t>(a) + b); },
                strides_ * color,
