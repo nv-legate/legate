@@ -19,6 +19,7 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import MagicMock
 
+import psutil
 import pytest
 from pytest_mock import MockerFixture
 
@@ -102,3 +103,8 @@ class TestSystem:
 
         assert result.timeout
         assert not result.skipped
+
+    def test_memort(self) -> None:
+        s = m.TestSystem()
+
+        assert s.memory == psutil.virtual_memory().total

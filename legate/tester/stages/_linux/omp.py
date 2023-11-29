@@ -15,6 +15,7 @@ import warnings
 from itertools import chain
 from typing import TYPE_CHECKING
 
+from ... import SMALL_SYSMEM
 from ..test_stage import TestStage
 from ..util import UNPIN_ENV, Shard, StageSpec, adjust_workers
 
@@ -56,6 +57,8 @@ class OMP(TestStage):
             str(config.ompthreads),
             "--numamem",
             str(config.numamem),
+            "--sysmem",
+            str(SMALL_SYSMEM),
         ]
         args += self._handle_cpu_pin_args(config, shard)
         args += self._handle_multi_node_args(config)
@@ -67,7 +70,15 @@ class OMP(TestStage):
         procs = (
             omps * threads + config.utility + int(config.cpu_pin == "strict")
         )
-        workers = len(cpus) // (procs * config.ranks_per_node)
+
+        omp_workers = len(cpus) // (procs * config.ranks_per_node)
+
+        numamem, bloat_factor = config.numamem, config.bloat_factor
+        mem_per_test = (SMALL_SYSMEM + omps * numamem) * bloat_factor
+
+        mem_workers = system.memory // mem_per_test
+
+        workers = min(omp_workers, mem_workers)
 
         if workers == 0:
             if config.cpu_pin == "strict":

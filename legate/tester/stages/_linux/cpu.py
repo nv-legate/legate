@@ -52,6 +52,8 @@ class CPU(TestStage):
         args = [
             "--cpus",
             str(config.cpus),
+            "--sysmem",
+            str(config.sysmem),
         ]
         args += self._handle_cpu_pin_args(config, shard)
         args += self._handle_multi_node_args(config)
@@ -62,7 +64,11 @@ class CPU(TestStage):
 
         procs = config.cpus + config.utility + int(config.cpu_pin == "strict")
 
-        workers = len(cpus) // (procs * config.ranks_per_node)
+        cpu_workers = len(cpus) // (procs * config.ranks_per_node)
+
+        mem_workers = system.memory // (config.sysmem * config.bloat_factor)
+
+        workers = min(cpu_workers, mem_workers)
 
         if workers == 0:
             if config.cpu_pin == "strict":

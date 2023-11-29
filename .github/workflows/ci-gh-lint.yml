@@ -43,6 +43,7 @@ jobs:
           python3 -m pip install -U pip setuptools wheel
           python3 -m pip install -U numpy traitlets vermin
           python3 -m pip install mypy==$(awk '/repo:.*mypy/{getline; print $2}' ./.pre-commit-config.yaml | tr -d \'v)
+          python3 -m pip install psutil types-psutil
 
 
       - name: Run vermin on the repository

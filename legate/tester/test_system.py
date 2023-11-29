@@ -23,6 +23,8 @@ from pathlib import Path
 from subprocess import PIPE, STDOUT, TimeoutExpired, run as stdlib_run
 from typing import Sequence
 
+import psutil
+
 from ..util.system import System
 from ..util.types import EnvDict
 
@@ -91,6 +93,10 @@ class TestSystem(System):
         super().__init__()
         self.manager = multiprocessing.Manager()
         self.dry_run: bool = dry_run
+
+    @property
+    def memory(self) -> int:
+        return psutil.virtual_memory().total
 
     def run(
         self,

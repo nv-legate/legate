@@ -39,6 +39,9 @@ DEFAULT_GPU_DELAY = 2000
 # Value to use if --fbmem is not specified (MB)
 DEFAULT_GPU_MEMORY_BUDGET = 4096
 
+# Value to use if --sysmem is not specified (MB)
+DEFAULT_SYS_MEMORY_BUDGET = 4000
+
 #: Value to use if --omps is not specified.
 DEFAULT_OMPS_PER_NODE = 1
 
@@ -46,7 +49,7 @@ DEFAULT_OMPS_PER_NODE = 1
 DEFAULT_OMPTHREADS = 4
 
 #: Value to use if --numamem is not specified.
-DEFAULT_NUMAMEM = 0
+DEFAULT_NUMAMEM = 4000
 
 #: Value to use if --ranks-per-node is not specified.
 DEFAULT_RANKS_PER_NODE = 1
@@ -58,6 +61,9 @@ DEFAULT_PROCESS_ENV = {
 
 #: Default number of nodes to use
 DEFAULT_NODES = 1
+
+#: sysmem value to use for non-CPU stages
+SMALL_SYSMEM = 100
 
 #: Feature values that are accepted for --use, in the relative order
 #: that the corresponding test stages should always execute in

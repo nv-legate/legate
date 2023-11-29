@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import pytest
 
+from legate.tester import SMALL_SYSMEM
 from legate.tester.config import Config
 from legate.tester.stages._linux import gpu as m
 from legate.tester.stages.util import Shard
@@ -49,6 +50,8 @@ class TestSingleRank:
             f"{len(shard)}",
             "--gpu-bind",
             expected,
+            "--sysmem",
+            str(SMALL_SYSMEM),
         ]
 
     def test_spec_with_gpus_1(self) -> None:
@@ -142,6 +145,8 @@ class TestMultiRank:
             f"{len(shard)}",
             "--gpu-bind",
             expected,
+            "--sysmem",
+            str(SMALL_SYSMEM),
         ]
 
     def test_spec_with_gpus_1(self) -> None:

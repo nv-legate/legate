@@ -69,11 +69,18 @@ class TestSingleRank:
         "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
-        c = Config([])
+        c = Config(["test.py", "--sysmem", "2000"])
         s = FakeSystem()
         stage = m.CPU(c, s)
         result = stage.shard_args(Shard([shard]), c)
-        assert result == ["--cpus", f"{c.cpus}", "--cpu-bind", expected]
+        assert result == [
+            "--cpus",
+            f"{c.cpus}",
+            "--sysmem",
+            str(c.sysmem),
+            "--cpu-bind",
+            expected,
+        ]
 
     def test_spec_with_cpus_1(self) -> None:
         c = Config(["test.py", "--cpus", "1"])
@@ -167,13 +174,25 @@ class TestSingleRank:
 
 class TestMultiRank:
     def test_shard_args(self) -> None:
-        c = Config(["test.py", "--cpus", "2", "--ranks-per-node", "2"])
+        c = Config(
+            [
+                "test.py",
+                "--cpus",
+                "2",
+                "--ranks-per-node",
+                "2",
+                "--sysmem",
+                "2000",
+            ]
+        )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
         result = stage.shard_args(Shard([(0, 1), (2, 3)]), c)
         assert result == [
             "--cpus",
             f"{c.cpus}",
+            "--sysmem",
+            str(c.sysmem),
             "--cpu-bind",
             "0,1/2,3",
             "--ranks-per-node",

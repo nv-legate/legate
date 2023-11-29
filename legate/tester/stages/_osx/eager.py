@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ... import SMALL_SYSMEM
 from ..test_stage import TestStage
 from ..util import EAGER_ENV, UNPIN_ENV, Shard, StageSpec, adjust_workers
 
@@ -49,12 +50,16 @@ class Eager(TestStage):
         return env
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
-        return ["--cpus", "1"]
+        return ["--cpus", "1", "--sysmem", str(SMALL_SYSMEM)]
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
         N = len(system.cpus)
-        degree = min(N, 60)  # ~LEGION_MAX_NUM_PROCS just in case
-        workers = adjust_workers(degree, config.requested_workers)
+
+        mem_workers = system.memory // (SMALL_SYSMEM * config.bloat_factor)
+
+        workers = min(N, mem_workers, 60)  # LEGION_MAX_NUM_PROCS just in case
+
+        workers = adjust_workers(workers, config.requested_workers)
 
         # make a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]

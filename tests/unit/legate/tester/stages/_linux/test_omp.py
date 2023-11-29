@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import pytest
 
+from legate.tester import SMALL_SYSMEM
 from legate.tester.config import Config
 from legate.tester.stages._linux import omp as m
 from legate.tester.stages.util import UNPIN_ENV, Shard
@@ -80,6 +81,8 @@ class TestSingleRank:
             f"{c.ompthreads}",
             "--numamem",
             f"{c.numamem}",
+            "--sysmem",
+            str(SMALL_SYSMEM),
             "--cpu-bind",
             expected,
         ]
@@ -227,6 +230,8 @@ class TestMultiRank:
             f"{c.ompthreads}",
             "--numamem",
             f"{c.numamem}",
+            "--sysmem",
+            str(SMALL_SYSMEM),
             "--cpu-bind",
             expected,
         ]

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import pytest
 
+from legate.tester import SMALL_SYSMEM
 from legate.tester.config import Config
 from legate.tester.stages._linux import eager as m
 from legate.tester.stages.util import Shard
@@ -44,7 +45,14 @@ def test_single_rank_shard_args(shard: tuple[int, ...], expected: str) -> None:
     s = FakeSystem()
     stage = m.Eager(c, s)
     result = stage.shard_args(Shard([shard]), c)
-    assert result == ["--cpus", "1", "--cpu-bind", expected]
+    assert result == [
+        "--cpus",
+        "1",
+        "--cpu-bind",
+        expected,
+        "--sysmem",
+        str(SMALL_SYSMEM),
+    ]
 
 
 def test_single_rank_spec() -> None:

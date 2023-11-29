@@ -14,6 +14,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+from ... import SMALL_SYSMEM
 from ..test_stage import TestStage
 from ..util import Shard, StageSpec, adjust_workers
 
@@ -58,6 +59,8 @@ class GPU(TestStage):
             str(sum(len(r) for r in shard.ranks) // len(shard.ranks)),
             "--gpu-bind",
             str(shard),
+            "--sysmem",
+            str(SMALL_SYSMEM),
         ]
         args += self._handle_multi_node_args(config)
         return args
@@ -68,8 +71,13 @@ class GPU(TestStage):
 
         fbsize = min(gpu.total for gpu in system.gpus) / (1 << 20)  # MB
         oversub_factor = int(fbsize // (config.fbmem * config.bloat_factor))
+
+        gpu_workers = degree * oversub_factor
+
+        mem_workers = system.memory // (SMALL_SYSMEM * config.bloat_factor)
+
         workers = adjust_workers(
-            degree * oversub_factor, config.requested_workers
+            min(gpu_workers, mem_workers), config.requested_workers
         )
 
         shards: list[Shard] = []

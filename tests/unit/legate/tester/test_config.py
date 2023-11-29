@@ -31,6 +31,7 @@ from legate.tester import (
     DEFAULT_OMPS_PER_NODE,
     DEFAULT_OMPTHREADS,
     DEFAULT_RANKS_PER_NODE,
+    DEFAULT_SYS_MEMORY_BUDGET,
     FEATURES,
     config as m,
 )
@@ -59,6 +60,7 @@ class TestConfig:
         assert c.cpu_pin == "partial"
         assert c.gpu_delay == DEFAULT_GPU_DELAY
         assert c.fbmem == DEFAULT_GPU_MEMORY_BUDGET
+        assert c.sysmem == DEFAULT_SYS_MEMORY_BUDGET
         assert c.bloat_factor == DEFAULT_GPU_BLOAT_FACTOR
         assert c.omps == DEFAULT_OMPS_PER_NODE
         assert c.ompthreads == DEFAULT_OMPTHREADS
@@ -132,7 +134,8 @@ class TestConfig:
         assert set(c.features) == {"cpus", feature}
 
     @pytest.mark.parametrize(
-        "opt", ("cpus", "gpus", "gpu-delay", "fbmem", "omps", "ompthreads")
+        "opt",
+        ("cpus", "gpus", "gpu-delay", "fbmem", "omps", "ompthreads", "sysmem"),
     )
     def test_feature_options(self, opt: str) -> None:
         c = m.Config(["test.py", f"--{opt}", "1234"])

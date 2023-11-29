@@ -18,7 +18,7 @@ run_test_or_analysis() {
             fi
 
             set +eou pipefail
-            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge pytest pytest-mock ipython jupyter_client ${ucx_libs}
+            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
             set -eou pipefail
 
             cd ~/legate/tests/unit
@@ -56,6 +56,7 @@ run_test_or_analysis() {
             ;;
         "cpp")
             echo "Running C++ unit tests..."
+            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
 
             if [[ "${UCX_ENABLED}" = "ON" ]]; then
               set +eou pipefail

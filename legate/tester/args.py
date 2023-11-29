@@ -31,6 +31,7 @@ from . import (
     DEFAULT_OMPS_PER_NODE,
     DEFAULT_OMPTHREADS,
     DEFAULT_RANKS_PER_NODE,
+    DEFAULT_SYS_MEMORY_BUDGET,
     FEATURES,
 )
 
@@ -156,7 +157,16 @@ feature_opts.add_argument(
     dest="fbmem",
     type=int,
     default=DEFAULT_GPU_MEMORY_BUDGET,
-    help="GPU framebuffer memory (MB)",
+    help="per-process GPU framebuffer memory (MB) limit",
+)
+
+
+feature_opts.add_argument(
+    "--sysmem",
+    dest="sysmem",
+    type=int,
+    default=DEFAULT_SYS_MEMORY_BUDGET,
+    help="per-process CPU system memory (MB) limit",
 )
 
 

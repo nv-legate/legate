@@ -194,6 +194,7 @@ class TestsConfig(SectionConfig):
             "types-docutils",
             "pynvml",
             "tifffile",
+            "psutil",
         )
 
     @property

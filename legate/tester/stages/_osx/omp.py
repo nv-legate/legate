@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ... import SMALL_SYSMEM
 from ..test_stage import TestStage
 from ..util import UNPIN_ENV, Shard, StageSpec, adjust_workers
 
@@ -52,14 +53,27 @@ class OMP(TestStage):
             str(config.omps),
             "--ompthreads",
             str(config.ompthreads),
+            "--sysmem",
+            str(SMALL_SYSMEM),
         ]
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
+        cpus = system.cpus
         omps, threads = config.omps, config.ompthreads
-        procs = omps * threads + config.utility
-        workers = adjust_workers(
-            len(system.cpus) // procs, config.requested_workers
+        procs = (
+            omps * threads + config.utility + int(config.cpu_pin == "strict")
         )
+
+        omp_workers = len(cpus) // (procs * config.ranks_per_node)
+
+        numamem, bloat_factor = config.numamem, config.bloat_factor
+        mem_per_test = (SMALL_SYSMEM + omps * numamem) * bloat_factor
+
+        mem_workers = system.memory // mem_per_test
+
+        workers = min(omp_workers, mem_workers)
+
+        workers = adjust_workers(workers, config.requested_workers)
 
         # return a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]

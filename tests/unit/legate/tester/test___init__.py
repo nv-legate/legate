@@ -25,10 +25,12 @@ from legate.tester import (
     DEFAULT_OMPS_PER_NODE,
     DEFAULT_OMPTHREADS,
     DEFAULT_PROCESS_ENV,
+    DEFAULT_SYS_MEMORY_BUDGET,
     FEATURES,
     LAST_FAILED_FILENAME,
     PER_FILE_ARGS,
     SKIPPED_EXAMPLES,
+    SMALL_SYSMEM,
 )
 
 
@@ -48,6 +50,9 @@ class TestConsts:
     def test_DEFAULT_GPU_MEMORY_BUDGET(self) -> None:
         assert DEFAULT_GPU_MEMORY_BUDGET == 4096
 
+    def test_DEFAULT_SYS_MEMORY_BUDGET(self) -> None:
+        assert DEFAULT_SYS_MEMORY_BUDGET == 4000
+
     def test_DEFAULT_OMPS_PER_NODE(self) -> None:
         assert DEFAULT_OMPS_PER_NODE == 1
 
@@ -55,7 +60,10 @@ class TestConsts:
         assert DEFAULT_OMPTHREADS == 4
 
     def test_DEFAULT_NUMAMEM(self) -> None:
-        assert DEFAULT_NUMAMEM == 0
+        assert DEFAULT_NUMAMEM == 4000
+
+    def test_SMALL_SYSMEM(self) -> None:
+        assert SMALL_SYSMEM == 100
 
     def test_DEFAULT_PROCESS_ENV(self) -> None:
         assert DEFAULT_PROCESS_ENV == {

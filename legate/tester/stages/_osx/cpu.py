@@ -47,13 +47,25 @@ class CPU(TestStage):
         return dict(UNPIN_ENV)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
-        return ["--cpus", str(config.cpus)]
+        return [
+            "--cpus",
+            str(config.cpus),
+            "--sysmem",
+            str(config.sysmem),
+        ]
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
-        procs = config.cpus + config.utility
-        workers = adjust_workers(
-            len(system.cpus) // procs, config.requested_workers
-        )
+        cpus = system.cpus
+
+        procs = config.cpus + config.utility + int(config.cpu_pin == "strict")
+
+        cpu_workers = len(cpus) // (procs * config.ranks_per_node)
+
+        mem_workers = system.memory // (config.sysmem * config.bloat_factor)
+
+        workers = min(cpu_workers, mem_workers)
+
+        workers = adjust_workers(workers, config.requested_workers)
 
         # return a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]
