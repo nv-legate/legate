@@ -67,18 +67,18 @@ class ManualTask:
     def add_input(
         self,
         arg: Union[LogicalStore, LogicalStorePartition],
-        projection: Optional[SymbolicPoint],
+        projection: Optional[SymbolicPoint] = None,
     ) -> None: ...
     def add_output(
         self,
         arg: Union[LogicalStore, LogicalStorePartition],
-        projection: Optional[SymbolicPoint],
+        projection: Optional[SymbolicPoint] = None,
     ) -> None: ...
     def add_reduction(
         self,
         arg: Union[LogicalStore, LogicalStorePartition],
         redop: int,
-        projection: Optional[SymbolicPoint],
+        projection: Optional[SymbolicPoint] = None,
     ) -> None: ...
     def add_scalar_arg(
         self,
