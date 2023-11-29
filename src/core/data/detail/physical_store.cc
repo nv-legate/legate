@@ -175,7 +175,7 @@ FutureWrapper::FutureWrapper(bool read_only,
       if (mem_kind == Memory::Kind::GPU_FB_MEM) {
         // TODO: This should be done by Legion
         buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
-        AccessorWO<int8_t, 1> acc(buffer_, field_size, false);
+        const AccessorWO<int8_t, 1> acc{buffer_, field_size, false};
         auto stream = cuda::StreamPool::get_stream_pool().get_stream();
         CHECK_CUDA(
           cudaMemcpyAsync(acc.ptr(0), p_init_value, field_size, cudaMemcpyDeviceToDevice, stream));

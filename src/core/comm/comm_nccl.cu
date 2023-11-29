@@ -34,25 +34,28 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 
 namespace legate::comm::nccl {
 
-struct _Payload {
+namespace {
+
+struct Payload {
   uint64_t field0;
   uint64_t field1;
 };
+}  // namespace
 
-#define CHECK_NCCL(expr)                    \
-  do {                                      \
-    ncclResult_t result = (expr);           \
-    check_nccl(result, __FILE__, __LINE__); \
+#define CHECK_NCCL(...)                      \
+  do {                                       \
+    const ncclResult_t result = __VA_ARGS__; \
+    check_nccl(result, __FILE__, __LINE__);  \
   } while (false)
 
 inline void check_nccl(ncclResult_t error, const char* file, int line)
 {
   if (error != ncclSuccess) {
-    fprintf(stderr,
-            "Internal NCCL failure with error %s in file %s at line %d\n",
-            ncclGetErrorString(error),
-            file,
-            line);
+    static_cast<void>(fprintf(stderr,
+                              "Internal NCCL failure with error %s in file %s at line %d\n",
+                              ncclGetErrorString(error),
+                              file,
+                              line));
     exit(error);
   }
 }
@@ -61,9 +64,8 @@ class Factory final : public detail::CommunicatorFactory {
  public:
   Factory(const detail::Library* core_library);
 
- public:
-  bool needs_barrier() const override;
-  bool is_supported_target(mapping::TaskTarget target) const override;
+  [[nodiscard]] bool needs_barrier() const override;
+  [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
  protected:
   Legion::FutureMap initialize(const mapping::detail::Machine& machine,
@@ -123,7 +125,7 @@ ncclUniqueId init_nccl_id(const Legion::Task* task,
                           Legion::Context context,
                           Legion::Runtime* runtime)
 {
-  legate::nvtx::Range auto_range("core::comm::nccl::init_id");
+  const legate::nvtx::Range auto_range{"core::comm::nccl::init_id"};
 
   legate::detail::show_progress(task, context, runtime);
 
@@ -138,21 +140,21 @@ ncclComm_t* init_nccl(const Legion::Task* task,
                       Legion::Context context,
                       Legion::Runtime* runtime)
 {
-  legate::nvtx::Range auto_range("core::comm::nccl::init");
+  const legate::nvtx::Range auto_range{"core::comm::nccl::init"};
 
   legate::detail::show_progress(task, context, runtime);
 
   assert(task->futures.size() == 1);
 
-  auto id          = task->futures[0].get_result<ncclUniqueId>();
-  ncclComm_t* comm = new ncclComm_t{};
+  auto id   = task->futures[0].get_result<ncclUniqueId>();
+  auto comm = std::make_unique<ncclComm_t>();
 
   auto num_ranks = task->index_domain.get_volume();
   auto rank_id   = task->index_point[0];
 
   auto ts_init_start = std::chrono::high_resolution_clock::now();
   CHECK_NCCL(ncclGroupStart());
-  CHECK_NCCL(ncclCommInitRank(comm, num_ranks, id, rank_id));
+  CHECK_NCCL(ncclCommInitRank(comm.get(), num_ranks, id, rank_id));
   CHECK_NCCL(ncclGroupEnd());
   auto ts_init_stop = std::chrono::high_resolution_clock::now();
 
@@ -163,11 +165,11 @@ ncclComm_t* init_nccl(const Legion::Task* task,
   }
 
   if (num_ranks == 1) {
-    return comm;
+    return comm.release();
   }
 
   if (!detail::Config::warmup_nccl) {
-    return comm;
+    return comm.release();
   }
 
   auto stream = cuda::StreamPool::get_stream_pool().get_stream();
@@ -179,15 +181,15 @@ ncclComm_t* init_nccl(const Legion::Task* task,
   CHECK_CUDA(cudaEventCreate(&ev_end_all_to_all));
   CHECK_CUDA(cudaEventCreate(&ev_end_all_gather));
 
-  auto src_buffer = create_buffer<_Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
-  auto tgt_buffer = create_buffer<_Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
+  auto src_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
+  auto tgt_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
 
   CHECK_CUDA(cudaEventRecord(ev_start, stream));
 
   CHECK_NCCL(ncclGroupStart());
   for (std::size_t idx = 0; idx < num_ranks; ++idx) {
-    CHECK_NCCL(ncclSend(src_buffer.ptr(0), sizeof(_Payload), ncclInt8, idx, *comm, stream));
-    CHECK_NCCL(ncclRecv(tgt_buffer.ptr(0), sizeof(_Payload), ncclInt8, idx, *comm, stream));
+    CHECK_NCCL(ncclSend(src_buffer.ptr(0), sizeof(Payload), ncclInt8, idx, *comm, stream));
+    CHECK_NCCL(ncclRecv(tgt_buffer.ptr(0), sizeof(Payload), ncclInt8, idx, *comm, stream));
   }
   CHECK_NCCL(ncclGroupEnd());
 
@@ -212,7 +214,7 @@ ncclComm_t* init_nccl(const Legion::Task* task,
       time_all_gather);
   }
 
-  return comm;
+  return comm.release();
 }
 
 void finalize_nccl(const Legion::Task* task,
@@ -220,7 +222,7 @@ void finalize_nccl(const Legion::Task* task,
                    Legion::Context context,
                    Legion::Runtime* runtime)
 {
-  legate::nvtx::Range auto_range("core::comm::nccl::finalize");
+  const legate::nvtx::Range auto_range{"core::comm::nccl::finalize"};
 
   legate::detail::show_progress(task, context, runtime);
 

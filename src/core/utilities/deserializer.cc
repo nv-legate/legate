@@ -160,7 +160,7 @@ void TaskDeserializer::_unpack(comm::Communicator& value)
 {
   auto future = futures_[0];
   futures_    = futures_.subspan(1);
-  value       = comm::Communicator{future};
+  value       = comm::Communicator{std::move(future)};
 }
 
 void TaskDeserializer::_unpack(Legion::PhaseBarrier& barrier)

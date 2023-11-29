@@ -29,16 +29,15 @@ StreamView::~StreamView()
   }
 }
 
-StreamView::StreamView(StreamView&& rhs) : valid_(rhs.valid_), stream_(rhs.stream_)
+StreamView::StreamView(StreamView&& rhs) noexcept
+  : valid_{std::exchange(rhs.valid_, false)}, stream_(rhs.stream_)
 {
-  rhs.valid_ = false;
 }
 
-StreamView& StreamView::operator=(StreamView&& rhs)
+StreamView& StreamView::operator=(StreamView&& rhs) noexcept
 {
-  valid_     = rhs.valid_;
-  stream_    = rhs.stream_;
-  rhs.valid_ = false;
+  valid_  = std::exchange(rhs.valid_, false);
+  stream_ = rhs.stream_;
   return *this;
 }
 

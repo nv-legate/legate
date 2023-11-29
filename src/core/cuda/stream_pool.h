@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include "legion.h"
-
 #include <cuda_runtime.h>
 #include <memory>
 
@@ -38,28 +36,25 @@ struct StreamView {
    *
    * @param stream Raw CUDA stream to wrap
    */
-  StreamView(cudaStream_t stream) : valid_(true), stream_(stream) {}
+  StreamView(cudaStream_t stream);
   ~StreamView();
 
- public:
   StreamView(const StreamView&)            = delete;
   StreamView& operator=(const StreamView&) = delete;
 
- public:
-  StreamView(StreamView&&);
-  StreamView& operator=(StreamView&&);
+  StreamView(StreamView&&) noexcept;
+  StreamView& operator=(StreamView&&) noexcept;
 
- public:
   /**
    * @brief Unwraps the raw CUDA stream
    *
    * @return Raw CUDA stream wrapped by the `StreamView`
    */
-  operator cudaStream_t() const { return stream_; }
+  operator cudaStream_t() const;
 
  private:
-  bool valid_;
-  cudaStream_t stream_;
+  bool valid_{};
+  cudaStream_t stream_{};
 };
 
 /**
@@ -67,10 +62,8 @@ struct StreamView {
  */
 struct StreamPool {
  public:
-  StreamPool() {}
   ~StreamPool();
 
- public:
   /**
    * @brief Returns a `StreamView` in the pool
    *
@@ -79,7 +72,6 @@ struct StreamPool {
    */
   StreamView get_stream();
 
- public:
   /**
    * @brief Returns a singleton stream pool
    *
@@ -93,7 +85,9 @@ struct StreamPool {
   // For now we keep only one stream in the pool
   // TODO: If this ever changes, the use of non-stream-ordered `DeferredBuffer`s
   // in `core/data/buffer.h` will no longer be safe.
-  std::unique_ptr<cudaStream_t> cached_stream_{nullptr};
+  std::unique_ptr<cudaStream_t> cached_stream_{};
 };
 
 }  // namespace legate::cuda
+
+#include "core/cuda/stream_pool.inl"

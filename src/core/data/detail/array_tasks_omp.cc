@@ -88,7 +88,7 @@ namespace legate::detail {
   auto lo          = ranges_acc[shape.lo].lo[0];
 #pragma omp parallel for schedule(static)
   for (int64_t idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {
-    offsets_acc[idx] = ranges_acc[idx].lo[0] - lo;
+    offsets_acc[idx] = static_cast<int32_t>(ranges_acc[idx].lo[0] - lo);
   }
 }
 

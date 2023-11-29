@@ -94,8 +94,8 @@ void task_wrapper(VariantImpl variant_impl,
   if (!task->get_provenance_string().empty()) {
     ss << " : " + task->get_provenance_string();
   }
-  std::string msg = std::move(ss).str();
-  nvtx::Range auto_range(msg.c_str());
+  const std::string msg = std::move(ss).str();
+  const nvtx::Range auto_range{msg.c_str()};
 #endif
 
   show_progress(task, legion_context, runtime);
