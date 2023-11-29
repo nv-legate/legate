@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/runtime/detail/projection.h"
+#include "core/operation/projection.h"
 
 namespace legate {
 
