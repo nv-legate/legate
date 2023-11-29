@@ -72,6 +72,8 @@ run_test_or_analysis() {
                --skip-license
 
             python3 "${HOME}"/legate/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1
+            # Also do some multi-CPU testing
+            python3 "${HOME}"/legate/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 4
             [[ -f ./ctest_install/bin/gpu_tests ]] && {
               python3 "${HOME}"/legate/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1
             }

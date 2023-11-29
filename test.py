@@ -45,10 +45,12 @@ def main() -> int:
         match action.dest:
             case "gtest_file":
                 action.default = os.path.abspath(
-                    "./build/tests/cpp/bin/cpp_tests"
+                    "./build/debug-gcc/legate-core-cpp/tests/cpp/bin/cpp_tests"
                 )
             case "mpi_output_filename":
-                action.default = os.path.abspath("./build/mpi_result")
+                action.default = os.path.abspath(
+                    "./build/debug-gcc/legate-core-cpp/tests/cpp/mpi_result"
+                )
 
     config = Config(sys.argv)
 

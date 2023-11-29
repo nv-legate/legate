@@ -69,8 +69,9 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor() const
     check_accessor_type<T>();
   }
 
+  check_write_access();
+
   if (is_future()) {
-    check_write_access();
     return {get_buffer(), shape<DIM>()};
   }
 
@@ -85,8 +86,9 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor() const
     check_accessor_type<T>();
   }
 
+  check_write_access();
+
   if (is_future()) {
-    check_write_access();
     return {get_buffer(), shape<DIM>()};
   }
 
@@ -102,8 +104,9 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor() const
     check_accessor_type<T>();
   }
 
+  check_reduction_access();
+
   if (is_future()) {
-    check_reduction_access();
     return {get_buffer(), shape<DIM>()};
   }
 
@@ -136,8 +139,9 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
     check_accessor_type<T>();
   }
 
+  check_write_access();
+
   if (is_future()) {
-    check_write_access();
     return {get_buffer(), bounds};
   }
 
@@ -152,8 +156,9 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) c
     check_accessor_type<T>();
   }
 
+  check_write_access();
+
   if (is_future()) {
-    check_write_access();
     return {get_buffer(), bounds};
   }
 
@@ -168,8 +173,9 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
     check_accessor_type<typename OP::LHS>();
   }
 
+  check_reduction_access();
+
   if (is_future()) {
-    check_reduction_access();
     return {get_buffer(), bounds};
   }
 
