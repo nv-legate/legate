@@ -30,6 +30,7 @@
 #include "core/task/exception.h"
 #include "core/type/type_info.h"
 
+#include <list>
 #include <map>
 #include <memory>
 #include <optional>
@@ -289,6 +290,7 @@ class Runtime {
   [[nodiscard]] static Runtime* get_runtime();
   [[nodiscard]] static int32_t start(int32_t argc, char** argv);
   [[nodiscard]] bool initialized() const;
+  void register_shutdown_callback(ShutdownCallback callback);
   void destroy();
   [[nodiscard]] int32_t finish();
   [[nodiscard]] const Library* core_library() const;
@@ -298,6 +300,7 @@ class Runtime {
   Legion::Runtime* legion_runtime_{};
   Legion::Context legion_context_{};
   Library* core_library_{};
+  std::list<ShutdownCallback> callbacks_{};
 
   using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
   std::map<FieldManagerKey, std::unique_ptr<FieldManager>> field_managers_{};

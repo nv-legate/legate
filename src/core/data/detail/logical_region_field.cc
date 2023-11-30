@@ -31,17 +31,7 @@ LogicalRegionField::~LogicalRegionField()
       return;
     }
 
-    try {
-      // TODO: make perform_invalidation_callbacks() noexcept
-      static_assert(
-        !noexcept(perform_invalidation_callbacks()),
-        "Can remove this try-catch since perform_invalidation_callbacks() is noexcept now");
-      perform_invalidation_callbacks();
-    } catch (const std::exception& exn) {
-      // can't throw exceptions in dtors, so we simply die instead
-      log_legate().error() << exn.what();
-      LEGATE_ABORT;
-    }
+    perform_invalidation_callbacks();
 
     // This is a misuse of the Legate API, so it should technically throw an exception, but we
     // shouldn't throw exceptions in destructors, so we just abort.
@@ -167,10 +157,10 @@ Legion::LogicalPartition LogicalRegionField::get_legion_partition(const Partitio
   return partition->construct(lr_, complete);
 }
 
-void LogicalRegionField::add_invalidation_callback(std::function<void()> callback)
+void LogicalRegionField::add_invalidation_callback_(std::function<void()> callback)
 {
   if (parent_) {
-    parent_->add_invalidation_callback(std::move(callback));
+    parent_->add_invalidation_callback_(std::move(callback));
   } else {
     callbacks_.emplace_back(std::move(callback));
   }

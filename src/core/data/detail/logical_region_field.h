@@ -60,10 +60,13 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   [[nodiscard]] Legion::LogicalPartition get_legion_partition(const Partition* partition,
                                                               bool complete);
 
-  void add_invalidation_callback(std::function<void()> callback);
+  template <typename T>
+  void add_invalidation_callback(T&& callback);
   void perform_invalidation_callbacks();
 
  private:
+  void add_invalidation_callback_(std::function<void()> callback);
+
   FieldManager* manager_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{};

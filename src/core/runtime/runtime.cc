@@ -222,6 +222,11 @@ LogicalStore Runtime::create_store(const Shape& extents,
 
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }
 
+void Runtime::register_shutdown_callback_(ShutdownCallback callback)
+{
+  detail::Runtime::get_runtime()->register_shutdown_callback(std::move(callback));
+}
+
 mapping::Machine Runtime::get_machine() const { return mapping::Machine{impl_->get_machine()}; }
 
 /*static*/ Runtime* Runtime::get_runtime()
@@ -245,7 +250,7 @@ int32_t start(int32_t argc, char** argv) { return detail::Runtime::start(argc, a
 
 int32_t finish() { return Runtime::get_runtime()->impl()->finish(); }
 
-void destroy() { return detail::Runtime::get_runtime()->destroy(); }
+void destroy() { detail::Runtime::get_runtime()->destroy(); }
 
 mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
 

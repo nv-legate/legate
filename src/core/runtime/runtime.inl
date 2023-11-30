@@ -16,8 +16,21 @@
 
 namespace legate {
 
+template <typename T>
+void Runtime::register_shutdown_callback(T&& callback)
+{
+  static_assert(std::is_nothrow_invocable_v<T>);
+  register_shutdown_callback_(std::forward<T>(callback));
+}
+
 inline Runtime::Runtime(detail::Runtime* runtime) : impl_{runtime} {}
 
 inline detail::Runtime* Runtime::impl() { return impl_; }
+
+template <typename T>
+void register_shutdown_callback(T&& callback)
+{
+  Runtime::get_runtime()->register_shutdown_callback(std::forward<T>(callback));
+}
 
 }  // namespace legate

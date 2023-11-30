@@ -1263,6 +1263,11 @@ void Runtime::destroy()
     log_legate().debug() << "Destroying Legate runtime...";
   }
 
+  // NOLINTNEXTLINE(modernize-loop-convert) `callbacks_` can be modified by callbacks
+  for (auto it = callbacks_.begin(); it != callbacks_.end(); ++it) {
+    (*it)();
+  }
+
   // Flush any outstanding operations before we tear down the runtime
   flush_scheduling_window();
 

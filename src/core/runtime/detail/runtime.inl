@@ -95,6 +95,11 @@ T Runtime::get_core_tunable(int64_t tunable_id)
 
 inline bool Runtime::initialized() const { return initialized_; }
 
+inline void Runtime::register_shutdown_callback(ShutdownCallback callback)
+{
+  callbacks_.emplace_back(std::move(callback));
+}
+
 inline const Library* Runtime::core_library() const { return core_library_; }
 
 inline uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }

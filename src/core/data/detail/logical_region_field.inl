@@ -30,4 +30,11 @@ inline const Legion::LogicalRegion& LogicalRegionField::region() const { return 
 
 inline Legion::FieldID LogicalRegionField::field_id() const { return fid_; }
 
+template <typename T>
+void LogicalRegionField::add_invalidation_callback(T&& callback)
+{
+  static_assert(std::is_nothrow_invocable_v<T>);
+  add_invalidation_callback_(std::forward<T>(callback));
+}
+
 }  // namespace legate::detail
