@@ -55,4 +55,20 @@ TEST_F(UnboundNullableArray, Bug1)
   runtime->submit(std::move(task));
 }
 
+TEST_F(UnboundNullableArray, Bug2)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->create_library(library_name);
+  Initialize::register_variants(library);
+
+  auto task = runtime->create_task(library, Initialize::TASK_ID);
+  task.add_output(runtime->create_array(legate::int64(), 1, true /*nullable*/));
+  task.add_output(runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/));
+  task.add_output(
+    runtime->create_array(legate::struct_type(true, legate::int64()), 1, true /*nullable*/));
+  // Add a dummy array argument to get the task parallelized
+  task.add_output(runtime->create_array(legate::Shape{4}, legate::int64(), true /*nullable*/));
+  runtime->submit(std::move(task));
+}
+
 }  // namespace unbound_nullable_array_test

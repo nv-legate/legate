@@ -887,9 +887,9 @@ std::string LogicalStore::to_string() const
     ss << extents();
   }
   if (!transform_->identity()) {
-    ss << ", transform: " << *transform_ << ", ";
+    ss << ", transform: " << *transform_;
   }
-  ss << "storage: " << storage_->id() << "}";
+  ss << ", storage: " << storage_->id() << "}";
   return std::move(ss).str();
 }
 

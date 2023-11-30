@@ -120,6 +120,9 @@ std::shared_ptr<PhysicalArray> StructPhysicalArray::child(uint32_t index) const
 void StructPhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
 {
   std::for_each(fields_.begin(), fields_.end(), [&result](auto& field) { field->_stores(result); });
+  if (nullable()) {
+    result.push_back(null_mask_);
+  }
 }
 
 Domain StructPhysicalArray::domain() const { return fields_.front()->domain(); }
