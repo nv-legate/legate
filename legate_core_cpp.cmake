@@ -485,6 +485,7 @@ install(
 install(
   FILES src/core/cuda/cuda_help.h
         src/core/cuda/stream_pool.h
+        src/core/cuda/stream_pool.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/cuda)
 
 install(
