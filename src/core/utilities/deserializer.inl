@@ -122,19 +122,19 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
   // read and update the buffer location.
   auto type = unpack_type();
 
-  const auto unpack_scalar_value = [&](const auto& type,
+  const auto unpack_scalar_value = [&](const auto& ty,
                                        const signed char* vptr,
                                        std::size_t capacity) -> std::pair<void*, std::size_t> {
     const auto ptr = static_cast<void*>(const_cast<signed char*>(vptr));
 
-    switch (type->code) {
+    switch (ty->code) {
       case Type::Code::NIL:
         return {nullptr, 0};
 
 #define CASE_TYPE_CODE_(CODE)                                   \
   case Type::Code::CODE:                                        \
     return detail::align_for_unpack<type_of<Type::Code::CODE>>( \
-      ptr, capacity, type->size(), type->alignment())
+      ptr, capacity, ty->size(), ty->alignment())
 
         CASE_TYPE_CODE_(BOOL);
         CASE_TYPE_CODE_(INT8);
@@ -156,7 +156,7 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
       case Type::Code::BINARY:       // fall-through
       case Type::Code::FIXED_ARRAY:  // fall-through
       case Type::Code::STRUCT:
-        return detail::align_for_unpack<std::byte>(ptr, capacity, type->size(), type->alignment());
+        return detail::align_for_unpack<std::byte>(ptr, capacity, ty->size(), ty->alignment());
       case Type::Code::STRING:
         // The size is an approximation here. We cannot know the true size of the string until
         // we have aligned the pointer, but we cannot align the pointer without knowing the

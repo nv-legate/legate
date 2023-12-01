@@ -202,12 +202,12 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
   }
 
   for (auto& region : group->regions) {
-    auto finder = groups_.find(region);
-    if (finder == groups_.end()) {
+    auto it = groups_.find(region);
+    if (it == groups_.end()) {
       groups_[region] = group;
-    } else if (finder->second != group) {
-      removed_groups.insert(finder->second);
-      finder->second = group;
+    } else if (it->second != group) {
+      removed_groups.insert(it->second);
+      it->second = group;
     }
   }
 
@@ -225,9 +225,9 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
       }
     }
     if (can_remove) {
-      auto finder = instances_.find(removed_group.get());
-      replaced.insert(finder->second.instance);
-      instances_.erase(finder);
+      auto it = instances_.find(removed_group.get());
+      replaced.insert(it->second.instance);
+      instances_.erase(it);
     }
   }
 

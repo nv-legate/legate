@@ -14,6 +14,8 @@
 
 #include "core/mapping/machine.h"
 
+#include <algorithm>
+
 namespace legate::mapping {
 
 /////////////////////////////////////
@@ -53,10 +55,12 @@ inline bool ProcessorRange::operator!=(const ProcessorRange& other) const noexce
   return !(other == *this);
 }
 
-inline ProcessorRange::ProcessorRange(uint32_t low, uint32_t high, uint32_t per_node_count) noexcept
-  : low{low < high ? low : 0},
-    high{low < high ? high : 0},
-    per_node_count{std::max(uint32_t{1}, per_node_count)}
+inline ProcessorRange::ProcessorRange(uint32_t low_id,
+                                      uint32_t high_id,
+                                      uint32_t per_node_proc_count) noexcept
+  : low{low_id < high_id ? low_id : 0},
+    high{low_id < high_id ? high_id : 0},
+    per_node_count{std::max(uint32_t{1}, per_node_proc_count)}
 {
 }
 

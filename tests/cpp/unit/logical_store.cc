@@ -53,12 +53,12 @@ TEST_F(Store, Creation)
     EXPECT_EQ(store.type(), legate::int64());
     EXPECT_FALSE(store.transformed());
     for (const auto& extents : {legate::Shape{1}, legate::Shape{1, 1}, legate::Shape{1, 1, 1}}) {
-      auto store = runtime->create_store(legate::Scalar(int64_t{123}), extents);
-      EXPECT_FALSE(store.unbound());
-      EXPECT_EQ(store.dim(), extents.size());
-      EXPECT_EQ(store.extents(), extents);
-      EXPECT_EQ(store.type(), legate::int64());
-      EXPECT_FALSE(store.transformed());
+      auto temp_store = runtime->create_store(legate::Scalar(int64_t{123}), extents);
+      EXPECT_FALSE(temp_store.unbound());
+      EXPECT_EQ(temp_store.dim(), extents.size());
+      EXPECT_EQ(temp_store.extents(), extents);
+      EXPECT_EQ(temp_store.type(), legate::int64());
+      EXPECT_FALSE(temp_store.transformed());
     }
     EXPECT_THROW((void)runtime->create_store(legate::Scalar(int64_t{123}), legate::Shape{1, 2}),
                  std::invalid_argument);

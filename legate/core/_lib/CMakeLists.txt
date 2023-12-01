@@ -10,6 +10,15 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+# in case we ever need to support msvc
+if(MSVC)
+  message(FATAL_ERROR "Don't know the flag to silence all MSVC warnings")
+endif()
+# Silence all compiler warnings for cythonized C/C++ code. We could try and be smart about
+# this, and only remove/silence the specific flags that cause warnings, but at the end of
+# the day it will be an arms race we cannot win.
+add_compile_options(-w)
+
 find_package(Python3 REQUIRED COMPONENTS Development)
 
 function(legate_core_create_cython_modules)

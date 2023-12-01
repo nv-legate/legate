@@ -82,7 +82,7 @@ void test_pop_provenance(legate::Library library)
   runtime->submit(std::move(task));
 }
 
-void test_underflow(legate::Library library)
+void test_underflow(legate::Library /*library*/)
 {
   auto runtime = legate::Runtime::get_runtime();
   runtime->impl()->provenance_manager()->clear_all();
@@ -105,23 +105,23 @@ void test_clear_provenance(legate::Library library)
 
 void test_provenance_tracker(legate::Library library)
 {
-  legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__));
+  const auto provenance = std::string(__FILE__) + ":" + std::to_string(__LINE__);
+  legate::ProvenanceTracker track{provenance};
   auto runtime = legate::Runtime::get_runtime();
   // auto task
-  auto task              = runtime->create_task(library, PROVENANCE);
-  std::string provenance = "provenance.cc:" + std::to_string(__LINE__ - 4);
+  auto task = runtime->create_task(library, PROVENANCE);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
 
 void test_nested_provenance_tracker(legate::Library library)
 {
-  legate::ProvenanceTracker track(std::string(__FILE__) + ":" + std::to_string(__LINE__));
+  const auto provenance = std::string(__FILE__) + ":" + std::to_string(__LINE__);
+  legate::ProvenanceTracker track{provenance};
   test_provenance_tracker(library);
   // The provenance string used by test_provenance_tracker should be popped out at this point
-  auto runtime           = legate::Runtime::get_runtime();
-  auto task              = runtime->create_task(library, PROVENANCE);
-  std::string provenance = "provenance.cc:" + std::to_string(__LINE__ - 5);
+  auto runtime = legate::Runtime::get_runtime();
+  auto task    = runtime->create_task(library, PROVENANCE);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }

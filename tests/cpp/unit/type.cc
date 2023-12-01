@@ -104,7 +104,7 @@ void test_struct_type(const legate::Type& type,
                       uint32_t alignment,
                       std::string to_string,
                       std::vector<legate::Type> field_types,
-                      std::vector<uint32_t> offsets)
+                      std::vector<uint32_t> /*offsets*/)
 {
   EXPECT_EQ(type.code(), legate::Type::Code::STRUCT);
   EXPECT_EQ(type.size(), size);

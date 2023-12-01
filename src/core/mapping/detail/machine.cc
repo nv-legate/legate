@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <type_traits>
 #include <utility>
 
 namespace legate::mapping::detail {
@@ -196,7 +197,9 @@ const Processor& LocalProcessorRange::operator[](uint32_t idx) const
 {
   auto local_idx = idx - offset_;
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(local_idx >= 0 && local_idx < procs_.size());
+    static_assert(std::is_unsigned_v<decltype(local_idx)>,
+                  "if local_idx becomes signed, also check local_idx >= 0 below!");
+    assert(local_idx < procs_.size());
   }
   return procs_[local_idx];
 }

@@ -33,7 +33,7 @@ enum TaskIDs {
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
   static const int32_t TASK_ID = INIT;
-  static void cpu_variant(legate::TaskContext context) {}
+  static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 void register_tasks()

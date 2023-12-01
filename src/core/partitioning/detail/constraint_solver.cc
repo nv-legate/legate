@@ -16,6 +16,8 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/detail/partitioner.h"
 
+#include <type_traits>
+
 namespace legate::detail {
 
 namespace {
@@ -108,16 +110,14 @@ void ConstraintSolver::solve_constraints()
   const auto& all_symbols = partition_symbols();
 
   entries.reserve(all_symbols.size());
-  [](auto& entries, auto& table, auto& is_dependent, const auto& all_symbols) {
-    for (auto& symb : all_symbols) {
-      // TODO: partition symbols can be independent of any stores of the operation
-      //       (e.g., when a symbol subsumes a union of two other symbols)
-      auto store = symb->operation()->find_store(symb);
-      entries.emplace_back(symb, store.get());
-      table.insert({*symb, &entries.back()});
-      is_dependent.insert({*symb, false});
-    }
-  }(entries, table, is_dependent_, all_symbols);
+  for (auto& symb : all_symbols) {
+    // TODO: partition symbols can be independent of any stores of the operation
+    //       (e.g., when a symbol subsumes a union of two other symbols)
+    auto store = symb->operation()->find_store(symb);
+    entries.emplace_back(symb, store.get());
+    table.insert({*symb, &entries.back()});
+    is_dependent_.insert({*symb, false});
+  }
 
   // Unify equivalence classes based on alignment constraints
   auto handle_alignment = [&table](const Alignment* alignment) {
@@ -168,7 +168,9 @@ void ConstraintSolver::solve_constraints()
       // TODO: We want to check the axis eagerly and raise an exception
       // if it is out of bounds
       if (LegateDefined(LEGATE_USE_DEBUG)) {
-        assert(0 <= axis && axis < equiv_class->restrictions.size());
+        static_assert(std::is_unsigned_v<decltype(axis)>,
+                      "If axis becomes signed, extend check below to include axis >= 0");
+        assert(axis < equiv_class->restrictions.size());
       }
       equiv_class->restrictions[axis] = Restriction::FORBID;
     }

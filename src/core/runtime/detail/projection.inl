@@ -16,8 +16,8 @@
 
 namespace legate::detail {
 
-inline LegateProjectionFunctor::LegateProjectionFunctor(Legion::Runtime* runtime)
-  : ProjectionFunctor{runtime}
+inline LegateProjectionFunctor::LegateProjectionFunctor(Legion::Runtime* lg_runtime)
+  : ProjectionFunctor{lg_runtime}
 {
 }
 

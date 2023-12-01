@@ -32,7 +32,7 @@ enum TaskIDs {
 
 struct ProduceNormalTask : public legate::LegateTask<ProduceNormalTask> {
   static const int32_t TASK_ID = TASK_PRODUCE_NORMAL;
-  static void cpu_variant(legate::TaskContext context) {}
+  static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {

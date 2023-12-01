@@ -112,7 +112,7 @@ class Task {
    */
   [[nodiscard]] size_t num_reductions() const;
 
-  explicit Task(detail::Task* impl_);
+  explicit Task(detail::Task* impl);
 
   Task(const Task&)            = delete;
   Task& operator=(const Task&) = delete;

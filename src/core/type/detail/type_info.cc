@@ -175,8 +175,8 @@ int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 
 bool Type::operator==(const Type& other) const { return equal(other); }
 
-PrimitiveType::PrimitiveType(Code code)
-  : Type{code}, size_{SIZEOF().at(code)}, alignment_{ALIGNOF().at(code)}
+PrimitiveType::PrimitiveType(Code type_code)
+  : Type{type_code}, size_{SIZEOF().at(type_code)}, alignment_{ALIGNOF().at(type_code)}
 {
 }
 
@@ -253,8 +253,8 @@ StructType::StructType(uint32_t uid, std::vector<std::shared_ptr<Type>>&& field_
 
   offsets_.reserve(field_types_.size());
   if (aligned_) {
-    static constexpr auto align_offset = [](uint32_t offset, uint32_t align) {
-      return (offset + (align - 1)) & -align;
+    static constexpr auto align_offset = [](uint32_t offset, uint32_t alignment) {
+      return (offset + (alignment - 1)) & -alignment;
     };
 
     for (auto& field_type : field_types_) {

@@ -16,7 +16,7 @@
 
 namespace legate::detail {
 
-inline Type::Type(Code code) : code{code} {}
+inline Type::Type(Code type_code) : code{type_code} {}
 
 inline bool Type::operator!=(const Type& other) const { return !operator==(other); }
 
@@ -52,7 +52,9 @@ inline bool StringType::equal(const Type& other) const { return code == other.co
 
 // ==========================================================================================
 
-inline ExtensionType::ExtensionType(uint32_t uid, Type::Code code) : Type{code}, uid_{uid} {}
+inline ExtensionType::ExtensionType(uint32_t uid, Type::Code type_code) : Type{type_code}, uid_{uid}
+{
+}
 
 inline uint32_t ExtensionType::uid() const { return uid_; }
 

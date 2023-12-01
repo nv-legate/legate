@@ -32,23 +32,22 @@ const std::vector<legate::Scalar> TUNABLES = {
 };
 
 class LibraryMapper : public legate::mapping::Mapper {
-  void set_machine(const legate::mapping::MachineQueryInterface* machine) override {}
+  void set_machine(const legate::mapping::MachineQueryInterface* /*machine*/) override {}
   legate::mapping::TaskTarget task_target(
-    const legate::mapping::Task& task,
+    const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::TaskTarget>& options) override
   {
     return options.front();
   }
   std::vector<legate::mapping::StoreMapping> store_mappings(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::StoreTarget>& options) override
+    const legate::mapping::Task& /*task*/,
+    const std::vector<legate::mapping::StoreTarget>& /*options*/) override
   {
     return {};
   }
   legate::Scalar tunable_value(legate::TunableID tunable_id) override
   {
-    return (tunable_id >= 0 && tunable_id < TUNABLES.size()) ? TUNABLES[tunable_id]
-                                                             : legate::Scalar{};
+    return tunable_id < TUNABLES.size() ? TUNABLES.at(tunable_id) : legate::Scalar{};
   }
 };
 

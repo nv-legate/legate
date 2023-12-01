@@ -183,7 +183,7 @@ struct BasicDerived : Base {
 struct TogglingDerived final : BasicDerived {
   bool* toggle;
 
-  TogglingDerived(bool* toggle) : toggle{toggle} {}
+  TogglingDerived(bool* tptr) : toggle{tptr} {}
 
   ~TogglingDerived() { *toggle = true; }
 

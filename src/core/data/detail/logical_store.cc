@@ -549,9 +549,9 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
                                 std::to_string(this->dim()) + "-D store"};
   }
 
-  auto sanitize_slice = [](const Slice& slice, int64_t extent) {
-    int64_t start = slice.start.value_or(0);
-    int64_t stop  = slice.stop.value_or(extent);
+  auto sanitize_slice = [](const Slice& san_slice, int64_t extent) {
+    int64_t start = san_slice.start.value_or(0);
+    int64_t stop  = san_slice.stop.value_or(extent);
 
     if (start < 0) {
       start += extent;

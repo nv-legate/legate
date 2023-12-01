@@ -70,8 +70,8 @@ struct GPUVariant<T, void_t<decltype(T::gpu_variant)>> : std::true_type {
 
 template <typename T, template <typename...> typename SELECTOR, bool VALID = SELECTOR<T>::value>
 struct VariantHelper {
-  static void record(TaskInfo* task_info,
-                     const std::map<LegateVariantCode, VariantOptions>& all_options)
+  static void record(TaskInfo* /*task_info*/,
+                     const std::map<LegateVariantCode, VariantOptions>& /*all_options*/)
   {
   }
 };

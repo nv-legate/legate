@@ -16,7 +16,7 @@
 
 namespace legate::mapping {
 
-inline Task::Task(detail::Task* impl_) : impl_{impl_} {}
+inline Task::Task(detail::Task* impl) : impl_{impl} {}
 
 inline detail::Task* Task::impl() const noexcept { return impl_; }
 

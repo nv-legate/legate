@@ -121,7 +121,7 @@ void Factory::finalize(const mapping::detail::Machine& machine,
 namespace {
 
 ncclUniqueId init_nccl_id(const Legion::Task* task,
-                          const std::vector<Legion::PhysicalRegion>& regions,
+                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
                           Legion::Context context,
                           Legion::Runtime* runtime)
 {
@@ -136,7 +136,7 @@ ncclUniqueId init_nccl_id(const Legion::Task* task,
 }
 
 ncclComm_t* init_nccl(const Legion::Task* task,
-                      const std::vector<Legion::PhysicalRegion>& regions,
+                      const std::vector<Legion::PhysicalRegion>& /*regions*/,
                       Legion::Context context,
                       Legion::Runtime* runtime)
 {
@@ -218,7 +218,7 @@ ncclComm_t* init_nccl(const Legion::Task* task,
 }
 
 void finalize_nccl(const Legion::Task* task,
-                   const std::vector<Legion::PhysicalRegion>& regions,
+                   const std::vector<Legion::PhysicalRegion>& /*regions*/,
                    Legion::Context context,
                    Legion::Runtime* runtime)
 {

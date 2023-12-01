@@ -26,14 +26,14 @@ namespace legate::detail {
   for (auto&& output : context.outputs()) {
     auto list_arr = output.as_list_array();
 
-    auto desc       = list_arr.descriptor();
-    auto desc_shape = desc.shape<1>();
+    auto list_desc  = list_arr.descriptor();
+    auto desc_shape = list_desc.shape<1>();
     if (desc_shape.empty()) {
       continue;
     }
 
     const auto vardata_lo = list_arr.vardata().shape<1>().lo;
-    auto desc_acc         = desc.data().read_write_accessor<Rect<1>, 1>();
+    auto desc_acc         = list_desc.data().read_write_accessor<Rect<1>, 1>();
 
     for (auto idx = desc_shape.lo[0]; idx <= desc_shape.hi[0]; ++idx) {
       auto& desc = desc_acc[idx];

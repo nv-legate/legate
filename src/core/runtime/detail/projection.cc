@@ -72,7 +72,10 @@ class DelinearizationFunctor final : public LegateProjectionFunctor {
 template <int32_t SRC_DIM, int32_t TGT_DIM>
 class AffineFunctor : public LegateProjectionFunctor {
  public:
-  AffineFunctor(Legion::Runtime* runtime, int32_t* dims, int32_t* weights, const int32_t* offsets);
+  AffineFunctor(Legion::Runtime* lg_runtime,
+                int32_t* dims,
+                int32_t* weights,
+                const int32_t* offsets);
 
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point,
                                           const Domain& launch_domain) const override;
@@ -134,11 +137,11 @@ DomainPoint DelinearizationFunctor::project_point(const DomainPoint& point,
 }
 
 template <int32_t SRC_DIM, int32_t TGT_DIM>
-AffineFunctor<SRC_DIM, TGT_DIM>::AffineFunctor(Legion::Runtime* runtime,
+AffineFunctor<SRC_DIM, TGT_DIM>::AffineFunctor(Legion::Runtime* lg_runtime,
                                                int32_t* dims,
                                                int32_t* weights,
                                                const int32_t* offsets)
-  : LegateProjectionFunctor{runtime}, transform_{create_transform(dims, weights)}
+  : LegateProjectionFunctor{lg_runtime}, transform_{create_transform(dims, weights)}
 
 {
   for (int32_t dim = 0; dim < TGT_DIM; ++dim) {

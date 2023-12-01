@@ -25,7 +25,7 @@ Literal::Literal(std::shared_ptr<Partition> partition) : partition_{std::move(pa
 
 std::string Literal::to_string() const { return partition_->to_string(); }
 
-void Literal::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const {}
+void Literal::find_partition_symbols(std::vector<const Variable*>& /*partition_symbols*/) const {}
 
 void Variable::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
 {

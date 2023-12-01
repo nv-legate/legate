@@ -11,7 +11,8 @@
             "environment": {
                 "LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS": "-O0 -g -g3",
                 "LEGATE_DEBUG_PRESET_CMAKE_CUDA_FLAGS": "-g --compiler-options='$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS}'",
-                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS": "-g --compiler-options='$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS}'"
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS": "-g --compiler-options='$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS}'",
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS_BASE":"-Werror -Wall -fstack-protector -Walloca -Wdeprecated -Wimplicit-fallthrough -fdiagnostics-show-template-tree -Wignored-qualifiers -Wmissing-field-initializers -Wextra"
             },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": {
@@ -42,7 +43,7 @@
             "displayName": "Debug Clang Build",
             "description": "Debug Clang Build",
             "environment": {
-                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS": "-Werror -Wall -fstack-protector -Walloca -Wdeprecated -Wimplicit-fallthrough -Wsign-compare -fdiagnostics-show-template-tree -Warray-bounds-pointer-arithmetic -Wassign-enum -Wformat-pedantic -D_LIBCPP_ENABLE_ASSERTIONS=1 -D_LIBCPP_ENABLE_NODISCARD=1"
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS_BASE} -Wsign-compare -Wshadow-all -Warray-bounds-pointer-arithmetic -Wassign-enum -Wformat-pedantic -D_LIBCPP_ENABLE_ASSERTIONS=1 -D_LIBCPP_ENABLE_NODISCARD=1"
             }
         },
         {
@@ -51,7 +52,7 @@
             "displayName": "Debug GCC Build",
             "description": "Debug GCC Build",
             "environment": {
-                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS": "-Werror -Wall -fstack-protector -Walloca -Wdeprecated -Wimplicit-fallthrough -fdiagnostics-show-template-tree"
+                "LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS_BASE} -Wshadow"
             }
         }
     ],

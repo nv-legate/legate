@@ -39,9 +39,6 @@ class Array {
 
   virtual void _stores(std::vector<std::shared_ptr<Store>>& result) const = 0;
   [[nodiscard]] virtual Domain domain() const                             = 0;
-
- protected:
-  std::shared_ptr<Store> null_mask_{};
 };
 
 class BaseArray final : public Array {

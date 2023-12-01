@@ -21,7 +21,9 @@ inline std::optional<Legion::ProjectionID> Analyzable::get_key_proj_id() const
   return std::nullopt;
 }
 
-inline void Analyzable::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const {}
+inline void Analyzable::record_unbound_stores(std::vector<const OutputRegionArg*>& /* args */) const
+{
+}
 
 inline void Analyzable::perform_invalidations() const {}
 

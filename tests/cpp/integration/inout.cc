@@ -26,9 +26,9 @@ enum TaskOpCode {
 static const char* library_name = "test_inout";
 
 class TesterMapper : public legate::mapping::Mapper {
-  void set_machine(const legate::mapping::MachineQueryInterface* machine) override {}
+  void set_machine(const legate::mapping::MachineQueryInterface* /*machine*/) override {}
   legate::mapping::TaskTarget task_target(
-    const legate::mapping::Task& task,
+    const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::TaskTarget>& options) override
   {
     return options.front();
@@ -50,7 +50,10 @@ class TesterMapper : public legate::mapping::Mapper {
     }
     return mappings;
   }
-  legate::Scalar tunable_value(legate::TunableID tunable_id) override { return legate::Scalar{}; }
+  legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
+  {
+    return legate::Scalar{};
+  }
 };
 
 struct InoutTask : public legate::LegateTask<InoutTask> {

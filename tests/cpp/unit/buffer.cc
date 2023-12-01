@@ -42,7 +42,8 @@ struct buffer_fn {
         EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
         EXPECT_EQ(memory.kind(),
-                  kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM : kind);
+                  kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM
+                                                     : static_cast<legate::Memory::Kind>(kind));
         break;
       }
       default: {
@@ -52,7 +53,8 @@ struct buffer_fn {
         EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
         EXPECT_EQ(memory.kind(),
-                  kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM : kind);
+                  kind == legate::Memory::NO_MEMKIND ? legate::Memory::SYSTEM_MEM
+                                                     : static_cast<legate::Memory::Kind>(kind));
         break;
       }
     }

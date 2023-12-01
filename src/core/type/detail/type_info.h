@@ -31,7 +31,7 @@ class Type {
  public:
   using Code = legate::Type::Code;
 
-  explicit Type(Code code);
+  explicit Type(Code type_code);
 
   virtual ~Type() = default;
   [[nodiscard]] virtual uint32_t size() const;
@@ -57,7 +57,7 @@ class Type {
 
 class PrimitiveType final : public Type {
  public:
-  explicit PrimitiveType(Code code);
+  explicit PrimitiveType(Code type_code);
 
   [[nodiscard]] uint32_t size() const override;
   [[nodiscard]] uint32_t alignment() const override;
@@ -91,7 +91,7 @@ class StringType final : public Type {
 
 class ExtensionType : public Type {
  public:
-  ExtensionType(uint32_t uid, Type::Code code);
+  ExtensionType(uint32_t uid, Type::Code type_code);
   [[nodiscard]] uint32_t uid() const override;
   [[nodiscard]] bool is_primitive() const override;
 

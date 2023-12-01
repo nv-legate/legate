@@ -102,11 +102,11 @@ struct ProcessorRange {
   /**
    * @brief Creates a processor range
    *
-   * @param low Starting processor ID
-   * @param high End processor ID
-   * @param per_node_count Number of per-node processors
+   * @param low_id Starting processor ID
+   * @param high_id End processor ID
+   * @param per_node_proc_count Number of per-node processors
    */
-  ProcessorRange(uint32_t low, uint32_t high, uint32_t per_node_count) noexcept;
+  ProcessorRange(uint32_t low_id, uint32_t high_id, uint32_t per_node_proc_count) noexcept;
 
   ProcessorRange operator&(const ProcessorRange&) const;
   bool operator==(const ProcessorRange& other) const noexcept;

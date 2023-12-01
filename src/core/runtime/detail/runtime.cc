@@ -311,11 +311,12 @@ void Runtime::issue_fill(
     throw std::runtime_error{"Fills on list or struct arrays are not supported yet"};
   }
 
-  auto _issue_fill = [&](std::shared_ptr<LogicalStore> store, std::shared_ptr<LogicalStore> value) {
+  auto _issue_fill = [&](std::shared_ptr<LogicalStore> store,
+                         std::shared_ptr<LogicalStore> scalar) {
     auto machine = machine_manager_->get_machine();
 
     submit(std::make_shared<Fill>(
-      std::move(store), std::move(value), next_unique_id_++, std::move(machine)));
+      std::move(store), std::move(scalar), next_unique_id_++, std::move(machine)));
   };
 
   if (value->type()->code == Type::Code::NIL) {

@@ -19,7 +19,7 @@ namespace unit {
 
 using DeathTestExample = DeathTestFixture;
 
-void KillProcess(int argc, char** argv)
+void KillProcess(int /*argc*/, char** /*argv*/)
 {
   (void)legate::start(0, NULL);
   abort();

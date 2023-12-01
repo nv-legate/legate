@@ -775,8 +775,8 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
 Delinearize::Delinearize(int32_t dim, std::vector<uint64_t>&& sizes)
   : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
 {
-  for (auto dim = static_cast<int32_t>(sizes_.size() - 2); dim >= 0; --dim) {
-    strides_[dim] = strides_[dim + 1] * sizes_[dim + 1];
+  for (auto size_dim = static_cast<int32_t>(sizes_.size() - 2); size_dim >= 0; --size_dim) {
+    strides_[size_dim] = strides_[size_dim + 1] * sizes_[size_dim + 1];
   }
   for (auto size : sizes_) {
     volume_ *= size;
@@ -785,13 +785,13 @@ Delinearize::Delinearize(int32_t dim, std::vector<uint64_t>&& sizes)
 
 Domain Delinearize::transform(const Domain& domain) const
 {
-  auto delinearize = [](const auto dim, const auto ndim, const auto& strides, const Domain& input) {
+  auto delinearize = [&](const auto dim, const auto ndim, const auto& strides) {
     Domain output;
-    output.dim = input.dim - 1 + ndim;
-    for (int32_t in_dim = 0, out_dim = 0; in_dim < input.dim; ++in_dim) {
+    output.dim = domain.dim - 1 + ndim;
+    for (int32_t in_dim = 0, out_dim = 0; in_dim < domain.dim; ++in_dim) {
       if (in_dim == dim) {
-        auto lo = input.rect_data[in_dim];
-        auto hi = input.rect_data[input.dim + in_dim];
+        auto lo = domain.rect_data[in_dim];
+        auto hi = domain.rect_data[domain.dim + in_dim];
         for (auto stride : strides) {
           output.rect_data[out_dim]              = lo / stride;
           output.rect_data[output.dim + out_dim] = hi / stride;
@@ -800,14 +800,14 @@ Domain Delinearize::transform(const Domain& domain) const
           ++out_dim;
         }
       } else {
-        output.rect_data[out_dim]              = input.rect_data[in_dim];
-        output.rect_data[output.dim + out_dim] = input.rect_data[input.dim + in_dim];
+        output.rect_data[out_dim]              = domain.rect_data[in_dim];
+        output.rect_data[output.dim + out_dim] = domain.rect_data[domain.dim + in_dim];
         ++out_dim;
       }
     }
     return output;
   };
-  return delinearize(dim_, sizes_.size(), strides_, domain);
+  return delinearize(dim_, sizes_.size(), strides_);
 }
 
 Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) const

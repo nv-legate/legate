@@ -43,7 +43,7 @@ struct TesterTask : public legate::LegateTask<TesterTask> {
 };
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static void cpu_variant(legate::TaskContext context) {}
+  static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 void prepare()

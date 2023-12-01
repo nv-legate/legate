@@ -61,7 +61,7 @@ class CoreMapper final : public Mapper {
     extract_env("LEGATE_FIELD_REUSE_FRAC", FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
 };
 
-void CoreMapper::set_machine(const legate::mapping::MachineQueryInterface* m) {}
+void CoreMapper::set_machine(const legate::mapping::MachineQueryInterface* /*m*/) {}
 
 TaskTarget CoreMapper::task_target(const legate::mapping::Task&,
                                    const std::vector<TaskTarget>& options)

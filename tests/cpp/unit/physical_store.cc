@@ -770,7 +770,6 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
 #if LEGATE_MAX_DIM >= 4
   {
     constexpr int32_t DIM = 4;
-    auto runtime          = legate::Runtime::get_runtime();
     auto logical_store    = runtime->create_store({7, 100, 8, 1000}, legate::complex128());
     auto store            = logical_store.get_physical_store();
     legate::Rect<DIM> expect_rect{{0, 0, 0, 0}, {6, 99, 7, 999}};

@@ -82,17 +82,16 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
       using VAL = legate::type_of<CODE>;
       auto src  = source.read_accessor<VAL, DIM>(shape);
       auto tgt  = target.read_accessor<VAL, DIM>(shape);
-      legate::PointInRectIterator<DIM> it(shape);
-      size_t i = 1;
+      size_t i  = 1;
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it, ++i) {
         EXPECT_EQ(src[*it] + i * seed.value<VAL>(), tgt[*it]);
       }
     }
     template <legate::Type::Code CODE, std::enable_if_t<!legate::is_integral<CODE>::value, int> = 0>
-    void operator()(legate::PhysicalStore& source,
-                    legate::PhysicalStore& target,
-                    const legate::Scalar& seed,
-                    legate::Rect<DIM>& shape)
+    void operator()(legate::PhysicalStore& /*source*/,
+                    legate::PhysicalStore& /*target*/,
+                    const legate::Scalar& /*seed*/,
+                    legate::Rect<DIM>& /*shape*/)
     {
       assert(false);
     }
