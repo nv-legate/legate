@@ -100,7 +100,7 @@ class TestTestStage:
         cov_bin = "conda/envs/legate/bin/coverage"
         args = ["--cov-bin", cov_bin]
         c = m.Config(["test.py"] + args)
-        expected_result = [cov_bin] + c.cov_args.split()
+        expected_result = [cov_bin] + c.other.cov_args.split()
         stage = MockTestStage(c, s)
         assert stage.cov_args(c) == expected_result
 

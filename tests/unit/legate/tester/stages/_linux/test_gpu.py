@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import pytest
 
-from legate.tester import SMALL_SYSMEM
 from legate.tester.config import Config
+from legate.tester.defaults import SMALL_SYSMEM
 from legate.tester.stages._linux import gpu as m
 from legate.tester.stages.util import Shard
 
@@ -108,14 +108,16 @@ class TestSingleRank:
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem()
         c = Config(["test.py", "-j", "0"])
-        assert c.requested_workers == 0
+        assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.GPU(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem()
         c = Config(["test.py", "-j", f"{len(s.gpus)+100}"])
-        assert c.requested_workers > len(s.gpus)
+        requested_workers = c.execution.workers
+        assert requested_workers is not None
+        assert requested_workers > len(s.gpus)
         with pytest.raises(RuntimeError):
             m.GPU(c, s)
 

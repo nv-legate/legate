@@ -46,14 +46,14 @@ class CPU(TestStage):
         self._init(config, system)
 
     def env(self, config: Config, system: TestSystem) -> EnvDict:
-        return {} if config.cpu_pin == "strict" else dict(UNPIN_ENV)
+        return {} if config.execution.cpu_pin == "strict" else dict(UNPIN_ENV)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         args = [
             "--cpus",
-            str(config.cpus),
+            str(config.core.cpus),
             "--sysmem",
-            str(config.sysmem),
+            str(config.memory.sysmem),
         ]
         args += self._handle_cpu_pin_args(config, shard)
         args += self._handle_multi_node_args(config)
@@ -61,40 +61,47 @@ class CPU(TestStage):
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
         cpus = system.cpus
+        ranks_per_node = config.multi_node.ranks_per_node
+        sysmem = config.memory.sysmem
+        bloat_factor = config.execution.bloat_factor
 
-        procs = config.cpus + config.utility + int(config.cpu_pin == "strict")
+        procs = (
+            config.core.cpus
+            + config.core.utility
+            + int(config.execution.cpu_pin == "strict")
+        )
 
-        cpu_workers = len(cpus) // (procs * config.ranks_per_node)
+        cpu_workers = len(cpus) // (procs * ranks_per_node)
 
-        mem_workers = system.memory // (config.sysmem * config.bloat_factor)
+        mem_workers = system.memory // (sysmem * bloat_factor)
 
         workers = min(cpu_workers, mem_workers)
 
         if workers == 0:
-            if config.cpu_pin == "strict":
+            if config.execution.cpu_pin == "strict":
                 raise RuntimeError(
                     f"{len(cpus)} detected core(s) not enough for "
-                    f"{config.ranks_per_node} rank(s) per node, each "
+                    f"{ranks_per_node} rank(s) per node, each "
                     f"reserving {procs} core(s) with strict CPU pinning"
                 )
             else:
                 warnings.warn(
                     f"{len(cpus)} detected core(s) not enough for "
-                    f"{config.ranks_per_node} rank(s) per node, each "
+                    f"{ranks_per_node} rank(s) per node, each "
                     f"reserving {procs} core(s), running anyway."
                 )
                 all_cpus = tuple(range(len(cpus)))
                 return StageSpec(1, [Shard([all_cpus])])
 
-        workers = adjust_workers(workers, config.requested_workers)
+        workers = adjust_workers(workers, config.execution.workers)
 
         shards: list[Shard] = []
         for i in range(workers):
             rank_shards = []
-            for j in range(config.ranks_per_node):
+            for j in range(ranks_per_node):
                 shard_cpus = range(
-                    (j + i * config.ranks_per_node) * procs,
-                    (j + i * config.ranks_per_node + 1) * procs,
+                    (j + i * ranks_per_node) * procs,
+                    (j + i * ranks_per_node + 1) * procs,
                 )
                 shard = chain.from_iterable(cpus[k].ids for k in shard_cpus)
                 rank_shards.append(tuple(sorted(shard)))

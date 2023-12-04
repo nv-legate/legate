@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -24,49 +25,10 @@ FeatureType: TypeAlias = Union[
     Literal["cpus"], Literal["cuda"], Literal["eager"], Literal["openmp"]
 ]
 
-#: Value to use if --cpus is not specified.
-DEFAULT_CPUS_PER_NODE = 2
-
-#: Value to use if --gpus is not specified.
-DEFAULT_GPUS_PER_NODE = 1
-
-# Value to use if --bloat-factor is not specified
-DEFAULT_GPU_BLOAT_FACTOR = 1.5
-
-# Delay to introduce between GPU test invocations (ms)
-DEFAULT_GPU_DELAY = 2000
-
-# Value to use if --fbmem is not specified (MB)
-DEFAULT_GPU_MEMORY_BUDGET = 4096
-
-# Value to use if --sysmem is not specified (MB)
-DEFAULT_SYS_MEMORY_BUDGET = 4000
-
-#: Value to use if --omps is not specified.
-DEFAULT_OMPS_PER_NODE = 1
-
-#: Value to use if --ompthreads is not specified.
-DEFAULT_OMPTHREADS = 4
-
-#: Value to use if --numamem is not specified.
-DEFAULT_NUMAMEM = 4000
-
-#: Value to use if --ranks-per-node is not specified.
-DEFAULT_RANKS_PER_NODE = 1
-
-#: Default values to apply to normalize the testing environment.
-DEFAULT_PROCESS_ENV = {
-    "LEGATE_TEST": "1",
-}
-
-#: Default number of nodes to use
-DEFAULT_NODES = 1
-
-#: sysmem value to use for non-CPU stages
-SMALL_SYSMEM = 100
-
 #: Feature values that are accepted for --use, in the relative order
 #: that the corresponding test stages should always execute in
+#:
+#: Client test scripts can update this value with their own customizations.
 FEATURES: tuple[FeatureType, ...] = (
     "cpus",
     "cuda",
@@ -76,12 +38,12 @@ FEATURES: tuple[FeatureType, ...] = (
 
 #: Paths to test files that should be skipped entirely in all stages.
 #:
-#: Client test scripts should udpate this set with their own customizations.
+#: Client test scripts can update this set with their own customizations.
 SKIPPED_EXAMPLES: set[str] = set()
 
 #: Extra arguments to add when specific test files are executed (in any stage).
 #:
-#: Client test scripts should udpate this dict with their own customizations.
+#: Client test scripts can update this dict with their own customizations.
 PER_FILE_ARGS: dict[str, ArgList] = {}
 
 
@@ -97,8 +59,10 @@ class CustomTest:
 #: command line arguments appended (overriding default stage arguments). These
 #: files are run serially, after the sharded, parallelized tests.
 #:
-#: Client test scripts should udpate this set with their own customizations.
+#: Client test scripts can update this list with their own customizations.
 CUSTOM_FILES: list[CustomTest] = []
 
 #: Location to store a list of last-failed tests
+#:
+#: Client test scripts can update this value with their own customizations.
 LAST_FAILED_FILENAME: str = ".legate-test-last-failed"

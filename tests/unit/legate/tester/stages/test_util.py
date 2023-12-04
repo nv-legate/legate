@@ -138,8 +138,7 @@ class Test_log_proc:
         assert LOG.lines == (timeout(f"(foo) {proc.test_file}"),)
 
     def test_dry_run(self) -> None:
-        config = Config([])
-        config.dry_run = True
+        config = Config(["test.py", "--dry-run"])
         proc = ProcessResult("proc", Path("proc"))
 
         LOG.clear()
@@ -151,8 +150,7 @@ class Test_log_proc:
         )
 
     def test_debug(self) -> None:
-        config = Config([])
-        config.debug = True
+        config = Config(["test.py", "--debug"])
         proc = ProcessResult("proc", Path("proc"))
 
         LOG.clear()
@@ -164,8 +162,7 @@ class Test_log_proc:
         )
 
     def test_time(self) -> None:
-        config = Config([])
-        config.debug = True
+        config = Config(["test.py", "--debug"])
         start = datetime.now()
         end = start + timedelta(seconds=2.41)
 

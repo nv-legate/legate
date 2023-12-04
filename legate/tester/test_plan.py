@@ -92,7 +92,7 @@ class TestPlan:
                 f"* TestSystem description   : {yellow(str(cpus) + ' cpus')} / {yellow(str(gpus) + ' gpus')}",  # noqa E501
             )
             return banner(
-                f"Test Suite Configuration ({'OpenMPI' if self._config.ranks_per_node > 1 else 'GTest'})",  # noqa E501
+                f"Test Suite Configuration ({'OpenMPI' if self._config.multi_node.ranks_per_node > 1 else 'GTest'})",  # noqa E501
                 details=details,
             )
 

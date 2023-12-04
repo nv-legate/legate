@@ -198,9 +198,9 @@ class TestStage(Protocol):
 
         # These are a bit ugly but necessary in order to make pytest generate
         # more verbose output for integration tests when -v, -vv is specified
-        if "integration" in test_file_string and config.verbose > 0:
+        if "integration" in test_file_string and config.info.verbose > 0:
             args += ["-v"]
-        if "integration" in test_file_string and config.verbose > 1:
+        if "integration" in test_file_string and config.info.verbose > 1:
             args += ["-s"]
 
         return args
@@ -214,10 +214,10 @@ class TestStage(Protocol):
             Test runner configuration
 
         """
-        if config.cov_bin:
-            args = [str(config.cov_bin)] + config.cov_args.split()
-            if config.cov_src_path:
-                args += ["--source", str(config.cov_src_path)]
+        if config.other.cov_bin:
+            args = [str(config.other.cov_bin)] + config.other.cov_args.split()
+            if config.other.cov_src_path:
+                args += ["--source", str(config.other.cov_src_path)]
         else:
             args = []
 
@@ -237,9 +237,9 @@ class TestStage(Protocol):
             cmd,
             test_description,
             env=self._env(config, system),
-            timeout=config.timeout,
+            timeout=config.execution.timeout,
         )
-        log_proc(self.name, result, config, verbose=config.verbose)
+        log_proc(self.name, result, config, verbose=config.info.verbose)
 
         self.shards.put(shard)
 
@@ -382,13 +382,13 @@ class TestStage(Protocol):
 
         launcher_args = (
             ["--launcher=mpirun"]
-            + [f"--ranks-per-node={config.ranks_per_node}"]
+            + [f"--ranks-per-node={config.multi_node.ranks_per_node}"]
             + ["--launcher-extra=--merge-stderr-to-stdout"]
         )
-        if config.mpi_output_filename:
+        if filename := config.multi_node.mpi_output_filename:
             launcher_args += [
                 '--launcher-extra="--output-filename"',
-                f"--launcher-extra={shlex.quote(config.mpi_output_filename)}",
+                f"--launcher-extra={shlex.quote(filename)}",
             ]
 
         cmd = (
@@ -427,19 +427,19 @@ class TestStage(Protocol):
     @staticmethod
     def _handle_multi_node_args(config: Config) -> ArgList:
         args: ArgList = []
-        if config.ranks_per_node > 1:
+        if config.multi_node.ranks_per_node > 1:
             args += [
                 "--ranks-per-node",
-                str(config.ranks_per_node),
+                str(config.multi_node.ranks_per_node),
             ]
-        if config.nodes > 1:
+        if config.multi_node.nodes > 1:
             args += [
                 "--nodes",
-                str(config.nodes),
+                str(config.multi_node.nodes),
             ]
-        if config.launcher != "none":
-            args += ["--launcher", str(config.launcher)]
-        for extra in config.launcher_extra:
+        if config.multi_node.launcher != "none":
+            args += ["--launcher", str(config.multi_node.launcher)]
+        for extra in config.multi_node.launcher_extra:
             args += ["--launcher-extra=" + str(extra)]
 
         return args
@@ -447,7 +447,7 @@ class TestStage(Protocol):
     @staticmethod
     def _handle_cpu_pin_args(config: Config, shard: Shard) -> ArgList:
         args: ArgList = []
-        if config.cpu_pin != "none":
+        if config.execution.cpu_pin != "none":
             args += [
                 "--cpu-bind",
                 str(shard),
@@ -461,7 +461,7 @@ class TestStage(Protocol):
         pool = multiprocessing.pool.ThreadPool(self.spec.workers)
 
         if config.gtest_file:
-            if config.ranks_per_node > 1:
+            if config.multi_node.ranks_per_node > 1:
                 jobs = [
                     pool.apply_async(
                         self.run_mpi, (config.gtest_file, arg, config, system)

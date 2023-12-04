@@ -14,7 +14,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from ... import SMALL_SYSMEM
+from ...defaults import SMALL_SYSMEM
 from ..test_stage import TestStage
 from ..util import Shard, StageSpec, adjust_workers
 
@@ -49,12 +49,12 @@ class GPU(TestStage):
         return {}
 
     def delay(self, shard: Shard, config: Config, system: TestSystem) -> None:
-        time.sleep(config.gpu_delay / 1000)
+        time.sleep(config.execution.gpu_delay / 1000)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         args = [
             "--fbmem",
-            str(config.fbmem),
+            str(config.memory.fbmem),
             "--gpus",
             str(sum(len(r) for r in shard.ranks) // len(shard.ranks)),
             "--gpu-bind",
@@ -67,33 +67,34 @@ class GPU(TestStage):
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
         N = len(system.gpus)
-        degree = N // (config.gpus * config.ranks_per_node)
+        ranks_per_node = config.multi_node.ranks_per_node
+        degree = N // (config.core.gpus * ranks_per_node)
+        fbmem = config.memory.fbmem
+        bloat_factor = config.execution.bloat_factor
 
         fbsize = min(gpu.total for gpu in system.gpus) / (1 << 20)  # MB
-        oversub_factor = int(fbsize // (config.fbmem * config.bloat_factor))
+        oversub_factor = int(fbsize // (fbmem * bloat_factor))
 
         gpu_workers = degree * oversub_factor
 
-        mem_workers = system.memory // (SMALL_SYSMEM * config.bloat_factor)
+        mem_workers = system.memory // (SMALL_SYSMEM * bloat_factor)
 
         workers = adjust_workers(
-            min(gpu_workers, mem_workers), config.requested_workers
+            min(gpu_workers, mem_workers), config.execution.workers
         )
 
         shards: list[Shard] = []
         for i in range(degree):
             rank_shards = []
-            for j in range(config.ranks_per_node):
+            for j in range(ranks_per_node):
                 shard_gpus = range(
-                    (j + i * config.ranks_per_node) * config.gpus,
-                    (j + i * config.ranks_per_node + 1) * config.gpus,
+                    (j + i * ranks_per_node) * config.core.gpus,
+                    (j + i * ranks_per_node + 1) * config.core.gpus,
                 )
                 shard = tuple(shard_gpus)
                 rank_shards.append(shard)
             shards.append(Shard(rank_shards))
 
-        shard_factor = (
-            workers if config.ranks_per_node == 1 else oversub_factor
-        )
+        shard_factor = workers if ranks_per_node == 1 else oversub_factor
 
         return StageSpec(workers, shards * shard_factor)

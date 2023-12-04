@@ -75,9 +75,9 @@ class TestSingleRank:
         result = stage.shard_args(Shard([shard]), c)
         assert result == [
             "--cpus",
-            f"{c.cpus}",
+            f"{c.core.cpus}",
             "--sysmem",
-            str(c.sysmem),
+            str(c.memory.sysmem),
             "--cpu-bind",
             expected,
         ]
@@ -128,14 +128,16 @@ class TestSingleRank:
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem()
         c = Config(["test.py", "-j", "0"])
-        assert c.requested_workers == 0
+        assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.CPU(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem()
         c = Config(["test.py", "-j", f"{len(s.cpus)+1}"])
-        assert c.requested_workers > len(s.cpus)
+        requested_workers = c.execution.workers
+        assert requested_workers is not None
+        assert requested_workers > len(s.cpus)
         with pytest.raises(RuntimeError):
             m.CPU(c, s)
 
@@ -190,9 +192,9 @@ class TestMultiRank:
         result = stage.shard_args(Shard([(0, 1), (2, 3)]), c)
         assert result == [
             "--cpus",
-            f"{c.cpus}",
+            f"{c.core.cpus}",
             "--sysmem",
-            str(c.sysmem),
+            str(c.memory.sysmem),
             "--cpu-bind",
             "0,1/2,3",
             "--ranks-per-node",
@@ -254,7 +256,7 @@ class TestMultiRank:
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem(cpus=12)
         c = Config(["test.py", "-j", "0", "--ranks-per-node", "2"])
-        assert c.requested_workers == 0
+        assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.CPU(c, s)
 
@@ -263,7 +265,9 @@ class TestMultiRank:
         c = Config(
             ["test.py", "-j", f"{len(s.cpus)+1}", "--ranks-per-node", "2"]
         )
-        assert c.requested_workers > len(s.cpus)
+        requested_workers = c.execution.workers
+        assert requested_workers is not None
+        assert requested_workers > len(s.cpus)
         with pytest.raises(RuntimeError):
             m.CPU(c, s)
 

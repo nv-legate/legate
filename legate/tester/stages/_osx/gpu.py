@@ -49,7 +49,7 @@ class GPU(TestStage):
         return dict(UNPIN_ENV)
 
     def delay(self, shard: Shard, config: Config, system: TestSystem) -> None:
-        time.sleep(config.gpu_delay / 1000)
+        time.sleep(config.execution.gpu_delay / 1000)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         raise NotImplementedError()

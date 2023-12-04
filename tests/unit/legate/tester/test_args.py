@@ -14,18 +14,7 @@
 """
 from __future__ import annotations
 
-from legate.tester import (
-    DEFAULT_CPUS_PER_NODE,
-    DEFAULT_GPU_DELAY,
-    DEFAULT_GPU_MEMORY_BUDGET,
-    DEFAULT_GPUS_PER_NODE,
-    DEFAULT_NODES,
-    DEFAULT_NUMAMEM,
-    DEFAULT_OMPS_PER_NODE,
-    DEFAULT_OMPTHREADS,
-    DEFAULT_RANKS_PER_NODE,
-    args as m,
-)
+from legate.tester import args as m, defaults
 
 
 class TestParserDefaults:
@@ -42,31 +31,33 @@ class TestParserDefaults:
         assert m.parser.get_default("last_failed") is False
 
     def test_cpus(self) -> None:
-        assert m.parser.get_default("cpus") == DEFAULT_CPUS_PER_NODE
+        assert m.parser.get_default("cpus") == defaults.CPUS_PER_NODE
 
     def test_gpus(self) -> None:
-        assert m.parser.get_default("gpus") == DEFAULT_GPUS_PER_NODE
+        assert m.parser.get_default("gpus") == defaults.GPUS_PER_NODE
 
     def test_cpu_pin(self) -> None:
         assert m.parser.get_default("cpu_pin") == "partial"
 
     def test_gpu_delay(self) -> None:
-        assert m.parser.get_default("gpu_delay") == DEFAULT_GPU_DELAY
+        assert m.parser.get_default("gpu_delay") == defaults.GPU_DELAY
 
     def test_fbmem(self) -> None:
-        assert m.parser.get_default("fbmem") == DEFAULT_GPU_MEMORY_BUDGET
+        assert m.parser.get_default("fbmem") == defaults.GPU_MEMORY_BUDGET
 
     def test_omps(self) -> None:
-        assert m.parser.get_default("omps") == DEFAULT_OMPS_PER_NODE
+        assert m.parser.get_default("omps") == defaults.OMPS_PER_NODE
 
     def test_ompthreads(self) -> None:
-        assert m.parser.get_default("ompthreads") == DEFAULT_OMPTHREADS
+        assert m.parser.get_default("ompthreads") == defaults.OMPTHREADS
 
     def test_numamem(self) -> None:
-        assert m.parser.get_default("numamem") == DEFAULT_NUMAMEM
+        assert m.parser.get_default("numamem") == defaults.NUMA_MEMORY_BUDGET
 
     def test_ranks_per_node(self) -> None:
-        assert m.parser.get_default("ranks_per_node") == DEFAULT_RANKS_PER_NODE
+        assert (
+            m.parser.get_default("ranks_per_node") == defaults.RANKS_PER_NODE
+        )
 
     def test_launcher(self) -> None:
         assert m.parser.get_default("launcher") == "none"
@@ -75,7 +66,7 @@ class TestParserDefaults:
         assert m.parser.get_default("launcher_extra") == []
 
     def test_nodes(self) -> None:
-        assert m.parser.get_default("nodes") == DEFAULT_NODES
+        assert m.parser.get_default("nodes") == defaults.NODES
 
     def test_timeout(self) -> None:
         assert m.parser.get_default("timeout") is None

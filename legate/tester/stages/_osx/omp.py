@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ... import SMALL_SYSMEM
+from ...defaults import SMALL_SYSMEM
 from ..test_stage import TestStage
 from ..util import UNPIN_ENV, Shard, StageSpec, adjust_workers
 
@@ -50,30 +50,35 @@ class OMP(TestStage):
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         return [
             "--omps",
-            str(config.omps),
+            str(config.core.omps),
             "--ompthreads",
-            str(config.ompthreads),
+            str(config.core.ompthreads),
             "--sysmem",
             str(SMALL_SYSMEM),
         ]
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
         cpus = system.cpus
-        omps, threads = config.omps, config.ompthreads
+        omps, threads = config.core.omps, config.core.ompthreads
+        ranks_per_node = config.multi_node.ranks_per_node
+        numamem = config.memory.numamem
+        bloat_factor = config.execution.bloat_factor
+
         procs = (
-            omps * threads + config.utility + int(config.cpu_pin == "strict")
+            omps * threads
+            + config.core.utility
+            + int(config.execution.cpu_pin == "strict")
         )
 
-        omp_workers = len(cpus) // (procs * config.ranks_per_node)
+        omp_workers = len(cpus) // (procs * ranks_per_node)
 
-        numamem, bloat_factor = config.numamem, config.bloat_factor
         mem_per_test = (SMALL_SYSMEM + omps * numamem) * bloat_factor
 
         mem_workers = system.memory // mem_per_test
 
         workers = min(omp_workers, mem_workers)
 
-        workers = adjust_workers(workers, config.requested_workers)
+        workers = adjust_workers(workers, config.execution.workers)
 
         # return a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]

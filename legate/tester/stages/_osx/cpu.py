@@ -49,23 +49,29 @@ class CPU(TestStage):
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         return [
             "--cpus",
-            str(config.cpus),
+            str(config.core.cpus),
             "--sysmem",
-            str(config.sysmem),
+            str(config.memory.sysmem),
         ]
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
         cpus = system.cpus
+        sysmem = config.memory.sysmem
+        bloat_factor = config.execution.bloat_factor
 
-        procs = config.cpus + config.utility + int(config.cpu_pin == "strict")
+        procs = (
+            config.core.cpus
+            + config.core.utility
+            + int(config.execution.cpu_pin == "strict")
+        )
 
-        cpu_workers = len(cpus) // (procs * config.ranks_per_node)
+        cpu_workers = len(cpus) // (procs * config.multi_node.ranks_per_node)
 
-        mem_workers = system.memory // (config.sysmem * config.bloat_factor)
+        mem_workers = system.memory // (sysmem * bloat_factor)
 
         workers = min(cpu_workers, mem_workers)
 
-        workers = adjust_workers(workers, config.requested_workers)
+        workers = adjust_workers(workers, config.execution.workers)
 
         # return a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]

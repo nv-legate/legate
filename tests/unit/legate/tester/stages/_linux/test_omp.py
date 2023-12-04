@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import pytest
 
-from legate.tester import SMALL_SYSMEM
 from legate.tester.config import Config
+from legate.tester.defaults import SMALL_SYSMEM
 from legate.tester.stages._linux import omp as m
 from legate.tester.stages.util import UNPIN_ENV, Shard
 
@@ -76,11 +76,11 @@ class TestSingleRank:
         result = stage.shard_args(Shard([shard]), c)
         assert result == [
             "--omps",
-            f"{c.omps}",
+            f"{c.core.omps}",
             "--ompthreads",
-            f"{c.ompthreads}",
+            f"{c.core.ompthreads}",
             "--numamem",
-            f"{c.numamem}",
+            f"{c.memory.numamem}",
             "--sysmem",
             str(SMALL_SYSMEM),
             "--cpu-bind",
@@ -154,14 +154,16 @@ class TestSingleRank:
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem(cpus=12)
         c = Config(["test.py", "-j", "0"])
-        assert c.requested_workers == 0
+        assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.OMP(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem(cpus=12)
         c = Config(["test.py", "-j", f"{len(s.cpus)+1}"])
-        assert c.requested_workers > len(s.cpus)
+        requested_workers = c.execution.workers
+        assert requested_workers is not None
+        assert requested_workers > len(s.cpus)
         with pytest.raises(RuntimeError):
             m.OMP(c, s)
 
@@ -225,11 +227,11 @@ class TestMultiRank:
         result = stage.shard_args(Shard([shard]), c)
         assert result == [
             "--omps",
-            f"{c.omps}",
+            f"{c.core.omps}",
             "--ompthreads",
-            f"{c.ompthreads}",
+            f"{c.core.ompthreads}",
             "--numamem",
-            f"{c.numamem}",
+            f"{c.memory.numamem}",
             "--sysmem",
             str(SMALL_SYSMEM),
             "--cpu-bind",

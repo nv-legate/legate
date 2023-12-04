@@ -15,22 +15,92 @@
 from __future__ import annotations
 
 import os
+import shlex
 import shutil
 import subprocess
 import sys
 from argparse import Namespace
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from ..util import colors
-from ..util.types import ArgList, EnvDict
+from ..util.types import (
+    ArgList,
+    DataclassMixin,
+    EnvDict,
+    LauncherType,
+    object_to_dataclass,
+)
 from . import (
-    DEFAULT_PROCESS_ENV,
     FEATURES,
     LAST_FAILED_FILENAME,
     SKIPPED_EXAMPLES,
     FeatureType,
+    defaults,
 )
-from .args import parser
+from .args import PinOptionsType, parser
+
+
+@dataclass(frozen=True)
+class Core(DataclassMixin):
+    cpus: int
+    gpus: int
+    omps: int
+    ompthreads: int
+    utility: int
+
+
+@dataclass(frozen=True)
+class Memory(DataclassMixin):
+    sysmem: int
+    fbmem: int
+    numamem: int
+
+
+@dataclass(frozen=True)
+class MultiNode(DataclassMixin):
+    nodes: int
+    ranks_per_node: int
+    launcher: LauncherType
+    launcher_extra: list[str]
+    mpi_output_filename: str | None
+
+    def __post_init__(self, **kw: dict[str, Any]) -> None:
+        # fix up launcher_extra to automatically handle quoted strings with
+        # internal whitespace, have to use __setattr__ for frozen
+        # https://docs.python.org/3/library/dataclasses.html#frozen-instances
+        if self.launcher_extra:
+            ex: list[str] = sum(
+                (shlex.split(x) for x in self.launcher_extra), []
+            )
+            object.__setattr__(self, "launcher_extra", ex)
+
+
+@dataclass(frozen=True)
+class Execution(DataclassMixin):
+    workers: int | None
+    timeout: int | None
+    bloat_factor: int
+    gpu_delay: int
+    cpu_pin: PinOptionsType
+
+
+@dataclass(frozen=True)
+class Info(DataclassMixin):
+    verbose: bool
+    debug: bool
+
+
+@dataclass
+class Other(DataclassMixin):
+    dry_run: bool
+    cov_bin: str | None
+    cov_args: str
+    cov_src_path: str | None
+
+    # not frozen because we have to update this manually
+    legate_dir: Path | None
 
 
 class Config:
@@ -49,58 +119,41 @@ class Config:
 
         args, self._extra_args = parser.parse_known_args(self.argv[1:])
 
+        # only saving this for help with testing
+        self._args = args
+
         colors.ENABLED = args.color
 
-        # mpi configuration
-        self.mpi_output_filename = args.mpi_output_filename
+        # feature configuration
+        self.features = self._compute_features(args)
 
-        # gtest configuration
-        self.gtest_file = args.gtest_file
-        self.gtest_tests = self._compute_gtest_tests(args)
-
-        # python configuration for which tests to run
+        # test selection
         self.examples = False if args.cov_bin else True
         self.integration = True
         self.unit = args.unit
         self.files = args.files
         self.last_failed = args.last_failed
-
-        # feature configuration
-        self.features = self._compute_features(args)
-
-        # feature options for integration tests
-        self.cpus = args.cpus
-        self.gpus = args.gpus
-        self.omps = args.omps
-        self.utility = args.utility
-        self.cpu_pin = args.cpu_pin
-        self.fbmem = args.fbmem
-        self.sysmem = args.sysmem
-        self.bloat_factor = args.bloat_factor
-        self.gpu_delay = args.gpu_delay
-        self.ompthreads = args.ompthreads
-        self.numamem = args.numamem
-        self.ranks_per_node = args.ranks_per_node
-        self.launcher = args.launcher
-        self.launcher_extra = args.launcher_extra
-        self.nodes = args.nodes
-
-        # test run configuration
-        self.timeout = args.timeout
-        self.debug = args.debug
-        self.dry_run = args.dry_run
-        self.verbose = args.verbose
+        self.gtest_file = args.gtest_file
+        self.gtest_tests = self._compute_gtest_tests(args)
         self.test_root = args.test_root
-        self.requested_workers = args.workers
-        self.legate_dir = self._compute_legate_dir(args)
-        self.cov_bin = args.cov_bin
-        self.cov_args = args.cov_args
-        self.cov_src_path = args.cov_src_path
+
+        self.core = object_to_dataclass(args, Core)
+        self.memory = object_to_dataclass(args, Memory)
+        self.multi_node = object_to_dataclass(args, MultiNode)
+        self.execution = object_to_dataclass(args, Execution)
+        self.info = object_to_dataclass(args, Info)
+        self.other = object_to_dataclass(args, Other)
+        self.other.legate_dir = self._compute_legate_dir(args)
+
+    @property
+    def dry_run(self) -> bool:
+        """Whether a dry run is configured."""
+        return self.other.dry_run
 
     @property
     def env(self) -> EnvDict:
         """Custom environment settings used for process exectution."""
-        return dict(DEFAULT_PROCESS_ENV)
+        return dict(defaults.PROCESS_ENV)
 
     @property
     def extra_args(self) -> ArgList:
@@ -171,8 +224,8 @@ class Config:
         if not hasattr(self, "legate_path_"):
 
             def compute_legate_path() -> str:
-                if self.legate_dir is not None:
-                    return str(self.legate_dir / "bin" / "legate")
+                if self.other.legate_dir is not None:
+                    return str(self.other.legate_dir / "bin" / "legate")
 
                 if legate_bin := shutil.which("legate"):
                     return legate_bin
