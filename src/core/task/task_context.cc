@@ -58,6 +58,11 @@ const Scalar& TaskContext::scalar(uint32_t index) const { return impl_->scalars(
 
 const std::vector<Scalar>& TaskContext::scalars() const { return impl_->scalars(); }
 
+comm::Communicator TaskContext::communicator(uint32_t index) const
+{
+  return impl_->communicators().at(index);
+}
+
 std::vector<comm::Communicator> TaskContext::communicators() const
 {
   return impl_->communicators();
@@ -68,6 +73,8 @@ size_t TaskContext::num_inputs() const { return impl_->inputs().size(); }
 size_t TaskContext::num_outputs() const { return impl_->outputs().size(); }
 
 size_t TaskContext::num_reductions() const { return impl_->reductions().size(); }
+
+size_t TaskContext::num_communicators() const { return impl_->communicators().size(); }
 
 bool TaskContext::is_single_task() const { return impl_->is_single_task(); }
 

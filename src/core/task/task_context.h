@@ -93,11 +93,11 @@ class TaskContext {
    */
   [[nodiscard]] std::vector<PhysicalArray> reductions() const;
   /**
-   * @brief Returns by-value arguments of the task
+   * @brief Returns a by-value argument of the task
    *
-   * @param index Index of the array
+   * @param index Index of the scalar
    *
-   * @return Vector of scalar objects
+   * @return Scalar
    */
   [[nodiscard]] const Scalar& scalar(uint32_t index) const;
   /**
@@ -107,13 +107,25 @@ class TaskContext {
    */
   [[nodiscard]] const std::vector<Scalar>& scalars() const;
   /**
+   * @brief Returns a communicator of the task
+   *
+   * If a task launch ends up emitting only a single point task, that task will not get passed a
+   * communicator, even if one was requested at task launching time. Therefore, tasks using
+   * communicators should be prepared to handle the case where the returned vector is empty.
+   *
+   * @param index Index of the communicator
+   *
+   * @return Communicator
+   */
+  [[nodiscard]] comm::Communicator communicator(uint32_t index) const;
+  /**
    * @brief Returns communicators of the task
    *
    * If a task launch ends up emitting only a single point task, that task will not get passed a
    * communicator, even if one was requested at task launching time. Therefore, most tasks using
    * communicators should be prepared to handle the case where the returned vector is empty.
    *
-   * @return Vector of communicator objects
+   * @return Vector of communicators
    */
   [[nodiscard]] std::vector<comm::Communicator> communicators() const;
 
@@ -135,6 +147,12 @@ class TaskContext {
    * @return Number of arrays
    */
   [[nodiscard]] size_t num_reductions() const;
+  /**
+   * @brief Returns the number of communicators
+   *
+   * @return Number of communicators
+   */
+  [[nodiscard]] size_t num_communicators() const;
 
   /**
    * @brief Indicates whether the task is parallelized

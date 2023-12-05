@@ -56,6 +56,7 @@ class RegionManager {
   Runtime* runtime_{};
   Domain shape_{};
   std::vector<ManagerEntry> entries_{};
+  std::vector<ManagerEntry> imported_{};
 };
 
 }  // namespace legate::detail

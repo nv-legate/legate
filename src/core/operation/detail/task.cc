@@ -100,7 +100,7 @@ void Task::launch_task(Strategy* p_strategy)
   }
 
   // Add communicators
-  if (launch_domain.is_valid()) {
+  if (launch_domain.is_valid() && launch_domain.get_volume() > 1) {
     for (auto* factory : communicator_factories_) {
       auto target = machine_.preferred_target;
 
@@ -133,7 +133,11 @@ void Task::launch_task(Strategy* p_strategy)
   if (launch_domain.is_valid()) {
     auto result = launcher.execute(launch_domain);
 
-    demux_scalar_stores(result, launch_domain);
+    if (launch_domain.get_volume() > 1) {
+      demux_scalar_stores(result, launch_domain);
+    } else {
+      demux_scalar_stores(result.get_future(launch_domain.lo()));
+    }
   } else {
     auto result = launcher.execute_single();
 

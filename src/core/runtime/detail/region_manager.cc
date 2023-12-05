@@ -27,8 +27,8 @@ void RegionManager::ManagerEntry::destroy(Runtime* runtime, bool unordered) cons
 // anyways. Unfortunately there is no way to check this programatically (e.g. via a
 // static_assert).
 RegionManager::RegionManager(Runtime* runtime,
-                             const Domain& shape  // NOLINT(modernize-pass-by-value)
-                             )
+                             // NOLINTNEXTLINE(modernize-pass-by-value)
+                             const Domain& shape)
   : runtime_{runtime}, shape_{shape}
 {
 }
@@ -36,6 +36,9 @@ RegionManager::RegionManager(Runtime* runtime,
 void RegionManager::destroy(bool unordered)
 {
   for (auto& entry : entries_) {
+    entry.destroy(runtime_, unordered);
+  }
+  for (auto& entry : imported_) {
     entry.destroy(runtime_, unordered);
   }
 }
@@ -64,7 +67,7 @@ std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(
 
 void RegionManager::import_region(const Legion::LogicalRegion& region)
 {
-  entries_.emplace_back(region);
+  imported_.emplace_back(region);
 }
 
 }  // namespace legate::detail
