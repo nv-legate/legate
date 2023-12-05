@@ -60,8 +60,8 @@ std::shared_ptr<LogicalArray> BaseLogicalArray::project(int32_t dim, int64_t ind
 
 std::shared_ptr<LogicalArray> BaseLogicalArray::slice(int32_t dim, Slice sl) const
 {
-  auto null_mask = nullable() ? null_mask_->slice(dim, sl) : nullptr;
-  auto data      = data_->slice(dim, sl);
+  auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
+  auto data      = slice_store(data_, dim, sl);
   return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -162,15 +162,20 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
   Legion::PrivilegeMode privilege,
   int32_t redop) const
 {
-  auto data_arg = data_->to_launcher_arg(
-    mapping.at(data_), strategy, launch_domain, projection, privilege, redop);
+  auto data_arg = store_to_launcher_arg(
+    data_, mapping.at(data_), strategy, launch_domain, projection, privilege, redop);
   std::unique_ptr<Analyzable> null_mask_arg{};
 
   if (nullable()) {
     auto null_redop =
       privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
-    null_mask_arg = null_mask_->to_launcher_arg(
-      mapping.at(null_mask_), strategy, launch_domain, projection, privilege, null_redop);
+    null_mask_arg = store_to_launcher_arg(null_mask_,
+                                          mapping.at(null_mask_),
+                                          strategy,
+                                          launch_domain,
+                                          projection,
+                                          privilege,
+                                          null_redop);
   }
 
   return std::make_unique<BaseArrayArg>(std::move(data_arg), std::move(null_mask_arg));
@@ -179,7 +184,8 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
 std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg_for_fixup(
   const Domain& launch_domain, Legion::PrivilegeMode privilege) const
 {
-  return std::make_unique<BaseArrayArg>(data_->to_launcher_arg_for_fixup(launch_domain, privilege));
+  return std::make_unique<BaseArrayArg>(
+    store_to_launcher_arg_for_fixup(data_, launch_domain, privilege));
 }
 
 bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
@@ -360,7 +366,7 @@ std::shared_ptr<LogicalArray> StructLogicalArray::project(int32_t dim, int64_t i
 
 std::shared_ptr<LogicalArray> StructLogicalArray::slice(int32_t dim, Slice sl) const
 {
-  auto null_mask = nullable() ? null_mask_->slice(dim, sl) : nullptr;
+  auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
   auto fields    = make_array_from_op(fields_, [&](auto& field) { return field->slice(dim, sl); });
   return std::make_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
@@ -477,8 +483,13 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   if (nullable()) {
     auto null_redop =
       privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
-    null_mask_arg = null_mask_->to_launcher_arg(
-      mapping.at(null_mask_), strategy, launch_domain, projection, privilege, null_redop);
+    null_mask_arg = store_to_launcher_arg(null_mask_,
+                                          mapping.at(null_mask_),
+                                          strategy,
+                                          launch_domain,
+                                          projection,
+                                          privilege,
+                                          null_redop);
   }
 
   auto field_args = make_array_from_op<std::unique_ptr<Analyzable>>(fields_, [&](auto& field) {

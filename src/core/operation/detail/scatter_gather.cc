@@ -28,10 +28,10 @@ ScatterGather::ScatterGather(std::shared_ptr<LogicalStore> target,
                              mapping::detail::Machine&& machine,
                              std::optional<int32_t> redop)
   : Operation{unique_id, std::move(machine)},
-    target_{target.get(), declare_partition()},
-    target_indirect_{target_indirect.get(), declare_partition()},
-    source_{source.get(), declare_partition()},
-    source_indirect_{source_indirect.get(), declare_partition()},
+    target_{target, declare_partition()},
+    target_indirect_{target_indirect, declare_partition()},
+    source_{source, declare_partition()},
+    source_indirect_{source_indirect, declare_partition()},
     constraint_(align(source_indirect_.variable, target_indirect_.variable)),
     redop_{redop}
 {
@@ -46,7 +46,7 @@ void ScatterGather::validate()
   if (*source_.store->type() != *target_.store->type()) {
     throw std::invalid_argument("Source and targets must have the same type");
   }
-  auto validate_store = [](auto* store) {
+  auto validate_store = [](const auto& store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
       throw std::invalid_argument(
         "ScatterGather accepts only normal, untransformed, region-backed stores");
@@ -82,7 +82,7 @@ void ScatterGather::launch(Strategy* p_strategy)
   if (!redop_) {
     launcher.add_inout(target_.store, create_projection_info(strategy, launch_domain, target_));
   } else {
-    auto store_partition = target_.store->create_partition(strategy[target_.variable]);
+    auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_projection_info(launch_domain);
     proj->set_reduction_op(static_cast<Legion::ReductionOpID>(
       target_.store->type()->find_reduction_operator(redop_.value())));

@@ -80,4 +80,46 @@ inline std::shared_ptr<StoragePartition> LogicalStorePartition::storage_partitio
 
 inline std::shared_ptr<LogicalStore> LogicalStorePartition::store() const { return store_; }
 
+inline std::shared_ptr<LogicalStore> slice_store(const std::shared_ptr<LogicalStore>& self,
+                                                 int32_t dim,
+                                                 Slice sl)
+{
+  return self->slice(self, dim, sl);
+}
+
+inline std::shared_ptr<LogicalStorePartition> partition_store_by_tiling(
+  const std::shared_ptr<LogicalStore>& self, Shape tile_shape)
+{
+  return self->partition_by_tiling(self, std::move(tile_shape));
+}
+
+inline std::shared_ptr<LogicalStorePartition> create_store_partition(
+  const std::shared_ptr<LogicalStore>& self,
+  std::shared_ptr<Partition> partition,
+  std::optional<bool> complete)
+{
+  return self->create_partition(self, std::move(partition), std::move(complete));
+}
+
+inline std::unique_ptr<Analyzable> store_to_launcher_arg(
+  const std::shared_ptr<LogicalStore>& self,
+  const Variable* variable,
+  const Strategy& strategy,
+  const Domain& launch_domain,
+  const std::optional<SymbolicPoint>& projection,
+  Legion::PrivilegeMode privilege,
+  int64_t redop)
+{
+  return self->to_launcher_arg(
+    self, variable, strategy, launch_domain, projection, privilege, redop);
+}
+
+inline std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
+  const std::shared_ptr<LogicalStore>& self,
+  const Domain& launch_domain,
+  Legion::PrivilegeMode privilege)
+{
+  return self->to_launcher_arg_for_fixup(self, launch_domain, privilege);
+}
+
 }  // namespace legate::detail

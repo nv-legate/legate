@@ -14,6 +14,7 @@
 
 #include "core/data/detail/array_kind.h"
 #include "core/data/detail/logical_region_field.h"
+#include "core/data/detail/logical_store.h"
 #include "core/operation/detail/req_analyzer.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/runtime.h"

@@ -212,11 +212,6 @@ std::unique_ptr<StoreTransform> TransformStack::pop()
   return result;
 }
 
-std::shared_ptr<TransformStack> TransformStack::push(std::unique_ptr<StoreTransform>&& transform)
-{
-  return std::make_shared<TransformStack>(std::move(transform), shared_from_this());
-}
-
 void TransformStack::dump() const
 {
   // We are printing to cerr, we absolutely want the stream to be synchronized with the

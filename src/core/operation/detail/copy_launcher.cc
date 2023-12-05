@@ -13,39 +13,12 @@
 #include "core/operation/detail/copy_launcher.h"
 
 #include "core/data/detail/logical_store.h"
-#include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/projection.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
 
 namespace legate::detail {
-
-struct CopyArg final : public Serializable {
- public:
-  CopyArg(uint32_t req_idx,
-          LogicalStore* store,
-          Legion::FieldID field_id,
-          Legion::PrivilegeMode privilege,
-          std::unique_ptr<ProjectionInfo> proj_info);
-
-  void pack(BufferBuilder& buffer) const override;
-
-  template <bool SINGLE>
-  void populate_requirement(Legion::RegionRequirement& requirement)
-  {
-    proj_info_->template populate_requirement<SINGLE>(
-      requirement, region_, {field_id_}, privilege_);
-  }
-
- private:
-  uint32_t req_idx_;
-  LogicalStore* store_;
-  Legion::LogicalRegion region_;
-  Legion::FieldID field_id_;
-  Legion::PrivilegeMode privilege_;
-  std::unique_ptr<ProjectionInfo> proj_info_;
-};
 
 CopyArg::CopyArg(uint32_t req_idx,
                  LogicalStore* store,
@@ -71,24 +44,8 @@ void CopyArg::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(field_id_);
 }
 
-CopyLauncher::~CopyLauncher()
-{
-  for (auto& arg : inputs_) {
-    delete arg;
-  }
-  for (auto& arg : outputs_) {
-    delete arg;
-  }
-  for (auto& arg : source_indirect_) {
-    delete arg;
-  }
-  for (auto& arg : target_indirect_) {
-    delete arg;
-  }
-}
-
-void CopyLauncher::add_store(std::vector<CopyArg*>& args,
-                             detail::LogicalStore* store,
+void CopyLauncher::add_store(std::vector<std::unique_ptr<CopyArg>>& args,
+                             const std::shared_ptr<LogicalStore>& store,
                              std::unique_ptr<ProjectionInfo> proj_info,
                              Legion::PrivilegeMode privilege)
 {
@@ -99,37 +56,40 @@ void CopyLauncher::add_store(std::vector<CopyArg*>& args,
   if (proj_info->is_key) {
     key_proj_id_ = proj_info->proj_id;
   }
-  args.emplace_back(new CopyArg{req_idx, store, field_id, privilege, std::move(proj_info)});
+  args.emplace_back(
+    std::make_unique<CopyArg>(req_idx, store.get(), field_id, privilege, std::move(proj_info)));
 }
 
-void CopyLauncher::add_input(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info)
+void CopyLauncher::add_input(const std::shared_ptr<LogicalStore>& store,
+                             std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(inputs_, store, std::move(proj_info), LEGION_READ_ONLY);
 }
 
-void CopyLauncher::add_output(detail::LogicalStore* store,
+void CopyLauncher::add_output(const std::shared_ptr<LogicalStore>& store,
                               std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(outputs_, store, std::move(proj_info), LEGION_WRITE_ONLY);
 }
 
-void CopyLauncher::add_inout(detail::LogicalStore* store, std::unique_ptr<ProjectionInfo> proj_info)
+void CopyLauncher::add_inout(const std::shared_ptr<LogicalStore>& store,
+                             std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(outputs_, store, std::move(proj_info), LEGION_READ_WRITE);
 }
 
-void CopyLauncher::add_reduction(detail::LogicalStore* store,
+void CopyLauncher::add_reduction(const std::shared_ptr<LogicalStore>& store,
                                  std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(outputs_, store, std::move(proj_info), LEGION_REDUCE);
 }
-void CopyLauncher::add_source_indirect(detail::LogicalStore* store,
+void CopyLauncher::add_source_indirect(const std::shared_ptr<LogicalStore>& store,
                                        std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(source_indirect_, store, std::move(proj_info), LEGION_READ_ONLY);
 }
 
-void CopyLauncher::add_target_indirect(detail::LogicalStore* store,
+void CopyLauncher::add_target_indirect(const std::shared_ptr<LogicalStore>& store,
                                        std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(target_indirect_, store, std::move(proj_info), LEGION_READ_ONLY);
@@ -180,7 +140,7 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
   machine_.pack(buffer);
   pack_sharding_functor_id(buffer);
 
-  auto pack_args = [&buffer](const std::vector<CopyArg*>& args) {
+  auto pack_args = [&buffer](const std::vector<std::unique_ptr<CopyArg>>& args) {
     buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
     for (auto& arg : args) {
       arg->pack(buffer);

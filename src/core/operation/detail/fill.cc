@@ -56,7 +56,7 @@ void Fill::launch(Strategy* strategy)
   auto launcher      = FillLauncher{machine_};
   auto launch_domain = strategy->launch_domain(this);
   auto part          = (*strategy)[lhs_var_];
-  auto lhs_proj      = lhs_->create_partition(part)->create_projection_info(launch_domain);
+  auto lhs_proj      = create_store_partition(lhs_, part)->create_projection_info(launch_domain);
 
   lhs_->set_key_partition(machine(), part.get());
 

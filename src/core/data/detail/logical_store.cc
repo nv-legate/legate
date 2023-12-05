@@ -399,6 +399,12 @@ void assert_fixed_storage_size(const std::shared_ptr<Storage>& storage)
   }
 }
 
+[[nodiscard]] std::shared_ptr<TransformStack> stack(const std::shared_ptr<TransformStack>& parent,
+                                                    std::unique_ptr<StoreTransform>&& transform)
+{
+  return std::make_shared<TransformStack>(std::move(transform), parent);
+}
+
 }  // namespace
 
 LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
@@ -498,7 +504,7 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t di
   }
 
   auto new_extents = extents().insert(extra_dim, dim_size);
-  auto transform   = transform_->push(std::make_unique<Promote>(extra_dim, dim_size));
+  auto transform   = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
@@ -517,7 +523,7 @@ std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
   }
 
   auto new_extents = old_extents.remove(d);
-  auto transform   = transform_->push(std::make_unique<Project>(d, index));
+  auto transform   = stack(transform_, std::make_unique<Project>(d, index));
   auto substorage =
     volume() == 0
       ? storage_
@@ -527,23 +533,13 @@ std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
     std::move(new_extents), std::move(substorage), std::move(transform));
 }
 
-std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(Shape tile_shape)
+std::shared_ptr<LogicalStore> LogicalStore::slice(const std::shared_ptr<LogicalStore>& self,
+                                                  int32_t dim,
+                                                  Slice slice)
 {
-  if (tile_shape.size() != extents().size()) {
-    throw std::invalid_argument{"Incompatible tile shape: expected a " +
-                                std::to_string(extents().size()) + "-tuple, got a " +
-                                std::to_string(tile_shape.size()) + "-tuple"};
-  }
-  if (tile_shape.volume() == 0) {
-    throw std::invalid_argument{"Tile shape must have a volume greater than 0"};
-  }
-  auto color_shape = apply([](auto c, auto t) { return (c + t - 1) / t; }, extents(), tile_shape);
-  auto partition   = create_tiling(std::move(tile_shape), std::move(color_shape));
-  return create_partition(std::move(partition), true);
-}
-
-std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
-{
+#if LegateDefined(LEGATE_USE_DEBUG)
+  assert(self.get() == this);
+#endif
   if (dim < 0 || dim >= this->dim()) {
     throw std::invalid_argument{"Invalid slicing of dimension " + std::to_string(dim) + " for a " +
                                 std::to_string(this->dim()) + "-D store"};
@@ -575,7 +571,7 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
   exts[dim] = (start < stop) ? (stop - start) : 0;
 
   if (exts[dim] == extents()[dim]) {
-    return shared_from_this();
+    return self;
   }
 
   if (0 == exts[dim]) {
@@ -583,7 +579,7 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(int32_t dim, Slice slice)
   }
 
   auto transform =
-    (start == 0) ? transform_ : transform_->push(std::make_unique<Shift>(dim, -start));
+    (start == 0) ? transform_ : stack(transform_, std::make_unique<Shift>(dim, -start));
   auto substorage =
     volume() == 0 ? storage_
                   : storage_->slice(transform->invert_extents(exts),
@@ -621,7 +617,7 @@ std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axe
     new_extents.append_inplace(old_extents[ax_i]);
   }
 
-  auto transform = transform_->push(std::make_unique<Transpose>(std::move(axes)));
+  auto transform = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
@@ -660,8 +656,27 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector
     new_extents.append_inplace(old_extents[i]);
   }
 
-  auto transform = transform_->push(std::make_unique<Delinearize>(dim, std::move(sizes)));
+  auto transform = stack(transform_, std::make_unique<Delinearize>(dim, std::move(sizes)));
   return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+}
+
+std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(
+  const std::shared_ptr<LogicalStore>& self, Shape tile_shape)
+{
+#if LegateDefined(LEGATE_USE_DEBUG)
+  assert(self.get() == this);
+#endif
+  if (tile_shape.size() != extents().size()) {
+    throw std::invalid_argument{"Incompatible tile shape: expected a " +
+                                std::to_string(extents().size()) + "-tuple, got a " +
+                                std::to_string(tile_shape.size()) + "-tuple"};
+  }
+  if (tile_shape.volume() == 0) {
+    throw std::invalid_argument{"Tile shape must have a volume greater than 0"};
+  }
+  auto color_shape = apply([](auto c, auto t) { return (c + t - 1) / t; }, extents(), tile_shape);
+  auto partition   = create_tiling(std::move(tile_shape), std::move(color_shape));
+  return create_partition(self, std::move(partition), true);
 }
 
 std::shared_ptr<PhysicalStore> LogicalStore::get_physical_store()
@@ -807,15 +822,20 @@ void LogicalStore::reset_key_partition()
 }
 
 std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
-  std::shared_ptr<Partition> partition, std::optional<bool> complete)
+  const std::shared_ptr<LogicalStore>& self,
+  std::shared_ptr<Partition> partition,
+  std::optional<bool> complete)
 {
+#if LegateDefined(LEGATE_USE_DEBUG)
+  assert(self.get() == this);
+#endif
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
   }
   auto storage_partition =
     storage_->create_partition(transform_->invert(partition.get()), complete);
   return std::make_shared<LogicalStorePartition>(
-    std::move(partition), std::move(storage_partition), shared_from_this());
+    std::move(partition), std::move(storage_partition), self);
 }
 
 void LogicalStore::pack(BufferBuilder& buffer) const
@@ -828,6 +848,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
 }
 
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
+  const std::shared_ptr<LogicalStore>& self,
   const Variable* variable,
   const Strategy& strategy,
   const Domain& launch_domain,
@@ -835,6 +856,9 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   Legion::PrivilegeMode privilege,
   int64_t redop)
 {
+#if LegateDefined(LEGATE_USE_DEBUG)
+  assert(self.get() == this);
+#endif
   if (has_scalar_storage()) {
     if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
       privilege = LEGION_READ_WRITE;
@@ -850,7 +874,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   }
 
   auto partition       = strategy[variable];
-  auto store_partition = create_partition(partition);
+  auto store_partition = create_partition(self, partition);
   auto proj_info       = store_partition->create_projection_info(launch_domain, projection);
   proj_info->is_key    = strategy.is_key_partition(variable);
   proj_info->redop     = static_cast<Legion::ReductionOpID>(redop);
@@ -865,13 +889,18 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));
 }
 
-std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(const Domain& launch_domain,
-                                                                    Legion::PrivilegeMode privilege)
+std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(
+  const std::shared_ptr<LogicalStore>& self,
+  const Domain& launch_domain,
+  Legion::PrivilegeMode privilege)
 {
+#if LegateDefined(LEGATE_USE_DEBUG)
+  assert(self.get() == this);
+#endif
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(key_partition_ != nullptr);
+    assert(self->key_partition_ != nullptr);
   }
-  auto store_partition = create_partition(key_partition_);
+  auto store_partition = create_partition(self, self->key_partition_);
   auto proj_info       = store_partition->create_projection_info(launch_domain);
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));
 }

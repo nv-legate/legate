@@ -17,6 +17,7 @@
 #include "core/data/physical_store.h"
 #include "core/data/slice.h"
 #include "core/mapping/detail/machine.h"
+#include "core/operation/detail/launcher_arg.h"
 #include "core/operation/projection.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
@@ -29,7 +30,6 @@
 
 namespace legate::detail {
 
-struct Analyzable;
 class LogicalStorePartition;
 struct ProjectionInfo;
 class Strategy;
@@ -143,7 +143,7 @@ class StoragePartition : public std::enable_shared_from_this<StoragePartition> {
   std::shared_ptr<Partition> partition_{};
 };
 
-class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
+class LogicalStore {
  public:
   explicit LogicalStore(std::shared_ptr<Storage>&& storage);
   LogicalStore(Shape&& extents,
@@ -178,13 +178,27 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
 
   [[nodiscard]] std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size);
   [[nodiscard]] std::shared_ptr<LogicalStore> project(int32_t dim, int64_t index);
-  [[nodiscard]] std::shared_ptr<LogicalStore> slice(int32_t dim, Slice sl);
+
+ private:
+  friend std::shared_ptr<LogicalStore> slice_store(const std::shared_ptr<LogicalStore>& self,
+                                                   int32_t dim,
+                                                   Slice sl);
+  [[nodiscard]] std::shared_ptr<LogicalStore> slice(const std::shared_ptr<LogicalStore>& self,
+                                                    int32_t dim,
+                                                    Slice sl);
+
+ public:
   [[nodiscard]] std::shared_ptr<LogicalStore> transpose(const std::vector<int32_t>& axes);
   [[nodiscard]] std::shared_ptr<LogicalStore> transpose(std::vector<int32_t>&& axes);
   [[nodiscard]] std::shared_ptr<LogicalStore> delinearize(int32_t dim, std::vector<uint64_t> sizes);
 
-  [[nodiscard]] std::shared_ptr<LogicalStorePartition> partition_by_tiling(Shape tile_shape);
+ private:
+  friend std::shared_ptr<LogicalStorePartition> partition_store_by_tiling(
+    const std::shared_ptr<LogicalStore>& self, Shape tile_shape);
+  [[nodiscard]] std::shared_ptr<LogicalStorePartition> partition_by_tiling(
+    const std::shared_ptr<LogicalStore>& self, Shape tile_shape);
 
+ public:
   [[nodiscard]] std::shared_ptr<PhysicalStore> get_physical_store();
   void detach();
   // Informs the runtime that references to this store may be removed in non-deterministic order
@@ -212,22 +226,50 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   void set_key_partition(const mapping::detail::Machine& machine, const Partition* partition);
   void reset_key_partition();
 
+ private:
+  friend std::shared_ptr<LogicalStorePartition> create_store_partition(
+    const std::shared_ptr<LogicalStore>& self,
+    std::shared_ptr<Partition> partition,
+    std::optional<bool> complete);
   [[nodiscard]] std::shared_ptr<LogicalStorePartition> create_partition(
-    std::shared_ptr<Partition> partition, std::optional<bool> complete = std::nullopt);
+    const std::shared_ptr<LogicalStore>& self,
+    std::shared_ptr<Partition> partition,
+    std::optional<bool> complete = std::nullopt);
+
+ public:
   [[nodiscard]] Legion::ProjectionID compute_projection(
     int32_t launch_ndim, const std::optional<SymbolicPoint>& projection = {}) const;
 
   void pack(BufferBuilder& buffer) const;
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
+
+ private:
+  friend std::unique_ptr<Analyzable> store_to_launcher_arg(
+    const std::shared_ptr<LogicalStore>& self,
     const Variable* variable,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    int64_t redop = -1);
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
-    const Domain& launch_domain, Legion::PrivilegeMode privilege);
+    int64_t redop);
+  friend std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
+    const std::shared_ptr<LogicalStore>& self,
+    const Domain& launch_domain,
+    Legion::PrivilegeMode privilege);
 
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
+    const std::shared_ptr<LogicalStore>& self,
+    const Variable* variable,
+    const Strategy& strategy,
+    const Domain& launch_domain,
+    const std::optional<SymbolicPoint>& projection,
+    Legion::PrivilegeMode privilege,
+    int64_t redop);
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+    const std::shared_ptr<LogicalStore>& self,
+    const Domain& launch_domain,
+    Legion::PrivilegeMode privilege);
+
+ public:
   [[nodiscard]] std::string to_string() const;
 
  private:
@@ -241,7 +283,7 @@ class LogicalStore : public std::enable_shared_from_this<LogicalStore> {
   std::shared_ptr<PhysicalStore> mapped_{};
 };
 
-class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePartition> {
+class LogicalStorePartition {
  public:
   LogicalStorePartition(std::shared_ptr<Partition> partition,
                         std::shared_ptr<StoragePartition> storage_partition,
@@ -261,6 +303,32 @@ class LogicalStorePartition : public std::enable_shared_from_this<LogicalStorePa
   std::shared_ptr<StoragePartition> storage_partition_{};
   std::shared_ptr<LogicalStore> store_{};
 };
+
+[[nodiscard]] std::shared_ptr<LogicalStore> slice_store(const std::shared_ptr<LogicalStore>& self,
+                                                        int32_t dim,
+                                                        Slice sl);
+
+[[nodiscard]] std::shared_ptr<LogicalStorePartition> partition_store_by_tiling(
+  const std::shared_ptr<LogicalStore>& self, Shape tile_shape);
+
+[[nodiscard]] std::shared_ptr<LogicalStorePartition> create_store_partition(
+  const std::shared_ptr<LogicalStore>& self,
+  std::shared_ptr<Partition> partition,
+  std::optional<bool> complete = std::nullopt);
+
+[[nodiscard]] std::unique_ptr<Analyzable> store_to_launcher_arg(
+  const std::shared_ptr<LogicalStore>& self,
+  const Variable* variable,
+  const Strategy& strategy,
+  const Domain& launch_domain,
+  const std::optional<SymbolicPoint>& projection,
+  Legion::PrivilegeMode privilege,
+  int64_t redop = -1);
+
+[[nodiscard]] std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
+  const std::shared_ptr<LogicalStore>& self,
+  const Domain& launch_domain,
+  Legion::PrivilegeMode privilege);
 
 }  // namespace legate::detail
 

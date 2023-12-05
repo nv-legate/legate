@@ -29,7 +29,7 @@ class Strategy;
 class Operation {
  protected:
   struct StoreArg {
-    LogicalStore* store{};
+    std::shared_ptr<LogicalStore> store{};
     const Variable* variable{};
   };
 

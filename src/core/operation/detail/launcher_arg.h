@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "core/data/detail/logical_store.h"
 #include "core/data/detail/scalar.h"
 #include "core/data/scalar.h"
 #include "core/operation/detail/projection.h"
@@ -25,6 +24,7 @@ namespace legate::detail {
 
 class BufferBuilder;
 struct OutputRegionArg;
+class LogicalStore;
 struct StoreAnalyzer;
 
 struct Serializable {

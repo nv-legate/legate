@@ -48,12 +48,13 @@ LogicalStore LogicalStore::project(int32_t dim, int64_t index) const
 
 LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<size_t> tile_shape) const
 {
-  return LogicalStorePartition{impl_->partition_by_tiling(Shape{std::move(tile_shape)})};
+  return LogicalStorePartition{
+    detail::partition_store_by_tiling(impl_, Shape{std::move(tile_shape)})};
 }
 
 LogicalStore LogicalStore::slice(int32_t dim, Slice sl) const
 {
-  return LogicalStore{impl_->slice(dim, sl)};
+  return LogicalStore{detail::slice_store(impl_, dim, sl)};
 }
 
 LogicalStore LogicalStore::transpose(std::vector<int32_t>&& axes) const

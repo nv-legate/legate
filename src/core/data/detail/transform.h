@@ -61,7 +61,7 @@ struct StoreTransform : public Transform {
   virtual void find_imaginary_dims(std::vector<int32_t>&) const        = 0;
 };
 
-struct TransformStack final : public Transform, std::enable_shared_from_this<TransformStack> {
+struct TransformStack final : public Transform {
  public:
   TransformStack() = default;
   TransformStack(std::unique_ptr<StoreTransform>&& transform,
@@ -84,7 +84,6 @@ struct TransformStack final : public Transform, std::enable_shared_from_this<Tra
   void print(std::ostream& out) const override;
 
   [[nodiscard]] std::unique_ptr<StoreTransform> pop();
-  [[nodiscard]] std::shared_ptr<TransformStack> push(std::unique_ptr<StoreTransform>&& transform);
   [[nodiscard]] bool identity() const;
 
   void dump() const;

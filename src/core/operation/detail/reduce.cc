@@ -60,7 +60,7 @@ void Reduce::launch(Strategy* p_strategy)
   }
 
   auto input_part      = strategy[input_part_];
-  auto input_partition = input_->create_partition(input_part);
+  auto input_partition = create_store_partition(input_, input_part);
 
   // generating projection functions to use in tree_reduction task
   std::vector<proj::SymbolicPoint> projections;
@@ -126,7 +126,7 @@ void Reduce::launch(Strategy* p_strategy)
 
       new_output->set_key_partition(machine_, &weighted);
       auto output_partition =
-        new_output->create_partition(std::make_shared<Weighted>(std::move(weighted)));
+        create_store_partition(new_output, std::make_shared<Weighted>(std::move(weighted)));
       input_          = new_output;
       input_partition = output_partition;
     }
