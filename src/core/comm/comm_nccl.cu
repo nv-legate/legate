@@ -80,7 +80,13 @@ class Factory final : public detail::CommunicatorFactory {
 
 Factory::Factory(const detail::Library* core_library) : core_library_(core_library) {}
 
-bool Factory::needs_barrier() const { return legate::comm::nccl::needs_barrier(); }
+bool Factory::needs_barrier() const
+{
+  // Blocking communications in NCCL violate CUDA's (undocumented) concurrent forward progress
+  // requirements and no CUDA drivers that have released are safe from this. Until either CUDA
+  // or NCCL is fixed, we will always insert a barrier at the beginning of every NCCL task.
+  return true;
+}
 
 bool Factory::is_supported_target(mapping::TaskTarget target) const
 {
@@ -274,14 +280,6 @@ void register_tasks(Legion::Runtime* runtime, const detail::Library* core_librar
       make_registrar(finalize_nccl_task_id, finalize_nccl_task_name, Processor::TOC_PROC);
     runtime->register_task_variant<finalize_nccl>(registrar, LEGATE_GPU_VARIANT);
   }
-}
-
-bool needs_barrier()
-{
-  // Blocking communications in NCCL violate CUDA's (undocumented) concurrent forward progress
-  // requirements and no CUDA drivers that have released are safe from this. Until either CUDA
-  // or NCCL is fixed, we will always insert a barrier at the beginning of every NCCL task.
-  return true;
 }
 
 void register_factory(const detail::Library* core_library)

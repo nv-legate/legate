@@ -101,10 +101,6 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
                                                           : machine.system_memory().capacity());
       return Scalar{global_mem_size / field_reuse_frac};
     }
-    case LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER: {
-      return Scalar{LegateDefined(LEGATE_USE_CUDA) && machine.has_gpus() &&
-                    comm::nccl::needs_barrier()};
-    }
     default: break;
   }
   // Illegal tunable variable

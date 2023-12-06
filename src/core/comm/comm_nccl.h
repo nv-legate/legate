@@ -22,8 +22,6 @@ namespace legate::comm::nccl {
 
 void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library);
 
-bool needs_barrier();
-
 void register_factory(const detail::Library* core_library);
 
 }  // namespace legate::comm::nccl

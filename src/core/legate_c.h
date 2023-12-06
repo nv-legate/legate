@@ -65,7 +65,6 @@ typedef enum legate_core_tunable_t {
   LEGATE_CORE_TUNABLE_NUM_NODES,
   LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM,
   LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE,
-  LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER,
 } legate_core_tunable_t;
 
 typedef enum legate_core_variant_t {
