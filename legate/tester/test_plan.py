@@ -48,6 +48,13 @@ class TestPlan:
 
     def execute(self) -> int:
         """Execute the entire test run with all configured feature stages."""
+
+        # This code path will exit the process
+        if self._config.other.gdb:
+            if len(self._stages) != 1:
+                raise ValueError("--gdb only works with a single stage")
+            self._stages[0](self._config, self._system)
+
         LOG.clear()
 
         LOG(self.intro)

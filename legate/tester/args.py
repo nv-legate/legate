@@ -323,6 +323,13 @@ other.add_argument(
 )
 
 other.add_argument(
+    "--gdb",
+    default=False,
+    action="store_true",
+    help="Invoke legate with --gdb (single test only)",
+)
+
+other.add_argument(
     "--cov-bin",
     default=None,
     help=(

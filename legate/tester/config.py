@@ -95,6 +95,7 @@ class Info(DataclassMixin):
 @dataclass
 class Other(DataclassMixin):
     dry_run: bool
+    gdb: bool
     cov_bin: str | None
     cov_args: str
     cov_src_path: str | None

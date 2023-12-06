@@ -16,7 +16,7 @@ import queue
 import shlex
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
 from typing_extensions import Protocol
 
@@ -138,6 +138,10 @@ class TestStage(Protocol):
             Process execution wrapper
 
         """
+        if config.other.gdb:
+            self._launch_gdb(config, system)
+            return
+
         t0 = datetime.now()
         procs = self._launch(config, system)
         t1 = datetime.now()
@@ -239,11 +243,26 @@ class TestStage(Protocol):
             env=self._env(config, system),
             timeout=config.execution.timeout,
         )
+
         log_proc(self.name, result, config, verbose=config.info.verbose)
 
         self.shards.put(shard)
 
         return result
+
+    def _run_gdb(
+        self,
+        cmd: ArgList,
+        test_description: Path,
+        config: Config,
+        system: TestSystem,
+        shard: Shard,
+    ) -> NoReturn:
+        import subprocess
+        import sys
+
+        subprocess.run(cmd, env=self._env(config, system))
+        sys.exit()
 
     def run_python(
         self,
@@ -275,6 +294,9 @@ class TestStage(Protocol):
         cov_args = self.cov_args(config)
 
         stage_args = self.args + self.shard_args(shard, config)
+        if config.other.gdb:
+            stage_args += ["--gdb"]
+
         file_args = self.file_args(test_file, config)
 
         cmd = (
@@ -294,7 +316,12 @@ class TestStage(Protocol):
         if custom_args:
             cmd += custom_args
 
-        return self._run_common(cmd, test_file, config, system, shard)
+        if config.other.gdb:
+            return self._run_gdb(cmd, Path(test_file), config, system, shard)
+        else:
+            return self._run_common(
+                cmd, Path(test_file), config, system, shard
+            )
 
     def run_gtest(
         self,
@@ -329,6 +356,9 @@ class TestStage(Protocol):
         cov_args = self.cov_args(config)
 
         stage_args = self.args + self.shard_args(shard, config)
+        if config.other.gdb:
+            stage_args += ["--gdb"]
+
         file_args = self.file_args(test_file, config)
 
         cmd = (
@@ -343,7 +373,13 @@ class TestStage(Protocol):
         if custom_args:
             cmd += custom_args
 
-        return self._run_common(cmd, Path(arg_test), config, system, shard)
+        if config.other.gdb:
+            cmd += ["--gtest_catch_exceptions=0"]
+
+        if config.other.gdb:
+            return self._run_gdb(cmd, Path(arg_test), config, system, shard)
+        else:
+            return self._run_common(cmd, Path(arg_test), config, system, shard)
 
     def run_mpi(
         self,
@@ -460,6 +496,8 @@ class TestStage(Protocol):
     ) -> list[ProcessResult]:
         pool = multiprocessing.pool.ThreadPool(self.spec.workers)
 
+        assert not config.other.gdb
+
         if config.gtest_file:
             if config.multi_node.ranks_per_node > 1:
                 jobs = [
@@ -493,3 +531,21 @@ class TestStage(Protocol):
         ]
 
         return sharded_results + custom_results
+
+    def _launch_gdb(self, config: Config, system: TestSystem) -> None:
+        # with --gdb set the "run" functions below will exit
+
+        if config.multi_node.ranks_per_node > 1 or config.multi_node.nodes > 1:
+            raise ValueError("--gbd can only be used with a single rank")
+
+        if config.gtest_file and config.gtest_tests:
+            if len(config.gtest_tests) != 1 or len(config.test_files) != 0:
+                raise ValueError("--gbd can only be used with a single test")
+            self.run_gtest(
+                config.gtest_file, config.gtest_tests[0], config, system
+            )
+
+        else:
+            if len(config.gtest_tests) != 0 or len(config.test_files) != 1:
+                raise ValueError("--gbd can only be used with a single test")
+            self.run_python(config.test_files[0], config, system)
