@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/partitioning/detail/constraint.h"
+#include "core/utilities/hash.h"
 
 namespace legate::detail {
 
@@ -35,8 +36,6 @@ inline bool operator==(const Variable& lhs, const Variable& rhs)
   return lhs.op_ == rhs.op_ && lhs.id_ == rhs.id_;
 }
 
-inline bool operator<(const Variable& lhs, const Variable& rhs) { return lhs.id_ < rhs.id_; }
-
 inline bool Variable::closed() const { return false; }
 
 inline Variable::Kind Variable::kind() const { return Kind::VARIABLE; }
@@ -46,6 +45,8 @@ inline const Literal* Variable::as_literal() const { return nullptr; }
 inline const Variable* Variable::as_variable() const { return this; }
 
 inline const Operation* Variable::operation() const { return op_; }
+
+inline size_t Variable::hash() const noexcept { return hash_all(id_); }
 
 // ==========================================================================================
 
@@ -172,3 +173,15 @@ inline const Variable* BloatConstraint::var_source() const { return var_source_;
 inline const Variable* BloatConstraint::var_bloat() const { return var_bloat_; }
 
 }  // namespace legate::detail
+
+namespace std {
+
+template <>
+struct hash<const legate::detail::Variable> {
+  [[nodiscard]] size_t operator()(const legate::detail::Variable& v) const noexcept
+  {
+    return v.hash();
+  }
+};
+
+}  // namespace std

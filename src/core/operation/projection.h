@@ -75,6 +75,8 @@ class SymbolicExpr {
 
   [[nodiscard]] std::string to_string() const;
 
+  [[nodiscard]] size_t hash() const;
+
  private:
   int32_t dim_{-1};
   int32_t weight_{1};

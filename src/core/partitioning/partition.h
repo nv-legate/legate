@@ -15,6 +15,7 @@
 #include "core/data/shape.h"
 #include "core/mapping/detail/machine.h"
 #include "core/partitioning/restriction.h"
+#include "core/utilities/detail/hash.h"
 #include "core/utilities/typedefs.h"
 
 #include <iosfwd>
@@ -100,7 +101,6 @@ class Tiling : public Partition {
   Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets, Shape&& strides);
 
   bool operator==(const Tiling& other) const;
-  bool operator<(const Tiling& other) const;
 
   [[nodiscard]] Kind kind() const override;
 
@@ -129,6 +129,8 @@ class Tiling : public Partition {
 
   [[nodiscard]] Shape get_child_extents(const Shape& extents, const Shape& color) const;
   [[nodiscard]] Shape get_child_offsets(const Shape& color) const;
+
+  [[nodiscard]] size_t hash() const;
 
  private:
   bool overlapped_{};

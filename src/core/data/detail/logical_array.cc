@@ -141,7 +141,7 @@ void BaseLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reductio
 
 void BaseLogicalArray::generate_constraints(
   AutoTask* task,
-  std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Variable* partition_symbol) const
 {
   mapping.try_emplace(data_, partition_symbol);
@@ -155,7 +155,7 @@ void BaseLogicalArray::generate_constraints(
 }
 
 std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
-  const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
@@ -273,7 +273,7 @@ void ListLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reductio
 
 void ListLogicalArray::generate_constraints(
   AutoTask* task,
-  std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Variable* partition_symbol) const
 {
   descriptor_->generate_constraints(task, mapping, partition_symbol);
@@ -285,7 +285,7 @@ void ListLogicalArray::generate_constraints(
 }
 
 std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
-  const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
@@ -452,7 +452,7 @@ void StructLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reduct
 
 void StructLogicalArray::generate_constraints(
   AutoTask* task,
-  std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Variable* partition_symbol) const
 {
   auto it = fields_.begin();
@@ -472,7 +472,7 @@ void StructLogicalArray::generate_constraints(
 }
 
 std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
-  const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,

@@ -15,9 +15,11 @@
 #include "core/partitioning/detail/constraint.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/detail/ordered_set.h"
+#include "core/utilities/hash.h"
 
 #include <map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace legate::detail {
@@ -50,14 +52,14 @@ struct ConstraintSolver {
 
  private:
   ordered_set<const Variable*> partition_symbols_{};
-  std::map<const Variable, bool> is_output_{};
+  std::unordered_map<const Variable, bool> is_output_{};
   std::vector<std::shared_ptr<Constraint>> constraints_{};
 
   struct EquivClass;
-  std::map<const Variable, EquivClass*> equiv_class_map_{};
+  std::unordered_map<const Variable, EquivClass*> equiv_class_map_{};
   std::vector<EquivClass*> equiv_classes_{};
 
-  std::map<const Variable, bool> is_dependent_{};
+  std::unordered_map<const Variable, bool> is_dependent_{};
 };
 
 }  // namespace legate::detail

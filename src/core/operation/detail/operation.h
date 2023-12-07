@@ -16,10 +16,12 @@
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/projection.h"
 #include "core/partitioning/detail/constraint.h"
+#include "core/utilities/hash.h"
 
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace legate::detail {
@@ -60,8 +62,8 @@ class Operation {
   uint64_t unique_id_{};
   uint32_t next_part_id_{};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
-  std::map<const Variable, std::shared_ptr<LogicalStore>> store_mappings_{};
-  std::map<std::shared_ptr<LogicalStore>, const Variable*> part_mappings_{};
+  std::unordered_map<const Variable, std::shared_ptr<LogicalStore>> store_mappings_{};
+  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*> part_mappings_{};
   std::string provenance_{};
   mapping::detail::Machine machine_{};
 };

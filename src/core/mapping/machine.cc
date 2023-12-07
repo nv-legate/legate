@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/mapping/detail/machine.h"
-
 #include "core/mapping/machine.h"
+
+#include "core/mapping/detail/machine.h"
+#include "core/utilities/hash.h"
 
 #include <iostream>
 #include <sstream>
@@ -72,6 +73,8 @@ bool ProcessorRange::operator<(const ProcessorRange& other) const noexcept
   }
   return per_node_count < other.per_node_count;
 }
+
+size_t ProcessorRange::hash() const noexcept { return hash_all(low, high, per_node_count); }
 
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range)
 {

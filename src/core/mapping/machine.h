@@ -112,6 +112,7 @@ struct ProcessorRange {
   bool operator==(const ProcessorRange& other) const noexcept;
   bool operator!=(const ProcessorRange& other) const noexcept;
   bool operator<(const ProcessorRange& other) const noexcept;
+  [[nodiscard]] size_t hash() const noexcept;
 };
 
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);

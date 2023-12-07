@@ -103,9 +103,10 @@ bool too_big(size_t union_volume, size_t my_volume, size_t group_volume, size_t 
 
 struct construct_overlapping_region_group_fn {
   template <int32_t DIM>
-  RegionGroupP operator()(const InstanceSet::Region& region,
-                          const Domain& domain,
-                          const std::map<RegionGroup*, InstanceSet::InstanceSpec>& instances)
+  RegionGroupP operator()(
+    const InstanceSet::Region& region,
+    const Domain& domain,
+    const std::unordered_map<RegionGroup*, InstanceSet::InstanceSpec>& instances)
   {
     auto bound       = domain.bounds<DIM, coord_t>();
     size_t bound_vol = bound.volume();

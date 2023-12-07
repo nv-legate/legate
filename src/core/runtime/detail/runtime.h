@@ -29,6 +29,8 @@
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/type/type_info.h"
+#include "core/utilities/detail/hash.h"
+#include "core/utilities/hash.h"
 
 #include <list>
 #include <map>
@@ -36,6 +38,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -303,22 +306,26 @@ class Runtime {
   std::list<ShutdownCallback> callbacks_{};
 
   using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
-  std::map<FieldManagerKey, std::unique_ptr<FieldManager>> field_managers_{};
-  std::map<Legion::Domain, std::unique_ptr<RegionManager>> region_managers_{};
+  std::unordered_map<FieldManagerKey, std::unique_ptr<FieldManager>, hasher<FieldManagerKey>>
+    field_managers_{};
+  using RegionManagerKey = Legion::Domain;
+  std::unordered_map<RegionManagerKey, std::unique_ptr<RegionManager>> region_managers_{};
   CommunicatorManager* communicator_manager_{};
   MachineManager* machine_manager_{};
   PartitionManager* partition_manager_{};
   ProvenanceManager* provenance_manager_{};
 
-  std::map<Legion::Domain, Legion::IndexSpace> index_spaces_{};
+  std::unordered_map<Legion::Domain, Legion::IndexSpace> index_spaces_{};
 
   using ProjectionDesc = std::pair<int32_t, proj::SymbolicPoint>;
   int64_t next_projection_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
-  std::map<ProjectionDesc, Legion::ProjectionID> registered_projections_{};
+  std::unordered_map<ProjectionDesc, Legion::ProjectionID, hasher<ProjectionDesc>>
+    registered_projections_{};
 
   using ShardingDesc = std::pair<Legion::ProjectionID, mapping::ProcessorRange>;
   int64_t next_sharding_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
-  std::map<ShardingDesc, Legion::ShardingID> registered_shardings_{};
+  std::unordered_map<ShardingDesc, Legion::ShardingID, hasher<ShardingDesc>>
+    registered_shardings_{};
 
   std::vector<std::shared_ptr<Operation>> operations_;
   size_t window_size_{};
@@ -330,9 +337,12 @@ class Runtime {
   uint32_t field_reuse_freq_{};
   bool force_consensus_match_{};
 
+  // This could be a hash map, but kept as an ordered map just in case we may later support
+  // library-specific shutdown callbacks that can launch tasks.
   std::map<std::string, std::unique_ptr<Library>> libraries_{};
 
-  std::map<std::pair<uint32_t, int32_t>, int32_t> reduction_ops_{};
+  using ReductionOpTableKey = std::pair<uint32_t, int32_t>;
+  std::unordered_map<ReductionOpTableKey, int32_t, hasher<ReductionOpTableKey>> reduction_ops_{};
 
   // TODO: We keep some of the deferred exception code as we will put it back later
   std::vector<Legion::Future> pending_exceptions_{};

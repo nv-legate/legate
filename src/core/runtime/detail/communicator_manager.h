@@ -13,6 +13,8 @@
 #pragma once
 
 #include "core/mapping/detail/machine.h"
+#include "core/utilities/detail/hash.h"
+#include "core/utilities/hash.h"
 #include "core/utilities/typedefs.h"
 
 #include <map>
@@ -65,13 +67,13 @@ class CommunicatorFactory {
 
     [[nodiscard]] mapping::detail::Machine get_machine() const;
     bool operator==(const CacheKey& other) const;
-    bool operator<(const CacheKey& other) const;
+    [[nodiscard]] size_t hash() const noexcept;
   };
   using CommKey  = CacheKey<uint32_t>;
   using AliasKey = CacheKey<Domain>;
 
-  std::map<CommKey, Legion::FutureMap> communicators_{};
-  std::map<AliasKey, Legion::FutureMap> nd_aliases_{};
+  std::unordered_map<CommKey, Legion::FutureMap, hasher<CommKey>> communicators_{};
+  std::unordered_map<AliasKey, Legion::FutureMap, hasher<AliasKey>> nd_aliases_{};
 };
 
 class CommunicatorManager {

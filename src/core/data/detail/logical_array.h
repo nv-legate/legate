@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace legate::detail {
@@ -68,11 +69,11 @@ struct LogicalArray {
 
   virtual void generate_constraints(
     AutoTask* task,
-    std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Variable* partition_symbol) const = 0;
 
   [[nodiscard]] virtual std::unique_ptr<Analyzable> to_launcher_arg(
-    const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
@@ -119,12 +120,13 @@ class BaseLogicalArray final : public LogicalArray {
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
 
-  void generate_constraints(AutoTask* task,
-                            std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
-                            const Variable* partition_symbol) const override;
+  void generate_constraints(
+    AutoTask* task,
+    std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    const Variable* partition_symbol) const override;
 
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
-    const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
@@ -173,12 +175,13 @@ class ListLogicalArray final : public LogicalArray {
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
 
-  void generate_constraints(AutoTask* task,
-                            std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
-                            const Variable* partition_symbol) const override;
+  void generate_constraints(
+    AutoTask* task,
+    std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    const Variable* partition_symbol) const override;
 
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
-    const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
@@ -226,12 +229,13 @@ class StructLogicalArray final : public LogicalArray {
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
 
-  void generate_constraints(AutoTask* task,
-                            std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
-                            const Variable* partition_symbol) const override;
+  void generate_constraints(
+    AutoTask* task,
+    std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    const Variable* partition_symbol) const override;
 
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
-    const std::map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+    const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
     const Strategy& strategy,
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,

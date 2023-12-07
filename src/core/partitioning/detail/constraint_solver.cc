@@ -104,7 +104,7 @@ void ConstraintSolver::add_constraint(std::shared_ptr<Constraint> constraint)
 void ConstraintSolver::solve_constraints()
 {
   std::vector<UnionFindEntry> entries;
-  std::map<const Variable, UnionFindEntry*> table;
+  std::unordered_map<const Variable, UnionFindEntry*> table;
 
   // Initialize the table by creating singleton equivalence classes
   const auto& all_symbols = partition_symbols();

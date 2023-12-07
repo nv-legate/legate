@@ -14,9 +14,12 @@
 
 #include "core/data/detail/logical_region_field.h"
 #include "core/operation/detail/projection.h"
+#include "core/utilities/detail/hash.h"
+#include "core/utilities/hash.h"
 
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -57,9 +60,12 @@ class FieldSet {
     std::vector<Legion::FieldID> fields{};
     bool is_key{};
   };
+  // This must be an ordered map to avoid control divergence
   std::map<Key, Entry> coalesced_{};
-  std::map<std::pair<Key, Legion::FieldID>, uint32_t> req_indices_{};
+  using ReqIndexMapKey = std::pair<Key, Legion::FieldID>;
+  std::unordered_map<ReqIndexMapKey, uint32_t, hasher<ReqIndexMapKey>> req_indices_{};
 
+  // This must be an ordered map to avoid control divergence
   std::map<Legion::FieldID, ProjectionSet> field_projs_{};
 };
 
@@ -86,6 +92,7 @@ class RequirementAnalyzer {
   void _populate_launcher(Launcher& task) const;
 
   bool relax_interference_checks_{};
+  // This must be an ordered map to avoid control divergence
   std::map<Legion::LogicalRegion, std::pair<FieldSet, uint32_t>> field_sets_{};
 };
 
@@ -104,8 +111,9 @@ class OutputRequirementAnalyzer {
     int32_t dim{-1};
     uint32_t req_idx{};
   };
+  // This must be an ordered map to avoid control divergence
   std::map<Legion::FieldSpace, std::set<Legion::FieldID>> field_groups_{};
-  std::map<Legion::FieldSpace, ReqInfo> req_infos_{};
+  std::unordered_map<Legion::FieldSpace, ReqInfo> req_infos_{};
 };
 
 class FutureAnalyzer {
@@ -120,6 +128,7 @@ class FutureAnalyzer {
   void populate_launcher(Legion::TaskLauncher& task) const;
 
  private:
+  // XXX: This could be a hash map, but Legion futures don't reveal IDs that we can hash
   std::map<Legion::Future, int32_t> future_indices_{};
   std::vector<Legion::Future> coalesced_{};
   std::vector<Legion::Future> futures_{};

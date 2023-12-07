@@ -355,6 +355,16 @@ typename tuple<T>::const_iterator tuple<T>::end() const
   return cend();
 }
 
+template <typename T>
+size_t tuple<T>::hash() const
+{
+  size_t result = 0;
+  for (auto&& v : data()) {
+    hash_combine(result, v);
+  }
+  return result;
+}
+
 // ==========================================================================================
 
 template <typename T>

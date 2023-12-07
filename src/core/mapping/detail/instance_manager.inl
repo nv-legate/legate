@@ -61,21 +61,9 @@ inline bool BaseInstanceManager::FieldMemInfo::operator==(const FieldMemInfo& rh
   return tid == rhs.tid && fid == rhs.fid && memory == rhs.memory;
 }
 
-inline bool BaseInstanceManager::FieldMemInfo::operator<(const FieldMemInfo& rhs) const
+inline size_t BaseInstanceManager::FieldMemInfo::hash() const noexcept
 {
-  if (tid < rhs.tid) {
-    return true;
-  }
-  if (tid > rhs.tid) {
-    return false;
-  }
-  if (fid < rhs.fid) {
-    return true;
-  }
-  if (fid > rhs.fid) {
-    return false;
-  }
-  return memory < rhs.memory;
+  return hash_all(tid, fid, memory.id);
 }
 
 inline Legion::Mapping::LocalLock& BaseInstanceManager::manager_lock() { return manager_lock_; }

@@ -24,22 +24,8 @@ inline BaseProjectionInfo::BaseProjectionInfo(Legion::LogicalPartition _partitio
 
 inline bool BaseProjectionInfo::operator<(const BaseProjectionInfo& other) const
 {
-  if (partition < other.partition) {
-    return true;
-  }
-  if (other.partition < partition) {
-    return false;
-  }
-  if (proj_id < other.proj_id) {
-    return true;
-  }
-  if (proj_id > other.proj_id) {
-    return false;
-  }
-  if (redop < other.redop) {
-    return true;
-  }
-  return false;
+  return std::tie(partition, proj_id, redop) <
+         std::tie(other.partition, other.proj_id, other.redop);
 }
 
 inline bool BaseProjectionInfo::operator==(const BaseProjectionInfo& other) const
@@ -48,6 +34,11 @@ inline bool BaseProjectionInfo::operator==(const BaseProjectionInfo& other) cons
 }
 
 inline void BaseProjectionInfo::set_reduction_op(Legion::ReductionOpID _redop) { redop = _redop; }
+
+inline size_t BaseProjectionInfo::hash() const noexcept
+{
+  return hash_all(partition, proj_id, redop);
+}
 
 // ==========================================================================================
 

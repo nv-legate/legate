@@ -15,6 +15,8 @@
 #include "core/data/shape.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
+#include "core/utilities/detail/hash.h"
+#include "core/utilities/hash.h"
 
 #include <map>
 #include <tuple>
@@ -66,7 +68,8 @@ class PartitionManager {
   std::unordered_map<uint32_t, std::vector<uint32_t>> all_factors_{};
 
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
-  std::map<TilingCacheKey, Legion::IndexPartition> tiling_cache_{};
+  std::unordered_map<TilingCacheKey, Legion::IndexPartition, hasher<TilingCacheKey>>
+    tiling_cache_{};
   using WeightedCacheKey = std::pair<Legion::IndexSpace, Weighted>;
   std::map<WeightedCacheKey, Legion::IndexPartition> weighted_cache_{};
   using ImageCacheKey = std::tuple<Legion::IndexSpace, Legion::LogicalPartition, Legion::FieldID>;

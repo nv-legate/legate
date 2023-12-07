@@ -78,32 +78,6 @@ bool Tiling::operator==(const Tiling& other) const
          offsets_ == other.offsets_ && strides_ == other.strides_;
 }
 
-bool Tiling::operator<(const Tiling& other) const
-{
-  if (tile_shape_ < other.tile_shape_) {
-    return true;
-  }
-  if (other.tile_shape_ < tile_shape_) {
-    return false;
-  }
-  if (color_shape_ < other.color_shape_) {
-    return true;
-  }
-  if (other.color_shape_ < color_shape_) {
-    return false;
-  }
-  if (offsets_ < other.offsets_) {
-    return true;
-  }
-  if (other.offsets_ < offsets_) {
-    return false;
-  }
-  if (strides_ < other.strides_) {
-    return true;
-  }
-  return false;
-}
-
 bool Tiling::is_complete_for(const detail::Storage* storage) const
 {
   const auto& storage_exts = storage->extents();
@@ -232,6 +206,8 @@ Shape Tiling::get_child_offsets(const Shape& color) const
                strides_ * color,
                offsets_);
 }
+
+size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
 
 Weighted::Weighted(const Legion::FutureMap& weights, const Domain& color_domain)
   : weights_{std::make_unique<Legion::FutureMap>(weights)},

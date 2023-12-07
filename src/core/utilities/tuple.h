@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "core/utilities/hash.h"
+
 #include <cstdint>
 #include <initializer_list>
 #include <iosfwd>
@@ -102,6 +104,8 @@ class tuple {
   [[nodiscard]] iterator end();
   [[nodiscard]] const_iterator cend() const;
   [[nodiscard]] const_iterator end() const;
+
+  [[nodiscard]] size_t hash() const;
 
  private:
   container_type data_{};

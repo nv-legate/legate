@@ -13,11 +13,14 @@
 #pragma once
 
 #include "core/mapping/mapping.h"
+#include "core/utilities/detail/hash.h"
+#include "core/utilities/hash.h"
 
 #include <iosfwd>
 #include <map>
 #include <memory>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 namespace legate::mapping::detail {
@@ -36,7 +39,7 @@ struct RegionGroup {
 
   std::set<Region> regions{};
   Domain bounding_box{};
-  std::map<const RegionGroup*, bool> subsumption_cache{};
+  std::unordered_map<const RegionGroup*, bool> subsumption_cache{};
 };
 
 std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group);
@@ -88,8 +91,8 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
  private:
   void dump_and_sanity_check() const;
 
-  std::map<RegionGroup*, InstanceSpec> instances_{};
-  std::map<Legion::LogicalRegion, RegionGroupP> groups_{};
+  std::unordered_map<RegionGroup*, InstanceSpec> instances_{};
+  std::unordered_map<Region, RegionGroupP> groups_{};
 };
 
 class ReductionInstanceSet {
@@ -120,7 +123,7 @@ class ReductionInstanceSet {
   bool erase(const Instance& inst);
 
  private:
-  std::map<Region, ReductionInstanceSpec> instances_{};
+  std::unordered_map<Region, ReductionInstanceSpec> instances_{};
 };
 
 class BaseInstanceManager {
@@ -135,7 +138,7 @@ class BaseInstanceManager {
     FieldMemInfo(RegionTreeID t, FieldID f, Memory m);
 
     bool operator==(const FieldMemInfo& rhs) const;
-    bool operator<(const FieldMemInfo& rhs) const;
+    [[nodiscard]] size_t hash() const noexcept;
 
     RegionTreeID tid;
     FieldID fid;
@@ -174,7 +177,7 @@ class InstanceManager : public BaseInstanceManager {
   [[nodiscard]] std::map<Memory, size_t> aggregate_instance_sizes() const;
 
  private:
-  std::map<FieldMemInfo, InstanceSet> instance_sets_{};
+  std::unordered_map<FieldMemInfo, InstanceSet, hasher<FieldMemInfo>> instance_sets_{};
 };
 
 class ReductionInstanceManager : public BaseInstanceManager {
@@ -199,7 +202,7 @@ class ReductionInstanceManager : public BaseInstanceManager {
   [[nodiscard]] static ReductionInstanceManager* get_instance_manager();
 
  private:
-  std::map<FieldMemInfo, ReductionInstanceSet> instance_sets_{};
+  std::unordered_map<FieldMemInfo, ReductionInstanceSet, hasher<FieldMemInfo>> instance_sets_{};
 };
 
 }  // namespace legate::mapping::detail

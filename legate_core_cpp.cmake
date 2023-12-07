@@ -565,6 +565,7 @@ install(
   FILES src/core/utilities/debug.h
         src/core/utilities/debug.inl
         src/core/utilities/dispatch.h
+        src/core/utilities/hash.h
         src/core/utilities/machine.h
         src/core/utilities/memory.h
         src/core/utilities/memory.inl

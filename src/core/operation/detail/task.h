@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -44,7 +45,7 @@ class Task : public Operation {
     ArrayArg(std::shared_ptr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
 
     std::shared_ptr<LogicalArray> array{};
-    std::map<std::shared_ptr<LogicalStore>, const Variable*> mapping{};
+    std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*> mapping{};
     std::optional<SymbolicPoint> projection{};
   };
 

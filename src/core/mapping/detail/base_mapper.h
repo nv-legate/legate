@@ -16,15 +16,16 @@
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/mapping.h"
 #include "core/runtime/detail/library.h"
+#include "core/utilities/detail/hash.h"
 #include "core/utilities/typedefs.h"
 
 #include "legion.h"
 
-#include <map>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace legate::mapping::detail {
@@ -246,8 +247,8 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                           const MapperTaskResult& result) override;
 
  protected:
-  using OutputMap =
-    std::map<const Legion::RegionRequirement*, std::vector<Legion::Mapping::PhysicalInstance>*>;
+  using OutputMap = std::unordered_map<const Legion::RegionRequirement*,
+                                       std::vector<Legion::Mapping::PhysicalInstance>*>;
   void map_legate_stores(Legion::Mapping::MapperContext ctx,
                          const Legion::Mappable& mappable,
                          std::vector<std::unique_ptr<StoreMapping>>& mappings,
@@ -296,7 +297,8 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
 
  protected:
   using VariantCacheKey = std::pair<Legion::TaskID, Processor::Kind>;
-  std::map<VariantCacheKey, std::optional<Legion::VariantID>> variants{};
+  std::unordered_map<VariantCacheKey, std::optional<Legion::VariantID>, hasher<VariantCacheKey>>
+    variants{};
 
   InstanceManager* local_instances{};
   ReductionInstanceManager* reduction_instances{};

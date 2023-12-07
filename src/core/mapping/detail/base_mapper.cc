@@ -487,8 +487,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   map_unbound_stores(for_unbound_stores);
 
   output.chosen_instances.resize(task.regions.size());
-  std::map<const Legion::RegionRequirement*, std::vector<Legion::Mapping::PhysicalInstance>*>
-    output_map;
+  OutputMap output_map;
   for (uint32_t idx = 0; idx < task.regions.size(); ++idx) {
     output_map[&task.regions[idx]] = &output.chosen_instances[idx];
   }
@@ -1066,8 +1065,7 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
 
   mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
 
-  std::map<const Legion::RegionRequirement*, std::vector<Legion::Mapping::PhysicalInstance>*>
-    output_map;
+  OutputMap output_map;
   auto&& reqs = mappings.front()->requirements();
   for (auto* req : reqs) {
     output_map[req] = &output.chosen_instances;
@@ -1146,8 +1144,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
 
   auto store_target = default_store_targets(target_proc.kind()).front();
 
-  std::map<const Legion::RegionRequirement*, std::vector<Legion::Mapping::PhysicalInstance>*>
-    output_map;
+  OutputMap output_map;
   auto add_to_output_map = [&output_map](auto& reqs, auto& instances) {
     instances.resize(reqs.size());
     for (uint32_t idx = 0; idx < reqs.size(); ++idx) {
@@ -1339,8 +1336,7 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
   std::vector<std::unique_ptr<StoreMapping>> mappings;
   mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
 
-  std::map<const Legion::RegionRequirement*, std::vector<Legion::Mapping::PhysicalInstance>*>
-    output_map;
+  OutputMap output_map;
   auto&& reqs = mappings.front()->requirements();
   for (auto* req : reqs) {
     output_map[req] = &output.chosen_instances;

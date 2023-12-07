@@ -71,7 +71,6 @@ TEST_F(Variable, BasicMethods)
   EXPECT_EQ(*part_imp, *part1_imp);
   auto part2     = task.declare_partition();
   auto part2_imp = part2.impl();
-  EXPECT_TRUE(*part_imp < *part2_imp);
 
   // Test find_partition_symbols
   std::vector<const legate::detail::Variable*> symbols = {};

@@ -82,8 +82,6 @@ class Variable final : public Expr {
 
   friend bool operator==(const Variable& lhs, const Variable& rhs);
 
-  friend bool operator<(const Variable& lhs, const Variable& rhs);
-
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
   [[nodiscard]] bool closed() const override;
@@ -94,6 +92,8 @@ class Variable final : public Expr {
   [[nodiscard]] const Variable* as_variable() const override;
 
   [[nodiscard]] const Operation* operation() const;
+
+  [[nodiscard]] size_t hash() const noexcept;
 
  private:
   const Operation* op_{};

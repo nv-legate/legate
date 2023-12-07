@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/utilities/detail/hash.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate::detail {
@@ -35,6 +36,8 @@ struct BaseProjectionInfo {
                             bool is_key) const;
 
   void set_reduction_op(Legion::ReductionOpID _redop);
+
+  [[nodiscard]] size_t hash() const noexcept;
 
   Legion::LogicalPartition partition{Legion::LogicalPartition::NO_PART};
   Legion::ProjectionID proj_id{};

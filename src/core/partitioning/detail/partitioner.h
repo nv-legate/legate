@@ -14,10 +14,11 @@
 
 #include "core/data/shape.h"
 #include "core/partitioning/detail/constraint.h"
+#include "core/utilities/hash.h"
 
-#include <map>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace legate {
@@ -53,9 +54,9 @@ class Strategy {
   void compute_launch_domains(const ConstraintSolver& solver);
   void record_key_partition(const Variable* partition_symbol);
 
-  std::map<const Variable, std::shared_ptr<Partition>> assignments_{};
-  std::map<const Variable, Legion::FieldSpace> field_spaces_{};
-  std::map<const Operation*, Domain> launch_domains_{};
+  std::unordered_map<const Variable, std::shared_ptr<Partition>> assignments_{};
+  std::unordered_map<const Variable, Legion::FieldSpace> field_spaces_{};
+  std::unordered_map<const Operation*, Domain> launch_domains_{};
   std::optional<const Variable*> key_partition_{};
 };
 
