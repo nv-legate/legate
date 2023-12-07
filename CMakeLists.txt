@@ -16,6 +16,24 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/policies.cmake NO_POLICY_SCOPE)
 
 set(LEGATE_CORE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+set(legate_core_CXX_STANDARD 17)
+if(CMAKE_CXX_STANDARD)
+  if(NOT ${CMAKE_CXX_STANDARD} EQUAL ${legate_core_CXX_STANDARD})
+    message(WARNING "CMAKE_CXX_STANDARD set to ${CMAKE_CXX_STANDARD}. Legate.Core expects to be compiled with C++${legate_core_CXX_STANDARD}, ignoring CMAKE_CXX_STANDARD.")
+  endif()
+endif()
+set(CMAKE_CXX_STANDARD ${legate_core_CXX_STANDARD} CACHE STRING "" FORCE)
+set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "" FORCE)
+
+if(CMAKE_CUDA_STANDARD)
+  if(NOT ${CMAKE_CUDA_STANDARD} EQUAL ${legate_core_CXX_STANDARD})
+    message(WARNING "CMAKE_CUDA_STANDARD set to ${CMAKE_CUDA_STANDARD}. Legate.Core expects to be compiled with C++${legate_core_CXX_STANDARD}, ignoring CMAKE_CUDA_STANDARD.")
+  endif()
+endif()
+set(CMAKE_CUDA_STANDARD ${legate_core_CXX_STANDARD} CACHE STRING "" FORCE)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE STRING "" FORCE)
+unset(legate_core_CXX_STANDARD) # clean up
+
 ##############################################################################
 # - Download and initialize RAPIDS CMake helpers -----------------------------
 
