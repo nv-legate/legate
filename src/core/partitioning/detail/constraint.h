@@ -13,9 +13,9 @@
 #pragma once
 
 #include "core/data/shape.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/tuple.h"
 
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -59,7 +59,7 @@ struct Expr {
 
 class Literal final : public Expr {
  public:
-  explicit Literal(std::shared_ptr<Partition> partition);
+  explicit Literal(InternalSharedPtr<Partition> partition);
 
   void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
 
@@ -70,10 +70,10 @@ class Literal final : public Expr {
   [[nodiscard]] const Literal* as_literal() const override;
   [[nodiscard]] const Variable* as_variable() const override;
 
-  [[nodiscard]] const std::shared_ptr<Partition>& partition() const;
+  [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
 
  private:
-  std::shared_ptr<Partition> partition_{};
+  InternalSharedPtr<Partition> partition_{};
 };
 
 class Variable final : public Expr {
@@ -198,7 +198,7 @@ class ImageConstraint final : public Constraint {
   [[nodiscard]] const Variable* var_function() const;
   [[nodiscard]] const Variable* var_range() const;
 
-  [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
+  [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 
  private:
   const Variable* var_function_{};
@@ -226,7 +226,7 @@ class ScaleConstraint final : public Constraint {
   [[nodiscard]] const Variable* var_smaller() const;
   [[nodiscard]] const Variable* var_bigger() const;
 
-  [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
+  [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 
  private:
   Shape factors_{};
@@ -258,7 +258,7 @@ class BloatConstraint final : public Constraint {
   [[nodiscard]] const Variable* var_source() const;
   [[nodiscard]] const Variable* var_bloat() const;
 
-  [[nodiscard]] std::shared_ptr<Partition> resolve(const Strategy& strategy) const;
+  [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 
  private:
   const Variable* var_source_{};
@@ -267,24 +267,24 @@ class BloatConstraint final : public Constraint {
   Shape high_offsets_{};
 };
 
-[[nodiscard]] std::shared_ptr<Alignment> align(const Variable* lhs, const Variable* rhs);
+[[nodiscard]] InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs);
 
-[[nodiscard]] std::shared_ptr<Broadcast> broadcast(const Variable* variable);
+[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable);
 
-[[nodiscard]] std::shared_ptr<Broadcast> broadcast(const Variable* variable,
-                                                   const tuple<int32_t>& axes);
+[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable,
+                                                     const tuple<int32_t>& axes);
 
-[[nodiscard]] std::shared_ptr<ImageConstraint> image(const Variable* var_function,
-                                                     const Variable* var_range);
+[[nodiscard]] InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
+                                                       const Variable* var_range);
 
-[[nodiscard]] std::shared_ptr<ScaleConstraint> scale(const Shape& factors,
-                                                     const Variable* var_smaller,
-                                                     const Variable* var_bigger);
+[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(const Shape& factors,
+                                                       const Variable* var_smaller,
+                                                       const Variable* var_bigger);
 
-[[nodiscard]] std::shared_ptr<BloatConstraint> bloat(const Variable* var_source,
-                                                     const Variable* var_bloat,
-                                                     const Shape& low_offsets,
-                                                     const Shape& high_offsets);
+[[nodiscard]] InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
+                                                       const Variable* var_bloat,
+                                                       const Shape& low_offsets,
+                                                       const Shape& high_offsets);
 
 }  // namespace legate::detail
 

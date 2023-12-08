@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "core/utilities/compressed_pair.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include "legate_defines.h"
@@ -24,229 +23,222 @@
 
 namespace legate {
 
-namespace detail {
-
-// ==========================================================================================
-
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_ref_cnt() const noexcept
+template <typename T>
+void InternalWeakPtr<T>::maybe_destroy_() noexcept
 {
-  return strong_refs_;
-}
-
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_ref_cnt() const noexcept
-{
-  return user_refs_;
-}
-
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_ref() noexcept
-{
-  return ++strong_refs_;
-}
-
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_ref() noexcept
-{
-  return ++user_refs_;
-}
-
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_deref() noexcept
-{
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(strong_refs_ > 0);
+  if (ctrl_ && ctrl_->weak_ref_cnt() == 0) {
+    // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
+    // circumstances.
+    //
+    // They must stay exactly as they are. ctrl_->maybe_destroy_control_block() calls the moral
+    // equivalent of "delete this", and hence any modification of ctrl_ hereafter is strictly
+    // undefined behavior.
+    //
+    // We must null-out ctrl_ first (via std::exchange) since if this weak ptr is held by a
+    // enable_shared_from_this, then maybe_destroy_control_block() could potentially also wipe
+    // out *this.
+    //
+    // BEGIN DO NOT MODIFY
+    std::exchange(ctrl_, nullptr)->maybe_destroy_control_block();
+    // END DO NOT MODIFY
   }
-  return --strong_refs_;
 }
 
-inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_deref() noexcept
+template <typename T>
+void InternalWeakPtr<T>::weak_reference_() noexcept
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(user_refs_ > 0);
+  if (ctrl_) {
+    ctrl_->weak_ref();
   }
-  return --user_refs_;
+}
+
+template <typename T>
+void InternalWeakPtr<T>::weak_dereference_() noexcept
+{
+  if (ctrl_) {
+    ctrl_->weak_deref();
+    maybe_destroy_();
+  }
+}
+
+template <typename T>
+constexpr InternalWeakPtr<T>::InternalWeakPtr(move_tag, control_block_type* ctrl_block_) noexcept
+  : ctrl_{ctrl_block_}
+{
+}
+
+template <typename T>
+InternalWeakPtr<T>::InternalWeakPtr(copy_tag, control_block_type* ctrl_block_) noexcept
+  : ctrl_{ctrl_block_}
+{
+  weak_reference_();
 }
 
 // ==========================================================================================
 
 template <typename T>
-inline void ControlBlockBase::dispose_control_block_impl_(T* cb_impl)
+InternalWeakPtr<T>::InternalWeakPtr(const InternalWeakPtr& other) noexcept
+  : InternalWeakPtr{copy_tag{}, other.ctrl_}
 {
-  auto alloc         = cb_impl->template rebind_alloc<T>();
-  using alloc_traits = std::allocator_traits<std::decay_t<decltype(alloc)>>;
+}
 
-  // cb_impl->~T();
-  alloc_traits::destroy(alloc, cb_impl);
-  // operator delete(cb_impl);
-  alloc_traits::deallocate(alloc, cb_impl, 1);
+template <typename T>
+InternalWeakPtr<T>&
+InternalWeakPtr<T>::operator=(  // NOLINT(bugprone-unhandled-self-assignment) yes it does
+  const InternalWeakPtr& other) noexcept
+{
+  InternalWeakPtr{other}.swap(*this);
+  return *this;
+}
+
+template <typename T>
+InternalWeakPtr<T>::InternalWeakPtr(InternalWeakPtr&& other) noexcept
+  : InternalWeakPtr{move_tag{}, std::exchange(other.ctrl_, nullptr)}
+{
+}
+
+template <typename T>
+InternalWeakPtr<T>& InternalWeakPtr<T>::operator=(InternalWeakPtr&& other) noexcept
+{
+  InternalWeakPtr{std::move(other)}.swap(*this);
+  return *this;
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalWeakPtr<T>::InternalWeakPtr(const InternalWeakPtr<U>& other) noexcept
+  : InternalWeakPtr{copy_tag{}, other.ctrl_}
+{
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalWeakPtr<T>&
+InternalWeakPtr<T>::operator=(  // NOLINT(bugprone-unhandled-self-assignment) yes it does
+  const InternalWeakPtr<U>& other) noexcept
+{
+  InternalWeakPtr{other}.swap(*this);
+  return *this;
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalWeakPtr<T>::InternalWeakPtr(InternalWeakPtr<U>&& other) noexcept
+  : InternalWeakPtr{move_tag{}, std::exchange(other.ctrl_, nullptr)}
+{
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalWeakPtr<T>& InternalWeakPtr<T>::operator=(InternalWeakPtr<U>&& other) noexcept
+{
+  InternalWeakPtr{std::move(other)}.swap(*this);
+  return *this;
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalWeakPtr<T>::InternalWeakPtr(const InternalSharedPtr<U>& other) noexcept
+  : InternalWeakPtr{copy_tag{}, other.ctrl_}
+{
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalWeakPtr<T>& InternalWeakPtr<T>::operator=(const InternalSharedPtr<U>& other) noexcept
+{
+  InternalWeakPtr{other}.swap(*this);
+  return *this;
+}
+
+template <typename T>
+InternalWeakPtr<T>::~InternalWeakPtr() noexcept
+{
+  weak_dereference_();
 }
 
 // ==========================================================================================
 
-template <typename T, typename Deleter, typename Alloc>
-class SeparateControlBlock final : public ControlBlockBase {
- public:
-  using value_type     = T;
-  using deleter_type   = Deleter;
-  using allocator_type = Alloc;
-
-  SeparateControlBlock() = delete;
-
-  SeparateControlBlock(value_type* ptr, deleter_type deleter, allocator_type allocator) noexcept
-    : ptr_{ptr}, pair_{std::move(deleter), std::move(allocator)}
-  {
-    static_assert(
-      std::is_nothrow_move_constructible_v<deleter_type>,
-      "Deleter must be no-throw move constructible to preserve strong exception guarantee");
-    static_assert(
-      std::is_nothrow_move_constructible_v<allocator_type>,
-      "Allocator must be no-throw move constructible to preserve strong exception guarantee");
-  }
-
-  void destroy() noexcept final
-  {
-    // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
-    static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(ptr_);
-    }
-    deleter_()(ptr_);
-  }
-
-  void dispose_control_block() noexcept final
-  {
-    ControlBlockBase::dispose_control_block_impl_(this);
-  }
-
-  [[nodiscard]] void* ptr() noexcept final { return static_cast<void*>(ptr_); }
-  [[nodiscard]] const void* ptr() const noexcept final { return static_cast<const void*>(ptr_); }
-
-  template <typename U>
-  [[nodiscard]] auto rebind_alloc() const
-  {
-    using rebound_type = typename std::allocator_traits<allocator_type>::template rebind_alloc<U>;
-    return rebound_type{alloc_()};
-  }
-
- private:
-  [[nodiscard]] allocator_type& alloc_() noexcept { return pair_.second(); }
-  [[nodiscard]] const allocator_type& alloc_() const noexcept { return pair_.second(); }
-
-  [[nodiscard]] deleter_type& deleter_() noexcept { return pair_.first(); }
-  [[nodiscard]] const deleter_type& deleter_() const noexcept { return pair_.first(); }
-
-  value_type* ptr_;
-  compressed_pair<deleter_type, allocator_type> pair_;
-};
-
-template <typename T, typename Allocator>
-class InplaceControlBlock final : public ControlBlockBase {
- public:
-  using value_type     = T;
-  using allocator_type = Allocator;
-
- private:
-  struct aligned_storage {
-    constexpr aligned_storage() noexcept = default;
-    // use this ctor to avoid zero-initializing the array
-    constexpr aligned_storage(std::nullptr_t) noexcept {}
-
-    [[nodiscard]] void* addr() noexcept { return static_cast<void*>(&mem); }
-    [[nodiscard]] const void* addr() const noexcept { return static_cast<const void*>(&mem); }
-
-    alignas(alignof(value_type)) std::byte mem[sizeof(value_type)];
-  };
-
- public:
-  InplaceControlBlock() = delete;
-
-  template <typename... Args>
-  InplaceControlBlock(allocator_type allocator, Args&&... args)
-    : pair_{std::move(allocator), nullptr}
-  {
-    auto alloc = rebind_alloc<value_type>();
-
-    // possibly throwing
-    std::allocator_traits<std::decay_t<decltype(alloc)>>::construct(
-      alloc, static_cast<value_type*>(ptr()), std::forward<Args>(args)...);
-  }
-
-  void destroy() noexcept final
-  {
-    // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
-    static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
-    auto alloc = rebind_alloc<value_type>();
-
-    std::allocator_traits<std::decay_t<decltype(alloc)>>::destroy(alloc,
-                                                                  static_cast<value_type*>(ptr()));
-  }
-
-  void dispose_control_block() noexcept final
-  {
-    ControlBlockBase::dispose_control_block_impl_(this);
-  }
-
-  [[nodiscard]] void* ptr() noexcept final { return store_().addr(); }
-  [[nodiscard]] const void* ptr() const noexcept final { return store_().addr(); }
-
-  template <typename U>
-  [[nodiscard]] auto rebind_alloc() const
-  {
-    using rebound_type = typename std::allocator_traits<allocator_type>::template rebind_alloc<U>;
-    return rebound_type{alloc_()};
-  }
-
- private:
-  [[nodiscard]] allocator_type& alloc_() noexcept { return pair_.first(); }
-  [[nodiscard]] const allocator_type& alloc_() const noexcept { return pair_.first(); }
-
-  [[nodiscard]] aligned_storage& store_() noexcept { return pair_.second(); }
-  [[nodiscard]] const aligned_storage& store_() const noexcept { return pair_.second(); }
-
-  compressed_pair<allocator_type, aligned_storage> pair_;
-};
-
-template <typename U, typename Alloc, typename P, typename... Args>
-inline U* construct_from_allocator_(Alloc& allocator, P* hint, Args&&... args)
+template <typename T>
+typename InternalWeakPtr<T>::ref_count_type InternalWeakPtr<T>::use_count() const noexcept
 {
-  using rebound_type   = typename std::allocator_traits<Alloc>::template rebind_alloc<U>;
-  using rebound_traits = std::allocator_traits<rebound_type>;
-  rebound_type rebound_alloc{allocator};
-
-  // Don't cast result to U * (implicitly or explicitly). It is an error for the rebound
-  // allocator to allocate anything other than U *, so we should catch that.
-  auto result = rebound_traits::allocate(rebound_alloc, 1, hint);
-  static_assert(std::is_same_v<std::decay_t<decltype(result)>, U*>);
-  // OK if the preceding lines throw, it is assumed the allocator cleans up after itself
-  // properly
-  try {
-    rebound_traits::construct(rebound_alloc, result, std::forward<Args>(args)...);
-  } catch (...) {
-    rebound_traits::deallocate(rebound_alloc, result, 1);
-    throw;
-  }
-  return result;
+  return ctrl_ ? ctrl_->strong_ref_cnt() : 0;
 }
 
-}  // namespace detail
+template <typename T>
+bool InternalWeakPtr<T>::expired() const noexcept
+{
+  return use_count() == 0;
+}
+
+template <typename T>
+InternalSharedPtr<T> InternalWeakPtr<T>::lock() const noexcept
+{
+  // Normally the weak ptr ctor for InternalSharedPtr can throw (if the weak ptr is empty) but
+  // in this case know it is not, and hence this function is noexcept
+  return expired() ? InternalSharedPtr<T>{} : InternalSharedPtr<T>{*this};
+}
+
+template <typename T>
+void InternalWeakPtr<T>::swap(InternalWeakPtr& other) noexcept
+{
+  using std::swap;
+
+  swap(other.ctrl_, ctrl_);
+}
+
+template <typename T>
+void swap(InternalWeakPtr<T>& lhs, InternalWeakPtr<T>& rhs) noexcept
+{
+  lhs.swap(rhs);
+}
 
 // ==========================================================================================
 
 template <typename T>
 void InternalSharedPtr<T>::maybe_destroy_() noexcept
 {
-  if (!use_count()) {
-    ctrl_->destroy();
-    // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
-    // circumstances.
-    //
-    // They must stay exactly as they are. ctrl_->dispose_control_block() calls the moral
-    // equivalent of "delete this", and hence any modification of ctrl_ hereafter is strictly
-    // undefined behavior.
-    //
-    // BEGIN DO NOT MODIFY
-    ctrl_->dispose_control_block();
-    ctrl_ = nullptr;
-    ptr_  = nullptr;
-    // END DO NOT MODIFY
+  if (use_count()) {
+    return;
   }
+  // If ptr_ is a SharedFromThis enabled class, then we want to temporarily act like we have an
+  // extra strong ref. This is to head off the following:
+  //
+  // 1. We decrement strong refcount to 0 (i.e. we are here).
+  // 2. Control block destroys the object (i.e. ptr_)...
+  // 3. ... Which eventually calls the SharedFromThis dtor, which calls the weak ptr dtor...
+  // 4. ... Which decrements the weak refcount to  0...
+  // 5. ... And calls its own ctrl_->maybe_destroy_control_block()
+  //
+  // And since all 3 counts (strong, weak, and user) are 0, the control block self-destructs
+  // out from underneath us! We could implement some complex logic which propagates a bool
+  // "weak ptr don't destroy the control block" all the way down the stack somehow, or maybe
+  // set a similar flag in the control block, or we can just do this.
+  //
+  // CAUTION:
+  // If element_type is opaque at this point, it may constitute an ODR violation!
+  if constexpr (detail::shared_from_this_enabled_v<element_type>) {
+    ctrl_->strong_ref();
+  }
+  ctrl_->destroy_object();
+  if constexpr (detail::shared_from_this_enabled_v<element_type>) {
+    ctrl_->strong_deref();
+  }
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!use_count());
+  }
+  // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
+  // circumstances.
+  //
+  // They must stay exactly as they are. ctrl_->maybe_destroy_control_block() calls the moral
+  // equivalent of "delete this", and hence any modification of ctrl_ hereafter is strictly
+  // undefined behavior.
+  //
+  // BEGIN DO NOT MODIFY
+  ctrl_->maybe_destroy_control_block();
+  ctrl_ = nullptr;
+  ptr_  = nullptr;
+  // END DO NOT MODIFY
 }
 
 template <typename T>
@@ -269,6 +261,30 @@ void InternalSharedPtr<T>::strong_dereference_() noexcept
       assert(get());
     }
     ctrl_->strong_deref();
+    maybe_destroy_();
+  }
+}
+
+template <typename T>
+void InternalSharedPtr<T>::weak_reference_() noexcept
+{
+  if (ctrl_) {
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(get());
+      assert(use_count());
+    }
+    ctrl_->weak_ref();
+  }
+}
+
+template <typename T>
+void InternalSharedPtr<T>::weak_dereference_() noexcept
+{
+  if (ctrl_) {
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(get());
+    }
+    ctrl_->weak_deref();
     maybe_destroy_();
   }
 }
@@ -298,27 +314,46 @@ void InternalSharedPtr<T>::user_dereference_(SharedPtrAccessTag) noexcept
 }
 
 template <typename T>
+template <typename U, typename V>
+void InternalSharedPtr<T>::init_shared_from_this_(const EnableSharedFromThis<U>* weak, V* ptr)
+{
+  if (weak && weak->weak_this_.expired()) {
+    using RawU = std::remove_cv_t<U>;
+
+    weak->weak_this_ =
+      InternalSharedPtr<RawU>{*this, const_cast<RawU*>(static_cast<const U*>(ptr))};
+  }
+}
+
+template <typename T>
+void InternalSharedPtr<T>::init_shared_from_this_(...)
+{
+}
+
+// Every non-trivial constructor goes through this function!
+template <typename T>
 template <typename U>
-inline InternalSharedPtr<T>::InternalSharedPtr(AllocateSharedTag,
-                                               control_block_type* ctrl_impl,
-                                               U* ptr) noexcept
+InternalSharedPtr<T>::InternalSharedPtr(AllocatedControlBlockTag,
+                                        control_block_type* ctrl_impl,
+                                        U* ptr) noexcept
   : ctrl_{ctrl_impl}, ptr_{ptr}
 {
+  init_shared_from_this_(ptr, ptr);
 }
 
 // ==========================================================================================
 
 template <typename T>
-inline InternalSharedPtr<T>::InternalSharedPtr(std::nullptr_t) noexcept
+InternalSharedPtr<T>::InternalSharedPtr(std::nullptr_t) noexcept
 {
 }
 
 // clang-format off
 template <typename T>
-template <typename U, typename D, typename A>
-inline InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator) try :
+template <typename U, typename D, typename A, typename SFINAE>
+ InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator) try :
   InternalSharedPtr{
-    AllocateSharedTag{},
+    AllocatedControlBlockTag{},
     detail::construct_from_allocator_<detail::SeparateControlBlock<U, D, A>>(allocator, ptr, ptr, deleter, allocator),
     ptr
   }
@@ -332,111 +367,176 @@ catch (...)
 // clang-format on
 
 template <typename T>
-inline InternalSharedPtr<T>::InternalSharedPtr(element_type* ptr)
+InternalSharedPtr<T>::InternalSharedPtr(element_type* ptr)
   : InternalSharedPtr{ptr, std::default_delete<element_type>{}}
 {
 }
 
 template <typename T>
-template <typename U>
-inline InternalSharedPtr<T>::InternalSharedPtr(U* ptr)
-  : InternalSharedPtr{ptr, std::default_delete<U>{}}
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>::InternalSharedPtr(U* ptr) : InternalSharedPtr{ptr, std::default_delete<U>{}}
 {
+  static_assert(!std::is_void_v<U>, "incomplete type");
+  // NOLINTNEXTLINE(bugprone-sizeof-expression)
+  static_assert(sizeof(U) > 0, "incomplete type");
 }
 
 template <typename T>
-inline InternalSharedPtr<T>::InternalSharedPtr(const InternalSharedPtr& other) noexcept
-  : InternalSharedPtr{AllocateSharedTag{}, other.ctrl_, other.ptr_}
+InternalSharedPtr<T>::InternalSharedPtr(const InternalSharedPtr& other) noexcept
+  : InternalSharedPtr{AllocatedControlBlockTag{}, other.ctrl_, other.ptr_}
 {
   strong_reference_();
 }
 
 template <typename T>
-inline InternalSharedPtr<T>&
+InternalSharedPtr<T>&
 InternalSharedPtr<T>::operator=(  // NOLINT(bugprone-unhandled-self-assignment): yes it does
   const InternalSharedPtr& other) noexcept
 {
-  InternalSharedPtr tmp{other};
-
-  swap(tmp);
+  InternalSharedPtr{other}.swap(*this);
   return *this;
 }
 
 template <typename T>
-inline InternalSharedPtr<T>::InternalSharedPtr(InternalSharedPtr&& other) noexcept
-  : InternalSharedPtr{
-      AllocateSharedTag{}, std::exchange(other.ctrl_, nullptr), std::exchange(other.ptr_, nullptr)}
+InternalSharedPtr<T>::InternalSharedPtr(InternalSharedPtr&& other) noexcept
+  : InternalSharedPtr{AllocatedControlBlockTag{},
+                      std::exchange(other.ctrl_, nullptr),
+                      std::exchange(other.ptr_, nullptr)}
 {
   // we do not increment ref-counts here, the other pointer gives up ownership entirely (so
   // refcounts stay at previous levels)
 }
 
 template <typename T>
-inline InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(InternalSharedPtr&& other) noexcept
+InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(InternalSharedPtr&& other) noexcept
 {
-  InternalSharedPtr tmp{std::move(other)};
-
-  swap(tmp);
+  InternalSharedPtr{std::move(other)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U>
-inline InternalSharedPtr<T>::InternalSharedPtr(const InternalSharedPtr<U>& other) noexcept
-  : InternalSharedPtr{AllocateSharedTag{}, other.ctrl_, other.ptr_}
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>::InternalSharedPtr(const InternalSharedPtr<U>& other) noexcept
+  : InternalSharedPtr{AllocatedControlBlockTag{}, other.ctrl_, other.ptr_}
 {
   strong_reference_();
 }
 
 template <typename T>
-template <typename U>
-inline InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(
-  const InternalSharedPtr<U>& other) noexcept
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(const InternalSharedPtr<U>& other) noexcept
 {
-  InternalSharedPtr tmp{other};
-
-  swap(tmp);
+  InternalSharedPtr{other}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U>
-inline InternalSharedPtr<T>::InternalSharedPtr(InternalSharedPtr<U>&& other) noexcept
-  : InternalSharedPtr{
-      AllocateSharedTag{}, std::exchange(other.ctrl_, nullptr), std::exchange(other.ptr_, nullptr)}
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>::InternalSharedPtr(InternalSharedPtr<U>&& other) noexcept
+  : InternalSharedPtr{AllocatedControlBlockTag{},
+                      std::exchange(other.ctrl_, nullptr),
+                      std::exchange(other.ptr_, nullptr)}
 {
 }
 
 template <typename T>
-template <typename U>
-inline InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(InternalSharedPtr<U>&& other) noexcept
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(InternalSharedPtr<U>&& other) noexcept
 {
-  InternalSharedPtr tmp{std::move(other)};
-
-  swap(tmp);
+  InternalSharedPtr{std::move(other)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U, typename D>
-inline InternalSharedPtr<T>::InternalSharedPtr(std::unique_ptr<U, D>&& ptr)
+template <typename U, typename D, typename SFINAE>
+InternalSharedPtr<T>::InternalSharedPtr(std::unique_ptr<U, D>&& ptr)
   : InternalSharedPtr{ptr.get(), std::move(ptr.get_deleter())}
 {
   // Release only after we have fully constructed ourselves to preserve strong exception
   // guarantee. If the above constructor throws, this has no effect.
-  ptr.release();
+  static_cast<void>(ptr.release());
 }
 
 template <typename T>
-template <typename U, typename D>
-inline InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(std::unique_ptr<U, D>&& ptr)
+template <typename U, typename D, typename SFINAE>
+InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(std::unique_ptr<U, D>&& ptr)
 {
   InternalSharedPtr{std::move(ptr)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-inline InternalSharedPtr<T>::~InternalSharedPtr() noexcept
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>::InternalSharedPtr(const SharedPtr<U>& other) noexcept
+  : InternalSharedPtr{other.internal_ptr({})}
+{
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(const SharedPtr<U>& other) noexcept
+{
+  InternalSharedPtr{other}.swap(*this);
+  return *this;
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>::InternalSharedPtr(SharedPtr<U>&& other) noexcept
+  : InternalSharedPtr{std::move(other.internal_ptr({}))}
+{
+  // Normally, move-assigning from one shared ptr instance to another does not incur any
+  // reference-count updating, however in this case we are "down-casting" from a user reference
+  // to just an internal reference. So we must decrement the user count since other is empty
+  // after this call.
+  user_dereference_({});
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(SharedPtr<U>&& other) noexcept
+{
+  InternalSharedPtr{std::move(other)}.swap(*this);
+  return *this;
+}
+
+template <typename T>
+template <typename U, typename SFINAE>
+InternalSharedPtr<T>::InternalSharedPtr(const InternalWeakPtr<U>& other)
+  : InternalSharedPtr{AllocatedControlBlockTag{},
+                      other.ctrl_,
+                      other.ctrl_ ? static_cast<T*>(other.ctrl_->ptr()) : nullptr}
+{
+  if (!ctrl_) {
+    throw BadInternalWeakPtr{
+      "Trying to construct an InternalSharedPtr from "
+      "an empty InternalWeakPtr"};
+  }
+  strong_reference_();
+}
+
+template <typename T>
+template <typename U>
+InternalSharedPtr<T>::InternalSharedPtr(const InternalSharedPtr<U>& other,
+                                        element_type* ptr) noexcept
+  // Do not use the AllocatedControlBlockTag ctor, otherwise this will infinitely loop for
+  // enable_shared_from_this classes!
+  : ctrl_{other.ctrl_}, ptr_{ptr}
+{
+  strong_reference_();
+}
+
+template <typename T>
+template <typename U>
+InternalSharedPtr<T>::InternalSharedPtr(InternalSharedPtr<U>&& other, element_type* ptr) noexcept
+  : InternalSharedPtr{AllocatedControlBlockTag{}, other.ctrl_, ptr}
+{
+  other.ctrl_ = nullptr;
+  other.ptr_  = nullptr;
+}
+
+template <typename T>
+InternalSharedPtr<T>::~InternalSharedPtr() noexcept
 {
   strong_dereference_();
 }
@@ -444,7 +544,7 @@ inline InternalSharedPtr<T>::~InternalSharedPtr() noexcept
 // ==========================================================================================
 
 template <typename T>
-inline void InternalSharedPtr<T>::swap(InternalSharedPtr& other) noexcept
+void InternalSharedPtr<T>::swap(InternalSharedPtr& other) noexcept
 {
   using std::swap;
 
@@ -453,26 +553,26 @@ inline void InternalSharedPtr<T>::swap(InternalSharedPtr& other) noexcept
 }
 
 template <typename T>
-inline void swap(InternalSharedPtr<T>& lhs, InternalSharedPtr<T>& rhs) noexcept
+void swap(InternalSharedPtr<T>& lhs, InternalSharedPtr<T>& rhs) noexcept
 {
   lhs.swap(rhs);
 }
 
 template <typename T>
-inline void InternalSharedPtr<T>::reset() noexcept
+void InternalSharedPtr<T>::reset() noexcept
 {
   InternalSharedPtr<T>{}.swap(*this);
 }
 
 template <typename T>
-inline void InternalSharedPtr<T>::reset(std::nullptr_t) noexcept
+void InternalSharedPtr<T>::reset(std::nullptr_t) noexcept
 {
   reset();
 }
 
 template <typename T>
-template <typename U, typename D, typename A>
-inline void InternalSharedPtr<T>::reset(U* ptr, D deleter, A allocator)
+template <typename U, typename D, typename A, typename SFINAE>
+void InternalSharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 {
   InternalSharedPtr<T>{ptr, std::move(deleter), std::move(allocator)}.swap(*this);
 }
@@ -480,27 +580,25 @@ inline void InternalSharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 // ==========================================================================================
 
 template <typename T>
-inline typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const noexcept
+typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const noexcept
 {
   return ptr_;
 }
 
 template <typename T>
-inline typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator*() const noexcept
+typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator*() const noexcept
 {
   return *ptr_;
 }
 
 template <typename T>
-inline typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::operator->()
-  const noexcept
+typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::operator->() const noexcept
 {
   return get();
 }
 
 template <typename T>
-inline typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::use_count()
-  const noexcept
+typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::use_count() const noexcept
 {
   // SharedPtr's are a subset of InternalSharedPtr (since each one holds an InternalSharedPtr),
   // so the number of strong references gives the total unique references held to the pointer.
@@ -508,39 +606,211 @@ inline typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::use_c
 }
 
 template <typename T>
-inline typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::strong_ref_count()
+typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::strong_ref_count()
   const noexcept
 {
   return ctrl_ ? ctrl_->strong_ref_cnt() : 0;
 }
 
 template <typename T>
-inline typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::user_ref_count()
-  const noexcept
+typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::user_ref_count() const noexcept
 {
   return ctrl_ ? ctrl_->user_ref_cnt() : 0;
 }
 
 template <typename T>
-inline InternalSharedPtr<T>::operator bool() const noexcept
+typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::weak_ref_count() const noexcept
+{
+  return ctrl_ ? ctrl_->weak_ref_cnt() : 0;
+}
+
+template <typename T>
+InternalSharedPtr<T>::operator bool() const noexcept
 {
   return get() != nullptr;
+}
+
+template <typename T>
+SharedPtr<T> InternalSharedPtr<T>::as_user_ptr() const noexcept
+{
+  return SharedPtr<T>{*this};
 }
 
 // ==========================================================================================
 
 template <typename T, typename... Args>
-inline InternalSharedPtr<T> make_internal_shared(Args&&... args)
+InternalSharedPtr<T> make_internal_shared(Args&&... args)
 {
-  using allocator_type = std::allocator<T>;
+  using RawT           = std::remove_cv_t<T>;
+  using allocator_type = std::allocator<RawT>;
 
   auto alloc = allocator_type{};
   auto control_block =
-    detail::construct_from_allocator_<detail::InplaceControlBlock<T, allocator_type>>(
-      alloc, static_cast<T*>(nullptr), alloc, std::forward<Args>(args)...);
-  return {typename InternalSharedPtr<T>::AllocateSharedTag{},
+    detail::construct_from_allocator_<detail::InplaceControlBlock<RawT, allocator_type>>(
+      alloc, static_cast<RawT*>(nullptr), alloc, std::forward<Args>(args)...);
+  return {typename InternalSharedPtr<T>::AllocatedControlBlockTag{},
           control_block,
-          static_cast<T*>(control_block->ptr())};
+          static_cast<RawT*>(control_block->ptr())};
+}
+
+// ==========================================================================================
+
+template <typename T, typename U>
+InternalSharedPtr<T> static_pointer_cast(const InternalSharedPtr<U>& ptr) noexcept
+{
+  return {ptr, static_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+}
+
+// ==========================================================================================
+
+template <typename T, typename U>
+bool operator==(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() == rhs.get();
+}
+
+template <typename T, typename U>
+bool operator!=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() != rhs.get();
+}
+
+template <typename T, typename U>
+bool operator<(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() < rhs.get();
+}
+
+template <typename T, typename U>
+bool operator>(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() > rhs.get();
+}
+
+template <typename T, typename U>
+bool operator<=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() <= rhs.get();
+}
+
+template <typename T, typename U>
+bool operator>=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() >= rhs.get();
+}
+
+// ==========================================================================================
+
+template <typename T>
+bool operator==(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() == nullptr;
+}
+
+template <typename T>
+bool operator==(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+{
+  return nullptr == rhs.get();
+}
+
+template <typename T>
+bool operator!=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() != nullptr;
+}
+
+template <typename T>
+bool operator!=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+{
+  return nullptr != rhs.get();
+}
+
+template <typename T>
+bool operator<(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() < nullptr;
+}
+
+template <typename T>
+bool operator<(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+{
+  return nullptr < rhs.get();
+}
+
+template <typename T>
+bool operator>(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() > nullptr;
+}
+
+template <typename T>
+bool operator>(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+{
+  return nullptr > rhs.get();
+}
+
+template <typename T>
+bool operator<=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() <= nullptr;
+}
+
+template <typename T>
+bool operator<=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+{
+  return nullptr <= rhs.get();
+}
+
+template <typename T>
+bool operator>=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() >= nullptr;
+}
+
+template <typename T>
+bool operator>=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+{
+  return nullptr >= rhs.get();
+}
+
+// ==========================================================================================
+
+template <typename T>
+constexpr EnableSharedFromThis<T>::EnableSharedFromThis(const EnableSharedFromThis&) noexcept
+{
+}
+
+template <typename T>
+constexpr EnableSharedFromThis<T>& EnableSharedFromThis<T>::operator=(
+  const EnableSharedFromThis&) noexcept
+{
+  return *this;
+}
+
+// ==========================================================================================
+
+template <typename T>
+typename EnableSharedFromThis<T>::shared_type EnableSharedFromThis<T>::shared_from_this()
+{
+  return shared_type{weak_this_};
+}
+
+template <typename T>
+typename EnableSharedFromThis<T>::const_shared_type EnableSharedFromThis<T>::shared_from_this()
+  const
+{
+  return const_shared_type{weak_this_};
 }
 
 }  // namespace legate
+
+namespace std {
+
+template <typename T>
+size_t hash<legate::InternalSharedPtr<T>>::operator()(
+  const legate::InternalSharedPtr<T>& ptr) const noexcept
+{
+  return hash<typename legate::InternalSharedPtr<T>::element_type*>{}(ptr.get());
+}
+
+}  // namespace std

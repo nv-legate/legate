@@ -13,16 +13,16 @@
 #pragma once
 
 #include "core/operation/detail/operation.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <string>
 
 namespace legate::detail {
 
 class Fill final : public Operation {
  public:
-  Fill(std::shared_ptr<LogicalStore>&& lhs,
-       std::shared_ptr<LogicalStore>&& value,
+  Fill(InternalSharedPtr<LogicalStore>&& lhs,
+       InternalSharedPtr<LogicalStore>&& value,
        uint64_t unique_id,
        mapping::detail::Machine&& machine);
 
@@ -35,8 +35,8 @@ class Fill final : public Operation {
 
  private:
   const Variable* lhs_var_{};
-  std::shared_ptr<LogicalStore> lhs_{};
-  std::shared_ptr<LogicalStore> value_{};
+  InternalSharedPtr<LogicalStore> lhs_{};
+  InternalSharedPtr<LogicalStore> value_{};
 };
 
 }  // namespace legate::detail

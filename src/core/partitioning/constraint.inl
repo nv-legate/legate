@@ -22,6 +22,6 @@ inline const detail::Variable* Variable::impl() const { return impl_; }
 
 // ==========================================================================================
 
-inline const std::shared_ptr<detail::Constraint>& Constraint::impl() const { return impl_; }
+inline const SharedPtr<detail::Constraint>& Constraint::impl() const { return impl_; }
 
 }  // namespace legate

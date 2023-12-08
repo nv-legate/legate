@@ -118,7 +118,7 @@ const std::string& Library::get_task_name(int64_t local_task_id) const
   return find_task(local_task_id)->name();
 }
 
-std::unique_ptr<Scalar> Library::get_tunable(int64_t tunable_id, std::shared_ptr<Type> type) const
+std::unique_ptr<Scalar> Library::get_tunable(int64_t tunable_id, InternalSharedPtr<Type> type) const
 {
   if (type->variable_size()) {
     throw std::invalid_argument{"Tunable variables must have fixed-size types"};

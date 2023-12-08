@@ -16,6 +16,7 @@
 #include "core/partitioning/restriction.h"
 #include "core/runtime/detail/projection.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
 #include <exception>
@@ -65,9 +66,9 @@ struct TransformStack final : public Transform {
  public:
   TransformStack() = default;
   TransformStack(std::unique_ptr<StoreTransform>&& transform,
-                 const std::shared_ptr<TransformStack>& parent);
+                 const InternalSharedPtr<TransformStack>& parent);
   TransformStack(std::unique_ptr<StoreTransform>&& transform,
-                 std::shared_ptr<TransformStack>&& parent);
+                 InternalSharedPtr<TransformStack>&& parent);
 
   [[nodiscard]] Domain transform(const Domain& input) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(int32_t in_dim) const override;
@@ -95,10 +96,10 @@ struct TransformStack final : public Transform {
 
   TransformStack(private_tag,
                  std::unique_ptr<StoreTransform>&& transform,
-                 std::shared_ptr<TransformStack> parent);
+                 InternalSharedPtr<TransformStack> parent);
 
   std::unique_ptr<StoreTransform> transform_{};
-  std::shared_ptr<TransformStack> parent_{};
+  InternalSharedPtr<TransformStack> parent_{};
   bool convertible_{true};
 };
 

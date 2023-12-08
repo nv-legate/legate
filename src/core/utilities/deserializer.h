@@ -24,6 +24,7 @@
 #include "core/mapping/detail/store.h"
 #include "core/type/detail/type_info.h"
 #include "core/type/type_traits.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/span.h"
 #include "core/utilities/typedefs.h"
 
@@ -69,8 +70,8 @@ class BaseDeserializer {
   [[nodiscard]] Span<const int8_t> current_args() const;
 
  protected:
-  [[nodiscard]] std::shared_ptr<detail::TransformStack> unpack_transform();
-  [[nodiscard]] std::shared_ptr<detail::Type> unpack_type();
+  [[nodiscard]] InternalSharedPtr<detail::TransformStack> unpack_transform();
+  [[nodiscard]] InternalSharedPtr<detail::Type> unpack_type();
 
   Span<const int8_t> args_{};
 };
@@ -81,12 +82,12 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
 
   using BaseDeserializer::_unpack;
 
-  [[nodiscard]] std::vector<std::shared_ptr<detail::PhysicalArray>> unpack_arrays();
-  [[nodiscard]] std::shared_ptr<detail::PhysicalArray> unpack_array();
-  [[nodiscard]] std::shared_ptr<detail::BasePhysicalArray> unpack_base_array();
-  [[nodiscard]] std::shared_ptr<detail::ListPhysicalArray> unpack_list_array();
-  [[nodiscard]] std::shared_ptr<detail::StructPhysicalArray> unpack_struct_array();
-  [[nodiscard]] std::shared_ptr<detail::PhysicalStore> unpack_store();
+  [[nodiscard]] std::vector<InternalSharedPtr<detail::PhysicalArray>> unpack_arrays();
+  [[nodiscard]] InternalSharedPtr<detail::PhysicalArray> unpack_array();
+  [[nodiscard]] InternalSharedPtr<detail::BasePhysicalArray> unpack_base_array();
+  [[nodiscard]] InternalSharedPtr<detail::ListPhysicalArray> unpack_list_array();
+  [[nodiscard]] InternalSharedPtr<detail::StructPhysicalArray> unpack_struct_array();
+  [[nodiscard]] InternalSharedPtr<detail::PhysicalStore> unpack_store();
 
   void _unpack(detail::FutureWrapper& value);
   void _unpack(detail::RegionField& value);
@@ -119,12 +120,12 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
 
   using BaseDeserializer::_unpack;
 
-  [[nodiscard]] std::vector<std::shared_ptr<detail::Array>> unpack_arrays();
-  [[nodiscard]] std::shared_ptr<detail::Array> unpack_array();
-  [[nodiscard]] std::shared_ptr<detail::BaseArray> unpack_base_array();
-  [[nodiscard]] std::shared_ptr<detail::ListArray> unpack_list_array();
-  [[nodiscard]] std::shared_ptr<detail::StructArray> unpack_struct_array();
-  [[nodiscard]] std::shared_ptr<detail::Store> unpack_store();
+  [[nodiscard]] std::vector<InternalSharedPtr<detail::Array>> unpack_arrays();
+  [[nodiscard]] InternalSharedPtr<detail::Array> unpack_array();
+  [[nodiscard]] InternalSharedPtr<detail::BaseArray> unpack_base_array();
+  [[nodiscard]] InternalSharedPtr<detail::ListArray> unpack_list_array();
+  [[nodiscard]] InternalSharedPtr<detail::StructArray> unpack_struct_array();
+  [[nodiscard]] InternalSharedPtr<detail::Store> unpack_store();
 
   void _unpack(detail::Array& array);
   void _unpack(detail::Store& store);

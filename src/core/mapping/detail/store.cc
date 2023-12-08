@@ -36,9 +36,9 @@ Legion::IndexSpace RegionField::get_index_space() const
 }
 
 Store::Store(int32_t dim,
-             std::shared_ptr<legate::detail::Type> type,
+             InternalSharedPtr<legate::detail::Type> type,
              FutureWrapper future,
-             std::shared_ptr<legate::detail::TransformStack>&& transform)
+             InternalSharedPtr<legate::detail::TransformStack>&& transform)
   : is_future_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -50,11 +50,11 @@ Store::Store(int32_t dim,
 Store::Store(Legion::Mapping::MapperRuntime* runtime,
              Legion::Mapping::MapperContext context,
              int32_t dim,
-             std::shared_ptr<legate::detail::Type> type,
+             InternalSharedPtr<legate::detail::Type> type,
              int32_t redop_id,
              const RegionField& region_field,
              bool is_unbound_store,
-             std::shared_ptr<legate::detail::TransformStack>&& transform)
+             InternalSharedPtr<legate::detail::TransformStack>&& transform)
   : is_unbound_store_{is_unbound_store},
     dim_{dim},
     type_{std::move(type)},

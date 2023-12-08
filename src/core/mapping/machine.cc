@@ -137,9 +137,10 @@ Machine Machine::operator&(const Machine& other) const { return Machine{*impl() 
 
 bool Machine::empty() const { return impl()->empty(); }
 
-Machine::Machine(std::shared_ptr<detail::Machine> impl) : impl_{std::move(impl)} {}
+Machine::Machine(InternalSharedPtr<detail::Machine> impl) : impl_{std::move(impl)} {}
 
-Machine::Machine(detail::Machine impl) : Machine{std::make_shared<detail::Machine>(std::move(impl))}
+Machine::Machine(detail::Machine impl)
+  : Machine{make_internal_shared<detail::Machine>(std::move(impl))}
 {
 }
 

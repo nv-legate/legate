@@ -15,8 +15,8 @@
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <optional>
 #include <string>
 
@@ -26,9 +26,9 @@ struct ConstraintSolver;
 
 class Gather final : public Operation {
  public:
-  Gather(std::shared_ptr<LogicalStore> target,
-         std::shared_ptr<LogicalStore> source,
-         std::shared_ptr<LogicalStore> source_indirect,
+  Gather(InternalSharedPtr<LogicalStore> target,
+         InternalSharedPtr<LogicalStore> source,
+         InternalSharedPtr<LogicalStore> source_indirect,
          uint64_t unique_id,
          mapping::detail::Machine&& machine,
          std::optional<int32_t> redop);
@@ -47,7 +47,7 @@ class Gather final : public Operation {
   StoreArg target_;
   StoreArg source_;
   StoreArg source_indirect_;
-  std::shared_ptr<Constraint> constraint_;
+  InternalSharedPtr<Constraint> constraint_;
   std::optional<int32_t> redop_;
 };
 

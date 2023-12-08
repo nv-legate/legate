@@ -38,7 +38,7 @@ FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field
   }
 }
 
-std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
+InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field()
 {
   issue_field_match();
   while (!ordered_free_fields_.empty() || !matches_.empty()) {
@@ -53,7 +53,7 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
       log_legate().debug(
         "Field %u recycled in field manager %p", info.field_id, static_cast<void*>(this));
       ordered_free_fields_.pop_front();
-      return std::shared_ptr<LogicalRegionField>{rf};
+      return InternalSharedPtr<LogicalRegionField>{rf};
     }
     // If there are any field matches we haven't processed yet, process the next one, then go back
     // and check if any fields were just added to the "ordered" queue.
@@ -65,11 +65,11 @@ std::shared_ptr<LogicalRegionField> FieldManager::allocate_field()
   auto* rf       = new LogicalRegionField{this, lr, fid};
 
   log_legate().debug("Field %u created in field manager %p", fid, static_cast<void*>(this));
-  return std::shared_ptr<LogicalRegionField>{rf};
+  return InternalSharedPtr<LogicalRegionField>{rf};
 }
 
-std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::LogicalRegion& region,
-                                                               Legion::FieldID field_id)
+InternalSharedPtr<LogicalRegionField> FieldManager::import_field(
+  const Legion::LogicalRegion& region, Legion::FieldID field_id)
 {
   // Import the region only if the region manager is created fresh
   auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
@@ -78,7 +78,7 @@ std::shared_ptr<LogicalRegionField> FieldManager::import_field(const Legion::Log
     rgn_mgr->import_region(region);
   }
   log_legate().debug("Field %u imported in field manager %p", field_id, static_cast<void*>(this));
-  return std::make_shared<LogicalRegionField>(this, region, field_id);
+  return make_internal_shared<LogicalRegionField>(this, region, field_id);
 }
 
 void FieldManager::free_field(const Legion::LogicalRegion& region,

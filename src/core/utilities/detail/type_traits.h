@@ -52,7 +52,9 @@ struct is_pure_move_constructible
 template <typename T>
 inline constexpr bool is_pure_move_constructible_v = is_pure_move_constructible<T>::value;
 
-namespace test {
+#ifndef __NVCC__
+// This does not appear to work for NVCC...
+namespace is_pure_move_constructible_test {
 
 struct MoveConstructible {
   MoveConstructible(MoveConstructible&&) = default;
@@ -71,7 +73,8 @@ static_assert(!is_pure_move_constructible_v<CopyConstructible>);
 static_assert(is_pure_move_constructible_v<MoveConstructible>);
 static_assert(is_pure_move_constructible_v<CopyAndMoveConstructible>);
 
-}  // namespace test
+}  // namespace is_pure_move_constructible_test
+#endif
 
 // Same as is_pure_move_constructible, but for operator=(Foo &&).
 template <typename T>
@@ -83,7 +86,9 @@ struct is_pure_move_assignable
 template <typename T>
 inline constexpr bool is_pure_move_assignable_v = is_pure_move_assignable<T>::value;
 
-namespace test {
+#ifndef __NVCC__
+// This does not appear to work for NVCC...
+namespace is_pure_move_assignable_test {
 
 struct MoveAssignable {
   MoveAssignable& operator=(MoveAssignable&&) = default;
@@ -102,6 +107,13 @@ static_assert(!is_pure_move_assignable_v<CopyAssignable>);
 static_assert(is_pure_move_assignable_v<MoveAssignable>);
 static_assert(is_pure_move_assignable_v<CopyAndMoveAssignable>);
 
-}  // namespace test
+}  // namespace is_pure_move_assignable_test
+#endif
+
+template <typename From, typename To>
+struct ptr_compat : std::is_convertible<From*, To*> {};
+
+template <typename From, typename To>
+inline constexpr bool ptr_compat_v = ptr_compat<From, To>::value;
 
 }  // namespace legate::traits::detail

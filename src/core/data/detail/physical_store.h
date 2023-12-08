@@ -17,6 +17,7 @@
 #include "core/data/inline_allocation.h"
 #include "core/task/detail/return.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <memory>
 
@@ -134,29 +135,29 @@ class FutureWrapper {
 class PhysicalStore {
  public:
   PhysicalStore(int32_t dim,
-                std::shared_ptr<Type> type,
+                InternalSharedPtr<Type> type,
                 int32_t redop_id,
                 FutureWrapper future,
-                std::shared_ptr<detail::TransformStack>&& transform = nullptr);
+                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
   PhysicalStore(int32_t dim,
-                std::shared_ptr<Type> type,
+                InternalSharedPtr<Type> type,
                 int32_t redop_id,
                 RegionField&& region_field,
-                std::shared_ptr<detail::TransformStack>&& transform = nullptr);
+                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
   PhysicalStore(int32_t dim,
-                std::shared_ptr<Type> type,
+                InternalSharedPtr<Type> type,
                 UnboundRegionField&& unbound_field,
-                std::shared_ptr<detail::TransformStack>&& transform = nullptr);
+                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
   PhysicalStore(int32_t dim,
-                std::shared_ptr<Type> type,
+                InternalSharedPtr<Type> type,
                 int32_t redop_id,
                 FutureWrapper future,
-                const std::shared_ptr<detail::TransformStack>& transform);
+                const InternalSharedPtr<detail::TransformStack>& transform);
   PhysicalStore(int32_t dim,
-                std::shared_ptr<Type> type,
+                InternalSharedPtr<Type> type,
                 int32_t redop_id,
                 RegionField&& region_field,
-                const std::shared_ptr<detail::TransformStack>& transform);
+                const InternalSharedPtr<detail::TransformStack>& transform);
 
   PhysicalStore(PhysicalStore&& other) noexcept            = default;
   PhysicalStore& operator=(PhysicalStore&& other) noexcept = default;
@@ -168,7 +169,7 @@ class PhysicalStore {
   [[nodiscard]] bool transformed() const;
 
   [[nodiscard]] int32_t dim() const;
-  [[nodiscard]] const std::shared_ptr<Type>& type() const;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const;
 
   [[nodiscard]] Domain domain() const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
@@ -209,14 +210,14 @@ class PhysicalStore {
   bool is_future_{};
   bool is_unbound_store_{};
   int32_t dim_{-1};
-  std::shared_ptr<Type> type_{};
+  InternalSharedPtr<Type> type_{};
   int32_t redop_id_{-1};
 
   FutureWrapper future_{};
   RegionField region_field_{};
   UnboundRegionField unbound_field_{};
 
-  std::shared_ptr<detail::TransformStack> transform_{};
+  InternalSharedPtr<detail::TransformStack> transform_{};
 
   bool readable_{};
   bool writable_{};

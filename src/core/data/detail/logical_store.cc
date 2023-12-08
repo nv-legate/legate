@@ -36,7 +36,7 @@ namespace legate::detail {
 // legate::detail::Storage
 ////////////////////////////////////////////////////
 
-Storage::Storage(int32_t dim, std::shared_ptr<Type> type)
+Storage::Storage(int32_t dim, InternalSharedPtr<Type> type)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     unbound_{true},
     dim_{dim},
@@ -48,7 +48,7 @@ Storage::Storage(int32_t dim, std::shared_ptr<Type> type)
   }
 }
 
-Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar)
+Storage::Storage(const Shape& extents, InternalSharedPtr<Type> type, bool optimize_scalar)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     dim_{static_cast<int32_t>(extents.size())},
     extents_{extents},
@@ -63,7 +63,7 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize
   }
 }
 
-Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future)
+Storage::Storage(const Shape& extents, InternalSharedPtr<Type> type, const Legion::Future& future)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     dim_{static_cast<int32_t>(extents.size())},
     extents_{extents},
@@ -78,8 +78,8 @@ Storage::Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion:
 }
 
 Storage::Storage(Shape&& extents,
-                 std::shared_ptr<Type> type,
-                 std::shared_ptr<StoragePartition> parent,
+                 InternalSharedPtr<Type> type,
+                 InternalSharedPtr<StoragePartition> parent,
                  Shape&& color,
                  Shape&& offsets)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
@@ -124,7 +124,7 @@ const Shape& Storage::offsets() const
   return offsets_;
 }
 
-bool Storage::overlaps(const std::shared_ptr<Storage>& other) const
+bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
 {
   const auto* lhs = this;
   const auto* rhs = other.get();
@@ -155,7 +155,7 @@ bool Storage::overlaps(const std::shared_ptr<Storage>& other) const
   return true;
 }
 
-std::shared_ptr<Storage> Storage::slice(Shape tile_shape, const Shape& offsets)
+InternalSharedPtr<Storage> Storage::slice(Shape tile_shape, const Shape& offsets)
 {
   if (Kind::FUTURE == kind_) {
     return shared_from_this();
@@ -186,17 +186,17 @@ std::shared_ptr<Storage> Storage::slice(Shape tile_shape, const Shape& offsets)
   return storage_partition->get_child_storage(std::move(color));
 }
 
-std::shared_ptr<const Storage> Storage::get_root() const
+InternalSharedPtr<const Storage> Storage::get_root() const
 {
   return parent_ ? parent_->get_root() : shared_from_this();
 }
 
-std::shared_ptr<Storage> Storage::get_root()
+InternalSharedPtr<Storage> Storage::get_root()
 {
   return parent_ ? parent_->get_root() : shared_from_this();
 }
 
-std::shared_ptr<LogicalRegionField> Storage::get_region_field()
+InternalSharedPtr<LogicalRegionField> Storage::get_region_field()
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(Kind::REGION_FIELD == kind_);
@@ -224,7 +224,7 @@ Legion::Future Storage::get_future() const
   return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
-void Storage::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
+void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
   assert(unbound_ && region_field_ == nullptr);
   assert(parent_ == nullptr);
@@ -309,13 +309,13 @@ void Storage::set_key_partition(const mapping::detail::Machine& machine,
 
 void Storage::reset_key_partition() noexcept { key_partition_.reset(); }
 
-std::shared_ptr<StoragePartition> Storage::create_partition(std::shared_ptr<Partition> partition,
-                                                            std::optional<bool> complete)
+InternalSharedPtr<StoragePartition> Storage::create_partition(
+  InternalSharedPtr<Partition> partition, std::optional<bool> complete)
 {
   if (!complete.has_value()) {
     complete = partition->is_complete_for(this);
   }
-  return std::make_shared<StoragePartition>(
+  return make_internal_shared<StoragePartition>(
     shared_from_this(), std::move(partition), complete.value());
 }
 
@@ -339,11 +339,11 @@ std::string Storage::to_string() const
 // legate::detail::StoragePartition
 ////////////////////////////////////////////////////
 
-std::shared_ptr<const Storage> StoragePartition::get_root() const { return parent_->get_root(); }
+InternalSharedPtr<const Storage> StoragePartition::get_root() const { return parent_->get_root(); }
 
-std::shared_ptr<Storage> StoragePartition::get_root() { return parent_->get_root(); }
+InternalSharedPtr<Storage> StoragePartition::get_root() { return parent_->get_root(); }
 
-std::shared_ptr<Storage> StoragePartition::get_child_storage(Shape color)
+InternalSharedPtr<Storage> StoragePartition::get_child_storage(Shape color)
 {
   if (partition_->kind() != Partition::Kind::TILING) {
     throw std::runtime_error{"Sub-storage is implemented only for tiling"};
@@ -352,14 +352,14 @@ std::shared_ptr<Storage> StoragePartition::get_child_storage(Shape color)
   auto tiling        = static_cast<Tiling*>(partition_.get());
   auto child_extents = tiling->get_child_extents(parent_->extents(), color);
   auto child_offsets = tiling->get_child_offsets(color);
-  return std::make_shared<Storage>(std::move(child_extents),
-                                   parent_->type(),
-                                   shared_from_this(),
-                                   std::move(color),
-                                   std::move(child_offsets));
+  return make_internal_shared<Storage>(std::move(child_extents),
+                                       parent_->type(),
+                                       shared_from_this(),
+                                       std::move(color),
+                                       std::move(child_offsets));
 }
 
-std::shared_ptr<LogicalRegionField> StoragePartition::get_child_data(const Shape& color)
+InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(const Shape& color)
 {
   if (partition_->kind() != Partition::Kind::TILING) {
     throw std::runtime_error{"Sub-storage is implemented only for tiling"};
@@ -391,7 +391,7 @@ bool StoragePartition::is_disjoint_for(const Domain& launch_domain) const
 
 namespace {
 
-void assert_fixed_storage_size(const std::shared_ptr<Storage>& storage)
+void assert_fixed_storage_size(const InternalSharedPtr<Storage>& storage)
 {
   if (storage->type()->variable_size()) {
     throw std::invalid_argument{"Store cannot be created with variable size type " +
@@ -399,18 +399,18 @@ void assert_fixed_storage_size(const std::shared_ptr<Storage>& storage)
   }
 }
 
-[[nodiscard]] std::shared_ptr<TransformStack> stack(const std::shared_ptr<TransformStack>& parent,
-                                                    std::unique_ptr<StoreTransform>&& transform)
+[[nodiscard]] InternalSharedPtr<TransformStack> stack(
+  const InternalSharedPtr<TransformStack>& parent, std::unique_ptr<StoreTransform>&& transform)
 {
-  return std::make_shared<TransformStack>(std::move(transform), parent);
+  return make_internal_shared<TransformStack>(std::move(transform), parent);
 }
 
 }  // namespace
 
-LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
+LogicalStore::LogicalStore(InternalSharedPtr<Storage>&& storage)
   : store_id_{Runtime::get_runtime()->get_unique_store_id()},
     storage_{std::move(storage)},
-    transform_{std::make_shared<TransformStack>()}
+    transform_{make_internal_shared<TransformStack>()}
 {
   assert_fixed_storage_size(storage_);
   if (!unbound()) {
@@ -424,8 +424,8 @@ LogicalStore::LogicalStore(std::shared_ptr<Storage>&& storage)
 }
 
 LogicalStore::LogicalStore(Shape&& extents,
-                           std::shared_ptr<Storage> storage,
-                           std::shared_ptr<TransformStack>&& transform)
+                           InternalSharedPtr<Storage> storage,
+                           InternalSharedPtr<TransformStack>&& transform)
   : store_id_{Runtime::get_runtime()->get_unique_store_id()},
     extents_{std::move(extents)},
     storage_{std::move(storage)},
@@ -459,27 +459,27 @@ int32_t LogicalStore::dim() const
   return unbound() ? storage_->dim() : static_cast<int32_t>(extents().size());
 }
 
-bool LogicalStore::overlaps(const std::shared_ptr<LogicalStore>& other) const
+bool LogicalStore::overlaps(const InternalSharedPtr<LogicalStore>& other) const
 {
   return storage_->overlaps(other->storage_);
 }
 
 bool LogicalStore::has_scalar_storage() const { return storage_->kind() == Storage::Kind::FUTURE; }
 
-std::shared_ptr<Type> LogicalStore::type() const { return storage_->type(); }
+InternalSharedPtr<Type> LogicalStore::type() const { return storage_->type(); }
 
 bool LogicalStore::transformed() const { return !transform_->identity(); }
 
 const Storage* LogicalStore::get_storage() const { return storage_.get(); }
 
-std::shared_ptr<LogicalRegionField> LogicalStore::get_region_field()
+InternalSharedPtr<LogicalRegionField> LogicalStore::get_region_field()
 {
   return storage_->get_region_field();
 }
 
 Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
 
-void LogicalStore::set_region_field(std::shared_ptr<LogicalRegionField>&& region_field)
+void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(!has_scalar_storage());
@@ -496,7 +496,7 @@ void LogicalStore::set_future(Legion::Future future)
   storage_->set_future(std::move(future));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t dim_size)
+InternalSharedPtr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t dim_size)
 {
   if (extra_dim < 0 || extra_dim > dim()) {
     throw std::invalid_argument{"Invalid promotion on dimension " + std::to_string(extra_dim) +
@@ -505,10 +505,10 @@ std::shared_ptr<LogicalStore> LogicalStore::promote(int32_t extra_dim, size_t di
 
   auto new_extents = extents().insert(extra_dim, dim_size);
   auto transform   = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
-  return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+  return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
+InternalSharedPtr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
 {
   auto old_extents = extents();
 
@@ -529,13 +529,13 @@ std::shared_ptr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
       ? storage_
       : storage_->slice(transform->invert_extents(new_extents),
                         transform->invert_point(legate::full<size_t>(new_extents.size(), 0)));
-  return std::make_shared<LogicalStore>(
+  return make_internal_shared<LogicalStore>(
     std::move(new_extents), std::move(substorage), std::move(transform));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::slice(const std::shared_ptr<LogicalStore>& self,
-                                                  int32_t dim,
-                                                  Slice slice)
+InternalSharedPtr<LogicalStore> LogicalStore::slice(const InternalSharedPtr<LogicalStore>& self,
+                                                    int32_t dim,
+                                                    Slice slice)
 {
 #if LegateDefined(LEGATE_USE_DEBUG)
   assert(self.get() == this);
@@ -584,16 +584,16 @@ std::shared_ptr<LogicalStore> LogicalStore::slice(const std::shared_ptr<LogicalS
     volume() == 0 ? storage_
                   : storage_->slice(transform->invert_extents(exts),
                                     transform->invert_point(legate::full<size_t>(exts.size(), 0)));
-  return std::make_shared<LogicalStore>(
+  return make_internal_shared<LogicalStore>(
     std::move(exts), std::move(substorage), std::move(transform));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::transpose(const std::vector<int32_t>& axes)
+InternalSharedPtr<LogicalStore> LogicalStore::transpose(const std::vector<int32_t>& axes)
 {
   return transpose(std::vector<int32_t>(axes));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axes)
+InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axes)
 {
   if (axes.size() != static_cast<size_t>(dim())) {
     throw std::invalid_argument{"Dimension Mismatch: expected " + std::to_string(dim()) +
@@ -618,10 +618,10 @@ std::shared_ptr<LogicalStore> LogicalStore::transpose(std::vector<int32_t>&& axe
   }
 
   auto transform = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
-  return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+  return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector<uint64_t> sizes)
+InternalSharedPtr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector<uint64_t> sizes)
 {
   if (dim < 0 || dim >= this->dim()) {
     throw std::invalid_argument{"Invalid delinearization on dimension " + std::to_string(dim) +
@@ -657,11 +657,11 @@ std::shared_ptr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vector
   }
 
   auto transform = stack(transform_, std::make_unique<Delinearize>(dim, std::move(sizes)));
-  return std::make_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+  return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(
-  const std::shared_ptr<LogicalStore>& self, Shape tile_shape)
+InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling(
+  const InternalSharedPtr<LogicalStore>& self, Shape tile_shape)
 {
 #if LegateDefined(LEGATE_USE_DEBUG)
   assert(self.get() == this);
@@ -679,7 +679,7 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::partition_by_tiling(
   return create_partition(self, std::move(partition), true);
 }
 
-std::shared_ptr<PhysicalStore> LogicalStore::get_physical_store()
+InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
 {
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
@@ -693,14 +693,15 @@ std::shared_ptr<PhysicalStore> LogicalStore::get_physical_store()
     auto future = FutureWrapper{true, type()->size(), domain, storage_->get_future()};
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    return std::make_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
+    return make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
   }
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(storage_->kind() == Storage::Kind::REGION_FIELD);
   }
   auto region_field = storage_->map();
-  mapped_ = std::make_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
+  mapped_ =
+    make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
   return mapped_;
 }
 
@@ -751,7 +752,7 @@ Legion::ProjectionID LogicalStore::compute_projection(
     ndim, transform_->invert(proj::create_symbolic_point(ndim)));
 }
 
-std::shared_ptr<Partition> LogicalStore::find_or_create_key_partition(
+InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
   const mapping::detail::Machine& machine, const Restrictions& restrictions)
 {
   const auto new_num_pieces = machine.count();
@@ -821,9 +822,9 @@ void LogicalStore::reset_key_partition()
   storage_->reset_key_partition();
 }
 
-std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
-  const std::shared_ptr<LogicalStore>& self,
-  std::shared_ptr<Partition> partition,
+InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition(
+  const InternalSharedPtr<LogicalStore>& self,
+  InternalSharedPtr<Partition> partition,
   std::optional<bool> complete)
 {
 #if LegateDefined(LEGATE_USE_DEBUG)
@@ -833,8 +834,8 @@ std::shared_ptr<LogicalStorePartition> LogicalStore::create_partition(
     throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
   }
   auto storage_partition =
-    storage_->create_partition(transform_->invert(partition.get()), complete);
-  return std::make_shared<LogicalStorePartition>(
+    storage_->create_partition(transform_->invert(partition.get()), std::move(complete));
+  return make_internal_shared<LogicalStorePartition>(
     std::move(partition), std::move(storage_partition), self);
 }
 
@@ -848,7 +849,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
 }
 
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
-  const std::shared_ptr<LogicalStore>& self,
+  const InternalSharedPtr<LogicalStore>& self,
   const Variable* variable,
   const Strategy& strategy,
   const Domain& launch_domain,
@@ -890,7 +891,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
 }
 
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(
-  const std::shared_ptr<LogicalStore>& self,
+  const InternalSharedPtr<LogicalStore>& self,
   const Domain& launch_domain,
   Legion::PrivilegeMode privilege)
 {
@@ -926,7 +927,7 @@ std::string LogicalStore::to_string() const
 // legate::detail::LogicalStorePartition
 ////////////////////////////////////////////////////
 
-std::shared_ptr<LogicalStore> LogicalStorePartition::get_child_store(const Shape& color) const
+InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(const Shape& color) const
 {
   if (partition_->kind() != Partition::Kind::TILING) {
     throw std::runtime_error{"Child stores can be retrieved only from tile partitions"};
@@ -944,11 +945,11 @@ std::shared_ptr<LogicalStore> LogicalStorePartition::get_child_store(const Shape
     if (child_offsets[dim] == 0) {
       continue;
     }
-    transform = std::make_shared<TransformStack>(std::make_unique<Shift>(dim, -child_offsets[dim]),
-                                                 std::move(transform));
+    transform = make_internal_shared<TransformStack>(
+      std::make_unique<Shift>(dim, -child_offsets[dim]), std::move(transform));
   }
 
-  return std::make_shared<LogicalStore>(
+  return make_internal_shared<LogicalStore>(
     std::move(child_extents), std::move(child_storage), std::move(transform));
 }
 

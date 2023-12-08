@@ -19,7 +19,7 @@ namespace legate {
 namespace {
 
 std::vector<PhysicalArray> to_arrays(
-  const std::vector<std::shared_ptr<detail::PhysicalArray>>& array_impls)
+  const std::vector<InternalSharedPtr<detail::PhysicalArray>>& array_impls)
 {
   return {array_impls.begin(), array_impls.end()};
 }

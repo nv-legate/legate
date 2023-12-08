@@ -16,23 +16,23 @@
 
 namespace legate {
 
-inline LogicalArray::LogicalArray(std::shared_ptr<detail::LogicalArray> impl)
+inline LogicalArray::LogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
   : impl_(std::move(impl))
 {
 }
 
-inline const std::shared_ptr<detail::LogicalArray>& LogicalArray::impl() const { return impl_; }
+inline const SharedPtr<detail::LogicalArray>& LogicalArray::impl() const { return impl_; }
 
 // ==========================================================================================
 
-inline ListLogicalArray::ListLogicalArray(std::shared_ptr<detail::LogicalArray> impl)
+inline ListLogicalArray::ListLogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
   : LogicalArray{std::move(impl)}
 {
 }
 
 // ==========================================================================================
 
-inline StringLogicalArray::StringLogicalArray(std::shared_ptr<detail::LogicalArray> impl)
+inline StringLogicalArray::StringLogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
   : LogicalArray{std::move(impl)}
 {
 }

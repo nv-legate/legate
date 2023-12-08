@@ -16,6 +16,7 @@
 #include "core/operation/detail/projection.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/hash.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <map>
 #include <set>
@@ -136,7 +137,7 @@ class FutureAnalyzer {
 
 struct StoreAnalyzer {
  public:
-  void insert(const std::shared_ptr<LogicalRegionField>& region_field,
+  void insert(const InternalSharedPtr<LogicalRegionField>& region_field,
               Legion::PrivilegeMode privilege,
               const ProjectionInfo& proj_info);
   void insert(int32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);

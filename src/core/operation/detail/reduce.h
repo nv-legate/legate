@@ -19,8 +19,8 @@
 
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/operation.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <string>
 
 namespace legate::detail {
@@ -29,8 +29,8 @@ class Reduce final : public Operation {
  private:
   friend class Runtime;
   Reduce(const Library* library,
-         std::shared_ptr<LogicalStore> store,
-         std::shared_ptr<LogicalStore> out_store,
+         InternalSharedPtr<LogicalStore> store,
+         InternalSharedPtr<LogicalStore> out_store,
          int64_t task_id,
          uint64_t unique_id,
          int32_t radix,
@@ -48,8 +48,8 @@ class Reduce final : public Operation {
   int32_t radix_{};
   const Library* library_{};
   int64_t task_id_{};
-  std::shared_ptr<LogicalStore> input_{};
-  std::shared_ptr<LogicalStore> output_{};
+  InternalSharedPtr<LogicalStore> input_{};
+  InternalSharedPtr<LogicalStore> output_{};
   const Variable* input_part_{};
   const Variable* output_part_{};
 };

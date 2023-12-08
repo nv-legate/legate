@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
-#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -195,7 +194,7 @@ void BinaryType::pack(BufferBuilder& buffer) const
   buffer.pack<uint32_t>(size_);
 }
 
-FixedArrayType::FixedArrayType(uint32_t uid, std::shared_ptr<Type> element_type, uint32_t N)
+FixedArrayType::FixedArrayType(uint32_t uid, InternalSharedPtr<Type> element_type, uint32_t N)
   : ExtensionType{uid, Type::Code::FIXED_ARRAY},
     element_type_{std::move(element_type)},
     N_{N},
@@ -237,7 +236,7 @@ bool FixedArrayType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-StructType::StructType(uint32_t uid, std::vector<std::shared_ptr<Type>>&& field_types, bool align)
+StructType::StructType(uint32_t uid, std::vector<InternalSharedPtr<Type>>&& field_types, bool align)
   : ExtensionType{uid, Type::Code::STRUCT},
     aligned_{align},
     alignment_{1},
@@ -333,7 +332,7 @@ bool StructType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-std::shared_ptr<Type> StructType::field_type(uint32_t field_idx) const
+InternalSharedPtr<Type> StructType::field_type(uint32_t field_idx) const
 {
   return field_types_.at(field_idx);
 }
@@ -343,9 +342,9 @@ void StringType::pack(BufferBuilder& buffer) const
   buffer.pack<int32_t>(static_cast<int32_t>(code));
 }
 
-std::shared_ptr<Type> primitive_type(Type::Code code)
+InternalSharedPtr<Type> primitive_type(Type::Code code)
 {
-  static std::unordered_map<Type::Code, std::shared_ptr<Type>> cache{};
+  static std::unordered_map<Type::Code, InternalSharedPtr<Type>> cache{};
   if (SIZEOF().find(code) == SIZEOF().end()) {
     throw std::invalid_argument{std::to_string(static_cast<int32_t>(code)) +
                                 " is not a valid type code for a primitive type"};
@@ -354,12 +353,12 @@ std::shared_ptr<Type> primitive_type(Type::Code code)
   if (finder != cache.end()) {
     return finder->second;
   }
-  auto result = std::make_shared<PrimitiveType>(code);
+  auto result = make_internal_shared<PrimitiveType>(code);
   cache[code] = result;
   return result;
 }
 
-ListType::ListType(uint32_t uid, std::shared_ptr<Type> element_type)
+ListType::ListType(uint32_t uid, InternalSharedPtr<Type> element_type)
   : ExtensionType{uid, Type::Code::LIST}, element_type_{std::move(element_type)}
 {
   if (element_type_->variable_size()) {
@@ -397,13 +396,13 @@ bool ListType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-std::shared_ptr<Type> string_type()
+InternalSharedPtr<Type> string_type()
 {
-  static auto type = std::make_shared<StringType>();
+  static auto type = make_internal_shared<StringType>();
   return type;
 }
 
-std::shared_ptr<Type> binary_type(uint32_t size)
+InternalSharedPtr<Type> binary_type(uint32_t size)
 {
   if (size == 0) {
     throw std::out_of_range{"Size for an opaque binary type must be greater than 0"};
@@ -413,10 +412,10 @@ std::shared_ptr<Type> binary_type(uint32_t size)
                             std::to_string(MAX_BINARY_TYPE_SIZE)};
   }
   auto uid = static_cast<int32_t>(Type::Code::BINARY) | (size << TYPE_CODE_OFFSET);
-  return std::make_shared<BinaryType>(uid, size);
+  return make_internal_shared<BinaryType>(uid, size);
 }
 
-std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint32_t N)
+InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type, uint32_t N)
 {
   if (N == 0) {
     throw std::out_of_range{"Size of array must be greater than 0"};
@@ -434,120 +433,120 @@ std::shared_ptr<Type> fixed_array_type(std::shared_ptr<Type> element_type, uint3
     }
     return static_cast<int32_t>(elem_type.code) | (N << TYPE_CODE_OFFSET);
   }(*element_type);
-  return std::make_shared<FixedArrayType>(uid, std::move(element_type), N);
+  return make_internal_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
 
-std::shared_ptr<Type> struct_type(std::vector<std::shared_ptr<Type>> field_types, bool align)
+InternalSharedPtr<Type> struct_type(std::vector<InternalSharedPtr<Type>> field_types, bool align)
 {
-  return std::make_shared<StructType>(get_next_uid(), std::move(field_types), align);
+  return make_internal_shared<StructType>(get_next_uid(), std::move(field_types), align);
 }
 
-std::shared_ptr<Type> list_type(std::shared_ptr<Type> element_type)
+InternalSharedPtr<Type> list_type(InternalSharedPtr<Type> element_type)
 {
-  return std::make_shared<ListType>(get_next_uid(), std::move(element_type));
+  return make_internal_shared<ListType>(get_next_uid(), std::move(element_type));
 }
 
-std::shared_ptr<Type> bool_()
+InternalSharedPtr<Type> bool_()
 {
   static auto result = detail::primitive_type(Type::Code::BOOL);
   return result;
 }
 
-std::shared_ptr<Type> int8()
+InternalSharedPtr<Type> int8()
 {
   static auto result = detail::primitive_type(Type::Code::INT8);
   return result;
 }
 
-std::shared_ptr<Type> int16()
+InternalSharedPtr<Type> int16()
 {
   static auto result = detail::primitive_type(Type::Code::INT16);
   return result;
 }
 
-std::shared_ptr<Type> int32()
+InternalSharedPtr<Type> int32()
 {
   static auto result = detail::primitive_type(Type::Code::INT32);
   return result;
 }
 
-std::shared_ptr<Type> int64()
+InternalSharedPtr<Type> int64()
 {
   static auto result = detail::primitive_type(Type::Code::INT64);
   return result;
 }
 
-std::shared_ptr<Type> uint8()
+InternalSharedPtr<Type> uint8()
 {
   static auto result = detail::primitive_type(Type::Code::UINT8);
   return result;
 }
 
-std::shared_ptr<Type> uint16()
+InternalSharedPtr<Type> uint16()
 {
   static auto result = detail::primitive_type(Type::Code::UINT16);
   return result;
 }
 
-std::shared_ptr<Type> uint32()
+InternalSharedPtr<Type> uint32()
 {
   static auto result = detail::primitive_type(Type::Code::UINT32);
   return result;
 }
 
-std::shared_ptr<Type> uint64()
+InternalSharedPtr<Type> uint64()
 {
   static auto result = detail::primitive_type(Type::Code::UINT64);
   return result;
 }
 
-std::shared_ptr<Type> float16()
+InternalSharedPtr<Type> float16()
 {
   static auto result = detail::primitive_type(Type::Code::FLOAT16);
   return result;
 }
 
-std::shared_ptr<Type> float32()
+InternalSharedPtr<Type> float32()
 {
   static auto result = detail::primitive_type(Type::Code::FLOAT32);
   return result;
 }
 
-std::shared_ptr<Type> float64()
+InternalSharedPtr<Type> float64()
 {
   static auto result = detail::primitive_type(Type::Code::FLOAT64);
   return result;
 }
 
-std::shared_ptr<Type> complex64()
+InternalSharedPtr<Type> complex64()
 {
   static auto result = detail::primitive_type(Type::Code::COMPLEX64);
   return result;
 }
 
-std::shared_ptr<Type> complex128()
+InternalSharedPtr<Type> complex128()
 {
   static auto result = detail::primitive_type(Type::Code::COMPLEX128);
   return result;
 }
 
-std::shared_ptr<Type> point_type(int32_t ndim)
+InternalSharedPtr<Type> point_type(int32_t ndim)
 {
-  static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
+  static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
   if (ndim <= 0 || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
   }
   if (nullptr == cache[ndim]) {
     cache[ndim] =
-      std::make_shared<detail::FixedArrayType>(BASE_POINT_TYPE_UID + ndim, int64(), ndim);
+      make_internal_shared<detail::FixedArrayType>(BASE_POINT_TYPE_UID + ndim, int64(), ndim);
   }
   return cache[ndim];
 }
 
-std::shared_ptr<Type> rect_type(int32_t ndim)
+InternalSharedPtr<Type> rect_type(int32_t ndim)
 {
-  static std::shared_ptr<Type> cache[LEGATE_MAX_DIM + 1];
+  static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
   if (ndim <= 0 || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
@@ -555,21 +554,21 @@ std::shared_ptr<Type> rect_type(int32_t ndim)
 
   if (nullptr == cache[ndim]) {
     auto pt_type = point_type(ndim);
-    std::vector<std::shared_ptr<detail::Type>> field_types{pt_type, pt_type};
+    std::vector<InternalSharedPtr<detail::Type>> field_types{pt_type, pt_type};
 
-    cache[ndim] = std::make_shared<detail::StructType>(
+    cache[ndim] = make_internal_shared<detail::StructType>(
       BASE_RECT_TYPE_UID + ndim, std::move(field_types), true /*align*/);
   }
   return cache[ndim];
 }
 
-std::shared_ptr<Type> null_type()
+InternalSharedPtr<Type> null_type()
 {
   static auto result = detail::primitive_type(Type::Code::NIL);
   return result;
 }
 
-bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim)
+bool is_point_type(const InternalSharedPtr<Type>& type, int32_t ndim)
 {
   switch (type->code) {
     case Type::Code::INT64: {
@@ -583,13 +582,13 @@ bool is_point_type(const std::shared_ptr<Type>& type, int32_t ndim)
   return false;
 }
 
-bool is_rect_type(const std::shared_ptr<Type>& type)
+bool is_rect_type(const InternalSharedPtr<Type>& type)
 {
   auto uid = type->uid();
   return uid > BASE_RECT_TYPE_UID && uid <= BASE_RECT_TYPE_UID + LEGATE_MAX_DIM;
 }
 
-bool is_rect_type(const std::shared_ptr<Type>& type, int32_t ndim)
+bool is_rect_type(const InternalSharedPtr<Type>& type, int32_t ndim)
 {
   return type->uid() == BASE_RECT_TYPE_UID + ndim;
 }

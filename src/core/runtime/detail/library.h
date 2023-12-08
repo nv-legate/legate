@@ -16,6 +16,7 @@
 #include "core/mapping/mapping.h"
 #include "core/runtime/resource.h"
 #include "core/task/task_info.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
 #include <memory>
@@ -77,7 +78,7 @@ class Library {
 
   [[nodiscard]] const std::string& get_task_name(int64_t local_task_id) const;
   [[nodiscard]] std::unique_ptr<Scalar> get_tunable(int64_t tunable_id,
-                                                    std::shared_ptr<Type> type) const;
+                                                    InternalSharedPtr<Type> type) const;
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);
   [[nodiscard]] Legion::Mapping::Mapper* get_legion_mapper() const;
 

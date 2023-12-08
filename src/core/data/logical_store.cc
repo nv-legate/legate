@@ -76,6 +76,8 @@ std::string LogicalStore::to_string() const { return impl_->to_string(); }
 
 void LogicalStore::detach() { impl_->detach(); }
 
+LogicalStore::~LogicalStore() noexcept = default;
+
 LogicalStore LogicalStorePartition::store() const { return LogicalStore{impl_->store()}; }
 
 const Shape& LogicalStorePartition::color_shape() const { return impl_->color_shape(); }
@@ -84,5 +86,7 @@ LogicalStore LogicalStorePartition::get_child_store(const Shape& color) const
 {
   return LogicalStore{impl_->get_child_store(color)};
 }
+
+LogicalStorePartition::~LogicalStorePartition() noexcept = default;
 
 }  // namespace legate

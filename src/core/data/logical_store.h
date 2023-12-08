@@ -16,8 +16,9 @@
 #include "core/data/shape.h"
 #include "core/data/slice.h"
 #include "core/type/type_info.h"
+#include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/shared_ptr.h"
 
-#include <memory>
 #include <utility>
 #include <vector>
 
@@ -77,14 +78,7 @@ class LogicalStore {
   friend class LogicalStorePartition;
 
  public:
-  LogicalStore()                                     = default;
-  LogicalStore(const LogicalStore& other)            = default;
-  LogicalStore& operator=(const LogicalStore& other) = default;
-
-  LogicalStore(LogicalStore&& other)            = default;
-  LogicalStore& operator=(LogicalStore&& other) = default;
-
-  explicit LogicalStore(std::shared_ptr<detail::LogicalStore>&& impl);
+  explicit LogicalStore(InternalSharedPtr<detail::LogicalStore>&& impl);
 
   /**
    * @brief Returns the number of dimensions of the store.
@@ -353,29 +347,41 @@ class LogicalStore {
 
   [[nodiscard]] std::string to_string() const;
 
-  [[nodiscard]] const std::shared_ptr<detail::LogicalStore>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::LogicalStore>& impl() const;
+
+  LogicalStore()                                         = default;
+  LogicalStore(const LogicalStore& other)                = default;
+  LogicalStore& operator=(const LogicalStore& other)     = default;
+  LogicalStore(LogicalStore&& other) noexcept            = default;
+  LogicalStore& operator=(LogicalStore&& other) noexcept = default;
+  ~LogicalStore() noexcept;
 
  private:
-  std::shared_ptr<detail::LogicalStore> impl_{};
+  SharedPtr<detail::LogicalStore> impl_{};
 };
 
 class LogicalStorePartition {
  private:
   friend class LogicalStore;
 
-  explicit LogicalStorePartition(std::shared_ptr<detail::LogicalStorePartition>&& impl);
+  explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition>&& impl);
 
  public:
-  LogicalStorePartition() = default;
-
   [[nodiscard]] LogicalStore store() const;
   [[nodiscard]] const Shape& color_shape() const;
   [[nodiscard]] LogicalStore get_child_store(const Shape& color) const;
 
-  [[nodiscard]] const std::shared_ptr<detail::LogicalStorePartition>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& impl() const;
+
+  LogicalStorePartition()                                                  = default;
+  LogicalStorePartition(const LogicalStorePartition& other)                = default;
+  LogicalStorePartition& operator=(const LogicalStorePartition& other)     = default;
+  LogicalStorePartition(LogicalStorePartition&& other) noexcept            = default;
+  LogicalStorePartition& operator=(LogicalStorePartition&& other) noexcept = default;
+  ~LogicalStorePartition() noexcept;
 
  private:
-  std::shared_ptr<detail::LogicalStorePartition> impl_{};
+  SharedPtr<detail::LogicalStorePartition> impl_{};
 };
 
 }  // namespace legate

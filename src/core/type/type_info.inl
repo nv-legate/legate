@@ -16,21 +16,23 @@
 
 namespace legate {
 
-inline Type::Type(std::shared_ptr<detail::Type> impl) : impl_{std::move(impl)} {}
+inline Type::Type(InternalSharedPtr<detail::Type> impl) : impl_{std::move(impl)} {}
 
-inline const std::shared_ptr<detail::Type>& Type::impl() const { return impl_; }
-
-// ==========================================================================================
-
-inline FixedArrayType::FixedArrayType(std::shared_ptr<detail::Type> type) : Type{std::move(type)} {}
+inline const SharedPtr<detail::Type>& Type::impl() const { return impl_; }
 
 // ==========================================================================================
 
-inline StructType::StructType(std::shared_ptr<detail::Type> type) : Type{std::move(type)} {}
+inline FixedArrayType::FixedArrayType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)}
+{
+}
 
 // ==========================================================================================
 
-inline ListType::ListType(std::shared_ptr<detail::Type> type) : Type{std::move(type)} {}
+inline StructType::StructType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)} {}
+
+// ==========================================================================================
+
+inline ListType::ListType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)} {}
 
 // ==========================================================================================
 

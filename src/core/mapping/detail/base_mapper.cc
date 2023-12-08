@@ -744,7 +744,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     return true;
   }
 
-  std::shared_ptr<RegionGroup> group{nullptr};
+  InternalSharedPtr<RegionGroup> group{nullptr};
 
   // Haven't made this instance before, so make it now
   if (fields.size() == 1 && regions.size() == 1) {

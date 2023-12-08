@@ -16,9 +16,9 @@
 #include "core/data/physical_array.h"
 #include "core/data/shape.h"
 #include "core/type/type_info.h"
+#include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/shared_ptr.h"
 #include "core/utilities/typedefs.h"
-
-#include <memory>
 
 /**
  * @file
@@ -216,7 +216,7 @@ class LogicalArray {
 
   LogicalArray() = default;
 
-  explicit LogicalArray(std::shared_ptr<detail::LogicalArray> impl);
+  explicit LogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 
   virtual ~LogicalArray()                      = default;
   LogicalArray(const LogicalArray&)            = default;
@@ -227,10 +227,10 @@ class LogicalArray {
   LogicalArray(const LogicalStore& store);
   LogicalArray(const LogicalStore& store, const LogicalStore& null_mask);
 
-  [[nodiscard]] const std::shared_ptr<detail::LogicalArray>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::LogicalArray>& impl() const;
 
  protected:
-  std::shared_ptr<detail::LogicalArray> impl_{nullptr};
+  SharedPtr<detail::LogicalArray> impl_{nullptr};
 };
 
 class ListLogicalArray : public LogicalArray {
@@ -251,7 +251,7 @@ class ListLogicalArray : public LogicalArray {
  private:
   friend class LogicalArray;
 
-  explicit ListLogicalArray(std::shared_ptr<detail::LogicalArray> impl);
+  explicit ListLogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 };
 
 class StringLogicalArray : public LogicalArray {
@@ -272,7 +272,7 @@ class StringLogicalArray : public LogicalArray {
  private:
   friend class LogicalArray;
 
-  explicit StringLogicalArray(std::shared_ptr<detail::LogicalArray> impl);
+  explicit StringLogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 };
 
 }  // namespace legate

@@ -29,7 +29,7 @@ inline bool OutputRequirementAnalyzer::empty() const { return field_groups_.empt
 
 // ==========================================================================================
 
-inline void StoreAnalyzer::insert(const std::shared_ptr<LogicalRegionField>& region_field,
+inline void StoreAnalyzer::insert(const InternalSharedPtr<LogicalRegionField>& region_field,
                                   Legion::PrivilegeMode privilege,
                                   const ProjectionInfo& proj_info)
 {

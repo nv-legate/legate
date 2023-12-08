@@ -16,8 +16,8 @@
 
 namespace legate::detail {
 
-inline BaseLogicalArray::BaseLogicalArray(std::shared_ptr<LogicalStore> data,
-                                          std::shared_ptr<LogicalStore> null_mask)
+inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
+                                          InternalSharedPtr<LogicalStore> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
   assert(data_ != nullptr);
@@ -27,7 +27,7 @@ inline int32_t BaseLogicalArray::dim() const { return data_->dim(); }
 
 inline ArrayKind BaseLogicalArray::kind() const { return ArrayKind::BASE; }
 
-inline std::shared_ptr<Type> BaseLogicalArray::type() const { return data_->type(); }
+inline InternalSharedPtr<Type> BaseLogicalArray::type() const { return data_->type(); }
 
 inline const Shape& BaseLogicalArray::extents() const { return data_->extents(); }
 
@@ -39,15 +39,15 @@ inline bool BaseLogicalArray::nested() const { return false; }
 
 inline uint32_t BaseLogicalArray::num_children() const { return 0; }
 
-inline std::shared_ptr<LogicalStore> BaseLogicalArray::data() const { return data_; }
+inline InternalSharedPtr<LogicalStore> BaseLogicalArray::data() const { return data_; }
 
-inline std::shared_ptr<LogicalStore> BaseLogicalArray::primary_store() const { return data(); }
+inline InternalSharedPtr<LogicalStore> BaseLogicalArray::primary_store() const { return data(); }
 
 // ==========================================================================================
 
-inline ListLogicalArray::ListLogicalArray(std::shared_ptr<Type> type,
-                                          std::shared_ptr<BaseLogicalArray> descriptor,
-                                          std::shared_ptr<LogicalArray> vardata)
+inline ListLogicalArray::ListLogicalArray(InternalSharedPtr<Type> type,
+                                          InternalSharedPtr<BaseLogicalArray> descriptor,
+                                          InternalSharedPtr<LogicalArray> vardata)
   : type_{std::move(type)}, descriptor_{std::move(descriptor)}, vardata_{std::move(vardata)}
 {
 }
@@ -56,7 +56,7 @@ inline int32_t ListLogicalArray::dim() const { return descriptor_->dim(); }
 
 inline ArrayKind ListLogicalArray::kind() const { return ArrayKind::LIST; }
 
-inline std::shared_ptr<Type> ListLogicalArray::type() const { return type_; }
+inline InternalSharedPtr<Type> ListLogicalArray::type() const { return type_; }
 
 inline const Shape& ListLogicalArray::extents() const { return descriptor_->extents(); }
 
@@ -68,28 +68,28 @@ inline bool ListLogicalArray::nested() const { return true; }
 
 inline uint32_t ListLogicalArray::num_children() const { return 2; }
 
-inline std::shared_ptr<LogicalStore> ListLogicalArray::null_mask() const
+inline InternalSharedPtr<LogicalStore> ListLogicalArray::null_mask() const
 {
   return descriptor_->null_mask();
 }
 
-inline std::shared_ptr<LogicalStore> ListLogicalArray::primary_store() const
+inline InternalSharedPtr<LogicalStore> ListLogicalArray::primary_store() const
 {
   return descriptor_->primary_store();
 }
 
 // ==========================================================================================
 
-inline StructLogicalArray::StructLogicalArray(std::shared_ptr<Type> type,
-                                              std::shared_ptr<LogicalStore> null_mask,
-                                              std::vector<std::shared_ptr<LogicalArray>>&& fields)
+inline StructLogicalArray::StructLogicalArray(InternalSharedPtr<Type> type,
+                                              InternalSharedPtr<LogicalStore> null_mask,
+                                              std::vector<InternalSharedPtr<LogicalArray>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
 }
 
 inline ArrayKind StructLogicalArray::kind() const { return ArrayKind::STRUCT; }
 
-inline std::shared_ptr<Type> StructLogicalArray::type() const { return type_; }
+inline InternalSharedPtr<Type> StructLogicalArray::type() const { return type_; }
 
 inline bool StructLogicalArray::nullable() const { return null_mask_ != nullptr; }
 

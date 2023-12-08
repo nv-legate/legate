@@ -13,7 +13,9 @@
 #pragma once
 
 #include "core/data/shape.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/memory.h"
+#include "core/utilities/shared_ptr.h"
 #include "core/utilities/tuple.h"
 
 #include <string>
@@ -61,17 +63,17 @@ class Constraint {
   [[nodiscard]] std::string to_string() const;
 
   Constraint() = default;
-  explicit Constraint(std::shared_ptr<detail::Constraint>&& impl);
+  explicit Constraint(InternalSharedPtr<detail::Constraint>&& impl);
   Constraint(const Constraint&)                = default;
   Constraint(Constraint&&) noexcept            = default;
   Constraint& operator=(const Constraint&)     = default;
   Constraint& operator=(Constraint&&) noexcept = default;
   ~Constraint()                                = default;
 
-  [[nodiscard]] const std::shared_ptr<detail::Constraint>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::Constraint>& impl() const;
 
  private:
-  std::shared_ptr<detail::Constraint> impl_{nullptr};
+  SharedPtr<detail::Constraint> impl_{};
 };
 
 /**

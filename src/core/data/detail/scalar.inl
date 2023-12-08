@@ -47,7 +47,7 @@ inline Scalar::Scalar(Scalar&& other) noexcept
 {
 }
 
-inline const std::shared_ptr<Type>& Scalar::type() const { return type_; }
+inline const InternalSharedPtr<Type>& Scalar::type() const { return type_; }
 
 inline const void* Scalar::data() const { return data_; }
 

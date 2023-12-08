@@ -17,8 +17,8 @@
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/store.h"
 #include "core/utilities/deserializer.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <vector>
 
 namespace legate::detail {
@@ -55,9 +55,9 @@ class Task : public Mappable {
 
   [[nodiscard]] int64_t task_id() const;
 
-  [[nodiscard]] const std::vector<std::shared_ptr<Array>>& inputs() const;
-  [[nodiscard]] const std::vector<std::shared_ptr<Array>>& outputs() const;
-  [[nodiscard]] const std::vector<std::shared_ptr<Array>>& reductions() const;
+  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& inputs() const;
+  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& outputs() const;
+  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& reductions() const;
   [[nodiscard]] const std::vector<Scalar>& scalars() const;
 
   [[nodiscard]] DomainPoint point() const;
@@ -68,9 +68,9 @@ class Task : public Mappable {
   const legate::detail::Library* library_;
   const Legion::Task* task_;
 
-  std::vector<std::shared_ptr<Array>> inputs_;
-  std::vector<std::shared_ptr<Array>> outputs_;
-  std::vector<std::shared_ptr<Array>> reductions_;
+  std::vector<InternalSharedPtr<Array>> inputs_;
+  std::vector<InternalSharedPtr<Array>> outputs_;
+  std::vector<InternalSharedPtr<Array>> reductions_;
   std::vector<Scalar> scalars_;
 };
 

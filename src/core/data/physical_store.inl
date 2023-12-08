@@ -311,11 +311,11 @@ ACC PhysicalStore::create_reduction_accessor(const Rect<DIM>& bounds) const
   return {pr, fid, get_redop_id(), bounds};
 }
 
-inline PhysicalStore::PhysicalStore(std::shared_ptr<detail::PhysicalStore> impl)
+inline PhysicalStore::PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl)
   : impl_{std::move(impl)}
 {
 }
 
-inline const std::shared_ptr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }
+inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }
 
 }  // namespace legate

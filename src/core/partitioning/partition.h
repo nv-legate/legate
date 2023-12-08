@@ -16,6 +16,7 @@
 #include "core/mapping/detail/machine.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/detail/hash.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
 #include <iosfwd>
@@ -181,8 +182,8 @@ class Weighted : public Partition {
 
 class Image : public Partition {
  public:
-  Image(std::shared_ptr<detail::LogicalStore> func,
-        std::shared_ptr<Partition> func_partition,
+  Image(InternalSharedPtr<detail::LogicalStore> func,
+        InternalSharedPtr<Partition> func_partition,
         mapping::detail::Machine machine);
 
   bool operator==(const Image& other) const;
@@ -212,8 +213,8 @@ class Image : public Partition {
   [[nodiscard]] const Shape& color_shape() const override;
 
  private:
-  std::shared_ptr<detail::LogicalStore> func_;
-  std::shared_ptr<Partition> func_partition_{};
+  InternalSharedPtr<detail::LogicalStore> func_;
+  InternalSharedPtr<Partition> func_partition_{};
   mapping::detail::Machine machine_{};
 };
 
@@ -231,8 +232,8 @@ class Image : public Partition {
 [[nodiscard]] std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
                                                         const Domain& color_domain);
 
-[[nodiscard]] std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
-                                                  std::shared_ptr<Partition> func_partition,
+[[nodiscard]] std::unique_ptr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
+                                                  InternalSharedPtr<Partition> func_partition,
                                                   mapping::detail::Machine machine);
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);

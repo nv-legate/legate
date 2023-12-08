@@ -16,8 +16,8 @@
 #include "core/data/inline_allocation.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
-
-#include <memory>
+#include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/shared_ptr.h"
 
 /** @defgroup data Data abstractions and allocators
  */
@@ -352,11 +352,11 @@ class PhysicalStore {
  public:
   PhysicalStore() noexcept;
 
-  explicit PhysicalStore(std::shared_ptr<detail::PhysicalStore> impl);
-  [[nodiscard]] const std::shared_ptr<detail::PhysicalStore>& impl() const;
+  explicit PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl);
+  [[nodiscard]] const SharedPtr<detail::PhysicalStore>& impl() const;
 
  private:
-  std::shared_ptr<detail::PhysicalStore> impl_{};
+  SharedPtr<detail::PhysicalStore> impl_{};
 };
 
 }  // namespace legate

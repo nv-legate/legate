@@ -25,6 +25,7 @@ const char* __asan_default_options()
          "alloc_dealloc_mismatch=1:"
          "strict_string_checks=1:"
          "color=always:"
+         "detect_odr_violation=2:"
 #if LegateDefined(LEGATE_USE_CUDA)
          "protect_shadow_gap=0:"
 #endif

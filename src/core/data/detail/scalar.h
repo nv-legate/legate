@@ -14,8 +14,7 @@
 
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/buffer_builder.h"
-
-#include <memory>
+#include "core/utilities/internal_shared_ptr.h"
 
 namespace legate::detail {
 
@@ -23,7 +22,7 @@ class Type;
 
 class Scalar {
  public:
-  Scalar(std::shared_ptr<Type> type, const void* data, bool copy);
+  Scalar(InternalSharedPtr<Type> type, const void* data, bool copy);
   explicit Scalar(const std::string& value);
   ~Scalar();
 
@@ -40,7 +39,7 @@ class Scalar {
   [[nodiscard]] static const void* copy_data(const void* data, size_t size);
 
  public:
-  [[nodiscard]] const std::shared_ptr<Type>& type() const;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const;
   [[nodiscard]] const void* data() const;
   [[nodiscard]] size_t size() const;
 
@@ -50,7 +49,7 @@ class Scalar {
   void clear_data();
 
   bool own_{};
-  std::shared_ptr<Type> type_{};
+  InternalSharedPtr<Type> type_{};
   const void* data_{};
 };
 

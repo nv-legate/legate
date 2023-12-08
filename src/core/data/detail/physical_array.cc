@@ -16,7 +16,7 @@
 
 namespace legate::detail {
 
-std::shared_ptr<PhysicalStore> PhysicalArray::data() const
+InternalSharedPtr<PhysicalStore> PhysicalArray::data() const
 {
   throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
   return {};
@@ -30,7 +30,7 @@ bool BasePhysicalArray::unbound() const
   return data_->is_unbound_store();
 }
 
-std::shared_ptr<PhysicalStore> BasePhysicalArray::null_mask() const
+InternalSharedPtr<PhysicalStore> BasePhysicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -38,13 +38,13 @@ std::shared_ptr<PhysicalStore> BasePhysicalArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<PhysicalArray> BasePhysicalArray::child(uint32_t /*index*/) const
+InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(uint32_t /*index*/) const
 {
   throw std::invalid_argument{"Non-nested array has no child sub-array"};
   return {};
 }
 
-void BasePhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
+void BasePhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   result.push_back(data_);
   if (nullable()) {
@@ -65,7 +65,7 @@ bool ListPhysicalArray::valid() const
   return descriptor_->valid();
 }
 
-std::shared_ptr<PhysicalArray> ListPhysicalArray::child(uint32_t index) const
+InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(uint32_t index) const
 {
   switch (index) {
     case 0: return descriptor_;
@@ -78,7 +78,7 @@ std::shared_ptr<PhysicalArray> ListPhysicalArray::child(uint32_t index) const
   return {};
 }
 
-void ListPhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
+void ListPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   descriptor_->_stores(result);
   vardata_->_stores(result);
@@ -104,7 +104,7 @@ bool StructPhysicalArray::valid() const
   return result;
 }
 
-std::shared_ptr<PhysicalStore> StructPhysicalArray::null_mask() const
+InternalSharedPtr<PhysicalStore> StructPhysicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -112,12 +112,12 @@ std::shared_ptr<PhysicalStore> StructPhysicalArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<PhysicalArray> StructPhysicalArray::child(uint32_t index) const
+InternalSharedPtr<PhysicalArray> StructPhysicalArray::child(uint32_t index) const
 {
   return fields_.at(index);
 }
 
-void StructPhysicalArray::_stores(std::vector<std::shared_ptr<PhysicalStore>>& result) const
+void StructPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   std::for_each(fields_.begin(), fields_.end(), [&result](auto& field) { field->_stores(result); });
   if (nullable()) {

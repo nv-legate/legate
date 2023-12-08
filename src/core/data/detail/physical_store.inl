@@ -73,10 +73,10 @@ inline Legion::UntypedDeferredValue FutureWrapper::get_buffer() const { return b
 // ==========================================================================================
 
 inline PhysicalStore::PhysicalStore(int32_t dim,
-                                    std::shared_ptr<Type> type,
+                                    InternalSharedPtr<Type> type,
                                     int32_t redop_id,
                                     FutureWrapper future,
-                                    std::shared_ptr<detail::TransformStack>&& transform)
+                                    InternalSharedPtr<detail::TransformStack>&& transform)
   : is_future_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -89,10 +89,10 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 }
 
 inline PhysicalStore::PhysicalStore(int32_t dim,
-                                    std::shared_ptr<Type> type,
+                                    InternalSharedPtr<Type> type,
                                     int32_t redop_id,
                                     RegionField&& region_field,
-                                    std::shared_ptr<detail::TransformStack>&& transform)
+                                    InternalSharedPtr<detail::TransformStack>&& transform)
   : dim_{dim},
     type_{std::move(type)},
     redop_id_{redop_id},
@@ -105,9 +105,9 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 }
 
 inline PhysicalStore::PhysicalStore(int32_t dim,
-                                    std::shared_ptr<Type> type,
+                                    InternalSharedPtr<Type> type,
                                     UnboundRegionField&& unbound_field,
-                                    std::shared_ptr<detail::TransformStack>&& transform)
+                                    InternalSharedPtr<detail::TransformStack>&& transform)
   : is_unbound_store_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -117,10 +117,10 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 }
 
 inline PhysicalStore::PhysicalStore(int32_t dim,
-                                    std::shared_ptr<Type> type,
+                                    InternalSharedPtr<Type> type,
                                     int32_t redop_id,
                                     FutureWrapper future,
-                                    const std::shared_ptr<detail::TransformStack>& transform)
+                                    const InternalSharedPtr<detail::TransformStack>& transform)
   : is_future_{true},
     dim_{dim},
     type_{std::move(type)},
@@ -132,10 +132,10 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 }
 
 inline PhysicalStore::PhysicalStore(int32_t dim,
-                                    std::shared_ptr<Type> type,
+                                    InternalSharedPtr<Type> type,
                                     int32_t redop_id,
                                     RegionField&& region_field,
-                                    const std::shared_ptr<detail::TransformStack>& transform)
+                                    const InternalSharedPtr<detail::TransformStack>& transform)
   : dim_{dim},
     type_{std::move(type)},
     redop_id_{redop_id},
@@ -149,7 +149,7 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 
 inline int32_t PhysicalStore::dim() const { return dim_; }
 
-inline const std::shared_ptr<Type>& PhysicalStore::type() const { return type_; }
+inline const InternalSharedPtr<Type>& PhysicalStore::type() const { return type_; }
 
 inline bool PhysicalStore::is_readable() const { return readable_; }
 

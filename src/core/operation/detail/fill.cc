@@ -20,8 +20,8 @@
 
 namespace legate::detail {
 
-Fill::Fill(std::shared_ptr<LogicalStore>&& lhs,
-           std::shared_ptr<LogicalStore>&& value,
+Fill::Fill(InternalSharedPtr<LogicalStore>&& lhs,
+           InternalSharedPtr<LogicalStore>&& value,
            uint64_t unique_id,
            mapping::detail::Machine&& machine)
   : Operation{unique_id, std::move(machine)},

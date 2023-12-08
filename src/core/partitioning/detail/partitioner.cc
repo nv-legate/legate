@@ -112,7 +112,7 @@ void Strategy::set_launch_domain(const Operation* op, const Domain& domain)
   launch_domains_.insert({op, domain});
 }
 
-void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition)
+void Strategy::insert(const Variable* partition_symbol, InternalSharedPtr<Partition> partition)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(assignments_.find(*partition_symbol) == assignments_.end());
@@ -121,7 +121,7 @@ void Strategy::insert(const Variable* partition_symbol, std::shared_ptr<Partitio
 }
 
 void Strategy::insert(const Variable* partition_symbol,
-                      std::shared_ptr<Partition> partition,
+                      InternalSharedPtr<Partition> partition,
                       Legion::FieldSpace field_space)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -136,7 +136,7 @@ bool Strategy::has_assignment(const Variable* partition_symbol) const
   return assignments_.find(*partition_symbol) != assignments_.end();
 }
 
-std::shared_ptr<Partition> Strategy::operator[](const Variable* partition_symbol) const
+InternalSharedPtr<Partition> Strategy::operator[](const Variable* partition_symbol) const
 {
   auto finder = assignments_.find(*partition_symbol);
 
@@ -299,7 +299,9 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
 
   filtered.reserve(partition_symbols.size());
   for (auto* part_symb : partition_symbols) {
-    if (strategy->has_assignment(part_symb)) { continue; }
+    if (strategy->has_assignment(part_symb)) {
+      continue;
+    }
     auto* op   = part_symb->operation();
     auto store = op->find_store(part_symb);
 
@@ -309,7 +311,7 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
     }
 
     auto equiv_class = solver.find_equivalence_class(part_symb);
-    const std::shared_ptr<Partition> partition{create_no_partition()};
+    const InternalSharedPtr<Partition> partition{create_no_partition()};
     auto field_space = runtime->create_field_space();
 
     for (auto symb : equiv_class) {

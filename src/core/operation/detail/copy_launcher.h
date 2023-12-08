@@ -60,21 +60,21 @@ class CopyLauncher {
  public:
   CopyLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
 
-  void add_input(const std::shared_ptr<LogicalStore>& store,
+  void add_input(const InternalSharedPtr<LogicalStore>& store,
                  std::unique_ptr<ProjectionInfo> proj_info);
-  void add_output(const std::shared_ptr<LogicalStore>& store,
+  void add_output(const InternalSharedPtr<LogicalStore>& store,
                   std::unique_ptr<ProjectionInfo> proj_info);
-  void add_inout(const std::shared_ptr<LogicalStore>& store,
+  void add_inout(const InternalSharedPtr<LogicalStore>& store,
                  std::unique_ptr<ProjectionInfo> proj_info);
-  void add_reduction(const std::shared_ptr<LogicalStore>& store,
+  void add_reduction(const InternalSharedPtr<LogicalStore>& store,
                      std::unique_ptr<ProjectionInfo> proj_info);
-  void add_source_indirect(const std::shared_ptr<LogicalStore>& store,
+  void add_source_indirect(const InternalSharedPtr<LogicalStore>& store,
                            std::unique_ptr<ProjectionInfo> proj_info);
-  void add_target_indirect(const std::shared_ptr<LogicalStore>& store,
+  void add_target_indirect(const InternalSharedPtr<LogicalStore>& store,
                            std::unique_ptr<ProjectionInfo> proj_info);
 
   void add_store(std::vector<std::unique_ptr<CopyArg>>& args,
-                 const std::shared_ptr<LogicalStore>& store,
+                 const InternalSharedPtr<LogicalStore>& store,
                  std::unique_ptr<ProjectionInfo> proj_info,
                  Legion::PrivilegeMode privilege);
 

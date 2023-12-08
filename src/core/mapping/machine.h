@@ -13,6 +13,8 @@
 #pragma once
 
 #include "core/mapping/mapping.h"
+#include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/shared_ptr.h"
 
 #include <iosfwd>
 #include <map>
@@ -280,7 +282,7 @@ class Machine {
 
   Machine() = default;
   explicit Machine(std::map<TaskTarget, ProcessorRange> ranges);
-  explicit Machine(std::shared_ptr<detail::Machine> impl);
+  explicit Machine(InternalSharedPtr<detail::Machine> impl);
   explicit Machine(detail::Machine impl);
 
   Machine(const Machine&)                = default;
@@ -288,10 +290,10 @@ class Machine {
   Machine(Machine&&) noexcept            = default;
   Machine& operator=(Machine&&) noexcept = default;
 
-  [[nodiscard]] const std::shared_ptr<detail::Machine>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::Machine>& impl() const;
 
  private:
-  std::shared_ptr<detail::Machine> impl_{nullptr};
+  SharedPtr<detail::Machine> impl_{};
 };
 
 std::ostream& operator<<(std::ostream& stream, const Machine& machine);

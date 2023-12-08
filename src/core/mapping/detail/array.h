@@ -15,8 +15,8 @@
 #include "core/data/detail/array_kind.h"
 #include "core/mapping/detail/store.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <vector>
 
 namespace legate::mapping::detail {
@@ -25,94 +25,94 @@ class Array {
  public:
   virtual ~Array() = default;
 
-  [[nodiscard]] virtual int32_t dim() const                                = 0;
-  [[nodiscard]] virtual legate::detail::ArrayKind kind() const             = 0;
-  [[nodiscard]] virtual std::shared_ptr<legate::detail::Type> type() const = 0;
-  [[nodiscard]] virtual bool unbound() const                               = 0;
-  [[nodiscard]] virtual bool nullable() const                              = 0;
-  [[nodiscard]] virtual bool nested() const                                = 0;
+  [[nodiscard]] virtual int32_t dim() const                                  = 0;
+  [[nodiscard]] virtual legate::detail::ArrayKind kind() const               = 0;
+  [[nodiscard]] virtual InternalSharedPtr<legate::detail::Type> type() const = 0;
+  [[nodiscard]] virtual bool unbound() const                                 = 0;
+  [[nodiscard]] virtual bool nullable() const                                = 0;
+  [[nodiscard]] virtual bool nested() const                                  = 0;
 
-  [[nodiscard]] virtual std::shared_ptr<Store> data() const;
-  [[nodiscard]] virtual std::shared_ptr<Store> null_mask() const           = 0;
-  [[nodiscard]] virtual std::shared_ptr<Array> child(uint32_t index) const = 0;
-  [[nodiscard]] std::vector<std::shared_ptr<Store>> stores() const;
+  [[nodiscard]] virtual InternalSharedPtr<Store> data() const;
+  [[nodiscard]] virtual InternalSharedPtr<Store> null_mask() const           = 0;
+  [[nodiscard]] virtual InternalSharedPtr<Array> child(uint32_t index) const = 0;
+  [[nodiscard]] std::vector<InternalSharedPtr<Store>> stores() const;
 
-  virtual void _stores(std::vector<std::shared_ptr<Store>>& result) const = 0;
-  [[nodiscard]] virtual Domain domain() const                             = 0;
+  virtual void _stores(std::vector<InternalSharedPtr<Store>>& result) const = 0;
+  [[nodiscard]] virtual Domain domain() const                               = 0;
 };
 
 class BaseArray final : public Array {
  public:
-  BaseArray(std::shared_ptr<Store> data, std::shared_ptr<Store> null_mask);
+  BaseArray(InternalSharedPtr<Store> data, InternalSharedPtr<Store> null_mask);
 
   [[nodiscard]] int32_t dim() const override;
   [[nodiscard]] legate::detail::ArrayKind kind() const override;
-  [[nodiscard]] std::shared_ptr<legate::detail::Type> type() const override;
+  [[nodiscard]] InternalSharedPtr<legate::detail::Type> type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
 
-  [[nodiscard]] std::shared_ptr<Store> data() const override;
-  [[nodiscard]] std::shared_ptr<Store> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> child(uint32_t index) const override;
-  void _stores(std::vector<std::shared_ptr<Store>>& result) const override;
+  [[nodiscard]] InternalSharedPtr<Store> data() const override;
+  [[nodiscard]] InternalSharedPtr<Store> null_mask() const override;
+  [[nodiscard]] InternalSharedPtr<Array> child(uint32_t index) const override;
+  void _stores(std::vector<InternalSharedPtr<Store>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
 
  private:
-  std::shared_ptr<Store> data_{};
-  std::shared_ptr<Store> null_mask_{};
+  InternalSharedPtr<Store> data_{};
+  InternalSharedPtr<Store> null_mask_{};
 };
 
 class ListArray final : public Array {
  public:
-  ListArray(std::shared_ptr<legate::detail::Type> type,
-            std::shared_ptr<BaseArray> descriptor,
-            std::shared_ptr<Array> vardata);
+  ListArray(InternalSharedPtr<legate::detail::Type> type,
+            InternalSharedPtr<BaseArray> descriptor,
+            InternalSharedPtr<Array> vardata);
 
   [[nodiscard]] int32_t dim() const override;
   [[nodiscard]] legate::detail::ArrayKind kind() const override;
-  [[nodiscard]] std::shared_ptr<legate::detail::Type> type() const override;
+  [[nodiscard]] InternalSharedPtr<legate::detail::Type> type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
 
-  [[nodiscard]] std::shared_ptr<Store> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> child(uint32_t index) const override;
-  void _stores(std::vector<std::shared_ptr<Store>>& result) const override;
-  [[nodiscard]] std::shared_ptr<Array> descriptor() const;
-  [[nodiscard]] std::shared_ptr<Array> vardata() const;
+  [[nodiscard]] InternalSharedPtr<Store> null_mask() const override;
+  [[nodiscard]] InternalSharedPtr<Array> child(uint32_t index) const override;
+  void _stores(std::vector<InternalSharedPtr<Store>>& result) const override;
+  [[nodiscard]] InternalSharedPtr<Array> descriptor() const;
+  [[nodiscard]] InternalSharedPtr<Array> vardata() const;
   [[nodiscard]] Domain domain() const override;
 
  private:
-  std::shared_ptr<legate::detail::Type> type_{};
-  std::shared_ptr<BaseArray> descriptor_{};
-  std::shared_ptr<Array> vardata_{};
+  InternalSharedPtr<legate::detail::Type> type_{};
+  InternalSharedPtr<BaseArray> descriptor_{};
+  InternalSharedPtr<Array> vardata_{};
 };
 
 class StructArray final : public Array {
  public:
-  StructArray(std::shared_ptr<legate::detail::Type> type,
-              std::shared_ptr<Store> null_mask,
-              std::vector<std::shared_ptr<Array>>&& fields);
+  StructArray(InternalSharedPtr<legate::detail::Type> type,
+              InternalSharedPtr<Store> null_mask,
+              std::vector<InternalSharedPtr<Array>>&& fields);
 
   [[nodiscard]] int32_t dim() const override;
   [[nodiscard]] legate::detail::ArrayKind kind() const override;
-  [[nodiscard]] std::shared_ptr<legate::detail::Type> type() const override;
+  [[nodiscard]] InternalSharedPtr<legate::detail::Type> type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
 
-  [[nodiscard]] std::shared_ptr<Store> null_mask() const override;
-  [[nodiscard]] std::shared_ptr<Array> child(uint32_t index) const override;
-  void _stores(std::vector<std::shared_ptr<Store>>& result) const override;
+  [[nodiscard]] InternalSharedPtr<Store> null_mask() const override;
+  [[nodiscard]] InternalSharedPtr<Array> child(uint32_t index) const override;
+  void _stores(std::vector<InternalSharedPtr<Store>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
 
  private:
-  std::shared_ptr<legate::detail::Type> type_{};
-  std::shared_ptr<Store> null_mask_{};
-  std::vector<std::shared_ptr<Array>> fields_{};
+  InternalSharedPtr<legate::detail::Type> type_{};
+  InternalSharedPtr<Store> null_mask_{};
+  std::vector<InternalSharedPtr<Array>> fields_{};
 };
 
 }  // namespace legate::mapping::detail

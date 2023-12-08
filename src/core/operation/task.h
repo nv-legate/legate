@@ -17,8 +17,9 @@
 #include "core/data/scalar.h"
 #include "core/operation/projection.h"
 #include "core/partitioning/constraint.h"
+#include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/shared_ptr.h"
 
-#include <memory>
 #include <string>
 
 /**
@@ -218,8 +219,8 @@ class AutoTask {
 
  private:
   friend class Runtime;
-  explicit AutoTask(std::shared_ptr<detail::AutoTask> impl);
-  std::shared_ptr<detail::AutoTask> impl_{};
+  explicit AutoTask(InternalSharedPtr<detail::AutoTask> impl);
+  SharedPtr<detail::AutoTask> impl_{};
 };
 
 /**
@@ -362,8 +363,8 @@ class ManualTask {
 
  private:
   friend class Runtime;
-  explicit ManualTask(std::shared_ptr<detail::ManualTask> impl);
-  std::shared_ptr<detail::ManualTask> impl_{};
+  explicit ManualTask(InternalSharedPtr<detail::ManualTask> impl);
+  SharedPtr<detail::ManualTask> impl_{};
 };
 
 }  // namespace legate

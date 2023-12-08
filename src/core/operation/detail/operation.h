@@ -17,8 +17,8 @@
 #include "core/operation/detail/projection.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/utilities/hash.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -31,7 +31,7 @@ class Strategy;
 class Operation {
  protected:
   struct StoreArg {
-    std::shared_ptr<LogicalStore> store{};
+    InternalSharedPtr<LogicalStore> store{};
     const Variable* variable{};
   };
 
@@ -46,15 +46,15 @@ class Operation {
   [[nodiscard]] virtual std::string to_string() const  = 0;
   [[nodiscard]] virtual bool always_flush() const;
 
-  [[nodiscard]] const Variable* find_or_declare_partition(std::shared_ptr<LogicalStore> store);
+  [[nodiscard]] const Variable* find_or_declare_partition(InternalSharedPtr<LogicalStore> store);
   [[nodiscard]] const Variable* declare_partition();
-  [[nodiscard]] std::shared_ptr<LogicalStore> find_store(const Variable* variable) const;
+  [[nodiscard]] InternalSharedPtr<LogicalStore> find_store(const Variable* variable) const;
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] const std::string& provenance() const;
 
  protected:
-  void record_partition(const Variable* variable, std::shared_ptr<LogicalStore> store);
+  void record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store);
   // Helper methods
   [[nodiscard]] static std::unique_ptr<ProjectionInfo> create_projection_info(
     const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
@@ -62,8 +62,8 @@ class Operation {
   uint64_t unique_id_{};
   uint32_t next_part_id_{};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
-  std::unordered_map<const Variable, std::shared_ptr<LogicalStore>> store_mappings_{};
-  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*> part_mappings_{};
+  std::unordered_map<const Variable, InternalSharedPtr<LogicalStore>> store_mappings_{};
+  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};
   std::string provenance_{};
   mapping::detail::Machine machine_{};
 };

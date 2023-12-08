@@ -18,7 +18,7 @@
 
 namespace legate::mapping::detail {
 
-std::shared_ptr<Store> Array::data() const
+InternalSharedPtr<Store> Array::data() const
 {
   throw std::invalid_argument("Data store of a nested array cannot be retrieved");
   return {};
@@ -32,7 +32,7 @@ bool BaseArray::unbound() const
   return data_->unbound();
 }
 
-std::shared_ptr<Store> BaseArray::null_mask() const
+InternalSharedPtr<Store> BaseArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument("Invalid to retrieve the null mask of a non-nullable array");
@@ -40,13 +40,13 @@ std::shared_ptr<Store> BaseArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<Array> BaseArray::child(uint32_t /*index*/) const
+InternalSharedPtr<Array> BaseArray::child(uint32_t /*index*/) const
 {
   throw std::invalid_argument("Non-nested array has no child sub-array");
   return {};
 }
 
-void BaseArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
+void BaseArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
   result.push_back(data_);
   if (nullable()) {
@@ -60,7 +60,7 @@ int32_t ListArray::dim() const { return descriptor_->dim(); }
 
 bool ListArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
 
-std::shared_ptr<Array> ListArray::child(uint32_t index) const
+InternalSharedPtr<Array> ListArray::child(uint32_t index) const
 {
   switch (index) {
     case 0: return descriptor_;
@@ -73,7 +73,7 @@ std::shared_ptr<Array> ListArray::child(uint32_t index) const
   return {};
 }
 
-void ListArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
+void ListArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
   descriptor_->_stores(result);
   vardata_->_stores(result);
@@ -88,7 +88,7 @@ bool StructArray::unbound() const
   return std::any_of(fields_.begin(), fields_.end(), [](auto& field) { return field->unbound(); });
 }
 
-std::shared_ptr<Store> StructArray::null_mask() const
+InternalSharedPtr<Store> StructArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument("Invalid to retrieve the null mask of a non-nullable array");
@@ -96,9 +96,9 @@ std::shared_ptr<Store> StructArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<Array> StructArray::child(uint32_t index) const { return fields_.at(index); }
+InternalSharedPtr<Array> StructArray::child(uint32_t index) const { return fields_.at(index); }
 
-void StructArray::_stores(std::vector<std::shared_ptr<Store>>& result) const
+void StructArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
   std::for_each(fields_.begin(), fields_.end(), [&result](auto& field) { field->_stores(result); });
 }

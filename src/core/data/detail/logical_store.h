@@ -22,6 +22,7 @@
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <memory>
 #include <optional>
@@ -37,7 +38,7 @@ class StoragePartition;
 class PhysicalStore;
 class Variable;
 
-class Storage : public std::enable_shared_from_this<Storage> {
+class Storage : public legate::EnableSharedFromThis<Storage> {
  public:
   enum class Kind : int32_t {
     REGION_FIELD,
@@ -45,15 +46,15 @@ class Storage : public std::enable_shared_from_this<Storage> {
   };
 
   // Create a RegionField-backed storage whose size is unbound. Initialized lazily.
-  Storage(int32_t dim, std::shared_ptr<Type> type);
+  Storage(int32_t dim, InternalSharedPtr<Type> type);
   // Create a RegionField-backed or a Future-backed storage. Initialized lazily.
-  Storage(const Shape& extents, std::shared_ptr<Type> type, bool optimize_scalar);
+  Storage(const Shape& extents, InternalSharedPtr<Type> type, bool optimize_scalar);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(const Shape& extents, std::shared_ptr<Type> type, const Legion::Future& future);
+  Storage(const Shape& extents, InternalSharedPtr<Type> type, const Legion::Future& future);
   // Create a RegionField-backed sub-storage. Initialized lazily.
   Storage(Shape&& extents,
-          std::shared_ptr<Type> type,
-          std::shared_ptr<StoragePartition> parent,
+          InternalSharedPtr<Type> type,
+          InternalSharedPtr<StoragePartition> parent,
           Shape&& color,
           Shape&& offsets);
   ~Storage();
@@ -64,18 +65,18 @@ class Storage : public std::enable_shared_from_this<Storage> {
   [[nodiscard]] const Shape& offsets() const;
   [[nodiscard]] size_t volume() const;
   [[nodiscard]] int32_t dim() const;
-  [[nodiscard]] bool overlaps(const std::shared_ptr<Storage>& other) const;
-  [[nodiscard]] std::shared_ptr<Type> type() const;
+  [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;
+  [[nodiscard]] InternalSharedPtr<Type> type() const;
   [[nodiscard]] Kind kind() const;
   [[nodiscard]] int32_t level() const;
 
-  [[nodiscard]] std::shared_ptr<Storage> slice(Shape tile_shape, const Shape& offsets);
-  [[nodiscard]] std::shared_ptr<const Storage> get_root() const;
-  [[nodiscard]] std::shared_ptr<Storage> get_root();
+  [[nodiscard]] InternalSharedPtr<Storage> slice(Shape tile_shape, const Shape& offsets);
+  [[nodiscard]] InternalSharedPtr<const Storage> get_root() const;
+  [[nodiscard]] InternalSharedPtr<Storage> get_root();
 
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> get_region_field();
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_region_field();
   [[nodiscard]] Legion::Future get_future() const;
-  void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
+  void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future);
 
   [[nodiscard]] RegionField map();
@@ -88,8 +89,8 @@ class Storage : public std::enable_shared_from_this<Storage> {
                          std::unique_ptr<Partition>&& key_partition);
   void reset_key_partition() noexcept;
 
-  [[nodiscard]] std::shared_ptr<StoragePartition> create_partition(
-    std::shared_ptr<Partition> partition, std::optional<bool> complete = std::nullopt);
+  [[nodiscard]] InternalSharedPtr<StoragePartition> create_partition(
+    InternalSharedPtr<Partition> partition, std::optional<bool> complete = std::nullopt);
 
   [[nodiscard]] std::string to_string() const;
 
@@ -99,14 +100,14 @@ class Storage : public std::enable_shared_from_this<Storage> {
   bool destroyed_out_of_order_{};
   int32_t dim_{-1};
   Shape extents_;
-  std::shared_ptr<Type> type_{};
+  InternalSharedPtr<Type> type_{};
   Kind kind_{Kind::REGION_FIELD};
 
-  std::shared_ptr<LogicalRegionField> region_field_{};
+  InternalSharedPtr<LogicalRegionField> region_field_{};
   std::unique_ptr<Legion::Future> future_{};
 
   int32_t level_{};
-  std::shared_ptr<StoragePartition> parent_{};
+  InternalSharedPtr<StoragePartition> parent_{};
   Shape color_{};
   // Unlike offsets in a tiling, these offsets can never be negative, as a slicing always selects a
   // sub-rectangle of its parent
@@ -116,17 +117,17 @@ class Storage : public std::enable_shared_from_this<Storage> {
   std::unique_ptr<Partition> key_partition_{};
 };
 
-class StoragePartition : public std::enable_shared_from_this<StoragePartition> {
+class StoragePartition : public legate::EnableSharedFromThis<StoragePartition> {
  public:
-  StoragePartition(std::shared_ptr<Storage> parent,
-                   std::shared_ptr<Partition> partition,
+  StoragePartition(InternalSharedPtr<Storage> parent,
+                   InternalSharedPtr<Partition> partition,
                    bool complete);
 
-  [[nodiscard]] std::shared_ptr<Partition> partition() const;
-  [[nodiscard]] std::shared_ptr<const Storage> get_root() const;
-  [[nodiscard]] std::shared_ptr<Storage> get_root();
-  [[nodiscard]] std::shared_ptr<Storage> get_child_storage(Shape color);
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> get_child_data(const Shape& color);
+  [[nodiscard]] InternalSharedPtr<Partition> partition() const;
+  [[nodiscard]] InternalSharedPtr<const Storage> get_root() const;
+  [[nodiscard]] InternalSharedPtr<Storage> get_root();
+  [[nodiscard]] InternalSharedPtr<Storage> get_child_storage(Shape color);
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child_data(const Shape& color);
 
   [[nodiscard]] Partition* find_key_partition(const mapping::detail::Machine& machine,
                                               const Restrictions& restrictions) const;
@@ -139,19 +140,19 @@ class StoragePartition : public std::enable_shared_from_this<StoragePartition> {
  private:
   bool complete_{};
   int32_t level_{};
-  std::shared_ptr<Storage> parent_{};
-  std::shared_ptr<Partition> partition_{};
+  InternalSharedPtr<Storage> parent_{};
+  InternalSharedPtr<Partition> partition_{};
 };
 
 class LogicalStore {
  public:
-  explicit LogicalStore(std::shared_ptr<Storage>&& storage);
+  explicit LogicalStore(InternalSharedPtr<Storage>&& storage);
   LogicalStore(Shape&& extents,
-               std::shared_ptr<Storage> storage,
-               std::shared_ptr<TransformStack>&& transform);
+               InternalSharedPtr<Storage> storage,
+               InternalSharedPtr<TransformStack>&& transform);
 
  private:
-  explicit LogicalStore(std::shared_ptr<detail::LogicalStore> impl);
+  explicit LogicalStore(InternalSharedPtr<detail::LogicalStore> impl);
 
  public:
   LogicalStore(LogicalStore&& other) noexcept            = default;
@@ -163,43 +164,44 @@ class LogicalStore {
   // Size of the backing storage
   [[nodiscard]] size_t storage_size() const;
   [[nodiscard]] int32_t dim() const;
-  [[nodiscard]] bool overlaps(const std::shared_ptr<LogicalStore>& other) const;
+  [[nodiscard]] bool overlaps(const InternalSharedPtr<LogicalStore>& other) const;
   [[nodiscard]] bool has_scalar_storage() const;
-  [[nodiscard]] std::shared_ptr<Type> type() const;
-  [[nodiscard]] const std::shared_ptr<TransformStack>& transform() const;
+  [[nodiscard]] InternalSharedPtr<Type> type() const;
+  [[nodiscard]] const InternalSharedPtr<TransformStack>& transform() const;
   [[nodiscard]] bool transformed() const;
   [[nodiscard]] uint64_t id() const;
 
   [[nodiscard]] const Storage* get_storage() const;
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> get_region_field();
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_region_field();
   [[nodiscard]] Legion::Future get_future();
-  void set_region_field(std::shared_ptr<LogicalRegionField>&& region_field);
+  void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future);
 
-  [[nodiscard]] std::shared_ptr<LogicalStore> promote(int32_t extra_dim, size_t dim_size);
-  [[nodiscard]] std::shared_ptr<LogicalStore> project(int32_t dim, int64_t index);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> promote(int32_t extra_dim, size_t dim_size);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> project(int32_t dim, int64_t index);
 
  private:
-  friend std::shared_ptr<LogicalStore> slice_store(const std::shared_ptr<LogicalStore>& self,
-                                                   int32_t dim,
-                                                   Slice sl);
-  [[nodiscard]] std::shared_ptr<LogicalStore> slice(const std::shared_ptr<LogicalStore>& self,
-                                                    int32_t dim,
-                                                    Slice sl);
+  friend InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<LogicalStore>& self,
+                                                     int32_t dim,
+                                                     Slice sl);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> slice(const InternalSharedPtr<LogicalStore>& self,
+                                                      int32_t dim,
+                                                      Slice sl);
 
  public:
-  [[nodiscard]] std::shared_ptr<LogicalStore> transpose(const std::vector<int32_t>& axes);
-  [[nodiscard]] std::shared_ptr<LogicalStore> transpose(std::vector<int32_t>&& axes);
-  [[nodiscard]] std::shared_ptr<LogicalStore> delinearize(int32_t dim, std::vector<uint64_t> sizes);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> transpose(const std::vector<int32_t>& axes);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> transpose(std::vector<int32_t>&& axes);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> delinearize(int32_t dim,
+                                                            std::vector<uint64_t> sizes);
 
  private:
-  friend std::shared_ptr<LogicalStorePartition> partition_store_by_tiling(
-    const std::shared_ptr<LogicalStore>& self, Shape tile_shape);
-  [[nodiscard]] std::shared_ptr<LogicalStorePartition> partition_by_tiling(
-    const std::shared_ptr<LogicalStore>& self, Shape tile_shape);
+  friend InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
+    const InternalSharedPtr<LogicalStore>& self, Shape tile_shape);
+  [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_by_tiling(
+    const InternalSharedPtr<LogicalStore>& self, Shape tile_shape);
 
  public:
-  [[nodiscard]] std::shared_ptr<PhysicalStore> get_physical_store();
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store();
   void detach();
   // Informs the runtime that references to this store may be removed in non-deterministic order
   // (e.g. by an asynchronous garbage collector).
@@ -217,23 +219,23 @@ class LogicalStore {
   void allow_out_of_order_destruction();
 
   [[nodiscard]] Restrictions compute_restrictions() const;
-  [[nodiscard]] std::shared_ptr<Partition> find_or_create_key_partition(
+  [[nodiscard]] InternalSharedPtr<Partition> find_or_create_key_partition(
     const mapping::detail::Machine& machine, const Restrictions& restrictions);
 
-  [[nodiscard]] std::shared_ptr<Partition> get_current_key_partition() const;
+  [[nodiscard]] InternalSharedPtr<Partition> get_current_key_partition() const;
   [[nodiscard]] bool has_key_partition(const mapping::detail::Machine& machine,
                                        const Restrictions& restrictions) const;
   void set_key_partition(const mapping::detail::Machine& machine, const Partition* partition);
   void reset_key_partition();
 
  private:
-  friend std::shared_ptr<LogicalStorePartition> create_store_partition(
-    const std::shared_ptr<LogicalStore>& self,
-    std::shared_ptr<Partition> partition,
+  friend InternalSharedPtr<LogicalStorePartition> create_store_partition(
+    const InternalSharedPtr<LogicalStore>& self,
+    InternalSharedPtr<Partition> partition,
     std::optional<bool> complete);
-  [[nodiscard]] std::shared_ptr<LogicalStorePartition> create_partition(
-    const std::shared_ptr<LogicalStore>& self,
-    std::shared_ptr<Partition> partition,
+  [[nodiscard]] InternalSharedPtr<LogicalStorePartition> create_partition(
+    const InternalSharedPtr<LogicalStore>& self,
+    InternalSharedPtr<Partition> partition,
     std::optional<bool> complete = std::nullopt);
 
  public:
@@ -244,7 +246,7 @@ class LogicalStore {
 
  private:
   friend std::unique_ptr<Analyzable> store_to_launcher_arg(
-    const std::shared_ptr<LogicalStore>& self,
+    const InternalSharedPtr<LogicalStore>& self,
     const Variable* variable,
     const Strategy& strategy,
     const Domain& launch_domain,
@@ -252,12 +254,12 @@ class LogicalStore {
     Legion::PrivilegeMode privilege,
     int64_t redop);
   friend std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
-    const std::shared_ptr<LogicalStore>& self,
+    const InternalSharedPtr<LogicalStore>& self,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege);
 
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
-    const std::shared_ptr<LogicalStore>& self,
+    const InternalSharedPtr<LogicalStore>& self,
     const Variable* variable,
     const Strategy& strategy,
     const Domain& launch_domain,
@@ -265,7 +267,7 @@ class LogicalStore {
     Legion::PrivilegeMode privilege,
     int64_t redop);
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
-    const std::shared_ptr<LogicalStore>& self,
+    const InternalSharedPtr<LogicalStore>& self,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege);
 
@@ -275,49 +277,48 @@ class LogicalStore {
  private:
   uint64_t store_id_{};
   Shape extents_{};
-  std::shared_ptr<Storage> storage_{};
-  std::shared_ptr<TransformStack> transform_{};
+  InternalSharedPtr<Storage> storage_{};
+  InternalSharedPtr<TransformStack> transform_{};
 
   uint32_t num_pieces_{};
-  std::shared_ptr<Partition> key_partition_{};
-  std::shared_ptr<PhysicalStore> mapped_{};
+  InternalSharedPtr<Partition> key_partition_{};
+  InternalSharedPtr<PhysicalStore> mapped_{};
 };
 
 class LogicalStorePartition {
  public:
-  LogicalStorePartition(std::shared_ptr<Partition> partition,
-                        std::shared_ptr<StoragePartition> storage_partition,
-                        std::shared_ptr<LogicalStore> store);
+  LogicalStorePartition(InternalSharedPtr<Partition> partition,
+                        InternalSharedPtr<StoragePartition> storage_partition,
+                        InternalSharedPtr<LogicalStore> store);
 
-  [[nodiscard]] std::shared_ptr<Partition> partition() const;
-  [[nodiscard]] std::shared_ptr<StoragePartition> storage_partition() const;
-  [[nodiscard]] std::shared_ptr<LogicalStore> store() const;
-  [[nodiscard]] std::shared_ptr<LogicalStore> get_child_store(const Shape& color) const;
+  [[nodiscard]] InternalSharedPtr<Partition> partition() const;
+  [[nodiscard]] InternalSharedPtr<StoragePartition> storage_partition() const;
+  [[nodiscard]] InternalSharedPtr<LogicalStore> store() const;
+  [[nodiscard]] InternalSharedPtr<LogicalStore> get_child_store(const Shape& color) const;
   [[nodiscard]] std::unique_ptr<ProjectionInfo> create_projection_info(
     const Domain& launch_domain, const std::optional<SymbolicPoint>& projection = {});
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] const Shape& color_shape() const;
 
  private:
-  std::shared_ptr<Partition> partition_{};
-  std::shared_ptr<StoragePartition> storage_partition_{};
-  std::shared_ptr<LogicalStore> store_{};
+  InternalSharedPtr<Partition> partition_{};
+  InternalSharedPtr<StoragePartition> storage_partition_{};
+  InternalSharedPtr<LogicalStore> store_{};
 };
 
-[[nodiscard]] std::shared_ptr<LogicalStore> slice_store(const std::shared_ptr<LogicalStore>& self,
-                                                        int32_t dim,
-                                                        Slice sl);
+[[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(
+  const InternalSharedPtr<LogicalStore>& self, int32_t dim, Slice sl);
 
-[[nodiscard]] std::shared_ptr<LogicalStorePartition> partition_store_by_tiling(
-  const std::shared_ptr<LogicalStore>& self, Shape tile_shape);
+[[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
+  const InternalSharedPtr<LogicalStore>& self, Shape tile_shape);
 
-[[nodiscard]] std::shared_ptr<LogicalStorePartition> create_store_partition(
-  const std::shared_ptr<LogicalStore>& self,
-  std::shared_ptr<Partition> partition,
+[[nodiscard]] InternalSharedPtr<LogicalStorePartition> create_store_partition(
+  const InternalSharedPtr<LogicalStore>& self,
+  InternalSharedPtr<Partition> partition,
   std::optional<bool> complete = std::nullopt);
 
 [[nodiscard]] std::unique_ptr<Analyzable> store_to_launcher_arg(
-  const std::shared_ptr<LogicalStore>& self,
+  const InternalSharedPtr<LogicalStore>& self,
   const Variable* variable,
   const Strategy& strategy,
   const Domain& launch_domain,
@@ -326,7 +327,7 @@ class LogicalStorePartition {
   int64_t redop = -1);
 
 [[nodiscard]] std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
-  const std::shared_ptr<LogicalStore>& self,
+  const InternalSharedPtr<LogicalStore>& self,
   const Domain& launch_domain,
   Legion::PrivilegeMode privilege);
 

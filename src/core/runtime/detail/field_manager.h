@@ -13,11 +13,11 @@
 #pragma once
 
 #include "core/runtime/detail/consensus_match_result.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
 #include <deque>
 #include <map>
-#include <memory>
 #include <vector>
 
 namespace legate::detail {
@@ -55,8 +55,8 @@ class FieldManager {
  public:
   FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
 
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> allocate_field();
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> import_field(
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field();
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(
     const Legion::LogicalRegion& region, Legion::FieldID field_id);
 
  private:

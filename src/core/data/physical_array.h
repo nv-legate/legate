@@ -14,10 +14,11 @@
 
 #include "core/data/physical_store.h"
 #include "core/type/type_info.h"
+#include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
 #include <cstdint>
-#include <memory>
 
 /**
  * @file
@@ -121,9 +122,9 @@ class PhysicalArray {
    */
   [[nodiscard]] StringPhysicalArray as_string_array() const;
 
-  explicit PhysicalArray(std::shared_ptr<detail::PhysicalArray> impl);
+  explicit PhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
 
-  [[nodiscard]] const std::shared_ptr<detail::PhysicalArray>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::PhysicalArray>& impl() const;
 
   PhysicalArray()                                    = default;
   virtual ~PhysicalArray() noexcept                  = default;
@@ -136,7 +137,7 @@ class PhysicalArray {
   void check_shape_dimension(int32_t dim) const;
 
  protected:
-  std::shared_ptr<detail::PhysicalArray> impl_{};
+  SharedPtr<detail::PhysicalArray> impl_{};
 };
 
 class ListPhysicalArray : public PhysicalArray {
@@ -157,7 +158,7 @@ class ListPhysicalArray : public PhysicalArray {
  private:
   friend class PhysicalArray;
 
-  explicit ListPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl);
+  explicit ListPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
 };
 
 class StringPhysicalArray : public PhysicalArray {
@@ -178,7 +179,7 @@ class StringPhysicalArray : public PhysicalArray {
  private:
   friend class PhysicalArray;
 
-  explicit StringPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl);
+  explicit StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
 };
 
 }  // namespace legate

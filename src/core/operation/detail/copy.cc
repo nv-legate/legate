@@ -21,8 +21,8 @@
 
 namespace legate::detail {
 
-Copy::Copy(std::shared_ptr<LogicalStore> target,
-           std::shared_ptr<LogicalStore> source,
+Copy::Copy(InternalSharedPtr<LogicalStore> target,
+           InternalSharedPtr<LogicalStore> source,
            uint64_t unique_id,
            mapping::detail::Machine&& machine,
            std::optional<int32_t> redop)

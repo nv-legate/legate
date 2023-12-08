@@ -15,6 +15,7 @@
 #include "core/data/shape.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/utilities/hash.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <memory>
 #include <optional>
@@ -28,7 +29,6 @@ struct Partition;
 namespace legate::detail {
 
 struct ConstraintSolver;
-class LogicalStore;
 class Partitioner;
 
 class Strategy {
@@ -39,12 +39,12 @@ class Strategy {
   [[nodiscard]] Domain launch_domain(const Operation* op) const;
   void set_launch_domain(const Operation* op, const Domain& domain);
 
-  void insert(const Variable* partition_symbol, std::shared_ptr<Partition> partition);
+  void insert(const Variable* partition_symbol, InternalSharedPtr<Partition> partition);
   void insert(const Variable* partition_symbol,
-              std::shared_ptr<Partition> partition,
+              InternalSharedPtr<Partition> partition,
               Legion::FieldSpace field_space);
   [[nodiscard]] bool has_assignment(const Variable* partition_symbol) const;
-  [[nodiscard]] std::shared_ptr<Partition> operator[](const Variable* partition_symbol) const;
+  [[nodiscard]] InternalSharedPtr<Partition> operator[](const Variable* partition_symbol) const;
   [[nodiscard]] const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
   [[nodiscard]] bool is_key_partition(const Variable* partition_symbol) const;
 
@@ -54,7 +54,7 @@ class Strategy {
   void compute_launch_domains(const ConstraintSolver& solver);
   void record_key_partition(const Variable* partition_symbol);
 
-  std::unordered_map<const Variable, std::shared_ptr<Partition>> assignments_{};
+  std::unordered_map<const Variable, InternalSharedPtr<Partition>> assignments_{};
   std::unordered_map<const Variable, Legion::FieldSpace> field_spaces_{};
   std::unordered_map<const Operation*, Domain> launch_domains_{};
   std::optional<const Variable*> key_partition_{};

@@ -21,7 +21,7 @@ namespace legate::detail {
 inline LogicalRegionField::LogicalRegionField(FieldManager* manager,
                                               const Legion::LogicalRegion& lr,
                                               Legion::FieldID fid,
-                                              std::shared_ptr<LogicalRegionField> parent)
+                                              InternalSharedPtr<LogicalRegionField> parent)
   : manager_{manager}, lr_{lr}, fid_{fid}, parent_{std::move(parent)}
 {
 }

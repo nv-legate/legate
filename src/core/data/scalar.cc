@@ -67,6 +67,4 @@ const void* Scalar::ptr() const { return impl_->data(); }
   return new detail::Scalar{type.impl(), data, copy};
 }
 
-Scalar null() { return {}; }
-
 }  // namespace legate

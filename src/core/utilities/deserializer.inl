@@ -226,45 +226,45 @@ Span<const int8_t> BaseDeserializer<Deserializer>::current_args() const
 }
 
 template <typename Deserializer>
-std::shared_ptr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack_transform()
+InternalSharedPtr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack_transform()
 {
   auto code = unpack<int32_t>();
   switch (code) {
     case -1: {
-      return std::make_shared<detail::TransformStack>();
+      return make_internal_shared<detail::TransformStack>();
     }
     case LEGATE_CORE_TRANSFORM_SHIFT: {
       auto dim    = unpack<int32_t>();
       auto offset = unpack<int64_t>();
       auto parent = unpack_transform();
-      return std::make_shared<detail::TransformStack>(std::make_unique<detail::Shift>(dim, offset),
-                                                      std::move(parent));
+      return make_internal_shared<detail::TransformStack>(
+        std::make_unique<detail::Shift>(dim, offset), std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_PROMOTE: {
       auto extra_dim = unpack<int32_t>();
       auto dim_size  = unpack<int64_t>();
       auto parent    = unpack_transform();
-      return std::make_shared<detail::TransformStack>(
+      return make_internal_shared<detail::TransformStack>(
         std::make_unique<detail::Promote>(extra_dim, dim_size), std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_PROJECT: {
       auto dim    = unpack<int32_t>();
       auto coord  = unpack<int64_t>();
       auto parent = unpack_transform();
-      return std::make_shared<detail::TransformStack>(std::make_unique<detail::Project>(dim, coord),
-                                                      std::move(parent));
+      return make_internal_shared<detail::TransformStack>(
+        std::make_unique<detail::Project>(dim, coord), std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_TRANSPOSE: {
       auto axes   = unpack<std::vector<int32_t>>();
       auto parent = unpack_transform();
-      return std::make_shared<detail::TransformStack>(
+      return make_internal_shared<detail::TransformStack>(
         std::make_unique<detail::Transpose>(std::move(axes)), std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_DELINEARIZE: {
       auto dim    = unpack<int32_t>();
       auto sizes  = unpack<std::vector<uint64_t>>();
       auto parent = unpack_transform();
-      return std::make_shared<detail::TransformStack>(
+      return make_internal_shared<detail::TransformStack>(
         std::make_unique<detail::Delinearize>(dim, std::move(sizes)), std::move(parent));
     }
   }
@@ -273,7 +273,7 @@ std::shared_ptr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack_t
 }
 
 template <typename Deserializer>
-std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
+InternalSharedPtr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
 {
   auto code = static_cast<Type::Code>(unpack<int32_t>());
   switch (code) {
@@ -282,13 +282,13 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
       auto N    = unpack<uint32_t>();
       auto type = unpack_type();
 
-      return std::make_shared<detail::FixedArrayType>(uid, std::move(type), N);
+      return make_internal_shared<detail::FixedArrayType>(uid, std::move(type), N);
     }
     case Type::Code::STRUCT: {
       auto uid        = unpack<uint32_t>();
       auto num_fields = unpack<uint32_t>();
 
-      std::vector<std::shared_ptr<detail::Type>> field_types;
+      std::vector<InternalSharedPtr<detail::Type>> field_types;
 
       field_types.reserve(num_fields);
       for (uint32_t idx = 0; idx < num_fields; ++idx) {
@@ -297,12 +297,12 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
 
       auto align = unpack<bool>();
 
-      return std::make_shared<detail::StructType>(uid, std::move(field_types), align);
+      return make_internal_shared<detail::StructType>(uid, std::move(field_types), align);
     }
     case Type::Code::LIST: {
       auto uid  = unpack<uint32_t>();
       auto type = unpack_type();
-      return std::make_shared<detail::ListType>(uid, std::move(type));
+      return make_internal_shared<detail::ListType>(uid, std::move(type));
     }
     case Type::Code::NIL: {
       return detail::null_type();
@@ -354,7 +354,7 @@ std::shared_ptr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
       return detail::binary_type(size);
     }
     case Type::Code::STRING: {
-      return std::make_shared<detail::StringType>();
+      return make_internal_shared<detail::StringType>();
     }
     default: break;
   }

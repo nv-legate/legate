@@ -74,7 +74,7 @@ TaskContext::TaskContext(const Legion::Task* task,
   // when the number of subregions isn't a multiple of the chosen radix.
   // To simplify the programming mode, we filter out those "invalid" stores out.
   if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
-    std::vector<std::shared_ptr<PhysicalArray>> inputs;
+    std::vector<InternalSharedPtr<PhysicalArray>> inputs;
     for (auto& input : inputs_) {
       if (input->valid()) {
         inputs.push_back(std::move(input));

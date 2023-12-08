@@ -13,9 +13,9 @@
 #pragma once
 
 #include "core/type/detail/type_info.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
-#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -75,17 +75,17 @@ class Store {
  public:
   Store() = default;
   Store(int32_t dim,
-        std::shared_ptr<legate::detail::Type> type,
+        InternalSharedPtr<legate::detail::Type> type,
         FutureWrapper future,
-        std::shared_ptr<legate::detail::TransformStack>&& transform = nullptr);
+        InternalSharedPtr<legate::detail::TransformStack>&& transform = nullptr);
   Store(Legion::Mapping::MapperRuntime* runtime,
         Legion::Mapping::MapperContext context,
         int32_t dim,
-        std::shared_ptr<legate::detail::Type> type,
+        InternalSharedPtr<legate::detail::Type> type,
         int32_t redop_id,
         const RegionField& region_field,
-        bool is_unbound_store                                       = false,
-        std::shared_ptr<legate::detail::TransformStack>&& transform = nullptr);
+        bool is_unbound_store                                         = false,
+        InternalSharedPtr<legate::detail::TransformStack>&& transform = nullptr);
   // A special constructor to create a mapper view of a store from a region requirement
   Store(Legion::Mapping::MapperRuntime* runtime,
         Legion::Mapping::MapperContext context,
@@ -94,7 +94,7 @@ class Store {
   [[nodiscard]] bool is_future() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] int32_t dim() const;
-  [[nodiscard]] std::shared_ptr<legate::detail::Type> type() const;
+  [[nodiscard]] InternalSharedPtr<legate::detail::Type> type() const;
 
   [[nodiscard]] bool is_reduction() const;
   [[nodiscard]] int32_t redop() const;
@@ -115,13 +115,13 @@ class Store {
   bool is_future_{};
   bool is_unbound_store_{};
   int32_t dim_{-1};
-  std::shared_ptr<legate::detail::Type> type_{};
+  InternalSharedPtr<legate::detail::Type> type_{};
   int32_t redop_id_{-1};
 
   FutureWrapper future_;
   RegionField region_field_;
 
-  std::shared_ptr<legate::detail::TransformStack> transform_{};
+  InternalSharedPtr<legate::detail::TransformStack> transform_{};
 
   Legion::Mapping::MapperRuntime* runtime_{};
   Legion::Mapping::MapperContext context_{};

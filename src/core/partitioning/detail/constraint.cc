@@ -21,7 +21,7 @@
 
 namespace legate::detail {
 
-Literal::Literal(std::shared_ptr<Partition> partition) : partition_{std::move(partition)} {}
+Literal::Literal(InternalSharedPtr<Partition> partition) : partition_{std::move(partition)} {}
 
 std::string Literal::to_string() const { return partition_->to_string(); }
 
@@ -135,13 +135,13 @@ std::string ImageConstraint::to_string() const
   return std::move(ss).str();
 }
 
-std::shared_ptr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
+InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
 {
   const auto* src = var_function();
   auto src_part   = strategy[src];
   if (src_part->has_launch_domain()) {
     auto* op = src->operation();
-    return create_image(op->find_store(src), src_part, op->machine());
+    return create_image(op->find_store(src).as_user_ptr(), src_part.as_user_ptr(), op->machine());
   }
   return create_no_partition();
 }
@@ -179,7 +179,7 @@ std::string ScaleConstraint::to_string() const
   return std::move(ss).str();
 }
 
-std::shared_ptr<Partition> ScaleConstraint::resolve(const detail::Strategy& strategy) const
+InternalSharedPtr<Partition> ScaleConstraint::resolve(const detail::Strategy& strategy) const
 {
   return strategy[var_smaller()]->scale(factors_);
 }
@@ -217,47 +217,47 @@ std::string BloatConstraint::to_string() const
   return std::move(ss).str();
 }
 
-std::shared_ptr<Partition> BloatConstraint::resolve(const detail::Strategy& strategy) const
+InternalSharedPtr<Partition> BloatConstraint::resolve(const detail::Strategy& strategy) const
 {
   return strategy[var_source()]->bloat(low_offsets_, high_offsets_);
 }
 
-std::shared_ptr<Alignment> align(const Variable* lhs, const Variable* rhs)
+InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs)
 {
-  return std::make_shared<Alignment>(lhs, rhs);
+  return make_internal_shared<Alignment>(lhs, rhs);
 }
 
-[[nodiscard]] std::shared_ptr<Broadcast> broadcast(const Variable* variable)
+[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable)
 {
-  return std::make_shared<Broadcast>(variable);
+  return make_internal_shared<Broadcast>(variable);
 }
 
-std::shared_ptr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
+InternalSharedPtr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
 {
   if (axes.empty()) {
     throw std::invalid_argument("List of axes to broadcast must not be empty");
   }
-  return std::make_shared<Broadcast>(variable, axes);
+  return make_internal_shared<Broadcast>(variable, axes);
 }
 
-std::shared_ptr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
+InternalSharedPtr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
 {
-  return std::make_shared<ImageConstraint>(var_function, var_range);
+  return make_internal_shared<ImageConstraint>(var_function, var_range);
 }
 
-std::shared_ptr<ScaleConstraint> scale(const Shape& factors,
-                                       const Variable* var_smaller,
-                                       const Variable* var_bigger)
+InternalSharedPtr<ScaleConstraint> scale(const Shape& factors,
+                                         const Variable* var_smaller,
+                                         const Variable* var_bigger)
 {
-  return std::make_shared<ScaleConstraint>(factors, var_smaller, var_bigger);
+  return make_internal_shared<ScaleConstraint>(factors, var_smaller, var_bigger);
 }
 
-std::shared_ptr<BloatConstraint> bloat(const Variable* var_source,
-                                       const Variable* var_bloat,
-                                       const Shape& low_offsets,
-                                       const Shape& high_offsets)
+InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
+                                         const Variable* var_bloat,
+                                         const Shape& low_offsets,
+                                         const Shape& high_offsets)
 {
-  return std::make_shared<BloatConstraint>(var_source, var_bloat, low_offsets, high_offsets);
+  return make_internal_shared<BloatConstraint>(var_source, var_bloat, low_offsets, high_offsets);
 }
 
 }  // namespace legate::detail

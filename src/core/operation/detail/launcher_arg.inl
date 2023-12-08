@@ -75,7 +75,7 @@ inline BaseArrayArg::BaseArrayArg(std::unique_ptr<Analyzable> data)
 
 // ==========================================================================================
 
-inline ListArrayArg::ListArrayArg(std::shared_ptr<Type> type,
+inline ListArrayArg::ListArrayArg(InternalSharedPtr<Type> type,
                                   std::unique_ptr<Analyzable> descriptor,
                                   std::unique_ptr<Analyzable> vardata)
   : type_{std::move(type)}, descriptor_{std::move(descriptor)}, vardata_{std::move(vardata)}
@@ -84,7 +84,7 @@ inline ListArrayArg::ListArrayArg(std::shared_ptr<Type> type,
 
 // ==========================================================================================
 
-inline StructArrayArg::StructArrayArg(std::shared_ptr<Type> type,
+inline StructArrayArg::StructArrayArg(InternalSharedPtr<Type> type,
                                       std::unique_ptr<Analyzable> null_mask,
                                       std::vector<std::unique_ptr<Analyzable>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}

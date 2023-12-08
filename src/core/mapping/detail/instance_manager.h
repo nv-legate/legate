@@ -15,10 +15,10 @@
 #include "core/mapping/mapping.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/hash.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <iosfwd>
 #include <map>
-#include <memory>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -62,7 +62,7 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
  public:
   using Region       = Legion::LogicalRegion;
   using Instance     = Legion::Mapping::PhysicalInstance;
-  using RegionGroupP = std::shared_ptr<RegionGroup>;
+  using RegionGroupP = InternalSharedPtr<RegionGroup>;
 
   struct InstanceSpec {
     InstanceSpec() = default;
@@ -153,7 +153,7 @@ class BaseInstanceManager {
 
 class InstanceManager : public BaseInstanceManager {
  public:
-  using RegionGroupP = std::shared_ptr<RegionGroup>;
+  using RegionGroupP = InternalSharedPtr<RegionGroup>;
 
   [[nodiscard]] bool find_instance(Region region,
                                    FieldID field_id,

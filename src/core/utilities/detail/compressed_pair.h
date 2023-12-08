@@ -12,12 +12,13 @@
 
 #pragma once
 
+#include <cstdint>
 #include <type_traits>
 #include <utility>
 
-namespace legate {
+namespace legate::detail {
 
-namespace detail {
+namespace compressed_pair_detail {
 
 template <bool t_empty, bool u_empty>
 struct compressed_pair_selector;
@@ -155,18 +156,20 @@ class compressed_pair_impl<T, U, 3> : T, U {
   }
 };
 
-}  // namespace detail
+}  // namespace compressed_pair_detail
 
 template <typename T, typename U>
 class compressed_pair
-  : public detail::compressed_pair_impl<
+  : public compressed_pair_detail::compressed_pair_impl<
       T,
       U,
-      detail::compressed_pair_selector<std::is_empty_v<T>, std::is_empty_v<U>>::value> {
-  using base_type = detail::compressed_pair_impl<
+      compressed_pair_detail::compressed_pair_selector<std::is_empty_v<T>,
+                                                       std::is_empty_v<U>>::value> {
+  using base_type = compressed_pair_detail::compressed_pair_impl<
     T,
     U,
-    detail::compressed_pair_selector<std::is_empty_v<T>, std::is_empty_v<U>>::value>;
+    compressed_pair_detail::compressed_pair_selector<std::is_empty_v<T>,
+                                                     std::is_empty_v<U>>::value>;
 
  public:
   using base_type::base_type;
@@ -234,4 +237,4 @@ static_assert(sizeof(compressed_pair<NotEmpty, EmptyMember>) >=
 
 #endif
 
-}  // namespace legate
+}  // namespace legate::detail

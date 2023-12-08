@@ -19,12 +19,12 @@
 
 namespace legate {
 
-inline PhysicalArray::PhysicalArray(std::shared_ptr<detail::PhysicalArray> impl)
+inline PhysicalArray::PhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl)
   : impl_{std::move(impl)}
 {
 }
 
-inline const std::shared_ptr<detail::PhysicalArray>& PhysicalArray::impl() const { return impl_; }
+inline const SharedPtr<detail::PhysicalArray>& PhysicalArray::impl() const { return impl_; }
 
 template <int32_t DIM>
 Rect<DIM> PhysicalArray::shape() const
@@ -39,14 +39,14 @@ Rect<DIM> PhysicalArray::shape() const
 
 // ==========================================================================================
 
-inline ListPhysicalArray::ListPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl)
+inline ListPhysicalArray::ListPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl)
   : PhysicalArray{std::move(impl)}
 {
 }
 
 // ==========================================================================================
 
-inline StringPhysicalArray::StringPhysicalArray(std::shared_ptr<detail::PhysicalArray> impl)
+inline StringPhysicalArray::StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl)
   : PhysicalArray{std::move(impl)}
 {
 }

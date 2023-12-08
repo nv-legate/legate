@@ -32,7 +32,7 @@ inline const char* NonInvertibleTransformation::what() const noexcept
 
 inline TransformStack::TransformStack(private_tag,
                                       std::unique_ptr<StoreTransform>&& transform,
-                                      std::shared_ptr<TransformStack> parent)
+                                      InternalSharedPtr<TransformStack> parent)
   : transform_{std::move(transform)},
     parent_{std::move(parent)},
     convertible_{transform_->is_convertible() && parent_->is_convertible()}
@@ -40,13 +40,13 @@ inline TransformStack::TransformStack(private_tag,
 }
 
 inline TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
-                                      const std::shared_ptr<TransformStack>& parent)
+                                      const InternalSharedPtr<TransformStack>& parent)
   : TransformStack{private_tag{}, std::move(transform), parent}
 {
 }
 
 inline TransformStack::TransformStack(std::unique_ptr<StoreTransform>&& transform,
-                                      std::shared_ptr<TransformStack>&& parent)
+                                      InternalSharedPtr<TransformStack>&& parent)
   : TransformStack{private_tag{}, std::move(transform), std::move(parent)}
 {
 }

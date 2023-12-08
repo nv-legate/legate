@@ -14,6 +14,8 @@
 
 #include "core/data/scalar.h"
 #include "core/mapping/store.h"
+#include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/shared_ptr.h"
 
 #include <iosfwd>
 #include <memory>
@@ -195,12 +197,17 @@ struct DimOrdering {
 
   [[nodiscard]] const detail::DimOrdering* impl() const noexcept;
 
-  DimOrdering() = default;
+  DimOrdering()                                  = default;
+  DimOrdering(const DimOrdering&)                = default;
+  DimOrdering& operator=(const DimOrdering&)     = default;
+  DimOrdering(DimOrdering&&) noexcept            = default;
+  DimOrdering& operator=(DimOrdering&&) noexcept = default;
+  ~DimOrdering() noexcept;
 
  private:
-  explicit DimOrdering(std::shared_ptr<detail::DimOrdering> impl);
+  explicit DimOrdering(InternalSharedPtr<detail::DimOrdering> impl);
 
-  std::shared_ptr<detail::DimOrdering> impl_{c_order().impl_};
+  SharedPtr<detail::DimOrdering> impl_{c_order().impl_};
 };
 
 /**

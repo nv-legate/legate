@@ -85,12 +85,12 @@ StringLogicalArray LogicalArray::as_string_array() const
 }
 
 LogicalArray::LogicalArray(const LogicalStore& store)
-  : impl_{std::make_shared<detail::BaseLogicalArray>(store.impl())}
+  : impl_{make_internal_shared<detail::BaseLogicalArray>(store.impl())}
 {
 }
 
 LogicalArray::LogicalArray(const LogicalStore& store, const LogicalStore& null_mask)
-  : impl_{std::make_shared<detail::BaseLogicalArray>(store.impl(), null_mask.impl())}
+  : impl_{make_internal_shared<detail::BaseLogicalArray>(store.impl(), null_mask.impl())}
 {
 }
 

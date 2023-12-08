@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/utilities/detail/type_traits.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 namespace legate {
@@ -24,20 +25,22 @@ void swap(SharedPtr<T>&, SharedPtr<T>&) noexcept;
 
 template <typename T>
 class SharedPtr {
-  using internal_ptr_type = InternalSharedPtr<T>;
-
  public:
-  using element_type   = typename internal_ptr_type::element_type;
-  using ref_count_type = typename internal_ptr_type::ref_count_type;
+  using internal_ptr_type = InternalSharedPtr<T>;
+  using element_type      = typename internal_ptr_type::element_type;
+  using ref_count_type    = typename internal_ptr_type::ref_count_type;
 
   // Constructors
   constexpr SharedPtr() noexcept = default;
 
   SharedPtr(std::nullptr_t) noexcept;
 
-  template <typename U, typename Deleter, typename Alloc = std::allocator<U>>
+  template <typename U,
+            typename Deleter,
+            typename Alloc = std::allocator<U>,
+            typename       = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   SharedPtr(U* ptr, Deleter deleter, Alloc allocator = Alloc{});
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   explicit SharedPtr(U* ptr);
 
   SharedPtr(const SharedPtr&) noexcept;
@@ -45,13 +48,13 @@ class SharedPtr {
   SharedPtr(SharedPtr&&) noexcept;
   SharedPtr& operator=(SharedPtr&&) noexcept;
 
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   SharedPtr(const SharedPtr<U>&) noexcept;
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   SharedPtr& operator=(const SharedPtr<U>&) noexcept;
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   SharedPtr(SharedPtr<U>&&) noexcept;
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   SharedPtr& operator=(SharedPtr<U>&&) noexcept;
 
   explicit SharedPtr(const InternalSharedPtr<element_type>&) noexcept;
@@ -59,18 +62,26 @@ class SharedPtr {
   explicit SharedPtr(InternalSharedPtr<element_type>&&) noexcept;
   SharedPtr& operator=(InternalSharedPtr<element_type>&&) noexcept;
 
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   explicit SharedPtr(const InternalSharedPtr<U>&) noexcept;
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   SharedPtr& operator=(const InternalSharedPtr<U>&) noexcept;
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   explicit SharedPtr(InternalSharedPtr<U>&&) noexcept;
-  template <typename U>
+  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   SharedPtr& operator=(InternalSharedPtr<U>&&) noexcept;
 
-  template <typename U, typename D>
+  template <
+    typename U,
+    typename D,
+    typename = std::enable_if_t<
+      traits::detail::ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
   SharedPtr(std::unique_ptr<U, D>&&);
-  template <typename U, typename D>
+  template <
+    typename U,
+    typename D,
+    typename = std::enable_if_t<
+      traits::detail::ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
   SharedPtr& operator=(std::unique_ptr<U, D>&&);
 
   ~SharedPtr() noexcept;
@@ -81,7 +92,10 @@ class SharedPtr {
   friend void ::legate::swap<>(SharedPtr&, SharedPtr&) noexcept;
   void reset() noexcept;
   void reset(std::nullptr_t) noexcept;
-  template <typename U, typename D = std::default_delete<U>, typename A = std::allocator<U>>
+  template <typename U,
+            typename D = std::default_delete<U>,
+            typename A = std::allocator<U>,
+            typename   = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   void reset(U* ptr, D deleter = D{}, A allocator = A{});
 
   // Observers
@@ -92,6 +106,16 @@ class SharedPtr {
   [[nodiscard]] ref_count_type use_count() const noexcept;
   explicit operator bool() const noexcept;
 
+  class InternalSharedPtrAccessTag {
+    InternalSharedPtrAccessTag() = default;
+
+    friend class SharedPtr<T>;
+    friend class InternalSharedPtr<T>;
+  };
+
+  [[nodiscard]] internal_ptr_type& internal_ptr(InternalSharedPtrAccessTag) noexcept;
+  [[nodiscard]] const internal_ptr_type& internal_ptr(InternalSharedPtrAccessTag) const noexcept;
+
  private:
   struct copy_tag {};
   struct move_tag {};
@@ -100,10 +124,6 @@ class SharedPtr {
   SharedPtr(copy_tag, const InternalSharedPtr<U>& other) noexcept;
   template <typename U>
   SharedPtr(move_tag, InternalSharedPtr<U>&& other, bool from_internal_ptr) noexcept;
-  template <typename U>
-  void assign_(copy_tag, const InternalSharedPtr<U>&) noexcept;
-  template <typename U>
-  void assign_(move_tag, InternalSharedPtr<U>&&) noexcept;
 
   template <typename U>
   friend class SharedPtr;
@@ -114,6 +134,73 @@ class SharedPtr {
   internal_ptr_type ptr_{};
 };
 
+// ==========================================================================================
+
+template <typename T, typename U>
+bool operator==(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+
+template <typename T, typename U>
+bool operator!=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+
+template <typename T, typename U>
+bool operator<(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+
+template <typename T, typename U>
+bool operator>(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+
+template <typename T, typename U>
+bool operator<=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+
+template <typename T, typename U>
+bool operator>=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+
+// ==========================================================================================
+
+template <typename T>
+bool operator==(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+
+template <typename T>
+bool operator==(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+
+template <typename T>
+bool operator!=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+
+template <typename T>
+bool operator!=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+
+template <typename T>
+bool operator<(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+
+template <typename T>
+bool operator<(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+
+template <typename T>
+bool operator>(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+
+template <typename T>
+bool operator>(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+
+template <typename T>
+bool operator<=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+
+template <typename T>
+bool operator<=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+
+template <typename T>
+bool operator>=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+
+template <typename T>
+bool operator>=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+
 }  // namespace legate
+
+namespace std {
+
+template <typename T>
+struct hash<legate::SharedPtr<T>> {
+  [[nodiscard]] size_t operator()(const legate::SharedPtr<T>& ptr) const noexcept;
+};
+
+}  // namespace std
 
 #include "core/utilities/shared_ptr.inl"

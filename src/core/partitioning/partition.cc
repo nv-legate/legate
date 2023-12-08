@@ -306,8 +306,8 @@ std::string Weighted::to_string() const
   return std::move(ss).str();
 }
 
-Image::Image(std::shared_ptr<detail::LogicalStore> func,
-             std::shared_ptr<Partition> func_partition,
+Image::Image(InternalSharedPtr<detail::LogicalStore> func,
+             InternalSharedPtr<Partition> func_partition,
              mapping::detail::Machine machine)
   : func_{std::move(func)}, func_partition_{std::move(func_partition)}, machine_{std::move(machine)}
 {
@@ -434,8 +434,8 @@ std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
   return std::make_unique<Weighted>(weights, color_domain);
 }
 
-std::unique_ptr<Image> create_image(std::shared_ptr<detail::LogicalStore> func,
-                                    std::shared_ptr<Partition> func_partition,
+std::unique_ptr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
+                                    InternalSharedPtr<Partition> func_partition,
                                     mapping::detail::Machine machine)
 {
   return std::make_unique<Image>(std::move(func), std::move(func_partition), std::move(machine));

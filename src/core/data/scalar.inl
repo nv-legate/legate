@@ -183,4 +183,8 @@ inline Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
 
 inline detail::Scalar* Scalar::impl() const { return impl_; }
 
+// ==========================================================================================
+
+inline Scalar null() { return {}; }
+
 }  // namespace legate

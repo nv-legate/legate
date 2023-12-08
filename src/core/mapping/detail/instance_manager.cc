@@ -13,13 +13,14 @@
 #include "core/mapping/detail/instance_manager.h"
 
 #include "core/utilities/dispatch.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <iostream>
 #include <unordered_set>
 
 namespace legate::mapping::detail {
 
-using RegionGroupP = std::shared_ptr<RegionGroup>;
+using RegionGroupP = InternalSharedPtr<RegionGroup>;
 
 namespace {
 
@@ -159,7 +160,7 @@ struct construct_overlapping_region_group_fn {
       bound_vol = union_vol;
     }
 
-    return std::make_shared<RegionGroup>(std::move(regions), Domain(bound));
+    return make_internal_shared<RegionGroup>(std::move(regions), Domain(bound));
   }
 };
 
@@ -176,7 +177,7 @@ RegionGroupP InstanceSet::construct_overlapping_region_group(const Region& regio
   if (!exact || finder->second->regions.size() == 1) {
     return finder->second;
   }
-  return std::make_shared<RegionGroup>(std::set<Region>{region}, domain);
+  return make_internal_shared<RegionGroup>(std::set<Region>{region}, domain);
 }
 
 std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP& group,
@@ -384,7 +385,7 @@ RegionGroupP InstanceManager::find_region_group(const Region& region,
 
   auto finder = instance_sets_.find({region.get_tree_id(), field_id, memory});
   if (finder == instance_sets_.end() || exact) {
-    result = std::make_shared<RegionGroup>(std::set<Region>{region}, domain);
+    result = make_internal_shared<RegionGroup>(std::set<Region>{region}, domain);
   } else {
     result = finder->second.construct_overlapping_region_group(region, domain, exact);
   }

@@ -15,8 +15,8 @@
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <optional>
 
 namespace legate::detail {
@@ -25,8 +25,8 @@ struct ConstraintSolver;
 
 class Copy final : public Operation {
  public:
-  Copy(std::shared_ptr<LogicalStore> target,
-       std::shared_ptr<LogicalStore> source,
+  Copy(InternalSharedPtr<LogicalStore> target,
+       InternalSharedPtr<LogicalStore> source,
        uint64_t unique_id,
        mapping::detail::Machine&& machine,
        std::optional<int32_t> redop);
@@ -41,7 +41,7 @@ class Copy final : public Operation {
  private:
   StoreArg target_;
   StoreArg source_;
-  std::shared_ptr<Constraint> constraint_;
+  InternalSharedPtr<Constraint> constraint_;
   std::optional<int32_t> redop_;
 };
 

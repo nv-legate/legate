@@ -13,9 +13,9 @@
 #pragma once
 
 #include "core/legate_c.h"
+#include "core/utilities/shared_ptr.h"
 
 #include <iosfwd>
-#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -212,12 +212,12 @@ class Type {
 
   virtual ~Type();
 
-  explicit Type(std::shared_ptr<detail::Type> impl);
+  explicit Type(InternalSharedPtr<detail::Type> impl);
 
-  [[nodiscard]] const std::shared_ptr<detail::Type>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::Type>& impl() const;
 
  protected:
-  std::shared_ptr<detail::Type> impl_{};
+  SharedPtr<detail::Type> impl_{};
 };
 
 /**
@@ -241,7 +241,7 @@ class FixedArrayType : public Type {
 
  private:
   friend class Type;
-  explicit FixedArrayType(std::shared_ptr<detail::Type> type);
+  explicit FixedArrayType(InternalSharedPtr<detail::Type> type);
 };
 
 /**
@@ -280,7 +280,7 @@ class StructType : public Type {
 
  private:
   friend class Type;
-  explicit StructType(std::shared_ptr<detail::Type> type);
+  explicit StructType(InternalSharedPtr<detail::Type> type);
 };
 
 /**
@@ -298,7 +298,7 @@ class ListType : public Type {
 
  private:
   friend class Type;
-  explicit ListType(std::shared_ptr<detail::Type> type);
+  explicit ListType(InternalSharedPtr<detail::Type> type);
 };
 
 /**

@@ -45,7 +45,7 @@ void CopyArg::pack(BufferBuilder& buffer) const
 }
 
 void CopyLauncher::add_store(std::vector<std::unique_ptr<CopyArg>>& args,
-                             const std::shared_ptr<LogicalStore>& store,
+                             const InternalSharedPtr<LogicalStore>& store,
                              std::unique_ptr<ProjectionInfo> proj_info,
                              Legion::PrivilegeMode privilege)
 {
@@ -60,36 +60,36 @@ void CopyLauncher::add_store(std::vector<std::unique_ptr<CopyArg>>& args,
     std::make_unique<CopyArg>(req_idx, store.get(), field_id, privilege, std::move(proj_info)));
 }
 
-void CopyLauncher::add_input(const std::shared_ptr<LogicalStore>& store,
+void CopyLauncher::add_input(const InternalSharedPtr<LogicalStore>& store,
                              std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(inputs_, store, std::move(proj_info), LEGION_READ_ONLY);
 }
 
-void CopyLauncher::add_output(const std::shared_ptr<LogicalStore>& store,
+void CopyLauncher::add_output(const InternalSharedPtr<LogicalStore>& store,
                               std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(outputs_, store, std::move(proj_info), LEGION_WRITE_ONLY);
 }
 
-void CopyLauncher::add_inout(const std::shared_ptr<LogicalStore>& store,
+void CopyLauncher::add_inout(const InternalSharedPtr<LogicalStore>& store,
                              std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(outputs_, store, std::move(proj_info), LEGION_READ_WRITE);
 }
 
-void CopyLauncher::add_reduction(const std::shared_ptr<LogicalStore>& store,
+void CopyLauncher::add_reduction(const InternalSharedPtr<LogicalStore>& store,
                                  std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(outputs_, store, std::move(proj_info), LEGION_REDUCE);
 }
-void CopyLauncher::add_source_indirect(const std::shared_ptr<LogicalStore>& store,
+void CopyLauncher::add_source_indirect(const InternalSharedPtr<LogicalStore>& store,
                                        std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(source_indirect_, store, std::move(proj_info), LEGION_READ_ONLY);
 }
 
-void CopyLauncher::add_target_indirect(const std::shared_ptr<LogicalStore>& store,
+void CopyLauncher::add_target_indirect(const InternalSharedPtr<LogicalStore>& store,
                                        std::unique_ptr<ProjectionInfo> proj_info)
 {
   add_store(target_indirect_, store, std::move(proj_info), LEGION_READ_ONLY);

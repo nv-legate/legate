@@ -25,7 +25,7 @@ inline const Literal* Literal::as_literal() const { return this; }
 
 inline const Variable* Literal::as_variable() const { return nullptr; }
 
-inline const std::shared_ptr<Partition>& Literal::partition() const { return partition_; }
+inline const InternalSharedPtr<Partition>& Literal::partition() const { return partition_; }
 
 // ==========================================================================================
 

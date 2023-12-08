@@ -138,13 +138,13 @@ void LogicalRegionField::allow_out_of_order_destruction()
   }
 }
 
-std::shared_ptr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* tiling,
-                                                                  const Shape& color,
-                                                                  bool complete)
+InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* tiling,
+                                                                    const Shape& color,
+                                                                    bool complete)
 {
   auto legion_partition = get_legion_partition(tiling, complete);
   auto color_point      = to_domain_point(color);
-  return std::make_shared<LogicalRegionField>(
+  return make_internal_shared<LogicalRegionField>(
     manager_,
     Runtime::get_runtime()->get_subregion(std::move(legion_partition), color_point),
     fid_,

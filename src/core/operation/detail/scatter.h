@@ -15,8 +15,8 @@
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <optional>
 #include <string>
 
@@ -26,9 +26,9 @@ struct ConstraintSolver;
 
 class Scatter final : public Operation {
  public:
-  Scatter(std::shared_ptr<LogicalStore> target,
-          std::shared_ptr<LogicalStore> target_indirect,
-          std::shared_ptr<LogicalStore> source,
+  Scatter(InternalSharedPtr<LogicalStore> target,
+          InternalSharedPtr<LogicalStore> target_indirect,
+          InternalSharedPtr<LogicalStore> source,
           uint64_t unique_id,
           mapping::detail::Machine&& machine,
           std::optional<int32_t> redop);
@@ -47,7 +47,7 @@ class Scatter final : public Operation {
   StoreArg target_;
   StoreArg target_indirect_;
   StoreArg source_;
-  std::shared_ptr<Constraint> constraint_;
+  InternalSharedPtr<Constraint> constraint_;
   std::optional<int32_t> redop_;
 };
 

@@ -13,12 +13,13 @@
 #pragma once
 
 #include "core/data/detail/logical_array.h"
+#include "core/data/detail/logical_store.h"
 #include "core/data/detail/scalar.h"
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/constraint.h"
 #include "core/partitioning/detail/partitioner.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -33,19 +34,17 @@ namespace legate::detail {
 class CommunicatorFactory;
 struct ConstraintSolver;
 class Library;
-class LogicalStore;
-class LogicalStorePartition;
 class Strategy;
 class Runtime;
 
 class Task : public Operation {
  protected:
   struct ArrayArg {
-    explicit ArrayArg(std::shared_ptr<LogicalArray> _array);
-    ArrayArg(std::shared_ptr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
+    explicit ArrayArg(InternalSharedPtr<LogicalArray> _array);
+    ArrayArg(InternalSharedPtr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
 
-    std::shared_ptr<LogicalArray> array{};
-    std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*> mapping{};
+    InternalSharedPtr<LogicalArray> array{};
+    std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> mapping{};
     std::optional<SymbolicPoint> projection{};
   };
 
@@ -62,9 +61,9 @@ class Task : public Operation {
   void throws_exception(bool can_throw_exception);
   void add_communicator(const std::string& name);
 
-  void record_scalar_output(std::shared_ptr<LogicalStore> store);
-  void record_unbound_output(std::shared_ptr<LogicalStore> store);
-  void record_scalar_reduction(std::shared_ptr<LogicalStore> store,
+  void record_scalar_output(InternalSharedPtr<LogicalStore> store);
+  void record_unbound_output(InternalSharedPtr<LogicalStore> store);
+  void record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
                                Legion::ReductionOpID legion_redop_id);
 
  protected:
@@ -89,9 +88,10 @@ class Task : public Operation {
   std::vector<ArrayArg> outputs_{};
   std::vector<ArrayArg> reductions_{};
   std::vector<Legion::ReductionOpID> reduction_ops_{};
-  std::vector<std::shared_ptr<LogicalStore>> unbound_outputs_{};
-  std::vector<std::shared_ptr<LogicalStore>> scalar_outputs_{};
-  std::vector<std::pair<std::shared_ptr<LogicalStore>, Legion::ReductionOpID>> scalar_reductions_{};
+  std::vector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
+  std::vector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
+  std::vector<std::pair<InternalSharedPtr<LogicalStore>, Legion::ReductionOpID>>
+    scalar_reductions_{};
   std::vector<CommunicatorFactory*> communicator_factories_{};
 };
 
@@ -104,20 +104,20 @@ class AutoTask final : public Task {
            mapping::detail::Machine&& machine);
 
  public:
-  [[nodiscard]] const Variable* add_input(std::shared_ptr<LogicalArray> array);
-  [[nodiscard]] const Variable* add_output(std::shared_ptr<LogicalArray> array);
-  [[nodiscard]] const Variable* add_reduction(std::shared_ptr<LogicalArray> array, int32_t redop);
+  [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array);
+  [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array);
+  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array, int32_t redop);
 
-  void add_input(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol);
-  void add_output(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol);
-  void add_reduction(std::shared_ptr<LogicalArray> array,
+  void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
+  void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
+  void add_reduction(InternalSharedPtr<LogicalArray> array,
                      int32_t redop,
                      const Variable* partition_symbol);
 
   [[nodiscard]] const Variable* find_or_declare_partition(
-    const std::shared_ptr<LogicalArray>& array);
+    const InternalSharedPtr<LogicalArray>& array);
 
-  void add_constraint(std::shared_ptr<Constraint> constraint);
+  void add_constraint(InternalSharedPtr<Constraint> constraint);
   void add_to_solver(ConstraintSolver& solver) override;
 
   void validate() override;
@@ -126,7 +126,7 @@ class AutoTask final : public Task {
  private:
   void fixup_ranges(Strategy& strategy);
 
-  std::vector<std::shared_ptr<Constraint>> constraints_{};
+  std::vector<InternalSharedPtr<Constraint>> constraints_{};
   std::vector<LogicalArray*> arrays_to_fixup_{};
 };
 
@@ -140,21 +140,21 @@ class ManualTask final : public Task {
              mapping::detail::Machine&& machine);
 
  public:
-  void add_input(const std::shared_ptr<LogicalStore>& store);
-  void add_input(const std::shared_ptr<LogicalStorePartition>& store_partition,
+  void add_input(const InternalSharedPtr<LogicalStore>& store);
+  void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                  std::optional<SymbolicPoint> projection);
-  void add_output(const std::shared_ptr<LogicalStore>& store);
-  void add_output(const std::shared_ptr<LogicalStorePartition>& store_partition,
+  void add_output(const InternalSharedPtr<LogicalStore>& store);
+  void add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                   std::optional<SymbolicPoint> projection);
-  void add_reduction(const std::shared_ptr<LogicalStore>& store, Legion::ReductionOpID redop);
-  void add_reduction(const std::shared_ptr<LogicalStorePartition>& store_partition,
+  void add_reduction(const InternalSharedPtr<LogicalStore>& store, Legion::ReductionOpID redop);
+  void add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                      Legion::ReductionOpID redop,
                      std::optional<SymbolicPoint> projection);
 
  private:
   void add_store(std::vector<ArrayArg>& store_args,
-                 const std::shared_ptr<LogicalStore>& store,
-                 std::shared_ptr<Partition> partition,
+                 const InternalSharedPtr<LogicalStore>& store,
+                 InternalSharedPtr<Partition> partition,
                  std::optional<SymbolicPoint> projection = {});
 
  public:

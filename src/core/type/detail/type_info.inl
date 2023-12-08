@@ -87,7 +87,7 @@ inline const FixedArrayType& FixedArrayType::as_fixed_array_type() const { retur
 
 inline uint32_t FixedArrayType::num_elements() const { return N_; }
 
-inline const std::shared_ptr<Type>& FixedArrayType::element_type() const { return element_type_; }
+inline const InternalSharedPtr<Type>& FixedArrayType::element_type() const { return element_type_; }
 
 // ==========================================================================================
 
@@ -101,7 +101,7 @@ inline const StructType& StructType::as_struct_type() const { return *this; }
 
 inline uint32_t StructType::num_fields() const { return field_types().size(); }
 
-inline const std::vector<std::shared_ptr<Type>>& StructType::field_types() const
+inline const std::vector<InternalSharedPtr<Type>>& StructType::field_types() const
 {
   return field_types_;
 }
@@ -118,6 +118,6 @@ inline bool ListType::variable_size() const { return true; }
 
 inline const ListType& ListType::as_list_type() const { return *this; }
 
-inline const std::shared_ptr<Type>& ListType::element_type() const { return element_type_; }
+inline const InternalSharedPtr<Type>& ListType::element_type() const { return element_type_; }
 
 }  // namespace legate::detail

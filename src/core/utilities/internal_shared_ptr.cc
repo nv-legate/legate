@@ -10,30 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#pragma once
-
-#include "core/data/logical_store.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 namespace legate {
 
-inline LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore>&& impl)
-  : impl_{std::move(impl)}
-{
-}
+BadInternalWeakPtr::BadInternalWeakPtr(std::string what) noexcept : what_{std::move(what)} {}
 
-inline const SharedPtr<detail::LogicalStore>& LogicalStore::impl() const { return impl_; }
-
-// ==========================================================================================
-
-inline LogicalStorePartition::LogicalStorePartition(
-  InternalSharedPtr<detail::LogicalStorePartition>&& impl)
-  : impl_{std::move(impl)}
-{
-}
-
-inline const SharedPtr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const
-{
-  return impl_;
-}
+const char* BadInternalWeakPtr::what() const noexcept { return what_.c_str(); }
 
 }  // namespace legate

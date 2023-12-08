@@ -27,11 +27,11 @@ inline uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
 // ==========================================================================================
 
-inline const std::vector<std::shared_ptr<Array>>& Task::inputs() const { return inputs_; }
+inline const std::vector<InternalSharedPtr<Array>>& Task::inputs() const { return inputs_; }
 
-inline const std::vector<std::shared_ptr<Array>>& Task::outputs() const { return outputs_; }
+inline const std::vector<InternalSharedPtr<Array>>& Task::outputs() const { return outputs_; }
 
-inline const std::vector<std::shared_ptr<Array>>& Task::reductions() const { return reductions_; }
+inline const std::vector<InternalSharedPtr<Array>>& Task::reductions() const { return reductions_; }
 
 inline const std::vector<Scalar>& Task::scalars() const { return scalars_; }
 

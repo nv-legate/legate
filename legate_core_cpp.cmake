@@ -200,6 +200,7 @@ list(APPEND legate_core_SOURCES
   src/core/utilities/deserializer.cc
   src/core/utilities/machine.cc
   src/core/utilities/linearize.cc
+  src/core/utilities/internal_shared_ptr.cc
   src/core/utilities/detail/buffer_builder.cc
   src/timing/timing.cc
 )
@@ -579,9 +580,14 @@ install(
         src/core/utilities/shared_ptr.inl
         src/core/utilities/internal_shared_ptr.h
         src/core/utilities/internal_shared_ptr.inl
-        src/core/utilities/compressed_pair.h
         src/core/utilities/cpp_version.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
+
+install(
+  FILES src/core/utilities/detail/compressed_pair.h
+        src/core/utilities/detail/shared_ptr_control_block.h
+        src/core/utilities/detail/shared_ptr_control_block.inl
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities/detail)
 
 install(
   DIRECTORY   ${LEGATE_CORE_DIR}/cmake/Modules

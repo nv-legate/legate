@@ -30,8 +30,8 @@
 namespace legate::detail {
 
 Reduce::Reduce(const Library* library,
-               std::shared_ptr<LogicalStore> store,
-               std::shared_ptr<LogicalStore> out_store,
+               InternalSharedPtr<LogicalStore> store,
+               InternalSharedPtr<LogicalStore> out_store,
                int64_t task_id,
                uint64_t unique_id,
                int32_t radix,
@@ -77,7 +77,7 @@ void Reduce::launch(Strategy* p_strategy)
 
   const auto runtime = detail::Runtime::get_runtime();
 
-  std::shared_ptr<LogicalStore> new_output;
+  InternalSharedPtr<LogicalStore> new_output;
   bool done = false;
 
   do {
@@ -126,7 +126,7 @@ void Reduce::launch(Strategy* p_strategy)
 
       new_output->set_key_partition(machine_, &weighted);
       auto output_partition =
-        create_store_partition(new_output, std::make_shared<Weighted>(std::move(weighted)));
+        create_store_partition(new_output, make_internal_shared<Weighted>(std::move(weighted)));
       input_          = new_output;
       input_partition = output_partition;
     }

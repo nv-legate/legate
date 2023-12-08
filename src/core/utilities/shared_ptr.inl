@@ -17,29 +17,27 @@
 namespace legate {
 
 template <typename T>
-inline void SharedPtr<T>::reference_() noexcept
+void SharedPtr<T>::reference_() noexcept
 {
-  ptr_.user_reference_({});
+  internal_ptr({}).user_reference_({});
 }
 
 template <typename T>
-inline void SharedPtr<T>::dereference_() noexcept
+void SharedPtr<T>::dereference_() noexcept
 {
-  ptr_.user_dereference_({});
+  internal_ptr({}).user_dereference_({});
 }
 
 template <typename T>
 template <typename U>
-inline SharedPtr<T>::SharedPtr(copy_tag, const InternalSharedPtr<U>& other) noexcept : ptr_{other}
+SharedPtr<T>::SharedPtr(copy_tag, const InternalSharedPtr<U>& other) noexcept : ptr_{other}
 {
   reference_();
 }
 
 template <typename T>
 template <typename U>
-inline SharedPtr<T>::SharedPtr(move_tag,
-                               InternalSharedPtr<U>&& other,
-                               bool from_internal_ptr) noexcept
+SharedPtr<T>::SharedPtr(move_tag, InternalSharedPtr<U>&& other, bool from_internal_ptr) noexcept
   : ptr_{std::move(other)}
 {
   // Only update refcount if we are constructing from a bare InternalSharedPointer, since
@@ -49,174 +47,155 @@ inline SharedPtr<T>::SharedPtr(move_tag,
   }
 }
 
-template <typename T>
-template <typename U>
-inline void SharedPtr<T>::assign_(copy_tag, const InternalSharedPtr<U>& other) noexcept
-{
-  SharedPtr tmp{other};
-
-  swap(tmp);
-}
-
-template <typename T>
-template <typename U>
-inline void SharedPtr<T>::assign_(move_tag, InternalSharedPtr<U>&& other) noexcept
-{
-  SharedPtr tmp{std::move(other)};
-
-  swap(tmp);
-}
-
 // ==========================================================================================
 
 template <typename T>
-inline SharedPtr<T>::SharedPtr(std::nullptr_t) noexcept
+SharedPtr<T>::SharedPtr(std::nullptr_t) noexcept
 {
 }
 
 template <typename T>
-template <typename U, typename Deleter, typename Alloc>
-inline SharedPtr<T>::SharedPtr(U* ptr, Deleter deleter, Alloc allocator)
+template <typename U, typename Deleter, typename Alloc, typename SFINAE>
+SharedPtr<T>::SharedPtr(U* ptr, Deleter deleter, Alloc allocator)
   : ptr_{ptr, std::move(deleter), std::move(allocator)}
 {
   reference_();
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>::SharedPtr(U* ptr) : SharedPtr{ptr, std::default_delete<U>{}}
+template <typename U, typename SFINAE>
+SharedPtr<T>::SharedPtr(U* ptr) : SharedPtr{ptr, std::default_delete<U>{}}
 {
 }
 
 template <typename T>
-inline SharedPtr<T>::SharedPtr(const SharedPtr& other) noexcept : SharedPtr{copy_tag{}, other.ptr_}
+SharedPtr<T>::SharedPtr(const SharedPtr& other) noexcept
+  : SharedPtr{copy_tag{}, other.internal_ptr({})}
 {
 }
 
 template <typename T>
-inline SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr& other) noexcept
+SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr& other) noexcept
 {
-  assign_(copy_tag{}, other.ptr_);
+  SharedPtr{other}.swap(*this);
   return *this;
 }
 
 template <typename T>
-inline SharedPtr<T>::SharedPtr(SharedPtr&& other) noexcept
-  : SharedPtr{move_tag{}, std::move(other.ptr_), false}
+SharedPtr<T>::SharedPtr(SharedPtr&& other) noexcept
+  : SharedPtr{move_tag{}, std::move(other.internal_ptr({})), false}
 {
 }
 
 template <typename T>
-inline SharedPtr<T>& SharedPtr<T>::operator=(SharedPtr&& other) noexcept
+SharedPtr<T>& SharedPtr<T>::operator=(SharedPtr&& other) noexcept
 {
-  assign_(move_tag{}, std::move(other.ptr_));
+  SharedPtr{std::move(other)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>::SharedPtr(const SharedPtr<U>& other) noexcept
-  : SharedPtr{copy_tag{}, other.ptr_}
+template <typename U, typename SFINAE>
+SharedPtr<T>::SharedPtr(const SharedPtr<U>& other) noexcept
+  : SharedPtr{copy_tag{}, other.internal_ptr({})}
 {
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr<U>& other) noexcept
+template <typename U, typename SFINAE>
+SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr<U>& other) noexcept
 {
-  assign_(copy_tag{}, other.ptr_);
+  SharedPtr{other}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>::SharedPtr(SharedPtr<U>&& other) noexcept
-  : SharedPtr{move_tag{}, std::move(other.ptr_), false}
+template <typename U, typename SFINAE>
+SharedPtr<T>::SharedPtr(SharedPtr<U>&& other) noexcept
+  : SharedPtr{move_tag{}, std::move(other.internal_ptr({})), false}
 {
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>& SharedPtr<T>::operator=(SharedPtr<U>&& other) noexcept
+template <typename U, typename SFINAE>
+SharedPtr<T>& SharedPtr<T>::operator=(SharedPtr<U>&& other) noexcept
 {
-  assign_(move_tag{}, std::move(other.ptr_));
+  SharedPtr{std::move(other)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-inline SharedPtr<T>::SharedPtr(const InternalSharedPtr<element_type>& other) noexcept
+SharedPtr<T>::SharedPtr(const InternalSharedPtr<element_type>& other) noexcept
   : SharedPtr{copy_tag{}, other}
 {
 }
 
 template <typename T>
-inline SharedPtr<T>& SharedPtr<T>::operator=(const InternalSharedPtr<element_type>& other) noexcept
+SharedPtr<T>& SharedPtr<T>::operator=(const InternalSharedPtr<element_type>& other) noexcept
 {
-  assign_(copy_tag{}, other);
+  SharedPtr{other}.swap(*this);
   return *this;
 }
 
 template <typename T>
-inline SharedPtr<T>::SharedPtr(InternalSharedPtr<element_type>&& other) noexcept
+SharedPtr<T>::SharedPtr(InternalSharedPtr<element_type>&& other) noexcept
   : SharedPtr{move_tag{}, std::move(other), true}
 {
 }
 
 template <typename T>
-inline SharedPtr<T>& SharedPtr<T>::operator=(InternalSharedPtr<element_type>&& other) noexcept
+SharedPtr<T>& SharedPtr<T>::operator=(InternalSharedPtr<element_type>&& other) noexcept
 {
-  assign_(move_tag{}, std::move(other));
+  SharedPtr{std::move(other)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>::SharedPtr(const InternalSharedPtr<U>& other) noexcept
-  : SharedPtr{copy_tag{}, other}
+template <typename U, typename SFINAE>
+SharedPtr<T>::SharedPtr(const InternalSharedPtr<U>& other) noexcept : SharedPtr{copy_tag{}, other}
 {
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>& SharedPtr<T>::operator=(const InternalSharedPtr<U>& other) noexcept
+template <typename U, typename SFINAE>
+SharedPtr<T>& SharedPtr<T>::operator=(const InternalSharedPtr<U>& other) noexcept
 {
-  assign_(copy_tag{}, other);
+  SharedPtr{other}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>::SharedPtr(InternalSharedPtr<U>&& other) noexcept
+template <typename U, typename SFINAE>
+SharedPtr<T>::SharedPtr(InternalSharedPtr<U>&& other) noexcept
   : SharedPtr{move_tag{}, std::move(other), true}
 {
 }
 
 template <typename T>
-template <typename U>
-inline SharedPtr<T>& SharedPtr<T>::operator=(InternalSharedPtr<U>&& other) noexcept
+template <typename U, typename SFINAE>
+SharedPtr<T>& SharedPtr<T>::operator=(InternalSharedPtr<U>&& other) noexcept
 {
-  assign_(move_tag{}, std::move(other));
+  SharedPtr{std::move(other)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-template <typename U, typename D>
-inline SharedPtr<T>::SharedPtr(std::unique_ptr<U, D>&& ptr) : ptr_{std::move(ptr)}
+template <typename U, typename D, typename SFINAE>
+SharedPtr<T>::SharedPtr(std::unique_ptr<U, D>&& ptr) : ptr_{std::move(ptr)}
 {
   reference_();
 }
 
 template <typename T>
-template <typename U, typename D>
-inline SharedPtr<T>& SharedPtr<T>::operator=(std::unique_ptr<U, D>&& ptr)
+template <typename U, typename D, typename SFINAE>
+SharedPtr<T>& SharedPtr<T>::operator=(std::unique_ptr<U, D>&& ptr)
 {
-  ptr_ = std::move(ptr);
-  reference_();
+  SharedPtr{std::move(ptr)}.swap(*this);
   return *this;
 }
 
 template <typename T>
-inline SharedPtr<T>::~SharedPtr() noexcept
+SharedPtr<T>::~SharedPtr() noexcept
 {
   dereference_();
 }
@@ -224,33 +203,33 @@ inline SharedPtr<T>::~SharedPtr() noexcept
 // ==========================================================================================
 
 template <typename T>
-inline void SharedPtr<T>::swap(SharedPtr& other) noexcept
+void SharedPtr<T>::swap(SharedPtr& other) noexcept
 {
-  ptr_.swap(other.ptr_);
+  internal_ptr({}).swap(other.internal_ptr({}));
 }
 
 // friend function
 template <typename T>
-inline void swap(SharedPtr<T>& lhs, SharedPtr<T>& rhs) noexcept
+void swap(SharedPtr<T>& lhs, SharedPtr<T>& rhs) noexcept
 {
   lhs.swap(rhs);
 }
 
 template <typename T>
-inline void SharedPtr<T>::reset() noexcept
+void SharedPtr<T>::reset() noexcept
 {
-  SharedPtr<T>{}.swap(*this);
+  reset(nullptr);
 }
 
 template <typename T>
-inline void SharedPtr<T>::reset(std::nullptr_t) noexcept
+void SharedPtr<T>::reset(std::nullptr_t) noexcept
 {
   SharedPtr<T>{nullptr}.swap(*this);
 }
 
 template <typename T>
-template <typename U, typename D, typename A>
-inline void SharedPtr<T>::reset(U* ptr, D deleter, A allocator)
+template <typename U, typename D, typename A, typename SFINAE>
+void SharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 {
   // cannot call ptr_.reset() since we may need to bump the user and strong reference counts
   SharedPtr<T>{ptr, std::move(deleter), std::move(allocator)}.swap(*this);
@@ -259,41 +238,177 @@ inline void SharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 // ==========================================================================================
 
 template <typename T>
-inline typename SharedPtr<T>::element_type* SharedPtr<T>::get() const noexcept
+typename SharedPtr<T>::element_type* SharedPtr<T>::get() const noexcept
 {
-  return ptr_.get();
+  return internal_ptr({}).get();
 }
 
 template <typename T>
-inline typename SharedPtr<T>::element_type& SharedPtr<T>::operator*() const noexcept
+typename SharedPtr<T>::element_type& SharedPtr<T>::operator*() const noexcept
 {
-  return ptr_.operator*();
+  return internal_ptr({}).operator*();
 }
 
 template <typename T>
-inline typename SharedPtr<T>::element_type* SharedPtr<T>::operator->() const noexcept
+typename SharedPtr<T>::element_type* SharedPtr<T>::operator->() const noexcept
 {
-  return ptr_.operator->();
+  return internal_ptr({}).operator->();
 }
 
 template <typename T>
-inline typename SharedPtr<T>::ref_count_type SharedPtr<T>::use_count() const noexcept
+typename SharedPtr<T>::ref_count_type SharedPtr<T>::use_count() const noexcept
 {
-  return ptr_.use_count();
+  return internal_ptr({}).use_count();
 }
 
 template <typename T>
-inline SharedPtr<T>::operator bool() const noexcept
+SharedPtr<T>::operator bool() const noexcept
 {
-  return ptr_.operator bool();
+  return internal_ptr({}).operator bool();
+}
+
+template <typename T>
+typename SharedPtr<T>::internal_ptr_type& SharedPtr<T>::internal_ptr(
+  InternalSharedPtrAccessTag) noexcept
+{
+  return ptr_;
+}
+
+template <typename T>
+const typename SharedPtr<T>::internal_ptr_type& SharedPtr<T>::internal_ptr(
+  InternalSharedPtrAccessTag) const noexcept
+{
+  return ptr_;
+}
+
+// ==========================================================================================
+
+template <typename T, typename U>
+bool operator==(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() == rhs.get();
+}
+
+template <typename T, typename U>
+bool operator!=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() != rhs.get();
+}
+
+template <typename T, typename U>
+bool operator<(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() < rhs.get();
+}
+
+template <typename T, typename U>
+bool operator>(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() > rhs.get();
+}
+
+template <typename T, typename U>
+bool operator<=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() <= rhs.get();
+}
+
+template <typename T, typename U>
+bool operator>=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+{
+  return lhs.get() >= rhs.get();
+}
+
+// ==========================================================================================
+
+template <typename T>
+bool operator==(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() == nullptr;
+}
+
+template <typename T>
+bool operator==(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+{
+  return nullptr == rhs.get();
+}
+
+template <typename T>
+bool operator!=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() != nullptr;
+}
+
+template <typename T>
+bool operator!=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+{
+  return nullptr != rhs.get();
+}
+
+template <typename T>
+bool operator<(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() < nullptr;
+}
+
+template <typename T>
+bool operator<(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+{
+  return nullptr < rhs.get();
+}
+
+template <typename T>
+bool operator>(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() > nullptr;
+}
+
+template <typename T>
+bool operator>(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+{
+  return nullptr > rhs.get();
+}
+
+template <typename T>
+bool operator<=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() <= nullptr;
+}
+
+template <typename T>
+bool operator<=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+{
+  return nullptr <= rhs.get();
+}
+
+template <typename T>
+bool operator>=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+{
+  return lhs.get() >= nullptr;
+}
+
+template <typename T>
+bool operator>=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+{
+  return nullptr >= rhs.get();
 }
 
 // ==========================================================================================
 
 template <typename T, typename... Args>
-inline SharedPtr<T> make_shared(Args&&... args)
+SharedPtr<T> make_shared(Args&&... args)
 {
   return SharedPtr<T>{make_internal_shared<T>(std::forward<Args>(args)...)};
 }
 
 }  // namespace legate
+
+namespace std {
+
+template <typename T>
+size_t hash<legate::SharedPtr<T>>::operator()(const legate::SharedPtr<T>& ptr) const noexcept
+{
+  return hash<typename legate::SharedPtr<T>::element_type*>{}(ptr.get());
+}
+
+}  // namespace std

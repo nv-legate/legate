@@ -68,6 +68,6 @@ inline ProcessorRange::ProcessorRange(uint32_t low_id,
 // legate::mapping::Machine
 //////////////////////////////////////////
 
-inline const std::shared_ptr<detail::Machine>& Machine::impl() const { return impl_; }
+inline const SharedPtr<detail::Machine>& Machine::impl() const { return impl_; }
 
 }  // namespace legate::mapping

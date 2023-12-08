@@ -25,7 +25,7 @@ Operation::Operation(uint64_t unique_id, mapping::detail::Machine&& machine)
 {
 }
 
-const Variable* Operation::find_or_declare_partition(std::shared_ptr<LogicalStore> store)
+const Variable* Operation::find_or_declare_partition(InternalSharedPtr<LogicalStore> store)
 {
   auto finder = part_mappings_.find(store);
   if (finder != part_mappings_.end()) {
@@ -43,12 +43,12 @@ const Variable* Operation::declare_partition()
     .get();
 }
 
-std::shared_ptr<LogicalStore> Operation::find_store(const Variable* variable) const
+InternalSharedPtr<LogicalStore> Operation::find_store(const Variable* variable) const
 {
   return store_mappings_.at(*variable);
 }
 
-void Operation::record_partition(const Variable* variable, std::shared_ptr<LogicalStore> store)
+void Operation::record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store)
 {
   auto finder = store_mappings_.find(*variable);
   if (finder != store_mappings_.end()) {

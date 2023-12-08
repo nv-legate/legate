@@ -17,8 +17,8 @@
 #include "core/data/scalar.h"
 #include "core/mapping/detail/machine.h"
 #include "core/task/detail/return.h"
+#include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -32,9 +32,9 @@ class TaskContext {
               LegateVariantCode variant_kind,
               const std::vector<Legion::PhysicalRegion>& regions);
 
-  [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& inputs();
-  [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& outputs();
-  [[nodiscard]] std::vector<std::shared_ptr<PhysicalArray>>& reductions();
+  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& inputs();
+  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& outputs();
+  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& reductions();
   [[nodiscard]] const std::vector<legate::Scalar>& scalars();
   [[nodiscard]] std::vector<comm::Communicator>& communicators();
 
@@ -66,9 +66,9 @@ class TaskContext {
   LegateVariantCode variant_kind_{};
   const std::vector<Legion::PhysicalRegion>& regions_;
 
-  std::vector<std::shared_ptr<PhysicalArray>> inputs_{}, outputs_{}, reductions_{};
-  std::vector<std::shared_ptr<PhysicalStore>> unbound_stores_{};
-  std::vector<std::shared_ptr<PhysicalStore>> scalar_stores_{};
+  std::vector<InternalSharedPtr<PhysicalArray>> inputs_{}, outputs_{}, reductions_{};
+  std::vector<InternalSharedPtr<PhysicalStore>> unbound_stores_{};
+  std::vector<InternalSharedPtr<PhysicalStore>> scalar_stores_{};
   std::vector<legate::Scalar> scalars_{};
   std::vector<comm::Communicator> comms_{};
   bool can_raise_exception_{};

@@ -24,16 +24,16 @@
 
 namespace legate::detail {
 
-std::shared_ptr<LogicalStore> LogicalArray::data() const
+InternalSharedPtr<LogicalStore> LogicalArray::data() const
 {
   throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
   return {};
 }
 
-/*static*/ std::shared_ptr<LogicalArray> LogicalArray::from_store(
-  std::shared_ptr<LogicalStore> store)
+/*static*/ InternalSharedPtr<LogicalArray> LogicalArray::from_store(
+  InternalSharedPtr<LogicalStore> store)
 {
-  return std::make_shared<BaseLogicalArray>(std::move(store));
+  return make_internal_shared<BaseLogicalArray>(std::move(store));
 }
 
 bool BaseLogicalArray::unbound() const
@@ -44,43 +44,43 @@ bool BaseLogicalArray::unbound() const
   return data_->unbound();
 }
 
-std::shared_ptr<LogicalArray> BaseLogicalArray::promote(int32_t extra_dim, size_t dim_size) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::promote(int32_t extra_dim, size_t dim_size) const
 {
   auto null_mask = nullable() ? null_mask_->promote(extra_dim, dim_size) : nullptr;
   auto data      = data_->promote(extra_dim, dim_size);
-  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<LogicalArray> BaseLogicalArray::project(int32_t dim, int64_t index) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::project(int32_t dim, int64_t index) const
 {
   auto null_mask = nullable() ? null_mask_->project(dim, index) : nullptr;
   auto data      = data_->project(dim, index);
-  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<LogicalArray> BaseLogicalArray::slice(int32_t dim, Slice sl) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::slice(int32_t dim, Slice sl) const
 {
   auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
   auto data      = slice_store(data_, dim, sl);
-  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<LogicalArray> BaseLogicalArray::transpose(const std::vector<int32_t>& axes) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::transpose(const std::vector<int32_t>& axes) const
 {
   auto null_mask = nullable() ? null_mask_->transpose(axes) : nullptr;
   auto data      = data_->transpose(axes);
-  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<LogicalArray> BaseLogicalArray::delinearize(
+InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
   int32_t dim, const std::vector<uint64_t>& sizes) const
 {
   auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
   auto data      = data_->delinearize(dim, sizes);
-  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<LogicalStore> BaseLogicalArray::null_mask() const
+InternalSharedPtr<LogicalStore> BaseLogicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -88,22 +88,22 @@ std::shared_ptr<LogicalStore> BaseLogicalArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<PhysicalArray> BaseLogicalArray::get_physical_array() const
+InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array() const
 {
   return _get_physical_array();
 }
 
-std::shared_ptr<BasePhysicalArray> BaseLogicalArray::_get_physical_array() const
+InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::_get_physical_array() const
 {
   auto data_store = data_->get_physical_store();
-  std::shared_ptr<PhysicalStore> null_mask_store{};
+  InternalSharedPtr<PhysicalStore> null_mask_store{};
   if (null_mask_ != nullptr) {
     null_mask_store = null_mask_->get_physical_store();
   }
-  return std::make_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
+  return make_internal_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
 }
 
-std::shared_ptr<LogicalArray> BaseLogicalArray::child(uint32_t /*index*/) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::child(uint32_t /*index*/) const
 {
   throw std::invalid_argument{"Non-nested array has no child sub-array"};
   return {};
@@ -141,7 +141,7 @@ void BaseLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reductio
 
 void BaseLogicalArray::generate_constraints(
   AutoTask* task,
-  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Variable* partition_symbol) const
 {
   mapping.try_emplace(data_, partition_symbol);
@@ -155,7 +155,7 @@ void BaseLogicalArray::generate_constraints(
 }
 
 std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
-  const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
@@ -190,45 +190,46 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg_for_fixup(
 
 bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
 
-std::shared_ptr<LogicalArray> ListLogicalArray::promote(int32_t, size_t) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::promote(int32_t, size_t) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-std::shared_ptr<LogicalArray> ListLogicalArray::project(int32_t, int64_t) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::project(int32_t, int64_t) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-std::shared_ptr<LogicalArray> ListLogicalArray::slice(int32_t, Slice) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::slice(int32_t, Slice) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-std::shared_ptr<LogicalArray> ListLogicalArray::transpose(const std::vector<int32_t>&) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(const std::vector<int32_t>&) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-std::shared_ptr<LogicalArray> ListLogicalArray::delinearize(int32_t,
-                                                            const std::vector<uint64_t>&) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(int32_t,
+                                                              const std::vector<uint64_t>&) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-std::shared_ptr<PhysicalArray> ListLogicalArray::get_physical_array() const
+InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array() const
 {
   auto desc_arr    = descriptor_->_get_physical_array();
   auto vardata_arr = vardata_->get_physical_array();
-  return std::make_shared<ListPhysicalArray>(type_, std::move(desc_arr), std::move(vardata_arr));
+  return make_internal_shared<ListPhysicalArray>(
+    type_, std::move(desc_arr), std::move(vardata_arr));
 }
 
-std::shared_ptr<LogicalArray> ListLogicalArray::child(uint32_t index) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::child(uint32_t index) const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
@@ -244,7 +245,7 @@ std::shared_ptr<LogicalArray> ListLogicalArray::child(uint32_t index) const
   return nullptr;
 }
 
-std::shared_ptr<BaseLogicalArray> ListLogicalArray::descriptor() const
+InternalSharedPtr<BaseLogicalArray> ListLogicalArray::descriptor() const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
@@ -252,7 +253,7 @@ std::shared_ptr<BaseLogicalArray> ListLogicalArray::descriptor() const
   return descriptor_;
 }
 
-std::shared_ptr<LogicalArray> ListLogicalArray::vardata() const
+InternalSharedPtr<LogicalArray> ListLogicalArray::vardata() const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
@@ -273,7 +274,7 @@ void ListLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reductio
 
 void ListLogicalArray::generate_constraints(
   AutoTask* task,
-  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Variable* partition_symbol) const
 {
   descriptor_->generate_constraints(task, mapping, partition_symbol);
@@ -285,7 +286,7 @@ void ListLogicalArray::generate_constraints(
 }
 
 std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
-  const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
@@ -346,48 +347,50 @@ std::vector<T> make_array_from_op(const std::vector<T>& fields, F&& generator_fn
 
 }  // namespace
 
-std::shared_ptr<LogicalArray> StructLogicalArray::promote(int32_t extra_dim, size_t dim_size) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::promote(int32_t extra_dim,
+                                                            size_t dim_size) const
 {
   auto null_mask = nullable() ? null_mask_->promote(extra_dim, dim_size) : nullptr;
   auto fields =
     make_array_from_op(fields_, [&](auto& field) { return field->promote(extra_dim, dim_size); });
 
-  return std::make_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
+  return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<LogicalArray> StructLogicalArray::project(int32_t dim, int64_t index) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::project(int32_t dim, int64_t index) const
 {
   auto null_mask = nullable() ? null_mask_->project(dim, index) : nullptr;
   auto fields =
     make_array_from_op(fields_, [&](auto& field) { return field->project(dim, index); });
 
-  return std::make_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
+  return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<LogicalArray> StructLogicalArray::slice(int32_t dim, Slice sl) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::slice(int32_t dim, Slice sl) const
 {
   auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
   auto fields    = make_array_from_op(fields_, [&](auto& field) { return field->slice(dim, sl); });
-  return std::make_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
+  return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<LogicalArray> StructLogicalArray::transpose(const std::vector<int32_t>& axes) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::transpose(
+  const std::vector<int32_t>& axes) const
 {
   auto null_mask = nullable() ? null_mask_->transpose(axes) : nullptr;
   auto fields    = make_array_from_op(fields_, [&](auto& field) { return field->transpose(axes); });
-  return std::make_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
+  return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<LogicalArray> StructLogicalArray::delinearize(
+InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
   int32_t dim, const std::vector<uint64_t>& sizes) const
 {
   auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
   auto fields =
     make_array_from_op(fields_, [&](auto& field) { return field->delinearize(dim, sizes); });
-  return std::make_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
+  return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<LogicalStore> StructLogicalArray::null_mask() const
+InternalSharedPtr<LogicalStore> StructLogicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -395,21 +398,21 @@ std::shared_ptr<LogicalStore> StructLogicalArray::null_mask() const
   return null_mask_;
 }
 
-std::shared_ptr<PhysicalArray> StructLogicalArray::get_physical_array() const
+InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array() const
 {
-  std::shared_ptr<PhysicalStore> null_mask_store = nullptr;
+  InternalSharedPtr<PhysicalStore> null_mask_store = nullptr;
   if (null_mask_ != nullptr) {
     null_mask_store = null_mask_->get_physical_store();
   }
 
-  auto field_arrays = make_array_from_op<std::shared_ptr<PhysicalArray>>(
+  auto field_arrays = make_array_from_op<InternalSharedPtr<PhysicalArray>>(
     fields_, [&](auto& field) { return field->get_physical_array(); });
 
-  return std::make_shared<StructPhysicalArray>(
+  return make_internal_shared<StructPhysicalArray>(
     type_, std::move(null_mask_store), std::move(field_arrays));
 }
 
-std::shared_ptr<LogicalArray> StructLogicalArray::child(uint32_t index) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::child(uint32_t index) const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
@@ -417,7 +420,7 @@ std::shared_ptr<LogicalArray> StructLogicalArray::child(uint32_t index) const
   return fields_.at(index);
 }
 
-std::shared_ptr<LogicalStore> StructLogicalArray::primary_store() const
+InternalSharedPtr<LogicalStore> StructLogicalArray::primary_store() const
 {
   return fields_.front()->primary_store();
 }
@@ -452,7 +455,7 @@ void StructLogicalArray::record_scalar_reductions(AutoTask* task, Legion::Reduct
 
 void StructLogicalArray::generate_constraints(
   AutoTask* task,
-  std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Variable* partition_symbol) const
 {
   auto it = fields_.begin();
@@ -472,7 +475,7 @@ void StructLogicalArray::generate_constraints(
 }
 
 std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
-  const std::unordered_map<std::shared_ptr<LogicalStore>, const Variable*>& mapping,
+  const std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Strategy& strategy,
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,

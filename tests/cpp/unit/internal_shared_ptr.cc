@@ -293,3 +293,77 @@ TYPED_TEST(InternalSharedPtrUnit, UniqueAssign)
   ASSERT_EQ(uniq.get(), nullptr);
   ASSERT_FALSE(uniq);
 }
+
+TYPED_TEST(InternalSharedPtrUnit, FromSharedCtor)
+{
+  auto sh_ptr = legate::make_shared<TypeParam>(88);
+
+  ASSERT_EQ(sh_ptr.use_count(), 1);
+
+  legate::InternalSharedPtr<TypeParam> internal_sh_ptr{sh_ptr};
+
+  test_basic_equal(internal_sh_ptr, sh_ptr.get());
+
+  ASSERT_EQ(internal_sh_ptr.as_user_ptr(), sh_ptr);
+  ASSERT_EQ(internal_sh_ptr.use_count(), 2);
+  ASSERT_EQ(internal_sh_ptr.strong_ref_count(), 2);
+  ASSERT_EQ(internal_sh_ptr.user_ref_count(), 1);
+  ASSERT_EQ(internal_sh_ptr.weak_ref_count(), 0);
+}
+
+TYPED_TEST(InternalSharedPtrUnit, FromSharedCtorMove)
+{
+  auto sh_ptr  = legate::make_shared<TypeParam>(88);
+  auto raw_ptr = sh_ptr.get();
+
+  ASSERT_EQ(sh_ptr.use_count(), 1);
+
+  legate::InternalSharedPtr<TypeParam> internal_sh_ptr{std::move(sh_ptr)};
+
+  test_basic_equal(internal_sh_ptr, raw_ptr);
+
+  ASSERT_EQ(internal_sh_ptr.use_count(), 1);
+  ASSERT_EQ(internal_sh_ptr.strong_ref_count(), 1);
+  ASSERT_EQ(internal_sh_ptr.user_ref_count(), 0);
+  ASSERT_EQ(internal_sh_ptr.weak_ref_count(), 0);
+}
+
+TYPED_TEST(InternalSharedPtrUnit, FromSharedAssign)
+{
+  auto sh_ptr = legate::make_shared<TypeParam>(88);
+
+  ASSERT_EQ(sh_ptr.use_count(), 1);
+
+  legate::InternalSharedPtr<TypeParam> internal_sh_ptr;
+
+  test_basic_equal(internal_sh_ptr, static_cast<TypeParam*>(nullptr));
+  internal_sh_ptr = sh_ptr;
+
+  test_basic_equal(internal_sh_ptr, sh_ptr.get());
+
+  ASSERT_EQ(internal_sh_ptr.as_user_ptr(), sh_ptr);
+  ASSERT_EQ(internal_sh_ptr.use_count(), 2);
+  ASSERT_EQ(internal_sh_ptr.strong_ref_count(), 2);
+  ASSERT_EQ(internal_sh_ptr.user_ref_count(), 1);
+  ASSERT_EQ(internal_sh_ptr.weak_ref_count(), 0);
+}
+
+TYPED_TEST(InternalSharedPtrUnit, FromSharedCtorMoveAssign)
+{
+  auto sh_ptr = legate::make_shared<TypeParam>(88);
+
+  ASSERT_EQ(sh_ptr.use_count(), 1);
+
+  legate::InternalSharedPtr<TypeParam> internal_sh_ptr;
+
+  test_basic_equal(internal_sh_ptr, static_cast<TypeParam*>(nullptr));
+  auto raw_ptr    = sh_ptr.get();
+  internal_sh_ptr = std::move(sh_ptr);
+
+  test_basic_equal(internal_sh_ptr, raw_ptr);
+
+  ASSERT_EQ(internal_sh_ptr.use_count(), 1);
+  ASSERT_EQ(internal_sh_ptr.strong_ref_count(), 1);
+  ASSERT_EQ(internal_sh_ptr.user_ref_count(), 0);
+  ASSERT_EQ(internal_sh_ptr.weak_ref_count(), 0);
+}

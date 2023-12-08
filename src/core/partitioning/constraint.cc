@@ -20,7 +20,7 @@ std::string Variable::to_string() const { return impl_->to_string(); }
 
 std::string Constraint::to_string() const { return impl_->to_string(); }
 
-Constraint::Constraint(std::shared_ptr<detail::Constraint>&& impl) : impl_{std::move(impl)} {}
+Constraint::Constraint(InternalSharedPtr<detail::Constraint>&& impl) : impl_{std::move(impl)} {}
 
 Constraint align(Variable lhs, Variable rhs)
 {

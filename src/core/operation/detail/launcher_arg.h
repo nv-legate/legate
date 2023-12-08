@@ -15,6 +15,7 @@
 #include "core/data/detail/scalar.h"
 #include "core/data/scalar.h"
 #include "core/operation/detail/projection.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <memory>
 #include <optional>
@@ -127,7 +128,7 @@ struct BaseArrayArg final : public Analyzable {
 
 struct ListArrayArg final : public Analyzable {
  public:
-  ListArrayArg(std::shared_ptr<Type> type,
+  ListArrayArg(InternalSharedPtr<Type> type,
                std::unique_ptr<Analyzable> descriptor,
                std::unique_ptr<Analyzable> vardata);
 
@@ -138,14 +139,14 @@ struct ListArrayArg final : public Analyzable {
   void perform_invalidations() const override;
 
  private:
-  std::shared_ptr<Type> type_;
+  InternalSharedPtr<Type> type_;
   std::unique_ptr<Analyzable> descriptor_;
   std::unique_ptr<Analyzable> vardata_;
 };
 
 struct StructArrayArg final : public Analyzable {
  public:
-  StructArrayArg(std::shared_ptr<Type> type,
+  StructArrayArg(InternalSharedPtr<Type> type,
                  std::unique_ptr<Analyzable> null_mask,
                  std::vector<std::unique_ptr<Analyzable>>&& fields);
 
@@ -156,7 +157,7 @@ struct StructArrayArg final : public Analyzable {
   void perform_invalidations() const override;
 
  private:
-  std::shared_ptr<Type> type_;
+  InternalSharedPtr<Type> type_;
   std::unique_ptr<Analyzable> null_mask_;
   std::vector<std::unique_ptr<Analyzable>> fields_;
 };

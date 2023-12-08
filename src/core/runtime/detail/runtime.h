@@ -31,6 +31,7 @@
 #include "core/type/type_info.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/hash.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include <list>
 #include <map>
@@ -49,7 +50,6 @@ class BaseLogicalArray;
 class Library;
 struct LogicalArray;
 class LogicalRegionField;
-class LogicalStore;
 class ManualTask;
 class StructLogicalArray;
 
@@ -86,76 +86,74 @@ class Runtime {
 
   [[nodiscard]] mapping::detail::Machine slice_machine_for_task(const Library* library,
                                                                 int64_t task_id);
-  [[nodiscard]] std::shared_ptr<AutoTask> create_task(const Library* library, int64_t task_id);
-  [[nodiscard]] std::shared_ptr<ManualTask> create_task(const Library* library,
-                                                        int64_t task_id,
-                                                        const Domain& launch_domain);
-  void issue_copy(std::shared_ptr<LogicalStore> target,
-                  std::shared_ptr<LogicalStore> source,
+  [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library* library, int64_t task_id);
+  [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library* library,
+                                                          int64_t task_id,
+                                                          const Domain& launch_domain);
+  void issue_copy(InternalSharedPtr<LogicalStore> target,
+                  InternalSharedPtr<LogicalStore> source,
                   std::optional<int32_t> redop);
-  void issue_gather(std::shared_ptr<LogicalStore> target,
-                    std::shared_ptr<LogicalStore> source,
-                    std::shared_ptr<LogicalStore> source_indirect,
+  void issue_gather(InternalSharedPtr<LogicalStore> target,
+                    InternalSharedPtr<LogicalStore> source,
+                    InternalSharedPtr<LogicalStore> source_indirect,
                     std::optional<int32_t> redop);
-  void issue_scatter(std::shared_ptr<LogicalStore> target,
-                     std::shared_ptr<LogicalStore> target_indirect,
-                     std::shared_ptr<LogicalStore> source,
+  void issue_scatter(InternalSharedPtr<LogicalStore> target,
+                     InternalSharedPtr<LogicalStore> target_indirect,
+                     InternalSharedPtr<LogicalStore> source,
                      std::optional<int32_t> redop);
-  void issue_scatter_gather(std::shared_ptr<LogicalStore> target,
-                            std::shared_ptr<LogicalStore> target_indirect,
-                            std::shared_ptr<LogicalStore> source,
-                            std::shared_ptr<LogicalStore> source_indirect,
+  void issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
+                            InternalSharedPtr<LogicalStore> target_indirect,
+                            InternalSharedPtr<LogicalStore> source,
+                            InternalSharedPtr<LogicalStore> source_indirect,
                             std::optional<int32_t> redop);
-  void issue_fill(std::shared_ptr<LogicalArray> lhs, std::shared_ptr<LogicalStore> value);
+  void issue_fill(InternalSharedPtr<LogicalArray> lhs, InternalSharedPtr<LogicalStore> value);
   void tree_reduce(const Library* library,
                    int64_t task_id,
-                   std::shared_ptr<LogicalStore> store,
-                   std::shared_ptr<LogicalStore> out_store,
+                   InternalSharedPtr<LogicalStore> store,
+                   InternalSharedPtr<LogicalStore> out_store,
                    int32_t radix);
   void flush_scheduling_window();
-  void submit(std::shared_ptr<Operation> op);
+  void submit(InternalSharedPtr<Operation> op);
 
-  [[nodiscard]] std::shared_ptr<LogicalArray> create_array(std::shared_ptr<Type> type,
-                                                           uint32_t dim,
-                                                           bool nullable);
-  [[nodiscard]] std::shared_ptr<LogicalArray> create_array(const Shape& extents,
-                                                           std::shared_ptr<Type> type,
-                                                           bool nullable,
-                                                           bool optimize_scalar);
-  [[nodiscard]] std::shared_ptr<LogicalArray> create_array_like(
-    const std::shared_ptr<LogicalArray>& array, std::shared_ptr<Type> type);
-  [[nodiscard]] std::shared_ptr<LogicalArray> create_list_array(
-    std::shared_ptr<Type> type,
-    const std::shared_ptr<LogicalArray>& descriptor,
-    std::shared_ptr<LogicalArray> vardata);
+  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(InternalSharedPtr<Type> type,
+                                                             uint32_t dim,
+                                                             bool nullable);
+  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const Shape& extents,
+                                                             InternalSharedPtr<Type> type,
+                                                             bool nullable,
+                                                             bool optimize_scalar);
+  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array_like(
+    const InternalSharedPtr<LogicalArray>& array, InternalSharedPtr<Type> type);
+  [[nodiscard]] InternalSharedPtr<LogicalArray> create_list_array(
+    InternalSharedPtr<Type> type,
+    const InternalSharedPtr<LogicalArray>& descriptor,
+    InternalSharedPtr<LogicalArray> vardata);
 
  private:
-  [[nodiscard]] std::shared_ptr<StructLogicalArray> create_struct_array(std::shared_ptr<Type> type,
-                                                                        uint32_t dim,
-                                                                        bool nullable);
-  [[nodiscard]] std::shared_ptr<StructLogicalArray> create_struct_array(const Shape& extents,
-                                                                        std::shared_ptr<Type> type,
-                                                                        bool nullable,
-                                                                        bool optimize_scalar);
+  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
+    InternalSharedPtr<Type> type, uint32_t dim, bool nullable);
+  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
+    const Shape& extents, InternalSharedPtr<Type> type, bool nullable, bool optimize_scalar);
 
-  [[nodiscard]] std::shared_ptr<BaseLogicalArray> create_base_array(std::shared_ptr<Type> type,
-                                                                    uint32_t dim,
-                                                                    bool nullable);
-  [[nodiscard]] std::shared_ptr<BaseLogicalArray> create_base_array(const Shape& extents,
-                                                                    std::shared_ptr<Type> type,
-                                                                    bool nullable,
-                                                                    bool optimize_scalar);
+  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(InternalSharedPtr<Type> type,
+                                                                      uint32_t dim,
+                                                                      bool nullable);
+  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(const Shape& extents,
+                                                                      InternalSharedPtr<Type> type,
+                                                                      bool nullable,
+                                                                      bool optimize_scalar);
 
  public:
-  [[nodiscard]] std::shared_ptr<LogicalStore> create_store(std::shared_ptr<Type> type, uint32_t);
-  [[nodiscard]] std::shared_ptr<LogicalStore> create_store(const Shape& extents,
-                                                           std::shared_ptr<Type> type,
-                                                           bool optimize_scalar = false);
-  [[nodiscard]] std::shared_ptr<LogicalStore> create_store(const Scalar& scalar,
-                                                           const Shape& extents = {1});
-  [[nodiscard]] std::shared_ptr<LogicalStore> create_store(
+  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Type> type,
+                                                             uint32_t);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const Shape& extents,
+                                                             InternalSharedPtr<Type> type,
+                                                             bool optimize_scalar = false);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const Scalar& scalar,
+                                                             const Shape& extents = {1});
+  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(
     const Shape& extents,
-    std::shared_ptr<Type> type,
+    InternalSharedPtr<Type> type,
     void* buffer,
     bool share,
     const mapping::detail::DimOrdering* ordering);
@@ -171,9 +169,9 @@ class Runtime {
   [[nodiscard]] uint64_t get_unique_store_id();
   [[nodiscard]] uint64_t get_unique_storage_id();
 
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> create_region_field(const Shape& extents,
-                                                                        uint32_t field_size);
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> import_region_field(
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_region_field(const Shape& extents,
+                                                                          uint32_t field_size);
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_region_field(
     Legion::LogicalRegion region, Legion::FieldID field_id, uint32_t field_size);
   [[nodiscard]] Legion::PhysicalRegion map_region_field(Legion::LogicalRegion region,
                                                         Legion::FieldID field_id);
@@ -287,7 +285,7 @@ class Runtime {
                                                 Legion::ProjectionID proj_id);
 
  private:
-  static void schedule(const std::vector<std::shared_ptr<Operation>>& operations);
+  static void schedule(const std::vector<InternalSharedPtr<Operation>>& operations);
 
  public:
   [[nodiscard]] static Runtime* get_runtime();
@@ -327,7 +325,7 @@ class Runtime {
   std::unordered_map<ShardingDesc, Legion::ShardingID, hasher<ShardingDesc>>
     registered_shardings_{};
 
-  std::vector<std::shared_ptr<Operation>> operations_;
+  std::vector<InternalSharedPtr<Operation>> operations_;
   size_t window_size_{};
   uint64_t next_unique_id_{};
 

@@ -99,7 +99,7 @@ void AutoTask::throws_exception(bool can_throw_exception)
 
 void AutoTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
 
-AutoTask::AutoTask(std::shared_ptr<detail::AutoTask> impl) : impl_{std::move(impl)} {}
+AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl) : impl_{std::move(impl)} {}
 
 AutoTask::~AutoTask() noexcept = default;
 
@@ -167,7 +167,7 @@ void ManualTask::throws_exception(bool can_throw_exception)
 
 void ManualTask::add_communicator(const std::string& name) { impl_->add_communicator(name); }
 
-ManualTask::ManualTask(std::shared_ptr<detail::ManualTask> impl) : impl_{std::move(impl)} {}
+ManualTask::ManualTask(InternalSharedPtr<detail::ManualTask> impl) : impl_{std::move(impl)} {}
 
 ManualTask::~ManualTask() noexcept = default;
 

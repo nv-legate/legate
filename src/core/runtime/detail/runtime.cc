@@ -230,16 +230,16 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
 }
 
 // This function should be moved to the library context
-std::shared_ptr<AutoTask> Runtime::create_task(const Library* library, int64_t task_id)
+InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, int64_t task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
-  auto task    = new AutoTask{library, task_id, next_unique_id_++, std::move(machine)};
-  return std::unique_ptr<AutoTask>{task};
+  return InternalSharedPtr<AutoTask>{
+    new AutoTask{library, task_id, next_unique_id_++, std::move(machine)}};
 }
 
-std::shared_ptr<ManualTask> Runtime::create_task(const Library* library,
-                                                 int64_t task_id,
-                                                 const Domain& launch_domain)
+InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
+                                                   int64_t task_id,
+                                                   const Domain& launch_domain)
 {
   if (launch_domain.empty()) {
     throw std::invalid_argument{"Launch domain must not be empty"};
@@ -250,72 +250,72 @@ std::shared_ptr<ManualTask> Runtime::create_task(const Library* library,
   return std::unique_ptr<ManualTask>(task);
 }
 
-void Runtime::issue_copy(std::shared_ptr<LogicalStore> target,
-                         std::shared_ptr<LogicalStore> source,
+void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,
+                         InternalSharedPtr<LogicalStore> source,
                          std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_shared<Copy>(
+  submit(make_internal_shared<Copy>(
     std::move(target), std::move(source), next_unique_id_++, std::move(machine), redop));
 }
 
-void Runtime::issue_gather(std::shared_ptr<LogicalStore> target,
-                           std::shared_ptr<LogicalStore> source,
-                           std::shared_ptr<LogicalStore> source_indirect,
+void Runtime::issue_gather(InternalSharedPtr<LogicalStore> target,
+                           InternalSharedPtr<LogicalStore> source,
+                           InternalSharedPtr<LogicalStore> source_indirect,
                            std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_shared<Gather>(std::move(target),
-                                  std::move(source),
-                                  std::move(source_indirect),
-                                  next_unique_id_++,
-                                  std::move(machine),
-                                  redop));
+  submit(make_internal_shared<Gather>(std::move(target),
+                                      std::move(source),
+                                      std::move(source_indirect),
+                                      next_unique_id_++,
+                                      std::move(machine),
+                                      redop));
 }
 
-void Runtime::issue_scatter(std::shared_ptr<LogicalStore> target,
-                            std::shared_ptr<LogicalStore> target_indirect,
-                            std::shared_ptr<LogicalStore> source,
+void Runtime::issue_scatter(InternalSharedPtr<LogicalStore> target,
+                            InternalSharedPtr<LogicalStore> target_indirect,
+                            InternalSharedPtr<LogicalStore> source,
                             std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_shared<Scatter>(std::move(target),
-                                   std::move(target_indirect),
-                                   std::move(source),
-                                   next_unique_id_++,
-                                   std::move(machine),
-                                   redop));
+  submit(make_internal_shared<Scatter>(std::move(target),
+                                       std::move(target_indirect),
+                                       std::move(source),
+                                       next_unique_id_++,
+                                       std::move(machine),
+                                       redop));
 }
 
-void Runtime::issue_scatter_gather(std::shared_ptr<LogicalStore> target,
-                                   std::shared_ptr<LogicalStore> target_indirect,
-                                   std::shared_ptr<LogicalStore> source,
-                                   std::shared_ptr<LogicalStore> source_indirect,
+void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
+                                   InternalSharedPtr<LogicalStore> target_indirect,
+                                   InternalSharedPtr<LogicalStore> source,
+                                   InternalSharedPtr<LogicalStore> source_indirect,
                                    std::optional<int32_t> redop)
 {
   auto machine = machine_manager_->get_machine();
-  submit(std::make_shared<ScatterGather>(std::move(target),
-                                         std::move(target_indirect),
-                                         std::move(source),
-                                         std::move(source_indirect),
-                                         next_unique_id_++,
-                                         std::move(machine),
-                                         redop));
+  submit(make_internal_shared<ScatterGather>(std::move(target),
+                                             std::move(target_indirect),
+                                             std::move(source),
+                                             std::move(source_indirect),
+                                             next_unique_id_++,
+                                             std::move(machine),
+                                             redop));
 }
 
 void Runtime::issue_fill(
-  std::shared_ptr<LogicalArray> lhs,  // NOLINT(performance-unnecessary-value-param)
-  std::shared_ptr<LogicalStore> value)
+  InternalSharedPtr<LogicalArray> lhs,  // NOLINT(performance-unnecessary-value-param)
+  InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->kind() != ArrayKind::BASE) {
     throw std::runtime_error{"Fills on list or struct arrays are not supported yet"};
   }
 
-  auto _issue_fill = [&](std::shared_ptr<LogicalStore> store,
-                         std::shared_ptr<LogicalStore> scalar) {
+  auto _issue_fill = [&](InternalSharedPtr<LogicalStore> store,
+                         InternalSharedPtr<LogicalStore> scalar) {
     auto machine = machine_manager_->get_machine();
 
-    submit(std::make_shared<Fill>(
+    submit(make_internal_shared<Fill>(
       std::move(store), std::move(scalar), next_unique_id_++, std::move(machine)));
   };
 
@@ -336,8 +336,8 @@ void Runtime::issue_fill(
 
 void Runtime::tree_reduce(const Library* library,
                           int64_t task_id,
-                          std::shared_ptr<LogicalStore> store,
-                          std::shared_ptr<LogicalStore> out_store,
+                          InternalSharedPtr<LogicalStore> store,
+                          InternalSharedPtr<LogicalStore> out_store,
                           int32_t radix)
 {
   if (store->dim() != 1) {
@@ -345,13 +345,13 @@ void Runtime::tree_reduce(const Library* library,
   }
 
   auto machine = machine_manager_->get_machine();
-  auto op      = std::shared_ptr<Operation>{new Reduce{library,
-                                                  std::move(store),
-                                                  std::move(out_store),
-                                                  task_id,
-                                                  next_unique_id_++,
-                                                  radix,
-                                                  std::move(machine)}};
+  auto op      = InternalSharedPtr<Operation>{new Reduce{library,
+                                                    std::move(store),
+                                                    std::move(out_store),
+                                                    task_id,
+                                                    next_unique_id_++,
+                                                    radix,
+                                                    std::move(machine)}};
   submit(std::move(op));
 }
 
@@ -361,12 +361,12 @@ void Runtime::flush_scheduling_window()
     return;
   }
 
-  std::vector<std::shared_ptr<Operation>> to_schedule;
+  std::vector<InternalSharedPtr<Operation>> to_schedule;
   to_schedule.swap(operations_);
   schedule(to_schedule);
 }
 
-void Runtime::submit(std::shared_ptr<Operation> op)
+void Runtime::submit(InternalSharedPtr<Operation> op)
 {
   op->validate();
   auto& submitted = operations_.emplace_back(std::move(op));
@@ -375,7 +375,7 @@ void Runtime::submit(std::shared_ptr<Operation> op)
   }
 }
 
-void Runtime::schedule(const std::vector<std::shared_ptr<Operation>>& operations)
+void Runtime::schedule(const std::vector<InternalSharedPtr<Operation>>& operations)
 {
   std::vector<Operation*> op_pointers{};
 
@@ -392,9 +392,9 @@ void Runtime::schedule(const std::vector<std::shared_ptr<Operation>>& operations
   }
 }
 
-std::shared_ptr<LogicalArray> Runtime::create_array(std::shared_ptr<Type> type,
-                                                    uint32_t dim,
-                                                    bool nullable)
+InternalSharedPtr<LogicalArray> Runtime::create_array(InternalSharedPtr<Type> type,
+                                                      uint32_t dim,
+                                                      bool nullable)
 {
   // TODO: We should be able to control colocation of fields for struct types,
   //       instead of special-casing rect types here
@@ -411,16 +411,16 @@ std::shared_ptr<LogicalArray> Runtime::create_array(std::shared_ptr<Type> type,
     auto descriptor = create_base_array(rect_type(1), dim, nullable);
     auto vardata    = create_array(std::move(elem_type), 1, false);
 
-    return std::make_shared<ListLogicalArray>(
+    return make_internal_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
   }
   return create_base_array(std::move(type), dim, nullable);
 }
 
-std::shared_ptr<LogicalArray> Runtime::create_array(const Shape& extents,
-                                                    std::shared_ptr<Type> type,
-                                                    bool nullable,
-                                                    bool optimize_scalar)
+InternalSharedPtr<LogicalArray> Runtime::create_array(const Shape& extents,
+                                                      InternalSharedPtr<Type> type,
+                                                      bool nullable,
+                                                      bool optimize_scalar)
 {
   // TODO: We should be able to control colocation of fields for struct types,
   //       instead of special-casing rect types here
@@ -438,14 +438,14 @@ std::shared_ptr<LogicalArray> Runtime::create_array(const Shape& extents,
     auto descriptor = create_base_array(extents, rect_type(1), nullable, optimize_scalar);
     auto vardata    = create_array(std::move(elem_type), 1, false);
 
-    return std::make_shared<ListLogicalArray>(
+    return make_internal_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
   }
   return create_base_array(extents, std::move(type), nullable, optimize_scalar);
 }
 
-std::shared_ptr<LogicalArray> Runtime::create_array_like(const std::shared_ptr<LogicalArray>& array,
-                                                         std::shared_ptr<Type> type)
+InternalSharedPtr<LogicalArray> Runtime::create_array_like(
+  const InternalSharedPtr<LogicalArray>& array, InternalSharedPtr<Type> type)
 {
   if (Type::Code::STRUCT == type->code || type->variable_size()) {
     throw std::runtime_error{
@@ -459,10 +459,10 @@ std::shared_ptr<LogicalArray> Runtime::create_array_like(const std::shared_ptr<L
   return create_array(array->extents(), std::move(type), array->nullable(), optimize_scalar);
 }
 
-std::shared_ptr<LogicalArray> Runtime::create_list_array(
-  std::shared_ptr<Type> type,
-  const std::shared_ptr<LogicalArray>& descriptor,
-  std::shared_ptr<LogicalArray> vardata)
+InternalSharedPtr<LogicalArray> Runtime::create_list_array(
+  InternalSharedPtr<Type> type,
+  const InternalSharedPtr<LogicalArray>& descriptor,
+  InternalSharedPtr<LogicalArray> vardata)
 {
   if (Type::Code::STRING != type->code && Type::Code::LIST != type->code) {
     throw std::invalid_argument{"Expected a list type but got " + type->to_string()};
@@ -488,15 +488,15 @@ std::shared_ptr<LogicalArray> Runtime::create_list_array(
                                 " but got " + vardata->type()->to_string()};
   }
 
-  return std::make_shared<ListLogicalArray>(
-    std::move(type), std::static_pointer_cast<BaseLogicalArray>(descriptor), std::move(vardata));
+  return make_internal_shared<ListLogicalArray>(
+    std::move(type), legate::static_pointer_cast<BaseLogicalArray>(descriptor), std::move(vardata));
 }
 
-std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(std::shared_ptr<Type> type,
-                                                                 uint32_t dim,
-                                                                 bool nullable)
+InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(InternalSharedPtr<Type> type,
+                                                                   uint32_t dim,
+                                                                   bool nullable)
 {
-  std::vector<std::shared_ptr<LogicalArray>> fields;
+  std::vector<InternalSharedPtr<LogicalArray>> fields;
   const auto& st_type = type->as_struct_type();
   auto null_mask      = nullable ? create_store(bool_(), dim) : nullptr;
 
@@ -504,16 +504,16 @@ std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(std::shared_ptr
   for (auto& field_type : st_type.field_types()) {
     fields.emplace_back(create_array(field_type, dim, false));
   }
-  return std::make_shared<StructLogicalArray>(
+  return make_internal_shared<StructLogicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(const Shape& extents,
-                                                                 std::shared_ptr<Type> type,
-                                                                 bool nullable,
-                                                                 bool optimize_scalar)
+InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(const Shape& extents,
+                                                                   InternalSharedPtr<Type> type,
+                                                                   bool nullable,
+                                                                   bool optimize_scalar)
 {
-  std::vector<std::shared_ptr<LogicalArray>> fields;
+  std::vector<InternalSharedPtr<LogicalArray>> fields;
   const auto& st_type = type->as_struct_type();
   auto null_mask      = nullable ? create_store(extents, bool_(), optimize_scalar) : nullptr;
 
@@ -521,60 +521,60 @@ std::shared_ptr<StructLogicalArray> Runtime::create_struct_array(const Shape& ex
   for (auto& field_type : st_type.field_types()) {
     fields.emplace_back(create_array(extents, field_type, false, optimize_scalar));
   }
-  return std::make_shared<StructLogicalArray>(
+  return make_internal_shared<StructLogicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
 }
 
-std::shared_ptr<BaseLogicalArray> Runtime::create_base_array(std::shared_ptr<Type> type,
-                                                             uint32_t dim,
-                                                             bool nullable)
+InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(InternalSharedPtr<Type> type,
+                                                               uint32_t dim,
+                                                               bool nullable)
 {
   auto data      = create_store(std::move(type), dim);
   auto null_mask = nullable ? create_store(bool_(), dim) : nullptr;
-  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<BaseLogicalArray> Runtime::create_base_array(const Shape& extents,
-                                                             std::shared_ptr<Type> type,
-                                                             bool nullable,
-                                                             bool optimize_scalar)
+InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(const Shape& extents,
+                                                               InternalSharedPtr<Type> type,
+                                                               bool nullable,
+                                                               bool optimize_scalar)
 {
   auto data      = create_store(extents, std::move(type), optimize_scalar);
   auto null_mask = nullable ? create_store(extents, bool_(), optimize_scalar) : nullptr;
-  return std::make_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(std::shared_ptr<Type> type, uint32_t dim)
+InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> type, uint32_t dim)
 {
   check_dimensionality(dim);
-  auto storage = std::make_shared<detail::Storage>(dim, std::move(type));
-  return std::make_shared<LogicalStore>(std::move(storage));
+  auto storage = make_internal_shared<detail::Storage>(dim, std::move(type));
+  return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
-                                                    std::shared_ptr<Type> type,
-                                                    bool optimize_scalar /*=false*/)
+InternalSharedPtr<LogicalStore> Runtime::create_store(const Shape& extents,
+                                                      InternalSharedPtr<Type> type,
+                                                      bool optimize_scalar /*=false*/)
 {
   check_dimensionality(extents.size());
-  auto storage = std::make_shared<detail::Storage>(extents, std::move(type), optimize_scalar);
-  return std::make_shared<detail::LogicalStore>(std::move(storage));
+  auto storage = make_internal_shared<detail::Storage>(extents, std::move(type), optimize_scalar);
+  return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(const Scalar& scalar, const Shape& extents)
+InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar, const Shape& extents)
 {
   if (extents.volume() != 1) {
     throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};
   }
   auto future  = create_future(scalar.data(), scalar.size());
-  auto storage = std::make_shared<detail::Storage>(extents, scalar.type(), future);
-  return std::make_shared<detail::LogicalStore>(std::move(storage));
+  auto storage = make_internal_shared<detail::Storage>(extents, scalar.type(), future);
+  return make_internal_shared<detail::LogicalStore>(std::move(storage));
 }
 
-std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
-                                                    std::shared_ptr<Type> type,
-                                                    void* buffer,
-                                                    bool share,
-                                                    const mapping::detail::DimOrdering* ordering)
+InternalSharedPtr<LogicalStore> Runtime::create_store(const Shape& extents,
+                                                      InternalSharedPtr<Type> type,
+                                                      void* buffer,
+                                                      bool share,
+                                                      const mapping::detail::DimOrdering* ordering)
 {
   if (type->variable_size()) {
     throw std::invalid_argument{
@@ -585,9 +585,9 @@ std::shared_ptr<LogicalStore> Runtime::create_store(const Shape& extents,
   }
 
   const auto type_size = type->size();
-  std::shared_ptr<LogicalStore> store =
+  InternalSharedPtr<LogicalStore> store =
     create_store(extents, std::move(type), false /*optimize_scalar*/);
-  const std::shared_ptr<LogicalRegionField> rf = store->get_region_field();
+  const InternalSharedPtr<LogicalRegionField> rf = store->get_region_field();
 
   if (!share) {
     auto nbytes = extents.volume() * type_size;
@@ -663,8 +663,8 @@ void Runtime::record_pending_exception(const Legion::Future& pending_exception)
   raise_pending_task_exception();
 }
 
-std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& extents,
-                                                                 uint32_t field_size)
+InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(const Shape& extents,
+                                                                   uint32_t field_size)
 {
   DomainPoint lo, hi;
   hi.dim = lo.dim = static_cast<int32_t>(extents.size());
@@ -681,9 +681,9 @@ std::shared_ptr<LogicalRegionField> Runtime::create_region_field(const Shape& ex
   return fld_mgr->allocate_field();
 }
 
-std::shared_ptr<LogicalRegionField> Runtime::import_region_field(Legion::LogicalRegion region,
-                                                                 Legion::FieldID field_id,
-                                                                 uint32_t field_size)
+InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(Legion::LogicalRegion region,
+                                                                   Legion::FieldID field_id,
+                                                                   uint32_t field_size)
 {
   // TODO: This is a blocking operation. We should instead use index spaces as keys to field
   // managers

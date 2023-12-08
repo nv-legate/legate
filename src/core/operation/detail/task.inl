@@ -16,9 +16,11 @@
 
 namespace legate::detail {
 
-inline Task::ArrayArg::ArrayArg(std::shared_ptr<LogicalArray> _array) : array{std::move(_array)} {}
+inline Task::ArrayArg::ArrayArg(InternalSharedPtr<LogicalArray> _array) : array{std::move(_array)}
+{
+}
 
-inline Task::ArrayArg::ArrayArg(std::shared_ptr<LogicalArray> _array,
+inline Task::ArrayArg::ArrayArg(InternalSharedPtr<LogicalArray> _array,
                                 std::optional<SymbolicPoint> _projection)
   : array{std::move(_array)}, projection{std::move(_projection)}
 {

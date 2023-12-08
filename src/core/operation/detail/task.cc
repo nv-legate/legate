@@ -56,17 +56,17 @@ void Task::add_communicator(const std::string& name)
   communicator_factories_.push_back(comm_mgr->find_factory(name));
 }
 
-void Task::record_scalar_output(std::shared_ptr<LogicalStore> store)
+void Task::record_scalar_output(InternalSharedPtr<LogicalStore> store)
 {
   scalar_outputs_.push_back(std::move(store));
 }
 
-void Task::record_unbound_output(std::shared_ptr<LogicalStore> store)
+void Task::record_unbound_output(InternalSharedPtr<LogicalStore> store)
 {
   unbound_outputs_.push_back(std::move(store));
 }
 
-void Task::record_scalar_reduction(std::shared_ptr<LogicalStore> store,
+void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
                                    Legion::ReductionOpID legion_redop_id)
 {
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
@@ -233,28 +233,28 @@ std::string Task::to_string() const
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-const Variable* AutoTask::add_input(std::shared_ptr<LogicalArray> array)
+const Variable* AutoTask::add_input(InternalSharedPtr<LogicalArray> array)
 {
   auto symb = find_or_declare_partition(array);
   add_input(std::move(array), symb);
   return symb;
 }
 
-const Variable* AutoTask::add_output(std::shared_ptr<LogicalArray> array)
+const Variable* AutoTask::add_output(InternalSharedPtr<LogicalArray> array)
 {
   auto symb = find_or_declare_partition(array);
   add_output(std::move(array), symb);
   return symb;
 }
 
-const Variable* AutoTask::add_reduction(std::shared_ptr<LogicalArray> array, int32_t redop)
+const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array, int32_t redop)
 {
   auto symb = find_or_declare_partition(array);
   add_reduction(std::move(array), redop, symb);
   return symb;
 }
 
-void AutoTask::add_input(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol)
+void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol)
 {
   if (array->unbound()) {
     throw std::invalid_argument{"Unbound arrays cannot be used as input"};
@@ -268,7 +268,7 @@ void AutoTask::add_input(std::shared_ptr<LogicalArray> array, const Variable* pa
   }
 }
 
-void AutoTask::add_output(std::shared_ptr<LogicalArray> array, const Variable* partition_symbol)
+void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol)
 {
   array->record_scalar_or_unbound_outputs(this);
   // TODO: We will later support structs with list/string fields
@@ -283,7 +283,7 @@ void AutoTask::add_output(std::shared_ptr<LogicalArray> array, const Variable* p
   }
 }
 
-void AutoTask::add_reduction(std::shared_ptr<LogicalArray> array,
+void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
                              int32_t redop,
                              const Variable* partition_symbol)
 {
@@ -307,12 +307,12 @@ void AutoTask::add_reduction(std::shared_ptr<LogicalArray> array,
   }
 }
 
-const Variable* AutoTask::find_or_declare_partition(const std::shared_ptr<LogicalArray>& array)
+const Variable* AutoTask::find_or_declare_partition(const InternalSharedPtr<LogicalArray>& array)
 {
   return Operation::find_or_declare_partition(array->primary_store());
 }
 
-void AutoTask::add_constraint(std::shared_ptr<Constraint> constraint)
+void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint)
 {
   constraints_.push_back(std::move(constraint));
 }
@@ -390,7 +390,7 @@ ManualTask::ManualTask(const Library* library,
   strategy_->set_launch_domain(this, launch_domain);
 }
 
-void ManualTask::add_input(const std::shared_ptr<LogicalStore>& store)
+void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
 {
   if (store->unbound()) {
     throw std::invalid_argument{"Unbound stores cannot be used as input"};
@@ -399,13 +399,13 @@ void ManualTask::add_input(const std::shared_ptr<LogicalStore>& store)
   add_store(inputs_, store, create_no_partition());
 }
 
-void ManualTask::add_input(const std::shared_ptr<LogicalStorePartition>& store_partition,
+void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                            std::optional<SymbolicPoint> projection)
 {
   add_store(inputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
-void ManualTask::add_output(const std::shared_ptr<LogicalStore>& store)
+void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
 {
   if (store->has_scalar_storage()) {
     if (strategy_->parallel(this)) {
@@ -419,7 +419,7 @@ void ManualTask::add_output(const std::shared_ptr<LogicalStore>& store)
   add_store(outputs_, store, create_no_partition());
 }
 
-void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_partition,
+void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                             std::optional<SymbolicPoint> projection)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -437,7 +437,7 @@ void ManualTask::add_output(const std::shared_ptr<LogicalStorePartition>& store_
     outputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
-void ManualTask::add_reduction(const std::shared_ptr<LogicalStore>& store, int32_t redop)
+void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store, int32_t redop)
 {
   if (store->unbound()) {
     throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
@@ -451,7 +451,7 @@ void ManualTask::add_reduction(const std::shared_ptr<LogicalStore>& store, int32
   reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 }
 
-void ManualTask::add_reduction(const std::shared_ptr<LogicalStorePartition>& store_partition,
+void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                                int32_t redop,
                                std::optional<SymbolicPoint> projection)
 {
@@ -468,13 +468,13 @@ void ManualTask::add_reduction(const std::shared_ptr<LogicalStorePartition>& sto
 }
 
 void ManualTask::add_store(std::vector<ArrayArg>& store_args,
-                           const std::shared_ptr<LogicalStore>& store,
-                           std::shared_ptr<Partition> partition,
+                           const InternalSharedPtr<LogicalStore>& store,
+                           InternalSharedPtr<Partition> partition,
                            std::optional<SymbolicPoint> projection)
 {
   auto partition_symbol = declare_partition();
   auto& arg =
-    store_args.emplace_back(std::make_shared<BaseLogicalArray>(store), std::move(projection));
+    store_args.emplace_back(make_internal_shared<BaseLogicalArray>(store), std::move(projection));
   const auto unbound = store->unbound();
 
   arg.mapping.insert({store, partition_symbol});

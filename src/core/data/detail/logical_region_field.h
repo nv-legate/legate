@@ -15,6 +15,7 @@
 #include "core/data/detail/physical_store.h"
 #include "core/data/shape.h"
 #include "core/runtime/detail/field_manager.h"
+#include "core/utilities/internal_shared_ptr.h"
 
 #include "legion.h"
 
@@ -31,7 +32,7 @@ class Tiling;
 
 namespace legate::detail {
 
-class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionField> {
+class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
  private:
   friend class FieldManager;
 
@@ -39,7 +40,7 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   LogicalRegionField(FieldManager* manager,
                      const Legion::LogicalRegion& lr,
                      Legion::FieldID fid,
-                     std::shared_ptr<LogicalRegionField> parent = nullptr);
+                     InternalSharedPtr<LogicalRegionField> parent = nullptr);
 
   ~LogicalRegionField();
 
@@ -54,9 +55,9 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   void detach();
   void allow_out_of_order_destruction();
 
-  [[nodiscard]] std::shared_ptr<LogicalRegionField> get_child(const Tiling* tiling,
-                                                              const Shape& color,
-                                                              bool complete);
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child(const Tiling* tiling,
+                                                                const Shape& color,
+                                                                bool complete);
   [[nodiscard]] Legion::LogicalPartition get_legion_partition(const Partition* partition,
                                                               bool complete);
 
@@ -70,7 +71,7 @@ class LogicalRegionField : public std::enable_shared_from_this<LogicalRegionFiel
   FieldManager* manager_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{};
-  std::shared_ptr<LogicalRegionField> parent_{};
+  InternalSharedPtr<LogicalRegionField> parent_{};
   std::unique_ptr<Legion::PhysicalRegion> pr_{};
   void* attachment_{};
   bool attachment_shared_{};
