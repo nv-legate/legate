@@ -1,37 +1,45 @@
 #!/usr/bin/env bash
 
 make_conda_env_from_yaml() {
-    mamba env create -v -n "${DEFAULT_CONDA_ENV:-legate}" -f "${yaml_file}";
+    mamba env create -n "${CONDA_ENV}" -f "${yaml_file}" --force;
 }
 
 generate_yaml_file() {
-    local cuda_version="${CUDA_VERSION:-${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}}";
-    cuda_version="$(echo "${cuda_version}" | cut -d'.' -f3 --complement)";
-
-    local python_version="${PYTHON_VERSION:-}";
-
-    if [[ -z "${python_version}" ]]; then
-        python_version="$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f3 --complement)";
-    fi
-
-    cd ~/;
-
     UCX_PKG=ucx
     [[ "${UCX_ENABLED:-}" = "OFF" ]] && UCX_PKG=no-ucx
 
-    yaml_file=~/"$(         \
-        ~/legate/scripts/generate-conda-envs.py \
-            --os linux                          \
-            --compilers                         \
-            --ctk "${cuda_version}"             \
-            --python "${python_version}"        \
-            --openmpi                           \
-            "--${UCX_PKG}"                      \
-        | head -n1 | cut -d' ' -f3              \
-    )"
+    if [[ "$USE_CUDA" == "OFF" ]]; then
+        yaml_file="$(\
+            $REPO_DIR/scripts/generate-conda-envs.py \
+                --os "$OS_SHORT_NAME" \
+                --compilers                         \
+                --python ${PYTHON_VERSION}          \
+                --openmpi                           \
+                --${UCX_PKG}                        \
+            | head -n1 | cut -d' ' -f3              \
+        )"
+    else
+        local cuda_version="${CUDA_VERSION:-${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}}";
+        cuda_version="$(echo "${cuda_version}" | cut -d'.' -f3 --complement)";
 
-    sed -i -re "s/legate-test/${DEFAULT_CONDA_ENV:-legate}/g" "${yaml_file}";
+        yaml_file="$(         \
+            $REPO_DIR/scripts/generate-conda-envs.py \
+                --os "$OS_SHORT_NAME"               \
+                --compilers                         \
+                --ctk ${cuda_version}               \
+                --python ${PYTHON_VERSION}          \
+                --openmpi                           \
+                --${UCX_PKG}                        \
+            | head -n1 | cut -d' ' -f3              \
+        )"
+    fi
+
+    $SED -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
     echo "  - boa" >> "${yaml_file}";
+
+    if [[ "$LEGATE_CORE_CMAKE_PRESET" == "debug-sanitizer-gcc" ]]; then
+        echo "  - libsanitizer <=${MAX_LIBSANITIZER_VERSION}" >> "${yaml_file}";
+    fi
 
     mkdir -p /tmp/out/
     cp "${yaml_file}" /tmp/out/
@@ -52,13 +60,11 @@ find_yaml_file() {
 }
 
 get_yaml_and_make_conda_env() {
-    set -e;
+    set -xe;
 
     local yaml_file="";
 
-    if ! find_yaml_file; then
-        generate_yaml_file;
-    fi
+    generate_yaml_file;
 
     echo YAML file: "${yaml_file}"
     cat "${yaml_file}";
@@ -70,21 +76,24 @@ install_legate_core_with_war() {
     # WAR: legate-core depends on a different version of numpy than what is already installed.
     # The correct version will be installed when legate-core is installed below.
     # See github issue: https://github.com/nv-legate/legate.core/issues/812
-    mamba uninstall -y -n "${DEFAULT_CONDA_ENV:-legate}" numpy;
+    mamba uninstall -y -n "${CONDA_ENV}" numpy;
 
-    mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c nvidia -c conda-forge -c /tmp/conda-build/legate_core legate-core;
+    mamba install -y -n "${CONDA_ENV}" -c nvidia -c conda-forge -c $ARTIFACTS_DIR/conda-build/legate_core legate-core;
 }
 
 activate_conda_env() {
-    # shellcheck source=/dev/null
-    . /opt/conda/etc/profile.d/conda.sh;
-    # shellcheck source=/dev/null
-    . /opt/conda/etc/profile.d/mamba.sh;
+    set +xu
+    eval "$(conda shell.bash hook)"
+    conda activate ${CONDA_ENV};
+    set -xu
+}
 
-    conda activate "${DEFAULT_CONDA_ENV:-legate}";
+conda_info() {
+    set +x
+    conda info
+    set -x
 }
 
 make_release_env() {
-    mamba create -n "${DEFAULT_CONDA_ENV:-legate}"
-    mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" boa
+    mamba create -y -n "${CONDA_ENV}" -c conda-forge boa
 }

@@ -3,7 +3,7 @@
 build_legate_wheel() {
     set -xeuo pipefail;
 
-    rm -rf ~/legate/_skbuild;
+    rm -rf $REPO_DIR/_skbuild;
 
     mkdir -p /tmp/out;
 
@@ -27,13 +27,13 @@ build_legate_wheel() {
     done
 
     cmake_args+=("-DFIND_LEGATE_CORE_CPP=ON");
-    cmake_args+=("-Dlegate_core_ROOT=$HOME/legate/build/${LEGATE_CORE_CMAKE_PRESET:-debug-gcc}");
+    cmake_args+=("-Dlegate_core_ROOT=$REPO_DIR/build/${LEGATE_CORE_CMAKE_PRESET}");
 
     # Build + package legate.core Python wheel
     time CMAKE_GENERATOR="Ninja" \
          CMAKE_ARGS="${cmake_args[@]}" \
          SKBUILD_BUILD_OPTIONS="${ninja_args[@]}" \
-         pip wheel ${pip_args[@]} ~/legate;
+         pip wheel ${pip_args[@]} $REPO_DIR;
 
     { set +x; } 2>/dev/null;
 }

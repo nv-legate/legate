@@ -183,7 +183,7 @@ class Test_extract_values:
     def test_mixed(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
 
-
+@pytest.mark.skipif(platform.system() == "Darwin", reason="non-OSX test")
 def test_linux_cpus_repects_affinity(mocker: MockerFixture) -> None:
     mocker.patch(
         "legate.util.system.linux_load_sibling_sets",

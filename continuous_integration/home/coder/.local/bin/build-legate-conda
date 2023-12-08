@@ -3,10 +3,9 @@
 build_legate_conda_package() {
     set -xeuo pipefail;
 
-    local python_version="${PYTHON_VERSION:-}";
-
-    if [ -z "${python_version}" ]; then
-        python_version="$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f3 --complement)";
+    # Patch post.py
+    if [[ "$(uname)" == "Darwin" ]]; then
+      patch "$CONDA_PREFIX/lib/python${PYTHON_VERSION}/site-packages/conda_build/post.py" < "$REPO_DIR/continuous_integration/post_py.patch"
     fi
 
     local conda_build_args=();
@@ -15,7 +14,7 @@ build_legate_conda_package() {
     conda_build_args+=(-c nvidia);
     conda_build_args+=(--croot /tmp/conda-croot/legate_core);
     conda_build_args+=(--numpy 1.22);
-    conda_build_args+=(--python ${python_version});
+    conda_build_args+=(--python ${PYTHON_VERSION});
     conda_build_args+=(--no-test);
     conda_build_args+=(--no-verify);
     conda_build_args+=(--no-build-id);
@@ -36,10 +35,12 @@ build_legate_conda_package() {
       debug_enabled=false
     fi
 
-    conda_build_args+=(--variants "{gpu_enabled:${GPU_ENABLED},python:${python_version},debug_enabled:${debug_enabled},ucx_configured:${UCX_CONFIGURED}}");
+    conda_build_args+=(--variants "{gpu_enabled:${GPU_ENABLED},python:${PYTHON_VERSION},debug_enabled:${debug_enabled},ucx_configured:${UCX_CONFIGURED}}");
 
     rm -rf /tmp/legate;
-    cp -ar ~/legate /tmp/legate;
+    cp -ar $REPO_DIR /tmp/legate;
+    git config --global --add safe.directory /tmp/legate
+
     rm -rf /tmp/conda-croot/legate_core;
     mkdir -p /tmp/conda-croot/legate_core;
     rm -rf /tmp/conda-build/legate_core;
@@ -51,7 +52,7 @@ build_legate_conda_package() {
 numpy:
   - 1.22
 python:
-  - "${python_version}"
+  - "${PYTHON_VERSION}"
 numpy_version:
   - ">=1.22"
 use_local_path:
@@ -63,7 +64,7 @@ debug_enabled:
 cmake_version:
   - ">=3.20.1,!=3.23.0"
 package_version:
-  - "$(git -C /tmp/legate describe --abbrev=0 --tags | sed 's/[a-zA-Z]//g' | cut -d '.' -f -2).00"
+  - "$(git -C /tmp/legate describe --abbrev=0 --tags | $SED 's/[a-zA-Z]//g' | cut -d '.' -f -2).00"
 ucx_configured:
   - "${UCX_CONFIGURED}"
 EOF
@@ -75,10 +76,13 @@ EOF
 fi
 
     cat <<EOF > /tmp/legate/conda/conda-build/build.sh
+echo "---------------------build.sh-------------------------"
+set -xeuo pipefail
+
 # Install legate_core C++ libs
-sh /tmp/out/legate_core-*-Linux.sh --skip-license --exclude-subdir --prefix="\$PREFIX"
-sed -E -i "s@$HOME/\.conda/envs/legate@\$PREFIX@g" "\$PREFIX/share/Legion/cmake/LegionConfigCommon.cmake";
-sed -E -i "s@$HOME/legate/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/Linux/STGZ/legate_core-(.*)-Linux@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
+sh /tmp/out/legate_core-*-$(uname).sh --skip-license --exclude-subdir --prefix="\$PREFIX"
+$SED -E -i "s@$CONDA_PREFIX@\$PREFIX@g" "\$PREFIX/share/Legion/cmake/LegionConfigCommon.cmake";
+$SED -E -i "s@$REPO_DIR/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/$(uname)/STGZ/legate_core-(.*)-$(uname)@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
 
 # Install legate_core Python wheel
 pip install --no-deps --root / --prefix "\$PREFIX" /tmp/out/legate_core-*.whl;
@@ -92,14 +96,13 @@ EOF
     git -C /tmp/legate commit --allow-empty --allow-empty-message -n -m "";
 
     # Build legate_core conda package
-    CUDA=${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR} \
     conda mambabuild ${conda_build_args[@]} /tmp/legate/conda/conda-build;
 
     git -C /tmp/legate reset --hard HEAD~1;
 
     rm -rf /tmp/legate;
 
-    cp /tmp/conda-build/legate_core/linux-64/legate-*.tar.bz2 /tmp/out/;
+    cp /tmp/conda-build/legate_core/${CONDA_PLATFORM}/legate-*.tar.bz2 /tmp/out/;
 
     { set +x; } 2>/dev/null;
 }

@@ -1,9 +1,9 @@
-name: Build legate.core.internal on GH
+name: Build legate.core.internal
 
 on:
   workflow_call:
     inputs:
-      build-target:
+      target-device:
         required: true
         type: string
         description: One of CPU / GPU
@@ -13,43 +13,50 @@ on:
       runs-on:
         required: true
         type: string
-      cmake-preset:
-        required: true
-        type: string
       sha:
         required: true
         type: string
         description: A unique identifier for labeling the images / artifacts
+      build-type:
+        required: true
+        type: string
+        description: One of ci / release
+      cmake-preset:
+        required: true
+        type: string
       ucx-config:
         required: true
         type: string
       ucx-string:
         required: true
-        type: string        
-      build-type:
+        type: string
+      use-container:
+        required: true
+        type: boolean
+      platform:
         required: true
         type: string
-        description: One of ci / release
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  BASE_IMAGE: rapidsai/devcontainers:23.06-cpp-mambaforge-ubuntu22.04
   UCX_ENABLED: ${{ (inputs.ucx-config == 'ucx' && 'ON') || 'OFF' }}
-  IMAGE_NAME: ${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}
-  USE_CUDA: ${{ (inputs.build-target == 'cpu' && 'OFF') || 'ON' }}
+  USE_CUDA: ${{ (inputs.target-device == 'cpu' && 'OFF') || 'ON' }}
   LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
-  PUSH_IMAGE: ${{ inputs.build-type == 'ci' && 'true' || 'false'}}
-
+  ARTIFACTS_DIR: "${{ github.workspace }}/.artifacts"
+  ARTIFACT_NAME: "${{ inputs.platform }}-${{ inputs.repos-name }}-${{ inputs.target-device }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}-${{ inputs.sha }}"
 jobs:
   build:
-    name: build-${{ inputs.build-target }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}-sub-workflow
+    name: Build (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, ${{ inputs.ucx-config }}, ${{ inputs.build-type }}, Use container=${{ inputs.use-container }} )
 
     permissions:
       id-token: write # This is required for configure-aws-credentials
       contents: read  # This is required for actions/checkout
-      packages: write # This is required to push docker image to ghcr.io
 
     runs-on: ${{ inputs.runs-on }}
+
+    defaults:
+      run:
+        shell: bash --noprofile --norc -xeuo pipefail {0}
 
     steps:
       - name: Checkout ${{ inputs.repos-name }} (= this repo)
@@ -65,62 +72,32 @@ jobs:
           role-duration-seconds: 28800 # 8 hours
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
 
-      - name: Docker system prune
+      - if: ${{ inputs.use-container }}
+        name: Build ${{ inputs.repos-name }} (in container)
         run: |
-          docker version
-          docker system prune --all --force
+          docker run \
+            -e AWS_REGION \
+            -e AWS_SESSION_TOKEN \
+            -e AWS_ACCESS_KEY_ID \
+            -e AWS_SECRET_ACCESS_KEY \
+            -e GITHUB_TOKEN \
+            -e USE_CUDA \
+            -e UCX_ENABLED \
+            -e LEGATE_CORE_CMAKE_PRESET \
+            -v "$(pwd):$(pwd)" \
+            -v "$ARTIFACTS_DIR:$(pwd)/.artifacts" \
+            --rm "condaforge/miniforge3:latest" \
+            /bin/bash -c "cd $(pwd) && continuous_integration/home/coder/.local/bin/entrypoint build-legate ${{ inputs.build-type}} ${{ inputs.target-device }}"
 
-      - name: Build docker image
-        run: |
-          echo BUILD_TARGET: ${{ inputs.build-target }}
-          echo USE_CUDA: ${{ env.USE_CUDA }}
-          echo LEGATE_CORE_CMAKE_PRESET: ${{ env.LEGATE_CORE_CMAKE_PRESET }}
-          echo UCX_ENABLED: ${{ env.UCX_ENABLED }}
+      - if: ${{ !inputs.use-container }}
+        name: Build ${{ inputs.repos-name }} (without container)
+        run: continuous_integration/home/coder/.local/bin/entrypoint build-legate ${{ inputs.build-type}}
 
-          IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
-
-          continuous_integration/build-docker-image \
-            --base-image "$BASE_IMAGE" \
-            --image-tag "$IMAGE_TAG" \
-            --use-cuda "$USE_CUDA" \
-            --source-dir . \
-            --build-type "${{ inputs.build-type }}"
-
-      - name: Dump docker history of image before upload
-        run: |
-          IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
-          docker history $IMAGE_TAG
-
-      - if: env.PUSH_IMAGE == 'true'
-        name: Log in to container image registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
-
-      - if: env.PUSH_IMAGE == 'true'
-        name: Push image
-        run: |
-          IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
-
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}
-
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-
-          IMAGE_ID=$IMAGE_ID/$IMAGE_TAG
-
-          docker tag $IMAGE_TAG $IMAGE_ID
-          docker push $IMAGE_ID
-
-      - name: Copy artifacts back to the host
-        run: |
-          IMAGE_TAG=${{ env.IMAGE_NAME }}:${{ inputs.sha }}
-          mkdir -p artifacts
-          docker run  -v "$(pwd)/artifacts:/home/coder/.artifacts" --rm -t $IMAGE_TAG copy-artifacts ${{ inputs.build-type }}
-
-      - name: Display structure of workdir
-        run: ls -R
+      - name: Display structure of the artifacts folder
+        run: ls -aR ${{ env.ARTIFACTS_DIR }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: "${{ inputs.repos-name }}-${{ inputs.build-target }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}-${{ inputs.sha }}"
-          path: artifacts
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
