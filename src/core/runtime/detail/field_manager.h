@@ -54,6 +54,7 @@ class FieldManager {
 
  public:
   FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
+  ~FieldManager();
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field();
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(

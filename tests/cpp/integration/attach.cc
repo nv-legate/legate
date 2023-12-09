@@ -22,6 +22,20 @@ namespace attach {
 using Attach          = DefaultFixture;
 using AttachDeathTest = DeathTestFixture;
 
+class Positive : public DefaultFixture,
+                 public ::testing::WithParamInterface<
+                   std::tuple<std::pair<int32_t, bool>, bool, bool, bool, bool>> {};
+
+INSTANTIATE_TEST_SUITE_P(Attach,
+                         Positive,
+                         ::testing::Combine(::testing::Values(std::make_pair(1, false),
+                                                              std::make_pair(2, false),
+                                                              std::make_pair(2, true)),
+                                            ::testing::Bool(),
+                                            ::testing::Bool(),
+                                            ::testing::Bool(),
+                                            ::testing::Bool()));
+
 static const char* library_name = "test_attach";
 
 enum TaskOpCode {
@@ -199,24 +213,15 @@ void test_body(
   }
 }
 
-TEST_F(Attach, Positive)
+TEST_P(Positive, Test)
 {
   register_tasks();
-  // Do multiple operations in a row, with stores collected in-between, in hopes of triggering
-  // consensus match.
+  // It's helpful to combine multiple calls of this function together, with stores collected
+  // in-between, in hopes of triggering consensus match.
   // TODO: Also try keeping multiple stores alive at one time.
-  for (auto& [dim, fortran] : std::vector<std::pair<int32_t, bool>>{
-         std::make_pair(1, false), std::make_pair(2, false), std::make_pair(2, true)}) {
-    for (bool unordered : {false, true}) {
-      for (bool share : {false, true}) {
-        for (bool use_tasks : {false, true}) {
-          for (bool use_inline : {false, true}) {
-            test_body(dim, fortran, unordered, share, use_tasks, use_inline);
-          }
-        }
-      }
-    }
-  }
+  const auto& [layout, unordered, share, use_tasks, use_inline] = GetParam();
+  const auto& [dim, fortran]                                    = layout;
+  test_body(dim, fortran, unordered, share, use_tasks, use_inline);
 }
 
 TEST_F(Attach, Negative)

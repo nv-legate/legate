@@ -38,6 +38,29 @@ FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field
   }
 }
 
+FieldManager::~FieldManager()
+{
+  // We are shutting down, so just free all the buffer copies we've made to attach to, without
+  // waiting on the detachments to finish.
+  for (auto& infos : info_for_match_items_) {
+    for (auto& [item, info] : infos) {
+      if (nullptr != info.attachment) {
+        free(info.attachment);
+      }
+    }
+  }
+  for (const FreeFieldInfo& info : ordered_free_fields_) {
+    if (nullptr != info.attachment) {
+      free(info.attachment);
+    }
+  }
+  for (const FreeFieldInfo& info : unordered_free_fields_) {
+    if (nullptr != info.attachment) {
+      free(info.attachment);
+    }
+  }
+}
+
 InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field()
 {
   issue_field_match();
