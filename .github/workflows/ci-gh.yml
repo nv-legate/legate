@@ -8,7 +8,7 @@ on:
   push:
     branches:
       - "pull-request/[0-9]+"
-      - "branch-*"
+      - "cpp-branch-*"
 
 jobs:
   build-and-test:
