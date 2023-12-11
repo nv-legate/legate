@@ -723,6 +723,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
       // We already did the acquire
       return false;
     }
+    runtime->enable_reentrant(ctx);
     if (!can_fail) {
       report_failed_mapping(mappable, mapping.requirement_index(), target_memory, redop, footprint);
     }
