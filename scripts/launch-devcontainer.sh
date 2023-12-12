@@ -32,14 +32,14 @@ launch_devcontainer() {
 
     local vols=();
     vols+=(-v "${cwd}:/home/coder/legate");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/build-legate-all:/home/coder/.local/bin/build-legate-all");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/build-legate-conda:/home/coder/.local/bin/build-legate-conda");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/build-legate-cpp:/home/coder/.local/bin/build-legate-cpp");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/build-legate-wheel:/home/coder/.local/bin/build-legate-wheel");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/conda-utils:/home/coder/.local/bin/conda-utils");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/copy-artifacts:/home/coder/.local/bin/copy-artifacts");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/entrypoint:/home/coder/.local/bin/entrypoint");
-    vols+=(-v "${cwd}/continuous_integration/home/coder/.local/bin/run-test-or-analysis:/home/coder/.local/bin/run-test-or-analysis");
+    vols+=(-v "${cwd}/continuous_integration/scripts/build-legate-all:/home/coder/.local/bin/build-legate-all");
+    vols+=(-v "${cwd}/continuous_integration/scripts/build-legate-conda:/home/coder/.local/bin/build-legate-conda");
+    vols+=(-v "${cwd}/continuous_integration/scripts/build-legate-cpp:/home/coder/.local/bin/build-legate-cpp");
+    vols+=(-v "${cwd}/continuous_integration/scripts/build-legate-wheel:/home/coder/.local/bin/build-legate-wheel");
+    vols+=(-v "${cwd}/continuous_integration/scripts/conda-utils:/home/coder/.local/bin/conda-utils");
+    vols+=(-v "${cwd}/continuous_integration/scripts/copy-artifacts:/home/coder/.local/bin/copy-artifacts");
+    vols+=(-v "${cwd}/continuous_integration/scripts/entrypoint:/home/coder/.local/bin/entrypoint");
+    vols+=(-v "${cwd}/continuous_integration/scripts/run-test-or-analysis:/home/coder/.local/bin/run-test-or-analysis");
 
     for x in ".aws" ".cache" ".cargo" ".config" ".conda/pkgs" ".local/state" "legion"; do
         if test -d "${cwd}/../${x}"; then

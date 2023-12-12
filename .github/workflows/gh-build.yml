@@ -87,11 +87,11 @@ jobs:
             -v "$(pwd):$(pwd)" \
             -v "$ARTIFACTS_DIR:$(pwd)/.artifacts" \
             --rm "condaforge/miniforge3:latest" \
-            /bin/bash -c "cd $(pwd) && continuous_integration/home/coder/.local/bin/entrypoint build-legate ${{ inputs.build-type}} ${{ inputs.target-device }}"
+            /bin/bash -c "cd $(pwd) && continuous_integration/scripts/entrypoint build-legate ${{ inputs.build-type}} ${{ inputs.target-device }}"
 
       - if: ${{ !inputs.use-container }}
         name: Build ${{ inputs.repos-name }} (without container)
-        run: continuous_integration/home/coder/.local/bin/entrypoint build-legate ${{ inputs.build-type}}
+        run: continuous_integration/scripts/entrypoint build-legate ${{ inputs.build-type}}
 
       - name: Display structure of the artifacts folder
         run: ls -aR ${{ env.ARTIFACTS_DIR }}

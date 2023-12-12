@@ -88,4 +88,4 @@ jobs:
           ls -aR $ARTIFACTS_DIR
 
       - name: Run ${{ inputs.repos-name }} test / analysis
-        run: continuous_integration/home/coder/.local/bin/entrypoint run-test-or-analysis ${{ inputs.test-scope }}
+        run: continuous_integration/scripts/entrypoint run-test-or-analysis ${{ inputs.test-scope }}

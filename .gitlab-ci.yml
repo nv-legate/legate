@@ -38,14 +38,14 @@ Build:LegateCore:
   before_script:
     # Set variables for AWS authentication
     - |
-      if [ $PERSONAL_ACCESS_TOKEN ]; then 
-        VAULT_HOST='https://vault.ops.k8s.rapids.ai'; 
+      if [ $PERSONAL_ACCESS_TOKEN ]; then
+        VAULT_HOST='https://vault.ops.k8s.rapids.ai';
         GH_TOKEN=$PERSONAL_ACCESS_TOKEN;
         GITHUB_TOKEN=$PERSONAL_ACCESS_TOKEN;
       fi
     - cp -R $CI_PROJECT_DIR ~coder/legate
     - mkdir -p ~coder/.local
-    - cp -R $CI_PROJECT_DIR/continuous_integration/home/coder/.local/bin  ~coder/.local/.
+    - cp -R $CI_PROJECT_DIR/continuous_integration/scripts  ~coder/.local/.
     - cp -ar $CI_PROJECT_DIR/continuous_integration/home/coder/.gitconfig /home/coder/;
     - chown -R coder:coder /home/coder/
     - mkdir -p /tmp/out;

@@ -7,11 +7,11 @@ set_repo_dir() {
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
     # Navigate to the parent of the parent of SCRIPT_DIR, then get the full path
-    REPO_DIR="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
+    REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
     export REPO_DIR
 
-    export PATH="${PATH}:${REPO_DIR}/continuous_integration/home/coder/.local/bin"
+    export PATH="${PATH}:${REPO_DIR}/continuous_integration/scripts"
 
     export ARTIFACTS_DIR="${REPO_DIR}/.artifacts"
 }
