@@ -338,7 +338,8 @@ namespace detail {
 template <typename T>
 class shared_from_this_enabled {
   template <typename U>
-  static constexpr auto test(U* u) -> decltype(u->shared_from_this(), std::true_type{});
+  static constexpr auto test(U* u)
+    -> decltype(static_cast<void>(u->shared_from_this()), std::true_type{});
 
   template <typename U>
   static constexpr std::false_type test(...);
