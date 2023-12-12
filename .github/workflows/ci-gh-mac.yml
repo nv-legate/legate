@@ -1,4 +1,4 @@
-name: Build and test
+name: Mac build and test
 
 concurrency:
   group: mac-ci-build-and-test-on-${{ github.event_name }}-from-${{ github.ref_name }}
