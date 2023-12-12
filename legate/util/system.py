@@ -84,7 +84,18 @@ class System:
     def cpus(self) -> tuple[CPUInfo, ...]:
         """A list of CPUs on the system."""
 
-        return darwin_cpus() if sys.platform == "darwin" else linux_cpus()
+        if sys.platform.startswith("darwin"):
+            N = multiprocessing.cpu_count()
+            return tuple(CPUInfo((i,)) for i in range(N))
+        elif sys.platform.startswith("linux"):
+            all_sets = linux_load_sibling_sets()
+
+            available_sets = (
+                s for s in all_sets if s[0] in os.sched_getaffinity(0)
+            )
+            return tuple(CPUInfo(x) for x in sorted(available_sets))
+        else:
+            raise NotImplementedError(sys.platform)
 
     @cached_property
     def gpus(self) -> tuple[GPUInfo, ...]:
@@ -142,11 +153,6 @@ def extract_values(line: str) -> tuple[int, ...]:
     )
 
 
-def darwin_cpus() -> tuple[CPUInfo, ...]:
-    N = multiprocessing.cpu_count()
-    return tuple(CPUInfo((i,)) for i in range(N))
-
-
 def linux_load_sibling_sets() -> set[tuple[int, ...]]:
     N = multiprocessing.cpu_count()
 
@@ -158,11 +164,3 @@ def linux_load_sibling_sets() -> set[tuple[int, ...]]:
         sibling_sets.add(extract_values(line.strip()))
 
     return sibling_sets
-
-
-def linux_cpus() -> tuple[CPUInfo, ...]:
-    all_sets = linux_load_sibling_sets()
-
-    available_sets = (s for s in all_sets if s[0] in os.sched_getaffinity(0))
-
-    return tuple(CPUInfo(x) for x in sorted(available_sets))

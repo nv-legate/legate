@@ -183,6 +183,7 @@ class Test_extract_values:
     def test_mixed(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
 
+
 @pytest.mark.skipif(platform.system() == "Darwin", reason="non-OSX test")
 def test_linux_cpus_repects_affinity(mocker: MockerFixture) -> None:
     mocker.patch(
@@ -191,4 +192,4 @@ def test_linux_cpus_repects_affinity(mocker: MockerFixture) -> None:
     )
     mocker.patch("os.sched_getaffinity", return_value={0})
 
-    assert m.linux_cpus() == (CPUInfo((0, 2)),)
+    assert m.System().cpus == (CPUInfo((0, 2)),)
