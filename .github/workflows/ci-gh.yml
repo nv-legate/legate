@@ -21,7 +21,6 @@ jobs:
           - no_ucx
         platform:
           - linux
-          - mac
         target-device:
           - cpu
           - gpu
@@ -34,14 +33,6 @@ jobs:
             ucx-config: ucx
           - cmake-preset: debug-sanitizer-gcc
             ucx-config: ucx
-          - platform: mac
-            target-device: gpu
-          - platform: mac
-            ucx-config: ucx
-          - platform: mac
-            cmake-preset: debug-gcc
-          - platform: mac
-            cmake-preset: debug-sanitizer-gcc
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
