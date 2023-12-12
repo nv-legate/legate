@@ -192,9 +192,6 @@ class Config:
         self.user_opts = tuple(args.command[1:]) if self.user_program else ()
         self._user_run_mode = args.run_mode
 
-        if self.run_mode == "exec" and self.user_program is None:
-            raise RuntimeError("'exec' run mode requires a program to execute")
-
         # these may modify the args, so apply before dataclass conversions
         self._fixup_nocr(args)
         self._fixup_log_to_file(args)
@@ -209,6 +206,16 @@ class Config:
         self.info = object_to_dataclass(args, Info)
         self.other = object_to_dataclass(args, Other)
 
+        if self.run_mode == "exec":
+            if self.user_program is None:
+                raise RuntimeError(
+                    "'exec' run mode requires a program to execute"
+                )
+            if self.other.module is not None:
+                raise RuntimeError(
+                    "'exec' run mode cannot be used with --module"
+                )
+
     @cached_property
     def console(self) -> bool:
         """Whether we are starting Legate as an interactive console."""
@@ -222,6 +229,10 @@ class Config:
 
         # no user program, just run legion_python
         if self.user_program is None:
+            return "python"
+
+        # --module specified means run with legion_python
+        if self.other.module is not None:
             return "python"
 
         # otherwise assume .py means run with legion_python

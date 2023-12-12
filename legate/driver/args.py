@@ -122,6 +122,7 @@ parser.add_argument(
     help="Whether to run the command as python code with legion_python, or "
     "as a bare executable. By default, commands that end in .py will be run "
     "as a python script, and those that don't will be run as an executable. "
+    "If --module is specified, python mode will also be assumed by default. "
     "[legate-only, not supported with standard Python invocation]",
 )
 
