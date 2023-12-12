@@ -16,14 +16,14 @@ on:
 jobs:
   setup-build:
     name: Setup build
-    runs-on: ubuntu-latest
+    runs-on: linux-amd64-cpu4
     outputs:
       runner_type: ${{ steps.set_runner.outputs.runner_type }}
     steps:
       - id: set_runner
         run: |
           if [ "${{ inputs.platform }}" = "linux" ]; then
-            echo "runner_type=legate-colossus-linux-amd64-cpu" >> $GITHUB_OUTPUT
+            echo "runner_type=linux-amd64-cpu32" >> $GITHUB_OUTPUT
           elif [ "${{ inputs.platform }}" = "mac" ]; then
             echo "runner_type=macos-latest"  >> $GITHUB_OUTPUT
           fi
@@ -49,7 +49,7 @@ jobs:
     name: Setup test
     needs:
       - build
-    runs-on: ubuntu-latest
+    runs-on: linux-amd64-cpu4
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -57,7 +57,7 @@ jobs:
         run: |
           set -xeuo pipefail
           MATRIX_JSON='{"include": ['
-          RUNNERS=('linux-amd64-gpu-v100-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'ubuntu-latest:cpu:linux' 'macos-latest:cpu:mac')
+          RUNNERS=('linux-amd64-gpu-v100-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'linux-amd64-cpu8:cpu:linux' 'macos-latest:cpu:mac')
           TEST_CONFIGS=('Python Unit Tests:python' 'C++ Unit Tests:cpp')
 
           for RUNNER in "${RUNNERS[@]}"; do
@@ -71,11 +71,6 @@ jobs:
                 IFS=':' read -ra CONFIG_INFO <<< "$TEST_CONFIG"
                 CONFIG_NAME=${CONFIG_INFO[0]}
                 CONFIG_SCOPE=${CONFIG_INFO[1]}
-
-                # # Exclude C++ Unit Tests on Mac
-                # if [[ "$CONFIG_NAME" == "C++ Unit Tests" && "$RUNNER_PLATFORM" == "mac" ]]; then
-                #   continue
-                # fi
 
                 MATRIX_JSON+="{\"runner\": {\"name\": \"$RUNNER_NAME\", \"type\": \"$TARGET_DEVICE\", \"platform\": \"$RUNNER_PLATFORM\"}, \"test-config\": {\"name\": \"$CONFIG_NAME\", \"test-scope\": \"$CONFIG_SCOPE\"}},"
               done
