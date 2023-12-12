@@ -391,7 +391,7 @@ class BadInternalWeakPtr : public std::bad_weak_ptr {
 namespace std {
 
 template <typename T>
-struct hash<legate::InternalSharedPtr<T>> {
+struct hash<legate::InternalSharedPtr<T>> {  // NOLINT(cert-dcl58-cpp) extending std::hash is OK
   [[nodiscard]] size_t operator()(const legate::InternalSharedPtr<T>& ptr) const noexcept;
 };
 
