@@ -12,11 +12,11 @@
 from libc.stdint cimport uint32_t
 from libcpp cimport bool
 from libcpp.map cimport map as std_map
-from libcpp.memory cimport shared_ptr as std_shared_ptr
 from libcpp.set cimport set as std_set
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
+from ..utilities.shared_ptr cimport _SharedPtr
 from .detail.machine cimport _MachineImpl
 from .mapping cimport TaskTarget
 
@@ -69,7 +69,7 @@ cdef extern from "core/mapping/machine.h" namespace "legate::mapping" nogil:
         bool operator!=(const _Machine&) const
         _Machine operator&(const _Machine&) except+
         bool empty() const
-        std_shared_ptr[_MachineImpl] impl() const
+        const _SharedPtr[_MachineImpl]& impl() const
 
 
 cdef class ProcessorRange:

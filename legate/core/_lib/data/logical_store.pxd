@@ -11,11 +11,11 @@
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
-from libcpp.memory cimport shared_ptr as std_shared_ptr
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
 from ..type.type_info cimport _Type
+from ..utilities.shared_ptr cimport _SharedPtr
 from .detail.logical_store cimport _LogicalStoreImpl
 from .physical_store cimport _PhysicalStore
 from .shape cimport _Shape
@@ -45,7 +45,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _PhysicalStore get_physical_store()
         void detach()
         std_string to_string()
-        std_shared_ptr[_LogicalStoreImpl] impl() const
+        const _SharedPtr[_LogicalStoreImpl]& impl() const
 
     cdef cppclass _LogicalStorePartition "legate::LogicalStorePartition":
         _LogicalStorePartition()
