@@ -587,6 +587,7 @@ install(
   FILES src/core/utilities/detail/compressed_pair.h
         src/core/utilities/detail/shared_ptr_control_block.h
         src/core/utilities/detail/shared_ptr_control_block.inl
+        src/core/utilities/detail/type_traits.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities/detail)
 
 install(
