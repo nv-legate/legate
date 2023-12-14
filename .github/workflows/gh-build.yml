@@ -38,7 +38,6 @@ on:
         type: string
 
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   UCX_ENABLED: ${{ (inputs.ucx-config == 'ucx' && 'ON') || 'OFF' }}
   USE_CUDA: ${{ (inputs.target-device == 'cpu' && 'OFF') || 'ON' }}
   LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
