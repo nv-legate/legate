@@ -97,6 +97,7 @@ Scalar::Scalar(const Point<DIM>& point) : impl_{create_impl(point_type(DIM), &po
 template <int32_t DIM>
 Scalar::Scalar(const Rect<DIM>& rect) : impl_{create_impl(rect_type(DIM), &rect, true)}
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
 }
 
 template <typename VAL>

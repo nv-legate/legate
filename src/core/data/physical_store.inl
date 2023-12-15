@@ -116,6 +116,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor() const
 template <typename T, int DIM, bool VALIDATE_TYPE>
 AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
     check_accessor_type<T>();
@@ -134,6 +135,7 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
 template <typename T, int DIM, bool VALIDATE_TYPE>
 AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
     check_accessor_type<T>();
@@ -151,6 +153,7 @@ AccessorWO<T, DIM> PhysicalStore::write_accessor(const Rect<DIM>& bounds) const
 template <typename T, int DIM, bool VALIDATE_TYPE>
 AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
     check_accessor_type<T>();
@@ -168,6 +171,7 @@ AccessorRW<T, DIM> PhysicalStore::read_write_accessor(const Rect<DIM>& bounds) c
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
 AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& bounds) const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   if constexpr (VALIDATE_TYPE) {
     check_accessor_dimension(DIM);
     check_accessor_type<typename OP::LHS>();
@@ -211,6 +215,7 @@ inline TYPE_CODE PhysicalStore::code() const
 template <int32_t DIM>
 Rect<DIM> PhysicalStore::shape() const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   check_shape_dimension(DIM);
   if (dim() > 0) {
     return domain().bounds<DIM, coord_t>();
@@ -275,6 +280,7 @@ void PhysicalStore::check_accessor_type() const
 template <typename ACC, int32_t DIM>
 ACC PhysicalStore::create_field_accessor(const Rect<DIM>& bounds) const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   Legion::PhysicalRegion pr;
   Legion::FieldID fid;
 
@@ -294,6 +300,7 @@ ACC PhysicalStore::create_field_accessor(const Rect<DIM>& bounds) const
 template <typename ACC, int32_t DIM>
 ACC PhysicalStore::create_reduction_accessor(const Rect<DIM>& bounds) const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   Legion::PhysicalRegion pr;
   Legion::FieldID fid;
 

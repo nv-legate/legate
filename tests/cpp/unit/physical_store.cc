@@ -700,7 +700,7 @@ void test_bound_store(legate::PhysicalStore& store, const legate::Rect<DIM>& exp
   EXPECT_FALSE(store.transformed());
 
   EXPECT_EQ(store.shape<DIM>(), expect_rect);
-  constexpr int32_t INVALID_DIM = DIM + 1;
+  constexpr int32_t INVALID_DIM = std::max((DIM + 1) % LEGATE_MAX_DIM, 1);
   EXPECT_THROW(static_cast<void>(store.shape<INVALID_DIM>()), std::invalid_argument);
 
   auto domain = store.domain();

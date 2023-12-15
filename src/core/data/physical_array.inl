@@ -29,6 +29,7 @@ inline const SharedPtr<detail::PhysicalArray>& PhysicalArray::impl() const { ret
 template <int32_t DIM>
 Rect<DIM> PhysicalArray::shape() const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   check_shape_dimension(DIM);
   if (dim() > 0) {
     return domain().bounds<DIM, coord_t>();

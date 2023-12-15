@@ -75,6 +75,8 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
                                Memory::Kind kind = Memory::Kind::NO_MEMKIND,
                                size_t alignment  = DEFAULT_ALIGNMENT)
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
+
   if (Memory::Kind::NO_MEMKIND == kind) {
     kind = find_memory_kind_for_executing_processor(false);
   }

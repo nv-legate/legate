@@ -19,6 +19,7 @@ namespace legate::mapping {
 template <int32_t DIM>
 Rect<DIM> Array::shape() const
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
   return Rect<DIM>{domain()};
 }
 

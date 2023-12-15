@@ -462,11 +462,6 @@ TEST_F(ScalarUnit, CreateWithRect)
     const int64_t hi[] = {4, 5, 6, 7};
     check_rect_scalar<4>(lo, hi);
   }
-
-  // Invalid dim
-  EXPECT_THROW(
-    legate::Scalar(legate::Rect<100>(legate::Point<100>::ZEROES(), legate::Point<100>::ZEROES())),
-    std::out_of_range);
 }
 
 TEST_F(ScalarUnit, OperatorEqual)
