@@ -214,10 +214,33 @@ LogicalStore Runtime::create_store(const Scalar& scalar, const Shape& extents)
 LogicalStore Runtime::create_store(const Shape& extents,
                                    const Type& type,
                                    void* buffer,
-                                   bool share,
+                                   bool read_only,
                                    const mapping::DimOrdering& ordering)
 {
-  return LogicalStore(impl_->create_store(extents, type.impl(), buffer, share, ordering.impl()));
+  const auto size = extents.volume() * type.size();
+  return create_store(
+    extents, type, ExternalAllocation::create_sysmem(buffer, size, read_only), ordering);
+}
+
+LogicalStore Runtime::create_store(const Shape& extents,
+                                   const Type& type,
+                                   const ExternalAllocation& allocation,
+                                   const mapping::DimOrdering& ordering)
+{
+  return LogicalStore{
+    impl_->create_store(extents, type.impl(), allocation.impl(), ordering.impl())};
+}
+
+std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
+  const Shape& extents,
+  const Shape& tile_shape,
+  const Type& type,
+  const std::vector<std::pair<ExternalAllocation, Shape>>& allocations,
+  const mapping::DimOrdering& ordering)
+{
+  auto [store, partition] =
+    impl_->create_store(extents, tile_shape, type.impl(), allocations, ordering.impl());
+  return {LogicalStore{std::move(store)}, LogicalStorePartition{std::move(partition)}};
 }
 
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }

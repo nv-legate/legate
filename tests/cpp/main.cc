@@ -26,6 +26,7 @@ const char* __asan_default_options()
          "strict_string_checks=1:"
          "color=always:"
          "detect_odr_violation=2:"
+         "abort_on_error=1:"
 #if LegateDefined(LEGATE_USE_CUDA)
          "protect_shadow_gap=0:"
 #endif

@@ -21,11 +21,11 @@ namespace legate::detail {
 inline FreeFieldInfo::FreeFieldInfo(Legion::LogicalRegion region_,
                                     Legion::FieldID field_id_,
                                     Legion::Future can_dealloc_,
-                                    void* attachment_)
+                                    std::unique_ptr<Attachment> attachment_)
   : region{std::move(region_)},
     field_id{std::move(field_id_)},
     can_dealloc{std::move(can_dealloc_)},
-    attachment{attachment_}
+    attachment{std::move(attachment_)}
 {
 }
 

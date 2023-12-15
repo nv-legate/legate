@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "core/data/detail/attachment.h"
+#include "core/data/detail/external_allocation.h"
 #include "core/data/detail/physical_store.h"
 #include "core/data/shape.h"
 #include "core/runtime/detail/field_manager.h"
@@ -51,7 +53,10 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   [[nodiscard]] Legion::Domain domain() const;
 
   [[nodiscard]] RegionField map();
-  void attach(Legion::PhysicalRegion pr, void* buffer, bool share);
+  void attach(Legion::PhysicalRegion physical_region,
+              InternalSharedPtr<ExternalAllocation> allocation);
+  void attach(const Legion::ExternalResources& external_resources,
+              std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
   void detach();
   void allow_out_of_order_destruction();
 
@@ -65,6 +70,12 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   void add_invalidation_callback(T&& callback);
   void perform_invalidation_callbacks();
 
+  // Should never copy or move raw logical region field objects
+  LogicalRegionField(const LogicalRegionField&)            = delete;
+  LogicalRegionField& operator=(const LogicalRegionField&) = delete;
+  LogicalRegionField(LogicalRegionField&&)                 = delete;
+  LogicalRegionField& operator=(LogicalRegionField&&)      = delete;
+
  private:
   void add_invalidation_callback_(std::function<void()> callback);
 
@@ -73,8 +84,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   Legion::FieldID fid_{};
   InternalSharedPtr<LogicalRegionField> parent_{};
   std::unique_ptr<Legion::PhysicalRegion> pr_{};
-  void* attachment_{};
-  bool attachment_shared_{};
+  std::unique_ptr<Attachment> attachment_{};
   bool destroyed_out_of_order_{};
   std::vector<std::function<void()>> callbacks_{};
 };

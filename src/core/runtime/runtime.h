@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/data/external_allocation.h"
 #include "core/data/logical_array.h"
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
@@ -27,6 +28,11 @@
 #include <string>
 #include <type_traits>
 
+/**
+ * @file
+ * @brief Definitions for legate::Runtime and top-level APIs
+ */
+
 /** @defgroup runtime Runtime and library contexts
  */
 
@@ -41,8 +47,13 @@ class Type;
 
 extern uint32_t extract_env(const char* env_name, uint32_t default_value, uint32_t test_value);
 
+namespace detail {
+class Runtime;
+}  // namespace detail
+
 /**
  * @ingroup runtime
+ *
  * @brief Class that implements the Legate runtime
  *
  * The legate runtime provides common services, including as library registration,
@@ -50,11 +61,6 @@ extern uint32_t extract_env(const char* env_name, uint32_t default_value, uint32
  * and communicator management. Legate libraries are free of all these details about
  * distribute programming and can focus on their domain logics.
  */
-
-namespace detail {
-class Runtime;
-}  // namespace detail
-
 class Runtime {
  public:
   /**
@@ -441,21 +447,15 @@ class Runtime {
    */
   [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& extents = Shape{1});
   /**
-   * @brief Creates a store by attaching to existing memory.
-   *
-   * If `share` is false, then Legate will make an internal copy of the passed buffer.
-   *
-   * If `share` is true, then the existing buffer will be reused, and Legate will update it
-   * according to any modifications made to the returned store. The caller must keep the buffer
-   * alive until they explicitly call `detach` on the result store. The contents of the attached
-   * buffer are only guaranteed to be up-to-date after `detach` returns.
+   * @brief Creates a store by attaching to an existing allocation.
    *
    * @param extents Shape of the store
    * @param type Element type
-   * @param buffer Pointer to the beginning of the memory to attach to; memory must be contiguous,
-   * and cover the entire contents of the store (at least `extents.volume() * type.size()` bytes)
+   * @param buffer Pointer to the beginning of the allocation to attach to; allocation must be
+   * contiguous, and cover the entire contents of the store (at least `extents.volume() *
+   * type.size()` bytes)
+   * @param read_only Whether the allocation is read-only
    * @param ordering In what order the elements are laid out in the passed buffer
-   * @param share Whether to reuse the passed buffer in-place
    *
    * @return Logical store
    */
@@ -463,7 +463,43 @@ class Runtime {
     const Shape& extents,
     const Type& type,
     void* buffer,
-    bool share                           = false,
+    bool read_only                       = true,
+    const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
+  /**
+   * @brief Creates a store by attaching to an existing allocation.
+   *
+   * @param extents Shape of the store
+   * @param type Element type
+   * @param allocation External allocation descriptor
+   * @param ordering In what order the elements are laid out in the passed allocation
+   *
+   * @return Logical store
+   */
+  [[nodiscard]] LogicalStore create_store(
+    const Shape& extents,
+    const Type& type,
+    const ExternalAllocation& allocation,
+    const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
+  /**
+   * @brief Creates a store by attaching to multiple existing allocations.
+   *
+   * External allocations must be read-only.
+   *
+   * @param extents Shape of the store
+   * @param tile_shape Shape of tiles
+   * @param type Element type
+   * @param allocations Pairs of external allocation descriptors and sub-store colors
+   * @param ordering In what order the elements are laid out in the passed allocatios
+   *
+   * @return A pair of a logical store and its partition
+   *
+   * @throw std::invalid_argument If any of the external allocations are not read-only
+   */
+  [[nodiscard]] std::pair<LogicalStore, LogicalStorePartition> create_store(
+    const Shape& extents,
+    const Shape& tile_shape,
+    const Type& type,
+    const std::vector<std::pair<ExternalAllocation, Shape>>& allocations,
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
   /**
@@ -504,6 +540,8 @@ class Runtime {
 };
 
 /**
+ * @ingroup runtime
+ *
  * @brief Starts the Legate runtime
  *
  * This makes the runtime ready to accept requests made via its APIs
@@ -516,6 +554,8 @@ class Runtime {
 [[nodiscard]] int32_t start(int32_t argc, char** argv);
 
 /**
+ * @ingroup runtime
+ *
  * @brief Waits for the runtime to finish
  *
  * The client code must call this to make sure all Legate tasks run
@@ -527,6 +567,8 @@ class Runtime {
 void destroy();
 
 /**
+ * @ingroup runtime
+ *
  * @brief Registers a callback that should be invoked during the runtime shutdown
  *
  * Any callbacks will be invoked before the core library and the runtime are destroyed. All
@@ -543,6 +585,8 @@ template <typename T>
 void register_shutdown_callback(T&& callback);
 
 /**
+ * @ingroup runtime
+ *
  * @brief Returns the machine for the current scope
  *
  * @return Machine object

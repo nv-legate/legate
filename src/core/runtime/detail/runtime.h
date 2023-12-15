@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/detail/scalar.h"
+#include "core/data/external_allocation.h"
 #include "core/data/logical_store.h"
 #include "core/data/shape.h"
 #include "core/mapping/machine.h"
@@ -154,8 +155,15 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(
     const Shape& extents,
     InternalSharedPtr<Type> type,
-    void* buffer,
-    bool share,
+    InternalSharedPtr<ExternalAllocation> allocation,
+    const mapping::detail::DimOrdering* ordering);
+  using IndexAttachResult =
+    std::pair<InternalSharedPtr<LogicalStore>, InternalSharedPtr<LogicalStorePartition>>;
+  [[nodiscard]] IndexAttachResult create_store(
+    const Shape& extents,
+    const Shape& tile_shape,
+    InternalSharedPtr<Type> type,
+    const std::vector<std::pair<legate::ExternalAllocation, Shape>>& allocations,
     const mapping::detail::DimOrdering* ordering);
 
  private:
@@ -177,7 +185,12 @@ class Runtime {
                                                         Legion::FieldID field_id);
   void remap_physical_region(Legion::PhysicalRegion pr);
   void unmap_physical_region(Legion::PhysicalRegion pr);
-  [[nodiscard]] Legion::Future detach(Legion::PhysicalRegion pr, bool flush, bool unordered);
+  [[nodiscard]] Legion::Future detach(const Legion::PhysicalRegion& physical_region,
+                                      bool flush,
+                                      bool unordered);
+  [[nodiscard]] Legion::Future detach(const Legion::ExternalResources& external_resources,
+                                      bool flush,
+                                      bool unordered);
   [[nodiscard]] uint32_t field_reuse_freq() const;
   [[nodiscard]] bool consensus_match_required() const;
   void progress_unordered_operations() const;
@@ -277,6 +290,7 @@ class Runtime {
 
   void initialize_toplevel_machine();
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
+  [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
 
   [[nodiscard]] Legion::ProjectionID get_projection(int32_t src_ndim,
                                                     const proj::SymbolicPoint& point);
@@ -302,6 +316,7 @@ class Runtime {
   Legion::Context legion_context_{};
   Library* core_library_{};
   std::list<ShutdownCallback> callbacks_{};
+  legate::mapping::detail::LocalMachine local_machine_{};
 
   using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
   std::unordered_map<FieldManagerKey, std::unique_ptr<FieldManager>, hasher<FieldManagerKey>>

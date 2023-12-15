@@ -142,7 +142,7 @@ int64_t* make_buffer(int32_t dim, bool fortran)
   return buffer;
 }
 
-void check_and_delete_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t counter)
+void check_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t counter)
 {
   if (dim == 1) {
     for (size_t i = 0; i < SHAPE_1D[0]; ++i) {
@@ -159,11 +159,10 @@ void check_and_delete_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t
       }
     }
   }
-  delete[] buffer;
 }
 
 void test_body(
-  int32_t dim, bool fortran, bool unordered, bool share, bool use_tasks, bool use_inline)
+  int32_t dim, bool fortran, bool unordered, bool read_only, bool use_tasks, bool use_inline)
 {
   auto runtime    = legate::Runtime::get_runtime();
   auto context    = runtime->find_library(library_name);
@@ -172,14 +171,14 @@ void test_body(
   auto l_store    = runtime->create_store(dim == 1 ? SHAPE_1D : SHAPE_2D,
                                        legate::int64(),
                                        buffer,
-                                       share,
+                                       read_only,
                                        fortran ? legate::mapping::DimOrdering::fortran_order()
                                                : legate::mapping::DimOrdering::c_order());
   if (unordered) {
     l_store.impl()->allow_out_of_order_destruction();
   }
-  if (!share) {
-    check_and_delete_buffer(buffer, dim, fortran, counter);
+  if (read_only) {
+    check_buffer(buffer, dim, fortran, counter);
   }
   for (auto iter = 0; iter < 2; ++iter) {
     if (use_tasks) {
@@ -207,10 +206,13 @@ void test_body(
     auto p_store = l_store.get_physical_store();
     check_physical_store(p_store, dim, counter);
   }
-  if (share) {
-    l_store.detach();
-    check_and_delete_buffer(buffer, dim, fortran, counter);
+  l_store.detach();
+  if (!read_only) {
+    check_buffer(buffer, dim, fortran, counter);
   }
+  // Legate no longer copies read-only attachments, so the only safe point to deallocate them is
+  // after they are detached from the stores
+  delete[] buffer;
 }
 
 TEST_P(Positive, Test)
@@ -219,9 +221,9 @@ TEST_P(Positive, Test)
   // It's helpful to combine multiple calls of this function together, with stores collected
   // in-between, in hopes of triggering consensus match.
   // TODO: Also try keeping multiple stores alive at one time.
-  const auto& [layout, unordered, share, use_tasks, use_inline] = GetParam();
-  const auto& [dim, fortran]                                    = layout;
-  test_body(dim, fortran, unordered, share, use_tasks, use_inline);
+  const auto& [layout, unordered, read_only, use_tasks, use_inline] = GetParam();
+  const auto& [dim, fortran]                                        = layout;
+  test_body(dim, fortran, unordered, read_only, use_tasks, use_inline);
 }
 
 TEST_F(Attach, Negative)
@@ -239,39 +241,14 @@ TEST_F(Attach, Negative)
                std::invalid_argument);
 
   {
-    auto mem = new int64_t[SHAPE_1D.volume()];
-    // Trying to detach a non-shared attachment
-    EXPECT_THROW(runtime->create_store(SHAPE_1D, legate::int64(), mem).detach(),
-                 std::invalid_argument);
-    delete[] mem;
-  }
-
-  {
     // Trying to detach a sub-store
     auto mem     = new int64_t[SHAPE_1D.volume()];
     auto l_store = runtime->create_store(SHAPE_1D, legate::int64(), mem, true /*share*/);
     EXPECT_THROW(l_store.project(0, 1).detach(), std::invalid_argument);
-    // We have to properly detach this, to avoid the abort in the destructor
+    // We have to properly detach this
     l_store.detach();
     delete[] mem;
   }
-}
-
-TEST_F(AttachDeathTest, MissingManualDetach)
-{
-  // Forgetting to detach a shared attachment
-  // TODO: We can't check the actual error message, because it's reported using logging, and even
-  // though that's mirrored on stderr, it doesn't seem to be included in the death message.
-  EXPECT_DEATH(
-    {
-      (void)legate::start(argc_, argv_);
-      register_tasks();
-      auto runtime = legate::Runtime::get_runtime();
-      (void)runtime->create_store(
-        SHAPE_1D, legate::int64(), new int64_t[SHAPE_1D.volume()], true /*share*/);
-      (void)legate::finish();
-    },
-    "");
 }
 
 }  // namespace attach

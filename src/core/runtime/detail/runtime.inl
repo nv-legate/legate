@@ -116,4 +116,8 @@ inline CommunicatorManager* Runtime::communicator_manager() const { return commu
 
 inline MachineManager* Runtime::machine_manager() const { return machine_manager_; }
 
+inline const mapping::detail::LocalMachine& Runtime::local_machine() const
+{
+  return local_machine_;
+}
 }  // namespace legate::detail

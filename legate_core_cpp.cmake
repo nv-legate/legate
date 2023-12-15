@@ -125,6 +125,7 @@ list(APPEND legate_core_SOURCES
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
   src/core/data/allocator.cc
+  src/core/data/external_allocation.cc
   src/core/data/logical_array.cc
   src/core/data/logical_store.cc
   src/core/data/scalar.cc
@@ -132,6 +133,8 @@ list(APPEND legate_core_SOURCES
   src/core/data/physical_array.cc
   src/core/data/physical_store.cc
   src/core/data/detail/array_tasks.cc
+  src/core/data/detail/attachment.cc
+  src/core/data/detail/external_allocation.cc
   src/core/data/detail/logical_array.cc
   src/core/data/detail/logical_region_field.cc
   src/core/data/detail/logical_store.cc
@@ -408,6 +411,7 @@ if (legate_core_BUILD_DOCS)
       src/core/data/physical_store.h
       src/core/data/scalar.h
       src/core/data/buffer.h
+      src/core/data/external_allocation.h
       src/core/utilities/span.h
       src/core/data/allocator.h
       # runtime
@@ -492,6 +496,7 @@ install(
 install(
   FILES src/core/data/allocator.h
         src/core/data/buffer.h
+        src/core/data/external_allocation.h
         src/core/data/inline_allocation.h
         src/core/data/logical_array.h
         src/core/data/logical_array.inl

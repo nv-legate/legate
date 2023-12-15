@@ -21,6 +21,7 @@
 #include "legion.h"
 // legion.h has to go before these
 #include "core/data/allocator.h"
+#include "core/data/external_allocation.h"
 #include "core/data/logical_store.h"
 #include "core/data/physical_store.h"
 #include "core/data/scalar.h"

@@ -44,19 +44,19 @@ FieldManager::~FieldManager()
   // waiting on the detachments to finish.
   for (auto& infos : info_for_match_items_) {
     for (auto& [item, info] : infos) {
-      if (nullptr != info.attachment) {
-        free(info.attachment);
+      if (info.attachment) {
+        info.attachment->maybe_deallocate();
       }
     }
   }
   for (const FreeFieldInfo& info : ordered_free_fields_) {
-    if (nullptr != info.attachment) {
-      free(info.attachment);
+    if (info.attachment) {
+      info.attachment->maybe_deallocate();
     }
   }
   for (const FreeFieldInfo& info : unordered_free_fields_) {
-    if (nullptr != info.attachment) {
-      free(info.attachment);
+    if (info.attachment) {
+      info.attachment->maybe_deallocate();
     }
   }
 }
@@ -68,9 +68,9 @@ InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field()
     // If there's a field that every shard is guaranteed to have, re-use that.
     if (!ordered_free_fields_.empty()) {
       const auto& info = ordered_free_fields_.front();
-      if (nullptr != info.attachment) {
+      if (info.attachment) {
         info.can_dealloc.get_void_result(true /*silence_warnings*/);
-        free(info.attachment);
+        info.attachment->maybe_deallocate();
       }
       auto* rf = new LogicalRegionField(this, info.region, info.field_id);
       log_legate().debug(
@@ -107,17 +107,19 @@ InternalSharedPtr<LogicalRegionField> FieldManager::import_field(
 void FieldManager::free_field(const Legion::LogicalRegion& region,
                               Legion::FieldID field_id,
                               Legion::Future can_dealloc,
-                              void* attachment,
+                              std::unique_ptr<Attachment> attachment,
                               bool unordered)
 {
   if (unordered) {
     log_legate().debug(
       "Field %u freed locally in field manager %p", field_id, static_cast<void*>(this));
-    unordered_free_fields_.emplace_back(region, field_id, std::move(can_dealloc), attachment);
+    unordered_free_fields_.emplace_back(
+      region, field_id, std::move(can_dealloc), std::move(attachment));
   } else {
     log_legate().debug(
       "Field %u freed in-order in field manager %p", field_id, static_cast<void*>(this));
-    ordered_free_fields_.emplace_back(region, field_id, std::move(can_dealloc), attachment);
+    ordered_free_fields_.emplace_back(
+      region, field_id, std::move(can_dealloc), std::move(attachment));
   }
 }
 
@@ -137,9 +139,9 @@ void FieldManager::issue_field_match()
   std::vector<MatchItem> input;
 
   input.reserve(unordered_free_fields_.size());
-  for (const auto& info : unordered_free_fields_) {
+  for (auto& info : unordered_free_fields_) {
     auto&& item = input.emplace_back(info.region.get_tree_id(), info.field_id);
-    infos[item] = info;
+    infos[item] = std::move(info);
   }
   assert(infos.size() == unordered_free_fields_.size());
   unordered_free_fields_.clear();
@@ -173,13 +175,13 @@ void FieldManager::process_next_field_match()
   for (const auto& item : match.output()) {
     auto it = infos.find(item);
     assert(it != infos.end());
-    ordered_free_fields_.push_back(it->second);
+    ordered_free_fields_.push_back(std::move(it->second));
     infos.erase(it);
   }
   // All fields that weren't matched can go back into the unordered queue, to be included in the
   // next consensus match that we run.
-  for (const auto& [item, info] : infos) {
-    unordered_free_fields_.push_back(info);
+  for (auto& [_, info] : infos) {
+    unordered_free_fields_.push_back(std::move(info));
   }
   matches_.pop_front();
   info_for_match_items_.pop_front();

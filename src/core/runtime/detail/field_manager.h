@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/data/detail/attachment.h"
 #include "core/runtime/detail/consensus_match_result.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
@@ -30,12 +31,12 @@ struct FreeFieldInfo {
   FreeFieldInfo(Legion::LogicalRegion region,
                 Legion::FieldID field_id,
                 Legion::Future can_dealloc,
-                void* attachment);
+                std::unique_ptr<Attachment> attachment);
 
   Legion::LogicalRegion region{};
   Legion::FieldID field_id{};
   Legion::Future can_dealloc{};
-  void* attachment{};
+  std::unique_ptr<Attachment> attachment{};
 };
 
 struct MatchItem {
@@ -64,7 +65,7 @@ class FieldManager {
   void free_field(const Legion::LogicalRegion& region,
                   Legion::FieldID field_id,
                   Legion::Future can_dealloc,
-                  void* attachment,
+                  std::unique_ptr<Attachment> attachment,
                   bool unordered);
   void issue_field_match();
   void process_next_field_match();

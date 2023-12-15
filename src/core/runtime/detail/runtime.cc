@@ -14,6 +14,7 @@
 
 #include "core/comm/comm.h"
 #include "core/data/detail/array_tasks.h"
+#include "core/data/detail/external_allocation.h"
 #include "core/data/detail/logical_array.h"
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
@@ -34,6 +35,7 @@
 #include "core/runtime/detail/shard.h"
 #include "core/runtime/runtime.h"
 #include "core/task/detail/task_context.h"
+#include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/strtoll.h"
 #include "core/utilities/detail/type_traits.h"
 
@@ -570,51 +572,109 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar, cons
   return make_internal_shared<detail::LogicalStore>(std::move(storage));
 }
 
-InternalSharedPtr<LogicalStore> Runtime::create_store(const Shape& extents,
-                                                      InternalSharedPtr<Type> type,
-                                                      void* buffer,
-                                                      bool share,
-                                                      const mapping::detail::DimOrdering* ordering)
+InternalSharedPtr<LogicalStore> Runtime::create_store(
+  const Shape& extents,
+  InternalSharedPtr<Type> type,
+  InternalSharedPtr<ExternalAllocation> allocation,
+  const mapping::detail::DimOrdering* ordering)
 {
   if (type->variable_size()) {
     throw std::invalid_argument{
       "stores created by attaching to a buffer must have fixed-size type"};
   }
-  if (nullptr == buffer) {
-    throw std::invalid_argument{"buffer to attach to cannot be NULL"};
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(allocation->ptr());
   }
 
-  const auto type_size = type->size();
   InternalSharedPtr<LogicalStore> store =
     create_store(extents, std::move(type), false /*optimize_scalar*/);
   const InternalSharedPtr<LogicalRegionField> rf = store->get_region_field();
 
-  if (!share) {
-    auto nbytes = extents.volume() * type_size;
-    void* copy  = malloc(nbytes);
-    if (nullptr == copy) {
-      throw std::bad_alloc();
-    }
-    memcpy(copy, buffer, nbytes);
-    buffer = copy;
-  }
-
-  Legion::AttachLauncher launcher(
-    LEGION_EXTERNAL_INSTANCE, rf->region(), rf->region(), false /*restricted*/, share /*mapped*/);
-  // the value of column_major below is irrelevant; it will be updated using the ordering constraint
-  launcher.attach_array_soa(buffer, false /*column_major*/, {rf->field_id()});
+  Legion::AttachLauncher launcher{LEGION_EXTERNAL_INSTANCE,
+                                  rf->region(),
+                                  rf->region(),
+                                  false /*restricted*/,
+                                  !allocation->read_only() /*mapped*/};
   launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
   launcher.provenance = provenance_manager()->get_provenance();
   launcher.constraints.ordering_constraint.ordering.clear();
   ordering->populate_dimension_ordering(store->dim(),
                                         launcher.constraints.ordering_constraint.ordering);
   launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
-  Legion::PhysicalRegion pr = legion_runtime_->attach_external_resource(legion_context_, launcher);
+  launcher.constraints.field_constraint =
+    Legion::FieldConstraint{std::vector<Legion::FieldID>{rf->field_id()}, false, false};
+  launcher.privilege_fields.insert(rf->field_id());
+  launcher.external_resource = allocation->resource();
+
+  auto pr = legion_runtime_->attach_external_resource(legion_context_, launcher);
   // no need to wait on the returned PhysicalRegion, since we're not inline-mapping
   // but we can keep it around and remap it later if the user asks
-  rf->attach(std::move(pr), buffer, share);
+  rf->attach(std::move(pr), std::move(allocation));
 
   return store;
+}
+
+Runtime::IndexAttachResult Runtime::create_store(
+  const Shape& extents,
+  const Shape& tile_shape,
+  InternalSharedPtr<Type> type,
+  const std::vector<std::pair<legate::ExternalAllocation, Shape>>& allocations,
+  const mapping::detail::DimOrdering* ordering)
+{
+  if (type->variable_size()) {
+    throw std::invalid_argument{
+      "stores created by attaching to a buffer must have fixed-size type"};
+  }
+
+  auto type_size = type->size();
+  auto store     = create_store(extents, std::move(type), false /*optimize_scalar*/);
+  auto partition = partition_store_by_tiling(store, tile_shape);
+
+  auto rf = store->get_region_field();
+
+  Legion::IndexAttachLauncher launcher{
+    LEGION_EXTERNAL_INSTANCE, rf->region(), false /*restricted*/};
+
+  std::vector<InternalSharedPtr<ExternalAllocation>> allocs;
+  allocs.reserve(allocations.size());
+  for (auto&& [allocation, color] : allocations) {
+    auto& alloc        = allocs.emplace_back(allocation.impl());
+    auto substore      = partition->get_child_store(color);
+    auto required_size = substore->extents().volume() * type_size;
+
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      assert(alloc->ptr());
+    }
+
+    if (!alloc->read_only()) {
+      throw std::invalid_argument{"External allocations must be read-only"};
+    }
+
+    if (required_size > alloc->size()) {
+      throw std::invalid_argument{"Sub-store for color " + color.to_string() +
+                                  " requires the allocation "
+                                  "to be at least " +
+                                  std::to_string(required_size) +
+                                  " bytes, but the allocation "
+                                  "is only " +
+                                  std::to_string(alloc->size()) + " bytes"};
+    }
+
+    launcher.add_external_resource(substore->get_region_field()->region(), alloc->resource());
+  }
+  launcher.provenance = provenance_manager()->get_provenance();
+  launcher.constraints.ordering_constraint.ordering.clear();
+  ordering->populate_dimension_ordering(store->dim(),
+                                        launcher.constraints.ordering_constraint.ordering);
+  launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
+  launcher.constraints.field_constraint =
+    Legion::FieldConstraint{std::vector<Legion::FieldID>{rf->field_id()}, false, false};
+  launcher.privilege_fields.insert(rf->field_id());
+
+  auto external_resources = legion_runtime_->attach_external_resources(legion_context_, launcher);
+  rf->attach(external_resources, std::move(allocs));
+
+  return {std::move(store), std::move(partition)};
 }
 
 void Runtime::check_dimensionality(uint32_t dim)
@@ -723,14 +783,28 @@ void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
   legion_runtime_->unmap_region(legion_context_, std::move(pr));
 }
 
-Legion::Future Runtime::detach(Legion::PhysicalRegion pr, bool flush, bool unordered)
+Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
+                               bool flush,
+                               bool unordered)
 {
-  assert(pr.exists() && !pr.is_mapped());
+  assert(physical_region.exists() && !physical_region.is_mapped());
   return legion_runtime_->detach_external_resource(legion_context_,
-                                                   std::move(pr),
+                                                   physical_region,
                                                    flush,
                                                    unordered,
                                                    provenance_manager()->get_provenance().c_str());
+}
+
+Legion::Future Runtime::detach(const Legion::ExternalResources& external_resources,
+                               bool flush,
+                               bool unordered)
+{
+  assert(external_resources.exists());
+  return legion_runtime_->detach_external_resources(legion_context_,
+                                                    external_resources,
+                                                    flush,
+                                                    unordered,
+                                                    provenance_manager()->get_provenance().c_str());
 }
 
 bool Runtime::consensus_match_required() const

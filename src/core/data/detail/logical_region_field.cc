@@ -33,14 +33,6 @@ LogicalRegionField::~LogicalRegionField()
 
     perform_invalidation_callbacks();
 
-    // This is a misuse of the Legate API, so it should technically throw an exception, but we
-    // shouldn't throw exceptions in destructors, so we just abort.
-    if (attachment_shared_) {
-      log_legate().error() << "stores created by attaching to a buffer with share=true must be "
-                           << "manually detached";
-      LEGATE_ABORT;
-    }
-
     // We unmap the field immediately. In the case where a LogicalStore is allowed to be destroyed
     // out-of-order, this unmapping might happen at different times on different shards. Unmapping
     // doesn't go through the Legion pipeline, so from that perspective it's not critical that all
@@ -54,11 +46,10 @@ LogicalRegionField::~LogicalRegionField()
     if (pr_ && pr_->is_mapped()) {
       runtime->unmap_physical_region(*pr_);
     }
-    Legion::Future can_dealloc =
-      (nullptr == attachment_) ? Legion::Future()  // waiting on this is a noop
-                               : Runtime::get_runtime()->detach(
-                                   *pr_, false /*flush*/, destroyed_out_of_order_ /*unordered*/);
-    manager_->free_field(lr_, fid_, std::move(can_dealloc), attachment_, destroyed_out_of_order_);
+    auto can_dealloc = attachment_ ? attachment_->detach(destroyed_out_of_order_ /*unordered*/)
+                                   : Legion::Future();  // waiting on this is a noop
+    manager_->free_field(
+      lr_, fid_, std::move(can_dealloc), std::move(attachment_), destroyed_out_of_order_);
   }
 }
 
@@ -91,16 +82,27 @@ RegionField LogicalRegionField::map()
   return {dim(), *pr_, fid_};
 }
 
-void LogicalRegionField::attach(Legion::PhysicalRegion pr, void* buffer, bool share)
+void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
+                                InternalSharedPtr<ExternalAllocation> allocation)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(nullptr == parent_);
-    assert(nullptr != buffer && pr.exists());
-    assert(nullptr == attachment_ && !pr_);
+    assert(!parent_);
+    assert(physical_region.exists());
+    assert(!attachment_ && !pr_);
   }
-  pr_                = std::make_unique<Legion::PhysicalRegion>(std::move(pr));
-  attachment_        = buffer;
-  attachment_shared_ = share;
+  pr_         = std::make_unique<Legion::PhysicalRegion>(std::move(physical_region));
+  attachment_ = std::make_unique<SingleAttachment>(pr_.get(), std::move(allocation));
+}
+
+void LogicalRegionField::attach(const Legion::ExternalResources& external_resources,
+                                std::vector<InternalSharedPtr<ExternalAllocation>> allocations)
+{
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(!parent_);
+    assert(external_resources.exists());
+    assert(!attachment_);
+  }
+  attachment_ = std::make_unique<IndexAttachment>(external_resources, std::move(allocations));
 }
 
 void LogicalRegionField::detach()
@@ -115,18 +117,19 @@ void LogicalRegionField::detach()
   if (nullptr != parent_) {
     throw std::invalid_argument{"Manual detach must be called on the root store"};
   }
-  if (!attachment_shared_) {
-    throw std::invalid_argument{"Only stores created with share=true can be manually detached"};
+  if (!attachment_) {
+    throw std::invalid_argument{"Store has no attachment to detach"};
   }
-  assert(nullptr != attachment_ && pr_ && pr_->exists());
+  assert(pr_ && pr_->exists());
   if (pr_->is_mapped()) {
     runtime->unmap_physical_region(*pr_);
   }
-  const Legion::Future fut = runtime->detach(*pr_, true /*flush*/, false /*unordered*/);
+  auto fut = attachment_->detach(false /*unordered*/);
   fut.get_void_result(true /*silence_warnings*/);
-  pr_                = nullptr;
-  attachment_        = nullptr;
-  attachment_shared_ = false;
+  attachment_->maybe_deallocate();
+
+  pr_         = nullptr;
+  attachment_ = nullptr;
 }
 
 void LogicalRegionField::allow_out_of_order_destruction()

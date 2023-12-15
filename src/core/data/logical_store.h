@@ -336,12 +336,11 @@ class LogicalStore {
   /**
    * @brief Detach a store from its attached memory
    *
-   * This should only be called on a store created by attaching to a buffer with share=true.
-   *
    * This call will wait for all operations that use the store (or any sub-store) to complete.
    *
-   * After this call returns, the contents of the attached buffer will be up-to-date, and it is safe
-   * to deallocate it. The contents of the store are invalid after that point.
+   * After this call returns, it is safe to deallocate the attached external allocation. If the
+   * allocation was mutable, the contents would be up-to-date upon the return. The contents of the
+   * store are invalid after that point.
    */
   void detach();
 
@@ -361,12 +360,9 @@ class LogicalStore {
 };
 
 class LogicalStorePartition {
- private:
-  friend class LogicalStore;
-
+ public:
   explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition>&& impl);
 
- public:
   [[nodiscard]] LogicalStore store() const;
   [[nodiscard]] const Shape& color_shape() const;
   [[nodiscard]] LogicalStore get_child_store(const Shape& color) const;
