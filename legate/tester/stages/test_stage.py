@@ -219,7 +219,11 @@ class TestStage(Protocol):
 
         """
         if config.other.cov_bin:
-            args = [str(config.other.cov_bin)] + config.other.cov_args.split()
+            # By default legate will assume cov_bin is an executable instead
+            # of a python script since it does not end in .py
+            args = ["--run-mode=python"]
+
+            args += [str(config.other.cov_bin)] + config.other.cov_args.split()
             if config.other.cov_src_path:
                 args += ["--source", str(config.other.cov_src_path)]
         else:

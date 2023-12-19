@@ -100,7 +100,10 @@ class TestTestStage:
         cov_bin = "conda/envs/legate/bin/coverage"
         args = ["--cov-bin", cov_bin]
         c = m.Config(["test.py"] + args)
-        expected_result = [cov_bin] + c.other.cov_args.split()
+        expected_result = [
+            "--run-mode=python",
+            cov_bin,
+        ] + c.other.cov_args.split()
         stage = MockTestStage(c, s)
         assert stage.cov_args(c) == expected_result
 
@@ -115,7 +118,9 @@ class TestTestStage:
         )
         c = m.Config(["test.py"] + args)
         expected_result = (
-            [cov_bin] + cov_args.split() + ["--source", cov_src_path]
+            ["--run-mode=python", cov_bin]
+            + cov_args.split()
+            + ["--source", cov_src_path]
         )
         stage = MockTestStage(c, s)
         assert stage.cov_args(c) == expected_result
