@@ -80,6 +80,17 @@ class Constraint {
  * @ingroup partitioning
  * @brief Creates an alignment constraint on two variables
  *
+ * An alignment constraint between variables `x` and `y` indicates to the runtime that the
+ * PhysicalStores (leaf-task-local portions, typically equal-size tiles) of the LogicalStores
+ * corresponding to `x` and `y` must have the same global indices (i.e. the Stores must "align" with
+ * one another).
+ *
+ * This is commonly used for e.g. element-wise operations. For example, consider an
+ * element-wise addition (`z = x + y`), where each array is 100 elements long. Each leaf task
+ * must receive the same local tile for all 3 arrays. For example, leaf task 0 receives indices
+ * 0 - 24, leaf task 1 receives 25 - 49, leaf task 2 receives 50 - 74, and leaf task 3 receives
+ * 75 - 99.
+ *
  * @param lhs LHS variable
  * @param rhs RHS variable
  *
@@ -91,7 +102,11 @@ class Constraint {
  * @ingroup partitioning
  * @brief Creates a broadcast constraint on a variable.
  *
- * This constraint prevents all dimensions of the store from being partitioned.
+ * A broadcast constraint informs the runtime that the variable should not be split among the
+ * leaf tasks, instead, each leaf task should get a full copy of the underlying store. In other
+ * words, the store should be "broadcast" in its entirety to all leaf tasks in a task launch.
+ *
+ * In effect, this constraint prevents all dimensions of the store from being partitioned.
  *
  * @param variable Partition symbol to constrain
  *
@@ -103,6 +118,9 @@ class Constraint {
  * @ingroup partitioning
  * @brief Creates a broadcast constraint on a variable.
  *
+ * A modified form of broadcast constraint which applies the broadcast to a subset of the axes of
+ * the LogicalStore corresponding to \p variable. The Store will be partitioned on all other axes.
+ *
  * @param variable Partition symbol to constrain
  * @param axes List of dimensions to broadcast
  *
@@ -110,11 +128,15 @@ class Constraint {
  *
  * @throw std::invalid_argument If the list of axes is empty
  */
-[[nodiscard]] Constraint broadcast(Variable variable, const tuple<int32_t>& axes);
+[[nodiscard]] Constraint broadcast(Variable variable, tuple<int32_t> axes);
 
 /**
  * @ingroup partitioning
  * @brief Creates an image constraint between partitions.
+ *
+ * The elements of \p var_function are treated as pointers to elements in \p var_range. Each
+ * sub-store `s` of \p var_function is aligned with a sub-store `t` of \p var_range, such that
+ * every element in `s` will find the element of \p var_range it's pointing to inside of `t`.
  *
  * @param var_function Partition symbol for the function store
  * @param var_range Partition symbol of the store whose partition should be derived from the image
@@ -127,7 +149,15 @@ class Constraint {
  * @ingroup partitioning
  * @brief Creates a scaling constraint between partitions
  *
- * If two stores `A` and `B` are constrained by a scaling constraint
+ * A scaling constraint is similar to an alignment constraint, except that the sizes of the
+ * aligned tiles is first scaled by \p factors.
+ *
+ * For example, this may be used in compacting a `5x56` array of `bool`s to a `5x7` array of bytes,
+ * treated as a bitfield. In this case \p var_smaller would be the byte array, \p var_bigger would
+ * be the array of `bool`s, and \p factors would be `[1, 8]` (a `2x3` tile on the byte array
+ * corresponds to a `2x24` tile on the bool array.
+ *
+ * Formally: if two stores `A` and `B` are constrained by a scaling constraint
  *
  *   `legate::scale(S, pA, pB)`
  *
@@ -144,13 +174,21 @@ class Constraint {
  *
  * @return Scaling constraint
  */
-[[nodiscard]] Constraint scale(const Shape& factors, Variable var_smaller, Variable var_bigger);
+[[nodiscard]] Constraint scale(Shape factors, Variable var_smaller, Variable var_bigger);
 
 /**
  * @ingroup partitioning
  * @brief Creates a bloating constraint between partitions
  *
- * If two stores `A` and `B` are constrained by a bloating constraint
+ * This is typically used in stencil computations, to instruct the runtime that the tiles on
+ * the "private + ghost" partition (\p var_bloat) must align with the tiles on the "private"
+ * partition (\p var_source), but also include a halo of additional elements off each end.
+ *
+ * For example, if \p var_source and \p var_bloat correspond to 10-element vectors, \p
+ * var_source is split into 2 tiles, `0-4` and `5-9`, `low_offsets == 1` and `high_offsets ==
+ * 2`, then \p var_bloat will be split into 2 tiles, `0-6` and `4-9`.
+ *
+ * Formally, if two stores `A` and `B` are constrained by a bloating constraint
  *
  *   `legate::bloat(pA, pB, L, H)`
  *
@@ -169,8 +207,8 @@ class Constraint {
  */
 [[nodiscard]] Constraint bloat(Variable var_source,
                                Variable var_bloat,
-                               const Shape& low_offsets,
-                               const Shape& high_offsets);
+                               Shape low_offsets,
+                               Shape high_offsets);
 
 }  // namespace legate
 

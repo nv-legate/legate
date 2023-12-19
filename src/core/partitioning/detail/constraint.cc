@@ -232,12 +232,12 @@ InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs)
   return make_internal_shared<Broadcast>(variable);
 }
 
-InternalSharedPtr<Broadcast> broadcast(const Variable* variable, const tuple<int32_t>& axes)
+InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<int32_t> axes)
 {
   if (axes.empty()) {
-    throw std::invalid_argument("List of axes to broadcast must not be empty");
+    throw std::invalid_argument{"List of axes to broadcast must not be empty"};
   }
-  return make_internal_shared<Broadcast>(variable, axes);
+  return make_internal_shared<Broadcast>(variable, std::move(axes));
 }
 
 InternalSharedPtr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
@@ -245,19 +245,20 @@ InternalSharedPtr<ImageConstraint> image(const Variable* var_function, const Var
   return make_internal_shared<ImageConstraint>(var_function, var_range);
 }
 
-InternalSharedPtr<ScaleConstraint> scale(const Shape& factors,
+InternalSharedPtr<ScaleConstraint> scale(Shape factors,
                                          const Variable* var_smaller,
                                          const Variable* var_bigger)
 {
-  return make_internal_shared<ScaleConstraint>(factors, var_smaller, var_bigger);
+  return make_internal_shared<ScaleConstraint>(std::move(factors), var_smaller, var_bigger);
 }
 
 InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
                                          const Variable* var_bloat,
-                                         const Shape& low_offsets,
-                                         const Shape& high_offsets)
+                                         Shape low_offsets,
+                                         Shape high_offsets)
 {
-  return make_internal_shared<BloatConstraint>(var_source, var_bloat, low_offsets, high_offsets);
+  return make_internal_shared<BloatConstraint>(
+    var_source, var_bloat, std::move(low_offsets), std::move(high_offsets));
 }
 
 }  // namespace legate::detail

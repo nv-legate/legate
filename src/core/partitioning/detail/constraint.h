@@ -271,20 +271,19 @@ class BloatConstraint final : public Constraint {
 
 [[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable);
 
-[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable,
-                                                     const tuple<int32_t>& axes);
+[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<int32_t> axes);
 
 [[nodiscard]] InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
                                                        const Variable* var_range);
 
-[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(const Shape& factors,
+[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(Shape factors,
                                                        const Variable* var_smaller,
                                                        const Variable* var_bigger);
 
 [[nodiscard]] InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
                                                        const Variable* var_bloat,
-                                                       const Shape& low_offsets,
-                                                       const Shape& high_offsets);
+                                                       Shape low_offsets,
+                                                       Shape high_offsets);
 
 }  // namespace legate::detail
 
