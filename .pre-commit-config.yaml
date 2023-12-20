@@ -38,7 +38,7 @@ repos:
       rev: '3.0.0'
       hooks:
         - id: shellcheck
-          args: ['--enable=all', '--color=always', '-x']
+          args: ['--enable=all', '--color=always', '-x', '--severity=error']
     - repo: local
       hooks:
         -   id: legate-defined
@@ -49,6 +49,7 @@ repos:
             'types_or': [c++, c, cuda]
             require_serial: false
             stages: [pre-commit]
+            exclude: '^(src/core/legate_c\.h|src/legate_preamble\.h)$'
 
 ci:
     autoupdate_schedule: quarterly

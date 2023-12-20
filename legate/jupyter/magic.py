@@ -80,7 +80,7 @@ class LegateInfo:
         out = f"""{header}
 
 Cores:
-{indent(kvtable(core_table, align=False),  prefix='  ')}
+{indent(kvtable(core_table, align=False), prefix='  ')}
 
 Memory:
 {indent(kvtable(memory_table, align=False), prefix='  ')}

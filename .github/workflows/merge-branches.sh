@@ -46,4 +46,4 @@ main() {
   done
 }
 
-main $@
+main "$@"

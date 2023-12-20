@@ -33,7 +33,7 @@ build_legate_wheel() {
     time CMAKE_GENERATOR="Ninja" \
          CMAKE_ARGS="${cmake_args[@]}" \
          SKBUILD_BUILD_OPTIONS="${ninja_args[@]}" \
-         pip wheel ${pip_args[@]} $REPO_DIR;
+         pip wheel "${pip_args[@]}" $REPO_DIR;
 
     { set +x; } 2>/dev/null;
 }

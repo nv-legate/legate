@@ -44,20 +44,23 @@ TEST_F(ChildStore, Simple)
 
       auto p_child = child.get_physical_store();
       auto acc     = p_child.write_accessor<int64_t, 2>();
-      for (int64_t i = 0; i < static_cast<int64_t>(extents[0]); ++i)
-        for (int64_t j = 0; j < static_cast<int64_t>(extents[1]); ++j)
+      for (int64_t i = 0; i < static_cast<int64_t>(extents[0]); ++i) {
+        for (int64_t j = 0; j < static_cast<int64_t>(extents[1]); ++j) {
           acc[{i, j}] = dim0 * FACTOR + dim1;
+        }
+      }
     }
   }
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<int64_t, 2>();
 
-  for (int64_t i = 0; i < static_cast<int64_t>(EXTENT); ++i)
+  for (int64_t i = 0; i < static_cast<int64_t>(EXTENT); ++i) {
     for (int64_t j = 0; j < static_cast<int64_t>(EXTENT); ++j) {
       auto expected_value = (i / TILE_SIZE) * FACTOR + (j / TILE_SIZE);
       EXPECT_EQ((acc[{i, j}]), expected_value);
     }
+  }
 }
 
 }  // namespace test_child_store

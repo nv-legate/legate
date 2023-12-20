@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd build
+cd build || exit
 ctest --output-on-failure

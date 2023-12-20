@@ -11,7 +11,44 @@ on:
       - "*branch-*"
 
 jobs:
-  lint:
+  pre-commit:
+    runs-on: 'linux-amd64-cpu4'
+    strategy:
+      fail-fast: true
+      matrix:
+        config:
+          - {jobName: '(must pass) pre-commit python-3.10', canFail: false, version: '3.10'}
+          - {jobName: '(continue on error) pre-commit python-3.11', canFail: true, version: '3.11'}
+          - {jobName: '(continue on error) pre-commit python-3.12', canFail: true,version: '3.12'}
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    permissions:
+      contents: read  # This is required for actions/checkout
+
+    steps:
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate requirements.txt
+        run: |
+          echo "shellcheck-py" > requirements.txt
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.config.version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: run pre-commit
+        uses: pre-commit/action@v3.0.0
+        continue-on-error: ${{ matrix.config.canFail }}
+
+  tidy:
     runs-on: 'ubuntu-latest'
     strategy:
       fail-fast: true
@@ -20,6 +57,11 @@ jobs:
       contents: read  # This is required for actions/checkout
 
     steps:
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
       - name: List machine info
         run: |
           uname -a
@@ -27,31 +69,6 @@ jobs:
 
       - name: List python version
         run: python3 --version
-
-      - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Bootstrap pip
-        run: |
-          curl -O https://bootstrap.pypa.io/get-pip.py
-          python3 get-pip.py
-
-      - name: Install requisite python packages
-        run: |
-          python3 -m pip install -U pip setuptools wheel
-          python3 -m pip install -U numpy traitlets vermin
-          python3 -m pip install mypy==$(awk '/repo:.*mypy/{getline; print $2}' ./.pre-commit-config.yaml | tr -d \'v)
-          python3 -m pip install psutil types-psutil
-
-
-      - name: Run vermin on the repository
-        run: |
-          vermin --config-file=./setup.cfg .
-
-      - name: Run MyPy on the repository
-        run: python3 -m mypy ./legate
 
       - name: Install LLVM 17
         working-directory: ~

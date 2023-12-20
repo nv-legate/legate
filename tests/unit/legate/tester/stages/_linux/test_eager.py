@@ -75,7 +75,7 @@ def test_single_rank_spec_with_requested_workers_zero() -> None:
 
 def test_single_rank_spec_with_requested_workers_bad() -> None:
     s = FakeSystem()
-    c = Config(["test.py", "-j", f"{len(s.cpus)+1}"])
+    c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"])
     requested_workers = c.execution.workers
     assert requested_workers is not None
     assert requested_workers > len(s.cpus)

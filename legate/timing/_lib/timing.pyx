@@ -1,4 +1,5 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -11,8 +12,6 @@
 from libcpp.utility cimport move
 
 from typing import Union
-
-import cython
 
 from legate.core import get_legate_runtime
 

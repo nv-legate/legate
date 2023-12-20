@@ -81,7 +81,7 @@ def banner(
         A list of lines to diplay inside the banner area below the heading
 
     """
-    pre = f"{char*3} "
+    pre = f"{char * 3} "
     divider = char * width
     if not details:
         return f"\n{divider}\n{pre}{heading}\n{divider}"
@@ -274,8 +274,8 @@ def rule(
     """
     width = N - pad
     if text is None:
-        return cyan(f"{char*width: >{N}}")
-    return cyan(" " * pad + char * 3 + f"{f' {text} ' :{char}<{width-3}}")
+        return cyan(f"{char * width: >{N}}")
+    return cyan(" " * pad + char * 3 + f"{f' {text} ' :{char}<{width - 3}}")
 
 
 def section(text: str) -> str:
@@ -337,7 +337,8 @@ def summary(
 
     """
     summary = (
-        f"{name}: Passed {passed} of {total} tests ({passed/total*100:0.1f}%) "
+        f"{name}: Passed {passed} of {total} tests "
+        f"({passed / total * 100:0.1f}%) "
         f"in {time.total_seconds():0.2f}s"
         if total > 0
         else f"{name}: 0 tests are running, Please check"

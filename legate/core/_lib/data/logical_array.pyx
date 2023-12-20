@@ -35,7 +35,9 @@ cdef class LogicalArray:
 
     @staticmethod
     def from_raw_handle(uintptr_t raw_handle):
-        return LogicalArray.from_handle(dereference(<_LogicalArray*> raw_handle))
+        return LogicalArray.from_handle(
+            dereference(<_LogicalArray*> raw_handle)
+        )
 
     @property
     def shape(self) -> Shape:

@@ -5,9 +5,10 @@ launch_devcontainer() {
     set -Eeuox pipefail;
 
     # cd to the repo root
-    cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/..";
+    cd "$(dirname "${BASH_SOURCE[0]}")"/..
 
-    local cwd="$(pwd)";
+    local cwd
+    cwd="$(pwd)";
 
     local args=();
     args+=(--rm);
@@ -52,7 +53,7 @@ launch_devcontainer() {
         vols+=(-v "${SSH_AUTH_SOCK}:/tmp/ssh-auth-sock");
     fi
 
-    exec docker run ${args[@]} ${vars[@]} ${vols[@]} "${@}";
+    exec docker run "${args[@]}" "${vars[@]}" "${vols[@]}" "${@}";
 }
 
 launch_devcontainer "$@";

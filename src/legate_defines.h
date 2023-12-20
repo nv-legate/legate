@@ -16,59 +16,6 @@
 
 #include "legion.h"
 
-#define LEGATE_ABORT                                                                        \
-  do {                                                                                      \
-    legate::detail::log_legate().error(                                                     \
-      "Legate called abort in %s at line %d in function %s", __FILE__, __LINE__, __func__); \
-    abort();                                                                                \
-  } while (false)
-
-#ifdef __CUDACC__
-#define LEGATE_DEVICE_PREFIX __device__
-#else
-#define LEGATE_DEVICE_PREFIX
-#endif
-
-#ifndef LEGION_REDOP_HALF
-#error "Legate needs Legion to be compiled with -DLEGION_REDOP_HALF"
-#endif
-
-#ifndef LEGATE_USE_CUDA
-#ifdef LEGION_USE_CUDA
-#define LEGATE_USE_CUDA 1
-#endif
-#endif
-
-#ifndef LEGATE_USE_OPENMP
-#ifdef REALM_USE_OPENMP
-#define LEGATE_USE_OPENMP 1
-#endif
-#endif
-
-#ifndef LEGATE_USE_NETWORK
-#if defined(REALM_USE_GASNET1) || defined(REALM_USE_GASNETEX) || defined(REALM_USE_MPI) || \
-  defined(REALM_USE_UCX)
-#define LEGATE_USE_NETWORK 1
-#endif
-#endif
-
-#ifdef LEGION_BOUNDS_CHECKS
-#define LEGATE_BOUNDS_CHECKS 1
-#endif
-
-#define LEGATE_MAX_DIM LEGION_MAX_DIM
-
-// backwards compatibility
-#if defined(DEBUG_LEGATE) && !defined(LEGATE_USE_DEBUG)
-#define LEGATE_USE_DEBUG 1
-#endif
-
-// TODO: 2022-10-04: Work around a Legion bug, by not instantiating futures on framebuffer.
-#define LEGATE_NO_FUTURES_ON_FB 1
-
-#define LegateConcat_(x, y) x##y
-#define LegateConcat(x, y) LegateConcat_(x, y)
-
 // Each suffix defines an additional "enabled" state for LegateDefined(LEGATE_), i.e. if you define
 //
 // #define LegateDefinedEnabledForm_FOO ignored,
@@ -91,3 +38,56 @@
 #define LegateDefinedPrivate_(...) LegateDefinedPrivate__((__VA_ARGS__))
 #define LegateDefinedPrivate(x) LegateDefinedPrivate_(x 1, 0, dummy)
 #define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))
+
+#define LEGATE_ABORT                                                                        \
+  do {                                                                                      \
+    legate::detail::log_legate().error(                                                     \
+      "Legate called abort in %s at line %d in function %s", __FILE__, __LINE__, __func__); \
+    abort();                                                                                \
+  } while (false)
+
+#ifdef __CUDACC__
+#define LEGATE_DEVICE_PREFIX __device__
+#else
+#define LEGATE_DEVICE_PREFIX
+#endif
+
+#ifndef LEGION_REDOP_HALF
+#error "Legate needs Legion to be compiled with -DLEGION_REDOP_HALF"
+#endif
+
+#if !LegateDefined(LEGATE_USE_CUDA)
+#ifdef LEGION_USE_CUDA
+#define LEGATE_USE_CUDA 1
+#endif
+#endif
+
+#if !LegateDefined(LEGATE_USE_OPENMP)
+#ifdef REALM_USE_OPENMP
+#define LEGATE_USE_OPENMP 1
+#endif
+#endif
+
+#if !LegateDefined(LEGATE_USE_NETWORK)
+#if defined(REALM_USE_GASNET1) || defined(REALM_USE_GASNETEX) || defined(REALM_USE_MPI) || \
+  defined(REALM_USE_UCX)
+#define LEGATE_USE_NETWORK 1
+#endif
+#endif
+
+#ifdef LEGION_BOUNDS_CHECKS
+#define LEGATE_BOUNDS_CHECKS 1
+#endif
+
+#define LEGATE_MAX_DIM LEGION_MAX_DIM
+
+// backwards compatibility
+#if defined(DEBUG_LEGATE) && !LegateDefined(LEGATE_USE_DEBUG)
+#define LEGATE_USE_DEBUG 1
+#endif
+
+// TODO: 2022-10-04: Work around a Legion bug, by not instantiating futures on framebuffer.
+#define LEGATE_NO_FUTURES_ON_FB 1
+
+#define LegateConcat_(x, y) x##y
+#define LegateConcat(x, y) LegateConcat_(x, y)

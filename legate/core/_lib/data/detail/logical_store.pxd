@@ -10,6 +10,6 @@
 # its affiliates is strictly prohibited.
 
 
-cdef extern from "core/data/detail/logical_store.h" namespace "legate::detail" nogil:
+cdef extern from "core/data/detail/logical_store.h" namespace "legate::detail" nogil:  # noqa E501
     cdef cppclass _LogicalStoreImpl "legate::detail::LogicalStore":
         void allow_out_of_order_destruction()

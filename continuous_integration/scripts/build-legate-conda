@@ -3,8 +3,14 @@
 build_legate_conda_package() {
     set -xeuo pipefail;
 
+    if [[ -z "${CONDA_PLATFORM}" ]]; then
+      exit 1
+    fi
+
+    UNAME=$(uname)
+
     # Patch post.py
-    if [[ "$(uname)" == "Darwin" ]]; then
+    if [[ "${UNAME}" == "Darwin" ]]; then
       patch "$CONDA_PREFIX/lib/python${PYTHON_VERSION}/site-packages/conda_build/post.py" < "$REPO_DIR/continuous_integration/post_py.patch"
     fi
 
@@ -68,7 +74,7 @@ package_version:
 ucx_configured:
   - "${UCX_CONFIGURED}"
 EOF
-if [ "$UCX_ENABLED" = "ON" ]; then
+if [[ "${UCX_ENABLED}" = "ON" ]]; then
     cat <<EOF >> /tmp/legate/conda/conda-build/conda_build_config.yaml
 ucx:
   - ">=1.14"
@@ -80,9 +86,9 @@ echo "---------------------build.sh-------------------------"
 set -xeuo pipefail
 
 # Install legate_core C++ libs
-sh /tmp/out/legate_core-*-$(uname).sh --skip-license --exclude-subdir --prefix="\$PREFIX"
-$SED -E -i "s@$CONDA_PREFIX@\$PREFIX@g" "\$PREFIX/share/Legion/cmake/LegionConfigCommon.cmake";
-$SED -E -i "s@$REPO_DIR/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/$(uname)/STGZ/legate_core-(.*)-$(uname)@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
+sh /tmp/out/legate_core-*-${UNAME}.sh --skip-license --exclude-subdir --prefix="\$PREFIX"
+${SED} -E -i "s@${CONDA_PREFIX}@\$PREFIX@g" "\$PREFIX/share/Legion/cmake/LegionConfigCommon.cmake";
+${SED} -E -i "s@${REPO_DIR}/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/${UNAME}/STGZ/legate_core-(.*)-${UNAME}@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
 
 # Install legate_core Python wheel
 pip install --no-deps --root / --prefix "\$PREFIX" /tmp/out/legate_core-*.whl;
@@ -96,13 +102,13 @@ EOF
     git -C /tmp/legate commit --allow-empty --allow-empty-message -n -m "";
 
     # Build legate_core conda package
-    conda mambabuild ${conda_build_args[@]} /tmp/legate/conda/conda-build;
+    conda mambabuild "${conda_build_args[@]}" /tmp/legate/conda/conda-build;
 
     git -C /tmp/legate reset --hard HEAD~1;
 
     rm -rf /tmp/legate;
 
-    cp /tmp/conda-build/legate_core/${CONDA_PLATFORM}/legate-*.tar.bz2 /tmp/out/;
+    cp /tmp/conda-build/legate_core/"${CONDA_PLATFORM}"/legate-*.tar.bz2 /tmp/out/;
 
     { set +x; } 2>/dev/null;
 }

@@ -114,7 +114,7 @@ class TestSingleRank:
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem()
-        c = Config(["test.py", "-j", f"{len(s.gpus)+100}"])
+        c = Config(["test.py", "-j", f"{len(s.gpus) + 100}"])
         requested_workers = c.execution.workers
         assert requested_workers is not None
         assert requested_workers > len(s.gpus)
