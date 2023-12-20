@@ -15,6 +15,7 @@ from libc.stdint cimport int32_t, int64_t, uint32_t
 from libcpp cimport bool
 from libcpp.string cimport string as std_string
 
+from ..data.external_allocation cimport _ExternalAllocation
 from ..data.logical_array cimport _LogicalArray
 from ..data.logical_store cimport _LogicalStore
 from ..data.scalar cimport _Scalar
@@ -135,6 +136,10 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
         _LogicalStore create_store(const _Scalar&, const _Shape&) except+
         _LogicalStore create_store(
             const _Shape&, const _Type&, const void*, bool
+        ) except+
+        # TODO: dimension ordering should be added
+        _LogicalStore create_store(
+            const _Shape&, const _Type&, const _ExternalAllocation&
         ) except+
         void issue_execution_fence(bool)
         _Machine get_machine() const

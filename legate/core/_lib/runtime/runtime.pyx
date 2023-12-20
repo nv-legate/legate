@@ -9,12 +9,6 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from cpython.buffer cimport (
-    Py_buffer,
-    PyBUF_CONTIG,
-    PyBUF_CONTIG_RO,
-    PyObject_GetBuffer,
-)
 from libc.stdint cimport int32_t, int64_t, uint32_t
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
@@ -29,6 +23,7 @@ from cython.cimports.libc.stdlib import malloc
 
 from legion_top import add_cleanup_item
 
+from ..data.external_allocation cimport _ExternalAllocation, create_from_buffer
 from ..data.logical_array cimport (
     LogicalArray,
     _LogicalArray,
@@ -462,35 +457,51 @@ cdef class Runtime:
             self._handle.create_store(scalar._handle, std_move(cpp_shape))
         )
 
-    def create_store_from_bytes(
-        self,
-        Type dtype,
-        shape: Optional[Union[Shape, Iterable[int]]],
-        bytes data,
-        bool share,
-    ) -> LogicalStore:
-        if not is_shape_like(shape):
-            raise ValueError(
-                "shape must be a Shape object or an iterable"
-            )
-        cdef _Shape cpp_shape = _Shape()
-        for extent in shape:
-            cpp_shape.append_inplace(<size_t> extent)
-
-        cdef void* buf = <void*>(<char*> data)
-        return LogicalStore.from_handle(
-            self._handle.create_store(
-                std_move(cpp_shape), dtype._handle, buf, share
-            )
-        )
-
     def create_store_from_buffer(
         self,
         Type dtype,
-        shape: Optional[Union[Shape, Iterable[int]]],
+        shape: Shape | Iterable[int],
         object data,
-        bool share,
+        bool read_only,
     ) -> LogicalStore:
+        """
+        Creates a Legate store from a Python object implementing the Python
+        buffer protocol.
+
+        Parameters
+        ----------
+        dtype: Type
+            Type of the store's elements
+
+        shape : Shape or Iterable[int]
+            Shape of the store
+
+        data : object
+            A Python object that implements the Python buffer protocol
+
+        read_only : bool
+            Whether the buffer of the passed object should be treated read-only
+            or not. If ``False``, any changes made to the store will also be
+            visible via the Python object.
+
+        Returns
+        -------
+        LogicalStore
+            Logical store attached to the buffer of the passed object
+
+        Raises
+        ------
+        BufferError
+            If the passed object does not implement the Python buffer protocol
+
+        Notes
+        -----
+        It's the callers' responsibility to make sure that buffers passed to
+        this function are never partially aliased; i.e., Python objects ``A``
+        and ``B`` passed to this function must be backed by either the exact
+        same buffer or two non-overlapping buffers. The code will exhibit
+        undefined behavior in the presence of partial aliasing.
+        """
         if not is_shape_like(shape):
             raise ValueError(
                 "shape must be a Shape object or an iterable"
@@ -499,14 +510,12 @@ cdef class Runtime:
         for extent in shape:
             cpp_shape.append_inplace(<size_t> extent)
 
-        cdef Py_buffer buffer
-        PyObject_GetBuffer(
-            data, &buffer, PyBUF_CONTIG if share else PyBUF_CONTIG_RO
+        cdef _ExternalAllocation alloc = create_from_buffer(
+            data, cpp_shape.volume(), read_only
         )
-
         return LogicalStore.from_handle(
             self._handle.create_store(
-                std_move(cpp_shape), dtype._handle, buffer.buf, share
+                std_move(cpp_shape), dtype._handle, std_move(alloc)
             )
         )
 

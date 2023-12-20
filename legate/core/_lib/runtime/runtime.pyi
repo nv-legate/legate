@@ -95,17 +95,10 @@ class Runtime:
         scalar: Scalar,
         shape: Optional[Union[Shape, Iterable[int]]] = None,
     ) -> LogicalStore: ...
-    def create_store_from_bytes(
-        self,
-        dtype: Type,
-        shape: Optional[Union[Shape, Iterable[int]]],
-        data: bytes,
-        share: bool,
-    ) -> LogicalStore: ...
     def create_store_from_buffer(
         self,
         dtype: Type,
-        shape: Optional[Union[Shape, Iterable[int]]],
+        shape: Shape | Iterable[int],
         data: object,
         share: bool,
     ) -> LogicalStore: ...

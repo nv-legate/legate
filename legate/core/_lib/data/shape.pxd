@@ -19,6 +19,7 @@ cdef extern from "core/data/shape.h" namespace "legate" nogil:
         _Shape()
         _Shape(const std_vector[size_t]&)
         void append_inplace(const size_t& value)
+        size_t volume() const
         const std_vector[size_t]& data() const
         void reserve(size_t)
 
