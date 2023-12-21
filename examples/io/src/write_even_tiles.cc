@@ -1,27 +1,23 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
-#include <filesystem>
-#include <fstream>
+#include "core/utilities/span.h"
 
 #include "legate_library.h"
 #include "legateio.h"
 #include "util.h"
 
-#include "core/utilities/span.h"
+#include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -39,20 +35,24 @@ void write_header(std::ofstream& out,
   // Dump the type code, the array's shape and the tile shape to the header
   out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
   out.write(reinterpret_cast<const char*>(&dim), sizeof(int32_t));
-  for (auto& v : shape) out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
-  for (auto& v : tile_shape) out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  for (auto& v : shape) {
+    out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  }
+  for (auto& v : tile_shape) {
+    out.write(reinterpret_cast<const char*>(&v), sizeof(int32_t));
+  }
 }
 
 }  // namespace
 
 class WriteEvenTilesTask : public Task<WriteEvenTilesTask, WRITE_EVEN_TILES> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto dirname                           = context.scalars().at(0).value<std::string>();
-    legate::Span<const int32_t> shape      = context.scalars().at(1).values<int32_t>();
-    legate::Span<const int32_t> tile_shape = context.scalars().at(2).values<int32_t>();
-    auto& input                            = context.inputs().at(0);
+    auto dirname                           = context.scalar(0).value<std::string>();
+    legate::Span<const int32_t> shape      = context.scalar(1).values<int32_t>();
+    legate::Span<const int32_t> tile_shape = context.scalar(2).values<int32_t>();
+    auto input                             = context.input(0).data();
 
     auto launch_domain = context.get_launch_domain();
     auto task_index    = context.get_task_index();

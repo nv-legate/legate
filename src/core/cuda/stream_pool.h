@@ -1,33 +1,26 @@
-/* Copyright 2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
-#include <memory>
-
 #include <cuda_runtime.h>
-#include "legion.h"
+#include <memory>
 
 /**
  * @file
  * @brief Class definition for legate::cuda::StreamPool
  */
 
-namespace legate {
-namespace cuda {
+namespace legate::cuda {
 
 /**
  * @ingroup task
@@ -43,28 +36,25 @@ struct StreamView {
    *
    * @param stream Raw CUDA stream to wrap
    */
-  StreamView(cudaStream_t stream) : valid_(true), stream_(stream) {}
+  StreamView(cudaStream_t stream);
   ~StreamView();
 
- public:
   StreamView(const StreamView&)            = delete;
   StreamView& operator=(const StreamView&) = delete;
 
- public:
-  StreamView(StreamView&&);
-  StreamView& operator=(StreamView&&);
+  StreamView(StreamView&&) noexcept;
+  StreamView& operator=(StreamView&&) noexcept;
 
- public:
   /**
    * @brief Unwraps the raw CUDA stream
    *
    * @return Raw CUDA stream wrapped by the `StreamView`
    */
-  operator cudaStream_t() const { return stream_; }
+  operator cudaStream_t() const;
 
  private:
-  bool valid_;
-  cudaStream_t stream_;
+  bool valid_{};
+  cudaStream_t stream_{};
 };
 
 /**
@@ -72,10 +62,8 @@ struct StreamView {
  */
 struct StreamPool {
  public:
-  StreamPool() {}
   ~StreamPool();
 
- public:
   /**
    * @brief Returns a `StreamView` in the pool
    *
@@ -84,7 +72,6 @@ struct StreamPool {
    */
   StreamView get_stream();
 
- public:
   /**
    * @brief Returns a singleton stream pool
    *
@@ -98,8 +85,9 @@ struct StreamPool {
   // For now we keep only one stream in the pool
   // TODO: If this ever changes, the use of non-stream-ordered `DeferredBuffer`s
   // in `core/data/buffer.h` will no longer be safe.
-  std::unique_ptr<cudaStream_t> cached_stream_{nullptr};
+  std::unique_ptr<cudaStream_t> cached_stream_{};
 };
 
-}  // namespace cuda
-}  // namespace legate
+}  // namespace legate::cuda
+
+#include "core/cuda/stream_pool.inl"

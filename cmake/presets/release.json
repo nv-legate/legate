@@ -1,0 +1,65 @@
+{
+    "version": 4,
+    "include": [
+        "base.json"
+    ],
+    "configurePresets": [
+        {
+            "inherits": "base",
+            "hidden": true,
+            "name": "base-release",
+            "environment": {
+                "LEGATE_RELEASE_PRESET_CMAKE_CXX_FLAGS": "-O2",
+                "LEGATE_RELEASE_PRESET_CMAKE_CUDA_FLAGS": "--compiler-options='$env{LEGATE_RELEASE_PRESET_CMAKE_CXX_FLAGS}'",
+                "LEGATE_RELEASE_PRESET_LEGATE_CORE_CXX_FLAGS": "-fstack-protector-strong",
+                "LEGATE_RELEASE_PRESET_LEGATE_CORE_CUDA_FLAGS": "--compiler-options='$env{LEGATE_RELEASE_PRESET_LEGATE_CORE_CXX_FLAGS}'"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": {
+                    "type": "STRING",
+                    "value": "Release"
+                },
+                "CMAKE_CXX_FLAGS_RELEASE": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_PRESET_CMAKE_CXX_FLAGS}"
+                },
+                "legate_core_CXX_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_PRESET_LEGATE_CORE_CXX_FLAGS}"
+                },
+                "CMAKE_CUDA_FLAGS_RELEASE": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_PRESET_CMAKE_CUDA_FLAGS}"
+                },
+                "legate_core_CUDA_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_PRESET_LEGATE_CORE_CUDA_FLAGS}"
+                }
+            }
+        },
+        {
+            "inherits": "base-release",
+            "name": "release-clang",
+            "displayName": "Release Clang Build",
+            "description": "Release Clang Build"
+        },
+        {
+            "inherits": "base-release",
+            "name": "release-gcc",
+            "displayName": "Release GCC Build",
+            "description": "Release GCC Build"
+        }
+    ],
+    "buildPresets": [
+        {
+            "inherits": "base",
+            "name": "release-clang",
+            "configurePreset": "release-clang"
+        },
+        {
+            "inherits": "base",
+            "name": "release-gcc",
+            "configurePreset": "release-gcc"
+        }
+    ]
+}

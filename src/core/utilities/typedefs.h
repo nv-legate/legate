@@ -1,25 +1,24 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
+#include "core/legate_c.h"
+
 #include "legion.h"
 
-#include "core/legate_c.h"
 #include "legate_defines.h"
+
+#include <functional>
 
 /**
  * @file
@@ -32,15 +31,16 @@ namespace legate {
  * @brief Function signature for task variants. Each task variant must be a function of this type.
  */
 class TaskContext;
-using VariantImpl = void (*)(TaskContext&);
+using VariantImpl      = void (*)(TaskContext);
+using ShutdownCallback = std::function<void(void)>;
 
 // C enum typedefs
 using LegateVariantCode = legate_core_variant_t;
 using LegateMappingTag  = legate_core_mapping_tag_t;
 
-using Logger = Legion::Logger;
+using LegateMainFnPtr = void (*)(int32_t, char**);
 
-extern Logger log_legate;
+using Logger = Legion::Logger;
 
 // Re-export Legion types
 
@@ -131,7 +131,8 @@ using Domain = Legion::Domain;
  * for a complete list of supported operators.
  */
 template <typename FT, int N, typename T = coord_t>
-using AccessorRO = Legion::FieldAccessor<READ_ONLY, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
+using AccessorRO =
+  Legion::FieldAccessor<LEGION_READ_ONLY, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
 
 /**
  * @brief Write-only accessor
@@ -141,7 +142,8 @@ using AccessorRO = Legion::FieldAccessor<READ_ONLY, FT, N, T, Realm::AffineAcces
  * for a complete list of supported operators.
  */
 template <typename FT, int N, typename T = coord_t>
-using AccessorWO = Legion::FieldAccessor<WRITE_DISCARD, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
+using AccessorWO =
+  Legion::FieldAccessor<LEGION_WRITE_DISCARD, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
 
 /**
  * @brief Read-write accessor
@@ -151,7 +153,8 @@ using AccessorWO = Legion::FieldAccessor<WRITE_DISCARD, FT, N, T, Realm::AffineA
  * for a complete list of supported operators.
  */
 template <typename FT, int N, typename T = coord_t>
-using AccessorRW = Legion::FieldAccessor<READ_WRITE, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
+using AccessorRW =
+  Legion::FieldAccessor<LEGION_READ_WRITE, FT, N, T, Realm::AffineAccessor<FT, N, T>>;
 
 /**
  * @brief Reduction accessor
@@ -248,7 +251,7 @@ using Memory = Legion::Memory;
  * types (`__half`, `float`, and `double`) are supported by all but bitwise operators. Arithmetic
  * operators also cover complex types `complex<__half>` and `complex<float>`.
  *
- * For details about reduction operators, See LibraryContext::register_reduction_operator.
+ * For details about reduction operators, See Library::register_reduction_operator.
  *
  * @{
  */
@@ -335,5 +338,13 @@ template <typename T>
 using XorReduction = Legion::XorReduction<T>;
 
 /** @} */  // end of reduction
+
+using RealmCallbackFn = void (*)(const void*, size_t, const void*, size_t, Processor);
+
+namespace detail {
+
+[[nodiscard]] Logger& log_legate();
+
+}  // namespace detail
 
 }  // namespace legate

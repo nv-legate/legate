@@ -1,118 +1,131 @@
 on:
   workflow_call:
     inputs:
-      device:
-        type: string
-        required: true
-      build-runner:
-        type: string
-        required: true
       platform:
         type: string
         required: true
-
-
+      target-device:
+        type: string
+        required: true
+      cmake-preset:
+        type: string
+        required: true
+      ucx-config:
+        type: string
+        required: true
 jobs:
+  setup-build:
+    name: Setup build
+    runs-on: linux-amd64-cpu4
+    outputs:
+      runner_type: ${{ steps.set_runner.outputs.runner_type }}
+    steps:
+      - id: set_runner
+        run: |
+          if [ "${{ inputs.platform }}" = "linux" ]; then
+            echo "runner_type=linux-amd64-cpu32" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.platform }}" = "mac" ]; then
+            echo "runner_type=macos-latest"  >> $GITHUB_OUTPUT
+          fi
+
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        ucx-config: [ucx, no_ucx]
-        os-platform: [ "${{ inputs.platform }}" ]
-        exclude:
-        - os-platform: "osx"
-          ucx-config: ucx
+    needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
       ./.github/workflows/gh-build.yml
     with:
-      build-target: ${{ inputs.device }}
+      target-device: ${{ inputs.target-device }}
       repos-name: ${{ github.event.repository.name }}
-      runs-on: ${{ inputs.build-runner }}
+      runs-on: ${{ needs.setup-build.outputs.runner_type }}
       sha: ${{ github.sha }}
+      cmake-preset: ${{ inputs.cmake-preset }}
+      ucx-config: ${{ inputs.ucx-config }}
+      ucx-string: ${{ (inputs.ucx-config == 'ucx' && '-ucx') || '' }}
       build-type: ci
       use-container: ${{ inputs.platform == 'linux' }}
-      ucx-config: ${{ matrix.ucx-config }}
-      ucx-string: ${{ (matrix.ucx-config == 'ucx' && '-ucx') || '' }}
+      platform: ${{ inputs.platform }}
 
-  test:
+  setup-test:
+    name: Setup test
     needs:
       - build
+    runs-on: linux-amd64-cpu4
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          set -xeuo pipefail
+          MATRIX_JSON='{"include": ['
+          RUNNERS=('linux-amd64-gpu-v100-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'linux-amd64-cpu8:cpu:linux' 'macos-latest:cpu:mac')
+          TEST_CONFIGS=('Python Unit Tests:python' 'C++ Unit Tests:cpp')
+
+          for RUNNER in "${RUNNERS[@]}"; do
+            IFS=':' read -ra RUNNER_INFO <<< "$RUNNER"
+            RUNNER_NAME=${RUNNER_INFO[0]}
+            TARGET_DEVICE=${RUNNER_INFO[1]}
+            RUNNER_PLATFORM=${RUNNER_INFO[2]}
+
+            if [[ "$TARGET_DEVICE" == "${{ inputs.target-device }}" && "$RUNNER_PLATFORM" == "${{ inputs.platform }}" ]]; then
+              for TEST_CONFIG in "${TEST_CONFIGS[@]}"; do
+                IFS=':' read -ra CONFIG_INFO <<< "$TEST_CONFIG"
+                CONFIG_NAME=${CONFIG_INFO[0]}
+                CONFIG_SCOPE=${CONFIG_INFO[1]}
+
+                MATRIX_JSON+="{\"runner\": {\"name\": \"$RUNNER_NAME\", \"type\": \"$TARGET_DEVICE\", \"platform\": \"$RUNNER_PLATFORM\"}, \"test-config\": {\"name\": \"$CONFIG_NAME\", \"test-scope\": \"$CONFIG_SCOPE\"}},"
+              done
+            fi
+          done
+
+          MATRIX_JSON=$(echo "$MATRIX_JSON" | sed 's/,$//') # Remove the trailing comma
+          MATRIX_JSON+=']}'
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+
+  test-within-container:
+    if: github.repository_owner == 'nv-legate' && inputs.platform == 'linux'
+    needs:
+      - setup-test
+
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, ${{ inputs.ucx-config }})
+
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Pytest Unit Tests
-            test-scope: unit
-            runner: linux-amd64-gpu-v100-latest-1
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'gpu' }}
-            ucx-config: no_ucx
+      matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
-          - name: Pytest Unit Tests
-            test-scope: unit
-            runner: linux-amd64-gpu-v100-latest-1
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'gpu' }}
-            ucx-config: ucx
-
-          - name: Pytest Unit Tests (OS X)
-            test-scope: unit
-            runner: macos-latest
-            enabled: ${{ inputs.platform == 'osx' }}
-            ucx-config: no_ucx
-
-          - name: Pytest Unit Tests
-            test-scope: unit
-            runner: linux-amd64-2gpu
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'gpu' }}
-            ucx-config: no_ucx
-
-          - name: Pytest Unit Tests
-            test-scope: unit
-            runner: linux-amd64-2gpu
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'gpu' }}
-            ucx-config: ucx
-
-          - name: Pytest Unit Tests
-            test-scope: unit
-            runner: linux-amd64-cpu4
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'cpu' }}
-            ucx-config: no_ucx
-
-          - name: Pytest Unit Tests
-            test-scope: unit
-            runner: linux-amd64-cpu4
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'cpu' }}
-            ucx-config: ucx
-
-          - name: mypy
-            test-scope: mypy
-            runner: linux-amd64-cpu4
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'cpu' }}
-            ucx-config: no_ucx
-
-          - name: mypy
-            test-scope: mypy
-            runner: linux-amd64-cpu4
-            enabled: ${{ inputs.platform == 'linux' && inputs.device == 'cpu' }}
-            ucx-config: ucx
-
-          - name: mypy (OS X)
-            test-scope: mypy
-            runner: macos-latest
-            enabled: ${{ inputs.platform == 'osx' }}
-            ucx-config: no_ucx
-
-    name: ${{ matrix.name }}
-    if: github.repository_owner == 'nv-legate'
     uses:
-      ./.github/workflows/gh-test.yml
+      ./.github/workflows/gh-test-within-container.yml
     with:
-      build-target: ${{ inputs.device }}
+      target-device: ${{ inputs.target-device }}
       repos-name: ${{ github.event.repository.name }}
-      runs-on: ${{ matrix.runner }}
+      runs-on: ${{ matrix.runner.name }}
       sha: ${{ github.sha }}
-      test-scope: ${{ matrix.test-scope }}
-      use-container: ${{ inputs.platform == 'linux' }}
-      enabled: ${{ matrix.enabled }}
-      ucx-config: ${{ matrix.ucx-config }}
-      ucx-string: ${{ (matrix.ucx-config == 'ucx' && '-ucx') || '' }}
+      test-scope: ${{ matrix.test-config.test-scope }}
+      cmake-preset: ${{ inputs.cmake-preset }}
+      ucx-config: ${{ inputs.ucx-config }}
+      ucx-string: ${{ (inputs.ucx-config == 'ucx' && '-ucx') || '' }}
+      platform: ${{ matrix.runner.platform }}
+
+  test-without-container:
+    if: github.repository_owner == 'nv-legate' && inputs.platform != 'linux'
+
+    needs:
+      - setup-test
+
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, ${{ inputs.ucx-config }})
+
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
+
+    uses:
+      ./.github/workflows/gh-test-without-container.yml
+    with:
+      target-device: ${{ inputs.target-device }}
+      repos-name: ${{ github.event.repository.name }}
+      runs-on: ${{ matrix.runner.name }}
+      sha: ${{ github.sha }}
+      test-scope: ${{ matrix.test-config.test-scope }}
+      cmake-preset: ${{ inputs.cmake-preset }}
+      ucx-config: ${{ inputs.ucx-config }}
+      ucx-string: ${{ (inputs.ucx-config == 'ucx' && '-ucx') || '' }}
+      platform: ${{ matrix.runner.platform }}

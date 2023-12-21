@@ -1,24 +1,18 @@
 #=============================================================================
-# Copyright 2022-2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 #=============================================================================
 
 ##############################################################################
 # - User Options  ------------------------------------------------------------
 
-option(legate_core_BUILD_TESTS OFF)
-option(legate_core_BUILD_EXAMPLES OFF)
 include(cmake/Modules/legate_core_options.cmake)
 
 ##############################################################################
@@ -27,8 +21,9 @@ include(cmake/Modules/legate_core_options.cmake)
 # Write the version header
 rapids_cmake_write_version_file(include/legate/version_config.hpp)
 
-# Needed to integrate with LLVM/clang tooling
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/compile_commands.cmake)
+
+legate_core_export_compile_commands()
 
 ##############################################################################
 # - Build Type ---------------------------------------------------------------
@@ -73,7 +68,7 @@ if(Legion_USE_Python)
   endif()
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/cuda_arch_helpers.cmake)
+include(${LEGATE_CORE_DIR}/cmake/Modules/cuda_arch_helpers.cmake)
 
 if(Legion_USE_CUDA)
   # Needs to run before find_package(Legion)
@@ -89,7 +84,7 @@ endif()
 # these features based on how Legion was configured (it doesn't make sense to
 # build legate.core's Python bindings if Legion's bindings weren't compiled).
 ###
-include(cmake/thirdparty/get_legion.cmake)
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_legion.cmake)
 
 # If Legion_USE_Python was toggled ON by find_package(Legion), find Python3
 if(Legion_USE_Python AND (NOT Python3_FOUND))
@@ -114,22 +109,136 @@ if(Legion_USE_CUDA)
     INSTALL_EXPORT_SET legate-core-exports
   )
   # Find NCCL
-  include(cmake/thirdparty/get_nccl.cmake)
+  include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_nccl.cmake)
 endif()
 
 # Find or install Thrust
-include(cmake/thirdparty/get_thrust.cmake)
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_thrust.cmake)
 
 ##############################################################################
 # - legate.core --------------------------------------------------------------
 
 set(legate_core_SOURCES "")
+
+list(APPEND legate_core_SOURCES
+  src/core/comm/comm.cc
+  src/core/comm/comm_cpu.cc
+  src/core/comm/coll.cc
+  src/core/data/allocator.cc
+  src/core/data/external_allocation.cc
+  src/core/data/logical_array.cc
+  src/core/data/logical_store.cc
+  src/core/data/scalar.cc
+  src/core/data/shape.cc
+  src/core/data/physical_array.cc
+  src/core/data/physical_store.cc
+  src/core/data/detail/array_tasks.cc
+  src/core/data/detail/attachment.cc
+  src/core/data/detail/external_allocation.cc
+  src/core/data/detail/logical_array.cc
+  src/core/data/detail/logical_region_field.cc
+  src/core/data/detail/logical_store.cc
+  src/core/data/detail/scalar.cc
+  src/core/data/detail/physical_array.cc
+  src/core/data/detail/physical_store.cc
+  src/core/data/detail/transform.cc
+  src/core/mapping/array.cc
+  src/core/mapping/machine.cc
+  src/core/mapping/mapping.cc
+  src/core/mapping/operation.cc
+  src/core/mapping/store.cc
+  src/core/mapping/detail/array.cc
+  src/core/mapping/detail/base_mapper.cc
+  src/core/mapping/detail/core_mapper.cc
+  src/core/mapping/detail/instance_manager.cc
+  src/core/mapping/detail/machine.cc
+  src/core/mapping/detail/mapping.cc
+  src/core/mapping/detail/operation.cc
+  src/core/mapping/detail/store.cc
+  src/core/operation/projection.cc
+  src/core/operation/task.cc
+  src/core/operation/detail/copy.cc
+  src/core/operation/detail/copy_launcher.cc
+  src/core/operation/detail/fill.cc
+  src/core/operation/detail/fill_launcher.cc
+  src/core/operation/detail/gather.cc
+  src/core/operation/detail/launcher_arg.cc
+  src/core/operation/detail/operation.cc
+  src/core/operation/detail/projection.cc
+  src/core/operation/detail/reduce.cc
+  src/core/operation/detail/req_analyzer.cc
+  src/core/operation/detail/scatter.cc
+  src/core/operation/detail/scatter_gather.cc
+  src/core/operation/detail/task.cc
+  src/core/operation/detail/task_launcher.cc
+  src/core/partitioning/constraint.cc
+  src/core/partitioning/partition.cc
+  src/core/partitioning/restriction.cc
+  src/core/partitioning/detail/constraint.cc
+  src/core/partitioning/detail/constraint_solver.cc
+  src/core/partitioning/detail/partitioner.cc
+  src/core/runtime/library.cc
+  src/core/runtime/runtime.cc
+  src/core/runtime/tracker.cc
+  src/core/runtime/detail/communicator_manager.cc
+  src/core/runtime/detail/field_manager.cc
+  src/core/runtime/detail/library.cc
+  src/core/runtime/detail/machine_manager.cc
+  src/core/runtime/detail/partition_manager.cc
+  src/core/runtime/detail/projection.cc
+  src/core/runtime/detail/provenance_manager.cc
+  src/core/runtime/detail/region_manager.cc
+  src/core/runtime/detail/runtime.cc
+  src/core/runtime/detail/shard.cc
+  src/core/task/registrar.cc
+  src/core/task/task.cc
+  src/core/task/task_context.cc
+  src/core/task/task_info.cc
+  src/core/task/variant_options.cc
+  src/core/task/detail/return.cc
+  src/core/task/detail/task_context.cc
+  src/core/type/type_info.cc
+  src/core/type/detail/type_info.cc
+  src/core/utilities/debug.cc
+  src/core/utilities/deserializer.cc
+  src/core/utilities/machine.cc
+  src/core/utilities/linearize.cc
+  src/core/utilities/internal_shared_ptr.cc
+  src/core/utilities/detail/buffer_builder.cc
+  src/timing/timing.cc
+)
+
+if(Legion_NETWORKS)
+  list(APPEND legate_core_SOURCES
+    src/core/comm/mpi_comm.cc
+    src/core/comm/local_comm.cc)
+else()
+  list(APPEND legate_core_SOURCES
+    src/core/comm/local_comm.cc)
+endif()
+
+if(Legion_USE_OpenMP)
+  list(APPEND legate_core_SOURCES
+    src/core/data/detail/array_tasks_omp.cc)
+endif()
+
+if(Legion_USE_CUDA)
+  list(APPEND legate_core_SOURCES
+    src/core/comm/comm_nccl.cu
+    src/core/cuda/stream_pool.cu
+    src/core/data/detail/array_tasks.cu)
+endif()
+
+add_library(legate_core ${legate_core_SOURCES})
+add_library(legate::core ALIAS legate_core)
+
 set(legate_core_CXX_DEFS "")
 set(legate_core_CUDA_DEFS "")
 set(legate_core_CXX_OPTIONS "")
 set(legate_core_CUDA_OPTIONS "")
+set(legate_core_LINKER_OPTIONS "")
 
-include(cmake/Modules/set_cpu_arch_flags.cmake)
+include(${LEGATE_CORE_DIR}/cmake/Modules/set_cpu_arch_flags.cmake)
 set_cpu_arch_flags(legate_core_CXX_OPTIONS)
 
 if (legate_core_COLLECTIVE)
@@ -137,8 +246,8 @@ if (legate_core_COLLECTIVE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND legate_core_CXX_DEFS DEBUG_LEGATE)
-  list(APPEND legate_core_CUDA_DEFS DEBUG_LEGATE)
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_DEBUG)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_DEBUG)
 endif()
 
 if(Legion_USE_CUDA)
@@ -153,11 +262,6 @@ if(Legion_USE_CUDA)
   list(APPEND legate_core_CUDA_OPTIONS -Wno-deprecated-gpu-targets)
 endif()
 
-if(Legion_USE_OpenMP)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_OPENMP)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_OPENMP)
-endif()
-
 if(Legion_NETWORKS)
   list(APPEND legate_core_CXX_DEFS LEGATE_USE_NETWORK)
   list(APPEND legate_core_CUDA_DEFS LEGATE_USE_NETWORK)
@@ -166,6 +270,13 @@ endif()
 # Change THRUST_DEVICE_SYSTEM for `.cpp` files
 # TODO: This is what we do in cuNumeric, should we do it here as well?
 if(Legion_USE_OpenMP)
+  find_package(OpenMP REQUIRED)
+
+  target_link_libraries(legate_core PRIVATE OpenMP::OpenMP_CXX)
+
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_OPENMP)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_OPENMP)
+
   list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
   list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP)
 elseif(NOT Legion_USE_CUDA)
@@ -178,68 +289,17 @@ endif()
 #   list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
 # endif()
 
-list(APPEND legate_core_SOURCES
-  src/core/legate_c.cc
-  src/core/comm/comm.cc
-  src/core/comm/comm_cpu.cc
-  src/core/comm/coll.cc
-  src/core/data/allocator.cc
-  src/core/data/scalar.cc
-  src/core/data/store.cc
-  src/core/data/transform.cc
-  src/core/mapping/base_mapper.cc
-  src/core/mapping/core_mapper.cc
-  src/core/mapping/default_mapper.cc
-  src/core/mapping/instance_manager.cc
-  src/core/mapping/machine.cc
-  src/core/mapping/mapping.cc
-  src/core/mapping/operation.cc
-  src/core/mapping/store.cc
-  src/core/runtime/context.cc
-  src/core/runtime/projection.cc
-  src/core/runtime/runtime.cc
-  src/core/runtime/shard.cc
-  src/core/task/registrar.cc
-  src/core/task/return.cc
-  src/core/task/task.cc
-  src/core/task/task_info.cc
-  src/core/task/variant_options.cc
-  src/core/type/type_info.cc
-  src/core/utilities/debug.cc
-  src/core/utilities/deserializer.cc
-  src/core/utilities/machine.cc
-  src/core/utilities/linearize.cc
-)
-
-if(Legion_NETWORKS)
-  list(APPEND legate_core_SOURCES
-    src/core/comm/mpi_comm.cc
-    src/core/comm/local_comm.cc)
-else()
-  list(APPEND legate_core_SOURCES
-    src/core/comm/local_comm.cc)
-endif()
-
-if(Legion_USE_CUDA)
-  list(APPEND legate_core_SOURCES
-    src/core/comm/comm_nccl.cu
-    src/core/cuda/stream_pool.cu)
-endif()
-
-add_library(legate_core ${legate_core_SOURCES})
-add_library(legate::core ALIAS legate_core)
-
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(platform_rpath_origin "\$ORIGIN")
+  set(LEGATE_CORE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  set(platform_rpath_origin "@loader_path")
+  set(LEGATE_CORE_PLATFORM_RPATH_ORIGIN "@loader_path")
 endif ()
 
 set_target_properties(legate_core
            PROPERTIES EXPORT_NAME                         core
                       LIBRARY_OUTPUT_NAME                 lgcore
-                      BUILD_RPATH                         "${platform_rpath_origin}"
-                      INSTALL_RPATH                       "${platform_rpath_origin}"
+                      BUILD_RPATH                         "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}"
+                      INSTALL_RPATH                       "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}"
                       CXX_STANDARD                        17
                       CXX_STANDARD_REQUIRED               ON
                       CUDA_STANDARD                       17
@@ -276,13 +336,48 @@ target_link_libraries(legate_core
           $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
   PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>)
 
-target_compile_options(legate_core
-  PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${legate_core_CXX_OPTIONS}>"
-          "$<$<COMPILE_LANGUAGE:CUDA>:${legate_core_CUDA_OPTIONS}>")
-
 target_compile_definitions(legate_core
   PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${legate_core_CXX_DEFS}>"
          "$<$<COMPILE_LANGUAGE:CUDA>:${legate_core_CUDA_DEFS}>")
+
+##############################################################################
+# - Custom User Flags --------------------------------------------------------
+
+macro(legate_core_add_target_compile_option TARGET_NAME OPTION_LANG VIS OPTION_NAME)
+  if (NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
+    # Using this form of separate_arguments() makes sure that quotes are respected when
+    # the list is formed. Otherwise stuff like
+    #
+    # "--compiler-options='-foo -bar -baz'"
+    #
+    # becomes
+    #
+    # --compiler-options="'-foo";"-bar";"-baz'"
+    #
+    # which is obviously not what we wanted
+    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
+  endif()
+  if(${OPTION_NAME})
+    target_compile_options(${TARGET_NAME} ${VIS} "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
+  endif()
+endmacro()
+
+macro(legate_core_add_target_link_option TARGET_NAME VIS OPTION_NAME)
+  if (NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
+    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
+  endif()
+  if(${OPTION_NAME})
+    target_link_options(${TARGET_NAME} ${VIS} "${${OPTION_NAME}}")
+  endif()
+endmacro()
+
+legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_OPTIONS)
+legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_OPTIONS)
+
+legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_FLAGS)
+legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_FLAGS)
+
+legate_core_add_target_link_option(legate_core INTERFACE legate_core_LINKER_FLAGS)
 
 target_include_directories(legate_core
   PUBLIC
@@ -304,28 +399,41 @@ if (legate_core_BUILD_DOCS)
       src/core/type/type_traits.h
       # task
       src/core/task/task.h
+      src/core/task/task_context.h
       src/core/task/registrar.h
       src/core/task/variant_options.h
       src/core/task/exception.h
       src/core/cuda/stream_pool.h
       # data
-      src/core/data/store.h
+      src/core/data/logical_array.h
+      src/core/data/logical_store.h
+      src/core/data/physical_array.h
+      src/core/data/physical_store.h
       src/core/data/scalar.h
       src/core/data/buffer.h
+      src/core/data/external_allocation.h
       src/core/utilities/span.h
       src/core/data/allocator.h
       # runtime
+      src/core/runtime/library.h
       src/core/runtime/runtime.h
-      src/core/runtime/runtime.inl
-      src/core/runtime/context.h
+      # operation
+      src/core/operation/projection.h
+      src/core/operation/task.h
+      # partitioning
+      src/core/partitioning/constraint.h
       # mapping
+      src/core/mapping/machine.h
       src/core/mapping/mapping.h
       src/core/mapping/operation.h
+      src/core/mapping/store.h
       # aliases
       src/core/utilities/typedefs.h
       # utilities
+      src/core/runtime/tracker.h
       src/core/utilities/debug.h
       src/core/utilities/dispatch.h
+      src/timing/timing.h
       # main page
       src/legate.h
     )
@@ -336,7 +444,10 @@ if (legate_core_BUILD_DOCS)
     set(DOXYGEN_EXTENSION_MAPPING cu=C++ cuh=C++)
     set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
     set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
-    set(DOXYGEN_STRIP_FROM_INC_PATH ${CMAKE_SOURCE_DIR}/src)
+    set(DOXYGEN_USE_MATHJAX YES)
+    set(DOXYGEN_MATHJAX_VERSION MathJax_3)
+    set(DOXYGEN_STRIP_FROM_INC_PATH ${LEGATE_CORE_DIR}/src)
+    set(DOXYGEN_EXAMPLE_PATH tests/cpp)
     doxygen_add_docs("doxygen_legate" ALL
       ${legate_core_DOC_SOURCES}
       COMMENT "Custom command for building Doxygen docs."
@@ -351,6 +462,7 @@ endif()
 
 include(CPack)
 include(GNUInstallDirs)
+
 rapids_cmake_install_lib_dir(lib_dir)
 
 install(TARGETS legate_core
@@ -371,46 +483,79 @@ install(
 install(
   FILES src/core/comm/coll.h
         src/core/comm/communicator.h
+        src/core/comm/communicator.inl
         src/core/comm/pthread_barrier.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/comm)
 
 install(
   FILES src/core/cuda/cuda_help.h
         src/core/cuda/stream_pool.h
+        src/core/cuda/stream_pool.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/cuda)
 
 install(
   FILES src/core/data/allocator.h
         src/core/data/buffer.h
+        src/core/data/external_allocation.h
+        src/core/data/inline_allocation.h
+        src/core/data/logical_array.h
+        src/core/data/logical_array.inl
+        src/core/data/logical_store.h
+        src/core/data/logical_store.inl
+        src/core/data/physical_array.h
+        src/core/data/physical_array.inl
+        src/core/data/physical_store.h
+        src/core/data/physical_store.inl
         src/core/data/scalar.h
         src/core/data/scalar.inl
-        src/core/data/store.h
-        src/core/data/store.inl
-        src/core/data/transform.h
+        src/core/data/shape.h
+        src/core/data/slice.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/data)
 
 install(
-  FILES src/core/mapping/machine.h
+  FILES src/core/mapping/array.h
+        src/core/mapping/array.inl
+        src/core/mapping/machine.h
+        src/core/mapping/machine.inl
         src/core/mapping/mapping.h
+        src/core/mapping/mapping.inl
         src/core/mapping/operation.h
         src/core/mapping/operation.inl
         src/core/mapping/store.h
+        src/core/mapping/store.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/mapping)
 
 install(
-  FILES src/core/runtime/context.h
-        src/core/runtime/context.inl
+  FILES src/core/operation/projection.h
+        src/core/operation/projection.inl
+        src/core/operation/task.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/operation)
+
+install(
+  FILES src/core/partitioning/constraint.h
+        src/core/partitioning/constraint.inl
+        src/core/partitioning/partition.h
+        src/core/partitioning/partition.inl
+        src/core/partitioning/restriction.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/partitioning)
+
+install(
+  FILES src/core/runtime/library.h
+        src/core/runtime/library.inl
         src/core/runtime/resource.h
         src/core/runtime/runtime.h
         src/core/runtime/runtime.inl
+        src/core/runtime/tracker.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/runtime)
 
 install(
   FILES src/core/task/exception.h
+        src/core/task/exception.inl
         src/core/task/registrar.h
-        src/core/task/return.h
         src/core/task/task.h
         src/core/task/task.inl
+        src/core/task/task_context.h
+        src/core/task/task_context.inl
         src/core/task/task_info.h
         src/core/task/variant_helper.h
         src/core/task/variant_options.h
@@ -418,18 +563,47 @@ install(
 
 install(
   FILES src/core/type/type_info.h
+        src/core/type/type_info.inl
         src/core/type/type_traits.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/type)
+
 install(
   FILES src/core/utilities/debug.h
-        src/core/utilities/deserializer.h
-        src/core/utilities/deserializer.inl
+        src/core/utilities/debug.inl
         src/core/utilities/dispatch.h
+        src/core/utilities/hash.h
         src/core/utilities/machine.h
+        src/core/utilities/memory.h
+        src/core/utilities/memory.inl
         src/core/utilities/nvtx_help.h
         src/core/utilities/span.h
+        src/core/utilities/span.inl
+        src/core/utilities/tuple.h
+        src/core/utilities/tuple.inl
         src/core/utilities/typedefs.h
+        src/core/utilities/shared_ptr.h
+        src/core/utilities/shared_ptr.inl
+        src/core/utilities/internal_shared_ptr.h
+        src/core/utilities/internal_shared_ptr.inl
+        src/core/utilities/cpp_version.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
+
+install(
+  FILES src/core/utilities/detail/compressed_pair.h
+        src/core/utilities/detail/shared_ptr_control_block.h
+        src/core/utilities/detail/shared_ptr_control_block.inl
+        src/core/utilities/detail/type_traits.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities/detail)
+
+install(
+  DIRECTORY   ${LEGATE_CORE_DIR}/cmake/Modules
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate_core"
+  FILES_MATCHING
+    PATTERN "*.cmake")
+
+include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
+
+legate_core_debug_syms(legate_core INSTALL_DIR ${lib_dir})
 
 ##############################################################################
 # - install export -----------------------------------------------------------
@@ -443,7 +617,7 @@ Imported Targets:
 
 ]=])
 
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/cmake/legate_helper_functions.cmake helper_functions)
+file(READ ${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake helper_functions)
 
 string(JOIN "\n" code_string
 [=[
@@ -486,14 +660,40 @@ rapids_export(
   LANGUAGES ${ENABLED_LANGUAES}
 )
 
-include(cmake/legate_helper_functions.cmake)
-
 set(legate_core_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
+include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)
+
+legate_core_add_tidy_target(SOURCES ${legate_core_SOURCES})
+
 if(legate_core_BUILD_TESTS)
-  add_subdirectory(tests/integration)
+  include(CTest)
+
+  add_subdirectory(${LEGATE_CORE_DIR}/tests/cpp)
+endif()
+
+if(legate_core_BUILD_INTEGRATION)
+  # TODO:
+  # This is broken!
+  #
+  # CMake Error at build/test-build/legate_core-config.cmake:196 (include):
+  # include could not find requested file:
+  #
+  #   /path/to/legate.core.internal/build/test-build/Modules/include_rapids.cmake
+  # Call Stack (most recent call first):
+  # cmake/legate_helper_functions.cmake:265 (legate_default_cpp_install)
+  # tests/integration/collective/CMakeLists.txt:32 (legate_add_cpp_subdirectory)
+  add_subdirectory(${LEGATE_CORE_DIR}/tests/integration)
 endif()
 
 if(legate_core_BUILD_EXAMPLES)
-  add_subdirectory(examples)
+  add_subdirectory(${LEGATE_CORE_DIR}/examples)
+endif()
+
+# touch these variables so they are not marked as "unused"
+set(legate_core_maybe_ignored_variables_ "${legate_core_CMAKE_PRESET_NAME};${CMAKE_BUILD_PARALLEL_LEVEL};")
+if(NOT Legion_USE_CUDA)
+  list(APPEND legate_core_maybe_ignored_variables_ "${legate_core_CUDA_FLAGS}")
+  list(APPEND legate_core_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_DEBUG}")
+  list(APPEND legate_core_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_RELEASE}")
 endif()

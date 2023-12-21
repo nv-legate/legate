@@ -1,30 +1,28 @@
-# Copyright 2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 
 import argparse
 
 import cunumeric as np
-from reduction import matmul, multiply, sum_over_axis, user_context
+from reduction import matmul, multiply, sum_over_axis
 
 import legate.core.types as ty
+from legate.core import get_legate_runtime
 
 
 def test(m: int, n: int, k: int, print_stores: bool, matmul_only: bool):
     # Generate inputs using cuNumeric
-    rhs1 = user_context.create_store(ty.int64, (m, k))
-    rhs2 = user_context.create_store(ty.int64, (k, n))
+    rhs1 = get_legate_runtime().create_store(ty.int64, (m, k))
+    rhs2 = get_legate_runtime().create_store(ty.int64, (k, n))
     np.asarray(rhs1)[:] = np.arange(m * k).reshape(m, k)
     np.asarray(rhs2)[:] = np.arange(k * n).reshape(k, n)
 

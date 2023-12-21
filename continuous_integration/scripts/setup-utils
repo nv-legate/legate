@@ -4,6 +4,7 @@ set_darwin_build_env() {
     set -xeuo pipefail
 
     export USE_CUDA=OFF
+    export UCX_ENABLED=OFF
     export OS_SHORT_NAME=osx
     export PATH="/usr/local/opt/coreutils/libexec/gnubin:${PATH}"
 }
@@ -139,6 +140,10 @@ install_linux_test_tools() {
 
     export SED=sed
     export READLINK=readlink
+
+    # Run package updates and install packages
+    apt-get update
+    apt-get install -y numactl
 }
 
 set_base_defs() {
@@ -152,6 +157,7 @@ set_base_defs() {
 
     export PROJECT=legate.core
     export PREBUILD_DIR=/tmp/prebuild
+    mkdir -p "$PREBUILD_DIR"
 
     export BUILD_MARCH=$(uname -m | tr '_' '-')
 
@@ -161,7 +167,10 @@ set_base_defs() {
 
     export PYTHON_VERSION=3.11
 
+    export MAX_LIBSANITIZER_VERSION=11.4
+
     export USE_OPENMP=ON
+    export LEGATE_CORE_CMAKE_PRESET=${LEGATE_CORE_CMAKE_PRESET:-release-gcc}
 }
 
 # -----------------------------------------------------------------------------
@@ -222,8 +231,6 @@ setup_os_specific_env() {
 
 setup_build_env() {
     set -xeuo pipefail
-
-    set_base_defs;
 
     install_tools;
 

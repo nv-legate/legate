@@ -14,12 +14,12 @@ get_vault_token() {
         curl -s                                       \
             -X POST                                   \
             -H "Content-Type: application/json"       \
-            -d "{\"token\": \"$gh_token\"}"           \
-            "$VAULT_HOST/v1/auth/github-${user_org}/login" \
+            -d "{\"token\": \"${gh_token}\"}"           \
+            "${VAULT_HOST}/v1/auth/github-${user_org}/login" \
         | jq -r '.auth.client_token'                    \
     )";
 
-    echo "vault_token='$vault_token'";
+    echo "vault_token='${vault_token}'";
 }
 
 vault_s3_init() {
@@ -27,7 +27,13 @@ vault_s3_init() {
     # Attempt to retrieve temporary AWS credentials from a vault
     # instance using GitHub OAuth.
 
-    eval "export $(find $REPO_DIR/.creds -type f -exec bash -c 'echo $(basename $0)=$(<$0)' {} \;)";
+    if [[ -z ${REPO_DIR} ]]; then
+        exit 1
+    fi
+
+    local retrieve_creds_code
+    retrieve_creds_code="export $(find "${REPO_DIR}"/.creds -type f -exec bash -c 'echo $(basename $0)=$(<$0)' {} \;)"
+    eval "${retrieve_creds_code}";
 
     if [[ -z "${VAULT_HOST:-}" ]]; then return; fi
     if [[ -z "${SCCACHE_BUCKET:-}" ]]; then return; fi
@@ -42,7 +48,9 @@ vault_s3_init() {
     local user_orgs=nv-legate;
 
     # Attempt to authenticate with GitHub
-    eval "$(get_vault_token "${VAULT_HOST}" ${user_orgs} $GH_TOKEN)";
+    local vault_token_code 
+    vault_token_code="$(get_vault_token "${VAULT_HOST}" "${user_orgs}" "${GH_TOKEN}")"
+    eval "${vault_token_code}";
 
     if [[ "${vault_token:-null}" == null ]]; then
         echo "Your GitHub user was not recognized by vault. Exiting." >&2;
@@ -55,17 +63,20 @@ vault_s3_init() {
     local uri="${VAULT_S3_URI:-"v1/aws/creds/devs"}";
 
     # Generate temporary AWS creds
-    local aws_creds="$(                         \
+    local aws_creds
+    aws_creds="$(                         \
         curl -s                                 \
             -X GET                              \
-            -H "X-Vault-Token: $vault_token"    \
+            -H "X-Vault-Token: ${vault_token}"    \
             -H "Content-Type: application/json" \
-            "${VAULT_HOST}/$uri?ttl=$ttl"       \
+            "${VAULT_HOST}/${uri}?ttl=${ttl}"       \
       | jq -r '.data'                           \
     )";
 
-    export AWS_ACCESS_KEY_ID="$(echo "$aws_creds" | jq -r '.access_key')";
-    export AWS_SECRET_ACCESS_KEY="$(echo "$aws_creds" | jq -r '.secret_key')";
+    AWS_ACCESS_KEY_ID="$(echo "${aws_creds}" | jq -r '.access_key')";
+    export AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY="$(echo "${aws_creds}" | jq -r '.secret_key')";
+    export AWS_SECRET_ACCESS_KEY
 
     if [[ "${AWS_ACCESS_KEY_ID:-null}" == null ]]; then
         echo "Failed to generate temporary AWS S3 credentials. Exiting." >&2;
@@ -80,18 +91,18 @@ vault_s3_init() {
     # Generate AWS config files
     mkdir -p ~/.aws;
 
-    echo "$(date '+%s')" > ~/.aws/stamp;
+    date '+%s' > ~/.aws/stamp;
 
     cat <<EOF > ~/.aws/config
 [default]
-${SCCACHE_BUCKET:+bucket=$SCCACHE_BUCKET}
-${SCCACHE_REGION:+region=$SCCACHE_REGION}
+${SCCACHE_BUCKET:+bucket=${SCCACHE_BUCKET}}
+${SCCACHE_REGION:+region=${SCCACHE_REGION}}
 EOF
 
     cat <<EOF > ~/.aws/credentials
 [default]
-aws_access_key_id=$AWS_ACCESS_KEY_ID
-aws_secret_access_key=$AWS_SECRET_ACCESS_KEY
+aws_access_key_id=${AWS_ACCESS_KEY_ID}
+aws_secret_access_key=${AWS_SECRET_ACCESS_KEY}
 EOF
 
     chmod 0600 ~/.aws/{config,credentials};

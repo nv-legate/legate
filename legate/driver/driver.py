@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -25,7 +22,7 @@ from typing import TYPE_CHECKING, Any
 from ..util.system import System
 from ..util.types import DataclassMixin
 from ..util.ui import kvtable, rule, section, value, warn
-from .command import CMD_PARTS_CANONICAL, CMD_PARTS_LEGION
+from .command import CMD_PARTS_CANONICAL, CMD_PARTS_EXEC, CMD_PARTS_LEGION
 from .config import ConfigProtocol
 from .launcher import Launcher, SimpleLauncher
 
@@ -70,12 +67,16 @@ class LegateDriver:
 
     @property
     def cmd(self) -> Command:
-        """The full command invocation that should be used to start Legate."""
+        """The full command invocation to use to run the Legate program."""
         config = self.config
         launcher = self.launcher
         system = self.system
 
-        parts = (part(config, system, launcher) for part in CMD_PARTS_LEGION)
+        cmd_parts = (
+            CMD_PARTS_LEGION if config.run_mode == "python" else CMD_PARTS_EXEC
+        )
+
+        parts = (part(config, system, launcher) for part in cmd_parts)
         return launcher.cmd + sum(parts, ())
 
     @property

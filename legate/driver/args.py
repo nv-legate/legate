@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 from argparse import REMAINDER, ArgumentDefaultsHelpFormatter, ArgumentParser
@@ -21,6 +18,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any
+    from ..util.types import RunMode
 
 from .. import __version__
 from ..util.args import InfoAction
@@ -44,6 +42,8 @@ from ..util.shared_args import (
 from . import defaults
 
 __all__ = ("parser",)
+
+RUN_MODE_OPTIONS: tuple[RunMode, ...] = ("python", "exec")
 
 
 def detect_multi_node_defaults() -> tuple[dict[str, Any], dict[str, Any]]:
@@ -113,6 +113,17 @@ parser.add_argument(
     help="A python script to run, plus any arguments for the script. "
     "Any arguments after the script will be passed to the script, i.e. "
     "NOT used as arguments to legate itself.",
+)
+
+parser.add_argument(
+    "--run-mode",
+    default=None,
+    choices=RUN_MODE_OPTIONS,
+    help="Whether to run the command as python code with legion_python, or "
+    "as a bare executable. By default, commands that end in .py will be run "
+    "as a python script, and those that don't will be run as an executable. "
+    "If --module is specified, python mode will also be assumed by default. "
+    "[legate-only, not supported with standard Python invocation]",
 )
 
 nodes_kw, ranks_per_node_kw = detect_multi_node_defaults()
@@ -416,9 +427,9 @@ other.add_argument(
     action="append",
     default=[],
     help="Specify another executable (and any command-line arguments for that "
-    "executable) to wrap the Legate executable invocation. This wrapper will "
+    "executable) to wrap the remaining command invocation. This wrapper will "
     "come right after the launcher invocation, and will be passed the rest of "
-    "the Legate invocation (including any other wrappers) to execute. May "
+    "the command invocation (including any other wrappers) to execute. May "
     "contain the special string %%%%LEGATE_GLOBAL_RANK%%%% that will be "
     "replaced with the rank of the current process by bind.sh. If multiple "
     "--wrapper values are provided, they will execute in the order given. "
@@ -432,9 +443,9 @@ other.add_argument(
     action="append",
     default=[],
     help="Specify another executable (and any command-line arguments for that "
-    "executable) to wrap the Legate executable invocation. This wrapper will "
-    "come right before the legion_python invocation (after any other "
-    "wrappers) and will be passed the rest of the legion_python invocation to "
+    "executable) to wrap the remaining command invocation. This wrapper will "
+    "come right before the command invocation (after any other "
+    "wrappers) and will be passed the rest of the command invocation to "
     "execute. May contain the special string %%%%LEGATE_GLOBAL_RANK%%%% that "
     "will be replaced with the rank of the current process by bind.sh. If "
     "multiple --wrapper-inner values are given, they will execute in the "
@@ -447,7 +458,8 @@ other.add_argument(
     dest="module",
     default=None,
     required=False,
-    help="Specify a Python module to load before running "
+    help="Specify a Python module to load before running. Only applicable "
+    "when run mode is 'python' (i.e. when running Python scripts). "
     "[legate-only, not supported with standard Python invocation]",
 )
 

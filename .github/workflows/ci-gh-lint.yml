@@ -1,0 +1,117 @@
+name: Lint legate.core on GH
+
+concurrency:
+  group: ci-lint-on-${{ github.event_name }}-from-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "pull-request/[0-9]+"
+      - "*branch-*"
+
+jobs:
+  pre-commit:
+    runs-on: 'linux-amd64-cpu4'
+    strategy:
+      fail-fast: true
+      matrix:
+        config:
+          - {jobName: '(must pass) pre-commit python-3.10', canFail: false, version: '3.10'}
+          - {jobName: '(continue on error) pre-commit python-3.11', canFail: true, version: '3.11'}
+          - {jobName: '(continue on error) pre-commit python-3.12', canFail: true,version: '3.12'}
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    permissions:
+      contents: read  # This is required for actions/checkout
+
+    steps:
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate requirements.txt
+        run: |
+          echo "shellcheck-py" > requirements.txt
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.config.version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: run pre-commit
+        uses: pre-commit/action@v3.0.0
+        continue-on-error: ${{ matrix.config.canFail }}
+
+  tidy:
+    runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: true
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    permissions:
+      contents: read  # This is required for actions/checkout
+
+    steps:
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: List machine info
+        run: |
+          uname -a
+          lsb_release -a
+
+      - name: List python version
+        run: python3 --version
+
+      - name: Install LLVM 17
+        working-directory: ~
+        run: |
+          # check if we can't install via apt-get, in which case we can remove all the
+          # lines below this
+          set -e
+          ret=$(sudo apt-get install -y clang-tidy-17 > /dev/null 2>&1; echo $?)
+          if [[ $ret -eq 0 ]]; then
+            echo 'Can install clang-tidy-17 with apt-get, no longer need to install it manually!';
+            exit 1;
+          fi
+          set +e
+          # can remove all this if we can install with apt-get
+          mkdir -p llvm-17
+          cd llvm-17
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x ./llvm.sh
+          sudo ./llvm.sh 17 all
+
+      - name: List clang-tidy version
+        run: |
+          clang-tidy-17 --version
+          # run-clang-tidy has no --version, so just print its location and help to make
+          # sure it's there
+          which run-clang-tidy-17
+          run-clang-tidy-17 --help
+
+      - name: Install Legion pre-reqs
+        run: |
+          # libdwarf
+          sudo apt-get install -y libdw-dev
+
+      - name: Configure legate.core
+        # CMake Error: CMake was unable to find a build program corresponding to "Ninja".
+        # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
+        # tool.
+        run: |
+          cmake \
+            --preset debug-clang \
+            -G "Unix Makefiles" \
+            -DLEGATE_CORE_CLANG_TIDY=clang-tidy-17 \
+            -DLEGATE_CORE_RUN_CLANG_TIDY=run-clang-tidy-17
+
+      - name: Run clang-tidy
+        run: cmake --build --preset debug-clang --target tidy

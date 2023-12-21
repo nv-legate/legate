@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import argparse
@@ -27,7 +24,7 @@ if TYPE_CHECKING:
     from .config import ConfigProtocol
     from .launcher import Launcher
 
-__all__ = ("CMD_PARTS_LEGION", "CMD_PARTS_CANONICAL")
+__all__ = ("CMD_PARTS_EXEC", "CMD_PARTS_LEGION", "CMD_PARTS_CANONICAL")
 
 
 # this will be replaced by bind.sh with the actual computed rank at runtime
@@ -439,10 +436,10 @@ def cmd_eager_alloc(
     return ("-lg:eager_alloc_percentage", str(eager_alloc))
 
 
-def cmd_user_script(
+def cmd_user_program(
     config: ConfigProtocol, system: System, launcher: Launcher
 ) -> CommandPart:
-    return () if config.user_script is None else (config.user_script,)
+    return () if config.user_program is None else (config.user_program,)
 
 
 def cmd_user_opts(
@@ -457,7 +454,24 @@ def cmd_python(
     return ("python",)
 
 
-_CMD_PARTS_SHARED = (
+_CMD_PARTS_PRE = (
+    cmd_bind,
+    # Add any user supplied (outer) wrappers
+    cmd_wrapper,
+    cmd_rlwrap,
+    cmd_gdb,
+    cmd_cuda_gdb,
+    cmd_nvprof,
+    cmd_nsys,
+    # Add memcheck right before the binary
+    cmd_memcheck,
+    # Add valgrind right before the binary
+    cmd_valgrind,
+    # Add any user supplied inner wrappers
+    cmd_wrapper_inner,
+)
+
+_CMD_PARTS_POST = (
     # This has to go before script name
     cmd_nocr,
     cmd_kthreads,
@@ -478,31 +492,18 @@ _CMD_PARTS_SHARED = (
 )
 
 CMD_PARTS_LEGION = (
-    (
-        cmd_bind,
-        # Add any user supplied (outer) wrappers
-        cmd_wrapper,
-        cmd_rlwrap,
-        cmd_gdb,
-        cmd_cuda_gdb,
-        cmd_nvprof,
-        cmd_nsys,
-        # Add memcheck right before the binary
-        cmd_memcheck,
-        # Add valgrind right before the binary
-        cmd_valgrind,
-        # Add any user supplied inner wrappers
-        cmd_wrapper_inner,
+    _CMD_PARTS_PRE
+    + (
         # Now we're ready to build the actual command to run
         cmd_legion,
         # This has to go before script name
         cmd_python_processor,
         cmd_module,
     )
-    + _CMD_PARTS_SHARED
+    + _CMD_PARTS_POST
     + (
         # User script
-        cmd_user_script,
+        cmd_user_program,
         # Append user flags so they can override whatever we provided
         cmd_user_opts,
     )
@@ -513,9 +514,22 @@ CMD_PARTS_CANONICAL = (
         # Executable name that will get stripped by the runtime
         cmd_python,
         # User script
-        cmd_user_script,
+        cmd_user_program,
     )
-    + _CMD_PARTS_SHARED
+    + _CMD_PARTS_POST
+    + (
+        # Append user flags so they can override whatever we provided
+        cmd_user_opts,
+    )
+)
+
+CMD_PARTS_EXEC = (
+    _CMD_PARTS_PRE
+    + (
+        # Now we're ready to build the actual command to run
+        cmd_user_program,
+    )
+    + _CMD_PARTS_POST
     + (
         # Append user flags so they can override whatever we provided
         cmd_user_opts,

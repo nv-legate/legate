@@ -1,29 +1,14 @@
 #!/usr/bin/env bash
 
-set_repo_dir() {
-    set -xeuo pipefail
-
-    # Resolve the directory of the script
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-    # Navigate to the parent of the parent of SCRIPT_DIR, then get the full path
-    REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-
-    export REPO_DIR
-
-    export PATH="${PATH}:${REPO_DIR}/continuous_integration/scripts"
-    export ARTIFACTS_DIR="${REPO_DIR}/.artifacts"
-}
-
 run_test_or_analysis() {
     set -x
-
-    set_repo_dir;
 
     . conda-utils
     . setup-utils;
 
     set_base_defs;
+    cd "$PREBUILD_DIR"
+
     install_test_tools;
 
     install_legate_core_with_war;
@@ -34,24 +19,88 @@ run_test_or_analysis() {
 
     set -xeuo pipefail
 
+    cd "$REPO_DIR"
+
     case "$1" in
-        "unit")
-            echo "Executing unit tests..."
+        "python")
             ucx_libs=
-            [ "${UCX_ENABLED:-}" = "ON" ] && ucx_libs=ucx\ openmpi
-            mamba install -y -n "${CONDA_ENV}" -c conda-forge pytest pytest-mock ipython jupyter_client $ucx_libs
+            [ "${UCX_ENABLED}" = "ON" ] && ucx_libs=ucx\ openmpi
+            echo "Executing python tests..."
+            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
+              echo "============================================================================"
+              echo "x ------------------------------------------------------------------------ x"
+              echo "Cannot yet handle running Python tests using Address Sanitizer, bailing!"
+              echo "x ------------------------------------------------------------------------ x"
+              echo "============================================================================"
+              return 0
+            fi
+
+            set +eou pipefail
+            mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
+            set -eou pipefail
+
             cd $REPO_DIR/tests/unit
-            pytest
+            # Leaving this here in case we ever decide to enable this. If we don't do
+            # this, we get
+            # ImportError: could not load libasan.6.so
+            # when loading the Cython extension libs.
+            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-gcc ]]; then
+              # Trying to reproduce this on macOS? See
+              # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
+              #
+              # The TL;DR is, however:
+              #
+              # asan_lib='/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib'
+              #
+              # py_paths='/path/to/legate.core.internal' (optional, only if you are using a venv)
+              #
+              # DYLD_INSERT_LIBRARIES=$asan_lib PYTHONPATH=$py_paths
+              # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
+              # /path/to/your/file.py
+              GCC_ASAN_PRELOAD=$(gcc -print-file-name=libasan.so)
+              for test_file in $(find . -name 'test_*.py'); do
+                LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest ${test_file}
+              done
+            elif [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-clang ]]; then
+              echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
+              echo "See impls for GCC above"
+              return 1
+            else
+              for test_file in $(find . -name 'test_*.py'); do
+                pytest ${test_file}
+              done
+            fi
+
             ;;
-        "mypy")
-          echo "Executing mypy..."
-            # Keep mypy version identical to mypy version in .pre-commit.yaml. The only
-            # reason we don't read it directly here is because when this is run in CI, it
-            # is done on a job which does not checkout the repo (and hence cannot read the
-            # .pre-commit.yaml).
-            mamba install -y -n "${CONDA_ENV}" mypy=1.5.1
-            cd $REPO_DIR
-            mypy legate
+        "cpp")
+            echo "Running C++ unit tests..."
+            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
+
+            if [[ "${UCX_ENABLED}" == "ON" ]]; then
+              set +eou pipefail
+              mamba install -y -n "${CONDA_ENV}" ucx openmpi
+              set -eou pipefail
+            fi
+
+            cd "${REPO_DIR}"
+            mkdir -p ctest_install
+            sh "${REPO_DIR}"/.artifacts/out/legate_core-*-$(uname).sh \
+               --prefix="${REPO_DIR}/ctest_install" \
+               --exclude-subdir \
+               --skip-license
+
+            python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1
+
+            # Also do some multi-CPU testing
+            if [[ "$(uname)" == "Darwin" ]]; then
+                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 2
+            else
+                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 4
+            fi
+
+            [[ -f ./ctest_install/bin/gpu_tests ]] && {
+              python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1
+            }
             ;;
         *)
             echo "Invalid command: $1"

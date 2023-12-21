@@ -1,4 +1,9 @@
 name: Pull Request Labels
+
+concurrency:
+  group: label-check-${{ github.event_name }}-from-${{ github.ref_name }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     types: [opened, labeled, unlabeled, synchronize]
@@ -6,9 +11,13 @@ jobs:
   label:
     runs-on: ubuntu-latest
     steps:
+      # When the pull request is opened, give some time to assign a label
+      - name: Delay on open
+        if: ${{ github.event.action == 'opened' }}
+        run: sleep 60
       - name: Check Labels
         uses: mheap/github-action-required-labels@v3
         with:
           mode: exactly
           count: 1
-          labels: "category:new-feature, category:improvement, category:bug-fix, category:task, category:documentation"
+          labels: "category:new-feature, category:improvement, category:bug-fix, category:housekeeping, category:documentation"

@@ -1,17 +1,13 @@
 #=============================================================================
-# Copyright 2022-2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 #=============================================================================
 
 ##############################################################################
@@ -62,6 +58,7 @@ include(rapids-cython)
 rapids_cython_init()
 
 add_subdirectory(legate/core/_lib)
+add_subdirectory(legate/timing/_lib)
 
 set(cython_lib_dir "../../")
 
@@ -136,3 +133,33 @@ rapids_export(
   NAMESPACE legate::
   DOCUMENTATION doc_string
   FINAL_CODE_BLOCK code_string)
+
+# We want to extract where the _skbuild/<machine-specific>/cmake-build folder is when
+# using scikit-build to build the project. scikit-build expects all build artifacts to go
+# there after configuration, but this may not always be the case. The user may pass -B
+# ./path/to/other/build, or this may be set automatically by a cmake preset.
+#
+# The workaround is therefore to locate this cmake-build folder, and -- after
+# configuration is complete -- create a symlink from the *actual* build folder to
+# cmake-build.
+#
+# But locating cmake-build is not easy:
+#
+# - CMAKE_CURRENT_BINARY_DIR is unreliable since it may be overridden (as detailed above).
+# - CMAKE_CURRENT_[SOURCE|LIST]_DIR don't work, they are /path/to/legate.core.internal
+#   (not the directory from which cmake was invoked)
+#
+# So the trick is to exploit the fact that scikit-build sets CMAKE_INSTALL_PREFIX to
+# _skbuild/<machine-specific>/cmake-install (and enforces that the user does not override
+# this! see
+# https://github.com/scikit-build/scikit-build/blob/main/skbuild/cmaker.py#L321). From
+# this, we can reconstruct the cmake-build path.
+if(SKBUILD)
+  cmake_path(GET CMAKE_INSTALL_PREFIX PARENT_PATH skbuild_root_dir)
+  cmake_path(APPEND skbuild_root_dir "cmake-build" OUTPUT_VARIABLE skbuild_cmake_build_dir)
+  if (NOT (${skbuild_cmake_build_dir} STREQUAL ${CMAKE_CURRENT_BINARY_DIR}))
+    # The binary dir has been overridden.
+    file(REMOVE_RECURSE ${skbuild_cmake_build_dir})
+    file(CREATE_LINK ${CMAKE_CURRENT_BINARY_DIR} ${skbuild_cmake_build_dir} SYMBOLIC)
+  endif()
+endif()

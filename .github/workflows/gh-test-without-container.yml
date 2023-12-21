@@ -1,0 +1,84 @@
+name: Test legate.core.internal
+
+on:
+  workflow_call:
+    inputs:
+      target-device:
+        required: true
+        type: string
+      repos-name:
+        required: true
+        type: string
+      runs-on:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+      test-scope:
+        required: true
+        type: string
+      cmake-preset:
+        required: true
+        type: string
+      ucx-config:
+        required: true
+        type: string
+      ucx-string:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+env:
+  UCX_ENABLED: ${{ (inputs.ucx-config == 'ucx' && 'ON') || 'OFF' }}
+  LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
+  ARTIFACTS_DIR: "${{ github.workspace }}/.artifacts"
+  ARTIFACT_NAME: "${{ inputs.platform }}-${{ inputs.repos-name }}-${{ inputs.target-device }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}-${{ inputs.sha }}"
+
+jobs:
+  test-without-container:
+    name: Test without container (${{ inputs.test-scope }}, ${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, ${{ inputs.ucx-config }}, ${{ inputs.runs-on }})
+
+    if: github.repository_owner == 'nv-legate'
+
+    runs-on: ${{ inputs.runs-on }}
+
+    defaults:
+      run:
+        shell: bash --noprofile --norc -xeuo pipefail {0}
+
+    env:
+      LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
+
+    steps:
+      - if: inputs.target-device == 'gpu'
+        name: Run nvidia-smi to make sure GPU is working
+        run: nvidia-smi
+
+      - name: Dump relevant enviornment variables
+        run: |
+          pwd
+          echo ARTIFACTS_DIR=$ARTIFACTS_DIR
+          echo ARTIFACT_NAME=$ARTIFACT_NAME
+          echo Platform: ${{ inputs.platform }}
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          path: ${{ github.workspace }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
+
+      - name: Display structure of downloaded artifacts
+        run: |
+          pwd
+          ls -aR ${{ env.ARTIFACTS_DIR }}
+
+      - name: Run ${{ inputs.repos-name }} test / analysis
+        run: continuous_integration/scripts/entrypoint run-test-or-analysis ${{ inputs.test-scope }}

@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import traceback
@@ -24,10 +21,23 @@ from typing import (
     Iterator,
     MutableSet,
     Optional,
+    Protocol,
     TypeVar,
 )
 
+from .shape import Shape
+
 T = TypeVar("T", bound="Hashable")
+
+
+class AnyCallable(Protocol):
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        ...
+
+
+class ShutdownCallback(Protocol):
+    def __call__(self) -> None:
+        ...
 
 
 class OrderedSet(MutableSet[T]):
@@ -89,9 +99,44 @@ def capture_traceback_repr(
     return "".join(traceback.format_tb(tb)) if tb is not None else None
 
 
+def is_iterable(obj: Any) -> bool:
+    try:
+        iter(obj)
+        return True
+    except TypeError:
+        return False
+
+
+def is_shape_like(obj: Any) -> bool:
+    return isinstance(obj, Shape) or is_iterable(obj)
+
+
 def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:
     # Use an already-opened library handle, which cffi will convert to a
     # regular FFI object (using the definitions previously added using
     # ffi.cdef), but will not automatically dlclose() on collection.
     lib = CDLL(lib_path, mode=RTLD_GLOBAL)
     return ffi.dlopen(ffi.cast("void *", lib._handle))
+
+
+class Annotation:
+    def __init__(self, pairs: dict[str, str]) -> None:
+        """
+        Constructs a new annotation object
+
+        Parameters
+        ----------
+        pairs : dict[str, str]
+            Annotations as key-value pairs
+        """
+        # self._annotation = runtime.annotation
+        self._pairs = pairs
+
+    def __enter__(self) -> None:
+        pass
+        # self._annotation.update(**self._pairs)
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        pass
+        # for key in self._pairs.keys():
+        #    self._annotation.remove(key)

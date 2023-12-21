@@ -1,41 +1,37 @@
-/* Copyright 2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
-#include <assert.h>
-#include <limits.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <string.h>
-#include <atomic>
-#include <cstdlib>
-#include <unordered_map>
-
-#ifndef LEGATE_USE_NETWORK
-#include <stdint.h>
-#endif
-
 #include "coll.h"
-#include "legate.h"
-#include "legion.h"
 
-namespace legate {
-namespace comm {
-namespace coll {
+#include "core/utilities/detail/strtoll.h"
 
-Logger log_coll("coll");
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <pthread.h>
+
+namespace legate::comm::coll {
+
+namespace detail {
+
+Logger& log_coll()
+{
+  static Logger log{"coll"};
+
+  return log;
+}
+
+}  // namespace detail
 
 BackendNetwork* backend_network = nullptr;
 
@@ -63,10 +59,10 @@ int collAlltoallv(const void* sendbuf,
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
-    log_coll.error("Do not support inplace Alltoallv");
+    detail::log_coll().error("Do not support inplace Alltoallv");
     LEGATE_ABORT;
   }
-  log_coll.debug(
+  detail::log_coll().debug(
     "Alltoallv: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
     "mpi_comm_size %d %d, nb_threads %d",
     global_comm->global_rank,
@@ -85,10 +81,10 @@ int collAlltoall(
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
-    log_coll.error("Do not support inplace Alltoall");
+    detail::log_coll().error("Do not support inplace Alltoall");
     LEGATE_ABORT;
   }
-  log_coll.debug(
+  detail::log_coll().debug(
     "Alltoall: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
     "mpi_comm_size %d %d, nb_threads %d",
     global_comm->global_rank,
@@ -104,7 +100,7 @@ int collAlltoall(
 int collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
-  log_coll.debug(
+  detail::log_coll().debug(
     "Allgather: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
     "mpi_comm_size %d %d, nb_threads %d",
     global_comm->global_rank,
@@ -120,18 +116,22 @@ int collAllgather(
 // called from main thread
 int collInit(int argc, char* argv[])
 {
-#ifdef LEGATE_USE_NETWORK
-  char* network    = getenv("LEGATE_NEED_NETWORK");
-  int need_network = 0;
-  if (network != nullptr) { need_network = atoi(network); }
-  if (need_network) {
-    backend_network = new MPINetwork(argc, argv);
-  } else {
-    backend_network = new LocalNetwork(argc, argv);
-  }
-#else
-  backend_network = new LocalNetwork(argc, argv);
+  if (LegateDefined(LEGATE_USE_NETWORK)) {
+    char* network    = getenv("LEGATE_NEED_NETWORK");
+    int need_network = 0;
+    if (network != nullptr) {
+      need_network = legate::detail::safe_strtoll<int>(network);
+    }
+    if (need_network) {
+#if LegateDefined(LEGATE_USE_NETWORK)
+      backend_network = new MPINetwork{argc, argv};
 #endif
+    } else {
+      backend_network = new LocalNetwork{argc, argv};
+    }
+  } else {
+    backend_network = new LocalNetwork{argc, argv};
+  }
   return CollSuccess;
 }
 
@@ -142,10 +142,6 @@ int collFinalize()
 }
 
 int collInitComm() { return backend_network->init_comm(); }
-
-BackendNetwork::BackendNetwork() : coll_inited(false), current_unique_id(0) {}
-
-BackendNetwork::~BackendNetwork() {}
 
 int BackendNetwork::collGetUniqueId(int* id)
 {
@@ -162,13 +158,15 @@ void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, size_t size)
   return sendbuf_tmp;
 }
 
-}  // namespace coll
-}  // namespace comm
-}  // namespace legate
+}  // namespace legate::comm::coll
 
 extern "C" {
 
-void legate_cpucoll_finalize(void) { legate::comm::coll::collFinalize(); }
+int legate_cpucoll_finalize(void)
+{
+  // REVIEW: this should be returned?
+  return legate::comm::coll::collFinalize();
+}
 
 int legate_cpucoll_initcomm(void) { return legate::comm::coll::collInitComm(); }
 }

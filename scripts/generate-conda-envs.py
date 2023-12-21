@@ -214,6 +214,7 @@ class TestsConfig(SectionConfig):
             "types-docutils",
             "pynvml",
             "tifffile",
+            "psutil",
         )
 
     @property
@@ -300,7 +301,7 @@ class EnvConfig:
 
 # --- Setup -------------------------------------------------------------------
 
-PYTHON_VERSIONS = ("3.9", "3.10", "3.11")
+PYTHON_VERSIONS = ("3.10", "3.11")
 
 OS_NAMES: Tuple[OSType, ...] = ("linux", "osx")
 
@@ -311,7 +312,7 @@ channels:
 {channels}
 dependencies:
 
-  - python={python},!=3.9.7  # avoid https://bugs.python.org/issue45121
+  - python={python}
 
 {conda_sections}{pip}
 """
@@ -379,7 +380,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--python",
         choices=PYTHON_VERSIONS,
-        default="3.10",
+        default=PYTHON_VERSIONS[0],
         help="Python version to generate for",
     )
     parser.add_argument(

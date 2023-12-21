@@ -1,25 +1,23 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
-#include "legion.h"
-
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
+
+#include "legion.h"
+
+#include <cstddef>
 
 /**
  * @file
@@ -27,6 +25,8 @@
  */
 
 namespace legate {
+
+inline constexpr size_t DEFAULT_ALIGNMENT = 16;
 
 /**
  * @ingroup data
@@ -73,14 +73,19 @@ using Buffer = Legion::DeferredBuffer<VAL, DIM>;
 template <typename VAL, int32_t DIM>
 Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
                                Memory::Kind kind = Memory::Kind::NO_MEMKIND,
-                               size_t alignment  = 16)
+                               size_t alignment  = DEFAULT_ALIGNMENT)
 {
-  if (Memory::Kind::NO_MEMKIND == kind) kind = find_memory_kind_for_executing_processor(false);
+  static_assert(DIM <= LEGATE_MAX_DIM);
+
+  if (Memory::Kind::NO_MEMKIND == kind) {
+    kind = find_memory_kind_for_executing_processor(false);
+  }
   auto hi = extents - Point<DIM>::ONES();
   // We just avoid creating empty buffers, as they cause all sorts of headaches.
-  for (int32_t idx = 0; idx < DIM; ++idx) hi[idx] = std::max<int64_t>(hi[idx], 0);
-  Rect<DIM> bounds(Point<DIM>::ZEROES(), hi);
-  return Buffer<VAL, DIM>(bounds, kind, nullptr, alignment);
+  for (int32_t idx = 0; idx < DIM; ++idx) {
+    hi[idx] = std::max<int64_t>(hi[idx], 0);
+  }
+  return Buffer<VAL, DIM>{Rect<DIM>{Point<DIM>::ZEROES(), std::move(hi)}, kind, nullptr, alignment};
 }
 
 /**
@@ -97,7 +102,7 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
 template <typename VAL>
 Buffer<VAL> create_buffer(size_t size,
                           Memory::Kind kind = Memory::Kind::NO_MEMKIND,
-                          size_t alignment  = 16)
+                          size_t alignment  = DEFAULT_ALIGNMENT)
 {
   return create_buffer<VAL, 1>(Point<1>(size), kind, alignment);
 }

@@ -1,92 +1,58 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #include "core/mapping/operation.h"
-#include "core/runtime/context.h"
-#include "core/utilities/deserializer.h"
 
-namespace legate {
-namespace mapping {
+#include "core/mapping/detail/array.h"
+#include "core/mapping/detail/operation.h"
 
-Mappable::Mappable() {}
+namespace legate::mapping {
 
-Mappable::Mappable(const Legion::Mappable* mappable)
+int64_t Task::task_id() const { return impl()->task_id(); }
+
+namespace {
+
+template <typename Arrays>
+std::vector<Array> convert_arrays(const Arrays& arrays)
 {
-  MapperDataDeserializer dez(mappable);
-  machine_desc_ = dez.unpack<MachineDesc>();
-  sharding_id_  = dez.unpack<uint32_t>();
-}
+  std::vector<Array> result;
 
-Task::Task(const Legion::Task* task,
-           const LibraryContext* library,
-           Legion::Mapping::MapperRuntime* runtime,
-           const Legion::Mapping::MapperContext context)
-  : Mappable(task), task_(task), library_(library)
-{
-  TaskDeserializer dez(task, runtime, context);
-  inputs_     = dez.unpack<std::vector<Store>>();
-  outputs_    = dez.unpack<std::vector<Store>>();
-  reductions_ = dez.unpack<std::vector<Store>>();
-  scalars_    = dez.unpack<std::vector<Scalar>>();
-}
-
-int64_t Task::task_id() const { return library_->get_local_task_id(task_->task_id); }
-
-TaskTarget Task::target() const
-{
-  switch (task_->target_proc.kind()) {
-    case Processor::LOC_PROC: return TaskTarget::CPU;
-    case Processor::TOC_PROC: return TaskTarget::GPU;
-    case Processor::OMP_PROC: return TaskTarget::OMP;
-    default: {
-      assert(false);
-    }
+  result.reserve(arrays.size());
+  for (auto&& array : arrays) {
+    result.emplace_back(array.get());
   }
-  assert(false);
-  return TaskTarget::CPU;
+  return result;
 }
 
-Copy::Copy(const Legion::Copy* copy,
-           Legion::Mapping::MapperRuntime* runtime,
-           const Legion::Mapping::MapperContext context)
-  : Mappable(), copy_(copy)
-{
-  CopyDeserializer dez(copy,
-                       {copy->src_requirements,
-                        copy->dst_requirements,
-                        copy->src_indirect_requirements,
-                        copy->dst_indirect_requirements},
-                       runtime,
-                       context);
-  machine_desc_ = dez.unpack<mapping::MachineDesc>();
-  sharding_id_  = dez.unpack<uint32_t>();
-  inputs_       = dez.unpack<std::vector<Store>>();
-  dez.next_requirement_list();
-  outputs_ = dez.unpack<std::vector<Store>>();
-  dez.next_requirement_list();
-  input_indirections_ = dez.unpack<std::vector<Store>>();
-  dez.next_requirement_list();
-  output_indirections_ = dez.unpack<std::vector<Store>>();
-#ifdef DEBUG_LEGATE
-  for (auto& input : inputs_) assert(!input.is_future());
-  for (auto& output : outputs_) assert(!output.is_future());
-  for (auto& input_indirection : input_indirections_) assert(!input_indirection.is_future());
-  for (auto& output_indirection : output_indirections_) assert(!output_indirection.is_future());
-#endif
-}
+}  // namespace
 
-}  // namespace mapping
-}  // namespace legate
+std::vector<Array> Task::inputs() const { return convert_arrays(impl()->inputs()); }
+
+std::vector<Array> Task::outputs() const { return convert_arrays(impl()->outputs()); }
+
+std::vector<Array> Task::reductions() const { return convert_arrays(impl()->reductions()); }
+
+const std::vector<Scalar>& Task::scalars() const { return impl()->scalars(); }
+
+Array Task::input(uint32_t index) const { return Array{impl()->inputs().at(index).get()}; }
+
+Array Task::output(uint32_t index) const { return Array{impl()->outputs().at(index).get()}; }
+
+Array Task::reduction(uint32_t index) const { return Array{impl()->reductions().at(index).get()}; }
+
+size_t Task::num_inputs() const { return impl()->inputs().size(); }
+
+size_t Task::num_outputs() const { return impl()->outputs().size(); }
+
+size_t Task::num_reductions() const { return impl()->reductions().size(); }
+
+}  // namespace legate::mapping

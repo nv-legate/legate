@@ -7,9 +7,9 @@
   {# We need to have a default value for the initial pass over the recipe #}
   {% set gpu_enabled_bool = false %}
 {% endif %}
-{% if debug_build == "true" %}
+{% if debug_enabled == "true" %}
   {% set debug_build_bool = true %}
-{% elif debug_build == "false" %}
+{% elif debug_enabled == "false" %}
   {% set debug_build_bool = false %}
 {% else %}
   {# We need to have a default value for the initial pass over the recipe #}
@@ -122,6 +122,15 @@ build:
     - cuda-nvcc
 {% endif %}
 
+# Note clang must go first! gxx is also in clangxx!!!!!
+{% if "clangxx" in compiler("cxx") %}
+  {% set compiler_version = 16 %}
+  {% set sanitizer_lib = "compiler-rt" %}
+{% elif "gxx" in compiler("cxx") %}
+  {% set compiler_version = 11.2 %}
+  {% set sanitizer_lib = "libsanitizer" %}
+{% endif %}
+
 requirements:
   # Compilers and build system
   build:
@@ -129,10 +138,13 @@ requirements:
     - rust
     - ninja
     - cmake {{ cmake_version }}
-    - {{ compiler('c') }} =11.2   # [linux]
-    - {{ compiler('cxx') }} =11.2 # [linux]
+    - {{ compiler('c') }} ={{ compiler_version }}   # [linux]
+    - {{ compiler('cxx') }} ={{ compiler_version }} # [linux]
     - {{ compiler('c') }}         # [osx]
     - {{ compiler('cxx') }}       # [osx]
+{% if gpu_enabled_bool %}
+    - cuda-nvcc ={{ cuda_version }}
+{% endif %}
 
   # Libraries and header files (C/C++).
   host:
@@ -143,9 +155,11 @@ requirements:
     - scikit-build
     - elfutils # [linux]
     - libdwarf # [linux]
+{% if debug_build_bool %}
+    - {{ sanitizer_lib }} ={{ compiler_version }}
+{% endif %}
 {% if gpu_enabled_bool %}
     - nccl
-    - cuda-nvcc ={{ cuda_version }}
     - cuda-nvtx ={{ cuda_version }}
     - cuda-cccl ={{ cuda_version }}
     - cuda-cudart ={{ cuda_version }}
@@ -171,6 +185,9 @@ requirements:
     - typing_extensions
     - elfutils # [linux]
     - libdwarf # [linux]
+{% if debug_build_bool %}
+    - {{ sanitizer_lib }} ={{ compiler_version }}
+{% endif %}
 {% if gpu_enabled_bool %}
     - cuda-cudart  >={{ cuda_version }},<{{ cuda_major+1 }}
     - cuda-version >={{ cuda_version }},<{{ cuda_major+1 }}
@@ -183,7 +200,7 @@ requirements:
 
   run_constrained:
     - __glibc >=2.17  # [linux]
-    - python != 3.9.7
+    - python >= 3.10
 {% if gpu_enabled_bool %}
     - __cuda
 {% endif %}
@@ -194,7 +211,7 @@ test:
 
 about:
   home: https://github.com/nv-legate/legate.core
-  license: Apache-2.0
+  license: NVIDIA Proprietary
   license_file: LICENSE
   summary: 'Scalable Computational Code'
   description: |

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-cd $(dirname "$(realpath "$0")")/..
+cd "$(dirname "$(realpath "$0" || true)")"/.. || exit
 
 # Use sccache if installed
 source ./scripts/util/build-caching.sh
@@ -16,12 +16,12 @@ rm -rf ./{build,_skbuild,dist,legate_core.egg-info}
 ninja_args="-j$(nproc --ignore=2)"
 
 # Pretend to install Legion because Legion's CMakeLists only generates the Legion CFFI bindings at install time
-if [[ -f "$Legion_ROOT/CMakeCache.txt" ]]; then
+if [[ -f "${Legion_ROOT}/CMakeCache.txt" ]]; then
 (
     tmpdir=$(mktemp -d);
-    cmake --build "$Legion_ROOT" ${ninja_args};
-    cmake --install "$Legion_ROOT" --prefix "$tmpdir" &>/dev/null;
-    rm -rf "$tmpdir";
+    cmake --build "${Legion_ROOT}" "${ninja_args}";
+    cmake --install "${Legion_ROOT}" --prefix "${tmpdir}" &>/dev/null;
+    rm -rf "${tmpdir}";
 )
 fi
 
@@ -29,30 +29,34 @@ fi
 cmake_args="${CMAKE_ARGS:-}"
 
 # Use ninja-build if installed
-if [[ -n "$(which ninja)" ]]; then cmake_args+=" -GNinja"; fi
+if [[ -n "$(command -v ninja || true)" ]]; then cmake_args+=" -GNinja"; fi
 
 # Add other build options here as desired
 cmake_args+="
 -D Legion_CUDA_ARCH=native
--D Legion_ROOT:STRING=\"$Legion_ROOT\"
+-D Legion_ROOT:STRING=\"${Legion_ROOT}\"
 ";
 
 # Configure legate_core C++
-cmake -S . -B build ${cmake_args}
+cmake -S . -B build "${cmake_args}"
 # Build legate_core C++
-cmake --build build ${ninja_args}
+cmake --build build "${ninja_args}"
 
 cmake_args+="
 -D FIND_LEGATE_CORE_CPP=ON
 -D legate_core_ROOT:STRING=\"$(pwd)/build\"
 "
 
+if [[ -z ${CONDA_PREFIX} ]]; then
+    exit 1
+fi
+
 # Build legion_core_python and perform an "editable" install
-SKBUILD_BUILD_OPTIONS="$ninja_args"       \
-CMAKE_ARGS="$cmake_args"                  \
+SKBUILD_BUILD_OPTIONS="${ninja_args}"       \
+CMAKE_ARGS="${cmake_args}"                  \
 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" \
     python -m pip install                 \
-        --root / --prefix "$CONDA_PREFIX" \
+        --root / --prefix "${CONDA_PREFIX}" \
         --no-deps --no-build-isolation    \
         --editable                        \
         . -vv

@@ -1,24 +1,47 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
+#include "core/utilities/cpp_version.h"
+
+#include "legion.h"
+
+// Each suffix defines an additional "enabled" state for LegateDefined(LEGATE_), i.e. if you define
+//
+// #define LegateDefinedEnabledForm_FOO ignored,
+//                                  ^^^~~~~~~~~~~~ note suffix
+// Results in
+//
+// #define LEGATE_HAVE_BAR FOO
+// LegateDefined(LEGATE_HAVE_BAR) // now evalues to 1
+#define LegateDefinedEnabledForm_1 ignored,
+#define LegateDefinedEnabledForm_ ignored,
+
+// arguments are either
+// - (0, 1, 0, dummy)
+// - (1, 0, dummy)
+// this final step cherry-picks the middle
+#define LegateDefinedPrivate___(ignored, val, ...) val
+// the following 2 steps are needed purely for MSVC since it has a nonconforming preprocessor
+// and does not expand __VA_ARGS__ in a single step
+#define LegateDefinedPrivate__(args) LegateDefinedPrivate___ args
+#define LegateDefinedPrivate_(...) LegateDefinedPrivate__((__VA_ARGS__))
+#define LegateDefinedPrivate(x) LegateDefinedPrivate_(x 1, 0, dummy)
+#define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))
+
 #define LEGATE_ABORT                                                                        \
   do {                                                                                      \
-    legate::log_legate.error(                                                               \
+    legate::detail::log_legate().error(                                                     \
       "Legate called abort in %s at line %d in function %s", __FILE__, __LINE__, __func__); \
     abort();                                                                                \
   } while (false)
@@ -33,30 +56,38 @@
 #error "Legate needs Legion to be compiled with -DLEGION_REDOP_HALF"
 #endif
 
-#ifndef LEGATE_USE_CUDA
+#if !LegateDefined(LEGATE_USE_CUDA)
 #ifdef LEGION_USE_CUDA
-#define LEGATE_USE_CUDA
+#define LEGATE_USE_CUDA 1
 #endif
 #endif
 
-#ifndef LEGATE_USE_OPENMP
+#if !LegateDefined(LEGATE_USE_OPENMP)
 #ifdef REALM_USE_OPENMP
-#define LEGATE_USE_OPENMP
+#define LEGATE_USE_OPENMP 1
 #endif
 #endif
 
-#ifndef LEGATE_USE_NETWORK
+#if !LegateDefined(LEGATE_USE_NETWORK)
 #if defined(REALM_USE_GASNET1) || defined(REALM_USE_GASNETEX) || defined(REALM_USE_MPI) || \
   defined(REALM_USE_UCX)
-#define LEGATE_USE_NETWORK
+#define LEGATE_USE_NETWORK 1
 #endif
 #endif
 
 #ifdef LEGION_BOUNDS_CHECKS
-#define LEGATE_BOUNDS_CHECKS
+#define LEGATE_BOUNDS_CHECKS 1
 #endif
 
 #define LEGATE_MAX_DIM LEGION_MAX_DIM
 
+// backwards compatibility
+#if defined(DEBUG_LEGATE) && !LegateDefined(LEGATE_USE_DEBUG)
+#define LEGATE_USE_DEBUG 1
+#endif
+
 // TODO: 2022-10-04: Work around a Legion bug, by not instantiating futures on framebuffer.
-#define LEGATE_NO_FUTURES_ON_FB
+#define LEGATE_NO_FUTURES_ON_FB 1
+
+#define LegateConcat_(x, y) x##y
+#define LegateConcat(x, y) LegateConcat_(x, y)

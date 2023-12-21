@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import multiprocessing
@@ -87,22 +84,18 @@ class System:
     def cpus(self) -> tuple[CPUInfo, ...]:
         """A list of CPUs on the system."""
 
-        N = multiprocessing.cpu_count()
-
-        if sys.platform == "darwin":
+        if sys.platform.startswith("darwin"):
+            N = multiprocessing.cpu_count()
             return tuple(CPUInfo((i,)) for i in range(N))
-        else:
-            # This explicit else is needed for mypy to not raise a type
-            # error on MacOS.
-            sibling_sets: set[tuple[int, ...]] = set()
-            for i in range(N):
-                line = open(
-                    f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list"  # noqa E501
-                ).read()
-                sibling_sets.add(extract_values(line.strip()))
-            return tuple(
-                CPUInfo(siblings) for siblings in sorted(sibling_sets)
+        elif sys.platform.startswith("linux"):
+            all_sets = linux_load_sibling_sets()
+
+            available_sets = (
+                s for s in all_sets if s[0] in os.sched_getaffinity(0)
             )
+            return tuple(CPUInfo(x) for x in sorted(available_sets))
+        else:
+            raise NotImplementedError(sys.platform)
 
     @cached_property
     def gpus(self) -> tuple[GPUInfo, ...]:
@@ -158,3 +151,16 @@ def extract_values(line: str) -> tuple[int, ...]:
             )
         )
     )
+
+
+def linux_load_sibling_sets() -> set[tuple[int, ...]]:
+    N = multiprocessing.cpu_count()
+
+    sibling_sets: set[tuple[int, ...]] = set()
+    for i in range(N):
+        line = open(
+            f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list"
+        ).read()
+        sibling_sets.add(extract_values(line.strip()))
+
+    return sibling_sets

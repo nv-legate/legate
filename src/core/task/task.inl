@@ -1,41 +1,29 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
+// Useful for IDEs
 #include "core/task/task.h"
 
+#include <typeinfo>
+
+namespace legate::detail {
+
+[[nodiscard]] std::string generate_task_name(const std::type_info&);
+
+}  // namespace legate::detail
+
 namespace legate {
-
-namespace detail {
-
-std::string generate_task_name(const std::type_info&);
-
-void task_wrapper(
-  VariantImpl, const std::string&, const void*, size_t, const void*, size_t, Legion::Processor);
-
-};  // namespace detail
-
-template <typename T>
-template <VariantImpl VARIANT_IMPL>
-/*static*/ void LegateTask<T>::legate_task_wrapper(
-  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
-{
-  detail::task_wrapper(VARIANT_IMPL, task_name(), args, arglen, userdata, userlen, p);
-}
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
@@ -47,10 +35,17 @@ template <typename T>
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
-  LibraryContext* context, const std::map<LegateVariantCode, VariantOptions>& all_options)
+  Library library, const std::map<LegateVariantCode, VariantOptions>& all_options)
+{
+  register_variants(library, T::TASK_ID, all_options);
+}
+
+template <typename T>
+/*static*/ void LegateTask<T>::register_variants(
+  Library library, int64_t task_id, const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
   auto task_info = create_task_info(all_options);
-  context->register_task(T::TASK_ID, std::move(task_info));
+  library.register_task(task_id, std::move(task_info));
 }
 
 template <typename T>
@@ -61,14 +56,23 @@ template <typename T>
   detail::VariantHelper<T, detail::CPUVariant>::record(task_info.get(), all_options);
   detail::VariantHelper<T, detail::OMPVariant>::record(task_info.get(), all_options);
   detail::VariantHelper<T, detail::GPUVariant>::record(task_info.get(), all_options);
-  return std::move(task_info);
+  return task_info;
 }
 
 template <typename T>
 /*static*/ const std::string& LegateTask<T>::task_name()
 {
-  static std::string result = detail::generate_task_name(typeid(T));
+  static const std::string result = detail::generate_task_name(typeid(T));
   return result;
+}
+
+template <typename T>
+template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+/*static*/ void LegateTask<T>::task_wrapper_(
+  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
+{
+  detail::task_wrapper(
+    variant_fn, variant_kind, task_name(), args, arglen, userdata, userlen, std::move(p));
 }
 
 }  // namespace legate

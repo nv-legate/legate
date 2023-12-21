@@ -1,17 +1,13 @@
 #=============================================================================
-# Copyright 2022-2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 #=============================================================================
 
 include_guard(GLOBAL)
@@ -121,12 +117,22 @@ function(find_or_configure_legion)
       set(Legion_BACKTRACE_USE_LIBDW OFF)
     endif()
 
-    set(Legion_BUILD_RUST_PROFILER OFF CACHE BOOL "Whether to build the Legion profiler" FORCE)
+    string(APPEND CMAKE_CXX_FLAGS ${Legion_CXX_FLAGS})
+    string(APPEND CMAKE_CUDA_FLAGS ${Legion_CUDA_FLAGS})
+    string(APPEND CMAKE_LINKER_FLAGS ${Legion_LINKER_FLAGS})
+
+    set(no_dev_warnings_backup "$CACHE{CMAKE_SUPPRESS_DEVELOPER_WARNINGS}")
+    set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON CACHE INTERNAL "" FORCE)
 
     rapids_cpm_find(Legion ${version} ${FIND_PKG_ARGS}
         CPM_ARGS
           ${legion_cpm_git_args}
+          # HACK: Legion headers contain *many* warnings, but we would like to build with
+          # -Wall -Werror. But there is a work-around. Compilers treat system headers as
+          # special and do not emit any warnings about suspect code in them, so until
+          # legion cleans house, we mark their headers as "system" headers.
           FIND_PACKAGE_ARGUMENTS EXACT
+          SYSTEM                 TRUE
           EXCLUDE_FROM_ALL       ${exclude_from_all}
           OPTIONS                ${_legion_cuda_options}
                                  "CMAKE_CXX_STANDARD ${_cxx_std}"
@@ -135,7 +141,9 @@ function(find_or_configure_legion)
                                  "Legion_REDOP_HALF ON"
                                  "Legion_REDOP_COMPLEX ON"
                                  "Legion_UCX_DYNAMIC_LOAD ON"
+                                 "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON"
     )
+    set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ${no_dev_warnings_backup} CACHE INTERNAL "" FORCE)
   endif()
 
   set(Legion_USE_CUDA ${Legion_USE_CUDA} PARENT_SCOPE)

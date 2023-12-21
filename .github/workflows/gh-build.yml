@@ -1,9 +1,9 @@
-name: Build legate.core on GH
+name: Build legate.core.internal
 
 on:
   workflow_call:
     inputs:
-      build-target:
+      target-device:
         required: true
         type: string
         description: One of CPU / GPU
@@ -21,25 +21,31 @@ on:
         required: true
         type: string
         description: One of ci / release
-      use-container:
+      cmake-preset:
         required: true
-        type: boolean
+        type: string
       ucx-config:
         required: true
         type: string
       ucx-string:
         required: true
         type: string
+      use-container:
+        required: true
+        type: boolean
+      platform:
+        required: true
+        type: string
 
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  USE_CUDA: ${{ (inputs.build-target == 'cpu' && 'OFF') || 'ON' }}
-  ARTIFACTS_DIR: "${{ github.workspace }}/.artifacts"
-  ARTIFACT_NAME: "${{ inputs.repos-name }}-${{ inputs.build-target }}${{ inputs.ucx-string }}-${{ inputs.sha }}"
   UCX_ENABLED: ${{ (inputs.ucx-config == 'ucx' && 'ON') || 'OFF' }}
+  USE_CUDA: ${{ (inputs.target-device == 'cpu' && 'OFF') || 'ON' }}
+  LEGATE_CORE_CMAKE_PRESET: ${{ inputs.cmake-preset }}
+  ARTIFACTS_DIR: "${{ github.workspace }}/.artifacts"
+  ARTIFACT_NAME: "${{ inputs.platform }}-${{ inputs.repos-name }}-${{ inputs.target-device }}-${{ inputs.cmake-preset }}${{ inputs.ucx-string }}-${{ inputs.sha }}"
 jobs:
   build:
-    name: build-${{ inputs.build-target }}${{ inputs.ucx-string }}-sub-workflow
+    name: Build (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, ${{ inputs.ucx-config }}, ${{ inputs.build-type }}, Use container=${{ inputs.use-container }} )
 
     permissions:
       id-token: write # This is required for configure-aws-credentials
@@ -49,7 +55,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash
+        shell: bash --noprofile --norc -xeuo pipefail {0}
 
     steps:
       - name: Checkout ${{ inputs.repos-name }} (= this repo)
@@ -67,10 +73,8 @@ jobs:
           role-to-assume: arn:aws:iam::279114543810:role/gha-oidc-nv-legate
 
       - if: ${{ inputs.use-container }}
-        name: Build legate.core (in container)
+        name: Build ${{ inputs.repos-name }} (in container)
         run: |
-          set -xeuo pipefail
-
           docker run \
             -e AWS_REGION \
             -e AWS_SESSION_TOKEN \
@@ -79,16 +83,15 @@ jobs:
             -e GITHUB_TOKEN \
             -e USE_CUDA \
             -e UCX_ENABLED \
+            -e LEGATE_CORE_CMAKE_PRESET \
             -v "$(pwd):$(pwd)" \
             -v "$ARTIFACTS_DIR:$(pwd)/.artifacts" \
             --rm "condaforge/miniforge3:latest" \
-            /bin/bash -c "cd $(pwd) && continuous_integration/scripts/build-legate ${{ inputs.build-type}}"
+            /bin/bash -c "cd $(pwd) && continuous_integration/scripts/entrypoint build-legate ${{ inputs.build-type}} ${{ inputs.target-device }}"
 
       - if: ${{ !inputs.use-container }}
-        name: Build legate.core (without container)
-        run: |
-          set -xeuo pipefail
-          continuous_integration/scripts/build-legate ${{ inputs.build-type}}
+        name: Build ${{ inputs.repos-name }} (without container)
+        run: continuous_integration/scripts/entrypoint build-legate ${{ inputs.build-type}}
 
       - name: Display structure of the artifacts folder
         run: ls -aR ${{ env.ARTIFACTS_DIR }}

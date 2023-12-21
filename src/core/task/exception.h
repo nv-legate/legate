@@ -1,22 +1,20 @@
-/* Copyright 2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
+#include <cstdint>
 #include <exception>
+#include <string>
 
 /**
  * @file
@@ -44,10 +42,7 @@ class TaskException : public std::exception {
    * @param index Exception id
    * @param error_message Error message
    */
-  TaskException(int32_t index, const std::string& error_message)
-    : index_(index), error_message_(error_message)
-  {
-  }
+  TaskException(int32_t index, std::string error_message);
 
   /**
    * @brief Constructs a `TaskException` object with an error message. The exception id
@@ -55,28 +50,28 @@ class TaskException : public std::exception {
    *
    * @param error_message Error message
    */
-  TaskException(const std::string& error_message) : index_(0), error_message_(error_message) {}
+  explicit TaskException(std::string error_message);
 
- public:
-  virtual const char* what() const throw() { return error_message_.c_str(); }
+  [[nodiscard]] const char* what() const noexcept override;
 
- public:
   /**
    * @brief Returns the exception id
    *
    * @return The exception id
    */
-  int32_t index() const { return index_; }
+  [[nodiscard]] int32_t index() const noexcept;
   /**
    * @brief Returns the error message
    *
    * @return The error message
    */
-  const std::string& error_message() const { return error_message_; }
+  [[nodiscard]] const std::string& error_message() const noexcept;
 
  private:
   int32_t index_{-1};
-  std::string error_message_;
+  std::string error_message_{};
 };
 
 }  // namespace legate
+
+#include "core/task/exception.inl"

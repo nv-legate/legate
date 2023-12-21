@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import argparse
@@ -32,6 +29,7 @@ from .util import GenObjs
 
 def test___all__() -> None:
     assert m.__all__ == (
+        "CMD_PARTS_EXEC",
         "CMD_PARTS_LEGION",
         "CMD_PARTS_CANONICAL",
     )
@@ -71,7 +69,37 @@ def test_CMD_PARTS() -> None:
         m.cmd_log_levels,
         m.cmd_log_file,
         m.cmd_eager_alloc,
-        m.cmd_user_script,
+        m.cmd_user_program,
+        m.cmd_user_opts,
+    )
+
+    assert m.CMD_PARTS_EXEC == (
+        m.cmd_bind,
+        m.cmd_wrapper,
+        m.cmd_rlwrap,
+        m.cmd_gdb,
+        m.cmd_cuda_gdb,
+        m.cmd_nvprof,
+        m.cmd_nsys,
+        m.cmd_memcheck,
+        m.cmd_valgrind,
+        m.cmd_wrapper_inner,
+        m.cmd_user_program,
+        m.cmd_nocr,
+        m.cmd_kthreads,
+        m.cmd_cpus,
+        m.cmd_gpus,
+        m.cmd_openmp,
+        m.cmd_utility,
+        m.cmd_bgwork,
+        m.cmd_mem,
+        m.cmd_numamem,
+        m.cmd_fbmem,
+        m.cmd_regmem,
+        m.cmd_network,
+        m.cmd_log_levels,
+        m.cmd_log_file,
+        m.cmd_eager_alloc,
         m.cmd_user_opts,
     )
 
@@ -1104,9 +1132,10 @@ class Test_cmd_bgwork:
         networks_orig = list(install_info.networks)
         install_info.networks = [x for x in networks_orig if x != "ucx"]
         result = m.cmd_bgwork(config, system, launcher)
-        install_info.networks[:] = networks_orig[:]
-
-        assert result == ("-ll:bgwork", "2")
+        if "ucx" in install_info.networks:
+            assert result == ("-ll:bgwork", "2", "-ll:bgworkpin", "1")
+        else:
+            assert result == ("-ll:bgwork", "2")
 
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     @pytest.mark.parametrize("rank", ("0", "1", "2"))
@@ -1136,9 +1165,10 @@ class Test_cmd_bgwork:
         networks_orig = list(install_info.networks)
         install_info.networks = [x for x in networks_orig if x != "ucx"]
         result = m.cmd_bgwork(config, system, launcher)
-        install_info.networks[:] = networks_orig[:]
-
-        assert result == ("-ll:bgwork", "2")
+        if "ucx" in install_info.networks:
+            assert result == ("-ll:bgwork", "2", "-ll:bgworkpin", "1")
+        else:
+            assert result == ("-ll:bgwork", "2")
 
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     @pytest.mark.parametrize("rank", ("0", "1", "2"))
@@ -1199,9 +1229,10 @@ class Test_cmd_bgwork:
         networks_orig = list(install_info.networks)
         install_info.networks = [x for x in networks_orig if x != "ucx"]
         result = m.cmd_bgwork(config, system, launcher)
-        install_info.networks[:] = networks_orig[:]
-
-        assert result == ("-ll:bgwork", value)
+        if "ucx" in install_info.networks:
+            assert result == ("-ll:bgwork", value, "-ll:bgworkpin", "1")
+        else:
+            assert result == ("-ll:bgwork", value)
 
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     @pytest.mark.parametrize("rank", ("0", "1", "2"))
@@ -1232,9 +1263,10 @@ class Test_cmd_bgwork:
         networks_orig = list(install_info.networks)
         install_info.networks = [x for x in networks_orig if x != "ucx"]
         result = m.cmd_bgwork(config, system, launcher)
-        install_info.networks[:] = networks_orig[:]
-
-        assert result == ("-ll:bgwork", value)
+        if "ucx" in install_info.networks:
+            assert result == ("-ll:bgwork", value, "-ll:bgworkpin", "1")
+        else:
+            assert result == ("-ll:bgwork", value)
 
     @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
     @pytest.mark.parametrize("value", ("2", "3", "10"))
@@ -1594,8 +1626,8 @@ class Test_cmd_user_opts:
         config, system, launcher = genobjs(opts, fake_module=None)
 
         user_opts = m.cmd_user_opts(config, system, launcher)
-        user_script = m.cmd_user_script(config, system, launcher)
-        result = user_script + user_opts
+        user_program = m.cmd_user_program(config, system, launcher)
+        result = user_program + user_opts
 
         assert result == tuple(opts)
 
@@ -1606,8 +1638,8 @@ class Test_cmd_user_opts:
         config, system, launcher = genobjs(args, fake_module=None)
 
         user_opts = m.cmd_user_opts(config, system, launcher)
-        user_script = m.cmd_user_script(config, system, launcher)
-        result = user_script + user_opts
+        user_program = m.cmd_user_program(config, system, launcher)
+        result = user_program + user_opts
 
         assert result == tuple(opts)
 

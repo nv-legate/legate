@@ -8,7 +8,7 @@ AlignEscapedNewlines: Left
 AlignOperands: true
 AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true
-AllowShortBlocksOnASingleLine: true
+AllowShortBlocksOnASingleLine: Empty
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: true
@@ -59,19 +59,22 @@ DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
 ForEachMacros:
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^<.*\.h>'
+  - Regex:           '^"core/.*\.h"'
     Priority:        1
-  - Regex:           '^<.*'
+  - Regex:           '^"legion.*'
     Priority:        2
-  - Regex:           '.*'
+  - Regex:           '^".*'
     Priority:        3
+  - Regex:           '^<.*'
+    Priority:        99
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
 IndentPPDirectives: None
 IndentWidth:     2
 IndentWrappedFunctionNames: false
+InsertBraces: true
 JavaScriptQuotes: Leave
 JavaScriptWrapImports: true
 KeepEmptyLinesAtTheStartOfBlocks: false

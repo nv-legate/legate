@@ -1,0 +1,38 @@
+--- ./generate_resource_spec.cpp
++++ ./generate_resource_spec.cpp
+@@ -14,7 +14,6 @@
+  * limitations under the License.
+  */
+
+-#include <cuda_runtime_api.h>
+
+ #include <iostream>
+ #include <string>
+@@ -27,7 +26,6 @@
+
+ struct gpu {
+   gpu(int i) : id{i} {};
+-  gpu(int i, const cudaDeviceProp& prop) : id{i}, memory{prop.totalGlobalMem}, slots{100} {}
+   int id        = 0;
+   size_t memory = 0;
+   int slots     = 0;
+@@ -47,17 +45,8 @@
+ int main()
+ {
+   std::vector<gpu> gpus;
+-  int nDevices = 0;
+-  cudaGetDeviceCount(&nDevices);
+-  if (nDevices == 0) {
+-    gpus.emplace_back(0);
+-  } else {
+-    for (int i = 0; i < nDevices; ++i) {
+-      cudaDeviceProp prop;
+-      cudaGetDeviceProperties(&prop, i);
+-      gpus.emplace_back(i, prop);
+-    }
+-  }
++
++  gpus.emplace_back(0);
+
+   version v{1, 0};
+   std::cout << "{\n";

@@ -1,62 +1,93 @@
-# Copyright 2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from enum import IntEnum, unique
+import builtins
 
-import legate.core._lib.types as ext  # type: ignore[import]
+from ._lib.type.type_info import (
+    FixedArrayType,
+    ReductionOp,
+    StructType,
+    Type,
+    array_type,
+    binary_type,
+    bool_,
+    complex64,
+    complex128,
+    float16,
+    float32,
+    float64,
+    int8,
+    int16,
+    int32,
+    int64,
+    null_type,
+    point_type,
+    rect_type,
+    string_type,
+    struct_type,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+)
+
+__all__ = (
+    "FixedArrayType",
+    "ReductionOp",
+    "StructType",
+    "Type",
+    "array_type",
+    "binary_type",
+    "bool_",
+    "complex64",
+    "complex128",
+    "float16",
+    "float32",
+    "float64",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "null_type",
+    "point_type",
+    "rect_type",
+    "string_type",
+    "struct_type",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+)
 
 
-@unique
-class ReductionOp(IntEnum):
-    ADD = ext.ADD
-    SUB = ext.SUB
-    MUL = ext.MUL
-    DIV = ext.DIV
-    MAX = ext.MAX
-    MIN = ext.MIN
-    OR = ext.OR
-    AND = ext.AND
-    XOR = ext.XOR
-
-
-Dtype = ext.Dtype
-FixedArrayDtype = ext.FixedArrayDtype
-StructDtype = ext.StructDtype
-
-
-bool_ = Dtype.primitive_type(ext.BOOL)
-int8 = Dtype.primitive_type(ext.INT8)
-int16 = Dtype.primitive_type(ext.INT16)
-int32 = Dtype.primitive_type(ext.INT32)
-int64 = Dtype.primitive_type(ext.INT64)
-uint8 = Dtype.primitive_type(ext.UINT8)
-uint16 = Dtype.primitive_type(ext.UINT16)
-uint32 = Dtype.primitive_type(ext.UINT32)
-uint64 = Dtype.primitive_type(ext.UINT64)
-float16 = Dtype.primitive_type(ext.FLOAT16)
-float32 = Dtype.primitive_type(ext.FLOAT32)
-float64 = Dtype.primitive_type(ext.FLOAT64)
-complex64 = Dtype.primitive_type(ext.COMPLEX64)
-complex128 = Dtype.primitive_type(ext.COMPLEX128)
-string = Dtype.string_type()
-
-
-def array_type(element_type: Dtype, N: int) -> FixedArrayDtype:
-    return Dtype.fixed_array_type(element_type, N)
-
-
-def struct_type(field_types: list[Dtype], align: bool = False) -> StructDtype:
-    return Dtype.struct_type(field_types, align)
+# Why is this not a member function of Dtype? Because we need to be able to
+# refer to the Python int, float, bool etc. This is impossible to do from
+# Cython as these names refer the the C types of the same name
+def _Dtype_from_python_type(ty: type) -> Type:
+    assert isinstance(ty, type)
+    match ty:
+        case builtins.bool:
+            return bool_
+        case builtins.int:
+            return int64
+        # The following _are_ all reachable (as evidenced by the test-suite!!)
+        # but mypy doesn't see to think so. Probably because these builtins
+        # also overload as functions, so by the time we reach the second
+        # function mypy believes we've exhausted every possibility...
+        case builtins.float:
+            return float64  # type: ignore[unreachable]
+        case builtins.complex:
+            return complex128  # type: ignore[unreachable]
+        case builtins.str:
+            return string_type  # type: ignore[unreachable]
+        case _:
+            raise NotImplementedError(f"unsupported type: {ty}")

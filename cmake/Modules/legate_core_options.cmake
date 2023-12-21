@@ -1,19 +1,18 @@
 #=============================================================================
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 #=============================================================================
 
+option(legate_core_BUILD_TESTS "Whether to build the C++ tests")
+option(legate_core_BUILD_INTEGRATION "Whether to build the C++ integration tests")
+option(legate_core_BUILD_EXAMPLES "Whether to build the C++/python examples")
 option(BUILD_SHARED_LIBS "Build legate.core shared libraries" ON)
 
 function(set_or_default var_name var_env)
@@ -83,7 +82,6 @@ option(legate_core_EXCLUDE_LEGION_FROM_ALL "Exclude Legion targets from legate.c
 option(legate_core_COLLECTIVE "Use of collective instances" ON)
 option(legate_core_BUILD_DOCS "Build doxygen docs" OFF)
 
-
 set_or_default(NCCL_DIR NCCL_PATH)
 set_or_default(Thrust_DIR THRUST_PATH)
 set_or_default(CUDA_TOOLKIT_ROOT_DIR CUDA)
@@ -124,3 +122,12 @@ elseif(NOT DEFINED Legion_CUDA_DYNAMIC_LOAD)
   set(Legion_CUDA_DYNAMIC_LOAD OFF)
   set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
 endif()
+
+set(legate_core_CXX_FLAGS "" CACHE STRING "C++ flags for legate core")
+set(legate_core_CUDA_FLAGS "" CACHE STRING "CUDA flags for legate core")
+set(legate_core_LINKER_FLAGS "" CACHE STRING "CUDA flags for legate core")
+
+# there must be some way to automate creating these for all dependent packages...
+set(Legion_CXX_FLAGS "" CACHE STRING "C++ flags for Legion")
+set(Legion_CUDA_FLAGS "" CACHE STRING "CUDA flags for Legion")
+set(Legion_LINKER_FLAGS "" CACHE STRING "CUDA flags for Legion")

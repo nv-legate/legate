@@ -1,23 +1,19 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
-
-#include <fstream>
 
 #include "legate_library.h"
 #include "legateio.h"
+
+#include <fstream>
 
 namespace legateio {
 
@@ -56,7 +52,9 @@ struct read_fn {
     auto buf       = output.create_output_buffer<VAL, 1>(legate::Point<1>(my_ext));
 
     // Skip to the right offset where the data assigned to this reader task actually starts
-    if (my_lo != 0) in.seekg(my_lo * sizeof(VAL), std::ios_base::cur);
+    if (my_lo != 0) {
+      in.seekg(my_lo * sizeof(VAL), std::ios_base::cur);
+    }
     for (int64_t idx = 0; idx < my_ext; ++idx) {
       auto ptr = buf.ptr(legate::Point<1>(idx));
       in.read(reinterpret_cast<char*>(ptr), sizeof(VAL));
@@ -80,10 +78,10 @@ struct read_fn {
 
 class ReadFileTask : public Task<ReadFileTask, READ_FILE> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto filename = context.scalars().at(0).value<std::string>();
-    auto& output  = context.outputs().at(0);
+    auto filename = context.scalar(0).value<std::string>();
+    auto output   = context.output(0).data();
 
     // The task context contains metadata about the launch so each reader task can figure out
     // which part of the file it needs to read into the output.

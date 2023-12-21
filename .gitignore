@@ -22,10 +22,10 @@
 *.dylib
 install_info.py
 /dist
-/build
+build*/
 /legion
 /install*
-/_skbuild
+_skbuild/
 config.mk
 /docs/legate/core/build
 /docs/legate/core/source/api/generated
@@ -37,6 +37,11 @@ _cmake_test_compile
 !cmake/versions.json
 legate.core.code-workspace
 *.prof
+examples/cpp/build
+tests/cpp/build
 .legate-test-last-failed
 out/
 .artifacts/
+venv/
+!cmake/presets/*.json
+!CMakePresets.json

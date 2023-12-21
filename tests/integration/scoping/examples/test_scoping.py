@@ -1,17 +1,14 @@
-# Copyright 2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 
 import pytest
 from scoping import user_context, user_lib
@@ -95,7 +92,8 @@ def test_cpu_only():
 
 def test_shifted_slices():
     m = get_machine()
-    num_nodes = len(m.get_node_range())
+    (node_lo, node_hi) = m.get_node_range()
+    num_nodes = node_hi - node_lo
     per_node_count = int((len(m) + num_nodes - 1) / num_nodes)
     # this will test processor slicing of the machine
     for i in range(len(m)):

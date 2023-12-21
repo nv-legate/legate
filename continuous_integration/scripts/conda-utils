@@ -1,43 +1,62 @@
+#!/usr/bin/env bash
+
 make_conda_env_from_yaml() {
+    if [[ -z ${CONDA_ENV} ]]; then
+        exit 1
+    fi
+
     mamba env create -n "${CONDA_ENV}" -f "${yaml_file}" --force;
 }
 
 generate_yaml_file() {
-    local python_version="${PYTHON_VERSION:-}";
+    UCX_PKG=ucx
+    [[ "${UCX_ENABLED:-}" = "OFF" ]] && UCX_PKG=no-ucx
 
-    if [ -z "${python_version}" ]; then
-        python_version="$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f3 --complement)";
+    if [[ -z ${PYTHON_VERSION} || -z ${OS_SHORT_NAME} || -z ${REPO_DIR} || -z ${USE_CUDA} ]]; then
+        exit 1
     fi
 
-    UCX_PKG=ucx
-    [ "${UCX_ENABLED:-}" = "OFF" ] && UCX_PKG=no-ucx
-
-    if [[ "$USE_CUDA" == "OFF" ]]; then
+# shellcheck disable=SC2312
+    if [[ "${USE_CUDA}" == "OFF" ]]; then
         yaml_file="$(\
-            $REPO_DIR/scripts/generate-conda-envs.py \
-                --os "$OS_SHORT_NAME" \
+            "${REPO_DIR}"/scripts/generate-conda-envs.py \
+                --os "${OS_SHORT_NAME}" \
                 --compilers                         \
-                --python ${python_version}          \
+                --python "${PYTHON_VERSION}"          \
                 --openmpi                           \
-                --${UCX_PKG}                        \
+                --"${UCX_PKG}"                        \
             | head -n1 | cut -d' ' -f3              \
         )"
     else
         local cuda_version="${CUDA_VERSION:-${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}}";
-        yaml_file="$(\
-            $REPO_DIR/scripts/generate-conda-envs.py \
-                --os "$OS_SHORT_NAME" \
+
+# shellcheck disable=SC2312
+        yaml_file="$(         \
+            "${REPO_DIR}"/scripts/generate-conda-envs.py \
+                --os "${OS_SHORT_NAME}"               \
                 --compilers                         \
-                --ctk ${cuda_version}               \
-                --python ${python_version}          \
+                --ctk "${cuda_version}"               \
+                --python "${PYTHON_VERSION}"          \
                 --openmpi                           \
-                --${UCX_PKG}                        \
+                --"${UCX_PKG}"                        \
             | head -n1 | cut -d' ' -f3              \
         )"
     fi
 
-    $SED -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
+    if [[ -z ${SED} ]]; then
+        exit 1
+    fi
+
+    ${SED} -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
     echo "  - boa" >> "${yaml_file}";
+
+    if [[ -z ${MAX_LIBSANITIZER_VERSION} || -z ${LEGATE_CORE_CMAKE_PRESET} ]]; then
+        exit 1
+    fi
+
+    if [[ "${LEGATE_CORE_CMAKE_PRESET}" == "debug-sanitizer-gcc" ]]; then
+        echo "  - libsanitizer <=${MAX_LIBSANITIZER_VERSION}" >> "${yaml_file}";
+    fi
 
     mkdir -p /tmp/out/
     cp "${yaml_file}" /tmp/out/
@@ -47,10 +66,10 @@ generate_yaml_file() {
 
 find_yaml_file() {
     pattern="/tmp/env_yaml/*.yaml";
-    files=( $pattern );
+    files=( "${pattern}" );
     yaml_file="${files[0]}";
 
-    if [ -z "${yaml_file:-}" ] || [ ! -f "$yaml_file" ]; then
+    if [[ -z "${yaml_file:-}" ]] || [[ ! -f "${yaml_file}" ]]; then
         return 1;
     fi
 
@@ -58,13 +77,13 @@ find_yaml_file() {
 }
 
 get_yaml_and_make_conda_env() {
-    set -e;
+    set -xe;
 
     local yaml_file="";
 
     generate_yaml_file;
 
-    echo YAML file: ${yaml_file}
+    echo YAML file: "${yaml_file}"
     cat "${yaml_file}";
 
     make_conda_env_from_yaml;
@@ -76,13 +95,19 @@ install_legate_core_with_war() {
     # See github issue: https://github.com/nv-legate/legate.core/issues/812
     mamba uninstall -y -n "${CONDA_ENV}" numpy;
 
-    mamba install -y -n "${CONDA_ENV}" -c nvidia/label/cuda-${CUDA_VERSION} -c conda-forge -c "${ARTIFACTS_DIR}/conda-build/legate_core" legate-core;
+    if [[ -z ${ARTIFACTS_DIR} ]]; then
+        exit 1
+    fi
+
+    mamba install -y -n "${CONDA_ENV}" -c nvidia/label/cuda-${CUDA_VERSION} -c conda-forge -c "${ARTIFACTS_DIR}"/conda-build/legate_core legate-core;
 }
 
 activate_conda_env() {
     set +xu
-    eval "$(conda shell.bash hook)"
-    conda activate ${CONDA_ENV};
+    local conda_code
+    conda_code="$(conda shell.bash hook)"
+    eval "${conda_code}"
+    conda activate "${CONDA_ENV}";
     set -xu
 }
 

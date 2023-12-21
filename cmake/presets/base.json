@@ -1,0 +1,72 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": {
+                    "type": "BOOL",
+                    "value": "ON"
+                },
+                "CMAKE_CXX_STANDARD": {
+                    "type": "STRING",
+                    "value": "17"
+                },
+                "CMAKE_CXX_STANDARD_REQUIRED": {
+                    "type": "BOOL",
+                    "value": "ON"
+                },
+                "CMAKE_CUDA_STANDARD": {
+                    "type": "STRING",
+                    "value": "17"
+                },
+                "CMAKE_CUDA_STANDARD_REQUIRED": {
+                    "type": "BOOL",
+                    "value": "ON"
+                },
+                "Legion_USE_Python": {
+                    "type": "BOOL",
+                    "value": "ON"
+                },
+                "legate_core_CMAKE_PRESET_NAME": {
+                    "type": "STRING",
+                    "value": "${presetName}"
+                }
+            }
+        },
+        {
+            "inherits": "base",
+            "hidden": true,
+            "name": "base-ninja",
+            "generator": "Ninja"
+        },
+        {
+            "inherits": "base",
+            "hidden": true,
+            "name": "base-make",
+            "generator": "Unix Makefiles"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "configurePreset": "base",
+            "jobs": 7
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "jobs": 8
+            }
+        }
+    ]
+}
