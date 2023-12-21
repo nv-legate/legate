@@ -37,7 +37,7 @@ unset(legate_core_CXX_STANDARD) # clean up
 ##############################################################################
 # - Download and initialize RAPIDS CMake helpers -----------------------------
 
-set(legate_core_version 23.11.00)
+set(legate_core_version 24.01.00)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/include_rapids.cmake)
 

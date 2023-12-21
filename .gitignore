@@ -41,6 +41,7 @@ examples/cpp/build
 tests/cpp/build
 .legate-test-last-failed
 out/
+.artifacts/
 venv/
 !cmake/presets/*.json
 !CMakePresets.json

@@ -35,7 +35,6 @@ build_legate_wheel() {
          SKBUILD_BUILD_OPTIONS="${ninja_args[@]}" \
          pip wheel "${pip_args[@]}" $REPO_DIR;
 
-    { set +x; } 2>/dev/null;
 }
 
 (build_legate_wheel "$@");

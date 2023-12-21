@@ -15,7 +15,7 @@ from __future__ import annotations
 from argparse import Action, ArgumentParser
 from dataclasses import dataclass
 from textwrap import indent
-from typing import Literal, Tuple
+from typing import Literal, Tuple, Union
 
 # --- Types -------------------------------------------------------------------
 
@@ -25,8 +25,12 @@ OSType = Literal["linux", "osx"]
 
 
 def V(version: str) -> tuple[int, ...]:
-    padded_version = (version.split(".") + ["0"])[:2]
+    padded_version = (version.split(".") + ["0", "0"])[:3]
     return tuple(int(x) for x in padded_version)
+
+
+def drop_patch(version: str) -> str:
+    return ".".join(version.split(".")[:2])
 
 
 class SectionConfig:
@@ -53,7 +57,7 @@ class SectionConfig:
 
 @dataclass(frozen=True)
 class CUDAConfig(SectionConfig):
-    ctk_version: str
+    ctk_version: Union[str, None]
     compilers: bool
     os: OSType
 
@@ -61,36 +65,52 @@ class CUDAConfig(SectionConfig):
 
     @property
     def conda(self) -> Reqs:
-        if self.ctk_version == "none":
+        if not self.ctk_version:
             return ()
 
         deps = (
-            f"cuda-version={self.ctk_version}",  # runtime
-            "cutensor>=1.3.3,<2",  # runtime
+            f"cuda-version={drop_patch(self.ctk_version)}",  # runtime
+            # cuTensor package notes:
+            # - We are pinning to 1.X major version.
+            #   See https://github.com/nv-legate/cunumeric/issues/1092.
+            # - The cuTensor packages on the nvidia channel are not well
+            #   structured. The multiple levels of packages are not connected
+            #   by strict dependencies, and the CTK compatibility is encoded
+            #   in the package name, rather than a constraint or label.
+            #   For now we pin to the conda-forge versions (which use build
+            #   numbers starting with h).
+            "cutensor=1.7*=h*",  # runtime
             "nccl",  # runtime
             "pynvml",  # tests
         )
 
-        if V(self.ctk_version) >= V("12.0"):
+        if V(self.ctk_version) < (12, 0, 0):
+            deps += (f"cudatoolkit={self.ctk_version}",)
+        else:
             deps += (
+                "cuda-cccl",  # no cuda-cccl-dev package on the nvidia channel
                 "cuda-cudart-dev",
+                "cuda-cudart-static",
+                "cuda-driver-dev",
                 "cuda-nvml-dev",
-                "cuda-nvtx-dev",
+                "cuda-nvtx",  # no cuda-nvtx-dev package on the nvidia channel
                 "libcublas-dev",
                 "libcufft-dev",
                 "libcurand-dev",
                 "libcusolver-dev",
+                "libcusparse-dev",
+                "libnvjitlink-dev",
             )
 
         if self.compilers:
             if self.os == "linux":
-                if V(self.ctk_version) < V("12.0"):
-                    deps += (f"nvcc_linux-64={self.ctk_version}",)
+                if V(self.ctk_version) < (12, 0, 0):
+                    deps += (f"nvcc_linux-64={drop_patch(self.ctk_version)}",)
                 else:
                     deps += ("cuda-nvcc",)
 
-                # gcc 11.3 is incompatible with nvcc <= 11.5.
-                if V(self.ctk_version) <= V("11.5"):
+                # gcc 11.3 is incompatible with nvcc < 11.6.
+                if V(self.ctk_version) < (11, 6, 0):
                     deps += (
                         "gcc_linux-64<=11.2",
                         "gxx_linux-64<=11.2",
@@ -104,7 +124,7 @@ class CUDAConfig(SectionConfig):
         return deps
 
     def __str__(self) -> str:
-        if self.ctk_version == "none":
+        if not self.ctk_version:
             return ""
 
         return f"-cuda{self.ctk_version}"
@@ -124,7 +144,7 @@ class BuildConfig(SectionConfig):
         pkgs = (
             # 3.25.0 triggers gitlab.kitware.com/cmake/cmake/-/issues/24119
             "cmake>=3.24,!=3.25.0",
-            "cython",
+            "cython>=3",
             "git",
             "make",
             "rust",
@@ -231,10 +251,18 @@ class EnvConfig:
     use: str
     python: str
     os: OSType
-    ctk: str
+    ctk_version: Union[str, None]
     compilers: bool
     openmpi: bool
     ucx: bool
+
+    @property
+    def channels(self) -> str:
+        channels = []
+        if self.ctk_version and V(self.ctk_version) >= (12, 0, 0):
+            channels.append(f"nvidia/label/cuda-{self.ctk_version}")
+        channels.append("conda-forge")
+        return "- " + "\n- ".join(channels)
 
     @property
     def sections(self) -> Tuple[SectionConfig, ...]:
@@ -248,7 +276,7 @@ class EnvConfig:
 
     @property
     def cuda(self) -> CUDAConfig:
-        return CUDAConfig(self.ctk, self.compilers, self.os)
+        return CUDAConfig(self.ctk_version, self.compilers, self.os)
 
     @property
     def build(self) -> BuildConfig:
@@ -275,31 +303,13 @@ class EnvConfig:
 
 PYTHON_VERSIONS = ("3.10", "3.11")
 
-CTK_VERSIONS = (
-    "none",
-    "10.2",
-    "11.0",
-    "11.1",
-    "11.2",
-    "11.3",
-    "11.4",
-    "11.5",
-    "11.6",
-    "11.7",
-    "11.8",
-    "12.0",
-    # TODO: libcublas 12.1 not available on conda-forge as of 2023-06-12
-    # "12.1",
-)
-
 OS_NAMES: Tuple[OSType, ...] = ("linux", "osx")
 
 
 ENV_TEMPLATE = """\
 name: legate-{use}
 channels:
-  - conda-forge
-  - nvidia
+{channels}
 dependencies:
 
   - python={python}
@@ -319,19 +329,6 @@ PIP_TEMPLATE = """\
 {pip_sections}
 """
 
-ALL_CONFIGS = [
-    EnvConfig("test", python, "linux", ctk, compilers, openmpi, ucx)
-    for python in PYTHON_VERSIONS
-    for ctk in CTK_VERSIONS
-    for compilers in (True, False)
-    for openmpi in (True, False)
-    for ucx in (True, False)
-] + [
-    EnvConfig("test", python, "osx", "none", compilers, openmpi, False)
-    for python in PYTHON_VERSIONS
-    for compilers in (True, False)
-    for openmpi in (True, False)
-]
 
 # --- Code --------------------------------------------------------------------
 
@@ -383,42 +380,40 @@ if __name__ == "__main__":
     parser.add_argument(
         "--python",
         choices=PYTHON_VERSIONS,
-        default=None,
-        help="Python version to generate for, (default: all python versions)",
+        default=PYTHON_VERSIONS[0],
+        help="Python version to generate for",
     )
     parser.add_argument(
         "--ctk",
-        choices=CTK_VERSIONS,
-        default=None,
         dest="ctk_version",
-        help="CTK version to generate for (default: all CTK versions)",
+        help="CTK version to generate for",
     )
     parser.add_argument(
         "--os",
         choices=OS_NAMES,
-        default=None,
-        help="OS to generate for (default: all OSes)",
+        default=("osx" if sys.platform == "darwin" else "linux"),
+        help="OS to generate for",
     )
     parser.add_argument(
         "--compilers",
         action=BooleanFlag,
         dest="compilers",
-        default=None,
-        help="Whether to include conda compilers or not (default: both)",
+        default=False,
+        help="Whether to include conda compilers or not",
     )
     parser.add_argument(
         "--openmpi",
         action=BooleanFlag,
         dest="openmpi",
-        default=None,
-        help="Whether to include openmpi or not (default: both)",
+        default=False,
+        help="Whether to include openmpi or not",
     )
     parser.add_argument(
         "--ucx",
         action=BooleanFlag,
         dest="ucx",
-        default=None,
-        help="Whether to include UCX or not (default: both)",
+        default=False,
+        help="Whether to include UCX or not",
     )
 
     parser.add_argument(
@@ -430,22 +425,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args(sys.argv[1:])
 
-    configs = ALL_CONFIGS
-
-    if args.python is not None:
-        configs = (x for x in configs if x.python == args.python)
-    if args.ctk_version is not None:
-        configs = (
-            x for x in configs if x.cuda.ctk_version == args.ctk_version
-        )
-    if args.compilers is not None:
-        configs = (x for x in configs if x.build.compilers == args.compilers)
-    if args.os is not None:
-        configs = (x for x in configs if x.os == args.os)
-    if args.openmpi is not None:
-        configs = (x for x in configs if x.build.openmpi == args.openmpi)
-    if args.ucx is not None:
-        configs = (x for x in configs if x.build.ucx == args.ucx)
+    if (
+        args.ctk_version
+        and V(args.ctk_version) >= (12, 0, 0)
+        and len(args.ctk_version.split(".")) != 3
+    ):
+        # This is necessary to match on the exact label on the nvidia channel
+        raise ValueError("CTK 12 versions must be in the form 12.X.Y")
 
     selected_sections = None
 
@@ -461,37 +447,47 @@ if __name__ == "__main__":
 
         return False
 
-    for config in configs:
-        conda_sections = indent(
-            "".join(
-                s.format("conda")
-                for s in config.sections
-                if s.conda and section_selected(s)
-            ),
-            "  ",
-        )
+    config = EnvConfig(
+        "test",
+        args.python,
+        args.os,
+        args.ctk_version,
+        args.compilers,
+        args.openmpi,
+        args.ucx,
+    )
 
-        pip_sections = indent(
-            "".join(
-                s.format("pip")
-                for s in config.sections
-                if s.pip and section_selected(s)
-            ),
-            "    ",
-        )
+    conda_sections = indent(
+        "".join(
+            s.format("conda")
+            for s in config.sections
+            if s.conda and section_selected(s)
+        ),
+        "  ",
+    )
 
-        filename = config.filename
-        if args.sections:
-            filename = config.filename + "-partial"
+    pip_sections = indent(
+        "".join(
+            s.format("pip")
+            for s in config.sections
+            if s.pip and section_selected(s)
+        ),
+        "    ",
+    )
 
-        print(f"--- generating: {filename}.yaml")
-        out = ENV_TEMPLATE.format(
-            use=config.use,
-            python=config.python,
-            conda_sections=conda_sections,
-            pip=PIP_TEMPLATE.format(pip_sections=pip_sections)
-            if pip_sections
-            else "",
-        )
-        with open(f"{filename}.yaml", "w") as f:
-            f.write(out)
+    filename = config.filename
+    if args.sections:
+        filename = config.filename + "-partial"
+
+    print(f"--- generating: {filename}.yaml")
+    out = ENV_TEMPLATE.format(
+        use=config.use,
+        channels=config.channels,
+        python=config.python,
+        conda_sections=conda_sections,
+        pip=PIP_TEMPLATE.format(pip_sections=pip_sections)
+        if pip_sections
+        else "",
+    )
+    with open(f"{filename}.yaml", "w") as f:
+        f.write(out)
