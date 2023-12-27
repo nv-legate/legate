@@ -30,6 +30,15 @@ jobs:
       packages: write # This is required to push docker image to ghcr.io
 
     runs-on: ${{ contains(github.repository, 'nv-legate/legate.core') && 'linux-amd64-cpu16' || 'ubuntu-latest' }}
+
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      options: -u root
+      image: condaforge/miniforge3:latest
+
     steps:
       - name: Dump GitHub context
         env:
@@ -75,17 +84,7 @@ jobs:
       
       - name: Build Documentation
         run: |
-          set -xeuo pipefail
-          docker run \
-            -e AWS_REGION \
-            -e AWS_SESSION_TOKEN \
-            -e AWS_ACCESS_KEY_ID \
-            -e AWS_SECRET_ACCESS_KEY \
-            -e GITHUB_TOKEN \
-            -v "$(pwd):$(pwd)" \
-            -v "$ARTIFACTS_DIR:$(pwd)/.artifacts" \
-            --rm "condaforge/miniforge3:latest" \
-            /bin/bash -c "cd $(pwd) && continuous_integration/scripts/entrypoint ./continuous_integration/scripts/build-legate docs"
+          /bin/bash -c "cd $(pwd) && mkdir -p $ARTIFACTS_DIR && continuous_integration/scripts/entrypoint ./continuous_integration/scripts/build-legate docs"
 
       - name: Upload documentation
         uses: actions/upload-artifact@v3
