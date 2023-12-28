@@ -401,7 +401,7 @@ static void returned_exception_fold(  // NOLINT(misc-use-anonymous-namespace)
   pack_returned_exception(lhs, lhs_ptr, lhs_size);
 }
 
-void register_exception_reduction_op(Legion::Runtime* /*runtime*/, const Library* library)
+void register_exception_reduction_op(const Library* library)
 {
   auto redop_id = library->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
   auto* redop   = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();

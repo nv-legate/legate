@@ -240,8 +240,9 @@ void finalize_nccl(const Legion::Task* task,
 
 }  // namespace
 
-void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library)
+void register_tasks(const detail::Library* core_library)
 {
+  const auto runtime                 = Legion::Runtime::get_runtime();
   auto init_nccl_id_task_id          = core_library->get_task_id(LEGATE_CORE_INIT_NCCL_ID_TASK_ID);
   const char* init_nccl_id_task_name = "core::comm::nccl::init_id";
   runtime->attach_name(

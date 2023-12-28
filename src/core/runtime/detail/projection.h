@@ -51,8 +51,11 @@ class LegateProjectionFunctor : public Legion::ProjectionFunctor {
                                                   const Domain& launch_domain) const = 0;
 };
 
-void register_legate_core_projection_functors(Legion::Runtime* runtime,
-                                              const detail::Library* core_library);
+void register_legate_core_projection_functors(const detail::Library* core_library);
+
+void register_affine_projection_functor(int32_t src_ndim,
+                                        const proj::SymbolicPoint& point,
+                                        legion_projection_id_t proj_id);
 
 [[nodiscard]] LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID proj_id,
                                                                       bool allow_missing = false);

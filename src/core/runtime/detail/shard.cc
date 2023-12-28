@@ -89,9 +89,10 @@ class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
   }
 };
 
-void register_legate_core_sharding_functors(Legion::Runtime* runtime,
-                                            const detail::Library* core_library)
+void register_legate_core_sharding_functors(const detail::Library* core_library)
 {
+  auto runtime = Legion::Runtime::get_runtime();
+
   runtime->register_sharding_functor(
     core_library->get_sharding_id(LEGATE_CORE_TOPLEVEL_TASK_SHARD_ID),
     new ToplevelTaskShardingFunctor{},
@@ -108,14 +109,8 @@ void register_legate_core_sharding_functors(Legion::Runtime* runtime,
 
 class LegateShardingFunctor final : public Legion::ShardingFunctor {
  public:
-  LegateShardingFunctor(LegateProjectionFunctor* proj_functor,
-                        uint32_t start_proc_id,
-                        uint32_t end_proc_id,
-                        uint32_t per_node_count)
-    : proj_functor_{proj_functor},
-      start_proc_id_{start_proc_id},
-      end_proc_id_{end_proc_id},
-      per_node_count_{per_node_count}
+  LegateShardingFunctor(LegateProjectionFunctor* proj_functor, const mapping::ProcessorRange& range)
+    : proj_functor_{proj_functor}, range_{range}
   {
   }
 
@@ -127,9 +122,8 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
     auto hi             = proj_functor_->project_point(launch_space.hi(), launch_space);
     auto point          = proj_functor_->project_point(p, launch_space);
     auto task_count     = linearize(lo, hi, hi) + 1;
-    auto proc_count     = end_proc_id_ - start_proc_id_;
-    auto global_proc_id = (linearize(lo, hi, point) * proc_count) / task_count + start_proc_id_;
-    auto shard_id       = global_proc_id / per_node_count_;
+    auto global_proc_id = (linearize(lo, hi, point) * range_.count()) / task_count + range_.low;
+    auto shard_id       = global_proc_id / range_.per_node_count;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       assert(shard_id < total_shards);
     }
@@ -138,9 +132,7 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
 
  private:
   LegateProjectionFunctor* proj_functor_{};
-  uint32_t start_proc_id_{};
-  uint32_t end_proc_id_{};
-  uint32_t per_node_count_{};
+  mapping::ProcessorRange range_{};
 };
 
 Legion::ShardingID find_sharding_functor_by_projection_functor(Legion::ProjectionID proj_id)
@@ -153,38 +145,27 @@ Legion::ShardingID find_sharding_functor_by_projection_functor(Legion::Projectio
 struct ShardingCallbackArgs {
   Legion::ShardID shard_id{};
   Legion::ProjectionID proj_id{};
-  uint32_t start_proc_id{};
-  uint32_t end_proc_id{};
-  uint32_t per_node_count{};
+  mapping::ProcessorRange range{};
 };
 
 namespace {
 
 void sharding_functor_registration_callback(const Legion::RegistrationCallbackArgs& args)
 {
-  auto p_args           = static_cast<ShardingCallbackArgs*>(args.buffer.get_ptr());
-  auto runtime          = Legion::Runtime::get_runtime();
-  auto sharding_functor = new LegateShardingFunctor{find_legate_projection_functor(p_args->proj_id),
-                                                    p_args->start_proc_id,
-                                                    p_args->end_proc_id,
-                                                    p_args->per_node_count};
+  auto p_args  = static_cast<ShardingCallbackArgs*>(args.buffer.get_ptr());
+  auto runtime = Legion::Runtime::get_runtime();
+  auto sharding_functor =
+    new LegateShardingFunctor{find_legate_projection_functor(p_args->proj_id), p_args->range};
   runtime->register_sharding_functor(p_args->shard_id, sharding_functor, true /*silence warnings*/);
 }
 
 }  // namespace
 
-}  // namespace legate::detail
-
-extern "C" {
-
-void legate_create_sharding_functor_using_projection(Legion::ShardID shard_id,
-                                                     Legion::ProjectionID proj_id,
-                                                     uint32_t start_proc_id,
-                                                     uint32_t end_proc_id,
-                                                     uint32_t per_node_count)
+void create_sharding_functor_using_projection(Legion::ShardID shard_id,
+                                              Legion::ProjectionID proj_id,
+                                              const mapping::ProcessorRange& range)
 {
-  legate::detail::ShardingCallbackArgs args{
-    shard_id, proj_id, start_proc_id, end_proc_id, per_node_count};
+  legate::detail::ShardingCallbackArgs args{shard_id, proj_id, range};
   {
     const std::lock_guard<std::mutex> lock{legate::detail::functor_table_lock};
     legate::detail::functor_id_table[proj_id] = shard_id;
@@ -196,4 +177,5 @@ void legate_create_sharding_functor_using_projection(Legion::ShardID shard_id,
     false /*global*/,
     false /*dedup*/);
 }
-}
+
+}  // namespace legate::detail

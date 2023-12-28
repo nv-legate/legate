@@ -169,8 +169,9 @@ void finalize_cpucoll(const Legion::Task* task,
 
 }  // namespace
 
-void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library)
+void register_tasks(const detail::Library* core_library)
 {
+  const auto runtime       = Legion::Runtime::get_runtime();
   const auto& command_args = Legion::Runtime::get_input_args();
   auto ret                 = coll::collInit(command_args.argc, command_args.argv);
   assert(ret == coll::CollSuccess);

@@ -1195,21 +1195,7 @@ Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::Symbo
 
   auto proj_id = core_library_->get_projection_id(next_projection_id_++);
 
-  auto ndim = point.size();
-  std::vector<int32_t> dims;
-  std::vector<int32_t> weights;
-  std::vector<int32_t> offsets;
-
-  dims.reserve(ndim);
-  weights.reserve(ndim);
-  offsets.reserve(ndim);
-  for (auto& expr : point.data()) {
-    dims.push_back(expr.dim());
-    weights.push_back(expr.weight());
-    offsets.push_back(expr.offset());
-  }
-  legate_register_affine_projection_functor(
-    src_ndim, static_cast<int32_t>(ndim), dims.data(), weights.data(), offsets.data(), proj_id);
+  register_affine_projection_functor(src_ndim, point, proj_id);
   registered_projections_[key] = proj_id;
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -1257,8 +1243,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
     log_legate().debug() << "Create sharding " << sharding_id;
   }
 
-  legate_create_sharding_functor_using_projection(
-    sharding_id, proj_id, proc_range.low, proc_range.high, proc_range.per_node_count);
+  create_sharding_functor_using_projection(sharding_id, proj_id, proc_range);
 
   return sharding_id;
 }
@@ -1425,7 +1410,7 @@ void register_extract_scalar_variant(const std::unique_ptr<TaskInfo>& task_info)
 
 }  // namespace
 
-void register_legate_core_tasks(Legion::Runtime* runtime, Library* core_lib)
+void register_legate_core_tasks(Library* core_lib)
 {
   auto task_info = std::make_unique<TaskInfo>("core::extract_scalar");
   register_extract_scalar_variant<LEGATE_CPU_VARIANT>(task_info);
@@ -1438,7 +1423,7 @@ void register_legate_core_tasks(Legion::Runtime* runtime, Library* core_lib)
   core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
 
   register_array_tasks(core_lib);
-  comm::register_tasks(runtime, core_lib);
+  comm::register_tasks(core_lib);
 }
 
 #define BUILTIN_REDOP_ID(OP, TYPE_CODE) \
@@ -1489,7 +1474,7 @@ void register_builtin_reduction_ops()
   RECORD_INT(XOR_LT)
 }
 
-extern void register_exception_reduction_op(Legion::Runtime* runtime, const Library* context);
+extern void register_exception_reduction_op(const Library* context);
 
 namespace {
 
@@ -1563,16 +1548,15 @@ void initialize_core_library()
   auto core_lib = Runtime::get_runtime()->create_library(
     CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), true /*in_callback*/);
 
-  auto legion_runtime = Legion::Runtime::get_runtime();
-  register_legate_core_tasks(legion_runtime, core_lib);
+  register_legate_core_tasks(core_lib);
 
   register_builtin_reduction_ops();
 
-  register_exception_reduction_op(legion_runtime, core_lib);
+  register_exception_reduction_op(core_lib);
 
-  register_legate_core_projection_functors(legion_runtime, core_lib);
+  register_legate_core_projection_functors(core_lib);
 
-  register_legate_core_sharding_functors(legion_runtime, core_lib);
+  register_legate_core_sharding_functors(core_lib);
 }
 
 void initialize_core_library_callback(

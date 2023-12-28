@@ -12,15 +12,13 @@
 
 #pragma once
 
-#include "legion.h"
-
 namespace legate::detail {
 class Library;
 }  // namespace legate::detail
 
 namespace legate::comm::nccl {
 
-void register_tasks(Legion::Runtime* runtime, const detail::Library* core_library);
+void register_tasks(const detail::Library* core_library);
 
 void register_factory(const detail::Library* core_library);
 
