@@ -142,6 +142,7 @@ requirements:
     - {{ compiler('cxx') }} ={{ compiler_version }} # [linux]
     - {{ compiler('c') }}         # [osx]
     - {{ compiler('cxx') }}       # [osx]
+    - libhwloc =* =*default*
 {% if gpu_enabled_bool %}
     - cuda-nvcc ={{ cuda_version }}
 {% endif %}
@@ -155,6 +156,7 @@ requirements:
     - scikit-build
     - elfutils # [linux]
     - libdwarf # [linux]
+    - libhwloc =* =*default*
 {% if debug_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
@@ -185,6 +187,7 @@ requirements:
     - typing_extensions
     - elfutils # [linux]
     - libdwarf # [linux]
+    - libhwloc =* =*default*
 {% if debug_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
