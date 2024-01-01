@@ -529,6 +529,7 @@ install(
   FILES src/core/operation/projection.h
         src/core/operation/projection.inl
         src/core/operation/task.h
+        src/core/operation/task.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/operation)
 
 install(

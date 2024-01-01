@@ -21,6 +21,7 @@
 #include "core/utilities/shared_ptr.h"
 
 #include <string>
+#include <type_traits>
 
 /**
  * @file
@@ -151,6 +152,17 @@ class AutoTask {
    * @param scalar A scalar to add to the task
    */
   void add_scalar_arg(Scalar&& scalar);
+
+  /**
+   @brief Template wrapper for arithmetic types to make adding scalar args
+          less verbose
+
+   @tparam T The arithmetic type
+   @param t The arithmetic scalar to convert to Scalar
+   */
+  template <class T, typename = std::enable_if_t<std::is_constructible<Scalar, T>::value>>
+  void add_scalar_arg(T&& t);
+
   /**
    * @brief Adds a partitioning constraint to the task
    *
@@ -317,6 +329,16 @@ class ManualTask {
   void add_scalar_arg(Scalar&& scalar);
 
   /**
+   @brief Template wrapper for arithmetic types to make adding scalar args
+          less verbose
+
+   @tparam T The arithmetic type
+   @param t The arithmetic scalar to convert to Scalar
+   */
+  template <class T, typename = std::enable_if_t<std::is_constructible<Scalar, T>::value>>
+  void add_scalar_arg(T&& t);
+
+  /**
    * @brief Returns the provenance information of this operation
    *
    * @return Provenance
@@ -368,3 +390,5 @@ class ManualTask {
 };
 
 }  // namespace legate
+
+#include "core/operation/task.inl"
