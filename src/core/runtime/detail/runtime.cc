@@ -20,6 +20,7 @@
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/detail/core_mapper.h"
 #include "core/mapping/detail/default_mapper.h"
+#include "core/mapping/detail/instance_manager.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/mapping.h"
 #include "core/operation/detail/copy.h"
@@ -1348,6 +1349,9 @@ void Runtime::destroy()
 
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
   issue_execution_fence(true);
+
+  mapping::detail::InstanceManager::get_instance_manager()->destroy();
+  mapping::detail::ReductionInstanceManager::get_instance_manager()->destroy();
 
   // Any STL containers holding Legion handles need to be cleared here, otherwise they cause
   // trouble when they get destroyed in the Legate runtime's destructor

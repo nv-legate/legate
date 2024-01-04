@@ -165,12 +165,14 @@ class InstanceManager : public BaseInstanceManager {
                                                FieldID field_id,
                                                Memory memory,
                                                bool exact = false);
-  [[nodiscard]] std::set<Instance> record_instance(const RegionGroupP& group,
-                                                   FieldID field_id,
-                                                   const Instance& instance,
-                                                   const InstanceMappingPolicy& policy = {});
+  void record_instance(const RegionGroupP& group,
+                       FieldID field_id,
+                       const Instance& instance,
+                       const InstanceMappingPolicy& policy = {});
 
   void erase(const Instance& inst);
+
+  void destroy();
 
   [[nodiscard]] static InstanceManager* get_instance_manager();
 
@@ -198,6 +200,8 @@ class ReductionInstanceManager : public BaseInstanceManager {
                        const InstanceMappingPolicy& policy = {});
 
   void erase(const Instance& inst);
+
+  void destroy();
 
   [[nodiscard]] static ReductionInstanceManager* get_instance_manager();
 

@@ -17,7 +17,7 @@ from ..data.logical_array cimport _LogicalArray
 from ..data.logical_store cimport _LogicalStore, _LogicalStorePartition
 from ..data.scalar cimport _Scalar
 from ..partitioning.constraint cimport _Constraint, _Variable
-from ..utilities.tuple cimport tuple as _tuple
+from ..utilities.tuple cimport _tuple
 from .projection cimport _SymbolicPoint
 
 

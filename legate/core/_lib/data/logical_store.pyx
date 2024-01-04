@@ -32,6 +32,11 @@ cdef class LogicalStore:
         handle.impl().get().allow_out_of_order_destruction()
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     @property
     def shape(self) -> Shape:
         return Shape(self.extents)

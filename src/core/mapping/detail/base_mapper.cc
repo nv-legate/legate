@@ -813,7 +813,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     if (!result.is_external_instance() && group != nullptr) {
       assert(fields.size() == 1);
       auto fid = fields.front();
-      static_cast<void>(local_instances->record_instance(group, fid, result, policy));
+      local_instances->record_instance(group, fid, result, policy);
     }
     runtime->enable_reentrant(ctx);
     // We made it so no need for an acquire

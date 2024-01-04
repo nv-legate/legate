@@ -84,7 +84,8 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
     future_{std::move(future)},
     transform_{std::move(transform)},
     readable_{future_.valid()},
-    writable_{!future_.is_read_only()}
+    writable_{!future_.is_read_only()},
+    reducible_{writable_}
 {
 }
 

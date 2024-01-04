@@ -66,6 +66,9 @@ cdef class Type:
         result._handle = ty
         return result
 
+    def __init__(self) -> None:
+        self._handle = _null_type()
+
     @property
     def code(self) -> int32_t:
         return <int32_t> self._handle.code()
@@ -120,6 +123,11 @@ cdef class Type:
 
 
 cdef class FixedArrayType(Type):
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     @property
     def num_elements(self) -> uint32_t:
         return self._handle.as_fixed_array_type().num_elements()
@@ -137,6 +145,11 @@ cdef class FixedArrayType(Type):
 
 
 cdef class StructType(Type):
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     @property
     def num_fields(self) -> uint32_t:
         return self._handle.as_struct_type().num_fields()

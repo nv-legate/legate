@@ -126,6 +126,11 @@ cdef class TaskInfo:
         result._registered_variants = {}
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     cdef _TaskInfo *release(self) except NULL:
         if not self.valid:
             raise RuntimeError(

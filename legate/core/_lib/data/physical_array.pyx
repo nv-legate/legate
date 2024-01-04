@@ -18,5 +18,10 @@ cdef class PhysicalArray:
         result._handle = array
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     cpdef PhysicalStore data(self):
         return PhysicalStore.from_handle(self._handle.data())

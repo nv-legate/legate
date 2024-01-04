@@ -14,7 +14,7 @@ from libcpp.vector cimport vector as std_vector
 
 
 cdef extern from "core/utilities/tuple.h" namespace "legate" nogil:
-    cdef cppclass tuple[T]:
+    cdef cppclass _tuple "legate::tuple" [T]:
         void append_inplace(const T& value)
         const std_vector[T]& data() const
         void reserve(size_t)

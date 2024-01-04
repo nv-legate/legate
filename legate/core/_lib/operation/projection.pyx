@@ -20,6 +20,11 @@ cdef class SymbolicExpr:
         result._handle = std_move(handle)
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     @property
     def dim(self) -> int:
         return self._handle.dim()

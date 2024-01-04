@@ -160,7 +160,7 @@ class AutoTask {
    @tparam T The arithmetic type
    @param t The arithmetic scalar to convert to Scalar
    */
-  template <class T, typename = std::enable_if_t<std::is_constructible<Scalar, T>::value>>
+  template <class T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
   void add_scalar_arg(T&& t);
 
   /**
@@ -335,7 +335,7 @@ class ManualTask {
    @tparam T The arithmetic type
    @param t The arithmetic scalar to convert to Scalar
    */
-  template <class T, typename = std::enable_if_t<std::is_constructible<Scalar, T>::value>>
+  template <class T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
   void add_scalar_arg(T&& t);
 
   /**

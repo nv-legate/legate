@@ -68,4 +68,12 @@ inline size_t BaseInstanceManager::FieldMemInfo::hash() const noexcept
 
 inline Legion::Mapping::LocalLock& BaseInstanceManager::manager_lock() { return manager_lock_; }
 
+// ==========================================================================================
+
+inline void InstanceManager::destroy() { instance_sets_.clear(); }
+
+// ==========================================================================================
+
+inline void ReductionInstanceManager::destroy() { instance_sets_.clear(); }
+
 }  // namespace legate::mapping::detail

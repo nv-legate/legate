@@ -398,14 +398,13 @@ RegionGroupP InstanceManager::find_region_group(const Region& region,
   return result;
 }
 
-std::set<InstanceManager::Instance> InstanceManager::record_instance(
-  const RegionGroupP& group,
-  FieldID field_id,
-  const Instance& instance,
-  const InstanceMappingPolicy& policy)
+void InstanceManager::record_instance(const RegionGroupP& group,
+                                      FieldID field_id,
+                                      const Instance& instance,
+                                      const InstanceMappingPolicy& policy)
 {
   FieldMemInfo key{instance.get_tree_id(), field_id, instance.get_location()};
-  return instance_sets_[std::move(key)].record_instance(group, instance, policy);
+  static_cast<void>(instance_sets_[std::move(key)].record_instance(group, instance, policy));
 }
 
 void InstanceManager::erase(const Instance& inst)
@@ -442,12 +441,8 @@ std::map<Memory, size_t> InstanceManager::aggregate_instance_sizes() const
 
 /*static*/ InstanceManager* InstanceManager::get_instance_manager()
 {
-  static InstanceManager* manager{nullptr};
-
-  if (nullptr == manager) {
-    manager = new InstanceManager{};
-  }
-  return manager;
+  static auto manager = std::make_unique<InstanceManager>();
+  return manager.get();
 }
 
 bool ReductionInstanceManager::find_instance(ReductionOpID& redop,
@@ -492,12 +487,8 @@ void ReductionInstanceManager::erase(const Instance& inst)
 
 /*static*/ ReductionInstanceManager* ReductionInstanceManager::get_instance_manager()
 {
-  static ReductionInstanceManager* manager{nullptr};
-
-  if (manager == nullptr) {
-    manager = new ReductionInstanceManager{};
-  }
-  return manager;
+  static auto manager = std::make_unique<ReductionInstanceManager>();
+  return manager.get();
 }
 
 }  // namespace legate::mapping::detail

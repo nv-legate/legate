@@ -13,7 +13,7 @@ from libc.stdint cimport int32_t
 from libcpp.utility cimport move as std_move
 
 from ..data.shape cimport _Shape
-from ..utilities.tuple cimport tuple as _tuple
+from ..utilities.tuple cimport _tuple
 from ...utils import is_iterable
 
 
@@ -23,6 +23,11 @@ cdef class Variable:
         cdef Variable result = Variable.__new__(Variable)
         result._handle = handle
         return result
+
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
 
     def __str__(self) -> str:
         return self._handle.to_string().decode()
@@ -37,6 +42,11 @@ cdef class Constraint:
         cdef Constraint result = Constraint.__new__(Constraint)
         result._handle = handle
         return result
+
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
 
     def __str__(self) -> str:
         return self._handle.to_string().decode()

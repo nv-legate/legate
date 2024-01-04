@@ -29,6 +29,11 @@ cdef class TaskContext:
         result._scalars = None
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     cpdef int64_t get_task_id(self):
         return self._handle.task_id()
 

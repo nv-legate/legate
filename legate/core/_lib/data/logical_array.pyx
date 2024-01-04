@@ -29,6 +29,11 @@ cdef class LogicalArray:
         result._handle = handle
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     @staticmethod
     def from_store(LogicalStore store) -> LogicalArray:
         return LogicalArray.from_handle(_LogicalArray(store._handle))

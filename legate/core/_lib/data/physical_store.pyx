@@ -24,6 +24,11 @@ cdef class PhysicalStore:
         result._handle = handle
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     @property
     def ndim(self) -> int32_t:
         return self._handle.dim()

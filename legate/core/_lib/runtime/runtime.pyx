@@ -88,6 +88,11 @@ cdef class Runtime:
         result._handle = handle
         return result
 
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
+
     def find_library(self, str library_name) -> Library:
         return Library.from_handle(
             self._handle.find_library(library_name.encode())
@@ -518,26 +523,6 @@ cdef class Runtime:
                 std_move(cpp_shape), dtype._handle, std_move(alloc)
             )
         )
-
-    def create_scalar(self, Type dtype, data: Any) -> Scalar:
-        """
-        Creates a future from a buffer holding a scalar value. The value is
-        copied to the future.
-
-        Parameters
-        ----------
-        data : buffer
-            Buffer that holds a scalar value
-
-        size : int
-            Size of the value
-
-        Returns
-        -------
-        Future
-            A new future
-        """
-        return Scalar.create_from_buffer(data, dtype)
 
     def issue_execution_fence(self, bool block = False) -> None:
         with cython.nogil:

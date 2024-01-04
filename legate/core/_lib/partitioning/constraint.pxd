@@ -13,7 +13,7 @@ from libc.stdint cimport int32_t
 from libcpp.string cimport string as std_string
 
 from ..data.shape cimport _Shape
-from ..utilities.tuple cimport tuple as _tuple
+from ..utilities.tuple cimport _tuple
 
 
 cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:

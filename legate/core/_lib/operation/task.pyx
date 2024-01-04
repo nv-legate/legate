@@ -28,7 +28,7 @@ from .projection cimport SymbolicExpr, _SymbolicPoint
 
 from ..type.type_info import Type, array_type, null_type
 
-from ..utilities.tuple cimport tuple as _tuple
+from ..utilities.tuple cimport _tuple
 
 from ...utils import is_iterable
 
@@ -57,6 +57,11 @@ cdef class AutoTask:
         result._handle = std_move(handle)
         result._exception_types = []
         return result
+
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
 
     def add_input(
         self, array_or_store, partition: Union[Variable, None] = None
@@ -310,6 +315,11 @@ cdef class ManualTask:
         result._handle = std_move(handle)
         result._exception_types = []
         return result
+
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )
 
     def add_input(
         self,
