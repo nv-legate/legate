@@ -35,9 +35,6 @@ class Tiling;
 namespace legate::detail {
 
 class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
- private:
-  friend class FieldManager;
-
  public:
   LogicalRegionField(FieldManager* manager,
                      const Legion::LogicalRegion& lr,

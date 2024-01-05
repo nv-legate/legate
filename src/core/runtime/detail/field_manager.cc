@@ -21,11 +21,6 @@ namespace legate::detail {
 FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
   : runtime_{runtime}, shape_{shape}, field_size_{field_size}
 {
-  auto size = shape.dim == 0 ? 1 : (shape.get_volume() * field_size);
-  if (size > Config::max_field_reuse_size) {
-    assert(Config::max_field_reuse_size > 0);
-    field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
-  }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     std::stringstream ss;
     if (shape.is_valid()) {
@@ -42,19 +37,7 @@ FieldManager::~FieldManager()
 {
   // We are shutting down, so just free all the buffer copies we've made to attach to, without
   // waiting on the detachments to finish.
-  for (auto& infos : info_for_match_items_) {
-    for (auto& [item, info] : infos) {
-      if (info.attachment) {
-        info.attachment->maybe_deallocate();
-      }
-    }
-  }
   for (const FreeFieldInfo& info : ordered_free_fields_) {
-    if (info.attachment) {
-      info.attachment->maybe_deallocate();
-    }
-  }
-  for (const FreeFieldInfo& info : unordered_free_fields_) {
     if (info.attachment) {
       info.attachment->maybe_deallocate();
     }
@@ -63,32 +46,12 @@ FieldManager::~FieldManager()
 
 InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field()
 {
-  issue_field_match();
-  while (!ordered_free_fields_.empty() || !matches_.empty()) {
-    // If there's a field that every shard is guaranteed to have, re-use that.
-    if (!ordered_free_fields_.empty()) {
-      const auto& info = ordered_free_fields_.front();
-      if (info.attachment) {
-        info.can_dealloc.get_void_result(true /*silence_warnings*/);
-        info.attachment->maybe_deallocate();
-      }
-      auto* rf = new LogicalRegionField(this, info.region, info.field_id);
-      log_legate().debug(
-        "Field %u recycled in field manager %p", info.field_id, static_cast<void*>(this));
-      ordered_free_fields_.pop_front();
-      return InternalSharedPtr<LogicalRegionField>{rf};
-    }
-    // If there are any field matches we haven't processed yet, process the next one, then go back
-    // and check if any fields were just added to the "ordered" queue.
-    process_next_field_match();
+  auto result = try_reuse_field();
+  if (result != nullptr) {
+    return result;
   }
   // If there are no more field matches to process, then we completely failed to reuse a field.
-  auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_);
-  auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
-  auto* rf       = new LogicalRegionField{this, lr, fid};
-
-  log_legate().debug("Field %u created in field manager %p", fid, static_cast<void*>(this));
-  return InternalSharedPtr<LogicalRegionField>{rf};
+  return create_new_field();
 }
 
 InternalSharedPtr<LogicalRegionField> FieldManager::import_field(
@@ -108,7 +71,98 @@ void FieldManager::free_field(const Legion::LogicalRegion& region,
                               Legion::FieldID field_id,
                               Legion::Future can_dealloc,
                               std::unique_ptr<Attachment> attachment,
-                              bool unordered)
+                              bool /*unordered*/)
+{
+  log_legate().debug(
+    "Field %u freed in-order in field manager %p", field_id, static_cast<void*>(this));
+  ordered_free_fields_.emplace_back(
+    region, field_id, std::move(can_dealloc), std::move(attachment));
+}
+
+InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field()
+{
+  if (ordered_free_fields_.empty()) {
+    return nullptr;
+  }
+  const auto& info = ordered_free_fields_.front();
+  if (info.attachment) {
+    info.can_dealloc.get_void_result(true /*silence_warnings*/);
+    info.attachment->maybe_deallocate();
+  }
+  auto* rf = new LogicalRegionField(this, info.region, info.field_id);
+  log_legate().debug(
+    "Field %u recycled in field manager %p", info.field_id, static_cast<void*>(this));
+  ordered_free_fields_.pop_front();
+  return InternalSharedPtr<LogicalRegionField>{rf};
+}
+
+InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field()
+{
+  // If there are no more field matches to process, then we completely failed to reuse a field.
+  auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_);
+  auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
+  auto* rf       = new LogicalRegionField{this, lr, fid};
+
+  log_legate().debug("Field %u created in field manager %p", fid, static_cast<void*>(this));
+  return InternalSharedPtr<LogicalRegionField>{rf};
+}
+
+// ==========================================================================================
+
+ConsensusMatchingFieldManager::ConsensusMatchingFieldManager(Runtime* runtime,
+                                                             const Domain& shape,
+                                                             uint32_t field_size)
+  : FieldManager{runtime, shape, field_size}
+{
+  auto size = shape.dim == 0 ? 1 : (shape.get_volume() * field_size);
+  if (size > Config::max_field_reuse_size) {
+    assert(Config::max_field_reuse_size > 0);
+    field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
+  }
+}
+
+ConsensusMatchingFieldManager::~ConsensusMatchingFieldManager()
+{
+  // We are shutting down, so just free all the buffer copies we've made to attach to, without
+  // waiting on the detachments to finish.
+  for (auto& infos : info_for_match_items_) {
+    for (auto& [item, info] : infos) {
+      if (info.attachment) {
+        info.attachment->maybe_deallocate();
+      }
+    }
+  }
+  for (const FreeFieldInfo& info : unordered_free_fields_) {
+    if (info.attachment) {
+      info.attachment->maybe_deallocate();
+    }
+  }
+}
+
+InternalSharedPtr<LogicalRegionField> ConsensusMatchingFieldManager::allocate_field()
+{
+  issue_field_match();
+  while (!ordered_free_fields_.empty() || !matches_.empty()) {
+    auto result = try_reuse_field();
+    // If there's a field that every shard is guaranteed to have, re-use that.
+    if (result != nullptr) {
+      return result;
+    }
+    if (matches_.empty()) {
+      break;
+    }
+    // If there are any field matches we haven't processed yet, process the next one, then go back
+    // and check if any fields were just added to the "ordered" queue.
+    process_next_field_match();
+  }
+  return create_new_field();
+}
+
+void ConsensusMatchingFieldManager::free_field(const Legion::LogicalRegion& region,
+                                               Legion::FieldID field_id,
+                                               Legion::Future can_dealloc,
+                                               std::unique_ptr<Attachment> attachment,
+                                               bool unordered)
 {
   if (unordered) {
     log_legate().debug(
@@ -116,14 +170,12 @@ void FieldManager::free_field(const Legion::LogicalRegion& region,
     unordered_free_fields_.emplace_back(
       region, field_id, std::move(can_dealloc), std::move(attachment));
   } else {
-    log_legate().debug(
-      "Field %u freed in-order in field manager %p", field_id, static_cast<void*>(this));
-    ordered_free_fields_.emplace_back(
-      region, field_id, std::move(can_dealloc), std::move(attachment));
+    FieldManager::free_field(
+      region, field_id, std::move(can_dealloc), std::move(attachment), unordered);
   }
 }
 
-void FieldManager::issue_field_match()
+void ConsensusMatchingFieldManager::issue_field_match()
 {
   // Check if there are any freed fields that are shared across all the shards. We have to
   // test this deterministically no matter what, even if we don't have any fields to offer
@@ -153,7 +205,7 @@ void FieldManager::issue_field_match()
                      static_cast<void*>(this));
 }
 
-void FieldManager::process_next_field_match()
+void ConsensusMatchingFieldManager::process_next_field_match()
 {
   assert(!matches_.empty());
   auto& match = matches_.front();

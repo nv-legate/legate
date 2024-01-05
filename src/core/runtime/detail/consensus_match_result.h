@@ -44,3 +44,5 @@ class ConsensusMatchResult {
 };
 
 }  // namespace legate::detail
+
+#include "core/runtime/detail/consensus_match_result.inl"

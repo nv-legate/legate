@@ -839,7 +839,9 @@ FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, uint32_
     return finder->second.get();
   }
 
-  auto fld_mgr         = std::make_unique<FieldManager>(this, shape, field_size);
+  auto fld_mgr         = consensus_match_required()
+                           ? std::make_unique<ConsensusMatchingFieldManager>(this, shape, field_size)
+                           : std::make_unique<FieldManager>(this, shape, field_size);
   auto ptr             = fld_mgr.get();
   field_managers_[key] = std::move(fld_mgr);
   return ptr;

@@ -59,6 +59,7 @@ GPU_DELAY = 2000
 # Default values to apply to normalize the testing environment.
 PROCESS_ENV = {
     "LEGATE_TEST": "1",
+    "LEGATE_CONSENSUS": "1",
 }
 
 # sysmem value to use for non-CPU stages

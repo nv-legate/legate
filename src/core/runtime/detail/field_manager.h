@@ -39,6 +39,34 @@ struct FreeFieldInfo {
   std::unique_ptr<Attachment> attachment{};
 };
 
+class FieldManager {
+ public:
+  FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
+  virtual ~FieldManager();
+
+  [[nodiscard]] virtual InternalSharedPtr<LogicalRegionField> allocate_field();
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(
+    const Legion::LogicalRegion& region, Legion::FieldID field_id);
+
+  virtual void free_field(const Legion::LogicalRegion& region,
+                          Legion::FieldID field_id,
+                          Legion::Future can_dealloc,
+                          std::unique_ptr<Attachment> attachment,
+                          bool unordered);
+
+ protected:
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field();
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field();
+
+  Runtime* runtime_{};
+  Domain shape_{};
+  uint32_t field_size_{};
+
+  // This is a sanitized list of (region,field_id) pairs that is guaranteed to be ordered across all
+  // the shards even with control replication.
+  std::deque<FreeFieldInfo> ordered_free_fields_;
+};
+
 struct MatchItem {
   MatchItem() = default;
   MatchItem(Legion::RegionTreeID tid, Legion::FieldID fid);
@@ -49,36 +77,26 @@ struct MatchItem {
   friend bool operator<(const MatchItem& l, const MatchItem& r);
 };
 
-class FieldManager {
- private:
-  friend LogicalRegionField;
-
+class ConsensusMatchingFieldManager final : public FieldManager {
  public:
-  FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
-  ~FieldManager();
+  ConsensusMatchingFieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
+  ~ConsensusMatchingFieldManager() final;
 
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field();
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(
-    const Legion::LogicalRegion& region, Legion::FieldID field_id);
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field() override;
 
- private:
   void free_field(const Legion::LogicalRegion& region,
                   Legion::FieldID field_id,
                   Legion::Future can_dealloc,
                   std::unique_ptr<Attachment> attachment,
-                  bool unordered);
+                  bool unordered) override;
+
+ private:
   void issue_field_match();
   void process_next_field_match();
 
-  Runtime* runtime_{};
-  Domain shape_{};
-  uint32_t field_size_{};
   uint32_t field_match_counter_{};
   uint32_t field_match_credit_{1};
 
-  // This is a sanitized list of (region,field_id) pairs that is guaranteed to be ordered across all
-  // the shards even with control replication.
-  std::deque<FreeFieldInfo> ordered_free_fields_;
   // This list contains the fields that we know have been freed on this shard, but may not have been
   // freed yet on other shards.
   std::vector<FreeFieldInfo> unordered_free_fields_;
