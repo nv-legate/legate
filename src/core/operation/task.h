@@ -143,25 +143,17 @@ class AutoTask {
   /**
    * @brief Adds a by-value scalar argument to the task
    *
-   * @param scalar A scalar to add to the task
+   * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(const Scalar& scalar);
+  void add_scalar_arg(Scalar scalar);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
-   * @param scalar A scalar to add to the task
+   * @tparam T The scalar value's type. Scalar must be constructible from a value of T
+   * @param value The scalar value to convert to Scalar and add to the task
    */
-  void add_scalar_arg(Scalar&& scalar);
-
-  /**
-   @brief Template wrapper for arithmetic types to make adding scalar args
-          less verbose
-
-   @tparam T The arithmetic type
-   @param t The arithmetic scalar to convert to Scalar
-   */
-  template <class T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
-  void add_scalar_arg(T&& t);
+  template <typename T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
+  void add_scalar_arg(T&& value);
 
   /**
    * @brief Adds a partitioning constraint to the task
@@ -318,25 +310,17 @@ class ManualTask {
   /**
    * @brief Adds a by-value scalar argument to the task
    *
-   * @param scalar A scalar to add to the task
+   * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(const Scalar& scalar);
+  void add_scalar_arg(Scalar scalar);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
-   * @param scalar A scalar to add to the task
+   * @tparam T The scalar value's type. Scalar must be constructible from a value of T
+   * @param value The scalar value to convert to Scalar and add to the task
    */
-  void add_scalar_arg(Scalar&& scalar);
-
-  /**
-   @brief Template wrapper for arithmetic types to make adding scalar args
-          less verbose
-
-   @tparam T The arithmetic type
-   @param t The arithmetic scalar to convert to Scalar
-   */
-  template <class T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
-  void add_scalar_arg(T&& t);
+  template <typename T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
+  void add_scalar_arg(T&& value);
 
   /**
    * @brief Returns the provenance information of this operation

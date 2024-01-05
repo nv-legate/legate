@@ -175,7 +175,8 @@ class Scalar {
    */
   [[nodiscard]] const void* ptr() const;
 
-  [[nodiscard]] detail::Scalar* impl() const;
+  [[nodiscard]] const detail::Scalar* impl() const;
+  [[nodiscard]] detail::Scalar* impl();
 
  private:
   static detail::Scalar* checked_create_impl(const Type& type,

@@ -37,9 +37,7 @@ Task::Task(const Library* library,
 {
 }
 
-void Task::add_scalar_arg(const Scalar& scalar) { scalars_.push_back(scalar); }
-
-void Task::add_scalar_arg(Scalar&& scalar) { scalars_.push_back(std::move(scalar)); }
+void Task::add_scalar_arg(Scalar&& scalar) { scalars_.emplace_back(std::move(scalar)); }
 
 void Task::set_concurrent(bool concurrent) { concurrent_ = concurrent; }
 

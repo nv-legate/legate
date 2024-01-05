@@ -54,7 +54,6 @@ class Task : public Operation {
        mapping::detail::Machine&& machine);
 
  public:
-  void add_scalar_arg(const Scalar& scalar);
   void add_scalar_arg(Scalar&& scalar);
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);

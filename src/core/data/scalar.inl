@@ -182,7 +182,9 @@ inline Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
   return result;
 }
 
-inline detail::Scalar* Scalar::impl() const { return impl_; }
+inline detail::Scalar* Scalar::impl() { return impl_; }
+
+inline const detail::Scalar* Scalar::impl() const { return impl_; }
 
 // ==========================================================================================
 

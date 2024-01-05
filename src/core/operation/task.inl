@@ -16,16 +16,16 @@
 
 namespace legate {
 
-template <class T, typename Enable>
-void AutoTask::add_scalar_arg(T&& t)
+template <typename T, typename Enable>
+void AutoTask::add_scalar_arg(T&& value)
 {
-  add_scalar_arg(Scalar{std::forward<T>(t)});
+  add_scalar_arg(Scalar{std::forward<T>(value)});
 }
 
-template <class T, typename Enable>
-void ManualTask::add_scalar_arg(T&& t)
+template <typename T, typename Enable>
+void ManualTask::add_scalar_arg(T&& value)
 {
-  add_scalar_arg(Scalar{std::forward<T>(t)});
+  add_scalar_arg(Scalar{std::forward<T>(value)});
 }
 
 }  // namespace legate

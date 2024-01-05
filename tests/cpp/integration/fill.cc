@@ -146,20 +146,20 @@ template <std::int32_t DIM>
   }
 }
 
-void check_output(const legate::LogicalArray& array, const legate::Scalar& value)
+void check_output(const legate::LogicalArray& array, legate::Scalar&& value)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
   auto task = runtime->create_task(context, CHECK_TASK + array.dim());
   task.add_input(array);
-  task.add_scalar_arg(value);
+  task.add_scalar_arg(std::move(value));
   runtime->submit(std::move(task));
 }
 
 void check_output_slice(const legate::LogicalArray& array,
-                        const legate::Scalar& value_in_slice,
-                        const legate::Scalar& value_outside_slice,
+                        legate::Scalar&& value_in_slice,
+                        legate::Scalar&& value_outside_slice,
                         int64_t offset)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -167,8 +167,8 @@ void check_output_slice(const legate::LogicalArray& array,
 
   auto task = runtime->create_task(context, CHECK_SLICE_TASK + array.dim());
   task.add_input(array);
-  task.add_scalar_arg(value_in_slice);
-  task.add_scalar_arg(value_outside_slice);
+  task.add_scalar_arg(std::move(value_in_slice));
+  task.add_scalar_arg(std::move(value_outside_slice));
   task.add_scalar_arg(legate::Scalar{offset});
   runtime->submit(std::move(task));
 }
@@ -187,7 +187,7 @@ void test_fill_index(std::int32_t dim, std::size_t size, bool nullable)
   runtime->issue_fill(lhs, v);
 
   // check the result of fill
-  check_output(lhs, v);
+  check_output(lhs, std::move(v));
 }
 
 void test_fill_slice(std::int32_t dim, std::size_t size, bool null_init)
@@ -214,7 +214,7 @@ void test_fill_slice(std::int32_t dim, std::size_t size, bool null_init)
   runtime->issue_fill(sliced, value_in_slice);
 
   // check if the slice is filled correctly
-  check_output_slice(lhs, legate::Scalar{v1}, legate::Scalar{v2}, offset);
+  check_output_slice(lhs, std::move(value_in_slice), std::move(value_outside_slice), offset);
 }
 
 void test_invalid()
