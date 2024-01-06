@@ -90,15 +90,16 @@ ConstraintSolver::~ConstraintSolver()
   }
 }
 
-void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol, IsOutput is_output)
+void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol,
+                                            AccessMode access_mode)
 {
   partition_symbols_.insert(partition_symbol);
-  is_output_.insert({*partition_symbol, static_cast<bool>(is_output)});
-}
-
-void ConstraintSolver::add_constraint(InternalSharedPtr<Constraint> constraint)
-{
-  constraints_.push_back(std::move(constraint));
+  auto finder = access_modes_.find(*partition_symbol);
+  if (finder != access_modes_.end()) {
+    finder->second = std::max(finder->second, access_mode);
+  } else {
+    access_modes_.emplace(*partition_symbol, access_mode);
+  }
 }
 
 void ConstraintSolver::solve_constraints()
@@ -286,16 +287,6 @@ const Restrictions& ConstraintSolver::find_restrictions(const Variable* partitio
   return equiv_class_map_.at(*partition_symbol)->restrictions;
 }
 
-bool ConstraintSolver::is_output(const Variable& partition_symbol) const
-{
-  return is_output_.at(partition_symbol);
-}
-
-bool ConstraintSolver::is_dependent(const Variable& partition_symbol) const
-{
-  return is_dependent_.at(partition_symbol);
-}
-
 void ConstraintSolver::dump()
 {
   log_legate().debug("===== Constraint Graph =====");
@@ -313,11 +304,6 @@ void ConstraintSolver::dump()
     log_legate().debug() << "  " << constraint->to_string();
   }
   log_legate().debug("============================");
-}
-
-const std::vector<const Variable*>& ConstraintSolver::partition_symbols() const
-{
-  return partition_symbols_.elements();
 }
 
 }  // namespace legate::detail

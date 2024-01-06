@@ -25,16 +25,17 @@ namespace legate::detail {
 
 class Strategy;
 
-enum class IsOutput : bool {
-  Y = true,
-  N = false,
+enum class AccessMode : uint32_t {
+  READ   = 0,
+  REDUCE = 1,
+  WRITE  = 2,
 };
 
 struct ConstraintSolver {
  public:
   ~ConstraintSolver();
 
-  void add_partition_symbol(const Variable* partition_symbol, IsOutput is_output);
+  void add_partition_symbol(const Variable* partition_symbol, AccessMode access_mode);
   void add_constraint(InternalSharedPtr<Constraint> constraint);
 
   void dump();
@@ -46,12 +47,13 @@ struct ConstraintSolver {
   [[nodiscard]] const std::vector<const Variable*>& find_equivalence_class(
     const Variable* partition_symbol) const;
   [[nodiscard]] const Restrictions& find_restrictions(const Variable* partition_symbol) const;
+  [[nodiscard]] AccessMode find_access_mode(const Variable& partition_symbol) const;
   [[nodiscard]] bool is_output(const Variable& partition_symbol) const;
   [[nodiscard]] bool is_dependent(const Variable& partition_symbol) const;
 
  private:
   ordered_set<const Variable*> partition_symbols_{};
-  std::unordered_map<const Variable, bool> is_output_{};
+  std::unordered_map<const Variable, AccessMode> access_modes_{};
   std::vector<InternalSharedPtr<Constraint>> constraints_{};
 
   struct EquivClass;
@@ -62,3 +64,5 @@ struct ConstraintSolver {
 };
 
 }  // namespace legate::detail
+
+#include "core/partitioning/detail/constraint_solver.inl"

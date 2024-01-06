@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <set>
+#include <tuple>
 
 namespace legate::detail {
 
@@ -247,7 +248,8 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       assert(!store->unbound());
     }
-    return std::make_pair(store->storage_size(), has_key_part);
+    return std::make_tuple(
+      store->storage_size(), has_key_part, solver.find_access_mode(*part_symb));
   };
 
   std::stable_sort(remaining_symbols.begin(),

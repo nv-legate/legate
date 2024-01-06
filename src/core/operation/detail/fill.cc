@@ -71,7 +71,7 @@ std::string Fill::to_string() const { return "Fill:" + std::to_string(unique_id_
 
 void Fill::add_to_solver(ConstraintSolver& solver)
 {
-  solver.add_partition_symbol(lhs_var_, IsOutput::Y);
+  solver.add_partition_symbol(lhs_var_, AccessMode::WRITE);
   if (lhs_->has_scalar_storage()) {
     solver.add_constraint(broadcast(lhs_var_));
   }

@@ -93,9 +93,9 @@ void Scatter::launch(Strategy* p_strategy)
 void Scatter::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable, IsOutput::Y);
-  solver.add_partition_symbol(target_indirect_.variable, IsOutput::N);
-  solver.add_partition_symbol(source_.variable, IsOutput::N);
+  solver.add_partition_symbol(target_.variable, !redop_ ? AccessMode::WRITE : AccessMode::REDUCE);
+  solver.add_partition_symbol(target_indirect_.variable, AccessMode::READ);
+  solver.add_partition_symbol(source_.variable, AccessMode::READ);
 }
 
 std::string Scatter::to_string() const { return "Scatter:" + std::to_string(unique_id_); }

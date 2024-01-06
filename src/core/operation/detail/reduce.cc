@@ -135,8 +135,8 @@ void Reduce::launch(Strategy* p_strategy)
 
 void Reduce::add_to_solver(detail::ConstraintSolver& solver)
 {
-  solver.add_partition_symbol(output_part_, IsOutput::Y);
-  solver.add_partition_symbol(input_part_, IsOutput::N);
+  solver.add_partition_symbol(output_part_, AccessMode::WRITE);
+  solver.add_partition_symbol(input_part_, AccessMode::READ);
 }
 
 std::string Reduce::to_string() const { return "Reduce:" + std::to_string(unique_id_); }

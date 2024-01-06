@@ -322,7 +322,7 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
   }
   for (auto& output : outputs_) {
     for (auto& [store, symb] : output.mapping) {
-      solver.add_partition_symbol(symb, IsOutput::Y);
+      solver.add_partition_symbol(symb, AccessMode::WRITE);
       if (store->has_scalar_storage()) {
         solver.add_constraint(broadcast(symb));
       }
@@ -330,12 +330,12 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
   }
   for (auto& input : inputs_) {
     for (auto& [_, symb] : input.mapping) {
-      solver.add_partition_symbol(symb, IsOutput::N);
+      solver.add_partition_symbol(symb, AccessMode::READ);
     }
   }
   for (auto& reduction : reductions_) {
     for (auto& [_, symb] : reduction.mapping) {
-      solver.add_partition_symbol(symb, IsOutput::N);
+      solver.add_partition_symbol(symb, AccessMode::REDUCE);
     }
   }
 }

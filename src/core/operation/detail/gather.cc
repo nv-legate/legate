@@ -93,9 +93,9 @@ void Gather::launch(Strategy* p_strategy)
 void Gather::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable, IsOutput::Y);
-  solver.add_partition_symbol(source_.variable, IsOutput::N);
-  solver.add_partition_symbol(source_indirect_.variable, IsOutput::N);
+  solver.add_partition_symbol(target_.variable, !redop_ ? AccessMode::WRITE : AccessMode::REDUCE);
+  solver.add_partition_symbol(source_.variable, AccessMode::READ);
+  solver.add_partition_symbol(source_indirect_.variable, AccessMode::READ);
 }
 
 }  // namespace legate::detail
