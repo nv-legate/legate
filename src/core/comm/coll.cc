@@ -169,4 +169,6 @@ int legate_cpucoll_finalize(void)
 }
 
 int legate_cpucoll_initcomm(void) { return legate::comm::coll::collInitComm(); }
+
+bool legate_has_cal() { return LegateDefined(LEGATE_USE_CAL); }
 }

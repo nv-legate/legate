@@ -48,10 +48,7 @@ class Factory final : public detail::CommunicatorFactory {
 
 Factory::Factory(const detail::Library* core_library) : core_library_{core_library} {}
 
-bool Factory::is_supported_target(mapping::TaskTarget target) const
-{
-  return target == mapping::TaskTarget::OMP || target == mapping::TaskTarget::CPU;
-}
+bool Factory::is_supported_target(mapping::TaskTarget /*target*/) const { return true; }
 
 Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, uint32_t num_tasks)
 {
@@ -231,6 +228,21 @@ void register_tasks(const detail::Library* core_library)
     auto registrar =
       make_registrar(finalize_cpucoll_task_id, finalize_cpucoll_task_name, Processor::OMP_PROC);
     runtime->register_task_variant<finalize_cpucoll>(registrar, LEGATE_OMP_VARIANT);
+  }
+  {
+    auto registrar = make_registrar(
+      init_cpucoll_mapping_task_id, init_cpucoll_mapping_task_name, Processor::TOC_PROC);
+    runtime->register_task_variant<int, init_cpucoll_mapping>(registrar, LEGATE_GPU_VARIANT);
+  }
+  {
+    auto registrar =
+      make_registrar(init_cpucoll_task_id, init_cpucoll_task_name, Processor::TOC_PROC);
+    runtime->register_task_variant<coll::CollComm, init_cpucoll>(registrar, LEGATE_GPU_VARIANT);
+  }
+  {
+    auto registrar =
+      make_registrar(finalize_cpucoll_task_id, finalize_cpucoll_task_name, Processor::TOC_PROC);
+    runtime->register_task_variant<finalize_cpucoll>(registrar, LEGATE_GPU_VARIANT);
   }
 }
 

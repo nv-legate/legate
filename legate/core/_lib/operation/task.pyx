@@ -296,6 +296,12 @@ cdef class AutoTask:
         """
         self.add_communicator("cpu")
 
+    def add_cal_communicator(self) -> None:
+        """
+        Adds a CAL communicator to the task
+        """
+        self.add_communicator("cal")
+
 
 cdef std_optional[_SymbolicPoint] to_cpp_projection(object projection):
     if projection is None:
@@ -444,3 +450,9 @@ cdef class ManualTask:
         Adds a CPU communicator to the task
         """
         self.add_communicator("cpu")
+
+    def add_cal_communicator(self) -> None:
+        """
+        Adds a CAL communicator to the task
+        """
+        self.add_communicator("cal")

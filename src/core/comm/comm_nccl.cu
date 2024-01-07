@@ -52,7 +52,8 @@ inline void check_nccl(ncclResult_t error, const char* file, int line)
 {
   if (error != ncclSuccess) {
     static_cast<void>(fprintf(stderr,
-                              "Internal NCCL failure with error %s in file %s at line %d\n",
+                              "Internal NCCL failure with error %d (%s) in file %s at line %d\n",
+                              error,
                               ncclGetErrorString(error),
                               file,
                               line));

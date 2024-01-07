@@ -227,6 +227,10 @@ if(Legion_USE_CUDA)
     src/core/comm/comm_nccl.cu
     src/core/cuda/stream_pool.cu
     src/core/data/detail/array_tasks.cu)
+  if(CAL_DIR)
+    list(APPEND legate_core_SOURCES
+      src/core/comm/comm_cal.cu)
+  endif()
 endif()
 
 add_library(legate_core ${legate_core_SOURCES})
@@ -327,6 +331,14 @@ if(Legion_USE_CUDA)
     # Make sure to export to consumers what runtime we used
     target_link_libraries(legate_core PUBLIC CUDA::cudart)
   endif()
+endif()
+
+if(Legion_USE_CUDA AND CAL_DIR)
+  message(VERBOSE "legate.core: CAL_DIR ${CAL_DIR}")
+  list(APPEND legate_core_CXX_DEFS LEGATE_USE_CAL=1)
+  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_CAL=1)
+  target_include_directories(legate_core PRIVATE ${CAL_DIR}/include)
+  target_link_libraries(legate_core PRIVATE ${CAL_DIR}/lib/libcal.so)
 endif()
 
 target_link_libraries(legate_core

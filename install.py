@@ -373,6 +373,7 @@ def install(
     thread_count,
     verbose,
     thrust_dir,
+    cal_dir,
     legion_dir,
     legion_src_dir,
     legion_url,
@@ -421,6 +422,7 @@ def install(
         print(f"thread_count: {thread_count}")
         print(f"verbose: {verbose}")
         print(f"thrust_dir: {thrust_dir}")
+        print(f"cal_dir: {cal_dir}")
         print(f"legion_dir: {legion_dir}")
         print(f"legion_src_dir: {legion_src_dir}")
         print(f"legion_url: {legion_url}")
@@ -454,6 +456,7 @@ def install(
     gasnet_dir = validate_path(gasnet_dir)
     ucx_dir = validate_path(ucx_dir)
     thrust_dir = validate_path(thrust_dir)
+    cal_dir = validate_path(cal_dir)
 
     if verbose:
         print(f"legate_core_dir: {legate_core_dir}")
@@ -464,6 +467,7 @@ def install(
         print(f"gasnet_dir: {gasnet_dir}")
         print(f"ucx_dir: {ucx_dir}")
         print(f"thrust_dir: {thrust_dir}")
+        print(f"cal_dir: {cal_dir}")
 
     if thread_count is None:
         thread_count = multiprocessing.cpu_count()
@@ -605,6 +609,8 @@ def install(
         cmake_flags += [f"-DCUDAToolkit_ROOT={cuda_dir}"]
     if thrust_dir:
         cmake_flags += [f"-DThrust_ROOT={thrust_dir}"]
+    if cal_dir:
+        cmake_flags += [f"-DCAL_DIR={cal_dir}"]
     if legion_dir:
         cmake_flags += [f"-DLegion_ROOT={legion_dir}"]
     elif legion_src_dir:
@@ -953,6 +959,14 @@ def driver():
         help="Path to Thrust installation directory. The required version of "
         "Thrust is cuda-11.2 or compatible.  If not "
         "provided, Thrust will be installed automatically.",
+    )
+    parser.add_argument(
+        "--with-cal",
+        dest="cal_dir",
+        metavar="DIR",
+        required=False,
+        default=os.environ.get("CAL_PATH"),
+        help="Path to CAL installation directory.",
     )
     parser.add_argument(
         "--with-legion",

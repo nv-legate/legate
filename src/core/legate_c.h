@@ -28,6 +28,8 @@ typedef enum legate_core_task_id_t {
   LEGATE_CORE_INIT_NCCL_ID_TASK_ID,
   LEGATE_CORE_INIT_NCCL_TASK_ID,
   LEGATE_CORE_FINALIZE_NCCL_TASK_ID,
+  LEGATE_CORE_INIT_CAL_TASK_ID,
+  LEGATE_CORE_FINALIZE_CAL_TASK_ID,
   LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID,
   LEGATE_CORE_INIT_CPUCOLL_TASK_ID,
   LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID,
@@ -141,6 +143,8 @@ extern "C" {
 #endif
 
 void legate_core_perform_registration(void);
+
+bool legate_has_cal();
 
 #ifdef __cplusplus
 }

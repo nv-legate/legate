@@ -19,8 +19,10 @@
 
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
-#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace legate::detail {
 
@@ -84,7 +86,7 @@ class CommunicatorManager {
   void destroy();
 
  private:
-  std::unordered_map<std::string, std::unique_ptr<CommunicatorFactory>> factories_{};
+  std::vector<std::pair<std::string, std::unique_ptr<CommunicatorFactory>>> factories_{};
 };
 
 }  // namespace legate::detail

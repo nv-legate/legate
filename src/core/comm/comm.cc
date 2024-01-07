@@ -13,6 +13,7 @@
 #include "legate_defines.h"
 //
 #include "core/comm/comm.h"
+#include "core/comm/comm_cal.h"
 #include "core/comm/comm_cpu.h"
 #include "core/comm/comm_nccl.h"
 #include "core/runtime/runtime.h"
@@ -25,6 +26,9 @@ void register_tasks(const detail::Library* library)
 {
   if (LegateDefined(LEGATE_USE_CUDA)) {
     nccl::register_tasks(library);
+  }
+  if (LegateDefined(LEGATE_USE_CAL)) {
+    cal::register_tasks(library);
   }
   const bool disable_mpi =
     static_cast<bool>(extract_env("LEGATE_DISABLE_MPI", DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST));
@@ -39,6 +43,9 @@ void register_builtin_communicator_factories(const detail::Library* library)
     nccl::register_factory(library);
   }
   cpu::register_factory(library);
+  if (LegateDefined(LEGATE_USE_CAL)) {
+    cal::register_factory(library);
+  }
 }
 
 }  // namespace legate::comm

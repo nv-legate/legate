@@ -70,19 +70,28 @@ Legion::FutureMap CommunicatorFactory::transform(const Legion::FutureMap& commun
 
 CommunicatorFactory* CommunicatorManager::find_factory(const std::string& name)
 {
-  return factories_.at(name).get();
+  auto it =
+    std::find_if(factories_.begin(),
+                 factories_.end(),
+                 [&](const std::pair<std::string, std::unique_ptr<CommunicatorFactory>>& e) {
+                   return e.first == name;
+                 });
+  if (it == factories_.end()) {
+    throw std::runtime_error{"No factory available for communicator '" + name + "'"};
+  }
+  return it->second.get();
 }
 
 void CommunicatorManager::register_factory(const std::string& name,
                                            std::unique_ptr<CommunicatorFactory> factory)
 {
-  factories_.insert({name, std::move(factory)});
+  factories_.emplace_back(name, std::move(factory));
 }
 
 void CommunicatorManager::destroy()
 {
-  for (auto& [_, factory] : factories_) {
-    factory->destroy();
+  for (auto i = factories_.rbegin(); i != factories_.rend(); ++i) {
+    i->second->destroy();
   }
   factories_.clear();
 }
