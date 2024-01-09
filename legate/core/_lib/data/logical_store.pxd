@@ -42,7 +42,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition partition_by_tiling(
             std_vector[size_t] tile_shape
         )
-        _PhysicalStore get_physical_store()
+        _PhysicalStore get_physical_store() except+
         void detach()
         std_string to_string()
         const _SharedPtr[_LogicalStoreImpl]& impl() const
