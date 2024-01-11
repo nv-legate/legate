@@ -406,11 +406,11 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   // Generate default mappings for stores that are not yet mapped by the client mapper
   auto default_option            = options.front();
-  auto generate_default_mappings = [&](auto& arrays, bool exact) {
+  auto generate_default_mappings = [&](auto& arrays) {
     for (auto& array : arrays) {
       auto stores = array->stores();
       for (auto& store : stores) {
-        auto mapping = StoreMapping::default_mapping(store.get(), default_option, exact);
+        auto mapping = StoreMapping::default_mapping(store.get(), default_option);
         if (store->is_future()) {
           auto fut_idx = store->future_index();
           // Only need to map Future-backed Stores corresponding to inputs (i.e. one of
@@ -438,9 +438,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
       }
     }
   };
-  generate_default_mappings(legate_task.inputs(), false);
-  generate_default_mappings(legate_task.outputs(), false);
-  generate_default_mappings(legate_task.reductions(), false);
+  generate_default_mappings(legate_task.inputs());
+  generate_default_mappings(legate_task.outputs());
+  generate_default_mappings(legate_task.reductions());
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(mapped_futures.size() <= task.futures.size());
     // The launching code should be packing all Store-backing Futures first.
@@ -492,7 +492,12 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     output_map[&task.regions[idx]] = &output.chosen_instances[idx];
   }
 
-  map_legate_stores(ctx, task, for_stores, task.target_proc, output_map);
+  map_legate_stores(ctx,
+                    task,
+                    for_stores,
+                    task.target_proc,
+                    output_map,
+                    legate_task.machine().count() < task.index_domain.get_volume());
 }
 
 void BaseMapper::map_replicate_task(Legion::Mapping::MapperContext /*ctx*/,
@@ -508,7 +513,8 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
                                    const Legion::Mappable& mappable,
                                    std::vector<std::unique_ptr<StoreMapping>>& mappings,
                                    Processor target_proc,
-                                   OutputMap& output_map)
+                                   OutputMap& output_map,
+                                   bool overdecomposed)
 {
   auto try_mapping = [&](bool can_fail) {
     const Legion::Mapping::PhysicalInstance NO_INST{};
@@ -516,7 +522,26 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
     for (auto& mapping : mappings) {
       Legion::Mapping::PhysicalInstance result = NO_INST;
       auto reqs                                = mapping->requirements();
-      while (map_legate_store(ctx, mappable, *mapping, reqs, target_proc, result, can_fail)) {
+      // Point tasks collectively writing to the same region must be doing so via distinct
+      // instances. This contract is somewhat difficult to satisfy while the mapper also tries to
+      // reuse the existing instance for the region, because when the tasks are mapped to processors
+      // with a shared memory, the mapper should reuse the instance for only one of the tasks and
+      // not for the others, a logic that is tedious to write correctly. For that reason, we simply
+      // give up on reusing instances for regions used in collective writes whenever more than one
+      // task can try to reuse the existing instance for the same region. The obvious case where the
+      // mapepr can safely reuse the instances is that the region is mapped to a framebuffer and not
+      // over-decomposed (i.e., there's a 1-1 mapping between tasks and GPUs).
+      const auto must_alloc_collective_writes =
+        mappable.get_mappable_type() == Legion::Mappable::TASK_MAPPABLE &&
+        (overdecomposed || mapping->policy.target != StoreTarget::FBMEM);
+      while (map_legate_store(ctx,
+                              mappable,
+                              *mapping,
+                              reqs,
+                              target_proc,
+                              result,
+                              can_fail,
+                              must_alloc_collective_writes)) {
         if (NO_INST == result) {
           if (LegateDefined(LEGATE_USE_DEBUG)) {
             assert(can_fail);
@@ -623,7 +648,8 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
                                   const std::set<const Legion::RegionRequirement*>& reqs,
                                   Processor target_proc,
                                   Legion::Mapping::PhysicalInstance& result,
-                                  bool can_fail)
+                                  bool can_fail,
+                                  bool must_alloc_collective_writes)
 {
   if (reqs.empty()) {
     return false;
@@ -732,8 +758,19 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
 
   const Legion::Mapping::AutoLock lock{ctx, local_instances->manager_lock()};
   runtime->disable_reentrant(ctx);
+
+  auto has_collective_write = [](const auto& to_check) {
+    return std::any_of(to_check.begin(), to_check.end(), [](const auto& req) {
+      return ((req->privilege & LEGION_WRITE_PRIV) != 0) &&
+             ((req->prop & LEGION_COLLECTIVE_MASK) != 0);
+    });
+  };
+  const auto alloc_policy = must_alloc_collective_writes && has_collective_write(reqs)
+                              ? AllocPolicy::MUST_ALLOC
+                              : policy.allocation;
+
   // See if we already have it in our local instances
-  if (fields.size() == 1 && regions.size() == 1 &&
+  if (fields.size() == 1 && regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC &&
       local_instances->find_instance(
         regions.front(), fields.front(), target_memory, result, policy)) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -767,7 +804,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
   bool success     = false;
   size_t footprint = 0;
 
-  switch (policy.allocation) {
+  switch (alloc_policy) {
     case AllocPolicy::MAY_ALLOC: {
       success = runtime->find_or_create_physical_instance(ctx,
                                                           target_memory,

@@ -18,6 +18,8 @@ namespace legate::detail {
 
 inline bool Operation::always_flush() const { return false; }
 
+inline bool Operation::supports_replicated_write() const { return false; }
+
 inline const mapping::detail::Machine& Operation::machine() const { return machine_; }
 
 inline const std::string& Operation::provenance() const { return provenance_; }

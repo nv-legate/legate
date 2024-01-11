@@ -163,7 +163,7 @@ ConfigureTest(
 if(integration_GPU_SRC)
   ConfigureTest(
     gpu_tests
-    ${main_SRC} ${integration_GPU_SRC}
+    ${main_SRC} ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC}
     GPUS 1
     PERCENT 30
   )

@@ -30,6 +30,8 @@ inline Task::ArrayArg::ArrayArg(InternalSharedPtr<LogicalArray> _array,
 
 inline bool Task::always_flush() const { return can_throw_exception_; }
 
+inline bool Task::supports_replicated_write() const { return true; }
+
 // ==========================================================================================
 
 inline AutoTask::AutoTask(const Library* library,

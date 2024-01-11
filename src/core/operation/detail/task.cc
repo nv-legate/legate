@@ -182,20 +182,23 @@ void Task::demux_scalar_stores(const Legion::Future& result)
 
 void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& launch_domain)
 {
-  // Tasks with scalar outputs shouldn't have been parallelized
-  assert(scalar_outputs_.empty());
-
+  auto num_scalar_outs  = scalar_outputs_.size();
   auto num_scalar_reds  = scalar_reductions_.size();
   auto num_unbound_outs = unbound_outputs_.size();
 
-  auto total = num_scalar_reds + num_unbound_outs + static_cast<size_t>(can_throw_exception_);
+  auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
+               static_cast<size_t>(can_throw_exception_);
   if (0 == total) {
     return;
   }
 
   const auto runtime = detail::Runtime::get_runtime();
   if (1 == total) {
-    if (1 == num_scalar_reds) {
+    if (1 == num_scalar_outs) {
+      // TODO: We should eventually support future map-backed stores, but for now we extract the
+      // first one to get the code running
+      scalar_outputs_.front()->set_future(result[launch_domain.lo()]);
+    } else if (1 == num_scalar_reds) {
       auto& [store, redop] = scalar_reductions_.front();
 
       store->set_future(runtime->reduce_future_map(result, redop, store->get_future()));
@@ -207,6 +210,14 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   } else {
     auto idx = static_cast<uint32_t>(num_unbound_outs);
 
+    if (!scalar_outputs_.empty()) {
+      // TODO: We should eventually support future map-backed stores, but for now we extract the
+      // first one to get the code running
+      auto first_future = result[launch_domain.lo()];
+      for (auto& store : scalar_outputs_) {
+        store->set_future(runtime->extract_scalar(first_future, idx++));
+      }
+    }
     for (auto& [store, redop] : scalar_reductions_) {
       auto values = runtime->extract_scalar(result, idx++, launch_domain);
 
@@ -406,10 +417,6 @@ void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store
 void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
 {
   if (store->has_scalar_storage()) {
-    if (strategy_->parallel(this)) {
-      throw std::invalid_argument{
-        "Manual tasks with scalar outputs cannot have a launch domain with more than one point"};
-    }
     record_scalar_output(store);
   } else if (store->unbound()) {
     record_unbound_output(store);
@@ -425,10 +432,6 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
     assert(!store_partition->store()->unbound());
   }
   if (store_partition->store()->has_scalar_storage()) {
-    if (strategy_->parallel(this)) {
-      throw std::invalid_argument{
-        "Manual tasks with scalar outputs cannot have a launch domain with more than one point"};
-    }
     record_scalar_output(store_partition->store());
   }
   add_store(

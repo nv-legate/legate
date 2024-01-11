@@ -197,7 +197,7 @@ void Strategy::compute_launch_domains(const ConstraintSolver& solver)
     auto store = op->find_store(&part_symb);
     if (store->unbound()) {
       domain_resolver.record_unbound_store(store->dim());
-    } else if (solver.is_output(part_symb)) {
+    } else if (!op->supports_replicated_write() && solver.is_output(part_symb)) {
       domain_resolver.set_must_be_sequential(true);
     }
   }

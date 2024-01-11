@@ -21,7 +21,8 @@ void BaseProjectionInfo::populate_requirement<true>(Legion::RegionRequirement& r
                                                     const Legion::LogicalRegion& region,
                                                     const std::vector<Legion::FieldID>& fields,
                                                     Legion::PrivilegeMode privilege,
-                                                    bool is_key) const
+                                                    bool is_key,
+                                                    bool is_single) const
 {
   auto parent = Runtime::get_runtime()->find_parent_region(region);
   auto tag    = static_cast<Legion::MappingTagID>(is_key ? LEGATE_CORE_KEY_STORE_TAG : 0);
@@ -32,6 +33,9 @@ void BaseProjectionInfo::populate_requirement<true>(Legion::RegionRequirement& r
   requirement.~RegionRequirement();
   if (LEGION_REDUCE == privilege) {
     new (&requirement) Legion::RegionRequirement{region, redop, LEGION_EXCLUSIVE, parent, tag};
+  } else if (!is_single && (privilege & LEGION_WRITE_PRIV) != 0) {
+    new (&requirement)
+      Legion::RegionRequirement{region, privilege, LEGION_COLLECTIVE_EXCLUSIVE, parent, tag};
   } else {
     new (&requirement) Legion::RegionRequirement{region, privilege, LEGION_EXCLUSIVE, parent, tag};
   }
@@ -43,10 +47,11 @@ void BaseProjectionInfo::populate_requirement<false>(Legion::RegionRequirement& 
                                                      const Legion::LogicalRegion& region,
                                                      const std::vector<Legion::FieldID>& fields,
                                                      Legion::PrivilegeMode privilege,
-                                                     bool is_key) const
+                                                     bool is_key,
+                                                     bool /*is_single*/) const
 {
   if (Legion::LogicalPartition::NO_PART == partition) {
-    populate_requirement<true>(requirement, region, fields, privilege, is_key);
+    populate_requirement<true>(requirement, region, fields, privilege, is_key, false);
     return;
   }
 

@@ -33,7 +33,8 @@ struct BaseProjectionInfo {
                             const Legion::LogicalRegion& region,
                             const std::vector<Legion::FieldID>& fields,
                             Legion::PrivilegeMode privilege,
-                            bool is_key) const;
+                            bool is_key,
+                            bool is_single = SINGLE) const;
 
   void set_reduction_op(Legion::ReductionOpID _redop);
 

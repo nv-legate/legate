@@ -102,10 +102,7 @@ void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& re
   for (auto& [key, entry] : coalesced_) {
     auto& [fields, is_key]       = entry;
     auto& [privilege, proj_info] = key;
-
-    task.region_requirements.emplace_back(Legion::RegionRequirement());
-
-    auto& requirement = task.region_requirements.back();
+    auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement());
 
     proj_info.template populate_requirement<is_single_v<Launcher>>(
       requirement, region, fields, privilege, is_key);

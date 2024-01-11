@@ -253,7 +253,8 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                          const Legion::Mappable& mappable,
                          std::vector<std::unique_ptr<StoreMapping>>& mappings,
                          Processor target_proc,
-                         OutputMap& output_map);
+                         OutputMap& output_map,
+                         bool overdecomposed = false);
   void tighten_write_policies(const Legion::Mappable& mappable,
                               std::vector<std::unique_ptr<StoreMapping>>& mappings);
   bool map_legate_store(Legion::Mapping::MapperContext ctx,
@@ -262,7 +263,8 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                         const std::set<const Legion::RegionRequirement*>& reqs,
                         Processor target_proc,
                         Legion::Mapping::PhysicalInstance& result,
-                        bool can_fail);
+                        bool can_fail,
+                        bool must_alloc_collective_writes);
   void report_failed_mapping(const Legion::Mappable& mappable,
                              unsigned index,
                              Memory target_memory,

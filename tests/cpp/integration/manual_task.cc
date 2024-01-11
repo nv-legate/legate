@@ -80,8 +80,6 @@ TEST_F(ManualTask, Invalid)
   EXPECT_THROW(task.add_input(unbound_store), std::invalid_argument);
   EXPECT_THROW(task.add_reduction(unbound_store, legate::ReductionOpKind::ADD),
                std::invalid_argument);
-  // Manual tasks with a launch domain of volume > 1 cannot have scalar outputs
-  EXPECT_THROW(task.add_output(scalar_store), std::invalid_argument);
 }
 
 }  // namespace manual_task_test
