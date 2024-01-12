@@ -218,7 +218,7 @@ class LogicalStore {
   // references.
   void allow_out_of_order_destruction();
 
-  [[nodiscard]] Restrictions compute_restrictions() const;
+  [[nodiscard]] Restrictions compute_restrictions(bool is_output) const;
   [[nodiscard]] InternalSharedPtr<Partition> find_or_create_key_partition(
     const mapping::detail::Machine& machine, const Restrictions& restrictions);
 

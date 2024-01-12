@@ -47,7 +47,8 @@ struct Transform {
   [[nodiscard]] virtual std::unique_ptr<Partition> convert(const Partition* partition) const  = 0;
   [[nodiscard]] virtual std::unique_ptr<Partition> invert(const Partition* partition) const   = 0;
   [[nodiscard]] virtual proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const    = 0;
-  [[nodiscard]] virtual Restrictions convert(const Restrictions& restrictions) const          = 0;
+  [[nodiscard]] virtual Restrictions convert(const Restrictions& restrictions,
+                                             bool forbid_fake_dim) const                      = 0;
   [[nodiscard]] virtual Restrictions invert(const Restrictions& restrictions) const           = 0;
   [[nodiscard]] virtual Shape invert_color(Shape color) const                                 = 0;
   [[nodiscard]] virtual Shape invert_extents(const Shape& extents) const                      = 0;
@@ -75,7 +76,8 @@ struct TransformStack final : public Transform {
   [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
   [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
+                                     bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
   [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
@@ -112,7 +114,8 @@ class Shift final : public StoreTransform {
   [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
   [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
+                                     bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
   [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
@@ -139,7 +142,8 @@ class Promote final : public StoreTransform {
   [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
   [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
+                                     bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
   [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
@@ -166,7 +170,8 @@ class Project final : public StoreTransform {
   [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
   [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
+                                     bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
   [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
@@ -193,7 +198,8 @@ class Transpose final : public StoreTransform {
   [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
   [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
+                                     bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
   [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
@@ -220,7 +226,8 @@ class Delinearize final : public StoreTransform {
   [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
   [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
   [[nodiscard]] proj::SymbolicPoint invert(const proj::SymbolicPoint& point) const override;
-  [[nodiscard]] Restrictions convert(const Restrictions& restrictions) const override;
+  [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
+                                     bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
   [[nodiscard]] Shape invert_color(Shape color) const override;
   [[nodiscard]] Shape invert_extents(const Shape& extents) const override;

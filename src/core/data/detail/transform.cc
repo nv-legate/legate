@@ -64,15 +64,15 @@ proj::SymbolicPoint TransformStack::invert(const proj::SymbolicPoint& point) con
   return parent_->invert(result);
 }
 
-Restrictions TransformStack::convert(const Restrictions& restrictions) const
+Restrictions TransformStack::convert(const Restrictions& restrictions, bool forbid_fake_dim) const
 {
   if (identity()) {
     return restrictions;
   }
   if (parent_->identity()) {
-    return transform_->convert(restrictions);
+    return transform_->convert(restrictions, forbid_fake_dim);
   }
-  return transform_->convert(parent_->convert(restrictions));
+  return transform_->convert(parent_->convert(restrictions, forbid_fake_dim), forbid_fake_dim);
 }
 
 Restrictions TransformStack::invert(const Restrictions& restrictions) const
@@ -414,9 +414,10 @@ proj::SymbolicPoint Promote::invert(const proj::SymbolicPoint& point) const
   return point.remove(extra_dim_);
 }
 
-Restrictions Promote::convert(const Restrictions& restrictions) const
+Restrictions Promote::convert(const Restrictions& restrictions, bool forbid_fake_dim) const
 {
-  return restrictions.insert(extra_dim_, Restriction::AVOID);
+  return restrictions.insert(extra_dim_,
+                             forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
 }
 
 Restrictions Promote::invert(const Restrictions& restrictions) const
@@ -545,7 +546,7 @@ proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
   return point.insert(dim_, proj::SymbolicExpr());
 }
 
-Restrictions Project::convert(const Restrictions& restrictions) const
+Restrictions Project::convert(const Restrictions& restrictions, bool /*forbid_fake_dim*/) const
 {
   return restrictions.remove(dim_);
 }
@@ -691,7 +692,7 @@ proj::SymbolicPoint Transpose::invert(const proj::SymbolicPoint& point) const
   return proj::SymbolicPoint{std::move(exprs)};
 }
 
-Restrictions Transpose::convert(const Restrictions& restrictions) const
+Restrictions Transpose::convert(const Restrictions& restrictions, bool /*forbid_fake_dim*/) const
 {
   std::vector<Restriction> result;
 
@@ -908,7 +909,7 @@ proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
   return proj::SymbolicPoint{std::move(exprs)};
 }
 
-Restrictions Delinearize::convert(const Restrictions& restrictions) const
+Restrictions Delinearize::convert(const Restrictions& restrictions, bool /*forbid_fake_dim*/) const
 {
   std::vector<Restriction> result;
 

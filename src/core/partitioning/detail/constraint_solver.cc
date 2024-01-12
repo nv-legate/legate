@@ -23,8 +23,8 @@ namespace legate::detail {
 namespace {
 
 struct UnionFindEntry {
-  UnionFindEntry(const Variable* symb, const detail::LogicalStore* store)
-    : partition_symbol{symb}, restrictions{store->compute_restrictions()}
+  UnionFindEntry(const Variable* symb, Restrictions rs)
+    : partition_symbol{symb}, restrictions{std::move(rs)}
   {
   }
 
@@ -114,9 +114,9 @@ void ConstraintSolver::solve_constraints()
   for (auto& symb : all_symbols) {
     // TODO: partition symbols can be independent of any stores of the operation
     //       (e.g., when a symbol subsumes a union of two other symbols)
-    auto store = symb->operation()->find_store(symb);
-    entries.emplace_back(symb, store.get());
-    table.insert({*symb, &entries.back()});
+    auto store  = symb->operation()->find_store(symb);
+    auto& entry = entries.emplace_back(symb, store->compute_restrictions(is_output(*symb)));
+    table.insert({*symb, &entry});
     is_dependent_.insert({*symb, false});
   }
 

@@ -723,9 +723,9 @@ void LogicalStore::allow_out_of_order_destruction()
   }
 }
 
-Restrictions LogicalStore::compute_restrictions() const
+Restrictions LogicalStore::compute_restrictions(bool is_output) const
 {
-  return transform_->convert(storage_->compute_restrictions());
+  return transform_->convert(storage_->compute_restrictions(), is_output);
 }
 
 Legion::ProjectionID LogicalStore::compute_projection(
