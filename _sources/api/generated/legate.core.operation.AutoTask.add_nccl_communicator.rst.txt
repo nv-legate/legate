@@ -1,6 +1,0 @@
-﻿legate.core.operation.AutoTask.add\_nccl\_communicator
-======================================================
-
-.. currentmodule:: legate.core.operation
-
-.. automethod:: AutoTask.add_nccl_communicator

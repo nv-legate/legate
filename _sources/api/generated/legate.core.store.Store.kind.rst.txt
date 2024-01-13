@@ -1,6 +1,0 @@
-﻿legate.core.store.Store.kind
-============================
-
-.. currentmodule:: legate.core.store
-
-.. autoproperty:: Store.kind

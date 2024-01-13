@@ -1,6 +1,6 @@
 .. _label_operation:
 
-.. currentmodule:: legate.core.operation
+.. currentmodule:: legate.core
 
 Operations
 ==========
@@ -37,54 +37,11 @@ The actual task implementation resides on the C++ side.
    AutoTask.add_alignment
    AutoTask.add_broadcast
    AutoTask.throws_exception
-   AutoTask.can_raise_exception
    AutoTask.add_nccl_communicator
    AutoTask.add_cpu_communicator
-   AutoTask.side_effect
    AutoTask.set_concurrent
    AutoTask.set_side_effect
    AutoTask.execute
-
-
-Copy
-----
-
-``Copy`` is a special kind of operation for copying data from one store to
-another. Unlike tasks that are mapped to and run on application processors,
-copies are performed by the DMA engine in the runtime. Also, unlike tasks that
-are user-defined, copies have well-defined semantics and come with predefined
-partitioning assumptions on stores. Hence, copies need not take partitioning
-constraints from developers.
-
-A copy can optionally take a store for indices that need to be used in
-accessing the source or target. With an `indirection` store on the source, the
-copy performs a gather operation, and with an indirection on the target, the
-copy does a scatter; when indirections exist for both the source and target,
-the copy turns into a full gather-scatter copy. Out-of-bounds indices are not
-checked and can produce undefined behavior. The caller therefore is responsible
-for making sure the indices are within bounds.
-
-.. autosummary::
-   :toctree: generated/
-
-   Copy.add_input
-   Copy.add_output
-   Copy.add_reduction
-   Copy.add_source_indirect
-   Copy.add_target_indirect
-   Copy.execute
-
-Fill
-----
-
-``Fill`` is a special kind of operation for filling a store with constant values.
-Like coipes, fills are performed by the DMA engine and their partitioning
-constraints are predefined.
-
-.. autosummary::
-   :toctree: generated/
-
-   Fill.execute
 
 
 Manually Parallelized Tasks
@@ -106,7 +63,6 @@ color space, and store partition.)
 .. autosummary::
    :toctree: generated/
 
-   ManualTask.side_effect
    ManualTask.set_concurrent
    ManualTask.set_side_effect
    ManualTask.add_input
@@ -114,7 +70,6 @@ color space, and store partition.)
    ManualTask.add_reduction
    ManualTask.add_scalar_arg
    ManualTask.throws_exception
-   ManualTask.can_raise_exception
    ManualTask.add_nccl_communicator
    ManualTask.add_cpu_communicator
    ManualTask.execute

@@ -1,4 +1,17 @@
 var searchData=
 [
-  ['unbound_0',['unbound',['../classlegate_1_1mapping_1_1Store.html#ad75b3e51fa3cfd077dd9c6dd5551cb2f',1,'legate::mapping::Store']]]
+  ['read_5faccessor_0',['read_accessor',['../classlegate_1_1PhysicalStore.html#ad32370a00e5024e4f771af0b011e64fa',1,'legate::PhysicalStore::read_accessor(const Rect&lt; DIM &gt; &amp;bounds) const'],['../classlegate_1_1PhysicalStore.html#aa2ed3b8b5f5f4616bccb24416b9bac2c',1,'legate::PhysicalStore::read_accessor() const']]],
+  ['read_5fonly_1',['read_only',['../classlegate_1_1ExternalAllocation.html#acae6d5dee8dc1ef7279d3595f16ef63d',1,'legate::ExternalAllocation']]],
+  ['read_5fwrite_5faccessor_2',['read_write_accessor',['../classlegate_1_1PhysicalStore.html#a53e41a0b2c62018f26258f55f94fee93',1,'legate::PhysicalStore::read_write_accessor() const'],['../classlegate_1_1PhysicalStore.html#a5414c28d2f0d632447f6346910adbb62',1,'legate::PhysicalStore::read_write_accessor(const Rect&lt; DIM &gt; &amp;bounds) const']]],
+  ['record_5freduction_5foperator_3',['record_reduction_operator',['../classlegate_1_1Type.html#ae3661c5dd16a7c553dbf44f355fad143',1,'legate::Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const'],['../classlegate_1_1Type.html#a2058c5caa09865281a85f0e5308f810f',1,'legate::Type::record_reduction_operator(ReductionOpKind op_kind, int32_t global_op_id) const']]],
+  ['rect_5ftype_4',['rect_type',['../group__types.html#ga27602dc14273ce52db185a22a0e2c00a',1,'legate']]],
+  ['redop_5',['redop',['../classlegate_1_1mapping_1_1Store.html#a4271ed349f27b1c565e9c96a75c510ed',1,'legate::mapping::Store']]],
+  ['reduce_5faccessor_6',['reduce_accessor',['../classlegate_1_1PhysicalStore.html#ae66eb764a8f2a7f2ac720cf45738b9de',1,'legate::PhysicalStore::reduce_accessor() const'],['../classlegate_1_1PhysicalStore.html#ac352236c3f2d0c1ab5b746e133a78f69',1,'legate::PhysicalStore::reduce_accessor(const Rect&lt; DIM &gt; &amp;bounds) const']]],
+  ['reduction_7',['reduction',['../classlegate_1_1mapping_1_1Task.html#ad0e82014c2cf0533a783b261b4c76d8b',1,'legate::mapping::Task::reduction()'],['../classlegate_1_1TaskContext.html#a20465eae79000cc3a76eacf8c56ee640',1,'legate::TaskContext::reduction(uint32_t index) const']]],
+  ['reductions_8',['reductions',['../classlegate_1_1TaskContext.html#a48c6d2d204e0952e6b30b9273868f22a',1,'legate::TaskContext::reductions()'],['../classlegate_1_1mapping_1_1Task.html#a69776bf8df4bb082a9e67f06d8486d13',1,'legate::mapping::Task::reductions()']]],
+  ['register_5fall_5ftasks_9',['register_all_tasks',['../classlegate_1_1TaskRegistrar.html#af91b54f3b7a6535144547e36219f31bc',1,'legate::TaskRegistrar']]],
+  ['register_5fmapper_10',['register_mapper',['../classlegate_1_1Library.html#a3a1d2688bd8dfe3b732e2c18b026911f',1,'legate::Library']]],
+  ['register_5freduction_5foperator_11',['register_reduction_operator',['../classlegate_1_1Library.html#a4e89b1100dbdbfa979716262a115581a',1,'legate::Library']]],
+  ['register_5fshutdown_5fcallback_12',['register_shutdown_callback',['../group__runtime.html#ga5442248d1e4513cae82a93e119fc1f94',1,'legate']]],
+  ['register_5fvariants_13',['register_variants',['../structlegate_1_1LegateTask.html#a85e6024fa5d194cba6df135dfee34966',1,'legate::LegateTask::register_variants(const std::map&lt; LegateVariantCode, VariantOptions &gt; &amp;all_options={})'],['../structlegate_1_1LegateTask.html#ac55460cf58468f52cd6df1c22df13bf7',1,'legate::LegateTask::register_variants(Library library, const std::map&lt; LegateVariantCode, VariantOptions &gt; &amp;all_options={})'],['../structlegate_1_1LegateTask.html#adf33a65c990d4fd3f9214906f52e5721',1,'legate::LegateTask::register_variants(Library library, int64_t task_id, const std::map&lt; LegateVariantCode, VariantOptions &gt; &amp;all_options={})']]]
 ];

@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['machine_20objects_0',['Machine objects',['../group__machine.html',1,'']]],
-  ['mapping_20api_1',['Mapping API',['../group__mapping.html',1,'']]]
+  ['in_20reduction_20operators_0',['Built-in reduction operators',['../group__reduction.html',1,'']]],
+  ['iterator_20types_1',['Iterator types',['../group__iterator.html',1,'']]]
 ];

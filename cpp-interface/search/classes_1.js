@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['dimordering_0',['DimOrdering',['../structlegate_1_1mapping_1_1DimOrdering.html',1,'legate::mapping']]]
+  ['constraint_0',['Constraint',['../classlegate_1_1Constraint.html',1,'legate']]]
 ];

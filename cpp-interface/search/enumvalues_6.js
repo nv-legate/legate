@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['soa_0',['SOA',['../group__mapping.html#gga3adb92606f48a8e6fef1a0892d88ec67abe5a791366c5f2810d7dd6132dc0f06c',1,'legate::mapping']]],
-  ['socketmem_1',['SOCKETMEM',['../group__mapping.html#gga7e2cad8c47f5c2d65fb316ddc0940d4baec3bcbd9f9b0295e03d901726264056f',1,'legate::mapping']]],
-  ['sysmem_2',['SYSMEM',['../group__mapping.html#gga7e2cad8c47f5c2d65fb316ddc0940d4bafd675e30b081b246462b344319d7a19a',1,'legate::mapping']]]
+  ['int16_0',['INT16',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87a5f90af42814c0a419d715d43ae54fd7a',1,'legate::Type']]],
+  ['int32_1',['INT32',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87a6495adba09844fac8eeb0aba86e6f1bf',1,'legate::Type']]],
+  ['int64_2',['INT64',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87a4e866b275c85fbb439f6484251cfb31c',1,'legate::Type']]],
+  ['int8_3',['INT8',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87aee9d73311ff0658494edfff14c3ec1e3',1,'legate::Type']]]
 ];

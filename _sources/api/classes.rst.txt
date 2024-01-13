@@ -7,8 +7,8 @@ Classes
 
    runtime
    operation
-   store
-   allocation
+   logical_store
+   machine
    shape
 .. partition
 .. legion

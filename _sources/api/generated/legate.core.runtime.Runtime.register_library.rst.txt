@@ -1,6 +1,0 @@
-﻿legate.core.runtime.Runtime.register\_library
-=============================================
-
-.. currentmodule:: legate.core.runtime
-
-.. automethod:: Runtime.register_library

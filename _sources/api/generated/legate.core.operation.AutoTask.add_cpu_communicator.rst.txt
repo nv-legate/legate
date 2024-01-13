@@ -1,6 +1,0 @@
-﻿legate.core.operation.AutoTask.add\_cpu\_communicator
-=====================================================
-
-.. currentmodule:: legate.core.operation
-
-.. automethod:: AutoTask.add_cpu_communicator

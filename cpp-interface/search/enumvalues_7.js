@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['zcmem_0',['ZCMEM',['../group__mapping.html#gga7e2cad8c47f5c2d65fb316ddc0940d4ba87eb3a4c6aed28af5bed8a8c469c6135',1,'legate::mapping']]]
+  ['list_0',['LIST',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87a298cb25408234de02baf2085803a464a',1,'legate::Type']]]
 ];

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['utilities_0',['Utilities',['../group__util.html',1,'']]]
+  ['objects_0',['Machine objects',['../group__machine.html',1,'']]],
+  ['operators_1',['Built-in reduction operators',['../group__reduction.html',1,'']]]
 ];

@@ -1,14 +1,14 @@
 var searchData=
 [
-  ['scalar_0',['scalar',['../classlegate_1_1Store.html#a7a4fc0d3a2de4d533892ed24cba8a447',1,'legate::Store']]],
-  ['scalar_1',['Scalar',['../classlegate_1_1Scalar.html#a3bcd1a3a181f33eae5f5458f4917528d',1,'legate::Scalar::Scalar(bool tuple, LegateTypeCode code, const void *data)'],['../classlegate_1_1Scalar.html#aab08bde944f6de6f836591014da8ac57',1,'legate::Scalar::Scalar(T value)'],['../classlegate_1_1Scalar.html#aa2f763d06669ea2cfd62d717ee5bf23a',1,'legate::Scalar::Scalar(const std::vector&lt; T &gt; &amp;values)']]],
-  ['scalars_2',['scalars',['../classlegate_1_1TaskContext.html#a55a7e480be80b8e8a96aba1bb73e4198',1,'legate::TaskContext::scalars()'],['../classlegate_1_1mapping_1_1Task.html#a7fe14e694938c526ebf2364f6fb2ef5c',1,'legate::mapping::Task::scalars()']]],
-  ['scopedallocator_3',['ScopedAllocator',['../classlegate_1_1ScopedAllocator.html#aa331f87b52348aa0628d699c13fc2cd8',1,'legate::ScopedAllocator']]],
-  ['set_5fmachine_4',['set_machine',['../classlegate_1_1mapping_1_1LegateMapper.html#af051f165eea12b54ea9fd68876021ba8',1,'legate::mapping::LegateMapper']]],
-  ['shape_5',['shape',['../classlegate_1_1Store.html#ada131de565e1157963182c8f0f7a8044',1,'legate::Store::shape()'],['../classlegate_1_1mapping_1_1Store.html#ad052b27c045f1bf412c14182e3faf048',1,'legate::mapping::Store::shape()']]],
-  ['size_6',['size',['../classlegate_1_1Scalar.html#a22af4176ea48f6ac0e8415aea8876942',1,'legate::Scalar::size()'],['../structlegate_1_1Span.html#a25baba9a28d9a48dcb1c19e2d349adfb',1,'legate::Span::size() const']]],
-  ['span_7',['Span',['../structlegate_1_1Span.html#aba23202335c53f161a6a915201d1a93d',1,'legate::Span']]],
-  ['store_5fmappings_8',['store_mappings',['../classlegate_1_1mapping_1_1LegateMapper.html#a02515e40e1db394892dd8713fdf11c9e',1,'legate::mapping::LegateMapper']]],
-  ['streamview_9',['StreamView',['../structlegate_1_1cuda_1_1StreamView.html#a92edf6164986947b666820ebc3555d9c',1,'legate::cuda::StreamView']]],
-  ['subspan_10',['subspan',['../structlegate_1_1Span.html#a565ee7907bcbb7c2d05b21fc93ebbe6d',1,'legate::Span']]]
+  ['offset_0',['offset',['../classlegate_1_1SymbolicExpr.html#abc91ae38bc21be79c8a215c3248b9267',1,'legate::SymbolicExpr']]],
+  ['offsets_1',['offsets',['../classlegate_1_1StructType.html#a79d7f727549420e98f6474302c1269da',1,'legate::StructType']]],
+  ['omps_2',['omps',['../classlegate_1_1mapping_1_1MachineQueryInterface.html#a06ab2dee05aea085a81e4aa5f9016c56',1,'legate::mapping::MachineQueryInterface']]],
+  ['only_3',['only',['../classlegate_1_1mapping_1_1Machine.html#afd9bb08b7407e395702f790c3ae4e2be',1,'legate::mapping::Machine::only(TaskTarget target) const'],['../classlegate_1_1mapping_1_1Machine.html#a02e48b7563bb28a20b06b3e03b001a8f',1,'legate::mapping::Machine::only(const std::vector&lt; TaskTarget &gt; &amp;targets) const']]],
+  ['operator_20cudastream_5ft_4',['operator cudaStream_t',['../structlegate_1_1cuda_1_1StreamView.html#a1a15293fbec3a97891b517f32ad58138',1,'legate::cuda::StreamView']]],
+  ['operator_26_5',['operator&amp;',['../classlegate_1_1mapping_1_1Machine.html#a1ddf8518d977be1203a6a8c9d8c1fd1f',1,'legate::mapping::Machine']]],
+  ['operator_3d_3d_6',['operator==',['../classlegate_1_1Type.html#a95d82e77419f077b367d0f1264780251',1,'legate::Type']]],
+  ['operator_5b_5d_7',['operator[]',['../classlegate_1_1mapping_1_1Machine.html#a3a6a18cbc1bd048d82117ac90e1e636b',1,'legate::mapping::Machine::operator[](TaskTarget target) const'],['../classlegate_1_1mapping_1_1Machine.html#a773195c20105e1fd41ee8010aa267949',1,'legate::mapping::Machine::operator[](const std::vector&lt; TaskTarget &gt; &amp;targets) const']]],
+  ['output_8',['output',['../classlegate_1_1TaskContext.html#ad90d5f1496eed2638f89168a17f0c13e',1,'legate::TaskContext::output()'],['../classlegate_1_1mapping_1_1Task.html#a4c4316fd9f52d6fd84f62b4b0279d661',1,'legate::mapping::Task::output()']]],
+  ['outputs_9',['outputs',['../classlegate_1_1TaskContext.html#aa2b3dfdceb30e2ef9d5421ff2219489c',1,'legate::TaskContext::outputs()'],['../classlegate_1_1mapping_1_1Task.html#ad8dea02d36713313bc4100670cf07b47',1,'legate::mapping::Task::outputs()']]],
+  ['overlaps_10',['overlaps',['../classlegate_1_1LogicalStore.html#acd476e18b38c5ac51ecbbd4886fb9315',1,'legate::LogicalStore']]]
 ];

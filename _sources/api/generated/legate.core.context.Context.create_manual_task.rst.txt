@@ -1,6 +1,0 @@
-﻿legate.core.context.Context.create\_manual\_task
-================================================
-
-.. currentmodule:: legate.core.context
-
-.. automethod:: Context.create_manual_task

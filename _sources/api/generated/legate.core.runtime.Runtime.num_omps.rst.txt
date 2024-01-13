@@ -1,6 +1,0 @@
-﻿legate.core.runtime.Runtime.num\_omps
-=====================================
-
-.. currentmodule:: legate.core.runtime
-
-.. autoproperty:: Runtime.num_omps

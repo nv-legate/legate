@@ -1,16 +1,14 @@
 var searchData=
 [
-  ['read_5faccessor_0',['read_accessor',['../classlegate_1_1Store.html#a38646426d60a846674fcf70bd520c42c',1,'legate::Store::read_accessor(const Rect&lt; DIM &gt; &amp;bounds) const'],['../classlegate_1_1Store.html#a7ad8eb774583c9d067df1a520e0dd93b',1,'legate::Store::read_accessor() const']]],
-  ['read_5fwrite_5faccessor_1',['read_write_accessor',['../classlegate_1_1Store.html#aae48070f7535e7990d4860721c9b7bb0',1,'legate::Store::read_write_accessor() const'],['../classlegate_1_1Store.html#a19c2caa99f3d15088d81a10648e6c664',1,'legate::Store::read_write_accessor(const Rect&lt; DIM &gt; &amp;bounds) const']]],
-  ['redop_2',['redop',['../classlegate_1_1mapping_1_1Store.html#a4271ed349f27b1c565e9c96a75c510ed',1,'legate::mapping::Store']]],
-  ['reduce_5faccessor_3',['reduce_accessor',['../classlegate_1_1Store.html#a8caa95925b7ab59dc52a60c0be1876d2',1,'legate::Store::reduce_accessor() const'],['../classlegate_1_1Store.html#ac85de3e6086089f6ccba7af6b5c3017c',1,'legate::Store::reduce_accessor(const Rect&lt; DIM &gt; &amp;bounds) const']]],
-  ['reductions_4',['reductions',['../classlegate_1_1mapping_1_1Task.html#abc6b9448549b2908e0c16ffeb66c48c2',1,'legate::mapping::Task::reductions()'],['../classlegate_1_1TaskContext.html#a5daa45de21306fb340326343ab6a066f',1,'legate::TaskContext::reductions()']]],
-  ['register_5fall_5ftasks_5',['register_all_tasks',['../classlegate_1_1TaskRegistrar.html#ad8f3031130bc4da57e04149cfb337af5',1,'legate::TaskRegistrar']]],
-  ['register_5fmapper_6',['register_mapper',['../classlegate_1_1LibraryContext.html#ad0f1888a78770ab7dd5529c23417f441',1,'legate::LibraryContext']]],
-  ['register_5freduction_5foperator_7',['register_reduction_operator',['../classlegate_1_1LibraryContext.html#a79baac51f86c860cb535dbf501083576',1,'legate::LibraryContext']]],
-  ['register_5fvariants_8',['register_variants',['../structlegate_1_1LegateTask.html#a85e6024fa5d194cba6df135dfee34966',1,'legate::LegateTask']]],
-  ['requirement_5findex_9',['requirement_index',['../structlegate_1_1mapping_1_1StoreMapping.html#a8bdf1ec61f393ab6bd80210a94054e03',1,'legate::mapping::StoreMapping']]],
-  ['requirement_5findices_10',['requirement_indices',['../structlegate_1_1mapping_1_1StoreMapping.html#ac2985c2ecf8718655303acb041e5a311',1,'legate::mapping::StoreMapping']]],
-  ['requirements_11',['requirements',['../structlegate_1_1mapping_1_1StoreMapping.html#add2b1bbcd1e80306f6ec0ae319020625',1,'legate::mapping::StoreMapping']]],
-  ['return_5fdata_12',['return_data',['../classlegate_1_1Store.html#a9ec6cb0b2ddde82025842eb53430fae2',1,'legate::Store']]]
+  ['nested_0',['nested',['../classlegate_1_1PhysicalArray.html#a2aa179746da541e045444b117c8c569c',1,'legate::PhysicalArray::nested()'],['../classlegate_1_1LogicalArray.html#a07b0a4b99a36c77042ba8950f3687e0c',1,'legate::LogicalArray::nested() const']]],
+  ['null_5fmask_1',['null_mask',['../classlegate_1_1LogicalArray.html#a042d2918fe910c9156c7483278f182d6',1,'legate::LogicalArray::null_mask()'],['../classlegate_1_1PhysicalArray.html#ab42015b36b5407b006b4af7b6e0d2871',1,'legate::PhysicalArray::null_mask()']]],
+  ['null_5ftype_2',['null_type',['../group__types.html#ga838f5087c4d62e16699184a315457c12',1,'legate']]],
+  ['nullable_3',['nullable',['../classlegate_1_1PhysicalArray.html#a94e5235663c98d08aedd34ca86e8d2bd',1,'legate::PhysicalArray::nullable()'],['../classlegate_1_1LogicalArray.html#af35f0f67033f51cf43cfc9825159e987',1,'legate::LogicalArray::nullable() const']]],
+  ['num_5fchildren_4',['num_children',['../classlegate_1_1LogicalArray.html#a34b8d58b1bc00ce5b958d8ef13fb378f',1,'legate::LogicalArray']]],
+  ['num_5fcommunicators_5',['num_communicators',['../classlegate_1_1TaskContext.html#a6138d7db8ed800f63e9a72d33a11673b',1,'legate::TaskContext']]],
+  ['num_5felements_6',['num_elements',['../classlegate_1_1FixedArrayType.html#aa8fc5342984aacf9b16f0f9775ec08e9',1,'legate::FixedArrayType']]],
+  ['num_5ffields_7',['num_fields',['../classlegate_1_1StructType.html#abd98c1783dbf6dbb919a5e76f19680b7',1,'legate::StructType']]],
+  ['num_5finputs_8',['num_inputs',['../classlegate_1_1TaskContext.html#a726e706280eaa3432020383d547e12aa',1,'legate::TaskContext::num_inputs()'],['../classlegate_1_1mapping_1_1Task.html#a2c9d712767cf244b79609185d1ae586a',1,'legate::mapping::Task::num_inputs()']]],
+  ['num_5foutputs_9',['num_outputs',['../classlegate_1_1TaskContext.html#a6a051062f149245f8d3704ed9eb0fe95',1,'legate::TaskContext::num_outputs()'],['../classlegate_1_1mapping_1_1Task.html#a7971cd144ec07f164ce3bf769ce5167d',1,'legate::mapping::Task::num_outputs()']]],
+  ['num_5freductions_10',['num_reductions',['../classlegate_1_1TaskContext.html#a59fc0463c18c9453d66e86f31b67550c',1,'legate::TaskContext::num_reductions()'],['../classlegate_1_1mapping_1_1Task.html#a53686f694a4b93de6a3dbdc06199f3c1',1,'legate::mapping::Task::num_reductions()']]]
 ];

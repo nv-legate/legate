@@ -1,6 +1,0 @@
-﻿legate.core.store.Store.size
-============================
-
-.. currentmodule:: legate.core.store
-
-.. autoproperty:: Store.size

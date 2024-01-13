@@ -43,6 +43,7 @@ Manipulation Methods
    Shape.replace
    Shape.insert
    Shape.map
+   Shape.__getitem__
 
 
 Arithmetic and comparison

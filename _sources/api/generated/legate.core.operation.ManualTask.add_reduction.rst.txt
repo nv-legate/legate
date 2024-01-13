@@ -1,6 +1,0 @@
-﻿legate.core.operation.ManualTask.add\_reduction
-===============================================
-
-.. currentmodule:: legate.core.operation
-
-.. automethod:: ManualTask.add_reduction

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ordering_0',['ordering',['../structlegate_1_1mapping_1_1InstanceMappingPolicy.html#aa51609ffed61a6467a720c62304a1750',1,'legate::mapping::InstanceMappingPolicy']]]
+  ['return_5fsize_0',['return_size',['../structlegate_1_1VariantOptions.html#a12e63e16bc0a74fb1ee33b7a94569cbd',1,'legate::VariantOptions']]]
 ];

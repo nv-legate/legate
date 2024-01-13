@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['core_0',['Core',['../structlegate_1_1Core.html',1,'legate']]]
+  ['autotask_0',['AutoTask',['../classlegate_1_1AutoTask.html',1,'legate']]]
 ];

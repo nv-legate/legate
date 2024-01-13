@@ -1,6 +1,0 @@
-﻿legate.core.store.Store.set\_key\_partition
-===========================================
-
-.. currentmodule:: legate.core.store
-
-.. automethod:: Store.set_key_partition

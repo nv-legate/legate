@@ -1,6 +1,0 @@
-﻿legate.core.ResourceConfig.max\_mappers
-=======================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: ResourceConfig.max_mappers

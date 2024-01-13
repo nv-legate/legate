@@ -1,17 +1,18 @@
 var searchData=
 [
-  ['machine_20objects_0',['Machine objects',['../group__machine.html',1,'']]],
-  ['machinequeryinterface_1',['MachineQueryInterface',['../classlegate_1_1mapping_1_1MachineQueryInterface.html',1,'legate::mapping']]],
-  ['make_5fall_5funbound_5fstores_5fempty_2',['make_all_unbound_stores_empty',['../classlegate_1_1TaskContext.html#ab928b8fca6ac3d29718d09830f408af0',1,'legate::TaskContext']]],
-  ['make_5fempty_3',['make_empty',['../classlegate_1_1Store.html#a84dc7dfe549ec45c7e96175ec846a3f3',1,'legate::Store']]],
-  ['mapping_20api_4',['Mapping API',['../group__mapping.html',1,'']]],
-  ['mapping_2eh_5',['mapping.h',['../mapping_8h.html',1,'']]],
-  ['max_5fmappers_6',['max_mappers',['../structlegate_1_1ResourceConfig.html#a5cfb09c52513593a682078959d3b1364',1,'legate::ResourceConfig']]],
-  ['max_5freduction_5fops_7',['max_reduction_ops',['../structlegate_1_1ResourceConfig.html#afd1b529bffc6a54c347ed13aa385d555',1,'legate::ResourceConfig']]],
-  ['max_5ftasks_8',['max_tasks',['../structlegate_1_1ResourceConfig.html#a968aab73b2252e0b060b853def639b15',1,'legate::ResourceConfig']]],
-  ['maxreduction_9',['MaxReduction',['../group__reduction.html#gab147c1772b8cc2b026d8dd7609cc6e55',1,'legate']]],
-  ['may_5falloc_10',['MAY_ALLOC',['../group__mapping.html#ggae54c9ff5552441bafa95fdd038abfd16a0139ff9a0879803731c0ce9e474568b0',1,'legate::mapping']]],
-  ['memory_11',['Memory',['../group__machine.html#gab8a99c5dda9ef313f63a2592ea4617d2',1,'legate']]],
-  ['minreduction_12',['MinReduction',['../group__reduction.html#ga8a579ec6e5da9a2a84994e5514693479',1,'legate']]],
-  ['must_5falloc_13',['MUST_ALLOC',['../group__mapping.html#ggae54c9ff5552441bafa95fdd038abfd16a137ca9effb0545c74c2d59900addfc8e',1,'legate::mapping']]]
+  ['layout_0',['layout',['../structlegate_1_1mapping_1_1InstanceMappingPolicy.html#ad281616e9c908d78179f113db73c2147',1,'legate::mapping::InstanceMappingPolicy']]],
+  ['leaf_1',['leaf',['../structlegate_1_1VariantOptions.html#a53387f0d492327bcb7e733bc95a30321',1,'legate::VariantOptions']]],
+  ['legate_20c_20api_20reference_2',['Legate C++ API reference',['../index.html',1,'']]],
+  ['legatetask_3',['LegateTask',['../structlegate_1_1LegateTask.html',1,'legate']]],
+  ['library_4',['Library',['../classlegate_1_1Library.html',1,'legate']]],
+  ['library_20contexts_5',['Runtime and library contexts',['../group__runtime.html',1,'']]],
+  ['library_2eh_6',['library.h',['../library_8h.html',1,'']]],
+  ['list_7',['LIST',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87a298cb25408234de02baf2085803a464a',1,'legate::Type']]],
+  ['list_5ftype_8',['list_type',['../group__types.html#ga1dcce4af75767bb1e92533c42c5febd9',1,'legate']]],
+  ['listtype_9',['ListType',['../classlegate_1_1ListType.html',1,'legate']]],
+  ['logical_5farray_2eh_10',['logical_array.h',['../logical__array_8h.html',1,'']]],
+  ['logical_5fstore_2eh_11',['logical_store.h',['../logical__store_8h.html',1,'']]],
+  ['logicalarray_12',['LogicalArray',['../classlegate_1_1LogicalArray.html',1,'legate']]],
+  ['logicalstore_13',['LogicalStore',['../classlegate_1_1LogicalStore.html',1,'legate']]],
+  ['low_14',['low',['../structlegate_1_1mapping_1_1ProcessorRange.html#a9a8089f8ae8b241eee68034bd39a18ba',1,'legate::mapping::ProcessorRange']]]
 ];

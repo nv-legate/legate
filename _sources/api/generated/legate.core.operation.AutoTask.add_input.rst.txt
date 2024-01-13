@@ -1,6 +1,0 @@
-﻿legate.core.operation.AutoTask.add\_input
-=========================================
-
-.. currentmodule:: legate.core.operation
-
-.. automethod:: AutoTask.add_input

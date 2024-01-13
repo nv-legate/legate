@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['variantimpl_0',['VariantImpl',['../task_8h.html#a1e76d61be28c0a9db31d415aea092f06',1,'legate']]]
+  ['xorreduction_0',['XorReduction',['../group__reduction.html#gae4a1496b0170c93a51d72a335f6c4741',1,'legate']]]
 ];

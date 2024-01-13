@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['task_0',['Task',['../classlegate_1_1mapping_1_1Task.html',1,'legate::mapping']]],
-  ['taskcontext_1',['TaskContext',['../classlegate_1_1TaskContext.html',1,'legate']]],
-  ['taskexception_2',['TaskException',['../classlegate_1_1TaskException.html',1,'legate']]],
-  ['taskregistrar_3',['TaskRegistrar',['../classlegate_1_1TaskRegistrar.html',1,'legate']]]
+  ['machine_0',['Machine',['../classlegate_1_1mapping_1_1Machine.html',1,'legate::mapping']]],
+  ['machinequeryinterface_1',['MachineQueryInterface',['../classlegate_1_1mapping_1_1MachineQueryInterface.html',1,'legate::mapping']]],
+  ['machinetracker_2',['MachineTracker',['../structlegate_1_1MachineTracker.html',1,'legate']]],
+  ['manualtask_3',['ManualTask',['../classlegate_1_1ManualTask.html',1,'legate']]],
+  ['mapper_4',['Mapper',['../classlegate_1_1mapping_1_1Mapper.html',1,'legate::mapping']]]
 ];

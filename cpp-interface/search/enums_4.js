@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['tasktarget_0',['TaskTarget',['../group__mapping.html#gad03106fcb86b1de39aaa0235e4c60970',1,'legate::mapping']]]
+  ['reductionopkind_0',['ReductionOpKind',['../group__types.html#gaf066ee3ee59b3247104e036a26e52525',1,'legate']]]
 ];

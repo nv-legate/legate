@@ -1,6 +1,0 @@
-﻿legate.core.store.StorePartition.get\_child\_store
-==================================================
-
-.. currentmodule:: legate.core.store
-
-.. automethod:: StorePartition.get_child_store

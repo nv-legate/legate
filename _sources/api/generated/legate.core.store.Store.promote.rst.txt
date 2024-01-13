@@ -1,6 +1,0 @@
-﻿legate.core.store.Store.promote
-===============================
-
-.. currentmodule:: legate.core.store
-
-.. automethod:: Store.promote

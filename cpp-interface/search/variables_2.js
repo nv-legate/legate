@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['dims_0',['dims',['../structlegate_1_1mapping_1_1DimOrdering.html#abd7de35969b5724e11847142ebf8a539',1,'legate::mapping::DimOrdering']]]
+  ['exact_0',['exact',['../structlegate_1_1mapping_1_1InstanceMappingPolicy.html#a6a82a59885c85bc0c874889bf6373f60',1,'legate::mapping::InstanceMappingPolicy']]]
 ];

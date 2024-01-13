@@ -1,6 +1,0 @@
-﻿legate.core.context.Context.push\_provenance
-============================================
-
-.. currentmodule:: legate.core.context
-
-.. automethod:: Context.push_provenance

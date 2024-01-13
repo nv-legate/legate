@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['legate_5ftype_5fof_0',['legate_type_of',['../group__util.html#ga9123134e6e7ff160a72f091f7c831fd0',1,'legate']]]
+  ['maxreduction_0',['MaxReduction',['../group__reduction.html#gab147c1772b8cc2b026d8dd7609cc6e55',1,'legate']]],
+  ['memory_1',['Memory',['../group__machine.html#gab8a99c5dda9ef313f63a2592ea4617d2',1,'legate']]],
+  ['minreduction_2',['MinReduction',['../group__reduction.html#ga8a579ec6e5da9a2a84994e5514693479',1,'legate']]]
 ];

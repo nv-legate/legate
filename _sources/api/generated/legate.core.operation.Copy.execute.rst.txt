@@ -1,6 +1,0 @@
-﻿legate.core.operation.Copy.execute
-==================================
-
-.. currentmodule:: legate.core.operation
-
-.. automethod:: Copy.execute

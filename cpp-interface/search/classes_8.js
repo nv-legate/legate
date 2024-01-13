@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['variantoptions_0',['VariantOptions',['../structlegate_1_1VariantOptions.html',1,'legate']]]
+  ['noderange_0',['NodeRange',['../structlegate_1_1mapping_1_1NodeRange.html',1,'legate::mapping']]]
 ];

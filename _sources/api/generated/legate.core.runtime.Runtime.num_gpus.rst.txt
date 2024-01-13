@@ -1,6 +1,0 @@
-﻿legate.core.runtime.Runtime.num\_gpus
-=====================================
-
-.. currentmodule:: legate.core.runtime
-
-.. autoproperty:: Runtime.num_gpus

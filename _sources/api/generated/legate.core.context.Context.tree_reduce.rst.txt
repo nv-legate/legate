@@ -1,6 +1,0 @@
-﻿legate.core.context.Context.tree\_reduce
-========================================
-
-.. currentmodule:: legate.core.context
-
-.. automethod:: Context.tree_reduce

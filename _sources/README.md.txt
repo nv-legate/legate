@@ -1,18 +1,13 @@
 <!--
-Copyright 2021-2022 NVIDIA Corporation
+SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+property and proprietary rights in and to this material, related
+documentation and any modifications thereto. Any use, reproduction,
+disclosure or distribution of this material and related documentation
+without an express license agreement from NVIDIA CORPORATION or
+its affiliates is strictly prohibited.
 -->
 
 # Legate
@@ -23,9 +18,7 @@ by running the same code that runs on a desktop or a laptop at scale.
 Using this technology, computational and data scientists can develop and test
 programs on moderately sized data sets on local machines and then immediately
 scale up to larger data sets deployed on many nodes in the cloud or on a
-supercomputer without any code modifications. In visual terms:
-
-<img src="docs/figures/vision.png" alt="drawing" width="700"/>
+supercomputer without any code modifications.
 
 The Legate project is built upon two foundational principles:
 
@@ -64,7 +57,6 @@ If you have questions, please contact us at legate(at)nvidia.com.
     - [Configuring the Jupyter Notebook](#configuring-the-jupyter-notebook)
     - [Magic Command](#magic-command)
   - [Other FAQs](#other-faqs)
-  - [Contributing](#contributing)
   - [Documentation](#documentation)
   - [Next Steps](#next-steps)
 
@@ -116,7 +108,7 @@ the concept of an [Array](https://arrow.apache.org/docs/cpp/api/array.html)
 from Arrow. The `LegateArray` class supports many of the same methods as
 the Arrow Array interface (we'll continue to add methods to improve
 compatibility). The main difference is that instead of obtaining
-[Buffer](https://arrow.apache.org/docs/cpp/api/memory.html#_CPPv4N5arrow6Buffer)
+[Buffer](https://arrow.apache.org/docs/cpp/api/memory.html#buffers)
 objects from arrays to describe allocations of data that back the array, the
 Legate Core API introduces a new primitive called a `LegateStore` which
 provides a new interface for reasoning about partitioned and distributed
@@ -159,7 +151,7 @@ the ecosystem and ensures that Legate library developers are more productive.
 ## How Does Legate Work?
 
 Our implementation of the Legate Core API is built on top of the
-[Legion](http://legion.stanford.edu) programming model and runtime system.
+[Legion](https://legion.stanford.edu/) programming model and runtime system.
 Legion was originally designed for large HPC applications that target
 supercomputers and consequently applications written in the Legion programming
 model tend to both perform and scale well on large clusters of both CPUs and
@@ -217,18 +209,30 @@ as though they are running on a single processor.
 
 ## How Do I Install Legate?
 
-Legate Core is available [on conda](https://anaconda.org/legate/legate-core):
+Legate Core is available [on conda](https://anaconda.org/legate/legate-core).
+Create a new environment containing Legate Core:
 
 ```
-conda install -c nvidia -c conda-forge -c legate legate-core
+mamba create -n myenv -c nvidia -c conda-forge -c legate legate-core
+```
+
+or install it into an existing environment:
+
+```
+mamba install -c nvidia -c conda-forge -c legate legate-core
 ```
 
 Only linux-64 packages are available at the moment.
 
-The default package contains GPU support, and is compatible with CUDA >= 11.4
-(CUDA driver version >= r470), and Volta or later GPU architectures. There are
-also CPU-only packages available, and will be automatically selected by `conda`
-when installing on a machine without GPUs.
+The default package contains GPU support, and is compatible with CUDA >= 12.0
+(CUDA driver version >= r520), and Volta or later GPU architectures. There are
+also CPU-only packages available, and will be automatically selected when
+installing on a machine without GPUs. You can force installation of a CPU-only
+package by requesting it as follows:
+
+```
+mamba ... legate-core=*=*_cpu
+```
 
 See [BUILD.md](BUILD.md) for instructions on building Legate Core from source.
 
@@ -250,9 +254,11 @@ to this:
 import cunumeric as np
 ```
 After this, you can use the `legate` driver script in the `bin` directory of
-your installation to run any Python program. **Note that the default python
-interpreter (`python`) will not work with programs that use Legate libraries, you
-need to use this custom driver script.**
+your installation to run any Python program.
+
+You can also use the standard Python interpreter, but in that case configuration
+options can only be passed through the environment (see below), and some options
+are not available (check the output of legate --help for more details).
 
 For example, to run your script in the default configuration (4 CPUs cores and
 4 GB of memory) just run:
@@ -376,10 +382,10 @@ Jupyter kernel spec Legate_SM_GPU (Legate_SM_GPU) has been installed
 
 You will need to start a Jupyter server, then you can use a Jupyter notebook
 from any browser. Please refer to the following two sections from the README of
-the Legion Jupyter Notebook extension:
+the [Legion Jupyter Notebook extension](https://github.com/StanfordLegion/legion/tree/master/jupyter_notebook)
 
-* [Start the Jupyter Notebook server](https://github.com/StanfordLegion/legion/tree/master/jupyter_notebook#start-the-jupyter-notebook-server)
-* [Use the Jupyter Notebook in the browser](https://github.com/StanfordLegion/legion/tree/master/jupyter_notebook#use-the-jupyter-notebook-in-the-browser)
+* Start the Jupyter Notebook server
+* Use the Jupyter Notebook in the browser
 
 ### Configuring the Jupyter Notebook
 
@@ -459,21 +465,16 @@ Memory:
   on the [Legion github issue tracker](https://github.com/StanfordLegion/legion/issues)
   as it will be almost entirely orthogonal to how you use Legate.
 
-## Contributing
-
-See the discussion of contributing in [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## Documentation
 
-A complete list of available features can is provided in the [API
-reference](https://nv-legate.github.io/legate.core/api.html).
+A complete list of available features can is found in the [Legate Core
+documentation](https://nv-legate.github.io/legate.core).
 
 ## Next Steps
 
 We recommend starting by experimenting with at least one Legate application
 library to test out performance and see how Legate works. If you are interested
 in building your own Legate application library, we recommend that you
-investigate our [Legate Hello World application
-library](https://github.com/nv-legate/legate.hello) that provides a small
-example of how to get started developing your own drop-in replacement library
-on top of Legion using the Legate Core library.
+investigate our [Legate Hello World application library](https://github.com/nv-legate/legate.core/tree/HEAD/examples/hello) that
+provides a small example of how to get started developing your own drop-in
+replacement library on top of Legion using the Legate Core library.

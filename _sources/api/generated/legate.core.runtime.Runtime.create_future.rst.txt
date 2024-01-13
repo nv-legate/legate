@@ -1,6 +1,0 @@
-﻿legate.core.runtime.Runtime.create\_future
-==========================================
-
-.. currentmodule:: legate.core.runtime
-
-.. automethod:: Runtime.create_future

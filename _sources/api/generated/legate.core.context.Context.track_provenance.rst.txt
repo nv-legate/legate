@@ -1,6 +1,0 @@
-﻿legate.core.context.Context.track\_provenance
-=============================================
-
-.. currentmodule:: legate.core.context
-
-.. automethod:: Context.track_provenance

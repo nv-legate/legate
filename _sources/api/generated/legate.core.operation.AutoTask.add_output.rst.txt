@@ -1,6 +1,0 @@
-﻿legate.core.operation.AutoTask.add\_output
-==========================================
-
-.. currentmodule:: legate.core.operation
-
-.. automethod:: AutoTask.add_output

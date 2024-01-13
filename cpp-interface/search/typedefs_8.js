@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['rect_0',['Rect',['../group__geometry.html#ga3ca1db057341830656e145bad16fe1c0',1,'legate']]],
-  ['registrationcallback_1',['RegistrationCallback',['../structlegate_1_1Core.html#a9bbba31714573657ac72f8bab2edc02e',1,'legate::Core']]]
+  ['sumreduction_0',['SumReduction',['../group__reduction.html#ga597bee16895747960675d38c01958b6c',1,'legate']]],
+  ['symbolicpoint_1',['SymbolicPoint',['../projection_8h.html#ae28af37b87a5fae24a49272c62585ea5',1,'legate']]]
 ];

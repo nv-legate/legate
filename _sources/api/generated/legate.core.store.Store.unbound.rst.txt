@@ -1,6 +1,0 @@
-﻿legate.core.store.Store.unbound
-===============================
-
-.. currentmodule:: legate.core.store
-
-.. autoproperty:: Store.unbound

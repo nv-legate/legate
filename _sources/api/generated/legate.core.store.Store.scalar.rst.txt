@@ -1,6 +1,0 @@
-﻿legate.core.store.Store.scalar
-==============================
-
-.. currentmodule:: legate.core.store
-
-.. autoproperty:: Store.scalar

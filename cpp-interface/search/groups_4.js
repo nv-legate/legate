@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['iterator_20types_0',['Iterator types',['../group__iterator.html',1,'']]]
+  ['geometry_20types_0',['Geometry types',['../group__geometry.html',1,'']]]
 ];

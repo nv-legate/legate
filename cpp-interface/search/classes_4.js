@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['machinequeryinterface_0',['MachineQueryInterface',['../classlegate_1_1mapping_1_1MachineQueryInterface.html',1,'legate::mapping']]]
+  ['fixedarraytype_0',['FixedArrayType',['../classlegate_1_1FixedArrayType.html',1,'legate']]]
 ];

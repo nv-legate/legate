@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['storetarget_0',['StoreTarget',['../group__mapping.html#ga7e2cad8c47f5c2d65fb316ddc0940d4b',1,'legate::mapping']]]
+  ['kind_0',['Kind',['../structlegate_1_1mapping_1_1DimOrdering.html#aed1dda35c8ba3bb451fad41bb2f5db3c',1,'legate::mapping::DimOrdering']]]
 ];

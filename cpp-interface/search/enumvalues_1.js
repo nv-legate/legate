@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['c_0',['C',['../structlegate_1_1mapping_1_1DimOrdering.html#aed1dda35c8ba3bb451fad41bb2f5db3ca0d61f8370cad1d412f80b84d143e1257',1,'legate::mapping::DimOrdering']]],
-  ['cpu_1',['CPU',['../group__mapping.html#ggad03106fcb86b1de39aaa0235e4c60970a2b55387dd066c5bac646ac61543d152d',1,'legate::mapping']]],
-  ['custom_2',['CUSTOM',['../structlegate_1_1mapping_1_1DimOrdering.html#aed1dda35c8ba3bb451fad41bb2f5db3ca72baef04098f035e8a320b03ad197818',1,'legate::mapping::DimOrdering']]]
+  ['binary_0',['BINARY',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87a98ad0e8750ae10ad556ed7a62affb452',1,'legate::Type']]],
+  ['bool_1',['BOOL',['../group__types.html#gga6889713118fa541e2abb3ffc5e840c87aa97b2c144243b2b9d2c593ec268b62f5',1,'legate::Type']]]
 ];

@@ -1,10 +1,17 @@
 var searchData=
 [
-  ['task_5fid_0',['task_id',['../classlegate_1_1mapping_1_1Task.html#a73d86e84366e826b5fb527d3623a432e',1,'legate::mapping::Task']]],
-  ['task_5ftarget_1',['task_target',['../classlegate_1_1mapping_1_1LegateMapper.html#ae2a38917768430bd51ed1f91b9a6039d',1,'legate::mapping::LegateMapper']]],
-  ['taskexception_2',['TaskException',['../classlegate_1_1TaskException.html#a9375f96517a55524cdd599c5dbd2c5a9',1,'legate::TaskException::TaskException(int32_t index, const std::string &amp;error_message)'],['../classlegate_1_1TaskException.html#a8fd8edd081ff702de6aac003d196e1c1',1,'legate::TaskException::TaskException(const std::string &amp;error_message)']]],
-  ['total_5fnodes_3',['total_nodes',['../classlegate_1_1mapping_1_1MachineQueryInterface.html#ab95be83a888984b6e1d55088673c13bc',1,'legate::mapping::MachineQueryInterface']]],
-  ['transformed_4',['transformed',['../classlegate_1_1Store.html#a54dc0f7727edd6f96ff773108b7a067e',1,'legate::Store']]],
-  ['tunable_5fvalue_5',['tunable_value',['../classlegate_1_1mapping_1_1LegateMapper.html#ac7ae485b60787ce82947e6dbd9184344',1,'legate::mapping::LegateMapper']]],
-  ['type_5fdispatch_6',['type_dispatch',['../group__util.html#gaaa6c2365d732fe477f12f2f6af3adb24',1,'legate']]]
+  ['partition_5fby_5ftiling_0',['partition_by_tiling',['../classlegate_1_1LogicalStore.html#abb057c7b941dbf4e6e9a0fdcb062952b',1,'legate::LogicalStore']]],
+  ['physicalstore_1',['PhysicalStore',['../classlegate_1_1PhysicalStore.html#a432c6666aa072839226508e7aff77939',1,'legate::PhysicalStore']]],
+  ['point_5ftype_2',['point_type',['../group__types.html#ga58c576de10daf8c681fe34049b52b0c7',1,'legate']]],
+  ['policy_3',['policy',['../structlegate_1_1mapping_1_1StoreMapping.html#ab848b90abc4d1fc597f990b8b0ab3e45',1,'legate::mapping::StoreMapping::policy()'],['../structlegate_1_1mapping_1_1StoreMapping.html#a81aa4f6cd954828a386ba0758adbcd02',1,'legate::mapping::StoreMapping::policy() const']]],
+  ['preferred_5ftarget_4',['preferred_target',['../classlegate_1_1mapping_1_1Machine.html#a2737cbb3c94adef654b78cc618362336',1,'legate::mapping::Machine']]],
+  ['primitive_5ftype_5',['primitive_type',['../group__types.html#gaeee74ab30324ff99e1bb246e649ed9ba',1,'legate']]],
+  ['print_5fdense_5farray_6',['print_dense_array',['../group__util.html#ga59e33b7fa4ae19b72b55626889c004de',1,'legate::print_dense_array(const PhysicalStore &amp;store)'],['../group__util.html#ga9c05770dfb21d8383a63c0b10565fb7f',1,'legate::print_dense_array(ACC accessor, const Rect&lt; DIM &gt; &amp;rect)'],['../group__util.html#gaed1ca68b25066c2236edfc58c6edf388',1,'legate::print_dense_array(const T *base, const Point&lt; DIM &gt; &amp;extents, size_t strides[DIM])']]],
+  ['processor_5frange_7',['processor_range',['../classlegate_1_1mapping_1_1Machine.html#a9ad7f7e8ac15fbcee51da859c89b24db',1,'legate::mapping::Machine::processor_range(TaskTarget target) const'],['../classlegate_1_1mapping_1_1Machine.html#aee6f75ac2d198dda9be932da38dd6f09',1,'legate::mapping::Machine::processor_range() const']]],
+  ['processorrange_8',['processorrange',['../structlegate_1_1mapping_1_1ProcessorRange.html#a221c042a09176e5d06fdf4a564c78743',1,'legate::mapping::ProcessorRange::ProcessorRange(uint32_t low_id, uint32_t high_id, uint32_t per_node_proc_count) noexcept'],['../structlegate_1_1mapping_1_1ProcessorRange.html#a37b467fb0a78c8429ee5d2a3700f9f54',1,'legate::mapping::ProcessorRange::ProcessorRange()=default']]],
+  ['project_9',['project',['../classlegate_1_1LogicalStore.html#a7ef189837b27fe30356ae8b94bd18756',1,'legate::LogicalStore::project()'],['../classlegate_1_1LogicalArray.html#a6945a7ff8649afc0c0e3e6e23f782a71',1,'legate::LogicalArray::project(int32_t dim, int64_t index) const']]],
+  ['promote_10',['promote',['../classlegate_1_1LogicalArray.html#ab6debc171f7d1ac69fa51bc271e56d8b',1,'legate::LogicalArray::promote()'],['../classlegate_1_1LogicalStore.html#a4cd14524f3cdb3e83cf29a1492f4f559',1,'legate::LogicalStore::promote()']]],
+  ['provenance_11',['provenance',['../classlegate_1_1AutoTask.html#a9f243750dabf86e8e7591afa6677ca96',1,'legate::AutoTask::provenance()'],['../classlegate_1_1ManualTask.html#a15b46666ebc3ff005abf4ff6b2db080c',1,'legate::ManualTask::provenance()']]],
+  ['provenancetracker_12',['ProvenanceTracker',['../structlegate_1_1ProvenanceTracker.html#a61d2a5d05c44b61b816b418abd417dfd',1,'legate::ProvenanceTracker']]],
+  ['ptr_13',['ptr',['../classlegate_1_1Scalar.html#a2356320d615f945b363586de4f79de6e',1,'legate::Scalar::ptr()'],['../classlegate_1_1ExternalAllocation.html#accf45a0a054f111055ab3c0defe6f6e3',1,'legate::ExternalAllocation::ptr()'],['../classlegate_1_1Span.html#a3f284602ea9044655b4765451656bd35',1,'legate::Span::ptr()']]]
 ];

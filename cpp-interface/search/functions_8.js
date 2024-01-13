@@ -1,4 +1,28 @@
 var searchData=
 [
-  ['librarycontext_0',['LibraryContext',['../classlegate_1_1LibraryContext.html#a7b9a739c7e1a398ca2b6b4f81053613a',1,'legate::LibraryContext']]]
+  ['image_0',['image',['../group__partitioning.html#ga2efd3bd672b7a8129c6f3b3646eae4a1',1,'legate']]],
+  ['index_1',['index',['../classlegate_1_1TaskException.html#aecf43e9ecac1516929c3f5ef1618f433',1,'legate::TaskException']]],
+  ['input_2',['input',['../classlegate_1_1TaskContext.html#afda599ae9f72821417b39e6f6038d9f2',1,'legate::TaskContext::input()'],['../classlegate_1_1mapping_1_1Task.html#aafcaf8b34a7a1d6533b9c1ba65750882',1,'legate::mapping::Task::input()']]],
+  ['inputs_3',['inputs',['../classlegate_1_1TaskContext.html#a683fc10b527892291d27b67e33fc9d59',1,'legate::TaskContext::inputs()'],['../classlegate_1_1mapping_1_1Task.html#ae4149b2808426f14ae922bfa877fe6e6',1,'legate::mapping::Task::inputs()']]],
+  ['int16_4',['int16',['../group__types.html#gabe55c3c07223c25e528e61c4344bbed5',1,'legate']]],
+  ['int32_5',['int32',['../group__types.html#ga9d486154e8c61c9a8a21580aec88e4dd',1,'legate']]],
+  ['int64_6',['int64',['../group__types.html#ga48c9e971ae27b7ae53f8837cd67c3eb1',1,'legate']]],
+  ['int8_7',['int8',['../group__types.html#ga26e84a7ea28dc5db1c9dd1e203d59b11',1,'legate']]],
+  ['is_5ffuture_8',['is_future',['../classlegate_1_1PhysicalStore.html#a4ffd6f1ba13c2220e9cd6a914533d4e8',1,'legate::PhysicalStore::is_future()'],['../classlegate_1_1mapping_1_1Store.html#a9f5795e557b2172410e50f07a7deccbf',1,'legate::mapping::Store::is_future()']]],
+  ['is_5fidentity_9',['is_identity',['../classlegate_1_1SymbolicExpr.html#a9ee0c9bb5a8cc839a5e2e46dbc007a7c',1,'legate::SymbolicExpr']]],
+  ['is_5fpoint_5ftype_10',['is_point_type',['../group__types.html#gad4e409ffc85ab401c2d082f3f11f6028',1,'legate']]],
+  ['is_5fprimitive_11',['is_primitive',['../classlegate_1_1Type.html#a692a9d3d2e49dd91fd58a83bd5384f12',1,'legate::Type']]],
+  ['is_5freadable_12',['is_readable',['../classlegate_1_1PhysicalStore.html#a3922f85bf4024c4ce057bb317909f351',1,'legate::PhysicalStore']]],
+  ['is_5frect_5ftype_13',['is_rect_type',['../group__types.html#ga39b3e6768364c5baa2ed09768be1a654',1,'legate']]],
+  ['is_5freducible_14',['is_reducible',['../classlegate_1_1PhysicalStore.html#accb7aa898a03de37b112bbd2b5131bf7',1,'legate::PhysicalStore']]],
+  ['is_5freduction_15',['is_reduction',['../classlegate_1_1mapping_1_1Store.html#a0a2da377a6fef351e542e61907488523',1,'legate::mapping::Store']]],
+  ['is_5fsingle_5ftask_16',['is_single_task',['../classlegate_1_1TaskContext.html#abd3ad39936a8f2c4b837c29ced8bfdac',1,'legate::TaskContext']]],
+  ['is_5funbound_5fstore_17',['is_unbound_store',['../classlegate_1_1PhysicalStore.html#aa800cf963438f294d335822fb4c6cce2',1,'legate::PhysicalStore']]],
+  ['is_5fwritable_18',['is_writable',['../classlegate_1_1PhysicalStore.html#a638bb1575b5c28984617e55547df95ce',1,'legate::PhysicalStore']]],
+  ['issue_5fcopy_19',['issue_copy',['../classlegate_1_1Runtime.html#aa414fce4f0f3a013dc158166918982b5',1,'legate::Runtime::issue_copy(LogicalStore &amp;target, const LogicalStore &amp;source, std::optional&lt; int32_t &gt; redop)'],['../classlegate_1_1Runtime.html#ac39cd813542d5c291a4db065ba836e13',1,'legate::Runtime::issue_copy(LogicalStore &amp;target, const LogicalStore &amp;source, std::optional&lt; ReductionOpKind &gt; redop=std::nullopt)']]],
+  ['issue_5fexecution_5ffence_20',['issue_execution_fence',['../classlegate_1_1Runtime.html#aee58f31c99882ddd268c3f52e4ee3055',1,'legate::Runtime']]],
+  ['issue_5ffill_21',['issue_fill',['../classlegate_1_1Runtime.html#a833ad58d72b2f63d97d611e64d61707b',1,'legate::Runtime::issue_fill(const LogicalArray &amp;lhs, const LogicalStore &amp;value)'],['../classlegate_1_1Runtime.html#abf6c33cbccba7c9eee327166c99d8fb6',1,'legate::Runtime::issue_fill(const LogicalArray &amp;lhs, const Scalar &amp;value)']]],
+  ['issue_5fgather_22',['issue_gather',['../classlegate_1_1Runtime.html#a68c37be0dcdd6d0423839f16024541f7',1,'legate::Runtime::issue_gather(LogicalStore &amp;target, const LogicalStore &amp;source, const LogicalStore &amp;source_indirect, std::optional&lt; ReductionOpKind &gt; redop=std::nullopt)'],['../classlegate_1_1Runtime.html#a14f4fd6bb0629d8c68d1b61f91f12405',1,'legate::Runtime::issue_gather(LogicalStore &amp;target, const LogicalStore &amp;source, const LogicalStore &amp;source_indirect, std::optional&lt; int32_t &gt; redop)']]],
+  ['issue_5fscatter_23',['issue_scatter',['../classlegate_1_1Runtime.html#ad738289cb4ab668259453be1e3337c2f',1,'legate::Runtime::issue_scatter(LogicalStore &amp;target, const LogicalStore &amp;target_indirect, const LogicalStore &amp;source, std::optional&lt; ReductionOpKind &gt; redop=std::nullopt)'],['../classlegate_1_1Runtime.html#a22d5f2fb683c13c9583584b1cacc285e',1,'legate::Runtime::issue_scatter(LogicalStore &amp;target, const LogicalStore &amp;target_indirect, const LogicalStore &amp;source, std::optional&lt; int32_t &gt; redop)']]],
+  ['issue_5fscatter_5fgather_24',['issue_scatter_gather',['../classlegate_1_1Runtime.html#a64512438655e1df2317760ad0f362710',1,'legate::Runtime::issue_scatter_gather(LogicalStore &amp;target, const LogicalStore &amp;target_indirect, const LogicalStore &amp;source, const LogicalStore &amp;source_indirect, std::optional&lt; ReductionOpKind &gt; redop=std::nullopt)'],['../classlegate_1_1Runtime.html#a4485bb806540bdf82cb280e8f3925def',1,'legate::Runtime::issue_scatter_gather(LogicalStore &amp;target, const LogicalStore &amp;target_indirect, const LogicalStore &amp;source, const LogicalStore &amp;source_indirect, std::optional&lt; int32_t &gt; redop)']]]
 ];
