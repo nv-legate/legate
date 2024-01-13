@@ -14,6 +14,11 @@
 
 #include "core/utilities/typedefs.h"
 
+/**
+ * @file
+ * @brief Class definition for legate::mapping::Store
+ */
+
 namespace legate::mapping::detail {
 class Store;
 }  // namespace legate::mapping::detail
@@ -22,8 +27,9 @@ namespace legate::mapping {
 
 /**
  * @ingroup mapping
- * @brief A metadata class that mirrors the structure of legate::Store but contains
- * only the data relevant to mapping
+ *
+ * @brief A metadata class that mirrors the structure of legate::PhysicalStore but contains only the
+ * data relevant to mapping
  */
 class Store {
  public:

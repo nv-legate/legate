@@ -23,8 +23,10 @@ namespace legate {
 
 /**
  * @ingroup data
- * @brief A simple span implementation used in Legate. Should eventually be replaced with
- * std::span once we bump up the C++ standard version to C++20
+ *
+ * @brief A simple span implementation used in Legate.
+ *
+ * Should eventually be replaced with std::span once we bump up the C++ standard version to C++20
  */
 template <typename T>
 class Span {

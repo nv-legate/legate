@@ -20,6 +20,11 @@
 #include <type_traits>
 #include <vector>
 
+/**
+ * @file
+ * @brief Legate type system
+ */
+
 /** @defgroup types Type system
  */
 

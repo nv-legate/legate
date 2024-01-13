@@ -430,8 +430,8 @@ if (legate_core_BUILD_DOCS)
       src/core/runtime/library.h
       src/core/runtime/runtime.h
       # operation
-      src/core/operation/projection.h
       src/core/operation/task.h
+      src/core/operation/projection.h
       # partitioning
       src/core/partitioning/constraint.h
       # mapping

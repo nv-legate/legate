@@ -305,10 +305,14 @@ class Runtime {
    */
   void issue_fill(const LogicalArray& lhs, const Scalar& value);
   /**
-   * @brief tree_reduce given store and task id
+   * @brief Performs reduction on a given store via a task
    *
+   * @param library The library for the reducer task
    * @param task_id reduction task ID
    * @param store Logical store to reduce
+   * @param radix Optional radix value that determines the maximum number of input stores to the
+   * task at each reduction step
+   *
    */
   [[nodiscard]] LogicalStore tree_reduce(Library library,
                                          int64_t task_id,
@@ -337,10 +341,9 @@ class Runtime {
   /**
    * @brief Creates an unbound array
    *
-   * @param extents Shape of the array
    * @param type Element type
-   * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
-   * scalars
+   * @param dim Number of dimensions
+   * @param nullable Nullability of the array
    *
    * @return Logical array
    */
@@ -352,6 +355,7 @@ class Runtime {
    *
    * @param extents Shape of the array
    * @param type Element type
+   * @param nullable Nullability of the array
    * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
    * scalars
    *
@@ -364,6 +368,7 @@ class Runtime {
   /**
    * @brief Creates an array isomorphic to the given array
    *
+   * @param to_mirror The array whose shape would be used to create the output array.
    * @param type Optional type for the resulting array. Must be compatible with the input array's
    * type
    *

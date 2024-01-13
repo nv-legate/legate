@@ -19,13 +19,19 @@
 #include <iosfwd>
 #include <tuple>
 
+/**
+ * @file
+ * @brief Definitions for legate::SymbolicExpr and constructors for symbolic expressions
+ */
+
 namespace legate {
 
 /**
  * @ingroup op
  * @brief A class that symbolically represents coordinates.
  *
- * A @f$\mathtt{SymbolicExpr}(i, w, c)` object denotes an expression @f$ w \cdot \mathit{dim}_i + c
+ * A @f$\mathtt{SymbolicExpr}(i, w, c)@f$ object denotes an expression @f$ w \cdot \mathit{dim}_i +
+ * c
  * @f$, where @f$ \mathit{dim}_i @f$ corresponds to the coordinate of the @f$i@f$-th dimension. A
  * special case is when @f$i@f$ is @f$-1@f$, which means the expression denotes a constant
  * @f$c@f$.

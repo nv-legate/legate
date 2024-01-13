@@ -137,6 +137,8 @@ class Machine {
  public:
   /**
    * @brief Preferred processor type of this machine descriptor
+   *
+   * @return Task target
    */
   [[nodiscard]] TaskTarget preferred_target() const;
   /**

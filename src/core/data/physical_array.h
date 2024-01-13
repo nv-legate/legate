@@ -34,6 +34,13 @@ struct PhysicalArray;
 class ListPhysicalArray;
 class StringPhysicalArray;
 
+/**
+ * @ingroup data
+ *
+ * @brief A multi-dimensional array abstraction for fixed- or variable-size elements
+ *
+ * Physical arrays can be backed by one or more physical stores, depending on their types.
+ */
 class PhysicalArray {
  public:
   /**
