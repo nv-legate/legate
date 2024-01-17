@@ -16,6 +16,11 @@
 
 #include "legion.h"
 
+#include <cstdlib>
+
+#define LegateConcat_(x, y) x##y
+#define LegateConcat(x, y) LegateConcat_(x, y)
+
 // Each suffix defines an additional "enabled" state for LegateDefined(LEGATE_), i.e. if you define
 //
 // #define LegateDefinedEnabledForm_FOO ignored,
@@ -43,7 +48,7 @@
   do {                                                                                      \
     legate::detail::log_legate().error(                                                     \
       "Legate called abort in %s at line %d in function %s", __FILE__, __LINE__, __func__); \
-    abort();                                                                                \
+    std::abort();                                                                           \
   } while (false)
 
 #ifdef __CUDACC__
@@ -88,6 +93,3 @@
 
 // TODO: 2022-10-04: Work around a Legion bug, by not instantiating futures on framebuffer.
 #define LEGATE_NO_FUTURES_ON_FB 1
-
-#define LegateConcat_(x, y) x##y
-#define LegateConcat(x, y) LegateConcat_(x, y)
