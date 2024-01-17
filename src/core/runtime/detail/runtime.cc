@@ -326,6 +326,9 @@ void Runtime::issue_fill(
     if (!lhs->nullable()) {
       throw std::invalid_argument{"Non-nullable arrays cannot be filled with null"};
     }
+    const auto& elem_type = lhs->type();
+    std::vector<uint8_t> dummy_value(elem_type->size());
+    _issue_fill(lhs->data(), create_store(Scalar{elem_type, dummy_value.data(), true}));
     _issue_fill(lhs->null_mask(), create_store(Scalar{false}));
     return;
   }
@@ -1133,6 +1136,13 @@ Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& fut
                                             false /*deterministic*/,
                                             core_library_->get_mapper_id(),
                                             LEGATE_CORE_JOIN_EXCEPTION_TAG);
+}
+
+void Runtime::discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)
+{
+  Legion::DiscardLauncher launcher{region, region};
+  launcher.add_field(field_id);
+  legion_runtime_->discard_fields(legion_context_, launcher);
 }
 
 void Runtime::issue_execution_fence(bool block /*=false*/)

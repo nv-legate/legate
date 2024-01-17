@@ -13,7 +13,7 @@
 #include "core/operation/detail/copy_launcher.h"
 
 #include "core/data/detail/logical_store.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
@@ -24,13 +24,13 @@ CopyArg::CopyArg(uint32_t req_idx,
                  LogicalStore* store,
                  Legion::FieldID field_id,
                  Legion::PrivilegeMode privilege,
-                 std::unique_ptr<ProjectionInfo> proj_info)
+                 std::unique_ptr<StoreProjection> store_proj)
   : req_idx_{req_idx},
     store_{store},
     region_{store_->get_region_field()->region()},
     field_id_{field_id},
     privilege_{privilege},
-    proj_info_{std::move(proj_info)}
+    store_proj_{std::move(store_proj)}
 {
 }
 
@@ -38,7 +38,7 @@ void CopyArg::pack(BufferBuilder& buffer) const
 {
   store_->pack(buffer);
 
-  buffer.pack<int32_t>(proj_info_->redop);
+  buffer.pack<int32_t>(store_proj_->redop);
   buffer.pack<int32_t>(region_.get_dim());
   buffer.pack<uint32_t>(req_idx_);
   buffer.pack<uint32_t>(field_id_);
@@ -46,53 +46,53 @@ void CopyArg::pack(BufferBuilder& buffer) const
 
 void CopyLauncher::add_store(std::vector<std::unique_ptr<CopyArg>>& args,
                              const InternalSharedPtr<LogicalStore>& store,
-                             std::unique_ptr<ProjectionInfo> proj_info,
+                             std::unique_ptr<StoreProjection> store_proj,
                              Legion::PrivilegeMode privilege)
 {
   auto req_idx      = static_cast<uint32_t>(args.size());
   auto region_field = store->get_region_field();
   auto field_id     = region_field->field_id();
 
-  if (proj_info->is_key) {
-    key_proj_id_ = proj_info->proj_id;
+  if (store_proj->is_key) {
+    key_proj_id_ = store_proj->proj_id;
   }
   args.emplace_back(
-    std::make_unique<CopyArg>(req_idx, store.get(), field_id, privilege, std::move(proj_info)));
+    std::make_unique<CopyArg>(req_idx, store.get(), field_id, privilege, std::move(store_proj)));
 }
 
 void CopyLauncher::add_input(const InternalSharedPtr<LogicalStore>& store,
-                             std::unique_ptr<ProjectionInfo> proj_info)
+                             std::unique_ptr<StoreProjection> store_proj)
 {
-  add_store(inputs_, store, std::move(proj_info), LEGION_READ_ONLY);
+  add_store(inputs_, store, std::move(store_proj), LEGION_READ_ONLY);
 }
 
 void CopyLauncher::add_output(const InternalSharedPtr<LogicalStore>& store,
-                              std::unique_ptr<ProjectionInfo> proj_info)
+                              std::unique_ptr<StoreProjection> store_proj)
 {
-  add_store(outputs_, store, std::move(proj_info), LEGION_WRITE_ONLY);
+  add_store(outputs_, store, std::move(store_proj), LEGION_WRITE_ONLY);
 }
 
 void CopyLauncher::add_inout(const InternalSharedPtr<LogicalStore>& store,
-                             std::unique_ptr<ProjectionInfo> proj_info)
+                             std::unique_ptr<StoreProjection> store_proj)
 {
-  add_store(outputs_, store, std::move(proj_info), LEGION_READ_WRITE);
+  add_store(outputs_, store, std::move(store_proj), LEGION_READ_WRITE);
 }
 
 void CopyLauncher::add_reduction(const InternalSharedPtr<LogicalStore>& store,
-                                 std::unique_ptr<ProjectionInfo> proj_info)
+                                 std::unique_ptr<StoreProjection> store_proj)
 {
-  add_store(outputs_, store, std::move(proj_info), LEGION_REDUCE);
+  add_store(outputs_, store, std::move(store_proj), LEGION_REDUCE);
 }
 void CopyLauncher::add_source_indirect(const InternalSharedPtr<LogicalStore>& store,
-                                       std::unique_ptr<ProjectionInfo> proj_info)
+                                       std::unique_ptr<StoreProjection> store_proj)
 {
-  add_store(source_indirect_, store, std::move(proj_info), LEGION_READ_ONLY);
+  add_store(source_indirect_, store, std::move(store_proj), LEGION_READ_ONLY);
 }
 
 void CopyLauncher::add_target_indirect(const InternalSharedPtr<LogicalStore>& store,
-                                       std::unique_ptr<ProjectionInfo> proj_info)
+                                       std::unique_ptr<StoreProjection> store_proj)
 {
-  add_store(target_indirect_, store, std::move(proj_info), LEGION_READ_ONLY);
+  add_store(target_indirect_, store, std::move(store_proj), LEGION_READ_ONLY);
 }
 
 void CopyLauncher::execute(const Legion::Domain& launch_domain)

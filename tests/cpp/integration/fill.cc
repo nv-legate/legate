@@ -252,11 +252,8 @@ TEST_P(Whole, Single)
 TEST_P(Slice, Index)
 {
   register_tasks();
-  for (bool null_init : {false, true}) {
-    for (std::int32_t dim : {1, 2, 3}) {
-      test_fill_slice(dim, SIZE, null_init);
-    }
-  }
+  const auto& [null_init, dim] = GetParam();
+  test_fill_slice(dim, SIZE, null_init);
 }
 
 TEST_F(FillTests, Invalid) { test_invalid(); }

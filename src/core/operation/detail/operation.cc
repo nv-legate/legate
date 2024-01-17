@@ -64,14 +64,14 @@ void Operation::record_partition(const Variable* variable, InternalSharedPtr<Log
   store_mappings_[*variable] = std::move(store);
 }
 
-std::unique_ptr<ProjectionInfo> Operation::create_projection_info(const Strategy& strategy,
-                                                                  const Domain& launch_domain,
-                                                                  const StoreArg& arg)
+std::unique_ptr<StoreProjection> Operation::create_store_projection(const Strategy& strategy,
+                                                                    const Domain& launch_domain,
+                                                                    const StoreArg& arg)
 {
   auto store_partition = create_store_partition(arg.store, strategy[arg.variable]);
-  auto proj_info       = store_partition->create_projection_info(launch_domain);
-  proj_info->is_key    = strategy.is_key_partition(arg.variable);
-  return proj_info;
+  auto store_proj      = store_partition->create_store_projection(launch_domain);
+  store_proj->is_key   = strategy.is_key_partition(arg.variable);
+  return store_proj;
 }
 
 }  // namespace legate::detail

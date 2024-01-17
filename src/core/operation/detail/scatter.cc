@@ -67,13 +67,13 @@ void Scatter::launch(Strategy* p_strategy)
   auto launcher      = CopyLauncher{machine_};
   auto launch_domain = strategy.launch_domain(this);
 
-  launcher.add_input(source_.store, create_projection_info(strategy, launch_domain, source_));
+  launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));
 
   if (!redop_) {
-    launcher.add_inout(target_.store, create_projection_info(strategy, launch_domain, target_));
+    launcher.add_inout(target_.store, create_store_projection(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
-    auto proj            = store_partition->create_projection_info(launch_domain);
+    auto proj            = store_partition->create_store_projection(launch_domain);
 
     proj->set_reduction_op(static_cast<Legion::ReductionOpID>(
       target_.store->type()->find_reduction_operator(redop_.value())));
@@ -81,7 +81,7 @@ void Scatter::launch(Strategy* p_strategy)
   }
 
   launcher.add_target_indirect(target_indirect_.store,
-                               create_projection_info(strategy, launch_domain, target_indirect_));
+                               create_store_projection(strategy, launch_domain, target_indirect_));
   launcher.set_target_indirect_out_of_range(out_of_range_);
 
   if (launch_domain.is_valid()) {

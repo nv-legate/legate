@@ -12,30 +12,30 @@
 
 #pragma once
 
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 
 namespace legate::detail {
 
-inline BaseProjectionInfo::BaseProjectionInfo(Legion::LogicalPartition _partition,
-                                              Legion::ProjectionID _proj_id)
+inline BaseStoreProjection::BaseStoreProjection(Legion::LogicalPartition _partition,
+                                                Legion::ProjectionID _proj_id)
   : partition{_partition}, proj_id{_proj_id}
 {
 }
 
-inline bool BaseProjectionInfo::operator<(const BaseProjectionInfo& other) const
+inline bool BaseStoreProjection::operator<(const BaseStoreProjection& other) const
 {
   return std::tie(partition, proj_id, redop) <
          std::tie(other.partition, other.proj_id, other.redop);
 }
 
-inline bool BaseProjectionInfo::operator==(const BaseProjectionInfo& other) const
+inline bool BaseStoreProjection::operator==(const BaseStoreProjection& other) const
 {
   return partition == other.partition && proj_id == other.proj_id && redop == other.redop;
 }
 
-inline void BaseProjectionInfo::set_reduction_op(Legion::ReductionOpID _redop) { redop = _redop; }
+inline void BaseStoreProjection::set_reduction_op(Legion::ReductionOpID _redop) { redop = _redop; }
 
-inline size_t BaseProjectionInfo::hash() const noexcept
+inline size_t BaseStoreProjection::hash() const noexcept
 {
   return hash_all(partition, proj_id, redop);
 }
@@ -43,10 +43,10 @@ inline size_t BaseProjectionInfo::hash() const noexcept
 // ==========================================================================================
 
 template <bool SINGLE>
-void ProjectionInfo::populate_requirement(Legion::RegionRequirement& requirement,
-                                          const Legion::LogicalRegion& region,
-                                          const std::vector<Legion::FieldID>& fields,
-                                          Legion::PrivilegeMode privilege) const
+void StoreProjection::populate_requirement(Legion::RegionRequirement& requirement,
+                                           const Legion::LogicalRegion& region,
+                                           const std::vector<Legion::FieldID>& fields,
+                                           Legion::PrivilegeMode privilege) const
 {
   return populate_requirement<SINGLE>(requirement, region, fields, privilege, is_key);
 }

@@ -18,6 +18,7 @@
 #include "core/data/slice.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/launcher_arg.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/operation/projection.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
@@ -32,7 +33,6 @@
 namespace legate::detail {
 
 class LogicalStorePartition;
-struct ProjectionInfo;
 class Strategy;
 class StoragePartition;
 class PhysicalStore;
@@ -295,7 +295,7 @@ class LogicalStorePartition {
   [[nodiscard]] InternalSharedPtr<StoragePartition> storage_partition() const;
   [[nodiscard]] InternalSharedPtr<LogicalStore> store() const;
   [[nodiscard]] InternalSharedPtr<LogicalStore> get_child_store(const Shape& color) const;
-  [[nodiscard]] std::unique_ptr<ProjectionInfo> create_projection_info(
+  [[nodiscard]] std::unique_ptr<StoreProjection> create_store_projection(
     const Domain& launch_domain, const std::optional<SymbolicPoint>& projection = {});
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const;
   [[nodiscard]] const Shape& color_shape() const;

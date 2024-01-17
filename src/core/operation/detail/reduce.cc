@@ -17,7 +17,7 @@
 #include "core/operation/detail/reduce.h"
 
 #include "core/data/detail/logical_store.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/operation/projection.h"
 #include "core/partitioning/detail/constraint.h"
@@ -88,17 +88,17 @@ void Reduce::launch(Strategy* p_strategy)
       // if there are more than 1 sub-task, we add several slices of the input
       // for each sub-task
       for (auto& projection : projections) {
-        auto proj_info = input_partition->create_projection_info(launch_domain, projection);
+        auto store_proj = input_partition->create_store_projection(launch_domain, projection);
 
         launcher.add_input(to_array_arg(
-          std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(proj_info))));
+          std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(store_proj))));
       }
     } else {
       // otherwise we just add an entire input region to the task
-      auto proj_info = input_partition->create_projection_info(launch_domain);
+      auto store_proj = input_partition->create_store_projection(launch_domain);
 
       launcher.add_input(to_array_arg(
-        std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(proj_info))));
+        std::make_unique<RegionFieldArg>(input_.get(), LEGION_READ_ONLY, std::move(store_proj))));
     }
 
     // calculating #of sub-tasks in the reduction task

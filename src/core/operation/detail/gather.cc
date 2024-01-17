@@ -67,15 +67,15 @@ void Gather::launch(Strategy* p_strategy)
   auto launcher      = CopyLauncher{machine_};
   auto launch_domain = strategy.launch_domain(this);
 
-  launcher.add_input(source_.store, create_projection_info(strategy, launch_domain, source_));
+  launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));
   launcher.add_source_indirect(source_indirect_.store,
-                               create_projection_info(strategy, launch_domain, source_indirect_));
+                               create_store_projection(strategy, launch_domain, source_indirect_));
 
   if (!redop_) {
-    launcher.add_output(target_.store, create_projection_info(strategy, launch_domain, target_));
+    launcher.add_output(target_.store, create_store_projection(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
-    auto proj            = store_partition->create_projection_info(launch_domain);
+    auto proj            = store_partition->create_store_projection(launch_domain);
 
     proj->set_reduction_op(static_cast<Legion::ReductionOpID>(
       target_.store->type()->find_reduction_operator(redop_.value())));

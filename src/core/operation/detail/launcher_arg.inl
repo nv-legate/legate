@@ -35,8 +35,8 @@ inline ScalarArg::ScalarArg(Scalar&& scalar) : scalar_{std::move(scalar)} {}
 
 inline RegionFieldArg::RegionFieldArg(LogicalStore* store,
                                       Legion::PrivilegeMode privilege,
-                                      std::unique_ptr<ProjectionInfo> proj_info)
-  : store_{store}, privilege_{privilege}, proj_info_{std::move(proj_info)}
+                                      std::unique_ptr<StoreProjection> store_proj)
+  : store_{store}, privilege_{privilege}, store_proj_{std::move(store_proj)}
 {
 }
 

@@ -13,7 +13,7 @@
 #pragma once
 
 #include "core/data/detail/logical_region_field.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -31,25 +31,25 @@ struct InterferingStoreError : public std::exception {};
 class ProjectionSet {
  public:
   void insert(Legion::PrivilegeMode new_privilege,
-              const ProjectionInfo& proj_info,
+              const StoreProjection& store_proj,
               bool relax_interference_checks);
 
   Legion::PrivilegeMode privilege{};
-  std::set<BaseProjectionInfo> proj_infos{};
+  std::set<BaseStoreProjection> store_projs{};
   bool is_key{};
 };
 
 class FieldSet {
  public:
-  using Key = std::pair<Legion::PrivilegeMode, BaseProjectionInfo>;
+  using Key = std::pair<Legion::PrivilegeMode, BaseStoreProjection>;
 
   void insert(Legion::FieldID field_id,
               Legion::PrivilegeMode privilege,
-              const ProjectionInfo& proj_info,
+              const StoreProjection& store_proj,
               bool relax_interference_checks);
   [[nodiscard]] uint32_t num_requirements() const;
   [[nodiscard]] uint32_t get_requirement_index(Legion::PrivilegeMode privilege,
-                                               const ProjectionInfo& proj_info,
+                                               const StoreProjection& store_proj,
                                                Legion::FieldID field_id) const;
 
   void coalesce();
@@ -75,10 +75,10 @@ class RequirementAnalyzer {
   void insert(const Legion::LogicalRegion& region,
               Legion::FieldID field_id,
               Legion::PrivilegeMode privilege,
-              const ProjectionInfo& proj_info);
+              const StoreProjection& store_proj);
   [[nodiscard]] uint32_t get_requirement_index(const Legion::LogicalRegion& region,
                                                Legion::PrivilegeMode privilege,
-                                               const ProjectionInfo& proj_info,
+                                               const StoreProjection& store_proj,
                                                Legion::FieldID field_id) const;
   [[nodiscard]] bool empty() const;
 
@@ -139,7 +139,7 @@ struct StoreAnalyzer {
  public:
   void insert(const InternalSharedPtr<LogicalRegionField>& region_field,
               Legion::PrivilegeMode privilege,
-              const ProjectionInfo& proj_info);
+              const StoreProjection& store_proj);
   void insert(int32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
   void insert(const Legion::Future& future);
 
@@ -147,7 +147,7 @@ struct StoreAnalyzer {
 
   [[nodiscard]] uint32_t get_index(const Legion::LogicalRegion& region,
                                    Legion::PrivilegeMode privilege,
-                                   const ProjectionInfo& proj_info,
+                                   const StoreProjection& store_proj,
                                    Legion::FieldID field_id) const;
   [[nodiscard]] uint32_t get_index(const Legion::FieldSpace& field_space,
                                    Legion::FieldID field_id) const;

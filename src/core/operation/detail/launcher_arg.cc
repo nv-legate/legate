@@ -32,20 +32,20 @@ void RegionFieldArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   auto region   = store_->get_region_field()->region();
   auto field_id = store_->get_region_field()->field_id();
 
-  buffer.pack<int32_t>(proj_info_->redop);
+  buffer.pack<int32_t>(store_proj_->redop);
   buffer.pack<int32_t>(region.get_dim());
-  buffer.pack<uint32_t>(analyzer.get_index(region, privilege_, *proj_info_, field_id));
+  buffer.pack<uint32_t>(analyzer.get_index(region, privilege_, *store_proj_, field_id));
   buffer.pack<uint32_t>(field_id);
 }
 
 void RegionFieldArg::analyze(StoreAnalyzer& analyzer)
 {
-  analyzer.insert(store_->get_region_field(), privilege_, *proj_info_);
+  analyzer.insert(store_->get_region_field(), privilege_, *store_proj_);
 }
 
 std::optional<Legion::ProjectionID> RegionFieldArg::get_key_proj_id() const
 {
-  return proj_info_->is_key ? std::make_optional(proj_info_->proj_id) : std::nullopt;
+  return store_proj_->is_key ? std::make_optional(store_proj_->proj_id) : std::nullopt;
 }
 
 void RegionFieldArg::perform_invalidations() const

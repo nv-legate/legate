@@ -14,7 +14,7 @@
 
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/detail/machine.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -57,7 +57,7 @@ class Operation {
  protected:
   void record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store);
   // Helper methods
-  [[nodiscard]] static std::unique_ptr<ProjectionInfo> create_projection_info(
+  [[nodiscard]] static std::unique_ptr<StoreProjection> create_store_projection(
     const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
 
   uint64_t unique_id_{};

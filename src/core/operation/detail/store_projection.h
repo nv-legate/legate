@@ -17,13 +17,13 @@
 
 namespace legate::detail {
 
-struct BaseProjectionInfo {
-  BaseProjectionInfo() = default;
+struct BaseStoreProjection {
+  BaseStoreProjection() = default;
 
-  BaseProjectionInfo(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
+  BaseStoreProjection(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
 
-  bool operator<(const BaseProjectionInfo& other) const;
-  bool operator==(const BaseProjectionInfo& other) const;
+  bool operator<(const BaseStoreProjection& other) const;
+  bool operator==(const BaseStoreProjection& other) const;
 
   // TODO: Ideally we want this method to return a requirement, instead of taking an inout argument.
   // We go with an inout parameter for now, as RegionRequirement doesn't have a move
@@ -45,9 +45,9 @@ struct BaseProjectionInfo {
   Legion::ReductionOpID redop{-1};
 };
 
-struct ProjectionInfo : BaseProjectionInfo {
-  using BaseProjectionInfo::BaseProjectionInfo;
-  using BaseProjectionInfo::populate_requirement;
+struct StoreProjection : BaseStoreProjection {
+  using BaseStoreProjection::BaseStoreProjection;
+  using BaseStoreProjection::populate_requirement;
 
   template <bool SINGLE>
   void populate_requirement(Legion::RegionRequirement& requirement,
@@ -60,4 +60,4 @@ struct ProjectionInfo : BaseProjectionInfo {
 
 }  // namespace legate::detail
 
-#include "core/operation/detail/projection.inl"
+#include "core/operation/detail/store_projection.inl"

@@ -31,9 +31,9 @@ inline bool OutputRequirementAnalyzer::empty() const { return field_groups_.empt
 
 inline void StoreAnalyzer::insert(const InternalSharedPtr<LogicalRegionField>& region_field,
                                   Legion::PrivilegeMode privilege,
-                                  const ProjectionInfo& proj_info)
+                                  const StoreProjection& store_proj)
 {
-  req_analyzer_.insert(region_field->region(), region_field->field_id(), privilege, proj_info);
+  req_analyzer_.insert(region_field->region(), region_field->field_id(), privilege, store_proj);
 }
 
 inline void StoreAnalyzer::insert(int32_t dim,
@@ -54,10 +54,10 @@ inline void StoreAnalyzer::analyze()
 
 inline uint32_t StoreAnalyzer::get_index(const Legion::LogicalRegion& region,
                                          Legion::PrivilegeMode privilege,
-                                         const ProjectionInfo& proj_info,
+                                         const StoreProjection& store_proj,
                                          Legion::FieldID field_id) const
 {
-  return req_analyzer_.get_requirement_index(region, privilege, proj_info, field_id);
+  return req_analyzer_.get_requirement_index(region, privilege, store_proj, field_id);
 }
 
 inline uint32_t StoreAnalyzer::get_index(const Legion::FieldSpace& field_space,

@@ -67,16 +67,13 @@ InternalSharedPtr<LogicalRegionField> FieldManager::import_field(
   return make_internal_shared<LogicalRegionField>(this, region, field_id);
 }
 
-void FieldManager::free_field(const Legion::LogicalRegion& region,
-                              Legion::FieldID field_id,
-                              Legion::Future can_dealloc,
-                              std::unique_ptr<Attachment> attachment,
-                              bool /*unordered*/)
+void FieldManager::free_field(FreeFieldInfo free_field_info, bool /*unordered*/)
 {
-  log_legate().debug(
-    "Field %u freed in-order in field manager %p", field_id, static_cast<void*>(this));
-  ordered_free_fields_.emplace_back(
-    region, field_id, std::move(can_dealloc), std::move(attachment));
+  log_legate().debug("Field %u freed in-order in field manager %p",
+                     free_field_info.field_id,
+                     static_cast<void*>(this));
+  auto& info = ordered_free_fields_.emplace_back(std::move(free_field_info));
+  runtime_->discard_field(info.region, info.field_id);
 }
 
 InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field()
@@ -158,20 +155,15 @@ InternalSharedPtr<LogicalRegionField> ConsensusMatchingFieldManager::allocate_fi
   return create_new_field();
 }
 
-void ConsensusMatchingFieldManager::free_field(const Legion::LogicalRegion& region,
-                                               Legion::FieldID field_id,
-                                               Legion::Future can_dealloc,
-                                               std::unique_ptr<Attachment> attachment,
-                                               bool unordered)
+void ConsensusMatchingFieldManager::free_field(FreeFieldInfo free_field_info, bool unordered)
 {
   if (unordered) {
-    log_legate().debug(
-      "Field %u freed locally in field manager %p", field_id, static_cast<void*>(this));
-    unordered_free_fields_.emplace_back(
-      region, field_id, std::move(can_dealloc), std::move(attachment));
+    log_legate().debug("Field %u freed locally in field manager %p",
+                       free_field_info.field_id,
+                       static_cast<void*>(this));
+    unordered_free_fields_.emplace_back(std::move(free_field_info));
   } else {
-    FieldManager::free_field(
-      region, field_id, std::move(can_dealloc), std::move(attachment), unordered);
+    FieldManager::free_field(std::move(free_field_info), unordered);
   }
 }
 
@@ -227,7 +219,7 @@ void ConsensusMatchingFieldManager::process_next_field_match()
   for (const auto& item : match.output()) {
     auto it = infos.find(item);
     assert(it != infos.end());
-    ordered_free_fields_.push_back(std::move(it->second));
+    FieldManager::free_field(std::move(it->second), false /*unordered*/);
     infos.erase(it);
   }
   // All fields that weren't matched can go back into the unordered queue, to be included in the

@@ -13,7 +13,9 @@
 #include "core/runtime/detail/region_manager.h"
 
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/hash.h"
 
+#include <unordered_set>
 #include <utility>
 
 namespace legate::detail {
@@ -38,9 +40,16 @@ void RegionManager::destroy(bool unordered)
   for (auto& entry : entries_) {
     entry.destroy(runtime_, unordered);
   }
+  std::unordered_set<Legion::LogicalRegion> deleted;
   for (auto& entry : imported_) {
+    if (deleted.find(entry.region) != deleted.end()) {
+      continue;
+    }
     entry.destroy(runtime_, unordered);
+    deleted.insert(entry.region);
   }
+  entries_.clear();
+  imported_.clear();
 }
 
 void RegionManager::push_entry()

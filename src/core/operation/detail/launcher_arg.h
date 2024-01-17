@@ -14,7 +14,7 @@
 
 #include "core/data/detail/scalar.h"
 #include "core/data/scalar.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <memory>
@@ -59,7 +59,7 @@ struct RegionFieldArg final : public Analyzable {
  public:
   RegionFieldArg(LogicalStore* store,
                  Legion::PrivilegeMode privilege,
-                 std::unique_ptr<ProjectionInfo> proj_info);
+                 std::unique_ptr<StoreProjection> store_proj);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
@@ -69,7 +69,7 @@ struct RegionFieldArg final : public Analyzable {
  private:
   LogicalStore* store_;
   Legion::PrivilegeMode privilege_;
-  std::unique_ptr<ProjectionInfo> proj_info_;
+  std::unique_ptr<StoreProjection> store_proj_;
 };
 
 struct OutputRegionArg final : public Analyzable {

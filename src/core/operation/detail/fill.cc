@@ -14,7 +14,7 @@
 
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/fill_launcher.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/partitioning/detail/constraint_solver.h"
 #include "core/partitioning/detail/partitioner.h"
 
@@ -56,7 +56,7 @@ void Fill::launch(Strategy* strategy)
   auto launcher      = FillLauncher{machine_};
   auto launch_domain = strategy->launch_domain(this);
   auto part          = (*strategy)[lhs_var_];
-  auto lhs_proj      = create_store_partition(lhs_, part)->create_projection_info(launch_domain);
+  auto lhs_proj      = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
 
   lhs_->set_key_partition(machine(), part.get());
 

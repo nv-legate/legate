@@ -16,7 +16,7 @@
 #include "core/data/detail/transform.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/operation.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/partition_manager.h"
@@ -876,9 +876,9 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
 
   auto partition       = strategy[variable];
   auto store_partition = create_partition(self, partition);
-  auto proj_info       = store_partition->create_projection_info(launch_domain, projection);
-  proj_info->is_key    = strategy.is_key_partition(variable);
-  proj_info->redop     = static_cast<Legion::ReductionOpID>(redop);
+  auto store_proj      = store_partition->create_store_projection(launch_domain, projection);
+  store_proj->is_key   = strategy.is_key_partition(variable);
+  store_proj->redop    = static_cast<Legion::ReductionOpID>(redop);
 
   if (privilege == LEGION_REDUCE && store_partition->is_disjoint_for(launch_domain)) {
     privilege = LEGION_READ_WRITE;
@@ -887,7 +887,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
     set_key_partition(variable->operation()->machine(), partition.get());
   }
 
-  return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));
+  return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
 }
 
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(
@@ -902,8 +902,8 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(
     assert(self->key_partition_ != nullptr);
   }
   auto store_partition = create_partition(self, self->key_partition_);
-  auto proj_info       = store_partition->create_projection_info(launch_domain);
-  return std::make_unique<RegionFieldArg>(this, privilege, std::move(proj_info));
+  auto store_proj      = store_partition->create_store_projection(launch_domain);
+  return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
 }
 
 std::string LogicalStore::to_string() const
@@ -953,15 +953,15 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(const Sha
     std::move(child_extents), std::move(child_storage), std::move(transform));
 }
 
-std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
+std::unique_ptr<StoreProjection> LogicalStorePartition::create_store_projection(
   const Domain& launch_domain, const std::optional<SymbolicPoint>& projection)
 {
   if (store_->has_scalar_storage()) {
-    return std::make_unique<ProjectionInfo>();
+    return std::make_unique<StoreProjection>();
   }
 
   if (!partition_->has_launch_domain()) {
-    return std::make_unique<ProjectionInfo>();
+    return std::make_unique<StoreProjection>();
   }
 
   // We're about to create a legion partition for this store, so the store should have its region
@@ -969,7 +969,7 @@ std::unique_ptr<ProjectionInfo> LogicalStorePartition::create_projection_info(
   auto legion_partition = storage_partition_->get_legion_partition();
   auto proj_id =
     launch_domain.is_valid() ? store_->compute_projection(launch_domain.dim, projection) : 0;
-  return std::make_unique<ProjectionInfo>(std::move(legion_partition), proj_id);
+  return std::make_unique<StoreProjection>(std::move(legion_partition), proj_id);
 }
 
 bool LogicalStorePartition::is_disjoint_for(const Domain& launch_domain) const

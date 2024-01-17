@@ -48,11 +48,7 @@ class FieldManager {
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(
     const Legion::LogicalRegion& region, Legion::FieldID field_id);
 
-  virtual void free_field(const Legion::LogicalRegion& region,
-                          Legion::FieldID field_id,
-                          Legion::Future can_dealloc,
-                          std::unique_ptr<Attachment> attachment,
-                          bool unordered);
+  virtual void free_field(FreeFieldInfo free_field_info, bool unordered);
 
  protected:
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field();
@@ -84,11 +80,7 @@ class ConsensusMatchingFieldManager final : public FieldManager {
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field() override;
 
-  void free_field(const Legion::LogicalRegion& region,
-                  Legion::FieldID field_id,
-                  Legion::Future can_dealloc,
-                  std::unique_ptr<Attachment> attachment,
-                  bool unordered) override;
+  void free_field(FreeFieldInfo free_field_info, bool unordered) override;
 
  private:
   void issue_field_match();

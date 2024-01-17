@@ -276,6 +276,7 @@ class Runtime {
   [[nodiscard]] Legion::Future reduce_exception_future_map(
     const Legion::FutureMap& future_map) const;
 
+  void discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void issue_execution_fence(bool block = false);
   // NOTE: If the type T contains any padding bits, make sure the entries *in the vector* are
   // deterministically zero'd out on all shards, e.g. by doing the initialization as follows:

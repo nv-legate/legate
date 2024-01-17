@@ -13,11 +13,11 @@
 #pragma once
 
 #include "core/mapping/detail/machine.h"
+#include "core/operation/detail/store_projection.h"
 
 namespace legate::detail {
 
 class LogicalStore;
-struct ProjectionInfo;
 class BufferBuilder;
 
 class FillLauncher {
@@ -26,9 +26,9 @@ class FillLauncher {
 
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,
-              const ProjectionInfo& lhs_proj,
+              const StoreProjection& lhs_proj,
               LogicalStore* value);
-  void launch_single(LogicalStore* lhs, const ProjectionInfo& lhs_proj, LogicalStore* value);
+  void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, LogicalStore* value);
 
  private:
   void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);

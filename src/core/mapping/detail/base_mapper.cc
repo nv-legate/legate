@@ -500,11 +500,11 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                     legate_task.machine().count() < task.index_domain.get_volume());
 }
 
-void BaseMapper::map_replicate_task(Legion::Mapping::MapperContext /*ctx*/,
-                                    const Legion::Task& /*task*/,
-                                    const MapTaskInput& /*input*/,
-                                    const MapTaskOutput& /*default_output*/,
-                                    MapReplicateTaskOutput& /*output*/)
+void BaseMapper::replicate_task(Legion::Mapping::MapperContext /*ctx*/,
+                                const Legion::Task& /*task*/,
+                                const ReplicateTaskInput& /*input*/,
+                                ReplicateTaskOutput& /*output*/)
+
 {
   LEGATE_ABORT;
 }

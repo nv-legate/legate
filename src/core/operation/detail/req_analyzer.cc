@@ -21,19 +21,19 @@ namespace legate::detail {
 ////////////////
 
 void ProjectionSet::insert(Legion::PrivilegeMode new_privilege,
-                           const ProjectionInfo& proj_info,
+                           const StoreProjection& store_proj,
                            bool relax_interference_checks)
 {
-  if (proj_infos.empty()) {
+  if (store_projs.empty()) {
     privilege = new_privilege;
     // conflicting privileges are promoted to a single read-write privilege
   } else if (privilege != new_privilege && privilege != NO_ACCESS && new_privilege != NO_ACCESS) {
     privilege = LEGION_READ_WRITE;
   }
-  proj_infos.emplace(proj_info);
-  is_key = is_key || proj_info.is_key;
+  store_projs.emplace(store_proj);
+  is_key = is_key || store_proj.is_key;
 
-  if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && proj_infos.size() > 1 &&
+  if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && store_projs.size() > 1 &&
       !relax_interference_checks) {
     throw InterferingStoreError{};
   }
@@ -45,21 +45,21 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege,
 
 void FieldSet::insert(Legion::FieldID field_id,
                       Legion::PrivilegeMode privilege,
-                      const ProjectionInfo& proj_info,
+                      const StoreProjection& store_proj,
                       bool relax_interference_checks)
 {
-  field_projs_[field_id].insert(privilege, proj_info, relax_interference_checks);
+  field_projs_[field_id].insert(privilege, store_proj, relax_interference_checks);
 }
 
 uint32_t FieldSet::num_requirements() const { return static_cast<uint32_t>(coalesced_.size()); }
 
 uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
-                                         const ProjectionInfo& proj_info,
+                                         const StoreProjection& store_proj,
                                          Legion::FieldID field_id) const
 {
-  auto finder = req_indices_.find({{privilege, proj_info}, field_id});
+  auto finder = req_indices_.find({{privilege, store_proj}, field_id});
   if (req_indices_.end() == finder) {
-    finder = req_indices_.find({{LEGION_READ_WRITE, proj_info}, field_id});
+    finder = req_indices_.find({{LEGION_READ_WRITE, store_proj}, field_id});
   }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(finder != req_indices_.end());
@@ -70,8 +70,8 @@ uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
 void FieldSet::coalesce()
 {
   for (const auto& [field_id, proj_set] : field_projs_) {
-    for (const auto& proj_info : proj_set.proj_infos) {
-      auto& [fields, is_key] = coalesced_[{proj_set.privilege, proj_info}];
+    for (const auto& store_proj : proj_set.store_projs) {
+      auto& [fields, is_key] = coalesced_[{proj_set.privilege, store_proj}];
       fields.emplace_back(field_id);
       is_key = is_key || proj_set.is_key;
     }
@@ -100,11 +100,11 @@ template <class Launcher>
 void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const
 {
   for (auto& [key, entry] : coalesced_) {
-    auto& [fields, is_key]       = entry;
-    auto& [privilege, proj_info] = key;
+    auto& [fields, is_key]        = entry;
+    auto& [privilege, store_proj] = key;
     auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement());
 
-    proj_info.template populate_requirement<is_single_v<Launcher>>(
+    store_proj.template populate_requirement<is_single_v<Launcher>>(
       requirement, region, fields, privilege, is_key);
   }
 }
@@ -116,14 +116,14 @@ void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& re
 void RequirementAnalyzer::insert(const Legion::LogicalRegion& region,
                                  Legion::FieldID field_id,
                                  Legion::PrivilegeMode privilege,
-                                 const ProjectionInfo& proj_info)
+                                 const StoreProjection& store_proj)
 {
-  field_sets_[region].first.insert(field_id, privilege, proj_info, relax_interference_checks_);
+  field_sets_[region].first.insert(field_id, privilege, store_proj, relax_interference_checks_);
 }
 
 uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion& region,
                                                     Legion::PrivilegeMode privilege,
-                                                    const ProjectionInfo& proj_info,
+                                                    const StoreProjection& store_proj,
                                                     Legion::FieldID field_id) const
 {
   auto finder = field_sets_.find(region);
@@ -131,7 +131,7 @@ uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion&
     assert(finder != field_sets_.end());
   }
   auto& [field_set, req_offset] = finder->second;
-  return req_offset + field_set.get_requirement_index(privilege, proj_info, field_id);
+  return req_offset + field_set.get_requirement_index(privilege, store_proj, field_id);
 }
 
 void RequirementAnalyzer::analyze_requirements()

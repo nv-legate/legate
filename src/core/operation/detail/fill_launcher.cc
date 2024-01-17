@@ -14,7 +14,7 @@
 
 #include "core/data/detail/logical_store.h"
 #include "core/mapping/machine.h"
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
@@ -23,7 +23,7 @@ namespace legate::detail {
 
 void FillLauncher::launch(const Legion::Domain& launch_domain,
                           LogicalStore* lhs,
-                          const ProjectionInfo& lhs_proj,
+                          const StoreProjection& lhs_proj,
                           LogicalStore* value)
 {
   BufferBuilder mapper_arg;
@@ -54,7 +54,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
 }
 
 void FillLauncher::launch_single(LogicalStore* lhs,
-                                 const ProjectionInfo& lhs_proj,
+                                 const StoreProjection& lhs_proj,
                                  LogicalStore* value)
 {
   BufferBuilder mapper_arg;

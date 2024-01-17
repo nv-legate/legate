@@ -48,8 +48,8 @@ LogicalRegionField::~LogicalRegionField()
     }
     auto can_dealloc = attachment_ ? attachment_->detach(destroyed_out_of_order_ /*unordered*/)
                                    : Legion::Future();  // waiting on this is a noop
-    manager_->free_field(
-      lr_, fid_, std::move(can_dealloc), std::move(attachment_), destroyed_out_of_order_);
+    manager_->free_field(FreeFieldInfo{lr_, fid_, std::move(can_dealloc), std::move(attachment_)},
+                         destroyed_out_of_order_);
   }
 }
 

@@ -10,19 +10,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/operation/detail/projection.h"
+#include "core/operation/detail/store_projection.h"
 
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
 
 template <>
-void BaseProjectionInfo::populate_requirement<true>(Legion::RegionRequirement& requirement,
-                                                    const Legion::LogicalRegion& region,
-                                                    const std::vector<Legion::FieldID>& fields,
-                                                    Legion::PrivilegeMode privilege,
-                                                    bool is_key,
-                                                    bool is_single) const
+void BaseStoreProjection::populate_requirement<true>(Legion::RegionRequirement& requirement,
+                                                     const Legion::LogicalRegion& region,
+                                                     const std::vector<Legion::FieldID>& fields,
+                                                     Legion::PrivilegeMode privilege,
+                                                     bool is_key,
+                                                     bool is_single) const
 {
   auto parent = Runtime::get_runtime()->find_parent_region(region);
   auto tag    = static_cast<Legion::MappingTagID>(is_key ? LEGATE_CORE_KEY_STORE_TAG : 0);
@@ -43,12 +43,12 @@ void BaseProjectionInfo::populate_requirement<true>(Legion::RegionRequirement& r
 }
 
 template <>
-void BaseProjectionInfo::populate_requirement<false>(Legion::RegionRequirement& requirement,
-                                                     const Legion::LogicalRegion& region,
-                                                     const std::vector<Legion::FieldID>& fields,
-                                                     Legion::PrivilegeMode privilege,
-                                                     bool is_key,
-                                                     bool /*is_single*/) const
+void BaseStoreProjection::populate_requirement<false>(Legion::RegionRequirement& requirement,
+                                                      const Legion::LogicalRegion& region,
+                                                      const std::vector<Legion::FieldID>& fields,
+                                                      Legion::PrivilegeMode privilege,
+                                                      bool is_key,
+                                                      bool /*is_single*/) const
 {
   if (Legion::LogicalPartition::NO_PART == partition) {
     populate_requirement<true>(requirement, region, fields, privilege, is_key, false);
