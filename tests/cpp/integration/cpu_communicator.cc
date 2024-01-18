@@ -68,7 +68,7 @@ void test_cpu_communicator_auto(int32_t ndim)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
   auto store =
-    runtime->create_store(legate::Shape{legate::full<size_t>(ndim, SIZE)}, legate::int32());
+    runtime->create_store(legate::Shape{legate::full<uint64_t>(ndim, SIZE)}, legate::int32());
 
   auto task = runtime->create_task(context, CPU_COMM_TESTER);
   auto part = task.declare_partition();
@@ -87,7 +87,7 @@ void test_cpu_communicator_manual(int32_t ndim)
 
   auto context = runtime->find_library(library_name);
   auto store =
-    runtime->create_store(legate::Shape{legate::full<size_t>(ndim, SIZE)}, legate::int32());
+    runtime->create_store(legate::Shape{legate::full<uint64_t>(ndim, SIZE)}, legate::int32());
   auto launch_shape = legate::full<uint64_t>(ndim, 1);
   auto tile_shape   = legate::full<uint64_t>(ndim, 1);
   launch_shape[0]   = num_procs;

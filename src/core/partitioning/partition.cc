@@ -207,14 +207,15 @@ tuple<uint64_t> Tiling::get_child_extents(const tuple<uint64_t>& extents,
   auto hi = apply(std::plus<int64_t>{}, tile_shape_ * (color + 1), offsets_);
   lo      = apply([](int64_t v) { return std::max(static_cast<int64_t>(0), v); }, lo);
   hi = apply([](size_t a, int64_t b) { return std::min(static_cast<int64_t>(a), b); }, extents, hi);
-  return apply([](int64_t h, int64_t l) { return static_cast<size_t>(h - l); }, hi, lo);
+  return apply([](int64_t h, int64_t l) { return static_cast<uint64_t>(h - l); }, hi, lo);
 }
 
 tuple<uint64_t> Tiling::get_child_offsets(const tuple<uint64_t>& color) const
 {
-  return apply([](size_t a, int64_t b) { return static_cast<size_t>(static_cast<int64_t>(a) + b); },
-               strides_ * color,
-               offsets_);
+  return apply(
+    [](uint64_t a, int64_t b) { return static_cast<uint64_t>(static_cast<int64_t>(a) + b); },
+    strides_ * color,
+    offsets_);
 }
 
 size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }

@@ -22,7 +22,6 @@
 extern void silence_unused_function_warnings()
 {
   // defined in copy_util.inl
-  static_cast<void>(::to_string);
   static_cast<void>(::fill_indirect);
 }
 
@@ -172,13 +171,13 @@ void check_copy_reduction_output(legate::Library library,
 }
 
 struct NormalCopySpec {
-  std::vector<size_t> shape;
+  std::vector<uint64_t> shape;
   legate::Type type;
   legate::Scalar seed;
 };
 
 struct NormalCopyReductionSpec {
-  std::vector<size_t> shape;
+  std::vector<uint64_t> shape;
   legate::Type type;
   legate::Scalar seed;
   legate::ReductionOpKind redop;

@@ -121,8 +121,8 @@ void check_gather_output(legate::Library library,
 }
 
 struct GatherSpec {
-  std::vector<size_t> ind_shape;
-  std::vector<size_t> data_shape;
+  std::vector<uint64_t> ind_shape;
+  std::vector<uint64_t> data_shape;
   legate::Scalar seed;
 
   std::string to_string() const
@@ -159,7 +159,7 @@ void test_gather(const GatherSpec& spec)
 TEST_F(Copy, Gather2Dto1D)
 {
   register_tasks();
-  std::vector<size_t> shape1d{5};
+  std::vector<uint64_t> shape1d{5};
   test_gather(GatherSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123))});
 }
 
@@ -172,7 +172,7 @@ TEST_F(Copy, Gather3Dto2D)
 TEST_F(Copy, Gather1Dto3D)
 {
   register_tasks();
-  std::vector<size_t> shape1d{5};
+  std::vector<uint64_t> shape1d{5};
   test_gather(GatherSpec{{2, 5, 4}, shape1d, legate::Scalar(789.0)});
 }
 

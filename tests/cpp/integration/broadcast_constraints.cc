@@ -60,7 +60,8 @@ void test_normal_store()
   auto context = runtime->find_library(library_name);
 
   auto launch_tester = [&](const std::vector<uint32_t>& dims, bool omit_dims_in_broadcast) {
-    std::vector<size_t> extents(3, EXT_SMALL);
+    std::vector<uint64_t> extents(3, EXT_SMALL);
+
     for (auto dim : dims) {
       extents[dim] = EXT_LARGE;
     }
@@ -101,7 +102,7 @@ void test_promoted_store()
   };
 
   auto launch_tester = [&](const uint32_t dim) {
-    std::vector<size_t> extents(2, EXT_SMALL);
+    std::vector<uint64_t> extents(2, EXT_SMALL);
     extents[dim] = EXT_LARGE;
     auto store   = runtime->create_store(legate::Shape{extents}, legate::int64());
     initialize(store);

@@ -173,11 +173,11 @@ void check_output_slice(const legate::LogicalArray& array,
   runtime->submit(std::move(task));
 }
 
-void test_fill_index(std::int32_t dim, std::size_t size, bool nullable)
+void test_fill_index(std::int32_t dim, std::uint64_t size, bool nullable)
 {
   auto runtime = legate::Runtime::get_runtime();
 
-  auto lhs = runtime->create_array(legate::full(static_cast<std::size_t>(dim), size),
+  auto lhs = runtime->create_array(legate::full(static_cast<std::uint64_t>(dim), size),
                                    legate::int64(),
                                    nullable /*nullable*/,
                                    true /*optimize_scalar*/);
@@ -190,7 +190,7 @@ void test_fill_index(std::int32_t dim, std::size_t size, bool nullable)
   check_output(lhs, std::move(v));
 }
 
-void test_fill_slice(std::int32_t dim, std::size_t size, bool null_init)
+void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init)
 {
   auto runtime = legate::Runtime::get_runtime();
 
@@ -199,7 +199,7 @@ void test_fill_slice(std::int32_t dim, std::size_t size, bool null_init)
   constexpr int64_t offset = 3;
 
   auto lhs = runtime->create_array(
-    legate::full(static_cast<std::size_t>(dim), size), legate::int64(), null_init);
+    legate::full(static_cast<std::uint64_t>(dim), size), legate::int64(), null_init);
   auto value_in_slice      = legate::Scalar{v1};
   auto value_outside_slice = null_init ? legate::Scalar{} : legate::Scalar{v2};
 

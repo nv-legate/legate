@@ -46,7 +46,7 @@ LogicalStore LogicalStore::project(int32_t dim, int64_t index) const
   return LogicalStore{impl_->project(dim, index)};
 }
 
-LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<size_t> tile_shape) const
+LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<uint64_t> tile_shape) const
 {
   return LogicalStorePartition{
     detail::partition_store_by_tiling(impl_, tuple<uint64_t>{std::move(tile_shape)})};

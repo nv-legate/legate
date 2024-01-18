@@ -42,7 +42,7 @@ Storage::Storage(uint32_t dim, InternalSharedPtr<Type> type)
     unbound_{true},
     shape_{make_internal_shared<Shape>(dim)},
     type_{std::move(type)},
-    offsets_{legate::full(dim, size_t{0})}
+    offsets_{legate::full(dim, uint64_t{0})}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -55,7 +55,7 @@ Storage::Storage(const InternalSharedPtr<Shape>& shape,
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{shape},
     type_{std::move(type)},
-    offsets_{legate::full(dim(), size_t{0})}
+    offsets_{legate::full(dim(), uint64_t{0})}
 {
   // We should not blindly check the shape volume as it would flush the scheduling window
   if (optimize_scalar && shape_->ready() && volume() == 1) {
@@ -74,7 +74,7 @@ Storage::Storage(const InternalSharedPtr<Shape>& shape,
     type_{std::move(type)},
     kind_{Kind::FUTURE},
     future_{std::make_unique<Legion::Future>(future)},
-    offsets_{legate::full(dim(), size_t{0})}
+    offsets_{legate::full(dim(), uint64_t{0})}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -171,8 +171,8 @@ InternalSharedPtr<Storage> Storage::slice(tuple<uint64_t> tile_shape,
     color          = offsets / tile_shape;
     signed_offsets = legate::full<int64_t>(shape.size(), 0);
   } else {
-    color_shape    = legate::full<size_t>(shape.size(), 1);
-    color          = legate::full<size_t>(shape.size(), 0);
+    color_shape    = legate::full<uint64_t>(shape.size(), 1);
+    color          = legate::full<uint64_t>(shape.size(), 0);
     signed_offsets = apply([](size_t v) { return static_cast<int64_t>(v); }, offsets);
   }
 
@@ -469,7 +469,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(int32_t d, int64_t index)
     volume() == 0
       ? storage_
       : storage_->slice(transform->invert_extents(new_extents),
-                        transform->invert_point(legate::full<size_t>(new_extents.size(), 0)));
+                        transform->invert_point(legate::full<uint64_t>(new_extents.size(), 0)));
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), std::move(substorage), std::move(transform));
 }
@@ -523,9 +523,10 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice(const InternalSharedPtr<Logi
   auto transform =
     (start == 0) ? transform_ : stack(transform_, std::make_unique<Shift>(dim, -start));
   auto substorage =
-    volume() == 0 ? storage_
-                  : storage_->slice(transform->invert_extents(exts),
-                                    transform->invert_point(legate::full<size_t>(exts.size(), 0)));
+    volume() == 0
+      ? storage_
+      : storage_->slice(transform->invert_extents(exts),
+                        transform->invert_point(legate::full<uint64_t>(exts.size(), 0)));
   return make_internal_shared<LogicalStore>(
     std::move(exts), std::move(substorage), std::move(transform));
 }

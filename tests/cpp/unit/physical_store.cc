@@ -607,7 +607,8 @@ legate::Shape get_shape(int32_t dim)
   if (dim < 0) {
     return legate::Shape{0};
   }
-  std::vector<size_t> vec;
+  std::vector<uint64_t> vec;
+
   vec.reserve(dim);
   for (int32_t i = 0; i < dim; i++) {
     vec.emplace_back(BOUND_STORE_EXTENTS + i);

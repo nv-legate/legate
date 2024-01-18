@@ -116,8 +116,8 @@ void register_tasks()
 }
 
 struct ScatterSpec {
-  std::vector<size_t> ind_shape;
-  std::vector<size_t> data_shape;
+  std::vector<uint64_t> ind_shape;
+  std::vector<uint64_t> data_shape;
   legate::Scalar seed;
   legate::Scalar init;
 
@@ -187,7 +187,7 @@ void test_scatter(const ScatterSpec& spec)
 TEST_F(Copy, Scatter1Dto2D)
 {
   register_tasks();
-  std::vector<size_t> shape1d{5};
+  std::vector<uint64_t> shape1d{5};
   test_scatter(
     ScatterSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
 }

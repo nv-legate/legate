@@ -170,7 +170,8 @@ void fill_indirect(legate::Library library,
   ind.impl()->reset_key_partition();
 }
 
-std::string to_string(const std::vector<size_t>& shape)
+template <typename T>
+std::string to_string(const std::vector<T>& shape)
 {
   std::stringstream ss;
   ss << "(";

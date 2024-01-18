@@ -84,9 +84,9 @@ struct CheckGatherScatterTask
 };
 
 struct GatherScatterSpec {
-  std::vector<size_t> src_shape;
-  std::vector<size_t> ind_shape;
-  std::vector<size_t> tgt_shape;
+  std::vector<uint64_t> src_shape;
+  std::vector<uint64_t> ind_shape;
+  std::vector<uint64_t> tgt_shape;
   legate::Scalar seed;
   legate::Scalar init;
 
@@ -192,7 +192,7 @@ void test_gather_scatter(const GatherScatterSpec& spec)
 TEST_F(Copy, GatherScatter1Dto3Dvia2D)
 {
   register_tasks();
-  std::vector<size_t> shape1d{5};
+  std::vector<uint64_t> shape1d{5};
   test_gather_scatter(GatherScatterSpec{
     shape1d, {7, 11}, {10, 10, 10}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
 }
@@ -200,7 +200,7 @@ TEST_F(Copy, GatherScatter1Dto3Dvia2D)
 TEST_F(Copy, GatherScatter2Dto1Dvia3D)
 {
   register_tasks();
-  std::vector<size_t> shape1d{1000};
+  std::vector<uint64_t> shape1d{1000};
   test_gather_scatter(GatherScatterSpec{
     {3, 7}, {3, 6, 5}, shape1d, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
 }
@@ -208,7 +208,7 @@ TEST_F(Copy, GatherScatter2Dto1Dvia3D)
 TEST_F(Copy, GatherScatter3Dto2Dvia1D)
 {
   register_tasks();
-  std::vector<size_t> shape1d{100};
+  std::vector<uint64_t> shape1d{100};
   test_gather_scatter(GatherScatterSpec{
     {4, 5, 2}, shape1d, {50, 50}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
 }

@@ -339,7 +339,7 @@ class LogicalStore {
    *
    * @return A store partition
    */
-  [[nodiscard]] LogicalStorePartition partition_by_tiling(std::vector<size_t> tile_shape) const;
+  [[nodiscard]] LogicalStorePartition partition_by_tiling(std::vector<uint64_t> tile_shape) const;
 
   /**
    * @brief Creates a physical store for this logical store

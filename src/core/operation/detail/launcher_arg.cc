@@ -90,7 +90,7 @@ void FutureStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<bool>(read_only_);
   buffer.pack<int32_t>(has_storage_ ? analyzer.get_index(store_->get_future()) : -1);
   buffer.pack<uint32_t>(store_->type()->size());
-  buffer.pack<size_t>(store_->get_storage()->extents().data());
+  buffer.pack<uint64_t>(store_->get_storage()->extents().data());
 }
 
 void FutureStoreArg::analyze(StoreAnalyzer& analyzer)

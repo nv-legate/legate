@@ -191,7 +191,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
 
   // Project back onto the original number of dimensions
   assert(temp_result.size() == ndim);
-  std::vector<size_t> result(shape.size(), 1);
+  std::vector<uint64_t> result(shape.size(), 1);
   for (uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
   }

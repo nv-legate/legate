@@ -215,7 +215,7 @@ void prepare()
 }
 
 void initialize_function(legate::LogicalStore func,
-                         const std::vector<size_t> range_extents,
+                         const std::vector<uint64_t>& range_extents,
                          bool ascending)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -253,8 +253,8 @@ void check_image(legate::LogicalStore func, legate::LogicalStore range)
 }
 
 struct ImageTestSpec {
-  std::vector<size_t> domain_extents;
-  std::vector<size_t> range_extents;
+  std::vector<uint64_t> domain_extents;
+  std::vector<uint64_t> range_extents;
   bool is_rect;
 };
 

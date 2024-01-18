@@ -27,7 +27,7 @@ TEST_F(Store, Creation)
     auto store   = runtime->create_store(legate::Shape{4, 4}, legate::int64());
     EXPECT_FALSE(store.unbound());
     EXPECT_EQ(store.dim(), 2);
-    EXPECT_EQ(store.extents().data(), (std::vector<size_t>{4, 4}));
+    EXPECT_EQ(store.extents().data(), (std::vector<uint64_t>{4, 4}));
     EXPECT_EQ(store.type(), legate::int64());
     EXPECT_FALSE(store.transformed());
   }
@@ -74,26 +74,26 @@ TEST_F(Store, Transform)
   auto store   = runtime->create_store(legate::Shape{4, 3}, legate::int64());
 
   auto promoted = store.promote(0, 5);
-  EXPECT_EQ(promoted.extents().data(), (std::vector<size_t>{5, 4, 3}));
+  EXPECT_EQ(promoted.extents().data(), (std::vector<uint64_t>{5, 4, 3}));
   EXPECT_TRUE(promoted.transformed());
 
   auto projected = store.project(0, 1);
   EXPECT_EQ(projected.extents().data(),
-            (std::vector<size_t>{
+            (std::vector<uint64_t>{
               3,
             }));
   EXPECT_TRUE(projected.transformed());
 
   auto sliced = store.slice(1, legate::Slice(1, 3));
-  EXPECT_EQ(sliced.extents().data(), (std::vector<size_t>{4, 2}));
+  EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{4, 2}));
   EXPECT_TRUE(sliced.transformed());
 
   auto transposed = store.transpose({1, 0});
-  EXPECT_EQ(transposed.extents().data(), (std::vector<size_t>{3, 4}));
+  EXPECT_EQ(transposed.extents().data(), (std::vector<uint64_t>{3, 4}));
   EXPECT_TRUE(transposed.transformed());
 
   auto delinearized = store.delinearize(0, {2, 2});
-  EXPECT_EQ(delinearized.extents().data(), (std::vector<size_t>{2, 2, 3}));
+  EXPECT_EQ(delinearized.extents().data(), (std::vector<uint64_t>{2, 2, 3}));
   EXPECT_TRUE(delinearized.transformed());
 }
 
