@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.string cimport string as std_string
 
 from ..data.shape cimport _Shape
@@ -32,15 +32,17 @@ cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:
     cdef _Constraint _broadcast "broadcast" (_Variable)
 
     cdef _Constraint _broadcast "broadcast" (
-        _Variable, const _tuple[int32_t]&
+        _Variable, _tuple[uint32_t]
     ) except+
 
     cdef _Constraint _image "image" (_Variable, _Variable)
 
-    cdef _Constraint _scale "scale" (const _Shape&, _Variable, _Variable)
+    cdef _Constraint _scale "scale" (
+        _tuple[uint64_t], _Variable, _Variable
+    )
 
     cdef _Constraint _bloat "bloat" (
-        _Variable, _Variable, const _Shape&, const _Shape&
+        _Variable, _Variable, _tuple[uint64_t], _tuple[uint64_t]
     )
 
 

@@ -23,6 +23,8 @@ inline LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore>&& impl
 
 inline const SharedPtr<detail::LogicalStore>& LogicalStore::impl() const { return impl_; }
 
+inline const tuple<uint64_t>& LogicalStore::extents() const { return shape().extents(); }
+
 // ==========================================================================================
 
 inline LogicalStorePartition::LogicalStorePartition(

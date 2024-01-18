@@ -312,9 +312,12 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg_for_fixup(
   return std::make_unique<ListArrayArg>(type(), std::move(descriptor_arg), std::move(vardata_arg));
 }
 
-int32_t StructLogicalArray::dim() const { return fields_.front()->dim(); }
+uint32_t StructLogicalArray::dim() const { return fields_.front()->dim(); }
 
-const Shape& StructLogicalArray::extents() const { return fields_.front()->extents(); }
+const InternalSharedPtr<Shape>& StructLogicalArray::shape() const
+{
+  return fields_.front()->shape();
+}
 
 size_t StructLogicalArray::volume() const { return fields_.front()->volume(); }
 

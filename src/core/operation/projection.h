@@ -38,18 +38,20 @@ namespace legate {
  */
 class SymbolicExpr {
  public:
+  static constexpr uint32_t UNSET = -1U;
+
   SymbolicExpr() = default;
 
-  SymbolicExpr(int32_t dim, int32_t weight, int32_t offset = 0);
+  SymbolicExpr(uint32_t dim, int32_t weight, int32_t offset = 0);
 
-  explicit SymbolicExpr(int32_t dim);
+  explicit SymbolicExpr(uint32_t dim);
 
   /**
    * @brief Returns the dimension index of this expression
    *
    * @return Dimension index
    */
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] uint32_t dim() const;
   /**
    * @brief Returns the weight for the coordinates
    *
@@ -71,7 +73,14 @@ class SymbolicExpr {
    * @return true The expression denotes an identity mapping
    * @return false The expression does not denote an identity mapping
    */
-  [[nodiscard]] bool is_identity(int32_t dim) const;
+  [[nodiscard]] bool is_identity(uint32_t dim) const;
+  /**
+   * @brief Indicates if the expression denotes a constant
+   *
+   * @return true The expression denotes a constant
+   * @return false The expression does not denote a constant
+   */
+  [[nodiscard]] bool is_constant() const;
 
   bool operator==(const SymbolicExpr& other) const;
   bool operator<(const SymbolicExpr& other) const;
@@ -84,7 +93,7 @@ class SymbolicExpr {
   [[nodiscard]] size_t hash() const;
 
  private:
-  int32_t dim_{-1};
+  uint32_t dim_{UNSET};
   int32_t weight_{1};
   int32_t offset_{};
 };
@@ -112,7 +121,7 @@ using SymbolicPoint = tuple<SymbolicExpr>;
  *
  * @return A symbolic expression for the given dimension
  */
-[[nodiscard]] SymbolicExpr dimension(int32_t dim);
+[[nodiscard]] SymbolicExpr dimension(uint32_t dim);
 
 /**
  * @ingroup op

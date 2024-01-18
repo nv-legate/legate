@@ -12,6 +12,7 @@
 
 #include "core/runtime/detail/region_manager.h"
 
+#include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/hash.h"
 
@@ -30,8 +31,8 @@ void RegionManager::ManagerEntry::destroy(Runtime* runtime, bool unordered) cons
 // static_assert).
 RegionManager::RegionManager(Runtime* runtime,
                              // NOLINTNEXTLINE(modernize-pass-by-value)
-                             const Domain& shape)
-  : runtime_{runtime}, shape_{shape}
+                             const Legion::IndexSpace& index_space)
+  : runtime_{runtime}, index_space_{index_space}
 {
 }
 
@@ -52,12 +53,22 @@ void RegionManager::destroy(bool unordered)
   imported_.clear();
 }
 
+void RegionManager::record_pending_match_credit_update(ConsensusMatchingFieldManager* field_mgr)
+{
+  pending_match_credit_updates_.push_back(field_mgr);
+}
+
+void RegionManager::update_field_manager_match_credits()
+{
+  for (auto* field_mgr : pending_match_credit_updates_) {
+    field_mgr->calculate_match_credit();
+  }
+  pending_match_credit_updates_.clear();
+}
+
 void RegionManager::push_entry()
 {
-  auto is = runtime_->find_or_create_index_space(shape_);
-  auto fs = runtime_->create_field_space();
-
-  entries_.emplace_back(runtime_->create_region(is, fs));
+  entries_.emplace_back(runtime_->create_region(index_space_, runtime_->create_field_space()));
 }
 
 bool RegionManager::has_space() const { return !entries_.empty() && active_entry().has_space(); }

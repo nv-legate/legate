@@ -14,6 +14,8 @@
 
 #include "core/utilities/hash.h"
 
+#include "legate_defines.h"
+
 #include <cstdint>
 #include <initializer_list>
 #include <iosfwd>
@@ -43,6 +45,8 @@ class tuple {
   tuple& operator=(const tuple&)     = default;
   tuple& operator=(tuple&&) noexcept = default;
 
+  [[nodiscard]] const T& at(uint32_t idx) const;
+  [[nodiscard]] T& at(uint32_t idx);
   [[nodiscard]] const T& operator[](uint32_t idx) const;
   [[nodiscard]] T& operator[](uint32_t idx);
 

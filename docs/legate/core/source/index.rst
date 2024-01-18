@@ -18,7 +18,7 @@ supercomputer without any code modifications.
   Overview <README.md>
   Build instructions <BUILD.md>
   Python API Reference <api/index.rst>
-  C++ API Reference <https://nv-legate.github.io/legate.core/cpp-interface>
+  C++ API Reference <https://silver-winner-7voy5mm.pages.github.io/cpp-interface>
 
 .. toctree::
   :maxdepth: 1

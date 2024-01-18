@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:
     from ...data_interface import Field, LegateDataInterfaceItem
-    from ...shape import Shape
     from ..type.type_info import Type
     from .physical_store import PhysicalStore
+    from .shape import Shape
 
 class LogicalStore:
     @property

@@ -139,7 +139,9 @@ class Runtime {
    *
    * @return Task object
    */
-  [[nodiscard]] ManualTask create_task(Library library, int64_t task_id, const Shape& launch_shape);
+  [[nodiscard]] ManualTask create_task(Library library,
+                                       int64_t task_id,
+                                       const tuple<uint64_t>& launch_shape);
   /**
    * @brief Creates a ManualTask
    *
@@ -353,7 +355,7 @@ class Runtime {
   /**
    * @brief Creates a normal array
    *
-   * @param extents Shape of the array
+   * @param shape Shape of the array. The call does not block on this shape
    * @param type Element type
    * @param nullable Nullability of the array
    * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
@@ -361,14 +363,15 @@ class Runtime {
    *
    * @return Logical array
    */
-  [[nodiscard]] LogicalArray create_array(const Shape& extents,
+  [[nodiscard]] LogicalArray create_array(const Shape& shape,
                                           const Type& type,
                                           bool nullable        = false,
                                           bool optimize_scalar = false);
   /**
    * @brief Creates an array isomorphic to the given array
    *
-   * @param to_mirror The array whose shape would be used to create the output array.
+   * @param to_mirror The array whose shape would be used to create the output array. The call does
+   * not block on the array's shape.
    * @param type Optional type for the resulting array. Must be compatible with the input array's
    * type
    *
@@ -432,29 +435,32 @@ class Runtime {
   /**
    * @brief Creates a normal store
    *
-   * @param extents Shape of the store
+   * @param shape Shape of the store. The call does not block on this shape.
    * @param type Element type
    * @param optimize_scalar When true, the runtime internally uses futures optimized for storing
    * scalars
    *
    * @return Logical store
    */
-  [[nodiscard]] LogicalStore create_store(const Shape& extents,
+  [[nodiscard]] LogicalStore create_store(const Shape& shape,
                                           const Type& type,
                                           bool optimize_scalar = false);
   /**
    * @brief Creates a normal store out of a `Scalar` object
    *
    * @param scalar Value of the scalar to create a store with
-   * @param extents Shape of the store. The volume must be 1.
+   * @param shape Shape of the store. The volume must be 1. The call does not block on this shape.
+   *
    *
    * @return Logical store
    */
-  [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& extents = Shape{1});
+  [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& shape = Shape{1});
   /**
    * @brief Creates a store by attaching to an existing allocation.
    *
-   * @param extents Shape of the store
+   * This call does not block wait on the input shape
+   *
+   * @param shape Shape of the store. The call does not block on this shape.
    * @param type Element type
    * @param buffer Pointer to the beginning of the allocation to attach to; allocation must be
    * contiguous, and cover the entire contents of the store (at least `extents.volume() *
@@ -465,7 +471,7 @@ class Runtime {
    * @return Logical store
    */
   [[nodiscard]] LogicalStore create_store(
-    const Shape& extents,
+    const Shape& shape,
     const Type& type,
     void* buffer,
     bool read_only                       = true,
@@ -473,7 +479,7 @@ class Runtime {
   /**
    * @brief Creates a store by attaching to an existing allocation.
    *
-   * @param extents Shape of the store
+   * @param shape Shape of the store. The call does not block on this shape.
    * @param type Element type
    * @param allocation External allocation descriptor
    * @param ordering In what order the elements are laid out in the passed allocation
@@ -481,7 +487,7 @@ class Runtime {
    * @return Logical store
    */
   [[nodiscard]] LogicalStore create_store(
-    const Shape& extents,
+    const Shape& shape,
     const Type& type,
     const ExternalAllocation& allocation,
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
@@ -490,7 +496,8 @@ class Runtime {
    *
    * External allocations must be read-only.
    *
-   * @param extents Shape of the store
+   * @param shape Shape of the store. The call can BLOCK on this shape for constructing a store
+   * partition
    * @param tile_shape Shape of tiles
    * @param type Element type
    * @param allocations Pairs of external allocation descriptors and sub-store colors
@@ -501,10 +508,10 @@ class Runtime {
    * @throw std::invalid_argument If any of the external allocations are not read-only
    */
   [[nodiscard]] std::pair<LogicalStore, LogicalStorePartition> create_store(
-    const Shape& extents,
-    const Shape& tile_shape,
+    const Shape& shape,
+    const tuple<uint64_t>& tile_shape,
     const Type& type,
-    const std::vector<std::pair<ExternalAllocation, Shape>>& allocations,
+    const std::vector<std::pair<ExternalAllocation, tuple<uint64_t>>>& allocations,
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
   /**

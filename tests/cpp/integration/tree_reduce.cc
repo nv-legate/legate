@@ -105,7 +105,7 @@ TEST_F(TreeReduce, AutoProducer)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, legate::Shape{num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, {num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
@@ -127,7 +127,7 @@ TEST_F(TreeReduce, ManualProducer)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, legate::Shape{num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, {num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
@@ -149,7 +149,7 @@ TEST_F(TreeReduce, ManualProducerMultiLevel)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, legate::Shape{num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_NORMAL, {num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
@@ -170,7 +170,7 @@ TEST_F(TreeReduce, ManualProducerUnbound)
   auto store       = runtime->create_store(legate::int64());
   size_t num_tasks = 4;
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, legate::Shape{num_tasks});
+  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, {num_tasks});
   task.add_output(store);
   runtime->submit(std::move(task));
 
@@ -189,7 +189,7 @@ TEST_F(TreeReduce, ManualProducerSingle)
   // unbound store
   auto store = runtime->create_store(legate::int64());
 
-  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, legate::Shape{1});
+  auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, {1});
   task.add_output(store);
   runtime->submit(std::move(task));
 

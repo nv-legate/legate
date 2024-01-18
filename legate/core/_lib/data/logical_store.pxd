@@ -16,6 +16,7 @@ from libcpp.vector cimport vector as std_vector
 
 from ..type.type_info cimport _Type
 from ..utilities.shared_ptr cimport _SharedPtr
+from ..utilities.tuple cimport _tuple
 from .detail.logical_store cimport _LogicalStoreImpl
 from .physical_store cimport _PhysicalStore
 from .shape cimport _Shape
@@ -30,7 +31,8 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         bool has_scalar_storage()
         bool overlaps(const _LogicalStore&)
         _Type type()
-        const _Shape& extents() except+
+        _Shape shape()
+        const _tuple[uint64_t]& extents() except+
         size_t volume() except+
         bool unbound()
         bool transformed()
@@ -51,8 +53,8 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition()
         _LogicalStorePartition(const _LogicalStorePartition&)
         _LogicalStore store()
-        const _Shape& color_shape() except+
-        _LogicalStore get_child_store(const _Shape&)
+        const _tuple[uint64_t]& color_shape() except+
+        _LogicalStore get_child_store(const _tuple[uint64_t]&)
 
 
 cdef class LogicalStore:

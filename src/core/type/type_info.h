@@ -503,7 +503,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-[[nodiscard]] Type point_type(int32_t ndim);
+[[nodiscard]] Type point_type(uint32_t ndim);
 
 /**
  * @ingroup types
@@ -513,7 +513,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-[[nodiscard]] Type rect_type(int32_t ndim);
+[[nodiscard]] Type rect_type(uint32_t ndim);
 
 /**
  * @ingroup types
@@ -533,7 +533,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a point type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_point_type(const Type& type, int32_t ndim);
+[[nodiscard]] bool is_point_type(const Type& type, uint32_t ndim);
 
 /**
  * @ingroup types
@@ -545,7 +545,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a rect type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_rect_type(const Type& type, int32_t ndim);
+[[nodiscard]] bool is_rect_type(const Type& type, uint32_t ndim);
 
 }  // namespace legate
 

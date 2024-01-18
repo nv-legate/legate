@@ -38,6 +38,7 @@
 #include "core/task/detail/task_context.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/strtoll.h"
+#include "core/utilities/detail/tuple.h"
 #include "core/utilities/detail/type_traits.h"
 
 #include "env_defaults.h"
@@ -306,6 +307,7 @@ void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
                                              redop));
 }
 
+// TODO: We want to use scalars as fill values
 void Runtime::issue_fill(
   InternalSharedPtr<LogicalArray> lhs,  // NOLINT(performance-unnecessary-value-param)
   InternalSharedPtr<LogicalStore> value)
@@ -326,10 +328,9 @@ void Runtime::issue_fill(
     if (!lhs->nullable()) {
       throw std::invalid_argument{"Non-nullable arrays cannot be filled with null"};
     }
-    const auto& elem_type = lhs->type();
-    std::vector<uint8_t> dummy_value(elem_type->size());
-    _issue_fill(lhs->data(), create_store(Scalar{elem_type, dummy_value.data(), true}));
-    _issue_fill(lhs->null_mask(), create_store(Scalar{false}));
+    auto scalar_shape = make_internal_shared<Shape>(tuple<uint64_t>{1});
+    _issue_fill(lhs->data(), create_store(Scalar{lhs->type()}, scalar_shape));
+    _issue_fill(lhs->null_mask(), create_store(Scalar{false}, scalar_shape));
     return;
   }
 
@@ -337,7 +338,8 @@ void Runtime::issue_fill(
   if (!lhs->nullable()) {
     return;
   }
-  _issue_fill(lhs->null_mask(), create_store(Scalar{true}));
+  _issue_fill(lhs->null_mask(),
+              create_store(Scalar{true}, make_internal_shared<Shape>(tuple<uint64_t>{1})));
 }
 
 void Runtime::tree_reduce(const Library* library,
@@ -423,7 +425,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(InternalSharedPtr<Type> ty
   return create_base_array(std::move(type), dim, nullable);
 }
 
-InternalSharedPtr<LogicalArray> Runtime::create_array(const Shape& extents,
+InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Shape>& shape,
                                                       InternalSharedPtr<Type> type,
                                                       bool nullable,
                                                       bool optimize_scalar)
@@ -431,23 +433,23 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const Shape& extents,
   // TODO: We should be able to control colocation of fields for struct types,
   //       instead of special-casing rect types here
   if (Type::Code::STRUCT == type->code && !is_rect_type(type)) {
-    return create_struct_array(extents, std::move(type), nullable, optimize_scalar);
+    return create_struct_array(shape, std::move(type), nullable, optimize_scalar);
   }
 
   if (type->variable_size()) {
-    if (extents.size() != 1) {
+    if (shape->ndim() != 1) {
       throw std::invalid_argument{"List/string arrays can only be 1D"};
     }
 
     auto elem_type =
       Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
-    auto descriptor = create_base_array(extents, rect_type(1), nullable, optimize_scalar);
+    auto descriptor = create_base_array(shape, rect_type(1), nullable, optimize_scalar);
     auto vardata    = create_array(std::move(elem_type), 1, false);
 
     return make_internal_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
   }
-  return create_base_array(extents, std::move(type), nullable, optimize_scalar);
+  return create_base_array(shape, std::move(type), nullable, optimize_scalar);
 }
 
 InternalSharedPtr<LogicalArray> Runtime::create_array_like(
@@ -462,7 +464,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_array_like(
   }
 
   const bool optimize_scalar = array->data()->has_scalar_storage();
-  return create_array(array->extents(), std::move(type), array->nullable(), optimize_scalar);
+  return create_array(array->shape(), std::move(type), array->nullable(), optimize_scalar);
 }
 
 InternalSharedPtr<LogicalArray> Runtime::create_list_array(
@@ -514,18 +516,19 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(InternalShare
     std::move(type), std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(const Shape& extents,
-                                                                   InternalSharedPtr<Type> type,
-                                                                   bool nullable,
-                                                                   bool optimize_scalar)
+InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(
+  const InternalSharedPtr<Shape>& shape,
+  InternalSharedPtr<Type> type,
+  bool nullable,
+  bool optimize_scalar)
 {
   std::vector<InternalSharedPtr<LogicalArray>> fields;
   const auto& st_type = type->as_struct_type();
-  auto null_mask      = nullable ? create_store(extents, bool_(), optimize_scalar) : nullptr;
+  auto null_mask      = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
 
   fields.reserve(st_type.field_types().size());
   for (auto& field_type : st_type.field_types()) {
-    fields.emplace_back(create_array(extents, field_type, false, optimize_scalar));
+    fields.emplace_back(create_array(shape, field_type, false, optimize_scalar));
   }
   return make_internal_shared<StructLogicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
@@ -540,13 +543,14 @@ InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(InternalSharedPtr
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(const Shape& extents,
-                                                               InternalSharedPtr<Type> type,
-                                                               bool nullable,
-                                                               bool optimize_scalar)
+InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(
+  const InternalSharedPtr<Shape>& shape,
+  InternalSharedPtr<Type> type,
+  bool nullable,
+  bool optimize_scalar)
 {
-  auto data      = create_store(extents, std::move(type), optimize_scalar);
-  auto null_mask = nullable ? create_store(extents, bool_(), optimize_scalar) : nullptr;
+  auto null_mask = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
+  auto data      = create_store(shape, std::move(type), optimize_scalar);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -557,27 +561,28 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
-InternalSharedPtr<LogicalStore> Runtime::create_store(const Shape& extents,
+InternalSharedPtr<LogicalStore> Runtime::create_store(const InternalSharedPtr<Shape>& shape,
                                                       InternalSharedPtr<Type> type,
                                                       bool optimize_scalar /*=false*/)
 {
-  check_dimensionality(extents.size());
-  auto storage = make_internal_shared<detail::Storage>(extents, std::move(type), optimize_scalar);
+  check_dimensionality(shape->ndim());
+  auto storage = make_internal_shared<detail::Storage>(shape, std::move(type), optimize_scalar);
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
-InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar, const Shape& extents)
+InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
+                                                      const InternalSharedPtr<Shape>& shape)
 {
-  if (extents.volume() != 1) {
+  if (shape->volume() != 1) {
     throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};
   }
   auto future  = create_future(scalar.data(), scalar.size());
-  auto storage = make_internal_shared<detail::Storage>(extents, scalar.type(), future);
+  auto storage = make_internal_shared<detail::Storage>(shape, scalar.type(), future);
   return make_internal_shared<detail::LogicalStore>(std::move(storage));
 }
 
 InternalSharedPtr<LogicalStore> Runtime::create_store(
-  const Shape& extents,
+  const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,
   InternalSharedPtr<ExternalAllocation> allocation,
   const mapping::detail::DimOrdering* ordering)
@@ -591,7 +596,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   }
 
   InternalSharedPtr<LogicalStore> store =
-    create_store(extents, std::move(type), false /*optimize_scalar*/);
+    create_store(shape, std::move(type), false /*optimize_scalar*/);
   const InternalSharedPtr<LogicalRegionField> rf = store->get_region_field();
 
   Legion::AttachLauncher launcher{LEGION_EXTERNAL_INSTANCE,
@@ -619,10 +624,10 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
 }
 
 Runtime::IndexAttachResult Runtime::create_store(
-  const Shape& extents,
-  const Shape& tile_shape,
+  const InternalSharedPtr<Shape>& shape,
+  const tuple<uint64_t>& tile_shape,
   InternalSharedPtr<Type> type,
-  const std::vector<std::pair<legate::ExternalAllocation, Shape>>& allocations,
+  const std::vector<std::pair<legate::ExternalAllocation, tuple<uint64_t>>>& allocations,
   const mapping::detail::DimOrdering* ordering)
 {
   if (type->variable_size()) {
@@ -631,7 +636,7 @@ Runtime::IndexAttachResult Runtime::create_store(
   }
 
   auto type_size = type->size();
-  auto store     = create_store(extents, std::move(type), false /*optimize_scalar*/);
+  auto store     = create_store(shape, std::move(type), false /*optimize_scalar*/);
   auto partition = partition_store_by_tiling(store, tile_shape);
 
   auto rf = store->get_region_field();
@@ -644,7 +649,7 @@ Runtime::IndexAttachResult Runtime::create_store(
   for (auto&& [allocation, color] : allocations) {
     auto& alloc        = allocs.emplace_back(allocation.impl());
     auto substore      = partition->get_child_store(color);
-    auto required_size = substore->extents().volume() * type_size;
+    auto required_size = substore->volume() * type_size;
 
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       assert(alloc->ptr());
@@ -727,33 +732,19 @@ void Runtime::record_pending_exception(const Legion::Future& pending_exception)
   raise_pending_task_exception();
 }
 
-InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(const Shape& extents,
-                                                                   uint32_t field_size)
+InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(
+  const InternalSharedPtr<Shape>& shape, uint32_t field_size)
 {
-  DomainPoint lo, hi;
-  hi.dim = lo.dim = static_cast<int32_t>(extents.size());
-  assert(lo.dim <= LEGION_MAX_DIM);
-  for (int32_t dim = 0; dim < lo.dim; ++dim) {
-    lo[dim] = 0;
-  }
-  for (int32_t dim = 0; dim < lo.dim; ++dim) {
-    hi[dim] = static_cast<Legion::coord_t>(extents[dim] - 1);
-  }
-
-  const Domain shape{lo, hi};
-  auto fld_mgr = find_or_create_field_manager(shape, field_size);
-  return fld_mgr->allocate_field();
+  return find_or_create_field_manager(shape, field_size)->allocate_field();
 }
 
-InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(Legion::LogicalRegion region,
-                                                                   Legion::FieldID field_id,
-                                                                   uint32_t field_size)
+InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(
+  const InternalSharedPtr<Shape>& shape,
+  Legion::LogicalRegion region,
+  Legion::FieldID field_id,
+  uint32_t field_size)
 {
-  // TODO: This is a blocking operation. We should instead use index spaces as keys to field
-  // managers
-  auto shape   = legion_runtime_->get_index_space_domain(legion_context_, region.get_index_space());
-  auto fld_mgr = find_or_create_field_manager(shape, field_size);
-  return fld_mgr->import_field(region, field_id);
+  return find_or_create_field_manager(shape, field_size)->import_field(region, field_id);
 }
 
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
@@ -821,22 +812,23 @@ void Runtime::progress_unordered_operations() const
   legion_runtime_->progress_unordered_operations(legion_context_);
 }
 
-RegionManager* Runtime::find_or_create_region_manager(const Domain& shape)
+RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& index_space)
 {
-  auto finder = region_managers_.find(shape);
+  auto finder = region_managers_.find(index_space);
   if (finder != region_managers_.end()) {
     return finder->second.get();
   }
 
-  auto rgn_mgr            = std::make_unique<RegionManager>(this, shape);
-  auto ptr                = rgn_mgr.get();
-  region_managers_[shape] = std::move(rgn_mgr);
+  auto rgn_mgr                  = std::make_unique<RegionManager>(this, index_space);
+  auto ptr                      = rgn_mgr.get();
+  region_managers_[index_space] = std::move(rgn_mgr);
   return ptr;
 }
 
-FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, uint32_t field_size)
+FieldManager* Runtime::find_or_create_field_manager(const InternalSharedPtr<Shape>& shape,
+                                                    uint32_t field_size)
 {
-  auto key    = FieldManagerKey(shape, field_size);
+  auto key    = FieldManagerKey(shape->index_space(), field_size);
   auto finder = field_managers_.find(key);
   if (finder != field_managers_.end()) {
     return finder->second.get();
@@ -850,18 +842,28 @@ FieldManager* Runtime::find_or_create_field_manager(const Domain& shape, uint32_
   return ptr;
 }
 
-Legion::IndexSpace Runtime::find_or_create_index_space(const Domain& shape)
+const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<uint64_t>& extents)
+{
+  if (extents.size() > LEGATE_MAX_DIM) {
+    throw std::out_of_range("Legate is configured with the maximum number of dimensions set to " +
+                            std::to_string(LEGATE_MAX_DIM) + ", but got a " +
+                            std::to_string(extents.size()) + "-D shape");
+  }
+
+  return find_or_create_index_space(to_domain(extents));
+}
+
+const Legion::IndexSpace& Runtime::find_or_create_index_space(const Domain& domain)
 {
   assert(nullptr != legion_context_);
-  auto finder = index_spaces_.find(shape);
-  if (finder != index_spaces_.end()) {
+  auto finder = cached_index_spaces_.find(domain);
+  if (finder != cached_index_spaces_.end()) {
     return finder->second;
   }
 
-  auto is              = legion_runtime_->create_index_space(legion_context_,
-                                                shape.is_valid() ? shape : Domain(Rect<1>(0, 0)));
-  index_spaces_[shape] = is;
-  return is;
+  auto [it, _] = cached_index_spaces_.emplace(
+    domain, legion_runtime_->create_index_space(legion_context_, domain));
+  return it->second;
 }
 
 Legion::IndexPartition Runtime::create_restricted_partition(
@@ -1185,7 +1187,7 @@ const mapping::detail::Machine& Runtime::get_machine() const
   return machine_manager_->get_machine();
 }
 
-Legion::ProjectionID Runtime::get_projection(int32_t src_ndim, const proj::SymbolicPoint& point)
+Legion::ProjectionID Runtime::get_projection(uint32_t src_ndim, const proj::SymbolicPoint& point)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Query projection {src_ndim: " << src_ndim << ", point: " << point
@@ -1354,10 +1356,10 @@ void Runtime::destroy()
   for (auto& [_, region_manager] : region_managers_) {
     region_manager->destroy(true /*unordered*/);
   }
-  for (auto& [_, index_space] : index_spaces_) {
+  for (auto& [_, index_space] : cached_index_spaces_) {
     legion_runtime_->destroy_index_space(legion_context_, index_space, true /*unordered*/);
   }
-  index_spaces_.clear();
+  cached_index_spaces_.clear();
 
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
   issue_execution_fence(true);

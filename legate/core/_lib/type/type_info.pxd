@@ -93,9 +93,9 @@ cdef extern from "core/type/type_info.h" namespace "legate" nogil:
     cdef _Type _complex64 "legate::complex64" ()
     cdef _Type _complex128 "legate::complex128" ()
 
-    cdef _Type _point_type "legate::point_type"(int32_t ndim)
+    cdef _Type _point_type "legate::point_type"(uint32_t ndim)
 
-    cdef _Type _rect_type "legate::rect_type"(int32_t ndim)
+    cdef _Type _rect_type "legate::rect_type"(uint32_t ndim)
 
     cdef _Type _fixed_array_type "legate::fixed_array_type" (
         _Type element_type, uint32_t N

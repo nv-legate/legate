@@ -80,7 +80,7 @@ void test_inline_map_and_task()
     auto acc     = p_store.write_accessor<int64_t, 1>();
     acc[2]       = 42;
   }
-  auto task = runtime->create_task(context, ADDER, legate::Shape{1});
+  auto task = runtime->create_task(context, ADDER, {1});
   task.add_input(l_store);
   task.add_output(l_store);
   runtime->submit(std::move(task));

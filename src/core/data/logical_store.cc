@@ -17,11 +17,11 @@
 
 namespace legate {
 
-int32_t LogicalStore::dim() const { return impl_->dim(); }
+uint32_t LogicalStore::dim() const { return impl_->dim(); }
 
 Type LogicalStore::type() const { return Type{impl_->type()}; }
 
-const Shape& LogicalStore::extents() const { return impl_->extents(); }
+Shape LogicalStore::shape() const { return Shape{impl_->shape()}; }
 
 size_t LogicalStore::volume() const { return impl_->volume(); }
 
@@ -49,7 +49,7 @@ LogicalStore LogicalStore::project(int32_t dim, int64_t index) const
 LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<size_t> tile_shape) const
 {
   return LogicalStorePartition{
-    detail::partition_store_by_tiling(impl_, Shape{std::move(tile_shape)})};
+    detail::partition_store_by_tiling(impl_, tuple<uint64_t>{std::move(tile_shape)})};
 }
 
 LogicalStore LogicalStore::slice(int32_t dim, Slice sl) const
@@ -80,9 +80,9 @@ LogicalStore::~LogicalStore() noexcept = default;
 
 LogicalStore LogicalStorePartition::store() const { return LogicalStore{impl_->store()}; }
 
-const Shape& LogicalStorePartition::color_shape() const { return impl_->color_shape(); }
+const tuple<uint64_t>& LogicalStorePartition::color_shape() const { return impl_->color_shape(); }
 
-LogicalStore LogicalStorePartition::get_child_store(const Shape& color) const
+LogicalStore LogicalStorePartition::get_child_store(const tuple<uint64_t>& color) const
 {
   return LogicalStore{impl_->get_child_store(color)};
 }

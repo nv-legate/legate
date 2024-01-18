@@ -14,6 +14,7 @@
 
 #include "core/operation/detail/task.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/tuple.h"
 
 namespace legate {
 
@@ -52,9 +53,11 @@ AutoTask Runtime::create_task(Library library, int64_t task_id)
   return AutoTask{impl_->create_task(library.impl(), task_id)};
 }
 
-ManualTask Runtime::create_task(Library library, int64_t task_id, const Shape& launch_shape)
+ManualTask Runtime::create_task(Library library,
+                                int64_t task_id,
+                                const tuple<uint64_t>& launch_shape)
 {
-  return create_task(library, task_id, to_domain(launch_shape));
+  return create_task(library, task_id, detail::to_domain(launch_shape));
 }
 
 ManualTask Runtime::create_task(Library library, int64_t task_id, const Domain& launch_domain)
@@ -162,12 +165,12 @@ LogicalArray Runtime::create_array(const Type& type, uint32_t dim, bool nullable
   return LogicalArray{impl_->create_array(type.impl(), dim, nullable)};
 }
 
-LogicalArray Runtime::create_array(const Shape& extents,
+LogicalArray Runtime::create_array(const Shape& shape,
                                    const Type& type,
                                    bool nullable,
                                    bool optimize_scalar)
 {
-  return LogicalArray{impl_->create_array(extents, type.impl(), nullable, optimize_scalar)};
+  return LogicalArray{impl_->create_array(shape.impl(), type.impl(), nullable, optimize_scalar)};
 }
 
 LogicalArray Runtime::create_array_like(const LogicalArray& to_mirror, std::optional<Type> type)
@@ -199,47 +202,47 @@ LogicalStore Runtime::create_store(const Type& type, uint32_t dim)
   return LogicalStore{impl_->create_store(type.impl(), dim)};
 }
 
-LogicalStore Runtime::create_store(const Shape& extents,
+LogicalStore Runtime::create_store(const Shape& shape,
                                    const Type& type,
                                    bool optimize_scalar /*=false*/)
 {
-  return LogicalStore{impl_->create_store(extents, type.impl(), optimize_scalar)};
+  return LogicalStore{impl_->create_store(shape.impl(), type.impl(), optimize_scalar)};
 }
 
-LogicalStore Runtime::create_store(const Scalar& scalar, const Shape& extents)
+LogicalStore Runtime::create_store(const Scalar& scalar, const Shape& shape)
 {
-  return LogicalStore{impl_->create_store(*scalar.impl(), extents)};
+  return LogicalStore{impl_->create_store(*scalar.impl(), shape.impl())};
 }
 
-LogicalStore Runtime::create_store(const Shape& extents,
+LogicalStore Runtime::create_store(const Shape& shape,
                                    const Type& type,
                                    void* buffer,
                                    bool read_only,
                                    const mapping::DimOrdering& ordering)
 {
-  const auto size = extents.volume() * type.size();
+  const auto size = shape.volume() * type.size();
   return create_store(
-    extents, type, ExternalAllocation::create_sysmem(buffer, size, read_only), ordering);
+    shape, type, ExternalAllocation::create_sysmem(buffer, size, read_only), ordering);
 }
 
-LogicalStore Runtime::create_store(const Shape& extents,
+LogicalStore Runtime::create_store(const Shape& shape,
                                    const Type& type,
                                    const ExternalAllocation& allocation,
                                    const mapping::DimOrdering& ordering)
 {
   return LogicalStore{
-    impl_->create_store(extents, type.impl(), allocation.impl(), ordering.impl())};
+    impl_->create_store(shape.impl(), type.impl(), allocation.impl(), ordering.impl())};
 }
 
 std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
-  const Shape& extents,
-  const Shape& tile_shape,
+  const Shape& shape,
+  const tuple<uint64_t>& tile_shape,
   const Type& type,
-  const std::vector<std::pair<ExternalAllocation, Shape>>& allocations,
+  const std::vector<std::pair<ExternalAllocation, tuple<uint64_t>>>& allocations,
   const mapping::DimOrdering& ordering)
 {
   auto [store, partition] =
-    impl_->create_store(extents, tile_shape, type.impl(), allocations, ordering.impl());
+    impl_->create_store(shape.impl(), tile_shape, type.impl(), allocations, ordering.impl());
   return {LogicalStore{std::move(store)}, LogicalStorePartition{std::move(partition)}};
 }
 

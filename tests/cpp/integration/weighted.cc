@@ -72,7 +72,7 @@ void initialize(legate::Runtime* runtime,
                 legate::Library library,
                 const std::vector<legate::LogicalStore>& outputs)
 {
-  auto task = runtime->create_task(library, INIT, legate::Shape{NUM_TASKS});
+  auto task = runtime->create_task(library, INIT, {NUM_TASKS});
 
   std::vector<const legate::Variable*> parts;
   for (auto& output : outputs) {

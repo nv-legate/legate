@@ -141,6 +141,7 @@ list(APPEND legate_core_SOURCES
   src/core/data/detail/scalar.cc
   src/core/data/detail/physical_array.cc
   src/core/data/detail/physical_store.cc
+  src/core/data/detail/shape.cc
   src/core/data/detail/transform.cc
   src/core/mapping/array.cc
   src/core/mapping/machine.cc
@@ -205,6 +206,7 @@ list(APPEND legate_core_SOURCES
   src/core/utilities/linearize.cc
   src/core/utilities/internal_shared_ptr.cc
   src/core/utilities/detail/buffer_builder.cc
+  src/core/utilities/detail/tuple.cc
   src/timing/timing.cc
 )
 
@@ -422,6 +424,7 @@ if (legate_core_BUILD_DOCS)
       src/core/data/physical_array.h
       src/core/data/physical_store.h
       src/core/data/scalar.h
+      src/core/data/shape.h
       src/core/data/buffer.h
       src/core/data/external_allocation.h
       src/core/utilities/span.h
@@ -521,6 +524,7 @@ install(
         src/core/data/scalar.h
         src/core/data/scalar.inl
         src/core/data/shape.h
+        src/core/data/shape.inl
         src/core/data/slice.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/data)
 

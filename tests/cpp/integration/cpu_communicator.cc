@@ -67,7 +67,8 @@ void test_cpu_communicator_auto(int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
-  auto store   = runtime->create_store(legate::full<size_t>(ndim, SIZE), legate::int32());
+  auto store =
+    runtime->create_store(legate::Shape{legate::full<size_t>(ndim, SIZE)}, legate::int32());
 
   auto task = runtime->create_task(context, CPU_COMM_TESTER);
   auto part = task.declare_partition();
@@ -85,16 +86,16 @@ void test_cpu_communicator_manual(int32_t ndim)
   }
 
   auto context = runtime->find_library(library_name);
-  auto store   = runtime->create_store(legate::full<size_t>(ndim, SIZE), legate::int32());
-  std::vector<size_t> launch_shape(ndim, 1);
-  std::vector<size_t> tile_shape(ndim, 1);
-  launch_shape[0] = num_procs;
-  tile_shape[0]   = (SIZE + num_procs - 1) / num_procs;
+  auto store =
+    runtime->create_store(legate::Shape{legate::full<size_t>(ndim, SIZE)}, legate::int32());
+  auto launch_shape = legate::full<uint64_t>(ndim, 1);
+  auto tile_shape   = legate::full<uint64_t>(ndim, 1);
+  launch_shape[0]   = num_procs;
+  tile_shape[0]     = (SIZE + num_procs - 1) / num_procs;
 
-  auto part = store.partition_by_tiling(std::move(tile_shape));
+  auto part = store.partition_by_tiling(tile_shape.data());
 
-  auto task =
-    runtime->create_task(context, CPU_COMM_TESTER, legate::Shape{std::move(launch_shape)});
+  auto task = runtime->create_task(context, CPU_COMM_TESTER, launch_shape);
   task.add_output(part);
   task.add_communicator("cpu");
   runtime->submit(std::move(task));

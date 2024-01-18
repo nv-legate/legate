@@ -52,7 +52,7 @@ class Store {
    *
    * @return Store's dimension
    */
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] uint32_t dim() const;
 
   /**
    * @brief Indicates whether the store is a reduction store

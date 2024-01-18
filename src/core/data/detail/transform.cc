@@ -91,7 +91,7 @@ Restrictions TransformStack::invert(const Restrictions& restrictions) const
   return parent_->invert(result);
 }
 
-Shape TransformStack::invert_color(Shape color) const
+tuple<uint64_t> TransformStack::invert_color(tuple<uint64_t> color) const
 {
   if (identity()) {
     return color;
@@ -104,7 +104,7 @@ Shape TransformStack::invert_color(Shape color) const
   return parent_->invert_color(std::move(result));
 }
 
-Shape TransformStack::invert_extents(const Shape& extents) const
+tuple<uint64_t> TransformStack::invert_extents(const tuple<uint64_t>& extents) const
 {
   if (identity()) {
     return extents;
@@ -120,7 +120,7 @@ Shape TransformStack::invert_extents(const Shape& extents) const
   return parent_->invert_extents(result);
 }
 
-Shape TransformStack::invert_point(const Shape& point) const
+tuple<uint64_t> TransformStack::invert_point(const tuple<uint64_t>& point) const
 {
   if (identity()) {
     return point;
@@ -273,8 +273,8 @@ std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
     }
     case Partition::Kind::TILING: {
       auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(Shape{tiling->tile_shape()},
-                           Shape{tiling->color_shape()},
+      return create_tiling(tuple<uint64_t>{tiling->tile_shape()},
+                           tuple<uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, offset_));
     }
     default: break;
@@ -292,8 +292,8 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
     case Partition::Kind::TILING: {
       auto tiling     = static_cast<const Tiling*>(partition);
       auto new_offset = tiling->offsets()[dim_] - offset_;
-      return create_tiling(Shape{tiling->tile_shape()},
-                           Shape{tiling->color_shape()},
+      return create_tiling(tuple<uint64_t>{tiling->tile_shape()},
+                           tuple<uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, new_offset));
     }
     default: break;
@@ -302,7 +302,7 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
   return {};
 }
 
-Shape Shift::invert_point(const Shape& point) const
+tuple<uint64_t> Shift::invert_point(const tuple<uint64_t>& point) const
 {
   auto result = point;
   result[dim_] -= offset_;
@@ -425,9 +425,15 @@ Restrictions Promote::invert(const Restrictions& restrictions) const
   return restrictions.remove(extra_dim_);
 }
 
-Shape Promote::invert_extents(const Shape& extents) const { return extents.remove(extra_dim_); }
+tuple<uint64_t> Promote::invert_extents(const tuple<uint64_t>& extents) const
+{
+  return extents.remove(extra_dim_);
+}
 
-Shape Promote::invert_point(const Shape& point) const { return point.remove(extra_dim_); }
+tuple<uint64_t> Promote::invert_point(const tuple<uint64_t>& point) const
+{
+  return point.remove(extra_dim_);
+}
 
 void Promote::pack(BufferBuilder& buffer) const
 {
@@ -556,11 +562,17 @@ Restrictions Project::invert(const Restrictions& restrictions) const
   return restrictions.insert(dim_, Restriction::ALLOW);
 }
 
-Shape Project::invert_color(Shape color) const { return color.insert(dim_, 0); }
+tuple<uint64_t> Project::invert_color(tuple<uint64_t> color) const { return color.insert(dim_, 0); }
 
-Shape Project::invert_extents(const Shape& extents) const { return extents.insert(dim_, 1); }
+tuple<uint64_t> Project::invert_extents(const tuple<uint64_t>& extents) const
+{
+  return extents.insert(dim_, 1);
+}
 
-Shape Project::invert_point(const Shape& point) const { return point.insert(dim_, coord_); }
+tuple<uint64_t> Project::invert_point(const tuple<uint64_t>& point) const
+{
+  return point.insert(dim_, coord_);
+}
 
 void Project::pack(BufferBuilder& buffer) const
 {
@@ -714,9 +726,15 @@ Restrictions Transpose::invert(const Restrictions& restrictions) const
   return Restrictions{std::move(result)};
 }
 
-Shape Transpose::invert_extents(const Shape& extents) const { return extents.map(inverse_); }
+tuple<uint64_t> Transpose::invert_extents(const tuple<uint64_t>& extents) const
+{
+  return extents.map(inverse_);
+}
 
-Shape Transpose::invert_point(const Shape& point) const { return point.map(inverse_); }
+tuple<uint64_t> Transpose::invert_point(const tuple<uint64_t>& point) const
+{
+  return point.map(inverse_);
+}
 
 namespace {  // anonymous
 
@@ -940,19 +958,19 @@ Restrictions Delinearize::invert(const Restrictions& restrictions) const
   return Restrictions{std::move(result)};
 }
 
-Shape Delinearize::invert_color(Shape /*color*/) const
+tuple<uint64_t> Delinearize::invert_color(tuple<uint64_t> /*color*/) const
 {
   throw NonInvertibleTransformation{};
   return {};
 }
 
-Shape Delinearize::invert_extents(const Shape& /*extents*/) const
+tuple<uint64_t> Delinearize::invert_extents(const tuple<uint64_t>& /*extents*/) const
 {
   throw NonInvertibleTransformation{};
   return {};
 }
 
-Shape Delinearize::invert_point(const Shape& /*point*/) const
+tuple<uint64_t> Delinearize::invert_point(const tuple<uint64_t>& /*point*/) const
 {
   throw NonInvertibleTransformation{};
   return {};

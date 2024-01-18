@@ -22,6 +22,9 @@ class Type;
 
 class Scalar {
  public:
+  // Constructs an uninitialized scalar that still owns the allocation
+  // Useful for initializing stores with undefined values
+  explicit Scalar(InternalSharedPtr<Type> type);
   Scalar(InternalSharedPtr<Type> type, const void* data, bool copy);
   explicit Scalar(const std::string& value);
   ~Scalar();

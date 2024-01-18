@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t
+from libc.stdint cimport int32_t, uint32_t
 from libcpp cimport bool
 from libcpp.optional cimport make_optional, optional as std_optional
 from libcpp.utility cimport move as std_move
@@ -24,13 +24,12 @@ from ..data.logical_array cimport (
 from ..data.logical_store cimport LogicalStore, LogicalStorePartition
 from ..data.scalar cimport Scalar
 from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
+from ..utilities.utils cimport is_iterable
 from .projection cimport SymbolicExpr, _SymbolicPoint
 
 from ..type.type_info import Type, array_type, null_type
 
 from ..utilities.tuple cimport _tuple
-
-from ...utils import is_iterable
 
 
 def sanitized_scalar_arg_type(
@@ -279,7 +278,8 @@ cdef class AutoTask:
             self._handle.add_constraint(_broadcast(part))
             return
 
-        cdef _tuple[int32_t] cpp_axes
+        cdef _tuple[uint32_t] cpp_axes
+        cpp_axes.reserve(len(sanitized))
         for axis in sanitized:
             cpp_axes.append_inplace(axis)
         self._handle.add_constraint(_broadcast(part, std_move(cpp_axes)))

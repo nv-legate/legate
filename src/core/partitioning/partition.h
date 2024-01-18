@@ -53,9 +53,9 @@ struct Partition {
   [[nodiscard]] virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
   [[nodiscard]] virtual bool is_convertible() const                                         = 0;
 
-  [[nodiscard]] virtual std::unique_ptr<Partition> scale(const Shape& factors) const      = 0;
-  [[nodiscard]] virtual std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                                         const Shape& high_offsets) const = 0;
+  [[nodiscard]] virtual std::unique_ptr<Partition> scale(const tuple<uint64_t>& factors) const = 0;
+  [[nodiscard]] virtual std::unique_ptr<Partition> bloat(
+    const tuple<uint64_t>& low_offsets, const tuple<uint64_t>& high_offsets) const = 0;
 
   [[nodiscard]] virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                            bool complete = false) const = 0;
@@ -67,7 +67,7 @@ struct Partition {
 
   [[nodiscard]] virtual std::string to_string() const = 0;
 
-  [[nodiscard]] virtual const Shape& color_shape() const = 0;
+  [[nodiscard]] virtual const tuple<uint64_t>& color_shape() const = 0;
 };
 
 class NoPartition : public Partition {
@@ -79,9 +79,9 @@ class NoPartition : public Partition {
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& /*restrictions*/) const override;
   [[nodiscard]] bool is_convertible() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                                 const Shape& high_offsets) const override;
+  [[nodiscard]] std::unique_ptr<Partition> scale(const tuple<uint64_t>& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(
+    const tuple<uint64_t>& low_offsets, const tuple<uint64_t>& high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion /*region*/,
                                                    bool /*complete*/) const override;
@@ -93,13 +93,16 @@ class NoPartition : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const Shape& color_shape() const override;
+  [[nodiscard]] const tuple<uint64_t>& color_shape() const override;
 };
 
 class Tiling : public Partition {
  public:
-  Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets);
-  Tiling(Shape&& tile_shape, Shape&& color_shape, tuple<int64_t>&& offsets, Shape&& strides);
+  Tiling(tuple<uint64_t>&& tile_shape, tuple<uint64_t>&& color_shape, tuple<int64_t>&& offsets);
+  Tiling(tuple<uint64_t>&& tile_shape,
+         tuple<uint64_t>&& color_shape,
+         tuple<int64_t>&& offsets,
+         tuple<uint64_t>&& strides);
 
   bool operator==(const Tiling& other) const;
 
@@ -110,9 +113,9 @@ class Tiling : public Partition {
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
   [[nodiscard]] bool is_convertible() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                                 const Shape& high_offsets) const override;
+  [[nodiscard]] std::unique_ptr<Partition> scale(const tuple<uint64_t>& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(
+    const tuple<uint64_t>& low_offsets, const tuple<uint64_t>& high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                    bool complete) const override;
@@ -124,21 +127,22 @@ class Tiling : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const Shape& tile_shape() const;
-  [[nodiscard]] const Shape& color_shape() const override;
+  [[nodiscard]] const tuple<uint64_t>& tile_shape() const;
+  [[nodiscard]] const tuple<uint64_t>& color_shape() const override;
   [[nodiscard]] const tuple<int64_t>& offsets() const;
 
-  [[nodiscard]] Shape get_child_extents(const Shape& extents, const Shape& color) const;
-  [[nodiscard]] Shape get_child_offsets(const Shape& color) const;
+  [[nodiscard]] tuple<uint64_t> get_child_extents(const tuple<uint64_t>& extents,
+                                                  const tuple<uint64_t>& color) const;
+  [[nodiscard]] tuple<uint64_t> get_child_offsets(const tuple<uint64_t>& color) const;
 
   [[nodiscard]] size_t hash() const;
 
  private:
   bool overlapped_{};
-  Shape tile_shape_{};
-  Shape color_shape_{};
+  tuple<uint64_t> tile_shape_{};
+  tuple<uint64_t> color_shape_{};
   tuple<int64_t> offsets_{};
-  Shape strides_{};
+  tuple<uint64_t> strides_{};
 };
 
 class Weighted : public Partition {
@@ -158,9 +162,9 @@ class Weighted : public Partition {
   [[nodiscard]] bool is_convertible() const override;
   [[nodiscard]] bool is_complete_for(const detail::Storage* /*storage*/) const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                                 const Shape& high_offsets) const override;
+  [[nodiscard]] std::unique_ptr<Partition> scale(const tuple<uint64_t>& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(
+    const tuple<uint64_t>& low_offsets, const tuple<uint64_t>& high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                    bool complete) const override;
@@ -172,12 +176,12 @@ class Weighted : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const Shape& color_shape() const override;
+  [[nodiscard]] const tuple<uint64_t>& color_shape() const override;
 
  private:
   std::unique_ptr<Legion::FutureMap> weights_{nullptr};
   Domain color_domain_{};
-  Shape color_shape_{};
+  tuple<uint64_t> color_shape_{};
 };
 
 class Image : public Partition {
@@ -196,9 +200,9 @@ class Image : public Partition {
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
   [[nodiscard]] bool is_convertible() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(const Shape& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(const Shape& low_offsets,
-                                                 const Shape& high_offsets) const override;
+  [[nodiscard]] std::unique_ptr<Partition> scale(const tuple<uint64_t>& factors) const override;
+  [[nodiscard]] std::unique_ptr<Partition> bloat(
+    const tuple<uint64_t>& low_offsets, const tuple<uint64_t>& high_offsets) const override;
 
   [[nodiscard]] Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                    bool complete) const override;
@@ -210,7 +214,7 @@ class Image : public Partition {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const Shape& color_shape() const override;
+  [[nodiscard]] const tuple<uint64_t>& color_shape() const override;
 
  private:
   InternalSharedPtr<detail::LogicalStore> func_;
@@ -220,14 +224,14 @@ class Image : public Partition {
 
 [[nodiscard]] std::unique_ptr<NoPartition> create_no_partition();
 
-[[nodiscard]] std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
-                                                    Shape&& color_shape,
+[[nodiscard]] std::unique_ptr<Tiling> create_tiling(tuple<uint64_t>&& tile_shape,
+                                                    tuple<uint64_t>&& color_shape,
                                                     tuple<int64_t>&& offsets = {});
 
-[[nodiscard]] std::unique_ptr<Tiling> create_tiling(Shape&& tile_shape,
-                                                    Shape&& color_shape,
+[[nodiscard]] std::unique_ptr<Tiling> create_tiling(tuple<uint64_t>&& tile_shape,
+                                                    tuple<uint64_t>&& color_shape,
                                                     tuple<int64_t>&& offsets,
-                                                    Shape&& strides);
+                                                    tuple<uint64_t>&& strides);
 
 [[nodiscard]] std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
                                                         const Domain& color_domain);

@@ -99,7 +99,7 @@ class RequirementAnalyzer {
 
 class OutputRequirementAnalyzer {
  public:
-  void insert(int32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
+  void insert(uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
   [[nodiscard]] uint32_t get_requirement_index(const Legion::FieldSpace& field_space,
                                                Legion::FieldID field_id) const;
   [[nodiscard]] bool empty() const;
@@ -109,7 +109,8 @@ class OutputRequirementAnalyzer {
 
  private:
   struct ReqInfo {
-    int32_t dim{-1};
+    static constexpr uint32_t UNSET = -1U;
+    uint32_t dim{UNSET};
     uint32_t req_idx{};
   };
   // This must be an ordered map to avoid control divergence
@@ -140,7 +141,7 @@ struct StoreAnalyzer {
   void insert(const InternalSharedPtr<LogicalRegionField>& region_field,
               Legion::PrivilegeMode privilege,
               const StoreProjection& store_proj);
-  void insert(int32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
+  void insert(uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
   void insert(const Legion::Future& future);
 
   void analyze();

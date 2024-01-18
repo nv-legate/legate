@@ -48,7 +48,7 @@ class LogicalArray {
    *
    * @return The number of dimensions
    */
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] uint32_t dim() const;
   /**
    * @brief Returns the element type of the array.
    *
@@ -58,15 +58,21 @@ class LogicalArray {
   /**
    * @brief Returns the shape of the array.
    *
-   * Flushes the scheduling window if the store is unbound and has no shape assigned.
-   *
    * @return The store's shape
    */
-  [[nodiscard]] const Shape& extents() const;
+  [[nodiscard]] Shape shape() const;
+  /**
+   * @brief Returns the extents of the array.
+   *
+   * The call can block if the array is unbound
+   *
+   * @return The store's extents
+   */
+  [[nodiscard]] const tuple<uint64_t>& extents() const;
   /**
    * @brief Returns the number of elements in the array.
    *
-   * Flushes the scheduling window if the store is unbound and has no shape assigned.
+   * The call can block if the array is unbound
    *
    * @return The number of elements in the store
    */
@@ -102,6 +108,8 @@ class LogicalArray {
   /**
    * @brief Adds an extra dimension to the array.
    *
+   * The call can block if the array is unbound
+   *
    * @param extra_dim Position for a new dimension
    * @param dim_size Extent of the new dimension
    *
@@ -113,6 +121,8 @@ class LogicalArray {
   [[nodiscard]] LogicalArray promote(int32_t extra_dim, size_t dim_size) const;
   /**
    * @brief Projects out a dimension of the array.
+   *
+   * The call can block if the array is unbound
    *
    * @param dim Dimension to project out
    * @param index Index on the chosen dimension
@@ -126,6 +136,8 @@ class LogicalArray {
   /**
    * @brief Slices a contiguous sub-section of the array.
    *
+   * The call can block if the array is unbound
+   *
    * @param dim Dimension to slice
    * @param sl Slice descriptor
    *
@@ -137,6 +149,8 @@ class LogicalArray {
   [[nodiscard]] LogicalArray slice(int32_t dim, Slice sl) const;
   /**
    * @brief Reorders dimensions of the array.
+   *
+   * The call can block if the array is unbound
    *
    * @param axes Mapping from dimensions of the resulting array to those of the input
    *
@@ -150,6 +164,8 @@ class LogicalArray {
   [[nodiscard]] LogicalArray transpose(const std::vector<int32_t>& axes) const;
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
+   *
+   * The call can block if the array is unbound
    *
    * @param dim Dimension to delinearize
    * @param sizes Extents for the resulting dimensions

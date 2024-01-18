@@ -43,11 +43,11 @@ TEST_F(IndexAttach, CPU)
   auto ext_alloc1 = legate::ExternalAllocation::create_sysmem(alloc1.data(), BYTES);
   auto ext_alloc2 = legate::ExternalAllocation::create_sysmem(alloc2.data(), BYTES);
 
-  auto [store, _] =
-    runtime->create_store(legate::Shape{TILE_SIZE * 2},
-                          legate::Shape{TILE_SIZE},
-                          legate::int64(),
-                          {{ext_alloc1, legate::Shape{0}}, {ext_alloc2, legate::Shape{1}}});
+  auto [store, _] = runtime->create_store(
+    legate::Shape{TILE_SIZE * 2},
+    legate::tuple<uint64_t>{TILE_SIZE},
+    legate::int64(),
+    {{ext_alloc1, legate::tuple<uint64_t>{0}}, {ext_alloc2, legate::tuple<uint64_t>{1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<int64_t, 1>();
@@ -88,10 +88,11 @@ TEST_F(IndexAttach, GPU)
     legate::ExternalAllocation::create_fbmem(0, d_alloc2, BYTES, true /*read_only*/, deleter);
   auto runtime = legate::Runtime::get_runtime();
 
-  auto [store, _] = runtime->create_store(legate::Shape{TILE_SIZE * 2},
-                                          legate::Shape{TILE_SIZE},
-                                          legate::int64(),
-                                          {{alloc1, legate::Shape{0}}, {alloc2, legate::Shape{1}}});
+  auto [store, _] = runtime->create_store(
+    legate::Shape{TILE_SIZE * 2},
+    legate::tuple<uint64_t>{TILE_SIZE},
+    legate::int64(),
+    {{alloc1, legate::tuple<uint64_t>{0}}, {alloc2, legate::tuple<uint64_t>{1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<int64_t, 1>();

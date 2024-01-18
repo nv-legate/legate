@@ -11,6 +11,7 @@
  */
 
 #include "core/data/detail/logical_store.h"
+#include "core/utilities/detail/tuple.h"
 
 #include "legate.h"
 
@@ -141,7 +142,7 @@ void fill_indirect(legate::Library library,
   // and thus be initialized in parallel, but we always serialize the
   // initialization to simplify the logic
   task.add_constraint(legate::broadcast(part, legate::from_range(ind.dim())));
-  auto domain = legate::to_domain(data.extents());
+  auto domain = legate::detail::to_domain(data.extents());
   switch (data.dim()) {
     case 1: {
       task.add_scalar_arg(legate::Scalar{legate::Rect<1>{domain}});

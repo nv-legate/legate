@@ -23,13 +23,13 @@ inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
   assert(data_ != nullptr);
 }
 
-inline int32_t BaseLogicalArray::dim() const { return data_->dim(); }
+inline uint32_t BaseLogicalArray::dim() const { return data_->dim(); }
 
 inline ArrayKind BaseLogicalArray::kind() const { return ArrayKind::BASE; }
 
 inline InternalSharedPtr<Type> BaseLogicalArray::type() const { return data_->type(); }
 
-inline const Shape& BaseLogicalArray::extents() const { return data_->extents(); }
+inline const InternalSharedPtr<Shape>& BaseLogicalArray::shape() const { return data_->shape(); }
 
 inline size_t BaseLogicalArray::volume() const { return data_->volume(); }
 
@@ -52,13 +52,16 @@ inline ListLogicalArray::ListLogicalArray(InternalSharedPtr<Type> type,
 {
 }
 
-inline int32_t ListLogicalArray::dim() const { return descriptor_->dim(); }
+inline uint32_t ListLogicalArray::dim() const { return descriptor_->dim(); }
 
 inline ArrayKind ListLogicalArray::kind() const { return ArrayKind::LIST; }
 
 inline InternalSharedPtr<Type> ListLogicalArray::type() const { return type_; }
 
-inline const Shape& ListLogicalArray::extents() const { return descriptor_->extents(); }
+inline const InternalSharedPtr<Shape>& ListLogicalArray::shape() const
+{
+  return descriptor_->shape();
+}
 
 inline size_t ListLogicalArray::volume() const { return descriptor_->volume(); }
 

@@ -10,16 +10,15 @@
 # its affiliates is strictly prohibited.
 
 from cython.operator cimport dereference
-from libc.stdint cimport int32_t, int64_t, uint32_t, uintptr_t
+from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t, uintptr_t
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
 from ..type.type_info cimport Type
+from ..utilities.utils cimport is_iterable
 from .logical_store cimport LogicalStore
+from .shape cimport Shape
 from .slice cimport from_python_slice
-
-from ...shape import Shape
-from ...utils import is_iterable
 
 
 cdef class LogicalArray:
@@ -46,7 +45,7 @@ cdef class LogicalArray:
 
     @property
     def shape(self) -> Shape:
-        return Shape(self.extents)
+        return Shape.from_handle(self._handle.shape())
 
     @property
     def ndim(self) -> int32_t:
@@ -57,7 +56,7 @@ cdef class LogicalArray:
         return Type.from_handle(self._handle.type())
 
     @property
-    def extents(self) -> list:
+    def extents(self) -> tuple[uint64_t, ...]:
         return self._handle.extents().data()
 
     @property

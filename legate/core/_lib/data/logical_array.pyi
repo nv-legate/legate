@@ -12,9 +12,9 @@
 from typing import TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:
-    from ...shape import Shape
     from ..type.type_info import Type
     from .logical_store import LogicalStore
+    from .shape import Shape
 
 class LogicalArray:
     @staticmethod
@@ -28,7 +28,7 @@ class LogicalArray:
     @property
     def type(self) -> Type: ...
     @property
-    def extents(self) -> list[int]: ...
+    def extents(self) -> tuple[int, ...]: ...
     @property
     def volume(self) -> int: ...
     @property

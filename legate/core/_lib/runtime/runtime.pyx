@@ -31,15 +31,19 @@ from ..data.logical_array cimport (
 )
 from ..data.logical_store cimport LogicalStore
 from ..data.scalar cimport Scalar
-from ..data.shape cimport _Shape, to_domain_point
+from ..data.shape cimport Shape
 from ..mapping.machine cimport Machine
 from ..operation.task cimport AutoTask, ManualTask
 from ..type.type_info cimport Type
+from ..utilities.utils cimport (
+    domain_from_iterables,
+    is_iterable,
+    uint64_tuple_from_iterable,
+)
 from .library cimport Library
 from .tracker cimport _ProvenanceTracker
 
-from ...shape import Shape
-from ...utils import AnyCallable, ShutdownCallback, is_iterable, is_shape_like
+from ...utils import AnyCallable, ShutdownCallback
 
 
 class ShutdownCallbackManager:
@@ -71,14 +75,6 @@ cdef void _reraise_legate_exception(
         raise RuntimeError(f"Invalid exception index {index}")
 
     raise exn(message)
-
-
-cdef _Shape to_cpp_shape(object iterable):
-    cdef _Shape shape
-    shape.reserve(len(iterable))
-    for value in iterable:
-        shape.append_inplace(<size_t>value)
-    return std_move(shape)
 
 
 cdef class Runtime:
@@ -169,17 +165,17 @@ cdef class Runtime:
         if lower_bounds is None:
             return ManualTask.from_handle(
                 self._handle.create_task(
-                    library._handle, task_id, to_cpp_shape(launch_shape)
+                    library._handle,
+                    task_id,
+                    uint64_tuple_from_iterable(launch_shape),
                 )
             )
         else:
             return ManualTask.from_handle(
                 self._handle.create_task(
-                    library._handle, task_id, _Domain(
-                        to_domain_point(to_cpp_shape(lower_bounds)),
-                        to_domain_point(
-                            to_cpp_shape(tuple(v - 1 for v in launch_shape))
-                        ),
+                    library._handle, task_id, domain_from_iterables(
+                        lower_bounds,
+                        tuple(v - 1 for v in launch_shape),
                     )
                 )
             )
@@ -359,7 +355,7 @@ cdef class Runtime:
     def create_array(
         self,
         Type dtype,
-        shape: Optional[Union[Shape, Iterable[int]]] = None,
+        shape: Shape | Iterable[int] | None = None,
         bool nullable = False,
         bool optimize_scalar = False,
         ndim: Optional[int] = None,
@@ -375,21 +371,12 @@ cdef class Runtime:
                 self._handle.create_array(dtype._handle, ndim, nullable)
             )
 
-        if not is_shape_like(shape):
-            raise ValueError(
-                "shape must be a Shape object or an iterable"
-            )
-
-        cdef _Shape cpp_shape = _Shape()
-        for extent in shape:
-            try:
-                cpp_shape.append_inplace(<size_t> extent)
-            except OverflowError:
-                raise ValueError("Extent must be a positive number")
-
         return LogicalArray.from_handle(
             self._handle.create_array(
-                std_move(cpp_shape), dtype._handle, nullable, optimize_scalar
+                Shape.from_shape_like(shape),
+                dtype._handle,
+                nullable,
+                optimize_scalar,
             )
         )
 
@@ -405,7 +392,7 @@ cdef class Runtime:
     def create_store(
         self,
         Type dtype,
-        shape: Optional[Union[Shape, Iterable[int]]] = None,
+        shape: Shape | Iterable[int] | None = None,
         bool optimize_scalar = False,
         ndim: Optional[int] = None,
     ) -> LogicalStore:
@@ -418,48 +405,26 @@ cdef class Runtime:
                 self._handle.create_store(dtype._handle, <uint32_t> ndim)
             )
 
-        if not is_shape_like(shape):
-            raise ValueError(
-                "shape must be a Shape object or an iterable"
-            )
-
-        cdef _Shape cpp_shape
-        for extent in shape:
-            try:
-                cpp_shape.append_inplace(<size_t> extent)
-            except OverflowError:
-                raise ValueError("Extent must be a positive number")
-
         return LogicalStore.from_handle(
             self._handle.create_store(
-                std_move(cpp_shape), dtype._handle, optimize_scalar
+                Shape.from_shape_like(shape), dtype._handle, optimize_scalar
             )
         )
 
     def create_store_from_scalar(
         self,
         scalar: Scalar,
-        shape: Optional[Union[Shape, Iterable[int]]] = None,
+        shape: Shape | Iterable[int] | None = None,
     ) -> LogicalStore:
         if shape is None:
             return LogicalStore.from_handle(
                 self._handle.create_store(scalar._handle)
             )
 
-        if not is_shape_like(shape):
-            raise ValueError(
-                "shape must be a Shape object or an iterable"
-            )
-
-        cdef _Shape cpp_shape
-        for extent in shape:
-            try:
-                cpp_shape.append_inplace(<size_t> extent)
-            except OverflowError:
-                raise ValueError("Extent must be a positive number")
-
         return LogicalStore.from_handle(
-            self._handle.create_store(scalar._handle, std_move(cpp_shape))
+            self._handle.create_store(
+                scalar._handle, Shape.from_shape_like(shape)
+            )
         )
 
     def create_store_from_buffer(
@@ -507,14 +472,7 @@ cdef class Runtime:
         same buffer or two non-overlapping buffers. The code will exhibit
         undefined behavior in the presence of partial aliasing.
         """
-        if not is_shape_like(shape):
-            raise ValueError(
-                "shape must be a Shape object or an iterable"
-            )
-        cdef _Shape cpp_shape = _Shape()
-        for extent in shape:
-            cpp_shape.append_inplace(<size_t> extent)
-
+        cdef _Shape cpp_shape = Shape.from_shape_like(shape)
         cdef _ExternalAllocation alloc = create_from_buffer(
             data, cpp_shape.volume(), read_only
         )

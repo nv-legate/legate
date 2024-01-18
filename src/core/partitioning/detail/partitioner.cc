@@ -30,11 +30,11 @@ namespace legate::detail {
 
 class LaunchDomainResolver {
  private:
-  static constexpr int32_t UNSET = -1;
+  static constexpr uint32_t UNSET = -1U;
 
  public:
   void record_launch_domain(const Domain& launch_domain);
-  void record_unbound_store(int32_t unbound_dim);
+  void record_unbound_store(uint32_t unbound_dim);
   void set_must_be_sequential(bool must_be_sequential) { must_be_sequential_ = must_be_sequential; }
 
   [[nodiscard]] Domain resolve_launch_domain() const;
@@ -42,7 +42,7 @@ class LaunchDomainResolver {
  private:
   bool must_be_sequential_{};
   bool must_be_1d_{};
-  int32_t unbound_dim_{UNSET};
+  uint32_t unbound_dim_{UNSET};
   std::set<Domain> launch_domains_{};
   std::set<int64_t> launch_volumes_{};
 };
@@ -60,7 +60,7 @@ void LaunchDomainResolver::record_launch_domain(const Domain& launch_domain)
   }
 }
 
-void LaunchDomainResolver::record_unbound_store(int32_t unbound_dim)
+void LaunchDomainResolver::record_unbound_store(uint32_t unbound_dim)
 {
   if (unbound_dim_ != UNSET && unbound_dim_ != unbound_dim) {
     must_be_sequential_ = true;
@@ -89,7 +89,7 @@ Domain LaunchDomainResolver::resolve_launch_domain() const
     assert(launch_domains_.size() == 1);
   }
   auto& launch_domain = *launch_domains_.begin();
-  if (unbound_dim_ != UNSET && launch_domain.dim != unbound_dim_) {
+  if (unbound_dim_ != UNSET && launch_domain.dim != static_cast<int32_t>(unbound_dim_)) {
     return {};
   }
   return launch_domain;

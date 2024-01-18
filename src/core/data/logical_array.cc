@@ -16,11 +16,11 @@
 
 namespace legate {
 
-int32_t LogicalArray::dim() const { return impl_->dim(); }
+uint32_t LogicalArray::dim() const { return impl_->dim(); }
 
 Type LogicalArray::type() const { return Type{impl_->type()}; }
 
-const Shape& LogicalArray::extents() const { return impl_->extents(); }
+Shape LogicalArray::shape() const { return Shape{impl_->shape()}; }
 
 size_t LogicalArray::volume() const { return impl_->volume(); }
 

@@ -167,14 +167,14 @@ void RequirementAnalyzer::_populate_launcher(Launcher& task) const
 // OutputRequirementAnalyzer
 ////////////////////////////
 
-void OutputRequirementAnalyzer::insert(int32_t dim,
+void OutputRequirementAnalyzer::insert(uint32_t dim,
                                        const Legion::FieldSpace& field_space,
                                        Legion::FieldID field_id)
 {
   auto& req_info = req_infos_[field_space];
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     // TODO: This should be checked when alignment constraints are set on unbound stores
-    assert(-1 == req_info.dim || req_info.dim == dim);
+    assert(ReqInfo::UNSET == req_info.dim || req_info.dim == dim);
   }
   req_info.dim = dim;
   field_groups_[field_space].insert(field_id);

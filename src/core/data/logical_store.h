@@ -85,7 +85,7 @@ class LogicalStore {
    *
    * @return The number of dimensions
    */
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] uint32_t dim() const;
   /**
    * @brief Indicates whether the store's storage is optimized for scalars
    *
@@ -107,17 +107,23 @@ class LogicalStore {
    */
   [[nodiscard]] Type type() const;
   /**
-   * @brief Returns the shape of the store.
-   *
-   * Flushes the scheduling window if the store is unbound and has no shape assigned.
+   * @brief Returns the shape of the array.
    *
    * @return The store's shape
    */
-  [[nodiscard]] const Shape& extents() const;
+  [[nodiscard]] Shape shape() const;
+  /**
+   * @brief Returns the extents of the store.
+   *
+   * The call can block if the store is unbound
+   *
+   * @return The store's extents
+   */
+  [[nodiscard]] const tuple<uint64_t>& extents() const;
   /**
    * @brief Returns the number of elements in the store.
    *
-   * Flushes the scheduling window if the store is unbound and has no shape assigned.
+   * The call can block if the store is unbound
    *
    * @return The number of elements in the store
    */
@@ -161,6 +167,8 @@ class LogicalStore {
    *  [3, 3]]
    * @endcode
    *
+   * The call can block if the store is unbound
+   *
    * @param extra_dim Position for a new dimension
    * @param dim_size Extent of the new dimension
    *
@@ -178,6 +186,8 @@ class LogicalStore {
    *
    * For example, if a 2D store `A` contains `[[1, 2], [3, 4]]`, `A.project(0, 1)` yields a store
    * equivalent to `[3, 4]`, whereas `A.project(1, 0)` yields `[1, 3]`.
+   *
+   * The call can block if the store is unbound
    *
    * @param dim Dimension to project out
    * @param index Index on the chosen dimension
@@ -227,6 +237,8 @@ class LogicalStore {
    *  [7, 8]]
    * @endcode
    *
+   * The call can block if the store is unbound
+   *
    * @param dim Dimension to slice
    * @param sl Slice descriptor
    *
@@ -267,6 +279,8 @@ class LogicalStore {
    *   [4, 8]]]
    * @endcode
    *
+   * The call can block if the store is unbound
+   *
    * @param axes Mapping from dimensions of the resulting store to those of the input
    *
    * @return A new store with the dimensions transposed
@@ -304,6 +318,8 @@ class LogicalStore {
    * nature, delinearized stores can raise `legate::NonInvertibleTransformation` in places where
    * they cannot be used.
    *
+   * The call can block if the store is unbound
+   *
    * @param dim Dimension to delinearize
    * @param sizes Extents for the resulting dimensions
    *
@@ -316,6 +332,8 @@ class LogicalStore {
 
   /**
    * @brief Creates a tiled partition of the store
+   *
+   * The call can block if the store is unbound
    *
    * @param tile_shape Shape of tiles
    *
@@ -364,8 +382,8 @@ class LogicalStorePartition {
   explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition>&& impl);
 
   [[nodiscard]] LogicalStore store() const;
-  [[nodiscard]] const Shape& color_shape() const;
-  [[nodiscard]] LogicalStore get_child_store(const Shape& color) const;
+  [[nodiscard]] const tuple<uint64_t>& color_shape() const;
+  [[nodiscard]] LogicalStore get_child_store(const tuple<uint64_t>& color) const;
 
   [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& impl() const;
 

@@ -136,7 +136,7 @@ void test_alignment_and_broadcast()
     task.add_scalar_arg(legate::Scalar(extents[0]));
 
     task.add_constraint(legate::align(part1, part2));
-    task.add_constraint(legate::broadcast(part1, legate::tuple<std::int32_t>{0}));
+    task.add_constraint(legate::broadcast(part1, legate::tuple<std::uint32_t>{0}));
 
     runtime->submit(std::move(task));
   };

@@ -113,9 +113,9 @@ void check_gather_output(legate::Library library,
   task.add_input(tgt, tgt_part);
   task.add_input(ind, ind_part);
 
-  task.add_constraint(legate::broadcast(src_part, legate::from_range<int32_t>(src.dim())));
-  task.add_constraint(legate::broadcast(tgt_part, legate::from_range<int32_t>(tgt.dim())));
-  task.add_constraint(legate::broadcast(ind_part, legate::from_range<int32_t>(ind.dim())));
+  task.add_constraint(legate::broadcast(src_part, legate::from_range(src.dim())));
+  task.add_constraint(legate::broadcast(tgt_part, legate::from_range(tgt.dim())));
+  task.add_constraint(legate::broadcast(ind_part, legate::from_range(ind.dim())));
 
   runtime->submit(std::move(task));
 }

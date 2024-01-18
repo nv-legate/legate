@@ -50,7 +50,7 @@ void test_reducer_manual(legate::Library library,
                          legate::LogicalStore store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, task::simple::REDUCER, legate::Shape({2}));
+  auto task    = runtime->create_task(library, task::simple::REDUCER, {2});
   task.add_reduction(scalar1, legate::ReductionOpKind::ADD);
   task.add_reduction(scalar2, legate::ReductionOpKind::MUL);
   task.add_input(store.partition_by_tiling({3}));

@@ -12,48 +12,25 @@
 
 #include "core/data/shape.h"
 
+#include "core/data/detail/shape.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
 namespace legate {
 
-Domain to_domain(const tuple<size_t>& shape)
+Shape::Shape(tuple<uint64_t> extents)
+  : impl_{make_internal_shared<detail::Shape>(std::move(extents))}
 {
-  const auto ndim = static_cast<uint32_t>(shape.size());
-  Domain domain;
-
-  domain.dim = static_cast<int>(ndim);
-  for (uint32_t idx = 0; idx < ndim; ++idx) {
-    domain.rect_data[idx]        = 0;
-    domain.rect_data[idx + ndim] = static_cast<int64_t>(shape[idx]) - 1;
-  }
-  return domain;
 }
 
-DomainPoint to_domain_point(const Shape& shape)
-{
-  const auto ndim = static_cast<uint32_t>(shape.size());
-  DomainPoint point;
+const tuple<uint64_t>& Shape::extents() const { return impl_->extents(); }
 
-  point.dim = static_cast<int>(ndim);
-  for (uint32_t idx = 0; idx < ndim; ++idx) {
-    point[idx] = static_cast<coord_t>(shape[idx]);
-  }
-  return point;
-}
+uint32_t Shape::ndim() const { return impl_->ndim(); }
 
-Shape from_domain(const Domain& domain)
-{
-  std::vector<size_t> result;
-  auto&& lo = domain.lo();
-  auto&& hi = domain.hi();
+std::string Shape::to_string() const { return impl_->to_string(); }
 
-  result.reserve(domain.dim);
-  for (int32_t idx = 0; idx < domain.dim; ++idx) {
-    result.emplace_back(hi[idx] - lo[idx] + 1);
-  }
-  return Shape{std::move(result)};
-}
+bool Shape::operator==(const Shape& other) const { return *impl_ == *other.impl_; }
 
 }  // namespace legate

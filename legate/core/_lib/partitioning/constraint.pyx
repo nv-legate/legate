@@ -9,12 +9,11 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t
+from libc.stdint cimport uint32_t
 from libcpp.utility cimport move as std_move
 
-from ..data.shape cimport _Shape
 from ..utilities.tuple cimport _tuple
-from ...utils import is_iterable
+from ..utilities.utils cimport is_iterable, uint64_tuple_from_iterable
 
 
 cdef class Variable:
@@ -69,9 +68,11 @@ def broadcast(Variable variable, axes = None) -> Constraint:
     if len(axes) == 0:
         return Constraint.from_handle(_broadcast(variable._handle))
 
-    cdef _tuple[int32_t] cpp_axes
+    cdef _tuple[uint32_t] cpp_axes
+
+    cpp_axes.reserve(len(axes))
     for axis in axes:
-        cpp_axes.append_inplace(<int32_t> axis)
+        cpp_axes.append_inplace(<uint32_t> axis)
     return Constraint.from_handle(
         _broadcast(variable._handle, std_move(cpp_axes))
     )
@@ -88,7 +89,7 @@ def scale(
 ) -> Constraint:
     return Constraint.from_handle(
         _scale(
-            _Shape(factors),
+            std_move(uint64_tuple_from_iterable(factors)),
             var_smaller._handle,
             var_bigger._handle,
         )
@@ -105,7 +106,7 @@ def bloat(
         _bloat(
             var_source._handle,
             var_bloat._handle,
-            _Shape(low_offsets),
-            _Shape(high_offsets),
+            std_move(uint64_tuple_from_iterable(low_offsets)),
+            std_move(uint64_tuple_from_iterable(high_offsets)),
         )
     )

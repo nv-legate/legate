@@ -266,9 +266,15 @@ void TaskLauncher::post_process_unbound_stores(
       assert(arg->requirement_index() != -1U);
     }
     auto* store = arg->store();
+    auto& shape = store->shape();
     auto& req   = output_requirements[arg->requirement_index()];
-    auto region_field =
-      runtime->import_region_field(req.parent, arg->field_id(), store->type()->size());
+
+    // This must be done before importing the region field below, as the field manager expects the
+    // index space to be available
+    shape->set_index_space(req.parent.get_index_space());
+
+    auto region_field = runtime->import_region_field(
+      store->shape(), req.parent, arg->field_id(), store->type()->size());
 
     store->set_region_field(std::move(region_field));
     store->set_key_partition(machine_, no_part.get());
@@ -291,8 +297,13 @@ void TaskLauncher::post_process_unbound_stores(
     [&runtime, &part_mgr, &launch_domain](
       auto*& arg, const auto& req, const auto& weights, const auto& machine) {
       auto* store = arg->store();
+      auto& shape = store->shape();
+      // This must be done before importing the region field below, as the field manager expects the
+      // index space to be available
+      shape->set_index_space(req.parent.get_index_space());
+
       auto region_field =
-        runtime->import_region_field(req.parent, arg->field_id(), store->type()->size());
+        runtime->import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
       store->set_region_field(std::move(region_field));
 
       // TODO: Need to handle key partitions for multi-dimensional unbound stores

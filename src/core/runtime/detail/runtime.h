@@ -13,9 +13,9 @@
 #pragma once
 
 #include "core/data/detail/scalar.h"
+#include "core/data/detail/shape.h"
 #include "core/data/external_allocation.h"
 #include "core/data/logical_store.h"
-#include "core/data/shape.h"
 #include "core/mapping/machine.h"
 #include "core/operation/detail/operation.h"
 #include "core/runtime/detail/communicator_manager.h"
@@ -119,7 +119,7 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(InternalSharedPtr<Type> type,
                                                              uint32_t dim,
                                                              bool nullable);
-  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const Shape& extents,
+  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const InternalSharedPtr<Shape>& shape,
                                                              InternalSharedPtr<Type> type,
                                                              bool nullable,
                                                              bool optimize_scalar);
@@ -134,36 +134,40 @@ class Runtime {
   [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
     InternalSharedPtr<Type> type, uint32_t dim, bool nullable);
   [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
-    const Shape& extents, InternalSharedPtr<Type> type, bool nullable, bool optimize_scalar);
+    const InternalSharedPtr<Shape>& shape,
+    InternalSharedPtr<Type> type,
+    bool nullable,
+    bool optimize_scalar);
 
   [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(InternalSharedPtr<Type> type,
                                                                       uint32_t dim,
                                                                       bool nullable);
-  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(const Shape& extents,
-                                                                      InternalSharedPtr<Type> type,
-                                                                      bool nullable,
-                                                                      bool optimize_scalar);
+  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(
+    const InternalSharedPtr<Shape>& shape,
+    InternalSharedPtr<Type> type,
+    bool nullable,
+    bool optimize_scalar);
 
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Type> type,
                                                              uint32_t);
-  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const Shape& extents,
+  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const InternalSharedPtr<Shape>& shape,
                                                              InternalSharedPtr<Type> type,
                                                              bool optimize_scalar = false);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const Scalar& scalar,
-                                                             const Shape& extents = {1});
+                                                             const InternalSharedPtr<Shape>& shape);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(
-    const Shape& extents,
+    const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
     InternalSharedPtr<ExternalAllocation> allocation,
     const mapping::detail::DimOrdering* ordering);
   using IndexAttachResult =
     std::pair<InternalSharedPtr<LogicalStore>, InternalSharedPtr<LogicalStorePartition>>;
   [[nodiscard]] IndexAttachResult create_store(
-    const Shape& extents,
-    const Shape& tile_shape,
+    const InternalSharedPtr<Shape>& shape,
+    const tuple<uint64_t>& tile_shape,
     InternalSharedPtr<Type> type,
-    const std::vector<std::pair<legate::ExternalAllocation, Shape>>& allocations,
+    const std::vector<std::pair<legate::ExternalAllocation, tuple<uint64_t>>>& allocations,
     const mapping::detail::DimOrdering* ordering);
 
  private:
@@ -177,10 +181,13 @@ class Runtime {
   [[nodiscard]] uint64_t get_unique_store_id();
   [[nodiscard]] uint64_t get_unique_storage_id();
 
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_region_field(const Shape& extents,
-                                                                          uint32_t field_size);
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_region_field(
+    const InternalSharedPtr<Shape>& shape, uint32_t field_size);
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_region_field(
-    Legion::LogicalRegion region, Legion::FieldID field_id, uint32_t field_size);
+    const InternalSharedPtr<Shape>& shape,
+    Legion::LogicalRegion region,
+    Legion::FieldID field_id,
+    uint32_t field_size);
   [[nodiscard]] Legion::PhysicalRegion map_region_field(Legion::LogicalRegion region,
                                                         Legion::FieldID field_id);
   void remap_physical_region(Legion::PhysicalRegion pr);
@@ -195,15 +202,17 @@ class Runtime {
   [[nodiscard]] bool consensus_match_required() const;
   void progress_unordered_operations() const;
 
-  [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::Domain& shape);
-  [[nodiscard]] FieldManager* find_or_create_field_manager(const Legion::Domain& shape,
+  [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::IndexSpace& index_space);
+  [[nodiscard]] FieldManager* find_or_create_field_manager(const InternalSharedPtr<Shape>& shape,
                                                            uint32_t field_size);
   [[nodiscard]] CommunicatorManager* communicator_manager() const;
   [[nodiscard]] MachineManager* machine_manager() const;
   [[nodiscard]] PartitionManager* partition_manager() const;
   [[nodiscard]] ProvenanceManager* provenance_manager() const;
 
-  [[nodiscard]] Legion::IndexSpace find_or_create_index_space(const Legion::Domain& shape);
+  [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(
+    const tuple<uint64_t>& extents);
+  [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(const Domain& domain);
   [[nodiscard]] Legion::IndexPartition create_restricted_partition(
     const Legion::IndexSpace& index_space,
     const Legion::IndexSpace& color_space,
@@ -293,7 +302,7 @@ class Runtime {
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
 
-  [[nodiscard]] Legion::ProjectionID get_projection(int32_t src_ndim,
+  [[nodiscard]] Legion::ProjectionID get_projection(uint32_t src_ndim,
                                                     const proj::SymbolicPoint& point);
   [[nodiscard]] Legion::ProjectionID get_delinearizing_projection();
   [[nodiscard]] Legion::ShardingID get_sharding(const mapping::detail::Machine& machine,
@@ -319,19 +328,19 @@ class Runtime {
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
 
-  using FieldManagerKey = std::pair<Legion::Domain, uint32_t>;
+  using FieldManagerKey = std::pair<Legion::IndexSpace, uint32_t>;
   std::unordered_map<FieldManagerKey, std::unique_ptr<FieldManager>, hasher<FieldManagerKey>>
     field_managers_{};
-  using RegionManagerKey = Legion::Domain;
+  using RegionManagerKey = Legion::IndexSpace;
   std::unordered_map<RegionManagerKey, std::unique_ptr<RegionManager>> region_managers_{};
   CommunicatorManager* communicator_manager_{};
   MachineManager* machine_manager_{};
   PartitionManager* partition_manager_{};
   ProvenanceManager* provenance_manager_{};
 
-  std::unordered_map<Legion::Domain, Legion::IndexSpace> index_spaces_{};
+  std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
 
-  using ProjectionDesc = std::pair<int32_t, proj::SymbolicPoint>;
+  using ProjectionDesc = std::pair<uint32_t, proj::SymbolicPoint>;
   int64_t next_projection_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
   std::unordered_map<ProjectionDesc, Legion::ProjectionID, hasher<ProjectionDesc>>
     registered_projections_{};

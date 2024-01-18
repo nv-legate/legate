@@ -15,6 +15,7 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/tuple.h"
 
 namespace legate::detail {
 
@@ -142,7 +143,7 @@ void LogicalRegionField::allow_out_of_order_destruction()
 }
 
 InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* tiling,
-                                                                    const Shape& color,
+                                                                    const tuple<uint64_t>& color,
                                                                     bool complete)
 {
   auto legion_partition = get_legion_partition(tiling, complete);

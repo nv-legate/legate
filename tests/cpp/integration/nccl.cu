@@ -93,16 +93,16 @@ void test_nccl_manual(int32_t ndim)
     return;
   }
 
-  auto context = runtime->find_library(library_name);
-  auto store   = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
-  std::vector<size_t> launch_shape(ndim, 1);
-  std::vector<size_t> tile_shape(ndim, 1);
-  launch_shape[0] = num_procs;
-  tile_shape[0]   = (SIZE + num_procs - 1) / num_procs;
+  auto context      = runtime->find_library(library_name);
+  auto store        = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
+  auto launch_shape = legate::full<uint64_t>(ndim, 1);
+  auto tile_shape   = legate::full<uint64_t>(ndim, 1);
+  launch_shape[0]   = num_procs;
+  tile_shape[0]     = (SIZE + num_procs - 1) / num_procs;
 
-  auto part = store.partition_by_tiling(std::move(tile_shape));
+  auto part = store.partition_by_tiling(tile_shape.data());
 
-  auto task = runtime->create_task(context, NCCL_TESTER, legate::Shape{std::move(launch_shape)});
+  auto task = runtime->create_task(context, NCCL_TESTER, launch_shape);
   task.add_output(part);
   task.add_communicator("cpu");  // This requested will be ignored
   task.add_communicator("nccl");

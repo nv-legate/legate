@@ -69,9 +69,12 @@ inline Restrictions Shift::convert(const Restrictions& restrictions, bool /*forb
 
 inline Restrictions Shift::invert(const Restrictions& restrictions) const { return restrictions; }
 
-inline Shape Shift::invert_color(Shape color) const { return color; }
+inline tuple<uint64_t> Shift::invert_color(tuple<uint64_t> color) const { return color; }
 
-inline Shape Shift::invert_extents(const Shape& extents) const { return extents; }
+inline tuple<uint64_t> Shift::invert_extents(const tuple<uint64_t>& extents) const
+{
+  return extents;
+}
 
 inline int32_t Shift::target_ndim(int32_t source_ndim) const { return source_ndim; }
 
@@ -86,7 +89,10 @@ inline Promote::Promote(int32_t extra_dim, int64_t dim_size)
 {
 }
 
-inline Shape Promote::invert_color(Shape color) const { return invert_point(color); }
+inline tuple<uint64_t> Promote::invert_color(tuple<uint64_t> color) const
+{
+  return invert_point(color);
+}
 
 inline int32_t Promote::target_ndim(int32_t source_ndim) const { return source_ndim - 1; }
 
@@ -102,7 +108,10 @@ inline bool Project::is_convertible() const { return true; }
 
 // ==========================================================================================
 
-inline Shape Transpose::invert_color(Shape color) const { return invert_point(color); }
+inline tuple<uint64_t> Transpose::invert_color(tuple<uint64_t> color) const
+{
+  return invert_point(color);
+}
 
 inline int32_t Transpose::target_ndim(int32_t source_ndim) const { return source_ndim; }
 

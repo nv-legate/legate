@@ -65,27 +65,27 @@ LegateVariantCode to_variant_code(TaskTarget target)
   return LEGATE_CPU_VARIANT;
 }
 
-void DimOrdering::populate_dimension_ordering(int32_t dim,
+void DimOrdering::populate_dimension_ordering(uint32_t ndim,
                                               std::vector<Legion::DimensionKind>& ordering) const
 {
   // TODO: We need to implement the relative dimension ordering
   switch (kind) {
     case Kind::C: {
-      for (int32_t idx = dim - 1; idx >= 0; --idx) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
+      for (int32_t dim = static_cast<int32_t>(ndim) - 1; dim >= 0; --dim) {
+        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
       }
       break;
     }
     case Kind::FORTRAN: {
-      for (int32_t idx = 0; idx < dim; ++idx) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
+      for (uint32_t dim = 0; dim < ndim; ++dim) {
+        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
       }
       break;
     }
     case Kind::CUSTOM: {
       ordering.reserve(ordering.size() + dims.size());
-      for (auto idx : dims) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + idx));
+      for (auto dim : dims) {
+        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
       }
       break;
     }

@@ -184,18 +184,18 @@ Type complex128() { return Type{detail::complex128()}; }
 
 Type binary_type(uint32_t size) { return Type{detail::binary_type(size)}; }
 
-Type point_type(int32_t ndim) { return Type{detail::point_type(ndim)}; }
+Type point_type(uint32_t ndim) { return Type{detail::point_type(ndim)}; }
 
-Type rect_type(int32_t ndim) { return Type{detail::rect_type(ndim)}; }
+Type rect_type(uint32_t ndim) { return Type{detail::rect_type(ndim)}; }
 
 Type null_type() { return Type{detail::null_type()}; }
 
-bool is_point_type(const Type& type, int32_t ndim)
+bool is_point_type(const Type& type, uint32_t ndim)
 {
   return detail::is_point_type(type.impl(), ndim);
 }
 
-bool is_rect_type(const Type& type, int32_t ndim)
+bool is_rect_type(const Type& type, uint32_t ndim)
 {
   return detail::is_rect_type(type.impl(), ndim);
 }

@@ -14,6 +14,7 @@ from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 
 from ..type.type_info cimport _Type
+from ..utilities.tuple cimport _tuple
 from .logical_store cimport _LogicalStore
 from .shape cimport _Shape
 from .slice cimport _Slice
@@ -23,7 +24,8 @@ cdef extern from "core/data/logical_array.h" namespace "legate" nogil:
     cdef cppclass _LogicalArray "legate::LogicalArray":
         int32_t dim()
         _Type type()
-        const _Shape& extents() except+
+        _Shape shape()
+        const _tuple[uint64_t]& extents() except+
         size_t volume() except+
         bool unbound()
         bool nullable()

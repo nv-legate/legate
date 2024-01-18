@@ -11,11 +11,11 @@
 
 from typing import Any, Callable, Iterable, Optional, Union
 
-from ...shape import Shape
 from ...utils import AnyCallable, ShutdownCallback
 from ..data.logical_array import LogicalArray
 from ..data.logical_store import LogicalStore
 from ..data.scalar import Scalar
+from ..data.shape import Shape
 from ..mapping.machine import Machine
 from ..operation.task import AutoTask, ManualTask
 from ..type.type_info import Type

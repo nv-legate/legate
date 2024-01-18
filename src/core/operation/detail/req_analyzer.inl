@@ -36,7 +36,7 @@ inline void StoreAnalyzer::insert(const InternalSharedPtr<LogicalRegionField>& r
   req_analyzer_.insert(region_field->region(), region_field->field_id(), privilege, store_proj);
 }
 
-inline void StoreAnalyzer::insert(int32_t dim,
+inline void StoreAnalyzer::insert(uint32_t dim,
                                   const Legion::FieldSpace& field_space,
                                   Legion::FieldID field_id)
 {

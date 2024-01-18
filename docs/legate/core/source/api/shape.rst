@@ -1,4 +1,4 @@
-.. currentmodule:: legate.core.shape
+.. currentmodule:: legate.core
 
 Shape
 =====
@@ -26,38 +26,7 @@ Properties
    :toctree: generated/
 
    Shape.extents
-   Shape.fixed
    Shape.ndim
    Shape.volume
-   Shape.sum
-   Shape.strides
-
-
-Manipulation Methods
---------------------
-.. autosummary::
-   :toctree: generated/
-
-   Shape.drop
-   Shape.update
-   Shape.replace
-   Shape.insert
-   Shape.map
    Shape.__getitem__
-
-
-Arithmetic and comparison
--------------------------
-.. autosummary::
-   :toctree: generated/
-
-   Shape.__eq__
-   Shape.__le__
-   Shape.__lt__
-   Shape.__ge__
-   Shape.__gt__
-   Shape.__add__
-   Shape.__sub__
-   Shape.__mul__
-   Shape.__mod__
-   Shape.__floordiv__
+   Shape.__len__

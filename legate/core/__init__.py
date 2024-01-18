@@ -56,6 +56,7 @@ from ._lib.legate_c import LEGATE_MAX_DIM
 from ._lib.data.logical_array import LogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
 from ._lib.data.scalar import Scalar
+from ._lib.data.shape import Shape
 from ._lib.data.physical_store import PhysicalStore
 from ._lib.data.physical_array import PhysicalArray
 from ._lib.operation.projection import dimension, constant
@@ -65,8 +66,6 @@ from ._lib.runtime.library import Library
 from ._lib.task.task_context import TaskContext
 from ._lib.task.task_info import TaskInfo
 
-
-from .shape import Shape
 from .types import (
     ReductionOp,
     Type,

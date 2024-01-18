@@ -11,7 +11,7 @@
 
 from cython.cimports.cpython.ref import PyObject
 
-from libc.stdint cimport int32_t, int64_t, uint32_t
+from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.string cimport string as std_string
 
@@ -24,6 +24,7 @@ from ..mapping.machine cimport _Machine
 from ..operation.task cimport _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
 from ..type.type_info cimport _Type
+from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain
 from .detail.runtime cimport _RuntimeImpl
 from .library cimport _Library
@@ -100,7 +101,7 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
         _Library find_library(std_string)
         _AutoTask create_task(_Library, int64_t)
-        _ManualTask create_task(_Library, int64_t, const _Shape&)
+        _ManualTask create_task(_Library, int64_t, const _tuple[uint64_t]&)
         _ManualTask create_task(_Library, int64_t, const _Domain&)
         void issue_copy(_LogicalStore, _LogicalStore) except+
         void issue_copy(_LogicalStore, _LogicalStore, int32_t) except+

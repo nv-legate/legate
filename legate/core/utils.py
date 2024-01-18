@@ -25,8 +25,6 @@ from typing import (
     TypeVar,
 )
 
-from .shape import Shape
-
 T = TypeVar("T", bound="Hashable")
 
 
@@ -79,10 +77,6 @@ class OrderedSet(MutableSet[T]):
         return OrderedSet(obj for obj in self if obj not in other)
 
 
-def cast_tuple(value: Any) -> tuple[Any, ...]:
-    return value if isinstance(value, tuple) else tuple(value)
-
-
 def capture_traceback_repr(
     skip_core_frames: bool = True,
 ) -> Optional[str]:
@@ -97,18 +91,6 @@ def capture_traceback_repr(
             tb_lineno=frame.f_lineno,
         )
     return "".join(traceback.format_tb(tb)) if tb is not None else None
-
-
-def is_iterable(obj: Any) -> bool:
-    try:
-        iter(obj)
-        return True
-    except TypeError:
-        return False
-
-
-def is_shape_like(obj: Any) -> bool:
-    return isinstance(obj, Shape) or is_iterable(obj)
 
 
 def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:

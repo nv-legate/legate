@@ -65,7 +65,7 @@ void OutputRegionArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer)
   store_->pack(buffer);
 
   buffer.pack<int32_t>(-1);
-  buffer.pack<int32_t>(store_->dim());
+  buffer.pack<uint32_t>(store_->dim());
   // Need to cache the requirement index for post-processing
   requirement_index_ = analyzer.get_index(field_space_, field_id_);
   buffer.pack<uint32_t>(requirement_index_);

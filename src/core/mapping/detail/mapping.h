@@ -38,7 +38,8 @@ struct DimOrdering {
 
   bool operator==(const DimOrdering& other) const;
 
-  void populate_dimension_ordering(int32_t dim, std::vector<Legion::DimensionKind>& ordering) const;
+  void populate_dimension_ordering(uint32_t ndim,
+                                   std::vector<Legion::DimensionKind>& ordering) const;
 
   Kind kind;
   std::vector<int32_t> dims{};

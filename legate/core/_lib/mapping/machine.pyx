@@ -19,9 +19,8 @@ from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
 from .mapping cimport TaskTarget
-
-from ...utils import is_iterable
 from .mapping import TaskTarget as PyTaskTarget
+from ..utilities.utils cimport is_iterable
 
 
 class EmptyMachineError(Exception):

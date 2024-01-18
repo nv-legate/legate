@@ -14,6 +14,7 @@
 
 #include "core/data/detail/array_kind.h"
 #include "core/data/detail/logical_store.h"
+#include "core/data/detail/shape.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/projection.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -34,21 +35,21 @@ class ListLogicalArray;
 class Variable;
 
 struct LogicalArray {
-  LogicalArray(const LogicalArray&)                          = default;
-  LogicalArray(LogicalArray&&)                               = delete;
-  LogicalArray& operator=(const LogicalArray&)               = default;
-  LogicalArray& operator=(LogicalArray&&)                    = delete;
-  LogicalArray()                                             = default;
-  virtual ~LogicalArray()                                    = default;
-  [[nodiscard]] virtual int32_t dim() const                  = 0;
-  [[nodiscard]] virtual ArrayKind kind() const               = 0;
-  [[nodiscard]] virtual InternalSharedPtr<Type> type() const = 0;
-  [[nodiscard]] virtual const Shape& extents() const         = 0;
-  [[nodiscard]] virtual size_t volume() const                = 0;
-  [[nodiscard]] virtual bool unbound() const                 = 0;
-  [[nodiscard]] virtual bool nullable() const                = 0;
-  [[nodiscard]] virtual bool nested() const                  = 0;
-  [[nodiscard]] virtual uint32_t num_children() const        = 0;
+  LogicalArray(const LogicalArray&)                                   = default;
+  LogicalArray(LogicalArray&&)                                        = delete;
+  LogicalArray& operator=(const LogicalArray&)                        = default;
+  LogicalArray& operator=(LogicalArray&&)                             = delete;
+  LogicalArray()                                                      = default;
+  virtual ~LogicalArray()                                             = default;
+  [[nodiscard]] virtual uint32_t dim() const                          = 0;
+  [[nodiscard]] virtual ArrayKind kind() const                        = 0;
+  [[nodiscard]] virtual InternalSharedPtr<Type> type() const          = 0;
+  [[nodiscard]] virtual const InternalSharedPtr<Shape>& shape() const = 0;
+  [[nodiscard]] virtual size_t volume() const                         = 0;
+  [[nodiscard]] virtual bool unbound() const                          = 0;
+  [[nodiscard]] virtual bool nullable() const                         = 0;
+  [[nodiscard]] virtual bool nested() const                           = 0;
+  [[nodiscard]] virtual uint32_t num_children() const                 = 0;
 
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> promote(int32_t extra_dim,
                                                                 size_t dim_size) const     = 0;
@@ -93,10 +94,10 @@ class BaseLogicalArray final : public LogicalArray {
   BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
                    InternalSharedPtr<LogicalStore> null_mask = nullptr);
 
-  [[nodiscard]] int32_t dim() const override;
+  [[nodiscard]] uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
   [[nodiscard]] InternalSharedPtr<Type> type() const override;
-  [[nodiscard]] const Shape& extents() const override;
+  [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] size_t volume() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
@@ -148,10 +149,10 @@ class ListLogicalArray final : public LogicalArray {
                    InternalSharedPtr<BaseLogicalArray> descriptor,
                    InternalSharedPtr<LogicalArray> vardata);
 
-  [[nodiscard]] int32_t dim() const override;
+  [[nodiscard]] uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
   [[nodiscard]] InternalSharedPtr<Type> type() const override;
-  [[nodiscard]] const Shape& extents() const override;
+  [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] size_t volume() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
@@ -204,10 +205,10 @@ class StructLogicalArray final : public LogicalArray {
                      InternalSharedPtr<LogicalStore> null_mask,
                      std::vector<InternalSharedPtr<LogicalArray>>&& fields);
 
-  [[nodiscard]] int32_t dim() const override;
+  [[nodiscard]] uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
   [[nodiscard]] InternalSharedPtr<Type> type() const override;
-  [[nodiscard]] const Shape& extents() const override;
+  [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] size_t volume() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;

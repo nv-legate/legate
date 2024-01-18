@@ -33,7 +33,7 @@ class Test_store_creation:
         assert store.type == ty.int64
         assert not store.transformed
         with pytest.raises(ValueError):
-            store.shape
+            store.shape.extents
 
 
 class Test_store_valid_transform:

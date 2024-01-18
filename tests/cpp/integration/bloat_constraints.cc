@@ -72,9 +72,9 @@ void prepare()
 }
 
 struct BloatTestSpec {
-  legate::Shape extents;
-  legate::Shape low_offsets;
-  legate::Shape high_offsets;
+  legate::tuple<uint64_t> extents;
+  legate::tuple<uint64_t> low_offsets;
+  legate::tuple<uint64_t> high_offsets;
 };
 
 void test_bloat(const BloatTestSpec& spec)
@@ -111,8 +111,8 @@ void test_invalid()
     auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
-    task.add_constraint(
-      legate::bloat(part_source, part_bloated, legate::Shape{2, 3}, legate::Shape{4, 5}));
+    task.add_constraint(legate::bloat(
+      part_source, part_bloated, legate::tuple<uint64_t>{2, 3}, legate::tuple<uint64_t>{4, 5}));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
@@ -124,8 +124,8 @@ void test_invalid()
     auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
-    task.add_constraint(
-      legate::bloat(part_source, part_bloated, legate::Shape{2, 3, 3}, legate::Shape{4, 5}));
+    task.add_constraint(legate::bloat(
+      part_source, part_bloated, legate::tuple<uint64_t>{2, 3, 3}, legate::tuple<uint64_t>{4, 5}));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
@@ -137,8 +137,8 @@ void test_invalid()
     auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
-    task.add_constraint(
-      legate::bloat(part_source, part_bloated, legate::Shape{2, 3}, legate::Shape{4, 5, 3}));
+    task.add_constraint(legate::bloat(
+      part_source, part_bloated, legate::tuple<uint64_t>{2, 3}, legate::tuple<uint64_t>{4, 5, 3}));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
@@ -147,19 +147,22 @@ void test_invalid()
 TEST_F(BloatConstraint, 1D)
 {
   prepare();
-  test_bloat({legate::Shape{10}, legate::Shape{2}, legate::Shape{4}});
+  test_bloat({legate::tuple<uint64_t>{10}, legate::tuple<uint64_t>{2}, legate::tuple<uint64_t>{4}});
 }
 
 TEST_F(BloatConstraint, 2D)
 {
   prepare();
-  test_bloat({legate::Shape{9, 9}, legate::Shape{2, 3}, legate::Shape{3, 4}});
+  test_bloat(
+    {legate::tuple<uint64_t>{9, 9}, legate::tuple<uint64_t>{2, 3}, legate::tuple<uint64_t>{3, 4}});
 }
 
 TEST_F(BloatConstraint, 3D)
 {
   prepare();
-  test_bloat({legate::Shape{10, 10, 10}, legate::Shape{2, 3, 4}, legate::Shape{4, 3, 2}});
+  test_bloat({legate::tuple<uint64_t>{10, 10, 10},
+              legate::tuple<uint64_t>{2, 3, 4},
+              legate::tuple<uint64_t>{4, 3, 2}});
 }
 
 TEST_F(BloatConstraint, Invalid)

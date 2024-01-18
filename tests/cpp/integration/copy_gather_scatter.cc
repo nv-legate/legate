@@ -156,10 +156,10 @@ void check_gather_scatter_output(legate::Library library,
   task.add_input(tgt_ind, tgt_ind_part);
   task.add_scalar_arg(init);
 
-  task.add_constraint(legate::broadcast(src_part, legate::from_range<int32_t>(src.dim())));
-  task.add_constraint(legate::broadcast(tgt_part, legate::from_range<int32_t>(tgt.dim())));
-  task.add_constraint(legate::broadcast(src_ind_part, legate::from_range<int32_t>(src_ind.dim())));
-  task.add_constraint(legate::broadcast(tgt_ind_part, legate::from_range<int32_t>(tgt_ind.dim())));
+  task.add_constraint(legate::broadcast(src_part, legate::from_range(src.dim())));
+  task.add_constraint(legate::broadcast(tgt_part, legate::from_range(tgt.dim())));
+  task.add_constraint(legate::broadcast(src_ind_part, legate::from_range(src_ind.dim())));
+  task.add_constraint(legate::broadcast(tgt_ind_part, legate::from_range(tgt_ind.dim())));
 
   runtime->submit(std::move(task));
 }

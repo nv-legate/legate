@@ -120,7 +120,7 @@ TEST_F(Broadcast, BasicMethods)
   auto task    = runtime->create_task(context, INIT);
   auto part1   = task.declare_partition();
 
-  auto dims      = legate::from_range<int32_t>(3);
+  auto dims      = legate::from_range<uint32_t>(3);
   auto broadcast = legate::detail::broadcast(part1.impl(), dims);
   EXPECT_EQ(broadcast->kind(), legate::detail::Constraint::Kind::BROADCAST);
   EXPECT_EQ(broadcast->variable(), part1.impl());

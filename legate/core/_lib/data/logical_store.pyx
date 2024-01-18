@@ -15,11 +15,11 @@ from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
 from ...data_interface import Field, LegateDataInterfaceItem
-from ...shape import Shape
-from ...utils import is_iterable
 
 from ..type.type_info cimport Type
+from ..utilities.utils cimport is_iterable
 from .physical_store cimport PhysicalStore
+from .shape cimport Shape
 from .slice cimport from_python_slice
 
 
@@ -39,7 +39,7 @@ cdef class LogicalStore:
 
     @property
     def shape(self) -> Shape:
-        return Shape(self.extents)
+        return Shape.from_handle(self._handle.shape())
 
     @property
     def ndim(self) -> int32_t:
@@ -415,7 +415,8 @@ cdef class LogicalStorePartition:
         return self._handle.color_shape().data()
 
     def get_child_store(self, *color) -> LogicalStore:
-        cdef _Shape cpp_color
+        cdef _tuple[uint64_t] cpp_color
+        cpp_color.reserve(len(color))
         for coord in color:
             cpp_color.append_inplace(<size_t> coord)
         return LogicalStore.from_handle(

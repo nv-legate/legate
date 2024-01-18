@@ -13,6 +13,7 @@
 set(
   cython_sources
   typedefs.pyx
+  utils.pyx
 )
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

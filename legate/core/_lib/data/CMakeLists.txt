@@ -18,6 +18,7 @@ set(
   physical_array.pyx
   physical_store.pyx
   scalar.pyx
+  shape.pyx
   slice.pyx
 )
 

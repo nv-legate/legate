@@ -43,9 +43,9 @@ enum TaskOpCode {
   CHECKER = 1,
 };
 
-static legate::Shape SHAPE_1D{5};
+static legate::tuple<uint64_t> SHAPE_1D{5};
 
-static legate::Shape SHAPE_2D{3, 4};
+static legate::tuple<uint64_t> SHAPE_2D{3, 4};
 
 void increment_physical_store(const legate::PhysicalStore& store, int32_t dim)
 {
@@ -182,7 +182,7 @@ void test_body(
   }
   for (auto iter = 0; iter < 2; ++iter) {
     if (use_tasks) {
-      auto task = runtime->create_task(context, ADDER, legate::Shape{1});
+      auto task = runtime->create_task(context, ADDER, {1});
       task.add_input(l_store);
       task.add_output(l_store);
       task.add_scalar_arg(legate::Scalar{dim});
@@ -196,7 +196,7 @@ void test_body(
     }
   }
   if (use_tasks) {
-    auto task = runtime->create_task(context, CHECKER, legate::Shape{1});
+    auto task = runtime->create_task(context, CHECKER, {1});
     task.add_input(l_store);
     task.add_scalar_arg(legate::Scalar{dim});
     task.add_scalar_arg(legate::Scalar{counter});

@@ -210,12 +210,12 @@ class ListType final : public ExtensionType {
 [[nodiscard]] InternalSharedPtr<Type> float64();
 [[nodiscard]] InternalSharedPtr<Type> complex64();
 [[nodiscard]] InternalSharedPtr<Type> complex128();
-[[nodiscard]] InternalSharedPtr<Type> point_type(int32_t ndim);
-[[nodiscard]] InternalSharedPtr<Type> rect_type(int32_t ndim);
+[[nodiscard]] InternalSharedPtr<Type> point_type(uint32_t ndim);
+[[nodiscard]] InternalSharedPtr<Type> rect_type(uint32_t ndim);
 [[nodiscard]] InternalSharedPtr<Type> null_type();
-[[nodiscard]] bool is_point_type(const InternalSharedPtr<Type>& type, int32_t ndim);
+[[nodiscard]] bool is_point_type(const InternalSharedPtr<Type>& type, uint32_t ndim);
 [[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type);
-[[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type, int32_t ndim);
+[[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type, uint32_t ndim);
 
 }  // namespace legate::detail
 

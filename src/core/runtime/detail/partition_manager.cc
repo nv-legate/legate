@@ -46,9 +46,9 @@ const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail
   return finder->second;
 }
 
-Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
-                                             const Restrictions& restrictions,
-                                             const Shape& shape)
+tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
+                                                       const Restrictions& restrictions,
+                                                       const tuple<uint64_t>& shape)
 {
   auto curr_num_pieces = machine.count();
   // Easy case if we only have one piece: no parallel launch space
@@ -196,13 +196,14 @@ Shape PartitionManager::compute_launch_shape(const mapping::detail::Machine& mac
     result[temp_dims[idx]] = temp_result[idx];
   }
 
-  return Shape{std::move(result)};
+  return tuple<uint64_t>{std::move(result)};
 }
 
-Shape PartitionManager::compute_tile_shape(const Shape& extents, const Shape& launch_shape)
+tuple<uint64_t> PartitionManager::compute_tile_shape(const tuple<uint64_t>& extents,
+                                                     const tuple<uint64_t>& launch_shape)
 {
   assert(extents.size() == launch_shape.size());
-  Shape tile_shape;
+  tuple<uint64_t> tile_shape;
   for (uint32_t idx = 0; idx < extents.size(); ++idx) {
     auto x = extents[idx];
     auto y = launch_shape[idx];
@@ -211,7 +212,8 @@ Shape PartitionManager::compute_tile_shape(const Shape& extents, const Shape& la
   return tile_shape;
 }
 
-bool PartitionManager::use_complete_tiling(const Shape& extents, const Shape& tile_shape)
+bool PartitionManager::use_complete_tiling(const tuple<uint64_t>& extents,
+                                           const tuple<uint64_t>& tile_shape)
 {
   // If it would generate a very large number of elements then
   // we'll apply a heuristic for now and not actually tile it

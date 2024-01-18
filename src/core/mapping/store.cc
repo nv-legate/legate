@@ -20,7 +20,7 @@ bool Store::is_future() const { return impl()->is_future(); }
 
 bool Store::unbound() const { return impl()->unbound(); }
 
-int32_t Store::dim() const { return impl()->dim(); }
+uint32_t Store::dim() const { return impl()->dim(); }
 
 bool Store::is_reduction() const { return impl()->is_reduction(); }
 

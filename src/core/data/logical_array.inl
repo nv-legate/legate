@@ -23,6 +23,8 @@ inline LogicalArray::LogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
 
 inline const SharedPtr<detail::LogicalArray>& LogicalArray::impl() const { return impl_; }
 
+inline const tuple<uint64_t>& LogicalArray::extents() const { return shape().extents(); }
+
 // ==========================================================================================
 
 inline ListLogicalArray::ListLogicalArray(InternalSharedPtr<detail::LogicalArray> impl)

@@ -49,10 +49,12 @@ TEST_F(Store, Creation)
     auto store   = runtime->create_store(legate::Scalar(int64_t{123}));
     EXPECT_FALSE(store.unbound());
     EXPECT_EQ(store.dim(), 1);
-    EXPECT_EQ(store.extents(), legate::Shape{1});
+    EXPECT_EQ(store.extents(), legate::tuple<uint64_t>{1});
     EXPECT_EQ(store.type(), legate::int64());
     EXPECT_FALSE(store.transformed());
-    for (const auto& extents : {legate::Shape{1}, legate::Shape{1, 1}, legate::Shape{1, 1, 1}}) {
+    for (const auto& extents : {legate::tuple<uint64_t>{1},
+                                legate::tuple<uint64_t>{1, 1},
+                                legate::tuple<uint64_t>{1, 1, 1}}) {
       auto temp_store = runtime->create_store(legate::Scalar(int64_t{123}), extents);
       EXPECT_FALSE(temp_store.unbound());
       EXPECT_EQ(temp_store.dim(), extents.size());

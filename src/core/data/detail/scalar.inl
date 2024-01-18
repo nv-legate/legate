@@ -19,6 +19,11 @@
 
 namespace legate::detail {
 
+inline Scalar::Scalar(InternalSharedPtr<Type> type)
+  : own_{true}, type_{std::move(type)}, data_{new char[type_->size()]{}}
+{
+}
+
 template <typename T>
 inline Scalar::Scalar(T value)
   : own_{true},

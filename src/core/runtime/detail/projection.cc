@@ -24,24 +24,24 @@
 
 namespace legate::proj {
 
-SymbolicPoint create_symbolic_point(int32_t ndim)
+SymbolicPoint create_symbolic_point(uint32_t ndim)
 {
   std::vector<SymbolicExpr> exprs;
 
   exprs.reserve(ndim);
-  for (int32_t dim = 0; dim < ndim; ++dim) {
+  for (uint32_t dim = 0; dim < ndim; ++dim) {
     exprs.emplace_back(dim);
   }
   return SymbolicPoint{std::move(exprs)};
 }
 
-bool is_identity(int32_t src_ndim, const SymbolicPoint& point)
+bool is_identity(uint32_t src_ndim, const SymbolicPoint& point)
 {
-  auto ndim = static_cast<int32_t>(point.size());
+  auto ndim = static_cast<uint32_t>(point.size());
   if (src_ndim != ndim) {
     return false;
   }
-  for (int32_t dim = 0; dim < ndim; ++dim) {
+  for (uint32_t dim = 0; dim < ndim; ++dim) {
     if (!point[dim].is_identity(dim)) {
       return false;
     }
@@ -69,7 +69,7 @@ class DelinearizationFunctor final : public LegateProjectionFunctor {
                                           const Domain& launch_domain) const override;
 };
 
-template <int32_t SRC_DIM, int32_t TGT_DIM>
+template <int32_t SRC_NDIM, int32_t TGT_NDIM>
 class AffineFunctor : public LegateProjectionFunctor {
  public:
   AffineFunctor(Legion::Runtime* lg_runtime, const proj::SymbolicPoint& point);
@@ -77,12 +77,12 @@ class AffineFunctor : public LegateProjectionFunctor {
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point,
                                           const Domain& launch_domain) const override;
 
-  [[nodiscard]] static Legion::Transform<TGT_DIM, SRC_DIM> create_transform(
+  [[nodiscard]] static Legion::Transform<TGT_NDIM, SRC_NDIM> create_transform(
     const proj::SymbolicPoint& point);
 
  private:
-  Legion::Transform<TGT_DIM, SRC_DIM> transform_{};
-  Point<TGT_DIM> offsets_{};
+  Legion::Transform<TGT_NDIM, SRC_NDIM> transform_{};
+  Point<TGT_NDIM> offsets_{};
 };
 
 Legion::LogicalRegion LegateProjectionFunctor::project(Legion::LogicalPartition upper_bound,
@@ -165,7 +165,7 @@ AffineFunctor<SRC_NDIM, TGT_NDIM>::create_transform(const proj::SymbolicPoint& p
 
   for (int32_t tgt_dim = 0; tgt_dim < TGT_NDIM; ++tgt_dim) {
     const auto& expr = point[tgt_dim];
-    if (expr.dim() != -1) {
+    if (!expr.is_constant()) {
       transform[tgt_dim][expr.dim()] = expr.weight();
     }
   }
@@ -208,7 +208,7 @@ struct register_affine_functor_fn {
       if (idx != 0) {
         ss << ",";
       }
-      if (expr.dim() != -1) {
+      if (!expr.is_constant()) {
         if (expr.weight() != 0) {
           if (expr.weight() != 1) {
             ss << expr.weight() << "*";
@@ -288,12 +288,15 @@ LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID pro
   return result;
 }
 
-void register_affine_projection_functor(int32_t src_ndim,
+void register_affine_projection_functor(uint32_t src_ndim,
                                         const proj::SymbolicPoint& point,
                                         legion_projection_id_t proj_id)
 {
-  legate::double_dispatch(
-    src_ndim, static_cast<int32_t>(point.size()), register_affine_functor_fn{}, point, proj_id);
+  legate::double_dispatch(static_cast<int32_t>(src_ndim),
+                          static_cast<int32_t>(point.size()),
+                          register_affine_functor_fn{},
+                          point,
+                          proj_id);
 }
 
 struct LinearizingPointTransformFunctor final : public Legion::PointTransformFunctor {

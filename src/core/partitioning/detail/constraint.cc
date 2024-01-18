@@ -60,8 +60,7 @@ void Alignment::validate() const
   if (lhs_store->unbound()) {
     return;
   }
-  if (!lhs_store->extents().empty() && !rhs_store->extents().empty() &&
-      lhs_store->extents() != rhs_store->extents()) {
+  if (*lhs_store->shape() != *rhs_store->shape()) {
     throw std::invalid_argument{"Alignment requires the stores to have the same shape, but found " +
                                 lhs_store->extents().to_string() + " and " +
                                 rhs_store->extents().to_string()};
@@ -88,7 +87,7 @@ void Broadcast::validate() const
   }
   auto store = variable_->operation()->find_store(variable_);
   for (auto axis : axes_.data()) {
-    if (axis < 0 || axis >= store->dim()) {
+    if (axis >= store->dim()) {
       throw std::invalid_argument{"Invalid broadcasting dimension " + std::to_string(axis) +
                                   " for a " + std::to_string(store->dim()) + "-D store"};
     }
@@ -232,7 +231,7 @@ InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs)
   return make_internal_shared<Broadcast>(variable);
 }
 
-InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<int32_t> axes)
+InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<uint32_t> axes)
 {
   if (axes.empty()) {
     throw std::invalid_argument{"List of axes to broadcast must not be empty"};
@@ -245,7 +244,7 @@ InternalSharedPtr<ImageConstraint> image(const Variable* var_function, const Var
   return make_internal_shared<ImageConstraint>(var_function, var_range);
 }
 
-InternalSharedPtr<ScaleConstraint> scale(Shape factors,
+InternalSharedPtr<ScaleConstraint> scale(tuple<uint64_t> factors,
                                          const Variable* var_smaller,
                                          const Variable* var_bigger)
 {
@@ -254,8 +253,8 @@ InternalSharedPtr<ScaleConstraint> scale(Shape factors,
 
 InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
                                          const Variable* var_bloat,
-                                         Shape low_offsets,
-                                         Shape high_offsets)
+                                         tuple<uint64_t> low_offsets,
+                                         tuple<uint64_t> high_offsets)
 {
   return make_internal_shared<BloatConstraint>(
     var_source, var_bloat, std::move(low_offsets), std::move(high_offsets));

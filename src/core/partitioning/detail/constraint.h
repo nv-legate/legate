@@ -152,7 +152,7 @@ class Broadcast final : public Constraint {
  public:
   explicit Broadcast(const Variable* variable);
 
-  Broadcast(const Variable* variable, tuple<int32_t> axes);
+  Broadcast(const Variable* variable, tuple<uint32_t> axes);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -169,12 +169,12 @@ class Broadcast final : public Constraint {
   [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
   [[nodiscard]] const Variable* variable() const;
-  [[nodiscard]] const tuple<int32_t>& axes() const;
+  [[nodiscard]] const tuple<uint32_t>& axes() const;
 
  private:
   const Variable* variable_{};
   // Broadcast all dimensions when empty
-  tuple<int32_t> axes_{};
+  tuple<uint32_t> axes_{};
 };
 
 class ImageConstraint final : public Constraint {
@@ -207,7 +207,7 @@ class ImageConstraint final : public Constraint {
 
 class ScaleConstraint final : public Constraint {
  public:
-  ScaleConstraint(Shape factors, const Variable* var_smaller, const Variable* var_bigger);
+  ScaleConstraint(tuple<uint64_t> factors, const Variable* var_smaller, const Variable* var_bigger);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -229,7 +229,7 @@ class ScaleConstraint final : public Constraint {
   [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 
  private:
-  Shape factors_{};
+  tuple<uint64_t> factors_{};
   const Variable* var_smaller_{};
   const Variable* var_bigger_{};
 };
@@ -238,8 +238,8 @@ class BloatConstraint final : public Constraint {
  public:
   BloatConstraint(const Variable* var_source,
                   const Variable* var_bloat,
-                  Shape low_offsets,
-                  Shape high_offsets);
+                  tuple<uint64_t> low_offsets,
+                  tuple<uint64_t> high_offsets);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -263,27 +263,28 @@ class BloatConstraint final : public Constraint {
  private:
   const Variable* var_source_{};
   const Variable* var_bloat_{};
-  Shape low_offsets_{};
-  Shape high_offsets_{};
+  tuple<uint64_t> low_offsets_{};
+  tuple<uint64_t> high_offsets_{};
 };
 
 [[nodiscard]] InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs);
 
 [[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable);
 
-[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<int32_t> axes);
+[[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable,
+                                                     tuple<uint32_t> axes);
 
 [[nodiscard]] InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
                                                        const Variable* var_range);
 
-[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(Shape factors,
+[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(tuple<uint64_t> factors,
                                                        const Variable* var_smaller,
                                                        const Variable* var_bigger);
 
 [[nodiscard]] InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
                                                        const Variable* var_bloat,
-                                                       Shape low_offsets,
-                                                       Shape high_offsets);
+                                                       tuple<uint64_t> low_offsets,
+                                                       tuple<uint64_t> high_offsets);
 
 }  // namespace legate::detail
 

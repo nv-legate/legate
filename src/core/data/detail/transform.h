@@ -50,9 +50,9 @@ struct Transform {
   [[nodiscard]] virtual Restrictions convert(const Restrictions& restrictions,
                                              bool forbid_fake_dim) const                      = 0;
   [[nodiscard]] virtual Restrictions invert(const Restrictions& restrictions) const           = 0;
-  [[nodiscard]] virtual Shape invert_color(Shape color) const                                 = 0;
-  [[nodiscard]] virtual Shape invert_extents(const Shape& extents) const                      = 0;
-  [[nodiscard]] virtual Shape invert_point(const Shape& point) const                          = 0;
+  [[nodiscard]] virtual tuple<uint64_t> invert_color(tuple<uint64_t> color) const             = 0;
+  [[nodiscard]] virtual tuple<uint64_t> invert_extents(const tuple<uint64_t>& extents) const  = 0;
+  [[nodiscard]] virtual tuple<uint64_t> invert_point(const tuple<uint64_t>& point) const      = 0;
   [[nodiscard]] virtual bool is_convertible() const                                           = 0;
   virtual void pack(BufferBuilder& buffer) const                                              = 0;
   virtual void print(std::ostream& out) const                                                 = 0;
@@ -79,9 +79,9 @@ struct TransformStack final : public Transform {
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
                                      bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
-  [[nodiscard]] Shape invert_color(Shape color) const override;
-  [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
-  [[nodiscard]] Shape invert_point(const Shape& point) const override;
+  [[nodiscard]] tuple<uint64_t> invert_color(tuple<uint64_t> color) const override;
+  [[nodiscard]] tuple<uint64_t> invert_extents(const tuple<uint64_t>& extents) const override;
+  [[nodiscard]] tuple<uint64_t> invert_point(const tuple<uint64_t>& point) const override;
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -117,9 +117,9 @@ class Shift final : public StoreTransform {
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
                                      bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
-  [[nodiscard]] Shape invert_color(Shape color) const override;
-  [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
-  [[nodiscard]] Shape invert_point(const Shape& point) const override;
+  [[nodiscard]] tuple<uint64_t> invert_color(tuple<uint64_t> color) const override;
+  [[nodiscard]] tuple<uint64_t> invert_extents(const tuple<uint64_t>& extents) const override;
+  [[nodiscard]] tuple<uint64_t> invert_point(const tuple<uint64_t>& point) const override;
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -145,9 +145,9 @@ class Promote final : public StoreTransform {
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
                                      bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
-  [[nodiscard]] Shape invert_color(Shape color) const override;
-  [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
-  [[nodiscard]] Shape invert_point(const Shape& point) const override;
+  [[nodiscard]] tuple<uint64_t> invert_color(tuple<uint64_t> color) const override;
+  [[nodiscard]] tuple<uint64_t> invert_extents(const tuple<uint64_t>& extents) const override;
+  [[nodiscard]] tuple<uint64_t> invert_point(const tuple<uint64_t>& point) const override;
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -173,9 +173,9 @@ class Project final : public StoreTransform {
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
                                      bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
-  [[nodiscard]] Shape invert_color(Shape color) const override;
-  [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
-  [[nodiscard]] Shape invert_point(const Shape& point) const override;
+  [[nodiscard]] tuple<uint64_t> invert_color(tuple<uint64_t> color) const override;
+  [[nodiscard]] tuple<uint64_t> invert_extents(const tuple<uint64_t>& extents) const override;
+  [[nodiscard]] tuple<uint64_t> invert_point(const tuple<uint64_t>& point) const override;
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -201,9 +201,9 @@ class Transpose final : public StoreTransform {
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
                                      bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
-  [[nodiscard]] Shape invert_color(Shape color) const override;
-  [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
-  [[nodiscard]] Shape invert_point(const Shape& point) const override;
+  [[nodiscard]] tuple<uint64_t> invert_color(tuple<uint64_t> color) const override;
+  [[nodiscard]] tuple<uint64_t> invert_extents(const tuple<uint64_t>& extents) const override;
+  [[nodiscard]] tuple<uint64_t> invert_point(const tuple<uint64_t>& point) const override;
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -229,9 +229,9 @@ class Delinearize final : public StoreTransform {
   [[nodiscard]] Restrictions convert(const Restrictions& restrictions,
                                      bool forbid_fake_dim) const override;
   [[nodiscard]] Restrictions invert(const Restrictions& restrictions) const override;
-  [[nodiscard]] Shape invert_color(Shape color) const override;
-  [[nodiscard]] Shape invert_extents(const Shape& extents) const override;
-  [[nodiscard]] Shape invert_point(const Shape& point) const override;
+  [[nodiscard]] tuple<uint64_t> invert_color(tuple<uint64_t> color) const override;
+  [[nodiscard]] tuple<uint64_t> invert_extents(const tuple<uint64_t>& extents) const override;
+  [[nodiscard]] tuple<uint64_t> invert_point(const tuple<uint64_t>& point) const override;
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;

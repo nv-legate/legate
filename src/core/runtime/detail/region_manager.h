@@ -19,6 +19,7 @@
 
 namespace legate::detail {
 
+class ConsensusMatchingFieldManager;
 class Runtime;
 
 class RegionManager {
@@ -39,8 +40,10 @@ class RegionManager {
   };
 
  public:
-  RegionManager(Runtime* runtime, const Domain& shape);
+  RegionManager(Runtime* runtime, const Legion::IndexSpace& index_space);
   void destroy(bool unordered = false);
+  void record_pending_match_credit_update(ConsensusMatchingFieldManager* field_mgr);
+  void update_field_manager_match_credits();
 
  private:
   [[nodiscard]] const ManagerEntry& active_entry() const { return entries_.back(); }
@@ -54,9 +57,10 @@ class RegionManager {
 
  private:
   Runtime* runtime_{};
-  Domain shape_{};
+  Legion::IndexSpace index_space_{};
   std::vector<ManagerEntry> entries_{};
   std::vector<ManagerEntry> imported_{};
+  std::vector<ConsensusMatchingFieldManager*> pending_match_credit_updates_{};
 };
 
 }  // namespace legate::detail

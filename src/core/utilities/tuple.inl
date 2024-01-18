@@ -38,14 +38,32 @@ tuple<T>::tuple(std::initializer_list<T> list) : data_{std::move(list)}
 }
 
 template <typename T>
+const T& tuple<T>::at(uint32_t idx) const
+{
+  return data().at(idx);
+}
+
+template <typename T>
+T& tuple<T>::at(uint32_t idx)
+{
+  return data().at(idx);
+}
+
+template <typename T>
 const T& tuple<T>::operator[](uint32_t idx) const
 {
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    return at(idx);
+  }
   return data()[idx];
 }
 
 template <typename T>
 T& tuple<T>::operator[](uint32_t idx)
 {
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    return at(idx);
+  }
   return data()[idx];
 }
 

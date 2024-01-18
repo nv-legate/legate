@@ -34,9 +34,9 @@ TEST_F(ChildStore, Simple)
   auto part    = store.partition_by_tiling({TILE_SIZE, TILE_SIZE});
 
   runtime->issue_fill(store, legate::Scalar{int64_t(-1)});
-  for (size_t dim0 = 0; dim0 < 2; ++dim0) {
-    for (size_t dim1 = 0; dim1 < 2; ++dim1) {
-      auto child    = part.get_child_store(legate::Shape{dim0, dim1});
+  for (uint64_t dim0 = 0; dim0 < 2; ++dim0) {
+    for (uint64_t dim1 = 0; dim1 < 2; ++dim1) {
+      auto child    = part.get_child_store(legate::tuple<uint64_t>{dim0, dim1});
       auto& extents = child.extents();
       std::cout << "Child store (" << dim0 << "," << dim1 << ") " << child.to_string() << std::endl;
       EXPECT_EQ(extents[0], dim0 == 0 ? TILE_SIZE : EXTENT - TILE_SIZE);

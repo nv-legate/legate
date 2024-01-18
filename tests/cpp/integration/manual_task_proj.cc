@@ -62,7 +62,7 @@ TEST_F(ManualTask, Proj)
   // With a launch shape
   {
     auto task = runtime->create_task(
-      library, ProjTesterTask::TASK_ID, legate::Shape{N_TILES_PER_DIM, N_TILES_PER_DIM});
+      library, ProjTesterTask::TASK_ID, legate::tuple<uint64_t>{N_TILES_PER_DIM, N_TILES_PER_DIM});
     task.add_input(row_wise, legate::SymbolicPoint{legate::dimension(0), legate::constant(0)});
     task.add_input(col_wise, legate::SymbolicPoint{legate::constant(0), legate::dimension(1)});
     runtime->submit(std::move(task));

@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/detail/attachment.h"
+#include "core/data/detail/shape.h"
 #include "core/runtime/detail/consensus_match_result.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
@@ -24,6 +25,7 @@
 namespace legate::detail {
 
 class LogicalRegionField;
+class RegionManager;
 class Runtime;
 
 struct FreeFieldInfo {
@@ -41,7 +43,7 @@ struct FreeFieldInfo {
 
 class FieldManager {
  public:
-  FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
+  FieldManager(Runtime* runtime, const InternalSharedPtr<Shape>& shape, uint32_t field_size);
   virtual ~FieldManager();
 
   [[nodiscard]] virtual InternalSharedPtr<LogicalRegionField> allocate_field();
@@ -55,7 +57,7 @@ class FieldManager {
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field();
 
   Runtime* runtime_{};
-  Domain shape_{};
+  InternalSharedPtr<Shape> shape_{};
   uint32_t field_size_{};
 
   // This is a sanitized list of (region,field_id) pairs that is guaranteed to be ordered across all
@@ -75,12 +77,15 @@ struct MatchItem {
 
 class ConsensusMatchingFieldManager final : public FieldManager {
  public:
-  ConsensusMatchingFieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size);
+  ConsensusMatchingFieldManager(Runtime* runtime,
+                                const InternalSharedPtr<Shape>& shape,
+                                uint32_t field_size);
   ~ConsensusMatchingFieldManager() final;
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field() override;
-
   void free_field(FreeFieldInfo free_field_info, bool unordered) override;
+
+  void calculate_match_credit();
 
  private:
   void issue_field_match();

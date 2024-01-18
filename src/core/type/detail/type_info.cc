@@ -530,11 +530,11 @@ InternalSharedPtr<Type> complex128()
   return result;
 }
 
-InternalSharedPtr<Type> point_type(int32_t ndim)
+InternalSharedPtr<Type> point_type(uint32_t ndim)
 {
   static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
-  if (ndim <= 0 || ndim > LEGATE_MAX_DIM) {
+  if (0 == ndim || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
   }
   if (nullptr == cache[ndim]) {
@@ -544,11 +544,11 @@ InternalSharedPtr<Type> point_type(int32_t ndim)
   return cache[ndim];
 }
 
-InternalSharedPtr<Type> rect_type(int32_t ndim)
+InternalSharedPtr<Type> rect_type(uint32_t ndim)
 {
   static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
-  if (ndim <= 0 || ndim > LEGATE_MAX_DIM) {
+  if (0 == ndim || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
   }
 
@@ -568,18 +568,9 @@ InternalSharedPtr<Type> null_type()
   return result;
 }
 
-bool is_point_type(const InternalSharedPtr<Type>& type, int32_t ndim)
+bool is_point_type(const InternalSharedPtr<Type>& type, uint32_t ndim)
 {
-  switch (type->code) {
-    case Type::Code::INT64: {
-      return 1 == ndim;
-    }
-    case Type::Code::FIXED_ARRAY: {
-      return type->as_fixed_array_type().num_elements() == static_cast<std::uint32_t>(ndim);
-    }
-    default: break;
-  }
-  return false;
+  return type->code == Type::Code::INT64 || type->uid() == BASE_POINT_TYPE_UID + ndim;
 }
 
 bool is_rect_type(const InternalSharedPtr<Type>& type)
@@ -588,7 +579,7 @@ bool is_rect_type(const InternalSharedPtr<Type>& type)
   return uid > BASE_RECT_TYPE_UID && uid <= BASE_RECT_TYPE_UID + LEGATE_MAX_DIM;
 }
 
-bool is_rect_type(const InternalSharedPtr<Type>& type, int32_t ndim)
+bool is_rect_type(const InternalSharedPtr<Type>& type, uint32_t ndim)
 {
   return type->uid() == BASE_RECT_TYPE_UID + ndim;
 }

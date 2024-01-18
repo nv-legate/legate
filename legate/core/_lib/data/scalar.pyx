@@ -29,9 +29,11 @@ from typing import Any
 import numpy as np
 
 from ..type.type_info cimport Type, _Type
+
 from ..type.type_info import null_type
+
 from ..legate_c cimport __convert_halfint_to_float, __half
-from ...utils import is_iterable
+from ..utilities.utils cimport is_iterable
 
 
 cpdef void from_null(Scalar scalar, object _, Type __):

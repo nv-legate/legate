@@ -72,12 +72,12 @@ inline bool Alignment::is_trivial() const { return *lhs_ == *rhs_; }
 
 // ==========================================================================================
 
-inline Broadcast::Broadcast(const Variable* variable, tuple<int32_t> axes)
+inline Broadcast::Broadcast(const Variable* variable, tuple<uint32_t> axes)
   : variable_{variable}, axes_{std::move(axes)}
 {
 }
 
-inline Broadcast::Broadcast(const Variable* variable) : Broadcast{variable, tuple<int32_t>{}} {}
+inline Broadcast::Broadcast(const Variable* variable) : Broadcast{variable, tuple<uint32_t>{}} {}
 
 inline Broadcast::Kind Broadcast::kind() const { return Kind::BROADCAST; }
 
@@ -93,7 +93,7 @@ inline const BloatConstraint* Broadcast::as_bloat_constraint() const { return nu
 
 inline const Variable* Broadcast::variable() const { return variable_; }
 
-inline const tuple<int32_t>& Broadcast::axes() const { return axes_; }
+inline const tuple<uint32_t>& Broadcast::axes() const { return axes_; }
 
 // ==========================================================================================
 
@@ -120,7 +120,7 @@ inline const Variable* ImageConstraint::var_range() const { return var_range_; }
 
 // ==========================================================================================
 
-inline ScaleConstraint::ScaleConstraint(Shape factors,
+inline ScaleConstraint::ScaleConstraint(tuple<uint64_t> factors,
                                         const Variable* var_smaller,
                                         const Variable* var_bigger)
   : factors_{std::move(factors)}, var_smaller_{var_smaller}, var_bigger_{var_bigger}
@@ -147,8 +147,8 @@ inline const Variable* ScaleConstraint::var_bigger() const { return var_bigger_;
 
 inline BloatConstraint::BloatConstraint(const Variable* var_source,
                                         const Variable* var_bloat,
-                                        Shape low_offsets,
-                                        Shape high_offsets)
+                                        tuple<uint64_t> low_offsets,
+                                        tuple<uint64_t> high_offsets)
   : var_source_{var_source},
     var_bloat_{var_bloat},
     low_offsets_{std::move(low_offsets)},

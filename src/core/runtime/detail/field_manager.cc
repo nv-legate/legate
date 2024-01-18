@@ -18,17 +18,13 @@
 
 namespace legate::detail {
 
-FieldManager::FieldManager(Runtime* runtime, const Domain& shape, uint32_t field_size)
+FieldManager::FieldManager(Runtime* runtime,
+                           const InternalSharedPtr<Shape>& shape,
+                           uint32_t field_size)
   : runtime_{runtime}, shape_{shape}, field_size_{field_size}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    std::stringstream ss;
-    if (shape.is_valid()) {
-      ss << shape;
-    } else {
-      ss << "()";
-    }
-    log_legate().debug() << "Field manager " << this << " created for shape " << std::move(ss).str()
+    log_legate().debug() << "Field manager " << this << " created for shape " << shape_->to_string()
                          << ", field_size " << field_size;
   }
 }
@@ -57,12 +53,7 @@ InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field()
 InternalSharedPtr<LogicalRegionField> FieldManager::import_field(
   const Legion::LogicalRegion& region, Legion::FieldID field_id)
 {
-  // Import the region only if the region manager is created fresh
-  auto rgn_mgr = runtime_->find_or_create_region_manager(shape_);
-
-  if (!rgn_mgr->has_space()) {
-    rgn_mgr->import_region(region);
-  }
+  runtime_->find_or_create_region_manager(shape_->index_space())->import_region(region);
   log_legate().debug("Field %u imported in field manager %p", field_id, static_cast<void*>(this));
   return make_internal_shared<LogicalRegionField>(this, region, field_id);
 }
@@ -96,7 +87,7 @@ InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field()
 InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field()
 {
   // If there are no more field matches to process, then we completely failed to reuse a field.
-  auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_);
+  auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_->index_space());
   auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
   auto* rf       = new LogicalRegionField{this, lr, fid};
 
@@ -107,14 +98,17 @@ InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field()
 // ==========================================================================================
 
 ConsensusMatchingFieldManager::ConsensusMatchingFieldManager(Runtime* runtime,
-                                                             const Domain& shape,
+                                                             const InternalSharedPtr<Shape>& shape,
                                                              uint32_t field_size)
   : FieldManager{runtime, shape, field_size}
 {
-  auto size = shape.dim == 0 ? 1 : (shape.get_volume() * field_size);
-  if (size > Config::max_field_reuse_size) {
-    assert(Config::max_field_reuse_size > 0);
-    field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
+  if (shape_->ready()) {
+    calculate_match_credit();
+  } else {
+    field_match_credit_ = runtime_->field_reuse_freq();
+    Runtime::get_runtime()
+      ->find_or_create_region_manager(shape_->index_space())
+      ->record_pending_match_credit_update(this);
   }
 }
 
@@ -164,6 +158,18 @@ void ConsensusMatchingFieldManager::free_field(FreeFieldInfo free_field_info, bo
     unordered_free_fields_.emplace_back(std::move(free_field_info));
   } else {
     FieldManager::free_field(std::move(free_field_info), unordered);
+  }
+}
+
+void ConsensusMatchingFieldManager::calculate_match_credit()
+{
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(shape_->ready());
+  }
+  const auto size = shape_->volume() * field_size_;
+  if (size > Config::max_field_reuse_size) {
+    assert(Config::max_field_reuse_size > 0);
+    field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
   }
 }
 

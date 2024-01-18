@@ -22,9 +22,9 @@ namespace legate::proj {
 using SymbolicExpr  = legate::SymbolicExpr;
 using SymbolicPoint = legate::SymbolicPoint;
 
-[[nodiscard]] SymbolicPoint create_symbolic_point(int32_t ndim);
+[[nodiscard]] SymbolicPoint create_symbolic_point(uint32_t ndim);
 
-[[nodiscard]] bool is_identity(int32_t ndim, const SymbolicPoint& point);
+[[nodiscard]] bool is_identity(uint32_t ndim, const SymbolicPoint& point);
 
 }  // namespace legate::proj
 
@@ -53,7 +53,7 @@ class LegateProjectionFunctor : public Legion::ProjectionFunctor {
 
 void register_legate_core_projection_functors(const detail::Library* core_library);
 
-void register_affine_projection_functor(int32_t src_ndim,
+void register_affine_projection_functor(uint32_t src_ndim,
                                         const proj::SymbolicPoint& point,
                                         legion_projection_id_t proj_id);
 

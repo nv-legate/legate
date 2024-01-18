@@ -127,12 +127,12 @@ TEST_F(TreeReduce, Unique)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task_fill = runtime->create_task(context, TASK_FILL, legate::Shape{num_tasks});
+  auto task_fill = runtime->create_task(context, TASK_FILL, {num_tasks});
   auto part      = store.partition_by_tiling({tile_size});
   task_fill.add_output(part);
   runtime->submit(std::move(task_fill));
 
-  auto task_unique         = runtime->create_task(context, TASK_UNIQUE, legate::Shape{num_tasks});
+  auto task_unique         = runtime->create_task(context, TASK_UNIQUE, {num_tasks});
   auto intermediate_result = runtime->create_store(legate::int64(), 1);
   task_unique.add_input(part);
   task_unique.add_output(intermediate_result);
@@ -142,7 +142,7 @@ TEST_F(TreeReduce, Unique)
 
   EXPECT_FALSE(result.unbound());
 
-  auto task_check = runtime->create_task(context, TASK_CHECK, legate::Shape{1});
+  auto task_check = runtime->create_task(context, TASK_CHECK, {1});
   task_check.add_input(result);
   runtime->submit(std::move(task_check));
 }
