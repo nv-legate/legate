@@ -42,7 +42,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore transpose(std_vector[int32_t]) except+
         _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
         _LogicalStorePartition partition_by_tiling(
-            std_vector[size_t] tile_shape
+            std_vector[uint64_t] tile_shape
         )
         _PhysicalStore get_physical_store() except+
         void detach()

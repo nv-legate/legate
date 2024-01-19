@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t, int64_t, uintptr_t
+from libc.stdint cimport int32_t, int64_t, uint64_t, uintptr_t
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
@@ -380,7 +380,7 @@ cdef class LogicalStore:
         """
         if not is_iterable(shape):
             raise ValueError(f"Expected an iterable but got {type(shape)}")
-        cdef std_vector[size_t] tile_shape = std_vector[size_t]()
+        cdef std_vector[uint64_t] tile_shape = std_vector[uint64_t]()
         for value in shape:
             tile_shape.push_back(value)
         return LogicalStorePartition.from_handle(
@@ -418,7 +418,7 @@ cdef class LogicalStorePartition:
         cdef _tuple[uint64_t] cpp_color
         cpp_color.reserve(len(color))
         for coord in color:
-            cpp_color.append_inplace(<size_t> coord)
+            cpp_color.append_inplace(<uint64_t> coord)
         return LogicalStore.from_handle(
             self._handle.get_child_store(cpp_color)
         )
