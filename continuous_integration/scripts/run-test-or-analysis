@@ -89,17 +89,23 @@ run_test_or_analysis() {
                --exclude-subdir \
                --skip-license
 
-            python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1
+            EXTRA_ARGS=
+            # TODO (wonchanl, jfaibussowit) Sanitizers can raise false alarms if the code does
+            # user-level threading, so we turn it off for sanitizer-enabled tests
+            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
+              EXTRA_ARGS="-ll:force_kthreads"
+            fi
+            python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
 
             # Also do some multi-CPU testing
             if [[ "$(uname)" == "Darwin" ]]; then
-                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 2
+                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 2 "${EXTRA_ARGS}"
             else
-                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 4
+                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 4 "${EXTRA_ARGS}"
             fi
 
             [[ -f ./ctest_install/bin/gpu_tests ]] && {
-              python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1
+              python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
             }
             ;;
         *)
