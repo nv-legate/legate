@@ -67,7 +67,7 @@ def test_NUMA_MEMORY_BUDGET() -> None:
 
 
 def test_SMALL_SYSMEM() -> None:
-    assert SMALL_SYSMEM == 100
+    assert SMALL_SYSMEM == 200
 
 
 def test_PROCESS_ENV() -> None:
