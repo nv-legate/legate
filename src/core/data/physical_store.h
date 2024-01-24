@@ -322,7 +322,8 @@ class PhysicalStore {
    *
    * @throw std::invalid_argument If the array is nullable or has sub-arrays
    */
-  explicit PhysicalStore(const PhysicalArray& array);
+  // NOLINTNEXTLINE(google-explicit-constructor) very common pattern in cuNumeric
+  PhysicalStore(const PhysicalArray& array);
 
  private:
   void check_accessor_dimension(int32_t dim) const;
