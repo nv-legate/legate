@@ -65,7 +65,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
 
   template <typename T>
   void add_invalidation_callback(T&& callback);
-  void perform_invalidation_callbacks();
+  void perform_invalidation_callbacks() noexcept;
 
   // Should never copy or move raw logical region field objects
   LogicalRegionField(const LogicalRegionField&)            = delete;

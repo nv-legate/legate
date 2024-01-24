@@ -41,6 +41,9 @@
 // and does not expand __VA_ARGS__ in a single step
 #define LegateDefinedPrivate__(args) LegateDefinedPrivate___ args
 #define LegateDefinedPrivate_(...) LegateDefinedPrivate__((__VA_ARGS__))
+// We do not want parentheses around 'x' since we need it to be expanded as-is to push the 1
+// forward an arg space
+// NOLINTNEXTLINE(bugprone-macro-parentheses)
 #define LegateDefinedPrivate(x) LegateDefinedPrivate_(x 1, 0, dummy)
 #define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))
 
@@ -91,5 +94,6 @@
 #define LEGATE_USE_DEBUG 1
 #endif
 
-// TODO: 2022-10-04: Work around a Legion bug, by not instantiating futures on framebuffer.
+// TODO(wonchanl): 2022-10-04: Work around a Legion bug, by not instantiating futures on
+// framebuffer.
 #define LEGATE_NO_FUTURES_ON_FB 1

@@ -36,7 +36,7 @@ class Enumerator {
   using reference         = typename iterator::reference;
 
   constexpr Enumerator() noexcept = default;
-  constexpr Enumerator(value_type start) noexcept;
+  constexpr explicit Enumerator(value_type start) noexcept;
 
   [[nodiscard]] constexpr value_type start() const noexcept;
 

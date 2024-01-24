@@ -240,6 +240,7 @@ class LogicalArray {
   LogicalArray(LogicalArray&&)                 = default;
   LogicalArray& operator=(LogicalArray&&)      = default;
 
+  // NOLINTNEXTLINE(google-explicit-constructor) we want this?
   LogicalArray(const LogicalStore& store);
   LogicalArray(const LogicalStore& store, const LogicalStore& null_mask);
 

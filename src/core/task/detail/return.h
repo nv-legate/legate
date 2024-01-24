@@ -72,7 +72,7 @@ struct ReturnedException {
 struct ReturnValues {
  public:
   ReturnValues() = default;
-  ReturnValues(std::vector<ReturnValue>&& return_values);
+  explicit ReturnValues(std::vector<ReturnValue>&& return_values);
 
   [[nodiscard]] ReturnValue operator[](int32_t idx) const;
 

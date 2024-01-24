@@ -629,7 +629,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
     return mapped_;
   }
   if (storage_->kind() == Storage::Kind::FUTURE) {
-    // TODO: future wrappers from inline mappings are read-only for now
+    // TODO(wonchanl): future wrappers from inline mappings are read-only for now
     auto domain = to_domain(storage_->shape()->extents());
     auto future = FutureWrapper{true, type()->size(), domain, storage_->get_future()};
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
@@ -685,7 +685,7 @@ Legion::ProjectionID LogicalStore::compute_projection(
   }
 
   const auto ndim = dim();
-  // TODO: We can't currently mix affine projections with delinearizing projections
+  // TODO(wonchanl): We can't currently mix affine projections with delinearizing projections
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(ndim == launch_ndim);
   }

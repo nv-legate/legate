@@ -62,7 +62,7 @@ class Strategy {
 
 class Partitioner {
  public:
-  Partitioner(std::vector<Operation*>&& operations);
+  explicit Partitioner(std::vector<Operation*>&& operations);
 
   [[nodiscard]] std::unique_ptr<Strategy> partition_stores();
 

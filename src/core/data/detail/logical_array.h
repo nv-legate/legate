@@ -91,8 +91,8 @@ struct LogicalArray {
 
 class BaseLogicalArray final : public LogicalArray {
  public:
-  BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
-                   InternalSharedPtr<LogicalStore> null_mask = nullptr);
+  explicit BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
+                            InternalSharedPtr<LogicalStore> null_mask = nullptr);
 
   [[nodiscard]] uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;

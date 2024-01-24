@@ -110,8 +110,8 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
 
 bool Tiling::is_disjoint_for(const Domain& launch_domain) const
 {
-  // TODO: The check really should be that every two points from the launch domain are mapped
-  // to two different colors
+  // TODO(wonchanl): The check really should be that every two points from the launch domain are
+  // mapped to two different colors
   return !overlapped_ &&
          (!launch_domain.is_valid() || launch_domain.get_volume() <= color_shape_.volume());
 }
@@ -254,8 +254,8 @@ bool Weighted::operator<(const Weighted& other) const { return *weights_ < *othe
 
 bool Weighted::is_disjoint_for(const Domain& launch_domain) const
 {
-  // TODO: The check really should be that every two points from the launch domain are mapped
-  // to two different colors
+  // TODO(wonchanl): The check really should be that every two points from the launch domain are
+  // mapped to two different colors
   return !launch_domain.is_valid() || launch_domain.get_volume() <= color_domain_.get_volume();
 }
 

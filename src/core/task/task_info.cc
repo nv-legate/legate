@@ -29,7 +29,7 @@ const Processor::Kind VARIANT_PROC_KINDS[] = {
 
 class TaskInfo::Impl {
  public:
-  Impl(std::string task_name);
+  explicit Impl(std::string task_name);
 
   [[nodiscard]] const std::string& name() const { return task_name_; }
 

@@ -48,7 +48,9 @@ class ScopedAllocator {
    * (and unless explicitly deallocated).
    * @param alignment Alignment for the allocations
    */
-  ScopedAllocator(Memory::Kind kind, bool scoped = true, size_t alignment = DEFAULT_ALIGNMENT);
+  explicit ScopedAllocator(Memory::Kind kind,
+                           bool scoped      = true,
+                           size_t alignment = DEFAULT_ALIGNMENT);
 
   /**
    * @brief Allocates a contiguous buffer of the given Memory::Kind

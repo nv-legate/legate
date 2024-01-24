@@ -990,7 +990,7 @@ void find_source_instance_bandwidth(
       affinities, source_memory, target_memory, false /*not just local affinities*/);
     // affinities being empty means that there's no direct channel between the source
     // and target memories, in which case we assign the smallest bandwidth
-    // TODO: Not all multi-hop copies are equal
+    // TODO(wonchanl): Not all multi-hop copies are equal
     if (!affinities.empty()) {
       if (LegateDefined(LEGATE_USE_DEBUG)) {
         assert(affinities.size() == 1);
@@ -1017,7 +1017,7 @@ void BaseMapper::legate_select_sources(
   std::map<Memory, Bandwidth> source_memory_bandwidths;
   // For right now we'll rank instances by the bandwidth of the memory
   // they are in to the destination.
-  // TODO: consider layouts when ranking source to help out the DMA system
+  // TODO(wonchanl): consider layouts when ranking source to help out the DMA system
   const Memory target_memory = target.get_location();
   // fill in a vector of the sources with their bandwidths
   std::vector<AnnotatedSourceInstance> all_sources;
@@ -1253,7 +1253,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& output)
 {
-  // TODO: Copies can have key stores in the future
+  // TODO(wonchanl): Copies can have key stores in the future
   output.chosen_functor = find_mappable_sharding_functor_id(copy);
 }
 
@@ -1430,8 +1430,8 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
   output.serdez_upper_bound = LEGATE_MAX_SIZE_SCALAR_RETURN;
 
   if (local_machine.has_gpus()) {
-    // TODO: It's been reported that blindly mapping target instances of future map reductions
-    // to framebuffers hurts performance. Until we find a better mapping policy, we guard
+    // TODO(wonchanl): It's been reported that blindly mapping target instances of future map
+    // reductions to framebuffers hurts performance. Until we find a better mapping policy, we guard
     // the current policy with a macro.
     if (LegateDefined(LEGATE_MAP_FUTURE_MAP_REDUCTIONS_TO_GPU)) {
       // If this was joining exceptions, we should put instances on a host-visible memory

@@ -58,7 +58,7 @@ struct CopyArg final : public Serializable {
 
 class CopyLauncher {
  public:
-  CopyLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
+  explicit CopyLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
 
   void add_input(const InternalSharedPtr<LogicalStore>& store,
                  std::unique_ptr<StoreProjection> store_proj);

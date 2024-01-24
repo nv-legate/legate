@@ -106,11 +106,11 @@ VAL Scalar::value() const
   const auto ty = type();
 
   if (ty.code() == Type::Code::STRING) {
-    throw std::invalid_argument("String cannot be casted to other types");
+    throw std::invalid_argument{"String cannot be casted to other types"};
   }
   if (sizeof(VAL) != ty.size()) {
-    throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
-                                ", but the requested type has size " + std::to_string(sizeof(VAL)));
+    throw std::invalid_argument{"Size of the scalar is " + std::to_string(ty.size()) +
+                                ", but the requested type has size " + std::to_string(sizeof(VAL))};
   }
   return *static_cast<const VAL*>(ptr());
 }
@@ -141,9 +141,9 @@ Span<const VAL> Scalar::values() const
     auto arr_type  = ty.as_fixed_array_type();
     auto elem_type = arr_type.element_type();
     if (sizeof(VAL) != elem_type.size()) {
-      throw std::invalid_argument(
+      throw std::invalid_argument{
         "The scalar's element type has size " + std::to_string(elem_type.size()) +
-        ", but the requested element type has size " + std::to_string(sizeof(VAL)));
+        ", but the requested element type has size " + std::to_string(sizeof(VAL))};
     }
     auto size = arr_type.num_elements();
     return {reinterpret_cast<const VAL*>(ptr()), size};
@@ -151,8 +151,8 @@ Span<const VAL> Scalar::values() const
 
   if (ty.code() == Type::Code::STRING) {
     if (sizeof(VAL) != 1) {
-      throw std::invalid_argument(
-        "String scalar can only be converted into a span of a type whose size is 1 byte");
+      throw std::invalid_argument{
+        "String scalar can only be converted into a span of a type whose size is 1 byte"};
     }
     auto data         = ptr();
     auto len          = *static_cast<const uint32_t*>(data);
@@ -163,9 +163,9 @@ Span<const VAL> Scalar::values() const
     return {nullptr, 0};
   }
   if (sizeof(VAL) != ty.size()) {
-    throw std::invalid_argument("Size of the scalar is " + std::to_string(ty.size()) +
+    throw std::invalid_argument{"Size of the scalar is " + std::to_string(ty.size()) +
                                 ", but the requested element type has size " +
-                                std::to_string(sizeof(VAL)));
+                                std::to_string(sizeof(VAL))};
   }
   return {static_cast<const VAL*>(ptr()), 1};
 }

@@ -57,6 +57,7 @@ struct Partition {
   [[nodiscard]] virtual std::unique_ptr<Partition> bloat(
     const tuple<uint64_t>& low_offsets, const tuple<uint64_t>& high_offsets) const = 0;
 
+  // NOLINTNEXTLINE(google-default-arguments)
   [[nodiscard]] virtual Legion::LogicalPartition construct(Legion::LogicalRegion region,
                                                            bool complete = false) const = 0;
 

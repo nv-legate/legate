@@ -22,7 +22,7 @@ class BufferBuilder;
 
 class FillLauncher {
  public:
-  FillLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
+  explicit FillLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
 
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,

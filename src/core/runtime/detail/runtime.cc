@@ -196,7 +196,7 @@ void Runtime::initialize(Legion::Context legion_context)
   initialized_    = true;
   legion_context_ = legion_context;
   core_library_   = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
-  // TODO: Use smart pointers for these
+  // TODO(jfaibussowit): Use smart pointers for these
   communicator_manager_ = new CommunicatorManager{};
   partition_manager_    = new PartitionManager{};
   machine_manager_      = new MachineManager{};
@@ -307,7 +307,7 @@ void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
                                              redop));
 }
 
-// TODO: We want to use scalars as fill values
+// TODO(wonchanl): We want to use scalars as fill values
 void Runtime::issue_fill(
   InternalSharedPtr<LogicalArray> lhs,  // NOLINT(performance-unnecessary-value-param)
   InternalSharedPtr<LogicalStore> value)
@@ -404,8 +404,8 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(InternalSharedPtr<Type> ty
                                                       uint32_t dim,
                                                       bool nullable)
 {
-  // TODO: We should be able to control colocation of fields for struct types,
-  //       instead of special-casing rect types here
+  // TODO(wonchanl): We should be able to control colocation of fields for struct types,
+  // instead of special-casing rect types here
   if (Type::Code::STRUCT == type->code && !is_rect_type(type)) {
     return create_struct_array(std::move(type), dim, nullable);
   }
@@ -430,8 +430,8 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
                                                       bool nullable,
                                                       bool optimize_scalar)
 {
-  // TODO: We should be able to control colocation of fields for struct types,
-  //       instead of special-casing rect types here
+  // TODO(wonchanl): We should be able to control colocation of fields for struct types,
+  // instead of special-casing rect types here
   if (Type::Code::STRUCT == type->code && !is_rect_type(type)) {
     return create_struct_array(shape, std::move(type), nullable, optimize_scalar);
   }
@@ -753,8 +753,8 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
   Legion::RegionRequirement req(region, LEGION_READ_WRITE, EXCLUSIVE, region);
   req.add_field(field_id);
   auto mapper_id = core_library_->get_mapper_id();
-  // TODO: We need to pass the metadata about logical store
-  Legion::InlineLauncher launcher(req, mapper_id);
+  // TODO(wonchanl): We need to pass the metadata about logical store
+  Legion::InlineLauncher launcher{req, mapper_id};
   launcher.provenance       = provenance_manager()->get_provenance();
   Legion::PhysicalRegion pr = legion_runtime_->map_region(legion_context_, launcher);
   pr.wait_until_valid(true /*silence_warnings*/);
@@ -1421,7 +1421,8 @@ void extract_scalar_task(const void* args,
 template <LegateVariantCode variant_id>
 void register_extract_scalar_variant(const std::unique_ptr<TaskInfo>& task_info)
 {
-  // TODO: We could support Legion & Realm calling convensions so we don't pass nullptr here
+  // TODO(wonchanl): We could support Legion & Realm calling convensions so we don't pass nullptr
+  // here
   task_info->add_variant(
     variant_id, nullptr, Legion::CodeDescriptor{extract_scalar_task<variant_id>}, VariantOptions{});
 }

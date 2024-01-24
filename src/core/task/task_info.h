@@ -28,7 +28,7 @@ struct VariantInfo {
 
 class TaskInfo {
  public:
-  TaskInfo(std::string task_name);
+  explicit TaskInfo(std::string task_name);
   ~TaskInfo();
 
   [[nodiscard]] const std::string& name() const;

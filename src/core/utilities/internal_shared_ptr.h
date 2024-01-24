@@ -54,16 +54,19 @@ class InternalWeakPtr {
   InternalWeakPtr& operator=(InternalWeakPtr&& other) noexcept;
 
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
-  InternalWeakPtr(const InternalWeakPtr<U>& other) noexcept;
+  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
+    const InternalWeakPtr<U>& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   InternalWeakPtr& operator=(const InternalWeakPtr<U>& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   InternalWeakPtr& operator=(InternalWeakPtr<U>&& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
-  InternalWeakPtr(InternalWeakPtr<U>&& other) noexcept;
+  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
+    InternalWeakPtr<U>&& other) noexcept;
 
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
-  InternalWeakPtr(const InternalSharedPtr<U>& other) noexcept;
+  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
+    const InternalSharedPtr<U>& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   InternalWeakPtr& operator=(const InternalSharedPtr<U>& other) noexcept;
 
@@ -114,6 +117,7 @@ class InternalSharedPtr {
   // constructors
   constexpr InternalSharedPtr() noexcept = default;
 
+  // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::shared_ptr ctor
   InternalSharedPtr(std::nullptr_t) noexcept;
 
   template <typename U,
@@ -133,11 +137,13 @@ class InternalSharedPtr {
   InternalSharedPtr& operator=(InternalSharedPtr&& other) noexcept;
 
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
-  InternalSharedPtr(const InternalSharedPtr<U>& other) noexcept;
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+    const InternalSharedPtr<U>& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   InternalSharedPtr& operator=(const InternalSharedPtr<U>& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
-  InternalSharedPtr(InternalSharedPtr<U>&& other) noexcept;
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+    InternalSharedPtr<U>&& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   InternalSharedPtr& operator=(InternalSharedPtr<U>&& other) noexcept;
 
@@ -146,7 +152,8 @@ class InternalSharedPtr {
     typename D,
     typename = std::enable_if_t<
       traits::detail::ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
-  InternalSharedPtr(std::unique_ptr<U, D>&& ptr);
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+    std::unique_ptr<U, D>&& ptr);
   template <
     typename U,
     typename D,
@@ -155,11 +162,13 @@ class InternalSharedPtr {
   InternalSharedPtr& operator=(std::unique_ptr<U, D>&& ptr);
 
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
-  InternalSharedPtr(const SharedPtr<U>& other) noexcept;
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+    const SharedPtr<U>& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   InternalSharedPtr& operator=(const SharedPtr<U>& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
-  InternalSharedPtr(SharedPtr<U>&& other) noexcept;
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+    SharedPtr<U>&& other) noexcept;
   template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   InternalSharedPtr& operator=(SharedPtr<U>&& other) noexcept;
 

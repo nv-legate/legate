@@ -112,6 +112,7 @@ class InplaceControlBlock final : public ControlBlockBase {
   struct aligned_storage {
     constexpr aligned_storage() noexcept = default;
     // use this ctor to avoid zero-initializing the array
+    // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::pair constructor
     constexpr aligned_storage(std::nullptr_t) noexcept {}
 
     [[nodiscard]] void* addr() noexcept { return static_cast<void*>(&mem); }
@@ -124,7 +125,7 @@ class InplaceControlBlock final : public ControlBlockBase {
   InplaceControlBlock() = delete;
 
   template <typename... Args>
-  InplaceControlBlock(allocator_type allocator, Args&&... args);
+  explicit InplaceControlBlock(allocator_type allocator, Args&&... args);
 
   void destroy_object() noexcept override;
 

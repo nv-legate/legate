@@ -72,7 +72,7 @@ struct get_inline_alloc_fn {
                               size_t field_size)
   {
     const Rect<N> rect =
-      domain.dim > 0 ? Rect<N>(domain) : Rect<N>(Point<N>::ZEROES(), Point<N>::ZEROES());
+      domain.dim > 0 ? Rect<N>{domain} : Rect<N>{Point<N>::ZEROES(), Point<N>::ZEROES()};
     return create(
       N,
       rect,
@@ -195,7 +195,7 @@ struct get_inline_alloc_from_future_fn {
   InlineAllocation operator()(const Legion::Future& future, const Domain& domain, size_t field_size)
   {
     const Rect<DIM> rect =
-      domain.dim > 0 ? Rect<DIM>(domain) : Rect<DIM>(Point<DIM>::ZEROES(), Point<DIM>::ZEROES());
+      domain.dim > 0 ? Rect<DIM>{domain} : Rect<DIM>{Point<DIM>::ZEROES(), Point<DIM>::ZEROES()};
     std::vector<size_t> strides(DIM, 0);
     const AccessorRO<int8_t, DIM> acc{
       future, rect, Memory::Kind::NO_MEMKIND, field_size, false /*check_field_size*/};
@@ -209,7 +209,7 @@ struct get_inline_alloc_from_future_fn {
                               size_t field_size)
   {
     const Rect<DIM> rect =
-      domain.dim > 0 ? Rect<DIM>(domain) : Rect<DIM>(Point<DIM>::ZEROES(), Point<DIM>::ZEROES());
+      domain.dim > 0 ? Rect<DIM>{domain} : Rect<DIM>{Point<DIM>::ZEROES(), Point<DIM>::ZEROES()};
     std::vector<size_t> strides(DIM, 0);
     const AccessorRO<int8_t, DIM> acc{value, rect, field_size, false /*check_field_size*/};
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));

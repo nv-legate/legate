@@ -119,7 +119,8 @@ void Task::launch_task(Strategy* p_strategy)
   launcher.set_concurrent(concurrent_);
   launcher.throws_exception(can_throw_exception_);
 
-  // TODO: Once we implement a precise interference checker, this workaround can be removed
+  // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
+  // removed
   auto has_projection = [](auto& args) {
     return std::any_of(
       args.begin(), args.end(), [](const auto& arg) { return arg.projection.has_value(); });
@@ -195,8 +196,8 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   const auto runtime = detail::Runtime::get_runtime();
   if (1 == total) {
     if (1 == num_scalar_outs) {
-      // TODO: We should eventually support future map-backed stores, but for now we extract the
-      // first one to get the code running
+      // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
+      // extract the first one to get the code running
       scalar_outputs_.front()->set_future(result[launch_domain.lo()]);
     } else if (1 == num_scalar_reds) {
       auto& [store, redop] = scalar_reductions_.front();
@@ -211,8 +212,8 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
     auto idx = static_cast<uint32_t>(num_unbound_outs);
 
     if (!scalar_outputs_.empty()) {
-      // TODO: We should eventually support future map-backed stores, but for now we extract the
-      // first one to get the code running
+      // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
+      // extract the first one to get the code running
       auto first_future = result[launch_domain.lo()];
       for (auto& store : scalar_outputs_) {
         store->set_future(runtime->extract_scalar(first_future, idx++));
@@ -280,7 +281,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
 void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol)
 {
   array->record_scalar_or_unbound_outputs(this);
-  // TODO: We will later support structs with list/string fields
+  // TODO(wonchanl): We will later support structs with list/string fields
   if (array->kind() == ArrayKind::LIST && array->unbound()) {
     arrays_to_fixup_.push_back(array.get());
   }
@@ -377,8 +378,8 @@ void AutoTask::fixup_ranges(Strategy& strategy)
   auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES};
 
   for (auto* array : arrays_to_fixup_) {
-    // TODO: We should pass projection functors here once we start supporting string/list legate
-    // arrays in ManualTasks
+    // TODO(wonchanl): We should pass projection functors here once we start supporting string/list
+    // legate arrays in ManualTasks
     launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, NO_ACCESS));
   }
   launcher.execute(launch_domain);
@@ -394,7 +395,7 @@ ManualTask::ManualTask(const Library* library,
                        uint64_t unique_id,
                        mapping::detail::Machine&& machine)
   : Task{library, task_id, unique_id, std::move(machine)},
-    strategy_(std::make_unique<detail::Strategy>())
+    strategy_{std::make_unique<detail::Strategy>()}
 {
   strategy_->set_launch_domain(this, launch_domain);
 }
@@ -428,7 +429,7 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
                             std::optional<SymbolicPoint> projection)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    // TODO: We need to raise an exception for the user error in this case
+    // TODO(wonchanl): We need to raise an exception for the user error in this case
     assert(!store_partition->store()->unbound());
   }
   if (store_partition->store()->has_scalar_storage()) {

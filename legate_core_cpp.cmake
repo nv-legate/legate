@@ -512,6 +512,7 @@ install(
   FILES src/core/data/allocator.h
         src/core/data/buffer.h
         src/core/data/external_allocation.h
+        src/core/data/external_allocation.inl
         src/core/data/inline_allocation.h
         src/core/data/logical_array.h
         src/core/data/logical_array.inl
@@ -526,6 +527,7 @@ install(
         src/core/data/shape.h
         src/core/data/shape.inl
         src/core/data/slice.h
+        src/core/data/slice.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/data)
 
 install(

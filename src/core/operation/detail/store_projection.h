@@ -25,9 +25,9 @@ struct BaseStoreProjection {
   bool operator<(const BaseStoreProjection& other) const;
   bool operator==(const BaseStoreProjection& other) const;
 
-  // TODO: Ideally we want this method to return a requirement, instead of taking an inout argument.
-  // We go with an inout parameter for now, as RegionRequirement doesn't have a move
-  // constructor/assignment.
+  // TODO(wonchanl): Ideally we want this method to return a requirement, instead of taking an
+  // inout argument. We go with an inout parameter for now, as RegionRequirement doesn't have a
+  // move constructor/assignment.
   template <bool SINGLE>
   void populate_requirement(Legion::RegionRequirement& requirement,
                             const Legion::LogicalRegion& region,

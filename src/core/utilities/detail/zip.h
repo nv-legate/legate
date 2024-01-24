@@ -169,7 +169,7 @@ class Zipper {
   using const_reference   = typename const_iterator::reference;
 
   Zipper() = delete;
-  Zipper(T&&... objs);
+  Zipper(T&&... objs);  // NOLINT(google-explicit-constructor)
 
   [[nodiscard]] iterator begin();
   [[nodiscard]] const_iterator cbegin() const;

@@ -306,7 +306,7 @@ void TaskLauncher::post_process_unbound_stores(
         runtime->import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
       store->set_region_field(std::move(region_field));
 
-      // TODO: Need to handle key partitions for multi-dimensional unbound stores
+      // TODO(wonchanl): Need to handle key partitions for multi-dimensional unbound stores
       if (store->dim() > 1) {
         return;
       }

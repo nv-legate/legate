@@ -31,7 +31,7 @@ using Legion::FutureMap;
 
 class Factory final : public detail::CommunicatorFactory {
  public:
-  Factory(const detail::Library* core_library);
+  explicit Factory(const detail::Library* core_library);
 
   [[nodiscard]] bool needs_barrier() const override { return false; }
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;

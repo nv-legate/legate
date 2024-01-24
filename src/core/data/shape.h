@@ -75,7 +75,7 @@ class Shape {
    *
    * @param extents Dimension extents
    */
-  Shape(tuple<uint64_t> extents);
+  Shape(tuple<uint64_t> extents);  // NOLINT(google-explicit-constructor)
   /**
    * @brief Constructs the shape from a vector of extents
    *

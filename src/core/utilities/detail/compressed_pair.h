@@ -77,6 +77,7 @@ class compressed_pair_impl<T, U, 1> : T {
   {
   }
 
+  // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::pair constructor
   compressed_pair_impl(second_type x) : second_{std::move(x)} {}
 
   [[nodiscard]] first_type& first() noexcept { return *this; }
@@ -105,6 +106,7 @@ class compressed_pair_impl<T, U, 2> : U {
   {
   }
 
+  // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::pair constructor
   compressed_pair_impl(first_type x) : first_{std::move(x)} {}
 
   [[nodiscard]] first_type& first() noexcept { return first_; }

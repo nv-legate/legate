@@ -68,7 +68,7 @@ LegateVariantCode to_variant_code(TaskTarget target)
 void DimOrdering::populate_dimension_ordering(uint32_t ndim,
                                               std::vector<Legion::DimensionKind>& ordering) const
 {
-  // TODO: We need to implement the relative dimension ordering
+  // TODO(wonchanl): We need to implement the relative dimension ordering
   switch (kind) {
     case Kind::C: {
       for (int32_t dim = static_cast<int32_t>(ndim) - 1; dim >= 0; --dim) {

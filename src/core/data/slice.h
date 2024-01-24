@@ -32,13 +32,13 @@ namespace legate {
 struct Slice {
   static inline constexpr std::nullopt_t OPEN = std::nullopt;
 
-  Slice(std::optional<int64_t> _start = OPEN, std::optional<int64_t> _stop = OPEN)
-    : start{std::move(_start)}, stop{std::move(_stop)}
-  {
-  }
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  Slice(std::optional<int64_t> _start = OPEN, std::optional<int64_t> _stop = OPEN);
 
   std::optional<int64_t> start{OPEN};
   std::optional<int64_t> stop{OPEN};
 };
 
 }  // namespace legate
+
+#include "core/data/slice.inl"

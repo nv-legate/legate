@@ -56,7 +56,7 @@ void RegionFieldArg::perform_invalidations() const
 OutputRegionArg::OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space)
   : store_{store}, field_space_{field_space}
 {
-  // TODO: We should reuse field ids here
+  // TODO(wonchanl): We should reuse field ids here
   field_id_ = Runtime::get_runtime()->allocate_field(field_space_, store->type()->size());
 }
 

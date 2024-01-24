@@ -18,7 +18,7 @@
 
 namespace legate::detail {
 
-template <typename T = long long>  // default to match strtoll()
+template <typename T = long long>  // NOLINT(google-runtime-int) default to match strtoll()
 [[nodiscard]] T safe_strtoll(const char* env_value, char** end_ptr = nullptr)
 {
   constexpr auto radix = 10;

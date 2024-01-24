@@ -83,7 +83,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
     return {};
   }
 
-  // TODO: We need a better heuristic
+  // TODO(wonchanl): We need a better heuristic
   auto max_pieces = curr_num_pieces;
 
   // First compute the N-th root of the number of pieces
@@ -217,7 +217,7 @@ bool PartitionManager::use_complete_tiling(const tuple<uint64_t>& extents,
 {
   // If it would generate a very large number of elements then
   // we'll apply a heuristic for now and not actually tile it
-  // TODO: A better heuristic for this in the future
+  // TODO(wonchanl): A better heuristic for this in the future
   constexpr auto MAX_TILES_HEURISTIC  = 256;
   constexpr auto MAX_PIECES_HEURISTIC = 16;
   const auto num_tiles                = (extents / tile_shape).volume();

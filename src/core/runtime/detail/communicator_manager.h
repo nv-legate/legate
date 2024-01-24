@@ -26,7 +26,8 @@
 
 namespace legate::detail {
 
-// TODO: We need to expose this eventually so client libraries can register custom communicators
+// TODO(wonchanl): We need to expose this eventually so client libraries can register custom
+// communicators
 class CommunicatorFactory {
  public:
   CommunicatorFactory()                                               = default;

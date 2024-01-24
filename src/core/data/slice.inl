@@ -12,26 +12,13 @@
 
 #pragma once
 
-#include "legate_defines.h"
+#include "core/data/slice.h"
 
-#if LegateDefined(LEGATE_USE_CUDA)
-#include <nvtx3/nvToolsExt.h>
-#else
-using nvtxRangeId_t = char;
-inline constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
-inline constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
-#endif
+namespace legate {
 
-namespace legate::nvtx {
+inline Slice::Slice(std::optional<int64_t> _start, std::optional<int64_t> _stop)
+  : start{std::move(_start)}, stop{std::move(_stop)}
+{
+}
 
-class Range {
- public:
-  explicit Range(const char* message) noexcept : range_{nvtxRangeStartA(message)} {}
-
-  ~Range() noexcept { nvtxRangeEnd(range_); }
-
- private:
-  nvtxRangeId_t range_;
-};
-
-}  // namespace legate::nvtx
+}  // namespace legate

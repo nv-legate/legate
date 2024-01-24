@@ -263,17 +263,17 @@ void PhysicalStore::check_accessor_type() const
   }
   // Test exact match for primitive types
   if (in_type != Type::Code::NIL) {
-    throw std::invalid_argument(
+    throw std::invalid_argument{
       "Type mismatch: " + primitive_type(in_type).to_string() + " accessor to a " +
       type().to_string() +
-      " store. Disable type checking via accessor template parameter if this is intended.");
+      " store. Disable type checking via accessor template parameter if this is intended."};
   }
   // Test size matches for other types
   if (sizeof(T) != type().size()) {
-    throw std::invalid_argument(
+    throw std::invalid_argument{
       "Type size mismatch: store type " + type().to_string() + " has size " +
       std::to_string(type().size()) + ", requested type has size " + std::to_string(sizeof(T)) +
-      ". Disable type checking via accessor template parameter if this is intended.");
+      ". Disable type checking via accessor template parameter if this is intended."};
   }
 }
 

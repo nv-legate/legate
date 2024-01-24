@@ -218,7 +218,8 @@ void ReturnValues::legion_serialize(void* buffer) const
       if (LegateDefined(LEGATE_USE_DEBUG)) {
         assert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
       }
-#if LegateDefined(LEGATE_USE_CUDA)  // TODO expose cudaMemcpyAsync() as a stub instead
+      // TODO (jfaibussowit): expose cudaMemcpyAsync() as a stub instead
+#if LegateDefined(LEGATE_USE_CUDA)
       CHECK_CUDA(cudaMemcpyAsync(buffer,
                                  ret.ptr(),
                                  ret.size(),

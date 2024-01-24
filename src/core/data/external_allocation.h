@@ -223,3 +223,5 @@ class ExternalAllocation {
 };
 
 }  // namespace legate
+
+#include "core/data/external_allocation.inl"

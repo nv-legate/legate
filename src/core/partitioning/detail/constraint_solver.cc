@@ -112,8 +112,8 @@ void ConstraintSolver::solve_constraints()
 
   entries.reserve(all_symbols.size());
   for (auto& symb : all_symbols) {
-    // TODO: partition symbols can be independent of any stores of the operation
-    //       (e.g., when a symbol subsumes a union of two other symbols)
+    // TODO(wonchanl): partition symbols can be independent of any stores of the operation
+    // (e.g., when a symbol subsumes a union of two other symbols)
     auto store  = symb->operation()->find_store(symb);
     auto& entry = entries.emplace_back(symb, store->compute_restrictions(is_output(*symb)));
     table.insert({*symb, &entry});
@@ -166,7 +166,7 @@ void ConstraintSolver::solve_constraints()
     }
     for (auto&& ax : axes) {
       auto axis = static_cast<uint32_t>(ax);
-      // TODO: We want to check the axis eagerly and raise an exception
+      // TODO(wonchanl): We want to check the axis eagerly and raise an exception
       // if it is out of bounds
       if (LegateDefined(LEGATE_USE_DEBUG)) {
         static_assert(std::is_unsigned_v<decltype(axis)>,

@@ -367,7 +367,7 @@ class Runtime {
   using ReductionOpTableKey = std::pair<uint32_t, int32_t>;
   std::unordered_map<ReductionOpTableKey, int32_t, hasher<ReductionOpTableKey>> reduction_ops_{};
 
-  // TODO: We keep some of the deferred exception code as we will put it back later
+  // TODO(wonchanl): We keep some of the deferred exception code as we will put it back later
   std::vector<Legion::Future> pending_exceptions_{};
   std::deque<TaskException> outstanding_exceptions_{};
 };

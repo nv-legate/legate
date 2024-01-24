@@ -27,15 +27,6 @@
 
 namespace legate {
 
-// TODO: For some reason having these two methods in the .inl file leads to a missing symbol
-// error.
-ExternalAllocation::ExternalAllocation(InternalSharedPtr<detail::ExternalAllocation>&& impl)
-  : impl_{std::move(impl)}
-{
-}
-
-const SharedPtr<detail::ExternalAllocation>& ExternalAllocation::impl() const { return impl_; }
-
 bool ExternalAllocation::read_only() const { return impl_->read_only(); }
 
 mapping::StoreTarget ExternalAllocation::target() const { return impl_->target(); }

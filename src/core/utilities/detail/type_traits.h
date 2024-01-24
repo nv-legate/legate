@@ -20,8 +20,11 @@ namespace util {
 
 template <typename T>
 struct move_conversion_sfinae_helper {
+  // The point here is that these are explicit
+  // NOLINTBEGIN(google-explicit-constructor)
   operator T const&();
   operator T&&();
+  // NOLINTEND(google-explicit-constructor)
 };
 
 }  // namespace util

@@ -16,7 +16,17 @@
 
 namespace legate {
 
-/*static*/ ExternalAllocation ExternalAllocation::create_sysmem(
+inline ExternalAllocation::ExternalAllocation(InternalSharedPtr<detail::ExternalAllocation>&& impl)
+  : impl_{std::move(impl)}
+{
+}
+
+inline const SharedPtr<detail::ExternalAllocation>& ExternalAllocation::impl() const
+{
+  return impl_;
+}
+
+/*static*/ inline ExternalAllocation ExternalAllocation::create_sysmem(
   const void* ptr,
   size_t size,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
@@ -24,7 +34,7 @@ namespace legate {
   return create_sysmem(const_cast<void*>(ptr), size, true, std::move(deleter));
 }
 
-/*static*/ ExternalAllocation ExternalAllocation::create_zcmem(
+/*static*/ inline ExternalAllocation ExternalAllocation::create_zcmem(
   const void* ptr,
   size_t size,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
@@ -32,13 +42,13 @@ namespace legate {
   return create_zcmem(const_cast<void*>(ptr), size, true, std::move(deleter));
 }
 
-/*static*/ ExternalAllocation ExternalAllocation::create_fbmem(
+/*static*/ inline ExternalAllocation ExternalAllocation::create_fbmem(
   uint32_t local_device_id,
   const void* ptr,
   size_t size,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
-  return create_fbmem(local_device_id, ptr, size, true, std::move(deleter));
+  return create_fbmem(local_device_id, const_cast<void*>(ptr), size, true, std::move(deleter));
 }
 
 }  // namespace legate

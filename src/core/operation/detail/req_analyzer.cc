@@ -173,7 +173,7 @@ void OutputRequirementAnalyzer::insert(uint32_t dim,
 {
   auto& req_info = req_infos_[field_space];
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    // TODO: This should be checked when alignment constraints are set on unbound stores
+    // TODO(wonchanl): This should be checked when alignment constraints are set on unbound stores
     assert(ReqInfo::UNSET == req_info.dim || req_info.dim == dim);
   }
   req_info.dim = dim;

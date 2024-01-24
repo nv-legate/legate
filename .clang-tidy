@@ -12,6 +12,7 @@ Checks:
   - 'mpi*'
   - 'cert-*'
   - 'portability-*'
+  - 'google*'
   - 'cppcoreguidelines-pro-type-cstyle-cast'
   # then disable the stuff we don't want
   - '-cert-dcl21-cpp' # returning non-const from operator-- or operator++
@@ -43,6 +44,13 @@ Checks:
   # touch any member variables, not because they are logically static. So we disable the
   # check.
   - '-readability-convert-member-functions-to-static'
+  # Given
+  #
+  # std::make_pair<some_type, some_other_type>(...)
+  #
+  # Results in: error: for C++11-compatibility, use pair directly. But we don't care about
+  # C++11, and so we don't care about this warning.
+  - '-google-build-explicit-make-pair'
 WarningsAsErrors: '*'
 HeaderFileExtensions:
   - ''
@@ -58,7 +66,7 @@ ImplementationFileExtensions:
   - cpp
   - cxx
   - cu
-HeaderFilterRegex: 'src/core/.*\.(hp*|inl|cuh)'
+HeaderFilterRegex: '.*/src/.*'
 AnalyzeTemporaryDtors: false
 SystemHeaders: false
 CheckOptions:

@@ -12,8 +12,8 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
-#include <stdint.h>
 #include <utility>
 
 /**
@@ -36,17 +36,15 @@ class Time {
    *
    * @return A timestamp value
    */
-  int64_t value() const;
+  [[nodiscard]] int64_t value() const;
 
- public:
   Time() = default;
 
  private:
   class Impl;
   explicit Time(std::shared_ptr<Impl> impl) : impl_{std::move(impl)} {}
-  std::shared_ptr<Impl> impl_{nullptr};
+  std::shared_ptr<Impl> impl_{};
 
- private:
   friend Time measure_microseconds();
   friend Time measure_nanoseconds();
 };
@@ -61,7 +59,7 @@ class Time {
  *
  * @return A `Time` object
  */
-Time measure_microseconds();
+[[nodiscard]] Time measure_microseconds();
 
 /**
  * @ingroup util
@@ -73,6 +71,6 @@ Time measure_microseconds();
  *
  * @return A `Time` object
  */
-Time measure_nanoseconds();
+[[nodiscard]] Time measure_nanoseconds();
 
 }  // namespace legate::timing

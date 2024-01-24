@@ -322,7 +322,7 @@ class PhysicalStore {
    *
    * @throw std::invalid_argument If the array is nullable or has sub-arrays
    */
-  PhysicalStore(const PhysicalArray& array);
+  explicit PhysicalStore(const PhysicalArray& array);
 
  private:
   void check_accessor_dimension(int32_t dim) const;

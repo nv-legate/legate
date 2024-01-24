@@ -22,7 +22,7 @@ namespace legate::detail {
   if (context.get_task_index()[0] == 0) {
     return;
   }
-  // TODO: We need to extend this to nested cases
+  // TODO(wonchanl): We need to extend this to nested cases
   for (auto&& output : context.outputs()) {
     auto list_arr = output.as_list_array();
 

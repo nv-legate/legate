@@ -36,7 +36,7 @@ namespace legate::comm {
 class Communicator {
  public:
   Communicator() = default;
-  Communicator(Legion::Future future);
+  explicit Communicator(Legion::Future future);
 
   Communicator(const Communicator&)            = default;
   Communicator& operator=(const Communicator&) = default;

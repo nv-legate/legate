@@ -170,7 +170,12 @@ void LogicalRegionField::add_invalidation_callback_(std::function<void()> callba
   }
 }
 
-void LogicalRegionField::perform_invalidation_callbacks()
+// This clang-tidy error is spurious. All of the callbacks are noexcept (they are checked as
+// such during registration) but the compiler doesn't know that, since std::function does not
+// (as of C++23) allow you to specify the exception specification. Otherwise we would make
+// callbacks_ a container of std::function<void() noexcept>.
+// NOLINTNEXTLINE(bugprone-exception-escape)
+void LogicalRegionField::perform_invalidation_callbacks() noexcept
 {
   if (parent_) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
