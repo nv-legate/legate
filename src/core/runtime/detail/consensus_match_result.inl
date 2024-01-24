@@ -39,8 +39,7 @@ ConsensusMatchResult<T>::~ConsensusMatchResult() noexcept
   try {
     wait();
   } catch (const std::exception& excn) {
-    log_legate().error() << excn.what();
-    LEGATE_ABORT;
+    LEGATE_ABORT(excn.what());
   }
 }
 

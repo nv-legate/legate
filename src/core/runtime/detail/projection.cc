@@ -282,8 +282,7 @@ LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID pro
 
   // If we're not OK with a missing projection functor, then throw an error.
   if (nullptr == result && !allow_missing) {
-    log_legate().debug("Failed to find projection functor of id %d", proj_id);
-    LEGATE_ABORT;
+    LEGATE_ABORT("Failed to find projection functor of id " << proj_id);
   }
   return result;
 }

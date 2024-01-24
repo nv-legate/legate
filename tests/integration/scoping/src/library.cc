@@ -19,8 +19,6 @@ namespace scoping {
 
 static const char* const library_name = "scoping";
 
-Legion::Logger log_scoping(library_name);
-
 template <typename T, int ID>
 struct Task : public legate::LegateTask<T> {
   static constexpr int TASK_ID = ID;
@@ -37,8 +35,8 @@ void validate(legate::TaskContext context)
   int32_t num_tasks = context.get_launch_domain().get_volume();
   auto to_compare   = context.scalars().at(0).value<int32_t>();
   if (to_compare != num_tasks) {
-    log_scoping.error("Test failed: expected %d tasks, but got %d tasks", to_compare, num_tasks);
-    LEGATE_ABORT;
+    LEGATE_ABORT("Test failed: expected " << to_compare << "tasks, but got " << num_tasks
+                                          << " tasks");
   }
 }
 
@@ -53,9 +51,8 @@ void map_check(legate::TaskContext& context)
   int32_t global_proc_id      = task_id * proc_count / task_count + start_proc_id;
   int32_t calculated_shard_id = global_proc_id / per_node_count;
   if (shard_id != calculated_shard_id) {
-    log_scoping.error(
-      "Test failed: expected %d shard, but got %d shard", shard_id, calculated_shard_id);
-    LEGATE_ABORT;
+    LEGATE_ABORT("Test failed: expected " << shard_id << " shard, but got " << calculated_shard_id
+                                          << " shard");
   }
 }
 

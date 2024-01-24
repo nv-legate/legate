@@ -104,6 +104,8 @@ class BackendNetwork {
 
   [[nodiscard]] virtual int init_comm() = 0;
 
+  virtual void abort();
+
   [[nodiscard]] virtual int comm_create(CollComm global_comm,
                                         int global_comm_size,
                                         int global_rank,
@@ -148,6 +150,8 @@ class MPINetwork : public BackendNetwork {
   ~MPINetwork() override;
 
   [[nodiscard]] int init_comm() override;
+
+  void abort() override;
 
   [[nodiscard]] int comm_create(CollComm global_comm,
                                 int global_comm_size,
@@ -281,6 +285,10 @@ extern BackendNetwork* backend_network;
 [[nodiscard]] int collInit(int argc, char* argv[]);
 
 [[nodiscard]] int collFinalize();
+
+// this is forward declared in legate_defines.h (for LEGATE_ABORT()), because we don't want to
+// include this entire header
+void collAbort() noexcept;  // NOLINT(readability-redundant-declaration)
 
 [[nodiscard]] int collInitComm();
 

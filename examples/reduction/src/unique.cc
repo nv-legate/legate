@@ -72,7 +72,7 @@ struct unique_fn {
   template <legate::Type::Code CODE, std::enable_if_t<!is_supported<CODE>>* = nullptr>
   void operator()(legate::Array& output, std::vector<legate::Array>& inputs)
   {
-    LEGATE_ABORT;
+    LEGATE_ABORT("Should not be called");
   }
 };
 

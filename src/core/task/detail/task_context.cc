@@ -153,8 +153,7 @@ std::vector<ReturnValue> TaskContext::get_return_values() const
   // the Python code relies on.
   if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
     if (return_values.size() != 1 || unbound_stores_.size() != 1) {
-      log_legate().error("Reduction tasks must have only one unbound output and no others");
-      LEGATE_ABORT;
+      LEGATE_ABORT("Reduction tasks must have only one unbound output and no others");
     }
   }
 

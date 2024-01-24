@@ -43,7 +43,8 @@ const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
 
   auto finder = defaults.find(kind);
   if (defaults.end() == finder) {
-    LEGATE_ABORT;
+    LEGATE_ABORT("Could not find ProcessorKind " << static_cast<int>(kind)
+                                                 << " in default store targets");
   }
   return finder->second;
 }
@@ -103,8 +104,7 @@ BaseMapper::~BaseMapper()
   try {
     show_usage = legate::detail::safe_strtoll(lg_show_usage) > 0;
   } catch (const std::exception& excn) {
-    logger.error() << excn.what();
-    LEGATE_ABORT;
+    LEGATE_ABORT(excn.what());
   }
   if (show_usage) {
     auto mem_sizes             = local_instances->aggregate_instance_sizes();
@@ -186,10 +186,9 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
     }
   }
   if (options.empty()) {
-    logger.error() << "Task " << task.get_task_name() << "[" << task.get_provenance_string()
-                   << "] does not have a valid variant "
-                   << "for this resource configuration: " << machine_desc;
-    LEGATE_ABORT;
+    LEGATE_ABORT("Task " << task.get_task_name() << "[" << task.get_provenance_string()
+                         << "] does not have a valid variant "
+                         << "for this resource configuration: " << machine_desc);
   }
 
   auto target = legate_mapper_->task_target(mapping::Task(&legate_task), options);
@@ -287,7 +286,7 @@ std::optional<Legion::VariantID> BaseMapper::find_variant(Legion::Mapping::Mappe
         result = vid;
         break;
       }
-      default: LEGATE_ABORT;  // unhandled variant kind
+      default: LEGATE_ABORT("Unhandled variant kind " << vid);  // unhandled variant kind
     }
   }
   variants[key] = result;
@@ -338,8 +337,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     auto* first_store = mapping->stores.front();
     for (auto it = mapping->stores.begin() + 1; it != mapping->stores.end(); ++it) {
       if (!(*it)->can_colocate_with(*first_store)) {
-        logger.error("Mapper %s tried to colocate stores that cannot colocate", get_mapper_name());
-        LEGATE_ABORT;
+        LEGATE_ABORT("Mapper " << get_mapper_name()
+                               << " tried to colocate stores that cannot colocate");
       }
     }
     assert(!(mapping->for_future() || mapping->for_unbound_store()) || mapping->stores.size() == 1);
@@ -367,8 +366,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
       }
       auto finder = mapped_futures.find(fut_idx);
       if (finder != mapped_futures.end() && finder->second->policy != mapping->policy) {
-        logger.error("Mapper %s returned duplicate store mappings", get_mapper_name());
-        LEGATE_ABORT;
+        LEGATE_ABORT("Mapper " << get_mapper_name() << " returned duplicate store mappings");
       } else {
         mapped_futures.insert({fut_idx, mapping});
         for_futures.emplace_back(client_mapping.release());
@@ -394,8 +392,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
         if (policies.end() == finder) {
           policies[key] = mapping->policy;
         } else if (mapping->policy != finder->second) {
-          logger.error("Mapper %s returned inconsistent store mappings", get_mapper_name());
-          LEGATE_ABORT;
+          LEGATE_ABORT("Mapper " << get_mapper_name() << " returned inconsistent store mappings");
         }
       }
     }
@@ -506,7 +503,7 @@ void BaseMapper::replicate_task(Legion::Mapping::MapperContext /*ctx*/,
                                 ReplicateTaskOutput& /*output*/)
 
 {
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should not be called");
 }
 
 void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
@@ -673,10 +670,9 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     for (auto* req : reqs) {
       if (redop != req->redop) {
-        logger.error(
+        LEGATE_ABORT(
           "Colocated stores should be either non-reduction arguments "
           "or reductions with the same reduction operator.");
-        LEGATE_ABORT;
       }
     }
   }
@@ -830,7 +826,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
                                                   &footprint);
       break;
     }
-    default: LEGATE_ABORT;  // should never get here
+    default: LEGATE_ABORT("Should never get here!");
   }
 
   if (success) {
@@ -873,9 +869,9 @@ void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
                                        uint32_t index,
                                        Memory target_memory,
                                        Legion::ReductionOpID redop,
-                                       size_t footprint)
+                                       size_t footprint) const
 {
-  static const char* memory_kinds[] = {
+  static constexpr const char* const memory_kinds[] = {
 #define MEM_NAMES(name, desc) desc,
     REALM_MEMORY_KINDS(MEM_NAMES)
 #undef MEM_NAMES
@@ -883,8 +879,7 @@ void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
 
   std::string opname;
   if (mappable.get_mappable_type() == Legion::Mappable::TASK_MAPPABLE) {
-    const auto task = mappable.as_task();
-    opname          = task->get_task_name();
+    opname = mappable.as_task()->get_task_name();
   }
 
   std::string provenance = mappable.get_provenance_string();
@@ -899,33 +894,29 @@ void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
     req_ss << "region requirement " << index;
   }
 
-  logger.error("Mapper %s failed to allocate %zd bytes on memory " IDFMT
-               " (of kind %s: %s) for %s of %s%s[%s] (UID %lld).\n"
-               "This means Legate was unable to reserve ouf of its memory pool the full amount "
-               "required for the above operation. Here are some things to try:\n"
-               "* Make sure your code is not impeding the garbage collection of Legate-backed "
-               "objects, e.g. by storing references in caches, or creating reference cycles.\n"
-               "* Ask Legate to reserve more space on the above memory, using the appropriate "
-               "--*mem legate flag.\n"
-               "* Assign less memory to the eager pool, by reducing --eager-alloc-percentage.\n"
-               "* If running on multiple nodes, increase how often distributed garbage collection "
-               "runs, by reducing LEGATE_FIELD_REUSE_FREQ (default: 32, warning: may "
-               "incur overhead).\n"
-               "* Adapt your code to reduce temporary storage requirements, e.g. by breaking up "
-               "larger operations into batches.\n"
-               "* If the previous steps don't help, and you are confident Legate should be able to "
-               "handle your code's working set, please open an issue on Legate's bug tracker.",
-               get_mapper_name(),
-               footprint,
-               target_memory.id,
-               Legion::Mapping::Utilities::to_string(target_memory.kind()),
-               memory_kinds[target_memory.kind()],
-               req_ss.str().c_str(),
-               log_mappable(mappable, true /*prefix_only*/).c_str(),
-               opname.c_str(),
-               provenance.c_str(),
-               mappable.get_unique_id());
-  LEGATE_ABORT;
+  LEGATE_ABORT(
+    "Mapper "
+    << get_mapper_name() << " failed to allocate " << footprint << " bytes on memory "
+    << target_memory.id << " (of kind "
+    << Legion::Mapping::Utilities::to_string(target_memory.kind()) << ": "
+    << memory_kinds[target_memory.kind()] << ") for " << req_ss.str() << " of "
+    << log_mappable(mappable, true /*prefix_only*/) << opname << "[" << provenance << "] (UID "
+    << mappable.get_unique_id()
+    << ").\n"
+       "This means Legate was unable to reserve ouf of its memory pool the full amount "
+       "required for the above operation. Here are some things to try:\n"
+       "* Make sure your code is not impeding the garbage collection of Legate-backed "
+       "objects, e.g. by storing references in caches, or creating reference cycles.\n"
+       "* Ask Legate to reserve more space on the above memory, using the appropriate "
+       "--*mem legate flag.\n"
+       "* Assign less memory to the eager pool, by reducing --eager-alloc-percentage.\n"
+       "* If running on multiple nodes, increase how often distributed garbage collection "
+       "runs, by reducing LEGATE_FIELD_REUSE_FREQ (default: 32, warning: may "
+       "incur overhead).\n"
+       "* Adapt your code to reduce temporary storage requirements, e.g. by breaking up "
+       "larger operations into batches.\n"
+       "* If the previous steps don't help, and you are confident Legate should be able to "
+       "handle your code's working set, please open an issue on Legate's bug tracker.");
 }
 
 void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
@@ -946,7 +937,7 @@ void BaseMapper::postmap_task(Legion::Mapping::MapperContext /*ctx*/,
                               PostMapOutput& /*output*/)
 {
   // We should currently never get this call in Legate
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::select_task_sources(Legion::Mapping::MapperContext ctx,
@@ -1061,8 +1052,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext,
                                   const Legion::Task&,
                                   const TaskProfilingInfo&)
 {
-  // Shouldn't get any profiling feedback currently
-  LEGATE_ABORT;
+  LEGATE_ABORT("Shouldn't get any profiling feedback currently");
 }
 
 Legion::ShardingID BaseMapper::find_mappable_sharding_functor_id(const Legion::Mappable& mappable)
@@ -1125,8 +1115,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
                                   const Legion::InlineMapping& /*inline_op*/,
                                   const InlineProfilingInfo& /*input*/)
 {
-  // No profiling yet for inline mappings
-  LEGATE_ABORT;
+  LEGATE_ABORT("No profiling yet for inline mappings");
 }
 
 void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
@@ -1244,8 +1233,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
                                   const Legion::Copy& /*copy*/,
                                   const CopyProfilingInfo& /*input*/)
 {
-  // No profiling for copies yet
-  LEGATE_ABORT;
+  LEGATE_ABORT("No profiling for copies yet");
 }
 
 void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
@@ -1270,8 +1258,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
                                   const Legion::Close& /*close*/,
                                   const CloseProfilingInfo& /*input*/)
 {
-  // No profiling yet for legate
-  LEGATE_ABORT;
+  LEGATE_ABORT("No profiling yet for legate");
 }
 
 void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
@@ -1279,7 +1266,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& /*output*/)
 {
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::map_acquire(Legion::Mapping::MapperContext /*ctx*/,
@@ -1294,8 +1281,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
                                   const Legion::Acquire& /*acquire*/,
                                   const AcquireProfilingInfo& /*input*/)
 {
-  // No profiling for legate yet
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
@@ -1303,7 +1289,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& /*output*/)
 {
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::map_release(Legion::Mapping::MapperContext /*ctx*/,
@@ -1328,7 +1314,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
                                   const ReleaseProfilingInfo& /*input*/)
 {
   // No profiling for legate yet
-  LEGATE_ABORT;
+  LEGATE_ABORT("No profiling for legate yet");
 }
 
 void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
@@ -1336,7 +1322,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& /*output*/)
 {
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::select_partition_projection(Legion::Mapping::MapperContext /*ctx*/,
@@ -1397,7 +1383,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext /*ctx*/,
                                   const PartitionProfilingInfo& /*input*/)
 {
   // No profiling yet
-  LEGATE_ABORT;
+  LEGATE_ABORT("No profiling for partition ops yet");
 }
 
 void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
@@ -1474,8 +1460,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const SelectShardingFunctorInput& /*input*/,
                                          MustEpochShardingFunctorOutput& /*output*/)
 {
-  // No must epoch launches in legate
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::memoize_operation(Legion::Mapping::MapperContext /*ctx*/,
@@ -1483,23 +1468,21 @@ void BaseMapper::memoize_operation(Legion::Mapping::MapperContext /*ctx*/,
                                    const MemoizeInput& /*input*/,
                                    MemoizeOutput& /*output*/)
 {
-  LEGATE_ABORT;
+  LEGATE_ABORT("No memoize operation yet");
 }
 
 void BaseMapper::map_must_epoch(Legion::Mapping::MapperContext /*ctx*/,
                                 const MapMustEpochInput& /*input*/,
                                 MapMustEpochOutput& /*output*/)
 {
-  // No must epoch launches in legate
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::map_dataflow_graph(Legion::Mapping::MapperContext /*ctx*/,
                                     const MapDataflowGraphInput& /*input*/,
                                     MapDataflowGraphOutput& /*output*/)
 {
-  // Not supported yet
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should never get here");
 }
 
 void BaseMapper::select_tasks_to_map(Legion::Mapping::MapperContext /*ctx*/,
@@ -1521,22 +1504,19 @@ void BaseMapper::permit_steal_request(Legion::Mapping::MapperContext /*ctx*/,
                                       const StealRequestInput& /*input*/,
                                       StealRequestOutput& /*output*/)
 {
-  // Nothing to do, no stealing in the legate mapper currently
-  LEGATE_ABORT;
+  LEGATE_ABORT("no stealing in the legate mapper currently");
 }
 
 void BaseMapper::handle_message(Legion::Mapping::MapperContext /*ctx*/,
                                 const MapperMessage& /*message*/)
 {
-  // We shouldn't be receiving any messages currently
-  LEGATE_ABORT;
+  LEGATE_ABORT("We shouldn't be receiving any messages currently");
 }
 
 void BaseMapper::handle_task_result(Legion::Mapping::MapperContext /*ctx*/,
                                     const MapperTaskResult& /*result*/)
 {
-  // Nothing to do since we should never get one of these
-  LEGATE_ABORT;
+  LEGATE_ABORT("Nothing to do since we should never get one of these");
 }
 
 }  // namespace legate::mapping::detail

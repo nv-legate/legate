@@ -316,8 +316,7 @@ size_t LocalNetwork::getDtypeSize(CollDataType dtype)
       return sizeof(double);
     }
     default: {
-      detail::log_coll().fatal("Unknown datatype");
-      LEGATE_ABORT;
+      LEGATE_ABORT("Unknown datatype");
       return 0;
     }
   }

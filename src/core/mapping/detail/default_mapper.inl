@@ -33,7 +33,7 @@ inline std::vector<mapping::StoreMapping> DefaultMapper::store_mappings(
 
 inline Scalar DefaultMapper::tunable_value(TunableID /*tunable_id*/)
 {
-  LEGATE_ABORT;
+  LEGATE_ABORT("Should not be called!");
   return Scalar{0};
 }
 

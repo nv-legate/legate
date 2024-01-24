@@ -105,7 +105,7 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
     default: break;
   }
   // Illegal tunable variable
-  LEGATE_ABORT;
+  LEGATE_ABORT("Illegal tunable variable" << tunable_id);
   return Scalar(0);
 }
 

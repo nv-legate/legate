@@ -169,7 +169,7 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
         // do not add a default clause! compilers will warn about missing enum values if there is
         // ever a new value added to Type::Code. We want to catch that!
     }
-    LEGATE_ABORT;
+    LEGATE_ABORT("unhandled type code: " << static_cast<int>(ty->code));
     return {nullptr, 0};
   };
 
@@ -358,7 +358,7 @@ InternalSharedPtr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
     }
     default: break;
   }
-  LEGATE_ABORT;
+  LEGATE_ABORT("unhandled type code: " << static_cast<int>(code));
   return {};
 }
 

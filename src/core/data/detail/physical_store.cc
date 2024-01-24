@@ -135,10 +135,9 @@ ReturnValue UnboundRegionField::pack_weight() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     if (!bound_) {
-      log_legate().error(
+      LEGATE_ABORT(
         "Found an uninitialized unbound store. Please make sure you return buffers to all unbound "
         "stores in the task");
-      LEGATE_ABORT;
     }
   }
   return {num_elements_, sizeof(size_t)};

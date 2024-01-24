@@ -111,11 +111,9 @@ void task_wrapper(VariantImpl variant_impl,
     } else {
       // If a Legate exception is thrown by a task that does not declare any exception,
       // this is a bug in the library that needs to be reported to the developer
-      log_legate().error(
-        "Task %s threw an exception \"%s\", but the task did not declare any exception.",
-        get_task_name().data(),
-        excn.error_message().c_str());
-      LEGATE_ABORT;
+      LEGATE_ABORT("Task " << get_task_name().data() << " threw an exception \""
+                           << excn.error_message().c_str()
+                           << "\", but the task did not declare any exception.");
     }
   };
 

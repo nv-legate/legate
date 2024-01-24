@@ -87,28 +87,29 @@ namespace {
   return tag;
 }
 
-}  // namespace
-
-inline void check_mpi(int error, const char* file, int line)
+void check_mpi(int error, const char* file, int line, const char* func)
 {
-  if (error != MPI_SUCCESS) {
-    static_cast<void>(fprintf(stderr,
-                              "Internal MPI failure with error code %d in file %s at line %d\n",
-                              error,
-                              file,
-                              line));
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(false);
-    } else {
-      exit(error);
-    }
+  if (error == MPI_SUCCESS) {
+    return;
+  }
+  int init = 0;
+
+  static_cast<void>(fprintf(
+    stderr, "Internal MPI failure with error code %d in %s:%d in %s()\n", error, file, line, func));
+  static_cast<void>(MPI_Initialized(&init));
+  if (init) {
+    static_cast<void>(MPI_Abort(MPI_COMM_WORLD, error));
+  } else {
+    assert(0);
   }
 }
 
-#define CHECK_MPI(expr)                    \
-  do {                                     \
-    const int result = (expr);             \
-    check_mpi(result, __FILE__, __LINE__); \
+}  // namespace
+
+#define CHECK_MPI(...)                                                     \
+  do {                                                                     \
+    const int result = __VA_ARGS__;                                        \
+    ::legate::comm::coll::check_mpi(result, __FILE__, __LINE__, __func__); \
   } while (false)
 
 // public functions start from here
@@ -127,10 +128,9 @@ MPINetwork::MPINetwork(int /*argc*/, char* /*argv*/[])
   int mpi_thread_model;
   CHECK_MPI(MPI_Query_thread(&mpi_thread_model));
   if (mpi_thread_model != MPI_THREAD_MULTIPLE) {
-    detail::log_coll().fatal(
+    LEGATE_ABORT(
       "MPI has been initialized by others, but is not initialized with "
       "MPI_THREAD_MULTIPLE");
-    LEGATE_ABORT;
   }
   // check
   int *tag_ub, flag;
@@ -153,14 +153,24 @@ MPINetwork::~MPINetwork()
   int fina_flag = 0;
   CHECK_MPI(MPI_Finalized(&fina_flag));
   if (fina_flag == 1) {
-    detail::log_coll().fatal("MPI should not have been finalized");
-    LEGATE_ABORT;
+    LEGATE_ABORT("MPI should not have been finalized");
   }
   if (self_init_mpi) {
     CHECK_MPI(MPI_Finalize());
     detail::log_coll().info("finalize mpi");
   }
   BackendNetwork::coll_inited = false;
+}
+
+void MPINetwork::abort()
+{
+  int init = 0;
+
+  static_cast<void>(MPI_Initialized(&init));
+  if (init) {
+    // noreturn
+    static_cast<void>(MPI_Abort(MPI_COMM_WORLD, 1));
+  }
 }
 
 int MPINetwork::init_comm()
@@ -539,8 +549,7 @@ MPI_Datatype MPINetwork::dtypeToMPIDtype(CollDataType dtype)
       return MPI_DOUBLE;
     }
     default: {
-      detail::log_coll().fatal("Unknown datatype");
-      LEGATE_ABORT;
+      LEGATE_ABORT("Unknown datatype");
       return MPI_BYTE;
     }
   }

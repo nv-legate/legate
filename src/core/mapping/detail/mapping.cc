@@ -22,7 +22,7 @@ TaskTarget to_target(Processor::Kind kind)
     case Processor::Kind::TOC_PROC: return TaskTarget::GPU;
     case Processor::Kind::OMP_PROC: return TaskTarget::OMP;
     case Processor::Kind::LOC_PROC: return TaskTarget::CPU;
-    default: LEGATE_ABORT;
+    default: LEGATE_ABORT("Unhandled Processor::Kind " << static_cast<int>(kind));
   }
   assert(false);
   return TaskTarget::CPU;
@@ -34,7 +34,7 @@ Processor::Kind to_kind(TaskTarget target)
     case TaskTarget::GPU: return Processor::Kind::TOC_PROC;
     case TaskTarget::OMP: return Processor::Kind::OMP_PROC;
     case TaskTarget::CPU: return Processor::Kind::LOC_PROC;
-    default: LEGATE_ABORT;
+    default: LEGATE_ABORT("Unhandled TaskTarget " << static_cast<int>(target));
   }
   assert(false);
   return Processor::Kind::LOC_PROC;
@@ -47,7 +47,7 @@ Memory::Kind to_kind(StoreTarget target)
     case StoreTarget::FBMEM: return Memory::Kind::GPU_FB_MEM;
     case StoreTarget::ZCMEM: return Memory::Kind::Z_COPY_MEM;
     case StoreTarget::SOCKETMEM: return Memory::Kind::SOCKET_MEM;
-    default: LEGATE_ABORT;
+    default: LEGATE_ABORT("Unhandled StoreTarget " << static_cast<int>(target));
   }
   assert(false);
   return Memory::Kind::SYSTEM_MEM;
@@ -59,7 +59,7 @@ LegateVariantCode to_variant_code(TaskTarget target)
     case TaskTarget::GPU: return LEGATE_GPU_VARIANT;
     case TaskTarget::OMP: return LEGATE_OMP_VARIANT;
     case TaskTarget::CPU: return LEGATE_CPU_VARIANT;
-    default: LEGATE_ABORT;
+    default: LEGATE_ABORT("Unhandled TaskTarget " << static_cast<int>(target));
   }
   assert(false);
   return LEGATE_CPU_VARIANT;

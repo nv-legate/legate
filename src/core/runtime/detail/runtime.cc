@@ -1608,8 +1608,7 @@ void try_set_property(Runtime& runtime,
 {
   auto value = var.value();
   if (value < 0) {
-    log_legate().error("%s", error_msg.c_str());
-    LEGATE_ABORT;
+    LEGATE_ABORT(error_msg);
   }
   auto config = runtime.get_module_config(module_name);
   if (nullptr == config) {
@@ -1617,14 +1616,11 @@ void try_set_property(Runtime& runtime,
     if (!var.has_value()) {
       return;
     }
-    const std::string msg = error_msg + " (the " + module_name + " module is not available)";
-    log_legate().error("%s", msg.c_str());
-    LEGATE_ABORT;
+    LEGATE_ABORT(error_msg << " (the " << module_name << " module is not available)");
   }
   auto success = config->set_property(property_name, value);
   if (!success) {
-    log_legate().error("%s", error_msg.c_str());
-    LEGATE_ABORT;
+    LEGATE_ABORT(error_msg);
   }
 }
 
@@ -1678,14 +1674,12 @@ void handle_legate_args(int32_t argc, char** argv)
 
   // ensure core module
   if (!rt.get_module_config("core")) {
-    log_legate().error("core module config is missing");
-    LEGATE_ABORT;
+    LEGATE_ABORT("core module config is missing");
   }
 
   // ensure sensible utility
-  if (util.value() < 1) {
-    log_legate().error("--utility must be at least 1");
-    LEGATE_ABORT;
+  if (const auto nutil = util.value(); nutil < 1) {
+    LEGATE_ABORT("--utility must be at least 1 (have " << nutil << ")");
   }
 
   // Set core configuration properties
@@ -1705,8 +1699,7 @@ void handle_legate_args(int32_t argc, char** argv)
 
   // Set OpenMP configuration properties
   if (omps.value() > 0 && ompthreads.value() == 0) {
-    log_legate().error("--omps configured with zero threads");
-    LEGATE_ABORT;
+    LEGATE_ABORT("--omps configured with zero threads");
   }
   if (omps.value() > 0) {
     setenv("LEGATE_NEED_OPENMP", "1", true);

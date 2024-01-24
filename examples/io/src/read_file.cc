@@ -37,8 +37,7 @@ struct read_fn {
     in.read(reinterpret_cast<char*>(&size), sizeof(size_t));
 
     if (static_cast<legate::Type::Code>(code) != CODE) {
-      logger.error() << "Type mismatch: " << CODE << " != " << code;
-      LEGATE_ABORT;
+      LEGATE_ABORT("Type mismatch: " << CODE << " != " << code);
     }
 
     // Compute the absolute offsets to the section that this reader task

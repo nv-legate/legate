@@ -54,9 +54,9 @@ cdef extern from * namespace "legate::detail":
     void delete_python_buffer(void* ptr) noexcept {
       const auto finder = exported_buffers.find(ptr);
       if (exported_buffers.end() == finder) {
-        log_legate().fatal(
-          "Failed to find a Python object mapped to pointer %p", ptr);
-        LEGATE_ABORT;
+        LEGATE_ABORT(
+          "Failed to find a Python object mapped to pointer " << ptr
+        );
       }
       if (--finder->second.count == 0) {
         // Hold the GIL before we mutate the Python object state

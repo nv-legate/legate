@@ -296,7 +296,7 @@ const std::vector<Processor>& LocalMachine::procs(TaskTarget target) const
     case TaskTarget::GPU: return gpus_;
     case TaskTarget::OMP: return omps_;
     case TaskTarget::CPU: return cpus_;
-    default: LEGATE_ABORT;
+    default: LEGATE_ABORT("invalid target: " << static_cast<int>(target));
   }
   assert(false);
   return cpus_;
@@ -364,7 +364,7 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     case StoreTarget::FBMEM: return frame_buffers_.at(proc);
     case StoreTarget::ZCMEM: return zerocopy_memory_;
     case StoreTarget::SOCKETMEM: return socket_memories_.at(proc);
-    default: LEGATE_ABORT;
+    default: LEGATE_ABORT("invalid StoreTarget: " << static_cast<int>(target));
   }
   assert(false);
   return Legion::Memory::NO_MEMORY;

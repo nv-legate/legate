@@ -59,8 +59,7 @@ int collAlltoallv(const void* sendbuf,
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
-    detail::log_coll().error("Do not support inplace Alltoallv");
-    LEGATE_ABORT;
+    LEGATE_ABORT("Do not support inplace Alltoallv");
   }
   detail::log_coll().debug(
     "Alltoallv: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
@@ -81,8 +80,7 @@ int collAlltoall(
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
-    detail::log_coll().error("Do not support inplace Alltoall");
-    LEGATE_ABORT;
+    LEGATE_ABORT("Do not support inplace Alltoall");
   }
   detail::log_coll().debug(
     "Alltoall: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
@@ -141,7 +139,19 @@ int collFinalize()
   return CollSuccess;
 }
 
+void collAbort() noexcept
+{
+  if (backend_network) {
+    backend_network->abort();
+  }
+}
+
 int collInitComm() { return backend_network->init_comm(); }
+
+void BackendNetwork::abort()
+{
+  // does nothing by default
+}
 
 int BackendNetwork::collGetUniqueId(int* id)
 {
