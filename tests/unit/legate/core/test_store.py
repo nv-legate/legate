@@ -12,7 +12,7 @@
 
 import pytest
 
-from legate.core import get_legate_runtime, types as ty
+from legate.core import Scalar, get_legate_runtime, types as ty
 
 
 class Test_store_creation:
@@ -34,6 +34,63 @@ class Test_store_creation:
         assert not store.transformed
         with pytest.raises(ValueError):
             store.shape.extents
+
+    def test_ndim(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int64, ndim=2)
+        assert store.unbound
+        assert store.ndim == 2
+        assert store.type == ty.int64
+        assert not store.transformed
+
+    def test_optimize_scalar(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(
+            ty.int64, shape=(1,), optimize_scalar=True
+        )
+        assert store.has_scalar_storage
+
+    def test_create_store_from_scalar(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store_from_scalar(Scalar(123, ty.int64))
+        assert not store.unbound
+        assert store.ndim == 1
+        assert store.shape == (1,)
+        assert store.type == ty.int64
+        assert not store.transformed
+
+    @pytest.mark.parametrize("shape", [(1,), (1, 1), (1, 1, 1)], ids=str)
+    def test_create_store_from_scalar_shape(self, shape: tuple[int]) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store_from_scalar(
+            Scalar(123, ty.int64), shape=shape
+        )
+        assert not store.unbound
+        assert store.ndim == len(shape)
+        assert store.shape == shape
+        assert store.type == ty.int64
+        assert not store.transformed
+
+
+class Test_store_creation_error:
+    def test_ndim_with_shape(self) -> None:
+        runtime = get_legate_runtime()
+        with pytest.raises(ValueError, match="ndim cannot be used with shape"):
+            runtime.create_store(ty.int32, shape=(1,), ndim=1)
+
+    def test_scalar_size_mismatch(self) -> None:
+        runtime = get_legate_runtime()
+        msg = (
+            "Type int32 expects a value of size 4, but the size of value is 5"
+        )
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_store_from_scalar(Scalar(b"12345", ty.int32))
+
+    def test_scalar_volume_mismatch(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "Scalar stores must have a shape of volume 1"
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_store_from_scalar(Scalar(123, ty.int64), (1, 2))
 
 
 class Test_store_valid_transform:
