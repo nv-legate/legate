@@ -22,8 +22,7 @@ specific cluster is not covered, you may be able to adapt an existing workflow.
 The primary method of retrieving dependencies for Legate Core and downstream
 libraries is through [conda](https://docs.conda.io/en/latest/). You will need
 an installation of conda to follow the instructions below. We suggest using
-the [mamba](https://github.com/mamba-org/mamba) implementation of the conda
-package manager.
+the [miniforge](https://github.com/conda-forge/miniforge) distribution of conda.
 
 Please use the `scripts/generate-conda-envs.py` script to create a conda
 environment file listing all the packages that are required to build, run and
@@ -42,13 +41,21 @@ Once you have this environment file, you can install the required packages by
 creating a new conda environment:
 
 ```shell
-mamba env create -n legate -f <env-file>.yaml
+conda env create -n legate -f <env-file>.yaml
 ```
 
 or by updating an existing environment:
 
 ```shell
-mamba env update -f <env-file>.yaml
+conda env update -f <env-file>.yaml
+```
+
+You will want to "activate" this environment every time before (re-)building
+Legate, to make sure it is always installed in the same directory (consider
+doing this in your shell startup script):
+
+```shell
+conda activate legate
 ```
 
 ## Building through install.py
