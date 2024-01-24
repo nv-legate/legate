@@ -1513,9 +1513,10 @@ void parse_config()
     const char* need_openmp = getenv("LEGATE_NEED_OPENMP");
     if (need_openmp != nullptr) {
       static_cast<void>(
+        // TODO(jfaibussowit): Change --openmp -> --with-openmp in build-system update
         fprintf(stderr,
-                "Legate was run on multiple nodes but was not built with networking "
-                "support. Please install Legate again with \"--network\".\n"));
+                "Legate was run with OpenMP enabled, but was not built with OpenMP support. "
+                "Please install Legate again with the \"--openmp\" flag.\n"));
       exit(1);
     }
   }
