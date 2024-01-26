@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from .type import UserFunction, VariantList
 
 from .task import PyTask
-from .util import DEFAULT_VARIANT_LIST
+from .util import DEFAULT_VARIANT_LIST, dynamic_docstring
 
 
 @overload
@@ -33,6 +33,7 @@ def task(
     ...
 
 
+@dynamic_docstring(DEFAULT_VARIANT_LIST=DEFAULT_VARIANT_LIST)
 def task(
     func: UserFunction | None = None,
     *,
@@ -65,10 +66,3 @@ def task(
         return PyTask(func=f, variants=variants, register=register)
 
     return decorator(func) if func else decorator
-
-
-if getattr(task, "__doc__", None) is not None:
-    assert isinstance(task.__doc__, str)
-    task.__doc__ = task.__doc__.format(
-        DEFAULT_VARIANT_LIST=DEFAULT_VARIANT_LIST
-    )

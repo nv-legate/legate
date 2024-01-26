@@ -54,8 +54,20 @@ add_library(legate_core_python INTERFACE)
 add_library(legate::core_python ALIAS legate_core_python)
 target_link_libraries(legate_core_python INTERFACE legate::core)
 
+# For scikit-build. They use some deprecated FindPython() modules that are removed by
+# default in cmake 3.28. Setting this policy to OLD restores them.
+if(POLICY CMP0148)
+  cmake_policy(PUSH)
+  cmake_policy(SET CMP0148 OLD)
+endif()
+
 include(rapids-cython)
+
 rapids_cython_init()
+
+if(POLICY CMP0148)
+  cmake_policy(POP)
+endif()
 
 add_subdirectory(legate/core/_lib)
 add_subdirectory(legate/timing/_lib)

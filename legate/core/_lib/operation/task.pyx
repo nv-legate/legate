@@ -55,7 +55,21 @@ cdef class AutoTask:
         cdef AutoTask result = AutoTask.__new__(AutoTask)
         result._handle = std_move(handle)
         result._exception_types = []
+        result._locked = False
         return result
+
+    # TODO(jfaibussowit): consider removing this, see
+    # https://github.com/nv-legate/legate.core.internal/pull/309
+    cpdef void lock(self):
+        r"""Lock an `AutoTask` from further argument modifications.
+
+        Notes
+        -----
+        This prevents any additional modification of the inputs, outputs,
+        reductions, or scalar arguments to this particular AutoTask. This is
+        usually the final action performed by a `PyTask`.
+        """
+        self._locked = True
 
     def __init__(self) -> None:
         raise ValueError(
@@ -75,7 +89,18 @@ cdef class AutoTask:
         partition : Variable, optional
             Partition to associate with the array/store. The default
             partition is picked if none is given.
+
+        Raises
+        ------
+        RuntimeError
+            If the AutoTask has been previously locked by a `PyTask`.
         """
+        if self._locked:
+            raise RuntimeError(
+                "Attempting to add inputs to a prepared Python task "
+                "is illegal!"
+            )
+
         cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         if partition is None:
             return Variable.from_handle(self._handle.add_input(array))
@@ -99,7 +124,18 @@ cdef class AutoTask:
         partition : Variable, optional
             Partition to associate with the array/store. The default
             partition is picked if none is given.
+
+        Raises
+        ------
+        RuntimeError
+            If the AutoTask has been previously locked by a `PyTask`.
         """
+        if self._locked:
+            raise RuntimeError(
+                "Attempting to add outputs to a prepared Python task "
+                "is illegal!"
+            )
+
         cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         if partition is None:
             return Variable.from_handle(self._handle.add_output(array))
@@ -128,7 +164,18 @@ cdef class AutoTask:
         partition : Variable, optional
             Partition to associate with the array/store. The default
             partition is picked if none is given.
+
+        Raises
+        ------
+        RuntimeError
+            If the AutoTask has been previously locked by a `PyTask`.
         """
+        if self._locked:
+            raise RuntimeError(
+                "Attempting to add reductions to a prepared Python task "
+                "is illegal!"
+            )
+
         cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
         if partition is None:
             return Variable.from_handle(
@@ -157,7 +204,18 @@ cdef class AutoTask:
             Data type descriptor for the scalar value. A descriptor ``(T,)``
             means that the value is a tuple of elements of type ``T`` (i.e.,
             equivalent to ``array_type(T, len(value))``).
+
+        Raises
+        ------
+        RuntimeError
+            If the AutoTask has been previously locked by a `PyTask`.
         """
+        if self._locked:
+            raise RuntimeError(
+                "Attempting to add scalar arguments to a prepared Python task "
+                "is illegal!"
+            )
+
         if isinstance(value, Scalar):
             self._handle.add_scalar_arg((<Scalar> value)._handle)
             return

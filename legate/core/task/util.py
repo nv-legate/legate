@@ -10,7 +10,8 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
     from .type import VariantKind, VariantList
@@ -18,6 +19,10 @@ if TYPE_CHECKING:
 KNOWN_VARIANTS: set[VariantKind] = {"cpu", "gpu", "omp"}
 
 DEFAULT_VARIANT_LIST: VariantList = ("cpu",)
+
+RESERVED_ARG_NAMES: set[str] = {"task_constraints"}
+
+_T = TypeVar("_T")
 
 
 def validate_variant(kind: str) -> None:
@@ -35,3 +40,13 @@ def validate_variant(kind: str) -> None:
     """
     if kind not in KNOWN_VARIANTS:
         raise ValueError(f"Unknown variant kind: {kind}")
+
+
+def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]:
+    def wrapper(obj: _T) -> _T:
+        if (obj_doc := getattr(obj, "__doc__", None)) is not None:
+            assert isinstance(obj_doc, str)
+            setattr(obj, "__doc__", obj_doc.format(**kwargs))
+        return obj
+
+    return wrapper

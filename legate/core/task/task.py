@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Final
 
 if TYPE_CHECKING:
@@ -20,12 +21,16 @@ if TYPE_CHECKING:
         VariantMapping,
     )
     from .._lib.task.task_context import TaskContext
+    from .._lib.operation.task import AutoTask
 
+from .._lib.data.logical_array import LogicalArray
+from .._lib.data.logical_store import LogicalStore
 from .._lib.mapping.mapping import TASK_TARGET_TO_VARIANT_KIND, TaskTarget
+from .._lib.partitioning.constraint import Constraint, ConstraintProxy
 from .._lib.runtime.runtime import get_legate_runtime
 from .._lib.task.task_info import TaskInfo
 from .invoker import VariantInvoker
-from .util import validate_variant
+from .util import RESERVED_ARG_NAMES, validate_variant
 
 
 class PyTask:
@@ -124,8 +129,8 @@ class PyTask:
             )
         return self._task_id
 
-    def __call__(self, *args: Any, **kwargs: Any) -> None:
-        r"""Invoke the task.
+    def prepare_call(self, *args: Any, **kwargs: Any) -> AutoTask:
+        r"""Prepare a task instance for execution.
 
         Parameters
         ----------
@@ -133,6 +138,11 @@ class PyTask:
             The positional arguments to the task.
         **kwargs : Any, optional
             The keyword arguments to the task.
+
+        Returns
+        -------
+        task : AutoTask
+            The configured task instance.
 
         Raises
         ------
@@ -146,12 +156,94 @@ class PyTask:
             If multiple arguments are given for a single argument. This may
             occur, for example, when a keyword argument overlaps with a
             positional argument.
+
+        Notes
+        -----
+        It is the user's responsibility to invoke the returned task instance,
+        either through `task.execute()` or `get_legate_runtime().submit(task)`.
+
+        The user is not allowed to add any additional inputs, outputs, scalars
+        or reductions to `task` after this routine returns.
+
+        See Also
+        --------
+        legate.core.task.task.PyTask.__call__
         """
-        runtime = get_legate_runtime()
-        task = runtime.create_auto_task(self._library, self.task_id)
+        task = get_legate_runtime().create_auto_task(
+            self._library, self.task_id
+        )
         task.throws_exception(RuntimeError)
         self._invoker.prepare_call(task, args, kwargs)
-        runtime.submit(task)
+        task.lock()
+        return task
+
+    @staticmethod
+    def _sanitize_constraint(
+        task: AutoTask, constraint: Constraint | ConstraintProxy
+    ) -> Constraint:
+        match constraint:
+            case Constraint():
+                return constraint
+            case ConstraintProxy(func=func, args=args):
+                sanitized_args = []
+                for arg in args:
+                    if isinstance(arg, (LogicalStore, LogicalArray)):
+                        if isinstance(arg, LogicalStore):
+                            arg = LogicalArray.from_store(arg)
+                        arg = task.find_or_declare_partition(arg)
+                    sanitized_args.append(arg)
+                return func(*sanitized_args)
+            case _:
+                raise TypeError(
+                    f"Expected a constraint but got {type(constraint)}"
+                )
+
+    assert (
+        "task_constraints" in RESERVED_ARG_NAMES
+    ), "task_constraints no longer reserved? Has PyTask.__call__ been updated?"
+
+    def __call__(
+        self,
+        *args: Any,
+        task_constraints: Sequence[Constraint | ConstraintProxy] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        r"""Invoke the task.
+
+        Parameters
+        ----------
+        *args : Any, optional
+            The positional arguments to the task.
+        task_constraints : Sequence[Constraint | ConstraintProxy], optional
+            The set of constraints to impose on the task arguments.
+        **kwargs : Any, optional
+            The keyword arguments to the task.
+
+        Notes
+        -----
+        This method is equivalent to the following:
+
+        ::
+
+            task_inst = task.prepare_call(*args, **kwargs)
+            if task_constraints is not None:
+                # add constraints to task_inst
+                ...
+            task_inst.execute()
+
+
+        As a result, it has the same exception and usage profile as
+        `PyTask.prepare_call`.
+
+        See Also
+        --------
+        legate.core.task.task.PyTask.prepare_call
+        """
+        task = self.prepare_call(*args, **kwargs)
+        if task_constraints is not None:
+            for cnst in task_constraints:
+                task.add_constraint(self._sanitize_constraint(task, cnst))
+        task.execute()
 
     def complete_registration(self) -> int:
         r"""Complete registration for a task.

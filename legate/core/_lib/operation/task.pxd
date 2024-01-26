@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport int32_t
+from libcpp cimport bool
 from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
@@ -67,10 +68,12 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
 cdef class AutoTask:
     cdef _AutoTask _handle
     cdef list[type] _exception_types
+    cdef bool _locked
 
     @staticmethod
     cdef AutoTask from_handle(_AutoTask)
 
+    cpdef void lock(self)
 
 cdef class ManualTask:
     cdef _ManualTask _handle

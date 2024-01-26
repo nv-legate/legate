@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from .projection import SymbolicPoint
 
 class AutoTask:
+    def lock(self) -> None: ...
     def add_input(
         self,
         array_or_store: Union[LogicalArray, LogicalStore],

@@ -70,19 +70,14 @@ cdef class InlineAllocation:
 
     @property
     def shape(self) -> tuple[size_t, ...]:
-        result = ()
         if self._store.ndim == 0:
-            return result
+            return ()
 
         cdef Domain domain = self._store.domain
         cdef DomainPoint lo = domain.lo
         cdef DomainPoint hi = domain.hi
         cdef int32_t ndim = domain.dim
-
-        for i in range(ndim):
-            result = (*result, hi[i] - lo[i] + 1)
-
-        return result
+        return tuple(hi[i] - lo[i] + 1 for i in range(ndim))
 
     @property
     def __array_interface__(self):

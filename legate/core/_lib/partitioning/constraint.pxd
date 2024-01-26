@@ -12,8 +12,12 @@
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp.string cimport string as std_string
 
-from ..data.shape cimport _Shape
+from ..data.logical_array cimport LogicalArray
+from ..data.logical_store cimport LogicalStore
 from ..utilities.tuple cimport _tuple
+
+from collections.abc import Sequence
+from typing import Any
 
 
 cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:
@@ -58,3 +62,33 @@ cdef class Constraint:
 
     @staticmethod
     cdef Constraint from_handle(_Constraint)
+
+cdef class ConstraintProxy:
+    cdef readonly:
+        object func
+        tuple[Any, ...] args
+
+ctypedef fused VariableOrStoreLike:
+    Variable
+    LogicalStore
+    LogicalArray
+
+
+cpdef object align(VariableOrStoreLike lhs, VariableOrStoreLike rhs)
+cpdef object broadcast(
+    VariableOrStoreLike variable, axes: Sequence[int] | None =*
+)
+cpdef object image(
+    VariableOrStoreLike var_function, VariableOrStoreLike var_range
+)
+cpdef object scale(
+    tuple factors,
+    VariableOrStoreLike var_smaller,
+    VariableOrStoreLike var_bigger
+)
+cpdef object bloat(
+    VariableOrStoreLike var_source,
+    VariableOrStoreLike var_bloat,
+    tuple low_offsets,
+    tuple high_offsets,
+)

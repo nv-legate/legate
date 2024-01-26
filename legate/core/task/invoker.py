@@ -33,6 +33,7 @@ from .type import (
     OutputStore,
     ReductionStore,
 )
+from .util import RESERVED_ARG_NAMES, dynamic_docstring
 
 _T = TypeVar("_T")
 _U = TypeVar("_U")
@@ -55,6 +56,7 @@ class VariantInvoker:
         "_scalars",
     )
 
+    @dynamic_docstring(RESERVED_ARGUMENTS=RESERVED_ARG_NAMES)
     def __init__(self, func: UserFunction) -> None:
         r"""Construct a ``VariantInvoker``
 
@@ -66,7 +68,7 @@ class VariantInvoker:
         Raises
         ------
         TypeError
-            If ``func`` has a non conforming signature.
+            If ``func`` has a non-conforming signature.
 
         Notes
         -----
@@ -77,6 +79,10 @@ class VariantInvoker:
         must be fully type-hinted. Furthermore, all arguments must be
         positional or keyword arguments, *args and **kwargs are not allowed.
         Default arguments are not yet supported either.
+
+        ``func`` must not contain any arguments named in {RESERVED_ARGUMENTS}.
+        These are reserved by the implementation, and are specially handled
+        at the callsite.
         """
         signature = self._get_signature(func)
 
@@ -93,6 +99,12 @@ class VariantInvoker:
         scalars: list[str] = []
 
         for name, param_descr in signature.parameters.items():
+            if name in RESERVED_ARG_NAMES:
+                raise TypeError(
+                    f'Parameter name "{name}" is not allowed; it is '
+                    "reserved by the implementation"
+                )
+
             ty = param_descr.annotation
             if ty is Signature.empty:
                 raise TypeError(

@@ -15,9 +15,11 @@ import re
 from typing import cast as TYPE_CAST
 
 import numpy as np
+import numpy.testing
 import pytest
 from typing_extensions import ParamSpec
 
+import legate.core as lg
 from legate.core import (
     PhysicalStore,
     TaskContext,
@@ -143,6 +145,73 @@ class TestTask(BaseTest):
         if check_called:
             self.check_func_called(func)
 
+    @pytest.mark.parametrize(
+        "in_func, func_args", zip(USER_FUNCS, USER_FUNC_ARGS)
+    )
+    @pytest.mark.parametrize("register", [True, False])
+    @pytest.mark.parametrize("check_called", [True, False])
+    def test_executable_prepare_call(
+        self,
+        in_func: TestFunction[_P, None],
+        func_args: ArgDescr,
+        register: bool,
+        check_called: bool,
+    ) -> None:
+        # make a deep copy of func since tasks may execute out of order on
+        # multiple threads which may clobber the called attribute
+        func = in_func.deep_clone()
+
+        task = lct.task(register=register)(func)
+
+        if not register:
+            self.check_valid_unregistered_task(task)
+            with pytest.raises(RuntimeError):
+                task(*func_args.args())
+
+            task.complete_registration()
+
+        self.check_valid_registered_task(task)
+        assert not func.called
+        task_inst = task.prepare_call(*func_args.args())
+
+        dummy_store = make_input_store()
+        with pytest.raises(
+            RuntimeError,
+            match=(
+                "Attempting to add inputs to a prepared Python task is "
+                "illegal!"
+            ),
+        ):
+            task_inst.add_input(dummy_store, None)
+        with pytest.raises(
+            RuntimeError,
+            match=(
+                "Attempting to add outputs to a prepared Python task is "
+                "illegal!"
+            ),
+        ):
+            task_inst.add_output(dummy_store, None)
+        with pytest.raises(
+            RuntimeError,
+            match=(
+                "Attempting to add reductions to a prepared Python task is "
+                "illegal!"
+            ),
+        ):
+            task_inst.add_reduction(dummy_store, 0, None)
+        with pytest.raises(
+            RuntimeError,
+            match=(
+                "Attempting to add scalar arguments to a prepared Python task "
+                "is illegal!"
+            ),
+        ):
+            task_inst.add_scalar_arg(0, None)
+
+        task_inst.execute()
+        if check_called:
+            self.check_func_called(func)
+
     def test_executable_wrong_arg_order(self) -> None:
         array_val = random.randint(0, 1000)
         c_val = random.randint(-1000, 1000)
@@ -242,7 +311,7 @@ class TestTask(BaseTest):
         self.check_valid_registered_task(bar)
         bar()
 
-    # TODO
+    # TODO(jfaibussowit)
     @pytest.mark.xfail
     def test_raised_exception(self) -> None:
         class CustomException(Exception):
@@ -256,6 +325,82 @@ class TestTask(BaseTest):
             CustomException, match=r"There is no peace but the Pax Romana"
         ):
             raises_exception()
+
+    def test_constraint_kwargs(self) -> None:
+        @lct.task
+        def my_task(x: InputStore, y: InputStore, z: OutputStore) -> None:
+            x_arr = np.asarray(x.get_inline_allocation())
+            y_arr = np.asarray(y.get_inline_allocation())
+            z_arr = np.asarray(z.get_inline_allocation())
+            assert x_arr.shape == y_arr.shape
+            assert z_arr.shape == y_arr.shape
+            np.testing.assert_allclose(x_arr, 1)
+            np.testing.assert_allclose(y_arr, 2)
+            z_arr[:] = x_arr + y_arr
+
+        x = make_input_store(value=1)
+        y = make_input_store(value=2)
+        z = make_output_store()
+        my_task(x, y, z, task_constraints=(lg.align(x, y), lg.align(y, z)))
+        get_legate_runtime().issue_execution_fence(block=True)
+        np.testing.assert_allclose(
+            np.asarray(z.get_physical_store().get_inline_allocation()),
+            np.full(shape=tuple(x.shape), fill_value=3),
+        )
+
+    @pytest.mark.parametrize("shape", ((10,), (10, 10), (10, 10, 10)))
+    def test_broadcast_constraint(self, shape: tuple[int, ...]) -> None:
+        x_val = 456
+
+        @lct.task
+        def broadcast_task(x: InputStore, y: OutputStore) -> None:
+            x_arr = np.asarray(x.get_inline_allocation())
+            assert x_arr.shape == shape
+            np.testing.assert_allclose(x_arr, x_val)
+            y_arr = np.asarray(y.get_inline_allocation())
+            assert y_arr.shape <= shape
+            y_arr[:] = x_arr[tuple(map(slice, y_arr.shape))]
+
+        x = make_input_store(value=x_val, shape=shape)
+        y = make_output_store(shape=shape)
+        broadcast_task(x, y, task_constraints=(lg.broadcast(x),))
+        get_legate_runtime().issue_execution_fence(block=True)
+        np.testing.assert_allclose(
+            np.asarray(y.get_physical_store().get_inline_allocation()),
+            np.full(shape=tuple(x.shape), fill_value=x_val),
+        )
+
+    @pytest.mark.parametrize("shape", ((1,), (10,), (100,)))
+    @pytest.mark.parametrize("scaling_factor", (2, 3, 4))
+    def test_scale_constraint(
+        self, shape: tuple[int, ...], scaling_factor: int
+    ) -> None:
+        @lct.task
+        def scale_task(x: InputStore, y: OutputStore) -> None:
+            x_arr = np.asarray(x.get_inline_allocation())
+            y_arr = np.asarray(y.get_inline_allocation())
+            assert x_arr.shape == tuple(
+                s * scaling_factor for s in y_arr.shape
+            )
+            # Compact x into y. The number of values compacted =
+            # scaling_factor. For example, if scaling_factor = 2:
+            #
+            # x: [1, 1, 1, 1, ..., 1, 1]
+            #     | /   | /        | /
+            #     +     +          +
+            # y: [2,    2,    ..., 2]
+            y_arr[:] = x_arr.reshape((-1, scaling_factor)).sum(axis=-1)
+
+        x = make_input_store(
+            value=1, shape=tuple(s * scaling_factor for s in shape)
+        )  # bigger
+        y = make_output_store(shape=shape)  # smaller
+        scale_task(x, y, task_constraints=(lg.scale((scaling_factor,), y, x),))
+        get_legate_runtime().issue_execution_fence(block=True)
+        np.testing.assert_allclose(
+            np.asarray(y.get_physical_store().get_inline_allocation()),
+            np.full(shape=tuple(y.shape), fill_value=scaling_factor),
+        )
 
 
 class TestVariantInvoker(BaseTest):
@@ -380,6 +525,13 @@ class TestVariantInvoker(BaseTest):
         invoker(ctx, func)
         if check_called:
             self.check_func_called(func)
+
+    def test_reserved_args(self) -> None:
+        def foo(task_constraints: InputStore) -> None:
+            pass
+
+        with pytest.raises(TypeError, match="Parameter name.* is not allowed"):
+            VariantInvoker(foo)
 
 
 class TestTaskUtil:

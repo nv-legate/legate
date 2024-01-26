@@ -13,9 +13,15 @@ from __future__ import annotations
 import copy
 import itertools
 from collections.abc import Callable
-from typing import Any, Generic, Optional, Protocol, TypeVar, cast as TYPE_CAST
-
-from typing_extensions import ParamSpec
+from typing import (
+    Any,
+    Generic,
+    Optional,
+    ParamSpec,
+    Protocol,
+    TypeVar,
+    cast as TYPE_CAST,
+)
 
 from legate.core import (
     AutoTask,
@@ -33,24 +39,30 @@ _T = TypeVar("_T")
 _P = ParamSpec("_P")
 
 
-def make_input_store(value: int = 123) -> LogicalStore:
+def make_input_store(
+    value: int = 123, shape: tuple[int, ...] | None = None
+) -> LogicalStore:
+    if shape is None:
+        shape = (10,)
     runtime = get_legate_runtime()
-    store = runtime.create_store(ty.int64, shape=(10,))
+    store = runtime.create_store(ty.int64, shape=shape)
     scalar = Scalar(value, ty.int64)
     runtime.issue_fill(store, scalar)
     return store
 
 
-def make_output_store() -> LogicalStore:
-    return make_input_store()
+def make_output_store(shape: tuple[int, ...] | None = None) -> LogicalStore:
+    return make_input_store(shape=shape)
 
 
-def make_input_array(value: int = 123) -> LogicalArray:
-    return LogicalArray.from_store(make_input_store(value=value))
+def make_input_array(
+    value: int = 123, shape: tuple[int, ...] | None = None
+) -> LogicalArray:
+    return LogicalArray.from_store(make_input_store(value=value, shape=shape))
 
 
-def make_output_array() -> LogicalArray:
-    return make_input_array()
+def make_output_array(shape: tuple[int, ...] | None = None) -> LogicalArray:
+    return make_input_array(shape=shape)
 
 
 class ArgDescr:

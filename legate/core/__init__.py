@@ -61,7 +61,7 @@ from ._lib.data.physical_store import PhysicalStore
 from ._lib.data.physical_array import PhysicalArray
 from ._lib.operation.projection import dimension, constant
 from ._lib.operation.task import AutoTask, ManualTask
-from ._lib.partitioning.constraint import align, bloat, broadcast, scale
+from ._lib.partitioning.constraint import align, image, bloat, broadcast, scale
 from ._lib.runtime.library import Library
 from ._lib.task.task_context import TaskContext
 from ._lib.task.task_info import TaskInfo

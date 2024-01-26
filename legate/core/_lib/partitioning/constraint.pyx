@@ -15,6 +15,9 @@ from libcpp.utility cimport move as std_move
 from ..utilities.tuple cimport _tuple
 from ..utilities.utils cimport is_iterable, uint64_tuple_from_iterable
 
+from collections.abc import Callable, Sequence
+from typing import Any
+
 
 cdef class Variable:
     @staticmethod
@@ -54,16 +57,50 @@ cdef class Constraint:
         return str(self)
 
 
-def align(Variable lhs, Variable rhs) -> Constraint:
-    return Constraint.from_handle(_align(lhs._handle, rhs._handle))
+cdef class ConstraintProxy:
+    r"""A trivial wrapper class to store the function and arguments
+    to construct a `Constraint`
+
+    Notes
+    -----
+    This class is useful to 'defer' construction of the `Constraint` until
+    a later time. For example, it is used by `PyTask` to take in Store or Array
+    arguments, convert them to the appropriate `Variable`, and then construct
+    the `Constraint` transparently.
+    """
+    def __init__(self, func: Callable[..., Constraint], *args: Any) -> None:
+        r"""Construct a `ConstraintProxy`
+
+        Parameters
+        ----------
+        func : Callable[..., Constraint]
+            The function which, given `args`, will construct the `Constraint`.
+        *args : Any
+            The original arguments to `func`.
+        """
+        self.func = func
+        self.args = args
 
 
-def broadcast(Variable variable, axes = None) -> Constraint:
+cpdef object align(VariableOrStoreLike lhs, VariableOrStoreLike rhs):
+    if VariableOrStoreLike is Variable:
+        return Constraint.from_handle(_align(lhs._handle, rhs._handle))
+    # I don't know why cython complains that this is unreachable. It is, just
+    # not for every version of this function (and that's the point!!)
+    return ConstraintProxy(align, lhs, rhs)
+
+
+cpdef object broadcast(
+    VariableOrStoreLike variable, axes: Sequence[int] | None = None
+):
+    if VariableOrStoreLike is not Variable:
+        return ConstraintProxy(broadcast, variable, axes)
+
     if axes is None:
         return Constraint.from_handle(_broadcast(variable._handle))
 
     if not is_iterable(axes):
-        raise ValueError("axes must bean iterable")
+        raise ValueError("axes must be iterable")
 
     if len(axes) == 0:
         return Constraint.from_handle(_broadcast(variable._handle))
@@ -78,35 +115,53 @@ def broadcast(Variable variable, axes = None) -> Constraint:
     )
 
 
-def image(Variable var_function, Variable var_range) -> Constraint:
-    return Constraint.from_handle(
-        _image(var_function._handle, var_range._handle)
-    )
-
-
-def scale(
-    tuple factors, Variable var_smaller, Variable var_bigger
-) -> Constraint:
-    return Constraint.from_handle(
-        _scale(
-            std_move(uint64_tuple_from_iterable(factors)),
-            var_smaller._handle,
-            var_bigger._handle,
+cpdef object image(
+    VariableOrStoreLike var_function, VariableOrStoreLike var_range
+):
+    if VariableOrStoreLike is Variable:
+        return Constraint.from_handle(
+            _image(var_function._handle, var_range._handle)
         )
+    return ConstraintProxy(image, var_function, var_range)
+
+
+cpdef object scale(
+    tuple factors,
+    VariableOrStoreLike var_smaller,
+    VariableOrStoreLike var_bigger
+):
+    if VariableOrStoreLike is Variable:
+        return Constraint.from_handle(
+            _scale(
+                std_move(uint64_tuple_from_iterable(factors)),
+                var_smaller._handle,
+                var_bigger._handle,
+            )
+        )
+    return ConstraintProxy(
+        scale, factors, var_smaller, var_bigger
     )
 
 
-def bloat(
-    Variable var_source,
-    Variable var_bloat,
+cpdef object bloat(
+    VariableOrStoreLike var_source,
+    VariableOrStoreLike var_bloat,
     tuple low_offsets,
     tuple high_offsets,
-) -> Constraint:
-    return Constraint.from_handle(
-        _bloat(
-            var_source._handle,
-            var_bloat._handle,
-            std_move(uint64_tuple_from_iterable(low_offsets)),
-            std_move(uint64_tuple_from_iterable(high_offsets)),
+):
+    if VariableOrStoreLike is Variable:
+        return Constraint.from_handle(
+            _bloat(
+                var_source._handle,
+                var_bloat._handle,
+                std_move(uint64_tuple_from_iterable(low_offsets)),
+                std_move(uint64_tuple_from_iterable(high_offsets)),
+            )
         )
+    return ConstraintProxy(
+        bloat,
+        var_source,
+        var_bloat,
+        low_offsets,
+        high_offsets,
     )
