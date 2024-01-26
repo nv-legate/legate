@@ -33,7 +33,7 @@ if is_legion_python == False:
     legion_canonical_python_main(driver.cmd)
     atexit.register(legion_canonical_python_cleanup)
 
-from .data_interface import Field, Table
+from .data_interface import LegateDataInterface, Field, Table
 from ._lib.mapping.mapping import TaskTarget
 from ._lib.mapping.machine import (
     EmptyMachineError,
