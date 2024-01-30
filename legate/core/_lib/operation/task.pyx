@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t, uint32_t
+from libc.stdint cimport int32_t, uint32_t, uintptr_t
 from libcpp cimport bool
 from libcpp.optional cimport make_optional, optional as std_optional
 from libcpp.utility cimport move as std_move
@@ -360,6 +360,13 @@ cdef class AutoTask:
         """
         self.add_communicator("cal")
 
+    @property
+    def raw_handle(self) -> uintptr_t:
+        """
+        Get the raw C++ pointer to the underlying class instance as an integer
+        """
+        return <uintptr_t> &self._handle
+
 
 cdef std_optional[_SymbolicPoint] to_cpp_projection(object projection):
     if projection is None:
@@ -514,3 +521,10 @@ cdef class ManualTask:
         Adds a CAL communicator to the task
         """
         self.add_communicator("cal")
+
+    @property
+    def raw_handle(self) -> uintptr_t:
+        """
+        Get the raw C++ pointer to the underlying class instance as an integer
+        """
+        return <uintptr_t> &self._handle

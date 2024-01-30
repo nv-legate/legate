@@ -128,6 +128,7 @@ cdef class LogicalArray:
     def child(self, uint32_t index) -> LogicalArray:
         return LogicalArray.from_handle(self._handle.child(index))
 
+    @property
     def raw_handle(self) -> uintptr_t:
         return <uintptr_t> &self._handle
 
