@@ -100,7 +100,7 @@ class Runtime:
         dtype: Type,
         shape: Shape | Iterable[int],
         data: object,
-        share: bool,
+        read_only: bool,
     ) -> LogicalStore: ...
     @property
     def max_pending_exceptions(self) -> int: ...

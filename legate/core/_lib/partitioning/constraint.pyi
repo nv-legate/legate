@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable
 from typing import Any, TypeAlias, overload
 
 from ..data.logical_array import LogicalArray
@@ -40,11 +40,11 @@ def align(lhs: Variable, rhs: Variable) -> Constraint: ...
 def align(lhs: StoreOrArray, rhs: StoreOrArray) -> ConstraintProxy: ...
 @overload
 def broadcast(
-    variable: Variable, axes: Sequence[int] | None = None
+    variable: Variable, axes: Iterable[int] | None = None
 ) -> Constraint: ...
 @overload
 def broadcast(
-    variable: StoreOrArray, axes: Sequence[int] | None = None
+    variable: StoreOrArray, axes: Iterable[int] | None = None
 ) -> ConstraintProxy: ...
 @overload
 def image(var_function: Variable, var_range: Variable) -> Constraint: ...

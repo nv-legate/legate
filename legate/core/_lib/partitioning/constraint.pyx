@@ -15,7 +15,7 @@ from libcpp.utility cimport move as std_move
 from ..utilities.tuple cimport _tuple
 from ..utilities.utils cimport is_iterable, uint64_tuple_from_iterable
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable
 from typing import Any
 
 
@@ -91,7 +91,7 @@ cpdef object align(VariableOrStoreLike lhs, VariableOrStoreLike rhs):
 
 
 cpdef object broadcast(
-    VariableOrStoreLike variable, axes: Sequence[int] | None = None
+    VariableOrStoreLike variable, axes: Iterable[int] | None = None
 ):
     if VariableOrStoreLike is not Variable:
         return ConstraintProxy(broadcast, variable, axes)
