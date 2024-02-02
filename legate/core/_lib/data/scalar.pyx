@@ -226,11 +226,13 @@ cpdef tuple to_struct(Scalar scalar):
     # Unfortunately, the array interface requires paddings in a struct type to
     # be materialized as separate fields, so we need to filter out garbage
     # values from those paddings.
-    result = ()
+    cdef list result = []
+    cdef int idx
+    cdef str name
     for idx, (name, _) in enumerate(arr.dtype.descr):
         if name.startswith("_"):
-            result = (*result, v[idx])
-    return result
+            result.append(v[idx])
+    return tuple(result)
 
 
 cdef dict _GETTERS = {
@@ -297,7 +299,7 @@ cdef class Scalar:
 
     @property
     def __array_interface__(self):
-        ty = self.type
+        cdef Type ty = self.type
         if ty.variable_size:
             raise ValueError(
                 "Scalars with variable size types don't support "

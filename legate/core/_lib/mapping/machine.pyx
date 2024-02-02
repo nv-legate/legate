@@ -18,8 +18,11 @@ from libcpp.map cimport map as std_map
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
+from ..runtime.runtime cimport get_legate_runtime
 from .mapping cimport TaskTarget
+
 from .mapping import TaskTarget as PyTaskTarget
+
 from ..utilities.utils cimport is_iterable
 
 
@@ -39,7 +42,9 @@ MACHINE_KEY = Union[PyTaskTarget, slice, int, ProcessorSlice]
 
 cdef class ProcessorRange:
     @staticmethod
-    def create(uint32_t low, uint32_t high, uint32_t per_node_count):
+    def create(
+            uint32_t low, uint32_t high, uint32_t per_node_count
+    ) -> ProcessorRange:
         return ProcessorRange(low, high, per_node_count)
 
     @staticmethod
@@ -131,7 +136,7 @@ cdef class ProcessorRange:
         """
         return self._handle.empty()
 
-    def slice(self, slice sl) -> ProcessorRange:
+    cpdef ProcessorRange slice(self, slice sl):
         """
         Slices the processor range by a given ``slice``
 
@@ -147,8 +152,8 @@ cdef class ProcessorRange:
         """
         if sl.step is not None and sl.step != 1:
             raise ValueError("The slicing step must be 1")
-        start = 0 if sl.start is None else sl.start
-        stop = self.high if sl.stop is None else sl.stop
+        cdef int start = 0 if sl.start is None else sl.start
+        cdef int stop = self.high if sl.stop is None else sl.stop
         return ProcessorRange.from_handle(self._handle.slice(start, stop))
 
     def __getitem__(self, key: PROC_RANGE_KEY) -> ProcessorRange:
@@ -174,7 +179,7 @@ cdef class ProcessorRange:
 
         raise KeyError(f"Invalid slicing key: {key}")
 
-    def get_node_range(self) -> tuple:
+    cpdef tuple get_node_range(self):
         """
         Returns the range of node IDs for this processor range
 
@@ -225,7 +230,7 @@ cdef class Machine:
         result._handle = handle
         return result
 
-    def __cinit__(self, ranges = None) -> None:
+    def __cinit__(self, ranges: dict | None = None) -> None:
         if ranges is None:
             ranges = dict()
 
@@ -265,9 +270,9 @@ cdef class Machine:
         """
         return self._handle.preferred_target()
 
-    def get_processor_range(
+    cpdef ProcessorRange get_processor_range(
         self, target: Optional[PyTaskTarget] = None
-    ) -> ProcessorRange:
+    ):
         """
         Returns the processor range of a given task target.
 
@@ -287,7 +292,7 @@ cdef class Machine:
             else self._handle.processor_range(<TaskTarget> target)
         )
 
-    def get_node_range(self, target: Optional[PyTaskTarget] = None) -> tuple:
+    cpdef tuple get_node_range(self, target: Optional[PyTaskTarget] = None):
         """
         Returns the node range for processor of a given task target.
 
@@ -315,9 +320,9 @@ cdef class Machine:
         """
         return tuple(self._handle.valid_targets())
 
-    def count(
+    cpdef int count(
         self, target: Optional[PyTaskTarget] = None
-    ) -> int:
+    ):
         """
         Returns the number of processors of a given task target
 
@@ -352,9 +357,9 @@ cdef class Machine:
         """
         return self._handle.empty()
 
-    def only(
-        self, targets: Union[Iterable[TaskTarget], TaskTarget]
-    ) -> Machine:
+    cpdef Machine only(
+        self, targets: Iterable[TaskTarget] | TaskTarget
+    ):
         """
         Returns a machine that contains only the processors of given kinds
 
@@ -371,13 +376,15 @@ cdef class Machine:
         if not is_iterable(targets):
             targets = (targets,)
         cdef std_vector[TaskTarget] cpp_targets = std_vector[TaskTarget]()
+
+        cpp_targets.reserve(len(targets))
         for target in targets:
             cpp_targets.push_back(<TaskTarget> target)
         return Machine.from_handle(self._handle.only(std_move(cpp_targets)))
 
-    def slice(
+    cpdef Machine slice(
         self, slice sl, target: Optional[PyTaskTarget] = None
-    ) -> Machine:
+    ):
         """
         Slices the machine by a given slice and a task target
 
@@ -466,10 +473,7 @@ cdef class Machine:
         return str(self)
 
     def __enter__(self) -> None:
-        from ..runtime.runtime import get_legate_runtime
-
         runtime = get_legate_runtime()
-
         new_machine = runtime.get_machine() & self
         if new_machine.empty:
             raise EmptyMachineError(
@@ -478,6 +482,4 @@ cdef class Machine:
         runtime.push_machine(new_machine)
 
     def __exit__(self, _: Any, __: Any, ___: Any) -> None:
-        from ..runtime.runtime import get_legate_runtime
-
         get_legate_runtime().pop_machine()

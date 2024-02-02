@@ -36,6 +36,8 @@ cdef class PhysicalStore:
     @staticmethod
     cdef PhysicalStore from_handle(_PhysicalStore)
 
+    cpdef InlineAllocation get_inline_allocation(self)
+
 
 cdef class InlineAllocation:
     cdef _InlineAllocation _handle

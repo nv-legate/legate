@@ -83,33 +83,36 @@ cdef class LogicalArray:
     def num_children(self) -> uint32_t:
         return self._handle.num_children()
 
-    def promote(self, int32_t extra_dim, size_t dim_size) -> LogicalArray:
+    cpdef LogicalArray promote(self, int32_t extra_dim, size_t dim_size):
         return LogicalArray.from_handle(
             self._handle.promote(extra_dim, dim_size)
         )
 
-    def project(self, int32_t dim, int64_t index) -> LogicalArray:
+    cpdef LogicalArray project(self, int32_t dim, int64_t index):
         return LogicalArray.from_handle(self._handle.project(dim, index))
 
-    def slice(self, int32_t dim, slice sl) -> LogicalArray:
+    cpdef LogicalArray slice(self, int32_t dim, slice sl):
         return LogicalArray.from_handle(
             self._handle.slice(dim, from_python_slice(sl))
         )
 
-    def transpose(self, object axes) -> LogicalArray:
+    cpdef LogicalArray transpose(self, object axes):
         if not is_iterable(axes):
             raise ValueError(f"Expected an iterable but got {type(axes)}")
         cdef std_vector[int32_t] cpp_axes = std_vector[int32_t]()
+
+        cpp_axes.reserve(len(axes))
         for axis in axes:
             cpp_axes.push_back(axis)
         return LogicalArray.from_handle(
             self._handle.transpose(std_move(cpp_axes))
         )
 
-    def delinearize(self, int32_t dim, object shape) -> LogicalArray:
+    cpdef LogicalArray delinearize(self, int32_t dim, object shape):
         if not is_iterable(shape):
             raise ValueError(f"Expected an iterable but got {type(shape)}")
         cdef std_vector[uint64_t] sizes = std_vector[uint64_t]()
+
         sizes.reserve(len(shape))
         for value in shape:
             sizes.push_back(value)
@@ -125,7 +128,7 @@ cdef class LogicalArray:
     def null_mask(self) -> LogicalStore:
         return LogicalStore.from_handle(self._handle.null_mask())
 
-    def child(self, uint32_t index) -> LogicalArray:
+    cpdef LogicalArray child(self, uint32_t index):
         return LogicalArray.from_handle(self._handle.child(index))
 
     @property

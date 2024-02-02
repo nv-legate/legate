@@ -10,16 +10,16 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport int32_t, int64_t, uint32_t
+from libc.stdlib cimport malloc as std_malloc
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 
 import gc
 import inspect
 import sys
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable
 
-import cython
-from cython.cimports.libc.stdlib import malloc
+cimport cython
 
 from legion_top import add_cleanup_item
 
@@ -46,19 +46,21 @@ from .tracker cimport _ProvenanceTracker
 from ...utils import AnyCallable, ShutdownCallback
 
 
-class ShutdownCallbackManager:
-    def __init__(self) -> None:
-        self._shutdown_callbacks: list[ShutdownCallback] = []
+cdef class ShutdownCallbackManager:
+    cdef list[ShutdownCallback] _shutdown_callbacks
 
-    def add_shutdown_callback(self, callback: ShutdownCallback) -> None:
+    def __init__(self) -> None:
+        self._shutdown_callbacks = []
+
+    cdef void add_shutdown_callback(self, callback: ShutdownCallback):
         self._shutdown_callbacks.append(callback)
 
-    def perform_callbacks(self) -> None:
+    cdef void perform_callbacks(self):
         for callback in self._shutdown_callbacks:
             callback()
 
 
-_shutdown_manager = ShutdownCallbackManager()
+cdef ShutdownCallbackManager _shutdown_manager = ShutdownCallbackManager()
 
 
 create_legate_task_exception()
@@ -68,6 +70,8 @@ LegateTaskException = <object> _LegateTaskException
 cdef void _reraise_legate_exception(
     tuple[type] exception_types, Exception e
 ) except *:
+    cdef int index
+
     message, index = e.args
     try:
         exn = exception_types[index]
@@ -89,7 +93,7 @@ cdef class Runtime:
             f"{type(self).__name__} objects must not be constructed directly"
         )
 
-    def find_library(self, str library_name) -> Library:
+    cpdef Library find_library(self, str library_name):
         return Library.from_handle(
             self._handle.find_library(library_name.encode())
         )
@@ -98,7 +102,7 @@ cdef class Runtime:
     def core_library(self) -> Library:
         return self.find_library("legate.core")
 
-    def create_auto_task(self, Library library, int64_t task_id) -> AutoTask:
+    cpdef AutoTask create_auto_task(self, Library library, int64_t task_id):
         """
         Creates an auto task.
 
@@ -121,13 +125,13 @@ cdef class Runtime:
             self._handle.create_task(library._handle, task_id)
         )
 
-    def create_manual_task(
+    cpdef ManualTask create_manual_task(
         self,
         Library library,
         int64_t task_id,
         object launch_shape,
         object lower_bounds = None,
-    ) -> ManualTask:
+    ):
         """
         Creates a manual task.
 
@@ -170,22 +174,22 @@ cdef class Runtime:
                     uint64_tuple_from_iterable(launch_shape),
                 )
             )
-        else:
-            return ManualTask.from_handle(
-                self._handle.create_task(
-                    library._handle, task_id, domain_from_iterables(
-                        lower_bounds,
-                        tuple(v - 1 for v in launch_shape),
-                    )
+        cdef int v
+        return ManualTask.from_handle(
+            self._handle.create_task(
+                library._handle, task_id, domain_from_iterables(
+                    lower_bounds,
+                    tuple([v - 1 for v in launch_shape]),
                 )
             )
+        )
 
-    def issue_copy(
+    cpdef void issue_copy(
         self,
         LogicalStore target,
         LogicalStore source,
-        redop: Optional[int] = None,
-    ) -> None:
+        redop: int | None = None,
+    ):
         if redop is None:
             self._handle.issue_copy(target._handle, source._handle)
         else:
@@ -193,13 +197,13 @@ cdef class Runtime:
                 target._handle, source._handle, <int32_t> redop
             )
 
-    def issue_gather(
+    cpdef void issue_gather(
         self,
         LogicalStore target,
         LogicalStore source,
         LogicalStore source_indirect,
-        redop: Optional[int] = None,
-    ) -> None:
+        redop: int | None = None,
+    ):
         if redop is None:
             self._handle.issue_gather(
                 target._handle,
@@ -214,13 +218,13 @@ cdef class Runtime:
                 <int32_t> redop,
             )
 
-    def issue_scatter(
+    cpdef void issue_scatter(
         self,
         LogicalStore target,
         LogicalStore target_indirect,
         LogicalStore source,
-        redop: Optional[int] = None,
-    ) -> None:
+        redop: int | None = None,
+    ):
         if redop is None:
             self._handle.issue_scatter(
                 target._handle,
@@ -235,14 +239,14 @@ cdef class Runtime:
                 <int32_t> redop,
             )
 
-    def issue_scatter_gather(
+    cpdef void issue_scatter_gather(
         self,
         LogicalStore target,
         LogicalStore target_indirect,
         LogicalStore source,
         LogicalStore source_indirect,
-        redop: Optional[int] = None,
-    ) -> None:
+        redop: int | None = None,
+    ):
         if redop is None:
             self._handle.issue_scatter_gather(
                 target._handle,
@@ -259,7 +263,7 @@ cdef class Runtime:
                 <int32_t> redop,
             )
 
-    def issue_fill(self, object array_or_store, object value) -> None:
+    cpdef void issue_fill(self, object array_or_store, object value):
         """
         Fills the array or store with a constant value.
 
@@ -294,13 +298,13 @@ cdef class Runtime:
                 f"got {type(value)}"
             )
 
-    def tree_reduce(
+    cpdef LogicalStore tree_reduce(
         self,
         Library library,
         int64_t task_id,
         LogicalStore store,
         int64_t radix = 4,
-    ) -> LogicalStore:
+    ):
         """
         Performs a user-defined reduction by building a tree of reduction
         tasks. At each step, the reducer task gets up to ``radix`` input stores
@@ -334,7 +338,7 @@ cdef class Runtime:
             )
         )
 
-    def submit(self, op) -> None:
+    cpdef void submit(self, object op):
         if isinstance(op, AutoTask):
             try:
                 with nogil:
@@ -352,14 +356,14 @@ cdef class Runtime:
 
         raise RuntimeError(f"Unknown type of operation: {type(op)}")
 
-    def create_array(
+    cpdef LogicalArray create_array(
         self,
         Type dtype,
         shape: Shape | Iterable[int] | None = None,
         bool nullable = False,
         bool optimize_scalar = False,
-        ndim: Optional[int] = None,
-    ) -> LogicalArray:
+        ndim: int | None = None,
+    ):
         if ndim is not None and shape is not None:
             raise ValueError("ndim cannot be used with shape")
 
@@ -380,22 +384,20 @@ cdef class Runtime:
             )
         )
 
-    def create_array_like(
-        self, LogicalArray array, Type dtype
-    ) -> LogicalArray:
+    cpdef LogicalArray create_array_like(self, LogicalArray array, Type dtype):
         return LogicalArray.from_handle(
             self._handle.create_array_like(
                 array._handle, dtype._handle
             )
         )
 
-    def create_store(
+    cpdef LogicalStore create_store(
         self,
         Type dtype,
         shape: Shape | Iterable[int] | None = None,
         bool optimize_scalar = False,
-        ndim: Optional[int] = None,
-    ) -> LogicalStore:
+        ndim: int | None = None,
+    ):
         if ndim is not None and shape is not None:
             raise ValueError("ndim cannot be used with shape")
 
@@ -411,11 +413,11 @@ cdef class Runtime:
             )
         )
 
-    def create_store_from_scalar(
+    cpdef LogicalStore create_store_from_scalar(
         self,
-        scalar: Scalar,
+        Scalar scalar,
         shape: Shape | Iterable[int] | None = None,
-    ) -> LogicalStore:
+    ):
         if shape is None:
             return LogicalStore.from_handle(
                 self._handle.create_store(scalar._handle)
@@ -427,13 +429,13 @@ cdef class Runtime:
             )
         )
 
-    def create_store_from_buffer(
+    cpdef LogicalStore create_store_from_buffer(
         self,
         Type dtype,
         shape: Shape | Iterable[int],
         object data,
         bool read_only,
-    ) -> LogicalStore:
+    ):
         """
         Creates a Legate store from a Python object implementing the Python
         buffer protocol.
@@ -482,46 +484,48 @@ cdef class Runtime:
             )
         )
 
-    def issue_execution_fence(self, bool block = False) -> None:
+    cpdef void issue_execution_fence(self, bool block = False):
         with cython.nogil:
             # Must release the GIL in case we have in-flight python tasks,
             # since those can't run if we are stuck here holding the bag.
             self._handle.issue_execution_fence(block)
 
-    def get_machine(self) -> Machine:
+    cpdef Machine get_machine(self):
         return Machine.from_handle(self._handle.get_machine())
 
     @property
     def machine(self) -> Machine:
         return get_machine()
 
-    def destroy(self) -> None:
+    cpdef void destroy(self):
         global _shutdown_manager
         _shutdown_manager.perform_callbacks()
         destroy()
 
-    def push_machine(self, Machine machine) -> None:
+    cpdef void push_machine(self, Machine machine):
         cdef _Machine cpp_machine = machine._handle
         self._handle.impl().machine_manager().push_machine(
             std_move(cpp_machine.impl().get()[0])
         )
 
-    def pop_machine(self) -> None:
+    cpdef void pop_machine(self):
         self._handle.impl().machine_manager().pop_machine()
 
-    def add_shutdown_callback(self, callback: ShutdownCallback) -> None:
+    cpdef void add_shutdown_callback(self, callback: ShutdownCallback):
         global _shutdown_manager
         _shutdown_manager.add_shutdown_callback(callback)
 
 
 cdef Runtime initialize():
     cdef int32_t argc = len(sys.argv)
-    cdef char** argv
-    # TODO: Allocations we create here are leaked
-    argv = <char**> malloc(argc * cython.sizeof(cython.p_char))
+    # TODO(wonchanl): Allocations we create here are leaked
+    cdef char** argv = <char**> std_malloc(argc * cython.sizeof(cython.p_char))
+    cdef int i, j
+    cdef str val
+    cdef bytes arg
     for i, val in enumerate(sys.argv):
         arg = val.encode()
-        argv[i] = <char*> malloc(len(arg) + 1)
+        argv[i] = <char*> std_malloc(len(arg) + 1)
         for j, v in enumerate(arg):
             argv[i][j] = <char> v
         argv[i][len(val)] = 0
@@ -529,10 +533,10 @@ cdef Runtime initialize():
     return Runtime.from_handle(_Runtime.get_runtime())
 
 
-_runtime = initialize()
+cdef Runtime _runtime = initialize()
 
 
-def get_legate_runtime() -> Runtime:
+cpdef Runtime get_legate_runtime():
     """
     Returns the Legate runtime
 
@@ -544,7 +548,7 @@ def get_legate_runtime() -> Runtime:
     return _runtime
 
 
-def get_machine() -> Machine:
+cpdef Machine get_machine():
     """
     Returns the machine of the current scope
 
@@ -555,7 +559,7 @@ def get_machine() -> Machine:
     return _runtime.get_machine()
 
 
-def caller_frameinfo() -> str:
+cdef str caller_frameinfo():
     frame = inspect.currentframe()
     if frame is None:
         return "<unknown>"
@@ -563,7 +567,7 @@ def caller_frameinfo() -> str:
 
 
 def track_provenance(
-    nested: bool = False,
+    bool nested = False
 ) -> Callable[[AnyCallable], AnyCallable]:
     """
     Decorator that adds provenance tracking to functions. Provenance of each
@@ -590,7 +594,7 @@ def track_provenance(
     def decorator(func: AnyCallable) -> AnyCallable:
         if nested:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                provenance = caller_frameinfo()
+                cdef str provenance = caller_frameinfo()
                 cdef _ProvenanceTracker* tracker = new _ProvenanceTracker(
                     provenance.encode()
                 )
@@ -616,7 +620,7 @@ def track_provenance(
     return decorator
 
 
-def _cleanup_legate_runtime() -> None:
+cdef void _cleanup_legate_runtime():
     get_legate_runtime().destroy()
     gc.collect()
 

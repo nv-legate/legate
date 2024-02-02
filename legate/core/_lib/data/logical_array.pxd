@@ -50,5 +50,12 @@ cdef class LogicalArray:
     @staticmethod
     cdef LogicalArray from_handle(_LogicalArray)
 
+    cpdef LogicalArray promote(self, int32_t extra_dim, size_t dim_size)
+    cpdef LogicalArray project(self, int32_t dim, int64_t index)
+    cpdef LogicalArray slice(self, int32_t dim, slice sl)
+    cpdef LogicalArray transpose(self, object axes)
+    cpdef LogicalArray delinearize(self, int32_t dim, object shape)
+    cpdef LogicalArray child(self, uint32_t index)
+
 
 cdef _LogicalArray to_cpp_logical_array(object array_or_store)

@@ -14,10 +14,15 @@ from libcpp cimport bool
 from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
-from ..data.logical_array cimport _LogicalArray
+from ..data.logical_array cimport LogicalArray, _LogicalArray
 from ..data.logical_store cimport _LogicalStore, _LogicalStorePartition
 from ..data.scalar cimport _Scalar
-from ..partitioning.constraint cimport _Constraint, _Variable
+from ..partitioning.constraint cimport (
+    Constraint,
+    Variable,
+    _Constraint,
+    _Variable,
+)
 from ..utilities.tuple cimport _tuple
 from .projection cimport _SymbolicPoint
 
@@ -74,6 +79,32 @@ cdef class AutoTask:
     cdef AutoTask from_handle(_AutoTask)
 
     cpdef void lock(self)
+    cpdef Variable add_input(
+        self, object array_or_store, object partition = *
+    )
+    cpdef Variable add_output(
+        self, object array_or_store, object partition = *
+    )
+    cpdef Variable add_reduction(
+        self, object array_or_store, int32_t redop, object partition = *
+    )
+    cpdef void add_scalar_arg(self, object value, object dtype = *)
+    cpdef void add_constraint(self, Constraint constraint)
+    cpdef Variable find_or_declare_partition(self, LogicalArray array)
+    cpdef Variable declare_partition(self)
+    cpdef str provenance(self)
+    cpdef void set_concurrent(self, bool concurrent)
+    cpdef void set_side_effect(self, bool has_side_effect)
+    cpdef void throws_exception(self, type exception_type)
+    cpdef void add_communicator(self, str name)
+    cpdef void execute(self)
+    cpdef void add_alignment(
+        self, object array_or_store1, object array_or_store2
+    )
+    cpdef void add_broadcast(self, object array_or_store, object axes = *)
+    cpdef void add_nccl_communicator(self)
+    cpdef void add_cpu_communicator(self)
+    cpdef void add_cal_communicator(self)
 
 cdef class ManualTask:
     cdef _ManualTask _handle
@@ -81,3 +112,19 @@ cdef class ManualTask:
 
     @staticmethod
     cdef ManualTask from_handle(_ManualTask)
+
+    cpdef void add_input(self, object arg, object projection = *)
+    cpdef void add_output(self, object arg, object projection = *)
+    cpdef void add_reduction(
+        self, object arg, int32_t redop, object projection = *
+    )
+    cpdef void add_scalar_arg(self, object value, object dtype = *)
+    cpdef str provenance(self)
+    cpdef void set_concurrent(self, bool concurrent)
+    cpdef void set_side_effect(self, bool has_side_effect)
+    cpdef void throws_exception(self, type exception_type)
+    cpdef void add_communicator(self, str name)
+    cpdef void execute(self)
+    cpdef void add_nccl_communicator(self)
+    cpdef void add_cpu_communicator(self)
+    cpdef void add_cal_communicator(self)

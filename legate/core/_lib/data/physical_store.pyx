@@ -41,7 +41,7 @@ cdef class PhysicalStore:
     def domain(self) -> Domain:
         return Domain.from_handle(self._handle.domain())
 
-    def get_inline_allocation(self) -> InlineAllocation:
+    cpdef InlineAllocation get_inline_allocation(self):
         return InlineAllocation.create(
             self,
             self._handle.get_inline_allocation()
@@ -65,7 +65,7 @@ cdef class InlineAllocation:
         return <long>(self._handle.ptr)
 
     @property
-    def strides(self) -> tuple[size_t]:
+    def strides(self) -> tuple[size_t, ...]:
         return () if self._store.ndim == 0 else tuple(self._handle.strides)
 
     @property
@@ -81,7 +81,7 @@ cdef class InlineAllocation:
 
     @property
     def __array_interface__(self):
-        ty = self._store.type
+        cdef Type ty = self._store.type
         if ty.variable_size:
             raise ValueError(
                 "Stores with variable size types don't support "

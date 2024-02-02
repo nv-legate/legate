@@ -34,7 +34,7 @@ class ReductionOp(IntEnum):
     XOR = legate_core_reduction_op_kind_t._XOR
 
 
-_NUMPY_DTYPES = {
+cdef dict _NUMPY_DTYPES = {
     _Type.Code.BOOL : np.dtype(np.bool_),
     _Type.Code.INT8 : np.dtype(np.int8),
     _Type.Code.INT16 : np.dtype(np.int16),
@@ -93,19 +93,19 @@ cdef class Type:
     def is_primitive(self) -> bool:
         return self._handle.is_primitive()
 
-    def record_reduction_op(
+    cpdef void record_reduction_op(
         self, int32_t op_kind, int64_t reduction_op_id
-    ) -> None:
+    ):
         self._handle.record_reduction_operator(op_kind, reduction_op_id)
 
-    def reduction_op_id(self, int32_t op_kind) -> int64_t:
+    cpdef int64_t reduction_op_id(self, int32_t op_kind):
         return self._handle.find_reduction_operator(op_kind)
 
     def __repr__(self) -> str:
         return self._handle.to_string().decode()
 
-    def to_numpy_dtype(self):
-        code = self.code
+    cpdef object to_numpy_dtype(self):
+        cdef int32_t code = self.code
         if code in _NUMPY_DTYPES:
             return _NUMPY_DTYPES[self.code]
         else:
@@ -138,9 +138,9 @@ cdef class FixedArrayType(Type):
             self._handle.as_fixed_array_type().element_type()
         )
 
-    def to_numpy_dtype(self):
+    cpdef object to_numpy_dtype(self):
         elem_ty = self.element_type.to_numpy_dtype()
-        N = self.num_elements
+        cdef uint32_t N = self.num_elements
         return np.dtype((elem_ty, (N, ))) if N > 1 else elem_ty
 
 
@@ -154,7 +154,7 @@ cdef class StructType(Type):
     def num_fields(self) -> uint32_t:
         return self._handle.as_struct_type().num_fields()
 
-    def field_type(self, uint32_t field_idx) -> Type:
+    cpdef Type field_type(self, uint32_t field_idx):
         return Type.from_handle(
             self._handle.as_struct_type().field_type(field_idx)
         )
@@ -167,14 +167,22 @@ cdef class StructType(Type):
     def offsets(self) -> tuple[uint32_t, ...]:
         return tuple(self._handle.as_struct_type().offsets())
 
-    def to_numpy_dtype(self):
-        num_fields = self.num_fields
-        names = tuple(
-            f"_{field_idx}" for field_idx in range(num_fields)
+    cpdef object to_numpy_dtype(self):
+        cdef uint32_t num_fields = self.num_fields
+        # Need to construct these tuple using list comprehensions because
+        # Cython (as of 3.0.8) does not yet support closures in cdef or cpdef
+        # functions.
+        #
+        # For whatever reason comprehensions are treated specially by the
+        # cython compiler (even though they are also technically closures...).
+        cdef tuple names = tuple(
+            [f"_{field_idx}" for field_idx in range(num_fields)]
         )
-        formats = tuple(
-            self.field_type(field_idx).to_numpy_dtype()
-            for field_idx in range(num_fields)
+        cdef tuple formats = tuple(
+            [
+                self.field_type(field_idx).to_numpy_dtype()
+                for field_idx in range(num_fields)
+            ]
         )
         return np.dtype(
             {"names": names, "formats": formats}, align=self.aligned
@@ -198,20 +206,20 @@ complex128 = Type.from_handle(_complex128())
 string_type = Type.from_handle(_string_type())
 
 
-def binary_type(uint32_t size) -> Type:
+cpdef Type binary_type(uint32_t size):
     return Type.from_handle(_binary_type(size))
 
 
-def array_type(
-    Type element_type, uint32_t N
-) -> FixedArrayType:
+cpdef FixedArrayType array_type(Type element_type, uint32_t N):
     return <FixedArrayType> Type.from_handle(
         _fixed_array_type(element_type._handle, N)
     )
 
 
-def struct_type(list field_types, bool align = True) -> StructType:
+cpdef StructType struct_type(list field_types, bool align = True):
     cdef std_vector[_Type] types = std_vector[_Type]()
+
+    types.reserve(len(field_types))
     for field_type in field_types:
         types.push_back(
             (<Type> field_type)._handle
@@ -221,9 +229,9 @@ def struct_type(list field_types, bool align = True) -> StructType:
     )
 
 
-def point_type(int32_t ndim) -> Type:
+cpdef Type point_type(int32_t ndim):
     return Type.from_handle(_point_type(ndim))
 
 
-def rect_type(int32_t ndim) -> Type:
+cpdef Type rect_type(int32_t ndim):
     return Type.from_handle(_rect_type(ndim))

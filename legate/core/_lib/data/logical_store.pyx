@@ -18,6 +18,7 @@ from ...data_interface import Field, LegateDataInterfaceItem
 
 from ..type.type_info cimport Type
 from ..utilities.utils cimport is_iterable
+from .logical_array cimport LogicalArray
 from .physical_store cimport PhysicalStore
 from .shape cimport Shape
 from .slice cimport from_python_slice
@@ -49,7 +50,7 @@ cdef class LogicalStore:
     def has_scalar_storage(self) -> bool:
         return self._handle.has_scalar_storage()
 
-    def overlaps(self, LogicalStore other) -> bool:
+    cpdef bool overlaps(self, LogicalStore other):
         return self._handle.overlaps(other._handle)
 
     @property
@@ -78,8 +79,6 @@ cdef class LogicalStore:
 
     @property
     def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-        from .logical_array import LogicalArray
-
         array = LogicalArray.from_store(self)
         result: LegateDataInterfaceItem = {
             "version": 1,
@@ -93,7 +92,7 @@ cdef class LogicalStore:
     def __repr__(self) -> str:
         return str(self)
 
-    def promote(self, int32_t extra_dim, size_t dim_size) -> LogicalStore:
+    cpdef LogicalStore promote(self, int32_t extra_dim, size_t dim_size):
         """
         Adds an extra dimension to the store. Value of ``extra_dim`` decides
         where a new dimension should be added, and each dimension `i`, where
@@ -140,7 +139,7 @@ cdef class LogicalStore:
             self._handle.promote(extra_dim, dim_size)
         )
 
-    def project(self, int32_t dim, int64_t index) -> LogicalStore:
+    cpdef LogicalStore project(self, int32_t dim, int64_t index):
         """
         Projects out a dimension of the store. Each dimension `i`, where
         `i` > ``dim``, is mapped to dimension `i-1` in a returned store.
@@ -173,7 +172,7 @@ cdef class LogicalStore:
             dim += self.ndim
         return LogicalStore.from_handle(self._handle.project(dim, index))
 
-    def slice(self, int32_t dim, slice sl) -> LogicalStore:
+    cpdef LogicalStore slice(self, int32_t dim, slice sl):
         """
         Slices a contiguous sub-section of the store.
 
@@ -242,7 +241,7 @@ cdef class LogicalStore:
             self._handle.slice(dim, from_python_slice(sl))
         )
 
-    def transpose(self, object axes) -> LogicalStore:
+    cpdef LogicalStore transpose(self, object axes):
         """
         Reorders dimensions of the store. Dimension ``i`` of the resulting
         store is mapped to dimension ``axes[i]`` of the input store.
@@ -300,13 +299,15 @@ cdef class LogicalStore:
         if not is_iterable(axes):
             raise ValueError(f"Expected an iterable but got {type(axes)}")
         cdef std_vector[int32_t] cpp_axes = std_vector[int32_t]()
+
+        cpp_axes.reserve(len(axes))
         for axis in axes:
             cpp_axes.push_back(axis)
         return LogicalStore.from_handle(
             self._handle.transpose(std_move(cpp_axes))
         )
 
-    def delinearize(self, int32_t dim, tuple shape) -> LogicalStore:
+    cpdef LogicalStore delinearize(self, int32_t dim, tuple shape):
         """
         Delinearizes a dimension into multiple dimensions. Each dimension
         `i` of the store, where `i` > ``dim``, will be mapped to dimension
@@ -358,13 +359,15 @@ cdef class LogicalStore:
         if dim < 0:
             dim += self.ndim
         cdef std_vector[uint64_t] sizes = std_vector[uint64_t]()
+
+        sizes.reserve(len(shape))
         for value in shape:
             sizes.push_back(value)
         return LogicalStore.from_handle(
             self._handle.delinearize(dim, std_move(sizes))
         )
 
-    def partition_by_tiling(self, object shape) -> LogicalStorePartition:
+    cpdef LogicalStorePartition partition_by_tiling(self, object shape):
         """
         Creates a tiled partition of the store
 
@@ -381,16 +384,18 @@ cdef class LogicalStore:
         if not is_iterable(shape):
             raise ValueError(f"Expected an iterable but got {type(shape)}")
         cdef std_vector[uint64_t] tile_shape = std_vector[uint64_t]()
+
+        tile_shape.reserve(len(shape))
         for value in shape:
             tile_shape.push_back(value)
         return LogicalStorePartition.from_handle(
             self._handle.partition_by_tiling(std_move(tile_shape))
         )
 
-    def get_physical_store(self) -> PhysicalStore:
+    cpdef PhysicalStore get_physical_store(self):
         return PhysicalStore.from_handle(self._handle.get_physical_store())
 
-    def detach(self) -> None:
+    cpdef void detach(self):
         self._handle.detach()
 
     @property
@@ -407,7 +412,7 @@ cdef class LogicalStorePartition:
         result._handle = handle
         return result
 
-    def store(self) -> LogicalStore:
+    cpdef LogicalStore store(self):
         return LogicalStore.from_handle(self._handle.store())
 
     @property
@@ -416,6 +421,7 @@ cdef class LogicalStorePartition:
 
     def get_child_store(self, *color) -> LogicalStore:
         cdef _tuple[uint64_t] cpp_color
+
         cpp_color.reserve(len(color))
         for coord in color:
             cpp_color.append_inplace(<uint64_t> coord)

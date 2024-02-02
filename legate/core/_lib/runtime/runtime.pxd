@@ -16,18 +16,18 @@ from libcpp cimport bool
 from libcpp.string cimport string as std_string
 
 from ..data.external_allocation cimport _ExternalAllocation
-from ..data.logical_array cimport _LogicalArray
-from ..data.logical_store cimport _LogicalStore
-from ..data.scalar cimport _Scalar
+from ..data.logical_array cimport LogicalArray, _LogicalArray
+from ..data.logical_store cimport LogicalStore, _LogicalStore
+from ..data.scalar cimport Scalar, _Scalar
 from ..data.shape cimport _Shape
-from ..mapping.machine cimport _Machine
-from ..operation.task cimport _AutoTask, _ManualTask
+from ..mapping.machine cimport Machine, _Machine
+from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
-from ..type.type_info cimport _Type
+from ..type.type_info cimport Type, _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain
 from .detail.runtime cimport _RuntimeImpl
-from .library cimport _Library
+from .library cimport Library, _Library
 from .resource cimport _ResourceConfig
 
 
@@ -161,3 +161,81 @@ cdef class Runtime:
 
     @staticmethod
     cdef Runtime from_handle(_Runtime*)
+
+    cpdef Library find_library(self, str library_name)
+    cpdef AutoTask create_auto_task(self, Library library, int64_t task_id)
+    cpdef ManualTask create_manual_task(
+        self,
+        Library library,
+        int64_t task_id,
+        object launch_shape,
+        object lower_bounds = *,
+    )
+    cpdef void issue_copy(
+        self,
+        LogicalStore target,
+        LogicalStore source,
+        object redop = *,
+    )
+    cpdef void issue_gather(
+        self,
+        LogicalStore target,
+        LogicalStore source,
+        LogicalStore source_indirect,
+        object redop = *,
+    )
+    cpdef void issue_scatter(
+        self,
+        LogicalStore target,
+        LogicalStore target_indirect,
+        LogicalStore source,
+        object redop = *,
+    )
+    cpdef void issue_scatter_gather(
+        self,
+        LogicalStore target,
+        LogicalStore target_indirect,
+        LogicalStore source,
+        LogicalStore source_indirect,
+        object redop = *,
+    )
+    cpdef void issue_fill(self, object array_or_store, object value)
+    cpdef LogicalStore tree_reduce(
+        self,
+        Library library,
+        int64_t task_id,
+        LogicalStore store,
+        int64_t radix = *,
+    )
+    cpdef void submit(self, object op)
+    cpdef LogicalArray create_array(
+        self,
+        Type dtype,
+        object shape = *,
+        bool nullable = *,
+        bool optimize_scalar = *,
+        object ndim = *,
+    )
+    cpdef LogicalArray create_array_like(self, LogicalArray array, Type dtype)
+    cpdef LogicalStore create_store(
+        self,
+        Type dtype,
+        object shape = *,
+        bool optimize_scalar = *,
+        object ndim = *,
+    )
+    cpdef LogicalStore create_store_from_scalar(
+        self, Scalar scalar, object shape = *
+    )
+    cpdef LogicalStore create_store_from_buffer(
+        self, Type dtype, object shape, object data, bool read_only
+    )
+    cpdef void issue_execution_fence(self, bool block = *)
+    cpdef Machine get_machine(self)
+    cpdef void destroy(self)
+    cpdef void push_machine(self, Machine machine)
+    cpdef void pop_machine(self)
+    cpdef void add_shutdown_callback(self, object callback)
+
+cpdef Runtime get_legate_runtime()
+cpdef Machine get_machine()

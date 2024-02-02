@@ -18,7 +18,7 @@ from ..type.type_info cimport _Type
 from ..utilities.shared_ptr cimport _SharedPtr
 from ..utilities.tuple cimport _tuple
 from .detail.logical_store cimport _LogicalStoreImpl
-from .physical_store cimport _PhysicalStore
+from .physical_store cimport PhysicalStore, _PhysicalStore
 from .shape cimport _Shape
 from .slice cimport _Slice
 
@@ -63,9 +63,22 @@ cdef class LogicalStore:
     @staticmethod
     cdef LogicalStore from_handle(_LogicalStore)
 
+    cpdef bool overlaps(self, LogicalStore other)
+
+    cpdef LogicalStore promote(self, int32_t extra_dim, size_t dim_size)
+    cpdef LogicalStore project(self, int32_t dim, int64_t index)
+    cpdef LogicalStore slice(self, int32_t dim, slice sl)
+    cpdef LogicalStore transpose(self, object axes)
+    cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)
+    cpdef LogicalStorePartition partition_by_tiling(self, object shape)
+    cpdef PhysicalStore get_physical_store(self)
+    cpdef void detach(self)
+
 
 cdef class LogicalStorePartition:
     cdef _LogicalStorePartition _handle
 
     @staticmethod
     cdef LogicalStorePartition from_handle(_LogicalStorePartition)
+
+    cpdef LogicalStore store(self)

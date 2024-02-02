@@ -24,18 +24,20 @@ from ..data.logical_array cimport (
 from ..data.logical_store cimport LogicalStore, LogicalStorePartition
 from ..data.scalar cimport Scalar
 from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
+from ..runtime.runtime cimport get_legate_runtime
+from ..type.type_info cimport Type, array_type
 from ..utilities.utils cimport is_iterable
 from .projection cimport SymbolicExpr, _SymbolicPoint
 
-from ..type.type_info import Type, array_type, null_type
+from ..type.type_info import null_type
 
 from ..utilities.tuple cimport _tuple
 
 
-def sanitized_scalar_arg_type(
-    value: Any, dtype: Union[Type, tuple[Type, ...]]
-) -> Type:
-    sanitized: Type
+cdef Type sanitized_scalar_arg_type(
+    object value, dtype: Type | tuple[Type, ...]
+):
+    cdef Type sanitized
     if isinstance(dtype, tuple):
         if not (len(dtype) == 1 and isinstance(dtype[0], Type)):
             raise TypeError(f"Unsupported type: {dtype}")
@@ -76,9 +78,9 @@ cdef class AutoTask:
             f"{type(self).__name__} objects must not be constructed directly"
         )
 
-    def add_input(
-        self, array_or_store, partition: Union[Variable, None] = None
-    ) -> Variable:
+    cpdef Variable add_input(
+        self, object array_or_store, partition: Union[Variable, None] = None
+    ):
         """
         Adds a logical array/store as input to the task
 
@@ -111,9 +113,9 @@ cdef class AutoTask:
         else:
             raise ValueError("Invalid partition symbol")
 
-    def add_output(
-        self, array_or_store, partition: Union[Variable, None] = None
-    ) -> Variable:
+    cpdef Variable add_output(
+        self, object array_or_store, partition: Union[Variable, None] = None
+    ):
         """
         Adds a logical array/store as output to the task
 
@@ -146,12 +148,12 @@ cdef class AutoTask:
         else:
             raise ValueError("Invalid partition symbol")
 
-    def add_reduction(
+    cpdef Variable add_reduction(
         self,
-        array_or_store,
+        object array_or_store,
         int32_t redop,
         partition: Union[Variable, None] = None
-    ) -> Variable:
+    ):
         """
         Adds a logical array/store to the task for reduction
 
@@ -190,9 +192,9 @@ cdef class AutoTask:
         else:
             raise ValueError("Invalid partition symbol")
 
-    def add_scalar_arg(
+    cpdef void add_scalar_arg(
         self, value: Any, dtype: Union[Type, tuple[Type, ...], None] = None
-    ) -> None:
+    ):
         """
         Adds a by-value argument to the task
 
@@ -227,27 +229,27 @@ cdef class AutoTask:
         cdef Scalar scalar = Scalar(value, sanitized)
         self._handle.add_scalar_arg(scalar._handle)
 
-    def add_constraint(self, Constraint constraint) -> None:
+    cpdef void add_constraint(self, Constraint constraint):
         self._handle.add_constraint(constraint._handle)
 
-    def find_or_declare_partition(self, LogicalArray array) -> Variable:
+    cpdef Variable find_or_declare_partition(self, LogicalArray array):
         return Variable.from_handle(
             self._handle.find_or_declare_partition(array._handle)
         )
 
-    def declare_partition(self) -> Variable:
+    cpdef Variable declare_partition(self):
         return Variable.from_handle(self._handle.declare_partition())
 
-    def provenance(self) -> str:
+    cpdef str provenance(self):
         return self._handle.provenance().decode()
 
-    def set_concurrent(self, bool concurrent) -> None:
+    cpdef void set_concurrent(self, bool concurrent):
         self._handle.set_concurrent(concurrent)
 
-    def set_side_effect(self, bool has_side_effect) -> None:
+    cpdef void set_side_effect(self, bool has_side_effect):
         self._handle.set_side_effect(has_side_effect)
 
-    def throws_exception(self, type exception_type) -> None:
+    cpdef void throws_exception(self, type exception_type):
         self._handle.throws_exception(True)
         self._exception_types.append(exception_type)
 
@@ -255,24 +257,22 @@ cdef class AutoTask:
     def exception_types(self) -> tuple[type]:
         return tuple(self._exception_types)
 
-    def add_communicator(self, str name) -> None:
+    cpdef void add_communicator(self, str name):
         self._handle.add_communicator(name.encode())
 
-    def execute(self) -> None:
+    cpdef void execute(self):
         """
         Submits the operation to the runtime. There is no guarantee that the
         operation will start the execution right upon the return of this
         method.
         """
-        from ..runtime.runtime import get_legate_runtime
-
         get_legate_runtime().submit(self)
 
-    def add_alignment(
+    cpdef void add_alignment(
         self,
-        array_or_store1,
-        array_or_store2,
-    ) -> None:
+        object array_or_store1,
+        object array_or_store2,
+    ):
         """
         Sets an alignment between stores. Equivalent to the following code:
 
@@ -299,11 +299,11 @@ cdef class AutoTask:
         part2 = self._handle.find_or_declare_partition(array2)
         self._handle.add_constraint(_align(part1, part2))
 
-    def add_broadcast(
+    cpdef void add_broadcast(
         self,
-        array_or_store,
+        object array_or_store,
         axes: Union[None, int, Iterable[int]] = None,
-    ) -> None:
+    ):
         """
         Sets a broadcasting constraint on the logical_array. Equivalent to the
         following code:
@@ -342,19 +342,19 @@ cdef class AutoTask:
             cpp_axes.append_inplace(axis)
         self._handle.add_constraint(_broadcast(part, std_move(cpp_axes)))
 
-    def add_nccl_communicator(self) -> None:
+    cpdef void add_nccl_communicator(self):
         """
         Adds a NCCL communicator to the task
         """
         self.add_communicator("nccl")
 
-    def add_cpu_communicator(self) -> None:
+    cpdef void add_cpu_communicator(self):
         """
         Adds a CPU communicator to the task
         """
         self.add_communicator("cpu")
 
-    def add_cal_communicator(self) -> None:
+    cpdef void add_cal_communicator(self):
         """
         Adds a CAL communicator to the task
         """
@@ -392,11 +392,11 @@ cdef class ManualTask:
             f"{type(self).__name__} objects must not be constructed directly"
         )
 
-    def add_input(
+    cpdef void add_input(
         self,
         arg: Union[LogicalStore, LogicalStorePartition],
         projection: Optional[tuple[SymbolicExpr, ...]] = None,
-    ) -> None:
+    ):
         if isinstance(arg, LogicalStore):
             self._handle.add_input((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
@@ -410,11 +410,11 @@ cdef class ManualTask:
                 "but got {type(arg)}"
             )
 
-    def add_output(
+    cpdef void add_output(
         self,
         arg: Union[LogicalStore, LogicalStorePartition],
         projection: Optional[tuple[SymbolicExpr, ...]] = None,
-    ) -> None:
+    ):
         if isinstance(arg, LogicalStore):
             self._handle.add_output((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
@@ -428,12 +428,12 @@ cdef class ManualTask:
                 "but got {type(arg)}"
             )
 
-    def add_reduction(
+    cpdef void add_reduction(
         self,
         arg: Union[LogicalStore, LogicalStorePartition],
         int32_t redop,
         projection: Optional[tuple[SymbolicExpr, ...]] = None,
-    ) -> None:
+    ):
         if isinstance(arg, LogicalStore):
             self._handle.add_reduction((<LogicalStore> arg)._handle, redop)
         elif isinstance(arg, LogicalStorePartition):
@@ -448,9 +448,9 @@ cdef class ManualTask:
                 "but got {type(arg)}"
             )
 
-    def add_scalar_arg(
+    cpdef void add_scalar_arg(
         self, value: Any, dtype: Union[Type, tuple[Type, ...], None] = None
-    ) -> None:
+    ):
         """
         Adds a by-value argument to the task
 
@@ -474,16 +474,16 @@ cdef class ManualTask:
         cdef Scalar scalar = Scalar(value, sanitized)
         self._handle.add_scalar_arg(scalar._handle)
 
-    def provenance(self) -> str:
+    cpdef str provenance(self):
         return self._handle.provenance().decode()
 
-    def set_concurrent(self, bool concurrent) -> None:
+    cpdef void set_concurrent(self, bool concurrent):
         self._handle.set_concurrent(concurrent)
 
-    def set_side_effect(self, bool has_side_effect) -> None:
+    cpdef void set_side_effect(self, bool has_side_effect):
         self._handle.set_side_effect(has_side_effect)
 
-    def throws_exception(self, type exception_type) -> None:
+    cpdef void throws_exception(self, type exception_type):
         self._handle.throws_exception(True)
         self._exception_types.append(exception_type)
 
@@ -491,32 +491,30 @@ cdef class ManualTask:
     def exception_types(self) -> tuple[type]:
         return tuple(self._exception_types)
 
-    def add_communicator(self, str name) -> None:
+    cpdef void add_communicator(self, str name):
         self._handle.add_communicator(name.encode())
 
-    def execute(self) -> None:
+    cpdef void execute(self):
         """
         Submits the operation to the runtime. There is no guarantee that the
         operation will start the execution right upon the return of this
         method.
         """
-        from ..runtime.runtime import get_legate_runtime
-
         get_legate_runtime().submit(self)
 
-    def add_nccl_communicator(self) -> None:
+    cpdef void add_nccl_communicator(self):
         """
         Adds a NCCL communicator to the task
         """
         self.add_communicator("nccl")
 
-    def add_cpu_communicator(self) -> None:
+    cpdef void add_cpu_communicator(self):
         """
         Adds a CPU communicator to the task
         """
         self.add_communicator("cpu")
 
-    def add_cal_communicator(self) -> None:
+    cpdef void add_cal_communicator(self):
         """
         Adds a CAL communicator to the task
         """

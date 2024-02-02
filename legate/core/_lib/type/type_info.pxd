@@ -111,3 +111,22 @@ cdef class Type:
 
     @staticmethod
     cdef Type from_handle(_Type)
+
+    cpdef void record_reduction_op(
+        self, int32_t op_kind, int64_t reduction_op_id
+    )
+    cpdef int64_t reduction_op_id(self, int32_t op_kind)
+    cpdef object to_numpy_dtype(self)
+
+cdef class FixedArrayType(Type):
+    cpdef object to_numpy_dtype(self)
+
+cdef class StructType(Type):
+    cpdef Type field_type(self, uint32_t field_idx)
+    cpdef object to_numpy_dtype(self)
+
+cpdef Type binary_type(uint32_t size)
+cpdef FixedArrayType array_type(Type element_type, uint32_t N)
+cpdef StructType struct_type(list field_types, bool align = *)
+cpdef Type point_type(int32_t ndim)
+cpdef Type rect_type(int32_t ndim)

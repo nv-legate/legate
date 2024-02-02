@@ -78,9 +78,19 @@ cdef class ProcessorRange:
     @staticmethod
     cdef ProcessorRange from_handle(_ProcessorRange)
 
+    cpdef ProcessorRange slice(self, slice sl)
+    cpdef tuple get_node_range(self)
 
 cdef class Machine:
     cdef _Machine _handle
 
     @staticmethod
     cdef Machine from_handle(_Machine)
+
+    cpdef ProcessorRange get_processor_range(
+        self, object target = *
+    )
+    cpdef tuple get_node_range(self, object target = *)
+    cpdef int count(self, object target = *)
+    cpdef Machine only(self, object targets)
+    cpdef Machine slice(self, slice sl, object target = *)
