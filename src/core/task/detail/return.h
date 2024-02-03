@@ -50,7 +50,7 @@ struct ReturnedException {
   ReturnedException() = default;
   ReturnedException(int32_t index, std::string_view error_message);
 
-  static inline constexpr auto MAX_MESSAGE_SIZE = 2048;
+  static inline constexpr auto MAX_MESSAGE_SIZE = 256;
 
   [[nodiscard]] bool raised() const;
 

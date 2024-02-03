@@ -359,7 +359,7 @@ class Runtime {
     registered_shardings_{};
 
   std::vector<InternalSharedPtr<Operation>> operations_;
-  size_t window_size_{};
+  size_t window_size_{1};
   uint64_t next_unique_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;

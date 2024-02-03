@@ -23,6 +23,18 @@
 
 namespace legate::detail {
 
+PartitionManager::PartitionManager(Runtime* runtime)
+{
+  auto mapper_id = runtime->core_library()->get_mapper_id();
+
+  min_shard_volume_ =
+    runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
+
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(min_shard_volume_ > 0);
+  }
+}
+
 const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail::Machine& machine)
 {
   auto curr_num_pieces = machine.count();
@@ -64,7 +76,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
   // Prune out any dimensions that are 1
   std::vector<size_t> temp_shape{};
   std::vector<uint32_t> temp_dims{};
-  size_t volume = 1;
+  int64_t volume = 1;
 
   temp_dims.reserve(shape.size());
   temp_shape.reserve(shape.size());
@@ -76,23 +88,28 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
     }
     temp_shape.push_back(extent);
     temp_dims.push_back(dim);
-    volume *= extent;
+    volume *= static_cast<int64_t>(extent);
   }
 
-  if (temp_shape.empty()) {
+  // Figure out how many shards we can make with this array
+  int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
+  assert(volume == 0 || max_pieces > 0);
+  // If we can only make one piece return that now
+  if (max_pieces <= 1) {
     return {};
   }
 
   // TODO(wonchanl): We need a better heuristic
-  auto max_pieces = curr_num_pieces;
+  max_pieces = curr_num_pieces;
 
   // First compute the N-th root of the number of pieces
   const auto ndim = temp_shape.size();
+  assert(ndim > 0);
   std::vector<size_t> temp_result{};
 
   if (1 == ndim) {
     // Easy one dimensional case
-    temp_result.push_back(std::min<size_t>(temp_shape.front(), max_pieces));
+    temp_result.push_back(std::min<size_t>(temp_shape.front(), static_cast<size_t>(max_pieces)));
   } else if (2 == ndim) {
     if (volume < max_pieces) {
       // TBD: Once the max_pieces heuristic is fixed, this should never happen
@@ -112,11 +129,11 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
       // try rounding n both up and down
       constexpr auto EPSILON = 1e-12;
 
-      auto n1 = std::max<size_t>(1, static_cast<size_t>(std::floor(n + EPSILON)));
+      auto n1 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n + EPSILON)));
       while (max_pieces % n1 != 0) {
         --n1;
       }
-      auto n2 = std::max<size_t>(1, static_cast<size_t>(std::floor(n - EPSILON)));
+      auto n2 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n - EPSILON)));
       while (max_pieces % n2 != 0) {
         ++n2;
       }

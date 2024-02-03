@@ -200,9 +200,7 @@ def test_function(
             fn_copy.self = fn_copy
 
             def mark_called() -> None:
-                # FIXME: This assertion doesn't hold if more than one Python
-                # task gets launched.
-                # assert not fn_copy.self.called, f"{fn}, {fn_copy.self}"
+                assert not fn_copy.self.called, f"{fn}, {fn_copy.self}"
                 fn_copy.self.called = True
 
             fn_copy.self.mark_called = mark_called

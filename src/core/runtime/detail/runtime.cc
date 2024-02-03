@@ -89,7 +89,6 @@ constexpr const char* const TOPLEVEL_NAME     = "Legate Core Toplevel Task";
 
 Runtime::Runtime()
   : legion_runtime_{Legion::Runtime::get_runtime()},
-    window_size_{extract_env("LEGATE_WINDOW_SIZE", WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)},
     field_reuse_freq_{
       extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)},
     force_consensus_match_{!!extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)}
@@ -198,7 +197,7 @@ void Runtime::initialize(Legion::Context legion_context)
   core_library_   = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
   // TODO(jfaibussowit): Use smart pointers for these
   communicator_manager_ = new CommunicatorManager{};
-  partition_manager_    = new PartitionManager{};
+  partition_manager_    = new PartitionManager{this};
   machine_manager_      = new MachineManager{};
   provenance_manager_   = new ProvenanceManager{};
   Config::has_socket_mem =
