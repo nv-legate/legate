@@ -135,8 +135,8 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
         temp_result.push_back(std::min(py, temp_shape[0]));
         temp_result.push_back(std::min(px, temp_shape[1]));
       } else {
-        temp_result.push_back(std::min(px, temp_shape[1]));
-        temp_result.push_back(std::min(py, temp_shape[0]));
+        temp_result.push_back(std::min(px, temp_shape[0]));
+        temp_result.push_back(std::min(py, temp_shape[1]));
       }
     }
   } else {

@@ -103,14 +103,12 @@ void register_legate_core_sharding_functors(const detail::Library* core_library)
     sharding_id, new LinearizingShardingFunctor{}, true /*silence warnings*/);
   // Use linearizing functor for identity projections
   functor_id_table[0] = sharding_id;
-  // and for the delinearizing projection
-  functor_id_table[core_library->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID)] = sharding_id;
 }
 
 class LegateShardingFunctor final : public Legion::ShardingFunctor {
  public:
-  LegateShardingFunctor(LegateProjectionFunctor* proj_functor, const mapping::ProcessorRange& range)
-    : proj_functor_{proj_functor}, range_{range}
+  LegateShardingFunctor(ProjectionFunction* proj_fn, const mapping::ProcessorRange& range)
+    : proj_fn_{proj_fn}, range_{range}
   {
   }
 
@@ -118,9 +116,9 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
                                       const Domain& launch_space,
                                       size_t total_shards) override
   {
-    auto lo             = proj_functor_->project_point(launch_space.lo(), launch_space);
-    auto hi             = proj_functor_->project_point(launch_space.hi(), launch_space);
-    auto point          = proj_functor_->project_point(p, launch_space);
+    auto lo             = proj_fn_->project_point(launch_space.lo());
+    auto hi             = proj_fn_->project_point(launch_space.hi());
+    auto point          = proj_fn_->project_point(p);
     auto task_count     = linearize(lo, hi, hi) + 1;
     auto global_proc_id = (linearize(lo, hi, point) * range_.count()) / task_count + range_.low;
     auto shard_id       = global_proc_id / range_.per_node_count;
@@ -131,7 +129,7 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
   }
 
  private:
-  LegateProjectionFunctor* proj_functor_{};
+  ProjectionFunction* proj_fn_{};
   mapping::ProcessorRange range_{};
 };
 
@@ -155,7 +153,7 @@ void sharding_functor_registration_callback(const Legion::RegistrationCallbackAr
   auto p_args  = static_cast<ShardingCallbackArgs*>(args.buffer.get_ptr());
   auto runtime = Legion::Runtime::get_runtime();
   auto sharding_functor =
-    new LegateShardingFunctor{find_legate_projection_functor(p_args->proj_id), p_args->range};
+    new LegateShardingFunctor{find_projection_function(p_args->proj_id), p_args->range};
   runtime->register_sharding_functor(p_args->shard_id, sharding_functor, true /*silence warnings*/);
 }
 

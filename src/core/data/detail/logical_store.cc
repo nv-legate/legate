@@ -17,6 +17,7 @@
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/operation.h"
 #include "core/operation/detail/store_projection.h"
+#include "core/operation/projection.h"
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/partition_manager.h"
@@ -670,27 +671,59 @@ Restrictions LogicalStore::compute_restrictions(bool is_output) const
 }
 
 Legion::ProjectionID LogicalStore::compute_projection(
-  uint32_t launch_ndim, const std::optional<SymbolicPoint>& projection) const
+  const Domain& launch_domain,
+  const tuple<uint64_t>& color_shape,
+  const std::optional<SymbolicPoint>& projection) const
 {
-  if (projection) {
-    assert(!transformed());
-    return Runtime::get_runtime()->get_projection(launch_ndim, *projection);
-  }
-
-  if (transform_->identity()) {
-    if (launch_ndim != dim()) {
-      return Runtime::get_runtime()->get_delinearizing_projection();
-    }
+  // If this is a sequential launch, the projection functor id is always 0
+  if (!launch_domain.is_valid()) {
     return 0;
   }
 
-  const auto ndim = dim();
-  // TODO(wonchanl): We can't currently mix affine projections with delinearizing projections
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(ndim == launch_ndim);
+  const auto launch_ndim = static_cast<uint32_t>(launch_domain.dim);
+  const auto runtime     = Runtime::get_runtime();
+
+  // If there's a custom projection, we just query its functor id
+  if (projection) {
+    // TODO(wonchanl): we should check if the projection is valid for the launch domain
+    // (i.e., projection->size() == launch_ndim)
+    return runtime->get_affine_projection(launch_ndim, transform_->invert(*projection));
   }
-  return Runtime::get_runtime()->get_projection(
-    ndim, transform_->invert(proj::create_symbolic_point(ndim)));
+
+  // We are about to generate a projection functor
+  const auto ndim = dim();
+
+  // Easy case where the store and launch domain have the same number of dimensions
+  if (ndim == launch_ndim) {
+    return transform_->identity() ? 0
+                                  : runtime->get_affine_projection(
+                                      ndim, transform_->invert(proj::create_symbolic_point(ndim)));
+  }
+
+  // If we're here, it means the launch domain has to be 1D due to mixed store dimensionalities
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    assert(launch_ndim == 1);
+  }
+
+  // Check if the color shape has only one dimension of a non-unit extent, in which case
+  // delinearization would simply be projections
+  if (std::count_if(
+        color_shape.begin(), color_shape.end(), [](const auto& ext) { return ext != 1; }) == 1) {
+    SymbolicPoint embed_1d_to_nd;
+
+    embed_1d_to_nd.reserve(color_shape.size());
+    for (auto&& ext : color_shape) {
+      embed_1d_to_nd.append_inplace(ext != 1 ? dimension(0) : constant(0));
+    }
+
+    return runtime->get_affine_projection(launch_ndim, transform_->invert(embed_1d_to_nd));
+  }
+
+  // When the store wasn't transformed, we could simply return the top-level delinearizing functor
+  return transform_->identity()
+           ? runtime->get_delinearizing_projection(color_shape)
+           : runtime->get_compound_projection(
+               color_shape, transform_->invert(proj::create_symbolic_point(ndim)));
 }
 
 InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
@@ -910,9 +943,7 @@ std::unique_ptr<StoreProjection> LogicalStorePartition::create_store_projection(
   // We're about to create a legion partition for this store, so the store should have its region
   // created.
   auto legion_partition = storage_partition_->get_legion_partition();
-  auto proj_id          = launch_domain.is_valid() ? store_->compute_projection(
-                                              static_cast<uint32_t>(launch_domain.dim), projection)
-                                                   : 0;
+  auto proj_id = store_->compute_projection(launch_domain, partition_->color_shape(), projection);
   return std::make_unique<StoreProjection>(std::move(legion_partition), proj_id);
 }
 

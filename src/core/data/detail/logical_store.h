@@ -244,7 +244,9 @@ class LogicalStore {
 
  public:
   [[nodiscard]] Legion::ProjectionID compute_projection(
-    uint32_t launch_ndim, const std::optional<SymbolicPoint>& projection = {}) const;
+    const Domain& launch_domain,
+    const tuple<uint64_t>& color_shape,
+    const std::optional<SymbolicPoint>& projection = {}) const;
 
   void pack(BufferBuilder& buffer) const;
 

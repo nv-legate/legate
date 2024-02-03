@@ -224,7 +224,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
       break;
     }
   }
-  auto key_functor = legate::detail::find_legate_projection_functor(projection);
+  auto key_functor = legate::detail::find_projection_function(projection);
 
   // For multi-node cases we should already have been sharded so we
   // should just have one or a few points here on this node, so iterate
@@ -237,13 +237,13 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
     sharding_domain = runtime->get_index_space_domain(ctx, task.sharding_space);
   }
 
-  auto lo                = key_functor->project_point(sharding_domain.lo(), sharding_domain);
-  auto hi                = key_functor->project_point(sharding_domain.hi(), sharding_domain);
+  auto lo                = key_functor->project_point(sharding_domain.lo());
+  auto hi                = key_functor->project_point(sharding_domain.hi());
   auto start_proc_id     = machine_desc.processor_range().low;
   auto total_tasks_count = linearize(lo, hi, hi) + 1;
 
   for (Domain::DomainPointIterator itr{input.domain}; itr; itr++) {
-    auto p = key_functor->project_point(itr.p, sharding_domain);
+    auto p = key_functor->project_point(itr.p);
     auto idx =
       linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count + start_proc_id;
     output.slices.emplace_back(Domain{itr.p, itr.p},
@@ -1155,10 +1155,10 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     // FIXME: We might later have non-identity projections for copy requirements,
     // in which case we should find the key store and use its projection functor
     // for the linearization
-    auto* key_functor = legate::detail::find_legate_projection_functor(0);
-    auto lo           = key_functor->project_point(sharding_domain.lo(), sharding_domain);
-    auto hi           = key_functor->project_point(sharding_domain.hi(), sharding_domain);
-    auto p            = key_functor->project_point(copy.index_point, sharding_domain);
+    auto* key_functor = legate::detail::find_projection_function(0);
+    auto lo           = key_functor->project_point(sharding_domain.lo());
+    auto hi           = key_functor->project_point(sharding_domain.hi());
+    auto p            = key_functor->project_point(copy.index_point);
 
     const uint32_t start_proc_id     = machine_desc.processor_range().low;
     const uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;

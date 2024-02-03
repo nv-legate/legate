@@ -1187,11 +1187,12 @@ const mapping::detail::Machine& Runtime::get_machine() const
   return machine_manager_->get_machine();
 }
 
-Legion::ProjectionID Runtime::get_projection(uint32_t src_ndim, const proj::SymbolicPoint& point)
+Legion::ProjectionID Runtime::get_affine_projection(uint32_t src_ndim,
+                                                    const proj::SymbolicPoint& point)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Query projection {src_ndim: " << src_ndim << ", point: " << point
-                         << "}";
+    log_legate().debug() << "Query affine projection {src_ndim: " << src_ndim
+                         << ", point: " << point << "}";
   }
 
   if (proj::is_identity(src_ndim, point)) {
@@ -1202,28 +1203,76 @@ Legion::ProjectionID Runtime::get_projection(uint32_t src_ndim, const proj::Symb
     return 0;
   }
 
-  auto key    = ProjectionDesc{src_ndim, point};
-  auto finder = registered_projections_.find(key);
-  if (registered_projections_.end() != finder) {
+  auto key    = AffineProjectionDesc{src_ndim, point};
+  auto finder = affine_projections_.find(key);
+  if (affine_projections_.end() != finder) {
     return finder->second;
   }
 
   auto proj_id = core_library_->get_projection_id(next_projection_id_++);
 
   register_affine_projection_functor(src_ndim, point, proj_id);
-  registered_projections_[key] = proj_id;
+  affine_projections_[key] = proj_id;
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Register projection " << proj_id << " {src_ndim: " << src_ndim
+    log_legate().debug() << "Register affine projection " << proj_id << " {src_ndim: " << src_ndim
                          << ", point: " << point << "}";
   }
 
   return proj_id;
 }
 
-Legion::ProjectionID Runtime::get_delinearizing_projection()
+Legion::ProjectionID Runtime::get_delinearizing_projection(const tuple<uint64_t>& color_shape)
 {
-  return core_library_->get_projection_id(LEGATE_CORE_DELINEARIZE_PROJ_ID);
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Query delinearizing projection {color_shape: "
+                         << color_shape.to_string() << "}";
+  }
+
+  auto finder = delinearizing_projections_.find(color_shape);
+  if (delinearizing_projections_.end() != finder) {
+    return finder->second;
+  }
+
+  auto proj_id = core_library_->get_projection_id(next_projection_id_++);
+
+  register_delinearizing_projection_functor(color_shape, proj_id);
+  delinearizing_projections_[color_shape] = proj_id;
+
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Register delinearizing projection " << proj_id
+                         << "{color_shape: " << color_shape.to_string() << "}";
+  }
+
+  return proj_id;
+}
+
+Legion::ProjectionID Runtime::get_compound_projection(const tuple<uint64_t>& color_shape,
+                                                      const proj::SymbolicPoint& point)
+{
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Query compound projection {color_shape: " << color_shape.to_string()
+                         << ", point: " << point << "}";
+  }
+
+  auto key    = CompoundProjectionDesc{color_shape, point};
+  auto finder = compound_projections_.find(key);
+  if (compound_projections_.end() != finder) {
+    return finder->second;
+  }
+
+  auto proj_id = core_library_->get_projection_id(next_projection_id_++);
+
+  register_compound_projection_functor(color_shape, point, proj_id);
+  compound_projections_[key] = proj_id;
+
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << "Register compound projection " << proj_id
+                         << " {color_shape: " << color_shape.to_string() << ", point: " << point
+                         << "}";
+  }
+
+  return proj_id;
 }
 
 Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine,
@@ -1573,8 +1622,6 @@ void initialize_core_library()
   register_builtin_reduction_ops();
 
   register_exception_reduction_op(core_lib);
-
-  register_legate_core_projection_functors(core_lib);
 
   register_legate_core_sharding_functors(core_lib);
 }

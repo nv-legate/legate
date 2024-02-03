@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/operation/projection.h"
+#include "core/utilities/tuple.h"
 
 #include <functional>
 #include <iosfwd>
@@ -32,34 +33,29 @@ namespace legate::detail {
 
 class Library;
 
-// Interface for Legate projection functors
-class LegateProjectionFunctor : public Legion::ProjectionFunctor {
+class ProjectionFunction {  // NOLINT(bugprone-forward-declaration-namespace)
  public:
-  explicit LegateProjectionFunctor(Legion::Runtime* runtime);
+  [[nodiscard]] virtual DomainPoint project_point(const DomainPoint& point) const = 0;
 
-  using Legion::ProjectionFunctor::project;
-  [[nodiscard]] Legion::LogicalRegion project(Legion::LogicalPartition upper_bound,
-                                              const DomainPoint& point,
-                                              const Domain& launch_domain) override;
-
-  // legate projection functors are almost always functional and don't traverse the region tree
-  [[nodiscard]] bool is_functional() const override;
-  [[nodiscard]] bool is_exclusive() const override;
-  [[nodiscard]] unsigned get_depth() const override;
-
-  [[nodiscard]] virtual DomainPoint project_point(const DomainPoint& point,
-                                                  const Domain& launch_domain) const = 0;
+  virtual ~ProjectionFunction()                            = default;
+  ProjectionFunction()                                     = default;
+  ProjectionFunction(const ProjectionFunction&)            = default;
+  ProjectionFunction(ProjectionFunction&&)                 = default;
+  ProjectionFunction& operator=(const ProjectionFunction&) = default;
+  ProjectionFunction& operator=(ProjectionFunction&&)      = default;
 };
-
-void register_legate_core_projection_functors(const detail::Library* core_library);
 
 void register_affine_projection_functor(uint32_t src_ndim,
                                         const proj::SymbolicPoint& point,
-                                        legion_projection_id_t proj_id);
+                                        Legion::ProjectionID proj_id);
 
-[[nodiscard]] LegateProjectionFunctor* find_legate_projection_functor(Legion::ProjectionID proj_id,
-                                                                      bool allow_missing = false);
+void register_delinearizing_projection_functor(const tuple<uint64_t>& color_shape,
+                                               Legion::ProjectionID proj_id);
+
+void register_compound_projection_functor(const tuple<uint64_t>& color_shape,
+                                          const proj::SymbolicPoint& point,
+                                          Legion::ProjectionID proj_id);
+
+[[nodiscard]] ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id) noexcept;
 
 }  // namespace legate::detail
-
-#include "core/runtime/detail/projection.inl"

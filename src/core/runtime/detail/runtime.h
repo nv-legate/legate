@@ -302,9 +302,12 @@ class Runtime {
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
 
-  [[nodiscard]] Legion::ProjectionID get_projection(uint32_t src_ndim,
-                                                    const proj::SymbolicPoint& point);
-  [[nodiscard]] Legion::ProjectionID get_delinearizing_projection();
+  [[nodiscard]] Legion::ProjectionID get_affine_projection(uint32_t src_ndim,
+                                                           const proj::SymbolicPoint& point);
+  [[nodiscard]] Legion::ProjectionID get_delinearizing_projection(
+    const tuple<uint64_t>& color_shape);
+  [[nodiscard]] Legion::ProjectionID get_compound_projection(const tuple<uint64_t>& color_shape,
+                                                             const proj::SymbolicPoint& point);
   [[nodiscard]] Legion::ShardingID get_sharding(const mapping::detail::Machine& machine,
                                                 Legion::ProjectionID proj_id);
 
@@ -340,10 +343,15 @@ class Runtime {
 
   std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
 
-  using ProjectionDesc = std::pair<uint32_t, proj::SymbolicPoint>;
+  using AffineProjectionDesc   = std::pair<uint32_t, proj::SymbolicPoint>;
+  using CompoundProjectionDesc = std::pair<tuple<uint64_t>, proj::SymbolicPoint>;
   int64_t next_projection_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
-  std::unordered_map<ProjectionDesc, Legion::ProjectionID, hasher<ProjectionDesc>>
-    registered_projections_{};
+  std::unordered_map<AffineProjectionDesc, Legion::ProjectionID, hasher<AffineProjectionDesc>>
+    affine_projections_{};
+  std::unordered_map<tuple<uint64_t>, Legion::ProjectionID, hasher<tuple<uint64_t>>>
+    delinearizing_projections_{};
+  std::unordered_map<CompoundProjectionDesc, Legion::ProjectionID, hasher<CompoundProjectionDesc>>
+    compound_projections_{};
 
   using ShardingDesc = std::pair<Legion::ProjectionID, mapping::ProcessorRange>;
   int64_t next_sharding_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};

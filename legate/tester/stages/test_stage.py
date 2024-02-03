@@ -540,16 +540,16 @@ class TestStage(Protocol):
         # with --gdb set the "run" functions below will exit
 
         if config.multi_node.ranks_per_node > 1 or config.multi_node.nodes > 1:
-            raise ValueError("--gbd can only be used with a single rank")
+            raise ValueError("--gdb can only be used with a single rank")
 
         if config.gtest_file and config.gtest_tests:
-            if len(config.gtest_tests) != 1 or len(config.test_files) != 0:
-                raise ValueError("--gbd can only be used with a single test")
+            if len(config.gtest_tests) != 1:
+                raise ValueError("--gdb can only be used with a single test")
             self.run_gtest(
                 config.gtest_file, config.gtest_tests[0], config, system
             )
 
         else:
-            if len(config.gtest_tests) != 0 or len(config.test_files) != 1:
-                raise ValueError("--gbd can only be used with a single test")
+            if len(config.test_files) != 1:
+                raise ValueError("--gdb can only be used with a single test")
             self.run_python(config.test_files[0], config, system)
