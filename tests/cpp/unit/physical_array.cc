@@ -72,7 +72,8 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
   auto store                   = array.data();
   static constexpr int32_t DIM = 3;
   EXPECT_TRUE(store.is_unbound_store());
-  ASSERT_NO_THROW((store.create_output_buffer<uint32_t, DIM>(legate::Point<DIM>(10), true)));
+  ASSERT_NO_THROW(
+    static_cast<void>(store.create_output_buffer<uint32_t, DIM>(legate::Point<DIM>(10), true)));
 
   EXPECT_EQ(array.nullable(), nullable);
   EXPECT_EQ(array.dim(), DIM);
@@ -91,7 +92,8 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
   if (nullable) {
     auto null_mask = array.null_mask();
     EXPECT_TRUE(null_mask.is_unbound_store());
-    ASSERT_NO_THROW((null_mask.create_output_buffer<bool, DIM>(legate::Point<DIM>(10), true)));
+    ASSERT_NO_THROW(
+      static_cast<void>(null_mask.create_output_buffer<bool, DIM>(legate::Point<DIM>(10), true)));
     EXPECT_THROW(static_cast<void>(null_mask.shape<DIM>()), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(null_mask.domain()), std::invalid_argument);
     EXPECT_EQ(null_mask.type(), legate::bool_());
@@ -177,7 +179,8 @@ void test_array_data(legate::PhysicalStore& store, bool is_unbound, legate::Type
   auto ranges_store            = string_array.ranges().data();
   auto chars_store             = string_array.chars().data();
   static constexpr int32_t DIM = 1;
-  ASSERT_NO_THROW((chars_store.create_output_buffer<int8_t, DIM>(legate::Point<DIM>(10), true)));
+  ASSERT_NO_THROW(
+    static_cast<void>(chars_store.create_output_buffer<int8_t, DIM>(legate::Point<DIM>(10), true)));
   if (unbound) {
     ASSERT_NO_THROW(ranges_store.bind_empty_data());
   }
@@ -255,10 +258,12 @@ void fill_bound_base_array(legate::PhysicalArray& array, bool nullable)
 void fill_unbound_base_array(legate::PhysicalArray& array, bool nullable)
 {
   auto store = array.data();
-  ASSERT_NO_THROW((store.create_output_buffer<int32_t, 2>(legate::Point<2>(5), true)));
+  ASSERT_NO_THROW(
+    static_cast<void>(store.create_output_buffer<int32_t, 2>(legate::Point<2>(5), true)));
   if (nullable) {
     auto null_mask = array.null_mask();
-    ASSERT_NO_THROW((null_mask.create_output_buffer<bool, 2>(legate::Point<2>(5), true)));
+    ASSERT_NO_THROW(
+      static_cast<void>(null_mask.create_output_buffer<bool, 2>(legate::Point<2>(5), true)));
   }
 }
 
@@ -334,7 +339,8 @@ void bind_list_array(legate::PhysicalArray& array, bool nullable, bool unbound)
   auto descriptor_store        = list_array.descriptor().data();
   auto vardata_store           = list_array.vardata().data();
   static constexpr int32_t DIM = 1;
-  ASSERT_NO_THROW((vardata_store.create_output_buffer<int64_t, DIM>(legate::Point<DIM>(10), true)));
+  ASSERT_NO_THROW(static_cast<void>(
+    vardata_store.create_output_buffer<int64_t, DIM>(legate::Point<DIM>(10), true)));
   if (unbound) {
     ASSERT_NO_THROW(descriptor_store.bind_empty_data());
   }
@@ -394,7 +400,8 @@ void bind_string_array(legate::PhysicalArray& array, bool nullable, bool unbound
   auto ranges_store            = string_array.ranges().data();
   auto chars_store             = string_array.chars().data();
   static constexpr int32_t DIM = 1;
-  ASSERT_NO_THROW((chars_store.create_output_buffer<int8_t, 1>(legate::Point<DIM>(10), true)));
+  ASSERT_NO_THROW(
+    static_cast<void>(chars_store.create_output_buffer<int8_t, 1>(legate::Point<DIM>(10), true)));
   if (unbound) {
     ASSERT_NO_THROW(ranges_store.bind_empty_data());
   }
