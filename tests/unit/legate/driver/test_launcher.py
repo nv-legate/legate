@@ -48,6 +48,7 @@ def test_LAUNCHER_VAR_PREFIXES() -> None:
         "NCCL_",
         "CUNUMERIC_",
         "NVIDIA_",
+        "LD_",
     )
 
 

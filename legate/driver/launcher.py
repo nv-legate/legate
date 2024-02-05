@@ -43,6 +43,7 @@ LAUNCHER_VAR_PREFIXES = (
     "NCCL_",
     "CUNUMERIC_",
     "NVIDIA_",
+    "LD_",
 )
 
 
