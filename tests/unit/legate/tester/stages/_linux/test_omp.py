@@ -52,6 +52,26 @@ def test_cpu_pin_strict() -> None:
     assert "--cpu-bind" in stage.shard_args(Shard([shard]), c)
 
 
+def test_cpu_pin_strict_zero_computed_workers() -> None:
+    c = Config(["test.py", "--cpu-pin", "strict", "--omps", "16"])
+    s = FakeSystem(cpus=12)
+    with pytest.raises(RuntimeError, match="not enough"):
+        m.OMP(c, s)
+
+
+def test_cpu_pin_nonstrict_zero_computed_workers() -> None:
+    c = Config(["test.py", "--omps", "16"])
+    s = FakeSystem(cpus=12)
+    stage = m.OMP(c, s)
+    assert stage.kind == "openmp"
+    assert stage.args == []
+    assert stage.env(c, s) == unpin_and_test
+    assert stage.spec.workers == 1
+
+    shard = tuple(range(12))
+    assert "--cpu-bind" in stage.shard_args(Shard([shard]), c)
+
+
 def test_cpu_pin_none() -> None:
     c = Config(["test.py", "--cpu-pin", "none"])
     s = FakeSystem(cpus=12)

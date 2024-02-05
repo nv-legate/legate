@@ -98,8 +98,8 @@ class OMP(TestStage):
                     f"{ranks_per_node} rank(s) per node, each "
                     f"reserving {procs} core(s), running anyway."
                 )
-                all_cpus = tuple(range(len(cpus)))
-                return StageSpec(1, [Shard([all_cpus])])
+                all_cpus = chain.from_iterable(cpu.ids for cpu in cpus)
+                return StageSpec(1, [Shard([tuple(sorted(all_cpus))])])
 
         workers = adjust_workers(workers, config.execution.workers)
 
