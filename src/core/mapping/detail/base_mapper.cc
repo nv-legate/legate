@@ -308,9 +308,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   // Let's populate easy outputs first
   auto variant = find_variant(ctx, task, task.target_proc.kind());
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(variant.has_value());
-  }
+  assert(variant.has_value());
   output.chosen_variant = *variant;
 
   Task legate_task(&task, library, runtime, ctx);
@@ -333,7 +331,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   auto client_mappings = legate_mapper_->store_mappings(mapping::Task(&legate_task), options);
 
-  auto validate_colocation = [this](const auto* mapping) {
+  const auto validate_colocation = [&](const auto* mapping) {
     auto* first_store = mapping->stores.front();
     for (auto it = mapping->stores.begin() + 1; it != mapping->stores.end(); ++it) {
       if (!(*it)->can_colocate_with(*first_store)) {
@@ -383,12 +381,14 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   }
   client_mappings.clear();
 
-  auto check_consistency = [this](const auto& mappings) {
+  if (LegateDefined(LEGATE_USE_DEBUG)) {
     std::map<RegionField::Id, InstanceMappingPolicy> policies;
-    for (auto& mapping : mappings) {
-      for (auto& store : mapping->stores) {
-        auto key    = store->unique_region_field_id();
-        auto finder = policies.find(key);
+
+    for (const auto& mapping : for_stores) {
+      for (const auto& store : mapping->stores) {
+        auto key          = store->unique_region_field_id();
+        const auto finder = policies.find(key);
+
         if (policies.end() == finder) {
           policies[key] = mapping->policy;
         } else if (mapping->policy != finder->second) {
@@ -396,9 +396,6 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
         }
       }
     }
-  };
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    check_consistency(for_stores);
   }
 
   // Generate default mappings for stores that are not yet mapped by the client mapper

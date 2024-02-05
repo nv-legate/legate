@@ -327,13 +327,16 @@ void CopyDeserializer::_unpack(detail::Store& store)
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(!is_future && !is_output_region);
+  } else {
+    static_cast<void>(is_future);
   }
+
   auto redop_id = unpack<int32_t>();
   detail::RegionField rf;
 
   _unpack(rf);
-  store = detail::Store(
-    runtime_, context_, dim, std::move(type), redop_id, rf, is_output_region, std::move(transform));
+  store = detail::Store{
+    runtime_, context_, dim, std::move(type), redop_id, rf, is_output_region, std::move(transform)};
 }
 
 void CopyDeserializer::_unpack(detail::RegionField& value)

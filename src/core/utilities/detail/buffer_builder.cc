@@ -45,9 +45,6 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
       throw std::invalid_argument{"alignment is not a power of 2: " + std::to_string(align)};
     }
   }
-  if (!size) {
-    return;
-  }
 
   const auto orig_buf_size = buffer_.size();
   void* aligned_ptr        = nullptr;
@@ -73,6 +70,7 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
          << ", this should never happen!";
       throw std::runtime_error{std::move(ss).str()};
     }
+    static_cast<void>(ptr);
     // size + align - 1 is a potential overallocation. We must chop off the unneeded space at
     // the end since the next call expects buffer_.data() + buffer_.size() to be the beginning
     // of unused space.
