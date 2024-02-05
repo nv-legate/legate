@@ -11,41 +11,31 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any
 
-if TYPE_CHECKING:
-    from .._lib.runtime.library import Library
-    from .type import (
-        UserFunction,
-        VariantList,
-        VariantMapping,
-    )
-    from .._lib.task.task_context import TaskContext
-    from .._lib.operation.task import AutoTask
+from ..._lib.data.logical_array cimport LogicalArray
+from ..._lib.data.logical_store cimport LogicalStore
+from ..._lib.mapping.mapping cimport TASK_TARGET_TO_VARIANT_KIND
 
-from .._lib.data.logical_array import LogicalArray
-from .._lib.data.logical_store import LogicalStore
-from .._lib.mapping.mapping import TASK_TARGET_TO_VARIANT_KIND, TaskTarget
-from .._lib.partitioning.constraint import Constraint, ConstraintProxy
-from .._lib.runtime.runtime import get_legate_runtime
-from .._lib.task.task_info import TaskInfo
-from .invoker import VariantInvoker
-from .util import RESERVED_ARG_NAMES, validate_variant
+# import deliberate here, we want the Python enum
+
+from ..._lib.mapping.mapping import TaskTarget
+
+from ..._lib.operation.task cimport AutoTask
+from ..._lib.partitioning.constraint cimport Constraint, ConstraintProxy
+from ..._lib.runtime.library cimport Library
+from ..._lib.runtime.runtime cimport get_legate_runtime
+from ..._lib.task.task_context cimport TaskContext
+from ..._lib.task.task_info cimport TaskInfo
+from .invoker cimport VariantInvoker
+from .type cimport VariantKind, VariantList, VariantMapping
+from .util cimport RESERVED_ARG_NAMES, validate_variant
+
+from .type import UserFunction
 
 
-class PyTask:
+cdef class PyTask:
     r"""A Legate task constructed from a Python callable."""
-
-    UNREGISTERED_ID: Final[int] = -1
-
-    __slots__ = (
-        "_name",
-        "_invoker",
-        "_variants",
-        "_task_id",
-        "_library",
-    )
-
     def __init__(
         self,
         *,
@@ -54,7 +44,7 @@ class PyTask:
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,
-    ):
+    ) -> None:
         r"""Construct a ``PyTask``.
 
         Parameters
@@ -75,12 +65,16 @@ class PyTask:
             ``False``, the user must manually register the task (via
             ``PyTask.complete_registration()``) before use.
         """
+        # Cython has no support for class variables...
+        self.UNREGISTERED_ID = -1
+
         if library is None:
             library = get_legate_runtime().core_library
 
         if invoker is None:
             invoker = VariantInvoker(func)
 
+        cdef str name
         try:
             name = func.__qualname__
         except AttributeError:
@@ -92,7 +86,7 @@ class PyTask:
         self._name = name
         self._invoker = invoker
         self._variants = self._init_variants(func, variants)
-        self._task_id = PyTask.UNREGISTERED_ID
+        self._task_id = self.UNREGISTERED_ID
         self._library = library
         if register:
             self.complete_registration()
@@ -106,10 +100,10 @@ class PyTask:
         registered : bool
             ``True`` if ``self`` is registered, ``False`` otherwise.
         """
-        return self._task_id != PyTask.UNREGISTERED_ID
+        return self._task_id != self.UNREGISTERED_ID
 
     @property
-    def task_id(self) -> int:
+    def task_id(self) -> int64_t:
         r"""Return the context-local task ID for this task.
 
         Returns
@@ -169,7 +163,7 @@ class PyTask:
         --------
         legate.core.task.task.PyTask.__call__
         """
-        task = get_legate_runtime().create_auto_task(
+        cdef AutoTask task = get_legate_runtime().create_auto_task(
             self._library, self.task_id
         )
         task.throws_exception(RuntimeError)
@@ -178,25 +172,25 @@ class PyTask:
         return task
 
     @staticmethod
-    def _sanitize_constraint(
+    cdef Constraint _sanitize_constraint(
         task: AutoTask, constraint: Constraint | ConstraintProxy
-    ) -> Constraint:
-        match constraint:
-            case Constraint():
-                return constraint
-            case ConstraintProxy(func=func, args=args):
-                sanitized_args = []
-                for arg in args:
-                    if isinstance(arg, (LogicalStore, LogicalArray)):
-                        if isinstance(arg, LogicalStore):
-                            arg = LogicalArray.from_store(arg)
-                        arg = task.find_or_declare_partition(arg)
-                    sanitized_args.append(arg)
-                return func(*sanitized_args)
-            case _:
-                raise TypeError(
-                    f"Expected a constraint but got {type(constraint)}"
-                )
+    ):
+        if isinstance(constraint, Constraint):
+            return constraint
+
+        if isinstance(constraint, ConstraintProxy):
+            sanitized_args = []
+            for arg in constraint.args:
+                if isinstance(arg, (LogicalStore, LogicalArray)):
+                    if isinstance(arg, LogicalStore):
+                        arg = LogicalArray.from_store(arg)
+                    arg = task.find_or_declare_partition(arg)
+                sanitized_args.append(arg)
+            return constraint.func(*sanitized_args)
+
+        raise TypeError(
+            f"Expected a constraint but got {type(constraint)}"
+        )
 
     assert (
         "task_constraints" in RESERVED_ARG_NAMES
@@ -239,13 +233,13 @@ class PyTask:
         --------
         legate.core.task.task.PyTask.prepare_call
         """
-        task = self.prepare_call(*args, **kwargs)
+        cdef AutoTask task = self.prepare_call(*args, **kwargs)
         if task_constraints is not None:
             for cnst in task_constraints:
-                task.add_constraint(self._sanitize_constraint(task, cnst))
+                task.add_constraint(PyTask._sanitize_constraint(task, cnst))
         task.execute()
 
-    def complete_registration(self) -> int:
+    cpdef int64_t complete_registration(self):
         r"""Complete registration for a task.
 
         Returns
@@ -266,10 +260,16 @@ class PyTask:
         if self.registered:
             return self._task_id
 
-        variants = [
+        cdef dict proc_kind_to_variant = {
+            TaskTarget.GPU: self._gpu_variant,
+            TaskTarget.CPU: self._cpu_variant,
+            TaskTarget.OMP: self.omp_variant,
+        }
+
+        cdef list variants = [
             (
                 TASK_TARGET_TO_VARIANT_KIND[proc_kind],
-                getattr(self, f"_{proc_kind.name.casefold()}_variant"),
+                proc_kind_to_variant[proc_kind],
             )
             for proc_kind, fn in self._variants.items()
             if fn is not None
@@ -277,13 +277,15 @@ class PyTask:
         if not variants:
             raise ValueError("Task has no registered variants")
 
-        task_id = self._library.get_new_task_id()
-        task_info = TaskInfo.from_variants(task_id, self._name, variants)
+        cdef int64_t task_id = self._library.get_new_task_id()
+        cdef TaskInfo task_info = TaskInfo.from_variants(
+            task_id, self._name, variants
+        )
         self._library.register_task(task_info)
         self._task_id = task_id
         return task_id
 
-    def _update_variant(self, func: UserFunction, variant: TaskTarget) -> None:
+    cdef void _update_variant(self, func: UserFunction, variant: TaskTarget):
         if self.registered:
             raise RuntimeError(
                 f"Task (id: {self._task_id}) has already completed "
@@ -293,7 +295,7 @@ class PyTask:
         self._invoker.validate_signature(func)
         self._variants[variant] = func
 
-    def cpu_variant(self, func: UserFunction) -> None:
+    cpdef void cpu_variant(self, func: UserFunction):
         r"""Register a CPU variant for this task
 
         Parameters
@@ -314,7 +316,7 @@ class PyTask:
         """
         self._update_variant(func, TaskTarget.CPU)
 
-    def gpu_variant(self, func: UserFunction) -> None:
+    cpdef void gpu_variant(self, func: UserFunction):
         r"""Register a GPU variant for this task
 
         Parameters
@@ -335,7 +337,7 @@ class PyTask:
         """
         self._update_variant(func, TaskTarget.GPU)
 
-    def omp_variant(self, func: UserFunction) -> None:
+    cpdef void omp_variant(self, func: UserFunction):
         r"""Register an OpenMP variant for this task
 
         Parameters
@@ -356,11 +358,12 @@ class PyTask:
         """
         self._update_variant(func, TaskTarget.OMP)
 
-    def _init_variants(
+    cdef VariantMapping _init_variants(
         self,
         func: UserFunction,
-        variants: VariantList,
-    ) -> VariantMapping:
+        variants: VariantList
+    ):
+        cdef VariantKind v
         for v in variants:
             validate_variant(v)
         self._invoker.validate_signature(func)
@@ -370,17 +373,17 @@ class PyTask:
             TaskTarget.OMP: func if "omp" in variants else None,
         }
 
-    def _invoke_variant(self, ctx: TaskContext, kind: TaskTarget) -> None:
+    cdef void _invoke_variant(self, ctx: TaskContext, kind: TaskTarget):
         assert (
             variant := self._variants[kind]
         ) is not None, f"Task has no variant for kind: {kind}"
         self._invoker(ctx, variant)
 
-    def _cpu_variant(self, ctx: TaskContext) -> None:
+    cdef void _cpu_variant(self, TaskContext ctx):
         self._invoke_variant(ctx, TaskTarget.CPU)
 
-    def _gpu_variant(self, ctx: TaskContext) -> None:
+    cdef void _gpu_variant(self, TaskContext ctx):
         self._invoke_variant(ctx, TaskTarget.GPU)
 
-    def _omp_variant(self, ctx: TaskContext) -> None:
+    cdef void _omp_variant(self, TaskContext ctx):
         self._invoke_variant(ctx, TaskTarget.OMP)

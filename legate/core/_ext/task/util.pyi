@@ -8,15 +8,20 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
+from __future__ import annotations
 
-# Note import, not cimport. We want the Python version of the enum
-from ..legate_c import legate_core_variant_t
+from collections.abc import Callable
+from typing import Any, Final, TypeVar
 
+from .type import VariantKind, VariantList
 
-cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
-    cpdef enum class TaskTarget:
-        GPU
-        OMP
-        CPU
+_T = TypeVar("_T")
 
-cdef dict[TaskTarget, legate_core_variant_t] TASK_TARGET_TO_VARIANT_KIND
+KNOWN_VARIANTS: Final[set[VariantKind]] = {"cpu", "gpu", "omp"}
+
+DEFAULT_VARIANT_LIST: Final[VariantList] = ("cpu",)
+
+RESERVED_ARG_NAMES: Final[set[str]] = {"task_constraints"}
+
+def validate_variant(kind: VariantKind) -> None: ...
+def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]: ...

@@ -70,6 +70,7 @@ if(POLICY CMP0148)
 endif()
 
 add_subdirectory(legate/core/_lib)
+add_subdirectory(legate/core/_ext)
 add_subdirectory(legate/timing/_lib)
 
 set(cython_lib_dir "../../")

@@ -30,6 +30,7 @@ from legate.core import (
     PhysicalArray,
     PhysicalStore,
     Scalar,
+    TaskContext,
     get_legate_runtime,
     types as ty,
 )
@@ -91,7 +92,7 @@ class ArgDescr:
         return [all_args[idx] for idx in self.arg_order]
 
 
-class FakeScalar(Generic[_T]):
+class FakeScalar(Scalar, Generic[_T]):
     def __init__(self, value: _T):
         self._v = value
 
@@ -115,21 +116,53 @@ class FakeArray(PhysicalArray):
         return FakeStore(self._handle)
 
 
-class FakeTaskContext:
+class FakeTaskContext(TaskContext):
     def __init__(self) -> None:
-        self.inputs: tuple[PhysicalArray, ...] = (
+        self._fake_inputs: tuple[PhysicalArray, ...] = (
             FakeArray(make_input_store()),
             FakeArray(make_input_store()),
         )
-        self.outputs: tuple[PhysicalArray, ...] = (
+        self._fake_outputs: tuple[PhysicalArray, ...] = (
             FakeArray(make_output_store()),
             FakeArray(make_output_store()),
         )
-        self.reductions: tuple[PhysicalArray, ...] = ()
-        self.scalars: tuple[Scalar, ...] = (  # type: ignore [assignment]
+        self._fake_reductions: tuple[PhysicalArray, ...] = ()
+        self._fake_scalars: tuple[Scalar, ...] = (
             FakeScalar(1),
             FakeScalar(2.0),
         )
+
+    @property
+    def inputs(self) -> tuple[PhysicalArray, ...]:
+        return self._fake_inputs
+
+    @inputs.setter
+    def inputs(self, value: tuple[PhysicalArray, ...]) -> None:
+        self._fake_inputs = value
+
+    @property
+    def outputs(self) -> tuple[PhysicalArray, ...]:
+        return self._fake_outputs
+
+    @outputs.setter
+    def outputs(self, value: tuple[PhysicalArray, ...]) -> None:
+        self._fake_outputs = value
+
+    @property
+    def reductions(self) -> tuple[PhysicalArray, ...]:
+        return self._fake_reductions
+
+    @reductions.setter
+    def reductions(self, value: tuple[PhysicalArray, ...]) -> None:
+        self._fake_reductions = value
+
+    @property
+    def scalars(self) -> tuple[Scalar, ...]:
+        return self._fake_scalars
+
+    @scalars.setter
+    def scalars(self, value: tuple[Scalar, ...]) -> None:
+        self._fake_scalars = value
 
 
 class FakeAutoTask(AutoTask):

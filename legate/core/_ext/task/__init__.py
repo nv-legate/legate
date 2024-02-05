@@ -10,40 +10,25 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-# This file exists because we want to keep "from legate.core.task import foo"
-# because the extra namespace helps to disambiguate things. I tried doing:
-#
-# from ._ext import task
-#
-# in legate/core/__init__.py but Python doesn't like that, and in fact, won't
-# consider attributes as modules during module lookup:
-#
-# ModuleNotFoundError: No module named 'legate.core.task'
-#
-# So the only solution is to keep a dummy "module" here, whose only job is to
-# mirror the real module over in _ext/task.
-from .._ext.task import (
-    task,
-    PyTask,
-    VariantInvoker,
+from .decorator import task
+from .invoker import VariantInvoker
+from .py_task import PyTask
+from .type import (
     InputStore,
     OutputStore,
     ReductionStore,
     InputArray,
     OutputArray,
 )
+from . import util
 
 __all__ = (
     "task",
-    "PyTask",
     "VariantInvoker",
+    "PyTask",
     "InputStore",
     "OutputStore",
     "ReductionStore",
     "InputArray",
     "OutputArray",
 )
-
-# Not in __all__, this is intentional! This module is only "exposed" for
-# testing purposes.
-from .._ext.task import util as _util

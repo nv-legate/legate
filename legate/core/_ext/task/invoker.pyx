@@ -10,53 +10,57 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+from libcpp cimport bool
+
 import inspect
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable
 from inspect import Parameter, Signature
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
-if TYPE_CHECKING:
-    from .._lib.task.task_context import TaskContext
-    from .type import ParamList, UserFunction
+from ..._lib.data.logical_array cimport LogicalArray
+from ..._lib.data.logical_store cimport LogicalStore
+from ..._lib.data.physical_array cimport PhysicalArray
+from ..._lib.data.physical_store cimport PhysicalStore
+from ..._lib.data.scalar cimport Scalar
+from ..._lib.operation.task cimport AutoTask
+from ..._lib.task.task_context cimport TaskContext
 
-from .._lib.data.logical_array import LogicalArray
-from .._lib.data.logical_store import LogicalStore
-from .._lib.data.physical_array import PhysicalArray
-from .._lib.data.physical_store import PhysicalStore
-from .._lib.data.scalar import Scalar
-from .._lib.operation.task import AutoTask
-from ..types import _Dtype_from_python_type
-from .type import (
+from ...types import _Dtype_from_python_type
+
+from .type cimport (
     InputArray,
     InputStore,
     OutputArray,
     OutputStore,
+    ParamList,
     ReductionStore,
 )
-from .util import RESERVED_ARG_NAMES, dynamic_docstring
+
+from .type import UserFunction
+
+from .util cimport RESERVED_ARG_NAMES
 
 _T = TypeVar("_T")
 _U = TypeVar("_U")
-_BASE_TYPES: tuple[type, ...] = (PhysicalStore, PhysicalArray)
-_BASE_LOGICAL_TYPES: tuple[type, ...] = (LogicalStore, LogicalArray)
-_INPUT_TYPES: tuple[type, ...] = (InputStore, InputArray)
-_OUTPUT_TYPES: tuple[type, ...] = (OutputStore, OutputArray)
-_OBJECT_TYPES = _INPUT_TYPES + _OUTPUT_TYPES
+
+cdef tuple[type, ...] _BASE_TYPES = (PhysicalStore, PhysicalArray)
+cdef tuple[type, ...] _BASE_LOGICAL_TYPES = (LogicalStore, LogicalArray)
+cdef tuple[type, ...] _INPUT_TYPES = (InputStore, InputArray)
+cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore, OutputArray)
+cdef tuple[type, ...] _OBJECT_TYPES = _INPUT_TYPES + _OUTPUT_TYPES
 
 
-class VariantInvoker:
+cdef class VariantInvoker:
     r"""Encapsulate the calling conventions between a user-supplied task
     variant function, and a Legate task."""
 
-    __slots__ = (
-        "_signature",
-        "_inputs",
-        "_outputs",
-        "_reductions",
-        "_scalars",
+    assert (
+        RESERVED_ARG_NAMES == {"task_constraints"}
+    ), (
+        "Must update VariantInvoker __init__ documentation, "
+        "as Cython does not allow dynamic __doc__"
     )
 
-    @dynamic_docstring(RESERVED_ARGUMENTS=RESERVED_ARG_NAMES)
     def __init__(self, func: UserFunction) -> None:
         r"""Construct a ``VariantInvoker``
 
@@ -80,11 +84,11 @@ class VariantInvoker:
         positional or keyword arguments, *args and **kwargs are not allowed.
         Default arguments are not yet supported either.
 
-        ``func`` must not contain any arguments named in {RESERVED_ARGUMENTS}.
+        ``func`` must not contain any arguments named in {"task_constraints"}.
         These are reserved by the implementation, and are specially handled
         at the callsite.
         """
-        signature = self._get_signature(func)
+        signature = VariantInvoker._get_signature(func)
 
         ret_type = signature.return_annotation
         if ret_type is not None and ret_type != Signature.empty:
@@ -93,10 +97,11 @@ class VariantInvoker:
                 f"expected 'None' as return-type, found {ret_type}"
             )
 
-        inputs: list[str] = []
-        outputs: list[str] = []
-        reductions: list[str] = []
-        scalars: list[str] = []
+        cdef list[str] inputs = []
+        cdef list[str] outputs = []
+        cdef list[str] reductions = []
+        cdef list[str] scalars = []
+        cdef str name
 
         for name, param_descr in signature.parameters.items():
             if name in RESERVED_ARG_NAMES:
@@ -198,9 +203,75 @@ class VariantInvoker:
         """
         return self._signature
 
-    def prepare_call(
+    @staticmethod
+    cdef void _handle_param(
+        task: AutoTask,
+        handled: dict[str, int],
+        expected_param: Parameter,
+        user_param: Any
+    ):
+        cdef str param_name = expected_param.name
+        # this lookup never fails
+        handled[param_name] += 1
+        if handled[param_name] > 1:
+            raise ValueError(
+                f"Got multiple values for argument {param_name}"
+            )
+
+        cdef type expected_ty = expected_param.annotation
+        # Note issubclass(), expected_ty is the class itself, not
+        # an instance of it!
+        if issubclass(expected_ty, _BASE_TYPES):
+            if not isinstance(user_param, _BASE_LOGICAL_TYPES):
+                raise TypeError(
+                    f"Argument: '{param_name}' "
+                    f"expected one of {_BASE_LOGICAL_TYPES}, "
+                    f"got {type(user_param)}"
+                )
+
+            if user_param.unbound:
+                raise NotImplementedError(
+                    "Unbound arrays or stores are not yet supported"
+                )
+
+            if issubclass(expected_ty, _INPUT_TYPES):
+                # Would have used
+                # isinstance(user_param, _BASE_LOGICAL_TYPES)
+                # here, but mypy balks:
+                #
+                # legate/core/task/invoker.py:261:36: error: Argument 1 to
+                # "add_input" of "AutoTask" has incompatible type "object";
+                # expected "LogicalArray | LogicalStore"  [arg-type]
+                #   task.add_input(user_param)
+                #                  ^~~~~~~~~~
+                assert isinstance(user_param, (LogicalStore, LogicalArray))
+                task.add_input(user_param)
+            elif issubclass(expected_ty, _OUTPUT_TYPES):
+                assert isinstance(user_param, (LogicalStore, LogicalArray))
+                task.add_output(user_param)
+            elif issubclass(expected_ty, ReductionStore):
+                raise NotImplementedError()
+                task.add_reduction(user_param, None)  # type: ignore
+            else:
+                raise NotImplementedError(
+                    f"Unsupported parameter type {expected_ty}"
+                )
+        else:
+            if not isinstance(user_param, expected_ty):
+                raise TypeError(
+                    f"Task expected a value of type {expected_ty} for "
+                    f"parameter {param_name}, but got {type(user_param)}"
+                )
+
+            task.add_scalar_arg(
+                user_param, dtype=_Dtype_from_python_type(type(user_param))
+            )
+
+    # Cannot cpdef prepare_call() since: "closures inside cpdef functions not
+    # yet supported"
+    cpdef void prepare_call(
         self, task: AutoTask, args: tuple[Any, ...], kwargs: dict[str, Any]
-    ) -> None:
+    ):
         r"""Prepare a list of arguments for task call.
 
         Parameters
@@ -253,87 +324,37 @@ class VariantInvoker:
                 f"but {len(args)} were passed"
             )
 
-        handled = {param_name: 0 for param_name in params.keys()}
+        cdef str param_name
+        cdef dict[str, int] handled = {
+            param_name: 0 for param_name in params.keys()
+        }
 
-        def handle_param(expected_param: Parameter, user_param: Any) -> None:
-            param_name = expected_param.name
-            # this lookup never fails
-            handled[param_name] += 1
-            if handled[param_name] > 1:
-                raise ValueError(
-                    f"Got multiple values for argument {param_name}"
-                )
-            expected_ty = expected_param.annotation
-            # Note issubclass(), expected_ty is the class itself, not
-            # an instance of it!
-            if issubclass(expected_ty, _BASE_TYPES):
-                if not isinstance(user_param, _BASE_LOGICAL_TYPES):
-                    raise TypeError(
-                        f"Argument: '{param_name}' "
-                        f"expected one of {_BASE_LOGICAL_TYPES}, "
-                        f"got {type(user_param)}"
-                    )
-
-                if user_param.unbound:
-                    raise NotImplementedError(
-                        "Unbound arrays or stores are not yet supported"
-                    )
-
-                if issubclass(expected_ty, _INPUT_TYPES):
-                    # Would have used
-                    # isinstance(user_param, _BASE_LOGICAL_TYPES)
-                    # here, but mypy balks:
-                    #
-                    # legate/core/task/invoker.py:261:36: error: Argument 1 to
-                    # "add_input" of "AutoTask" has incompatible type "object";
-                    # expected "LogicalArray | LogicalStore"  [arg-type]
-                    #   task.add_input(user_param)
-                    #                  ^~~~~~~~~~
-                    assert isinstance(user_param, (LogicalStore, LogicalArray))
-                    task.add_input(user_param)
-                elif issubclass(expected_ty, _OUTPUT_TYPES):
-                    assert isinstance(user_param, (LogicalStore, LogicalArray))
-                    task.add_output(user_param)
-                elif issubclass(expected_ty, ReductionStore):
-                    raise NotImplementedError()
-                    task.add_reduction(user_param, None)  # type: ignore
-                else:
-                    raise NotImplementedError(
-                        f"Unsupported parameter type {expected_ty}"
-                    )
-            else:
-                if not isinstance(user_param, expected_ty):
-                    raise TypeError(
-                        f"Task expected a value of type {expected_ty} for "
-                        f"parameter {param_name}, but got {type(user_param)}"
-                    )
-
-                task.add_scalar_arg(
-                    user_param, dtype=_Dtype_from_python_type(type(user_param))
-                )
-
+        # Handle positional arguments
         for expected_param, pos_param in zip(params.values(), args):
-            handle_param(expected_param, pos_param)
+            VariantInvoker._handle_param(
+                task, handled, expected_param, pos_param
+            )
 
-        def fn_orderered_kwargs() -> Iterator[tuple[Parameter, Any]]:
-            unhandled_kwargs = set(kwargs.keys())
-            for name, sig in params.items():
-                try:
-                    yield sig, kwargs[name]
-                except KeyError:
-                    pass
-                else:
-                    unhandled_kwargs.remove(name)
+        # Handle kwargs
+        cdef set unhandled_kwargs = set(kwargs.keys())
+        cdef str name
 
-            if unhandled_kwargs:
-                raise TypeError(
-                    "Task does not have keyword argument(s): "
-                    f"{', '.join(map(str, unhandled_kwargs))}"
-                )
+        for name, sig in params.items():
+            try:
+                param = kwargs[name]
+            except KeyError:
+                continue
 
-        for sig, param in fn_orderered_kwargs():
-            handle_param(sig, param)
+            unhandled_kwargs.remove(name)
+            VariantInvoker._handle_param(task, handled, sig, param)
 
+        if unhandled_kwargs:
+            raise TypeError(
+                "Task does not have keyword argument(s): "
+                f"{', '.join(map(str, unhandled_kwargs))}"
+            )
+
+        cdef int count
         if missing_params := [
             params[name] for name, count in handled.items() if count == 0
         ]:
@@ -365,13 +386,14 @@ class VariantInvoker:
             If the signature of ``func`` does not match the configured
             signature of this ``VariantInvoker``.
         """
+        cdef dict[str, Any] kw = {}
+
         params = self.signature.parameters
-        kw: dict[str, Any] = dict()
 
         def maybe_unpack_array(
             name: str, arg: PhysicalArray
         ) -> PhysicalArray | PhysicalStore:
-            arg_ty = params[name].annotation
+            cdef type arg_ty = params[name].annotation
             if issubclass(arg_ty, PhysicalArray):
                 return arg
             if issubclass(arg_ty, PhysicalStore):
@@ -382,12 +404,12 @@ class VariantInvoker:
                 "this is a bug in legate.core!"
             )
 
-        def unpack_scalar(name: str, arg: Scalar) -> Any:
+        def unpack_scalar(name: str, arg: Scalar) -> object:
             return arg.value()
 
         def unpack_args(
-            names: Sequence[str],
-            vals: Sequence[_T],
+            names: tuple[str, ...],
+            vals: tuple[_T, ...],
             unpacker: Callable[[str, _T], _U],
         ) -> None:
             if len(names) != len(vals):
@@ -395,6 +417,7 @@ class VariantInvoker:
                     f"Wrong number of given arguments ({len(vals)}), "
                     f"expected {len(names)}"
                 )
+            cdef str name
             kw.update(
                 {name: unpacker(name, val) for name, val in zip(names, vals)}
             )
@@ -406,10 +429,10 @@ class VariantInvoker:
         return func(**kw)
 
     @staticmethod
-    def _get_signature(func: Any) -> Signature:
+    cdef object _get_signature(func: Any):
         return inspect.signature(func, eval_str=True)
 
-    def valid_signature(self, func: UserFunction) -> bool:
+    cpdef bool valid_signature(self, func: UserFunction):
         r"""Whether the given function's signature  matches the configured
         function signature.
 
@@ -424,9 +447,9 @@ class VariantInvoker:
             ``True`` if the signature of ``func`` matches this
             ``VariantInvoker``s signature, ``False`` otherwise.
         """
-        return self._get_signature(func) == self.signature
+        return VariantInvoker._get_signature(func) == self.signature
 
-    def validate_signature(self, func: UserFunction) -> None:
+    cpdef void validate_signature(self, func: UserFunction):
         r"""Ensure a callable's signature matches the configured signature.
 
         Paramters
@@ -457,5 +480,5 @@ class VariantInvoker:
         if not self.valid_signature(func):
             raise ValueError(
                 f"Invalid signature for {func}, expected {self.signature}, "
-                f"got {self._get_signature(func)}"
+                f"got {VariantInvoker._get_signature(func)}"
             )

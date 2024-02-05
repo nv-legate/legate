@@ -8,15 +8,17 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
+from __future__ import annotations
 
-# Note import, not cimport. We want the Python version of the enum
-from ..legate_c import legate_core_variant_t
+from typing import Callable, overload
 
+from .py_task import PyTask
+from .type import UserFunction, VariantList
+from .util import DEFAULT_VARIANT_LIST, dynamic_docstring
 
-cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
-    cpdef enum class TaskTarget:
-        GPU
-        OMP
-        CPU
-
-cdef dict[TaskTarget, legate_core_variant_t] TASK_TARGET_TO_VARIANT_KIND
+@overload
+def task(func: UserFunction) -> PyTask: ...
+@overload
+def task(
+    *, variants: VariantList = DEFAULT_VARIANT_LIST, register: bool = True
+) -> Callable[[UserFunction], PyTask]: ...

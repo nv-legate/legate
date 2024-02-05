@@ -10,27 +10,27 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Callable, overload
+from libcpp cimport bool
 
-if TYPE_CHECKING:
-    from .type import UserFunction, VariantList
+from collections.abc import Callable
 
-from .task import PyTask
-from .util import DEFAULT_VARIANT_LIST, dynamic_docstring
+from .type cimport VariantList
+from .util cimport DEFAULT_VARIANT_LIST
 
-
-@overload
-def task(func: UserFunction) -> PyTask:
-    ...
-
-
-@overload
-def task(
-    *,
-    variants: VariantList = DEFAULT_VARIANT_LIST,
-    register: bool = True,
-) -> Callable[[UserFunction], PyTask]:
-    ...
+# imports are deliberate here, we want the python objects. Technically not true
+# for PyTask, but cimporting it results in:
+#
+# cmake-build/legate/core/_ext/task/decorator.cxx:4025:17: error: incompatible
+# pointer types assigning to 'PyObject *' (aka '_object *') from 'struct
+# __pyx_obj_6legate_4core_4_ext_4task_7py_task_PyTask *'
+#         __pyx_t_2 =
+#         __pyx_pf_6legate_4core_4_ext_4task_9decorator_4task_decorator(__pyx_v_decorator,
+#         __pyx_v_func);
+#
+# So I guess we import it.
+from .py_task import PyTask
+from .type import UserFunction
+from .util import dynamic_docstring
 
 
 @dynamic_docstring(DEFAULT_VARIANT_LIST=DEFAULT_VARIANT_LIST)

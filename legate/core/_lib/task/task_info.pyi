@@ -12,7 +12,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from ...task.type import VariantFunction
+from ..._ext.task.type import VariantFunction
 
 class TaskInfo:
     def __dealloc__(self) -> None: ...

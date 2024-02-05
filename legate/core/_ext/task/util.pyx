@@ -11,21 +11,23 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
 
-if TYPE_CHECKING:
-    from .type import VariantKind, VariantList
+from .type cimport VariantKind, VariantList
 
-KNOWN_VARIANTS: set[VariantKind] = {"cpu", "gpu", "omp"}
 
-DEFAULT_VARIANT_LIST: VariantList = ("cpu",)
+cdef set[VariantKind] _KNOWN_VARIANTS = {"cpu", "gpu", "omp"}
+# for python export
+KNOWN_VARIANTS = _KNOWN_VARIANTS
 
-RESERVED_ARG_NAMES: set[str] = {"task_constraints"}
+cdef VariantList DEFAULT_VARIANT_LIST = ("cpu",)
+
+cdef set[str] RESERVED_ARG_NAMES = {"task_constraints"}
 
 _T = TypeVar("_T")
 
 
-def validate_variant(kind: str) -> None:
+cpdef void validate_variant(kind: VariantKind):
     r"""Confirm that a variant kind is one of the known variants.
 
     Parameters
@@ -38,15 +40,19 @@ def validate_variant(kind: str) -> None:
     ValueError
         If ``kind`` is an unknown variant kind.
     """
-    if kind not in KNOWN_VARIANTS:
+    if kind not in _KNOWN_VARIANTS:
         raise ValueError(f"Unknown variant kind: {kind}")
 
 
 def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]:
-    def wrapper(obj: _T) -> _T:
+    def wrapper(obj: Any) -> Any:
         if (obj_doc := getattr(obj, "__doc__", None)) is not None:
             assert isinstance(obj_doc, str)
-            setattr(obj, "__doc__", obj_doc.format(**kwargs))
+            try:
+                setattr(obj, "__doc__", obj_doc.format(**kwargs))
+            except AttributeError:
+                print(obj)
+                assert 0
         return obj
 
     return wrapper

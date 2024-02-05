@@ -10,29 +10,17 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from typing import Callable, Literal, TypeAlias
+from collections.abc import Callable
+from typing import TypeAlias
 
-from .._lib.data.physical_array import PhysicalArray
-from .._lib.data.physical_store import PhysicalStore
-from .._lib.mapping.mapping import TaskTarget
-from .._lib.task.task_context import TaskContext
-
-SignatureMapping: TypeAlias = dict[str, type]
-
-ParamList: TypeAlias = tuple[str, ...]
+from ..._lib.data.physical_array cimport PhysicalArray
+from ..._lib.data.physical_store cimport PhysicalStore
+from ..._lib.task.task_context cimport TaskContext
 
 UserFunction: TypeAlias = Callable[..., None]
-
 VariantFunction: TypeAlias = Callable[[TaskContext], None]
 
-VariantKind: TypeAlias = Literal["cpu", "gpu", "omp"]
-
-VariantList: TypeAlias = tuple[VariantKind, ...]
-
-VariantMapping: TypeAlias = dict[TaskTarget, UserFunction | None]
-
-
-class InputStore(PhysicalStore):
+cdef class InputStore(PhysicalStore):
     r"""Convenience class for specifying input stores for Legate task variants.
 
     This class can be used as a type annotation in order to mark parameters as
@@ -46,7 +34,7 @@ class InputStore(PhysicalStore):
     """
 
 
-class OutputStore(PhysicalStore):
+cdef class OutputStore(PhysicalStore):
     r"""Convenience class for specifying output stores for Legate task
     variants.
 
@@ -61,7 +49,7 @@ class OutputStore(PhysicalStore):
     """
 
 
-class ReductionStore(PhysicalStore):
+cdef class ReductionStore(PhysicalStore):
     r"""Convenience class for specifying reduction stores for Legate task
     variants.
 
@@ -76,7 +64,7 @@ class ReductionStore(PhysicalStore):
     """
 
 
-class InputArray(PhysicalArray):
+cdef class InputArray(PhysicalArray):
     r"""Convenience class for specifying input arrays for Legate task variants.
 
     This class can be used as a type annotation in order to mark parameters as
@@ -90,7 +78,7 @@ class InputArray(PhysicalArray):
     """
 
 
-class OutputArray(PhysicalArray):
+cdef class OutputArray(PhysicalArray):
     r"""Convenience class for specifying output arrays for Legate task
     variants.
 

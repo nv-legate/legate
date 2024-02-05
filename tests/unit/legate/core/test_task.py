@@ -12,27 +12,15 @@ from __future__ import annotations
 
 import random
 import re
-from typing import cast as TYPE_CAST
+from typing import ParamSpec
 
 import numpy as np
 import numpy.testing
 import pytest
-from typing_extensions import ParamSpec
 
 import legate.core as lg
-from legate.core import (
-    PhysicalStore,
-    TaskContext,
-    get_legate_runtime,
-    task as lct,
-)
-from legate.core.task import (
-    InputStore,
-    OutputStore,
-    PyTask,
-    VariantInvoker,
-    util as lct_task_util,
-)
+from legate.core import PhysicalStore, get_legate_runtime, task as lct
+from legate.core.task import InputStore, OutputStore, PyTask, VariantInvoker
 
 from .util.task_util import (
     UNTYPED_FUNCS,
@@ -64,16 +52,14 @@ class BaseTest:
     def check_valid_task(self, task: PyTask) -> None:
         assert isinstance(task, PyTask)
         assert callable(task)
-        assert hasattr(task, "_task_id")
-        assert isinstance(task._task_id, int)
-        assert hasattr(task, "_name")
-        assert isinstance(task._name, str)
-        assert hasattr(task, "_library")
+        assert isinstance(task.registered, bool)
 
     def check_valid_registered_task(self, task: PyTask) -> None:
         self.check_valid_task(task)
         assert task.registered
-        assert task.task_id > 0
+        task_id = task.task_id
+        assert isinstance(task_id, int)
+        assert task_id > 0
 
     def check_valid_unregistered_task(self, task: PyTask) -> None:
         self.check_valid_task(task)
@@ -513,13 +499,10 @@ class TestVariantInvoker(BaseTest):
 
         self.check_valid_invoker(invoker, func)
 
-        fctx = FakeTaskContext()
-        fctx.inputs = tuple(map(FakeArray, func_args.inputs))
-        fctx.outputs = tuple(map(FakeArray, func_args.outputs))
-        fctx.scalars = tuple(
-            map(FakeScalar, func_args.scalars)  # type: ignore [arg-type]
-        )
-        ctx = TYPE_CAST(TaskContext, fctx)
+        ctx = FakeTaskContext()
+        ctx.inputs = tuple(map(FakeArray, func_args.inputs))
+        ctx.outputs = tuple(map(FakeArray, func_args.outputs))
+        ctx.scalars = tuple(map(FakeScalar, func_args.scalars))
 
         assert not func.called
         invoker(ctx, func)
@@ -535,16 +518,16 @@ class TestVariantInvoker(BaseTest):
 
 
 class TestTaskUtil:
-    @pytest.mark.parametrize(
-        "variant_kind", sorted(lct_task_util.KNOWN_VARIANTS)
-    )
+    @pytest.mark.parametrize("variant_kind", sorted(lct._util.KNOWN_VARIANTS))
     def test_validate_variant_good(self, variant_kind: str) -> None:
         assert isinstance(variant_kind, str)
-        lct_task_util.validate_variant(variant_kind)
+        lct._util.validate_variant(variant_kind)  # type: ignore[arg-type]
 
     def test_validate_variant_bad(self) -> None:
         with pytest.raises(ValueError):
-            lct_task_util.validate_variant("this_variant_does_not_exist")
+            lct._util.validate_variant(
+                "this_variant_does_not_exist"  # type: ignore[arg-type]
+            )
 
 
 if __name__ == "__main__":
