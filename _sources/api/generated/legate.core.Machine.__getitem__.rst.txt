@@ -1,0 +1,6 @@
+﻿legate.core.Machine.\_\_getitem\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Machine.__getitem__

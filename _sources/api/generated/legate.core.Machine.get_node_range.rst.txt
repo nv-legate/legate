@@ -1,0 +1,6 @@
+﻿legate.core.Machine.get\_node\_range
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Machine.get_node_range

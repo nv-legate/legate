@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
@@ -17,24 +17,24 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=c5ced968eda925caa686" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=c5ced968eda925caa686" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=c5ced968eda925caa686" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=bd9e20870c6007c4c509" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/params.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=c5ced968eda925caa686" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=c5ced968eda925caa686"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=bd9e20870c6007c4c509" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=bd9e20870c6007c4c509" />
+  <script src="_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=bd9e20870c6007c4c509"></script>
 
     <script src="_static/documentation_options.js?v=5929fcd5"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
@@ -53,7 +53,7 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
   
   <div id="pst-scroll-pixel-helper"></div>
 
@@ -96,8 +96,10 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <header>
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    <div class="bd-header navbar navbar-expand-lg bd-navbar">
 <div class="bd-header__inner bd-page-width">
   <label class="sidebar-toggle primary-toggle" for="__primary">
     <span class="fa-solid fa-bars"></span>
@@ -107,6 +109,7 @@
   <div class=" navbar-header-items__start">
     
       <div class="navbar-item">
+
    
 
 <a class="navbar-brand logo" href="https://nv-legate.github.io/legate.core/">
@@ -126,13 +129,8 @@
     
     <div class="me-auto navbar-header-items__center">
       
-        <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+        <div class="navbar-item">
+<nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
@@ -179,6 +177,7 @@
       
         <div class="navbar-item navbar-persistent--container">
           
+
  <script>
  document.write(`
    <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -208,6 +207,7 @@
 </ul></div>
       
         <div class="navbar-item">
+
 <script>
 document.write(`
   <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -224,6 +224,7 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
+
  <script>
  document.write(`
    <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -237,12 +238,22 @@ document.write(`
   
 
   
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
 </div>
 
-    </nav>
+    </div>
   
+  </header>
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
       
       <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
@@ -253,13 +264,8 @@ document.write(`
     
       <div class="sidebar-header-items__center">
         
-          <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+          <div class="navbar-item">
+<nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
@@ -322,6 +328,7 @@ document.write(`
 </ul></div>
         
           <div class="navbar-item">
+
 <script>
 document.write(`
   <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
@@ -338,8 +345,8 @@ document.write(`
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
-      <div class="sidebar-primary-item"><nav class="sidebar-indices-items">
-  <p class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
   <ul class="indices-link">
         <li class="toctree-l1">
           <a class="reference internal"
@@ -367,7 +374,7 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
 
 <h1 id="index">Index</h1>
@@ -378,16 +385,13 @@ document.write(`
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
- | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
- | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
- | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
@@ -397,54 +401,36 @@ document.write(`
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.__add__.html#legate.core.shape.Shape.__add__">__add__() (legate.core.shape.Shape method)</a>
-</li>
       <li><a href="api/generated/legate.core.Machine.__and__.html#legate.core.Machine.__and__">__and__() (legate.core.Machine method)</a>
 
       <ul>
         <li><a href="api/generated/legate.core.ProcessorRange.__and__.html#legate.core.ProcessorRange.__and__">(legate.core.ProcessorRange method)</a>
 </li>
       </ul></li>
-      <li><a href="api/generated/legate.core.shape.Shape.__eq__.html#legate.core.shape.Shape.__eq__">__eq__() (legate.core.shape.Shape method)</a>
-</li>
-      <li><a href="api/generated/legate.core.shape.Shape.__floordiv__.html#legate.core.shape.Shape.__floordiv__">__floordiv__() (legate.core.shape.Shape method)</a>
-</li>
-      <li><a href="api/generated/legate.core.shape.Shape.__ge__.html#legate.core.shape.Shape.__ge__">__ge__() (legate.core.shape.Shape method)</a>
-</li>
       <li><a href="api/generated/legate.core.Machine.__getitem__.html#legate.core.Machine.__getitem__">__getitem__() (legate.core.Machine method)</a>
 
       <ul>
         <li><a href="api/generated/legate.core.ProcessorRange.__getitem__.html#legate.core.ProcessorRange.__getitem__">(legate.core.ProcessorRange method)</a>
 </li>
-        <li><a href="api/generated/legate.core.shape.Shape.__getitem__.html#legate.core.shape.Shape.__getitem__">(legate.core.shape.Shape method)</a>
+        <li><a href="api/generated/legate.core.Shape.__getitem__.html#legate.core.Shape.__getitem__">(legate.core.Shape method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.__gt__.html#legate.core.shape.Shape.__gt__">__gt__() (legate.core.shape.Shape method)</a>
-</li>
       <li><a href="api/generated/legate.core.Annotation.__init__.html#legate.core.Annotation.__init__">__init__() (legate.core.Annotation method)</a>
 
       <ul>
-        <li><a href="api/generated/legate.core.shape.Shape.__init__.html#legate.core.shape.Shape.__init__">(legate.core.shape.Shape method)</a>
+        <li><a href="api/generated/legate.core.Shape.__init__.html#legate.core.Shape.__init__">(legate.core.Shape method)</a>
 </li>
       </ul></li>
-      <li><a href="api/generated/legate.core.shape.Shape.__le__.html#legate.core.shape.Shape.__le__">__le__() (legate.core.shape.Shape method)</a>
-</li>
       <li><a href="api/generated/legate.core.Machine.__len__.html#legate.core.Machine.__len__">__len__() (legate.core.Machine method)</a>
 
       <ul>
         <li><a href="api/generated/legate.core.ProcessorRange.__len__.html#legate.core.ProcessorRange.__len__">(legate.core.ProcessorRange method)</a>
 </li>
+        <li><a href="api/generated/legate.core.Shape.__len__.html#legate.core.Shape.__len__">(legate.core.Shape method)</a>
+</li>
       </ul></li>
-      <li><a href="api/generated/legate.core.shape.Shape.__lt__.html#legate.core.shape.Shape.__lt__">__lt__() (legate.core.shape.Shape method)</a>
-</li>
-      <li><a href="api/generated/legate.core.shape.Shape.__mod__.html#legate.core.shape.Shape.__mod__">__mod__() (legate.core.shape.Shape method)</a>
-</li>
-      <li><a href="api/generated/legate.core.shape.Shape.__mul__.html#legate.core.shape.Shape.__mul__">__mul__() (legate.core.shape.Shape method)</a>
-</li>
-      <li><a href="api/generated/legate.core.shape.Shape.__sub__.html#legate.core.shape.Shape.__sub__">__sub__() (legate.core.shape.Shape method)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -523,8 +509,6 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/generated/legate.core.LogicalStore.delinearize.html#legate.core.LogicalStore.delinearize">delinearize() (legate.core.LogicalStore method)</a>
 </li>
-      <li><a href="api/generated/legate.core.shape.Shape.drop.html#legate.core.shape.Shape.drop">drop() (legate.core.shape.Shape method)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -545,15 +529,7 @@ document.write(`
         <li><a href="api/generated/legate.core.ManualTask.execute.html#legate.core.ManualTask.execute">(legate.core.ManualTask method)</a>
 </li>
       </ul></li>
-      <li><a href="api/generated/legate.core.shape.Shape.extents.html#legate.core.shape.Shape.extents">extents (legate.core.shape.Shape property)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="F">F</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.fixed.html#legate.core.shape.Shape.fixed">fixed (legate.core.shape.Shape property)</a>
+      <li><a href="api/generated/legate.core.Shape.extents.html#legate.core.Shape.extents">extents (legate.core.Shape attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -589,12 +565,10 @@ document.write(`
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.insert.html#legate.core.shape.Shape.insert">insert() (legate.core.shape.Shape method)</a>
+      <li><a href="api/generated/legate.core.Runtime.issue_execution_fence.html#legate.core.Runtime.issue_execution_fence">issue_execution_fence() (legate.core.Runtime method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.Runtime.issue_execution_fence.html#legate.core.Runtime.issue_execution_fence">issue_execution_fence() (legate.core.Runtime method)</a>
-</li>
       <li><a href="api/generated/legate.core.Runtime.issue_fill.html#legate.core.Runtime.issue_fill">issue_fill() (legate.core.Runtime method)</a>
 </li>
   </ul></td>
@@ -608,21 +582,13 @@ document.write(`
   </ul></td>
 </tr></table>
 
-<h2 id="M">M</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.map.html#legate.core.shape.Shape.map">map() (legate.core.shape.Shape method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/generated/legate.core.LogicalStore.ndim.html#legate.core.LogicalStore.ndim">ndim (legate.core.LogicalStore attribute)</a>
 
       <ul>
-        <li><a href="api/generated/legate.core.shape.Shape.ndim.html#legate.core.shape.Shape.ndim">(legate.core.shape.Shape property)</a>
+        <li><a href="api/generated/legate.core.Shape.ndim.html#legate.core.Shape.ndim">(legate.core.Shape attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -654,14 +620,6 @@ document.write(`
   </ul></td>
 </tr></table>
 
-<h2 id="R">R</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.replace.html#legate.core.shape.Shape.replace">replace() (legate.core.shape.Shape method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -677,10 +635,10 @@ document.write(`
         <li><a href="api/generated/legate.core.ManualTask.set_side_effect.html#legate.core.ManualTask.set_side_effect">(legate.core.ManualTask method)</a>
 </li>
       </ul></li>
-      <li><a href="api/generated/legate.core.LogicalStore.shape.html#legate.core.LogicalStore.shape">shape (legate.core.LogicalStore attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/generated/legate.core.LogicalStore.shape.html#legate.core.LogicalStore.shape">shape (legate.core.LogicalStore attribute)</a>
+</li>
       <li><a href="api/generated/legate.core.LogicalStore.size.html#legate.core.LogicalStore.size">size (legate.core.LogicalStore attribute)</a>
 </li>
       <li><a href="api/generated/legate.core.LogicalStore.slice.html#legate.core.LogicalStore.slice">slice() (legate.core.LogicalStore method)</a>
@@ -690,10 +648,6 @@ document.write(`
 </li>
       </ul></li>
       <li><a href="api/generated/legate.core.LogicalStorePartition.store.html#legate.core.LogicalStorePartition.store">store() (legate.core.LogicalStorePartition method)</a>
-</li>
-      <li><a href="api/generated/legate.core.shape.Shape.strides.html#legate.core.shape.Shape.strides">strides() (legate.core.shape.Shape method)</a>
-</li>
-      <li><a href="api/generated/legate.core.shape.Shape.sum.html#legate.core.shape.Shape.sum">sum() (legate.core.shape.Shape method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -728,10 +682,6 @@ document.write(`
       <li><a href="api/generated/legate.core.LogicalStore.unbound.html#legate.core.LogicalStore.unbound">unbound (legate.core.LogicalStore attribute)</a>
 </li>
   </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.update.html#legate.core.shape.Shape.update">update() (legate.core.shape.Shape method)</a>
-</li>
-  </ul></td>
 </tr></table>
 
 <h2 id="V">V</h2>
@@ -741,7 +691,7 @@ document.write(`
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/generated/legate.core.shape.Shape.volume.html#legate.core.shape.Shape.volume">volume() (legate.core.shape.Shape method)</a>
+      <li><a href="api/generated/legate.core.Shape.volume.html#legate.core.Shape.volume">volume (legate.core.Shape attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -755,7 +705,7 @@ document.write(`
               
               
                 <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                  
 <div class="prev-next-area">
 </div>
                 </footer>
@@ -763,6 +713,8 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"></div>
               
             
           </div>
@@ -775,8 +727,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=c5ced968eda925caa686"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=c5ced968eda925caa686"></script>
+  <script src="_static/scripts/bootstrap.js?digest=bd9e20870c6007c4c509"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=bd9e20870c6007c4c509"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -784,6 +736,7 @@ document.write(`
     <div class="footer-items__start">
       
         <div class="footer-item">
+
   <p class="copyright">
     
       © Copyright 2021-2023, NVIDIA.
@@ -798,8 +751,9 @@ document.write(`
   
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.2.
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.1.
 </p></div>
       
     </div>

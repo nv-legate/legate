@@ -1,6 +1,0 @@
-﻿legate.core.shape.Shape.extents
-===============================
-
-.. currentmodule:: legate.core.shape
-
-.. autoproperty:: Shape.extents

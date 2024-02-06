@@ -1,0 +1,6 @@
+﻿legate.core.Shape.volume
+========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Shape.volume

@@ -1,0 +1,6 @@
+﻿legate.core.Shape.extents
+=========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Shape.extents

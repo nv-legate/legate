@@ -1,0 +1,6 @@
+﻿legate.core.Shape.\_\_init\_\_
+==============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Shape.__init__

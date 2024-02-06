@@ -1,0 +1,6 @@
+﻿legate.core.ProcessorRange.get\_node\_range
+===========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: ProcessorRange.get_node_range

@@ -1,0 +1,6 @@
+﻿legate.core.get\_machine
+========================
+
+.. currentmodule:: legate.core
+
+.. autofunction:: get_machine

@@ -1,6 +1,0 @@
-﻿legate.core.shape.Shape.\_\_mod\_\_
-===================================
-
-.. currentmodule:: legate.core.shape
-
-.. automethod:: Shape.__mod__

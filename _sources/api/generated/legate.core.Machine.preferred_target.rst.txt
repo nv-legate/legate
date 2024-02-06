@@ -1,0 +1,6 @@
+﻿legate.core.Machine.preferred\_target
+=====================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Machine.preferred_target

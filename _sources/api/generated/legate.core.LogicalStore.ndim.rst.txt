@@ -1,0 +1,6 @@
+﻿legate.core.LogicalStore.ndim
+=============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalStore.ndim

@@ -1,0 +1,6 @@
+﻿legate.core.ProcessorRange.per\_node\_count
+===========================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: ProcessorRange.per_node_count

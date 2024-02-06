@@ -1,0 +1,6 @@
+﻿legate.core.Runtime.create\_store
+=================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.create_store

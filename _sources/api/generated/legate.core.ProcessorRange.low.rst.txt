@@ -1,0 +1,6 @@
+﻿legate.core.ProcessorRange.low
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: ProcessorRange.low

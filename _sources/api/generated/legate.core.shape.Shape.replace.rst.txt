@@ -1,6 +1,0 @@
-﻿legate.core.shape.Shape.replace
-===============================
-
-.. currentmodule:: legate.core.shape
-
-.. automethod:: Shape.replace

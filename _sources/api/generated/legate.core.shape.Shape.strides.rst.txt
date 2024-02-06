@@ -1,6 +1,0 @@
-﻿legate.core.shape.Shape.strides
-===============================
-
-.. currentmodule:: legate.core.shape
-
-.. automethod:: Shape.strides

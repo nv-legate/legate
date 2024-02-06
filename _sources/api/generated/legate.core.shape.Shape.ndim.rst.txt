@@ -1,6 +1,0 @@
-﻿legate.core.shape.Shape.ndim
-============================
-
-.. currentmodule:: legate.core.shape
-
-.. autoproperty:: Shape.ndim
