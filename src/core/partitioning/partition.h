@@ -131,6 +131,7 @@ class Tiling : public Partition {
   [[nodiscard]] const tuple<uint64_t>& tile_shape() const;
   [[nodiscard]] const tuple<uint64_t>& color_shape() const override;
   [[nodiscard]] const tuple<int64_t>& offsets() const;
+  [[nodiscard]] bool has_color(const tuple<uint64_t>& color) const;
 
   [[nodiscard]] tuple<uint64_t> get_child_extents(const tuple<uint64_t>& extents,
                                                   const tuple<uint64_t>& color) const;

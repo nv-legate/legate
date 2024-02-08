@@ -37,6 +37,7 @@
 #include "core/runtime/runtime.h"
 #include "core/task/detail/task_context.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/hash.h"
 #include "core/utilities/detail/strtoll.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/detail/type_traits.h"
@@ -50,6 +51,7 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_set>
 
 namespace legate::detail {
 
@@ -593,6 +595,13 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     assert(allocation->ptr());
   }
+  if (allocation->size() < shape->volume() * type->size()) {
+    throw std::invalid_argument{"External allocation of size " +
+                                std::to_string(allocation->size()) +
+                                " is not big enough "
+                                "for a store of shape " +
+                                shape->extents().to_string() + " and type " + type->to_string()};
+  }
 
   InternalSharedPtr<LogicalStore> store =
     create_store(shape, std::move(type), false /*optimize_scalar*/);
@@ -644,8 +653,24 @@ Runtime::IndexAttachResult Runtime::create_store(
     LEGION_EXTERNAL_INSTANCE, rf->region(), false /*restricted*/};
 
   std::vector<InternalSharedPtr<ExternalAllocation>> allocs;
+  std::unordered_set<uint64_t> visited;
+  const hasher<tuple<uint64_t>> hash_color{};
+  visited.reserve(allocations.size());
   allocs.reserve(allocations.size());
-  for (auto&& [allocation, color] : allocations) {
+  for (auto&& [idx, spec] : enumerate(allocations)) {
+    auto&& [allocation, color] = spec;
+    const auto color_hash      = hash_color(color);
+    if (visited.find(color_hash) != visited.end()) {
+      // If we're here, this color might have been seen in one of the previous iterations
+      for (int64_t k = 0; k < idx; ++k) {
+        if (allocations[k].second == color) {
+          throw std::invalid_argument{"Mulitple external allocations are found for color " +
+                                      color.to_string()};
+        }
+      }
+      // If we're here, then we've just seen a fairly rare hash collision
+    }
+    visited.insert(color_hash);
     auto& alloc        = allocs.emplace_back(allocation.impl());
     auto substore      = partition->get_child_store(color);
     auto required_size = substore->volume() * type_size;

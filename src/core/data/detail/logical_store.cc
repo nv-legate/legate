@@ -910,6 +910,12 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
   }
   const auto* tiling = static_cast<const Tiling*>(partition_.get());
 
+  if (!tiling->has_color(color)) {
+    throw std::out_of_range{"Color " + color.to_string() +
+                            " is invalid for partition of color shape " +
+                            color_shape().to_string()};
+  }
+
   auto transform      = store_->transform();
   auto inverted_color = transform->invert_color(color);
   auto child_storage  = storage_partition_->get_child_storage(inverted_color);

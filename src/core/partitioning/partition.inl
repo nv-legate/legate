@@ -57,6 +57,8 @@ inline const tuple<uint64_t>& Tiling::color_shape() const { return color_shape_;
 
 inline const tuple<int64_t>& Tiling::offsets() const { return offsets_; }
 
+inline bool Tiling::has_color(const tuple<uint64_t>& color) const { return color < color_shape_; }
+
 // ==========================================================================================
 
 inline Weighted::Kind Weighted::kind() const { return Kind::WEIGHTED; }

@@ -249,6 +249,17 @@ TEST_F(Attach, Negative)
     l_store.detach();
     delete[] mem;
   }
+
+  // Trying to attach a buffer smaller than what the store requires
+  {
+    std::vector<int64_t> test(3, 0);
+    EXPECT_THROW(
+      (void)runtime->create_store(SHAPE_1D,
+                                  legate::int64(),
+                                  legate::ExternalAllocation::create_sysmem(
+                                    test.data(), test.size() * sizeof(decltype(test)::value_type))),
+      std::invalid_argument);
+  }
 }
 
 }  // namespace attach
