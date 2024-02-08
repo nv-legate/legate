@@ -60,7 +60,7 @@ class TestStage(Protocol):
     # --- Protocol methods
 
     def __init__(self, config: Config, system: TestSystem) -> None:
-        ...
+        pass
 
     def env(self, config: Config, system: TestSystem) -> EnvDict:
         """Generate stage-specific customizations to the process env

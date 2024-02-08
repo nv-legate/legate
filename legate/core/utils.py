@@ -30,12 +30,12 @@ T = TypeVar("T", bound="Hashable")
 
 class AnyCallable(Protocol):
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
+        pass
 
 
 class ShutdownCallback(Protocol):
     def __call__(self) -> None:
-        ...
+        pass
 
 
 class OrderedSet(MutableSet[T]):

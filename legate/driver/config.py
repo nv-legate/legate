@@ -164,7 +164,7 @@ class ConfigProtocol(Protocol):
 
     @cached_property
     def run_mode(self) -> RunMode:
-        ...
+        pass
 
 
 class Config:

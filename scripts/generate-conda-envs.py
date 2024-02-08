@@ -365,9 +365,11 @@ class BooleanFlag(Action):
 
         option_strings = flatten(
             [
-                [opt, "--no-" + opt[2:], "--no" + opt[2:]]
-                if opt.startswith("--")
-                else [opt]
+                (
+                    [opt, "--no-" + opt[2:], "--no" + opt[2:]]
+                    if opt.startswith("--")
+                    else [opt]
+                )
                 for opt in option_strings
             ]
         )
@@ -500,9 +502,11 @@ if __name__ == "__main__":
         channels=config.channels,
         python=config.python,
         conda_sections=conda_sections,
-        pip=PIP_TEMPLATE.format(pip_sections=pip_sections)
-        if pip_sections
-        else "",
+        pip=(
+            PIP_TEMPLATE.format(pip_sections=pip_sections)
+            if pip_sections
+            else ""
+        ),
     )
     with open(f"{filename}.yaml", "w") as f:
         f.write(out)

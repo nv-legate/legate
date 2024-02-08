@@ -21,7 +21,14 @@ from typing_extensions import TypeAlias
 from legate.util import colors, ui as m
 
 try:
-    import colorama  # type: ignore [import]
+    # Need to add unused-ignore here since mypy complains:
+    #
+    # Unused "type: ignore" comment, use narrower [import-untyped] instead of
+    # [import] code
+    #
+    # But colorama may or may not be installed, and so the suggested narrower
+    # error code ends up being wrong half the time.
+    import colorama  # type: ignore [import, unused-ignore]
 except ImportError:
     colorama = None
 

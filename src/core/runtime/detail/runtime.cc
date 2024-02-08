@@ -1519,7 +1519,7 @@ void register_legate_core_tasks(Library* core_lib)
 }
 
 #define BUILTIN_REDOP_ID(OP, TYPE_CODE) \
-  (LEGION_REDOP_BASE + (OP)*LEGION_TYPE_TOTAL + (static_cast<int32_t>(TYPE_CODE)))
+  (LEGION_REDOP_BASE + (OP) * LEGION_TYPE_TOTAL + (static_cast<int32_t>(TYPE_CODE)))
 
 #define RECORD(OP, TYPE_CODE) \
   PrimitiveType(TYPE_CODE).record_reduction_operator(OP, BUILTIN_REDOP_ID(OP, TYPE_CODE));

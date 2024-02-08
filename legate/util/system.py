@@ -95,7 +95,15 @@ class System:
             # case pynvml is not installed, tests stages that don't need gpu
             # info (e.g. cpus, eager) will proceed unaffected. Test stages
             # that do require gpu info will fail here with an ImportError.
-            import pynvml  # type: ignore[import]
+            #
+            # Need to add unused-ignore here since mypy complains:
+            #
+            # Unused "type: ignore" comment, use narrower [import-untyped]
+            # instead of [import] code
+            #
+            # But pynvml may or may not be installed, and so the suggested
+            # narrower error code ends up being wrong half the time.
+            import pynvml  # type: ignore[import, unused-ignore]
 
             # Also a pynvml package is available on some platforms that won't
             # have GPUs for some reason. In which case this init call will

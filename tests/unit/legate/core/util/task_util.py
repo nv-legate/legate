@@ -204,7 +204,7 @@ class TestFunction(Protocol[_P, _T]):
     mark_called: Callable[[], None]
 
     def __call__(*args: _P.args, **kwargs: _P.kwargs) -> _T:
-        ...
+        pass
 
 
 def test_function(

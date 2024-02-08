@@ -45,9 +45,9 @@ class Test_generate_kernel_spec:
         expected_env = {
             k: v for k, v in driver.env.items() if k in driver.custom_env_vars
         }
-        expected_env[
-            m.LEGATE_JUPYTER_KERNEL_SPEC_KEY
-        ] = config.kernel.spec_name
+        expected_env[m.LEGATE_JUPYTER_KERNEL_SPEC_KEY] = (
+            config.kernel.spec_name
+        )
 
         assert spec.display_name == config.kernel.display_name
         assert spec.language == "python"  # type: ignore
