@@ -12,6 +12,8 @@
 
 #include "timing/timing.h"
 
+#include "core/runtime/detail/runtime.h"
+
 #include "legion.h"
 
 #include <optional>
@@ -20,18 +22,30 @@ namespace legate::timing {
 
 class Time::Impl {
  public:
-  explicit Impl(Legion::Future future) : future_{std::move(future)} {}
+  explicit Impl(Legion::Future future)
+    : future_{std::make_unique<Legion::Future>(std::move(future))}
+  {
+  }
+
+  ~Impl()
+  {
+    if (!detail::Runtime::get_runtime()->initialized()) {
+      // Leak the Future handle if the runtime has already shut down, as there's no hope that
+      // this would be collected by the Legion runtime
+      static_cast<void>(future_.release());
+    }
+  }
 
   [[nodiscard]] int64_t value()
   {
     if (!value_) {
-      value_ = future_.get_result<int64_t>();
+      value_ = future_->get_result<int64_t>();
     }
     return *value_;
   }
 
  private:
-  Legion::Future future_{};
+  std::unique_ptr<Legion::Future> future_{};
   std::optional<int64_t> value_{std::nullopt};
 };
 
