@@ -476,7 +476,7 @@ cdef class Runtime:
         """
         cdef _Shape cpp_shape = Shape.from_shape_like(shape)
         cdef _ExternalAllocation alloc = create_from_buffer(
-            data, cpp_shape.volume(), read_only
+            data, cpp_shape.volume() * dtype.size, read_only
         )
         return LogicalStore.from_handle(
             self._handle.create_store(
