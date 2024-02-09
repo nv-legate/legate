@@ -12,12 +12,9 @@
 from libc.stdint cimport uint32_t, uint64_t
 from libcpp.string cimport string as std_string
 
-from ..data.logical_array cimport LogicalArray
-from ..data.logical_store cimport LogicalStore
 from ..utilities.tuple cimport _tuple
 
-from collections.abc import Sequence
-from typing import Any
+from collections.abc import Iterable
 
 
 cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:
@@ -68,27 +65,24 @@ cdef class ConstraintProxy:
         object func
         tuple[Any, ...] args
 
-ctypedef fused VariableOrStoreLike:
+ctypedef fused VariableOrStr:
     Variable
-    LogicalStore
-    LogicalArray
+    str
 
 
-cpdef object align(VariableOrStoreLike lhs, VariableOrStoreLike rhs)
-cpdef object broadcast(
-    VariableOrStoreLike variable, axes: Sequence[int] | None =*
-)
+cpdef object align(VariableOrStr lhs, VariableOrStr rhs)
+cpdef object broadcast(VariableOrStr variable, axes: Iterable[int] =*)
 cpdef object image(
-    VariableOrStoreLike var_function, VariableOrStoreLike var_range
+    VariableOrStr var_function, VariableOrStr var_range
 )
 cpdef object scale(
     tuple factors,
-    VariableOrStoreLike var_smaller,
-    VariableOrStoreLike var_bigger
+    VariableOrStr var_smaller,
+    VariableOrStr var_bigger
 )
 cpdef object bloat(
-    VariableOrStoreLike var_source,
-    VariableOrStoreLike var_bloat,
+    VariableOrStr var_source,
+    VariableOrStr var_bloat,
     tuple low_offsets,
     tuple high_offsets,
 )

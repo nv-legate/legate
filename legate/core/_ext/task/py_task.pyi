@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from typing import Any, Final
 
 from ..._lib.operation.task import AutoTask
-from ..._lib.partitioning.constraint import Constraint, ConstraintProxy
+from ..._lib.partitioning.constraint import ConstraintProxy
 from ..._lib.runtime.library import Library
 from .invoker import VariantInvoker
 from .type import UserFunction, VariantList
@@ -27,6 +27,7 @@ class PyTask:
         *,
         func: UserFunction,
         variants: VariantList,
+        constraints: Sequence[ConstraintProxy] | None = None,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,
@@ -36,12 +37,7 @@ class PyTask:
     @property
     def task_id(self) -> int: ...
     def prepare_call(self, *args: Any, **kwargs: Any) -> AutoTask: ...
-    def __call__(
-        self,
-        *args: Any,
-        task_constraints: Sequence[Constraint | ConstraintProxy] | None = None,
-        **kwargs: Any,
-    ) -> None: ...
+    def __call__(self, *args: Any, **kwargs: Any) -> None: ...
     def complete_registration(self) -> int: ...
     def cpu_variant(self, func: UserFunction) -> None: ...
     def gpu_variant(self, func: UserFunction) -> None: ...

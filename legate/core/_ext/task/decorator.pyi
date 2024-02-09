@@ -10,15 +10,20 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Callable, overload
 
+from ..._lib.partitioning.constraint import ConstraintProxy
 from .py_task import PyTask
 from .type import UserFunction, VariantList
-from .util import DEFAULT_VARIANT_LIST, dynamic_docstring
+from .util import DEFAULT_VARIANT_LIST
 
 @overload
 def task(func: UserFunction) -> PyTask: ...
 @overload
 def task(
-    *, variants: VariantList = DEFAULT_VARIANT_LIST, register: bool = True
+    *,
+    variants: VariantList = DEFAULT_VARIANT_LIST,
+    constraints: Sequence[ConstraintProxy] | None = None,
+    register: bool = True,
 ) -> Callable[[UserFunction], PyTask]: ...

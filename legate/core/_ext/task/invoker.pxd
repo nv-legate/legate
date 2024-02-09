@@ -14,11 +14,22 @@ from libcpp cimport bool
 
 from typing import Any
 
+from cython.dataclasses cimport dataclass
+
 from ..._lib.operation.task cimport AutoTask
-from .type cimport ParamList
+from ..._lib.partitioning.constraint cimport ConstraintProxy
+from .type cimport ConstraintSet
 
 from .type import UserFunction
 
+
+@dataclass
+cdef class SeenObjTuple:  # private!
+    cdef:
+        bool   seen
+        object value
+
+ctypedef dict[str, SeenObjTuple] ParamMapping
 
 cdef class VariantInvoker:
     cdef:
@@ -31,13 +42,28 @@ cdef class VariantInvoker:
     @staticmethod
     cdef void _handle_param(
         AutoTask task,
-        dict[str, int] handled,
+        ParamMapping handled,
         object expected_param,  # inspect.Parameter
         object user_param,
     )
 
-    cpdef void prepare_call(
+    cdef ParamMapping _prepare_params(
         self, AutoTask task, tuple[Any, ...] args, dict[str, Any] kwargs
+    )
+
+    @staticmethod
+    cdef void _prepare_constraints(
+        AutoTask task,
+        ParamMapping param_mapping,
+        ConstraintSet constraints,
+    )
+
+    cpdef void prepare_call(
+        self,
+        AutoTask task,
+        tuple[Any, ...] args,
+        dict[str, Any] kwargs,
+        ConstraintSet constraints = *
     )
 
     @staticmethod

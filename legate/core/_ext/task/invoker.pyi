@@ -10,12 +10,13 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from inspect import Parameter, Signature
+from inspect import Signature
 from typing import Any
 
 from ..._lib.operation.task import AutoTask
+from ..._lib.partitioning.constraint import ConstraintProxy
 from ..._lib.task.task_context import TaskContext
-from .type import ParamList, UserFunction
+from .type import ConstraintSet, ParamList, UserFunction
 
 class VariantInvoker:
     def __init__(self, func: UserFunction) -> None: ...
@@ -30,7 +31,11 @@ class VariantInvoker:
     @property
     def signature(self) -> Signature: ...
     def prepare_call(
-        self, task: AutoTask, args: tuple[Any, ...], kwargs: dict[str, Any]
+        self,
+        task: AutoTask,
+        args: tuple[Any, ...],
+        kwargs: dict[str, Any],
+        constraints: ConstraintSet | None = None,
     ) -> None: ...
     def __call__(self, ctx: TaskContext, func: UserFunction) -> None: ...
     def valid_signature(self, func: UserFunction) -> bool: ...

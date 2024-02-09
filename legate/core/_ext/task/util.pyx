@@ -22,10 +22,7 @@ KNOWN_VARIANTS = _KNOWN_VARIANTS
 
 cdef VariantList DEFAULT_VARIANT_LIST = ("cpu",)
 
-cdef set[str] RESERVED_ARG_NAMES = {"task_constraints"}
-
-_T = TypeVar("_T")
-
+cdef object _T = TypeVar("_T")
 
 cpdef void validate_variant(kind: VariantKind):
     r"""Confirm that a variant kind is one of the known variants.
@@ -45,7 +42,7 @@ cpdef void validate_variant(kind: VariantKind):
 
 
 def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]:
-    def wrapper(obj: Any) -> Any:
+    def wrapper(obj: _T) -> _T:
         if (obj_doc := getattr(obj, "__doc__", None)) is not None:
             assert isinstance(obj_doc, str)
             try:

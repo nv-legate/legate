@@ -12,8 +12,9 @@ from __future__ import annotations
 
 from libcpp cimport bool
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
+from ..._lib.partitioning.constraint cimport ConstraintProxy
 from .type cimport VariantList
 from .util cimport DEFAULT_VARIANT_LIST
 
@@ -38,6 +39,7 @@ def task(
     func: UserFunction | None = None,
     *,
     variants: VariantList = DEFAULT_VARIANT_LIST,
+    constraints: Sequence[ConstraintProxy] | None = None,
     register: bool = True,
 ) -> Callable[[UserFunction], PyTask] | PyTask:
     r"""Convert a Python function to a Legate task.
@@ -63,6 +65,11 @@ def task(
     """
 
     def decorator(f: UserFunction) -> PyTask:
-        return PyTask(func=f, variants=variants, register=register)
+        return PyTask(
+            func=f,
+            variants=variants,
+            constraints=constraints,
+            register=register,
+        )
 
     return decorator(func) if func else decorator

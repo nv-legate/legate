@@ -13,12 +13,10 @@ from __future__ import annotations
 from libc.stdint cimport int64_t
 from libcpp cimport bool
 
-from typing import Any
-
 from ..._lib.mapping.mapping import TaskTarget
 
 from ..._lib.operation.task cimport AutoTask
-from ..._lib.partitioning.constraint cimport Constraint, ConstraintProxy
+from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.runtime.library cimport Library
 from ..._lib.task.task_context cimport TaskContext
 from .invoker cimport VariantInvoker
@@ -32,16 +30,13 @@ cdef class PyTask:
     # variable...
     cdef readonly int64_t UNREGISTERED_ID
     cdef:
-        str            _name
-        VariantInvoker _invoker
-        VariantMapping _variants
-        int64_t        _task_id
-        Library        _library
+        str                         _name
+        VariantInvoker              _invoker
+        VariantMapping              _variants
+        int64_t                     _task_id
+        Library                     _library
+        tuple[ConstraintProxy, ...] _constraints
 
-    @staticmethod
-    cdef Constraint _sanitize_constraint(
-        AutoTask task, constraint: Constraint | ConstraintProxy
-    )
     cpdef int64_t complete_registration(self)
     cdef void _update_variant(self, func: UserFunction, variant: TaskTarget)
     cpdef void cpu_variant(self, func: UserFunction)

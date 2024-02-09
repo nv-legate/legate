@@ -24,10 +24,9 @@ from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.data.scalar cimport Scalar
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.task.task_context cimport TaskContext
-
-from ...types import _Dtype_from_python_type
-
+from ..._lib.type.type_info cimport Type
 from .type cimport (
+    ConstraintSet,
     InputArray,
     InputStore,
     OutputArray,
@@ -38,10 +37,9 @@ from .type cimport (
 
 from .type import UserFunction
 
-from .util cimport RESERVED_ARG_NAMES
 
-_T = TypeVar("_T")
-_U = TypeVar("_U")
+cdef object _T = TypeVar("_T")
+cdef object _U = TypeVar("_U")
 
 cdef tuple[type, ...] _BASE_TYPES = (PhysicalStore, PhysicalArray)
 cdef tuple[type, ...] _BASE_LOGICAL_TYPES = (LogicalStore, LogicalArray)
@@ -49,17 +47,9 @@ cdef tuple[type, ...] _INPUT_TYPES = (InputStore, InputArray)
 cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore, OutputArray)
 cdef tuple[type, ...] _OBJECT_TYPES = _INPUT_TYPES + _OUTPUT_TYPES
 
-
 cdef class VariantInvoker:
     r"""Encapsulate the calling conventions between a user-supplied task
     variant function, and a Legate task."""
-
-    assert (
-        RESERVED_ARG_NAMES == {"task_constraints"}
-    ), (
-        "Must update VariantInvoker __init__ documentation, "
-        "as Cython does not allow dynamic __doc__"
-    )
 
     def __init__(self, func: UserFunction) -> None:
         r"""Construct a ``VariantInvoker``
@@ -83,10 +73,6 @@ cdef class VariantInvoker:
         must be fully type-hinted. Furthermore, all arguments must be
         positional or keyword arguments, *args and **kwargs are not allowed.
         Default arguments are not yet supported either.
-
-        ``func`` must not contain any arguments named in {"task_constraints"}.
-        These are reserved by the implementation, and are specially handled
-        at the callsite.
         """
         signature = VariantInvoker._get_signature(func)
 
@@ -104,12 +90,6 @@ cdef class VariantInvoker:
         cdef str name
 
         for name, param_descr in signature.parameters.items():
-            if name in RESERVED_ARG_NAMES:
-                raise TypeError(
-                    f'Parameter name "{name}" is not allowed; it is '
-                    "reserved by the implementation"
-                )
-
             ty = param_descr.annotation
             if ty is Signature.empty:
                 raise TypeError(
@@ -206,17 +186,18 @@ cdef class VariantInvoker:
     @staticmethod
     cdef void _handle_param(
         task: AutoTask,
-        handled: dict[str, int],
+        param_mapping: ParamMapping,
         expected_param: Parameter,
         user_param: Any
     ):
         cdef str param_name = expected_param.name
         # this lookup never fails
-        handled[param_name] += 1
-        if handled[param_name] > 1:
+        cdef SeenObjTuple param_tup = param_mapping[param_name]
+        if param_tup.seen:
             raise ValueError(
                 f"Got multiple values for argument {param_name}"
             )
+        param_tup.seen = True
 
         cdef type expected_ty = expected_param.annotation
         # Note issubclass(), expected_ty is the class itself, not
@@ -264,13 +245,116 @@ cdef class VariantInvoker:
                 )
 
             task.add_scalar_arg(
-                user_param, dtype=_Dtype_from_python_type(type(user_param))
+                user_param, dtype=Type.from_python_type(type(user_param))
+            )
+        param_tup.value = user_param
+
+    cdef ParamMapping _prepare_params(
+        self, AutoTask task, tuple[Any, ...] args, dict[str, Any] kwargs
+    ):
+        params = self.signature.parameters
+
+        if len(params.values()) < len(args):
+            raise TypeError(
+                f"Task expects {len(params.values())} parameters, "
+                f"but {len(args)} were passed"
             )
 
-    # Cannot cpdef prepare_call() since: "closures inside cpdef functions not
-    # yet supported"
+        cdef str param_name
+        cdef ParamMapping param_mapping = {
+            param_name: SeenObjTuple(seen=False, value=None)
+            for param_name in params.keys()
+        }
+
+        # Handle positional arguments
+        for expected_param, pos_param in zip(params.values(), args):
+            VariantInvoker._handle_param(
+                task, param_mapping, expected_param, pos_param
+            )
+
+        # Handle kwargs
+        cdef set[str] unhandled_kwargs = set(kwargs.keys())
+        cdef str name
+
+        for name, sig in params.items():
+            try:
+                param = kwargs[name]
+            except KeyError:
+                continue
+
+            unhandled_kwargs.remove(name)
+            VariantInvoker._handle_param(task, param_mapping, sig, param)
+
+        if unhandled_kwargs:
+            raise TypeError(
+                "Task does not have keyword argument(s): "
+                f"{', '.join(map(str, unhandled_kwargs))}"
+            )
+
+        cdef list missing_params
+        cdef SeenObjTuple tup
+        if missing_params := [
+            params[name] for name, tup in param_mapping.items() if not tup.seen
+        ]:
+            raise TypeError(
+                f"missing {len(missing_params)} required argument(s): "
+                f"{', '.join(map(str, missing_params))}"
+            )
+        return param_mapping
+
+    @staticmethod
+    cdef void _prepare_constraints(
+        AutoTask task, ParamMapping param_mapping, ConstraintSet constraints
+    ):
+        r"""Handle any constraints imposed on the task
+
+        Parameters
+        ----------
+        task : AutoTask
+            The task to which to apply the constraints.
+        param_mapping : ParamMapping
+            The mapping of parameter names to their values.
+        constraints : ConstraintSet
+            The set of constraint proxies.
+        """
+        cdef ConstraintProxy constraint
+        cdef list sanitized_args
+        cdef SeenObjTuple tup
+
+        for constraint in constraints:
+            sanitized_args = []
+            for arg in constraint.args:
+                if isinstance(arg, str):
+                    # Also, we need to use this temporary (and type it above)
+                    # in order for Cython to realize that param_mapping[arg]
+                    # does in fact hold SeenObjTuple. I guess Cython does not
+                    # read the type hint about what a dict _maps_ to...
+                    tup = param_mapping[arg]
+                    arg_value = tup.value
+                    if isinstance(arg_value, LogicalStore):
+                        arg_value = LogicalArray.from_store(arg_value)
+                    else:
+                        assert isinstance(arg_value, LogicalArray), (
+                            "Parameter constraint argument of unexpect type "
+                            f"{type(arg_value)}. Expected LogicalArray or "
+                            "LogicalStore."
+                        )
+                    arg_value = task.find_or_declare_partition(arg_value)
+                else:
+                    assert arg is not None
+                    arg_value = arg
+                sanitized_args.append(arg_value)
+            task.add_constraint(constraint.func(*sanitized_args))
+
     cpdef void prepare_call(
-        self, task: AutoTask, args: tuple[Any, ...], kwargs: dict[str, Any]
+        self,
+        AutoTask task,
+        tuple[Any, ...] args,
+        dict[str, Any] kwargs,
+        # This should be constraints: ConstraintSet | None, but then Cython
+        # barfs with "Signature not compatible with previous declaration", even
+        # if you change the .pxd to match. So here we are, lying to Cython.
+        ConstraintSet constraints = None
     ):
         r"""Prepare a list of arguments for task call.
 
@@ -316,52 +400,12 @@ cdef class VariantInvoker:
                 {"foo" : "bar", "baz" : "bop"}
             )
         """
-        params = self.signature.parameters
-
-        if len(params.values()) < len(args):
-            raise TypeError(
-                f"Task expects {len(params.values())} parameters, "
-                f"but {len(args)} were passed"
-            )
-
-        cdef str param_name
-        cdef dict[str, int] handled = {
-            param_name: 0 for param_name in params.keys()
-        }
-
-        # Handle positional arguments
-        for expected_param, pos_param in zip(params.values(), args):
-            VariantInvoker._handle_param(
-                task, handled, expected_param, pos_param
-            )
-
-        # Handle kwargs
-        cdef set unhandled_kwargs = set(kwargs.keys())
-        cdef str name
-
-        for name, sig in params.items():
-            try:
-                param = kwargs[name]
-            except KeyError:
-                continue
-
-            unhandled_kwargs.remove(name)
-            VariantInvoker._handle_param(task, handled, sig, param)
-
-        if unhandled_kwargs:
-            raise TypeError(
-                "Task does not have keyword argument(s): "
-                f"{', '.join(map(str, unhandled_kwargs))}"
-            )
-
-        cdef int count
-        if missing_params := [
-            params[name] for name, count in handled.items() if count == 0
-        ]:
-            raise TypeError(
-                f"missing {len(missing_params)} required argument(s): "
-                f"{', '.join(map(str, missing_params))}"
-            )
+        cdef ParamMapping param_mapping = self._prepare_params(
+            task, args, kwargs
+        )
+        if constraints is None:
+            constraints = tuple()
+        VariantInvoker._prepare_constraints(task, param_mapping, constraints)
 
     def __call__(self, ctx: TaskContext, func: UserFunction) -> None:
         r"""Invoke the given function by adapting a TaskContext to the

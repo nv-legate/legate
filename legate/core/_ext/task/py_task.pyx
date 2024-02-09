@@ -13,8 +13,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from ..._lib.data.logical_array cimport LogicalArray
-from ..._lib.data.logical_store cimport LogicalStore
 from ..._lib.mapping.mapping cimport TASK_TARGET_TO_VARIANT_KIND
 
 # import deliberate here, we want the Python enum
@@ -22,14 +20,14 @@ from ..._lib.mapping.mapping cimport TASK_TARGET_TO_VARIANT_KIND
 from ..._lib.mapping.mapping import TaskTarget
 
 from ..._lib.operation.task cimport AutoTask
-from ..._lib.partitioning.constraint cimport Constraint, ConstraintProxy
+from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.runtime.library cimport Library
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.task.task_info cimport TaskInfo
 from .invoker cimport VariantInvoker
 from .type cimport VariantKind, VariantList, VariantMapping
-from .util cimport RESERVED_ARG_NAMES, validate_variant
+from .util cimport validate_variant
 
 from .type import UserFunction
 
@@ -41,6 +39,7 @@ cdef class PyTask:
         *,
         func: UserFunction,
         variants: VariantList,
+        constraints: Sequence[ConstraintProxy] | None = None,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,
@@ -74,20 +73,46 @@ cdef class PyTask:
         if invoker is None:
             invoker = VariantInvoker(func)
 
-        cdef str name
-        try:
-            name = func.__qualname__
-        except AttributeError:
-            try:
-                name = func.__class__.__qualname__
-            except AttributeError:
-                name = func.__name__
+        if constraints is None:
+            constraints = tuple()
 
-        self._name = name
+        def get_callable_name(obj: Any) -> str:
+            try:
+                return obj.__qualname__
+            except AttributeError:
+                pass
+            try:
+                return obj.__class__.__qualname__
+            except AttributeError:
+                return obj.__name__
+
+        cdef int i
+        cdef set[str] param_names = set(invoker.signature.parameters.keys())
+        # Not cdef-ing c is deliberate! Otherwise if c is not a ConstraintProxy
+        # we get a worse error message from Cython: 'Cannot convert int to
+        # ConstraintProxy'.
+        for i, c in enumerate(constraints):
+            if not isinstance(c, ConstraintProxy):
+                raise TypeError(
+                    f"Constraint #{i + 1} of unexpected type. "
+                    f"Found {type(c)}, expected {ConstraintProxy}"
+                )
+            for arg in c.args:
+                if not isinstance(arg, str):
+                    continue
+                if arg not in param_names:
+                    raise ValueError(
+                        f"Constraint argument \"{arg}\" (of constraint "
+                        f"\"{get_callable_name(c.func)}()\") not in set of "
+                        f"parameters: {param_names}"
+                    )
+
+        self._name = get_callable_name(func)
         self._invoker = invoker
         self._variants = self._init_variants(func, variants)
         self._task_id = self.UNREGISTERED_ID
         self._library = library
+        self._constraints = constraints
         if register:
             self.complete_registration()
 
@@ -167,49 +192,17 @@ cdef class PyTask:
             self._library, self.task_id
         )
         task.throws_exception(RuntimeError)
-        self._invoker.prepare_call(task, args, kwargs)
+        self._invoker.prepare_call(task, args, kwargs, self._constraints)
         task.lock()
         return task
 
-    @staticmethod
-    cdef Constraint _sanitize_constraint(
-        task: AutoTask, constraint: Constraint | ConstraintProxy
-    ):
-        if isinstance(constraint, Constraint):
-            return constraint
-
-        if isinstance(constraint, ConstraintProxy):
-            sanitized_args = []
-            for arg in constraint.args:
-                if isinstance(arg, (LogicalStore, LogicalArray)):
-                    if isinstance(arg, LogicalStore):
-                        arg = LogicalArray.from_store(arg)
-                    arg = task.find_or_declare_partition(arg)
-                sanitized_args.append(arg)
-            return constraint.func(*sanitized_args)
-
-        raise TypeError(
-            f"Expected a constraint but got {type(constraint)}"
-        )
-
-    assert (
-        "task_constraints" in RESERVED_ARG_NAMES
-    ), "task_constraints no longer reserved? Has PyTask.__call__ been updated?"
-
-    def __call__(
-        self,
-        *args: Any,
-        task_constraints: Sequence[Constraint | ConstraintProxy] | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def __call__(self, *args: Any, **kwargs: Any) -> None:
         r"""Invoke the task.
 
         Parameters
         ----------
         *args : Any, optional
             The positional arguments to the task.
-        task_constraints : Sequence[Constraint | ConstraintProxy], optional
-            The set of constraints to impose on the task arguments.
         **kwargs : Any, optional
             The keyword arguments to the task.
 
@@ -219,11 +212,7 @@ cdef class PyTask:
 
         ::
 
-            task_inst = task.prepare_call(*args, **kwargs)
-            if task_constraints is not None:
-                # add constraints to task_inst
-                ...
-            task_inst.execute()
+            task.prepare_call(*args, **kwargs).execute()
 
 
         As a result, it has the same exception and usage profile as
@@ -233,11 +222,7 @@ cdef class PyTask:
         --------
         legate.core.task.task.PyTask.prepare_call
         """
-        cdef AutoTask task = self.prepare_call(*args, **kwargs)
-        if task_constraints is not None:
-            for cnst in task_constraints:
-                task.add_constraint(PyTask._sanitize_constraint(task, cnst))
-        task.execute()
+        self.prepare_call(*args, **kwargs).execute()
 
     cpdef int64_t complete_registration(self):
         r"""Complete registration for a task.

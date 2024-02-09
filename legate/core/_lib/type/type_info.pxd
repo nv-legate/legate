@@ -118,6 +118,9 @@ cdef class Type:
     cpdef int64_t reduction_op_id(self, int32_t op_kind)
     cpdef object to_numpy_dtype(self)
 
+    @staticmethod
+    cdef Type from_python_type(type ty)
+
 cdef class FixedArrayType(Type):
     cpdef object to_numpy_dtype(self)
 

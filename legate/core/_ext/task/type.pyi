@@ -10,11 +10,13 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from typing import Callable, Literal, TypeAlias
+from collections.abc import Iterable
+from typing import Any, Callable, Literal, TypeAlias
 
 from ..._lib.data.physical_array import PhysicalArray
 from ..._lib.data.physical_store import PhysicalStore
 from ..._lib.mapping.mapping import TaskTarget
+from ..._lib.partitioning.constraint import ConstraintProxy
 from ..._lib.task.task_context import TaskContext
 
 SignatureMapping: TypeAlias = dict[str, type]
@@ -36,3 +38,5 @@ class OutputStore(PhysicalStore): ...
 class ReductionStore(PhysicalStore): ...
 class InputArray(PhysicalArray): ...
 class OutputArray(PhysicalArray): ...
+
+ConstraintSet: TypeAlias = tuple[ConstraintProxy, ...]

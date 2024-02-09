@@ -10,12 +10,9 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from typing import Any
-
 from .type cimport VariantKind, VariantList
 
 
 cdef VariantList DEFAULT_VARIANT_LIST
-cdef set[str] RESERVED_ARG_NAMES
 
 cpdef void validate_variant(VariantKind kind)

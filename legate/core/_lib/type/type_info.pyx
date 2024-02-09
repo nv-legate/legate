@@ -14,6 +14,7 @@ from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
+import builtins
 from enum import IntEnum, unique
 
 import numpy as np
@@ -120,6 +121,20 @@ cdef class Type:
 
     def __eq__(self, Type other) -> bool:
         return isinstance(other, Type) and self._handle == other._handle
+
+    @staticmethod
+    cdef Type from_python_type(type ty):
+        if issubclass(ty, builtins.bool):
+            return bool_
+        if issubclass(ty, builtins.int):
+            return int64
+        if issubclass(ty, builtins.float):
+            return float64
+        if issubclass(ty, builtins.complex):
+            return complex128
+        if issubclass(ty, builtins.str):
+            return string_type
+        raise NotImplementedError(f"unsupported type: {ty}")
 
 
 cdef class FixedArrayType(Type):

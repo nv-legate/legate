@@ -312,9 +312,9 @@ class TestTask(BaseTest):
         ):
             raises_exception()
 
-    def test_constraint_kwargs(self) -> None:
-        @lct.task
-        def my_task(x: InputStore, y: InputStore, z: OutputStore) -> None:
+    def test_align_constraint(self) -> None:
+        @lct.task(constraints=(lg.align("x", "y"), lg.align("y", "z")))
+        def align_task(x: InputStore, y: InputStore, z: OutputStore) -> None:
             x_arr = np.asarray(x.get_inline_allocation())
             y_arr = np.asarray(y.get_inline_allocation())
             z_arr = np.asarray(z.get_inline_allocation())
@@ -327,7 +327,7 @@ class TestTask(BaseTest):
         x = make_input_store(value=1)
         y = make_input_store(value=2)
         z = make_output_store()
-        my_task(x, y, z, task_constraints=(lg.align(x, y), lg.align(y, z)))
+        align_task(x, y, z)
         get_legate_runtime().issue_execution_fence(block=True)
         np.testing.assert_allclose(
             np.asarray(z.get_physical_store().get_inline_allocation()),
@@ -338,7 +338,7 @@ class TestTask(BaseTest):
     def test_broadcast_constraint(self, shape: tuple[int, ...]) -> None:
         x_val = 456
 
-        @lct.task
+        @lct.task(constraints=(lg.broadcast("x"),))
         def broadcast_task(x: InputStore, y: OutputStore) -> None:
             x_arr = np.asarray(x.get_inline_allocation())
             assert x_arr.shape == shape
@@ -349,7 +349,7 @@ class TestTask(BaseTest):
 
         x = make_input_store(value=x_val, shape=shape)
         y = make_output_store(shape=shape)
-        broadcast_task(x, y, task_constraints=(lg.broadcast(x),))
+        broadcast_task(x, y)
         get_legate_runtime().issue_execution_fence(block=True)
         np.testing.assert_allclose(
             np.asarray(y.get_physical_store().get_inline_allocation()),
@@ -361,7 +361,7 @@ class TestTask(BaseTest):
     def test_scale_constraint(
         self, shape: tuple[int, ...], scaling_factor: int
     ) -> None:
-        @lct.task
+        @lct.task(constraints=(lg.scale((scaling_factor,), "y", "x"),))
         def scale_task(x: InputStore, y: OutputStore) -> None:
             x_arr = np.asarray(x.get_inline_allocation())
             y_arr = np.asarray(y.get_inline_allocation())
@@ -381,12 +381,38 @@ class TestTask(BaseTest):
             value=1, shape=tuple(s * scaling_factor for s in shape)
         )  # bigger
         y = make_output_store(shape=shape)  # smaller
-        scale_task(x, y, task_constraints=(lg.scale((scaling_factor,), y, x),))
+        scale_task(x, y)
         get_legate_runtime().issue_execution_fence(block=True)
         np.testing.assert_allclose(
             np.asarray(y.get_physical_store().get_inline_allocation()),
             np.full(shape=tuple(y.shape), fill_value=scaling_factor),
         )
+
+    def test_constraint_bad(self) -> None:
+        def foo() -> None:
+            pass
+
+        x = 1
+        with pytest.raises(
+            TypeError,
+            match=(
+                "Constraint #1 of unexpected type. Found "
+                f"{type(x)}, expected.*"
+            ),
+        ):
+            lct.task(constraints=(x,))(foo)  # type: ignore[arg-type]
+
+        def baz(x: OutputStore) -> None:
+            pass
+
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                r'Constraint argument "y" (of constraint "align()") '
+                r"not in set of parameters: {'x'}"
+            ),
+        ):
+            lct.task(constraints=(lg.align("x", "y"),))(baz)
 
 
 class TestVariantInvoker(BaseTest):
@@ -508,13 +534,6 @@ class TestVariantInvoker(BaseTest):
         invoker(ctx, func)
         if check_called:
             self.check_func_called(func)
-
-    def test_reserved_args(self) -> None:
-        def foo(task_constraints: InputStore) -> None:
-            pass
-
-        with pytest.raises(TypeError, match="Parameter name.* is not allowed"):
-            VariantInvoker(foo)
 
 
 class TestTaskUtil:

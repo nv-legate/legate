@@ -15,8 +15,7 @@ from libcpp.utility cimport move as std_move
 from ..utilities.tuple cimport _tuple
 from ..utilities.utils cimport is_iterable, uint64_tuple_from_iterable
 
-from collections.abc import Callable, Iterable
-from typing import Any
+from collections.abc import Callable, Collection
 
 
 cdef class Variable:
@@ -82,8 +81,8 @@ cdef class ConstraintProxy:
         self.args = args
 
 
-cpdef object align(VariableOrStoreLike lhs, VariableOrStoreLike rhs):
-    if VariableOrStoreLike is Variable:
+cpdef object align(VariableOrStr lhs, VariableOrStr rhs):
+    if VariableOrStr is Variable:
         return Constraint.from_handle(_align(lhs._handle, rhs._handle))
     # I don't know why cython complains that this is unreachable. It is, just
     # not for every version of this function (and that's the point!!)
@@ -91,16 +90,13 @@ cpdef object align(VariableOrStoreLike lhs, VariableOrStoreLike rhs):
 
 
 cpdef object broadcast(
-    VariableOrStoreLike variable, axes: Iterable[int] | None = None
+    VariableOrStr variable, axes: Collection[int] = tuple()
 ):
-    if VariableOrStoreLike is not Variable:
-        return ConstraintProxy(broadcast, variable, axes)
-
-    if axes is None:
-        return Constraint.from_handle(_broadcast(variable._handle))
-
     if not is_iterable(axes):
         raise ValueError("axes must be iterable")
+
+    if VariableOrStr is str:
+        return ConstraintProxy(broadcast, variable, axes)
 
     if len(axes) == 0:
         return Constraint.from_handle(_broadcast(variable._handle))
@@ -116,9 +112,9 @@ cpdef object broadcast(
 
 
 cpdef object image(
-    VariableOrStoreLike var_function, VariableOrStoreLike var_range
+    VariableOrStr var_function, VariableOrStr var_range
 ):
-    if VariableOrStoreLike is Variable:
+    if VariableOrStr is Variable:
         return Constraint.from_handle(
             _image(var_function._handle, var_range._handle)
         )
@@ -127,10 +123,10 @@ cpdef object image(
 
 cpdef object scale(
     tuple factors,
-    VariableOrStoreLike var_smaller,
-    VariableOrStoreLike var_bigger
+    VariableOrStr var_smaller,
+    VariableOrStr var_bigger
 ):
-    if VariableOrStoreLike is Variable:
+    if VariableOrStr is Variable:
         return Constraint.from_handle(
             _scale(
                 std_move(uint64_tuple_from_iterable(factors)),
@@ -144,12 +140,12 @@ cpdef object scale(
 
 
 cpdef object bloat(
-    VariableOrStoreLike var_source,
-    VariableOrStoreLike var_bloat,
+    VariableOrStr var_source,
+    VariableOrStr var_bloat,
     tuple low_offsets,
     tuple high_offsets,
 ):
-    if VariableOrStoreLike is Variable:
+    if VariableOrStr is Variable:
         return Constraint.from_handle(
             _bloat(
                 var_source._handle,

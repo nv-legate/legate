@@ -15,6 +15,7 @@ from typing import Optional
 from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.mapping.mapping cimport TaskTarget
+from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.task.task_context cimport TaskContext
 
 ctypedef dict[str, type] SignatureMapping
@@ -73,3 +74,5 @@ cdef class InputArray(PhysicalArray):
 
 cdef class OutputArray(PhysicalArray):
     pass
+
+ctypedef tuple[ConstraintProxy, ...] ConstraintSet

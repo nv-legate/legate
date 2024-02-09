@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Final, TypeVar
+from typing import Any, Final, TypeAlias, TypeVar
 
 from .type import VariantKind, VariantList
 
@@ -20,8 +20,6 @@ _T = TypeVar("_T")
 KNOWN_VARIANTS: Final[set[VariantKind]] = {"cpu", "gpu", "omp"}
 
 DEFAULT_VARIANT_LIST: Final[VariantList] = ("cpu",)
-
-RESERVED_ARG_NAMES: Final[set[str]] = {"task_constraints"}
 
 def validate_variant(kind: VariantKind) -> None: ...
 def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]: ...
