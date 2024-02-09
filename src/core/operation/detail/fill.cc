@@ -20,36 +20,48 @@
 
 namespace legate::detail {
 
-Fill::Fill(InternalSharedPtr<LogicalStore>&& lhs,
-           InternalSharedPtr<LogicalStore>&& value,
+Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
+           InternalSharedPtr<LogicalStore> value,
            uint64_t unique_id,
-           mapping::detail::Machine&& machine)
+           mapping::detail::Machine machine)
   : Operation{unique_id, std::move(machine)},
     lhs_var_{declare_partition()},
     lhs_{std::move(lhs)},
     value_{std::move(value)}
 {
   store_mappings_[*lhs_var_] = lhs_;
-  if (lhs_->unbound()) {
-    throw std::invalid_argument("Fill lhs must be a normal store");
-  }
+}
 
-  if (!value_->has_scalar_storage()) {
-    throw std::invalid_argument("Fill value should be a Future-back store");
-  }
+Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
+           Scalar value,
+           uint64_t unique_id,
+           mapping::detail::Machine machine)
+  : Operation{unique_id, std::move(machine)},
+    lhs_var_{declare_partition()},
+    lhs_{std::move(lhs)},
+    value_{std::move(value)}
+{
+  store_mappings_[*lhs_var_] = lhs_;
 }
 
 void Fill::validate()
 {
-  if (*lhs_->type() != *value_->type()) {
-    throw std::invalid_argument("Fill value and target must have the same type");
+  const auto& value_type =
+    value_.index() == 0 ? std::get<0>(value_)->type() : std::get<1>(value_).type();
+  if (*lhs_->type() != *value_type) {
+    throw std::invalid_argument{"Fill value and target must have the same type"};
   }
 }
 
 void Fill::launch(Strategy* strategy)
 {
   if (lhs_->has_scalar_storage()) {
-    lhs_->set_future(value_->get_future());
+    if (value_.index() == 0) {
+      lhs_->set_future(std::get<0>(value_)->get_future());
+    } else {
+      auto& value = std::get<1>(value_);
+      lhs_->set_future(Legion::Future::from_untyped_pointer(value.data(), value.size()));
+    }
     return;
   }
 
@@ -60,10 +72,18 @@ void Fill::launch(Strategy* strategy)
 
   lhs_->set_key_partition(machine(), part.get());
 
-  if (launch_domain.is_valid()) {
-    launcher.launch(launch_domain, lhs_.get(), *lhs_proj, value_.get());
+  if (value_.index() == 0) {
+    if (launch_domain.is_valid()) {
+      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<0>(value_).get());
+    } else {
+      launcher.launch_single(lhs_.get(), *lhs_proj, std::get<0>(value_).get());
+    }
   } else {
-    launcher.launch_single(lhs_.get(), *lhs_proj, value_.get());
+    if (launch_domain.is_valid()) {
+      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<1>(value_));
+    } else {
+      launcher.launch_single(lhs_.get(), *lhs_proj, std::get<1>(value_));
+    }
   }
 }
 

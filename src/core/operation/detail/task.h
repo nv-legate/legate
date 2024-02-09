@@ -96,14 +96,12 @@ class Task : public Operation {
 };
 
 class AutoTask final : public Task {
- private:
-  friend class Runtime;
+ public:
   AutoTask(const Library* library,
            int64_t task_id,
            uint64_t unique_id,
            mapping::detail::Machine&& machine);
 
- public:
   [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array);
   [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array);
   [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array, int32_t redop);
@@ -131,15 +129,13 @@ class AutoTask final : public Task {
 };
 
 class ManualTask final : public Task {
- private:
-  friend class Runtime;
+ public:
   ManualTask(const Library* library,
              int64_t task_id,
              const Domain& launch_domain,
              uint64_t unique_id,
              mapping::detail::Machine&& machine);
 
- public:
   void add_input(const InternalSharedPtr<LogicalStore>& store);
   void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                  std::optional<SymbolicPoint> projection);

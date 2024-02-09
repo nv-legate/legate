@@ -16,15 +16,20 @@
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <string>
+#include <variant>
 
 namespace legate::detail {
 
 class Fill final : public Operation {
  public:
-  Fill(InternalSharedPtr<LogicalStore>&& lhs,
-       InternalSharedPtr<LogicalStore>&& value,
+  Fill(InternalSharedPtr<LogicalStore> lhs,
+       InternalSharedPtr<LogicalStore> value,
        uint64_t unique_id,
-       mapping::detail::Machine&& machine);
+       mapping::detail::Machine machine);
+  Fill(InternalSharedPtr<LogicalStore> lhs,
+       Scalar value,
+       uint64_t unique_id,
+       mapping::detail::Machine machine);
 
   void validate() override;
   void launch(Strategy* strategy) override;
@@ -36,7 +41,7 @@ class Fill final : public Operation {
  private:
   const Variable* lhs_var_{};
   InternalSharedPtr<LogicalStore> lhs_{};
-  InternalSharedPtr<LogicalStore> value_{};
+  std::variant<InternalSharedPtr<LogicalStore>, Scalar> value_{};
 };
 
 }  // namespace legate::detail

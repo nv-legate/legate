@@ -44,6 +44,10 @@ inline void Runtime::register_shutdown_callback(ShutdownCallback callback)
 
 inline const Library* Runtime::core_library() const { return core_library_; }
 
+inline uint64_t Runtime::current_op_id() const { return current_op_id_; }
+
+inline void Runtime::increment_op_id() { ++current_op_id_; }
+
 inline uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
 inline uint64_t Runtime::get_unique_storage_id() { return next_storage_id_++; }

@@ -338,9 +338,9 @@ class PhysicalStore {
 
   void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
   [[nodiscard]] int32_t get_redop_id() const;
-  template <typename ACC, int32_t DIM>
+  template <typename ACC, typename T, int32_t DIM>
   [[nodiscard]] ACC create_field_accessor(const Rect<DIM>& bounds) const;
-  template <typename ACC, int32_t DIM>
+  template <typename ACC, typename T, int32_t DIM>
   [[nodiscard]] ACC create_reduction_accessor(const Rect<DIM>& bounds) const;
 
   [[nodiscard]] bool is_read_only_future() const;

@@ -26,8 +26,7 @@
 namespace legate::detail {
 
 class Reduce final : public Operation {
- private:
-  friend class Runtime;
+ public:
   Reduce(const Library* library,
          InternalSharedPtr<LogicalStore> store,
          InternalSharedPtr<LogicalStore> out_store,
@@ -36,7 +35,6 @@ class Reduce final : public Operation {
          int32_t radix,
          mapping::detail::Machine&& machine);
 
- public:
   void launch(Strategy*) override;
 
   void validate() override {}

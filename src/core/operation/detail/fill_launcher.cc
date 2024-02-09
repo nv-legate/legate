@@ -53,6 +53,37 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
   runtime->dispatch(index_fill);
 }
 
+void FillLauncher::launch(const Legion::Domain& launch_domain,
+                          LogicalStore* lhs,
+                          const StoreProjection& lhs_proj,
+                          const Scalar& value)
+{
+  BufferBuilder mapper_arg;
+
+  pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
+
+  const auto runtime    = Runtime::get_runtime();
+  auto&& provenance     = runtime->provenance_manager()->get_provenance();
+  auto lhs_region_field = lhs->get_region_field();
+  auto lhs_region       = lhs_region_field->region();
+  auto field_id         = lhs_region_field->field_id();
+  auto lhs_parent       = runtime->find_parent_region(lhs_region);
+  auto index_fill       = Legion::IndexFillLauncher{
+    launch_domain,
+    lhs_proj.partition,
+    lhs_parent,
+    Legion::UntypedBuffer{value.data(), value.size()},
+    lhs_proj.proj_id,
+    Legion::Predicate::TRUE_PRED,
+    runtime->core_library()->get_mapper_id(),
+    static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
+    mapper_arg.to_legion_buffer(),
+    provenance.c_str()};
+
+  index_fill.add_field(field_id);
+  runtime->dispatch(index_fill);
+}
+
 void FillLauncher::launch_single(LogicalStore* lhs,
                                  const StoreProjection& lhs_proj,
                                  LogicalStore* value)
@@ -72,6 +103,34 @@ void FillLauncher::launch_single(LogicalStore* lhs,
     lhs_region,
     lhs_parent,
     future_value,
+    Legion::Predicate::TRUE_PRED,
+    runtime->core_library()->get_mapper_id(),
+    static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
+    mapper_arg.to_legion_buffer(),
+    provenance.c_str()};
+
+  single_fill.add_field(field_id);
+  runtime->dispatch(single_fill);
+}
+
+void FillLauncher::launch_single(LogicalStore* lhs,
+                                 const StoreProjection& lhs_proj,
+                                 const Scalar& value)
+{
+  BufferBuilder mapper_arg;
+
+  pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
+
+  const auto runtime    = Runtime::get_runtime();
+  auto&& provenance     = runtime->provenance_manager()->get_provenance();
+  auto lhs_region_field = lhs->get_region_field();
+  auto lhs_region       = lhs_region_field->region();
+  auto field_id         = lhs_region_field->field_id();
+  auto lhs_parent       = runtime->find_parent_region(lhs_region);
+  auto single_fill      = Legion::FillLauncher{
+    lhs_region,
+    lhs_parent,
+    Legion::UntypedBuffer{value.data(), value.size()},
     Legion::Predicate::TRUE_PRED,
     runtime->core_library()->get_mapper_id(),
     static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),

@@ -142,7 +142,7 @@ void Runtime::issue_fill(const LogicalArray& lhs, const LogicalStore& value)
 
 void Runtime::issue_fill(const LogicalArray& lhs, const Scalar& value)
 {
-  issue_fill(lhs, create_store(value));
+  impl_->issue_fill(lhs.impl(), *value.impl());
 }
 
 LogicalStore Runtime::tree_reduce(Library library,

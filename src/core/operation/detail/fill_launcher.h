@@ -28,7 +28,12 @@ class FillLauncher {
               LogicalStore* lhs,
               const StoreProjection& lhs_proj,
               LogicalStore* value);
+  void launch(const Legion::Domain& launch_domain,
+              LogicalStore* lhs,
+              const StoreProjection& lhs_proj,
+              const Scalar& value);
   void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, LogicalStore* value);
+  void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, const Scalar& value);
 
  private:
   void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);

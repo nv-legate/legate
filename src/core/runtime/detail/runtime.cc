@@ -238,8 +238,9 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
 InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, int64_t task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
-  return InternalSharedPtr<AutoTask>{
-    new AutoTask{library, task_id, next_unique_id_++, std::move(machine)}};
+  auto task = make_internal_shared<AutoTask>(library, task_id, current_op_id(), std::move(machine));
+  increment_op_id();
+  return task;
 }
 
 InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
@@ -250,9 +251,10 @@ InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
     throw std::invalid_argument{"Launch domain must not be empty"};
   }
   auto machine = slice_machine_for_task(library, task_id);
-  auto task =
-    new ManualTask{library, task_id, launch_domain, next_unique_id_++, std::move(machine)};
-  return std::unique_ptr<ManualTask>(task);
+  auto task    = make_internal_shared<ManualTask>(
+    library, task_id, launch_domain, current_op_id(), std::move(machine));
+  increment_op_id();
+  return task;
 }
 
 void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,
@@ -261,7 +263,8 @@ void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,
 {
   auto machine = machine_manager_->get_machine();
   submit(make_internal_shared<Copy>(
-    std::move(target), std::move(source), next_unique_id_++, std::move(machine), redop));
+    std::move(target), std::move(source), current_op_id(), std::move(machine), redop));
+  increment_op_id();
 }
 
 void Runtime::issue_gather(InternalSharedPtr<LogicalStore> target,
@@ -273,9 +276,10 @@ void Runtime::issue_gather(InternalSharedPtr<LogicalStore> target,
   submit(make_internal_shared<Gather>(std::move(target),
                                       std::move(source),
                                       std::move(source_indirect),
-                                      next_unique_id_++,
+                                      current_op_id(),
                                       std::move(machine),
                                       redop));
+  increment_op_id();
 }
 
 void Runtime::issue_scatter(InternalSharedPtr<LogicalStore> target,
@@ -287,9 +291,10 @@ void Runtime::issue_scatter(InternalSharedPtr<LogicalStore> target,
   submit(make_internal_shared<Scatter>(std::move(target),
                                        std::move(target_indirect),
                                        std::move(source),
-                                       next_unique_id_++,
+                                       current_op_id(),
                                        std::move(machine),
                                        redop));
+  increment_op_id();
 }
 
 void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
@@ -303,44 +308,80 @@ void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
                                              std::move(target_indirect),
                                              std::move(source),
                                              std::move(source_indirect),
-                                             next_unique_id_++,
+                                             current_op_id(),
                                              std::move(machine),
                                              redop));
+  increment_op_id();
 }
 
-// TODO(wonchanl): We want to use scalars as fill values
-void Runtime::issue_fill(
-  InternalSharedPtr<LogicalArray> lhs,  // NOLINT(performance-unnecessary-value-param)
-  InternalSharedPtr<LogicalStore> value)
+void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
+                         InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->kind() != ArrayKind::BASE) {
     throw std::runtime_error{"Fills on list or struct arrays are not supported yet"};
   }
 
-  auto _issue_fill = [&](InternalSharedPtr<LogicalStore> store,
-                         InternalSharedPtr<LogicalStore> scalar) {
-    auto machine = machine_manager_->get_machine();
-
-    submit(make_internal_shared<Fill>(
-      std::move(store), std::move(scalar), next_unique_id_++, std::move(machine)));
-  };
-
   if (value->type()->code == Type::Code::NIL) {
     if (!lhs->nullable()) {
       throw std::invalid_argument{"Non-nullable arrays cannot be filled with null"};
     }
-    auto scalar_shape = make_internal_shared<Shape>(tuple<uint64_t>{1});
-    _issue_fill(lhs->data(), create_store(Scalar{lhs->type()}, scalar_shape));
-    _issue_fill(lhs->null_mask(), create_store(Scalar{false}, scalar_shape));
+    issue_fill(lhs->data(), Scalar{lhs->type()});
+    issue_fill(lhs->null_mask(), Scalar{false});
     return;
   }
 
-  _issue_fill(lhs->data(), std::move(value));
+  issue_fill(lhs->data(), std::move(value));
   if (!lhs->nullable()) {
     return;
   }
-  _issue_fill(lhs->null_mask(),
-              create_store(Scalar{true}, make_internal_shared<Shape>(tuple<uint64_t>{1})));
+  issue_fill(lhs->null_mask(), Scalar{true});
+}
+
+void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar value)
+{
+  if (lhs->kind() != ArrayKind::BASE) {
+    throw std::runtime_error{"Fills on list or struct arrays are not supported yet"};
+  }
+
+  if (value.type()->code == Type::Code::NIL) {
+    if (!lhs->nullable()) {
+      throw std::invalid_argument{"Non-nullable arrays cannot be filled with null"};
+    }
+    issue_fill(lhs->data(), Scalar{lhs->type()});
+    issue_fill(lhs->null_mask(), Scalar{false});
+    return;
+  }
+
+  issue_fill(lhs->data(), std::move(value));
+  if (!lhs->nullable()) {
+    return;
+  }
+  issue_fill(lhs->null_mask(), Scalar{true});
+}
+
+void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value)
+{
+  if (lhs->unbound()) {
+    throw std::invalid_argument{"Fill lhs must be a normal store"};
+  }
+  if (!value->has_scalar_storage()) {
+    throw std::invalid_argument{"Fill value should be a Future-back store"};
+  }
+
+  submit(make_internal_shared<Fill>(
+    std::move(lhs), std::move(value), current_op_id(), machine_manager_->get_machine()));
+  increment_op_id();
+}
+
+void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
+{
+  if (lhs->unbound()) {
+    throw std::invalid_argument{"Fill lhs must be a normal store"};
+  }
+
+  submit(make_internal_shared<Fill>(
+    std::move(lhs), std::move(value), current_op_id(), machine_manager_->get_machine()));
+  increment_op_id();
 }
 
 void Runtime::tree_reduce(const Library* library,
@@ -354,14 +395,14 @@ void Runtime::tree_reduce(const Library* library,
   }
 
   auto machine = machine_manager_->get_machine();
-  auto op      = InternalSharedPtr<Operation>{new Reduce{library,
-                                                    std::move(store),
-                                                    std::move(out_store),
-                                                    task_id,
-                                                    next_unique_id_++,
-                                                    radix,
-                                                    std::move(machine)}};
-  submit(std::move(op));
+  submit(make_internal_shared<Reduce>(library,
+                                      std::move(store),
+                                      std::move(out_store),
+                                      task_id,
+                                      current_op_id(),
+                                      radix,
+                                      std::move(machine)));
+  increment_op_id();
 }
 
 void Runtime::flush_scheduling_window()
@@ -577,7 +618,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
   if (shape->volume() != 1) {
     throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};
   }
-  auto future  = create_future(scalar.data(), scalar.size());
+  auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
   auto storage = make_internal_shared<detail::Storage>(shape, scalar.type(), future);
   return make_internal_shared<detail::LogicalStore>(std::move(storage));
 }
@@ -996,11 +1037,6 @@ Legion::LogicalRegion Runtime::find_parent_region(const Legion::LogicalRegion& r
     result         = legion_runtime_->get_parent_logical_region(legion_context_, partition);
   }
   return result;
-}
-
-Legion::Future Runtime::create_future(const void* data, size_t datalen)
-{
-  return Legion::Future::from_untyped_pointer(data, datalen);
 }
 
 Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space, size_t field_size)

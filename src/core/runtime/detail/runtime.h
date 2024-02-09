@@ -107,7 +107,11 @@ class Runtime {
                             InternalSharedPtr<LogicalStore> source,
                             InternalSharedPtr<LogicalStore> source_indirect,
                             std::optional<int32_t> redop);
-  void issue_fill(InternalSharedPtr<LogicalArray> lhs, InternalSharedPtr<LogicalStore> value);
+  void issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
+                  InternalSharedPtr<LogicalStore> value);
+  void issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar value);
+  void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
+  void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
   void tree_reduce(const Library* library,
                    int64_t task_id,
                    InternalSharedPtr<LogicalStore> store,
@@ -172,6 +176,8 @@ class Runtime {
 
  private:
   static void check_dimensionality(uint32_t dim);
+  [[nodiscard]] uint64_t current_op_id() const;
+  void increment_op_id();
 
  public:
   void raise_pending_task_exception();
@@ -240,7 +246,6 @@ class Runtime {
   [[nodiscard]] Legion::LogicalRegion get_subregion(const Legion::LogicalPartition& partition,
                                                     const Legion::DomainPoint& color);
   [[nodiscard]] Legion::LogicalRegion find_parent_region(const Legion::LogicalRegion& region);
-  [[nodiscard]] Legion::Future create_future(const void* data, size_t datalen);
   [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
                                                size_t field_size);
   [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
@@ -360,7 +365,7 @@ class Runtime {
 
   std::vector<InternalSharedPtr<Operation>> operations_;
   size_t window_size_{1};
-  uint64_t next_unique_id_{};
+  uint64_t current_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   uint64_t next_store_id_{1};
