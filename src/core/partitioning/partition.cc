@@ -41,8 +41,7 @@ std::unique_ptr<Partition> NoPartition::bloat(const tuple<uint64_t>& /*low_offst
 
 Legion::Domain NoPartition::launch_domain() const
 {
-  assert(false);
-  return {};
+  throw std::invalid_argument{"NoPartition has no launch domain"};
 }
 
 std::unique_ptr<Partition> NoPartition::clone() const { return create_no_partition(); }
@@ -57,8 +56,8 @@ Tiling::Tiling(tuple<uint64_t>&& tile_shape,
     offsets_{offsets.empty() ? legate::full<int64_t>(tile_shape_.size(), 0) : std::move(offsets)},
     strides_{tile_shape_}
 {
-  assert(tile_shape_.size() == color_shape_.size());
-  assert(tile_shape_.size() == offsets_.size());
+  LegateCheck(tile_shape_.size() == color_shape_.size());
+  LegateCheck(tile_shape_.size() == offsets_.size());
 }
 
 Tiling::Tiling(tuple<uint64_t>&& tile_shape,
@@ -74,8 +73,8 @@ Tiling::Tiling(tuple<uint64_t>&& tile_shape,
   if (!overlapped_) {
     throw std::invalid_argument("This constructor must be called only for overlapped tiling");
   }
-  assert(tile_shape_.size() == color_shape_.size());
-  assert(tile_shape_.size() == offsets_.size());
+  LegateCheck(tile_shape_.size() == color_shape_.size());
+  LegateCheck(tile_shape_.size() == offsets_.size());
 }
 
 bool Tiling::operator==(const Tiling& other) const
@@ -89,10 +88,8 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   const auto& storage_exts = storage->extents();
   const auto& storage_offs = storage->offsets();
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(storage_exts.size() == storage_offs.size());
-    assert(storage_offs.size() == offsets_.size());
-  }
+  LegateAssert(storage_exts.size() == storage_offs.size());
+  LegateAssert(storage_offs.size() == offsets_.size());
 
   const auto ndim = static_cast<uint32_t>(storage_exts.size());
 

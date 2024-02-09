@@ -27,7 +27,7 @@ class SquareTask : public Task<SquareTask, SQUARE> {
     legate::Rect<1> input_shape = input.shape<1>();  // should be a 1-Dim array
     auto in                     = input.read_accessor<float, 1>();
 
-    assert(input_shape == output_shape);
+    LegateCheck(input_shape == output_shape);
 
     logger.info() << "Elementwise square [" << output_shape.lo << "," << output_shape.hi << "]";
 

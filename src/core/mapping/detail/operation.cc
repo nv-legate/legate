@@ -39,16 +39,12 @@ int64_t Task::task_id() const { return library_->get_local_task_id(task_->task_i
 
 TaskTarget Task::target() const
 {
-  switch (task_->target_proc.kind()) {
+  switch (const auto kind = task_->target_proc.kind()) {
     case Processor::LOC_PROC: return TaskTarget::CPU;
     case Processor::TOC_PROC: return TaskTarget::GPU;
     case Processor::OMP_PROC: return TaskTarget::OMP;
-    default: {
-      assert(false);
-    }
+    default: throw std::invalid_argument{"Invalid task target: " + std::to_string(kind)};
   }
-  assert(false);
-  return TaskTarget::CPU;
 }
 
 Copy::Copy(const Legion::Copy* copy,
@@ -72,19 +68,17 @@ Copy::Copy(const Legion::Copy* copy,
   input_indirections_ = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();
   output_indirections_ = dez.unpack<std::vector<Store>>();
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    for (auto& input : inputs_) {
-      assert(!input.is_future());
-    }
-    for (auto& output : outputs_) {
-      assert(!output.is_future());
-    }
-    for (auto& input_indirection : input_indirections_) {
-      assert(!input_indirection.is_future());
-    }
-    for (auto& output_indirection : output_indirections_) {
-      assert(!output_indirection.is_future());
-    }
+  for (auto& input : inputs_) {
+    LegateAssert(!input.is_future());
+  }
+  for (auto& output : outputs_) {
+    LegateAssert(!output.is_future());
+  }
+  for (auto& input_indirection : input_indirections_) {
+    LegateAssert(!input_indirection.is_future());
+  }
+  for (auto& output_indirection : output_indirections_) {
+    LegateAssert(!output_indirection.is_future());
   }
 }
 

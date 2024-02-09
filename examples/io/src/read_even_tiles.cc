@@ -44,7 +44,7 @@ struct read_fn {
 
     // Since the shape is already fixed on the Python side, the sub-store's extents should be the
     // same as what's stored in the file
-    assert(shape.hi - shape.lo + legate::Point<DIM>::ONES() == extents);
+    LegateCheck(shape.hi - shape.lo + legate::Point<DIM>::ONES() == extents);
 
     logger.print() << "Read a sub-array of rect " << shape << " from " << path;
 

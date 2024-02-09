@@ -64,7 +64,7 @@ class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
               const size_t total_shards,
               std::vector<DomainPoint>& points) override
   {
-    assert(shard_domain == full_domain);
+    LegateCheck(shard_domain == full_domain);
     const size_t size  = shard_domain.get_volume();
     const size_t chunk = (size + total_shards - 1) / total_shards;
     size_t idx         = shard * chunk;
@@ -122,9 +122,7 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
     auto task_count     = linearize(lo, hi, hi) + 1;
     auto global_proc_id = (linearize(lo, hi, point) * range_.count()) / task_count + range_.low;
     auto shard_id       = global_proc_id / range_.per_node_count;
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(shard_id < total_shards);
-    }
+    LegateAssert(shard_id < total_shards);
     return static_cast<Legion::ShardID>(shard_id);
   }
 
@@ -136,7 +134,7 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
 Legion::ShardingID find_sharding_functor_by_projection_functor(Legion::ProjectionID proj_id)
 {
   const std::lock_guard<std::mutex> lock{functor_table_lock};
-  assert(functor_id_table.find(proj_id) != functor_id_table.end());
+  LegateCheck(functor_id_table.find(proj_id) != functor_id_table.end());
   return functor_id_table[proj_id];
 }
 

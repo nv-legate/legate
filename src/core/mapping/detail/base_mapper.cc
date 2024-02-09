@@ -58,9 +58,7 @@ std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = fa
     {LEGION_PARTITION_MAPPABLE, "Partition "},
   };
   auto finder = prefixes.find(mappable.get_mappable_type());
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(finder != prefixes.end());
-  }
+  LegateAssert(finder != prefixes.end());
   if (prefix_only) {
     return finder->second;
   }
@@ -276,9 +274,7 @@ std::optional<Legion::VariantID> BaseMapper::find_variant(Legion::Mapping::Mappe
   runtime->find_valid_variants(ctx, key.first, avail_variants, key.second);
   std::optional<Legion::VariantID> result;
   for (auto vid : avail_variants) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(vid > 0);
-    }
+    LegateAssert(vid > 0);
     switch (vid) {
       case LEGATE_CPU_VARIANT:
       case LEGATE_OMP_VARIANT:
@@ -304,11 +300,11 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   }
 
   // Should never be mapping the top-level task here
-  assert(task.get_depth() > 0);
+  LegateCheck(task.get_depth() > 0);
 
   // Let's populate easy outputs first
   auto variant = find_variant(ctx, task, task.target_proc.kind());
-  assert(variant.has_value());
+  LegateCheck(variant.has_value());
   output.chosen_variant = *variant;
 
   Task legate_task(&task, library, runtime, ctx);
@@ -321,9 +317,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     // If this is a single task, here is the right place to compute the final target processor
     auto local_range =
       local_machine.slice(legate_task.target(), legate_task.machine(), task.local_function);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(!local_range.empty());
-    }
+    LegateAssert(!local_range.empty());
     output.target_procs.push_back(local_range.first());
   }
 
@@ -339,7 +333,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                                << " tried to colocate stores that cannot colocate");
       }
     }
-    assert(!(mapping->for_future() || mapping->for_unbound_store()) || mapping->stores.size() == 1);
+    LegateCheck(!(mapping->for_future() || mapping->for_unbound_store()) ||
+                mapping->stores.size() == 1);
   };
 
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -436,12 +431,12 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   generate_default_mappings(legate_task.outputs());
   generate_default_mappings(legate_task.reductions());
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(mapped_futures.size() <= task.futures.size());
+    LegateCheck(mapped_futures.size() <= task.futures.size());
     // The launching code should be packing all Store-backing Futures first.
     if (!mapped_futures.empty()) {
       const auto max_mapped_fut = mapped_futures.rbegin()->first;
 
-      assert(mapped_futures.size() == max_mapped_fut + 1);
+      LegateCheck(mapped_futures.size() == max_mapped_fut + 1);
     }
   }
 
@@ -537,9 +532,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
                               can_fail,
                               must_alloc_collective_writes)) {
         if (NO_INST == result) {
-          if (LegateDefined(LEGATE_USE_DEBUG)) {
-            assert(can_fail);
-          }
+          LegateAssert(can_fail);
           for (auto& instance : instances) {
             runtime->release_instance(ctx, instance);
           }
@@ -828,7 +821,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
 
   if (success) {
     // We succeeded in making the instance where we want it
-    assert(result.exists());
+    LegateCheck(result.exists());
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       if (created) {
         logger.debug() << "Operation " << mappable.get_unique_id() << ": created instance "
@@ -841,7 +834,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     }
     // Only save the result for future use if it is not an external instance
     if (!result.is_external_instance() && group != nullptr) {
-      assert(fields.size() == 1);
+      LegateCheck(fields.size() == 1);
       auto fid = fields.front();
       local_instances->record_instance(group, fid, result, policy);
     }
@@ -922,9 +915,7 @@ void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
                                      SelectVariantOutput& output)
 {
   auto variant = find_variant(ctx, task, input.processor.kind());
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(variant.has_value());
-  }
+  LegateAssert(variant.has_value());
   output.chosen_variant = *variant;
 }
 
@@ -980,9 +971,7 @@ void find_source_instance_bandwidth(
     // and target memories, in which case we assign the smallest bandwidth
     // TODO(wonchanl): Not all multi-hop copies are equal
     if (!affinities.empty()) {
-      if (LegateDefined(LEGATE_USE_DEBUG)) {
-        assert(affinities.size() == 1);
-      }
+      LegateAssert(affinities.size() == 1);
       bandwidth = affinities.front().bandwidth;
     }
     source_memory_bandwidths[source_memory] = bandwidth;
@@ -1019,10 +1008,8 @@ void BaseMapper::legate_select_sources(
     std::vector<Legion::Mapping::PhysicalInstance> source_instances;
 
     collective_source.find_instances_nearest_memory(target_memory, source_instances);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      // there must exist at least one instance in the collective view
-      assert(!source_instances.empty());
-    }
+    // there must exist at least one instance in the collective view
+    LegateAssert(!source_instances.empty());
     // we need only first instance if there are several
     find_source_instance_bandwidth(all_sources,
                                    source_memory_bandwidths,
@@ -1030,9 +1017,7 @@ void BaseMapper::legate_select_sources(
                                    target_memory,
                                    legion_machine);
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!all_sources.empty());
-  }
+  LegateAssert(!all_sources.empty());
   if (all_sources.size() > 1) {
     // Sort source instances by their bandwidths
     std::sort(all_sources.begin(), all_sources.end(), [](const auto& lhs, const auto& rhs) {
@@ -1081,9 +1066,7 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
 
   auto store_target = default_store_targets(target_proc.kind()).front();
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(inline_op.requirement.instance_fields.size() == 1);
-  }
+  LegateAssert(inline_op.requirement.instance_fields.size() == 1);
 
   const Store store{mapper_runtime, ctx, &inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
@@ -1133,9 +1116,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     // However, if the machine in the scope doesn't have any CPU or OMP as a fallback for
     // indirect copies, we have no choice but using GPUs
     if (valid_targets.empty()) {
-      if (LegateDefined(LEGATE_USE_DEBUG)) {
-        assert(indirect);
-      }
+      LegateAssert(indirect);
       valid_targets = machine_desc.valid_targets();
     }
     return valid_targets.front();
@@ -1178,10 +1159,8 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   add_to_output_map(copy.src_requirements, output.src_instances);
   add_to_output_map(copy.dst_requirements, output.dst_instances);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(copy.src_indirect_requirements.size() <= 1);
-    assert(copy.dst_indirect_requirements.size() <= 1);
-  }
+  LegateAssert(copy.src_indirect_requirements.size() <= 1);
+  LegateAssert(copy.dst_indirect_requirements.size() <= 1);
   if (!copy.src_indirect_requirements.empty()) {
     // This is to make the push_back call later add the isntance to the right place
     output.src_indirect_instances.clear();
@@ -1349,9 +1328,7 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
 
   auto store_target = default_store_targets(target_proc.kind()).front();
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(partition.requirement.instance_fields.size() == 1);
-  }
+  LegateAssert(partition.requirement.instance_fields.size() == 1);
 
   const Store store{mapper_runtime, ctx, &partition.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;

@@ -30,9 +30,7 @@ PartitionManager::PartitionManager(Runtime* runtime)
   min_shard_volume_ =
     runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(min_shard_volume_ > 0);
-  }
+  LegateAssert(min_shard_volume_ > 0);
 }
 
 const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail::Machine& machine)
@@ -93,7 +91,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
 
   // Figure out how many shards we can make with this array
   int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
-  assert(volume == 0 || max_pieces > 0);
+  LegateCheck(volume == 0 || max_pieces > 0);
   // If we can only make one piece return that now
   if (max_pieces <= 1) {
     return {};
@@ -104,7 +102,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
 
   // First compute the N-th root of the number of pieces
   const auto ndim = temp_shape.size();
-  assert(ndim > 0);
+  LegateCheck(ndim > 0);
   std::vector<size_t> temp_result{};
 
   if (1 == ndim) {
@@ -207,7 +205,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
   }
 
   // Project back onto the original number of dimensions
-  assert(temp_result.size() == ndim);
+  LegateCheck(temp_result.size() == ndim);
   std::vector<uint64_t> result(shape.size(), 1);
   for (uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
@@ -219,7 +217,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
 tuple<uint64_t> PartitionManager::compute_tile_shape(const tuple<uint64_t>& extents,
                                                      const tuple<uint64_t>& launch_shape)
 {
-  assert(extents.size() == launch_shape.size());
+  LegateCheck(extents.size() == launch_shape.size());
   tuple<uint64_t> tile_shape;
   for (uint32_t idx = 0; idx < extents.size(); ++idx) {
     auto x = extents[idx];
@@ -312,9 +310,7 @@ void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& inde
 {
   auto finder = image_cache_.find({index_space, func_partition, field_id});
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(finder != image_cache_.end());
-  }
+  LegateAssert(finder != image_cache_.end());
   image_cache_.erase(finder);
 }
 

@@ -39,7 +39,6 @@ inline bool NoPartition::has_launch_domain() const { return false; }
 
 inline const tuple<uint64_t>& NoPartition::color_shape() const
 {
-  assert(false);
   throw std::invalid_argument{"NoPartition doesn't support color_shape"};
 }
 

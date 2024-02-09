@@ -99,4 +99,6 @@ CheckOptions:
   # copy).
   performance-unnecessary-value-param.AllowedTypes: 'legate::TaskContext'
   performance-inefficient-vector-operation.VectorLikeClasses: 'legate::tuple;legate::Shape'
+  readability-simplify-boolean-expr.ChainedConditionalReturn: 'true'
+  readability-simplify-boolean-expr.ChainedConditionalAssignment: 'true'
 ...

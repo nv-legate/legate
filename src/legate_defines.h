@@ -12,58 +12,12 @@
 
 #pragma once
 
+#include "core/utilities/abort.h"
+#include "core/utilities/assert.h"
 #include "core/utilities/cpp_version.h"
+#include "core/utilities/defined.h"
 
 #include "legion.h"
-
-#include <cstdlib>
-
-#define LegateConcat_(x, y) x##y
-#define LegateConcat(x, y) LegateConcat_(x, y)
-
-// Each suffix defines an additional "enabled" state for LegateDefined(LEGATE_), i.e. if you define
-//
-// #define LegateDefinedEnabledForm_FOO ignored,
-//                                  ^^^~~~~~~~~~~~ note suffix
-// Results in
-//
-// #define LEGATE_HAVE_BAR FOO
-// LegateDefined(LEGATE_HAVE_BAR) // now evalues to 1
-#define LegateDefinedEnabledForm_1 ignored,
-#define LegateDefinedEnabledForm_ ignored,
-
-// arguments are either
-// - (0, 1, 0, dummy)
-// - (1, 0, dummy)
-// this final step cherry-picks the middle
-#define LegateDefinedPrivate___(ignored, val, ...) val
-// the following 2 steps are needed purely for MSVC since it has a nonconforming preprocessor
-// and does not expand __VA_ARGS__ in a single step
-#define LegateDefinedPrivate__(args) LegateDefinedPrivate___ args
-#define LegateDefinedPrivate_(...) LegateDefinedPrivate__((__VA_ARGS__))
-// We do not want parentheses around 'x' since we need it to be expanded as-is to push the 1
-// forward an arg space
-// NOLINTNEXTLINE(bugprone-macro-parentheses)
-#define LegateDefinedPrivate(x) LegateDefinedPrivate_(x 1, 0, dummy)
-#define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))
-
-namespace legate::comm::coll {
-
-void collAbort() noexcept;
-
-}  // namespace legate::comm::coll
-
-#define LEGATE_ABORT(...)                                                                     \
-  do {                                                                                        \
-    legate::detail::log_legate().error()                                                      \
-      << "Legate called abort at " << __FILE__ << ':' << __LINE__ << " in " << __func__       \
-      << "(): " << __VA_ARGS__;                                                               \
-    /* if the collective library has a bespoke abort function, call that first */             \
-    legate::comm::coll::collAbort();                                                          \
-    /* if we are here, then either the comm library has not been initialized, or it didn't */ \
-    /* have an abort mechanism. Either way, we abort normally now. */                         \
-    std::abort();                                                                             \
-  } while (false)
 
 #ifdef __CUDACC__
 #define LEGATE_DEVICE_PREFIX __device__

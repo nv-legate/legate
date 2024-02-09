@@ -98,7 +98,7 @@ __global__ void offsets_to_ranges(size_t offsets_volume,
   auto ranges  = context.output(0).data();
 
   auto offsets_shape = offsets.shape<1>();
-  assert(offsets_shape == ranges.shape<1>());
+  LegateCheck(offsets_shape == ranges.shape<1>());
 
   if (offsets_shape.empty()) {
     return;
@@ -144,7 +144,7 @@ __global__ void ranges_to_offsets(size_t ranges_volume,
   auto offsets = context.output(0).data();
 
   auto ranges_shape = ranges.shape<1>();
-  assert(ranges_shape == offsets.shape<1>());
+  LegateCheck(ranges_shape == offsets.shape<1>());
 
   if (ranges_shape.empty()) {
     return;

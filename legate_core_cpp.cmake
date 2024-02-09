@@ -605,6 +605,9 @@ install(
         src/core/utilities/internal_shared_ptr.h
         src/core/utilities/internal_shared_ptr.inl
         src/core/utilities/cpp_version.h
+        src/core/utilities/assert.h
+        src/core/utilities/abort.h
+        src/core/utilities/defined.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 install(

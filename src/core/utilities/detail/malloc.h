@@ -12,7 +12,8 @@
 
 #pragma once
 
-#include <cassert>
+#include "core/utilities/assert.h"
+
 #include <cstddef>
 #include <cstdlib>
 #include <type_traits>
@@ -25,9 +26,9 @@ void typed_malloc(T** ret, U num_elems) noexcept
 {
   static_assert(std::is_integral_v<U>);
   if constexpr (std::is_signed_v<U>) {
-    assert(num_elems >= 0);
+    LegateCheck(num_elems >= 0);
   }
-  assert(ret);
+  LegateCheck(ret);
   *ret = static_cast<T*>(std::malloc(sizeof(T) * static_cast<size_t>(num_elems)));
 }
 

@@ -13,7 +13,6 @@
 #include "core/comm/coll.h"
 #include "core/utilities/detail/malloc.h"
 
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -25,8 +24,8 @@ namespace legate::comm::coll {
 LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
 {
   detail::log_coll().debug("Enable LocalNetwork");
-  assert(current_unique_id == 0);
-  assert(thread_comms.empty());
+  LegateCheck(current_unique_id == 0);
+  LegateCheck(thread_comms.empty());
   BackendNetwork::coll_inited = true;
   BackendNetwork::comm_type   = CollCommType::CollLocal;
 }
@@ -34,9 +33,9 @@ LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
 LocalNetwork::~LocalNetwork()
 {
   detail::log_coll().debug("Finalize LocalNetwork");
-  assert(BackendNetwork::coll_inited == true);
+  LegateCheck(BackendNetwork::coll_inited == true);
   for (ThreadComm* thread_comm : thread_comms) {
-    assert(!thread_comm->ready_flag);
+    LegateCheck(!thread_comm->ready_flag);
     free(thread_comm);
   }
   thread_comms.clear();
@@ -53,7 +52,7 @@ int LocalNetwork::comm_create(CollComm global_comm,
   global_comm->global_rank      = global_rank;
   global_comm->status           = true;
   global_comm->unique_id        = unique_id;
-  assert(mapping_table == nullptr);
+  LegateCheck(mapping_table == nullptr);
   global_comm->mpi_comm_size        = 1;
   global_comm->mpi_comm_size_actual = 1;
   global_comm->mpi_rank             = 0;
@@ -77,9 +76,9 @@ int LocalNetwork::comm_create(CollComm global_comm,
   }
   global_comm->local_comm = thread_comms[global_comm->unique_id];
   barrierLocal(global_comm);
-  assert(global_comm->local_comm->ready_flag == true);
-  assert(global_comm->local_comm->buffers != nullptr);
-  assert(global_comm->local_comm->displs != nullptr);
+  LegateCheck(global_comm->local_comm->ready_flag == true);
+  LegateCheck(global_comm->local_comm->buffers != nullptr);
+  LegateCheck(global_comm->local_comm->displs != nullptr);
   global_comm->nb_threads = global_comm->global_comm_size;
   return CollSuccess;
 }
@@ -109,8 +108,8 @@ int LocalNetwork::init_comm()
 {
   int id   = 0;
   auto ret = collGetUniqueId(&id);
-  assert(ret == CollSuccess);
-  assert(id >= 0 && thread_comms.size() == static_cast<std::size_t>(id));
+  LegateCheck(ret == CollSuccess);
+  LegateCheck(id >= 0 && thread_comms.size() == static_cast<std::size_t>(id));
   // create thread comm
   ThreadComm* thread_comm;
 
@@ -331,7 +330,7 @@ void LocalNetwork::resetLocalBuffer(CollComm global_comm)
 
 void LocalNetwork::barrierLocal(CollComm global_comm)
 {
-  assert(BackendNetwork::coll_inited == true);
+  LegateCheck(BackendNetwork::coll_inited == true);
   pthread_barrier_wait(const_cast<pthread_barrier_t*>(&(global_comm->local_comm->barrier)));
 }
 

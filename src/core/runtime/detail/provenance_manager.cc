@@ -25,25 +25,19 @@ ProvenanceManager::ProvenanceManager() { push_provenance(BOTTOM); }
 
 const std::string& ProvenanceManager::get_provenance() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!provenance_.empty());
-  }
+  LegateAssert(!provenance_.empty());
   return provenance_.top();
 }
 
 void ProvenanceManager::set_provenance(std::string p)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!provenance_.empty());
-  }
+  LegateAssert(!provenance_.empty());
   std::swap(provenance_.top(), p);
 }
 
 void ProvenanceManager::reset_provenance()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!provenance_.empty());
-  }
+  LegateAssert(!provenance_.empty());
   provenance_.top() = BOTTOM;
 }
 

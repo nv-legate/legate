@@ -20,10 +20,8 @@ namespace legate::detail {
 
 Legion::Future SingleAttachment::detach(bool unordered) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(allocation_);
-    assert(physical_region_);
-  }
+  LegateAssert(allocation_);
+  LegateAssert(physical_region_);
   return Runtime::get_runtime()->detach(*physical_region_, !allocation_->read_only(), unordered);
 }
 

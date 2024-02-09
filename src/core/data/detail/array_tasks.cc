@@ -50,7 +50,7 @@ namespace legate::detail {
   const auto ranges  = context.output(0).data();
 
   const auto shape = offsets.shape<1>();
-  assert(shape == ranges.shape<1>());
+  LegateCheck(shape == ranges.shape<1>());
 
   if (shape.empty()) {
     return;
@@ -75,7 +75,7 @@ namespace legate::detail {
   const auto offsets = context.output(0).data();
 
   const auto shape = ranges.shape<1>();
-  assert(shape == offsets.shape<1>());
+  LegateCheck(shape == offsets.shape<1>());
 
   if (shape.empty()) {
     return;

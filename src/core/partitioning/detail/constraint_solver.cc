@@ -132,16 +132,12 @@ void ConstraintSolver::solve_constraints()
     std::vector<const Variable*> part_symbs_to_unify;
 
     alignment->find_partition_symbols(part_symbs_to_unify);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(!part_symbs_to_unify.empty());
-    }
+    LegateAssert(!part_symbs_to_unify.empty());
 
     auto it           = part_symbs_to_unify.begin();
     auto* equiv_class = table[**it++];
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(equiv_class != nullptr);
-    }
+    LegateAssert(equiv_class != nullptr);
     for (; it != part_symbs_to_unify.end(); ++it) {
       auto* to_unify = table[**it];
       auto* result   = equiv_class->unify(to_unify);
@@ -168,11 +164,9 @@ void ConstraintSolver::solve_constraints()
       auto axis = static_cast<uint32_t>(ax);
       // TODO(wonchanl): We want to check the axis eagerly and raise an exception
       // if it is out of bounds
-      if (LegateDefined(LEGATE_USE_DEBUG)) {
-        static_assert(std::is_unsigned_v<decltype(axis)>,
-                      "If axis becomes signed, extend check below to include axis >= 0");
-        assert(axis < equiv_class->restrictions.size());
-      }
+      static_assert(std::is_unsigned_v<decltype(axis)>,
+                    "If axis becomes signed, extend check below to include axis >= 0");
+      LegateAssert(axis < equiv_class->restrictions.size());
       equiv_class->restrictions[axis] = Restriction::FORBID;
     }
   };

@@ -50,7 +50,7 @@ template <typename T, int DIM>
     buf = new T[num_elems];
 #if LegateDefined(LEGATE_USE_CUDA)
     auto res = cudaMemcpy(buf, base, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
-    assert(res == cudaSuccess);
+    LegateCheck(res == cudaSuccess);
 #endif
     base = buf;
   }

@@ -38,11 +38,9 @@ ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, size_t size)
 /*static*/ ReturnValue ReturnValue::unpack(const void* ptr, size_t size, Memory::Kind memory_kind)
 {
   ReturnValue result{Legion::UntypedDeferredValue{size, memory_kind}, size};
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!result.is_device_value());
-  }
-  memcpy(result.ptr(), ptr, size);
 
+  LegateAssert(!result.is_device_value());
+  std::memcpy(result.ptr(), ptr, size);
   return result;
 }
 
@@ -163,9 +161,7 @@ void ReturnedException::legion_deserialize(const void* buffer)
   if (raised_) {
     std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &index_);
     std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &message_size_);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(message_size_ <= error_message_.size());
-    }
+    LegateAssert(message_size_ <= error_message_.size());
     std::memcpy(error_message_.data(), ptr, message_size_);
     std::memset(error_message_.data() + message_size_, 0, error_message_.size() - message_size_);
     error_message_.back() = '\0';  // always null-terminate, regardless of size
@@ -215,9 +211,7 @@ void ReturnValues::legion_serialize(void* buffer) const
     auto& ret = return_values_.front();
 
     if (ret.is_device_value()) {
-      if (LegateDefined(LEGATE_USE_DEBUG)) {
-        assert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
-      }
+      LegateAssert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
       // TODO (jfaibussowit): expose cudaMemcpyAsync() as a stub instead
 #if LegateDefined(LEGATE_USE_CUDA)
       CHECK_CUDA(cudaMemcpyAsync(buffer,
@@ -340,9 +334,7 @@ struct JoinReturnedException {
   template <bool EXCLUSIVE>
   static void apply(LHS& lhs, RHS rhs)
   {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(EXCLUSIVE);
-    }
+    LegateCheck(EXCLUSIVE);
     if (lhs.raised() || !rhs.raised()) {
       return;
     }
@@ -352,9 +344,7 @@ struct JoinReturnedException {
   template <bool EXCLUSIVE>
   static void fold(RHS& rhs1, RHS rhs2)
   {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(EXCLUSIVE);
-    }
+    LegateCheck(EXCLUSIVE);
     if (rhs1.raised() || !rhs2.raised()) {
       return;
     }
@@ -372,7 +362,7 @@ void pack_returned_exception(const ReturnedException& value, void*& ptr, size_t&
   if (new_size > size) {
     size         = new_size;
     auto new_ptr = realloc(ptr, new_size);
-    assert(new_ptr);  // realloc returns nullptr on failure, so check before clobbering ptr
+    LegateCheck(new_ptr);  // realloc returns nullptr on failure, so check before clobbering ptr
     ptr = new_ptr;
   }
   value.legion_serialize(ptr);

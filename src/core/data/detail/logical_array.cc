@@ -38,9 +38,7 @@ InternalSharedPtr<LogicalStore> LogicalArray::data() const
 
 bool BaseLogicalArray::unbound() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!nullable() || data_->unbound() == null_mask_->unbound());
-  }
+  LegateAssert(!nullable() || data_->unbound() == null_mask_->unbound());
   return data_->unbound();
 }
 

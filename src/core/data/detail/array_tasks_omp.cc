@@ -51,7 +51,7 @@ namespace legate::detail {
   auto ranges  = context.output(0).data();
 
   auto shape = offsets.shape<1>();
-  assert(shape == ranges.shape<1>());
+  LegateCheck(shape == ranges.shape<1>());
 
   if (shape.empty()) {
     return;
@@ -77,7 +77,7 @@ namespace legate::detail {
   auto offsets = context.output(0).data();
 
   auto shape = ranges.shape<1>();
-  assert(shape == offsets.shape<1>());
+  LegateCheck(shape == offsets.shape<1>());
 
   if (shape.empty()) {
     return;

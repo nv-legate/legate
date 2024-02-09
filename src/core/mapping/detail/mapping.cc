@@ -24,7 +24,6 @@ TaskTarget to_target(Processor::Kind kind)
     case Processor::Kind::LOC_PROC: return TaskTarget::CPU;
     default: LEGATE_ABORT("Unhandled Processor::Kind " << static_cast<int>(kind));
   }
-  assert(false);
   return TaskTarget::CPU;
 }
 
@@ -36,7 +35,6 @@ Processor::Kind to_kind(TaskTarget target)
     case TaskTarget::CPU: return Processor::Kind::LOC_PROC;
     default: LEGATE_ABORT("Unhandled TaskTarget " << static_cast<int>(target));
   }
-  assert(false);
   return Processor::Kind::LOC_PROC;
 }
 
@@ -49,7 +47,6 @@ Memory::Kind to_kind(StoreTarget target)
     case StoreTarget::SOCKETMEM: return Memory::Kind::SOCKET_MEM;
     default: LEGATE_ABORT("Unhandled StoreTarget " << static_cast<int>(target));
   }
-  assert(false);
   return Memory::Kind::SYSTEM_MEM;
 }
 
@@ -61,7 +58,6 @@ LegateVariantCode to_variant_code(TaskTarget target)
     case TaskTarget::CPU: return LEGATE_CPU_VARIANT;
     default: LEGATE_ABORT("Unhandled TaskTarget " << static_cast<int>(target));
   }
-  assert(false);
   return LEGATE_CPU_VARIANT;
 }
 
@@ -115,11 +111,11 @@ uint32_t StoreMapping::requirement_index() const
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     uint32_t result = -1U;
 
-    assert(!stores.empty());
+    LegateAssert(!stores.empty());
     for (auto& store : stores) {
       auto idx = store->requirement_index();
 
-      assert(result == -1U || result == idx);
+      LegateAssert(result == -1U || result == idx);
       result = idx;
     }
     return result;

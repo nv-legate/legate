@@ -38,7 +38,7 @@ inline int64_t Library::ResourceIdScope::translate(int64_t local_resource_id) co
 
 inline int64_t Library::ResourceIdScope::invert(int64_t resource_id) const
 {
-  assert(in_scope(resource_id));
+  LegateCheck(in_scope(resource_id));
   return resource_id - base_;
 }
 

@@ -174,7 +174,7 @@ namespace {
   auto rank      = task->index_point[0];
   auto num_ranks = task->index_domain.get_volume();
 
-  assert(task->futures.size() == 1);
+  LegateCheck(task->futures.size() == 1);
   auto cpu_comm = task->futures[0].get_result<comm::coll::CollComm>();
 
   int device = -1;
@@ -205,7 +205,7 @@ void finalize_cal(const Legion::Task* task,
 
   legate::detail::show_progress(task, context, runtime);
 
-  assert(task->futures.size() == 1);
+  LegateCheck(task->futures.size() == 1);
   auto comm = task->futures[0].get_result<cal_comm_t>();
   CHECK_CAL(cal_comm_destroy(comm));
 }

@@ -286,8 +286,8 @@ extern BackendNetwork* backend_network;
 
 [[nodiscard]] int collFinalize();
 
-// this is forward declared in legate_defines.h (for LEGATE_ABORT()), because we don't want to
-// include this entire header
+// this is forward declared in src/core/utilities/abort.h (for LEGATE_ABORT()), because we don't
+// want to include this entire header
 void collAbort() noexcept;  // NOLINT(readability-redundant-declaration)
 
 [[nodiscard]] int collInitComm();

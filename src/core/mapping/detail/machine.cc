@@ -196,11 +196,9 @@ std::ostream& operator<<(std::ostream& stream, const Machine& machine)
 const Processor& LocalProcessorRange::operator[](uint32_t idx) const
 {
   auto local_idx = idx - offset_;
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    static_assert(std::is_unsigned_v<decltype(local_idx)>,
-                  "if local_idx becomes signed, also check local_idx >= 0 below!");
-    assert(local_idx < procs_.size());
-  }
+  static_assert(std::is_unsigned_v<decltype(local_idx)>,
+                "if local_idx becomes signed, also check local_idx >= 0 below!");
+  LegateAssert(local_idx < procs_.size());
   return procs_[local_idx];
 }
 
@@ -256,14 +254,14 @@ LocalMachine::LocalMachine()
   // Now do queries to find all our local memories
   Legion::Machine::MemoryQuery sysmem{legion_machine};
   sysmem.local_address_space().only_kind(Legion::Memory::SYSTEM_MEM);
-  assert(sysmem.count() > 0);
+  LegateCheck(sysmem.count() > 0);
   system_memory_ = sysmem.first();
 
   if (!gpus_.empty()) {
     Legion::Machine::MemoryQuery zcmem{legion_machine};
 
     zcmem.local_address_space().only_kind(Legion::Memory::Z_COPY_MEM);
-    assert(zcmem.count() > 0);
+    LegateCheck(zcmem.count() > 0);
     zerocopy_memory_ = zcmem.first();
   }
 
@@ -271,7 +269,7 @@ LocalMachine::LocalMachine()
     Legion::Machine::MemoryQuery framebuffer{legion_machine};
 
     framebuffer.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
-    assert(framebuffer.count() > 0);
+    LegateCheck(framebuffer.count() > 0);
     frame_buffers_[gpu] = framebuffer.first();
   }
 
@@ -296,9 +294,7 @@ const std::vector<Processor>& LocalMachine::procs(TaskTarget target) const
     case TaskTarget::GPU: return gpus_;
     case TaskTarget::OMP: return omps_;
     case TaskTarget::CPU: return cpus_;
-    default: LEGATE_ABORT("invalid target: " << static_cast<int>(target));
   }
-  assert(false);
   return cpus_;
 }
 
@@ -366,7 +362,6 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     case StoreTarget::SOCKETMEM: return socket_memories_.at(proc);
     default: LEGATE_ABORT("invalid StoreTarget: " << static_cast<int>(target));
   }
-  assert(false);
   return Legion::Memory::NO_MEMORY;
 }
 

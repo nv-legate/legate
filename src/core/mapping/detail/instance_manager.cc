@@ -82,7 +82,7 @@ bool InstanceSet::find_instance(Region region,
   }
 
   auto ifinder = instances_.find(group.get());
-  assert(ifinder != instances_.end());
+  LegateCheck(ifinder != instances_.end());
 
   auto& spec = ifinder->second;
   if (spec.policy.subsumes(policy)) {
@@ -311,11 +311,11 @@ void InstanceSet::dump_and_sanity_check() const
   std::unordered_set<RegionGroup*> found_groups;
   for (auto& entry : groups_) {
     found_groups.insert(entry.second.get());
-    assert(instances_.count(entry.second.get()) > 0);
-    assert(entry.second->regions.count(entry.first) > 0);
+    LegateCheck(instances_.count(entry.second.get()) > 0);
+    LegateCheck(entry.second->regions.count(entry.first) > 0);
   }
   for (auto& entry : instances_) {
-    assert(found_groups.count(entry.first) > 0);
+    LegateCheck(found_groups.count(entry.first) > 0);
   }
 }
 

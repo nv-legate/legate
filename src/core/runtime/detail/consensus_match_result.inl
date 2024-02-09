@@ -14,6 +14,7 @@
 
 // Useful for IDEs
 #include "core/runtime/detail/consensus_match_result.h"
+#include "core/utilities/assert.h"
 
 namespace legate::detail {
 
@@ -50,7 +51,7 @@ void ConsensusMatchResult<T>::wait()
     return;
   }
   const auto num_matched = future_.get_result<std::size_t>();
-  assert(num_matched <= output_.size());
+  LegateCheck(num_matched <= output_.size());
   output_.resize(num_matched);
   complete_ = true;
 };
@@ -64,7 +65,7 @@ const std::vector<T>& ConsensusMatchResult<T>::input() const
 template <typename T>
 const std::vector<T>& ConsensusMatchResult<T>::output() const
 {
-  assert(complete_);
+  LegateCheck(complete_);
   return output_;
 };
 

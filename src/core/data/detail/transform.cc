@@ -148,9 +148,7 @@ void TransformStack::pack(BufferBuilder& buffer) const
 
 Legion::Domain TransformStack::transform(const Legion::Domain& input) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(transform_ != nullptr);
-  }
+  LegateAssert(transform_ != nullptr);
   return transform_->transform(parent_->identity() ? input : parent_->transform(input));
 }
 
@@ -171,9 +169,7 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
 
 Legion::DomainAffineTransform TransformStack::inverse_transform(int32_t in_dim) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(transform_ != nullptr);
-  }
+  LegateAssert(transform_ != nullptr);
   auto result  = transform_->inverse_transform(in_dim);
   auto out_dim = transform_->target_ndim(in_dim);
 
@@ -201,9 +197,7 @@ void TransformStack::print(std::ostream& out) const
 
 std::unique_ptr<StoreTransform> TransformStack::pop()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(transform_ != nullptr);
-  }
+  LegateAssert(transform_ != nullptr);
   auto result = std::move(transform_);
   if (parent_) {
     transform_ = std::move(parent_->transform_);
@@ -241,7 +235,7 @@ Domain Shift::transform(const Domain& input) const
 
 Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
 {
-  assert(dim_ < in_dim);
+  LegateCheck(dim_ < in_dim);
   auto out_dim = in_dim;
 
   Legion::DomainTransform transform;
@@ -267,7 +261,7 @@ Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
 
 std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -277,15 +271,17 @@ std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
                            tuple<uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, offset_));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
 std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -296,9 +292,11 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
                            tuple<uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, new_offset));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
@@ -342,7 +340,7 @@ Domain Promote::transform(const Domain& input) const
 
 Legion::DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
 {
-  assert(extra_dim_ < in_dim);
+  LegateCheck(extra_dim_ < in_dim);
   auto out_dim = in_dim - 1;
 
   Legion::DomainTransform transform;
@@ -375,7 +373,7 @@ Legion::DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
 
 std::unique_ptr<Partition> Promote::convert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -385,15 +383,17 @@ std::unique_ptr<Partition> Promote::convert(const Partition* partition) const
                            tiling->color_shape().insert(extra_dim_, 1),
                            tiling->offsets().insert(extra_dim_, 0));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
 std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -403,9 +403,11 @@ std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
                            tiling->color_shape().remove(extra_dim_),
                            tiling->offsets().remove(extra_dim_));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
@@ -477,7 +479,7 @@ Domain Project::transform(const Domain& input) const
 Legion::DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
 {
   auto out_dim = in_dim + 1;
-  assert(dim_ < out_dim);
+  LegateCheck(dim_ < out_dim);
 
   Legion::DomainTransform transform;
   transform.m = out_dim;
@@ -513,7 +515,7 @@ Legion::DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
 
 std::unique_ptr<Partition> Project::convert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -523,15 +525,17 @@ std::unique_ptr<Partition> Project::convert(const Partition* partition) const
                            tiling->color_shape().remove(dim_),
                            tiling->offsets().remove(dim_));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
 std::unique_ptr<Partition> Project::invert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -541,9 +545,11 @@ std::unique_ptr<Partition> Project::invert(const Partition* partition) const
                            tiling->color_shape().insert(dim_, 1),
                            tiling->offsets().insert(dim_, coord_));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
@@ -659,7 +665,7 @@ Legion::DomainAffineTransform Transpose::inverse_transform(int32_t in_dim) const
 
 std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -669,15 +675,17 @@ std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const
                            tiling->color_shape().map(axes_),
                            tiling->offsets().map(axes_));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
 std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -687,9 +695,11 @@ std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
                            tiling->color_shape().map(inverse_),
                            tiling->offsets().map(inverse_));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 
@@ -779,9 +789,8 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
   // e.g. X.promoted = [0] => X.transpose((1,2,0)).promoted = [2]
   for (auto& promoted : dims) {
     auto finder = std::find(axes_.begin(), axes_.end(), promoted);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(finder != axes_.end());
-    }
+
+    LegateCheck(finder != axes_.end());
     promoted = static_cast<int32_t>(finder - axes_.begin());
   }
 }
@@ -866,7 +875,7 @@ std::unique_ptr<Partition> Delinearize::convert(const Partition* /*partition*/) 
 
 std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
 {
-  switch (partition->kind()) {
+  switch (const auto kind = partition->kind()) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -907,9 +916,11 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       return create_tiling(
         std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
     }
-    default: break;
+    default:
+      throw std::invalid_argument{
+        "Invalid partition kind: " +
+        std::to_string(static_cast<std::underlying_type_t<decltype(kind)>>(kind))};
   }
-  assert(false);
   return {};
 }
 

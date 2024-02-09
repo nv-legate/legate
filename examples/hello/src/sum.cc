@@ -42,7 +42,7 @@ class SumTask : public Task<SumTask, SUM> {
     using Reduce         = Legion::SumReduction<float>;
     legate::Store output = context.reduction(0).data();
     auto sum             = output.reduce_accessor<Reduce, true, 1>();
-    assert(output.shape<1>() == legate::Rect<1>(0, 0));
+    LegateCheck(output.shape<1>() == legate::Rect<1>(0, 0));
     sum.reduce(0, total);
   }
 };

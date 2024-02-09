@@ -69,9 +69,7 @@ Domain LogicalRegionField::domain() const
 RegionField LogicalRegionField::map()
 {
   if (parent_ != nullptr) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(!pr_);
-    }
+    LegateAssert(!pr_);
     return parent_->map();
   }
   if (!pr_) {
@@ -86,11 +84,9 @@ RegionField LogicalRegionField::map()
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
                                 InternalSharedPtr<ExternalAllocation> allocation)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!parent_);
-    assert(physical_region.exists());
-    assert(!attachment_ && !pr_);
-  }
+  LegateAssert(!parent_);
+  LegateAssert(physical_region.exists());
+  LegateAssert(!attachment_ && !pr_);
   pr_         = std::make_unique<Legion::PhysicalRegion>(std::move(physical_region));
   attachment_ = std::make_unique<SingleAttachment>(pr_.get(), std::move(allocation));
 }
@@ -98,11 +94,9 @@ void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
 void LogicalRegionField::attach(const Legion::ExternalResources& external_resources,
                                 std::vector<InternalSharedPtr<ExternalAllocation>> allocations)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!parent_);
-    assert(external_resources.exists());
-    assert(!attachment_);
-  }
+  LegateAssert(!parent_);
+  LegateAssert(external_resources.exists());
+  LegateAssert(!attachment_);
   attachment_ = std::make_unique<IndexAttachment>(external_resources, std::move(allocations));
 }
 
@@ -121,7 +115,7 @@ void LogicalRegionField::detach()
   if (!attachment_) {
     throw std::invalid_argument{"Store has no attachment to detach"};
   }
-  assert(pr_ && pr_->exists());
+  LegateCheck(pr_ && pr_->exists());
   if (pr_->is_mapped()) {
     runtime->unmap_physical_region(*pr_);
   }
@@ -178,10 +172,8 @@ void LogicalRegionField::add_invalidation_callback_(std::function<void()> callba
 void LogicalRegionField::perform_invalidation_callbacks() noexcept
 {
   if (parent_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      // Callbacks should exist only in the root
-      assert(callbacks_.empty());
-    }
+    // Callbacks should exist only in the root
+    LegateAssert(callbacks_.empty());
     parent_->perform_invalidation_callbacks();
   } else {
     for (auto&& callback : callbacks_) {

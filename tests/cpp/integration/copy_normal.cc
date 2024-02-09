@@ -92,7 +92,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
                     const legate::Scalar& /*seed*/,
                     legate::Rect<DIM>& /*shape*/)
     {
-      assert(false);
+      LegateAssert(false);
     }
   };
 

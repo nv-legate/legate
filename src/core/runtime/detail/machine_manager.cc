@@ -22,9 +22,7 @@ namespace legate::detail {
 
 const mapping::detail::Machine& MachineManager::get_machine() const noexcept
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!machines_.empty());
-  }
+  LegateAssert(!machines_.empty());
   return machines_.top();
 }
 

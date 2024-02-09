@@ -163,9 +163,7 @@ FutureWrapper::FutureWrapper(bool read_only,
     future_{std::make_unique<Legion::Future>(std::move(future))}
 {
   if (!read_only) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(!initialize || future_->get_untyped_size() == field_size);
-    }
+    LegateAssert(!initialize || future_->get_untyped_size() == field_size);
     auto mem_kind =
       find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB));
     if (initialize) {
@@ -239,9 +237,7 @@ void FutureWrapper::initialize_with_identity(int32_t redop_id)
   const auto ptr         = untyped_acc.ptr(0);
 
   auto redop = Legion::Runtime::get_reduction_op(redop_id);
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(redop->sizeof_lhs == field_size_);
-  }
+  LegateAssert(redop->sizeof_lhs == field_size_);
   auto identity = redop->identity;
 #if LegateDefined(LEGATE_USE_CUDA)
   if (buffer_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM) {
@@ -276,9 +272,7 @@ Domain PhysicalStore::domain() const
   if (!transform_->identity()) {
     result = transform_->transform(result);
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(result.dim == dim() || dim() == 0);
-  }
+  LegateAssert(result.dim == dim() || dim() == 0);
   return result;
 }
 
@@ -363,34 +357,26 @@ bool PhysicalStore::is_read_only_future() const { return future_.is_read_only();
 
 void PhysicalStore::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!(is_future() || is_unbound_store()));
-  }
+  LegateAssert(!(is_future() || is_unbound_store()));
   pr  = region_field_.get_physical_region();
   fid = region_field_.get_field_id();
 }
 
 Legion::Future PhysicalStore::get_future() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(is_future());
-  }
+  LegateAssert(is_future());
   return future_.get_future();
 }
 
 Legion::UntypedDeferredValue PhysicalStore::get_buffer() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(is_future());
-  }
+  LegateAssert(is_future());
   return future_.get_buffer();
 }
 
 void PhysicalStore::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(is_unbound_store());
-  }
+  LegateAssert(is_unbound_store());
   out = unbound_field_.get_output_region();
   fid = unbound_field_.get_field_id();
 }

@@ -16,7 +16,6 @@
 
 #include "legate_defines.h"
 
-#include <cassert>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -38,9 +37,7 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::increment_ref
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(
   std::atomic<ref_count_type>& refcount) noexcept
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(refcount > 0);
-  }
+  LegateAssert(refcount > 0);
   return refcount.fetch_sub(1, std::memory_order_acq_rel) - 1;
 }
 
@@ -161,9 +158,7 @@ void SeparateControlBlock<T, D, A>::destroy_object() noexcept
 {
   // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
   static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(ptr_);
-  }
+  LegateAssert(ptr_);
   deleter_()(ptr_);
 }
 

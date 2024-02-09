@@ -527,7 +527,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
     throw std::invalid_argument{"Descriptor array does not have a 1D rect type"};
   }
   // If this doesn't hold, something bad happened (and will happen below)
-  assert(!descriptor->nested());
+  LegateCheck(!descriptor->nested());
   if (vardata->nullable()) {
     throw std::invalid_argument{"Vardata should not be nullable"};
   }
@@ -633,9 +633,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
     throw std::invalid_argument{
       "stores created by attaching to a buffer must have fixed-size type"};
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(allocation->ptr());
-  }
+  LegateCheck(allocation->ptr());
   if (allocation->size() < shape->volume() * type->size()) {
     throw std::invalid_argument{"External allocation of size " +
                                 std::to_string(allocation->size()) +
@@ -716,9 +714,7 @@ Runtime::IndexAttachResult Runtime::create_store(
     auto substore      = partition->get_child_store(color);
     auto required_size = substore->volume() * type_size;
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(alloc->ptr());
-    }
+    LegateAssert(alloc->ptr());
 
     if (!alloc->read_only()) {
       throw std::invalid_argument{"External allocations must be read-only"};
@@ -838,7 +834,7 @@ void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     std::vector<Legion::FieldID> fields;
     pr.get_fields(fields);
-    assert(fields.size() == 1);
+    LegateCheck(fields.size() == 1);
   }
   legion_runtime_->unmap_region(legion_context_, std::move(pr));
 }
@@ -847,7 +843,7 @@ Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
                                bool flush,
                                bool unordered)
 {
-  assert(physical_region.exists() && !physical_region.is_mapped());
+  LegateCheck(physical_region.exists() && !physical_region.is_mapped());
   return legion_runtime_->detach_external_resource(legion_context_,
                                                    physical_region,
                                                    flush,
@@ -859,7 +855,7 @@ Legion::Future Runtime::detach(const Legion::ExternalResources& external_resourc
                                bool flush,
                                bool unordered)
 {
-  assert(external_resources.exists());
+  LegateCheck(external_resources.exists());
   return legion_runtime_->detach_external_resources(legion_context_,
                                                     external_resources,
                                                     flush,
@@ -920,7 +916,7 @@ const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<uint64
 
 const Legion::IndexSpace& Runtime::find_or_create_index_space(const Domain& domain)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   auto finder = cached_index_spaces_.find(domain);
   if (finder != cached_index_spaces_.end()) {
     return finder->second;
@@ -998,34 +994,34 @@ Legion::IndexPartition Runtime::create_image_partition(
 
 Legion::FieldSpace Runtime::create_field_space()
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->create_field_space(legion_context_);
 }
 
 Legion::LogicalRegion Runtime::create_region(const Legion::IndexSpace& index_space,
                                              const Legion::FieldSpace& field_space)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->create_logical_region(legion_context_, index_space, field_space);
 }
 
 void Runtime::destroy_region(const Legion::LogicalRegion& logical_region, bool unordered)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   legion_runtime_->destroy_logical_region(legion_context_, logical_region, unordered);
 }
 
 Legion::LogicalPartition Runtime::create_logical_partition(
   const Legion::LogicalRegion& logical_region, const Legion::IndexPartition& index_partition)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->get_logical_partition(legion_context_, logical_region, index_partition);
 }
 
 Legion::LogicalRegion Runtime::get_subregion(const Legion::LogicalPartition& partition,
                                              const Legion::DomainPoint& color)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->get_logical_subregion_by_color(legion_context_, partition, color);
 }
 
@@ -1041,7 +1037,7 @@ Legion::LogicalRegion Runtime::find_parent_region(const Legion::LogicalRegion& r
 
 Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space, size_t field_size)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
   return allocator.allocate_field(field_size);
 }
@@ -1050,14 +1046,14 @@ Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space,
                                         Legion::FieldID field_id,
                                         size_t field_size)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
   return allocator.allocate_field(field_size, field_id);
 }
 
 Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space) const
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->get_index_space_domain(legion_context_, index_space);
 }
 
@@ -1067,7 +1063,7 @@ Legion::DomainPoint _delinearize_future_map(const DomainPoint& point,
                                             const Domain& domain,
                                             const Domain& range)
 {
-  assert(range.dim == 1);
+  LegateCheck(range.dim == 1);
   DomainPoint result;
   result.dim = 1;
 
@@ -1112,38 +1108,38 @@ Legion::Future Runtime::get_tunable(Legion::MapperID mapper_id, int64_t tunable_
 Legion::Future Runtime::dispatch(Legion::TaskLauncher& launcher,
                                  std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->execute_task(legion_context_, launcher, &output_requirements);
 }
 
 Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher& launcher,
                                     std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->execute_index_space(legion_context_, launcher, &output_requirements);
 }
 
 void Runtime::dispatch(Legion::CopyLauncher& launcher)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
 void Runtime::dispatch(Legion::IndexCopyLauncher& launcher)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
 void Runtime::dispatch(Legion::FillLauncher& launcher)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
 void Runtime::dispatch(Legion::IndexFillLauncher& launcher)
 {
-  assert(nullptr != legion_context_);
+  LegateCheck(nullptr != legion_context_);
   return legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
@@ -1233,17 +1229,13 @@ void Runtime::initialize_toplevel_machine()
                                     {mapping::TaskTarget::OMP, create_range(num_omps)},
                                     {mapping::TaskTarget::CPU, create_range(num_cpus)}}};
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(machine_manager_ != nullptr);
-  }
+  LegateAssert(machine_manager_ != nullptr);
   machine_manager_->push_machine(std::move(machine));
 }
 
 const mapping::detail::Machine& Runtime::get_machine() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(machine_manager_ != nullptr);
-  }
+  LegateAssert(machine_manager_ != nullptr);
   return machine_manager_->get_machine();
 }
 

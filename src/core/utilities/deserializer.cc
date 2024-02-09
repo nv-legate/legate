@@ -53,7 +53,6 @@ InternalSharedPtr<detail::PhysicalArray> TaskDeserializer::unpack_array()
     case detail::ArrayKind::LIST: return unpack_list_array();
     case detail::ArrayKind::STRUCT: return unpack_struct_array();
   }
-  assert(false);
   return {};
 }
 
@@ -78,9 +77,7 @@ InternalSharedPtr<detail::ListPhysicalArray> TaskDeserializer::unpack_list_array
 InternalSharedPtr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_array()
 {
   auto type = unpack_type();
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(type->code == Type::Code::STRUCT);
-  }
+  LegateCheck(type->code == Type::Code::STRUCT);
 
   std::vector<InternalSharedPtr<detail::PhysicalArray>> fields;
   const auto& st_type = type->as_struct_type();
@@ -119,7 +116,7 @@ InternalSharedPtr<detail::PhysicalStore> TaskDeserializer::unpack_store()
     return make_internal_shared<detail::PhysicalStore>(
       dim, std::move(type), redop_id, std::move(rf), std::move(transform));
   }
-  assert(redop_id == -1);
+  LegateCheck(redop_id == -1);
   auto out = unpack<detail::UnboundRegionField>();
 
   return make_internal_shared<detail::PhysicalStore>(
@@ -208,7 +205,6 @@ InternalSharedPtr<detail::Array> TaskDeserializer::unpack_array()
     case legate::detail::ArrayKind::LIST: return unpack_list_array();
     case legate::detail::ArrayKind::STRUCT: return unpack_struct_array();
   }
-  assert(false);
   return {};
 }
 
@@ -234,9 +230,7 @@ InternalSharedPtr<detail::ListArray> TaskDeserializer::unpack_list_array()
 InternalSharedPtr<detail::StructArray> TaskDeserializer::unpack_struct_array()
 {
   auto type = unpack_type();
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(type->code == Type::Code::STRUCT);
-  }
+  LegateCheck(type->code == Type::Code::STRUCT);
 
   std::vector<InternalSharedPtr<detail::Array>> fields;
   const auto& st_type = type->as_struct_type();
@@ -309,9 +303,7 @@ CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
 
 void CopyDeserializer::next_requirement_list()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(curr_reqs_ != all_reqs_.end());
-  }
+  LegateCheck(curr_reqs_ != all_reqs_.end());
   req_index_offset_ += curr_reqs_->get().size();
   ++curr_reqs_;
 }
@@ -325,11 +317,8 @@ void CopyDeserializer::_unpack(detail::Store& store)
 
   auto transform = unpack_transform();
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!is_future && !is_output_region);
-  } else {
-    static_cast<void>(is_future);
-  }
+  LegateCheck(!is_future && !is_output_region);
+  static_cast<void>(is_future);
 
   auto redop_id = unpack<int32_t>();
   detail::RegionField rf;

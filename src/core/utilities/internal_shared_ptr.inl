@@ -16,7 +16,6 @@
 
 #include "legate_defines.h"
 
-#include <cassert>
 #include <cstddef>
 #include <memory>
 #include <utility>
@@ -224,9 +223,7 @@ void InternalSharedPtr<T>::maybe_destroy_() noexcept
   if constexpr (detail::shared_from_this_enabled_v<element_type>) {
     ctrl_->strong_deref();
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!use_count());
-  }
+  LegateAssert(!use_count());
   // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
   // circumstances.
   //
@@ -245,10 +242,8 @@ template <typename T>
 void InternalSharedPtr<T>::strong_reference_() noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(get());
-      assert(use_count());
-    }
+    LegateAssert(get());
+    LegateAssert(use_count());
     ctrl_->strong_ref();
   }
 }
@@ -257,9 +252,7 @@ template <typename T>
 void InternalSharedPtr<T>::strong_dereference_() noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(get());
-    }
+    LegateAssert(get());
     ctrl_->strong_deref();
     maybe_destroy_();
   }
@@ -269,10 +262,8 @@ template <typename T>
 void InternalSharedPtr<T>::weak_reference_() noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(get());
-      assert(use_count());
-    }
+    LegateAssert(get());
+    LegateAssert(use_count());
     ctrl_->weak_ref();
   }
 }
@@ -281,9 +272,7 @@ template <typename T>
 void InternalSharedPtr<T>::weak_dereference_() noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(get());
-    }
+    LegateAssert(get());
     ctrl_->weak_deref();
     maybe_destroy_();
   }
@@ -293,10 +282,8 @@ template <typename T>
 void InternalSharedPtr<T>::user_reference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(get());
-      assert(use_count());
-    }
+    LegateAssert(get());
+    LegateAssert(use_count());
     ctrl_->user_ref();
   }
 }
@@ -305,9 +292,7 @@ template <typename T>
 void InternalSharedPtr<T>::user_dereference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(get());
-    }
+    LegateAssert(get());
     ctrl_->user_deref();
     maybe_destroy_();
   }

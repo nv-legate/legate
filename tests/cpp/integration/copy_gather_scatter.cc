@@ -166,7 +166,7 @@ void check_gather_scatter_output(legate::Library library,
 
 void test_gather_scatter(const GatherScatterSpec& spec)
 {
-  assert(spec.seed.type() == spec.init.type());
+  LegateAssert(spec.seed.type() == spec.init.type());
   logger.print() << "Gather-scatter Copy: " << spec.to_string();
 
   auto runtime = legate::Runtime::get_runtime();

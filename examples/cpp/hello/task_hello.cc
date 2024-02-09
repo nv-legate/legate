@@ -60,9 +60,9 @@ void register_tasks()
   legate::PhysicalStore output = context.reduction(0);
   auto sum                     = output.reduce_accessor<Reduce, true, 1>();
   // Best-practice is to validate types
-  assert(output.code() == legate::Type::Code::FLOAT32);
-  assert(output.dim() == 1);
-  assert(output.shape<1>() == legate::Rect<1>(0, 0));
+  LegateCheck(output.code() == legate::Type::Code::FLOAT32);
+  LegateCheck(output.dim() == 1);
+  LegateCheck(output.shape<1>() == legate::Rect<1>(0, 0));
   sum.reduce(0, total);
 }
 
@@ -70,19 +70,19 @@ void register_tasks()
 {
   legate::PhysicalStore output = context.output(0);
   // Best-practice to validate the store types
-  assert(output.code() == legate::Type::Code::FLOAT32);
-  assert(output.dim() == 1);
+  LegateCheck(output.code() == legate::Type::Code::FLOAT32);
+  LegateCheck(output.dim() == 1);
   legate::Rect<1> output_shape = output.shape<1>();
   auto out                     = output.write_accessor<float, 1>();
 
   legate::PhysicalStore input = context.input(0);
   // Best-practice to validate the store types
-  assert(input.code() == legate::Type::Code::FLOAT32);
-  assert(input.dim() == 1);
+  LegateCheck(input.code() == legate::Type::Code::FLOAT32);
+  LegateCheck(input.dim() == 1);
   legate::Rect<1> input_shape = input.shape<1>();  // should be a 1-Dim array
   auto in                     = input.read_accessor<float, 1>();
 
-  assert(input_shape == output_shape);
+  LegateCheck(input_shape == output_shape);
 
   logger.info() << "Elementwise square [" << output_shape.lo << "," << output_shape.hi << "]";
 

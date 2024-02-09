@@ -129,9 +129,7 @@ DelinearizingProjection::DelinearizingProjection(const tuple<uint64_t>& color_sh
 
 DomainPoint DelinearizingProjection::project_point(const DomainPoint& point) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(point.dim == 1);
-  }
+  LegateAssert(point.dim == 1);
 
   DomainPoint result;
   int64_t value = point[0];
@@ -315,7 +313,7 @@ struct LinearizingPointTransformFunctor final : public Legion::PointTransformFun
                               const Domain& domain,
                               const Domain& range) override
   {
-    assert(range.dim == 1);
+    LegateCheck(range.dim == 1);
     DomainPoint result;
     result.dim = 1;
 

@@ -16,9 +16,9 @@
 
 #include "legate_defines.h"
 
-#include <assert.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cuda_runtime.h>
-#include <stdio.h>
 
 #define THREADS_PER_BLOCK 128
 #define CHECK_CUDA(...)                                                      \
@@ -42,17 +42,14 @@ namespace legate::cuda {
 __host__ inline void check_cuda(cudaError_t error, const char* file, int line)
 {
   if (error != cudaSuccess) {
-    static_cast<void>(fprintf(stderr,
-                              "Internal CUDA failure with error %s (%s) in file %s at line %d\n",
-                              cudaGetErrorString(error),
-                              cudaGetErrorName(error),
-                              file,
-                              line));
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(false);
-    } else {
-      exit(error);
-    }
+    static_cast<void>(
+      std::fprintf(stderr,
+                   "Internal CUDA failure with error %s (%s) in file %s at line %d\n",
+                   cudaGetErrorString(error),
+                   cudaGetErrorName(error),
+                   file,
+                   line));
+    std::abort();
   }
 }
 

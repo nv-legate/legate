@@ -162,8 +162,8 @@ void Task::demux_scalar_stores(const Legion::Future& result)
       scalar_reductions_.front().first->set_future(result);
     } else if (can_throw_exception_) {
       detail::Runtime::get_runtime()->record_pending_exception(result);
-    } else if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(1 == num_unbound_outs);
+    } else {
+      LegateAssert(1 == num_unbound_outs);
     }
   } else {
     auto* runtime = detail::Runtime::get_runtime();
@@ -205,8 +205,8 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
       store->set_future(runtime->reduce_future_map(result, redop, store->get_future()));
     } else if (can_throw_exception_) {
       runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
-    } else if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(1 == num_unbound_outs);
+    } else {
+      LegateAssert(1 == num_unbound_outs);
     }
   } else {
     auto idx = static_cast<uint32_t>(num_unbound_outs);
@@ -428,10 +428,8 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
 void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                             std::optional<SymbolicPoint> projection)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    // TODO(wonchanl): We need to raise an exception for the user error in this case
-    assert(!store_partition->store()->unbound());
-  }
+  // TODO(wonchanl): We need to raise an exception for the user error in this case
+  LegateAssert(!store_partition->store()->unbound());
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_output(store_partition->store());
   }

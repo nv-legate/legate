@@ -120,7 +120,7 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
   const auto point     = static_cast<int>(task->index_point[0]);
   const auto num_ranks = static_cast<int>(task->index_domain.get_volume());
 
-  assert(task->futures.size() == static_cast<size_t>(num_ranks + 1));
+  LegateCheck(task->futures.size() == static_cast<size_t>(num_ranks + 1));
   const int unique_id = task->futures[0].get_result<int>();
 
   coll::CollComm comm;
@@ -136,12 +136,12 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
       mapping_table[i]                 = mapping_table_element;
     }
     auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, mapping_table);
-    assert(ret == coll::CollSuccess);
-    assert(mapping_table[point] == comm->mpi_rank);
+    LegateCheck(ret == coll::CollSuccess);
+    LegateCheck(mapping_table[point] == comm->mpi_rank);
     free(mapping_table);
   } else {
     auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, nullptr);
-    assert(ret == coll::CollSuccess);
+    LegateCheck(ret == coll::CollSuccess);
   }
 
   return comm;
@@ -154,12 +154,12 @@ void finalize_cpucoll(const Legion::Task* task,
 {
   legate::detail::show_progress(task, context, runtime);
 
-  assert(task->futures.size() == 1);
+  LegateCheck(task->futures.size() == 1);
   auto comm        = task->futures[0].get_result<coll::CollComm>();
   const auto point = static_cast<int>(task->index_point[0]);
-  assert(comm->global_rank == point);
+  LegateCheck(comm->global_rank == point);
   auto ret = coll::collCommDestroy(comm);
-  assert(ret == coll::CollSuccess);
+  LegateCheck(ret == coll::CollSuccess);
   free(comm);
   comm = nullptr;
 }
@@ -171,7 +171,7 @@ void register_tasks(const detail::Library* core_library)
   const auto runtime       = Legion::Runtime::get_runtime();
   const auto& command_args = Legion::Runtime::get_input_args();
   auto ret                 = coll::collInit(command_args.argc, command_args.argv);
-  assert(ret == coll::CollSuccess);
+  LegateCheck(ret == coll::CollSuccess);
   auto init_cpucoll_mapping_task_id =
     core_library->get_task_id(LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID);
   const char* init_cpucoll_mapping_task_name = "core::comm::cpu::init_mapping";

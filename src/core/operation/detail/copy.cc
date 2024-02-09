@@ -61,7 +61,7 @@ void Copy::validate()
 void Copy::launch(Strategy* p_strategy)
 {
   if (target_.store->has_scalar_storage()) {
-    assert(source_.store->has_scalar_storage());
+    LegateCheck(source_.store->has_scalar_storage());
     target_.store->set_future(source_.store->get_future());
     return;
   }

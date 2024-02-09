@@ -33,7 +33,7 @@ struct print_dense_array_fn {
 
 std::string print_dense_array(const PhysicalStore& store)
 {
-  assert(store.is_readable());
+  LegateCheck(store.is_readable());
   return double_dispatch(store.dim(), store.code(), print_dense_array_fn{}, store);
 }
 

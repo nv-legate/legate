@@ -37,7 +37,7 @@ constexpr decltype(auto) type_dispatch_for_test(legate::Type::Code code,
     }
     default: break;
   }
-  assert(false);
+  LegateAssert(false);
   return f.template operator()<legate::Type::Code::INT64>(std::forward<Fnargs>(args)...);
 }
 
@@ -157,7 +157,7 @@ void fill_indirect(legate::Library library,
       break;
     }
     default: {
-      assert(false);
+      LegateAssert(false);
       break;
     }
   }

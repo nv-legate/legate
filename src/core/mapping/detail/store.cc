@@ -92,28 +92,24 @@ bool Store::can_colocate_with(const Store& other) const
 
 const RegionField& Store::region_field() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!is_future());
-  }
+  LegateAssert(!is_future());
   return region_field_;
 }
 
 const FutureWrapper& Store::future() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(is_future());
-  }
+  LegateAssert(is_future());
   return future_;
 }
 
 Domain Store::domain() const
 {
-  assert(!unbound());
+  LegateCheck(!unbound());
   auto result = is_future() ? future().domain() : region_field().domain(runtime_, context_);
   if (transform_) {
     result = transform_->transform(result);
   }
-  assert(result.dim == dim());
+  LegateCheck(result.dim == dim());
   return result;
 }
 

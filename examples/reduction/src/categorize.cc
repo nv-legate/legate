@@ -28,7 +28,7 @@ struct categorize_fn {
     auto in_shape  = result.shape<1>();
     auto bin_shape = bins.shape<1>();
 
-    assert(!bin_shape.empty());
+    LegateCheck(!bin_shape.empty());
     if (in_shape.empty()) {
       return;
     }
@@ -54,7 +54,7 @@ struct categorize_fn {
   template <legate::Type::Code CODE, std::enable_if_t<legate::is_complex<CODE>::value>* = nullptr>
   void operator()(legate::Store& result, legate::Store& input, legate::Store& bins)
   {
-    assert(false);
+    LegateCheck(false);
   }
 };
 

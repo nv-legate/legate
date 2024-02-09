@@ -268,7 +268,7 @@ InternalSharedPtr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack
         std::make_unique<detail::Delinearize>(dim, std::move(sizes)), std::move(parent));
     }
   }
-  assert(false);
+  LEGATE_ABORT("Unhandled transform code: " << code);
   return nullptr;
 }
 

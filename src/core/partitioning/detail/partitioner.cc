@@ -78,16 +78,12 @@ Domain LaunchDomainResolver::resolve_launch_domain() const
     if (unbound_dim_ != UNSET && unbound_dim_ > 1) {
       return {};
     }
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(launch_volumes_.size() == 1);
-    }
+    LegateAssert(launch_volumes_.size() == 1);
     const int64_t volume = *launch_volumes_.begin();
     return {0, volume - 1};
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(launch_domains_.size() == 1);
-  }
+  LegateAssert(launch_domains_.size() == 1);
   auto& launch_domain = *launch_domains_.begin();
   if (unbound_dim_ != UNSET && launch_domain.dim != static_cast<int32_t>(unbound_dim_)) {
     return {};
@@ -107,17 +103,13 @@ Domain Strategy::launch_domain(const Operation* op) const
 
 void Strategy::set_launch_domain(const Operation* op, const Domain& domain)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(launch_domains_.find(op) == launch_domains_.end());
-  }
+  LegateAssert(launch_domains_.find(op) == launch_domains_.end());
   launch_domains_.insert({op, domain});
 }
 
 void Strategy::insert(const Variable* partition_symbol, InternalSharedPtr<Partition> partition)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(assignments_.find(*partition_symbol) == assignments_.end());
-  }
+  LegateAssert(assignments_.find(*partition_symbol) == assignments_.end());
   assignments_.insert({*partition_symbol, std::move(partition)});
 }
 
@@ -125,9 +117,7 @@ void Strategy::insert(const Variable* partition_symbol,
                       InternalSharedPtr<Partition> partition,
                       Legion::FieldSpace field_space)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(field_spaces_.find(*partition_symbol) == field_spaces_.end());
-  }
+  LegateAssert(field_spaces_.find(*partition_symbol) == field_spaces_.end());
   field_spaces_.insert({*partition_symbol, field_space});
   insert(partition_symbol, std::move(partition));
 }
@@ -141,9 +131,7 @@ InternalSharedPtr<Partition> Strategy::operator[](const Variable* partition_symb
 {
   auto finder = assignments_.find(*partition_symbol);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(finder != assignments_.end());
-  }
+  LegateAssert(finder != assignments_.end());
   return finder->second;
 }
 
@@ -151,9 +139,7 @@ const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_s
 {
   auto finder = field_spaces_.find(*partition_symbol);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(finder != field_spaces_.end());
-  }
+  LegateAssert(finder != field_spaces_.end());
   return finder->second;
 }
 
@@ -245,9 +231,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto has_key_part =
       store->has_key_partition(op->machine(), solver.find_restrictions(part_symb));
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(!store->unbound());
-    }
+    LegateAssert(!store->unbound());
     return std::make_tuple(
       store->storage_size(), has_key_part, solver.find_access_mode(*part_symb));
   };
@@ -271,9 +255,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto partition = store->find_or_create_key_partition(op->machine(), restrictions);
 
     strategy->record_key_partition(part_symb);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(partition != nullptr);
-    }
+    LegateAssert(partition != nullptr);
     for (auto symb : equiv_class) {
       strategy->insert(symb, partition);
     }

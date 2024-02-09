@@ -151,7 +151,7 @@ ncclComm_t* init_nccl(const Legion::Task* task,
 
   legate::detail::show_progress(task, context, runtime);
 
-  assert(task->futures.size() == 1);
+  LegateCheck(task->futures.size() == 1);
 
   auto id   = task->futures[0].get_result<ncclUniqueId>();
   auto comm = std::make_unique<ncclComm_t>();
@@ -233,7 +233,7 @@ void finalize_nccl(const Legion::Task* task,
 
   legate::detail::show_progress(task, context, runtime);
 
-  assert(task->futures.size() == 1);
+  LegateCheck(task->futures.size() == 1);
   auto comm = task->futures[0].get_result<ncclComm_t*>();
   CHECK_NCCL(ncclCommDestroy(*comm));
   delete comm;

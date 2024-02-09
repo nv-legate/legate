@@ -20,7 +20,7 @@ namespace tree_reduce {
   auto output = context.output(0);
   for (auto& input : inputs) {
     auto shape = input.shape<1>();
-    assert(shape.empty() || shape.volume() == TILE_SIZE);
+    LegateAssert(shape.empty() || shape.volume() == TILE_SIZE);
   }
   output.data().create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);
 }

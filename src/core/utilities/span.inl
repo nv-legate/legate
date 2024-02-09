@@ -12,9 +12,8 @@
 
 #pragma once
 
+#include "core/utilities/assert.h"
 #include "core/utilities/span.h"
-
-#include <cassert>
 
 namespace legate {
 
@@ -32,7 +31,7 @@ std::size_t Span<T>::size() const
 template <typename T>
 decltype(auto) Span<T>::operator[](std::size_t pos) const
 {
-  assert(pos < size_);
+  LegateAssert(pos < size_);
   return data_[pos];
 }
 
@@ -51,7 +50,7 @@ const T* Span<T>::end() const
 template <typename T>
 Span<T> Span<T>::subspan(std::size_t off)
 {
-  assert(off <= size_);
+  LegateCheck(off <= size_);
   return {data_ + off, size_ - off};
 }
 

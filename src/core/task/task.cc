@@ -62,7 +62,7 @@ std::string generate_task_name(const std::type_info& ti)
   char* demangled = abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status);
   result          = demangled;
   free(demangled);
-  assert(!status);
+  LegateCheck(!status);
   return result;
 }
 

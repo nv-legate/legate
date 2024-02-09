@@ -50,6 +50,15 @@ repos:
             require_serial: false
             stages: [pre-commit]
             exclude: '^(src/core/legate_c\.h|src/legate_preamble\.h)$'
+        -   id: legate-assert
+            name: legate-assert
+            description: 'Find uses of assert() that should be using LegateAssert()'
+            entry: ./scripts/pre-commit/legate_assert.py
+            language: python
+            'types_or': [c++, c, cuda]
+            require_serial: false
+            stages: [pre-commit]
+            exclude: '^(src/core/utilities/assert\.h)$'
 
 ci:
     autoupdate_schedule: quarterly

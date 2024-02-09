@@ -111,9 +111,7 @@ Storage::~Storage()
 
 const tuple<uint64_t>& Storage::offsets() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!unbound_);
-  }
+  LegateAssert(!unbound_);
   return offsets_;
 }
 
@@ -195,9 +193,7 @@ InternalSharedPtr<Storage> Storage::get_root()
 
 InternalSharedPtr<LogicalRegionField> Storage::get_region_field()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(Kind::REGION_FIELD == kind_);
-  }
+  LegateAssert(Kind::REGION_FIELD == kind_);
   if (region_field_ != nullptr) {
     return region_field_;
   }
@@ -215,16 +211,14 @@ InternalSharedPtr<LogicalRegionField> Storage::get_region_field()
 
 Legion::Future Storage::get_future() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(Kind::FUTURE == kind_);
-  }
+  LegateAssert(Kind::FUTURE == kind_);
   return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
-  assert(unbound_ && region_field_ == nullptr);
-  assert(parent_ == nullptr);
+  LegateCheck(unbound_ && region_field_ == nullptr);
+  LegateCheck(parent_ == nullptr);
 
   unbound_      = false;
   region_field_ = std::move(region_field);
@@ -240,9 +234,7 @@ void Storage::set_future(Legion::Future future)
 
 RegionField Storage::map()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(Kind::REGION_FIELD == kind_);
-  }
+  LegateAssert(Kind::REGION_FIELD == kind_);
   auto region_field = get_region_field();
   auto mapped       = region_field->map();
   // Set the right subregion so the physical store can see the right domain
@@ -396,9 +388,8 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage>&& storage)
     transform_{make_internal_shared<TransformStack>()}
 {
   assert_fixed_storage_size(storage_);
+  LegateAssert(transform_ != nullptr);
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(transform_ != nullptr);
-
     log_legate().debug() << "Create " << to_string();
   }
 }
@@ -412,29 +403,24 @@ LogicalStore::LogicalStore(tuple<uint64_t>&& extents,
     transform_{std::move(transform)}
 {
   assert_fixed_storage_size(storage_);
+  LegateAssert(transform_ != nullptr);
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(transform_ != nullptr);
-
     log_legate().debug() << "Create " << to_string();
   }
 }
 
 void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!has_scalar_storage());
-    // The shape object of this store must be an alias to that of the storage
-    assert(storage_->shape() == shape());
-  }
+  LegateAssert(!has_scalar_storage());
+  // The shape object of this store must be an alias to that of the storage
+  LegateAssert(storage_->shape() == shape());
   // this call updates the shape for both the storage and the store
   storage_->set_region_field(std::move(region_field));
 }
 
 void LogicalStore::set_future(Legion::Future future)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(has_scalar_storage());
-  }
+  LegateAssert(has_scalar_storage());
   storage_->set_future(std::move(future));
 }
 
@@ -479,9 +465,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice(const InternalSharedPtr<Logi
                                                     int32_t dim,
                                                     Slice slice)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(self.get() == this);
-  }
+  LegateAssert(self.get() == this);
   if (dim < 0 || dim >= static_cast<int32_t>(this->dim())) {
     throw std::invalid_argument{"Invalid slicing of dimension " + std::to_string(dim) + " for a " +
                                 std::to_string(this->dim()) + "-D store"};
@@ -605,9 +589,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(int32_t dim, std::vect
 InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling(
   const InternalSharedPtr<LogicalStore>& self, tuple<uint64_t> tile_shape)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(self.get() == this);
-  }
+  LegateAssert(self.get() == this);
   if (tile_shape.size() != dim()) {
     throw std::invalid_argument{"Incompatible tile shape: expected a " +
                                 std::to_string(extents().size()) + "-tuple, got a " +
@@ -638,9 +620,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
     return make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(storage_->kind() == Storage::Kind::REGION_FIELD);
-  }
+  LegateAssert(storage_->kind() == Storage::Kind::REGION_FIELD);
   auto region_field = storage_->map();
   mapped_ =
     make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
@@ -701,9 +681,7 @@ Legion::ProjectionID LogicalStore::compute_projection(
   }
 
   // If we're here, it means the launch domain has to be 1D due to mixed store dimensionalities
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(launch_ndim == 1);
-  }
+  LegateAssert(launch_ndim == 1);
 
   // Check if the color shape has only one dimension of a non-unit extent, in which case
   // delinearization would simply be projections
@@ -761,9 +739,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
     }
   } else {
     store_part = transform_->convert(storage_part);
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(store_part);
-    }
+    LegateAssert(store_part);
   }
   return store_part;
 }
@@ -802,9 +778,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition(
   InternalSharedPtr<Partition> partition,
   std::optional<bool> complete)
 {
-#if LegateDefined(LEGATE_USE_DEBUG)
-  assert(self.get() == this);
-#endif
+  LegateAssert(self.get() == this);
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
   }
@@ -832,9 +806,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   Legion::PrivilegeMode privilege,
   int64_t redop)
 {
-#if LegateDefined(LEGATE_USE_DEBUG)
-  assert(self.get() == this);
-#endif
+  LegateAssert(self.get() == this);
   if (has_scalar_storage()) {
     if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
       privilege = LEGION_READ_WRITE;
@@ -870,12 +842,8 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(
   const Domain& launch_domain,
   Legion::PrivilegeMode privilege)
 {
-#if LegateDefined(LEGATE_USE_DEBUG)
-  assert(self.get() == this);
-#endif
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(self->key_partition_ != nullptr);
-  }
+  LegateAssert(self.get() == this);
+  LegateAssert(self->key_partition_ != nullptr);
   auto store_partition = create_partition(self, self->key_partition_);
   auto store_proj      = store_partition->create_store_projection(launch_domain);
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));

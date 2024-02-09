@@ -24,9 +24,7 @@ InternalSharedPtr<PhysicalStore> PhysicalArray::data() const
 
 bool BasePhysicalArray::unbound() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(!nullable() || data_->is_unbound_store() == null_mask_->is_unbound_store());
-  }
+  LegateAssert(!nullable() || data_->is_unbound_store() == null_mask_->is_unbound_store());
   return data_->is_unbound_store();
 }
 
@@ -59,9 +57,7 @@ void BasePhysicalArray::check_shape_dimension(int32_t dim) const
 
 bool ListPhysicalArray::valid() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(descriptor_->valid() == vardata_->valid());
-  }
+  LegateAssert(descriptor_->valid() == vardata_->valid());
   return descriptor_->valid();
 }
 
@@ -98,9 +94,7 @@ bool StructPhysicalArray::valid() const
 {
   auto result =
     std::all_of(fields_.begin(), fields_.end(), [](auto& field) { return field->valid(); });
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(null_mask_->valid() == result);
-  }
+  LegateAssert(null_mask_->valid() == result);
   return result;
 }
 

@@ -163,12 +163,10 @@ void ConsensusMatchingFieldManager::free_field(FreeFieldInfo free_field_info, bo
 
 void ConsensusMatchingFieldManager::calculate_match_credit()
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(shape_->ready());
-  }
+  LegateCheck(shape_->ready());
   const auto size = shape_->volume() * field_size_;
   if (size > Config::max_field_reuse_size) {
-    assert(Config::max_field_reuse_size > 0);
+    LegateCheck(Config::max_field_reuse_size > 0);
     field_match_credit_ = (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
   }
 }
@@ -193,7 +191,7 @@ void ConsensusMatchingFieldManager::issue_field_match()
     auto&& item = input.emplace_back(info.region.get_tree_id(), info.field_id);
     infos[item] = std::move(info);
   }
-  assert(infos.size() == unordered_free_fields_.size());
+  LegateCheck(infos.size() == unordered_free_fields_.size());
   unordered_free_fields_.clear();
   // Dispatch the match and put it on the queue of outstanding matches, but don't block on it yet.
   // We'll do that when we run out of ordered fields.
@@ -205,7 +203,7 @@ void ConsensusMatchingFieldManager::issue_field_match()
 
 void ConsensusMatchingFieldManager::process_next_field_match()
 {
-  assert(!matches_.empty());
+  LegateCheck(!matches_.empty());
   auto& match = matches_.front();
   auto& infos = info_for_match_items_.front();
   match.wait();
@@ -224,7 +222,7 @@ void ConsensusMatchingFieldManager::process_next_field_match()
   // which is the same order that all shards will see.
   for (const auto& item : match.output()) {
     auto it = infos.find(item);
-    assert(it != infos.end());
+    LegateCheck(it != infos.end());
     FieldManager::free_field(std::move(it->second), false /*unordered*/);
     infos.erase(it);
   }

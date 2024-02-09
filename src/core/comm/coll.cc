@@ -14,7 +14,6 @@
 
 #include "core/utilities/detail/strtoll.h"
 
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -163,7 +162,7 @@ int BackendNetwork::collGetUniqueId(int* id)
 void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, size_t size)
 {
   void* sendbuf_tmp = malloc(size);
-  assert(sendbuf_tmp != nullptr);
+  LegateCheck(sendbuf_tmp != nullptr);
   memcpy(sendbuf_tmp, recvbuf, size);
   return sendbuf_tmp;
 }

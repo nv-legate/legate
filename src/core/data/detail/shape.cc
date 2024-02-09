@@ -49,7 +49,7 @@ const Legion::IndexSpace& Shape::index_space()
 {
   ensure_binding();
   if (!index_space_.exists()) {
-    assert(State::READY == state_);
+    LegateCheck(State::READY == state_);
     index_space_ = Runtime::get_runtime()->find_or_create_index_space(extents_);
   }
   return index_space_;
@@ -57,9 +57,7 @@ const Legion::IndexSpace& Shape::index_space()
 
 void Shape::set_index_space(const Legion::IndexSpace& index_space)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    assert(State::UNBOUND == state_);
-  }
+  LegateCheck(State::UNBOUND == state_);
   index_space_ = index_space;
   state_       = State::BOUND;
 }
@@ -77,7 +75,6 @@ std::string Shape::to_string() const
       return "Shape" + extents_.to_string();
     }
   }
-  assert(false);
   return "";
 }
 

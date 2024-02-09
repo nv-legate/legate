@@ -262,9 +262,7 @@ void TaskLauncher::post_process_unbound_stores(
   auto no_part  = create_no_partition();
 
   for (auto& arg : unbound_stores_) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      assert(arg->requirement_index() != -1U);
-    }
+    LegateAssert(arg->requirement_index() != -1U);
     auto* store = arg->store();
     auto& shape = store->shape();
     auto& req   = output_requirements[arg->requirement_index()];
