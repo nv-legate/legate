@@ -17,6 +17,22 @@
 
 namespace legate {
 
+void PhysicalStore::bind_untyped_data(Buffer<int8_t, 1>& buffer, const Point<1>& extents) const
+{
+  check_valid_binding(true);
+  check_buffer_dimension(1);
+
+  Legion::OutputRegion out;
+  Legion::FieldID fid;
+
+  get_output_field(out, fid);
+
+  out.return_data(DomainPoint{extents}, fid, buffer.get_instance(), false /*check_constraints*/);
+
+  // We will use this value only when the unbound store is 1D
+  update_num_elements(extents[0]);
+}
+
 void PhysicalStore::bind_empty_data() const { impl_->bind_empty_data(); }
 
 int32_t PhysicalStore::dim() const { return impl_->dim(); }

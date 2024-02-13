@@ -186,8 +186,9 @@ class PhysicalStore {
   [[nodiscard]] VAL scalar() const;
 
   /**
-   * @brief Creates a buffer of specified extents for the unbound store. The returned
-   * buffer is always consistent with the mapping policy for the store. Can be invoked
+   * @brief Creates a buffer of specified extents for the unbound store.
+   *
+   * The returned buffer is always consistent with the mapping policy for the store. Can be invoked
    * multiple times unless `bind_buffer` is true.
    *
    * @param extents Extents of the buffer
@@ -201,23 +202,47 @@ class PhysicalStore {
   [[nodiscard]] Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents,
                                                     bool bind_buffer = false) const;
   /**
-   * @brief Binds a buffer to the store. Valid only when the store is unbound and
-   * has not yet been bound to another buffer. The buffer must be consistent with
-   * the mapping policy for the store. Recommend that the buffer be created by
-   * a `create_output_buffer` call.
+   * @brief Binds a buffer to the store.
+   *
+   * Valid only when the store is unbound and has not yet been bound to another buffer. The buffer
+   * must be consistent with the mapping policy for the store.  Recommend that the buffer be created
+   * by a `create_output_buffer` call.
    *
    * @param buffer Buffer to bind to the store
    *
-   * @param extents Extents of the buffer. Passing extents smaller than the actual
-   * extents of the buffer is legal; the runtime uses the passed extents as the
-   * extents of this store.
+   * @param extents Extents of the buffer. Passing extents smaller than the actual extents of the
+   * buffer is legal; the runtime uses the passed extents as the extents of this store.
    *
    */
   template <typename T, int32_t DIM>
   void bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const;
   /**
-   * @brief Makes the unbound store empty. Valid only when the store is unbound and
-   * has not yet been bound to another buffer.
+   * @brief Binds a 1D buffer of byte-size elements to the store in an untyped manner.
+   *
+   * Values in the buffer are reinterpreted based on the store's actual type. The buffer must have
+   * enough bytes to be aligned on the store's element boundary. For example, a 1D buffer of size
+   * 4 wouldn't be valid if the store had the int64 type, whereas it would be if the store's element
+   * type is int32.
+   *
+   * Like the typed counterpart (i.e., bind_data), the operation is legal only when the store is
+   * unbound and has not yet been bound to another buffer. The memory in which the buffer is created
+   * must be the same as the mapping decision of this store.
+   *
+   * Can be used only with 1D unbound stores.
+   *
+   * @param buffer Buffer to bind to the store
+   *
+   * @param extents Extents of the buffer. Passing extents smaller than the actual extents of the
+   * buffer is legal; the runtime uses the passed extents as the extents of this store. The size of
+   * the buffer must be at least as big as `extents * type().size()`.
+   *
+   * @snippet unit/physical_store.cc Bind an untyped buffer to an unbound store
+   */
+  void bind_untyped_data(Buffer<int8_t, 1>& buffer, const Point<1>& extents) const;
+  /**
+   * @brief Makes the unbound store empty.
+   *
+   * Valid only when the store is unbound and has not yet been bound to another buffer.
    */
   void bind_empty_data() const;
 
@@ -284,8 +309,9 @@ class PhysicalStore {
   [[nodiscard]] bool is_reducible() const;
 
   /**
-   * @brief Indicates whether the store is valid. A store passed to a task can be invalid
-   * only for reducer tasks for tree reduction.
+   * @brief Indicates whether the store is valid.
+   *
+   * A store passed to a task can be invalid only for reducer tasks for tree reduction.
    *
    * @return true The store is valid
    * @return false The store is invalid and cannot be used in any data access
@@ -308,9 +334,10 @@ class PhysicalStore {
    */
   [[nodiscard]] bool is_future() const;
   /**
-   * @brief Indicates whether the store is an unbound store. The value DOES NOT indicate
-   * that the store has already assigned to a buffer; i.e., the store may have been assigned
-   * to a buffer even when this function returns `true`.
+   * @brief Indicates whether the store is an unbound store.
+   *
+   * The value DOES NOT indicate that the store has already assigned to a buffer; i.e., the store
+   * may have been assigned to a buffer even when this function returns `true`.
    *
    * @return true The store is an unbound store
    * @return false The store is a normal store

@@ -25,13 +25,14 @@ constexpr uint32_t UNBOUND_STORE_EXTENTS = 9;
 
 static const char* library_name = "legate.physical_store";
 
-enum class UnbountStoreOpCode : uint32_t {
-  BIND_EMPTY          = 0,
-  BIND_CREATED_BUFFER = 1,
-  BIND_BUFFER         = 2,
-  INVALID_BINDING     = 3,
-  INVALID_DIM         = 4,
-  BASIC_FEATURES      = 5
+enum class UnboundStoreOpCode : uint32_t {
+  BIND_EMPTY,
+  BIND_CREATED_BUFFER,
+  BIND_BUFFER,
+  BIND_UNTYPED_BUFFER,
+  INVALID_BINDING,
+  INVALID_DIM,
+  BASIC_FEATURES,
 };
 
 enum class AccessorCode : uint32_t {
@@ -62,7 +63,7 @@ template <typename T, int32_t DIM>
 void test_bound_store(legate::PhysicalStore& store, const legate::Rect<DIM>& expect_rect);
 template <typename T>
 void test_future_store(const legate::Scalar& scalar);
-legate::PhysicalStore create_unbound_store_by_task(UnbountStoreOpCode op_code,
+legate::PhysicalStore create_unbound_store_by_task(UnboundStoreOpCode op_code,
                                                    const legate::Type& type,
                                                    uint32_t dim = 1);
 void test_array_store(legate::LogicalArray& logical_array, StoreTaskID id);
@@ -82,30 +83,40 @@ struct unbound_store_fn {
   void operator()(legate::PhysicalStore& store, uint32_t op_code)
   {
     using T                 = legate::type_of<CODE>;
-    UnbountStoreOpCode code = static_cast<UnbountStoreOpCode>(op_code);
+    UnboundStoreOpCode code = static_cast<UnboundStoreOpCode>(op_code);
     switch (code) {
-      case UnbountStoreOpCode::BIND_EMPTY: {
+      case UnboundStoreOpCode::BIND_EMPTY: {
         store.bind_empty_data();
         break;
       }
-      case UnbountStoreOpCode::BIND_CREATED_BUFFER: {
+      case UnboundStoreOpCode::BIND_CREATED_BUFFER: {
         auto buffer =
           store.create_output_buffer<T, DIM>(legate::Point<DIM>{UNBOUND_STORE_EXTENTS}, true);
         break;
       }
-      case UnbountStoreOpCode::BIND_BUFFER: {
+      case UnboundStoreOpCode::BIND_BUFFER: {
         auto buffer = store.create_output_buffer<T, DIM>(legate::Point<DIM>{UNBOUND_STORE_EXTENTS});
         store.bind_data(buffer, legate::Point<DIM>::ONES());
         break;
       }
-      case UnbountStoreOpCode::INVALID_BINDING: {
+      case UnboundStoreOpCode::BIND_UNTYPED_BUFFER: {
+        /// [Bind an untyped buffer to an unbound store]
+        constexpr auto num_elements      = 9;
+        const auto element_size_in_bytes = store.type().size();
+        auto buffer = legate::create_buffer<int8_t, 1>(num_elements * element_size_in_bytes);
+        store.bind_untyped_data(buffer, legate::Point<1>{num_elements});
+        /// [Bind an untyped buffer to an unbound store]
+        assert(num_elements == UNBOUND_STORE_EXTENTS);
+        break;
+      }
+      case UnboundStoreOpCode::INVALID_BINDING: {
         auto buffer =
           store.create_output_buffer<T, DIM>(legate::Point<DIM>{UNBOUND_STORE_EXTENTS}, true);
         EXPECT_THROW(store.bind_data(buffer, legate::Point<DIM>::ONES()), std::invalid_argument);
         EXPECT_THROW(store.bind_empty_data(), std::invalid_argument);
         break;
       }
-      case UnbountStoreOpCode::INVALID_DIM: {
+      case UnboundStoreOpCode::INVALID_DIM: {
         constexpr int32_t INVALID_DIM = DIM % LEGATE_MAX_DIM + 1;
         EXPECT_THROW(static_cast<void>(
                        store.create_output_buffer<T>(legate::Point<INVALID_DIM>::ONES(), true)),
@@ -115,7 +126,7 @@ struct unbound_store_fn {
         store.bind_empty_data();
         break;
       }
-      case UnbountStoreOpCode::BASIC_FEATURES: {
+      case UnboundStoreOpCode::BASIC_FEATURES: {
         test_unbound_store<T, DIM>(store);
 
         // bind to buffer
@@ -650,7 +661,7 @@ void test_unbound_store(const legate::PhysicalStore& store)
   EXPECT_THROW(static_cast<void>(store.read_accessor<T, DIM>()), std::invalid_argument);
 }
 
-legate::PhysicalStore create_unbound_store_by_task(UnbountStoreOpCode op_code,
+legate::PhysicalStore create_unbound_store_by_task(UnboundStoreOpCode op_code,
                                                    const legate::Type& type,
                                                    uint32_t dim)
 {
@@ -865,25 +876,25 @@ TEST_F(PhysicalStoreUnit, UnboundStoreCreation)
 {
   register_tasks();
 #if LEGATE_MAX_DIM >= 1
-  create_unbound_store_by_task(UnbountStoreOpCode::BASIC_FEATURES, legate::uint32(), 1);
+  create_unbound_store_by_task(UnboundStoreOpCode::BASIC_FEATURES, legate::uint32(), 1);
 #endif
 #if LEGATE_MAX_DIM >= 2
-  create_unbound_store_by_task(UnbountStoreOpCode::BASIC_FEATURES, legate::bool_(), 2);
+  create_unbound_store_by_task(UnboundStoreOpCode::BASIC_FEATURES, legate::bool_(), 2);
 #endif
 #if LEGATE_MAX_DIM >= 3
-  create_unbound_store_by_task(UnbountStoreOpCode::BASIC_FEATURES, legate::float16(), 3);
+  create_unbound_store_by_task(UnboundStoreOpCode::BASIC_FEATURES, legate::float16(), 3);
 #endif
 #if LEGATE_MAX_DIM >= 4
-  create_unbound_store_by_task(UnbountStoreOpCode::BASIC_FEATURES, legate::float32(), 4);
+  create_unbound_store_by_task(UnboundStoreOpCode::BASIC_FEATURES, legate::float32(), 4);
 #endif
 #if LEGATE_MAX_DIM >= 5
-  create_unbound_store_by_task(UnbountStoreOpCode::BASIC_FEATURES, legate::float64(), 5);
+  create_unbound_store_by_task(UnboundStoreOpCode::BASIC_FEATURES, legate::float64(), 5);
 #endif
 #if LEGATE_MAX_DIM >= 6
-  create_unbound_store_by_task(UnbountStoreOpCode::BASIC_FEATURES, legate::complex64(), 6);
+  create_unbound_store_by_task(UnboundStoreOpCode::BASIC_FEATURES, legate::complex64(), 6);
 #endif
 #if LEGATE_MAX_DIM >= 7
-  create_unbound_store_by_task(UnbountStoreOpCode::BASIC_FEATURES, legate::complex128(), 7);
+  create_unbound_store_by_task(UnboundStoreOpCode::BASIC_FEATURES, legate::complex128(), 7);
 #endif
 }
 
@@ -893,7 +904,7 @@ TEST_F(PhysicalStoreUnit, UnboundStoreBindBuffer)
   constexpr int32_t DIM = 1;
 
   {
-    auto store = create_unbound_store_by_task(UnbountStoreOpCode::BIND_EMPTY, legate::int32());
+    auto store = create_unbound_store_by_task(UnboundStoreOpCode::BIND_EMPTY, legate::int32());
     // empty rect
     auto expect_rect = legate::Rect<DIM, int32_t>{0, -1};
     test_bound_store<int32_t, DIM>(store, expect_rect);
@@ -901,24 +912,32 @@ TEST_F(PhysicalStoreUnit, UnboundStoreBindBuffer)
 
   {
     auto store =
-      create_unbound_store_by_task(UnbountStoreOpCode::BIND_CREATED_BUFFER, legate::float32());
+      create_unbound_store_by_task(UnboundStoreOpCode::BIND_CREATED_BUFFER, legate::float32());
     auto expect_rect = legate::Rect<DIM, int32_t>{0, UNBOUND_STORE_EXTENTS - 1};
     test_bound_store<float, DIM>(store, expect_rect);
   }
 
   {
-    auto store = create_unbound_store_by_task(UnbountStoreOpCode::BIND_BUFFER, legate::complex64());
+    auto store = create_unbound_store_by_task(UnboundStoreOpCode::BIND_BUFFER, legate::complex64());
     // equals extents of binded buffer
     auto expect_rect = legate::Rect<DIM, int32_t>{0, 0};
     test_bound_store<complex<float>, DIM>(store, expect_rect);
+  }
+
+  {
+    auto store =
+      create_unbound_store_by_task(UnboundStoreOpCode::BIND_UNTYPED_BUFFER, legate::complex128());
+    // equals extents of binded buffer
+    auto expect_rect = legate::Rect<DIM, int32_t>{0, UNBOUND_STORE_EXTENTS - 1};
+    test_bound_store<complex<double>, DIM>(store, expect_rect);
   }
 }
 
 TEST_F(PhysicalStoreUnit, UnboundStoreInvalid)
 {
   register_tasks();
-  create_unbound_store_by_task(UnbountStoreOpCode::INVALID_BINDING, legate::int64());
-  create_unbound_store_by_task(UnbountStoreOpCode::INVALID_DIM, legate::uint8());
+  create_unbound_store_by_task(UnboundStoreOpCode::INVALID_BINDING, legate::int64());
+  create_unbound_store_by_task(UnboundStoreOpCode::INVALID_DIM, legate::uint8());
 }
 
 TEST_F(PhysicalStoreUnit, PrimitiveArrayStoreCreation)
