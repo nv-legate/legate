@@ -63,4 +63,4 @@ PROCESS_ENV = {
 }
 
 # sysmem value to use for non-CPU stages
-SMALL_SYSMEM = 200
+SMALL_SYSMEM = 300
