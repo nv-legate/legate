@@ -106,7 +106,7 @@ struct unbound_store_fn {
         auto buffer = legate::create_buffer<int8_t, 1>(num_elements * element_size_in_bytes);
         store.bind_untyped_data(buffer, legate::Point<1>{num_elements});
         /// [Bind an untyped buffer to an unbound store]
-        assert(num_elements == UNBOUND_STORE_EXTENTS);
+        LegateCheck(num_elements == UNBOUND_STORE_EXTENTS);
         break;
       }
       case UnboundStoreOpCode::INVALID_BINDING: {
