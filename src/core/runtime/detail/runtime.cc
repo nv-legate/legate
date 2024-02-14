@@ -97,40 +97,49 @@ Runtime::Runtime()
 {
 }
 
-Library* Runtime::create_library(const std::string& library_name,
+Library* Runtime::create_library(std::string_view library_name,
                                  const ResourceConfig& config,
                                  std::unique_ptr<mapping::Mapper> mapper,
                                  bool in_callback)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
-    throw std::invalid_argument{"Library " + library_name + " already exists"};
+    std::stringstream ss;
+
+    ss << "Library " << library_name << " already exists";
+    throw std::invalid_argument{std::move(ss).str()};
   }
 
-  log_legate().debug("Library %s is created", library_name.c_str());
+  log_legate().debug("Library %s is created", library_name.data());
   if (nullptr == mapper) {
     mapper = std::make_unique<mapping::detail::DefaultMapper>();
   }
-  auto library             = std::unique_ptr<Library>{new Library{library_name, config}};
-  auto ptr                 = library.get();
-  libraries_[library_name] = std::move(library);
+  auto ptr =
+    libraries_
+      .emplace(
+        library_name,
+        std::unique_ptr<Library>{new Library{static_cast<std::string>(library_name), config}})
+      .first->second.get();
   ptr->register_mapper(std::move(mapper), in_callback);
   return ptr;
 }
 
-Library* Runtime::find_library(const std::string& library_name, bool can_fail /*=false*/) const
+Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=false*/) const
 {
   const auto finder = libraries_.find(library_name);
 
   if (libraries_.end() == finder) {
     if (!can_fail) {
-      throw std::out_of_range{"Library " + library_name + " does not exist"};
+      std::stringstream ss;
+
+      ss << "Library " << library_name << " does not exist";
+      throw std::out_of_range{std::move(ss).str()};
     }
     return {};
   }
   return finder->second.get();
 }
 
-Library* Runtime::find_or_create_library(const std::string& library_name,
+Library* Runtime::find_or_create_library(std::string_view library_name,
                                          const ResourceConfig& config,
                                          std::unique_ptr<mapping::Mapper> mapper,
                                          bool* created,
@@ -144,7 +153,7 @@ Library* Runtime::find_or_create_library(const std::string& library_name,
     }
     return result;
   }
-  result = create_library(library_name, config, std::move(mapper), in_callback);
+  result = create_library(std::move(library_name), config, std::move(mapper), in_callback);
   if (created != nullptr) {
     *created = true;
   }
@@ -1712,7 +1721,7 @@ void try_set_property(Runtime& runtime,
                       const std::string& module_name,
                       const std::string& property_name,
                       const VarWithDefault<DEFAULT, SCALE, Value>& var,
-                      const std::string& error_msg)
+                      std::string_view error_msg)
 {
   auto value = var.value();
   if (value < 0) {

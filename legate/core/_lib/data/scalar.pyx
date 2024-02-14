@@ -24,6 +24,10 @@ from libcpp cimport bool as cpp_bool
 from libcpp.complex cimport complex as std_complex
 from libcpp.string cimport string as std_string
 
+from ..._ext.cython_libcpp.string_view cimport (
+    string_view_from_py as std_string_view_from_py,
+)
+
 from typing import Any
 
 import numpy as np
@@ -195,7 +199,7 @@ cpdef void from_struct(Scalar scalar, object value, Type dtype):
 
 
 cpdef void from_string(Scalar scalar, str value, Type _):
-    scalar._handle = _Scalar(<std_string> value.encode())
+    scalar._handle = _Scalar(std_string_view_from_py(value))
 
 
 cdef dict _CONSTRUCTORS = {

@@ -18,34 +18,34 @@
 
 namespace legate {
 
-Library Runtime::find_library(const std::string& library_name) const
+Library Runtime::find_library(std::string_view library_name) const
 {
-  return Library{impl_->find_library(library_name, false)};
+  return Library{impl_->find_library(std::move(library_name), false)};
 }
 
-std::optional<Library> Runtime::maybe_find_library(const std::string& library_name) const
+std::optional<Library> Runtime::maybe_find_library(std::string_view library_name) const
 {
-  if (auto result = impl_->find_library(library_name, true)) {
+  if (auto result = impl_->find_library(std::move(library_name), true)) {
     return {Library{std::move(result)}};
   }
   return std::nullopt;
 }
 
-Library Runtime::create_library(const std::string& library_name,
+Library Runtime::create_library(std::string_view library_name,
                                 const ResourceConfig& config,
                                 std::unique_ptr<mapping::Mapper> mapper)
 {
-  return Library{
-    impl_->create_library(library_name, config, std::move(mapper), false /*in_callback*/)};
+  return Library{impl_->create_library(
+    std::move(library_name), config, std::move(mapper), false /*in_callback*/)};
 }
 
-Library Runtime::find_or_create_library(const std::string& library_name,
+Library Runtime::find_or_create_library(std::string_view library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper,
                                         bool* created)
 {
   return Library{impl_->find_or_create_library(
-    library_name, config, std::move(mapper), created, false /*in_callback*/)};
+    std::move(library_name), config, std::move(mapper), created, false /*in_callback*/)};
 }
 
 AutoTask Runtime::create_task(Library library, std::int64_t task_id)

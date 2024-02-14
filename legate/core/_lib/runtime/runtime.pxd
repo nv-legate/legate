@@ -13,8 +13,8 @@ from cython.cimports.cpython.ref import PyObject
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
-from libcpp.string cimport string as std_string
 
+from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
 from ..data.external_allocation cimport _ExternalAllocation
 from ..data.logical_array cimport LogicalArray, _LogicalArray
 from ..data.logical_store cimport LogicalStore, _LogicalStore
@@ -99,7 +99,7 @@ cdef extern from *:
 
 cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
-        _Library find_library(std_string)
+        _Library find_library(std_string_view)
         _AutoTask create_task(_Library, int64_t)
         _ManualTask create_task(_Library, int64_t, const _tuple[uint64_t]&)
         _ManualTask create_task(_Library, int64_t, const _Domain&)

@@ -21,8 +21,8 @@ from libc.stdint cimport (
 )
 from libcpp cimport bool as cpp_bool
 from libcpp.complex cimport complex as std_complex
-from libcpp.string cimport string as std_string
 
+from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
 from ..legate_c cimport __half
 from ..type.type_info cimport _Type
 
@@ -45,7 +45,7 @@ cdef extern from "core/data/scalar.h" namespace "legate" nogil:
         _Scalar(std_complex[float], _Type)
         _Scalar(std_complex[double], _Type)
         _Scalar(_Scalar)
-        _Scalar(const std_string&)
+        _Scalar(std_string_view)
         _Scalar(_Type, const char*, cpp_bool)
         _Type type() const
         size_t size() const

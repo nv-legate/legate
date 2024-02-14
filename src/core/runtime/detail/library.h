@@ -50,7 +50,7 @@ class Library {
   };
 
   friend class Runtime;
-  Library(const std::string& library_name, const ResourceConfig& config);
+  Library(std::string library_name, const ResourceConfig& config);
 
  public:
   Library(const Library&) = delete;

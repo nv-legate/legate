@@ -25,7 +25,7 @@
 
 #include <memory>
 #include <optional>
-#include <string>
+#include <string_view>
 #include <type_traits>
 
 /**
@@ -81,7 +81,7 @@ class Runtime {
    *
    * @throw std::invalid_argument If a library already exists for a given name
    */
-  [[nodiscard]] Library create_library(const std::string& library_name,
+  [[nodiscard]] Library create_library(std::string_view library_name,
                                        const ResourceConfig& config            = ResourceConfig{},
                                        std::unique_ptr<mapping::Mapper> mapper = nullptr);
   /**
@@ -93,7 +93,7 @@ class Runtime {
    *
    * @throw std::out_of_range If no library is found for a given name
    */
-  [[nodiscard]] Library find_library(const std::string& library_name) const;
+  [[nodiscard]] Library find_library(std::string_view library_name) const;
   /**
    * @brief Attempts to find a library.
    *
@@ -103,7 +103,7 @@ class Runtime {
    *
    * @return Library object if a library exists for a given name, a null object otherwise
    */
-  [[nodiscard]] std::optional<Library> maybe_find_library(const std::string& library_name) const;
+  [[nodiscard]] std::optional<Library> maybe_find_library(std::string_view library_name) const;
   /**
    * @brief Finds or creates a library.
    *
@@ -118,7 +118,7 @@ class Runtime {
    *
    * @return Context object for the library
    */
-  [[nodiscard]] Library find_or_create_library(const std::string& library_name,
+  [[nodiscard]] Library find_or_create_library(std::string_view library_name,
                                                const ResourceConfig& config = ResourceConfig{},
                                                std::unique_ptr<mapping::Mapper> mapper = nullptr,
                                                bool* created                           = nullptr);

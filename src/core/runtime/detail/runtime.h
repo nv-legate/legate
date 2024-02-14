@@ -40,6 +40,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -69,12 +70,12 @@ class Runtime {
  public:
   Runtime();
 
-  [[nodiscard]] Library* create_library(const std::string& library_name,
+  [[nodiscard]] Library* create_library(std::string_view library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper,
                                         bool in_callback);
-  [[nodiscard]] Library* find_library(const std::string& library_name, bool can_fail) const;
-  [[nodiscard]] Library* find_or_create_library(const std::string& library_name,
+  [[nodiscard]] Library* find_library(std::string_view library_name, bool can_fail) const;
+  [[nodiscard]] Library* find_or_create_library(std::string_view library_name,
                                                 const ResourceConfig& config,
                                                 std::unique_ptr<mapping::Mapper> mapper,
                                                 bool* created,
@@ -380,7 +381,7 @@ class Runtime {
 
   // This could be a hash map, but kept as an ordered map just in case we may later support
   // library-specific shutdown callbacks that can launch tasks.
-  std::map<std::string, std::unique_ptr<Library>> libraries_{};
+  std::map<std::string, std::unique_ptr<Library>, std::less<>> libraries_{};
 
   using ReductionOpTableKey = std::pair<uint32_t, std::int32_t>;
   std::unordered_map<ReductionOpTableKey, int32_t, hasher<ReductionOpTableKey>> reduction_ops_{};

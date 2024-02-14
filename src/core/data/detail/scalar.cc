@@ -39,7 +39,7 @@ Scalar::Scalar(InternalSharedPtr<Type> type, const void* data, bool copy)
   }
 }
 
-Scalar::Scalar(const std::string& value) : own_{true}, type_{string_type()}
+Scalar::Scalar(std::string_view value) : own_{true}, type_{string_type()}
 {
   const auto vsize     = static_cast<std::uint32_t>(value.size());
   const auto data_size = sizeof(std::decay_t<decltype(value)>::value_type) * vsize;

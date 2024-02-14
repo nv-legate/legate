@@ -16,6 +16,8 @@
 #include "core/utilities/detail/buffer_builder.h"
 #include "core/utilities/internal_shared_ptr.h"
 
+#include <string_view>
+
 namespace legate::detail {
 
 class Type;
@@ -26,7 +28,7 @@ class Scalar {
   // Useful for initializing stores with undefined values
   explicit Scalar(InternalSharedPtr<Type> type);
   Scalar(InternalSharedPtr<Type> type, const void* data, bool copy);
-  explicit Scalar(const std::string& value);
+  explicit Scalar(std::string_view value);
   ~Scalar();
 
   template <typename T>

@@ -14,6 +14,7 @@ from libcpp cimport bool
 from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
+from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
 from ..data.logical_array cimport LogicalArray, _LogicalArray
 from ..data.logical_store cimport _LogicalStore, _LogicalStorePartition
 from ..data.scalar cimport _Scalar
@@ -45,7 +46,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)
-        void add_communicator(const std_string&)
+        void add_communicator(std_string_view)
 
     cdef cppclass _ManualTask "legate::ManualTask":
         _ManualTask()
@@ -67,7 +68,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)
-        void add_communicator(const std_string&)
+        void add_communicator(std_string_view)
 
 
 cdef class AutoTask:

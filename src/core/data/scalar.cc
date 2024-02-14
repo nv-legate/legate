@@ -31,7 +31,7 @@ Scalar::Scalar(const Type& type, const void* data, bool copy) : impl_{create_imp
 {
 }
 
-Scalar::Scalar(const std::string& string) : impl_{new detail::Scalar{string}} {}
+Scalar::Scalar(std::string_view string) : impl_{new detail::Scalar{std::move(string)}} {}
 
 Scalar& Scalar::operator=(const Scalar& other)
 {

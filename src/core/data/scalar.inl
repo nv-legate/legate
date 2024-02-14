@@ -63,7 +63,7 @@ Scalar::Scalar(T value, private_tag)
 {
 }
 
-template <typename T>
+template <typename T, typename SFINAE>
 Scalar::Scalar(T value) : Scalar{detail::canonical_value_of(std::move(value)), private_tag{}}
 {
 }

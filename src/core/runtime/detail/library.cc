@@ -23,22 +23,22 @@
 
 namespace legate::detail {
 
-Library::Library(const std::string& library_name, const ResourceConfig& config)
+Library::Library(std::string library_name, const ResourceConfig& config)
   : runtime_{Legion::Runtime::get_runtime()},
-    library_name_{library_name},
-    task_scope_{runtime_->generate_library_task_ids(library_name.c_str(), config.max_tasks),
+    library_name_{std::move(library_name)},
+    task_scope_{runtime_->generate_library_task_ids(library_name_.c_str(), config.max_tasks),
                 config.max_tasks,
                 config.max_dyn_tasks},
     redop_scope_{
-      runtime_->generate_library_reduction_ids(library_name.c_str(), config.max_reduction_ops),
+      runtime_->generate_library_reduction_ids(library_name_.c_str(), config.max_reduction_ops),
       config.max_reduction_ops},
     proj_scope_{
-      runtime_->generate_library_projection_ids(library_name.c_str(), config.max_projections),
+      runtime_->generate_library_projection_ids(library_name_.c_str(), config.max_projections),
       config.max_projections},
     shard_scope_{
-      runtime_->generate_library_sharding_ids(library_name.c_str(), config.max_shardings),
+      runtime_->generate_library_sharding_ids(library_name_.c_str(), config.max_shardings),
       config.max_shardings},
-    mapper_id_{runtime_->generate_library_mapper_ids(library_name.c_str(), 1)}
+    mapper_id_{runtime_->generate_library_mapper_ids(library_name_.c_str(), 1)}
 {
 }
 
@@ -136,9 +136,12 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
 
 void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
 {
-  const std::string library_name(static_cast<const char*>(args.buffer.get_ptr()));
+  // Yes it's a trivial move *now* clang-tidy, but it might not always be!
+  // NOLINTNEXTLINE(misc-const-correctness)
+  std::string_view library_name{static_cast<const char*>(args.buffer.get_ptr()),
+                                args.buffer.get_size() - 1};
 
-  auto* library       = Runtime::get_runtime()->find_library(library_name, false /*can_fail*/);
+  auto* library = Runtime::get_runtime()->find_library(std::move(library_name), false /*can_fail*/);
   auto* legion_mapper = library->get_legion_mapper();
   LegateAssert(legion_mapper != nullptr);
   Legion::Runtime::get_runtime()->add_mapper(library->get_mapper_id(), legion_mapper);

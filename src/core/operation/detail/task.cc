@@ -48,10 +48,10 @@ void Task::throws_exception(bool can_throw_exception)
   can_throw_exception_ = can_throw_exception;
 }
 
-void Task::add_communicator(const std::string& name)
+void Task::add_communicator(std::string_view name)
 {
   auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  communicator_factories_.push_back(comm_mgr->find_factory(name));
+  communicator_factories_.push_back(comm_mgr->find_factory(std::move(name)));
 }
 
 void Task::record_scalar_output(InternalSharedPtr<LogicalStore> store)

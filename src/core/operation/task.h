@@ -21,6 +21,7 @@
 #include "core/utilities/shared_ptr.h"
 
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 /**
@@ -212,7 +213,7 @@ class AutoTask {
    *
    * @param name The name of the communicator to use for this task
    */
-  void add_communicator(const std::string& name);
+  void add_communicator(std::string_view name);
 
   AutoTask()                               = default;
   AutoTask(AutoTask&&) noexcept            = default;
@@ -358,7 +359,7 @@ class ManualTask {
    *
    * @param name The name of the communicator to use for this task
    */
-  void add_communicator(const std::string& name);
+  void add_communicator(std::string_view name);
 
   ~ManualTask() noexcept;
   ManualTask()                                 = default;

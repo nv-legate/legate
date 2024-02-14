@@ -14,6 +14,10 @@ from libcpp cimport bool
 from libcpp.optional cimport make_optional, optional as std_optional
 from libcpp.utility cimport move as std_move
 
+from ..._ext.cython_libcpp.string_view cimport (
+    string_view_from_py as std_string_view_from_py,
+)
+
 from typing import Any, Iterable, Union
 
 from ..data.logical_array cimport (
@@ -258,7 +262,7 @@ cdef class AutoTask:
         return tuple(self._exception_types)
 
     cpdef void add_communicator(self, str name):
-        self._handle.add_communicator(name.encode())
+        self._handle.add_communicator(std_string_view_from_py(name))
 
     cpdef void execute(self):
         """
@@ -492,7 +496,7 @@ cdef class ManualTask:
         return tuple(self._exception_types)
 
     cpdef void add_communicator(self, str name):
-        self._handle.add_communicator(name.encode())
+        self._handle.add_communicator(std_string_view_from_py(name))
 
     cpdef void execute(self):
         """

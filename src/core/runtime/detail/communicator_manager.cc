@@ -68,7 +68,7 @@ Legion::FutureMap CommunicatorFactory::transform(const Legion::FutureMap& commun
   return runtime->delinearize_future_map(communicator, new_domain);
 }
 
-CommunicatorFactory* CommunicatorManager::find_factory(const std::string& name)
+CommunicatorFactory* CommunicatorManager::find_factory(std::string_view name)
 {
   auto it =
     std::find_if(factories_.begin(),
@@ -77,15 +77,18 @@ CommunicatorFactory* CommunicatorManager::find_factory(const std::string& name)
                    return e.first == name;
                  });
   if (it == factories_.end()) {
-    throw std::runtime_error{"No factory available for communicator '" + name + "'"};
+    std::stringstream ss;
+
+    ss << "No factory available for communicator '" << name << "'";
+    throw std::runtime_error{std::move(ss).str()};
   }
   return it->second.get();
 }
 
-void CommunicatorManager::register_factory(const std::string& name,
+void CommunicatorManager::register_factory(std::string name,
                                            std::unique_ptr<CommunicatorFactory> factory)
 {
-  factories_.emplace_back(name, std::move(factory));
+  factories_.emplace_back(std::move(name), std::move(factory));
 }
 
 void CommunicatorManager::destroy()

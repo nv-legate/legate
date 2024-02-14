@@ -21,6 +21,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -81,8 +82,8 @@ class CommunicatorFactory {
 
 class CommunicatorManager {
  public:
-  [[nodiscard]] CommunicatorFactory* find_factory(const std::string& name);
-  void register_factory(const std::string& name, std::unique_ptr<CommunicatorFactory> factory);
+  [[nodiscard]] CommunicatorFactory* find_factory(std::string_view name);
+  void register_factory(std::string name, std::unique_ptr<CommunicatorFactory> factory);
 
   void destroy();
 

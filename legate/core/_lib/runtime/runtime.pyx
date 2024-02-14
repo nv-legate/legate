@@ -14,6 +14,10 @@ from libc.stdlib cimport malloc as std_malloc
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 
+from ..._ext.cython_libcpp.string_view cimport (
+    string_view_from_py as std_string_view_from_py,
+)
+
 import gc
 import inspect
 import sys
@@ -95,7 +99,7 @@ cdef class Runtime:
 
     cpdef Library find_library(self, str library_name):
         return Library.from_handle(
-            self._handle.find_library(library_name.encode())
+            self._handle.find_library(std_string_view_from_py(library_name))
         )
 
     @property

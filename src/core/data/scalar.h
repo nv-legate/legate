@@ -18,6 +18,9 @@
 #include "core/utilities/typedefs.h"
 
 #include <memory>
+#include <string_view>
+#include <type_traits>
+#include <vector>
 
 /**
  * @file
@@ -71,7 +74,10 @@ class Scalar {
    *
    * @param value A scalar value to create a `Scalar` with
    */
-  template <typename T>
+  template <typename T,
+            // Note the SFINAE, we want std::string (or thereto convertible types) to use the
+            // string_view ctor.
+            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, std::string>>>
   explicit Scalar(T value);
   /**
    * @brief Creates an owned scalar of a specified type from a scalar value
@@ -89,7 +95,7 @@ class Scalar {
    *
    * @param string A string to create a `Scalar` with
    */
-  explicit Scalar(const std::string& string);
+  explicit Scalar(std::string_view string);
 
   /**
    * @brief Creates an owned scalar from a vector of scalars. The values in the input vector

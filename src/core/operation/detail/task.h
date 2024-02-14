@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -58,7 +59,7 @@ class Task : public Operation {
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);
   void throws_exception(bool can_throw_exception);
-  void add_communicator(const std::string& name);
+  void add_communicator(std::string_view name);
 
   void record_scalar_output(InternalSharedPtr<LogicalStore> store);
   void record_unbound_output(InternalSharedPtr<LogicalStore> store);

@@ -74,8 +74,7 @@ struct StringArrayAccessor<LEGION_WRITE_DISCARD>
   StringArrayAccessor(const StringArray& array);
 
   using ListArrayAccessor::insert;
-  void insert(const std::string& value);
-  void insert(const std::string_view& value);
+  void insert(std::string_view value);
 };
 
 }  // namespace legate
