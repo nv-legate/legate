@@ -27,9 +27,9 @@ class Copy final : public Operation {
  public:
   Copy(InternalSharedPtr<LogicalStore> target,
        InternalSharedPtr<LogicalStore> source,
-       uint64_t unique_id,
+       std::uint64_t unique_id,
        mapping::detail::Machine&& machine,
-       std::optional<int32_t> redop);
+       std::optional<std::int32_t> redop);
 
   void validate() override;
   void launch(Strategy* strategy) override;
@@ -42,7 +42,7 @@ class Copy final : public Operation {
   StoreArg target_;
   StoreArg source_;
   InternalSharedPtr<Constraint> constraint_;
-  std::optional<int32_t> redop_;
+  std::optional<std::int32_t> redop_;
 };
 
 }  // namespace legate::detail

@@ -26,25 +26,25 @@ std::vector<PhysicalArray> to_arrays(
 
 }  // namespace
 
-int64_t TaskContext::task_id() const noexcept { return impl_->task_id(); }
+std::int64_t TaskContext::task_id() const noexcept { return impl_->task_id(); }
 
 LegateVariantCode TaskContext::variant_kind() const noexcept { return impl_->variant_kind(); }
 
-PhysicalArray TaskContext::input(uint32_t index) const
+PhysicalArray TaskContext::input(std::uint32_t index) const
 {
   return PhysicalArray{impl_->inputs().at(index)};
 }
 
 std::vector<PhysicalArray> TaskContext::inputs() const { return to_arrays(impl_->inputs()); }
 
-PhysicalArray TaskContext::output(uint32_t index) const
+PhysicalArray TaskContext::output(std::uint32_t index) const
 {
   return PhysicalArray{impl_->outputs().at(index)};
 }
 
 std::vector<PhysicalArray> TaskContext::outputs() const { return to_arrays(impl_->outputs()); }
 
-PhysicalArray TaskContext::reduction(uint32_t index) const
+PhysicalArray TaskContext::reduction(std::uint32_t index) const
 {
   return PhysicalArray{impl_->reductions().at(index)};
 }
@@ -54,11 +54,11 @@ std::vector<PhysicalArray> TaskContext::reductions() const
   return to_arrays(impl_->reductions());
 }
 
-const Scalar& TaskContext::scalar(uint32_t index) const { return impl_->scalars().at(index); }
+const Scalar& TaskContext::scalar(std::uint32_t index) const { return impl_->scalars().at(index); }
 
 const std::vector<Scalar>& TaskContext::scalars() const { return impl_->scalars(); }
 
-comm::Communicator TaskContext::communicator(uint32_t index) const
+comm::Communicator TaskContext::communicator(std::uint32_t index) const
 {
   return impl_->communicators().at(index);
 }
@@ -68,13 +68,13 @@ std::vector<comm::Communicator> TaskContext::communicators() const
   return impl_->communicators();
 }
 
-size_t TaskContext::num_inputs() const { return impl_->inputs().size(); }
+std::size_t TaskContext::num_inputs() const { return impl_->inputs().size(); }
 
-size_t TaskContext::num_outputs() const { return impl_->outputs().size(); }
+std::size_t TaskContext::num_outputs() const { return impl_->outputs().size(); }
 
-size_t TaskContext::num_reductions() const { return impl_->reductions().size(); }
+std::size_t TaskContext::num_reductions() const { return impl_->reductions().size(); }
 
-size_t TaskContext::num_communicators() const { return impl_->communicators().size(); }
+std::size_t TaskContext::num_communicators() const { return impl_->communicators().size(); }
 
 bool TaskContext::is_single_task() const { return impl_->is_single_task(); }
 

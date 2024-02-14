@@ -43,7 +43,7 @@ struct FreeFieldInfo {
 
 class FieldManager {
  public:
-  FieldManager(Runtime* runtime, const InternalSharedPtr<Shape>& shape, uint32_t field_size);
+  FieldManager(Runtime* runtime, const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
   virtual ~FieldManager();
 
   [[nodiscard]] virtual InternalSharedPtr<LogicalRegionField> allocate_field();
@@ -58,7 +58,7 @@ class FieldManager {
 
   Runtime* runtime_{};
   InternalSharedPtr<Shape> shape_{};
-  uint32_t field_size_{};
+  std::uint32_t field_size_{};
 
   // This is a sanitized list of (region,field_id) pairs that is guaranteed to be ordered across all
   // the shards even with control replication.
@@ -79,7 +79,7 @@ class ConsensusMatchingFieldManager final : public FieldManager {
  public:
   ConsensusMatchingFieldManager(Runtime* runtime,
                                 const InternalSharedPtr<Shape>& shape,
-                                uint32_t field_size);
+                                std::uint32_t field_size);
   ~ConsensusMatchingFieldManager() final;
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field() override;
@@ -91,8 +91,8 @@ class ConsensusMatchingFieldManager final : public FieldManager {
   void issue_field_match();
   void process_next_field_match();
 
-  uint32_t field_match_counter_{};
-  uint32_t field_match_credit_{1};
+  std::uint32_t field_match_counter_{};
+  std::uint32_t field_match_credit_{1};
 
   // This list contains the fields that we know have been freed on this shard, but may not have been
   // freed yet on other shards.

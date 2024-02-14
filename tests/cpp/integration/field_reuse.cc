@@ -34,7 +34,7 @@ void register_tasks()
 void check_field_is_new(Legion::FieldID fid)
 {
   static std::set<Legion::FieldID> unique_fields;
-  size_t prev_size = unique_fields.size();
+  std::size_t prev_size = unique_fields.size();
   unique_fields.insert(fid);
   EXPECT_EQ(unique_fields.size(), prev_size + 1);
 }
@@ -57,10 +57,10 @@ TEST_F(Integration, FieldReuse)
     return;
   }
 
-  uint32_t field_reuse_freq = runtime->impl()->field_reuse_freq();
+  std::uint32_t field_reuse_freq = runtime->impl()->field_reuse_freq();
   EXPECT_GE(field_reuse_freq, 7);  // otherwise the consensus match would be triggered too early
-  uint32_t num_allocations = 0;
-  auto make_store          = [&]() {
+  std::uint32_t num_allocations = 0;
+  auto make_store               = [&]() {
     ++num_allocations;
     return runtime->create_store(legate::Shape{5, 5}, legate::int64());
   };

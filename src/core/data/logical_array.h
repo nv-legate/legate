@@ -48,7 +48,7 @@ class LogicalArray {
    *
    * @return The number of dimensions
    */
-  [[nodiscard]] uint32_t dim() const;
+  [[nodiscard]] std::uint32_t dim() const;
   /**
    * @brief Returns the element type of the array.
    *
@@ -68,7 +68,7 @@ class LogicalArray {
    *
    * @return The store's extents
    */
-  [[nodiscard]] const tuple<uint64_t>& extents() const;
+  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
   /**
    * @brief Returns the number of elements in the array.
    *
@@ -76,7 +76,7 @@ class LogicalArray {
    *
    * @return The number of elements in the store
    */
-  [[nodiscard]] size_t volume() const;
+  [[nodiscard]] std::size_t volume() const;
   /**
    * @brief Indicates whether the array is unbound
    *
@@ -103,7 +103,7 @@ class LogicalArray {
    *
    * @return Number of child sub-arrays
    */
-  [[nodiscard]] uint32_t num_children() const;
+  [[nodiscard]] std::uint32_t num_children() const;
 
   /**
    * @brief Adds an extra dimension to the array.
@@ -118,7 +118,7 @@ class LogicalArray {
    * @throw std::invalid_argument When `extra_dim` is not a valid dimension name
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray promote(int32_t extra_dim, size_t dim_size) const;
+  [[nodiscard]] LogicalArray promote(std::int32_t extra_dim, std::size_t dim_size) const;
   /**
    * @brief Projects out a dimension of the array.
    *
@@ -132,7 +132,7 @@ class LogicalArray {
    * @throw std::invalid_argument If `dim` is not a valid dimension name or `index` is out of bounds
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray project(int32_t dim, int64_t index) const;
+  [[nodiscard]] LogicalArray project(std::int32_t dim, std::int64_t index) const;
   /**
    * @brief Slices a contiguous sub-section of the array.
    *
@@ -146,7 +146,7 @@ class LogicalArray {
    * @throw std::invalid_argument If `dim` is not a valid dimension name
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray slice(int32_t dim, Slice sl) const;
+  [[nodiscard]] LogicalArray slice(std::int32_t dim, Slice sl) const;
   /**
    * @brief Reorders dimensions of the array.
    *
@@ -161,7 +161,7 @@ class LogicalArray {
    * axis name.
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray transpose(const std::vector<int32_t>& axes) const;
+  [[nodiscard]] LogicalArray transpose(const std::vector<std::int32_t>& axes) const;
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
    *
@@ -176,7 +176,8 @@ class LogicalArray {
    * the extent of the chosen dimenison
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
-  [[nodiscard]] LogicalArray delinearize(int32_t dim, const std::vector<uint64_t>& sizes) const;
+  [[nodiscard]] LogicalArray delinearize(std::int32_t dim,
+                                         const std::vector<std::uint64_t>& sizes) const;
 
   /**
    * @brief Returns the store of this array
@@ -201,7 +202,7 @@ class LogicalArray {
    * struct array
    * @throw std::out_of_range If the index is out of range
    */
-  [[nodiscard]] LogicalArray child(uint32_t index) const;
+  [[nodiscard]] LogicalArray child(std::uint32_t index) const;
 
   /**
    * @brief Creates a physical array for this logical array

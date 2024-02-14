@@ -43,7 +43,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
 
   ~LogicalRegionField();
 
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const Legion::LogicalRegion& region() const;
   [[nodiscard]] Legion::FieldID field_id() const;
   [[nodiscard]] const LogicalRegionField& get_root() const;
@@ -58,7 +58,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   void allow_out_of_order_destruction();
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child(const Tiling* tiling,
-                                                                const tuple<uint64_t>& color,
+                                                                const tuple<std::uint64_t>& color,
                                                                 bool complete);
   [[nodiscard]] Legion::LogicalPartition get_legion_partition(const Partition* partition,
                                                               bool complete);

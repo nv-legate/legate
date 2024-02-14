@@ -22,7 +22,7 @@ namespace legate::detail {
 
 Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
            InternalSharedPtr<LogicalStore> value,
-           uint64_t unique_id,
+           std::uint64_t unique_id,
            mapping::detail::Machine machine)
   : Operation{unique_id, std::move(machine)},
     lhs_var_{declare_partition()},
@@ -34,7 +34,7 @@ Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
 
 Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
            Scalar value,
-           uint64_t unique_id,
+           std::uint64_t unique_id,
            mapping::detail::Machine machine)
   : Operation{unique_id, std::move(machine)},
     lhs_var_{declare_partition()},

@@ -21,7 +21,7 @@ using TreeReduce = DefaultFixture;
 
 static const char* library_name = "test_tree_reduce";
 
-static const size_t TILE_SIZE = 10;
+static const std::size_t TILE_SIZE = 10;
 
 enum TaskIDs {
   TASK_PRODUCE_NORMAL = 1,
@@ -31,25 +31,25 @@ enum TaskIDs {
 };
 
 struct ProduceNormalTask : public legate::LegateTask<ProduceNormalTask> {
-  static const int32_t TASK_ID = TASK_PRODUCE_NORMAL;
+  static const std::int32_t TASK_ID = TASK_PRODUCE_NORMAL;
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
-  static const int32_t TASK_ID = TASK_PRODUCE_UNBOUND;
+  static const std::int32_t TASK_ID = TASK_PRODUCE_UNBOUND;
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
     auto size   = context.get_task_index()[0] + 1;
     auto buffer = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true /*bind*/);
-    for (int64_t idx = 0; idx < size; ++idx) {
+    for (std::int64_t idx = 0; idx < size; ++idx) {
       buffer[idx] = size;
     }
   }
 };
 
 struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
-  static const int32_t TASK_ID = TASK_REDUCE_NORMAL;
+  static const std::int32_t TASK_ID = TASK_REDUCE_NORMAL;
   static void cpu_variant(legate::TaskContext context)
   {
     auto inputs = context.inputs();
@@ -63,12 +63,12 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
 };
 
 struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
-  static const int32_t TASK_ID = TASK_REDUCE_UNBOUND;
+  static const std::int32_t TASK_ID = TASK_REDUCE_UNBOUND;
   static void cpu_variant(legate::TaskContext context)
   {
-    auto inputs       = context.inputs();
-    auto output       = context.output(0).data();
-    uint32_t expected = 1;
+    auto inputs            = context.inputs();
+    auto output            = context.output(0).data();
+    std::uint32_t expected = 1;
     for (auto& input : inputs) {
       auto shape = input.shape<1>();
       ASSERT_EQ(shape.volume(), expected);
@@ -100,8 +100,8 @@ TEST_F(TreeReduce, AutoProducer)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  size_t num_tasks = 3;
-  size_t tile_size = TILE_SIZE;
+  std::size_t num_tasks = 3;
+  std::size_t tile_size = TILE_SIZE;
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
@@ -122,8 +122,8 @@ TEST_F(TreeReduce, ManualProducer)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  size_t num_tasks = 3;
-  size_t tile_size = TILE_SIZE;
+  std::size_t num_tasks = 3;
+  std::size_t tile_size = TILE_SIZE;
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
@@ -144,8 +144,8 @@ TEST_F(TreeReduce, ManualProducerMultiLevel)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  size_t num_tasks = 6;
-  size_t tile_size = TILE_SIZE;
+  std::size_t num_tasks = 6;
+  std::size_t tile_size = TILE_SIZE;
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
@@ -167,8 +167,8 @@ TEST_F(TreeReduce, ManualProducerUnbound)
   auto context = runtime->find_library(library_name);
 
   // unbound store
-  auto store       = runtime->create_store(legate::int64());
-  size_t num_tasks = 4;
+  auto store            = runtime->create_store(legate::int64());
+  std::size_t num_tasks = 4;
 
   auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND, {num_tasks});
   task.add_output(store);

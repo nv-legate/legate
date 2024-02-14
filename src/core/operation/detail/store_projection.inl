@@ -35,7 +35,7 @@ inline bool BaseStoreProjection::operator==(const BaseStoreProjection& other) co
 
 inline void BaseStoreProjection::set_reduction_op(Legion::ReductionOpID _redop) { redop = _redop; }
 
-inline size_t BaseStoreProjection::hash() const noexcept
+inline std::size_t BaseStoreProjection::hash() const noexcept
 {
   return hash_all(partition, proj_id, redop);
 }

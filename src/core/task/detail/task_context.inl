@@ -31,7 +31,7 @@ inline const std::vector<legate::Scalar>& TaskContext::scalars() { return scalar
 
 inline std::vector<comm::Communicator>& TaskContext::communicators() { return comms_; }
 
-inline int64_t TaskContext::task_id() const noexcept { return task_->task_id; }
+inline std::int64_t TaskContext::task_id() const noexcept { return task_->task_id; }
 
 inline LegateVariantCode TaskContext::variant_kind() const noexcept { return variant_kind_; }
 

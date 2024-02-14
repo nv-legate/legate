@@ -44,7 +44,7 @@ void register_tasks()
 
   float total = 0;
   // i is a global index for the complete array
-  for (int64_t i = input_shape.lo; i <= input_shape.hi; ++i) {
+  for (std::int64_t i = input_shape.lo; i <= input_shape.hi; ++i) {
     total += in[i];
   }
 
@@ -87,7 +87,7 @@ void register_tasks()
   logger.info() << "Elementwise square [" << output_shape.lo << "," << output_shape.hi << "]";
 
   // i is a global index for the complete array
-  for (int64_t i = input_shape.lo; i <= input_shape.hi; ++i) {
+  for (std::int64_t i = input_shape.lo; i <= input_shape.hi; ++i) {
     out[i] = in[i] * in[i];
   }
 }
@@ -101,7 +101,7 @@ void register_tasks()
   logger.info() << "Iota task [" << output_shape.lo << "," << output_shape.hi << "]";
 
   // i is a global index for the complete array
-  for (int64_t i = output_shape.lo; i <= output_shape.hi; ++i) {
+  for (std::int64_t i = output_shape.lo; i <= output_shape.hi; ++i) {
     out[i] = i + 1;
   }
 }

@@ -25,22 +25,22 @@ namespace legate {
 
 class ScopedAllocator::Impl {
  public:
-  using ByteBuffer = Buffer<int8_t>;
+  using ByteBuffer = Buffer<std::int8_t>;
 
-  Impl(Memory::Kind kind, bool scoped, size_t alignment);
+  Impl(Memory::Kind kind, bool scoped, std::size_t alignment);
   ~Impl() noexcept;
 
-  [[nodiscard]] void* allocate(size_t bytes);
+  [[nodiscard]] void* allocate(std::size_t bytes);
   void deallocate(void* ptr);
 
  private:
   Memory::Kind target_kind_{Memory::Kind::SYSTEM_MEM};
   bool scoped_{};
-  size_t alignment_{};
+  std::size_t alignment_{};
   std::unordered_map<const void*, ByteBuffer> buffers_{};
 };
 
-ScopedAllocator::Impl::Impl(Memory::Kind kind, bool scoped, size_t alignment)
+ScopedAllocator::Impl::Impl(Memory::Kind kind, bool scoped, std::size_t alignment)
   : target_kind_{kind}, scoped_{scoped}, alignment_{alignment}
 {
 }
@@ -55,13 +55,13 @@ ScopedAllocator::Impl::~Impl() noexcept
   }
 }
 
-void* ScopedAllocator::Impl::allocate(size_t bytes)
+void* ScopedAllocator::Impl::allocate(std::size_t bytes)
 {
   if (bytes == 0) {
     return nullptr;
   }
 
-  auto buffer = create_buffer<int8_t>(bytes, target_kind_, alignment_);
+  auto buffer = create_buffer<std::int8_t>(bytes, target_kind_, alignment_);
   auto ptr    = buffer.ptr(0);
 
   buffers_[ptr] = std::move(buffer);
@@ -80,12 +80,12 @@ void ScopedAllocator::Impl::deallocate(void* ptr)
   buffer.destroy();
 }
 
-ScopedAllocator::ScopedAllocator(Memory::Kind kind, bool scoped, size_t alignment)
+ScopedAllocator::ScopedAllocator(Memory::Kind kind, bool scoped, std::size_t alignment)
   : impl_{new Impl{kind, scoped, alignment}}
 {
 }
 
-void* ScopedAllocator::allocate(size_t bytes) { return impl_->allocate(bytes); }
+void* ScopedAllocator::allocate(std::size_t bytes) { return impl_->allocate(bytes); }
 
 void ScopedAllocator::deallocate(void* ptr) { impl_->deallocate(ptr); }
 

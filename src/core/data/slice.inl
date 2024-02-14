@@ -16,7 +16,7 @@
 
 namespace legate {
 
-inline Slice::Slice(std::optional<int64_t> _start, std::optional<int64_t> _stop)
+inline Slice::Slice(std::optional<std::int64_t> _start, std::optional<std::int64_t> _stop)
   : start{std::move(_start)}, stop{std::move(_stop)}
 {
 }

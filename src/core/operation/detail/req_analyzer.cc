@@ -51,11 +51,14 @@ void FieldSet::insert(Legion::FieldID field_id,
   field_projs_[field_id].insert(privilege, store_proj, relax_interference_checks);
 }
 
-uint32_t FieldSet::num_requirements() const { return static_cast<uint32_t>(coalesced_.size()); }
+std::uint32_t FieldSet::num_requirements() const
+{
+  return static_cast<std::uint32_t>(coalesced_.size());
+}
 
-uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
-                                         const StoreProjection& store_proj,
-                                         Legion::FieldID field_id) const
+std::uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
+                                              const StoreProjection& store_proj,
+                                              Legion::FieldID field_id) const
 {
   auto finder = req_indices_.find({{privilege, store_proj}, field_id});
   if (req_indices_.end() == finder) {
@@ -74,7 +77,7 @@ void FieldSet::coalesce()
       is_key = is_key || proj_set.is_key;
     }
   }
-  uint32_t idx = 0;
+  std::uint32_t idx = 0;
   for (const auto& [key, entry] : coalesced_) {
     for (const auto& field : entry.fields) {
       req_indices_[{key, field}] = idx;
@@ -119,10 +122,10 @@ void RequirementAnalyzer::insert(const Legion::LogicalRegion& region,
   field_sets_[region].first.insert(field_id, privilege, store_proj, relax_interference_checks_);
 }
 
-uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion& region,
-                                                    Legion::PrivilegeMode privilege,
-                                                    const StoreProjection& store_proj,
-                                                    Legion::FieldID field_id) const
+std::uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion& region,
+                                                         Legion::PrivilegeMode privilege,
+                                                         const StoreProjection& store_proj,
+                                                         Legion::FieldID field_id) const
 {
   auto finder = field_sets_.find(region);
   LegateAssert(finder != field_sets_.end());
@@ -132,7 +135,7 @@ uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRegion&
 
 void RequirementAnalyzer::analyze_requirements()
 {
-  uint32_t num_reqs = 0;
+  std::uint32_t num_reqs = 0;
   for (auto& [_, entry] : field_sets_) {
     auto& [field_set, req_offset] = entry;
     field_set.coalesce();
@@ -163,7 +166,7 @@ void RequirementAnalyzer::_populate_launcher(Launcher& task) const
 // OutputRequirementAnalyzer
 ////////////////////////////
 
-void OutputRequirementAnalyzer::insert(uint32_t dim,
+void OutputRequirementAnalyzer::insert(std::uint32_t dim,
                                        const Legion::FieldSpace& field_space,
                                        Legion::FieldID field_id)
 {
@@ -174,8 +177,8 @@ void OutputRequirementAnalyzer::insert(uint32_t dim,
   field_groups_[field_space].insert(field_id);
 }
 
-uint32_t OutputRequirementAnalyzer::get_requirement_index(const Legion::FieldSpace& field_space,
-                                                          Legion::FieldID) const
+std::uint32_t OutputRequirementAnalyzer::get_requirement_index(
+  const Legion::FieldSpace& field_space, Legion::FieldID) const
 {
   auto finder = req_infos_.find(field_space);
   LegateAssert(finder != req_infos_.end());
@@ -184,7 +187,7 @@ uint32_t OutputRequirementAnalyzer::get_requirement_index(const Legion::FieldSpa
 
 void OutputRequirementAnalyzer::analyze_requirements()
 {
-  uint32_t idx = 0;
+  std::uint32_t idx = 0;
   for (const auto& [field_space, _] : field_groups_) {
     req_infos_[field_space].req_idx = idx++;
   }
@@ -206,14 +209,14 @@ void OutputRequirementAnalyzer::populate_output_requirements(
 
 void FutureAnalyzer::insert(const Legion::Future& future) { futures_.push_back(future); }
 
-int32_t FutureAnalyzer::get_future_index(const Legion::Future& future) const
+std::int32_t FutureAnalyzer::get_future_index(const Legion::Future& future) const
 {
   return future_indices_.at(future);
 }
 
 void FutureAnalyzer::analyze_futures()
 {
-  int32_t index = 0;
+  std::int32_t index = 0;
   for (auto&& future : futures_) {
     if (future_indices_.find(future) != future_indices_.end()) {
       continue;

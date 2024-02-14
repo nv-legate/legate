@@ -41,7 +41,7 @@ Scalar::Scalar(InternalSharedPtr<Type> type, const void* data, bool copy)
 
 Scalar::Scalar(const std::string& value) : own_{true}, type_{string_type()}
 {
-  const auto vsize     = static_cast<uint32_t>(value.size());
+  const auto vsize     = static_cast<std::uint32_t>(value.size());
   const auto data_size = sizeof(std::decay_t<decltype(value)>::value_type) * vsize;
   // If you change this, you must also change the pack() function below! The packed buffer must
   // be aligned the same way as it was allocated here, and new char[] aligns to
@@ -79,7 +79,7 @@ Scalar& Scalar::operator=(Scalar&& other) noexcept
   return *this;
 }
 
-const void* Scalar::copy_data(const void* data, size_t size)
+const void* Scalar::copy_data(const void* data, std::size_t size)
 {
   void* buffer = nullptr;
 
@@ -90,7 +90,7 @@ const void* Scalar::copy_data(const void* data, size_t size)
   return buffer;
 }
 
-size_t Scalar::size() const
+std::size_t Scalar::size() const
 {
   if (type()->code == Type::Code::STRING) {
     return *static_cast<const uint32_t*>(data()) + sizeof(uint32_t);

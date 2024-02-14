@@ -27,7 +27,7 @@ enum TaskIDs {
   CPU_COMM_TESTER = 0,
 };
 
-constexpr size_t SIZE = 10;
+constexpr std::size_t SIZE = 10;
 
 struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> {
   static void cpu_variant(legate::TaskContext context)
@@ -39,9 +39,9 @@ struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> 
     }
     auto comm = context.communicators().at(0).get<legate::comm::coll::CollComm>();
 
-    int64_t value    = 12345;
-    size_t num_tasks = context.get_launch_domain().get_volume();
-    std::vector<int64_t> recv_buffer(num_tasks, 0);
+    std::int64_t value    = 12345;
+    std::size_t num_tasks = context.get_launch_domain().get_volume();
+    std::vector<std::int64_t> recv_buffer(num_tasks, 0);
     auto result = collAllgather(
       &value, recv_buffer.data(), 1, legate::comm::coll::CollDataType::CollInt64, comm);
     EXPECT_EQ(result, legate::comm::coll::CollSuccess);
@@ -63,12 +63,12 @@ void prepare()
   CPUCommunicatorTester::register_variants(context, CPU_COMM_TESTER);
 }
 
-void test_cpu_communicator_auto(int32_t ndim)
+void test_cpu_communicator_auto(std::int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
   auto store =
-    runtime->create_store(legate::Shape{legate::full<uint64_t>(ndim, SIZE)}, legate::int32());
+    runtime->create_store(legate::Shape{legate::full<std::uint64_t>(ndim, SIZE)}, legate::int32());
 
   auto task = runtime->create_task(context, CPU_COMM_TESTER);
   auto part = task.declare_partition();
@@ -77,19 +77,19 @@ void test_cpu_communicator_auto(int32_t ndim)
   runtime->submit(std::move(task));
 }
 
-void test_cpu_communicator_manual(int32_t ndim)
+void test_cpu_communicator_manual(std::int32_t ndim)
 {
-  auto runtime     = legate::Runtime::get_runtime();
-  size_t num_procs = runtime->get_machine().count();
+  auto runtime          = legate::Runtime::get_runtime();
+  std::size_t num_procs = runtime->get_machine().count();
   if (num_procs <= 1) {
     return;
   }
 
   auto context = runtime->find_library(library_name);
   auto store =
-    runtime->create_store(legate::Shape{legate::full<uint64_t>(ndim, SIZE)}, legate::int32());
-  auto launch_shape = legate::full<uint64_t>(ndim, 1);
-  auto tile_shape   = legate::full<uint64_t>(ndim, 1);
+    runtime->create_store(legate::Shape{legate::full<std::uint64_t>(ndim, SIZE)}, legate::int32());
+  auto launch_shape = legate::full<std::uint64_t>(ndim, 1);
+  auto tile_shape   = legate::full<std::uint64_t>(ndim, 1);
   launch_shape[0]   = num_procs;
   tile_shape[0]     = (SIZE + num_procs - 1) / num_procs;
 
@@ -106,7 +106,7 @@ TEST_F(Integration, CPUCommunicator)
 {
   prepare();
 
-  for (int32_t ndim : {1, 3}) {
+  for (std::int32_t ndim : {1, 3}) {
     test_cpu_communicator_auto(ndim);
     test_cpu_communicator_manual(ndim);
   }

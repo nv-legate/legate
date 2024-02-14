@@ -26,7 +26,7 @@ namespace legateio {
 namespace {
 
 struct header_write_fn {
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   void operator()(std::ofstream& out,
                   const legate::Domain& launch_domain,
                   legate::Type::Code type_code)
@@ -37,7 +37,7 @@ struct header_write_fn {
     // The header contains the type code and the launch shape
     out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
     out.write(reinterpret_cast<const char*>(&launch_domain.dim), sizeof(int32_t));
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
     }
   }

@@ -27,7 +27,7 @@ void test_primitive_array(bool nullable)
     auto array = runtime->create_array({4, 4}, legate::int64(), nullable);
     EXPECT_FALSE(array.unbound());
     EXPECT_EQ(array.dim(), 2);
-    EXPECT_EQ(array.extents().data(), (std::vector<uint64_t>{4, 4}));
+    EXPECT_EQ(array.extents().data(), (std::vector<std::uint64_t>{4, 4}));
     EXPECT_EQ(array.volume(), 16);
     EXPECT_EQ(array.type(), legate::int64());
     EXPECT_EQ(array.nullable(), nullable);
@@ -37,7 +37,7 @@ void test_primitive_array(bool nullable)
     auto store = array.data();
     EXPECT_FALSE(store.unbound());
     EXPECT_EQ(store.dim(), 2);
-    EXPECT_EQ(store.extents().data(), (std::vector<uint64_t>{4, 4}));
+    EXPECT_EQ(store.extents().data(), (std::vector<std::uint64_t>{4, 4}));
     EXPECT_EQ(store.volume(), 16);
     EXPECT_EQ(store.type(), legate::int64());
 
@@ -92,7 +92,7 @@ void test_list_array(bool nullable)
     // List arrays are unbound even with the fixed extents
     EXPECT_TRUE(array.unbound());
     EXPECT_EQ(array.dim(), 1);
-    EXPECT_EQ(array.extents().data(), (std::vector<uint64_t>{7}));
+    EXPECT_EQ(array.extents().data(), (std::vector<std::uint64_t>{7}));
     EXPECT_EQ(array.volume(), 7);
     EXPECT_EQ(array.type(), arr_type);
     EXPECT_EQ(array.nullable(), nullable);
@@ -152,7 +152,7 @@ void test_list_array(bool nullable)
 
     EXPECT_FALSE(array.unbound());
     EXPECT_EQ(array.dim(), 1);
-    EXPECT_EQ(array.extents().data(), (std::vector<uint64_t>{7}));
+    EXPECT_EQ(array.extents().data(), (std::vector<std::uint64_t>{7}));
     EXPECT_EQ(array.volume(), 7);
     EXPECT_EQ(array.type(), type);
     EXPECT_EQ(array.nullable(), nullable);
@@ -174,7 +174,7 @@ void test_string_array(bool nullable)
     auto array = runtime->create_array({5}, str_type, nullable);
     EXPECT_TRUE(array.unbound());
     EXPECT_EQ(array.dim(), 1);
-    EXPECT_EQ(array.extents().data(), (std::vector<uint64_t>{5}));
+    EXPECT_EQ(array.extents().data(), (std::vector<std::uint64_t>{5}));
     EXPECT_EQ(array.volume(), 5);
     EXPECT_EQ(array.type(), str_type);
     EXPECT_EQ(array.nullable(), nullable);
@@ -238,7 +238,7 @@ void test_struct_array(bool nullable)
     auto array = runtime->create_array({4, 4}, st_type, nullable);
     EXPECT_FALSE(array.unbound());
     EXPECT_EQ(array.dim(), 2);
-    EXPECT_EQ(array.extents().data(), (std::vector<uint64_t>{4, 4}));
+    EXPECT_EQ(array.extents().data(), (std::vector<std::uint64_t>{4, 4}));
     EXPECT_EQ(array.volume(), 16);
     EXPECT_EQ(array.type(), st_type);
     EXPECT_EQ(array.nullable(), nullable);
@@ -254,7 +254,7 @@ void test_struct_array(bool nullable)
       EXPECT_EQ(null_mask.dim(), array.dim());
     }
     EXPECT_THROW(static_cast<void>(array.child(num_fields)), std::out_of_range);
-    for (uint32_t idx = 0; idx < num_fields; ++idx) {
+    for (std::uint32_t idx = 0; idx < num_fields; ++idx) {
       auto field_type     = st_type.field_type(idx);
       auto field_subarray = array.child(idx);
 
@@ -429,7 +429,7 @@ void test_physical_array(bool nullable)
   EXPECT_EQ(array.type(), legate::int64());
   EXPECT_FALSE(array.nested());
   EXPECT_EQ(array.shape<2>(), legate::Rect<2>({0, 0}, {3, 3}));
-  EXPECT_EQ((array.domain().bounds<2, int64_t>()), legate::Rect<2>({0, 0}, {3, 3}));
+  EXPECT_EQ((array.domain().bounds<2, std::int64_t>()), legate::Rect<2>({0, 0}, {3, 3}));
 
   if (!nullable) {
     EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
@@ -450,12 +450,12 @@ void test_promote(bool nullable)
   {
     auto bound_array = runtime->create_array({1, 2, 3, 4}, legate::int64(), nullable);
     auto promoted    = bound_array.promote(0, 5);
-    EXPECT_EQ(promoted.extents().data(), (std::vector<uint64_t>{5, 1, 2, 3, 4}));
+    EXPECT_EQ(promoted.extents().data(), (std::vector<std::uint64_t>{5, 1, 2, 3, 4}));
 
     // Note: gitlab issue #16 unexpected behavior
     promoted = bound_array.promote(2, -1);
     EXPECT_EQ(promoted.extents().data(),
-              (std::vector<uint64_t>{1, 2, static_cast<size_t>(-1), 3, 4}));
+              (std::vector<std::uint64_t>{1, 2, static_cast<std::size_t>(-1), 3, 4}));
 
     // invalid extra_dim
     EXPECT_THROW(static_cast<void>(bound_array.promote(-1, 3)), std::invalid_argument);
@@ -499,11 +499,12 @@ void test_promote(bool nullable)
                      .as_struct_type();
     auto bound_array = runtime->create_array({4, 5, 6}, st_type, nullable);
     auto promoted    = bound_array.promote(2, 10);
-    EXPECT_EQ(promoted.extents().data(), (std::vector<uint64_t>{4, 5, 10, 6}));
+    EXPECT_EQ(promoted.extents().data(), (std::vector<std::uint64_t>{4, 5, 10, 6}));
 
     // Note: gitlab issue #16 unexpected behavior
     promoted = bound_array.promote(1, -1);
-    EXPECT_EQ(promoted.extents().data(), (std::vector<uint64_t>{4, static_cast<size_t>(-1), 5, 6}));
+    EXPECT_EQ(promoted.extents().data(),
+              (std::vector<std::uint64_t>{4, static_cast<std::size_t>(-1), 5, 6}));
 
     // invalid extra_dim
     EXPECT_THROW(static_cast<void>(bound_array.promote(-1, 3)), std::invalid_argument);
@@ -521,7 +522,7 @@ void test_project(bool nullable)
   {
     auto bound_array = runtime->create_array({1, 2, 3, 4}, legate::int64(), nullable);
     auto projected   = bound_array.project(0, 0);
-    EXPECT_EQ(projected.extents().data(), (std::vector<uint64_t>{2, 3, 4}));
+    EXPECT_EQ(projected.extents().data(), (std::vector<std::uint64_t>{2, 3, 4}));
 
     // invalid dim
     EXPECT_THROW(static_cast<void>(bound_array.project(4, 1)), std::invalid_argument);
@@ -568,7 +569,7 @@ void test_project(bool nullable)
                      .as_struct_type();
     auto bound_array = runtime->create_array({4, 5, 6}, st_type, nullable);
     auto projected   = bound_array.project(0, 2);
-    EXPECT_EQ(projected.extents().data(), (std::vector<uint64_t>{5, 6}));
+    EXPECT_EQ(projected.extents().data(), (std::vector<std::uint64_t>{5, 6}));
 
     // invalid dim
     EXPECT_THROW(static_cast<void>(bound_array.project(4, 1)), std::invalid_argument);
@@ -590,14 +591,14 @@ void test_slice(bool nullable)
     auto bound_array = runtime->create_array({1, 2, 3, 4}, legate::int64(), nullable);
     // slice [OPEN, STOP) of dim i
     auto sliced = bound_array.slice(2, legate::Slice(-2, -1));
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{1, 2, 1, 4}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{1, 2, 1, 4}));
 
     sliced = bound_array.slice(2, legate::Slice(1, 2));
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{1, 2, 1, 4}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{1, 2, 1, 4}));
 
     // full slice
     sliced = bound_array.slice(0, legate::Slice());
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{1, 2, 3, 4}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{1, 2, 3, 4}));
 
     // out of bounds
     EXPECT_THROW(static_cast<void>(bound_array.slice(2, legate::Slice(1, 4))),
@@ -661,20 +662,20 @@ void test_slice(bool nullable)
     auto bound_array = runtime->create_array({4, 5, 6}, st_type, nullable);
     // slice [OPEN, STOP) of dim i
     auto sliced = bound_array.slice(2, legate::Slice(-2, -1));
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{4, 5, 1}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{4, 5, 1}));
 
     sliced = bound_array.slice(2, legate::Slice(1, 2));
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{4, 5, 1}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{4, 5, 1}));
 
     sliced = bound_array.slice(2, legate::Slice(1, 4));
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{4, 5, 3}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{4, 5, 3}));
 
     sliced = bound_array.slice(2, legate::Slice(3, 4));
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{4, 5, 1}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{4, 5, 1}));
 
     // full slice
     sliced = bound_array.slice(0, legate::Slice());
-    EXPECT_EQ(sliced.extents().data(), (std::vector<uint64_t>{4, 5, 6}));
+    EXPECT_EQ(sliced.extents().data(), (std::vector<std::uint64_t>{4, 5, 6}));
 
     // invalid dim
     EXPECT_THROW(static_cast<void>(bound_array.slice(4, legate::Slice(1, 3))),
@@ -705,7 +706,7 @@ void test_transpose(bool nullable)
   {
     auto bound_array = runtime->create_array({1, 2, 3, 4}, legate::int64(), nullable);
     auto transposed  = bound_array.transpose({1, 0, 3, 2});
-    EXPECT_EQ(transposed.extents().data(), (std::vector<uint64_t>{2, 1, 4, 3}));
+    EXPECT_EQ(transposed.extents().data(), (std::vector<std::uint64_t>{2, 1, 4, 3}));
 
     // invalid axes length
     EXPECT_THROW(static_cast<void>(bound_array.transpose({2})), std::invalid_argument);
@@ -747,7 +748,7 @@ void test_transpose(bool nullable)
                      .as_struct_type();
     auto bound_array = runtime->create_array({4, 5, 6}, st_type, nullable);
     auto transposed  = bound_array.transpose({1, 0, 2});
-    EXPECT_EQ(transposed.extents().data(), (std::vector<uint64_t>{5, 4, 6}));
+    EXPECT_EQ(transposed.extents().data(), (std::vector<std::uint64_t>{5, 4, 6}));
 
     // invalid axes length
     EXPECT_THROW(static_cast<void>(bound_array.transpose({0, 1})), std::invalid_argument);
@@ -771,13 +772,13 @@ void test_delinearize(bool nullable)
   {
     auto bound_array  = runtime->create_array({1, 2, 3, 4}, legate::int64(), nullable);
     auto delinearized = bound_array.delinearize(0, {1, 1});
-    EXPECT_EQ(delinearized.extents().data(), (std::vector<uint64_t>{1, 1, 2, 3, 4}));
+    EXPECT_EQ(delinearized.extents().data(), (std::vector<std::uint64_t>{1, 1, 2, 3, 4}));
 
     delinearized = bound_array.delinearize(3, {4});
-    EXPECT_EQ(delinearized.extents().data(), (std::vector<uint64_t>{1, 2, 3, 4}));
+    EXPECT_EQ(delinearized.extents().data(), (std::vector<std::uint64_t>{1, 2, 3, 4}));
 
     delinearized = bound_array.delinearize(3, {2, 1, 2, 1});
-    EXPECT_EQ(delinearized.extents().data(), (std::vector<uint64_t>{1, 2, 3, 2, 1, 2, 1}));
+    EXPECT_EQ(delinearized.extents().data(), (std::vector<std::uint64_t>{1, 2, 3, 2, 1, 2, 1}));
 
     // invalid dim
     EXPECT_THROW(static_cast<void>(bound_array.delinearize(4, {1, 1})), std::invalid_argument);
@@ -789,7 +790,7 @@ void test_delinearize(bool nullable)
 
     // Note: gitlab issue #16 unexpected: delinearized.extents is
     // (18446744073709551615,18446744073709551615,2,3,4,)
-    // delinearized = bound_array.delinearize(0, (std::vector<int64_t>{-1, -1}));
+    // delinearized = bound_array.delinearize(0, (std::vector<std::int64_t>{-1, -1}));
 
     auto unbound_array = runtime->create_array(legate::int64(), 3, nullable);
     EXPECT_THROW(static_cast<void>(unbound_array.delinearize(0, {1, 1})), std::invalid_argument);
@@ -821,13 +822,13 @@ void test_delinearize(bool nullable)
                      .as_struct_type();
     auto bound_array  = runtime->create_array({4, 5, 6}, st_type, nullable);
     auto delinearized = bound_array.delinearize(0, {2, 2});
-    EXPECT_EQ(delinearized.extents().data(), (std::vector<uint64_t>{2, 2, 5, 6}));
+    EXPECT_EQ(delinearized.extents().data(), (std::vector<std::uint64_t>{2, 2, 5, 6}));
 
     delinearized = bound_array.delinearize(2, {6});
-    EXPECT_EQ(delinearized.extents().data(), (std::vector<uint64_t>{4, 5, 6}));
+    EXPECT_EQ(delinearized.extents().data(), (std::vector<std::uint64_t>{4, 5, 6}));
 
     delinearized = bound_array.delinearize(2, {2, 3, 1});
-    EXPECT_EQ(delinearized.extents().data(), (std::vector<uint64_t>{4, 5, 2, 3, 1}));
+    EXPECT_EQ(delinearized.extents().data(), (std::vector<std::uint64_t>{4, 5, 2, 3, 1}));
 
     // invalid dim
     EXPECT_THROW(static_cast<void>(bound_array.delinearize(4, {1, 1})), std::invalid_argument);

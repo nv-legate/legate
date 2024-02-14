@@ -29,7 +29,7 @@ static const char* library_name = "test_region_manager";
 void register_tasks();
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
-  static const int32_t TASK_ID = 0;
+  static const std::int32_t TASK_ID = 0;
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 

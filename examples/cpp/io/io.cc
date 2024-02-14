@@ -69,7 +69,7 @@ class IOArray : public Array {
     runtime->submit(std::move(task));
   }
 
-  void to_even_tiles(std::string path, uint32_t tile_shape)
+  void to_even_tiles(std::string path, std::uint32_t tile_shape)
   {
     int result = mkdir(path.c_str(), 0775);
     if (result == -1) {
@@ -89,8 +89,8 @@ class IOArray : public Array {
     auto extents = store_.extents();
     EXPECT_EQ(extents.size(), 2);
     task.add_scalar_arg(
-      legate::Scalar(std::vector<uint32_t>{(uint32_t)extents[0], (uint32_t)extents[1]}));
-    task.add_scalar_arg(legate::Scalar(std::vector<uint32_t>{tile_shape, tile_shape}));
+      legate::Scalar(std::vector<std::uint32_t>{(uint32_t)extents[0], (uint32_t)extents[1]}));
+    task.add_scalar_arg(legate::Scalar(std::vector<std::uint32_t>{tile_shape, tile_shape}));
     runtime->submit(std::move(task));
   }
 
@@ -137,20 +137,20 @@ IOArray read_file_parallel(legate::Library library,
   return IOArray(library, output);
 }
 
-void _read_header_uneven(std::string path, std::vector<size_t>& color_shape)
+void _read_header_uneven(std::string path, std::vector<std::size_t>& color_shape)
 {
   std::ifstream in(path.c_str(), std::ios::binary | std::ios::in);
 
-  uint32_t code;
-  uint32_t dim;
+  std::uint32_t code;
+  std::uint32_t dim;
 
   in.read(reinterpret_cast<char*>(&code), sizeof(uint32_t));
   in.read(reinterpret_cast<char*>(&dim), sizeof(uint32_t));
 
-  EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::INT8));
+  EXPECT_EQ(code, static_cast<std::uint32_t>(legate::Type::Code::INT8));
 
-  int64_t data;
-  for (uint32_t i = 0; i < dim; i++) {
+  std::int64_t data;
+  for (std::uint32_t i = 0; i < dim; i++) {
     in.read(reinterpret_cast<char*>(&data), sizeof(int64_t));
     color_shape.push_back(data);
   }
@@ -167,7 +167,7 @@ IOArray read_uneven_tiles(legate::Library library, std::string path)
   //  |   (4B)    |  (4B)  |   (8B)   |
   //  +-----------+--------+----------+-----
   //
-  std::vector<size_t> color_shape;
+  std::vector<std::size_t> color_shape;
   _read_header_uneven(path + "/.header", color_shape);
 
   // Create a multi-dimensional unbound store
@@ -201,25 +201,25 @@ IOArray read_uneven_tiles(legate::Library library, std::string path)
 }
 
 void _read_header_even(std::string path,
-                       std::vector<size_t>& shape,
-                       std::vector<size_t>& tile_shape)
+                       std::vector<std::size_t>& shape,
+                       std::vector<std::size_t>& tile_shape)
 {
   std::ifstream in(path.c_str(), std::ios::binary | std::ios::in);
 
-  uint32_t code;
-  uint32_t dim;
+  std::uint32_t code;
+  std::uint32_t dim;
 
   in.read(reinterpret_cast<char*>(&code), sizeof(uint32_t));
   in.read(reinterpret_cast<char*>(&dim), sizeof(uint32_t));
 
-  EXPECT_EQ(code, static_cast<uint32_t>(legate::Type::Code::INT8));
+  EXPECT_EQ(code, static_cast<std::uint32_t>(legate::Type::Code::INT8));
 
-  uint32_t data;
-  for (uint32_t i = 0; i < dim; i++) {
+  std::uint32_t data;
+  for (std::uint32_t i = 0; i < dim; i++) {
     in.read(reinterpret_cast<char*>(&data), sizeof(uint32_t));
     shape.push_back(data);
   }
-  for (uint32_t i = 0; i < dim; i++) {
+  for (std::uint32_t i = 0; i < dim; i++) {
     in.read(reinterpret_cast<char*>(&data), sizeof(uint32_t));
     tile_shape.push_back(data);
   }
@@ -237,8 +237,8 @@ IOArray read_even_tiles(legate::Library library, std::string path)
   //   |   (4B)    |  (4B)  |   (4B)   |     |   (4B)   |
   //   +-----------+--------+----------+-----+----------+-----
   //
-  std::vector<size_t> shape;
-  std::vector<size_t> tile_shape;
+  std::vector<std::size_t> shape;
+  std::vector<std::size_t> tile_shape;
   _read_header_even(path + "/.header", shape, tile_shape);
 
   auto runtime          = legate::Runtime::get_runtime();
@@ -261,7 +261,7 @@ TEST(Example, SingleFileIO)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::legateio::library_name);
 
-  uint32_t n           = 10;
+  std::uint32_t n      = 10;
   std::string filename = "test.dat";
 
   auto src = cunumeric::arange(n).as_type(legate::int8());
@@ -295,9 +295,9 @@ TEST(Example, EvenTilesIO)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::legateio::library_name);
 
-  std::string dataset_name = "even_datafiles";
-  uint32_t store_shape     = 8;
-  uint32_t tile_shape      = 3;
+  std::string dataset_name  = "even_datafiles";
+  std::uint32_t store_shape = 8;
+  std::uint32_t tile_shape  = 3;
 
   // Use cuNumeric to generate a random array to dump to a dataset
   auto src = cunumeric::random({store_shape, store_shape}).as_type(legate::int8());
@@ -317,7 +317,7 @@ TEST(Example, EvenTilesIO)
   // operation, just to confirm in the profile that the partition from the
   // reader tasks is reused in the downstream tasks.
   auto empty =
-    cunumeric::full({store_shape, store_shape}, cunumeric::Scalar(static_cast<int64_t>(0)));
+    cunumeric::full({store_shape, store_shape}, cunumeric::Scalar(static_cast<std::int64_t>(0)));
   auto c2_cunumeric =
     cunumeric::add(cunumeric::as_array(c2.store()).as_type(legate::int64()), empty);
   EXPECT_TRUE(cunumeric::array_equal(src, c2_cunumeric.as_type(legate::int8())));
@@ -330,8 +330,8 @@ TEST(Example, UnevenTilesIO)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::legateio::library_name);
 
-  std::string dataset_name = "uneven_datafiles";
-  uint32_t store_shape     = 8;
+  std::string dataset_name  = "uneven_datafiles";
+  std::uint32_t store_shape = 8;
 
   // Use cuNumeric to generate a random array to dump to a dataset
   auto src = cunumeric::random({store_shape, store_shape}).as_type(legate::int8());

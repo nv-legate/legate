@@ -34,9 +34,9 @@ namespace {
 //
 // We mark this function as noexcept because if this map fails to initialize, then we are so
 // well and truly beansed that the program must abort.
-[[nodiscard]] const std::unordered_map<Type::Code, uint32_t>& SIZEOF() noexcept
+[[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& SIZEOF() noexcept
 {
-  static const std::unordered_map<Type::Code, uint32_t> map = {
+  static const std::unordered_map<Type::Code, std::uint32_t> map = {
     {Type::Code::BOOL, sizeof(type_of<Type::Code::BOOL>)},
     {Type::Code::INT8, sizeof(type_of<Type::Code::INT8>)},
     {Type::Code::INT16, sizeof(type_of<Type::Code::INT16>)},
@@ -56,9 +56,9 @@ namespace {
   return map;
 }
 
-[[nodiscard]] const std::unordered_map<Type::Code, uint32_t>& ALIGNOF() noexcept
+[[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& ALIGNOF() noexcept
 {
-  static const std::unordered_map<Type::Code, uint32_t> map = {
+  static const std::unordered_map<Type::Code, std::uint32_t> map = {
     {Type::Code::BOOL, alignof(type_of<Type::Code::BOOL>)},
     {Type::Code::INT8, alignof(type_of<Type::Code::INT8>)},
     {Type::Code::INT16, alignof(type_of<Type::Code::INT16>)},
@@ -118,22 +118,22 @@ constexpr const char* const VARIABLE_SIZE_ERROR_MESSAGE =
 // * Rect types: [_BASE_RECT_TYPE_UID + 1, _BASE_RECT_TYPE_UID + LEGATE_MAX_DIM]
 //
 // where the <+> operator is a pairwise concatenation
-constexpr uint32_t TYPE_CODE_OFFSET     = 8;
-constexpr uint32_t BASE_POINT_TYPE_UID  = 0x10000000;
-constexpr uint32_t BASE_RECT_TYPE_UID   = BASE_POINT_TYPE_UID + LEGATE_MAX_DIM + 1;
-constexpr uint32_t BASE_CUSTOM_TYPE_UID = BASE_RECT_TYPE_UID + LEGATE_MAX_DIM + 1;
+constexpr std::uint32_t TYPE_CODE_OFFSET     = 8;
+constexpr std::uint32_t BASE_POINT_TYPE_UID  = 0x10000000;
+constexpr std::uint32_t BASE_RECT_TYPE_UID   = BASE_POINT_TYPE_UID + LEGATE_MAX_DIM + 1;
+constexpr std::uint32_t BASE_CUSTOM_TYPE_UID = BASE_RECT_TYPE_UID + LEGATE_MAX_DIM + 1;
 // Last byte of a static UID is a type code
-constexpr uint32_t MAX_BINARY_TYPE_SIZE = 0x0FFFFF00 >> TYPE_CODE_OFFSET;
+constexpr std::uint32_t MAX_BINARY_TYPE_SIZE = 0x0FFFFF00 >> TYPE_CODE_OFFSET;
 
-uint32_t get_next_uid()
+std::uint32_t get_next_uid()
 {
-  static std::atomic<uint32_t> next_uid = BASE_CUSTOM_TYPE_UID;
+  static std::atomic<std::uint32_t> next_uid = BASE_CUSTOM_TYPE_UID;
   return next_uid++;
 }
 
 }  // namespace
 
-uint32_t Type::size() const
+std::uint32_t Type::size() const
 {
   throw std::invalid_argument{"Size of a variable size type is undefined"};
   return {};
@@ -157,19 +157,19 @@ const ListType& Type::as_list_type() const
   return *reinterpret_cast<const ListType*>(this);
 }
 
-void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
+void Type::record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const
 {
   detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
 }
 
-int32_t Type::find_reduction_operator(int32_t op_kind) const
+std::int32_t Type::find_reduction_operator(std::int32_t op_kind) const
 {
   return detail::Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
 }
 
-int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
+std::int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
-  return find_reduction_operator(static_cast<int32_t>(op_kind));
+  return find_reduction_operator(static_cast<std::int32_t>(op_kind));
 }
 
 bool Type::operator==(const Type& other) const { return equal(other); }
@@ -183,18 +183,20 @@ std::string PrimitiveType::to_string() const { return std::string{TYPE_NAMES().a
 
 void PrimitiveType::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
 }
 
 std::string BinaryType::to_string() const { return "binary(" + std::to_string(size_) + ")"; }
 
 void BinaryType::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
-  buffer.pack<uint32_t>(size_);
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
+  buffer.pack<std::uint32_t>(size_);
 }
 
-FixedArrayType::FixedArrayType(uint32_t uid, InternalSharedPtr<Type> element_type, uint32_t N)
+FixedArrayType::FixedArrayType(std::uint32_t uid,
+                               InternalSharedPtr<Type> element_type,
+                               std::uint32_t N)
   : ExtensionType{uid, Type::Code::FIXED_ARRAY},
     element_type_{std::move(element_type)},
     N_{N},
@@ -215,9 +217,9 @@ std::string FixedArrayType::to_string() const
 
 void FixedArrayType::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
-  buffer.pack<uint32_t>(uid_);
-  buffer.pack<uint32_t>(N_);
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
+  buffer.pack<std::uint32_t>(uid_);
+  buffer.pack<std::uint32_t>(N_);
   element_type_->pack(buffer);
 }
 
@@ -236,7 +238,9 @@ bool FixedArrayType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-StructType::StructType(uint32_t uid, std::vector<InternalSharedPtr<Type>>&& field_types, bool align)
+StructType::StructType(std::uint32_t uid,
+                       std::vector<InternalSharedPtr<Type>>&& field_types,
+                       bool align)
   : ExtensionType{uid, Type::Code::STRUCT},
     aligned_{align},
     alignment_{1},
@@ -252,7 +256,7 @@ StructType::StructType(uint32_t uid, std::vector<InternalSharedPtr<Type>>&& fiel
 
   offsets_.reserve(field_types_.size());
   if (aligned_) {
-    static constexpr auto align_offset = [](uint32_t offset, uint32_t alignment) {
+    static constexpr auto align_offset = [](std::uint32_t offset, std::uint32_t alignment) {
       return (offset + (alignment - 1)) & -alignment;
     };
 
@@ -284,7 +288,7 @@ std::string StructType::to_string() const
   std::stringstream ss;
 
   ss << "{";
-  for (uint32_t idx = 0; idx < field_types_.size(); ++idx) {
+  for (std::uint32_t idx = 0; idx < field_types_.size(); ++idx) {
     if (idx > 0) {
       ss << ",";
     }
@@ -296,9 +300,9 @@ std::string StructType::to_string() const
 
 void StructType::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
-  buffer.pack<uint32_t>(uid_);
-  buffer.pack<uint32_t>(static_cast<std::uint32_t>(field_types_.size()));
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
+  buffer.pack<std::uint32_t>(uid_);
+  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(field_types_.size()));
   for (auto& field_type : field_types_) {
     field_type->pack(buffer);
   }
@@ -321,7 +325,7 @@ bool StructType::equal(const Type& other) const
     if (nf != casted.num_fields()) {
       return false;
     }
-    for (uint32_t idx = 0; idx < nf; ++idx) {
+    for (std::uint32_t idx = 0; idx < nf; ++idx) {
       if (field_type(idx) != casted.field_type(idx)) {
         return false;
       }
@@ -332,21 +336,21 @@ bool StructType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-InternalSharedPtr<Type> StructType::field_type(uint32_t field_idx) const
+InternalSharedPtr<Type> StructType::field_type(std::uint32_t field_idx) const
 {
   return field_types_.at(field_idx);
 }
 
 void StringType::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
 }
 
 InternalSharedPtr<Type> primitive_type(Type::Code code)
 {
   static std::unordered_map<Type::Code, InternalSharedPtr<Type>> cache{};
   if (SIZEOF().find(code) == SIZEOF().end()) {
-    throw std::invalid_argument{std::to_string(static_cast<int32_t>(code)) +
+    throw std::invalid_argument{std::to_string(static_cast<std::int32_t>(code)) +
                                 " is not a valid type code for a primitive type"};
   }
   auto finder = cache.find(code);
@@ -358,7 +362,7 @@ InternalSharedPtr<Type> primitive_type(Type::Code code)
   return result;
 }
 
-ListType::ListType(uint32_t uid, InternalSharedPtr<Type> element_type)
+ListType::ListType(std::uint32_t uid, InternalSharedPtr<Type> element_type)
   : ExtensionType{uid, Type::Code::LIST}, element_type_{std::move(element_type)}
 {
   if (element_type_->variable_size()) {
@@ -376,8 +380,8 @@ std::string ListType::to_string() const
 
 void ListType::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(code));
-  buffer.pack<uint32_t>(uid_);
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
+  buffer.pack<std::uint32_t>(uid_);
   element_type_->pack(buffer);
 }
 
@@ -402,7 +406,7 @@ InternalSharedPtr<Type> string_type()
   return type;
 }
 
-InternalSharedPtr<Type> binary_type(uint32_t size)
+InternalSharedPtr<Type> binary_type(std::uint32_t size)
 {
   if (size == 0) {
     throw std::out_of_range{"Size for an opaque binary type must be greater than 0"};
@@ -411,11 +415,11 @@ InternalSharedPtr<Type> binary_type(uint32_t size)
     throw std::out_of_range{"Maximum size for opaque binary types is " +
                             std::to_string(MAX_BINARY_TYPE_SIZE)};
   }
-  auto uid = static_cast<int32_t>(Type::Code::BINARY) | (size << TYPE_CODE_OFFSET);
+  auto uid = static_cast<std::int32_t>(Type::Code::BINARY) | (size << TYPE_CODE_OFFSET);
   return make_internal_shared<BinaryType>(uid, size);
 }
 
-InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type, uint32_t N)
+InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type, std::uint32_t N)
 {
   if (N == 0) {
     throw std::out_of_range{"Size of array must be greater than 0"};
@@ -431,7 +435,7 @@ InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type, u
     if (!elem_type.is_primitive() || N > MAX_ELEMENTS) {
       return get_next_uid();
     }
-    return static_cast<int32_t>(elem_type.code) | (N << TYPE_CODE_OFFSET);
+    return static_cast<std::int32_t>(elem_type.code) | (N << TYPE_CODE_OFFSET);
   }(*element_type);
   return make_internal_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
@@ -530,7 +534,7 @@ InternalSharedPtr<Type> complex128()
   return result;
 }
 
-InternalSharedPtr<Type> point_type(uint32_t ndim)
+InternalSharedPtr<Type> point_type(std::uint32_t ndim)
 {
   static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
@@ -544,7 +548,7 @@ InternalSharedPtr<Type> point_type(uint32_t ndim)
   return cache[ndim];
 }
 
-InternalSharedPtr<Type> rect_type(uint32_t ndim)
+InternalSharedPtr<Type> rect_type(std::uint32_t ndim)
 {
   static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
@@ -568,7 +572,7 @@ InternalSharedPtr<Type> null_type()
   return result;
 }
 
-bool is_point_type(const InternalSharedPtr<Type>& type, uint32_t ndim)
+bool is_point_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 {
   return type->code == Type::Code::INT64 || type->uid() == BASE_POINT_TYPE_UID + ndim;
 }
@@ -579,7 +583,7 @@ bool is_rect_type(const InternalSharedPtr<Type>& type)
   return uid > BASE_RECT_TYPE_UID && uid <= BASE_RECT_TYPE_UID + LEGATE_MAX_DIM;
 }
 
-bool is_rect_type(const InternalSharedPtr<Type>& type, uint32_t ndim)
+bool is_rect_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 {
   return type->uid() == BASE_RECT_TYPE_UID + ndim;
 }

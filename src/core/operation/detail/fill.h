@@ -24,11 +24,11 @@ class Fill final : public Operation {
  public:
   Fill(InternalSharedPtr<LogicalStore> lhs,
        InternalSharedPtr<LogicalStore> value,
-       uint64_t unique_id,
+       std::uint64_t unique_id,
        mapping::detail::Machine machine);
   Fill(InternalSharedPtr<LogicalStore> lhs,
        Scalar value,
-       uint64_t unique_id,
+       std::uint64_t unique_id,
        mapping::detail::Machine machine);
 
   void validate() override;

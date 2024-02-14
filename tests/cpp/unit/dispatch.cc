@@ -35,12 +35,12 @@ const std::vector<legate::Type::Code> PRIMITIVE_TYPE_CODE = {legate::Type::Code:
                                                              legate::Type::Code::COMPLEX128};
 
 struct DoubleDispatchData {
-  int32_t data1;
-  int32_t data2;
+  std::int32_t data1;
+  std::int32_t data2;
 };
 
 struct double_dispatch_fn {
-  template <legate::Type::Code CODE, int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(DoubleDispatchData& data)
   {
     EXPECT_EQ(CODE, static_cast<legate::Type::Code>(data.data1));
@@ -54,7 +54,7 @@ struct double_dispatch_fn {
 };
 
 struct double_dispatch_with_dim_fn {
-  template <int32_t DIM1, int32_t DIM2>
+  template <std::int32_t DIM1, std::int32_t DIM2>
   void operator()(DoubleDispatchData& data)
   {
     EXPECT_EQ(DIM1, data.data1);
@@ -68,10 +68,10 @@ struct double_dispatch_with_dim_fn {
 };
 
 struct dim_dispatch_fn {
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   void operator()(legate::Scalar& scalar)
   {
-    EXPECT_EQ(DIM, scalar.value<int32_t>());
+    EXPECT_EQ(DIM, scalar.value<std::int32_t>());
   }
 };
 
@@ -79,16 +79,16 @@ struct type_dispatch_fn {
   template <legate::Type::Code CODE>
   void operator()(legate::Scalar& scalar)
   {
-    EXPECT_EQ(CODE, static_cast<legate::Type::Code>(scalar.value<uint32_t>()));
+    EXPECT_EQ(CODE, static_cast<legate::Type::Code>(scalar.value<std::uint32_t>()));
   }
 };
 
 TEST_F(DispatchTest, DoubleDispatch)
 {
-  for (size_t idx = 0; idx < PRIMITIVE_TYPE_CODE.size(); ++idx) {
+  for (std::size_t idx = 0; idx < PRIMITIVE_TYPE_CODE.size(); ++idx) {
     auto code               = PRIMITIVE_TYPE_CODE.at(idx);
-    auto dim                = static_cast<int32_t>(idx % LEGATE_MAX_DIM + 1);
-    DoubleDispatchData data = {static_cast<int32_t>(code), dim};
+    auto dim                = static_cast<std::int32_t>(idx % LEGATE_MAX_DIM + 1);
+    DoubleDispatchData data = {static_cast<std::int32_t>(code), dim};
     legate::double_dispatch(dim, code, double_dispatch_fn{}, data);
   }
 
@@ -120,7 +120,7 @@ TEST_F(DispatchTest, DoubleDispatch)
 
 TEST_F(DispatchTest, DoubleDispatchWithDims)
 {
-  for (int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
+  for (std::int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     DoubleDispatchData data = {idx, LEGATE_MAX_DIM - idx + 1};
     legate::double_dispatch(idx, LEGATE_MAX_DIM - idx + 1, double_dispatch_with_dim_fn{}, data);
   }
@@ -145,7 +145,7 @@ TEST_F(DispatchTest, DoubleDispatchWithDims)
 
 TEST_F(DispatchTest, DimDispatch)
 {
-  for (int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
+  for (std::int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     auto scalar = legate::Scalar(idx);
     legate::dim_dispatch(idx, dim_dispatch_fn{}, scalar);
   }
@@ -160,9 +160,9 @@ TEST_F(DispatchTest, DimDispatch)
 
 TEST_F(DispatchTest, TypeDispatch)
 {
-  for (size_t idx = 0; idx < PRIMITIVE_TYPE_CODE.size(); ++idx) {
+  for (std::size_t idx = 0; idx < PRIMITIVE_TYPE_CODE.size(); ++idx) {
     auto code   = PRIMITIVE_TYPE_CODE.at(idx);
-    auto scalar = legate::Scalar(static_cast<uint32_t>(code));
+    auto scalar = legate::Scalar(static_cast<std::uint32_t>(code));
     legate::type_dispatch(code, type_dispatch_fn{}, scalar);
   }
 

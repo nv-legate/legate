@@ -231,7 +231,7 @@ InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs)
   return make_internal_shared<Broadcast>(variable);
 }
 
-InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<uint32_t> axes)
+InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<std::uint32_t> axes)
 {
   if (axes.empty()) {
     throw std::invalid_argument{"List of axes to broadcast must not be empty"};
@@ -244,7 +244,7 @@ InternalSharedPtr<ImageConstraint> image(const Variable* var_function, const Var
   return make_internal_shared<ImageConstraint>(var_function, var_range);
 }
 
-InternalSharedPtr<ScaleConstraint> scale(tuple<uint64_t> factors,
+InternalSharedPtr<ScaleConstraint> scale(tuple<std::uint64_t> factors,
                                          const Variable* var_smaller,
                                          const Variable* var_bigger)
 {
@@ -253,8 +253,8 @@ InternalSharedPtr<ScaleConstraint> scale(tuple<uint64_t> factors,
 
 InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
                                          const Variable* var_bloat,
-                                         tuple<uint64_t> low_offsets,
-                                         tuple<uint64_t> high_offsets)
+                                         tuple<std::uint64_t> low_offsets,
+                                         tuple<std::uint64_t> high_offsets)
 {
   return make_internal_shared<BloatConstraint>(
     var_source, var_bloat, std::move(low_offsets), std::move(high_offsets));

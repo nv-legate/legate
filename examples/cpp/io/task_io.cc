@@ -38,7 +38,7 @@ void register_tasks()
 namespace utils {
 
 struct write_util_fn {
-  template <legate::Type::Code CODE, int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(const legate::PhysicalStore& store, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
@@ -52,7 +52,7 @@ struct write_util_fn {
 
     std::ofstream out(path, std::ios::binary | std::ios::out | std::ios::trunc);
     // Each file for a chunk starts with the extents
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
     }
 
@@ -70,7 +70,7 @@ struct write_util_fn {
 };
 
 std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext context,
-                                                     int32_t ndim,
+                                                     std::int32_t ndim,
                                                      const std::string& dirname)
 {
   auto task_index = context.get_task_index();
@@ -81,7 +81,7 @@ std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext c
   }
 
   std::stringstream ss;
-  for (int32_t idx = 0; idx < task_index.dim; ++idx) {
+  for (std::int32_t idx = 0; idx < task_index.dim; ++idx) {
     if (idx != 0) {
       ss << ".";
     }
@@ -104,7 +104,7 @@ void write_to_file(legate::TaskContext task_context,
 }  // namespace utils
 
 struct read_even_fn {
-  template <legate::Type::Code CODE, int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& output, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
@@ -118,7 +118,7 @@ struct read_even_fn {
     std::ifstream in(path, std::ios::binary | std::ios::in);
 
     legate::Point<DIM> extents;
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       in.read(reinterpret_cast<char*>(&extents[idx]), sizeof(legate::coord_t));
     }
 
@@ -150,13 +150,13 @@ struct read_fn {
   template <legate::Type::Code CODE>
   void operator()(legate::PhysicalStore& output,
                   const std::string& filename,
-                  int64_t my_id,
-                  int64_t num_readers)
+                  std::int64_t my_id,
+                  std::int64_t num_readers)
   {
     using VAL = legate::legate_type_of<CODE>;
 
-    int64_t code;
-    size_t size;
+    std::int64_t code;
+    std::size_t size;
 
     // All reader tasks need to read the header to figure out the total number of elements
     std::ifstream in(filename, std::ios::binary | std::ios::in);
@@ -169,18 +169,18 @@ struct read_fn {
 
     // Compute the absolute offsets to the section that this reader task
     // is supposed to read from the file
-    int64_t my_lo = my_id * size / num_readers;
-    int64_t my_hi = std::min((my_id + 1) * size / num_readers, size);
+    std::int64_t my_lo = my_id * size / num_readers;
+    std::int64_t my_hi = std::min((my_id + 1) * size / num_readers, size);
 
     // Then compute the extent for the output and create the output buffer to populate
-    int64_t my_ext = my_hi - my_lo;
-    auto buf       = output.create_output_buffer<VAL, 1>(legate::Point<1>(my_ext));
+    std::int64_t my_ext = my_hi - my_lo;
+    auto buf            = output.create_output_buffer<VAL, 1>(legate::Point<1>(my_ext));
 
     // Skip to the right offset where the data assigned to this reader task actually starts
     if (my_lo != 0) {
       in.seekg(my_lo * sizeof(VAL), std::ios_base::cur);
     }
-    for (int64_t idx = 0; idx < my_ext; ++idx) {
+    for (std::int64_t idx = 0; idx < my_ext; ++idx) {
       auto ptr = buf.ptr(legate::Point<1>(idx));
       in.read(reinterpret_cast<char*>(ptr), sizeof(VAL));
     }
@@ -206,8 +206,9 @@ struct read_fn {
 
   // The task context contains metadata about the launch so each reader task can figure out
   // which part of the file it needs to read into the output.
-  int64_t my_id       = context.is_single_task() ? 0 : context.get_task_index()[0];
-  int64_t num_readers = context.is_single_task() ? 1 : context.get_launch_domain().get_volume();
+  std::int64_t my_id = context.is_single_task() ? 0 : context.get_task_index()[0];
+  std::int64_t num_readers =
+    context.is_single_task() ? 1 : context.get_launch_domain().get_volume();
   logger.debug() << "Read " << filename << " (" << my_id + 1 << "/" << num_readers << ")";
 
   // type_dispatch converts the first argument to a non-type template argument
@@ -215,7 +216,7 @@ struct read_fn {
 }
 
 struct read_uneven_fn {
-  template <legate::Type::Code CODE, int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& output, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
@@ -224,7 +225,7 @@ struct read_uneven_fn {
 
     // Read the header of each file to extract the extents
     legate::Point<DIM> extents;
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       in.read(reinterpret_cast<char*>(&extents[idx]), sizeof(legate::coord_t));
     }
 
@@ -258,11 +259,11 @@ struct read_uneven_fn {
 
 void write_header(std::ofstream& out,
                   legate::Type::Code type_code,
-                  const legate::Span<const int32_t>& shape,
-                  const legate::Span<const int32_t>& tile_shape)
+                  const legate::Span<const std::int32_t>& shape,
+                  const legate::Span<const std::int32_t>& tile_shape)
 {
   LegateCheck(shape.size() == tile_shape.size());
-  int32_t dim = shape.size();
+  std::int32_t dim = shape.size();
   // Dump the type code, the array's shape and the tile shape to the header
   out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
   out.write(reinterpret_cast<const char*>(&dim), sizeof(int32_t));
@@ -276,10 +277,10 @@ void write_header(std::ofstream& out,
 
 /*static*/ void WriteEvenTilesTask::cpu_variant(legate::TaskContext context)
 {
-  auto dirname                           = context.scalar(0).value<std::string>();
-  legate::Span<const int32_t> shape      = context.scalar(1).values<int32_t>();
-  legate::Span<const int32_t> tile_shape = context.scalar(2).values<int32_t>();
-  auto input                             = context.input(0).data();
+  auto dirname                                = context.scalar(0).value<std::string>();
+  legate::Span<const std::int32_t> shape      = context.scalar(1).values<std::int32_t>();
+  legate::Span<const std::int32_t> tile_shape = context.scalar(2).values<std::int32_t>();
+  auto input                                  = context.input(0).data();
 
   auto launch_domain = context.get_launch_domain();
   auto task_index    = context.get_task_index();
@@ -301,9 +302,9 @@ struct write_fn {
   {
     using VAL = legate::legate_type_of<CODE>;
 
-    auto shape  = input.shape<1>();
-    auto code   = input.code<int64_t>();
-    size_t size = shape.volume();
+    auto shape       = input.shape<1>();
+    auto code        = input.code<std::int64_t>();
+    std::size_t size = shape.volume();
 
     // Store the type code and the number of elements in the array at the beginning of the file
     std::ofstream out(filename, std::ios::binary | std::ios::out | std::ios::trunc);
@@ -328,7 +329,7 @@ struct write_fn {
 }
 
 struct header_write_fn {
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   void operator()(std::ofstream& out,
                   const legate::Domain& launch_domain,
                   legate::Type::Code type_code)
@@ -339,7 +340,7 @@ struct header_write_fn {
     // The header contains the type code and the launch shape
     out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
     out.write(reinterpret_cast<const char*>(&launch_domain.dim), sizeof(int32_t));
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
     }
   }

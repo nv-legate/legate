@@ -34,10 +34,10 @@ Variable AutoTask::add_output(const LogicalArray& array)
 
 Variable AutoTask::add_reduction(const LogicalArray& array, ReductionOpKind redop)
 {
-  return Variable{impl_->add_reduction(array.impl(), static_cast<int32_t>(redop))};
+  return Variable{impl_->add_reduction(array.impl(), static_cast<std::int32_t>(redop))};
 }
 
-Variable AutoTask::add_reduction(const LogicalArray& array, int32_t redop)
+Variable AutoTask::add_reduction(const LogicalArray& array, std::int32_t redop)
 {
   return Variable{impl_->add_reduction(array.impl(), redop)};
 }
@@ -58,12 +58,12 @@ Variable AutoTask::add_reduction(const LogicalArray& array,
                                  ReductionOpKind redop,
                                  Variable partition_symbol)
 {
-  impl_->add_reduction(array.impl(), static_cast<int32_t>(redop), partition_symbol.impl());
+  impl_->add_reduction(array.impl(), static_cast<std::int32_t>(redop), partition_symbol.impl());
   return partition_symbol;
 }
 
 Variable AutoTask::add_reduction(const LogicalArray& array,
-                                 int32_t redop,
+                                 std::int32_t redop,
                                  Variable partition_symbol)
 {
   impl_->add_reduction(array.impl(), redop, partition_symbol.impl());
@@ -123,10 +123,10 @@ void ManualTask::add_output(const LogicalStorePartition& store_partition,
 
 void ManualTask::add_reduction(const LogicalStore& store, ReductionOpKind redop)
 {
-  impl_->add_reduction(store.impl(), static_cast<int32_t>(redop));
+  impl_->add_reduction(store.impl(), static_cast<std::int32_t>(redop));
 }
 
-void ManualTask::add_reduction(const LogicalStore& store, int32_t redop)
+void ManualTask::add_reduction(const LogicalStore& store, std::int32_t redop)
 {
   impl_->add_reduction(store.impl(), redop);
 }
@@ -135,11 +135,12 @@ void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
                                ReductionOpKind redop,
                                std::optional<SymbolicPoint> projection)
 {
-  impl_->add_reduction(store_partition.impl(), static_cast<int32_t>(redop), std::move(projection));
+  impl_->add_reduction(
+    store_partition.impl(), static_cast<std::int32_t>(redop), std::move(projection));
 }
 
 void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
-                               int32_t redop,
+                               std::int32_t redop,
                                std::optional<SymbolicPoint> projection)
 {
   impl_->add_reduction(store_partition.impl(), redop, std::move(projection));

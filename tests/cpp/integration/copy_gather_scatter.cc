@@ -23,9 +23,9 @@ using Copy = DefaultFixture;
 static const char* library_name = "test_copy_gather_scatter";
 static legate::Logger logger(library_name);
 
-constexpr int32_t CHECK_GATHER_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
+constexpr std::int32_t CHECK_GATHER_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
-template <int32_t SRC_DIM, int32_t IND_DIM, int32_t TGT_DIM>
+template <std::int32_t SRC_DIM, std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckGatherScatterTask
   : public legate::LegateTask<CheckGatherScatterTask<SRC_DIM, IND_DIM, TGT_DIM>> {
   struct CheckGatherScatterTaskBody {
@@ -74,8 +74,9 @@ struct CheckGatherScatterTask
     }
   };
 
-  static const int32_t TASK_ID = CHECK_GATHER_SCATTER_TASK + SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM +
-                                 IND_DIM * TEST_MAX_DIM + TGT_DIM;
+  static const std::int32_t TASK_ID = CHECK_GATHER_SCATTER_TASK +
+                                      SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM +
+                                      IND_DIM * TEST_MAX_DIM + TGT_DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto type_code = context.input(0).type().code();
@@ -84,9 +85,9 @@ struct CheckGatherScatterTask
 };
 
 struct GatherScatterSpec {
-  std::vector<uint64_t> src_shape;
-  std::vector<uint64_t> ind_shape;
-  std::vector<uint64_t> tgt_shape;
+  std::vector<std::uint64_t> src_shape;
+  std::vector<std::uint64_t> ind_shape;
+  std::vector<std::uint64_t> tgt_shape;
   legate::Scalar seed;
   legate::Scalar init;
 
@@ -141,8 +142,8 @@ void check_gather_scatter_output(legate::Library library,
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
 
-  int32_t task_id = CHECK_GATHER_SCATTER_TASK + src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
-                    src_ind.dim() * TEST_MAX_DIM + tgt.dim();
+  std::int32_t task_id = CHECK_GATHER_SCATTER_TASK + src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
+                         src_ind.dim() * TEST_MAX_DIM + tgt.dim();
 
   auto task = runtime->create_task(library, task_id);
 
@@ -192,7 +193,7 @@ void test_gather_scatter(const GatherScatterSpec& spec)
 TEST_F(Copy, GatherScatter1Dto3Dvia2D)
 {
   register_tasks();
-  std::vector<uint64_t> shape1d{5};
+  std::vector<std::uint64_t> shape1d{5};
   test_gather_scatter(GatherScatterSpec{
     shape1d, {7, 11}, {10, 10, 10}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
 }
@@ -200,7 +201,7 @@ TEST_F(Copy, GatherScatter1Dto3Dvia2D)
 TEST_F(Copy, GatherScatter2Dto1Dvia3D)
 {
   register_tasks();
-  std::vector<uint64_t> shape1d{1000};
+  std::vector<std::uint64_t> shape1d{1000};
   test_gather_scatter(GatherScatterSpec{
     {3, 7}, {3, 6, 5}, shape1d, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
 }
@@ -208,7 +209,7 @@ TEST_F(Copy, GatherScatter2Dto1Dvia3D)
 TEST_F(Copy, GatherScatter3Dto2Dvia1D)
 {
   register_tasks();
-  std::vector<uint64_t> shape1d{100};
+  std::vector<std::uint64_t> shape1d{100};
   test_gather_scatter(GatherScatterSpec{
     {4, 5, 2}, shape1d, {50, 50}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
 }

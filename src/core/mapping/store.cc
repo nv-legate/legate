@@ -20,11 +20,11 @@ bool Store::is_future() const { return impl()->is_future(); }
 
 bool Store::unbound() const { return impl()->unbound(); }
 
-uint32_t Store::dim() const { return impl()->dim(); }
+std::uint32_t Store::dim() const { return impl()->dim(); }
 
 bool Store::is_reduction() const { return impl()->is_reduction(); }
 
-int32_t Store::redop() const { return impl()->redop(); }
+std::int32_t Store::redop() const { return impl()->redop(); }
 
 bool Store::can_colocate_with(const Store& other) const
 {

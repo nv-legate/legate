@@ -53,7 +53,7 @@ class PhysicalStore {
    *
    * @return A read-only accessor to the store
    */
-  template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorRO<T, DIM> read_accessor() const;
   /**
    * @brief Returns a write-only accessor to the store for the entire domain.
@@ -66,7 +66,7 @@ class PhysicalStore {
    *
    * @return A write-only accessor to the store
    */
-  template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorWO<T, DIM> write_accessor() const;
   /**
    * @brief Returns a read-write accessor to the store for the entire domain.
@@ -79,7 +79,7 @@ class PhysicalStore {
    *
    * @return A read-write accessor to the store
    */
-  template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorRW<T, DIM> read_write_accessor() const;
   /**
    * @brief Returns a reduction accessor to the store for the entire domain.
@@ -96,7 +96,7 @@ class PhysicalStore {
    *
    * @return A reduction accessor to the store
    */
-  template <typename OP, bool EXCLUSIVE, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename OP, bool EXCLUSIVE, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor() const;
 
   /**
@@ -114,7 +114,7 @@ class PhysicalStore {
    *
    * @return A read-only accessor to the store
    */
-  template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorRO<T, DIM> read_accessor(const Rect<DIM>& bounds) const;
   /**
    * @brief Returns a write-only accessor to the store for the entire domain.
@@ -131,7 +131,7 @@ class PhysicalStore {
    *
    * @return A write-only accessor to the store
    */
-  template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds) const;
   /**
    * @brief Returns a read-write accessor to the store for the entire domain.
@@ -148,7 +148,7 @@ class PhysicalStore {
    *
    * @return A read-write accessor to the store
    */
-  template <typename T, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorRW<T, DIM> read_write_accessor(const Rect<DIM>& bounds) const;
   /**
    * @brief Returns a reduction accessor to the store for the entire domain.
@@ -169,7 +169,7 @@ class PhysicalStore {
    *
    * @return A reduction accessor to the store
    */
-  template <typename OP, bool EXCLUSIVE, int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename OP, bool EXCLUSIVE, std::int32_t DIM, bool VALIDATE_TYPE = true>
   [[nodiscard]] AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(const Rect<DIM>& bounds) const;
 
   /**
@@ -198,7 +198,7 @@ class PhysicalStore {
    *
    * @return A reduction accessor to the store
    */
-  template <typename T, int32_t DIM>
+  template <typename T, std::int32_t DIM>
   [[nodiscard]] Buffer<T, DIM> create_output_buffer(const Point<DIM>& extents,
                                                     bool bind_buffer = false) const;
   /**
@@ -214,7 +214,7 @@ class PhysicalStore {
    * buffer is legal; the runtime uses the passed extents as the extents of this store.
    *
    */
-  template <typename T, int32_t DIM>
+  template <typename T, std::int32_t DIM>
   void bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const;
   /**
    * @brief Binds a 1D buffer of byte-size elements to the store in an untyped manner.
@@ -251,7 +251,7 @@ class PhysicalStore {
    *
    * @return The store's dimension
    */
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] std::int32_t dim() const;
   /**
    * @brief Returns the type metadata of the store
    *
@@ -271,7 +271,7 @@ class PhysicalStore {
    *
    * @return Store's domain
    */
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   [[nodiscard]] Rect<DIM> shape() const;
   /**
    * @brief Returns the store's domain in a dimension-erased domain type
@@ -353,9 +353,9 @@ class PhysicalStore {
   PhysicalStore(const PhysicalArray& array);
 
  private:
-  void check_accessor_dimension(int32_t dim) const;
-  void check_buffer_dimension(int32_t dim) const;
-  void check_shape_dimension(int32_t dim) const;
+  void check_accessor_dimension(std::int32_t dim) const;
+  void check_buffer_dimension(std::int32_t dim) const;
+  void check_shape_dimension(std::int32_t dim) const;
   void check_valid_binding(bool bind_buffer) const;
   void check_write_access() const;
   void check_reduction_access() const;
@@ -364,10 +364,10 @@ class PhysicalStore {
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
 
   void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] int32_t get_redop_id() const;
-  template <typename ACC, typename T, int32_t DIM>
+  [[nodiscard]] std::int32_t get_redop_id() const;
+  template <typename ACC, typename T, std::int32_t DIM>
   [[nodiscard]] ACC create_field_accessor(const Rect<DIM>& bounds) const;
-  template <typename ACC, typename T, int32_t DIM>
+  template <typename ACC, typename T, std::int32_t DIM>
   [[nodiscard]] ACC create_reduction_accessor(const Rect<DIM>& bounds) const;
 
   [[nodiscard]] bool is_read_only_future() const;
@@ -375,7 +375,7 @@ class PhysicalStore {
   [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
 
   void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const;
-  void update_num_elements(size_t num_elements) const;
+  void update_num_elements(std::size_t num_elements) const;
 
  public:
   PhysicalStore() noexcept;

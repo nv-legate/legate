@@ -35,7 +35,7 @@ namespace legate {
  */
 class ScopedAllocator {
  public:
-  static inline constexpr size_t DEFAULT_ALIGNMENT = 16;
+  static inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 
   // Iff 'scoped', all allocations will be released upon destruction.
   // Otherwise this is up to the runtime after the task has finished.
@@ -49,8 +49,8 @@ class ScopedAllocator {
    * @param alignment Alignment for the allocations
    */
   explicit ScopedAllocator(Memory::Kind kind,
-                           bool scoped      = true,
-                           size_t alignment = DEFAULT_ALIGNMENT);
+                           bool scoped           = true,
+                           std::size_t alignment = DEFAULT_ALIGNMENT);
 
   /**
    * @brief Allocates a contiguous buffer of the given Memory::Kind
@@ -62,7 +62,7 @@ class ScopedAllocator {
    *
    * @return A raw pointer to the allocation
    */
-  [[nodiscard]] void* allocate(size_t bytes);
+  [[nodiscard]] void* allocate(std::size_t bytes);
   /**
    * @brief Deallocates an allocation. The input pointer must be one that was previously
    * returned by an `allocate` call, otherwise the code will fail with an error message.

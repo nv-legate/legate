@@ -38,7 +38,7 @@ class TaskContext {
   [[nodiscard]] const std::vector<legate::Scalar>& scalars();
   [[nodiscard]] std::vector<comm::Communicator>& communicators();
 
-  [[nodiscard]] int64_t task_id() const noexcept;
+  [[nodiscard]] std::int64_t task_id() const noexcept;
   [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
   [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] bool can_raise_exception() const;
@@ -57,7 +57,7 @@ class TaskContext {
   void make_all_unbound_stores_empty();
   [[nodiscard]] ReturnValues pack_return_values() const;
   [[nodiscard]] ReturnValues pack_return_values_with_exception(
-    int32_t index, std::string_view error_message) const;
+    std::int32_t index, std::string_view error_message) const;
 
  private:
   [[nodiscard]] std::vector<ReturnValue> get_return_values() const;

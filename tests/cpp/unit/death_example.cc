@@ -22,12 +22,12 @@ using DeathTestExample = DeathTestFixture;
 void KillProcess(int /*argc*/, char** /*argv*/)
 {
   (void)legate::start(0, NULL);
-  abort();
+  std::abort();
 }
 
 TEST_F(DeathTestExample, Simple)
 {
-  auto value           = getenv("REALM_BACKTRACE");
+  auto value           = std::getenv("REALM_BACKTRACE");
   bool realm_backtrace = value != nullptr && atoi(value) != 0;
 
   if (realm_backtrace) {

@@ -34,15 +34,15 @@ struct DimOrdering {
   using Kind = mapping::DimOrdering::Kind;
 
   explicit DimOrdering(Kind _kind);
-  explicit DimOrdering(std::vector<int32_t> _dims);
+  explicit DimOrdering(std::vector<std::int32_t> _dims);
 
   bool operator==(const DimOrdering& other) const;
 
-  void populate_dimension_ordering(uint32_t ndim,
+  void populate_dimension_ordering(std::uint32_t ndim,
                                    std::vector<Legion::DimensionKind>& ordering) const;
 
   Kind kind;
-  std::vector<int32_t> dims{};
+  std::vector<std::int32_t> dims{};
 };
 
 struct StoreMapping {
@@ -51,8 +51,8 @@ struct StoreMapping {
   [[nodiscard]] bool for_unbound_store() const;
   [[nodiscard]] const Store* store() const;
 
-  [[nodiscard]] uint32_t requirement_index() const;
-  [[nodiscard]] std::set<uint32_t> requirement_indices() const;
+  [[nodiscard]] std::uint32_t requirement_index() const;
+  [[nodiscard]] std::set<std::uint32_t> requirement_indices() const;
   [[nodiscard]] std::set<const Legion::RegionRequirement*> requirements() const;
 
   void populate_layout_constraints(Legion::LayoutConstraintSet& layout_constraints) const;

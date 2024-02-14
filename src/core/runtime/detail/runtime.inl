@@ -24,13 +24,13 @@ ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 }
 
 template <typename T>
-T Runtime::get_tunable(Legion::MapperID mapper_id, int64_t tunable_id)
+T Runtime::get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id)
 {
   return get_tunable(mapper_id, tunable_id, sizeof(T)).get_result<T>();
 }
 
 template <typename T>
-T Runtime::get_core_tunable(int64_t tunable_id)
+T Runtime::get_core_tunable(std::int64_t tunable_id)
 {
   return get_tunable<T>(core_library_->get_mapper_id(), tunable_id);
 }
@@ -44,15 +44,15 @@ inline void Runtime::register_shutdown_callback(ShutdownCallback callback)
 
 inline const Library* Runtime::core_library() const { return core_library_; }
 
-inline uint64_t Runtime::current_op_id() const { return current_op_id_; }
+inline std::uint64_t Runtime::current_op_id() const { return current_op_id_; }
 
 inline void Runtime::increment_op_id() { ++current_op_id_; }
 
-inline uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
+inline std::uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
-inline uint64_t Runtime::get_unique_storage_id() { return next_storage_id_++; }
+inline std::uint64_t Runtime::get_unique_storage_id() { return next_storage_id_++; }
 
-inline uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
+inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
 
 inline PartitionManager* Runtime::partition_manager() const { return partition_manager_; }
 

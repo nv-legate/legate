@@ -26,7 +26,7 @@ namespace legateio {
 namespace {
 
 struct write_fn {
-  template <legate::Type::Code CODE, int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(const legate::Store& store, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
@@ -36,14 +36,14 @@ struct write_fn {
     auto extents =
       empty ? legate::Point<DIM>::ZEROES() : shape.hi - shape.lo + legate::Point<DIM>::ONES();
 
-    int32_t dim  = DIM;
-    int32_t code = store.code<int32_t>();
+    std::int32_t dim  = DIM;
+    std::int32_t code = store.code<std::int32_t>();
 
     logger.print() << "Write a sub-array " << shape << " to " << path;
 
     std::ofstream out(path, std::ios::binary | std::ios::out | std::ios::trunc);
     // Each file for a chunk starts with the extents
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
     }
 
@@ -63,7 +63,7 @@ struct write_fn {
 }  // namespace
 
 std::filesystem::path get_unique_path_for_task_index(legate::TaskContext context,
-                                                     int32_t ndim,
+                                                     std::int32_t ndim,
                                                      const std::string& dirname)
 {
   auto task_index = context.get_task_index();
@@ -74,7 +74,7 @@ std::filesystem::path get_unique_path_for_task_index(legate::TaskContext context
   }
 
   std::stringstream ss;
-  for (int32_t idx = 0; idx < task_index.dim; ++idx) {
+  for (std::int32_t idx = 0; idx < task_index.dim; ++idx) {
     if (idx != 0) {
       ss << ".";
     }

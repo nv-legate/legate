@@ -48,19 +48,19 @@ Library Runtime::find_or_create_library(const std::string& library_name,
     library_name, config, std::move(mapper), created, false /*in_callback*/)};
 }
 
-AutoTask Runtime::create_task(Library library, int64_t task_id)
+AutoTask Runtime::create_task(Library library, std::int64_t task_id)
 {
   return AutoTask{impl_->create_task(library.impl(), task_id)};
 }
 
 ManualTask Runtime::create_task(Library library,
-                                int64_t task_id,
-                                const tuple<uint64_t>& launch_shape)
+                                std::int64_t task_id,
+                                const tuple<std::uint64_t>& launch_shape)
 {
   return create_task(library, task_id, detail::to_domain(launch_shape));
 }
 
-ManualTask Runtime::create_task(Library library, int64_t task_id, const Domain& launch_domain)
+ManualTask Runtime::create_task(Library library, std::int64_t task_id, const Domain& launch_domain)
 {
   return ManualTask{impl_->create_task(library.impl(), task_id, launch_domain)};
 }
@@ -69,13 +69,13 @@ void Runtime::issue_copy(LogicalStore& target,
                          const LogicalStore& source,
                          std::optional<ReductionOpKind> redop)
 {
-  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  auto op = redop ? std::make_optional(static_cast<std::int32_t>(redop.value())) : std::nullopt;
   impl_->issue_copy(target.impl(), source.impl(), op);
 }
 
 void Runtime::issue_copy(LogicalStore& target,
                          const LogicalStore& source,
-                         std::optional<int32_t> redop)
+                         std::optional<std::int32_t> redop)
 {
   impl_->issue_copy(target.impl(), source.impl(), redop);
 }
@@ -85,14 +85,14 @@ void Runtime::issue_gather(LogicalStore& target,
                            const LogicalStore& source_indirect,
                            std::optional<ReductionOpKind> redop)
 {
-  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  auto op = redop ? std::make_optional(static_cast<std::int32_t>(redop.value())) : std::nullopt;
   impl_->issue_gather(target.impl(), source.impl(), source_indirect.impl(), op);
 }
 
 void Runtime::issue_gather(LogicalStore& target,
                            const LogicalStore& source,
                            const LogicalStore& source_indirect,
-                           std::optional<int32_t> redop)
+                           std::optional<std::int32_t> redop)
 {
   impl_->issue_gather(target.impl(), source.impl(), source_indirect.impl(), redop);
 }
@@ -102,14 +102,14 @@ void Runtime::issue_scatter(LogicalStore& target,
                             const LogicalStore& source,
                             std::optional<ReductionOpKind> redop)
 {
-  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  auto op = redop ? std::make_optional(static_cast<std::int32_t>(redop.value())) : std::nullopt;
   impl_->issue_scatter(target.impl(), target_indirect.impl(), source.impl(), op);
 }
 
 void Runtime::issue_scatter(LogicalStore& target,
                             const LogicalStore& target_indirect,
                             const LogicalStore& source,
-                            std::optional<int32_t> redop)
+                            std::optional<std::int32_t> redop)
 {
   impl_->issue_scatter(target.impl(), target_indirect.impl(), source.impl(), redop);
 }
@@ -120,7 +120,7 @@ void Runtime::issue_scatter_gather(LogicalStore& target,
                                    const LogicalStore& source_indirect,
                                    std::optional<ReductionOpKind> redop)
 {
-  auto op = redop ? std::make_optional(static_cast<int32_t>(redop.value())) : std::nullopt;
+  auto op = redop ? std::make_optional(static_cast<std::int32_t>(redop.value())) : std::nullopt;
   impl_->issue_scatter_gather(
     target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl(), op);
 }
@@ -129,7 +129,7 @@ void Runtime::issue_scatter_gather(LogicalStore& target,
                                    const LogicalStore& target_indirect,
                                    const LogicalStore& source,
                                    const LogicalStore& source_indirect,
-                                   std::optional<int32_t> redop)
+                                   std::optional<std::int32_t> redop)
 {
   impl_->issue_scatter_gather(
     target.impl(), target_indirect.impl(), source.impl(), source_indirect.impl(), redop);
@@ -146,9 +146,9 @@ void Runtime::issue_fill(const LogicalArray& lhs, const Scalar& value)
 }
 
 LogicalStore Runtime::tree_reduce(Library library,
-                                  int64_t task_id,
+                                  std::int64_t task_id,
                                   const LogicalStore& store,
-                                  int32_t radix)
+                                  std::int32_t radix)
 {
   auto out_store = create_store(store.type(), 1);
 
@@ -160,7 +160,7 @@ void Runtime::submit(AutoTask task) { impl_->submit(std::move(task.impl_)); }
 
 void Runtime::submit(ManualTask task) { impl_->submit(std::move(task.impl_)); }
 
-LogicalArray Runtime::create_array(const Type& type, uint32_t dim, bool nullable)
+LogicalArray Runtime::create_array(const Type& type, std::uint32_t dim, bool nullable)
 {
   return LogicalArray{impl_->create_array(type.impl(), dim, nullable)};
 }
@@ -197,7 +197,7 @@ ListLogicalArray Runtime::create_list_array(const LogicalArray& descriptor,
     .as_list_array();
 }
 
-LogicalStore Runtime::create_store(const Type& type, uint32_t dim)
+LogicalStore Runtime::create_store(const Type& type, std::uint32_t dim)
 {
   return LogicalStore{impl_->create_store(type.impl(), dim)};
 }
@@ -236,9 +236,9 @@ LogicalStore Runtime::create_store(const Shape& shape,
 
 std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
   const Shape& shape,
-  const tuple<uint64_t>& tile_shape,
+  const tuple<std::uint64_t>& tile_shape,
   const Type& type,
-  const std::vector<std::pair<ExternalAllocation, tuple<uint64_t>>>& allocations,
+  const std::vector<std::pair<ExternalAllocation, tuple<std::uint64_t>>>& allocations,
   const mapping::DimOrdering& ordering)
 {
   auto [store, partition] =
@@ -272,9 +272,9 @@ mapping::Machine Runtime::get_machine() const { return mapping::Machine{impl_->g
   return the_runtime;
 }
 
-int32_t start(int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
+std::int32_t start(std::int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
 
-int32_t finish() { return Runtime::get_runtime()->impl()->finish(); }
+std::int32_t finish() { return Runtime::get_runtime()->impl()->finish(); }
 
 void destroy() { detail::Runtime::get_runtime()->destroy(); }
 

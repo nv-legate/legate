@@ -71,7 +71,7 @@ class BufferBuilder {
   [[nodiscard]] Legion::UntypedBuffer to_legion_buffer() const;
 
  private:
-  std::vector<int8_t> buffer_{};
+  std::vector<std::int8_t> buffer_{};
 };
 
 }  // namespace legate::detail

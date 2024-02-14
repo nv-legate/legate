@@ -29,9 +29,9 @@ class Scatter final : public Operation {
   Scatter(InternalSharedPtr<LogicalStore> target,
           InternalSharedPtr<LogicalStore> target_indirect,
           InternalSharedPtr<LogicalStore> source,
-          uint64_t unique_id,
+          std::uint64_t unique_id,
           mapping::detail::Machine&& machine,
-          std::optional<int32_t> redop);
+          std::optional<std::int32_t> redop);
 
   void set_indirect_out_of_range(bool flag);
 
@@ -48,7 +48,7 @@ class Scatter final : public Operation {
   StoreArg target_indirect_;
   StoreArg source_;
   InternalSharedPtr<Constraint> constraint_;
-  std::optional<int32_t> redop_;
+  std::optional<std::int32_t> redop_;
 };
 
 }  // namespace legate::detail

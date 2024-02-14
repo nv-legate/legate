@@ -26,7 +26,7 @@ class IotaTask : public Task<IotaTask, IOTA> {
     logger.info() << "Iota task [" << output_shape.lo << "," << output_shape.hi << "]";
 
     // i is a global index for the complete array
-    for (size_t i = output_shape.lo; i <= output_shape.hi; ++i) {
+    for (std::size_t i = output_shape.lo; i <= output_shape.hi; ++i) {
       out[i] = i + 1;
     }
   }

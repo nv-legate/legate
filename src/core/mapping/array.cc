@@ -18,7 +18,7 @@ namespace legate::mapping {
 
 bool Array::nullable() const { return impl_->nullable(); }
 
-int32_t Array::dim() const { return impl_->dim(); }
+std::int32_t Array::dim() const { return impl_->dim(); }
 
 Type Array::type() const { return Type{impl_->type()}; }
 

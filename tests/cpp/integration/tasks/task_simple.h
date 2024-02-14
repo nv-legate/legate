@@ -33,17 +33,17 @@ extern Legion::Logger logger;
 void register_tasks();
 
 struct HelloTask : public legate::LegateTask<HelloTask> {
-  static const int32_t TASK_ID = HELLO;
+  static const std::int32_t TASK_ID = HELLO;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WriterTask : public legate::LegateTask<WriterTask> {
-  static const int32_t TASK_ID = WRITER;
+  static const std::int32_t TASK_ID = WRITER;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct ReducerTask : public legate::LegateTask<ReducerTask> {
-  static const int32_t TASK_ID = REDUCER;
+  static const std::int32_t TASK_ID = REDUCER;
   static void cpu_variant(legate::TaskContext context);
 };
 

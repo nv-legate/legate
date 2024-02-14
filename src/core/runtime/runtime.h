@@ -45,7 +45,9 @@ namespace legate {
 class Scalar;
 class Type;
 
-extern uint32_t extract_env(const char* env_name, uint32_t default_value, uint32_t test_value);
+extern std::uint32_t extract_env(const char* env_name,
+                                 std::uint32_t default_value,
+                                 std::uint32_t test_value);
 
 namespace detail {
 class Runtime;
@@ -129,7 +131,7 @@ class Runtime {
    *
    * @return Task object
    */
-  [[nodiscard]] AutoTask create_task(Library library, int64_t task_id);
+  [[nodiscard]] AutoTask create_task(Library library, std::int64_t task_id);
   /**
    * @brief Creates a ManualTask
    *
@@ -140,8 +142,8 @@ class Runtime {
    * @return Task object
    */
   [[nodiscard]] ManualTask create_task(Library library,
-                                       int64_t task_id,
-                                       const tuple<uint64_t>& launch_shape);
+                                       std::int64_t task_id,
+                                       const tuple<std::uint64_t>& launch_shape);
   /**
    * @brief Creates a ManualTask
    *
@@ -156,7 +158,7 @@ class Runtime {
    * @return Task object
    */
   [[nodiscard]] ManualTask create_task(Library library,
-                                       int64_t task_id,
+                                       std::int64_t task_id,
                                        const Domain& launch_domain);
   /**
    * @brief Issues a copy between stores.
@@ -185,7 +187,9 @@ class Runtime {
    *
    * @throw std::invalid_argument If the store's type doesn't support the reduction operator
    */
-  void issue_copy(LogicalStore& target, const LogicalStore& source, std::optional<int32_t> redop);
+  void issue_copy(LogicalStore& target,
+                  const LogicalStore& source,
+                  std::optional<std::int32_t> redop);
   /**
    * @brief Issues a gather copy between stores.
    *
@@ -219,7 +223,7 @@ class Runtime {
   void issue_gather(LogicalStore& target,
                     const LogicalStore& source,
                     const LogicalStore& source_indirect,
-                    std::optional<int32_t> redop);
+                    std::optional<std::int32_t> redop);
   /**
    * @brief Issues a scatter copy between stores.
    *
@@ -253,7 +257,7 @@ class Runtime {
   void issue_scatter(LogicalStore& target,
                      const LogicalStore& target_indirect,
                      const LogicalStore& source,
-                     std::optional<int32_t> redop);
+                     std::optional<std::int32_t> redop);
   /**
    * @brief Issues a scatter-gather copy between stores.
    *
@@ -291,7 +295,7 @@ class Runtime {
                             const LogicalStore& target_indirect,
                             const LogicalStore& source,
                             const LogicalStore& source_indirect,
-                            std::optional<int32_t> redop);
+                            std::optional<std::int32_t> redop);
   /**
    * @brief Fills a given array with a constant
    *
@@ -317,9 +321,9 @@ class Runtime {
    *
    */
   [[nodiscard]] LogicalStore tree_reduce(Library library,
-                                         int64_t task_id,
+                                         std::int64_t task_id,
                                          const LogicalStore& store,
-                                         int32_t radix = 4);
+                                         std::int32_t radix = 4);
 
   /**
    * @brief Submits an AutoTask for execution
@@ -350,8 +354,8 @@ class Runtime {
    * @return Logical array
    */
   [[nodiscard]] LogicalArray create_array(const Type& type,
-                                          uint32_t dim  = 1,
-                                          bool nullable = false);
+                                          std::uint32_t dim = 1,
+                                          bool nullable     = false);
   /**
    * @brief Creates a normal array
    *
@@ -431,7 +435,7 @@ class Runtime {
    *
    * @return Logical store
    */
-  [[nodiscard]] LogicalStore create_store(const Type& type, uint32_t dim = 1);
+  [[nodiscard]] LogicalStore create_store(const Type& type, std::uint32_t dim = 1);
   /**
    * @brief Creates a normal store
    *
@@ -509,9 +513,9 @@ class Runtime {
    */
   [[nodiscard]] std::pair<LogicalStore, LogicalStorePartition> create_store(
     const Shape& shape,
-    const tuple<uint64_t>& tile_shape,
+    const tuple<std::uint64_t>& tile_shape,
     const Type& type,
-    const std::vector<std::pair<ExternalAllocation, tuple<uint64_t>>>& allocations,
+    const std::vector<std::pair<ExternalAllocation, tuple<std::uint64_t>>>& allocations,
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
   /**
@@ -563,7 +567,7 @@ class Runtime {
  *
  * @return Non-zero value when the runtime start-up failed, 0 otherwise
  */
-[[nodiscard]] int32_t start(int32_t argc, char** argv);
+[[nodiscard]] std::int32_t start(std::int32_t argc, char** argv);
 
 /**
  * @ingroup runtime
@@ -574,7 +578,7 @@ class Runtime {
  *
  * @return Non-zero value when the runtime encountered a failure, 0 otherwise
  */
-[[nodiscard]] int32_t finish();
+[[nodiscard]] std::int32_t finish();
 
 void destroy();
 

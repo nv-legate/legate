@@ -23,20 +23,20 @@ namespace legate::detail {
 
 class Shape {
  private:
-  enum class State : uint64_t {
+  enum class State : std::uint64_t {
     UNBOUND,
     BOUND,
     READY,
   };
 
  public:
-  explicit Shape(uint32_t dim);
-  explicit Shape(tuple<uint64_t>&& extents);
+  explicit Shape(std::uint32_t dim);
+  explicit Shape(tuple<std::uint64_t>&& extents);
 
   [[nodiscard]] bool ready() const;
-  [[nodiscard]] uint32_t ndim() const;
-  [[nodiscard]] size_t volume();
-  [[nodiscard]] const tuple<uint64_t>& extents();
+  [[nodiscard]] std::uint32_t ndim() const;
+  [[nodiscard]] std::size_t volume();
+  [[nodiscard]] const tuple<std::uint64_t>& extents();
   [[nodiscard]] const Legion::IndexSpace& index_space();
 
   void set_index_space(const Legion::IndexSpace& index_space);
@@ -50,8 +50,8 @@ class Shape {
   void ensure_binding();
 
   State state_{State::UNBOUND};
-  uint32_t dim_{};
-  tuple<uint64_t> extents_{};
+  std::uint32_t dim_{};
+  tuple<std::uint64_t> extents_{};
   Legion::IndexSpace index_space_{};
 };
 

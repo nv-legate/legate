@@ -25,7 +25,7 @@ namespace legate {
 template <typename T, int DIM>
 [[nodiscard]] std::string print_dense_array(const T* base,
                                             const Point<DIM>& extents,
-                                            size_t strides[DIM])
+                                            std::size_t strides[DIM])
 {
   T* buf                        = nullptr;
   const auto is_device_only_ptr = [](const void* ptr) {
@@ -43,8 +43,8 @@ template <typename T, int DIM>
     const auto max_different_types = [](const auto& lhs, const auto& rhs) {
       return lhs < rhs ? rhs : lhs;
     };
-    size_t num_elems = 0;
-    for (size_t dim = 0; dim < DIM; ++dim) {
+    std::size_t num_elems = 0;
+    for (std::size_t dim = 0; dim < DIM; ++dim) {
       num_elems = max_different_types(num_elems, strides[dim] * extents[dim]);
     }
     buf = new T[num_elems];
@@ -99,7 +99,7 @@ template <int DIM, typename ACC>
 [[nodiscard]] std::string print_dense_array(ACC accessor, const Rect<DIM>& rect)
 {
   const Point<DIM> extents = rect.hi - rect.lo + Point<DIM>::ONES();
-  size_t strides[DIM];
+  std::size_t strides[DIM];
   const typename ACC::value_type* base = accessor.ptr(rect, strides);
   return print_dense_array(base, extents, strides);
 }

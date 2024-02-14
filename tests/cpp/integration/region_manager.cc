@@ -29,7 +29,7 @@ TEST_F(Integration, RegionManager)
   auto task    = runtime->create_task(context, 0);
 
   std::vector<legate::LogicalStore> stores;
-  for (uint32_t idx = 0; idx < LEGION_MAX_FIELDS * 2; ++idx) {
+  for (std::uint32_t idx = 0; idx < LEGION_MAX_FIELDS * 2; ++idx) {
     auto store = runtime->create_store(legate::Shape{10}, legate::int64());
     auto part  = task.declare_partition();
     task.add_output(store, part);

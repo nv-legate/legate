@@ -86,7 +86,7 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
 
   bool erase(const Instance& inst);
 
-  [[nodiscard]] size_t get_instance_size() const;
+  [[nodiscard]] std::size_t get_instance_size() const;
 
  private:
   void dump_and_sanity_check() const;
@@ -138,7 +138,7 @@ class BaseInstanceManager {
     FieldMemInfo(RegionTreeID t, FieldID f, Memory m);
 
     bool operator==(const FieldMemInfo& rhs) const;
-    [[nodiscard]] size_t hash() const noexcept;
+    [[nodiscard]] std::size_t hash() const noexcept;
 
     RegionTreeID tid;
     FieldID fid;
@@ -176,7 +176,7 @@ class InstanceManager : public BaseInstanceManager {
 
   [[nodiscard]] static InstanceManager* get_instance_manager();
 
-  [[nodiscard]] std::map<Memory, size_t> aggregate_instance_sizes() const;
+  [[nodiscard]] std::map<Memory, std::size_t> aggregate_instance_sizes() const;
 
  private:
   std::unordered_map<FieldMemInfo, InstanceSet, hasher<FieldMemInfo>> instance_sets_{};

@@ -30,14 +30,14 @@ class ExternalAllocation {
   ExternalAllocation(bool read_only,
                      mapping::StoreTarget target,
                      void* ptr,
-                     size_t size,
+                     std::size_t size,
                      std::unique_ptr<Realm::ExternalInstanceResource> resource,
                      std::optional<Deleter> deleter = std::nullopt);
 
   [[nodiscard]] bool read_only() const;
   [[nodiscard]] mapping::StoreTarget target() const;
   [[nodiscard]] void* ptr() const;
-  [[nodiscard]] size_t size() const;
+  [[nodiscard]] std::size_t size() const;
   [[nodiscard]] const Realm::ExternalInstanceResource* resource() const;
   void maybe_deallocate();
 
@@ -49,7 +49,7 @@ class ExternalAllocation {
   bool read_only_{};
   mapping::StoreTarget target_{mapping::StoreTarget::SYSMEM};
   void* ptr_{};
-  size_t size_{};
+  std::size_t size_{};
   std::unique_ptr<Realm::ExternalInstanceResource> resource_{};
   std::optional<Deleter> deleter_{};
 };

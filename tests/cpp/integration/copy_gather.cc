@@ -23,9 +23,9 @@ using Copy = DefaultFixture;
 static const char* library_name = "test_copy_gather";
 static legate::Logger logger(library_name);
 
-constexpr int32_t CHECK_GATHER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
+constexpr std::int32_t CHECK_GATHER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
-template <int32_t IND_DIM, int32_t SRC_DIM>
+template <std::int32_t IND_DIM, std::int32_t SRC_DIM>
 struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_DIM>> {
   struct CheckGatherTaskBody {
     template <legate::Type::Code CODE>
@@ -54,7 +54,7 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
     }
   };
 
-  static const int32_t TASK_ID = CHECK_GATHER_TASK + IND_DIM * TEST_MAX_DIM + SRC_DIM;
+  static const std::int32_t TASK_ID = CHECK_GATHER_TASK + IND_DIM * TEST_MAX_DIM + SRC_DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto type_code = context.input(0).type().code();
@@ -102,13 +102,13 @@ void check_gather_output(legate::Library library,
                          const legate::LogicalStore& tgt,
                          const legate::LogicalStore& ind)
 {
-  auto runtime    = legate::Runtime::get_runtime();
-  auto machine    = runtime->get_machine();
-  int32_t task_id = CHECK_GATHER_TASK + ind.dim() * TEST_MAX_DIM + src.dim();
-  auto task       = runtime->create_task(library, task_id);
-  auto src_part   = task.declare_partition();
-  auto tgt_part   = task.declare_partition();
-  auto ind_part   = task.declare_partition();
+  auto runtime         = legate::Runtime::get_runtime();
+  auto machine         = runtime->get_machine();
+  std::int32_t task_id = CHECK_GATHER_TASK + ind.dim() * TEST_MAX_DIM + src.dim();
+  auto task            = runtime->create_task(library, task_id);
+  auto src_part        = task.declare_partition();
+  auto tgt_part        = task.declare_partition();
+  auto ind_part        = task.declare_partition();
   task.add_input(src, src_part);
   task.add_input(tgt, tgt_part);
   task.add_input(ind, ind_part);
@@ -121,8 +121,8 @@ void check_gather_output(legate::Library library,
 }
 
 struct GatherSpec {
-  std::vector<uint64_t> ind_shape;
-  std::vector<uint64_t> data_shape;
+  std::vector<std::uint64_t> ind_shape;
+  std::vector<std::uint64_t> data_shape;
   legate::Scalar seed;
 
   std::string to_string() const
@@ -159,7 +159,7 @@ void test_gather(const GatherSpec& spec)
 TEST_F(Copy, Gather2Dto1D)
 {
   register_tasks();
-  std::vector<uint64_t> shape1d{5};
+  std::vector<std::uint64_t> shape1d{5};
   test_gather(GatherSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123))});
 }
 
@@ -172,7 +172,7 @@ TEST_F(Copy, Gather3Dto2D)
 TEST_F(Copy, Gather1Dto3D)
 {
   register_tasks();
-  std::vector<uint64_t> shape1d{5};
+  std::vector<std::uint64_t> shape1d{5};
   test_gather(GatherSpec{{2, 5, 4}, shape1d, legate::Scalar(789.0)});
 }
 

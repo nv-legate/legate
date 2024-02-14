@@ -57,10 +57,10 @@ void hello_cpu_variant(legate::TaskContext& context)
   }
 }
 
-template <int32_t TID>
+template <std::int32_t TID>
 struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
-  using Registrar              = Registry;
-  static const int32_t TASK_ID = TID;
+  using Registrar                   = Registry;
+  static const std::int32_t TASK_ID = TID;
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
@@ -114,7 +114,7 @@ void test_manual_task(const legate::Library& context,
                       TaskID taskid)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, taskid, legate::tuple<uint64_t>{3, 3});
+  auto task    = runtime->create_task(context, taskid, legate::tuple<std::uint64_t>{3, 3});
   auto part    = store.partition_by_tiling({2, 2});
   task.add_output(part);
   runtime->submit(std::move(task));

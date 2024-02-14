@@ -75,7 +75,7 @@ class Shape {
    *
    * @param extents Dimension extents
    */
-  Shape(tuple<uint64_t> extents);  // NOLINT(google-explicit-constructor)
+  Shape(tuple<std::uint64_t> extents);  // NOLINT(google-explicit-constructor)
   /**
    * @brief Constructs the shape from a vector of extents
    *
@@ -83,7 +83,7 @@ class Shape {
    *
    * @param extents Dimension extents
    */
-  explicit Shape(std::vector<uint64_t> extents);
+  explicit Shape(std::vector<std::uint64_t> extents);
   /**
    * @brief Constructs the shape from an initializer list of extents
    *
@@ -91,7 +91,7 @@ class Shape {
    *
    * @param extents Dimension extents
    */
-  Shape(std::initializer_list<uint64_t> extents);
+  Shape(std::initializer_list<std::uint64_t> extents);
 
   /**
    * @brief Returns the shape's extents
@@ -100,7 +100,7 @@ class Shape {
    *
    * @return Dimension extents
    */
-  [[nodiscard]] const tuple<uint64_t>& extents() const;
+  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
   /**
    * @brief Returns the shape's volume
    *
@@ -109,7 +109,7 @@ class Shape {
    *
    * @return Volume of the shape
    */
-  [[nodiscard]] size_t volume() const;
+  [[nodiscard]] std::size_t volume() const;
   /**
    * @brief Returns the number of dimensions of this shape
    *
@@ -117,7 +117,7 @@ class Shape {
    *
    * @return Number of dimensions
    */
-  [[nodiscard]] uint32_t ndim() const;
+  [[nodiscard]] std::uint32_t ndim() const;
   /**
    * @brief Returns the extent of a given dimension
    *
@@ -128,7 +128,7 @@ class Shape {
    *
    * @return Extent of the chosen dimension
    */
-  [[nodiscard]] uint64_t operator[](uint32_t idx) const;
+  [[nodiscard]] std::uint64_t operator[](std::uint32_t idx) const;
   /**
    * @brief Returns the extent of a given dimension
    *
@@ -140,7 +140,7 @@ class Shape {
    *
    * @throw std::out_of_range If the dimension index is invalid
    */
-  [[nodiscard]] uint64_t at(uint32_t idx) const;
+  [[nodiscard]] std::uint64_t at(std::uint32_t idx) const;
   /**
    * @brief Generates a human-readable string from the shape (non-blocking)
    *

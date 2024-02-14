@@ -27,11 +27,11 @@ namespace {
 
 void write_header(std::ofstream& out,
                   legate::Type::Code type_code,
-                  const legate::Span<const int32_t>& shape,
-                  const legate::Span<const int32_t>& tile_shape)
+                  const legate::Span<const std::int32_t>& shape,
+                  const legate::Span<const std::int32_t>& tile_shape)
 {
   LegateCheck(shape.size() == tile_shape.size());
-  int32_t dim = shape.size();
+  std::int32_t dim = shape.size();
   // Dump the type code, the array's shape and the tile shape to the header
   out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));
   out.write(reinterpret_cast<const char*>(&dim), sizeof(int32_t));
@@ -49,10 +49,10 @@ class WriteEvenTilesTask : public Task<WriteEvenTilesTask, WRITE_EVEN_TILES> {
  public:
   static void cpu_variant(legate::TaskContext context)
   {
-    auto dirname                           = context.scalar(0).value<std::string>();
-    legate::Span<const int32_t> shape      = context.scalar(1).values<int32_t>();
-    legate::Span<const int32_t> tile_shape = context.scalar(2).values<int32_t>();
-    auto input                             = context.input(0).data();
+    auto dirname                                = context.scalar(0).value<std::string>();
+    legate::Span<const std::int32_t> shape      = context.scalar(1).values<std::int32_t>();
+    legate::Span<const std::int32_t> tile_shape = context.scalar(2).values<std::int32_t>();
+    auto input                                  = context.input(0).data();
 
     auto launch_domain = context.get_launch_domain();
     auto task_index    = context.get_task_index();

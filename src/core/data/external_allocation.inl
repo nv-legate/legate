@@ -28,7 +28,7 @@ inline const SharedPtr<detail::ExternalAllocation>& ExternalAllocation::impl() c
 
 /*static*/ inline ExternalAllocation ExternalAllocation::create_sysmem(
   const void* ptr,
-  size_t size,
+  std::size_t size,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
   return create_sysmem(const_cast<void*>(ptr), size, true, std::move(deleter));
@@ -36,16 +36,16 @@ inline const SharedPtr<detail::ExternalAllocation>& ExternalAllocation::impl() c
 
 /*static*/ inline ExternalAllocation ExternalAllocation::create_zcmem(
   const void* ptr,
-  size_t size,
+  std::size_t size,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
   return create_zcmem(const_cast<void*>(ptr), size, true, std::move(deleter));
 }
 
 /*static*/ inline ExternalAllocation ExternalAllocation::create_fbmem(
-  uint32_t local_device_id,
+  std::uint32_t local_device_id,
   const void* ptr,
-  size_t size,
+  std::size_t size,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
   return create_fbmem(local_device_id, const_cast<void*>(ptr), size, true, std::move(deleter));

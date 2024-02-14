@@ -29,7 +29,7 @@ void typed_malloc(T** ret, U num_elems) noexcept
     LegateCheck(num_elems >= 0);
   }
   LegateCheck(ret);
-  *ret = static_cast<T*>(std::malloc(sizeof(T) * static_cast<size_t>(num_elems)));
+  *ret = static_cast<T*>(std::malloc(sizeof(T) * static_cast<std::size_t>(num_elems)));
 }
 
 }  // namespace legate::detail

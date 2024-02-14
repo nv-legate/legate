@@ -17,13 +17,13 @@
 
 namespace legate {
 
-uint32_t LogicalStore::dim() const { return impl_->dim(); }
+std::uint32_t LogicalStore::dim() const { return impl_->dim(); }
 
 Type LogicalStore::type() const { return Type{impl_->type()}; }
 
 Shape LogicalStore::shape() const { return Shape{impl_->shape()}; }
 
-size_t LogicalStore::volume() const { return impl_->volume(); }
+std::size_t LogicalStore::volume() const { return impl_->volume(); }
 
 bool LogicalStore::unbound() const { return impl_->unbound(); }
 
@@ -36,33 +36,33 @@ bool LogicalStore::overlaps(const LogicalStore& other) const
   return impl_->overlaps(other.impl_);
 }
 
-LogicalStore LogicalStore::promote(int32_t extra_dim, size_t dim_size) const
+LogicalStore LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size) const
 {
   return LogicalStore{impl_->promote(extra_dim, dim_size)};
 }
 
-LogicalStore LogicalStore::project(int32_t dim, int64_t index) const
+LogicalStore LogicalStore::project(std::int32_t dim, std::int64_t index) const
 {
   return LogicalStore{impl_->project(dim, index)};
 }
 
-LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<uint64_t> tile_shape) const
+LogicalStorePartition LogicalStore::partition_by_tiling(std::vector<std::uint64_t> tile_shape) const
 {
   return LogicalStorePartition{
-    detail::partition_store_by_tiling(impl_, tuple<uint64_t>{std::move(tile_shape)})};
+    detail::partition_store_by_tiling(impl_, tuple<std::uint64_t>{std::move(tile_shape)})};
 }
 
-LogicalStore LogicalStore::slice(int32_t dim, Slice sl) const
+LogicalStore LogicalStore::slice(std::int32_t dim, Slice sl) const
 {
   return LogicalStore{detail::slice_store(impl_, dim, sl)};
 }
 
-LogicalStore LogicalStore::transpose(std::vector<int32_t>&& axes) const
+LogicalStore LogicalStore::transpose(std::vector<std::int32_t>&& axes) const
 {
   return LogicalStore{impl_->transpose(std::move(axes))};
 }
 
-LogicalStore LogicalStore::delinearize(int32_t dim, std::vector<uint64_t> sizes) const
+LogicalStore LogicalStore::delinearize(std::int32_t dim, std::vector<std::uint64_t> sizes) const
 {
   return LogicalStore{impl_->delinearize(dim, std::move(sizes))};
 }
@@ -80,9 +80,12 @@ LogicalStore::~LogicalStore() noexcept = default;
 
 LogicalStore LogicalStorePartition::store() const { return LogicalStore{impl_->store()}; }
 
-const tuple<uint64_t>& LogicalStorePartition::color_shape() const { return impl_->color_shape(); }
+const tuple<std::uint64_t>& LogicalStorePartition::color_shape() const
+{
+  return impl_->color_shape();
+}
 
-LogicalStore LogicalStorePartition::get_child_store(const tuple<uint64_t>& color) const
+LogicalStore LogicalStorePartition::get_child_store(const tuple<std::uint64_t>& color) const
 {
   return LogicalStore{impl_->get_child_store(color)};
 }

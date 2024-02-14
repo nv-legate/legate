@@ -43,7 +43,7 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
   std::stringstream point_str;
   const auto& point = task->index_point;
   point_str << point[0];
-  for (int32_t dim = 1; dim < point.dim; ++dim) {
+  for (std::int32_t dim = 1; dim < point.dim; ++dim) {
     point_str << "," << point[dim];
   }
 
@@ -61,7 +61,7 @@ std::string generate_task_name(const std::type_info& ti)
   int status      = 0;
   char* demangled = abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status);
   result          = demangled;
-  free(demangled);
+  std::free(demangled);
   LegateCheck(!status);
   return result;
 }
@@ -70,9 +70,9 @@ void task_wrapper(VariantImpl variant_impl,
                   LegateVariantCode variant_kind,
                   std::optional<std::string_view> task_name,
                   const void* args,
-                  size_t arglen,
+                  std::size_t arglen,
                   const void* /*userdata*/,
-                  size_t /*userlen*/,
+                  std::size_t /*userlen*/,
                   Processor p)
 {
   // Legion preamble

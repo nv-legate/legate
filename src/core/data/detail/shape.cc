@@ -18,12 +18,14 @@
 
 namespace legate::detail {
 
-Shape::Shape(tuple<uint64_t>&& extents)
-  : state_{State::READY}, dim_{static_cast<uint32_t>(extents.size())}, extents_{std::move(extents)}
+Shape::Shape(tuple<std::uint64_t>&& extents)
+  : state_{State::READY},
+    dim_{static_cast<std::uint32_t>(extents.size())},
+    extents_{std::move(extents)}
 {
 }
 
-const tuple<uint64_t>& Shape::extents()
+const tuple<std::uint64_t>& Shape::extents()
 {
   switch (state_) {
     case State::UNBOUND: {

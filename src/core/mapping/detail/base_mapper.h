@@ -53,7 +53,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   [[nodiscard]] const std::vector<Processor>& cpus() const override;
   [[nodiscard]] const std::vector<Processor>& gpus() const override;
   [[nodiscard]] const std::vector<Processor>& omps() const override;
-  [[nodiscard]] uint32_t total_nodes() const override;
+  [[nodiscard]] std::uint32_t total_nodes() const override;
   [[nodiscard]] const char* get_mapper_name() const override;
   [[nodiscard]] Legion::Mapping::Mapper::MapperSyncModel get_mapper_sync_model() const override;
 
@@ -268,7 +268,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                              unsigned index,
                              Memory target_memory,
                              Legion::ReductionOpID redop,
-                             size_t footprint) const;
+                             std::size_t footprint) const;
   void legate_select_sources(Legion::Mapping::MapperContext ctx,
                              const Legion::Mapping::PhysicalInstance& target,
                              const std::vector<Legion::Mapping::PhysicalInstance>& sources,

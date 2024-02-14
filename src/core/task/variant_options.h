@@ -22,7 +22,7 @@ namespace legate {
 
 // Each scalar output store can take up to 12 bytes, so in the worst case there can be only up to
 // 341 scalar output stores.
-constexpr size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
+constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
 
 /**
  * @ingroup task
@@ -42,7 +42,7 @@ struct VariantOptions {
   /**
    * @brief Maximum aggregate size for scalar output values. 4096 by default.
    */
-  size_t return_size{LEGATE_MAX_SIZE_SCALAR_RETURN};
+  std::size_t return_size{LEGATE_MAX_SIZE_SCALAR_RETURN};
 
   /**
    * @brief Changes the value of the `leaf` flag
@@ -63,7 +63,7 @@ struct VariantOptions {
    *
    * @param `return_size` A new maximum aggregate size for scalar output values
    */
-  VariantOptions& with_return_size(size_t return_size);
+  VariantOptions& with_return_size(std::size_t return_size);
 
   void populate_registrar(Legion::TaskVariantRegistrar& registrar) const;
 };

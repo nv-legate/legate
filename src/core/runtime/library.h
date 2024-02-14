@@ -49,23 +49,23 @@ class Library {
    */
   [[nodiscard]] const std::string& get_library_name() const;
 
-  [[nodiscard]] Legion::TaskID get_task_id(int64_t local_task_id) const;
+  [[nodiscard]] Legion::TaskID get_task_id(std::int64_t local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
-  [[nodiscard]] Legion::ReductionOpID get_reduction_op_id(int64_t local_redop_id) const;
-  [[nodiscard]] Legion::ProjectionID get_projection_id(int64_t local_proj_id) const;
-  [[nodiscard]] Legion::ShardingID get_sharding_id(int64_t local_shard_id) const;
+  [[nodiscard]] Legion::ReductionOpID get_reduction_op_id(std::int64_t local_redop_id) const;
+  [[nodiscard]] Legion::ProjectionID get_projection_id(std::int64_t local_proj_id) const;
+  [[nodiscard]] Legion::ShardingID get_sharding_id(std::int64_t local_shard_id) const;
 
-  [[nodiscard]] int64_t get_local_task_id(Legion::TaskID task_id) const;
-  [[nodiscard]] int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
-  [[nodiscard]] int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
-  [[nodiscard]] int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
+  [[nodiscard]] std::int64_t get_local_task_id(Legion::TaskID task_id) const;
+  [[nodiscard]] std::int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
+  [[nodiscard]] std::int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
+  [[nodiscard]] std::int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
 
   [[nodiscard]] bool valid_task_id(Legion::TaskID task_id) const;
   [[nodiscard]] bool valid_reduction_op_id(Legion::ReductionOpID redop_id) const;
   [[nodiscard]] bool valid_projection_id(Legion::ProjectionID proj_id) const;
   [[nodiscard]] bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
-  [[nodiscard]] int64_t get_new_task_id();
+  [[nodiscard]] std::int64_t get_new_task_id();
 
   /**
    * @brief Returns the name of a task
@@ -73,7 +73,7 @@ class Library {
    * @param local_task_id Task id
    * @return Name of the task
    */
-  [[nodiscard]] const std::string& get_task_name(int64_t local_task_id) const;
+  [[nodiscard]] const std::string& get_task_name(std::int64_t local_task_id) const;
   /**
    * @brief Retrieves a tunable parameter
    *
@@ -82,7 +82,7 @@ class Library {
    *
    * @return The value of tunable parameter in a `Scalar`
    */
-  [[nodiscard]] Scalar get_tunable(int64_t tunable_id, const Type& type);
+  [[nodiscard]] Scalar get_tunable(std::int64_t tunable_id, const Type& type);
   /**
    * @brief Registers a library specific reduction operator.
    *
@@ -139,7 +139,7 @@ class Library {
    * @return Global reduction operator ID
    */
   template <typename REDOP>
-  [[nodiscard]] int64_t register_reduction_operator(int32_t redop_id);
+  [[nodiscard]] std::int64_t register_reduction_operator(std::int32_t redop_id);
   /**
    * @brief Registers a library mapper. Replaces the existing mapper if there already is one.
    *
@@ -147,8 +147,8 @@ class Library {
    */
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper);
 
-  void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
-  [[nodiscard]] const TaskInfo* find_task(int64_t local_task_id) const;
+  void register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+  [[nodiscard]] const TaskInfo* find_task(std::int64_t local_task_id) const;
 
   Library() = default;
   explicit Library(detail::Library* impl);

@@ -27,9 +27,9 @@ struct write_fn {
   {
     using VAL = legate::legate_type_of<CODE>;
 
-    auto shape  = input.shape<1>();
-    auto code   = input.code<int64_t>();
-    size_t size = shape.volume();
+    auto shape       = input.shape<1>();
+    auto code        = input.code<std::int64_t>();
+    std::size_t size = shape.volume();
 
     // Store the type code and the number of elements in the array at the beginning of the file
     std::ofstream out(filename, std::ios::binary | std::ios::out | std::ios::trunc);

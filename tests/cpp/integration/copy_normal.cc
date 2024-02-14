@@ -31,11 +31,11 @@ using Copy = DefaultFixture;
 
 static const char* library_name = "test_copy_normal";
 
-static constexpr int32_t TEST_MAX_DIM = 3;
+static constexpr std::int32_t TEST_MAX_DIM = 3;
 
-constexpr int32_t CHECK_COPY_TASK = FILL_TASK + TEST_MAX_DIM;
+constexpr std::int32_t CHECK_COPY_TASK = FILL_TASK + TEST_MAX_DIM;
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
   struct CheckCopyTaskBody {
     template <legate::Type::Code CODE>
@@ -52,7 +52,7 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
     }
   };
 
-  static const int32_t TASK_ID = CHECK_COPY_TASK + DIM;
+  static const std::int32_t TASK_ID = CHECK_COPY_TASK + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto source = context.input(0).data();
@@ -67,9 +67,9 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
   }
 };
 
-constexpr int32_t CHECK_COPY_REDUCTION_TASK = CHECK_COPY_TASK + TEST_MAX_DIM;
+constexpr std::int32_t CHECK_COPY_REDUCTION_TASK = CHECK_COPY_TASK + TEST_MAX_DIM;
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask<DIM>> {
   struct CheckCopyReductionTaskBody {
     template <legate::Type::Code CODE, std::enable_if_t<legate::is_integral<CODE>::value, int> = 0>
@@ -78,10 +78,10 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
                     const legate::Scalar& seed,
                     legate::Rect<DIM>& shape)
     {
-      using VAL = legate::type_of<CODE>;
-      auto src  = source.read_accessor<VAL, DIM>(shape);
-      auto tgt  = target.read_accessor<VAL, DIM>(shape);
-      size_t i  = 1;
+      using VAL     = legate::type_of<CODE>;
+      auto src      = source.read_accessor<VAL, DIM>(shape);
+      auto tgt      = target.read_accessor<VAL, DIM>(shape);
+      std::size_t i = 1;
       for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it, ++i) {
         EXPECT_EQ(src[*it] + i * seed.value<VAL>(), tgt[*it]);
       }
@@ -96,7 +96,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
     }
   };
 
-  static const int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
+  static const std::int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto source = legate::PhysicalStore{context.input(0)};
@@ -171,13 +171,13 @@ void check_copy_reduction_output(legate::Library library,
 }
 
 struct NormalCopySpec {
-  std::vector<uint64_t> shape;
+  std::vector<std::uint64_t> shape;
   legate::Type type;
   legate::Scalar seed;
 };
 
 struct NormalCopyReductionSpec {
-  std::vector<uint64_t> shape;
+  std::vector<std::uint64_t> shape;
   legate::Type type;
   legate::Scalar seed;
   legate::ReductionOpKind redop;

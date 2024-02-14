@@ -32,13 +32,13 @@ class Mappable {
   explicit Mappable(const Legion::Mappable* mappable);
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
-  [[nodiscard]] uint32_t sharding_id() const;
+  [[nodiscard]] std::uint32_t sharding_id() const;
 
  protected:
   Mappable() = default;
 
   mapping::detail::Machine machine_{};
-  uint32_t sharding_id_{};
+  std::uint32_t sharding_id_{};
 
  private:
   struct private_tag {};
@@ -53,7 +53,7 @@ class Task : public Mappable {
        Legion::Mapping::MapperRuntime* runtime,
        Legion::Mapping::MapperContext context);
 
-  [[nodiscard]] int64_t task_id() const;
+  [[nodiscard]] std::int64_t task_id() const;
 
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& inputs() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& outputs() const;

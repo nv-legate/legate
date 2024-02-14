@@ -32,7 +32,7 @@ class SquareTask : public Task<SquareTask, SQUARE> {
     logger.info() << "Elementwise square [" << output_shape.lo << "," << output_shape.hi << "]";
 
     // i is a global index for the complete array
-    for (size_t i = input_shape.lo; i <= input_shape.hi; ++i) {
+    for (std::size_t i = input_shape.lo; i <= input_shape.hi; ++i) {
       out[i] = in[i] * in[i];
     }
   }

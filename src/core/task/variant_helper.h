@@ -32,8 +32,11 @@ void task_wrapper(VariantImpl,
                   Legion::Processor);
 
 template <VariantImpl variant_fn, LegateVariantCode variant_kind>
-inline void task_wrapper_dyn_name(
-  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
+inline void task_wrapper_dyn_name(const void* args,
+                                  std::size_t arglen,
+                                  const void* userdata,
+                                  std::size_t userlen,
+                                  Legion::Processor p)
 {
   task_wrapper(variant_fn, variant_kind, {}, args, arglen, userdata, userlen, std::move(p));
 }

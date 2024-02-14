@@ -38,7 +38,7 @@ class ScaleConstraint;
 class Variable;
 
 struct Expr {
-  enum class Kind : int32_t {
+  enum class Kind : std::int32_t {
     LITERAL  = 0,
     VARIABLE = 1,
   };
@@ -78,7 +78,7 @@ class Literal final : public Expr {
 
 class Variable final : public Expr {
  public:
-  Variable(const Operation* op, int32_t id);
+  Variable(const Operation* op, std::int32_t id);
 
   friend bool operator==(const Variable& lhs, const Variable& rhs);
 
@@ -93,15 +93,15 @@ class Variable final : public Expr {
 
   [[nodiscard]] const Operation* operation() const;
 
-  [[nodiscard]] size_t hash() const noexcept;
+  [[nodiscard]] std::size_t hash() const noexcept;
 
  private:
   const Operation* op_{};
-  int32_t id_{};
+  std::int32_t id_{};
 };
 
 struct Constraint {
-  enum class Kind : int32_t {
+  enum class Kind : std::int32_t {
     ALIGNMENT = 0,
     BROADCAST = 1,
     IMAGE     = 2,
@@ -152,7 +152,7 @@ class Broadcast final : public Constraint {
  public:
   explicit Broadcast(const Variable* variable);
 
-  Broadcast(const Variable* variable, tuple<uint32_t> axes);
+  Broadcast(const Variable* variable, tuple<std::uint32_t> axes);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -169,12 +169,12 @@ class Broadcast final : public Constraint {
   [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
   [[nodiscard]] const Variable* variable() const;
-  [[nodiscard]] const tuple<uint32_t>& axes() const;
+  [[nodiscard]] const tuple<std::uint32_t>& axes() const;
 
  private:
   const Variable* variable_{};
   // Broadcast all dimensions when empty
-  tuple<uint32_t> axes_{};
+  tuple<std::uint32_t> axes_{};
 };
 
 class ImageConstraint final : public Constraint {
@@ -207,7 +207,9 @@ class ImageConstraint final : public Constraint {
 
 class ScaleConstraint final : public Constraint {
  public:
-  ScaleConstraint(tuple<uint64_t> factors, const Variable* var_smaller, const Variable* var_bigger);
+  ScaleConstraint(tuple<std::uint64_t> factors,
+                  const Variable* var_smaller,
+                  const Variable* var_bigger);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -229,7 +231,7 @@ class ScaleConstraint final : public Constraint {
   [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 
  private:
-  tuple<uint64_t> factors_{};
+  tuple<std::uint64_t> factors_{};
   const Variable* var_smaller_{};
   const Variable* var_bigger_{};
 };
@@ -238,8 +240,8 @@ class BloatConstraint final : public Constraint {
  public:
   BloatConstraint(const Variable* var_source,
                   const Variable* var_bloat,
-                  tuple<uint64_t> low_offsets,
-                  tuple<uint64_t> high_offsets);
+                  tuple<std::uint64_t> low_offsets,
+                  tuple<std::uint64_t> high_offsets);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -263,8 +265,8 @@ class BloatConstraint final : public Constraint {
  private:
   const Variable* var_source_{};
   const Variable* var_bloat_{};
-  tuple<uint64_t> low_offsets_{};
-  tuple<uint64_t> high_offsets_{};
+  tuple<std::uint64_t> low_offsets_{};
+  tuple<std::uint64_t> high_offsets_{};
 };
 
 [[nodiscard]] InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs);
@@ -272,19 +274,19 @@ class BloatConstraint final : public Constraint {
 [[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable);
 
 [[nodiscard]] InternalSharedPtr<Broadcast> broadcast(const Variable* variable,
-                                                     tuple<uint32_t> axes);
+                                                     tuple<std::uint32_t> axes);
 
 [[nodiscard]] InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
                                                        const Variable* var_range);
 
-[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(tuple<uint64_t> factors,
+[[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(tuple<std::uint64_t> factors,
                                                        const Variable* var_smaller,
                                                        const Variable* var_bigger);
 
 [[nodiscard]] InternalSharedPtr<BloatConstraint> bloat(const Variable* var_source,
                                                        const Variable* var_bloat,
-                                                       tuple<uint64_t> low_offsets,
-                                                       tuple<uint64_t> high_offsets);
+                                                       tuple<std::uint64_t> low_offsets,
+                                                       tuple<std::uint64_t> high_offsets);
 
 }  // namespace legate::detail
 

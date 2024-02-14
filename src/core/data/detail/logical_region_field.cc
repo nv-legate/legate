@@ -54,7 +54,7 @@ LogicalRegionField::~LogicalRegionField()
   }
 }
 
-int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
+std::int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
 
 const LogicalRegionField& LogicalRegionField::get_root() const
 {
@@ -136,9 +136,8 @@ void LogicalRegionField::allow_out_of_order_destruction()
   }
 }
 
-InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(const Tiling* tiling,
-                                                                    const tuple<uint64_t>& color,
-                                                                    bool complete)
+InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(
+  const Tiling* tiling, const tuple<std::uint64_t>& color, bool complete)
 {
   auto legion_partition = get_legion_partition(tiling, complete);
   auto color_point      = to_domain_point(color);

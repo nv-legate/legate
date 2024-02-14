@@ -20,12 +20,12 @@ namespace projection_test {
 using ProjectionTest = DefaultFixture;
 
 namespace {
-constexpr uint64_t BIG_EXTENT   = 100;
-constexpr uint64_t SMALL_EXTENT = 2;
+constexpr std::uint64_t BIG_EXTENT   = 100;
+constexpr std::uint64_t SMALL_EXTENT = 2;
 }  // namespace
 
 struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> {
-  static constexpr int32_t TASK_ID = 0;
+  static constexpr std::int32_t TASK_ID = 0;
   static void cpu_variant(legate::TaskContext context)
   {
     if (context.is_single_task()) {
@@ -52,7 +52,7 @@ struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> 
 };
 
 struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
-  static constexpr int32_t TASK_ID = 1;
+  static constexpr std::int32_t TASK_ID = 1;
   static void cpu_variant(legate::TaskContext context)
   {
     if (context.is_single_task()) {

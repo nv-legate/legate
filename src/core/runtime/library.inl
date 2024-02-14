@@ -67,9 +67,9 @@ namespace legate {
 inline Library::Library(detail::Library* impl) : impl_{impl} {}
 
 template <typename REDOP>
-int64_t Library::register_reduction_operator(int32_t redop_id)
+std::int64_t Library::register_reduction_operator(std::int32_t redop_id)
 {
-  int64_t legion_redop_id = get_reduction_op_id(redop_id);
+  std::int64_t legion_redop_id = get_reduction_op_id(redop_id);
 #if !defined(REALM_COMPILER_IS_NVCC)
   if (LegateDefined(LEGATE_USE_CUDA)) {
     LEGATE_ABORT("Reduction operators must be registered in a .cu file when CUDA is enabled");

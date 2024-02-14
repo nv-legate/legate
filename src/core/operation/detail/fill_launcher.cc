@@ -144,7 +144,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
 void FillLauncher::pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id)
 {
   machine_.pack(buffer);
-  buffer.pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, proj_id));
+  buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, proj_id));
 }
 
 }  // namespace legate::detail

@@ -38,8 +38,8 @@ struct Machine {
   [[nodiscard]] std::vector<TaskTarget> valid_targets_except(
     const std::set<TaskTarget>& to_exclude) const;
 
-  [[nodiscard]] uint32_t count() const;
-  [[nodiscard]] uint32_t count(TaskTarget target) const;
+  [[nodiscard]] std::uint32_t count() const;
+  [[nodiscard]] std::uint32_t count(TaskTarget target) const;
 
   [[nodiscard]] std::string to_string() const;
 
@@ -47,11 +47,11 @@ struct Machine {
 
   [[nodiscard]] Machine only(TaskTarget target) const;
   [[nodiscard]] Machine only(const std::vector<TaskTarget>& targets) const;
-  [[nodiscard]] Machine slice(uint32_t from,
-                              uint32_t to,
+  [[nodiscard]] Machine slice(std::uint32_t from,
+                              std::uint32_t to,
                               TaskTarget target,
                               bool keep_others = false) const;
-  [[nodiscard]] Machine slice(uint32_t from, uint32_t to, bool keep_others = false) const;
+  [[nodiscard]] Machine slice(std::uint32_t from, std::uint32_t to, bool keep_others = false) const;
 
   [[nodiscard]] Machine operator[](TaskTarget target) const;
   [[nodiscard]] Machine operator[](const std::vector<TaskTarget>& targets) const;
@@ -75,23 +75,23 @@ std::ostream& operator<<(std::ostream& stream, const Machine& machine);
 class LocalProcessorRange {
  public:
   LocalProcessorRange() = default;
-  LocalProcessorRange(uint32_t offset,
-                      uint32_t total_proc_count,
+  LocalProcessorRange(std::uint32_t offset,
+                      std::uint32_t total_proc_count,
                       const Processor* local_procs,
-                      size_t num_local_procs);
+                      std::size_t num_local_procs);
 
   explicit LocalProcessorRange(const std::vector<Processor>& procs);
 
   [[nodiscard]] const Processor& first() const;
-  [[nodiscard]] const Processor& operator[](uint32_t idx) const;
+  [[nodiscard]] const Processor& operator[](std::uint32_t idx) const;
 
   [[nodiscard]] bool empty() const;
   [[nodiscard]] std::string to_string() const;
-  [[nodiscard]] uint32_t total_proc_count() const;
+  [[nodiscard]] std::uint32_t total_proc_count() const;
 
  private:
-  uint32_t offset_{};
-  uint32_t total_proc_count_{};
+  std::uint32_t offset_{};
+  std::uint32_t total_proc_count_{};
   Span<const Processor> procs_{};
 };
 
@@ -107,12 +107,12 @@ class LocalMachine {
   [[nodiscard]] const std::vector<Processor>& omps() const;
   [[nodiscard]] const std::vector<Processor>& procs(TaskTarget target) const;
 
-  [[nodiscard]] size_t total_cpu_count() const;
-  [[nodiscard]] size_t total_gpu_count() const;
-  [[nodiscard]] size_t total_omp_count() const;
+  [[nodiscard]] std::size_t total_cpu_count() const;
+  [[nodiscard]] std::size_t total_gpu_count() const;
+  [[nodiscard]] std::size_t total_omp_count() const;
 
-  [[nodiscard]] size_t total_frame_buffer_size() const;
-  [[nodiscard]] size_t total_socket_memory_size() const;
+  [[nodiscard]] std::size_t total_frame_buffer_size() const;
+  [[nodiscard]] std::size_t total_socket_memory_size() const;
 
   [[nodiscard]] bool has_cpus() const;
   [[nodiscard]] bool has_gpus() const;
@@ -130,8 +130,8 @@ class LocalMachine {
                                           const Machine& machine,
                                           bool fallback_to_global = false) const;
 
-  uint32_t node_id{};
-  uint32_t total_nodes{};
+  std::uint32_t node_id{};
+  std::uint32_t total_nodes{};
 
  private:
   std::vector<Processor> cpus_{};

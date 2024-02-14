@@ -55,7 +55,7 @@ class PhysicalArray {
    *
    * @return Array's dimension
    */
-  [[nodiscard]] int32_t dim() const noexcept;
+  [[nodiscard]] std::int32_t dim() const noexcept;
   /**
    * @brief Returns the array's type
    *
@@ -96,14 +96,14 @@ class PhysicalArray {
    * @throw std::invalid_argument If the array has no child arrays
    * @throw std::out_of_range If the index is out of range
    */
-  [[nodiscard]] PhysicalArray child(uint32_t index) const;
+  [[nodiscard]] PhysicalArray child(std::uint32_t index) const;
 
   /**
    * @brief Returns the array's domain
    *
    * @return Array's domain
    */
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   [[nodiscard]] Rect<DIM> shape() const;
   /**
    * @brief Returns the array's domain in a dimension-erased domain type
@@ -141,7 +141,7 @@ class PhysicalArray {
   PhysicalArray& operator=(PhysicalArray&&) noexcept = default;
 
  private:
-  void check_shape_dimension(int32_t dim) const;
+  void check_shape_dimension(std::int32_t dim) const;
 
  protected:
   SharedPtr<detail::PhysicalArray> impl_{};

@@ -26,7 +26,7 @@
 
 namespace legate {
 
-inline constexpr size_t DEFAULT_ALIGNMENT = 16;
+inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 
 /**
  * @ingroup data
@@ -56,7 +56,7 @@ inline constexpr size_t DEFAULT_ALIGNMENT = 16;
  * concurrently allocating from the eager pool, and that it's OK for kernels to access a buffer even
  * after it's technically been deallocated.
  */
-template <typename VAL, int32_t DIM = 1>
+template <typename VAL, std::int32_t DIM = 1>
 using Buffer = Legion::DeferredBuffer<VAL, DIM>;
 
 /**
@@ -70,10 +70,10 @@ using Buffer = Legion::DeferredBuffer<VAL, DIM>;
  *
  * @return A `Buffer` object
  */
-template <typename VAL, int32_t DIM>
+template <typename VAL, std::int32_t DIM>
 Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
-                               Memory::Kind kind = Memory::Kind::NO_MEMKIND,
-                               size_t alignment  = DEFAULT_ALIGNMENT)
+                               Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
+                               std::size_t alignment = DEFAULT_ALIGNMENT)
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
 
@@ -82,8 +82,8 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
   }
   auto hi = extents - Point<DIM>::ONES();
   // We just avoid creating empty buffers, as they cause all sorts of headaches.
-  for (int32_t idx = 0; idx < DIM; ++idx) {
-    hi[idx] = std::max<int64_t>(hi[idx], 0);
+  for (std::int32_t idx = 0; idx < DIM; ++idx) {
+    hi[idx] = std::max<std::int64_t>(hi[idx], 0);
   }
   return Buffer<VAL, DIM>{Rect<DIM>{Point<DIM>::ZEROES(), std::move(hi)}, kind, nullptr, alignment};
 }
@@ -100,9 +100,9 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
  * @return A 1D `Buffer` object
  */
 template <typename VAL>
-Buffer<VAL> create_buffer(size_t size,
-                          Memory::Kind kind = Memory::Kind::NO_MEMKIND,
-                          size_t alignment  = DEFAULT_ALIGNMENT)
+Buffer<VAL> create_buffer(std::size_t size,
+                          Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
+                          std::size_t alignment = DEFAULT_ALIGNMENT)
 {
   return create_buffer<VAL, 1>(Point<1>(size), kind, alignment);
 }

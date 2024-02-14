@@ -43,14 +43,14 @@ Scalar& Scalar::operator=(const Scalar& other)
 
 Type Scalar::type() const { return Type{impl_->type()}; }
 
-size_t Scalar::size() const { return impl_->size(); }
+std::size_t Scalar::size() const { return impl_->size(); }
 
 const void* Scalar::ptr() const { return impl_->data(); }
 
 /*static*/ detail::Scalar* Scalar::checked_create_impl(const Type& type,
                                                        const void* data,
                                                        bool copy,
-                                                       size_t size)
+                                                       std::size_t size)
 {
   if (type.code() == Type::Code::NIL) {
     throw std::invalid_argument{"Null type cannot be used"};

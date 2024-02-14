@@ -27,7 +27,7 @@ class SumTask : public Task<SumTask, SUM> {
 
     float total = 0;
     // i is a global index for the complete array
-    for (size_t i = input_shape.lo; i <= input_shape.hi; ++i) {
+    for (std::size_t i = input_shape.lo; i <= input_shape.hi; ++i) {
       total += in[i];
     }
 

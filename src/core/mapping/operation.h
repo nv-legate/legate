@@ -39,7 +39,7 @@ class Task {
    *
    * @return Task id
    */
-  [[nodiscard]] int64_t task_id() const;
+  [[nodiscard]] std::int64_t task_id() const;
 
   /**
    * @brief Returns metadata for the task's input arrays
@@ -75,7 +75,7 @@ class Task {
    *
    * @return Array metadata object
    */
-  [[nodiscard]] Array input(uint32_t index) const;
+  [[nodiscard]] Array input(std::uint32_t index) const;
   /**
    * @brief Returns metadata for the task's output array
    *
@@ -83,7 +83,7 @@ class Task {
    *
    * @return Array metadata object
    */
-  [[nodiscard]] Array output(uint32_t index) const;
+  [[nodiscard]] Array output(std::uint32_t index) const;
   /**
    * @brief Returns metadata for the task's reduction array
    *
@@ -91,26 +91,26 @@ class Task {
    *
    * @return Array metadata object
    */
-  [[nodiscard]] Array reduction(uint32_t index) const;
+  [[nodiscard]] Array reduction(std::uint32_t index) const;
 
   /**
    * @brief Returns the number of task's inputs
    *
    * @return Number of arrays
    */
-  [[nodiscard]] size_t num_inputs() const;
+  [[nodiscard]] std::size_t num_inputs() const;
   /**
    * @brief Returns the number of task's outputs
    *
    * @return Number of arrays
    */
-  [[nodiscard]] size_t num_outputs() const;
+  [[nodiscard]] std::size_t num_outputs() const;
   /**
    * @brief Returns the number of task's reductions
    *
    * @return Number of arrays
    */
-  [[nodiscard]] size_t num_reductions() const;
+  [[nodiscard]] std::size_t num_reductions() const;
 
   explicit Task(detail::Task* impl);
 

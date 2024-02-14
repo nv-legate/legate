@@ -47,10 +47,10 @@ class FieldSet {
               Legion::PrivilegeMode privilege,
               const StoreProjection& store_proj,
               bool relax_interference_checks);
-  [[nodiscard]] uint32_t num_requirements() const;
-  [[nodiscard]] uint32_t get_requirement_index(Legion::PrivilegeMode privilege,
-                                               const StoreProjection& store_proj,
-                                               Legion::FieldID field_id) const;
+  [[nodiscard]] std::uint32_t num_requirements() const;
+  [[nodiscard]] std::uint32_t get_requirement_index(Legion::PrivilegeMode privilege,
+                                                    const StoreProjection& store_proj,
+                                                    Legion::FieldID field_id) const;
 
   void coalesce();
   template <class Launcher>
@@ -76,10 +76,10 @@ class RequirementAnalyzer {
               Legion::FieldID field_id,
               Legion::PrivilegeMode privilege,
               const StoreProjection& store_proj);
-  [[nodiscard]] uint32_t get_requirement_index(const Legion::LogicalRegion& region,
-                                               Legion::PrivilegeMode privilege,
-                                               const StoreProjection& store_proj,
-                                               Legion::FieldID field_id) const;
+  [[nodiscard]] std::uint32_t get_requirement_index(const Legion::LogicalRegion& region,
+                                                    Legion::PrivilegeMode privilege,
+                                                    const StoreProjection& store_proj,
+                                                    Legion::FieldID field_id) const;
   [[nodiscard]] bool empty() const;
 
   void analyze_requirements();
@@ -94,14 +94,14 @@ class RequirementAnalyzer {
 
   bool relax_interference_checks_{};
   // This must be an ordered map to avoid control divergence
-  std::map<Legion::LogicalRegion, std::pair<FieldSet, uint32_t>> field_sets_{};
+  std::map<Legion::LogicalRegion, std::pair<FieldSet, std::uint32_t>> field_sets_{};
 };
 
 class OutputRequirementAnalyzer {
  public:
-  void insert(uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
-  [[nodiscard]] uint32_t get_requirement_index(const Legion::FieldSpace& field_space,
-                                               Legion::FieldID field_id) const;
+  void insert(std::uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
+  [[nodiscard]] std::uint32_t get_requirement_index(const Legion::FieldSpace& field_space,
+                                                    Legion::FieldID field_id) const;
   [[nodiscard]] bool empty() const;
 
   void analyze_requirements();
@@ -109,9 +109,9 @@ class OutputRequirementAnalyzer {
 
  private:
   struct ReqInfo {
-    static constexpr uint32_t UNSET = -1U;
-    uint32_t dim{UNSET};
-    uint32_t req_idx{};
+    static constexpr std::uint32_t UNSET = -1U;
+    std::uint32_t dim{UNSET};
+    std::uint32_t req_idx{};
   };
   // This must be an ordered map to avoid control divergence
   std::map<Legion::FieldSpace, std::set<Legion::FieldID>> field_groups_{};
@@ -121,7 +121,7 @@ class OutputRequirementAnalyzer {
 class FutureAnalyzer {
  public:
   void insert(const Legion::Future& future);
-  [[nodiscard]] int32_t get_future_index(const Legion::Future& future) const;
+  [[nodiscard]] std::int32_t get_future_index(const Legion::Future& future) const;
 
   void analyze_futures();
   template <class Launcher>
@@ -131,7 +131,7 @@ class FutureAnalyzer {
 
  private:
   // XXX: This could be a hash map, but Legion futures don't reveal IDs that we can hash
-  std::map<Legion::Future, int32_t> future_indices_{};
+  std::map<Legion::Future, std::int32_t> future_indices_{};
   std::vector<Legion::Future> coalesced_{};
   std::vector<Legion::Future> futures_{};
 };
@@ -141,18 +141,18 @@ struct StoreAnalyzer {
   void insert(const InternalSharedPtr<LogicalRegionField>& region_field,
               Legion::PrivilegeMode privilege,
               const StoreProjection& store_proj);
-  void insert(uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
+  void insert(std::uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
   void insert(const Legion::Future& future);
 
   void analyze();
 
-  [[nodiscard]] uint32_t get_index(const Legion::LogicalRegion& region,
-                                   Legion::PrivilegeMode privilege,
-                                   const StoreProjection& store_proj,
-                                   Legion::FieldID field_id) const;
-  [[nodiscard]] uint32_t get_index(const Legion::FieldSpace& field_space,
-                                   Legion::FieldID field_id) const;
-  [[nodiscard]] int32_t get_index(const Legion::Future& future) const;
+  [[nodiscard]] std::uint32_t get_index(const Legion::LogicalRegion& region,
+                                        Legion::PrivilegeMode privilege,
+                                        const StoreProjection& store_proj,
+                                        Legion::FieldID field_id) const;
+  [[nodiscard]] std::uint32_t get_index(const Legion::FieldSpace& field_space,
+                                        Legion::FieldID field_id) const;
+  [[nodiscard]] std::int32_t get_index(const Legion::Future& future) const;
 
   template <typename Launcher>
   void populate(Launcher& launcher, std::vector<Legion::OutputRequirement>& out_reqs);

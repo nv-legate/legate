@@ -91,7 +91,7 @@ Restrictions TransformStack::invert(const Restrictions& restrictions) const
   return parent_->invert(result);
 }
 
-tuple<uint64_t> TransformStack::invert_color(tuple<uint64_t> color) const
+tuple<std::uint64_t> TransformStack::invert_color(tuple<std::uint64_t> color) const
 {
   if (identity()) {
     return color;
@@ -104,7 +104,7 @@ tuple<uint64_t> TransformStack::invert_color(tuple<uint64_t> color) const
   return parent_->invert_color(std::move(result));
 }
 
-tuple<uint64_t> TransformStack::invert_extents(const tuple<uint64_t>& extents) const
+tuple<std::uint64_t> TransformStack::invert_extents(const tuple<std::uint64_t>& extents) const
 {
   if (identity()) {
     return extents;
@@ -120,7 +120,7 @@ tuple<uint64_t> TransformStack::invert_extents(const tuple<uint64_t>& extents) c
   return parent_->invert_extents(result);
 }
 
-tuple<uint64_t> TransformStack::invert_point(const tuple<uint64_t>& point) const
+tuple<std::uint64_t> TransformStack::invert_point(const tuple<std::uint64_t>& point) const
 {
   if (identity()) {
     return point;
@@ -139,7 +139,7 @@ tuple<uint64_t> TransformStack::invert_point(const tuple<uint64_t>& point) const
 void TransformStack::pack(BufferBuilder& buffer) const
 {
   if (identity()) {
-    buffer.pack<int32_t>(-1);
+    buffer.pack<std::int32_t>(-1);
   } else {
     transform_->pack(buffer);
     parent_->pack(buffer);
@@ -167,7 +167,7 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
 
 }  // namespace
 
-Legion::DomainAffineTransform TransformStack::inverse_transform(int32_t in_dim) const
+Legion::DomainAffineTransform TransformStack::inverse_transform(std::int32_t in_dim) const
 {
   LegateAssert(transform_ != nullptr);
   auto result  = transform_->inverse_transform(in_dim);
@@ -213,9 +213,9 @@ void TransformStack::dump() const
   std::cerr << *this << std::endl;  // NOLINT(performance-avoid-endl)
 }
 
-std::vector<int32_t> TransformStack::find_imaginary_dims() const
+std::vector<std::int32_t> TransformStack::find_imaginary_dims() const
 {
-  std::vector<int32_t> dims;
+  std::vector<std::int32_t> dims;
   if (parent_) {
     dims = parent_->find_imaginary_dims();
   }
@@ -233,7 +233,7 @@ Domain Shift::transform(const Domain& input) const
   return result;
 }
 
-Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
+Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) const
 {
   LegateCheck(dim_ < in_dim);
   auto out_dim = in_dim;
@@ -241,15 +241,15 @@ Legion::DomainAffineTransform Shift::inverse_transform(int32_t in_dim) const
   Legion::DomainTransform transform;
   transform.m = out_dim;
   transform.n = in_dim;
-  for (int32_t i = 0; i < out_dim; ++i) {
-    for (int32_t j = 0; j < in_dim; ++j) {
+  for (std::int32_t i = 0; i < out_dim; ++i) {
+    for (std::int32_t j = 0; j < in_dim; ++j) {
       transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);
     }
   }
 
   DomainPoint offset;
   offset.dim = out_dim;
-  for (int32_t i = 0; i < out_dim; ++i) {
+  for (std::int32_t i = 0; i < out_dim; ++i) {
     offset[i] = i == dim_ ? -offset_ : 0;
   }
 
@@ -267,8 +267,8 @@ std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
     }
     case Partition::Kind::TILING: {
       auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tuple<uint64_t>{tiling->tile_shape()},
-                           tuple<uint64_t>{tiling->color_shape()},
+      return create_tiling(tuple<std::uint64_t>{tiling->tile_shape()},
+                           tuple<std::uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, offset_));
     }
     default:
@@ -288,8 +288,8 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
     case Partition::Kind::TILING: {
       auto tiling     = static_cast<const Tiling*>(partition);
       auto new_offset = tiling->offsets()[dim_] - offset_;
-      return create_tiling(tuple<uint64_t>{tiling->tile_shape()},
-                           tuple<uint64_t>{tiling->color_shape()},
+      return create_tiling(tuple<std::uint64_t>{tiling->tile_shape()},
+                           tuple<std::uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, new_offset));
     }
     default:
@@ -300,7 +300,7 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
   return {};
 }
 
-tuple<uint64_t> Shift::invert_point(const tuple<uint64_t>& point) const
+tuple<std::uint64_t> Shift::invert_point(const tuple<std::uint64_t>& point) const
 {
   auto result = point;
   result[dim_] -= offset_;
@@ -309,9 +309,9 @@ tuple<uint64_t> Shift::invert_point(const tuple<uint64_t>& point) const
 
 void Shift::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_SHIFT);
-  buffer.pack<int32_t>(dim_);
-  buffer.pack<int64_t>(offset_);
+  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_SHIFT);
+  buffer.pack<std::int32_t>(dim_);
+  buffer.pack<std::int64_t>(offset_);
 }
 
 void Shift::print(std::ostream& out) const
@@ -325,7 +325,7 @@ Domain Promote::transform(const Domain& input) const
   Domain output;
   output.dim = input.dim + 1;
 
-  for (int32_t out_dim = 0, in_dim = 0; out_dim < output.dim; ++out_dim) {
+  for (std::int32_t out_dim = 0, in_dim = 0; out_dim < output.dim; ++out_dim) {
     if (out_dim == extra_dim_) {
       output.rect_data[out_dim]              = 0;
       output.rect_data[out_dim + output.dim] = dim_size_ - 1;
@@ -338,30 +338,30 @@ Domain Promote::transform(const Domain& input) const
   return output;
 }
 
-Legion::DomainAffineTransform Promote::inverse_transform(int32_t in_dim) const
+Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) const
 {
   LegateCheck(extra_dim_ < in_dim);
   auto out_dim = in_dim - 1;
 
   Legion::DomainTransform transform;
-  transform.m = std::max<int32_t>(out_dim, 1);
+  transform.m = std::max<std::int32_t>(out_dim, 1);
   transform.n = in_dim;
-  for (int32_t i = 0; i < transform.m; ++i) {
-    for (int32_t j = 0; j < transform.n; ++j) {
+  for (std::int32_t i = 0; i < transform.m; ++i) {
+    for (std::int32_t j = 0; j < transform.n; ++j) {
       transform.matrix[i * in_dim + j] = 0;
     }
   }
 
   if (out_dim > 0) {
-    for (int32_t j = 0, i = 0; j < transform.n; ++j) {
+    for (std::int32_t j = 0, i = 0; j < transform.n; ++j) {
       if (j != extra_dim_) {
         transform.matrix[i++ * in_dim + j] = 1;
       }
     }
   }
   DomainPoint offset;
-  offset.dim = std::max<int32_t>(out_dim, 1);
-  for (int32_t i = 0; i < transform.m; ++i) {
+  offset.dim = std::max<std::int32_t>(out_dim, 1);
+  for (std::int32_t i = 0; i < transform.m; ++i) {
     offset[i] = 0;
   }
 
@@ -427,21 +427,21 @@ Restrictions Promote::invert(const Restrictions& restrictions) const
   return restrictions.remove(extra_dim_);
 }
 
-tuple<uint64_t> Promote::invert_extents(const tuple<uint64_t>& extents) const
+tuple<std::uint64_t> Promote::invert_extents(const tuple<std::uint64_t>& extents) const
 {
   return extents.remove(extra_dim_);
 }
 
-tuple<uint64_t> Promote::invert_point(const tuple<uint64_t>& point) const
+tuple<std::uint64_t> Promote::invert_point(const tuple<std::uint64_t>& point) const
 {
   return point.remove(extra_dim_);
 }
 
 void Promote::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_PROMOTE);
-  buffer.pack<int32_t>(extra_dim_);
-  buffer.pack<int64_t>(dim_size_);
+  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_PROMOTE);
+  buffer.pack<std::int32_t>(extra_dim_);
+  buffer.pack<std::int64_t>(dim_size_);
 }
 
 void Promote::print(std::ostream& out) const
@@ -451,7 +451,7 @@ void Promote::print(std::ostream& out) const
   out << "dim_size: " << dim_size_ << ")";
 }
 
-void Promote::find_imaginary_dims(std::vector<int32_t>& dims) const
+void Promote::find_imaginary_dims(std::vector<std::int32_t>& dims) const
 {
   for (auto& dim : dims) {
     if (dim >= extra_dim_) {
@@ -466,7 +466,7 @@ Domain Project::transform(const Domain& input) const
   Domain output;
   output.dim = input.dim - 1;
 
-  for (int32_t in_dim = 0, out_dim = 0; in_dim < input.dim; ++in_dim) {
+  for (std::int32_t in_dim = 0, out_dim = 0; in_dim < input.dim; ++in_dim) {
     if (in_dim != dim_) {
       output.rect_data[out_dim]              = input.rect_data[in_dim];
       output.rect_data[out_dim + output.dim] = input.rect_data[in_dim + input.dim];
@@ -476,7 +476,7 @@ Domain Project::transform(const Domain& input) const
   return output;
 }
 
-Legion::DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
+Legion::DomainAffineTransform Project::inverse_transform(std::int32_t in_dim) const
 {
   auto out_dim = in_dim + 1;
   LegateCheck(dim_ < out_dim);
@@ -488,13 +488,13 @@ Legion::DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
     transform.matrix[0] = 0;
   } else {
     transform.n = in_dim;
-    for (int32_t i = 0; i < out_dim; ++i) {
-      for (int32_t j = 0; j < in_dim; ++j) {
+    for (std::int32_t i = 0; i < out_dim; ++i) {
+      for (std::int32_t j = 0; j < in_dim; ++j) {
         transform.matrix[i * in_dim + j] = 0;
       }
     }
 
-    for (int32_t i = 0, j = 0; i < out_dim; ++i) {
+    for (std::int32_t i = 0, j = 0; i < out_dim; ++i) {
       if (i != dim_) {
         transform.matrix[i * in_dim + j++] = 1;
       }
@@ -503,7 +503,7 @@ Legion::DomainAffineTransform Project::inverse_transform(int32_t in_dim) const
 
   DomainPoint offset;
   offset.dim = out_dim;
-  for (int32_t i = 0; i < out_dim; ++i) {
+  for (std::int32_t i = 0; i < out_dim; ++i) {
     offset[i] = i == dim_ ? coord_ : 0;
   }
 
@@ -568,23 +568,26 @@ Restrictions Project::invert(const Restrictions& restrictions) const
   return restrictions.insert(dim_, Restriction::ALLOW);
 }
 
-tuple<uint64_t> Project::invert_color(tuple<uint64_t> color) const { return color.insert(dim_, 0); }
+tuple<std::uint64_t> Project::invert_color(tuple<std::uint64_t> color) const
+{
+  return color.insert(dim_, 0);
+}
 
-tuple<uint64_t> Project::invert_extents(const tuple<uint64_t>& extents) const
+tuple<std::uint64_t> Project::invert_extents(const tuple<std::uint64_t>& extents) const
 {
   return extents.insert(dim_, 1);
 }
 
-tuple<uint64_t> Project::invert_point(const tuple<uint64_t>& point) const
+tuple<std::uint64_t> Project::invert_point(const tuple<std::uint64_t>& point) const
 {
   return point.insert(dim_, coord_);
 }
 
 void Project::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_PROJECT);
-  buffer.pack<int32_t>(dim_);
-  buffer.pack<int64_t>(coord_);
+  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_PROJECT);
+  buffer.pack<std::int32_t>(dim_);
+  buffer.pack<std::int64_t>(coord_);
 }
 
 void Project::print(std::ostream& out) const
@@ -594,7 +597,7 @@ void Project::print(std::ostream& out) const
   out << "coord: " << coord_ << ")";
 }
 
-void Project::find_imaginary_dims(std::vector<int32_t>& dims) const
+void Project::find_imaginary_dims(std::vector<std::int32_t>& dims) const
 {
   auto finder = std::find(dims.begin(), dims.end(), dim_);
   if (finder != dims.end()) {
@@ -607,7 +610,7 @@ void Project::find_imaginary_dims(std::vector<int32_t>& dims) const
   }
 }
 
-Transpose::Transpose(std::vector<int32_t>&& axes) : axes_{std::move(axes)}
+Transpose::Transpose(std::vector<std::int32_t>&& axes) : axes_{std::move(axes)}
 {
   const auto size = axes_.size();
   // could alternatively do
@@ -628,7 +631,7 @@ Domain Transpose::transform(const Domain& domain) const
 {
   Domain output;
   output.dim = domain.dim;
-  for (int32_t out_dim = 0; out_dim < output.dim; ++out_dim) {
+  for (std::int32_t out_dim = 0; out_dim < output.dim; ++out_dim) {
     auto in_dim                            = axes_[out_dim];
     output.rect_data[out_dim]              = domain.rect_data[in_dim];
     output.rect_data[out_dim + output.dim] = domain.rect_data[in_dim + domain.dim];
@@ -636,24 +639,24 @@ Domain Transpose::transform(const Domain& domain) const
   return output;
 }
 
-Legion::DomainAffineTransform Transpose::inverse_transform(int32_t in_dim) const
+Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) const
 {
   Legion::DomainTransform transform;
   transform.m = in_dim;
   transform.n = in_dim;
-  for (int32_t i = 0; i < in_dim; ++i) {
-    for (int32_t j = 0; j < in_dim; ++j) {
+  for (std::int32_t i = 0; i < in_dim; ++i) {
+    for (std::int32_t j = 0; j < in_dim; ++j) {
       transform.matrix[i * in_dim + j] = 0;
     }
   }
 
-  for (int32_t j = 0; j < in_dim; ++j) {
+  for (std::int32_t j = 0; j < in_dim; ++j) {
     transform.matrix[axes_[j] * in_dim + j] = 1;
   }
 
   DomainPoint offset;
   offset.dim = in_dim;
-  for (int32_t i = 0; i < in_dim; ++i) {
+  for (std::int32_t i = 0; i < in_dim; ++i) {
     offset[i] = 0;
   }
 
@@ -736,12 +739,12 @@ Restrictions Transpose::invert(const Restrictions& restrictions) const
   return Restrictions{std::move(result)};
 }
 
-tuple<uint64_t> Transpose::invert_extents(const tuple<uint64_t>& extents) const
+tuple<std::uint64_t> Transpose::invert_extents(const tuple<std::uint64_t>& extents) const
 {
   return extents.map(inverse_);
 }
 
-tuple<uint64_t> Transpose::invert_point(const tuple<uint64_t>& point) const
+tuple<std::uint64_t> Transpose::invert_point(const tuple<std::uint64_t>& point) const
 {
   return point.map(inverse_);
 }
@@ -768,10 +771,10 @@ void print_vector(std::ostream& out, const std::vector<T>& vec)
 
 void Transpose::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_TRANSPOSE);
-  buffer.pack<uint32_t>(axes_.size());
+  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_TRANSPOSE);
+  buffer.pack<std::uint32_t>(axes_.size());
   for (auto axis : axes_) {
-    buffer.pack<int32_t>(axis);
+    buffer.pack<std::int32_t>(axis);
   }
 }
 
@@ -783,7 +786,7 @@ void Transpose::print(std::ostream& out) const
   out << ")";
 }
 
-void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
+void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
 {
   // i should be added to X.tranpose(axes).promoted iff axes[i] is in X.promoted
   // e.g. X.promoted = [0] => X.transpose((1,2,0)).promoted = [2]
@@ -791,14 +794,14 @@ void Transpose::find_imaginary_dims(std::vector<int32_t>& dims) const
     auto finder = std::find(axes_.begin(), axes_.end(), promoted);
 
     LegateCheck(finder != axes_.end());
-    promoted = static_cast<int32_t>(finder - axes_.begin());
+    promoted = static_cast<std::int32_t>(finder - axes_.begin());
   }
 }
 
-Delinearize::Delinearize(int32_t dim, std::vector<uint64_t>&& sizes)
+Delinearize::Delinearize(std::int32_t dim, std::vector<std::uint64_t>&& sizes)
   : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
 {
-  for (auto size_dim = static_cast<int32_t>(sizes_.size() - 2); size_dim >= 0; --size_dim) {
+  for (auto size_dim = static_cast<std::int32_t>(sizes_.size() - 2); size_dim >= 0; --size_dim) {
     strides_[size_dim] = strides_[size_dim + 1] * sizes_[size_dim + 1];
   }
   for (auto size : sizes_) {
@@ -811,7 +814,7 @@ Domain Delinearize::transform(const Domain& domain) const
   auto delinearize = [&](const auto dim, const auto ndim, const auto& strides) {
     Domain output;
     output.dim = domain.dim - 1 + ndim;
-    for (int32_t in_dim = 0, out_dim = 0; in_dim < domain.dim; ++in_dim) {
+    for (std::int32_t in_dim = 0, out_dim = 0; in_dim < domain.dim; ++in_dim) {
       if (in_dim == dim) {
         auto lo = domain.rect_data[in_dim];
         auto hi = domain.rect_data[domain.dim + in_dim];
@@ -833,19 +836,19 @@ Domain Delinearize::transform(const Domain& domain) const
   return delinearize(dim_, sizes_.size(), strides_);
 }
 
-Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) const
+Legion::DomainAffineTransform Delinearize::inverse_transform(std::int32_t in_dim) const
 {
   Legion::DomainTransform transform;
-  const auto out_dim = static_cast<int32_t>(in_dim - strides_.size() + 1);
+  const auto out_dim = static_cast<std::int32_t>(in_dim - strides_.size() + 1);
   transform.m        = out_dim;
   transform.n        = in_dim;
-  for (int32_t i = 0; i < out_dim; ++i) {
-    for (int32_t j = 0; j < in_dim; ++j) {
+  for (std::int32_t i = 0; i < out_dim; ++i) {
+    for (std::int32_t j = 0; j < in_dim; ++j) {
       transform.matrix[i * in_dim + j] = 0;
     }
   }
 
-  for (int32_t i = 0, j = 0; i < out_dim; ++i) {
+  for (std::int32_t i = 0, j = 0; i < out_dim; ++i) {
     if (i == dim_) {
       for (auto stride : strides_) {
         transform.matrix[i * in_dim + j++] = static_cast<coord_t>(stride);
@@ -857,7 +860,7 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(int32_t in_dim) con
 
   DomainPoint offset;
   offset.dim = out_dim;
-  for (int32_t i = 0; i < out_dim; ++i) {
+  for (std::int32_t i = 0; i < out_dim; ++i) {
     offset[i] = 0;
   }
 
@@ -886,9 +889,9 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       auto& offsets     = tiling->offsets();
 
       const auto invertible = [&] {
-        size_t volume     = 1;
-        size_t sum_offset = 0;
-        for (uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+        std::size_t volume     = 1;
+        std::size_t sum_offset = 0;
+        for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
           volume *= color_shape[dim_ + idx];
           sum_offset += offsets[dim_ + idx];
         }
@@ -904,14 +907,14 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       auto new_color_shape = color_shape;
       auto new_offsets     = offsets;
 
-      for (uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+      for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
         new_tile_shape.remove_inplace(dim_ + 1);
         new_color_shape.remove_inplace(dim_ + 1);
         new_offsets.remove_inplace(dim_ + 1);
       }
 
       new_tile_shape[dim_] *= strides_[0];
-      new_offsets[dim_] *= static_cast<int64_t>(strides_[0]);
+      new_offsets[dim_] *= static_cast<std::int64_t>(strides_[0]);
 
       return create_tiling(
         std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
@@ -929,7 +932,7 @@ proj::SymbolicPoint Delinearize::invert(const proj::SymbolicPoint& point) const
   std::vector<proj::SymbolicExpr> exprs;
 
   exprs.reserve(point.size() - (sizes_.size() - 1));
-  for (int32_t dim = 0; dim < dim_ + 1; ++dim) {
+  for (std::int32_t dim = 0; dim < dim_ + 1; ++dim) {
     exprs.push_back(point[dim]);
   }
   for (auto dim = dim_ + sizes_.size(); dim < point.size(); ++dim) {
@@ -946,10 +949,10 @@ Restrictions Delinearize::convert(const Restrictions& restrictions, bool /*forbi
   for (auto dim = 0; dim <= dim_; ++dim) {
     result.emplace_back(restrictions[dim]);
   }
-  for (uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
     result.emplace_back(Restriction::FORBID);
   }
-  for (uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim) {
+  for (std::uint32_t dim = dim_ + 1; dim < restrictions.size(); ++dim) {
     result.emplace_back(restrictions[dim]);
   }
   return Restrictions{std::move(result)};
@@ -969,19 +972,19 @@ Restrictions Delinearize::invert(const Restrictions& restrictions) const
   return Restrictions{std::move(result)};
 }
 
-tuple<uint64_t> Delinearize::invert_color(tuple<uint64_t> /*color*/) const
+tuple<std::uint64_t> Delinearize::invert_color(tuple<std::uint64_t> /*color*/) const
 {
   throw NonInvertibleTransformation{};
   return {};
 }
 
-tuple<uint64_t> Delinearize::invert_extents(const tuple<uint64_t>& /*extents*/) const
+tuple<std::uint64_t> Delinearize::invert_extents(const tuple<std::uint64_t>& /*extents*/) const
 {
   throw NonInvertibleTransformation{};
   return {};
 }
 
-tuple<uint64_t> Delinearize::invert_point(const tuple<uint64_t>& /*point*/) const
+tuple<std::uint64_t> Delinearize::invert_point(const tuple<std::uint64_t>& /*point*/) const
 {
   throw NonInvertibleTransformation{};
   return {};
@@ -989,11 +992,11 @@ tuple<uint64_t> Delinearize::invert_point(const tuple<uint64_t>& /*point*/) cons
 
 void Delinearize::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(LEGATE_CORE_TRANSFORM_DELINEARIZE);
-  buffer.pack<int32_t>(dim_);
-  buffer.pack<uint32_t>(sizes_.size());
+  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_DELINEARIZE);
+  buffer.pack<std::int32_t>(dim_);
+  buffer.pack<std::uint32_t>(sizes_.size());
   for (auto extent : sizes_) {
-    buffer.pack<uint64_t>(extent);
+    buffer.pack<std::uint64_t>(extent);
   }
 }
 
@@ -1006,9 +1009,9 @@ void Delinearize::print(std::ostream& out) const
   out << ")";
 }
 
-int32_t Delinearize::target_ndim(int32_t source_ndim) const
+std::int32_t Delinearize::target_ndim(std::int32_t source_ndim) const
 {
-  return static_cast<int32_t>(source_ndim - strides_.size() + 1);
+  return static_cast<std::int32_t>(source_ndim - strides_.size() + 1);
 }
 
 std::ostream& operator<<(std::ostream& out, const Transform& transform)

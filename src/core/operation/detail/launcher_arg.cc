@@ -32,10 +32,10 @@ void RegionFieldArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   auto region   = store_->get_region_field()->region();
   auto field_id = store_->get_region_field()->field_id();
 
-  buffer.pack<int32_t>(store_proj_->redop);
-  buffer.pack<int32_t>(region.get_dim());
-  buffer.pack<uint32_t>(analyzer.get_index(region, privilege_, *store_proj_, field_id));
-  buffer.pack<uint32_t>(field_id);
+  buffer.pack<std::int32_t>(store_proj_->redop);
+  buffer.pack<std::int32_t>(region.get_dim());
+  buffer.pack<std::uint32_t>(analyzer.get_index(region, privilege_, *store_proj_, field_id));
+  buffer.pack<std::uint32_t>(field_id);
 }
 
 void RegionFieldArg::analyze(StoreAnalyzer& analyzer)
@@ -64,12 +64,12 @@ void OutputRegionArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer)
 {
   store_->pack(buffer);
 
-  buffer.pack<int32_t>(-1);
-  buffer.pack<uint32_t>(store_->dim());
+  buffer.pack<std::int32_t>(-1);
+  buffer.pack<std::uint32_t>(store_->dim());
   // Need to cache the requirement index for post-processing
   requirement_index_ = analyzer.get_index(field_space_, field_id_);
-  buffer.pack<uint32_t>(requirement_index_);
-  buffer.pack<uint32_t>(field_id_);
+  buffer.pack<std::uint32_t>(requirement_index_);
+  buffer.pack<std::uint32_t>(field_id_);
 }
 
 void OutputRegionArg::analyze(StoreAnalyzer& analyzer)
@@ -86,11 +86,11 @@ void FutureStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
 {
   store_->pack(buffer);
 
-  buffer.pack<int32_t>(redop_);
+  buffer.pack<std::int32_t>(redop_);
   buffer.pack<bool>(read_only_);
-  buffer.pack<int32_t>(has_storage_ ? analyzer.get_index(store_->get_future()) : -1);
-  buffer.pack<uint32_t>(store_->type()->size());
-  buffer.pack<uint64_t>(store_->get_storage()->extents().data());
+  buffer.pack<std::int32_t>(has_storage_ ? analyzer.get_index(store_->get_future()) : -1);
+  buffer.pack<std::uint32_t>(store_->type()->size());
+  buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
 
 void FutureStoreArg::analyze(StoreAnalyzer& analyzer)
@@ -102,7 +102,7 @@ void FutureStoreArg::analyze(StoreAnalyzer& analyzer)
 
 void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(ArrayKind::BASE));
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::BASE));
   data_->pack(buffer, analyzer);
 
   const bool nullable = null_mask_ != nullptr;
@@ -141,7 +141,7 @@ void BaseArrayArg::perform_invalidations() const
 
 void ListArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(ArrayKind::LIST));
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::LIST));
   type_->pack(buffer);
   descriptor_->pack(buffer, analyzer);
   vardata_->pack(buffer, analyzer);
@@ -172,7 +172,7 @@ void ListArrayArg::perform_invalidations() const
 
 void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(ArrayKind::STRUCT));
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::STRUCT));
   type_->pack(buffer);
 
   const bool nullable = null_mask_ != nullptr;

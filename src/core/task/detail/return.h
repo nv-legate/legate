@@ -24,16 +24,18 @@ namespace legate::detail {
 
 struct ReturnValue {
  public:
-  ReturnValue(Legion::UntypedDeferredValue value, size_t size);
+  ReturnValue(Legion::UntypedDeferredValue value, std::size_t size);
 
   ReturnValue(const ReturnValue&)            = default;
   ReturnValue& operator=(const ReturnValue&) = default;
 
-  [[nodiscard]] static ReturnValue unpack(const void* ptr, size_t size, Memory::Kind memory_kind);
+  [[nodiscard]] static ReturnValue unpack(const void* ptr,
+                                          std::size_t size,
+                                          Memory::Kind memory_kind);
 
   [[nodiscard]] void* ptr();
   [[nodiscard]] const void* ptr() const;
-  [[nodiscard]] size_t size() const;
+  [[nodiscard]] std::size_t size() const;
   [[nodiscard]] bool is_device_value() const;
 
   // Calls the Legion postamble with an instance
@@ -41,14 +43,14 @@ struct ReturnValue {
 
  private:
   Legion::UntypedDeferredValue value_{};
-  size_t size_{};
+  std::size_t size_{};
   bool is_device_value_{};
 };
 
 struct ReturnedException {
  public:
   ReturnedException() = default;
-  ReturnedException(int32_t index, std::string_view error_message);
+  ReturnedException(std::int32_t index, std::string_view error_message);
 
   static inline constexpr auto MAX_MESSAGE_SIZE = 256;
 
@@ -56,7 +58,7 @@ struct ReturnedException {
 
   [[nodiscard]] std::optional<TaskException> to_task_exception() const;
 
-  [[nodiscard]] size_t legion_buffer_size() const;
+  [[nodiscard]] std::size_t legion_buffer_size() const;
   void legion_serialize(void* buffer) const;
   void legion_deserialize(const void* buffer);
 
@@ -64,8 +66,8 @@ struct ReturnedException {
 
  private:
   bool raised_{};
-  int32_t index_{-1};
-  uint32_t message_size_{};
+  std::int32_t index_{-1};
+  std::uint32_t message_size_{};
   std::array<char, MAX_MESSAGE_SIZE> error_message_{};
 };
 
@@ -74,19 +76,19 @@ struct ReturnValues {
   ReturnValues() = default;
   explicit ReturnValues(std::vector<ReturnValue>&& return_values);
 
-  [[nodiscard]] ReturnValue operator[](int32_t idx) const;
+  [[nodiscard]] ReturnValue operator[](std::int32_t idx) const;
 
-  [[nodiscard]] size_t legion_buffer_size() const;
+  [[nodiscard]] std::size_t legion_buffer_size() const;
   void legion_serialize(void* buffer) const;
   void legion_deserialize(const void* buffer);
 
-  [[nodiscard]] static ReturnValue extract(const Legion::Future& future, uint32_t to_extract);
+  [[nodiscard]] static ReturnValue extract(const Legion::Future& future, std::uint32_t to_extract);
 
   // Calls the Legion postamble with an instance that packs all return values
   void finalize(Legion::Context legion_context) const;
 
  private:
-  size_t buffer_size_{};
+  std::size_t buffer_size_{};
   std::vector<ReturnValue> return_values_{};
 };
 

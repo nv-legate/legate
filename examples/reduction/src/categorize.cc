@@ -44,7 +44,7 @@ struct categorize_fn {
       auto& value = in_acc[p];
       for (auto bin_idx = 0; bin_idx < num_bins; ++bin_idx) {
         if (bin_acc[bin_idx] <= value && value < bin_acc[bin_idx + 1]) {
-          res_acc[p] = static_cast<uint64_t>(bin_idx);
+          res_acc[p] = static_cast<std::uint64_t>(bin_idx);
           break;
         }
       }

@@ -28,7 +28,7 @@ enum TaskOpCode {
 };
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
-  static const int32_t TASK_ID = ADDER;
+  static const std::int32_t TASK_ID = ADDER;
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();

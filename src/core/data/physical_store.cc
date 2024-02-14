@@ -35,7 +35,7 @@ void PhysicalStore::bind_untyped_data(Buffer<int8_t, 1>& buffer, const Point<1>&
 
 void PhysicalStore::bind_empty_data() const { impl_->bind_empty_data(); }
 
-int32_t PhysicalStore::dim() const { return impl_->dim(); }
+std::int32_t PhysicalStore::dim() const { return impl_->dim(); }
 
 Type PhysicalStore::type() const { return Type(impl_->type()); }
 
@@ -69,17 +69,20 @@ PhysicalStore::PhysicalStore(const PhysicalArray& array)
 {
 }
 
-void PhysicalStore::check_accessor_dimension(int32_t dim) const
+void PhysicalStore::check_accessor_dimension(std::int32_t dim) const
 {
   impl_->check_accessor_dimension(dim);
 }
 
-void PhysicalStore::check_buffer_dimension(int32_t dim) const
+void PhysicalStore::check_buffer_dimension(std::int32_t dim) const
 {
   impl_->check_buffer_dimension(dim);
 }
 
-void PhysicalStore::check_shape_dimension(int32_t dim) const { impl_->check_shape_dimension(dim); }
+void PhysicalStore::check_shape_dimension(std::int32_t dim) const
+{
+  impl_->check_shape_dimension(dim);
+}
 
 void PhysicalStore::check_valid_binding(bool bind_buffer) const
 {
@@ -102,7 +105,7 @@ void PhysicalStore::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID
   impl_->get_region_field(pr, fid);
 }
 
-int32_t PhysicalStore::get_redop_id() const { return impl_->get_redop_id(); }
+std::int32_t PhysicalStore::get_redop_id() const { return impl_->get_redop_id(); }
 
 Legion::Future PhysicalStore::get_future() const { return impl_->get_future(); }
 
@@ -113,7 +116,7 @@ void PhysicalStore::get_output_field(Legion::OutputRegion& out, Legion::FieldID&
   impl_->get_output_field(out, fid);
 }
 
-void PhysicalStore::update_num_elements(size_t num_elements) const
+void PhysicalStore::update_num_elements(std::size_t num_elements) const
 {
   impl_->update_num_elements(num_elements);
 }

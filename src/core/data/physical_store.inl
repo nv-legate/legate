@@ -17,9 +17,9 @@
 
 namespace legate::detail::store_detail {
 
-template <typename ACC, typename T, int32_t N>
+template <typename ACC, typename T, std::int32_t N>
 struct trans_accessor_fn {
-  template <int32_t M>
+  template <std::int32_t M>
   ACC operator()(const Legion::PhysicalRegion& pr,
                  Legion::FieldID fid,
                  const Legion::AffineTransform<M, N>& transform,
@@ -28,10 +28,10 @@ struct trans_accessor_fn {
     return {pr, fid, transform, bounds, sizeof(T), false};
   }
 
-  template <int32_t M>
+  template <std::int32_t M>
   ACC operator()(const Legion::PhysicalRegion& pr,
                  Legion::FieldID fid,
-                 int32_t redop_id,
+                 std::int32_t redop_id,
                  const Legion::AffineTransform<M, N>& transform,
                  const Rect<N>& bounds)
   {
@@ -191,7 +191,7 @@ AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor(const Rect<DIM>& b
   return create_reduction_accessor<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(bounds);
 }
 
-template <typename T, int32_t DIM>
+template <typename T, std::int32_t DIM>
 Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
                                                    bool bind_buffer /*= false*/) const
 {
@@ -218,7 +218,7 @@ inline TYPE_CODE PhysicalStore::code() const
   return static_cast<TYPE_CODE>(type().code());
 }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 Rect<DIM> PhysicalStore::shape() const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
@@ -244,7 +244,7 @@ VAL PhysicalStore::scalar() const
   return get_buffer().operator Legion::DeferredValue<VAL>().read();
 }
 
-template <typename T, int32_t DIM>
+template <typename T, std::int32_t DIM>
 void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
@@ -284,7 +284,7 @@ void PhysicalStore::check_accessor_type() const
   }
 }
 
-template <typename ACC, typename T, int32_t DIM>
+template <typename ACC, typename T, std::int32_t DIM>
 ACC PhysicalStore::create_field_accessor(const Rect<DIM>& bounds) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
@@ -304,7 +304,7 @@ ACC PhysicalStore::create_field_accessor(const Rect<DIM>& bounds) const
   return {pr, fid, bounds};
 }
 
-template <typename ACC, typename T, int32_t DIM>
+template <typename ACC, typename T, std::int32_t DIM>
 ACC PhysicalStore::create_reduction_accessor(const Rect<DIM>& bounds) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);

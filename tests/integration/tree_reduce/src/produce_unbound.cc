@@ -20,7 +20,7 @@ namespace tree_reduce {
   auto size   = context.get_task_index()[0] + 1;
   auto buffer =
     output.data().create_output_buffer<int64_t, 1>(legate::Point<1>(size), true /*bind*/);
-  for (int64_t idx = 0; idx < size; ++idx) {
+  for (std::int64_t idx = 0; idx < size; ++idx) {
     buffer[idx] = size;
   }
 }

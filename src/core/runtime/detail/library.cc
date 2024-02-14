@@ -42,19 +42,19 @@ Library::Library(const std::string& library_name, const ResourceConfig& config)
 {
 }
 
-Legion::TaskID Library::get_task_id(int64_t local_task_id) const
+Legion::TaskID Library::get_task_id(std::int64_t local_task_id) const
 {
   LegateCheck(task_scope_.valid());
   return static_cast<Legion::TaskID>(task_scope_.translate(local_task_id));
 }
 
-Legion::ReductionOpID Library::get_reduction_op_id(int64_t local_redop_id) const
+Legion::ReductionOpID Library::get_reduction_op_id(std::int64_t local_redop_id) const
 {
   LegateCheck(redop_scope_.valid());
   return static_cast<Legion::ReductionOpID>(redop_scope_.translate(local_redop_id));
 }
 
-Legion::ProjectionID Library::get_projection_id(int64_t local_proj_id) const
+Legion::ProjectionID Library::get_projection_id(std::int64_t local_proj_id) const
 {
   if (local_proj_id == 0) {
     return 0;
@@ -63,25 +63,25 @@ Legion::ProjectionID Library::get_projection_id(int64_t local_proj_id) const
   return static_cast<Legion::ProjectionID>(proj_scope_.translate(local_proj_id));
 }
 
-Legion::ShardingID Library::get_sharding_id(int64_t local_shard_id) const
+Legion::ShardingID Library::get_sharding_id(std::int64_t local_shard_id) const
 {
   LegateCheck(shard_scope_.valid());
   return static_cast<Legion::ShardingID>(shard_scope_.translate(local_shard_id));
 }
 
-int64_t Library::get_local_task_id(Legion::TaskID task_id) const
+std::int64_t Library::get_local_task_id(Legion::TaskID task_id) const
 {
   LegateCheck(task_scope_.valid());
   return task_scope_.invert(task_id);
 }
 
-int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
+std::int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
 {
   LegateCheck(redop_scope_.valid());
   return redop_scope_.invert(redop_id);
 }
 
-int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) const
+std::int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) const
 {
   if (proj_id == 0) {
     return 0;
@@ -90,7 +90,7 @@ int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) const
   return proj_scope_.invert(proj_id);
 }
 
-int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
+std::int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
 {
   LegateCheck(shard_scope_.valid());
   return shard_scope_.invert(shard_id);
@@ -113,19 +113,20 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
   return shard_scope_.in_scope(shard_id);
 }
 
-const std::string& Library::get_task_name(int64_t local_task_id) const
+const std::string& Library::get_task_name(std::int64_t local_task_id) const
 {
   return find_task(local_task_id)->name();
 }
 
-std::unique_ptr<Scalar> Library::get_tunable(int64_t tunable_id, InternalSharedPtr<Type> type) const
+std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
+                                             InternalSharedPtr<Type> type) const
 {
   if (type->variable_size()) {
     throw std::invalid_argument{"Tunable variables must have fixed-size types"};
   }
-  auto result        = Runtime::get_runtime()->get_tunable(mapper_id_, tunable_id, type->size());
-  size_t extents     = 0;
-  const void* buffer = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
+  auto result         = Runtime::get_runtime()->get_tunable(mapper_id_, tunable_id, type->size());
+  std::size_t extents = 0;
+  const void* buffer  = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
   if (extents != type->size()) {
     throw std::invalid_argument{"Size mismatch: expected " + std::to_string(type->size()) +
                                 " bytes but got " + std::to_string(extents) + " bytes"};
@@ -164,7 +165,7 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
   }
 }
 
-void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
+void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   auto task_id = get_task_id(local_task_id);
 
@@ -188,7 +189,7 @@ void Library::register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> tas
   tasks_.emplace(local_task_id, std::move(task_info));
 }
 
-const TaskInfo* Library::find_task(int64_t local_task_id) const
+const TaskInfo* Library::find_task(std::int64_t local_task_id) const
 {
   auto finder = tasks_.find(local_task_id);
 

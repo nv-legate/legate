@@ -28,13 +28,13 @@ bool NoPartition::is_disjoint_for(const Domain& launch_domain) const
   return !launch_domain.is_valid() || launch_domain.get_volume() == 1;
 }
 
-std::unique_ptr<Partition> NoPartition::scale(const tuple<uint64_t>& /*factors*/) const
+std::unique_ptr<Partition> NoPartition::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
   return create_no_partition();
 }
 
-std::unique_ptr<Partition> NoPartition::bloat(const tuple<uint64_t>& /*low_offsts*/,
-                                              const tuple<uint64_t>& /*high_offsets*/) const
+std::unique_ptr<Partition> NoPartition::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
+                                              const tuple<std::uint64_t>& /*high_offsets*/) const
 {
   return create_no_partition();
 }
@@ -48,26 +48,28 @@ std::unique_ptr<Partition> NoPartition::clone() const { return create_no_partiti
 
 std::string NoPartition::to_string() const { return "NoPartition"; }
 
-Tiling::Tiling(tuple<uint64_t>&& tile_shape,
-               tuple<uint64_t>&& color_shape,
-               tuple<int64_t>&& offsets)
+Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
+               tuple<std::uint64_t>&& color_shape,
+               tuple<std::int64_t>&& offsets)
   : tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
-    offsets_{offsets.empty() ? legate::full<int64_t>(tile_shape_.size(), 0) : std::move(offsets)},
+    offsets_{offsets.empty() ? legate::full<std::int64_t>(tile_shape_.size(), 0)
+                             : std::move(offsets)},
     strides_{tile_shape_}
 {
   LegateCheck(tile_shape_.size() == color_shape_.size());
   LegateCheck(tile_shape_.size() == offsets_.size());
 }
 
-Tiling::Tiling(tuple<uint64_t>&& tile_shape,
-               tuple<uint64_t>&& color_shape,
-               tuple<int64_t>&& offsets,
-               tuple<uint64_t>&& strides)
+Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
+               tuple<std::uint64_t>&& color_shape,
+               tuple<std::int64_t>&& offsets,
+               tuple<std::uint64_t>&& strides)
   : overlapped_{strides < tile_shape},
     tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
-    offsets_{offsets.empty() ? legate::full<int64_t>(tile_shape_.size(), 0) : std::move(offsets)},
+    offsets_{offsets.empty() ? legate::full<std::int64_t>(tile_shape_.size(), 0)
+                             : std::move(offsets)},
     strides_{std::move(strides)}
 {
   if (!overlapped_) {
@@ -91,14 +93,14 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   LegateAssert(storage_exts.size() == storage_offs.size());
   LegateAssert(storage_offs.size() == offsets_.size());
 
-  const auto ndim = static_cast<uint32_t>(storage_exts.size());
+  const auto ndim = static_cast<std::uint32_t>(storage_exts.size());
 
-  for (uint32_t dim = 0; dim < ndim; ++dim) {
-    const int64_t my_lo = offsets_[dim];
-    const int64_t my_hi = my_lo + static_cast<int64_t>(strides_[dim] * color_shape_[dim]);
-    const auto soff     = static_cast<int64_t>(storage_offs[dim]);
+  for (std::uint32_t dim = 0; dim < ndim; ++dim) {
+    const std::int64_t my_lo = offsets_[dim];
+    const std::int64_t my_hi = my_lo + static_cast<std::int64_t>(strides_[dim] * color_shape_[dim]);
+    const auto soff          = static_cast<std::int64_t>(storage_offs[dim]);
 
-    if (soff < my_lo && my_hi < (soff + static_cast<int64_t>(storage_exts[dim]))) {
+    if (soff < my_lo && my_hi < (soff + static_cast<std::int64_t>(storage_exts[dim]))) {
       return false;
     }
   }
@@ -115,34 +117,35 @@ bool Tiling::is_disjoint_for(const Domain& launch_domain) const
 
 bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  static auto satisfies_restriction = [](Restriction r, size_t ext) {
+  static auto satisfies_restriction = [](Restriction r, std::size_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape_).all();
 }
 
-std::unique_ptr<Partition> Tiling::scale(const tuple<uint64_t>& factors) const
+std::unique_ptr<Partition> Tiling::scale(const tuple<std::uint64_t>& factors) const
 {
-  auto new_offsets =
-    apply([](int64_t off, size_t factor) { return off * static_cast<int64_t>(factor); },
-          offsets_,
-          factors);
+  auto new_offsets = apply(
+    [](std::int64_t off, std::size_t factor) { return off * static_cast<std::int64_t>(factor); },
+    offsets_,
+    factors);
   return create_tiling(
-    tile_shape_ * factors, tuple<uint64_t>{color_shape_}, std::move(new_offsets));
+    tile_shape_ * factors, tuple<std::uint64_t>{color_shape_}, std::move(new_offsets));
 }
 
-std::unique_ptr<Partition> Tiling::bloat(const tuple<uint64_t>& low_offsets,
-                                         const tuple<uint64_t>& high_offsets) const
+std::unique_ptr<Partition> Tiling::bloat(const tuple<std::uint64_t>& low_offsets,
+                                         const tuple<std::uint64_t>& high_offsets) const
 {
   auto tile_shape = tile_shape_ + low_offsets + high_offsets;
-  auto offsets    = apply([](int64_t off, size_t diff) { return off - static_cast<int64_t>(diff); },
-                       offsets_,
-                       low_offsets);
+  auto offsets =
+    apply([](std::int64_t off, std::size_t diff) { return off - static_cast<std::int64_t>(diff); },
+          offsets_,
+          low_offsets);
 
   return create_tiling(std::move(tile_shape),
-                       tuple<uint64_t>{color_shape_},
+                       tuple<std::uint64_t>{color_shape_},
                        std::move(offsets),
-                       tuple<uint64_t>{tile_shape_});
+                       tuple<std::uint64_t>{tile_shape_});
 }
 
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
@@ -156,20 +159,20 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
     return runtime->create_logical_partition(region, index_partition);
   }
 
-  auto ndim = static_cast<int32_t>(tile_shape_.size());
+  auto ndim = static_cast<std::int32_t>(tile_shape_.size());
 
   Legion::DomainTransform transform;
   transform.m = ndim;
   transform.n = ndim;
-  for (int32_t idx = 0; idx < ndim * ndim; ++idx) {
+  for (std::int32_t idx = 0; idx < ndim * ndim; ++idx) {
     transform.matrix[idx] = 0;
   }
-  for (int32_t idx = 0; idx < ndim; ++idx) {
+  for (std::int32_t idx = 0; idx < ndim; ++idx) {
     transform.matrix[ndim * idx + idx] = static_cast<Legion::coord_t>(strides_[idx]);
   }
 
   auto extent = detail::to_domain(tile_shape_);
-  for (int32_t idx = 0; idx < ndim; ++idx) {
+  for (std::int32_t idx = 0; idx < ndim; ++idx) {
     extent.rect_data[idx] += offsets_[idx];
     extent.rect_data[idx + ndim] += offsets_[idx];
   }
@@ -197,25 +200,31 @@ std::string Tiling::to_string() const
   return std::move(ss).str();
 }
 
-tuple<uint64_t> Tiling::get_child_extents(const tuple<uint64_t>& extents,
-                                          const tuple<uint64_t>& color) const
+tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& extents,
+                                               const tuple<std::uint64_t>& color) const
 {
-  auto lo = apply(std::plus<int64_t>{}, tile_shape_ * color, offsets_);
-  auto hi = apply(std::plus<int64_t>{}, tile_shape_ * (color + 1), offsets_);
-  lo      = apply([](int64_t v) { return std::max(static_cast<int64_t>(0), v); }, lo);
-  hi = apply([](size_t a, int64_t b) { return std::min(static_cast<int64_t>(a), b); }, extents, hi);
-  return apply([](int64_t h, int64_t l) { return static_cast<uint64_t>(h - l); }, hi, lo);
+  auto lo = apply(std::plus<std::int64_t>{}, tile_shape_ * color, offsets_);
+  auto hi = apply(std::plus<std::int64_t>{}, tile_shape_ * (color + 1), offsets_);
+  lo      = apply([](std::int64_t v) { return std::max(static_cast<std::int64_t>(0), v); }, lo);
+  hi =
+    apply([](std::size_t a, std::int64_t b) { return std::min(static_cast<std::int64_t>(a), b); },
+          extents,
+          hi);
+  return apply(
+    [](std::int64_t h, std::int64_t l) { return static_cast<std::uint64_t>(h - l); }, hi, lo);
 }
 
-tuple<uint64_t> Tiling::get_child_offsets(const tuple<uint64_t>& color) const
+tuple<std::uint64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color) const
 {
   return apply(
-    [](uint64_t a, int64_t b) { return static_cast<uint64_t>(static_cast<int64_t>(a) + b); },
+    [](std::uint64_t a, std::int64_t b) {
+      return static_cast<std::uint64_t>(static_cast<std::int64_t>(a) + b);
+    },
     strides_ * color,
     offsets_);
 }
 
-size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
+std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
 
 Weighted::Weighted(const Legion::FutureMap& weights, const Domain& color_domain)
   : weights_{std::make_unique<Legion::FutureMap>(weights)},
@@ -258,20 +267,20 @@ bool Weighted::is_disjoint_for(const Domain& launch_domain) const
 
 bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  static auto satisfies_restriction = [](Restriction r, size_t ext) {
+  static auto satisfies_restriction = [](Restriction r, std::size_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape_).all();
 }
 
-std::unique_ptr<Partition> Weighted::scale(const tuple<uint64_t>& /*factors*/) const
+std::unique_ptr<Partition> Weighted::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
 }
 
-std::unique_ptr<Partition> Weighted::bloat(const tuple<uint64_t>& /*low_offsts*/,
-                                           const tuple<uint64_t>& /*high_offsets*/) const
+std::unique_ptr<Partition> Weighted::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
+                                           const tuple<std::uint64_t>& /*high_offsets*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
@@ -308,7 +317,7 @@ std::string Weighted::to_string() const
   ss << "Weighted({";
   for (Domain::DomainPointIterator it{color_domain_}; it; ++it) {
     auto& p = *it;
-    ss << p << ":" << weights_->get_result<size_t>(p) << ",";
+    ss << p << ":" << weights_->get_result<std::size_t>(p) << ",";
   }
   ss << "})";
   return std::move(ss).str();
@@ -347,20 +356,20 @@ bool Image::is_disjoint_for(const Domain& launch_domain) const
 
 bool Image::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  static auto satisfies_restriction = [](Restriction r, size_t ext) {
+  static auto satisfies_restriction = [](Restriction r, std::size_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape()).all();
 }
 
-std::unique_ptr<Partition> Image::scale(const tuple<uint64_t>& /*factors*/) const
+std::unique_ptr<Partition> Image::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
 }
 
-std::unique_ptr<Partition> Image::bloat(const tuple<uint64_t>& /*low_offsts*/,
-                                        const tuple<uint64_t>& /*high_offsets*/) const
+std::unique_ptr<Partition> Image::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
+                                        const tuple<std::uint64_t>& /*high_offsets*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
@@ -415,22 +424,22 @@ std::string Image::to_string() const
   return std::move(ss).str();
 }
 
-const tuple<uint64_t>& Image::color_shape() const { return func_partition_->color_shape(); }
+const tuple<std::uint64_t>& Image::color_shape() const { return func_partition_->color_shape(); }
 
 std::unique_ptr<NoPartition> create_no_partition() { return std::make_unique<NoPartition>(); }
 
-std::unique_ptr<Tiling> create_tiling(tuple<uint64_t>&& tile_shape,
-                                      tuple<uint64_t>&& color_shape,
-                                      tuple<int64_t>&& offsets /*= {}*/)
+std::unique_ptr<Tiling> create_tiling(tuple<std::uint64_t>&& tile_shape,
+                                      tuple<std::uint64_t>&& color_shape,
+                                      tuple<std::int64_t>&& offsets /*= {}*/)
 {
   return std::make_unique<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets));
 }
 
-std::unique_ptr<Tiling> create_tiling(tuple<uint64_t>&& tile_shape,
-                                      tuple<uint64_t>&& color_shape,
-                                      tuple<int64_t>&& offsets,
-                                      tuple<uint64_t>&& strides)
+std::unique_ptr<Tiling> create_tiling(tuple<std::uint64_t>&& tile_shape,
+                                      tuple<std::uint64_t>&& color_shape,
+                                      tuple<std::int64_t>&& offsets,
+                                      tuple<std::uint64_t>&& strides)
 {
   return std::make_unique<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));

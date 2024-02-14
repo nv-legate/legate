@@ -36,32 +36,32 @@ extern Legion::Logger logger;
 void register_tasks();
 
 struct ReadEvenTilesTask : public legate::LegateTask<ReadEvenTilesTask> {
-  static const int32_t TASK_ID = READ_EVEN_TILES;
+  static const std::int32_t TASK_ID = READ_EVEN_TILES;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct ReadFileTask : public legate::LegateTask<ReadFileTask> {
-  static const int32_t TASK_ID = READ_FILE;
+  static const std::int32_t TASK_ID = READ_FILE;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct ReadUnevenTilesTask : public legate::LegateTask<ReadUnevenTilesTask> {
-  static const int32_t TASK_ID = READ_UNEVEN_TILES;
+  static const std::int32_t TASK_ID = READ_UNEVEN_TILES;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WriteEvenTilesTask : public legate::LegateTask<WriteEvenTilesTask> {
-  static const int32_t TASK_ID = WRITE_EVEN_TILES;
+  static const std::int32_t TASK_ID = WRITE_EVEN_TILES;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WriteFileTask : public legate::LegateTask<WriteFileTask> {
-  static const int32_t TASK_ID = WRITE_FILE;
+  static const std::int32_t TASK_ID = WRITE_FILE;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WriteUnevenTilesTask : public legate::LegateTask<WriteUnevenTilesTask> {
-  static const int32_t TASK_ID = WRITE_UNEVEN_TILES;
+  static const std::int32_t TASK_ID = WRITE_UNEVEN_TILES;
   static void cpu_variant(legate::TaskContext context);
 };
 

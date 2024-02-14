@@ -32,8 +32,8 @@ void validate(legate::TaskContext context)
     return;
   }
 
-  int32_t num_tasks = context.get_launch_domain().get_volume();
-  auto to_compare   = context.scalars().at(0).value<int32_t>();
+  std::int32_t num_tasks = context.get_launch_domain().get_volume();
+  auto to_compare        = context.scalars().at(0).value<std::int32_t>();
   if (to_compare != num_tasks) {
     LEGATE_ABORT("Test failed: expected " << to_compare << "tasks, but got " << num_tasks
                                           << " tasks");
@@ -42,14 +42,14 @@ void validate(legate::TaskContext context)
 
 void map_check(legate::TaskContext& context)
 {
-  int32_t task_count          = context.get_launch_domain().get_volume();
-  int32_t shard_id            = legate::Processor::get_executing_processor().address_space();
-  int32_t task_id             = context.get_task_index()[0];
-  int32_t per_node_count      = context.scalar(0).value<int32_t>();
-  int32_t proc_count          = context.scalar(1).value<int32_t>();
-  int32_t start_proc_id       = context.scalar(2).value<int32_t>();
-  int32_t global_proc_id      = task_id * proc_count / task_count + start_proc_id;
-  int32_t calculated_shard_id = global_proc_id / per_node_count;
+  std::int32_t task_count          = context.get_launch_domain().get_volume();
+  std::int32_t shard_id            = legate::Processor::get_executing_processor().address_space();
+  std::int32_t task_id             = context.get_task_index()[0];
+  std::int32_t per_node_count      = context.scalar(0).value<std::int32_t>();
+  std::int32_t proc_count          = context.scalar(1).value<std::int32_t>();
+  std::int32_t start_proc_id       = context.scalar(2).value<std::int32_t>();
+  std::int32_t global_proc_id      = task_id * proc_count / task_count + start_proc_id;
+  std::int32_t calculated_shard_id = global_proc_id / per_node_count;
   if (shard_id != calculated_shard_id) {
     LEGATE_ABORT("Test failed: expected " << shard_id << " shard, but got " << calculated_shard_id
                                           << " shard");

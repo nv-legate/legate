@@ -50,7 +50,7 @@ inline decltype(auto) canonical_value_of(T&& v) noexcept
   return std::forward<T>(v);
 }
 
-inline uint64_t canonical_value_of(size_t v) noexcept { return uint64_t{v}; }
+inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return uint64_t{v}; }
 
 }  // namespace detail
 
@@ -89,12 +89,12 @@ Scalar::Scalar(const tuple<T>& values) : Scalar{values.data()}
 {
 }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 Scalar::Scalar(const Point<DIM>& point) : impl_{create_impl(point_type(DIM), &point, true)}
 {
 }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 Scalar::Scalar(const Rect<DIM>& rect) : impl_{create_impl(rect_type(DIM), &rect, true)}
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
@@ -174,7 +174,7 @@ template <>
 inline Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
 {
   Legion::DomainPoint result;
-  const auto span = values<int64_t>();
+  const auto span = values<std::int64_t>();
   result.dim      = static_cast<decltype(result.dim)>(span.size());
   for (auto idx = 0; idx < result.dim; ++idx) {
     result[idx] = span[idx];

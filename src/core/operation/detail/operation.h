@@ -35,7 +35,7 @@ class Operation {
     const Variable* variable{};
   };
 
-  Operation(uint64_t unique_id, mapping::detail::Machine&& machine);
+  Operation(std::uint64_t unique_id, mapping::detail::Machine&& machine);
 
  public:
   virtual ~Operation() = default;
@@ -60,8 +60,8 @@ class Operation {
   [[nodiscard]] static std::unique_ptr<StoreProjection> create_store_projection(
     const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
 
-  uint64_t unique_id_{};
-  uint32_t next_part_id_{};
+  std::uint64_t unique_id_{};
+  std::uint32_t next_part_id_{};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
   std::unordered_map<const Variable, InternalSharedPtr<LogicalStore>> store_mappings_{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};

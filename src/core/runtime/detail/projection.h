@@ -23,9 +23,9 @@ namespace legate::proj {
 using SymbolicExpr  = legate::SymbolicExpr;
 using SymbolicPoint = legate::SymbolicPoint;
 
-[[nodiscard]] SymbolicPoint create_symbolic_point(uint32_t ndim);
+[[nodiscard]] SymbolicPoint create_symbolic_point(std::uint32_t ndim);
 
-[[nodiscard]] bool is_identity(uint32_t ndim, const SymbolicPoint& point);
+[[nodiscard]] bool is_identity(std::uint32_t ndim, const SymbolicPoint& point);
 
 }  // namespace legate::proj
 
@@ -45,14 +45,14 @@ class ProjectionFunction {  // NOLINT(bugprone-forward-declaration-namespace)
   ProjectionFunction& operator=(ProjectionFunction&&)      = default;
 };
 
-void register_affine_projection_functor(uint32_t src_ndim,
+void register_affine_projection_functor(std::uint32_t src_ndim,
                                         const proj::SymbolicPoint& point,
                                         Legion::ProjectionID proj_id);
 
-void register_delinearizing_projection_functor(const tuple<uint64_t>& color_shape,
+void register_delinearizing_projection_functor(const tuple<std::uint64_t>& color_shape,
                                                Legion::ProjectionID proj_id);
 
-void register_compound_projection_functor(const tuple<uint64_t>& color_shape,
+void register_compound_projection_functor(const tuple<std::uint64_t>& color_shape,
                                           const proj::SymbolicPoint& point,
                                           Legion::ProjectionID proj_id);
 

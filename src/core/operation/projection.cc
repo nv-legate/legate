@@ -36,7 +36,7 @@ std::string SymbolicExpr::to_string() const
   return std::move(ss).str();
 }
 
-size_t SymbolicExpr::hash() const { return hash_all(dim_, weight_, offset_); }
+std::size_t SymbolicExpr::hash() const { return hash_all(dim_, weight_, offset_); }
 
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
 {

@@ -34,7 +34,7 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
   {
     EXPECT_TRUE(context.can_raise_exception());
     auto raise = context.scalar(0).value<bool>();
-    auto index = context.scalar(1).value<int32_t>();
+    auto index = context.scalar(1).value<std::int32_t>();
     // Make sure only some of the  point tasks raise an exception
     if (raise && (context.is_single_task() || context.get_task_index()[0] == 0)) {
       if (context.is_single_task()) {
@@ -72,7 +72,7 @@ void test_single()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto issue_task = [&](int32_t index, bool raise) {
+  auto issue_task = [&](std::int32_t index, bool raise) {
     auto task = runtime->create_task(context, EXCEPTION_TASK);
     task.add_scalar_arg(legate::Scalar(raise));
     task.add_scalar_arg(legate::Scalar(index));

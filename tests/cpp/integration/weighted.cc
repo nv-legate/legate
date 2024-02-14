@@ -26,14 +26,14 @@ enum TaskIDs {
   CHECK = 3,
 };
 
-constexpr uint32_t NUM_TASKS = 4;
+constexpr std::uint32_t NUM_TASKS = 4;
 
 struct Initializer : public legate::LegateTask<Initializer> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto task_idx = context.get_task_index()[0];
     auto outputs  = context.outputs();
-    for (uint32_t idx = 0; idx < outputs.size(); ++idx) {
+    for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto output = outputs.at(idx).data();
       (void)output.create_output_buffer<int32_t, 1>(legate::Point<1>(task_idx + 10 * (idx + 1)),
                                                     true);
@@ -48,7 +48,7 @@ struct Tester : public legate::LegateTask<Tester> {
     EXPECT_EQ(context.get_launch_domain().get_volume(), NUM_TASKS);
     auto task_idx = context.get_task_index()[0];
     auto outputs  = context.outputs();
-    for (uint32_t idx = 0; idx < outputs.size(); ++idx) {
+    for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto volume = outputs.at(idx).shape<1>().volume();
       EXPECT_EQ(volume, task_idx + 10 * (idx + 1));
     }
@@ -98,13 +98,13 @@ void check(legate::Runtime* runtime,
   runtime->submit(std::move(task));
 }
 
-void test_weighted(uint32_t num_stores)
+void test_weighted(std::uint32_t num_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
 
   std::vector<legate::LogicalStore> stores;
-  for (uint32_t idx = 0; idx < num_stores; ++idx) {
+  for (std::uint32_t idx = 0; idx < num_stores; ++idx) {
     stores.push_back(runtime->create_store(legate::int32()));
   }
   initialize(runtime, library, stores);

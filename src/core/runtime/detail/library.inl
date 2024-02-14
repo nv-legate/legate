@@ -19,7 +19,9 @@
 
 namespace legate::detail {
 
-inline Library::ResourceIdScope::ResourceIdScope(int64_t base, int64_t size, int64_t dyn_size)
+inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
+                                                 std::int64_t size,
+                                                 std::int64_t dyn_size)
   : base_{base}, size_{size}, next_{size - dyn_size}
 {
   if (LegateDefined(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
@@ -31,18 +33,18 @@ inline Library::ResourceIdScope::ResourceIdScope(int64_t base, int64_t size, int
   }
 }
 
-inline int64_t Library::ResourceIdScope::translate(int64_t local_resource_id) const
+inline std::int64_t Library::ResourceIdScope::translate(std::int64_t local_resource_id) const
 {
   return base_ + local_resource_id;
 }
 
-inline int64_t Library::ResourceIdScope::invert(int64_t resource_id) const
+inline std::int64_t Library::ResourceIdScope::invert(std::int64_t resource_id) const
 {
   LegateCheck(in_scope(resource_id));
   return resource_id - base_;
 }
 
-inline int64_t Library::ResourceIdScope::generate_id()
+inline std::int64_t Library::ResourceIdScope::generate_id()
 {
   if (next_ == size_) {
     throw std::overflow_error{"The scope ran out of IDs"};
@@ -52,12 +54,12 @@ inline int64_t Library::ResourceIdScope::generate_id()
 
 inline bool Library::ResourceIdScope::valid() const { return base_ != -1; }
 
-inline bool Library::ResourceIdScope::in_scope(int64_t resource_id) const
+inline bool Library::ResourceIdScope::in_scope(std::int64_t resource_id) const
 {
   return base_ <= resource_id && resource_id < base_ + size_;
 }
 
-inline int64_t Library::ResourceIdScope::size() const { return size_; }
+inline std::int64_t Library::ResourceIdScope::size() const { return size_; }
 
 // ==========================================================================================
 
@@ -65,7 +67,7 @@ inline const std::string& Library::get_library_name() const { return library_nam
 
 inline Legion::MapperID Library::get_mapper_id() const { return mapper_id_; }
 
-inline int64_t Library::get_new_task_id() { return task_scope_.generate_id(); }
+inline std::int64_t Library::get_new_task_id() { return task_scope_.generate_id(); }
 
 inline Legion::Mapping::Mapper* Library::get_legion_mapper() const { return legion_mapper_; }
 

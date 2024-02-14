@@ -16,6 +16,11 @@
 
 #include "coll.h"
 
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <unordered_map>
+
 namespace legate::comm::coll {
 
 enum CollTag : int {
@@ -215,7 +220,7 @@ int MPINetwork::comm_create(CollComm global_comm,
   LegateCheck(mapping_table != nullptr);
   legate::detail::typed_malloc(&(global_comm->mapping_table.global_rank), global_comm_size);
   legate::detail::typed_malloc(&(global_comm->mapping_table.mpi_rank), global_comm_size);
-  memcpy(global_comm->mapping_table.mpi_rank, mapping_table, sizeof(int) * global_comm_size);
+  std::memcpy(global_comm->mapping_table.mpi_rank, mapping_table, sizeof(int) * global_comm_size);
   for (int i = 0; i < global_comm_size; i++) {
     global_comm->mapping_table.global_rank[i] = i;
   }
@@ -227,11 +232,11 @@ int MPINetwork::comm_create(CollComm global_comm,
 int MPINetwork::comm_destroy(CollComm global_comm)
 {
   if (global_comm->mapping_table.global_rank != nullptr) {
-    free(global_comm->mapping_table.global_rank);
+    std::free(global_comm->mapping_table.global_rank);
     global_comm->mapping_table.global_rank = nullptr;
   }
   if (global_comm->mapping_table.mpi_rank != nullptr) {
-    free(global_comm->mapping_table.mpi_rank);
+    std::free(global_comm->mapping_table.mpi_rank);
     global_comm->mapping_table.mpi_rank = nullptr;
   }
   global_comm->status = false;
@@ -262,9 +267,9 @@ int MPINetwork::alltoallv(const void* sendbuf,
     sendto_global_rank   = (global_rank + i) % total_size;
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     char* src            = static_cast<char*>(const_cast<void*>(sendbuf)) +
-                static_cast<ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent;
+                static_cast<std::ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent;
     char* dst = static_cast<char*>(recvbuf) +
-                static_cast<ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
+                static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
     const int scount  = sendcounts[sendto_global_rank];
     const int rcount  = recvcounts[recvfrom_global_rank];
     sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
@@ -321,9 +326,9 @@ int MPINetwork::alltoall(
     const auto sendto_global_rank   = (global_rank + i) % total_size;
     const auto recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     const char* src                 = static_cast<char*>(const_cast<void*>(sendbuf)) +
-                      static_cast<ptrdiff_t>(sendto_global_rank) * type_extent * count;
+                      static_cast<std::ptrdiff_t>(sendto_global_rank) * type_extent * count;
     char* dst = static_cast<char*>(recvbuf) +
-                static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
+                static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
     const auto sendto_mpi_rank   = global_comm->mapping_table.mpi_rank[sendto_global_rank];
     const auto recvfrom_mpi_rank = global_comm->mapping_table.mpi_rank[recvfrom_global_rank];
     LegateCheck(sendto_global_rank == global_comm->mapping_table.global_rank[sendto_global_rank]);
@@ -385,7 +390,7 @@ int MPINetwork::allgather(
 
   auto guard = legate::detail::make_scope_guard([&] {
     if (sendbuf == recvbuf) {
-      free(sendbuf_tmp);
+      std::free(sendbuf_tmp);
     }
   });
 
@@ -433,7 +438,7 @@ int MPINetwork::gather(
   // root
   MPI_Aint incr, lb, type_extent;
   CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
-  incr      = type_extent * static_cast<ptrdiff_t>(count);
+  incr      = type_extent * static_cast<std::ptrdiff_t>(count);
   char* dst = static_cast<char*>(recvbuf);
   int recvfrom_mpi_rank;
   for (int i = 0; i < total_size; i++) {
@@ -453,7 +458,7 @@ int MPINetwork::gather(
     }
     LegateCheck(dst != nullptr);
     if (global_rank == i) {
-      memcpy(dst, sendbuf, incr);
+      std::memcpy(dst, sendbuf, incr);
     } else {
       CHECK_MPI(
         MPI_Recv(dst, count, mpi_type, recvfrom_mpi_rank, tag, global_comm->mpi_comm, &status));

@@ -24,7 +24,7 @@ namespace legateio {
 namespace {
 
 struct read_fn {
-  template <legate::Type::Code CODE, int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::Store& output, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
@@ -38,7 +38,7 @@ struct read_fn {
     std::ifstream in(path, std::ios::binary | std::ios::in);
 
     legate::Point<DIM> extents;
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       in.read(reinterpret_cast<char*>(&extents[idx]), sizeof(legate::coord_t));
     }
 

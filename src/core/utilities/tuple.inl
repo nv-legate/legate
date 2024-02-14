@@ -38,19 +38,19 @@ tuple<T>::tuple(std::initializer_list<T> list) : data_{std::move(list)}
 }
 
 template <typename T>
-const T& tuple<T>::at(uint32_t idx) const
+const T& tuple<T>::at(std::uint32_t idx) const
 {
   return data().at(idx);
 }
 
 template <typename T>
-T& tuple<T>::at(uint32_t idx)
+T& tuple<T>::at(std::uint32_t idx)
 {
   return data().at(idx);
 }
 
 template <typename T>
-const T& tuple<T>::operator[](uint32_t idx) const
+const T& tuple<T>::operator[](std::uint32_t idx) const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     return at(idx);
@@ -59,7 +59,7 @@ const T& tuple<T>::operator[](uint32_t idx) const
 }
 
 template <typename T>
-T& tuple<T>::operator[](uint32_t idx)
+T& tuple<T>::operator[](std::uint32_t idx)
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     return at(idx);
@@ -165,17 +165,17 @@ void tuple<T>::reserve(size_type size)
 
 template <typename T>
 template <typename U>
-tuple<T> tuple<T>::insert(int32_t pos, U&& value) const
+tuple<T> tuple<T>::insert(std::int32_t pos, U&& value) const
 {
-  const auto len = static_cast<int32_t>(size());
+  const auto len = static_cast<std::int32_t>(size());
   tuple new_values;
 
   new_values.reserve(len + 1);
-  for (int32_t idx = 0; idx < pos; ++idx) {
+  for (std::int32_t idx = 0; idx < pos; ++idx) {
     new_values.append_inplace(data()[idx]);
   }
   new_values.append_inplace(std::forward<U>(value));
-  for (int32_t idx = pos; idx < len; ++idx) {
+  for (std::int32_t idx = pos; idx < len; ++idx) {
     new_values.append_inplace(data()[idx]);
   }
   return new_values;
@@ -192,16 +192,16 @@ tuple<T> tuple<T>::append(U&& value) const
 }
 
 template <typename T>
-tuple<T> tuple<T>::remove(int32_t pos) const
+tuple<T> tuple<T>::remove(std::int32_t pos) const
 {
   tuple new_values;
 
-  if (const auto len = static_cast<int32_t>(size())) {
+  if (const auto len = static_cast<std::int32_t>(size())) {
     new_values.reserve(len - 1);
-    for (int32_t idx = 0; idx < pos; ++idx) {
+    for (std::int32_t idx = 0; idx < pos; ++idx) {
       new_values.append_inplace(data()[idx]);
     }
-    for (int32_t idx = pos + 1; idx < len; ++idx) {
+    for (std::int32_t idx = pos + 1; idx < len; ++idx) {
       new_values.append_inplace(data()[idx]);
     }
   }
@@ -210,7 +210,7 @@ tuple<T> tuple<T>::remove(int32_t pos) const
 
 template <typename T>
 template <typename U>
-tuple<T> tuple<T>::update(int32_t pos, U&& value) const
+tuple<T> tuple<T>::update(std::int32_t pos, U&& value) const
 {
   tuple new_values{data()};
 
@@ -220,7 +220,7 @@ tuple<T> tuple<T>::update(int32_t pos, U&& value) const
 
 template <typename T>
 template <typename U>
-void tuple<T>::insert_inplace(int32_t pos, U&& value)
+void tuple<T>::insert_inplace(std::int32_t pos, U&& value)
 {
   data().insert(begin() + pos, std::forward<U>(value));
 }
@@ -233,7 +233,7 @@ void tuple<T>::append_inplace(U&& value)
 }
 
 template <typename T>
-void tuple<T>::remove_inplace(int32_t pos)
+void tuple<T>::remove_inplace(std::int32_t pos)
 {
   data().erase(begin() + pos);
 }
@@ -289,7 +289,7 @@ bool tuple<T>::any(PRED&& pred) const
 }
 
 template <typename T>
-tuple<T> tuple<T>::map(const std::vector<int32_t>& mapping) const
+tuple<T> tuple<T>::map(const std::vector<std::int32_t>& mapping) const
 {
   tuple new_values;
 
@@ -314,7 +314,7 @@ template <typename U>
 std::ostream& operator<<(std::ostream& out, const tuple<U>& tpl)
 {
   out << '(';
-  size_t idx = 0;
+  std::size_t idx = 0;
   for (auto&& value : tpl) {
     if (idx++ > 0) {
       out << ',';
@@ -374,9 +374,9 @@ typename tuple<T>::const_iterator tuple<T>::end() const
 }
 
 template <typename T>
-size_t tuple<T>::hash() const
+std::size_t tuple<T>::hash() const
 {
-  size_t result = 0;
+  std::size_t result = 0;
   for (auto&& v : data()) {
     hash_combine(result, v);
   }
@@ -437,7 +437,7 @@ auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
     throw std::invalid_argument{"Operands should have the same size"};
   }
   result.reserve(rhs1.size());
-  for (uint32_t idx = 0; idx < rhs1.size(); ++idx) {
+  for (std::uint32_t idx = 0; idx < rhs1.size(); ++idx) {
     result.append_inplace(func(rhs1[idx], rhs2[idx]));
   }
   return result;

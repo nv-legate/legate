@@ -36,8 +36,8 @@ namespace legate::mapping {
  * `NodeRange`s are half-open intervals of logical node IDs.
  */
 struct NodeRange {
-  uint32_t low{0};
-  uint32_t high{0};
+  std::uint32_t low{0};
+  std::uint32_t high{0};
 
   bool operator<(const NodeRange& other) const noexcept;
   bool operator==(const NodeRange& other) const noexcept;
@@ -54,21 +54,21 @@ struct ProcessorRange {
   /**
    * @brief Starting processor ID
    */
-  uint32_t low{0};
+  std::uint32_t low{0};
   /**
    * @brief End processor ID
    */
-  uint32_t high{0};
+  std::uint32_t high{0};
   /**
    * @brief Number of per-node processors
    */
-  uint32_t per_node_count{1};
+  std::uint32_t per_node_count{1};
   /**
    * @brief Returns the number of processors in the range
    *
    * @return Processor count
    */
-  [[nodiscard]] uint32_t count() const noexcept;
+  [[nodiscard]] std::uint32_t count() const noexcept;
   /**
    * @brief Checks if the processor range is empty
    *
@@ -84,7 +84,7 @@ struct ProcessorRange {
    *
    * @return Sliced procesor range
    */
-  [[nodiscard]] ProcessorRange slice(uint32_t from, uint32_t to) const;
+  [[nodiscard]] ProcessorRange slice(std::uint32_t from, std::uint32_t to) const;
   /**
    * @brief Computes a range of node IDs for this processor range
    *
@@ -108,13 +108,15 @@ struct ProcessorRange {
    * @param high_id End processor ID
    * @param per_node_proc_count Number of per-node processors
    */
-  ProcessorRange(uint32_t low_id, uint32_t high_id, uint32_t per_node_proc_count) noexcept;
+  ProcessorRange(std::uint32_t low_id,
+                 std::uint32_t high_id,
+                 std::uint32_t per_node_proc_count) noexcept;
 
   ProcessorRange operator&(const ProcessorRange&) const;
   bool operator==(const ProcessorRange& other) const noexcept;
   bool operator!=(const ProcessorRange& other) const noexcept;
   bool operator<(const ProcessorRange& other) const noexcept;
-  [[nodiscard]] size_t hash() const noexcept;
+  [[nodiscard]] std::size_t hash() const noexcept;
 };
 
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
@@ -177,7 +179,7 @@ class Machine {
    *
    * @return Processor count
    */
-  [[nodiscard]] uint32_t count() const;
+  [[nodiscard]] std::uint32_t count() const;
   /**
    * @brief Returns the number of processors of a given type
    *
@@ -185,7 +187,7 @@ class Machine {
    *
    * @return Processor count
    */
-  [[nodiscard]] uint32_t count(TaskTarget target) const;
+  [[nodiscard]] std::uint32_t count(TaskTarget target) const;
 
   /**
    * @brief Converts the machine descriptor to a human-readable string
@@ -226,8 +228,8 @@ class Machine {
    *
    * @return Machine descriptor with the chosen procssor range sliced
    */
-  [[nodiscard]] Machine slice(uint32_t from,
-                              uint32_t to,
+  [[nodiscard]] Machine slice(std::uint32_t from,
+                              std::uint32_t to,
                               TaskTarget target,
                               bool keep_others = false) const;
   /**
@@ -239,7 +241,7 @@ class Machine {
    *
    * @return Machine descriptor with the preferred processor range sliced
    */
-  [[nodiscard]] Machine slice(uint32_t from, uint32_t to, bool keep_others = false) const;
+  [[nodiscard]] Machine slice(std::uint32_t from, std::uint32_t to, bool keep_others = false) const;
   /**
    * @brief Selects the processor range for a given processor type and constructs a machine
    * descriptor with it.

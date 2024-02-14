@@ -35,8 +35,8 @@ inline bool Task::supports_replicated_write() const { return true; }
 // ==========================================================================================
 
 inline AutoTask::AutoTask(const Library* library,
-                          int64_t task_id,
-                          uint64_t unique_id,
+                          std::int64_t task_id,
+                          std::uint64_t unique_id,
                           mapping::detail::Machine&& machine)
   : Task{library, task_id, unique_id, std::move(machine)}
 {

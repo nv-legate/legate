@@ -41,7 +41,7 @@ inline bool NodeRange::operator!=(const NodeRange& other) const noexcept
 // legate::mapping::ProcessorRange
 /////////////////////////////////////
 
-inline uint32_t ProcessorRange::count() const noexcept { return high - low; }
+inline std::uint32_t ProcessorRange::count() const noexcept { return high - low; }
 
 inline bool ProcessorRange::empty() const noexcept { return high <= low; }
 
@@ -55,9 +55,9 @@ inline bool ProcessorRange::operator!=(const ProcessorRange& other) const noexce
   return !(other == *this);
 }
 
-inline ProcessorRange::ProcessorRange(uint32_t low_id,
-                                      uint32_t high_id,
-                                      uint32_t per_node_proc_count) noexcept
+inline ProcessorRange::ProcessorRange(std::uint32_t low_id,
+                                      std::uint32_t high_id,
+                                      std::uint32_t per_node_proc_count) noexcept
   : low{low_id < high_id ? low_id : 0},
     high{low_id < high_id ? high_id : 0},
     per_node_count{std::max(uint32_t{1}, per_node_proc_count)}

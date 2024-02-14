@@ -26,7 +26,7 @@ enum TaskIDs {
 };
 
 struct Copy : public legate::LegateTask<Copy> {
-  static const int32_t TASK_ID = COPY;
+  static const std::int32_t TASK_ID = COPY;
   static void cpu_variant(legate::TaskContext context)
   {
     auto input  = context.input(0).data();

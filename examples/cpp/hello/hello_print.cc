@@ -26,7 +26,7 @@ void test_print_hello(legate::Library library, std::string str)
   runtime->submit(std::move(task));
 }
 
-void test_print_hellos(legate::Library library, std::string str, size_t count)
+void test_print_hellos(legate::Library library, std::string str, std::size_t count)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, task::hello::HELLO_WORLD, legate::Shape({count}));

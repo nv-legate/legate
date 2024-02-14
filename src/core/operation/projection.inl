@@ -16,20 +16,20 @@
 
 namespace legate {
 
-inline SymbolicExpr::SymbolicExpr(uint32_t dim, int32_t weight, int32_t offset)
+inline SymbolicExpr::SymbolicExpr(std::uint32_t dim, std::int32_t weight, std::int32_t offset)
   : dim_{dim}, weight_{weight}, offset_{offset}
 {
 }
 
-inline SymbolicExpr::SymbolicExpr(uint32_t dim) : SymbolicExpr{dim, 1} {}
+inline SymbolicExpr::SymbolicExpr(std::uint32_t dim) : SymbolicExpr{dim, 1} {}
 
-inline uint32_t SymbolicExpr::dim() const { return dim_; }
+inline std::uint32_t SymbolicExpr::dim() const { return dim_; }
 
-inline int32_t SymbolicExpr::weight() const { return weight_; }
+inline std::int32_t SymbolicExpr::weight() const { return weight_; }
 
-inline int32_t SymbolicExpr::offset() const { return offset_; }
+inline std::int32_t SymbolicExpr::offset() const { return offset_; }
 
-inline bool SymbolicExpr::is_identity(uint32_t dim) const
+inline bool SymbolicExpr::is_identity(std::uint32_t dim) const
 {
   return this->dim() == dim && weight() == 1 && offset() == 0;
 }
@@ -46,18 +46,21 @@ inline bool SymbolicExpr::operator<(const SymbolicExpr& other) const
   return std::tie(dim_, weight_, offset_) < std::tie(other.dim_, other.weight_, other.offset_);
 }
 
-inline SymbolicExpr SymbolicExpr::operator*(int32_t other) const
+inline SymbolicExpr SymbolicExpr::operator*(std::int32_t other) const
 {
   return {dim(), weight() * other, offset() * other};
 }
 
-inline SymbolicExpr SymbolicExpr::operator+(int32_t other) const
+inline SymbolicExpr SymbolicExpr::operator+(std::int32_t other) const
 {
   return {dim(), weight(), offset() + other};
 }
 
-inline SymbolicExpr dimension(uint32_t dim) { return SymbolicExpr{dim}; }
+inline SymbolicExpr dimension(std::uint32_t dim) { return SymbolicExpr{dim}; }
 
-inline SymbolicExpr constant(int32_t value) { return SymbolicExpr{SymbolicExpr::UNSET, 0, value}; }
+inline SymbolicExpr constant(std::int32_t value)
+{
+  return SymbolicExpr{SymbolicExpr::UNSET, 0, value};
+}
 
 }  // namespace legate

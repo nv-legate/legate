@@ -17,7 +17,7 @@
 
 namespace hello {
 
-legate::LogicalStore iota(legate::Library library, size_t size)
+legate::LogicalStore iota(legate::Library library, std::size_t size)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, task::hello::IOTA);

@@ -28,7 +28,7 @@ enum TaskIDs {
 };
 
 struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
-  static const int32_t TASK_ID = PROVENANCE;
+  static const std::int32_t TASK_ID = PROVENANCE;
   static void cpu_variant(legate::TaskContext context);
 };
 

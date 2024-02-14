@@ -37,7 +37,7 @@ struct histogram_fn {
 
     auto in_acc  = input.read_accessor<VAL, 1>();
     auto bin_acc = bins.read_accessor<VAL, 1>();
-    auto res_acc = result.reduce_accessor<legate::SumReduction<uint64_t>, true, 1>();
+    auto res_acc = result.reduce_accessor<legate::SumReduction<std::uint64_t>, true, 1>();
 
     for (legate::PointInRectIterator<1> it(in_shape); it.valid(); ++it) {
       auto& value = in_acc[*it];

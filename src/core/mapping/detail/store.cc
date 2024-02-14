@@ -35,7 +35,7 @@ Legion::IndexSpace RegionField::get_index_space() const
   return get_requirement()->region.get_index_space();
 }
 
-Store::Store(int32_t dim,
+Store::Store(std::int32_t dim,
              InternalSharedPtr<legate::detail::Type> type,
              FutureWrapper future,
              InternalSharedPtr<legate::detail::TransformStack>&& transform)
@@ -49,9 +49,9 @@ Store::Store(int32_t dim,
 
 Store::Store(Legion::Mapping::MapperRuntime* runtime,
              Legion::Mapping::MapperContext context,
-             int32_t dim,
+             std::int32_t dim,
              InternalSharedPtr<legate::detail::Type> type,
-             int32_t redop_id,
+             std::int32_t redop_id,
              const RegionField& region_field,
              bool is_unbound_store,
              InternalSharedPtr<legate::detail::TransformStack>&& transform)
@@ -113,7 +113,7 @@ Domain Store::domain() const
   return result;
 }
 
-std::vector<int32_t> Store::find_imaginary_dims() const
+std::vector<std::int32_t> Store::find_imaginary_dims() const
 {
   if (transform_) {
     return transform_->find_imaginary_dims();

@@ -26,7 +26,7 @@ namespace legate::mapping {
 // legate::mapping::ProcessorRange
 /////////////////////////////////////
 
-ProcessorRange ProcessorRange::slice(uint32_t from, uint32_t to) const
+ProcessorRange ProcessorRange::slice(std::uint32_t from, std::uint32_t to) const
 {
   auto new_low  = std::min(low + from, high);
   auto new_high = std::min(low + to, high);
@@ -74,7 +74,7 @@ bool ProcessorRange::operator<(const ProcessorRange& other) const noexcept
   return per_node_count < other.per_node_count;
 }
 
-size_t ProcessorRange::hash() const noexcept { return hash_all(low, high, per_node_count); }
+std::size_t ProcessorRange::hash() const noexcept { return hash_all(low, high, per_node_count); }
 
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range)
 {
@@ -102,9 +102,9 @@ std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>
   return impl()->valid_targets_except(to_exclude);
 }
 
-uint32_t Machine::count() const { return count(preferred_target()); }
+std::uint32_t Machine::count() const { return count(preferred_target()); }
 
-uint32_t Machine::count(TaskTarget target) const { return impl()->count(target); }
+std::uint32_t Machine::count(TaskTarget target) const { return impl()->count(target); }
 
 std::string Machine::to_string() const { return impl()->to_string(); }
 
@@ -115,12 +115,15 @@ Machine Machine::only(const std::vector<TaskTarget>& targets) const
   return Machine{impl()->only(targets)};
 }
 
-Machine Machine::slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others) const
+Machine Machine::slice(std::uint32_t from,
+                       std::uint32_t to,
+                       TaskTarget target,
+                       bool keep_others) const
 {
   return Machine{impl()->slice(from, to, target, keep_others)};
 }
 
-Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
+Machine Machine::slice(std::uint32_t from, std::uint32_t to, bool keep_others) const
 {
   return slice(from, to, preferred_target(), keep_others);
 }

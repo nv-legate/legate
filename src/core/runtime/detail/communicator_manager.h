@@ -46,7 +46,7 @@ class CommunicatorFactory {
  protected:
   [[nodiscard]] Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
                                                  const mapping::ProcessorRange& range,
-                                                 uint32_t num_tasks);
+                                                 std::uint32_t num_tasks);
   [[nodiscard]] Legion::FutureMap transform(const Legion::FutureMap& communicator,
                                             const Domain& launch_domain);
 
@@ -56,10 +56,10 @@ class CommunicatorFactory {
 
  protected:
   [[nodiscard]] virtual Legion::FutureMap initialize(const mapping::detail::Machine& machine,
-                                                     uint32_t num_tasks) = 0;
+                                                     std::uint32_t num_tasks) = 0;
   virtual void finalize(const mapping::detail::Machine& machine,
-                        uint32_t num_tasks,
-                        const Legion::FutureMap& communicator)           = 0;
+                        std::uint32_t num_tasks,
+                        const Legion::FutureMap& communicator)                = 0;
 
  private:
   template <class Desc>
@@ -70,9 +70,9 @@ class CommunicatorFactory {
 
     [[nodiscard]] mapping::detail::Machine get_machine() const;
     bool operator==(const CacheKey& other) const;
-    [[nodiscard]] size_t hash() const noexcept;
+    [[nodiscard]] std::size_t hash() const noexcept;
   };
-  using CommKey  = CacheKey<uint32_t>;
+  using CommKey  = CacheKey<std::uint32_t>;
   using AliasKey = CacheKey<Domain>;
 
   std::unordered_map<CommKey, Legion::FutureMap, hasher<CommKey>> communicators_{};

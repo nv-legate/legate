@@ -36,7 +36,7 @@ inline void StoreAnalyzer::insert(const InternalSharedPtr<LogicalRegionField>& r
   req_analyzer_.insert(region_field->region(), region_field->field_id(), privilege, store_proj);
 }
 
-inline void StoreAnalyzer::insert(uint32_t dim,
+inline void StoreAnalyzer::insert(std::uint32_t dim,
                                   const Legion::FieldSpace& field_space,
                                   Legion::FieldID field_id)
 {
@@ -52,21 +52,21 @@ inline void StoreAnalyzer::analyze()
   fut_analyzer_.analyze_futures();
 }
 
-inline uint32_t StoreAnalyzer::get_index(const Legion::LogicalRegion& region,
-                                         Legion::PrivilegeMode privilege,
-                                         const StoreProjection& store_proj,
-                                         Legion::FieldID field_id) const
+inline std::uint32_t StoreAnalyzer::get_index(const Legion::LogicalRegion& region,
+                                              Legion::PrivilegeMode privilege,
+                                              const StoreProjection& store_proj,
+                                              Legion::FieldID field_id) const
 {
   return req_analyzer_.get_requirement_index(region, privilege, store_proj, field_id);
 }
 
-inline uint32_t StoreAnalyzer::get_index(const Legion::FieldSpace& field_space,
-                                         Legion::FieldID field_id) const
+inline std::uint32_t StoreAnalyzer::get_index(const Legion::FieldSpace& field_space,
+                                              Legion::FieldID field_id) const
 {
   return out_analyzer_.get_requirement_index(field_space, field_id);
 }
 
-inline int32_t StoreAnalyzer::get_index(const Legion::Future& future) const
+inline std::int32_t StoreAnalyzer::get_index(const Legion::Future& future) const
 {
   return fut_analyzer_.get_future_index(future);
 }

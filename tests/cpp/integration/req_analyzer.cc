@@ -26,7 +26,7 @@ enum TaskIDs {
 };
 
 struct Tester : public legate::LegateTask<Tester> {
-  static const int32_t TASK_ID = TESTER;
+  static const std::int32_t TASK_ID = TESTER;
   static void cpu_variant(legate::TaskContext context)
   {
     auto inputs  = context.inputs();

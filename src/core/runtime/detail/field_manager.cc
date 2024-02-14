@@ -20,7 +20,7 @@ namespace legate::detail {
 
 FieldManager::FieldManager(Runtime* runtime,
                            const InternalSharedPtr<Shape>& shape,
-                           uint32_t field_size)
+                           std::uint32_t field_size)
   : runtime_{runtime}, shape_{shape}, field_size_{field_size}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -99,7 +99,7 @@ InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field()
 
 ConsensusMatchingFieldManager::ConsensusMatchingFieldManager(Runtime* runtime,
                                                              const InternalSharedPtr<Shape>& shape,
-                                                             uint32_t field_size)
+                                                             std::uint32_t field_size)
   : FieldManager{runtime, shape, field_size}
 {
   if (shape_->ready()) {

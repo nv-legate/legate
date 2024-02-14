@@ -42,7 +42,9 @@ template <typename T>
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
-  Library library, int64_t task_id, const std::map<LegateVariantCode, VariantOptions>& all_options)
+  Library library,
+  std::int64_t task_id,
+  const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
   auto task_info = create_task_info(all_options);
   library.register_task(task_id, std::move(task_info));
@@ -68,8 +70,11 @@ template <typename T>
 
 template <typename T>
 template <VariantImpl variant_fn, LegateVariantCode variant_kind>
-/*static*/ void LegateTask<T>::task_wrapper_(
-  const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p)
+/*static*/ void LegateTask<T>::task_wrapper_(const void* args,
+                                             std::size_t arglen,
+                                             const void* userdata,
+                                             std::size_t userlen,
+                                             Legion::Processor p)
 {
   detail::task_wrapper(
     variant_fn, variant_kind, task_name(), args, arglen, userdata, userlen, std::move(p));

@@ -32,9 +32,9 @@ namespace legate::detail {
 Reduce::Reduce(const Library* library,
                InternalSharedPtr<LogicalStore> store,
                InternalSharedPtr<LogicalStore> out_store,
-               int64_t task_id,
-               uint64_t unique_id,
-               int32_t radix,
+               std::int64_t task_id,
+               std::uint64_t unique_id,
+               std::int32_t radix,
                mapping::detail::Machine&& machine)
   : Operation{unique_id, std::move(machine)},
     radix_{radix},
@@ -63,8 +63,8 @@ void Reduce::launch(Strategy* p_strategy)
   // generating projection functions to use in tree_reduction task
   std::vector<proj::SymbolicPoint> projections;
   if (n_tasks > 1) {
-    projections.reserve(static_cast<size_t>(radix_));
-    for (int32_t i = 0; i < radix_; i++) {
+    projections.reserve(static_cast<std::size_t>(radix_));
+    for (std::int32_t i = 0; i < radix_; i++) {
       projections.emplace_back(std::initializer_list<SymbolicExpr>{SymbolicExpr{0, radix_, i}});
     }
   }

@@ -32,7 +32,7 @@ class BufferBuilder;
 
 struct CopyArg final : public Serializable {
  public:
-  CopyArg(uint32_t req_idx,
+  CopyArg(std::uint32_t req_idx,
           LogicalStore* store,
           Legion::FieldID field_id,
           Legion::PrivilegeMode privilege,
@@ -48,7 +48,7 @@ struct CopyArg final : public Serializable {
   }
 
  private:
-  uint32_t req_idx_;
+  std::uint32_t req_idx_;
   LogicalStore* store_;
   Legion::LogicalRegion region_;
   Legion::FieldID field_id_;
@@ -58,7 +58,7 @@ struct CopyArg final : public Serializable {
 
 class CopyLauncher {
  public:
-  explicit CopyLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
+  explicit CopyLauncher(const mapping::detail::Machine& machine, std::int64_t tag = 0);
 
   void add_input(const InternalSharedPtr<LogicalStore>& store,
                  std::unique_ptr<StoreProjection> store_proj);
@@ -91,7 +91,7 @@ class CopyLauncher {
 
  private:
   const mapping::detail::Machine& machine_;
-  int64_t tag_{};
+  std::int64_t tag_{};
   Legion::ProjectionID key_proj_id_{};
 
   std::vector<std::unique_ptr<CopyArg>> inputs_{};

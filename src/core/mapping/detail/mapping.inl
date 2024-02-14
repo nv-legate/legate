@@ -20,7 +20,7 @@ namespace legate::mapping::detail {
 
 inline DimOrdering::DimOrdering(Kind _kind) : kind{_kind} {}
 
-inline DimOrdering::DimOrdering(std::vector<int32_t> _dims)
+inline DimOrdering::DimOrdering(std::vector<std::int32_t> _dims)
   : kind{Kind::CUSTOM}, dims{std::move(_dims)}
 {
 }

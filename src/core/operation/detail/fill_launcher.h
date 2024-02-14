@@ -22,7 +22,7 @@ class BufferBuilder;
 
 class FillLauncher {
  public:
-  explicit FillLauncher(const mapping::detail::Machine& machine, int64_t tag = 0);
+  explicit FillLauncher(const mapping::detail::Machine& machine, std::int64_t tag = 0);
 
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,
@@ -39,7 +39,7 @@ class FillLauncher {
   void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);
 
   const mapping::detail::Machine& machine_;
-  int64_t tag_;
+  std::int64_t tag_;
 };
 
 }  // namespace legate::detail

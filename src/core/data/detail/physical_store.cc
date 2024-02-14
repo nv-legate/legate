@@ -26,7 +26,7 @@
 
 namespace legate::detail {
 
-RegionField::RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid)
+RegionField::RegionField(std::int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid)
   : dim_{dim},
     pr_{std::make_unique<Legion::PhysicalRegion>(pr)},
     lr_{pr.get_logical_region()},
@@ -47,29 +47,29 @@ namespace {
 
 struct get_inline_alloc_fn {
   template <typename Rect, typename Acc>
-  InlineAllocation create(const int32_t DIM, const Rect& rect, Acc&& acc)
+  InlineAllocation create(const std::int32_t DIM, const Rect& rect, Acc&& acc)
   {
-    std::vector<size_t> strides(DIM, 0);
+    std::vector<std::size_t> strides(DIM, 0);
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
     return {ptr, strides};
   }
 
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   InlineAllocation operator()(const Legion::PhysicalRegion& pr,
                               const Legion::FieldID fid,
-                              size_t field_size)
+                              std::size_t field_size)
   {
     const Rect<DIM> rect{pr};
     return create(
       DIM, rect, AccessorRO<int8_t, DIM>{pr, fid, rect, field_size, false /*check_field_size*/});
   }
 
-  template <int32_t M, int32_t N>
+  template <std::int32_t M, std::int32_t N>
   InlineAllocation operator()(const Legion::PhysicalRegion& pr,
                               const Legion::FieldID fid,
                               const Domain& domain,
                               const Legion::AffineTransform<M, N>& transform,
-                              size_t field_size)
+                              std::size_t field_size)
   {
     const Rect<N> rect =
       domain.dim > 0 ? Rect<N>{domain} : Rect<N>{Point<N>::ZEROES(), Point<N>::ZEROES()};
@@ -87,13 +87,15 @@ Domain RegionField::domain() const
   return Legion::Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
 }
 
-InlineAllocation RegionField::get_inline_allocation(uint32_t field_size) const
+InlineAllocation RegionField::get_inline_allocation(std::uint32_t field_size) const
 {
   return dim_dispatch(dim_, get_inline_alloc_fn{}, *pr_, fid_, field_size);
 }
 
 InlineAllocation RegionField::get_inline_allocation(
-  uint32_t field_size, const Domain& domain, const Legion::DomainAffineTransform& transform) const
+  std::uint32_t field_size,
+  const Domain& domain,
+  const Legion::DomainAffineTransform& transform) const
 {
   return double_dispatch(transform.transform.m,
                          transform.transform.n,
@@ -116,17 +118,17 @@ UnboundRegionField& UnboundRegionField::operator=(UnboundRegionField&& other) no
   return *this;
 }
 
-void UnboundRegionField::bind_empty_data(int32_t ndim)
+void UnboundRegionField::bind_empty_data(std::int32_t ndim)
 {
   update_num_elements(0);
 
   DomainPoint extents;
   extents.dim = ndim;
 
-  for (int32_t dim = 0; dim < ndim; ++dim) {
+  for (std::int32_t dim = 0; dim < ndim; ++dim) {
     extents[dim] = 0;
   }
-  auto empty_buffer = create_buffer<int8_t>(0);
+  auto empty_buffer = create_buffer<std::int8_t>(0);
   out_.return_data(extents, fid_, empty_buffer.get_instance(), false);
   bound_ = true;
 }
@@ -143,7 +145,7 @@ ReturnValue UnboundRegionField::pack_weight() const
   return {num_elements_, sizeof(size_t)};
 }
 
-void UnboundRegionField::update_num_elements(size_t num_elements)
+void UnboundRegionField::update_num_elements(std::size_t num_elements)
 {
   const AccessorWO<size_t, 1> acc{num_elements_, sizeof(num_elements), false};
   acc[0] = num_elements;
@@ -153,7 +155,7 @@ void UnboundRegionField::update_num_elements(size_t num_elements)
 // anyways. Unfortunately there is no way to check this programatically (e.g. via a
 // static_assert).
 FutureWrapper::FutureWrapper(bool read_only,
-                             uint32_t field_size,
+                             std::uint32_t field_size,
                              const Domain& domain,  // NOLINT(modernize-pass-by-value)
                              Legion::Future future,
                              bool initialize /*= false*/)
@@ -191,26 +193,28 @@ FutureWrapper::FutureWrapper(bool read_only,
 namespace {
 
 struct get_inline_alloc_from_future_fn {
-  template <int32_t DIM>
-  InlineAllocation operator()(const Legion::Future& future, const Domain& domain, size_t field_size)
+  template <std::int32_t DIM>
+  InlineAllocation operator()(const Legion::Future& future,
+                              const Domain& domain,
+                              std::size_t field_size)
   {
     const Rect<DIM> rect =
       domain.dim > 0 ? Rect<DIM>{domain} : Rect<DIM>{Point<DIM>::ZEROES(), Point<DIM>::ZEROES()};
-    std::vector<size_t> strides(DIM, 0);
+    std::vector<std::size_t> strides(DIM, 0);
     const AccessorRO<int8_t, DIM> acc{
       future, rect, Memory::Kind::NO_MEMKIND, field_size, false /*check_field_size*/};
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
     return InlineAllocation{ptr, std::move(strides)};
   }
 
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   InlineAllocation operator()(const Legion::UntypedDeferredValue& value,
                               const Domain& domain,
-                              size_t field_size)
+                              std::size_t field_size)
   {
     const Rect<DIM> rect =
       domain.dim > 0 ? Rect<DIM>{domain} : Rect<DIM>{Point<DIM>::ZEROES(), Point<DIM>::ZEROES()};
-    std::vector<size_t> strides(DIM, 0);
+    std::vector<std::size_t> strides(DIM, 0);
     const AccessorRO<int8_t, DIM> acc{value, rect, field_size, false /*check_field_size*/};
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
     return InlineAllocation{ptr, std::move(strides)};
@@ -234,7 +238,7 @@ InlineAllocation FutureWrapper::get_inline_allocation() const
   return get_inline_allocation(domain_);
 }
 
-void FutureWrapper::initialize_with_identity(int32_t redop_id)
+void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
 {
   const auto untyped_acc = AccessorWO<int8_t, 1>{buffer_, field_size_};
   const auto ptr         = untyped_acc.ptr(0);
@@ -306,7 +310,7 @@ void PhysicalStore::bind_empty_data()
   unbound_field_.bind_empty_data(dim());
 }
 
-void PhysicalStore::check_accessor_dimension(int32_t dim) const
+void PhysicalStore::check_accessor_dimension(std::int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
     throw std::invalid_argument{"Dimension mismatch: invalid to create a " + std::to_string(dim) +
@@ -314,7 +318,7 @@ void PhysicalStore::check_accessor_dimension(int32_t dim) const
   }
 }
 
-void PhysicalStore::check_buffer_dimension(int32_t dim) const
+void PhysicalStore::check_buffer_dimension(std::int32_t dim) const
 {
   if (dim != this->dim()) {
     throw std::invalid_argument{"Dimension mismatch: invalid to bind a " + std::to_string(dim) +
@@ -322,7 +326,7 @@ void PhysicalStore::check_buffer_dimension(int32_t dim) const
   }
 }
 
-void PhysicalStore::check_shape_dimension(int32_t dim) const
+void PhysicalStore::check_shape_dimension(std::int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
     throw std::invalid_argument{"Dimension mismatch: invalid to retrieve a " + std::to_string(dim) +
@@ -387,7 +391,7 @@ void PhysicalStore::get_output_field(Legion::OutputRegion& out, Legion::FieldID&
   fid = unbound_field_.get_field_id();
 }
 
-void PhysicalStore::update_num_elements(size_t num_elements)
+void PhysicalStore::update_num_elements(std::size_t num_elements)
 {
   unbound_field_.update_num_elements(num_elements);
   unbound_field_.set_bound(true);

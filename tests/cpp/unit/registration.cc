@@ -19,15 +19,15 @@ using Registration = DefaultFixture;
 
 namespace test_registration {
 
-template <int32_t ID>
+template <std::int32_t ID>
 struct CPUVariantTask : public legate::LegateTask<CPUVariantTask<ID>> {
-  static const int32_t TASK_ID = ID;
+  static const std::int32_t TASK_ID = ID;
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
-template <int32_t ID>
+template <std::int32_t ID>
 struct GPUVariantTask : public legate::LegateTask<GPUVariantTask<ID>> {
-  static const int32_t TASK_ID = ID;
+  static const std::int32_t TASK_ID = ID;
   static void gpu_variant(legate::TaskContext /*context*/) {}
 };
 

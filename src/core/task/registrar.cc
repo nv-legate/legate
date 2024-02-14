@@ -24,7 +24,7 @@ struct TaskRegistrar::Impl {
   std::vector<std::pair<int64_t, std::unique_ptr<TaskInfo>>> pending_task_infos{};
 };
 
-void TaskRegistrar::record_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
+void TaskRegistrar::record_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   impl_->pending_task_infos.emplace_back(local_task_id, std::move(task_info));
 }

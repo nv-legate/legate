@@ -23,9 +23,9 @@ namespace legate::detail {
 Gather::Gather(InternalSharedPtr<LogicalStore> target,
                InternalSharedPtr<LogicalStore> source,
                InternalSharedPtr<LogicalStore> source_indirect,
-               uint64_t unique_id,
+               std::uint64_t unique_id,
                mapping::detail::Machine&& machine,
-               std::optional<int32_t> redop)
+               std::optional<std::int32_t> redop)
   : Operation{unique_id, std::move(machine)},
     target_{target, declare_partition()},
     source_{source, declare_partition()},

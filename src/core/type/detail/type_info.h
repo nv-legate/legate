@@ -34,21 +34,21 @@ class Type {
   explicit Type(Code type_code);
 
   virtual ~Type() = default;
-  [[nodiscard]] virtual uint32_t size() const;
-  [[nodiscard]] virtual uint32_t alignment() const    = 0;
-  [[nodiscard]] virtual uint32_t uid() const          = 0;
-  [[nodiscard]] virtual bool variable_size() const    = 0;
-  [[nodiscard]] virtual std::string to_string() const = 0;
-  [[nodiscard]] virtual bool is_primitive() const     = 0;
-  virtual void pack(BufferBuilder& buffer) const      = 0;
+  [[nodiscard]] virtual std::uint32_t size() const;
+  [[nodiscard]] virtual std::uint32_t alignment() const = 0;
+  [[nodiscard]] virtual std::uint32_t uid() const       = 0;
+  [[nodiscard]] virtual bool variable_size() const      = 0;
+  [[nodiscard]] virtual std::string to_string() const   = 0;
+  [[nodiscard]] virtual bool is_primitive() const       = 0;
+  virtual void pack(BufferBuilder& buffer) const        = 0;
   [[nodiscard]] virtual const FixedArrayType& as_fixed_array_type() const;
   [[nodiscard]] virtual const StructType& as_struct_type() const;
   [[nodiscard]] virtual const ListType& as_list_type() const;
   [[nodiscard]] virtual bool equal(const Type& other) const = 0;
 
-  void record_reduction_operator(int32_t op_kind, int32_t global_op_id) const;
-  [[nodiscard]] int32_t find_reduction_operator(int32_t op_kind) const;
-  [[nodiscard]] int32_t find_reduction_operator(ReductionOpKind op_kind) const;
+  void record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const;
+  [[nodiscard]] std::int32_t find_reduction_operator(std::int32_t op_kind) const;
+  [[nodiscard]] std::int32_t find_reduction_operator(ReductionOpKind op_kind) const;
   bool operator==(const Type& other) const;
   bool operator!=(const Type& other) const;
 
@@ -59,9 +59,9 @@ class PrimitiveType final : public Type {
  public:
   explicit PrimitiveType(Code type_code);
 
-  [[nodiscard]] uint32_t size() const override;
-  [[nodiscard]] uint32_t alignment() const override;
-  [[nodiscard]] uint32_t uid() const override;
+  [[nodiscard]] std::uint32_t size() const override;
+  [[nodiscard]] std::uint32_t alignment() const override;
+  [[nodiscard]] std::uint32_t uid() const override;
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   [[nodiscard]] bool is_primitive() const override;
@@ -70,8 +70,8 @@ class PrimitiveType final : public Type {
  private:
   [[nodiscard]] bool equal(const Type& other) const override;
 
-  uint32_t size_{};
-  uint32_t alignment_{};
+  std::uint32_t size_{};
+  std::uint32_t alignment_{};
 };
 
 class StringType final : public Type {
@@ -79,8 +79,8 @@ class StringType final : public Type {
   StringType();
 
   [[nodiscard]] bool variable_size() const override;
-  [[nodiscard]] uint32_t alignment() const override;
-  [[nodiscard]] uint32_t uid() const override;
+  [[nodiscard]] std::uint32_t alignment() const override;
+  [[nodiscard]] std::uint32_t uid() const override;
   [[nodiscard]] std::string to_string() const override;
   [[nodiscard]] bool is_primitive() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -91,20 +91,20 @@ class StringType final : public Type {
 
 class ExtensionType : public Type {
  public:
-  ExtensionType(uint32_t uid, Type::Code type_code);
-  [[nodiscard]] uint32_t uid() const override;
+  ExtensionType(std::uint32_t uid, Type::Code type_code);
+  [[nodiscard]] std::uint32_t uid() const override;
   [[nodiscard]] bool is_primitive() const override;
 
  protected:
-  uint32_t uid_{};
+  std::uint32_t uid_{};
 };
 
 class BinaryType final : public ExtensionType {
  public:
-  BinaryType(uint32_t uid, uint32_t size);
+  BinaryType(std::uint32_t uid, std::uint32_t size);
 
-  [[nodiscard]] uint32_t size() const override;
-  [[nodiscard]] uint32_t alignment() const override;
+  [[nodiscard]] std::uint32_t size() const override;
+  [[nodiscard]] std::uint32_t alignment() const override;
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -112,63 +112,65 @@ class BinaryType final : public ExtensionType {
  private:
   [[nodiscard]] bool equal(const Type& other) const override;
 
-  uint32_t size_{};
+  std::uint32_t size_{};
 };
 
 class FixedArrayType final : public ExtensionType {
  public:
-  FixedArrayType(uint32_t uid, InternalSharedPtr<Type> element_type, uint32_t N);
+  FixedArrayType(std::uint32_t uid, InternalSharedPtr<Type> element_type, std::uint32_t N);
 
-  [[nodiscard]] uint32_t size() const override;
-  [[nodiscard]] uint32_t alignment() const override;
+  [[nodiscard]] std::uint32_t size() const override;
+  [[nodiscard]] std::uint32_t alignment() const override;
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
   [[nodiscard]] const FixedArrayType& as_fixed_array_type() const override;
 
-  [[nodiscard]] uint32_t num_elements() const;
+  [[nodiscard]] std::uint32_t num_elements() const;
   [[nodiscard]] const InternalSharedPtr<Type>& element_type() const;
 
  private:
   [[nodiscard]] bool equal(const Type& other) const override;
 
   InternalSharedPtr<Type> element_type_{};
-  uint32_t N_{};
-  uint32_t size_{};
+  std::uint32_t N_{};
+  std::uint32_t size_{};
 };
 
 class StructType final : public ExtensionType {
  public:
-  StructType(uint32_t uid, std::vector<InternalSharedPtr<Type>>&& field_types, bool align = false);
+  StructType(std::uint32_t uid,
+             std::vector<InternalSharedPtr<Type>>&& field_types,
+             bool align = false);
 
-  [[nodiscard]] uint32_t size() const override;
-  [[nodiscard]] uint32_t alignment() const override;
+  [[nodiscard]] std::uint32_t size() const override;
+  [[nodiscard]] std::uint32_t alignment() const override;
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
   [[nodiscard]] const StructType& as_struct_type() const override;
 
-  [[nodiscard]] uint32_t num_fields() const;
-  [[nodiscard]] InternalSharedPtr<Type> field_type(uint32_t field_idx) const;
+  [[nodiscard]] std::uint32_t num_fields() const;
+  [[nodiscard]] InternalSharedPtr<Type> field_type(std::uint32_t field_idx) const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Type>>& field_types() const;
   [[nodiscard]] bool aligned() const;
-  [[nodiscard]] const std::vector<uint32_t>& offsets() const;
+  [[nodiscard]] const std::vector<std::uint32_t>& offsets() const;
 
  private:
   [[nodiscard]] bool equal(const Type& other) const override;
 
   bool aligned_{};
-  uint32_t size_{};
-  uint32_t alignment_{};
+  std::uint32_t size_{};
+  std::uint32_t alignment_{};
   std::vector<InternalSharedPtr<Type>> field_types_{};
-  std::vector<uint32_t> offsets_{};
+  std::vector<std::uint32_t> offsets_{};
 };
 
 class ListType final : public ExtensionType {
  public:
-  ListType(uint32_t uid, InternalSharedPtr<Type> element_type);
+  ListType(std::uint32_t uid, InternalSharedPtr<Type> element_type);
 
-  [[nodiscard]] uint32_t alignment() const override;
+  [[nodiscard]] std::uint32_t alignment() const override;
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
@@ -186,10 +188,10 @@ class ListType final : public ExtensionType {
 
 [[nodiscard]] InternalSharedPtr<Type> string_type();
 
-[[nodiscard]] InternalSharedPtr<Type> binary_type(uint32_t size);
+[[nodiscard]] InternalSharedPtr<Type> binary_type(std::uint32_t size);
 
 [[nodiscard]] InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type,
-                                                       uint32_t N);
+                                                       std::uint32_t N);
 
 [[nodiscard]] InternalSharedPtr<Type> struct_type(std::vector<InternalSharedPtr<Type>> field_types,
                                                   bool align);
@@ -210,12 +212,12 @@ class ListType final : public ExtensionType {
 [[nodiscard]] InternalSharedPtr<Type> float64();
 [[nodiscard]] InternalSharedPtr<Type> complex64();
 [[nodiscard]] InternalSharedPtr<Type> complex128();
-[[nodiscard]] InternalSharedPtr<Type> point_type(uint32_t ndim);
-[[nodiscard]] InternalSharedPtr<Type> rect_type(uint32_t ndim);
+[[nodiscard]] InternalSharedPtr<Type> point_type(std::uint32_t ndim);
+[[nodiscard]] InternalSharedPtr<Type> rect_type(std::uint32_t ndim);
 [[nodiscard]] InternalSharedPtr<Type> null_type();
-[[nodiscard]] bool is_point_type(const InternalSharedPtr<Type>& type, uint32_t ndim);
+[[nodiscard]] bool is_point_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim);
 [[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type);
-[[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type, uint32_t ndim);
+[[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim);
 
 }  // namespace legate::detail
 

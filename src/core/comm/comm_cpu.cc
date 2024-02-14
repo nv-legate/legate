@@ -37,9 +37,9 @@ class Factory final : public detail::CommunicatorFactory {
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
  protected:
-  FutureMap initialize(const mapping::detail::Machine& machine, uint32_t num_tasks) override;
+  FutureMap initialize(const mapping::detail::Machine& machine, std::uint32_t num_tasks) override;
   void finalize(const mapping::detail::Machine& machine,
-                uint32_t num_tasks,
+                std::uint32_t num_tasks,
                 const Legion::FutureMap& communicator) override;
 
  private:
@@ -50,14 +50,16 @@ Factory::Factory(const detail::Library* core_library) : core_library_{core_libra
 
 bool Factory::is_supported_target(mapping::TaskTarget /*target*/) const { return true; }
 
-Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, uint32_t num_tasks)
+Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine,
+                                      std::uint32_t num_tasks)
 {
-  const Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+  const Domain launch_domain(
+    Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
   auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
 
   // Generate a unique ID
-  auto comm_id = Legion::Future::from_value<int32_t>(coll::collInitComm());
+  auto comm_id = Legion::Future::from_value<std::int32_t>(coll::collInitComm());
 
   // Find a mapping of all participants
   detail::TaskLauncher init_cpucoll_mapping_launcher{
@@ -79,12 +81,13 @@ Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, u
 }
 
 void Factory::finalize(const mapping::detail::Machine& machine,
-                       uint32_t num_tasks,
+                       std::uint32_t num_tasks,
                        const Legion::FutureMap& communicator)
 {
   const auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
-  const Domain launch_domain{Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1))};
+  const Domain launch_domain{
+    Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1))};
   detail::TaskLauncher launcher{core_library_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag};
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
@@ -120,7 +123,7 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
   const auto point     = static_cast<int>(task->index_point[0]);
   const auto num_ranks = static_cast<int>(task->index_domain.get_volume());
 
-  LegateCheck(task->futures.size() == static_cast<size_t>(num_ranks + 1));
+  LegateCheck(task->futures.size() == static_cast<std::size_t>(num_ranks + 1));
   const int unique_id = task->futures[0].get_result<int>();
 
   coll::CollComm comm;
@@ -138,7 +141,7 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
     auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, mapping_table);
     LegateCheck(ret == coll::CollSuccess);
     LegateCheck(mapping_table[point] == comm->mpi_rank);
-    free(mapping_table);
+    std::free(mapping_table);
   } else {
     auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, nullptr);
     LegateCheck(ret == coll::CollSuccess);
@@ -160,7 +163,7 @@ void finalize_cpucoll(const Legion::Task* task,
   LegateCheck(comm->global_rank == point);
   auto ret = coll::collCommDestroy(comm);
   LegateCheck(ret == coll::CollSuccess);
-  free(comm);
+  std::free(comm);
   comm = nullptr;
 }
 

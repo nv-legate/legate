@@ -86,7 +86,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array, int32_t redop);
+  Variable add_reduction(const LogicalArray& array, std::int32_t redop);
 
   /**
    * @brief Adds an array to the task as input
@@ -139,7 +139,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array, int32_t redop, Variable partition_symbol);
+  Variable add_reduction(const LogicalArray& array, std::int32_t redop, Variable partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -284,7 +284,7 @@ class ManualTask {
    * @param store A store to add to the task for reductions
    * @param redop ID of the reduction operator to use. The store's type must support the operator.
    */
-  void add_reduction(const LogicalStore& store, int32_t redop);
+  void add_reduction(const LogicalStore& store, std::int32_t redop);
   /**
    * @brief Adds a store partition to the task for reductions
    *
@@ -305,7 +305,7 @@ class ManualTask {
    * launch domain and substores in the partition
    */
   void add_reduction(const LogicalStorePartition& store_partition,
-                     int32_t redop,
+                     std::int32_t redop,
                      std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a by-value scalar argument to the task

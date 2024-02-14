@@ -68,7 +68,7 @@ void check_cal(calError_t error, const char* file, int line)
                               cal_get_error_message(error),
                               file,
                               line));
-    exit(error);
+    std::exit(error);
   }
 }
 
@@ -84,9 +84,9 @@ class Factory final : public detail::CommunicatorFactory {
 
  protected:
   [[nodiscard]] Legion::FutureMap initialize(const mapping::detail::Machine& machine,
-                                             uint32_t num_tasks) override;
+                                             std::uint32_t num_tasks) override;
   void finalize(const mapping::detail::Machine& machine,
-                uint32_t num_tasks,
+                std::uint32_t num_tasks,
                 const Legion::FutureMap& communicator) override;
 
  private:
@@ -102,9 +102,10 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
   return target == mapping::TaskTarget::GPU;
 }
 
-Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, uint32_t num_tasks)
+Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine,
+                                      std::uint32_t num_tasks)
 {
-  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<int64_t>(num_tasks) - 1}}};
+  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   detail::TaskLauncher init_cal_launcher{
     core_library_, machine, LEGATE_CORE_INIT_CAL_TASK_ID, LEGATE_GPU_VARIANT};
@@ -121,10 +122,10 @@ Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, u
 }
 
 void Factory::finalize(const mapping::detail::Machine& machine,
-                       uint32_t num_tasks,
+                       std::uint32_t num_tasks,
                        const Legion::FutureMap& communicator)
 {
-  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<int64_t>(num_tasks) - 1}}};
+  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   detail::TaskLauncher launcher{
     core_library_, machine, LEGATE_CORE_FINALIZE_CAL_TASK_ID, LEGATE_GPU_VARIANT};
@@ -136,7 +137,7 @@ void Factory::finalize(const mapping::detail::Machine& machine,
 namespace {
 
 [[nodiscard]] calError_t allgather(
-  void* src_buf, void* recv_buf, size_t size, void* data, void** request)
+  void* src_buf, void* recv_buf, std::size_t size, void* data, void** request)
 {
   // this is sync!
   auto res = comm::coll::collAllgather(src_buf,

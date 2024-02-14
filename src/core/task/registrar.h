@@ -82,7 +82,7 @@ class TaskRegistrar {
    */
   void register_all_tasks(Library library);
 
-  void record_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+  void record_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
 
  private:
   struct Impl;

@@ -26,7 +26,7 @@ enum TaskIDs {
 };
 
 struct Tester : public legate::LegateTask<Tester> {
-  static const int32_t TASK_ID = TESTER;
+  static const std::int32_t TASK_ID = TESTER;
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE(context.is_single_task());
@@ -41,7 +41,7 @@ TEST_F(Partitioner, MixedDim)
   Tester::register_variants(library);
 
   auto test = [&runtime, &library](
-                int32_t unbound_ndim, const auto& extents1, const auto& extents2) {
+                std::int32_t unbound_ndim, const auto& extents1, const auto& extents2) {
     auto unbound = runtime->create_store(legate::int32(), unbound_ndim);
     auto normal1 = runtime->create_store(extents1, legate::int64());
     auto normal2 = runtime->create_store(extents2, legate::float64());

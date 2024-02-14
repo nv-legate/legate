@@ -30,13 +30,13 @@ enum TaskIDs {
 
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
-  static const int32_t TASK_ID = INIT;
+  static const std::int32_t TASK_ID = INIT;
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
-  static const int32_t TASK_ID = ALIGNMENT_TESTER + DIM;
+  static const std::int32_t TASK_ID = ALIGNMENT_TESTER + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
@@ -47,14 +47,14 @@ struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
   }
 };
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTester<DIM>> {
-  static const int32_t TASK_ID = ALIGNMENT_BROADCAST_TESTER + DIM;
+  static const std::int32_t TASK_ID = ALIGNMENT_BROADCAST_TESTER + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto shape1 = context.outputs().at(0).shape<DIM>();
     auto shape2 = context.outputs().at(1).shape<DIM>();
-    auto extent = context.scalars().at(0).value<size_t>();
+    auto extent = context.scalars().at(0).value<std::size_t>();
     EXPECT_EQ(shape1, shape2);
     EXPECT_EQ(shape1.lo[0], 0);
     EXPECT_EQ(shape1.hi[0] + 1, extent);
@@ -62,9 +62,9 @@ struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTe
   }
 };
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct TransformedTester : public legate::LegateTask<TransformedTester<DIM>> {
-  static const int32_t TASK_ID = TRANSFORMED_TESTER + DIM;
+  static const std::int32_t TASK_ID = TRANSFORMED_TESTER + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto shape1 = context.inputs().at(0).shape<DIM>();
@@ -99,7 +99,7 @@ void test_alignment()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto launch_tester = [&](const std::vector<uint64_t>& extents) {
+  auto launch_tester = [&](const std::vector<std::uint64_t>& extents) {
     auto store1 = runtime->create_store(legate::Shape{extents}, legate::int64());
     auto store2 = runtime->create_store(legate::Shape{extents}, legate::int64());
     auto store3 = runtime->create_store(legate::Shape{extents}, legate::int64());
@@ -125,7 +125,7 @@ void test_alignment_and_broadcast()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto launch_tester = [&](const std::vector<uint64_t>& extents) {
+  auto launch_tester = [&](const std::vector<std::uint64_t>& extents) {
     auto store1 = runtime->create_store(legate::Shape{extents}, legate::int64());
     auto store2 = runtime->create_store(legate::Shape{extents}, legate::int64());
 
@@ -200,11 +200,11 @@ void test_redundant_alignment()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  const std::vector<uint64_t> extents = {10};
-  auto shapes                         = legate::Shape{extents};
-  auto store1                         = runtime->create_store(shapes, legate::int64());
-  auto store2                         = runtime->create_store(shapes, legate::int64());
-  auto store3                         = runtime->create_store(shapes, legate::int64());
+  const std::vector<std::uint64_t> extents = {10};
+  auto shapes                              = legate::Shape{extents};
+  auto store1                              = runtime->create_store(shapes, legate::int64());
+  auto store2                              = runtime->create_store(shapes, legate::int64());
+  auto store3                              = runtime->create_store(shapes, legate::int64());
 
   auto task  = runtime->create_task(context, ALIGNMENT_TESTER + extents.size());
   auto part1 = task.add_output(store1);

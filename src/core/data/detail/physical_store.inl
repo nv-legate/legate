@@ -18,7 +18,7 @@
 
 namespace legate::detail {
 
-inline int32_t RegionField::dim() const { return dim_; }
+inline std::int32_t RegionField::dim() const { return dim_; }
 
 inline void RegionField::set_logical_region(const Legion::LogicalRegion& lr) { lr_ = lr; }
 
@@ -60,7 +60,7 @@ inline Legion::FieldID UnboundRegionField::get_field_id() const { return fid_; }
 
 // ==========================================================================================
 
-inline int32_t FutureWrapper::dim() const { return domain_.dim; }
+inline std::int32_t FutureWrapper::dim() const { return domain_.dim; }
 
 inline Domain FutureWrapper::domain() const { return domain_; }
 
@@ -72,9 +72,9 @@ inline Legion::UntypedDeferredValue FutureWrapper::get_buffer() const { return b
 
 // ==========================================================================================
 
-inline PhysicalStore::PhysicalStore(int32_t dim,
+inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    int32_t redop_id,
+                                    std::int32_t redop_id,
                                     FutureWrapper future,
                                     InternalSharedPtr<detail::TransformStack>&& transform)
   : is_future_{true},
@@ -89,9 +89,9 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 {
 }
 
-inline PhysicalStore::PhysicalStore(int32_t dim,
+inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    int32_t redop_id,
+                                    std::int32_t redop_id,
                                     RegionField&& region_field,
                                     InternalSharedPtr<detail::TransformStack>&& transform)
   : dim_{dim},
@@ -105,7 +105,7 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 {
 }
 
-inline PhysicalStore::PhysicalStore(int32_t dim,
+inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
                                     UnboundRegionField&& unbound_field,
                                     InternalSharedPtr<detail::TransformStack>&& transform)
@@ -117,9 +117,9 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 {
 }
 
-inline PhysicalStore::PhysicalStore(int32_t dim,
+inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    int32_t redop_id,
+                                    std::int32_t redop_id,
                                     FutureWrapper future,
                                     const InternalSharedPtr<detail::TransformStack>& transform)
   : is_future_{true},
@@ -132,9 +132,9 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 {
 }
 
-inline PhysicalStore::PhysicalStore(int32_t dim,
+inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    int32_t redop_id,
+                                    std::int32_t redop_id,
                                     RegionField&& region_field,
                                     const InternalSharedPtr<detail::TransformStack>& transform)
   : dim_{dim},
@@ -148,7 +148,7 @@ inline PhysicalStore::PhysicalStore(int32_t dim,
 {
 }
 
-inline int32_t PhysicalStore::dim() const { return dim_; }
+inline std::int32_t PhysicalStore::dim() const { return dim_; }
 
 inline const InternalSharedPtr<Type>& PhysicalStore::type() const { return type_; }
 
@@ -166,6 +166,6 @@ inline ReturnValue PhysicalStore::pack() const { return future_.pack(); }
 
 inline ReturnValue PhysicalStore::pack_weight() const { return unbound_field_.pack_weight(); }
 
-inline int32_t PhysicalStore::get_redop_id() const { return redop_id_; }
+inline std::int32_t PhysicalStore::get_redop_id() const { return redop_id_; }
 
 }  // namespace legate::detail

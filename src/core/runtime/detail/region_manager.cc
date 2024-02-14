@@ -73,7 +73,8 @@ void RegionManager::push_entry()
 
 bool RegionManager::has_space() const { return !entries_.empty() && active_entry().has_space(); }
 
-std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(size_t field_size)
+std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(
+  std::size_t field_size)
 {
   if (!has_space()) {
     push_entry();

@@ -128,7 +128,7 @@ class Constraint {
  *
  * @throw std::invalid_argument If the list of axes is empty
  */
-[[nodiscard]] Constraint broadcast(Variable variable, tuple<uint32_t> axes);
+[[nodiscard]] Constraint broadcast(Variable variable, tuple<std::uint32_t> axes);
 
 /**
  * @ingroup partitioning
@@ -174,7 +174,9 @@ class Constraint {
  *
  * @return Scaling constraint
  */
-[[nodiscard]] Constraint scale(tuple<uint64_t> factors, Variable var_smaller, Variable var_bigger);
+[[nodiscard]] Constraint scale(tuple<std::uint64_t> factors,
+                               Variable var_smaller,
+                               Variable var_bigger);
 
 /**
  * @ingroup partitioning
@@ -207,8 +209,8 @@ class Constraint {
  */
 [[nodiscard]] Constraint bloat(Variable var_source,
                                Variable var_bloat,
-                               tuple<uint64_t> low_offsets,
-                               tuple<uint64_t> high_offsets);
+                               tuple<std::uint64_t> low_offsets,
+                               tuple<std::uint64_t> high_offsets);
 
 }  // namespace legate
 

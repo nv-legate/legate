@@ -46,7 +46,7 @@ namespace legate {
 template <typename Deserializer>
 class BaseDeserializer {
  public:
-  BaseDeserializer(const void* args, size_t arglen);
+  BaseDeserializer(const void* args, std::size_t arglen);
 
   template <typename T>
   [[nodiscard]] T unpack();
@@ -67,13 +67,13 @@ class BaseDeserializer {
   void _unpack(mapping::detail::Machine& value);
   void _unpack(Domain& domain);
 
-  [[nodiscard]] Span<const int8_t> current_args() const;
+  [[nodiscard]] Span<const std::int8_t> current_args() const;
 
  protected:
   [[nodiscard]] InternalSharedPtr<detail::TransformStack> unpack_transform();
   [[nodiscard]] InternalSharedPtr<detail::Type> unpack_type();
 
-  Span<const int8_t> args_{};
+  Span<const std::int8_t> args_{};
 };
 
 class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
@@ -161,7 +161,7 @@ class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {
   std::vector<ReqsRef>::iterator curr_reqs_{};
   Legion::Mapping::MapperRuntime* runtime_{};
   Legion::Mapping::MapperContext context_{};
-  uint32_t req_index_offset_{};
+  std::uint32_t req_index_offset_{};
 };
 
 }  // namespace legate::mapping

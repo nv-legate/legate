@@ -57,7 +57,7 @@ inline bool TransformStack::identity() const { return nullptr == transform_; }
 
 // ==========================================================================================
 
-inline Shift::Shift(int32_t dim, int64_t offset) : dim_{dim}, offset_{offset} {}
+inline Shift::Shift(std::int32_t dim, std::int64_t offset) : dim_{dim}, offset_{offset} {}
 
 // the shift transform makes no change on the store's dimensions
 inline proj::SymbolicPoint Shift::invert(const proj::SymbolicPoint& point) const { return point; }
@@ -69,57 +69,57 @@ inline Restrictions Shift::convert(const Restrictions& restrictions, bool /*forb
 
 inline Restrictions Shift::invert(const Restrictions& restrictions) const { return restrictions; }
 
-inline tuple<uint64_t> Shift::invert_color(tuple<uint64_t> color) const { return color; }
+inline tuple<std::uint64_t> Shift::invert_color(tuple<std::uint64_t> color) const { return color; }
 
-inline tuple<uint64_t> Shift::invert_extents(const tuple<uint64_t>& extents) const
+inline tuple<std::uint64_t> Shift::invert_extents(const tuple<std::uint64_t>& extents) const
 {
   return extents;
 }
 
-inline int32_t Shift::target_ndim(int32_t source_ndim) const { return source_ndim; }
+inline std::int32_t Shift::target_ndim(std::int32_t source_ndim) const { return source_ndim; }
 
-inline void Shift::find_imaginary_dims(std::vector<int32_t>&) const {}
+inline void Shift::find_imaginary_dims(std::vector<std::int32_t>&) const {}
 
 inline bool Shift::is_convertible() const { return true; }
 
 // ==========================================================================================
 
-inline Promote::Promote(int32_t extra_dim, int64_t dim_size)
+inline Promote::Promote(std::int32_t extra_dim, std::int64_t dim_size)
   : extra_dim_{extra_dim}, dim_size_{dim_size}
 {
 }
 
-inline tuple<uint64_t> Promote::invert_color(tuple<uint64_t> color) const
+inline tuple<std::uint64_t> Promote::invert_color(tuple<std::uint64_t> color) const
 {
   return invert_point(color);
 }
 
-inline int32_t Promote::target_ndim(int32_t source_ndim) const { return source_ndim - 1; }
+inline std::int32_t Promote::target_ndim(std::int32_t source_ndim) const { return source_ndim - 1; }
 
 inline bool Promote::is_convertible() const { return true; }
 
 // ==========================================================================================
 
-inline Project::Project(int32_t dim, int64_t coord) : dim_{dim}, coord_{coord} {}
+inline Project::Project(std::int32_t dim, std::int64_t coord) : dim_{dim}, coord_{coord} {}
 
-inline int32_t Project::target_ndim(int32_t source_ndim) const { return source_ndim + 1; }
+inline std::int32_t Project::target_ndim(std::int32_t source_ndim) const { return source_ndim + 1; }
 
 inline bool Project::is_convertible() const { return true; }
 
 // ==========================================================================================
 
-inline tuple<uint64_t> Transpose::invert_color(tuple<uint64_t> color) const
+inline tuple<std::uint64_t> Transpose::invert_color(tuple<std::uint64_t> color) const
 {
   return invert_point(color);
 }
 
-inline int32_t Transpose::target_ndim(int32_t source_ndim) const { return source_ndim; }
+inline std::int32_t Transpose::target_ndim(std::int32_t source_ndim) const { return source_ndim; }
 
 inline bool Transpose::is_convertible() const { return true; }
 
 // ==========================================================================================
 
-inline void Delinearize::find_imaginary_dims(std::vector<int32_t>&) const {}
+inline void Delinearize::find_imaginary_dims(std::vector<std::int32_t>&) const {}
 
 inline bool Delinearize::is_convertible() const { return false; }
 

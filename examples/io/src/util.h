@@ -20,7 +20,7 @@
 namespace legateio {
 
 std::filesystem::path get_unique_path_for_task_index(legate::TaskContext task_context,
-                                                     int32_t ndim,
+                                                     std::int32_t ndim,
                                                      const std::string& dirname);
 
 void write_to_file(legate::TaskContext task_context,

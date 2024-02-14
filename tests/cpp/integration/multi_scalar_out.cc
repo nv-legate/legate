@@ -59,8 +59,8 @@ void test_reducer_manual(legate::Library library,
 
 void validate_stores(legate::LogicalStore scalar1,
                      legate::LogicalStore scalar2,
-                     int32_t to_match1,
-                     int64_t to_match2)
+                     std::int32_t to_match1,
+                     std::int64_t to_match2)
 {
   auto runtime = legate::Runtime::get_runtime();
   static_cast<void>(runtime);

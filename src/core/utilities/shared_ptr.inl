@@ -406,7 +406,7 @@ SharedPtr<T> make_shared(Args&&... args)
 namespace std {
 
 template <typename T>
-size_t hash<legate::SharedPtr<T>>::operator()(const legate::SharedPtr<T>& ptr) const noexcept
+std::size_t hash<legate::SharedPtr<T>>::operator()(const legate::SharedPtr<T>& ptr) const noexcept
 {
   return hash<typename legate::SharedPtr<T>::element_type*>{}(ptr.get());
 }

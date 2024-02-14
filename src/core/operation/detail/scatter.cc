@@ -23,9 +23,9 @@ namespace legate::detail {
 Scatter::Scatter(InternalSharedPtr<LogicalStore> target,
                  InternalSharedPtr<LogicalStore> target_indirect,
                  InternalSharedPtr<LogicalStore> source,
-                 uint64_t unique_id,
+                 std::uint64_t unique_id,
                  mapping::detail::Machine&& machine,
-                 std::optional<int32_t> redop)
+                 std::optional<std::int32_t> redop)
   : Operation{unique_id, std::move(machine)},
     target_{target, declare_partition()},
     target_indirect_{target_indirect, declare_partition()},

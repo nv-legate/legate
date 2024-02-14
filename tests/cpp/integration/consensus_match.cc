@@ -15,6 +15,7 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
+#include <cstring>
 #include <gtest/gtest.h>
 
 namespace consensus_match {
@@ -32,7 +33,7 @@ void register_tasks()
 
 struct Thing {
   bool flag;
-  int32_t number;
+  std::int32_t number;
   bool operator==(const Thing& other) const { return flag == other.flag && number == other.number; }
 };
 
@@ -53,7 +54,7 @@ TEST_F(Integration, ConsensusMatch)
     input.emplace_back();
     // Make sure the padding bits have deterministic values. Apparently there is no reliable way to
     // force the compiler to do zero initialization.
-    memset(&input.back(), 0, sizeof(Thing));
+    std::memset(&input.back(), 0, sizeof(Thing));
     switch ((i + sid) % 4) {
       case 0:  // shared between shards
         input.back().flag   = true;

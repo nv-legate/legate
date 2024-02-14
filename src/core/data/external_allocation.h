@@ -94,7 +94,7 @@ class ExternalAllocation {
    *
    * @return Allocation size in bytes
    */
-  [[nodiscard]] size_t size() const;
+  [[nodiscard]] std::size_t size() const;
 
   /**
    * @brief Creates an external allocation for a system memory
@@ -110,7 +110,10 @@ class ExternalAllocation {
    * @throw std::invalid_argument If the `ptr` is null
    */
   [[nodiscard]] static ExternalAllocation create_sysmem(
-    void* ptr, size_t size, bool read_only = true, std::optional<Deleter> deleter = std::nullopt);
+    void* ptr,
+    std::size_t size,
+    bool read_only                 = true,
+    std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates a read-only external allocation for a system memory
@@ -126,7 +129,7 @@ class ExternalAllocation {
    * @throw std::invalid_argument If the `ptr` is null
    */
   [[nodiscard]] static ExternalAllocation create_sysmem(
-    const void* ptr, size_t size, std::optional<Deleter> deleter = std::nullopt);
+    const void* ptr, std::size_t size, std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates an external allocation for a zero-copy memory
@@ -144,7 +147,10 @@ class ExternalAllocation {
    * @throw std::runtime_error If Legate is not configured with CUDA support enabled
    */
   [[nodiscard]] static ExternalAllocation create_zcmem(
-    void* ptr, size_t size, bool read_only = true, std::optional<Deleter> deleter = std::nullopt);
+    void* ptr,
+    std::size_t size,
+    bool read_only                 = true,
+    std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates a read-only external allocation for a zero-copy memory
@@ -161,7 +167,7 @@ class ExternalAllocation {
    * @throw std::runtime_error If Legate is not configured with CUDA support enabled
    */
   [[nodiscard]] static ExternalAllocation create_zcmem(
-    const void* ptr, size_t size, std::optional<Deleter> deleter = std::nullopt);
+    const void* ptr, std::size_t size, std::optional<Deleter> deleter = std::nullopt);
 
   /**
    * @brief Creates an external allocation for a framebuffer memory
@@ -181,9 +187,9 @@ class ExternalAllocation {
    * @throw std::out_of_range If the local device ID is invalid
    */
   [[nodiscard]] static ExternalAllocation create_fbmem(
-    uint32_t local_device_id,
+    std::uint32_t local_device_id,
     void* ptr,
-    size_t size,
+    std::size_t size,
     bool read_only                 = true,
     std::optional<Deleter> deleter = std::nullopt);
 
@@ -204,9 +210,9 @@ class ExternalAllocation {
    * @throw std::out_of_range If the local device ID is invalid
    */
   [[nodiscard]] static ExternalAllocation create_fbmem(
-    uint32_t local_device_id,
+    std::uint32_t local_device_id,
     const void* ptr,
-    size_t size,
+    std::size_t size,
     std::optional<Deleter> deleter = std::nullopt);
 
   [[nodiscard]] const SharedPtr<detail::ExternalAllocation>& impl() const;

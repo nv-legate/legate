@@ -94,7 +94,7 @@ struct LegateTask {
    */
   static void register_variants(
     Library library,
-    int64_t task_id,
+    std::int64_t task_id,
     const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 
  private:
@@ -108,8 +108,11 @@ struct LegateTask {
   [[nodiscard]] static const std::string& task_name();
 
   template <VariantImpl variant_fn, LegateVariantCode variant_kind>
-  static void task_wrapper_(
-    const void* args, size_t arglen, const void* userdata, size_t userlen, Legion::Processor p);
+  static void task_wrapper_(const void* args,
+                            std::size_t arglen,
+                            const void* userdata,
+                            std::size_t userlen,
+                            Legion::Processor p);
 };
 
 }  // namespace legate

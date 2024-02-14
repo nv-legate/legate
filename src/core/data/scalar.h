@@ -113,14 +113,14 @@ class Scalar {
    *
    * @param point A point from which the scalar should be constructed
    */
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   explicit Scalar(const Point<DIM>& point);
   /**
    * @brief Creates a rect scalar
    *
    * @param rect A rect from which the scalar should be constructed
    */
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   explicit Scalar(const Rect<DIM>& rect);
 
   Scalar& operator=(const Scalar& other);
@@ -136,7 +136,7 @@ class Scalar {
    *
    * @return The size of allocation
    */
-  [[nodiscard]] size_t size() const;
+  [[nodiscard]] std::size_t size() const;
 
   /**
    * @brief Returns a copy of the value stored in this `Scalar`.
@@ -182,7 +182,7 @@ class Scalar {
   static detail::Scalar* checked_create_impl(const Type& type,
                                              const void* data,
                                              bool copy,
-                                             size_t size);
+                                             std::size_t size);
   static detail::Scalar* create_impl(const Type& type, const void* data, bool copy);
 
   struct private_tag {};

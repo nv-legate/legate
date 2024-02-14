@@ -33,18 +33,18 @@ mapping::StoreTarget ExternalAllocation::target() const { return impl_->target()
 
 void* ExternalAllocation::ptr() const { return impl_->ptr(); }
 
-size_t ExternalAllocation::size() const { return impl_->size(); }
+std::size_t ExternalAllocation::size() const { return impl_->size(); }
 
 ExternalAllocation::~ExternalAllocation() noexcept = default;
 
 /*static*/ ExternalAllocation ExternalAllocation::create_sysmem(
   void* ptr,
-  size_t size,
+  std::size_t size,
   bool read_only /*=true*/,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
   auto realm_resource = std::make_unique<Realm::ExternalMemoryResource>(
-    reinterpret_cast<uintptr_t>(ptr), size, read_only);
+    reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
   return ExternalAllocation{
     make_internal_shared<detail::ExternalAllocation>(read_only,
                                                      mapping::StoreTarget::SYSMEM,
@@ -56,13 +56,13 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
 
 /*static*/ ExternalAllocation ExternalAllocation::create_zcmem(
   void* ptr,
-  size_t size,
+  std::size_t size,
   bool read_only,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
 #if LegateDefined(LEGATE_USE_CUDA)
   auto realm_resource = std::make_unique<Realm::ExternalCudaPinnedHostResource>(
-    reinterpret_cast<uintptr_t>(ptr), size, read_only);
+    reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
   return ExternalAllocation{
     make_internal_shared<detail::ExternalAllocation>(read_only,
                                                      mapping::StoreTarget::ZCMEM,
@@ -81,9 +81,9 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
 }
 
 /*static*/ ExternalAllocation ExternalAllocation::create_fbmem(
-  uint32_t local_device_id,
+  std::uint32_t local_device_id,
   void* ptr,
-  size_t size,
+  std::size_t size,
   bool read_only,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
@@ -96,7 +96,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   }
 
   auto realm_resource = std::make_unique<Realm::ExternalCudaMemoryResource>(
-    local_device_id, reinterpret_cast<uintptr_t>(ptr), size, read_only);
+    local_device_id, reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
   return ExternalAllocation{
     make_internal_shared<detail::ExternalAllocation>(read_only,
                                                      mapping::StoreTarget::FBMEM,

@@ -42,28 +42,31 @@ bool BaseLogicalArray::unbound() const
   return data_->unbound();
 }
 
-InternalSharedPtr<LogicalArray> BaseLogicalArray::promote(int32_t extra_dim, size_t dim_size) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::promote(std::int32_t extra_dim,
+                                                          std::size_t dim_size) const
 {
   auto null_mask = nullable() ? null_mask_->promote(extra_dim, dim_size) : nullptr;
   auto data      = data_->promote(extra_dim, dim_size);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<LogicalArray> BaseLogicalArray::project(int32_t dim, int64_t index) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::project(std::int32_t dim,
+                                                          std::int64_t index) const
 {
   auto null_mask = nullable() ? null_mask_->project(dim, index) : nullptr;
   auto data      = data_->project(dim, index);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<LogicalArray> BaseLogicalArray::slice(int32_t dim, Slice sl) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::slice(std::int32_t dim, Slice sl) const
 {
   auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
   auto data      = slice_store(data_, dim, sl);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<LogicalArray> BaseLogicalArray::transpose(const std::vector<int32_t>& axes) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::transpose(
+  const std::vector<std::int32_t>& axes) const
 {
   auto null_mask = nullable() ? null_mask_->transpose(axes) : nullptr;
   auto data      = data_->transpose(axes);
@@ -71,7 +74,7 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::transpose(const std::vector<in
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
-  int32_t dim, const std::vector<uint64_t>& sizes) const
+  std::int32_t dim, const std::vector<std::uint64_t>& sizes) const
 {
   auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
   auto data      = data_->delinearize(dim, sizes);
@@ -101,7 +104,7 @@ InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::_get_physical_array() con
   return make_internal_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
 }
 
-InternalSharedPtr<LogicalArray> BaseLogicalArray::child(uint32_t /*index*/) const
+InternalSharedPtr<LogicalArray> BaseLogicalArray::child(std::uint32_t /*index*/) const
 {
   throw std::invalid_argument{"Non-nested array has no child sub-array"};
   return {};
@@ -158,7 +161,7 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  int32_t redop) const
+  std::int32_t redop) const
 {
   auto data_arg = store_to_launcher_arg(
     data_, mapping.at(data_), strategy, launch_domain, projection, privilege, redop);
@@ -206,14 +209,14 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::slice(int32_t, Slice) const
   return {};
 }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(const std::vector<int32_t>&) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(const std::vector<std::int32_t>&) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(int32_t,
-                                                              const std::vector<uint64_t>&) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
+  int32_t, const std::vector<std::uint64_t>&) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
@@ -227,7 +230,7 @@ InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array() const
     type_, std::move(desc_arr), std::move(vardata_arr));
 }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::child(uint32_t index) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::child(std::uint32_t index) const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
@@ -289,7 +292,7 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  int32_t redop) const
+  std::int32_t redop) const
 {
   const auto desc_priv =
     (LEGION_READ_ONLY == privilege || vardata_->unbound()) ? privilege : LEGION_READ_WRITE;
@@ -310,14 +313,14 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg_for_fixup(
   return std::make_unique<ListArrayArg>(type(), std::move(descriptor_arg), std::move(vardata_arg));
 }
 
-uint32_t StructLogicalArray::dim() const { return fields_.front()->dim(); }
+std::uint32_t StructLogicalArray::dim() const { return fields_.front()->dim(); }
 
 const InternalSharedPtr<Shape>& StructLogicalArray::shape() const
 {
   return fields_.front()->shape();
 }
 
-size_t StructLogicalArray::volume() const { return fields_.front()->volume(); }
+std::size_t StructLogicalArray::volume() const { return fields_.front()->volume(); }
 
 bool StructLogicalArray::unbound() const
 {
@@ -348,8 +351,8 @@ std::vector<T> make_array_from_op(const std::vector<T>& fields, F&& generator_fn
 
 }  // namespace
 
-InternalSharedPtr<LogicalArray> StructLogicalArray::promote(int32_t extra_dim,
-                                                            size_t dim_size) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::promote(std::int32_t extra_dim,
+                                                            std::size_t dim_size) const
 {
   auto null_mask = nullable() ? null_mask_->promote(extra_dim, dim_size) : nullptr;
   auto fields =
@@ -358,7 +361,8 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::promote(int32_t extra_dim,
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<LogicalArray> StructLogicalArray::project(int32_t dim, int64_t index) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::project(std::int32_t dim,
+                                                            std::int64_t index) const
 {
   auto null_mask = nullable() ? null_mask_->project(dim, index) : nullptr;
   auto fields =
@@ -367,7 +371,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::project(int32_t dim, int64_t
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<LogicalArray> StructLogicalArray::slice(int32_t dim, Slice sl) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::slice(std::int32_t dim, Slice sl) const
 {
   auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
   auto fields    = make_array_from_op(fields_, [&](auto& field) { return field->slice(dim, sl); });
@@ -375,7 +379,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::slice(int32_t dim, Slice sl)
 }
 
 InternalSharedPtr<LogicalArray> StructLogicalArray::transpose(
-  const std::vector<int32_t>& axes) const
+  const std::vector<std::int32_t>& axes) const
 {
   auto null_mask = nullable() ? null_mask_->transpose(axes) : nullptr;
   auto fields    = make_array_from_op(fields_, [&](auto& field) { return field->transpose(axes); });
@@ -383,7 +387,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::transpose(
 }
 
 InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
-  int32_t dim, const std::vector<uint64_t>& sizes) const
+  std::int32_t dim, const std::vector<std::uint64_t>& sizes) const
 {
   auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
   auto fields =
@@ -413,7 +417,7 @@ InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array() const
     type_, std::move(null_mask_store), std::move(field_arrays));
 }
 
-InternalSharedPtr<LogicalArray> StructLogicalArray::child(uint32_t index) const
+InternalSharedPtr<LogicalArray> StructLogicalArray::child(std::uint32_t index) const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
@@ -481,7 +485,7 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  int32_t redop) const
+  std::int32_t redop) const
 {
   std::unique_ptr<Analyzable> null_mask_arg = nullptr;
   if (nullable()) {

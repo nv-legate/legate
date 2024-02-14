@@ -16,13 +16,13 @@
 
 namespace legate {
 
-uint32_t LogicalArray::dim() const { return impl_->dim(); }
+std::uint32_t LogicalArray::dim() const { return impl_->dim(); }
 
 Type LogicalArray::type() const { return Type{impl_->type()}; }
 
 Shape LogicalArray::shape() const { return Shape{impl_->shape()}; }
 
-size_t LogicalArray::volume() const { return impl_->volume(); }
+std::size_t LogicalArray::volume() const { return impl_->volume(); }
 
 bool LogicalArray::unbound() const { return impl_->unbound(); }
 
@@ -30,29 +30,30 @@ bool LogicalArray::nullable() const { return impl_->nullable(); }
 
 bool LogicalArray::nested() const { return impl_->nested(); }
 
-uint32_t LogicalArray::num_children() const { return impl_->num_children(); }
+std::uint32_t LogicalArray::num_children() const { return impl_->num_children(); }
 
-LogicalArray LogicalArray::promote(int32_t extra_dim, size_t dim_size) const
+LogicalArray LogicalArray::promote(std::int32_t extra_dim, std::size_t dim_size) const
 {
   return LogicalArray{impl_->promote(extra_dim, dim_size)};
 }
 
-LogicalArray LogicalArray::project(int32_t dim, int64_t index) const
+LogicalArray LogicalArray::project(std::int32_t dim, std::int64_t index) const
 {
   return LogicalArray{impl_->project(dim, index)};
 }
 
-LogicalArray LogicalArray::slice(int32_t dim, Slice sl) const
+LogicalArray LogicalArray::slice(std::int32_t dim, Slice sl) const
 {
   return LogicalArray{impl_->slice(dim, sl)};
 }
 
-LogicalArray LogicalArray::transpose(const std::vector<int32_t>& axes) const
+LogicalArray LogicalArray::transpose(const std::vector<std::int32_t>& axes) const
 {
   return LogicalArray{impl_->transpose(axes)};
 }
 
-LogicalArray LogicalArray::delinearize(int32_t dim, const std::vector<uint64_t>& sizes) const
+LogicalArray LogicalArray::delinearize(std::int32_t dim,
+                                       const std::vector<std::uint64_t>& sizes) const
 {
   return LogicalArray{impl_->delinearize(dim, sizes)};
 }
@@ -61,7 +62,10 @@ LogicalStore LogicalArray::data() const { return LogicalStore{impl_->data()}; }
 
 LogicalStore LogicalArray::null_mask() const { return LogicalStore{impl_->null_mask()}; }
 
-LogicalArray LogicalArray::child(uint32_t index) const { return LogicalArray{impl_->child(index)}; }
+LogicalArray LogicalArray::child(std::uint32_t index) const
+{
+  return LogicalArray{impl_->child(index)};
+}
 
 PhysicalArray LogicalArray::get_physical_array() const
 {

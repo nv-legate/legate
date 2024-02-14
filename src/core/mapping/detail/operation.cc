@@ -18,7 +18,7 @@
 namespace legate::mapping::detail {
 
 Mappable::Mappable(private_tag, MapperDataDeserializer dez)
-  : machine_{dez.unpack<Machine>()}, sharding_id_{dez.unpack<uint32_t>()}
+  : machine_{dez.unpack<Machine>()}, sharding_id_{dez.unpack<std::uint32_t>()}
 {
 }
 
@@ -35,7 +35,7 @@ Task::Task(const Legion::Task* task,
   scalars_    = dez.unpack_scalars();
 }
 
-int64_t Task::task_id() const { return library_->get_local_task_id(task_->task_id); }
+std::int64_t Task::task_id() const { return library_->get_local_task_id(task_->task_id); }
 
 TaskTarget Task::target() const
 {
@@ -60,7 +60,7 @@ Copy::Copy(const Legion::Copy* copy,
                        runtime,
                        context};
   machine_     = dez.unpack<Machine>();
-  sharding_id_ = dez.unpack<uint32_t>();
+  sharding_id_ = dez.unpack<std::uint32_t>();
   inputs_      = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();
   outputs_ = dez.unpack<std::vector<Store>>();

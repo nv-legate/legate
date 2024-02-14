@@ -22,7 +22,7 @@ namespace legate::detail {
 
 class ControlBlockBase {
  public:
-  using ref_count_type = uint32_t;
+  using ref_count_type = std::uint32_t;
 
   constexpr ControlBlockBase() noexcept = default;
   virtual ~ControlBlockBase() noexcept  = default;

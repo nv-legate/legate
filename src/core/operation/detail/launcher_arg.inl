@@ -48,7 +48,7 @@ inline const Legion::FieldSpace& OutputRegionArg::field_space() const { return f
 
 inline Legion::FieldID OutputRegionArg::field_id() const { return field_id_; }
 
-inline uint32_t OutputRegionArg::requirement_index() const { return requirement_index_; }
+inline std::uint32_t OutputRegionArg::requirement_index() const { return requirement_index_; }
 
 // ==========================================================================================
 

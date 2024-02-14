@@ -24,18 +24,20 @@
 
 namespace legate {
 
-uint32_t extract_env(const char* env_name, uint32_t default_value, uint32_t test_value)
+std::uint32_t extract_env(const char* env_name,
+                          std::uint32_t default_value,
+                          std::uint32_t test_value)
 {
-  const char* env_value = getenv(env_name);
+  const char* env_value = std::getenv(env_name);
   if (nullptr == env_value) {
-    const char* legate_test = getenv("LEGATE_TEST");
+    const char* legate_test = std::getenv("LEGATE_TEST");
 
     if (legate_test != nullptr && detail::safe_strtoll(legate_test) > 0) {
       return test_value;
     }
     return default_value;
   }
-  return detail::safe_strtoll<uint32_t>(env_value);
+  return detail::safe_strtoll<std::uint32_t>(env_value);
 }
 
 }  // namespace legate
@@ -59,17 +61,17 @@ class CoreMapper final : public Mapper {
  private:
   const LocalMachine machine{};
   // TODO(wonchanl): Some of these should be moved to legate::detail::Config
-  const int64_t min_gpu_chunk{
+  const std::int64_t min_gpu_chunk{
     extract_env("LEGATE_MIN_GPU_CHUNK", MIN_GPU_CHUNK_DEFAULT, MIN_GPU_CHUNK_TEST)};
-  const int64_t min_cpu_chunk{
+  const std::int64_t min_cpu_chunk{
     extract_env("LEGATE_MIN_CPU_CHUNK", MIN_CPU_CHUNK_DEFAULT, MIN_CPU_CHUNK_TEST)};
-  const int64_t min_omp_chunk{
+  const std::int64_t min_omp_chunk{
     extract_env("LEGATE_MIN_OMP_CHUNK", MIN_OMP_CHUNK_DEFAULT, MIN_OMP_CHUNK_TEST)};
-  const uint32_t window_size{
+  const std::uint32_t window_size{
     extract_env("LEGATE_WINDOW_SIZE", WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
-  const uint32_t field_reuse_frac{
+  const std::uint32_t field_reuse_frac{
     extract_env("LEGATE_FIELD_REUSE_FRAC", FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
-  const uint32_t max_lru_length{
+  const std::uint32_t max_lru_length{
     extract_env("LEGATE_MAX_LRU_LENGTH", MAX_LRU_LENGTH_DEFAULT, MAX_LRU_LENGTH_TEST)};
 };
 
@@ -91,16 +93,16 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
 {
   switch (tunable_id) {
     case LEGATE_CORE_TUNABLE_TOTAL_CPUS: {
-      return Scalar{static_cast<int32_t>(machine.total_cpu_count())};  // assume symmetry
+      return Scalar{static_cast<std::int32_t>(machine.total_cpu_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_TOTAL_GPUS: {
-      return Scalar{static_cast<int32_t>(machine.total_gpu_count())};  // assume symmetry
+      return Scalar{static_cast<std::int32_t>(machine.total_gpu_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_TOTAL_OMPS: {
-      return Scalar{static_cast<int32_t>(machine.total_omp_count())};  // assume symmetry
+      return Scalar{static_cast<std::int32_t>(machine.total_omp_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_NUM_NODES: {
-      return Scalar{static_cast<int32_t>(machine.total_nodes)};
+      return Scalar{static_cast<std::int32_t>(machine.total_nodes)};
     }
     case LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME: {
       // TODO(wonchanl): make these profile guided
@@ -123,7 +125,7 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
     }
     case LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: {
       // Multiply this by the total number of nodes and then scale by the frac
-      const uint64_t global_mem_size =
+      const std::uint64_t global_mem_size =
         machine.has_gpus() ? machine.total_frame_buffer_size()
                            : (machine.has_socket_memory() ? machine.total_socket_memory_size()
                                                           : machine.system_memory().capacity());

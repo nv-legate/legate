@@ -26,7 +26,7 @@ inline PhysicalArray::PhysicalArray(InternalSharedPtr<detail::PhysicalArray> imp
 
 inline const SharedPtr<detail::PhysicalArray>& PhysicalArray::impl() const { return impl_; }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 Rect<DIM> PhysicalArray::shape() const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);

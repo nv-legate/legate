@@ -95,7 +95,10 @@ bool InstanceSet::find_instance(Region region,
 namespace {
 
 // We define "too big" as the size of the "unused" points being bigger than the intersection
-bool too_big(size_t union_volume, size_t my_volume, size_t group_volume, size_t intersect_volume)
+bool too_big(std::size_t union_volume,
+             std::size_t my_volume,
+             std::size_t group_volume,
+             std::size_t intersect_volume)
 {
   return (union_volume - (my_volume + group_volume - intersect_volume)) > intersect_volume;
 }
@@ -103,14 +106,14 @@ bool too_big(size_t union_volume, size_t my_volume, size_t group_volume, size_t 
 }  // namespace
 
 struct construct_overlapping_region_group_fn {
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   RegionGroupP operator()(
     const InstanceSet::Region& region,
     const Domain& domain,
     const std::unordered_map<RegionGroup*, InstanceSet::InstanceSpec>& instances)
   {
-    auto bound       = domain.bounds<DIM, coord_t>();
-    size_t bound_vol = bound.volume();
+    auto bound            = domain.bounds<DIM, coord_t>();
+    std::size_t bound_vol = bound.volume();
     std::set<InstanceSet::Region> regions{region};
 
     if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -134,10 +137,10 @@ struct construct_overlapping_region_group_fn {
       }
 
       // Only allow merging if the bloating isn't "too big"
-      auto union_bbox            = bound.union_bbox(group_bbox);
-      const size_t union_vol     = union_bbox.volume();
-      const size_t group_vol     = group_bbox.volume();
-      const size_t intersect_vol = intersect.volume();
+      auto union_bbox                 = bound.union_bbox(group_bbox);
+      const std::size_t union_vol     = union_bbox.volume();
+      const std::size_t group_vol     = group_bbox.volume();
+      const std::size_t intersect_vol = intersect.volume();
       if (too_big(union_vol, bound_vol, group_vol, intersect_vol)) {
         if (LegateDefined(LEGATE_USE_DEBUG)) {
           log_instmgr().debug() << "    too big to merge (union:" << union_bbox
@@ -289,9 +292,9 @@ bool InstanceSet::erase(const Instance& inst)
   return instances_.empty();
 }
 
-size_t InstanceSet::get_instance_size() const
+std::size_t InstanceSet::get_instance_size() const
 {
-  size_t sum = 0;
+  std::size_t sum = 0;
   for (auto& pair : instances_) {
     sum += pair.second.instance.get_instance_size();
   }
@@ -425,9 +428,9 @@ void InstanceManager::erase(const Instance& inst)
   }
 }
 
-std::map<Memory, size_t> InstanceManager::aggregate_instance_sizes() const
+std::map<Memory, std::size_t> InstanceManager::aggregate_instance_sizes() const
 {
-  std::map<Memory, size_t> result;
+  std::map<Memory, std::size_t> result;
 
   for (auto& pair : instance_sets_) {
     auto& memory = pair.first.memory;

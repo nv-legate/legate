@@ -132,7 +132,7 @@ class BackendNetwork {
  protected:
   [[nodiscard]] int collGetUniqueId(int* id);
 
-  [[nodiscard]] static void* allocateInplaceBuffer(const void* recvbuf, size_t size);
+  [[nodiscard]] static void* allocateInplaceBuffer(const void* recvbuf, std::size_t size);
 
  public:
   CollCommType comm_type;
@@ -247,7 +247,7 @@ class LocalNetwork : public BackendNetwork {
                               CollComm global_comm) override;
 
  protected:
-  [[nodiscard]] static size_t getDtypeSize(CollDataType dtype);
+  [[nodiscard]] static std::size_t getDtypeSize(CollDataType dtype);
 
   void resetLocalBuffer(CollComm global_comm);
 

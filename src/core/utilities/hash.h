@@ -24,7 +24,7 @@ struct has_hash_member : std::false_type {};
 template <typename T>
 struct has_hash_member<
   T,
-  std::void_t<std::enable_if_t<std::is_same_v<decltype(std::declval<T>().hash()), size_t>>>>
+  std::void_t<std::enable_if_t<std::is_same_v<decltype(std::declval<T>().hash()), std::size_t>>>>
   : std::true_type {};
 
 template <typename T>
@@ -35,12 +35,12 @@ struct hasher;
 
 template <typename T>
 struct hasher<T, std::enable_if_t<std::is_constructible_v<std::hash<T>>>> {
-  [[nodiscard]] size_t operator()(const T& v) const noexcept { return std::hash<T>{}(v); }
+  [[nodiscard]] std::size_t operator()(const T& v) const noexcept { return std::hash<T>{}(v); }
 };
 
 template <typename T>
 struct hasher<T, std::enable_if_t<!std::is_constructible_v<std::hash<T>> && has_hash_member_v<T>>> {
-  [[nodiscard]] size_t operator()(const T& v) const noexcept { return v.hash(); }
+  [[nodiscard]] std::size_t operator()(const T& v) const noexcept { return v.hash(); }
 };
 
 inline void hash_combine(size_t&) noexcept {}
@@ -54,9 +54,9 @@ void hash_combine(size_t& target, const T& v, Ts&&... vs) noexcept
 }
 
 template <typename... Ts>
-size_t hash_all(Ts&&... vs) noexcept
+std::size_t hash_all(Ts&&... vs) noexcept
 {
-  size_t result = 0;
+  std::size_t result = 0;
   hash_combine(result, std::forward<Ts>(vs)...);
   return result;
 }

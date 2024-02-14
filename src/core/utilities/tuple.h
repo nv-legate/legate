@@ -45,10 +45,10 @@ class tuple {
   tuple& operator=(const tuple&)     = default;
   tuple& operator=(tuple&&) noexcept = default;
 
-  [[nodiscard]] const T& at(uint32_t idx) const;
-  [[nodiscard]] T& at(uint32_t idx);
-  [[nodiscard]] const T& operator[](uint32_t idx) const;
-  [[nodiscard]] T& operator[](uint32_t idx);
+  [[nodiscard]] const T& at(std::uint32_t idx) const;
+  [[nodiscard]] T& at(std::uint32_t idx);
+  [[nodiscard]] const T& operator[](std::uint32_t idx) const;
+  [[nodiscard]] T& operator[](std::uint32_t idx);
 
   bool operator==(const tuple& other) const;
   bool operator!=(const tuple& other) const;
@@ -69,18 +69,18 @@ class tuple {
   void reserve(size_type size);
 
   template <typename U = T>
-  [[nodiscard]] tuple insert(int32_t pos, U&& value) const;
+  [[nodiscard]] tuple insert(std::int32_t pos, U&& value) const;
   template <typename U = T>
   [[nodiscard]] tuple append(U&& value) const;
-  [[nodiscard]] tuple remove(int32_t pos) const;
+  [[nodiscard]] tuple remove(std::int32_t pos) const;
   template <typename U = T>
-  [[nodiscard]] tuple update(int32_t pos, U&& value) const;
+  [[nodiscard]] tuple update(std::int32_t pos, U&& value) const;
 
   template <typename U = T>
-  void insert_inplace(int32_t pos, U&& value);
+  void insert_inplace(std::int32_t pos, U&& value);
   template <typename U = T>
   void append_inplace(U&& value);
-  void remove_inplace(int32_t pos);
+  void remove_inplace(std::int32_t pos);
 
   template <typename FUNC, typename U>
   [[nodiscard]] T reduce(FUNC&& func, U&& init) const;
@@ -92,7 +92,7 @@ class tuple {
   [[nodiscard]] bool any() const;
   template <typename PRED>
   [[nodiscard]] bool any(PRED&& pred) const;
-  [[nodiscard]] tuple map(const std::vector<int32_t>& mapping) const;
+  [[nodiscard]] tuple map(const std::vector<std::int32_t>& mapping) const;
 
   [[nodiscard]] std::string to_string() const;
   template <typename U>
@@ -109,7 +109,7 @@ class tuple {
   [[nodiscard]] const_iterator cend() const;
   [[nodiscard]] const_iterator end() const;
 
-  [[nodiscard]] size_t hash() const;
+  [[nodiscard]] std::size_t hash() const;
 
  private:
   container_type data_{};

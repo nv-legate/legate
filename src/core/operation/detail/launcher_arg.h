@@ -83,13 +83,13 @@ struct OutputRegionArg final : public Analyzable {
   [[nodiscard]] LogicalStore* store() const;
   [[nodiscard]] const Legion::FieldSpace& field_space() const;
   [[nodiscard]] Legion::FieldID field_id() const;
-  [[nodiscard]] uint32_t requirement_index() const;
+  [[nodiscard]] std::uint32_t requirement_index() const;
 
  private:
   LogicalStore* store_;
   Legion::FieldSpace field_space_;
   Legion::FieldID field_id_;
-  mutable uint32_t requirement_index_{-1U};
+  mutable std::uint32_t requirement_index_{-1U};
 };
 
 struct FutureStoreArg final : public Analyzable {

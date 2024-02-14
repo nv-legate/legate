@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace legate::detail {
 
-enum class ArrayKind : int32_t {
+enum class ArrayKind : std::int32_t {
   BASE   = 0,
   LIST   = 1,
   STRUCT = 2,

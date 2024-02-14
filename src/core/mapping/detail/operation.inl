@@ -23,7 +23,7 @@ inline Mappable::Mappable(const Legion::Mappable* mappable)
 
 inline const mapping::detail::Machine& Mappable::machine() const { return machine_; }
 
-inline uint32_t Mappable::sharding_id() const { return sharding_id_; }
+inline std::uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
 // ==========================================================================================
 

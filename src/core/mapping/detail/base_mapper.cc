@@ -25,6 +25,8 @@
 #include "mappers/mapping_utilities.h"
 
 #include <algorithm>
+#include <cstdlib>
+#include <cstring>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -92,7 +94,7 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
 BaseMapper::~BaseMapper()
 {
   // Compute the size of all our remaining instances in each memory
-  const auto lg_show_usage = getenv("LEGATE_SHOW_USAGE");
+  const auto lg_show_usage = std::getenv("LEGATE_SHOW_USAGE");
 
   if (lg_show_usage == nullptr) {
     return;
@@ -112,8 +114,8 @@ BaseMapper::~BaseMapper()
 #undef MEM_NAMES
     };
     for (auto& pair : mem_sizes) {
-      const auto& mem       = pair.first;
-      const size_t capacity = mem.capacity();
+      const auto& mem            = pair.first;
+      const std::size_t capacity = mem.capacity();
       logger.print(
         "%s used %ld bytes of %s memory %llx with "
         "%ld total bytes (%.2g%%)",
@@ -245,7 +247,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
     auto idx =
       linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count + start_proc_id;
     output.slices.emplace_back(Domain{itr.p, itr.p},
-                               local_range[static_cast<uint32_t>(idx)],
+                               local_range[static_cast<std::uint32_t>(idx)],
                                false /*recurse*/,
                                false /*stealable*/);
   }
@@ -464,9 +466,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
       std::vector<Legion::DimensionKind> dimension_ordering;
 
       dimension_ordering.reserve(ndim + 1);
-      for (int32_t dim = ndim - 1; dim >= 0; --dim) {
+      for (std::int32_t dim = ndim - 1; dim >= 0; --dim) {
         dimension_ordering.push_back(static_cast<Legion::DimensionKind>(
-          static_cast<int32_t>(Legion::DimensionKind::LEGION_DIM_X) + dim));
+          static_cast<std::int32_t>(Legion::DimensionKind::LEGION_DIM_X) + dim));
       }
       dimension_ordering.push_back(Legion::DimensionKind::LEGION_DIM_F);
       output.output_constraints[req_idx].ordering_constraint =
@@ -477,7 +479,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   output.chosen_instances.resize(task.regions.size());
   OutputMap output_map;
-  for (uint32_t idx = 0; idx < task.regions.size(); ++idx) {
+  for (std::uint32_t idx = 0; idx < task.regions.size(); ++idx) {
     output_map[&task.regions[idx]] = &output.chosen_instances[idx];
   }
 
@@ -568,7 +570,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
     }
 
     // If we're here, all stores are mapped and instances are all acquired
-    for (uint32_t idx = 0; idx < mappings.size(); ++idx) {
+    for (std::uint32_t idx = 0; idx < mappings.size(); ++idx) {
       auto& mapping  = mappings[idx];
       auto& instance = instances[idx];
       for (auto& req : mapping->requirements()) {
@@ -705,7 +707,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     // if we didn't find it, create one
     layout_constraints.add_constraint(
       Legion::SpecializedConstraint(REDUCTION_FOLD_SPECIALIZE, redop));
-    size_t footprint = 0;
+    std::size_t footprint = 0;
     if (runtime->create_physical_instance(ctx,
                                           target_memory,
                                           layout_constraints,
@@ -786,9 +788,9 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     regions = group->get_regions();
   }
 
-  bool created     = false;
-  bool success     = false;
-  size_t footprint = 0;
+  bool created          = false;
+  bool success          = false;
+  std::size_t footprint = 0;
 
   switch (alloc_policy) {
     case AllocPolicy::MAY_ALLOC: {
@@ -856,10 +858,10 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
 }
 
 void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
-                                       uint32_t index,
+                                       std::uint32_t index,
                                        Memory target_memory,
                                        Legion::ReductionOpID redop,
-                                       size_t footprint) const
+                                       std::size_t footprint) const
 {
   static constexpr const char* const memory_kinds[] = {
 #define MEM_NAMES(name, desc) desc,
@@ -939,7 +941,7 @@ void BaseMapper::select_task_sources(Legion::Mapping::MapperContext ctx,
 
 namespace {
 
-using Bandwidth = uint32_t;
+using Bandwidth = std::uint32_t;
 
 // Source instance annotated with the memory bandwidth
 struct AnnotatedSourceInstance {
@@ -962,7 +964,7 @@ void find_source_instance_bandwidth(
   const Memory source_memory = source_instance.get_location();
   auto finder                = source_memory_bandwidths.find(source_memory);
 
-  uint32_t bandwidth{0};
+  std::uint32_t bandwidth{0};
   if (source_memory_bandwidths.end() == finder) {
     std::vector<Legion::MemoryMemoryAffinity> affinities;
     legion_machine.get_mem_mem_affinity(
@@ -1138,8 +1140,8 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     auto hi           = key_functor->project_point(sharding_domain.hi());
     auto p            = key_functor->project_point(copy.index_point);
 
-    const uint32_t start_proc_id     = machine_desc.processor_range().low;
-    const uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;
+    const std::uint32_t start_proc_id     = machine_desc.processor_range().low;
+    const std::uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;
     auto idx =
       linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count + start_proc_id;
     target_proc = local_range[idx];
@@ -1152,7 +1154,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   OutputMap output_map;
   auto add_to_output_map = [&output_map](auto& reqs, auto& instances) {
     instances.resize(reqs.size());
-    for (uint32_t idx = 0; idx < reqs.size(); ++idx) {
+    for (std::uint32_t idx = 0; idx < reqs.size(); ++idx) {
       output_map[&reqs[idx]] = &instances[idx];
     }
   };
@@ -1180,7 +1182,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   const auto stores_to_copy = {
     std::ref(inputs), std::ref(outputs), std::ref(input_ind), std::ref(output_ind)};
 
-  size_t reserve_size = 0;
+  std::size_t reserve_size = 0;
   for (auto&& store : stores_to_copy) {
     reserve_size += store.get().size();
   }
@@ -1422,8 +1424,8 @@ void BaseMapper::select_tunable_value(Legion::Mapping::MapperContext /*ctx*/,
 
   output.size = value.size();
   if (output.size) {
-    output.value = malloc(output.size);
-    memcpy(output.value, value.ptr(), output.size);
+    output.value = std::malloc(output.size);
+    std::memcpy(output.value, value.ptr(), output.size);
   } else {
     output.value = nullptr;
   }

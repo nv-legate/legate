@@ -32,7 +32,7 @@ enum TaskIDs {
 
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
-  static const int32_t TASK_ID = INIT;
+  static const std::int32_t TASK_ID = INIT;
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -120,7 +120,7 @@ TEST_F(Broadcast, BasicMethods)
   auto task    = runtime->create_task(context, INIT);
   auto part1   = task.declare_partition();
 
-  auto dims      = legate::from_range<uint32_t>(3);
+  auto dims      = legate::from_range<std::uint32_t>(3);
   auto broadcast = legate::detail::broadcast(part1.impl(), dims);
   EXPECT_EQ(broadcast->kind(), legate::detail::Constraint::Kind::BROADCAST);
   EXPECT_EQ(broadcast->variable(), part1.impl());

@@ -31,7 +31,7 @@ inline BasePhysicalArray::BasePhysicalArray(InternalSharedPtr<PhysicalStore> dat
 {
 }
 
-inline int32_t BasePhysicalArray::dim() const { return data_->dim(); }
+inline std::int32_t BasePhysicalArray::dim() const { return data_->dim(); }
 
 inline ArrayKind BasePhysicalArray::kind() const { return ArrayKind::BASE; }
 
@@ -56,7 +56,7 @@ inline ListPhysicalArray::ListPhysicalArray(InternalSharedPtr<Type> type,
 {
 }
 
-inline int32_t ListPhysicalArray::dim() const { return descriptor_->dim(); }
+inline std::int32_t ListPhysicalArray::dim() const { return descriptor_->dim(); }
 
 inline ArrayKind ListPhysicalArray::kind() const { return ArrayKind::LIST; }
 
@@ -95,7 +95,7 @@ inline StructPhysicalArray::StructPhysicalArray(
 {
 }
 
-inline int32_t StructPhysicalArray::dim() const { return fields_.front()->dim(); }
+inline std::int32_t StructPhysicalArray::dim() const { return fields_.front()->dim(); }
 
 inline ArrayKind StructPhysicalArray::kind() const { return ArrayKind::STRUCT; }
 

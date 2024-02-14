@@ -30,9 +30,9 @@ class Reduce final : public Operation {
   Reduce(const Library* library,
          InternalSharedPtr<LogicalStore> store,
          InternalSharedPtr<LogicalStore> out_store,
-         int64_t task_id,
-         uint64_t unique_id,
-         int32_t radix,
+         std::int64_t task_id,
+         std::uint64_t unique_id,
+         std::int32_t radix,
          mapping::detail::Machine&& machine);
 
   void launch(Strategy*) override;
@@ -43,9 +43,9 @@ class Reduce final : public Operation {
   [[nodiscard]] std::string to_string() const override;
 
  private:
-  int32_t radix_{};
+  std::int32_t radix_{};
   const Library* library_{};
-  int64_t task_id_{};
+  std::int64_t task_id_{};
   InternalSharedPtr<LogicalStore> input_{};
   InternalSharedPtr<LogicalStore> output_{};
   const Variable* input_part_{};

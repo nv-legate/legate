@@ -16,23 +16,23 @@
 
 namespace legate::detail {
 
-inline uint64_t Storage::id() const { return storage_id_; }
+inline std::uint64_t Storage::id() const { return storage_id_; }
 
 inline bool Storage::unbound() const { return unbound_; }
 
 inline const InternalSharedPtr<Shape>& Storage::shape() const { return shape_; }
 
-inline const tuple<uint64_t>& Storage::extents() const { return shape()->extents(); }
+inline const tuple<std::uint64_t>& Storage::extents() const { return shape()->extents(); }
 
-inline size_t Storage::volume() const { return shape()->volume(); }
+inline std::size_t Storage::volume() const { return shape()->volume(); }
 
-inline uint32_t Storage::dim() const { return shape()->ndim(); }
+inline std::uint32_t Storage::dim() const { return shape()->ndim(); }
 
 inline InternalSharedPtr<Type> Storage::type() const { return type_; }
 
 inline Storage::Kind Storage::kind() const { return kind_; }
 
-inline int32_t Storage::level() const { return level_; }
+inline std::int32_t Storage::level() const { return level_; }
 
 // ==========================================================================================
 
@@ -48,7 +48,7 @@ inline StoragePartition::StoragePartition(InternalSharedPtr<Storage> parent,
 
 inline InternalSharedPtr<Partition> StoragePartition::partition() const { return partition_; }
 
-inline int32_t StoragePartition::level() const { return level_; }
+inline std::int32_t StoragePartition::level() const { return level_; }
 
 // ==========================================================================================
 
@@ -56,13 +56,16 @@ inline bool LogicalStore::unbound() const { return storage_->unbound(); }
 
 inline const InternalSharedPtr<Shape>& LogicalStore::shape() const { return shape_; }
 
-inline const tuple<uint64_t>& LogicalStore::extents() const { return shape()->extents(); }
+inline const tuple<std::uint64_t>& LogicalStore::extents() const { return shape()->extents(); }
 
-inline size_t LogicalStore::volume() const { return shape()->volume(); }
+inline std::size_t LogicalStore::volume() const { return shape()->volume(); }
 
-inline size_t LogicalStore::storage_size() const { return storage_->volume() * type()->size(); }
+inline std::size_t LogicalStore::storage_size() const
+{
+  return storage_->volume() * type()->size();
+}
 
-inline uint32_t LogicalStore::dim() const { return shape()->ndim(); }
+inline std::uint32_t LogicalStore::dim() const { return shape()->ndim(); }
 
 inline const InternalSharedPtr<TransformStack>& LogicalStore::transform() const
 {
@@ -83,7 +86,7 @@ inline InternalSharedPtr<Type> LogicalStore::type() const { return storage_->typ
 
 inline bool LogicalStore::transformed() const { return !transform_->identity(); }
 
-inline uint64_t LogicalStore::id() const { return store_id_; }
+inline std::uint64_t LogicalStore::id() const { return store_id_; }
 
 inline const Storage* LogicalStore::get_storage() const { return storage_.get(); }
 
@@ -121,14 +124,14 @@ inline InternalSharedPtr<StoragePartition> LogicalStorePartition::storage_partit
 inline InternalSharedPtr<LogicalStore> LogicalStorePartition::store() const { return store_; }
 
 inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<LogicalStore>& self,
-                                                   int32_t dim,
+                                                   std::int32_t dim,
                                                    Slice sl)
 {
   return self->slice(self, dim, sl);
 }
 
 inline InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
-  const InternalSharedPtr<LogicalStore>& self, tuple<uint64_t> tile_shape)
+  const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape)
 {
   return self->partition_by_tiling(self, std::move(tile_shape));
 }
@@ -148,7 +151,7 @@ inline std::unique_ptr<Analyzable> store_to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  int64_t redop)
+  std::int64_t redop)
 {
   return self->to_launcher_arg(
     self, variable, strategy, launch_domain, projection, privilege, redop);

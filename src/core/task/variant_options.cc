@@ -38,7 +38,7 @@ VariantOptions& VariantOptions::with_concurrent(bool _concurrent)
   return *this;
 }
 
-VariantOptions& VariantOptions::with_return_size(size_t _return_size)
+VariantOptions& VariantOptions::with_return_size(std::size_t _return_size)
 {
   return_size = _return_size;
   return *this;

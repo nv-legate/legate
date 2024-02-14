@@ -50,7 +50,7 @@ ListArrayAccessor<LEGION_WRITE_DISCARD, VAL>::~ListArrayAccessor() noexcept
   try {
     // this line can throw!
     auto total_size = [&] {
-      int64_t size = 0;
+      std::int64_t size = 0;
 
       for (auto& value : values_) {
         size += value.size();
@@ -59,14 +59,14 @@ ListArrayAccessor<LEGION_WRITE_DISCARD, VAL>::~ListArrayAccessor() noexcept
     }();
     auto buffer = vardata_store_.create_output_buffer<VAL>(Point<1>{total_size}, true);
 
-    auto* p_buffer      = buffer.ptr(0);
-    int64_t vardata_pos = 0;
-    int64_t desc_pos    = desc_shape_.lo[0];
+    auto* p_buffer           = buffer.ptr(0);
+    std::int64_t vardata_pos = 0;
+    std::int64_t desc_pos    = desc_shape_.lo[0];
 
     for (auto& value : values_) {
       const auto len = value.size();
 
-      memcpy(p_buffer, value.data(), len * sizeof(VAL));
+      std::memcpy(p_buffer, value.data(), len * sizeof(VAL));
       p_buffer += len;
 
       auto& desc = desc_acc_[desc_pos++];

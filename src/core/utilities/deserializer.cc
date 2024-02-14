@@ -35,10 +35,10 @@ TaskDeserializer::TaskDeserializer(const Legion::Task* task,
 std::vector<InternalSharedPtr<detail::PhysicalArray>> TaskDeserializer::unpack_arrays()
 {
   std::vector<InternalSharedPtr<detail::PhysicalArray>> arrays;
-  auto size = unpack<uint32_t>();
+  auto size = unpack<std::uint32_t>();
 
   arrays.reserve(size);
-  for (uint32_t idx = 0; idx < size; ++idx) {
+  for (std::uint32_t idx = 0; idx < size; ++idx) {
     arrays.emplace_back(unpack_array());
   }
   return arrays;
@@ -46,7 +46,7 @@ std::vector<InternalSharedPtr<detail::PhysicalArray>> TaskDeserializer::unpack_a
 
 InternalSharedPtr<detail::PhysicalArray> TaskDeserializer::unpack_array()
 {
-  auto kind = static_cast<detail::ArrayKind>(unpack<int32_t>());
+  auto kind = static_cast<detail::ArrayKind>(unpack<std::int32_t>());
 
   switch (kind) {
     case detail::ArrayKind::BASE: return unpack_base_array();
@@ -67,7 +67,7 @@ InternalSharedPtr<detail::BasePhysicalArray> TaskDeserializer::unpack_base_array
 InternalSharedPtr<detail::ListPhysicalArray> TaskDeserializer::unpack_list_array()
 {
   auto type = unpack_type();
-  static_cast<void>(unpack<int32_t>());  // Unpack kind
+  static_cast<void>(unpack<std::int32_t>());  // Unpack kind
   auto descriptor = unpack_base_array();
   auto vardata    = unpack_array();
   return make_internal_shared<detail::ListPhysicalArray>(
@@ -85,7 +85,7 @@ InternalSharedPtr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_a
   auto null_mask      = nullable ? unpack_store() : nullptr;
 
   fields.reserve(st_type.num_fields());
-  for (uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
+  for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
     fields.emplace_back(unpack_array());
   }
   return make_internal_shared<detail::StructPhysicalArray>(
@@ -96,10 +96,10 @@ InternalSharedPtr<detail::PhysicalStore> TaskDeserializer::unpack_store()
 {
   auto is_future        = unpack<bool>();
   auto is_output_region = unpack<bool>();
-  auto dim              = unpack<int32_t>();
+  auto dim              = unpack<std::int32_t>();
   auto type             = unpack_type();
   auto transform        = unpack_transform();
-  auto redop_id         = unpack<int32_t>();
+  auto redop_id         = unpack<std::int32_t>();
 
   if (is_future) {
     auto fut = unpack<detail::FutureWrapper>();
@@ -126,8 +126,8 @@ InternalSharedPtr<detail::PhysicalStore> TaskDeserializer::unpack_store()
 void TaskDeserializer::_unpack(detail::FutureWrapper& value)
 {
   auto read_only    = unpack<bool>();
-  auto future_index = unpack<int32_t>();
-  auto field_size   = unpack<uint32_t>();
+  auto future_index = unpack<std::int32_t>();
+  auto field_size   = unpack<std::uint32_t>();
   auto domain       = unpack<Domain>();
 
   auto has_storage      = future_index >= 0;
@@ -137,18 +137,18 @@ void TaskDeserializer::_unpack(detail::FutureWrapper& value)
 
 void TaskDeserializer::_unpack(detail::RegionField& value)
 {
-  auto dim = unpack<int32_t>();
-  auto idx = unpack<uint32_t>();
-  auto fid = unpack<int32_t>();
+  auto dim = unpack<std::int32_t>();
+  auto idx = unpack<std::uint32_t>();
+  auto fid = unpack<std::int32_t>();
 
   value = detail::RegionField{dim, regions_[idx], static_cast<Legion::FieldID>(fid)};
 }
 
 void TaskDeserializer::_unpack(detail::UnboundRegionField& value)
 {
-  static_cast<void>(unpack<int32_t>());  // dim
-  auto idx = unpack<uint32_t>();
-  auto fid = unpack<int32_t>();
+  static_cast<void>(unpack<std::int32_t>());  // dim
+  auto idx = unpack<std::uint32_t>();
+  auto fid = unpack<std::int32_t>();
 
   value = detail::UnboundRegionField{outputs_[idx], static_cast<Legion::FieldID>(fid)};
 }
@@ -187,10 +187,10 @@ TaskDeserializer::TaskDeserializer(const Legion::Task* task,
 std::vector<InternalSharedPtr<detail::Array>> TaskDeserializer::unpack_arrays()
 {
   std::vector<InternalSharedPtr<detail::Array>> arrays;
-  auto size = unpack<uint32_t>();
+  auto size = unpack<std::uint32_t>();
 
   arrays.reserve(size);
-  for (uint32_t idx = 0; idx < size; ++idx) {
+  for (std::uint32_t idx = 0; idx < size; ++idx) {
     arrays.emplace_back(unpack_array());
   }
   return arrays;
@@ -198,7 +198,7 @@ std::vector<InternalSharedPtr<detail::Array>> TaskDeserializer::unpack_arrays()
 
 InternalSharedPtr<detail::Array> TaskDeserializer::unpack_array()
 {
-  auto kind = static_cast<legate::detail::ArrayKind>(unpack<int32_t>());
+  auto kind = static_cast<legate::detail::ArrayKind>(unpack<std::int32_t>());
 
   switch (kind) {
     case legate::detail::ArrayKind::BASE: return unpack_base_array();
@@ -220,7 +220,7 @@ InternalSharedPtr<detail::BaseArray> TaskDeserializer::unpack_base_array()
 InternalSharedPtr<detail::ListArray> TaskDeserializer::unpack_list_array()
 {
   auto type = unpack_type();
-  static_cast<void>(unpack<int32_t>());  // Unpack kind
+  static_cast<void>(unpack<std::int32_t>());  // Unpack kind
   auto descriptor = unpack_base_array();
   auto vardata    = unpack_array();
   return make_internal_shared<detail::ListArray>(
@@ -238,7 +238,7 @@ InternalSharedPtr<detail::StructArray> TaskDeserializer::unpack_struct_array()
   auto null_mask      = nullable ? unpack_store() : nullptr;
 
   fields.reserve(st_type.num_fields());
-  for (uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
+  for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
     fields.emplace_back(unpack_array());
   }
   return make_internal_shared<detail::StructArray>(
@@ -249,20 +249,20 @@ InternalSharedPtr<detail::Store> TaskDeserializer::unpack_store()
 {
   auto is_future        = unpack<bool>();
   auto is_output_region = unpack<bool>();
-  auto dim              = unpack<int32_t>();
+  auto dim              = unpack<std::int32_t>();
   auto type             = unpack_type();
 
   auto transform = unpack_transform();
 
   if (is_future) {
     // We still need to parse the reduction op
-    static_cast<void>(unpack<int32_t>());
+    static_cast<void>(unpack<std::int32_t>());
     auto fut = unpack<detail::FutureWrapper>();
 
     return make_internal_shared<detail::Store>(
       dim, std::move(type), std::move(fut), std::move(transform));
   }
-  auto redop_id = unpack<int32_t>();
+  auto redop_id = unpack<std::int32_t>();
   detail::RegionField rf;
   _unpack(rf, is_output_region);
   return make_internal_shared<detail::Store>(
@@ -273,17 +273,17 @@ void TaskDeserializer::_unpack(detail::FutureWrapper& value)
 {
   // We still need to deserialize these fields to get to the domain
   static_cast<void>(unpack<bool>());
-  auto future_index = unpack<int32_t>();
-  static_cast<void>(unpack<uint32_t>());
+  auto future_index = unpack<std::int32_t>();
+  static_cast<void>(unpack<std::uint32_t>());
   auto domain = unpack<Domain>();
-  value       = detail::FutureWrapper{static_cast<uint32_t>(future_index), domain};
+  value       = detail::FutureWrapper{static_cast<std::uint32_t>(future_index), domain};
 }
 
 void TaskDeserializer::_unpack(detail::RegionField& value, bool is_output_region)
 {
-  auto dim = unpack<int32_t>();
-  auto idx = unpack<uint32_t>();
-  auto fid = unpack<int32_t>();
+  auto dim = unpack<std::int32_t>();
+  auto idx = unpack<std::uint32_t>();
+  auto fid = unpack<std::int32_t>();
 
   auto req = is_output_region ? &task_->output_regions[idx] : &task_->regions[idx];
   value    = detail::RegionField{req, dim, idx, static_cast<Legion::FieldID>(fid)};
@@ -312,7 +312,7 @@ void CopyDeserializer::_unpack(detail::Store& store)
 {
   auto is_future        = unpack<bool>();
   auto is_output_region = unpack<bool>();
-  auto dim              = unpack<int32_t>();
+  auto dim              = unpack<std::int32_t>();
   auto type             = unpack_type();
 
   auto transform = unpack_transform();
@@ -320,7 +320,7 @@ void CopyDeserializer::_unpack(detail::Store& store)
   LegateCheck(!is_future && !is_output_region);
   static_cast<void>(is_future);
 
-  auto redop_id = unpack<int32_t>();
+  auto redop_id = unpack<std::int32_t>();
   detail::RegionField rf;
 
   _unpack(rf);
@@ -330,9 +330,9 @@ void CopyDeserializer::_unpack(detail::Store& store)
 
 void CopyDeserializer::_unpack(detail::RegionField& value)
 {
-  auto dim = unpack<int32_t>();
-  auto idx = unpack<uint32_t>();
-  auto fid = unpack<int32_t>();
+  auto dim = unpack<std::int32_t>();
+  auto idx = unpack<std::uint32_t>();
+  auto fid = unpack<std::int32_t>();
   auto req = &curr_reqs_->get()[idx];
 
   value = detail::RegionField{req, dim, idx + req_index_offset_, static_cast<Legion::FieldID>(fid)};

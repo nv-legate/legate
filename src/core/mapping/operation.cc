@@ -17,7 +17,7 @@
 
 namespace legate::mapping {
 
-int64_t Task::task_id() const { return impl()->task_id(); }
+std::int64_t Task::task_id() const { return impl()->task_id(); }
 
 namespace {
 
@@ -43,16 +43,19 @@ std::vector<Array> Task::reductions() const { return convert_arrays(impl()->redu
 
 const std::vector<Scalar>& Task::scalars() const { return impl()->scalars(); }
 
-Array Task::input(uint32_t index) const { return Array{impl()->inputs().at(index).get()}; }
+Array Task::input(std::uint32_t index) const { return Array{impl()->inputs().at(index).get()}; }
 
-Array Task::output(uint32_t index) const { return Array{impl()->outputs().at(index).get()}; }
+Array Task::output(std::uint32_t index) const { return Array{impl()->outputs().at(index).get()}; }
 
-Array Task::reduction(uint32_t index) const { return Array{impl()->reductions().at(index).get()}; }
+Array Task::reduction(std::uint32_t index) const
+{
+  return Array{impl()->reductions().at(index).get()};
+}
 
-size_t Task::num_inputs() const { return impl()->inputs().size(); }
+std::size_t Task::num_inputs() const { return impl()->inputs().size(); }
 
-size_t Task::num_outputs() const { return impl()->outputs().size(); }
+std::size_t Task::num_outputs() const { return impl()->outputs().size(); }
 
-size_t Task::num_reductions() const { return impl()->reductions().size(); }
+std::size_t Task::num_reductions() const { return impl()->reductions().size(); }
 
 }  // namespace legate::mapping

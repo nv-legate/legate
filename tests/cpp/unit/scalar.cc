@@ -23,27 +23,27 @@ namespace scalar_test {
 
 using ScalarUnit = DefaultFixture;
 
-constexpr bool BOOL_VALUE       = true;
-constexpr int8_t INT8_VALUE     = 10;
-constexpr int16_t INT16_VALUE   = -1000;
-constexpr int32_t INT32_VALUE   = 2700;
-constexpr int64_t INT64_VALUE   = -28;
-constexpr uint8_t UINT8_VALUE   = 128;
-constexpr uint16_t UINT16_VALUE = 65535;
-constexpr uint32_t UINT32_VALUE = 999;
-constexpr uint64_t UINT64_VALUE = 100;
-constexpr float FLOAT_VALUE     = 1.23f;
-constexpr double DOUBLE_VALUE   = -4.567;
-const std::string STRING_VALUE  = "123";
+constexpr bool BOOL_VALUE            = true;
+constexpr std::int8_t INT8_VALUE     = 10;
+constexpr std::int16_t INT16_VALUE   = -1000;
+constexpr std::int32_t INT32_VALUE   = 2700;
+constexpr std::int64_t INT64_VALUE   = -28;
+constexpr std::uint8_t UINT8_VALUE   = 128;
+constexpr std::uint16_t UINT16_VALUE = 65535;
+constexpr std::uint32_t UINT32_VALUE = 999;
+constexpr std::uint64_t UINT64_VALUE = 100;
+constexpr float FLOAT_VALUE          = 1.23f;
+constexpr double DOUBLE_VALUE        = -4.567;
+const std::string STRING_VALUE       = "123";
 const __half FLOAT16_VALUE(0.1f);
 const complex<float> COMPLEX_FLOAT_VALUE{0, 1};
 const complex<double> COMPLEX_DOUBLE_VALUE{0, 1};
-constexpr uint32_t DATA_SIZE = 10;
+constexpr std::uint32_t DATA_SIZE = 10;
 
 struct PaddingStructData {
   bool bool_data;
-  int32_t int32_data;
-  uint64_t uint64_data;
+  std::int32_t int32_data;
+  std::uint64_t uint64_data;
   bool operator==(const PaddingStructData& other) const
   {
     return bool_data == other.bool_data && int32_data == other.int32_data &&
@@ -53,8 +53,8 @@ struct PaddingStructData {
 
 struct __attribute__((packed)) NoPaddingStructData {
   bool bool_data;
-  int32_t int32_data;
-  uint64_t uint64_data;
+  std::int32_t int32_data;
+  std::uint64_t uint64_data;
   bool operator==(const NoPaddingStructData& other) const
   {
     return bool_data == other.bool_data && int32_data == other.int32_data &&
@@ -62,38 +62,38 @@ struct __attribute__((packed)) NoPaddingStructData {
   }
 };
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct MultiDimRectStruct {
-  int64_t lo[DIM];
-  int64_t hi[DIM];
+  std::int64_t lo[DIM];
+  std::int64_t hi[DIM];
 };
 
 template <typename T>
 void check_type(T value);
 template <typename T>
 void check_struct_type_scalar(T& struct_data, bool align);
-template <int32_t DIM>
-void check_point_scalar(const int64_t bounds[]);
-template <int32_t DIM>
-void check_rect_scalar(const int64_t lo[], const int64_t hi[]);
-template <int32_t DIM>
+template <std::int32_t DIM>
+void check_point_scalar(const std::int64_t bounds[]);
+template <std::int32_t DIM>
+void check_rect_scalar(const std::int64_t lo[], const std::int64_t hi[]);
+template <std::int32_t DIM>
 void check_rect_bounds(const MultiDimRectStruct<DIM>& to_compare,
                        const MultiDimRectStruct<DIM>& expect);
 void check_pack(const legate::Scalar& scalar);
-template <int32_t DIM>
+template <std::int32_t DIM>
 void check_pack_point_scalar();
-template <int32_t DIM>
+template <std::int32_t DIM>
 void check_pack_rect_scalar();
 
 class ScalarUnitTestDeserializer : public legate::BaseDeserializer<ScalarUnitTestDeserializer> {
  public:
-  ScalarUnitTestDeserializer(const void* args, size_t arglen);
+  ScalarUnitTestDeserializer(const void* args, std::size_t arglen);
 
  public:
   using BaseDeserializer::_unpack;
 };
 
-ScalarUnitTestDeserializer::ScalarUnitTestDeserializer(const void* args, size_t arglen)
+ScalarUnitTestDeserializer::ScalarUnitTestDeserializer(const void* args, std::size_t arglen)
   : BaseDeserializer(args, arglen)
 {
 }
@@ -166,8 +166,8 @@ void check_struct_type_scalar(T& struct_data, bool align)
   EXPECT_NE(actual_values.ptr(), expected_values.ptr());
 }
 
-template <int32_t DIM>
-void check_point_scalar(const int64_t bounds[])
+template <std::int32_t DIM>
+void check_point_scalar(const std::int64_t bounds[])
 {
   auto point = legate::Point<DIM>(bounds);
   legate::Scalar scalar(point);
@@ -177,8 +177,8 @@ void check_point_scalar(const int64_t bounds[])
   EXPECT_NE(scalar.ptr(), nullptr);
 
   // Check values
-  legate::Span expectedValues = legate::Span<const int64_t>(bounds, DIM);
-  legate::Span actualValues(scalar.values<int64_t>());
+  legate::Span expectedValues = legate::Span<const std::int64_t>(bounds, DIM);
+  legate::Span actualValues(scalar.values<std::int64_t>());
   for (int i = 0; i < DIM; i++) {
     EXPECT_EQ(actualValues[i], expectedValues[i]);
   }
@@ -186,11 +186,11 @@ void check_point_scalar(const int64_t bounds[])
   EXPECT_EQ(actualValues.size(), expectedValues.size());
 
   // Invalid type
-  EXPECT_THROW(scalar.values<int32_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar.values<std::int32_t>(), std::invalid_argument);
 }
 
-template <int32_t DIM>
-void check_rect_scalar(const int64_t lo[], const int64_t hi[])
+template <std::int32_t DIM>
+void check_rect_scalar(const std::int64_t lo[], const std::int64_t hi[])
 {
   auto point_lo = legate::Point<DIM>(lo);
   auto point_hi = legate::Point<DIM>(hi);
@@ -220,11 +220,11 @@ void check_rect_scalar(const int64_t lo[], const int64_t hi[])
   EXPECT_NE(actual_values.ptr(), expected_values.ptr());
 
   // Invalid type
-  EXPECT_THROW(scalar.value<int32_t>(), std::invalid_argument);
-  EXPECT_THROW(scalar.values<uint8_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar.value<std::int32_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar.values<std::uint8_t>(), std::invalid_argument);
 }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 void check_rect_bounds(const MultiDimRectStruct<DIM>& to_compare,
                        const MultiDimRectStruct<DIM>& expect)
 {
@@ -251,7 +251,7 @@ void check_pack(const legate::Scalar& scalar)
   EXPECT_EQ(scalar_unpack->size(), scalar.size());
 }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 void check_pack_point_scalar()
 {
   auto point = legate::Point<DIM>::ONES();
@@ -259,7 +259,7 @@ void check_pack_point_scalar()
   check_pack(scalar);
 }
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 void check_pack_rect_scalar()
 {
   auto rect = legate::Rect<DIM>(legate::Point<DIM>::ZEROES(), legate::Point<DIM>::ONES());
@@ -276,40 +276,40 @@ TEST_F(ScalarUnit, CreateWithObject)
   EXPECT_EQ(scalar2.size(), scalar1.size());
   EXPECT_EQ(scalar2.size(), legate::uint32().size());
   EXPECT_NE(scalar2.ptr(), nullptr);
-  EXPECT_EQ(scalar2.value<int32_t>(), scalar1.value<int32_t>());
-  EXPECT_EQ(scalar2.values<int32_t>().size(), scalar1.values<int32_t>().size());
-  EXPECT_EQ(*scalar2.values<int32_t>().begin(), *scalar1.values<int32_t>().begin());
+  EXPECT_EQ(scalar2.value<std::int32_t>(), scalar1.value<std::int32_t>());
+  EXPECT_EQ(scalar2.values<std::int32_t>().size(), scalar1.values<std::int32_t>().size());
+  EXPECT_EQ(*scalar2.values<std::int32_t>().begin(), *scalar1.values<std::int32_t>().begin());
 
   // Invalid type
-  EXPECT_THROW(scalar2.value<int64_t>(), std::invalid_argument);
-  EXPECT_THROW(scalar2.values<int8_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar2.value<std::int64_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar2.values<std::int8_t>(), std::invalid_argument);
 }
 
 TEST_F(ScalarUnit, CreateSharedScalar)
 {
   // unowned
   {
-    auto data_vec    = std::vector<uint64_t>(DATA_SIZE, UINT64_VALUE);
+    auto data_vec    = std::vector<std::uint64_t>(DATA_SIZE, UINT64_VALUE);
     const auto* data = data_vec.data();
     legate::Scalar scalar(legate::uint64(), data);
     EXPECT_EQ(scalar.type().code(), legate::Type::Code::UINT64);
     EXPECT_EQ(scalar.size(), legate::uint64().size());
     EXPECT_EQ(scalar.ptr(), data);
 
-    EXPECT_EQ(scalar.value<uint64_t>(), UINT64_VALUE);
-    legate::Span actualValues(scalar.values<uint64_t>());
-    legate::Span expectedValues = legate::Span<const uint64_t>(data, 1);
+    EXPECT_EQ(scalar.value<std::uint64_t>(), UINT64_VALUE);
+    legate::Span actualValues(scalar.values<std::uint64_t>());
+    legate::Span expectedValues = legate::Span<const std::uint64_t>(data, 1);
     EXPECT_EQ(*actualValues.begin(), *expectedValues.begin());
     EXPECT_EQ(actualValues.size(), expectedValues.size());
 
     // Invalid type
-    EXPECT_THROW(scalar.value<int32_t>(), std::invalid_argument);
-    EXPECT_THROW(scalar.values<int8_t>(), std::invalid_argument);
+    EXPECT_THROW(scalar.value<std::int32_t>(), std::invalid_argument);
+    EXPECT_THROW(scalar.values<std::int8_t>(), std::invalid_argument);
   }
 
   // owned
   {
-    auto data_vec    = std::vector<uint32_t>(DATA_SIZE, UINT32_VALUE);
+    auto data_vec    = std::vector<std::uint32_t>(DATA_SIZE, UINT32_VALUE);
     const auto* data = data_vec.data();
     legate::Scalar scalar(legate::uint32(), data, true);
     EXPECT_NE(scalar.ptr(), data);
@@ -353,24 +353,24 @@ TEST_F(ScalarUnit, CreateBinary)
 TEST_F(ScalarUnit, CreateWithVector)
 {
   // constructor with arrays
-  std::vector<int32_t> scalar_data{INT32_VALUE, INT32_VALUE};
+  std::vector<std::int32_t> scalar_data{INT32_VALUE, INT32_VALUE};
   legate::Scalar scalar(scalar_data);
   EXPECT_EQ(scalar.type().code(), legate::Type::Code::FIXED_ARRAY);
   auto fixed_type = legate::fixed_array_type(legate::int32(), scalar_data.size());
   EXPECT_EQ(scalar.size(), fixed_type.size());
 
   // check values here. Note: no value allowed for a fixed arrays scalar
-  std::vector<int32_t> data_vec = {INT32_VALUE, INT32_VALUE};
-  const auto* data              = data_vec.data();
-  legate::Span expectedValues   = legate::Span<const int32_t>(data, scalar_data.size());
-  legate::Span actualValues(scalar.values<int32_t>());
+  std::vector<std::int32_t> data_vec = {INT32_VALUE, INT32_VALUE};
+  const auto* data                   = data_vec.data();
+  legate::Span expectedValues        = legate::Span<const std::int32_t>(data, scalar_data.size());
+  legate::Span actualValues(scalar.values<std::int32_t>());
   for (std::size_t i = 0; i < scalar_data.size(); i++) {
     EXPECT_EQ(actualValues[i], expectedValues[i]);
   }
   EXPECT_EQ(actualValues.size(), expectedValues.size());
 
   // Invalid type
-  EXPECT_THROW(scalar.value<int32_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar.value<std::int32_t>(), std::invalid_argument);
   EXPECT_THROW(scalar.values<std::string>(), std::invalid_argument);
 }
 
@@ -392,8 +392,8 @@ TEST_F(ScalarUnit, CreateWithString)
   EXPECT_EQ(*actualValues.begin(), inputString[0]);
 
   // Invalid type
-  EXPECT_THROW(scalar.value<int32_t>(), std::invalid_argument);
-  EXPECT_THROW(scalar.values<int32_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar.value<std::int32_t>(), std::invalid_argument);
+  EXPECT_THROW(scalar.values<std::int32_t>(), std::invalid_argument);
 }
 
 TEST_F(ScalarUnit, CreateWithStructType)
@@ -414,22 +414,22 @@ TEST_F(ScalarUnit, CreateWithStructType)
 TEST_F(ScalarUnit, CreateWithPoint)
 {
   {
-    const int64_t bounds[] = {0};
+    const std::int64_t bounds[] = {0};
     check_point_scalar<1>(bounds);
   }
 
   {
-    const int64_t bounds[] = {1, 8};
+    const std::int64_t bounds[] = {1, 8};
     check_point_scalar<2>(bounds);
   }
 
   {
-    const int64_t bounds[] = {-10, 2, -1};
+    const std::int64_t bounds[] = {-10, 2, -1};
     check_point_scalar<3>(bounds);
   }
 
   {
-    const int64_t bounds[] = {1, 5, 7, 200};
+    const std::int64_t bounds[] = {1, 5, 7, 200};
     check_point_scalar<4>(bounds);
   }
 
@@ -440,26 +440,26 @@ TEST_F(ScalarUnit, CreateWithPoint)
 TEST_F(ScalarUnit, CreateWithRect)
 {
   {
-    const int64_t lo[] = {1};
-    const int64_t hi[] = {-9};
+    const std::int64_t lo[] = {1};
+    const std::int64_t hi[] = {-9};
     check_rect_scalar<1>(lo, hi);
   }
 
   {
-    const int64_t lo[] = {-1, 3};
-    const int64_t hi[] = {9, -2};
+    const std::int64_t lo[] = {-1, 3};
+    const std::int64_t hi[] = {9, -2};
     check_rect_scalar<2>(lo, hi);
   }
 
   {
-    const int64_t lo[] = {0, 1, 2};
-    const int64_t hi[] = {3, 4, 5};
+    const std::int64_t lo[] = {0, 1, 2};
+    const std::int64_t hi[] = {3, 4, 5};
     check_rect_scalar<3>(lo, hi);
   }
 
   {
-    const int64_t lo[] = {-5, 1, -7, 10};
-    const int64_t hi[] = {4, 5, 6, 7};
+    const std::int64_t lo[] = {-5, 1, -7, 10};
+    const std::int64_t hi[] = {4, 5, 6, 7};
     check_rect_scalar<4>(lo, hi);
   }
 }
@@ -471,8 +471,8 @@ TEST_F(ScalarUnit, OperatorEqual)
   scalar2 = scalar1;
   EXPECT_EQ(scalar2.type().code(), scalar1.type().code());
   EXPECT_EQ(scalar2.size(), scalar2.size());
-  EXPECT_EQ(scalar2.value<int32_t>(), scalar1.value<int32_t>());
-  EXPECT_EQ(scalar2.values<int32_t>().size(), scalar1.values<int32_t>().size());
+  EXPECT_EQ(scalar2.value<std::int32_t>(), scalar1.value<std::int32_t>());
+  EXPECT_EQ(scalar2.values<std::int32_t>().size(), scalar1.values<std::int32_t>().size());
 }
 
 TEST_F(ScalarUnit, Pack)
@@ -484,7 +484,7 @@ TEST_F(ScalarUnit, Pack)
 
   // test pack for a fixed array scalar
   {
-    legate::Scalar scalar(std::vector<uint32_t>{UINT32_VALUE, UINT32_VALUE});
+    legate::Scalar scalar(std::vector<std::uint32_t>{UINT32_VALUE, UINT32_VALUE});
     check_pack(scalar);
   }
 
@@ -518,7 +518,7 @@ TEST_F(ScalarUnit, Pack)
 
   // test pack for a shared scalar
   {
-    auto data_vec    = std::vector<uint64_t>(DATA_SIZE, UINT64_VALUE);
+    auto data_vec    = std::vector<std::uint64_t>(DATA_SIZE, UINT64_VALUE);
     const auto* data = data_vec.data();
     legate::Scalar scalar(legate::uint64(), data);
     check_pack(scalar);

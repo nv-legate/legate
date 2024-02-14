@@ -34,19 +34,19 @@ class Library {
   class ResourceIdScope {
    public:
     ResourceIdScope() = default;
-    ResourceIdScope(int64_t base, int64_t size, int64_t dyn_size = 0);
+    ResourceIdScope(std::int64_t base, std::int64_t size, std::int64_t dyn_size = 0);
 
-    [[nodiscard]] int64_t translate(int64_t local_resource_id) const;
-    [[nodiscard]] int64_t invert(int64_t resource_id) const;
-    [[nodiscard]] int64_t generate_id();
+    [[nodiscard]] std::int64_t translate(std::int64_t local_resource_id) const;
+    [[nodiscard]] std::int64_t invert(std::int64_t resource_id) const;
+    [[nodiscard]] std::int64_t generate_id();
     [[nodiscard]] bool valid() const;
-    [[nodiscard]] bool in_scope(int64_t resource_id) const;
-    [[nodiscard]] int64_t size() const;
+    [[nodiscard]] bool in_scope(std::int64_t resource_id) const;
+    [[nodiscard]] std::int64_t size() const;
 
    private:
-    int64_t base_{-1};
-    int64_t size_{-1};
-    int64_t next_{};
+    std::int64_t base_{-1};
+    std::int64_t size_{-1};
+    std::int64_t next_{};
   };
 
   friend class Runtime;
@@ -58,32 +58,32 @@ class Library {
 
   [[nodiscard]] const std::string& get_library_name() const;
 
-  [[nodiscard]] Legion::TaskID get_task_id(int64_t local_task_id) const;
+  [[nodiscard]] Legion::TaskID get_task_id(std::int64_t local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
-  [[nodiscard]] Legion::ReductionOpID get_reduction_op_id(int64_t local_redop_id) const;
-  [[nodiscard]] Legion::ProjectionID get_projection_id(int64_t local_proj_id) const;
-  [[nodiscard]] Legion::ShardingID get_sharding_id(int64_t local_shard_id) const;
+  [[nodiscard]] Legion::ReductionOpID get_reduction_op_id(std::int64_t local_redop_id) const;
+  [[nodiscard]] Legion::ProjectionID get_projection_id(std::int64_t local_proj_id) const;
+  [[nodiscard]] Legion::ShardingID get_sharding_id(std::int64_t local_shard_id) const;
 
-  [[nodiscard]] int64_t get_local_task_id(Legion::TaskID task_id) const;
-  [[nodiscard]] int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
-  [[nodiscard]] int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
-  [[nodiscard]] int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
+  [[nodiscard]] std::int64_t get_local_task_id(Legion::TaskID task_id) const;
+  [[nodiscard]] std::int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
+  [[nodiscard]] std::int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
+  [[nodiscard]] std::int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
 
   [[nodiscard]] bool valid_task_id(Legion::TaskID task_id) const;
   [[nodiscard]] bool valid_reduction_op_id(Legion::ReductionOpID redop_id) const;
   [[nodiscard]] bool valid_projection_id(Legion::ProjectionID proj_id) const;
   [[nodiscard]] bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
-  [[nodiscard]] int64_t get_new_task_id();
+  [[nodiscard]] std::int64_t get_new_task_id();
 
-  [[nodiscard]] const std::string& get_task_name(int64_t local_task_id) const;
-  [[nodiscard]] std::unique_ptr<Scalar> get_tunable(int64_t tunable_id,
+  [[nodiscard]] const std::string& get_task_name(std::int64_t local_task_id) const;
+  [[nodiscard]] std::unique_ptr<Scalar> get_tunable(std::int64_t tunable_id,
                                                     InternalSharedPtr<Type> type) const;
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);
   [[nodiscard]] Legion::Mapping::Mapper* get_legion_mapper() const;
 
-  void register_task(int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
-  [[nodiscard]] const TaskInfo* find_task(int64_t local_task_id) const;
+  void register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+  [[nodiscard]] const TaskInfo* find_task(std::int64_t local_task_id) const;
 
  private:
   Legion::Runtime* runtime_{};

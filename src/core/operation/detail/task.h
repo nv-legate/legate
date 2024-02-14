@@ -49,8 +49,8 @@ class Task : public Operation {
   };
 
   Task(const Library* library,
-       int64_t task_id,
-       uint64_t unique_id,
+       std::int64_t task_id,
+       std::uint64_t unique_id,
        mapping::detail::Machine&& machine);
 
  public:
@@ -79,7 +79,7 @@ class Task : public Operation {
 
  protected:
   const Library* library_{};
-  int64_t task_id_{};
+  std::int64_t task_id_{};
   bool concurrent_{};
   bool has_side_effect_{};
   bool can_throw_exception_{};
@@ -98,18 +98,19 @@ class Task : public Operation {
 class AutoTask final : public Task {
  public:
   AutoTask(const Library* library,
-           int64_t task_id,
-           uint64_t unique_id,
+           std::int64_t task_id,
+           std::uint64_t unique_id,
            mapping::detail::Machine&& machine);
 
   [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array);
   [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array);
-  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array, int32_t redop);
+  [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
+                                              std::int32_t redop);
 
   void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
   void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
   void add_reduction(InternalSharedPtr<LogicalArray> array,
-                     int32_t redop,
+                     std::int32_t redop,
                      const Variable* partition_symbol);
 
   [[nodiscard]] const Variable* find_or_declare_partition(
@@ -131,9 +132,9 @@ class AutoTask final : public Task {
 class ManualTask final : public Task {
  public:
   ManualTask(const Library* library,
-             int64_t task_id,
+             std::int64_t task_id,
              const Domain& launch_domain,
-             uint64_t unique_id,
+             std::uint64_t unique_id,
              mapping::detail::Machine&& machine);
 
   void add_input(const InternalSharedPtr<LogicalStore>& store);

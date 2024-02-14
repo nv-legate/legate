@@ -66,7 +66,7 @@ namespace legate::detail {
     ranges_acc[idx].hi[0] = vardata_lo + offsets_acc[idx + 1] - 1;
   }
   ranges_acc[shape.hi].lo[0] = vardata_lo + offsets_acc[shape.hi];
-  ranges_acc[shape.hi].hi[0] = vardata_lo + static_cast<int64_t>(vardata_shape.volume()) - 1;
+  ranges_acc[shape.hi].hi[0] = vardata_lo + static_cast<std::int64_t>(vardata_shape.volume()) - 1;
 }
 
 /*static*/ void RangesToOffsets::cpu_variant(legate::TaskContext context)
@@ -85,7 +85,7 @@ namespace legate::detail {
   const auto offsets_acc = offsets.write_accessor<int32_t, 1>();
   const auto lo          = ranges_acc[shape.lo].lo[0];
   for (auto idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {
-    offsets_acc[idx] = static_cast<int32_t>(ranges_acc[idx].lo[0] - lo);
+    offsets_acc[idx] = static_cast<std::int32_t>(ranges_acc[idx].lo[0] - lo);
   }
 }
 

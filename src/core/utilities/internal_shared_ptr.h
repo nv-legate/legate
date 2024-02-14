@@ -402,7 +402,7 @@ namespace std {
 
 template <typename T>
 struct hash<legate::InternalSharedPtr<T>> {  // NOLINT(cert-dcl58-cpp) extending std::hash is OK
-  [[nodiscard]] size_t operator()(const legate::InternalSharedPtr<T>& ptr) const noexcept;
+  [[nodiscard]] std::size_t operator()(const legate::InternalSharedPtr<T>& ptr) const noexcept;
 };
 
 }  // namespace std

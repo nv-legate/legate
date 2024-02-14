@@ -58,7 +58,7 @@ struct UnionFindEntry {
   const Variable* partition_symbol{};
   Restrictions restrictions{};
   UnionFindEntry* next{};
-  size_t size{1};
+  std::size_t size{1};
 };
 
 }  // namespace
@@ -161,7 +161,7 @@ void ConstraintSolver::solve_constraints()
       return;
     }
     for (auto&& ax : axes) {
-      auto axis = static_cast<uint32_t>(ax);
+      auto axis = static_cast<std::uint32_t>(ax);
       // TODO(wonchanl): We want to check the axis eagerly and raise an exception
       // if it is out of bounds
       static_assert(std::is_unsigned_v<decltype(axis)>,

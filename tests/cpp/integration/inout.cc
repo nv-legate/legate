@@ -57,7 +57,7 @@ class TesterMapper : public legate::mapping::Mapper {
 };
 
 struct InoutTask : public legate::LegateTask<InoutTask> {
-  static const int32_t TASK_ID = INOUT;
+  static const std::int32_t TASK_ID = INOUT;
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();

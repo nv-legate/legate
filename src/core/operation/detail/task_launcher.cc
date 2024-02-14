@@ -28,9 +28,9 @@
 
 namespace legate::detail {
 
-int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
+std::int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
 
-int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
+std::int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
 
 void TaskLauncher::add_input(std::unique_ptr<Analyzable> arg) { inputs_.push_back(std::move(arg)); }
 
@@ -75,7 +75,7 @@ void pack_args(BufferBuilder& buffer,
                StoreAnalyzer& analyzer,
                const std::vector<std::unique_ptr<Analyzable>>& args)
 {
-  buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
+  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
   for (auto& arg : args) {
     arg->pack(buffer, analyzer);
   }
@@ -83,7 +83,7 @@ void pack_args(BufferBuilder& buffer,
 
 void pack_args(BufferBuilder& buffer, const std::vector<std::unique_ptr<ScalarArg>>& args)
 {
-  buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
+  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
   for (auto& arg : args) {
     arg->pack(buffer);
   }
@@ -119,7 +119,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   pack_args(task_arg, scalars_);
   task_arg.pack<bool>(can_throw_exception_);
   task_arg.pack<bool>(insert_barrier_);
-  task_arg.pack<uint32_t>(static_cast<uint32_t>(communicators_.size()));
+  task_arg.pack<std::uint32_t>(static_cast<std::uint32_t>(communicators_.size()));
 
   BufferBuilder mapper_arg;
 
@@ -196,7 +196,7 @@ Legion::Future TaskLauncher::execute_single()
   // insert_barrier
   task_arg.pack<bool>(false);
   // # communicators
-  task_arg.pack<uint32_t>(0);
+  task_arg.pack<std::uint32_t>(0);
 
   BufferBuilder mapper_arg;
 
@@ -248,7 +248,7 @@ void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
   if (!key_proj_id) {
     key_proj_id.emplace(0);
   }
-  buffer.pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
+  buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
 }
 
 void TaskLauncher::post_process_unbound_stores(
@@ -322,7 +322,7 @@ void TaskLauncher::post_process_unbound_stores(
 
     post_process_unbound_store(arg, req, result, machine_);
   } else {
-    uint32_t idx = 0;
+    std::uint32_t idx = 0;
 
     for (auto& arg : unbound_stores_) {
       const auto& req = output_requirements[arg->requirement_index()];

@@ -29,7 +29,7 @@ enum TaskIDs {
   NCCL_TESTER = 0,
 };
 
-constexpr size_t SIZE = 10;
+constexpr std::size_t SIZE = 10;
 
 struct NCCLTester : public legate::LegateTask<NCCLTester> {
   static void gpu_variant(legate::TaskContext context)
@@ -41,15 +41,16 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     }
     auto comm = context.communicators().at(0).get<ncclComm_t*>();
 
-    size_t num_tasks = context.get_launch_domain().get_volume();
+    std::size_t num_tasks = context.get_launch_domain().get_volume();
 
-    auto recv_buffer = legate::create_buffer<uint64_t>(num_tasks, legate::Memory::Kind::Z_COPY_MEM);
-    auto send_buffer = legate::create_buffer<uint64_t>(1, legate::Memory::Kind::Z_COPY_MEM);
+    auto recv_buffer =
+      legate::create_buffer<std::uint64_t>(num_tasks, legate::Memory::Kind::Z_COPY_MEM);
+    auto send_buffer = legate::create_buffer<std::uint64_t>(1, legate::Memory::Kind::Z_COPY_MEM);
 
     auto* p_recv = recv_buffer.ptr(0);
     auto* p_send = send_buffer.ptr(0);
 
-    for (uint32_t idx = 0; idx < num_tasks; ++idx) {
+    for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
       p_recv[idx] = 0;
     }
     *p_send = 12345;
@@ -58,7 +59,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     auto result = ncclAllGather(p_send, p_recv, 1, ncclUint64, *comm, stream);
     EXPECT_EQ(result, ncclSuccess);
     CHECK_CUDA(cudaStreamSynchronize(stream));
-    for (uint32_t idx = 0; idx < num_tasks; ++idx) {
+    for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
       EXPECT_EQ(p_recv[idx], 12345);
     }
   }
@@ -71,7 +72,7 @@ void prepare()
   NCCLTester::register_variants(context, NCCL_TESTER);
 }
 
-void test_nccl_auto(int32_t ndim)
+void test_nccl_auto(std::int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -85,18 +86,18 @@ void test_nccl_auto(int32_t ndim)
   runtime->submit(std::move(task));
 }
 
-void test_nccl_manual(int32_t ndim)
+void test_nccl_manual(std::int32_t ndim)
 {
-  auto runtime     = legate::Runtime::get_runtime();
-  size_t num_procs = runtime->get_machine().count();
+  auto runtime          = legate::Runtime::get_runtime();
+  std::size_t num_procs = runtime->get_machine().count();
   if (num_procs <= 1) {
     return;
   }
 
   auto context      = runtime->find_library(library_name);
   auto store        = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
-  auto launch_shape = legate::full<uint64_t>(ndim, 1);
-  auto tile_shape   = legate::full<uint64_t>(ndim, 1);
+  auto launch_shape = legate::full<std::uint64_t>(ndim, 1);
+  auto tile_shape   = legate::full<std::uint64_t>(ndim, 1);
   launch_shape[0]   = num_procs;
   tile_shape[0]     = (SIZE + num_procs - 1) / num_procs;
 
@@ -121,7 +122,7 @@ TEST_F(Integration, NCCL)
   }
   legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
 
-  for (int32_t ndim : {1, 3}) {
+  for (std::int32_t ndim : {1, 3}) {
     test_nccl_auto(ndim);
     test_nccl_manual(ndim);
   }

@@ -20,14 +20,14 @@
 
 namespace legate {
 
-Shape::Shape(tuple<uint64_t> extents)
+Shape::Shape(tuple<std::uint64_t> extents)
   : impl_{make_internal_shared<detail::Shape>(std::move(extents))}
 {
 }
 
-const tuple<uint64_t>& Shape::extents() const { return impl_->extents(); }
+const tuple<std::uint64_t>& Shape::extents() const { return impl_->extents(); }
 
-uint32_t Shape::ndim() const { return impl_->ndim(); }
+std::uint32_t Shape::ndim() const { return impl_->ndim(); }
 
 std::string Shape::to_string() const { return impl_->to_string(); }
 

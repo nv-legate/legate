@@ -18,7 +18,7 @@
 
 namespace legate::detail {
 
-inline size_t ReturnValue::size() const { return size_; }
+inline std::size_t ReturnValue::size() const { return size_; }
 
 inline bool ReturnValue::is_device_value() const { return is_device_value_; }
 
@@ -28,8 +28,8 @@ inline bool ReturnedException::raised() const { return raised_; }
 
 // ==========================================================================================
 
-inline size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
+inline std::size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
 
-inline ReturnValue ReturnValues::operator[](int32_t idx) const { return return_values_[idx]; }
+inline ReturnValue ReturnValues::operator[](std::int32_t idx) const { return return_values_[idx]; }
 
 }  // namespace legate::detail

@@ -20,7 +20,7 @@ inline ExternalAllocation::ExternalAllocation(
   bool read_only,
   mapping::StoreTarget target,
   void* ptr,
-  size_t size,
+  std::size_t size,
   std::unique_ptr<Realm::ExternalInstanceResource> resource,
   std::optional<Deleter> deleter)
   : read_only_{read_only},
@@ -41,7 +41,7 @@ inline mapping::StoreTarget ExternalAllocation::target() const { return target_;
 
 inline void* ExternalAllocation::ptr() const { return ptr_; }
 
-inline size_t ExternalAllocation::size() const { return size_; }
+inline std::size_t ExternalAllocation::size() const { return size_; }
 
 inline const Realm::ExternalInstanceResource* ExternalAllocation::resource() const
 {

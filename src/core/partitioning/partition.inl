@@ -37,7 +37,7 @@ inline Legion::LogicalPartition NoPartition::construct(Legion::LogicalRegion /*r
 
 inline bool NoPartition::has_launch_domain() const { return false; }
 
-inline const tuple<uint64_t>& NoPartition::color_shape() const
+inline const tuple<std::uint64_t>& NoPartition::color_shape() const
 {
   throw std::invalid_argument{"NoPartition doesn't support color_shape"};
 }
@@ -50,13 +50,16 @@ inline bool Tiling::is_convertible() const { return true; }
 
 inline bool Tiling::has_launch_domain() const { return true; }
 
-inline const tuple<uint64_t>& Tiling::tile_shape() const { return tile_shape_; }
+inline const tuple<std::uint64_t>& Tiling::tile_shape() const { return tile_shape_; }
 
-inline const tuple<uint64_t>& Tiling::color_shape() const { return color_shape_; }
+inline const tuple<std::uint64_t>& Tiling::color_shape() const { return color_shape_; }
 
-inline const tuple<int64_t>& Tiling::offsets() const { return offsets_; }
+inline const tuple<std::int64_t>& Tiling::offsets() const { return offsets_; }
 
-inline bool Tiling::has_color(const tuple<uint64_t>& color) const { return color < color_shape_; }
+inline bool Tiling::has_color(const tuple<std::uint64_t>& color) const
+{
+  return color < color_shape_;
+}
 
 // ==========================================================================================
 
@@ -74,7 +77,7 @@ inline bool Weighted::has_launch_domain() const { return true; }
 
 inline Domain Weighted::launch_domain() const { return color_domain_; }
 
-inline const tuple<uint64_t>& Weighted::color_shape() const { return color_shape_; }
+inline const tuple<std::uint64_t>& Weighted::color_shape() const { return color_shape_; }
 
 // ==========================================================================================
 

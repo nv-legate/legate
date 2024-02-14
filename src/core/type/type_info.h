@@ -42,7 +42,7 @@ class StructType;
  * @ingroup types
  * @brief Enum for reduction operator kinds
  */
-enum class ReductionOpKind : int32_t {
+enum class ReductionOpKind : std::int32_t {
   ADD = ADD_LT, /*!< Addition */
   SUB = SUB_LT, /*!< Subtraction */
   MUL = MUL_LT, /*!< Multiplication */
@@ -64,7 +64,7 @@ class Type {
    * @ingroup types
    * @brief Enum for type codes
    */
-  enum class Code : int32_t {
+  enum class Code : std::int32_t {
     NIL         = NULL_LT,        /*!< Null type */
     BOOL        = BOOL_LT,        /*!< Boolean type */
     INT8        = INT8_LT,        /*!< 8-bit signed integer type */
@@ -98,19 +98,19 @@ class Type {
    *
    * @return Data type size in bytes
    */
-  [[nodiscard]] uint32_t size() const;
+  [[nodiscard]] std::uint32_t size() const;
   /**
    * @brief Alignment of the type
    *
    * @return Alignment in bytes
    */
-  [[nodiscard]] uint32_t alignment() const;
+  [[nodiscard]] std::uint32_t alignment() const;
   /**
    * @brief Unique ID of the data type
    *
    * @return Unique ID
    */
-  [[nodiscard]] uint32_t uid() const;
+  [[nodiscard]] std::uint32_t uid() const;
   /**
    * @brief Inidicates whether the data type is of varible size elements
    *
@@ -164,7 +164,7 @@ class Type {
    * @param op_kind Reduction operator kind
    * @param global_op_id Global reduction operator ID
    */
-  void record_reduction_operator(int32_t op_kind, int32_t global_op_id) const;
+  void record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const;
   /**
    * @brief Records a reduction operator.
    *
@@ -174,7 +174,7 @@ class Type {
    * @param op_kind Reduction operator kind
    * @param global_op_id Global reduction operator ID
    */
-  void record_reduction_operator(ReductionOpKind op_kind, int32_t global_op_id) const;
+  void record_reduction_operator(ReductionOpKind op_kind, std::int32_t global_op_id) const;
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -184,7 +184,7 @@ class Type {
    *
    * @return Global reduction operator ID
    */
-  [[nodiscard]] int32_t find_reduction_operator(int32_t op_kind) const;
+  [[nodiscard]] std::int32_t find_reduction_operator(std::int32_t op_kind) const;
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -194,7 +194,7 @@ class Type {
    *
    * @return Global reduction operator ID
    */
-  [[nodiscard]] int32_t find_reduction_operator(ReductionOpKind op_kind) const;
+  [[nodiscard]] std::int32_t find_reduction_operator(ReductionOpKind op_kind) const;
   /**
    * @brief Equality check between types
    *
@@ -236,7 +236,7 @@ class FixedArrayType : public Type {
    *
    * @return Number of elements
    */
-  [[nodiscard]] uint32_t num_elements() const;
+  [[nodiscard]] std::uint32_t num_elements() const;
   /**
    * @brief Returns the element type
    *
@@ -260,7 +260,7 @@ class StructType : public Type {
    *
    * @return Number of fields
    */
-  [[nodiscard]] uint32_t num_fields() const;
+  [[nodiscard]] std::uint32_t num_fields() const;
   /**
    * @brief Returns the element type
    *
@@ -268,7 +268,7 @@ class StructType : public Type {
    *
    * @return Element type
    */
-  [[nodiscard]] Type field_type(uint32_t field_idx) const;
+  [[nodiscard]] Type field_type(std::uint32_t field_idx) const;
   /**
    * @brief Indiciates whether the fields are aligned
    *
@@ -281,7 +281,7 @@ class StructType : public Type {
    *
    * @return Field offsets in a vector
    */
-  [[nodiscard]] std::vector<uint32_t> offsets() const;
+  [[nodiscard]] std::vector<std::uint32_t> offsets() const;
 
  private:
   friend class Type;
@@ -332,7 +332,7 @@ class ListType : public Type {
  *
  * @return Type object
  */
-[[nodiscard]] Type binary_type(uint32_t size);
+[[nodiscard]] Type binary_type(std::uint32_t size);
 
 /**
  * @ingroup types
@@ -343,7 +343,7 @@ class ListType : public Type {
  *
  * @return Type object
  */
-[[nodiscard]] Type fixed_array_type(const Type& element_type, uint32_t N);
+[[nodiscard]] Type fixed_array_type(const Type& element_type, std::uint32_t N);
 
 /**
  * @ingroup types
@@ -503,7 +503,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-[[nodiscard]] Type point_type(uint32_t ndim);
+[[nodiscard]] Type point_type(std::uint32_t ndim);
 
 /**
  * @ingroup types
@@ -513,7 +513,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-[[nodiscard]] Type rect_type(uint32_t ndim);
+[[nodiscard]] Type rect_type(std::uint32_t ndim);
 
 /**
  * @ingroup types
@@ -533,7 +533,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a point type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_point_type(const Type& type, uint32_t ndim);
+[[nodiscard]] bool is_point_type(const Type& type, std::uint32_t ndim);
 
 /**
  * @ingroup types
@@ -545,7 +545,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return true If the `type` is a rect type
  * @return false Otherwise
  */
-[[nodiscard]] bool is_rect_type(const Type& type, uint32_t ndim);
+[[nodiscard]] bool is_rect_type(const Type& type, std::uint32_t ndim);
 
 }  // namespace legate
 

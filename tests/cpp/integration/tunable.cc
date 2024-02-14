@@ -78,7 +78,7 @@ TEST_F(Tunable, Valid)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
 
-  int64_t tunable_id = 0;
+  std::int64_t tunable_id = 0;
   for (const auto& to_compare : TUNABLES) {
     auto dtype = to_compare.type();
     EXPECT_TRUE(legate::type_dispatch(

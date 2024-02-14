@@ -59,6 +59,14 @@ repos:
             require_serial: false
             stages: [pre-commit]
             exclude: '^(src/core/utilities/assert\.h)$'
+        -   id: c-begone
+            name: c-begone
+            description: 'Convert C standard library functions and types to C++ equivalent'
+            entry: ./scripts/pre-commit/c_begone.py
+            language: python
+            'types_or': [c++, c, cuda]
+            require_serial: false
+            stages: [pre-commit]
 
 ci:
     autoupdate_schedule: quarterly

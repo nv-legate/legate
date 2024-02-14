@@ -25,7 +25,7 @@ namespace legate {
 
 bool PhysicalArray::nullable() const noexcept { return impl_->nullable(); }
 
-int32_t PhysicalArray::dim() const noexcept { return impl_->dim(); }
+std::int32_t PhysicalArray::dim() const noexcept { return impl_->dim(); }
 
 Type PhysicalArray::type() const { return Type{impl_->type()}; }
 
@@ -35,14 +35,17 @@ PhysicalStore PhysicalArray::data() const { return PhysicalStore{impl_->data()};
 
 PhysicalStore PhysicalArray::null_mask() const { return PhysicalStore{impl_->null_mask()}; }
 
-PhysicalArray PhysicalArray::child(uint32_t index) const
+PhysicalArray PhysicalArray::child(std::uint32_t index) const
 {
   return PhysicalArray{impl_->child(index)};
 }
 
 Domain PhysicalArray::domain() const { return impl_->domain(); }
 
-void PhysicalArray::check_shape_dimension(int32_t dim) const { impl_->check_shape_dimension(dim); }
+void PhysicalArray::check_shape_dimension(std::int32_t dim) const
+{
+  impl_->check_shape_dimension(dim);
+}
 
 ListPhysicalArray PhysicalArray::as_list_array() const
 {

@@ -47,7 +47,7 @@ void CommunicatorFactory::destroy()
 
 Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget& target,
                                                       const mapping::ProcessorRange& range,
-                                                      uint32_t num_tasks)
+                                                      std::uint32_t num_tasks)
 {
   CommKey key{num_tasks, target, range};
   auto finder = communicators_.find(key);

@@ -43,11 +43,11 @@ enum TaskOpCode {
   CHECKER = 1,
 };
 
-static legate::tuple<uint64_t> SHAPE_1D{5};
+static legate::tuple<std::uint64_t> SHAPE_1D{5};
 
-static legate::tuple<uint64_t> SHAPE_2D{3, 4};
+static legate::tuple<std::uint64_t> SHAPE_2D{3, 4};
 
-void increment_physical_store(const legate::PhysicalStore& store, int32_t dim)
+void increment_physical_store(const legate::PhysicalStore& store, std::int32_t dim)
 {
   if (dim == 1) {
     auto shape = store.shape<1>();
@@ -64,20 +64,22 @@ void increment_physical_store(const legate::PhysicalStore& store, int32_t dim)
   }
 }
 
-void check_physical_store(const legate::PhysicalStore& store, int32_t dim, int64_t counter)
+void check_physical_store(const legate::PhysicalStore& store,
+                          std::int32_t dim,
+                          std::int64_t counter)
 {
   if (dim == 1) {
     auto shape = store.shape<1>();
     auto acc   = store.read_accessor<int64_t, 1, true>(shape);
-    for (size_t i = 0; i < SHAPE_1D[0]; ++i) {
+    for (std::size_t i = 0; i < SHAPE_1D[0]; ++i) {
       EXPECT_EQ(acc[i], counter++);
     }
   } else {
     auto shape = store.shape<2>();
     auto acc   = store.read_accessor<int64_t, 2, true>(shape);
     // Legate should always see elements in the expected order
-    for (size_t i = 0; i < SHAPE_2D[0]; ++i) {
-      for (size_t j = 0; j < SHAPE_2D[1]; ++j) {
+    for (std::size_t i = 0; i < SHAPE_2D[0]; ++i) {
+      for (std::size_t j = 0; j < SHAPE_2D[1]; ++j) {
         EXPECT_EQ(acc[legate::Point<2>(i, j)], counter++);
       }
     }
@@ -85,22 +87,22 @@ void check_physical_store(const legate::PhysicalStore& store, int32_t dim, int64
 }
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
-  static const int32_t TASK_ID = ADDER;
+  static const std::int32_t TASK_ID = ADDER;
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output = context.output(0).data();
-    int32_t dim = context.scalar(0).value<int32_t>();
+    auto output      = context.output(0).data();
+    std::int32_t dim = context.scalar(0).value<std::int32_t>();
     increment_physical_store(output, dim);
   }
 };
 
 struct CheckerTask : public legate::LegateTask<CheckerTask> {
-  static const int32_t TASK_ID = CHECKER;
+  static const std::int32_t TASK_ID = CHECKER;
   static void cpu_variant(legate::TaskContext context)
   {
-    auto input      = context.input(0).data();
-    int32_t dim     = context.scalar(0).value<int32_t>();
-    int64_t counter = context.scalar(1).value<int64_t>();
+    auto input           = context.input(0).data();
+    std::int32_t dim     = context.scalar(0).value<std::int32_t>();
+    std::int64_t counter = context.scalar(1).value<std::int64_t>();
     check_physical_store(input, dim, counter);
   }
 };
@@ -118,19 +120,19 @@ void register_tasks()
   CheckerTask::register_variants(context);
 }
 
-int64_t* make_buffer(int32_t dim, bool fortran)
+int64_t* make_buffer(std::int32_t dim, bool fortran)
 {
   int64_t* buffer;
-  int64_t counter = 0;
+  std::int64_t counter = 0;
   if (dim == 1) {
     buffer = new int64_t[SHAPE_1D.volume()];
-    for (size_t i = 0; i < SHAPE_1D[0]; ++i) {
+    for (std::size_t i = 0; i < SHAPE_1D[0]; ++i) {
       buffer[i] = counter++;
     }
   } else {
     buffer = new int64_t[SHAPE_2D.volume()];
-    for (size_t i = 0; i < SHAPE_2D[0]; ++i) {
-      for (size_t j = 0; j < SHAPE_2D[1]; ++j) {
+    for (std::size_t i = 0; i < SHAPE_2D[0]; ++i) {
+      for (std::size_t j = 0; j < SHAPE_2D[1]; ++j) {
         if (fortran) {
           buffer[j * SHAPE_2D[0] + i] = counter++;
         } else {
@@ -142,15 +144,15 @@ int64_t* make_buffer(int32_t dim, bool fortran)
   return buffer;
 }
 
-void check_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t counter)
+void check_buffer(int64_t* buffer, std::int32_t dim, bool fortran, std::int64_t counter)
 {
   if (dim == 1) {
-    for (size_t i = 0; i < SHAPE_1D[0]; ++i) {
+    for (std::size_t i = 0; i < SHAPE_1D[0]; ++i) {
       EXPECT_EQ(buffer[i], counter++);
     }
   } else {
-    for (size_t i = 0; i < SHAPE_2D[0]; ++i) {
-      for (size_t j = 0; j < SHAPE_2D[1]; ++j) {
+    for (std::size_t i = 0; i < SHAPE_2D[0]; ++i) {
+      for (std::size_t j = 0; j < SHAPE_2D[1]; ++j) {
         if (fortran) {
           EXPECT_EQ(buffer[j * SHAPE_2D[0] + i], counter++);
         } else {
@@ -162,13 +164,13 @@ void check_buffer(int64_t* buffer, int32_t dim, bool fortran, int64_t counter)
 }
 
 void test_body(
-  int32_t dim, bool fortran, bool unordered, bool read_only, bool use_tasks, bool use_inline)
+  std::int32_t dim, bool fortran, bool unordered, bool read_only, bool use_tasks, bool use_inline)
 {
-  auto runtime    = legate::Runtime::get_runtime();
-  auto context    = runtime->find_library(library_name);
-  int64_t counter = 0;
-  auto buffer     = make_buffer(dim, fortran);
-  auto l_store    = runtime->create_store(dim == 1 ? SHAPE_1D : SHAPE_2D,
+  auto runtime         = legate::Runtime::get_runtime();
+  auto context         = runtime->find_library(library_name);
+  std::int64_t counter = 0;
+  auto buffer          = make_buffer(dim, fortran);
+  auto l_store         = runtime->create_store(dim == 1 ? SHAPE_1D : SHAPE_2D,
                                        legate::int64(),
                                        buffer,
                                        read_only,
@@ -252,7 +254,7 @@ TEST_F(Attach, Negative)
 
   // Trying to attach a buffer smaller than what the store requires
   {
-    std::vector<int64_t> test(3, 0);
+    std::vector<std::int64_t> test(3, 0);
     EXPECT_THROW(
       (void)runtime->create_store(SHAPE_1D,
                                   legate::int64(),

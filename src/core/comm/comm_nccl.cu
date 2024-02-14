@@ -37,8 +37,8 @@ namespace legate::comm::nccl {
 namespace {
 
 struct Payload {
-  uint64_t field0;
-  uint64_t field1;
+  std::uint64_t field0;
+  std::uint64_t field1;
 };
 }  // namespace
 
@@ -57,7 +57,7 @@ inline void check_nccl(ncclResult_t error, const char* file, int line)
                               ncclGetErrorString(error),
                               file,
                               line));
-    exit(error);
+    std::exit(error);
   }
 }
 
@@ -70,9 +70,9 @@ class Factory final : public detail::CommunicatorFactory {
 
  protected:
   Legion::FutureMap initialize(const mapping::detail::Machine& machine,
-                               uint32_t num_tasks) override;
+                               std::uint32_t num_tasks) override;
   void finalize(const mapping::detail::Machine& machine,
-                uint32_t num_tasks,
+                std::uint32_t num_tasks,
                 const Legion::FutureMap& communicator) override;
 
  private:
@@ -94,9 +94,10 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
   return target == mapping::TaskTarget::GPU;
 }
 
-Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, uint32_t num_tasks)
+Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine,
+                                      std::uint32_t num_tasks)
 {
-  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
 
   // Create a communicator ID
   detail::TaskLauncher init_nccl_id_launcher(
@@ -113,10 +114,10 @@ Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine, u
 }
 
 void Factory::finalize(const mapping::detail::Machine& machine,
-                       uint32_t num_tasks,
+                       std::uint32_t num_tasks,
                        const Legion::FutureMap& communicator)
 {
-  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<int64_t>(num_tasks) - 1)));
+  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
 
   detail::TaskLauncher launcher(
     core_library_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);

@@ -33,10 +33,10 @@ struct Slice {
   static inline constexpr std::nullopt_t OPEN = std::nullopt;
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  Slice(std::optional<int64_t> _start = OPEN, std::optional<int64_t> _stop = OPEN);
+  Slice(std::optional<std::int64_t> _start = OPEN, std::optional<std::int64_t> _stop = OPEN);
 
-  std::optional<int64_t> start{OPEN};
-  std::optional<int64_t> stop{OPEN};
+  std::optional<std::int64_t> start{OPEN};
+  std::optional<std::int64_t> stop{OPEN};
 };
 
 }  // namespace legate

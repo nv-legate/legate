@@ -14,13 +14,13 @@
 
 namespace legate::detail {
 
-inline Shape::Shape(uint32_t dim) : dim_{dim} {}
+inline Shape::Shape(std::uint32_t dim) : dim_{dim} {}
 
 inline bool Shape::ready() const { return state_ == State::READY; }
 
-inline uint32_t Shape::ndim() const { return dim_; }
+inline std::uint32_t Shape::ndim() const { return dim_; }
 
-inline size_t Shape::volume() { return extents().volume(); }
+inline std::size_t Shape::volume() { return extents().volume(); }
 
 inline bool Shape::operator!=(Shape& other) { return !operator==(other); }
 

@@ -25,7 +25,7 @@ namespace legate::detail {
 
 class Strategy;
 
-enum class AccessMode : uint32_t {
+enum class AccessMode : std::uint32_t {
   READ   = 0,
   REDUCE = 1,
   WRITE  = 2,

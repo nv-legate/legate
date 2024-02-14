@@ -29,16 +29,16 @@ enum TaskIDs {
   SCALE_TESTER = 0,
 };
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
-  static const int32_t TASK_ID = SCALE_TESTER + DIM;
+  static const std::int32_t TASK_ID = SCALE_TESTER + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto smaller = context.output(0);
     auto bigger  = context.output(1);
 
-    auto extents = context.scalar(0).values<size_t>();
-    auto factors = context.scalar(1).values<size_t>();
+    auto extents = context.scalar(0).values<std::size_t>();
+    auto factors = context.scalar(1).values<std::size_t>();
 
     auto smaller_shape = smaller.shape<DIM>();
     auto bigger_shape  = bigger.shape<DIM>();
@@ -47,11 +47,12 @@ struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
       return;
     }
 
-    for (int32_t idx = 0; idx < DIM; ++idx) {
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       EXPECT_EQ(smaller_shape.lo[idx] * factors[idx], bigger_shape.lo[idx]);
-      auto high = context.is_single_task()
-                    ? extents[idx]
-                    : std::min<int64_t>((smaller_shape.hi[idx] + 1) * factors[idx], extents[idx]);
+      auto high =
+        context.is_single_task()
+          ? extents[idx]
+          : std::min<std::int64_t>((smaller_shape.hi[idx] + 1) * factors[idx], extents[idx]);
       EXPECT_EQ(bigger_shape.hi[idx], high - 1);
     }
   }
@@ -72,7 +73,7 @@ void prepare()
 }
 
 struct ScaleTestSpec {
-  legate::tuple<uint64_t> factors;
+  legate::tuple<std::uint64_t> factors;
   legate::Shape smaller_extents;
   legate::Shape bigger_extents;
 };

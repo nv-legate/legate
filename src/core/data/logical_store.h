@@ -85,7 +85,7 @@ class LogicalStore {
    *
    * @return The number of dimensions
    */
-  [[nodiscard]] uint32_t dim() const;
+  [[nodiscard]] std::uint32_t dim() const;
   /**
    * @brief Indicates whether the store's storage is optimized for scalars
    *
@@ -119,7 +119,7 @@ class LogicalStore {
    *
    * @return The store's extents
    */
-  [[nodiscard]] const tuple<uint64_t>& extents() const;
+  [[nodiscard]] const tuple<std::uint64_t>& extents() const;
   /**
    * @brief Returns the number of elements in the store.
    *
@@ -127,7 +127,7 @@ class LogicalStore {
    *
    * @return The number of elements in the store
    */
-  [[nodiscard]] size_t volume() const;
+  [[nodiscard]] std::size_t volume() const;
   /**
    * @brief Indicates whether the store is unbound
    *
@@ -176,7 +176,7 @@ class LogicalStore {
    *
    * @throw std::invalid_argument When `extra_dim` is not a valid dimension name
    */
-  [[nodiscard]] LogicalStore promote(int32_t extra_dim, size_t dim_size) const;
+  [[nodiscard]] LogicalStore promote(std::int32_t extra_dim, std::size_t dim_size) const;
   /**
    * @brief Projects out a dimension of the store.
    *
@@ -196,7 +196,7 @@ class LogicalStore {
    *
    * @throw std::invalid_argument If `dim` is not a valid dimension name or `index` is out of bounds
    */
-  [[nodiscard]] LogicalStore project(int32_t dim, int64_t index) const;
+  [[nodiscard]] LogicalStore project(std::int32_t dim, std::int64_t index) const;
   /**
    * @brief Slices a contiguous sub-section of the store.
    *
@@ -246,7 +246,7 @@ class LogicalStore {
    *
    * @throw std::invalid_argument If `dim` is not a valid dimension name
    */
-  [[nodiscard]] LogicalStore slice(int32_t dim, Slice sl) const;
+  [[nodiscard]] LogicalStore slice(std::int32_t dim, Slice sl) const;
   /**
    * @brief Reorders dimensions of the store.
    *
@@ -289,7 +289,7 @@ class LogicalStore {
    * match the store's dimension; 2) `axes` has duplicates; 3) Any axis in `axes` is an invalid
    * axis name.
    */
-  [[nodiscard]] LogicalStore transpose(std::vector<int32_t>&& axes) const;
+  [[nodiscard]] LogicalStore transpose(std::vector<std::int32_t>&& axes) const;
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
    *
@@ -328,7 +328,7 @@ class LogicalStore {
    * @throw std::invalid_argument If `dim` is invalid for the store or `sizes` does not preserve
    * the extent of the chosen dimenison
    */
-  [[nodiscard]] LogicalStore delinearize(int32_t dim, std::vector<uint64_t> sizes) const;
+  [[nodiscard]] LogicalStore delinearize(std::int32_t dim, std::vector<std::uint64_t> sizes) const;
 
   /**
    * @brief Creates a tiled partition of the store
@@ -339,7 +339,8 @@ class LogicalStore {
    *
    * @return A store partition
    */
-  [[nodiscard]] LogicalStorePartition partition_by_tiling(std::vector<uint64_t> tile_shape) const;
+  [[nodiscard]] LogicalStorePartition partition_by_tiling(
+    std::vector<std::uint64_t> tile_shape) const;
 
   /**
    * @brief Creates a physical store for this logical store
@@ -382,8 +383,8 @@ class LogicalStorePartition {
   explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition>&& impl);
 
   [[nodiscard]] LogicalStore store() const;
-  [[nodiscard]] const tuple<uint64_t>& color_shape() const;
-  [[nodiscard]] LogicalStore get_child_store(const tuple<uint64_t>& color) const;
+  [[nodiscard]] const tuple<std::uint64_t>& color_shape() const;
+  [[nodiscard]] LogicalStore get_child_store(const tuple<std::uint64_t>& color) const;
 
   [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& impl() const;
 

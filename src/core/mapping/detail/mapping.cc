@@ -61,19 +61,19 @@ LegateVariantCode to_variant_code(TaskTarget target)
   return LEGATE_CPU_VARIANT;
 }
 
-void DimOrdering::populate_dimension_ordering(uint32_t ndim,
+void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,
                                               std::vector<Legion::DimensionKind>& ordering) const
 {
   // TODO(wonchanl): We need to implement the relative dimension ordering
   switch (kind) {
     case Kind::C: {
-      for (int32_t dim = static_cast<int32_t>(ndim) - 1; dim >= 0; --dim) {
+      for (std::int32_t dim = static_cast<std::int32_t>(ndim) - 1; dim >= 0; --dim) {
         ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
       }
       break;
     }
     case Kind::FORTRAN: {
-      for (uint32_t dim = 0; dim < ndim; ++dim) {
+      for (std::uint32_t dim = 0; dim < ndim; ++dim) {
         ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
       }
       break;
@@ -106,10 +106,10 @@ bool StoreMapping::for_unbound_store() const
 
 const Store* StoreMapping::store() const { return stores.front(); }
 
-uint32_t StoreMapping::requirement_index() const
+std::uint32_t StoreMapping::requirement_index() const
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
-    uint32_t result = -1U;
+    std::uint32_t result = -1U;
 
     LegateAssert(!stores.empty());
     for (auto& store : stores) {
@@ -121,16 +121,16 @@ uint32_t StoreMapping::requirement_index() const
     return result;
   }
 
-  static constexpr uint32_t invalid = -1U;
+  static constexpr std::uint32_t invalid = -1U;
   if (stores.empty()) {
     return invalid;
   }
   return stores.front()->requirement_index();
 }
 
-std::set<uint32_t> StoreMapping::requirement_indices() const
+std::set<std::uint32_t> StoreMapping::requirement_indices() const
 {
-  std::set<uint32_t> indices;
+  std::set<std::uint32_t> indices;
 
   for (auto& store : stores) {
     if (store->is_future()) {

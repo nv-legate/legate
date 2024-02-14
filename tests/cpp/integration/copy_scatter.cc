@@ -23,9 +23,9 @@ using Copy = DefaultFixture;
 static const char* library_name = "test_copy_scatter";
 static legate::Logger logger(library_name);
 
-constexpr int32_t CHECK_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
+constexpr std::int32_t CHECK_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
-template <int32_t IND_DIM, int32_t TGT_DIM>
+template <std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TGT_DIM>> {
   struct CheckScatterTaskBody {
     template <legate::Type::Code CODE>
@@ -72,7 +72,7 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
     }
   };
 
-  static const int32_t TASK_ID = CHECK_SCATTER_TASK + IND_DIM * TEST_MAX_DIM + TGT_DIM;
+  static const std::int32_t TASK_ID = CHECK_SCATTER_TASK + IND_DIM * TEST_MAX_DIM + TGT_DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto type_code = context.input(0).type().code();
@@ -116,8 +116,8 @@ void register_tasks()
 }
 
 struct ScatterSpec {
-  std::vector<uint64_t> ind_shape;
-  std::vector<uint64_t> data_shape;
+  std::vector<std::uint64_t> ind_shape;
+  std::vector<std::uint64_t> data_shape;
   legate::Scalar seed;
   legate::Scalar init;
 
@@ -141,7 +141,7 @@ void check_scatter_output(legate::Library library,
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
 
-  int32_t task_id = CHECK_SCATTER_TASK + ind.dim() * TEST_MAX_DIM + tgt.dim();
+  std::int32_t task_id = CHECK_SCATTER_TASK + ind.dim() * TEST_MAX_DIM + tgt.dim();
 
   auto task = runtime->create_task(library, task_id);
 
@@ -187,7 +187,7 @@ void test_scatter(const ScatterSpec& spec)
 TEST_F(Copy, Scatter1Dto2D)
 {
   register_tasks();
-  std::vector<uint64_t> shape1d{5};
+  std::vector<std::uint64_t> shape1d{5};
   test_scatter(
     ScatterSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
 }

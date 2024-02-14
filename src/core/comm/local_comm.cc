@@ -36,7 +36,7 @@ LocalNetwork::~LocalNetwork()
   LegateCheck(BackendNetwork::coll_inited == true);
   for (ThreadComm* thread_comm : thread_comms) {
     LegateCheck(!thread_comm->ready_flag);
-    free(thread_comm);
+    std::free(thread_comm);
   }
   thread_comms.clear();
   BackendNetwork::coll_inited = false;
@@ -88,9 +88,9 @@ int LocalNetwork::comm_destroy(CollComm global_comm)
   barrierLocal(global_comm);
   if (global_comm->global_rank == 0) {
     pthread_barrier_destroy(&(thread_comms[global_comm->unique_id]->barrier));
-    free(thread_comms[global_comm->unique_id]->buffers);
+    std::free(thread_comms[global_comm->unique_id]->buffers);
     thread_comms[global_comm->unique_id]->buffers = nullptr;
-    free(thread_comms[global_comm->unique_id]->displs);
+    std::free(thread_comms[global_comm->unique_id]->displs);
     thread_comms[global_comm->unique_id]->displs = nullptr;
     __sync_synchronize();
     thread_comms[global_comm->unique_id]->ready_flag = false;
@@ -152,9 +152,9 @@ int LocalNetwork::alltoallv(const void* sendbuf,
     src_base  = global_comm->local_comm->buffers[recvfrom_global_rank];
     displs    = global_comm->local_comm->displs[recvfrom_global_rank];
     char* src = static_cast<char*>(const_cast<void*>(src_base)) +
-                static_cast<ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent;
+                static_cast<std::ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent;
     char* dst = static_cast<char*>(recvbuf) +
-                static_cast<ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
+                static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
         "AlltoallvLocal i: %d === global_rank %d, dtype %zu, copy rank %d (seg %d, sdispls %d, %p) "
@@ -171,7 +171,7 @@ int LocalNetwork::alltoallv(const void* sendbuf,
         rdispls[recvfrom_global_rank],
         static_cast<void*>(dst));
     }
-    memcpy(dst, src, recvcounts[recvfrom_global_rank] * type_extent);
+    std::memcpy(dst, src, recvcounts[recvfrom_global_rank] * type_extent);
   }
 
   barrierLocal(global_comm);
@@ -204,9 +204,9 @@ int LocalNetwork::alltoall(
     while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr) {}
     src_base  = global_comm->local_comm->buffers[recvfrom_global_rank];
     char* src = static_cast<char*>(const_cast<void*>(src_base)) +
-                static_cast<ptrdiff_t>(recvfrom_seg_id) * type_extent * count;
+                static_cast<std::ptrdiff_t>(recvfrom_seg_id) * type_extent * count;
     char* dst = static_cast<char*>(recvbuf) +
-                static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
+                static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
         "AlltoallLocal i: %d === global_rank %d, dtype %zu, copy rank %d (seg %d, %p) to rank %d "
@@ -221,7 +221,7 @@ int LocalNetwork::alltoall(
         recvfrom_global_rank,
         static_cast<void*>(dst));
     }
-    memcpy(dst, src, count * type_extent);
+    std::memcpy(dst, src, count * type_extent);
   }
 
   barrierLocal(global_comm);
@@ -256,7 +256,7 @@ int LocalNetwork::allgather(
     while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr) {}
     const void* src = global_comm->local_comm->buffers[recvfrom_global_rank];
     char* dst       = static_cast<char*>(recvbuf) +
-                static_cast<ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
+                static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
         "AllgatherLocal i: %d === global_rank %d, dtype %zu, copy rank %d (%p) to rank %d (%p)",
@@ -268,12 +268,12 @@ int LocalNetwork::allgather(
         global_rank,
         static_cast<void*>(dst));
     }
-    memcpy(dst, src, count * type_extent);
+    std::memcpy(dst, src, count * type_extent);
   }
 
   barrierLocal(global_comm);
   if (sendbuf == recvbuf) {
-    free(const_cast<void*>(sendbuf_tmp));
+    std::free(const_cast<void*>(sendbuf_tmp));
   }
 
   __sync_synchronize();
@@ -286,7 +286,7 @@ int LocalNetwork::allgather(
 
 // protected functions start from here
 
-size_t LocalNetwork::getDtypeSize(CollDataType dtype)
+std::size_t LocalNetwork::getDtypeSize(CollDataType dtype)
 {
   switch (dtype) {
     case CollDataType::CollInt8:

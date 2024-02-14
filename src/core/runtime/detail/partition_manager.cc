@@ -28,20 +28,21 @@ PartitionManager::PartitionManager(Runtime* runtime)
   auto mapper_id = runtime->core_library()->get_mapper_id();
 
   min_shard_volume_ =
-    runtime->get_tunable<int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
+    runtime->get_tunable<std::int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
   LegateAssert(min_shard_volume_ > 0);
 }
 
-const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail::Machine& machine)
+const std::vector<std::uint32_t>& PartitionManager::get_factors(
+  const mapping::detail::Machine& machine)
 {
   auto curr_num_pieces = machine.count();
   auto finder          = all_factors_.find(curr_num_pieces);
 
   if (all_factors_.end() == finder) {
-    std::vector<uint32_t> factors;
+    std::vector<std::uint32_t> factors;
     auto remaining_pieces = curr_num_pieces;
-    auto push_factors     = [&factors, &remaining_pieces](uint32_t prime) {
+    auto push_factors     = [&factors, &remaining_pieces](std::uint32_t prime) {
       while (remaining_pieces % prime == 0) {
         factors.push_back(prime);
         remaining_pieces /= prime;
@@ -56,9 +57,9 @@ const std::vector<uint32_t>& PartitionManager::get_factors(const mapping::detail
   return finder->second;
 }
 
-tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
-                                                       const Restrictions& restrictions,
-                                                       const tuple<uint64_t>& shape)
+tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
+                                                            const Restrictions& restrictions,
+                                                            const tuple<std::uint64_t>& shape)
 {
   auto curr_num_pieces = machine.count();
   // Easy case if we only have one piece: no parallel launch space
@@ -72,13 +73,13 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
   }
 
   // Prune out any dimensions that are 1
-  std::vector<size_t> temp_shape{};
-  std::vector<uint32_t> temp_dims{};
-  int64_t volume = 1;
+  std::vector<std::size_t> temp_shape{};
+  std::vector<std::uint32_t> temp_dims{};
+  std::int64_t volume = 1;
 
   temp_dims.reserve(shape.size());
   temp_shape.reserve(shape.size());
-  for (uint32_t dim = 0; dim < shape.size(); ++dim) {
+  for (std::uint32_t dim = 0; dim < shape.size(); ++dim) {
     auto extent = shape[dim];
 
     if (1 == extent || restrictions[dim] == Restriction::FORBID) {
@@ -86,11 +87,11 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
     }
     temp_shape.push_back(extent);
     temp_dims.push_back(dim);
-    volume *= static_cast<int64_t>(extent);
+    volume *= static_cast<std::int64_t>(extent);
   }
 
   // Figure out how many shards we can make with this array
-  int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
+  std::int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
   LegateCheck(volume == 0 || max_pieces > 0);
   // If we can only make one piece return that now
   if (max_pieces <= 1) {
@@ -103,11 +104,12 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
   // First compute the N-th root of the number of pieces
   const auto ndim = temp_shape.size();
   LegateCheck(ndim > 0);
-  std::vector<size_t> temp_result{};
+  std::vector<std::size_t> temp_result{};
 
   if (1 == ndim) {
     // Easy one dimensional case
-    temp_result.push_back(std::min<size_t>(temp_shape.front(), static_cast<size_t>(max_pieces)));
+    temp_result.push_back(
+      std::min<std::size_t>(temp_shape.front(), static_cast<std::size_t>(max_pieces)));
   } else if (2 == ndim) {
     if (volume < max_pieces) {
       // TBD: Once the max_pieces heuristic is fixed, this should never happen
@@ -127,11 +129,11 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
       // try rounding n both up and down
       constexpr auto EPSILON = 1e-12;
 
-      auto n1 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n + EPSILON)));
+      auto n1 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n + EPSILON)));
       while (max_pieces % n1 != 0) {
         --n1;
       }
-      auto n2 = std::max<int64_t>(1, static_cast<int64_t>(std::floor(n - EPSILON)));
+      auto n2 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n - EPSILON)));
       while (max_pieces % n2 != 0) {
         ++n2;
       }
@@ -140,8 +142,8 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
       // i.e. gives the shortest long side
       auto side1 = std::max(nx / n1, ny / (max_pieces / n1));
       auto side2 = std::max(nx / n2, ny / (max_pieces / n2));
-      auto px    = static_cast<size_t>(side1 <= side2 ? n1 : n2);
-      auto py    = static_cast<size_t>(max_pieces / px);
+      auto px    = static_cast<std::size_t>(side1 <= side2 ? n1 : n2);
+      auto py    = static_cast<std::size_t>(max_pieces / px);
 
       // we need to trim launch space if it is larger than the
       // original shape in one of the dimensions (can happen in
@@ -161,7 +163,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
     // performance on the GPU
     temp_result.resize(ndim);
     std::fill(temp_result.begin(), temp_result.end(), 1);
-    size_t factor_prod = 1;
+    std::size_t factor_prod = 1;
 
     for (auto factor : get_factors(machine)) {
       // Avoid exceeding the maximum number of pieces
@@ -171,13 +173,13 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
 
       factor_prod *= factor;
 
-      std::vector<size_t> remaining;
+      std::vector<std::size_t> remaining;
 
       remaining.reserve(temp_shape.size());
-      for (uint32_t idx = 0; idx < temp_shape.size(); ++idx) {
+      for (std::uint32_t idx = 0; idx < temp_shape.size(); ++idx) {
         remaining.push_back((temp_shape[idx] + temp_result[idx] - 1) / temp_result[idx]);
       }
-      const uint32_t big_dim =
+      const std::uint32_t big_dim =
         std::max_element(remaining.begin(), remaining.end()) - remaining.begin();
       if (big_dim < ndim - 1) {
         // Not the last dimension, so do it
@@ -191,7 +193,7 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
           temp_result[big_dim] *= factor;
         } else {
           // Won't be see if we can do it with one of the other dimensions
-          const uint32_t next_big_dim =
+          const std::uint32_t next_big_dim =
             std::max_element(remaining.begin(), remaining.end() - 1) - remaining.begin();
           if (remaining[next_big_dim] / factor > 0) {
             temp_result[next_big_dim] *= factor;
@@ -206,20 +208,20 @@ tuple<uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Ma
 
   // Project back onto the original number of dimensions
   LegateCheck(temp_result.size() == ndim);
-  std::vector<uint64_t> result(shape.size(), 1);
-  for (uint32_t idx = 0; idx < ndim; ++idx) {
+  std::vector<std::uint64_t> result(shape.size(), 1);
+  for (std::uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
   }
 
-  return tuple<uint64_t>{std::move(result)};
+  return tuple<std::uint64_t>{std::move(result)};
 }
 
-tuple<uint64_t> PartitionManager::compute_tile_shape(const tuple<uint64_t>& extents,
-                                                     const tuple<uint64_t>& launch_shape)
+tuple<std::uint64_t> PartitionManager::compute_tile_shape(const tuple<std::uint64_t>& extents,
+                                                          const tuple<std::uint64_t>& launch_shape)
 {
   LegateCheck(extents.size() == launch_shape.size());
-  tuple<uint64_t> tile_shape;
-  for (uint32_t idx = 0; idx < extents.size(); ++idx) {
+  tuple<std::uint64_t> tile_shape;
+  for (std::uint32_t idx = 0; idx < extents.size(); ++idx) {
     auto x = extents[idx];
     auto y = launch_shape[idx];
     tile_shape.append_inplace((x + y - 1) / y);
@@ -227,8 +229,8 @@ tuple<uint64_t> PartitionManager::compute_tile_shape(const tuple<uint64_t>& exte
   return tile_shape;
 }
 
-bool PartitionManager::use_complete_tiling(const tuple<uint64_t>& extents,
-                                           const tuple<uint64_t>& tile_shape)
+bool PartitionManager::use_complete_tiling(const tuple<std::uint64_t>& extents,
+                                           const tuple<std::uint64_t>& tile_shape)
 {
   // If it would generate a very large number of elements then
   // we'll apply a heuristic for now and not actually tile it

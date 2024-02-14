@@ -32,7 +32,7 @@ class BasePhysicalArray;
 class RegionField {
  public:
   RegionField() = default;
-  RegionField(int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid);
+  RegionField(std::int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid);
 
   RegionField(RegionField&& other) noexcept            = default;
   RegionField& operator=(RegionField&& other) noexcept = default;
@@ -42,13 +42,13 @@ class RegionField {
 
   [[nodiscard]] bool valid() const;
 
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] std::int32_t dim() const;
 
   [[nodiscard]] Domain domain() const;
   void set_logical_region(const Legion::LogicalRegion& lr);
-  [[nodiscard]] InlineAllocation get_inline_allocation(uint32_t field_size) const;
+  [[nodiscard]] InlineAllocation get_inline_allocation(std::uint32_t field_size) const;
   [[nodiscard]] InlineAllocation get_inline_allocation(
-    uint32_t field_size,
+    std::uint32_t field_size,
     const Domain& domain,
     const Legion::DomainAffineTransform& transform) const;
 
@@ -60,7 +60,7 @@ class RegionField {
   [[nodiscard]] Legion::FieldID get_field_id() const;
 
  private:
-  int32_t dim_{-1};
+  std::int32_t dim_{-1};
   std::unique_ptr<Legion::PhysicalRegion> pr_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{-1U};
@@ -83,12 +83,12 @@ class UnboundRegionField {
 
   [[nodiscard]] bool bound() const;
 
-  void bind_empty_data(int32_t dim);
+  void bind_empty_data(std::int32_t dim);
 
   [[nodiscard]] ReturnValue pack_weight() const;
 
   void set_bound(bool bound);
-  void update_num_elements(size_t num_elements);
+  void update_num_elements(std::size_t num_elements);
 
   [[nodiscard]] Legion::OutputRegion get_output_region() const;
   [[nodiscard]] Legion::FieldID get_field_id() const;
@@ -104,19 +104,19 @@ class FutureWrapper {
  public:
   FutureWrapper() = default;
   FutureWrapper(bool read_only,
-                uint32_t field_size,
+                std::uint32_t field_size,
                 const Domain& domain,
                 Legion::Future future,
                 bool initialize = false);
 
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] Domain domain() const;
   [[nodiscard]] bool valid() const;
 
   [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
 
-  void initialize_with_identity(int32_t redop_id);
+  void initialize_with_identity(std::int32_t redop_id);
 
   [[nodiscard]] ReturnValue pack() const;
 
@@ -126,7 +126,7 @@ class FutureWrapper {
 
  private:
   bool read_only_{true};
-  uint32_t field_size_{};
+  std::uint32_t field_size_{};
   Domain domain_{};
   std::unique_ptr<Legion::Future> future_{};
   Legion::UntypedDeferredValue buffer_{};
@@ -134,28 +134,28 @@ class FutureWrapper {
 
 class PhysicalStore {
  public:
-  PhysicalStore(int32_t dim,
+  PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                int32_t redop_id,
+                std::int32_t redop_id,
                 FutureWrapper future,
                 InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
-  PhysicalStore(int32_t dim,
+  PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                int32_t redop_id,
+                std::int32_t redop_id,
                 RegionField&& region_field,
                 InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
-  PhysicalStore(int32_t dim,
+  PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
                 UnboundRegionField&& unbound_field,
                 InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
-  PhysicalStore(int32_t dim,
+  PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                int32_t redop_id,
+                std::int32_t redop_id,
                 FutureWrapper future,
                 const InternalSharedPtr<detail::TransformStack>& transform);
-  PhysicalStore(int32_t dim,
+  PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                int32_t redop_id,
+                std::int32_t redop_id,
                 RegionField&& region_field,
                 const InternalSharedPtr<detail::TransformStack>& transform);
 
@@ -168,7 +168,7 @@ class PhysicalStore {
   [[nodiscard]] bool valid() const;
   [[nodiscard]] bool transformed() const;
 
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const InternalSharedPtr<Type>& type() const;
 
   [[nodiscard]] Domain domain() const;
@@ -188,9 +188,9 @@ class PhysicalStore {
  private:
   friend class legate::PhysicalStore;
   friend class legate::detail::BasePhysicalArray;
-  void check_accessor_dimension(int32_t dim) const;
-  void check_buffer_dimension(int32_t dim) const;
-  void check_shape_dimension(int32_t dim) const;
+  void check_accessor_dimension(std::int32_t dim) const;
+  void check_buffer_dimension(std::int32_t dim) const;
+  void check_shape_dimension(std::int32_t dim) const;
   void check_valid_binding(bool bind_buffer) const;
   void check_write_access() const;
   void check_reduction_access() const;
@@ -198,20 +198,20 @@ class PhysicalStore {
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
 
   void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] int32_t get_redop_id() const;
+  [[nodiscard]] std::int32_t get_redop_id() const;
 
   [[nodiscard]] bool is_read_only_future() const;
   [[nodiscard]] Legion::Future get_future() const;
   [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
 
   void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
-  void update_num_elements(size_t num_elements);
+  void update_num_elements(std::size_t num_elements);
 
   bool is_future_{};
   bool is_unbound_store_{};
-  int32_t dim_{-1};
+  std::int32_t dim_{-1};
   InternalSharedPtr<Type> type_{};
-  int32_t redop_id_{-1};
+  std::int32_t redop_id_{-1};
 
   FutureWrapper future_{};
   RegionField region_field_{};

@@ -38,7 +38,7 @@ struct BaseStoreProjection {
 
   void set_reduction_op(Legion::ReductionOpID _redop);
 
-  [[nodiscard]] size_t hash() const noexcept;
+  [[nodiscard]] std::size_t hash() const noexcept;
 
   Legion::LogicalPartition partition{Legion::LogicalPartition::NO_PART};
   Legion::ProjectionID proj_id{};

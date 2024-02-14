@@ -21,26 +21,26 @@ using TreeReduce = DefaultFixture;
 
 static const char* library_name = "test_tree_reduce_unique";
 
-static const size_t TILE_SIZE = 10;
+static const std::size_t TILE_SIZE = 10;
 
 enum TaskIDs { TASK_FILL = 1, TASK_UNIQUE, TASK_UNIQUE_REDUCE, TASK_CHECK };
 
 struct FillTask : public legate::LegateTask<FillTask> {
-  static const int32_t TASK_ID = TASK_FILL;
+  static const std::int32_t TASK_ID = TASK_FILL;
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
     auto rect   = output.shape<1>();
     auto volume = rect.volume();
     auto out    = output.write_accessor<int64_t, 1>(rect);
-    for (size_t idx = 0; idx < volume; ++idx) {
+    for (std::size_t idx = 0; idx < volume; ++idx) {
       out[idx] = idx / 2;
     }
   }
 };
 
 struct UniqueTask : public legate::LegateTask<UniqueTask> {
-  static const int32_t TASK_ID = TASK_UNIQUE;
+  static const std::int32_t TASK_ID = TASK_UNIQUE;
   static void cpu_variant(legate::TaskContext context)
   {
     auto input  = context.input(0).data();
@@ -48,13 +48,13 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
     auto rect   = input.shape<1>();
     auto volume = rect.volume();
     auto in     = input.read_accessor<int64_t, 1>(rect);
-    std::set<int64_t> dedup_set;
-    for (size_t idx = 0; idx < volume; ++idx) {
+    std::set<std::int64_t> dedup_set;
+    for (std::size_t idx = 0; idx < volume; ++idx) {
       dedup_set.insert(in[idx]);
     }
 
-    auto result = output.create_output_buffer<int64_t, 1>(dedup_set.size(), true);
-    size_t pos  = 0;
+    auto result     = output.create_output_buffer<int64_t, 1>(dedup_set.size(), true);
+    std::size_t pos = 0;
     for (auto e : dedup_set) {
       result[pos++] = e;
     }
@@ -62,7 +62,7 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
 };
 
 struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
-  static const int32_t TASK_ID = TASK_UNIQUE_REDUCE;
+  static const std::int32_t TASK_ID = TASK_UNIQUE_REDUCE;
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
@@ -72,7 +72,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
       auto acc   = input_arr.data().read_accessor<int64_t, 1>(shape);
       inputs.push_back(std::make_pair(acc, shape));
     }
-    std::set<int64_t> dedup_set;
+    std::set<std::int64_t> dedup_set;
     for (auto& pair : inputs) {
       auto& input = pair.first;
       auto& shape = pair.second;
@@ -81,9 +81,9 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
       }
     }
 
-    size_t size = dedup_set.size();
-    size_t pos  = 0;
-    auto result = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
+    std::size_t size = dedup_set.size();
+    std::size_t pos  = 0;
+    auto result      = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
     for (auto e : dedup_set) {
       result[pos++] = e;
     }
@@ -91,7 +91,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 };
 
 struct CheckTask : public legate::LegateTask<CheckTask> {
-  static const int32_t TASK_ID = TASK_CHECK;
+  static const std::int32_t TASK_ID = TASK_CHECK;
   static void cpu_variant(legate::TaskContext context)
   {
     auto input  = context.input(0).data();
@@ -99,7 +99,7 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
     auto volume = rect.volume();
     auto in     = input.read_accessor<int64_t, 1>(rect);
     ASSERT_EQ(volume, TILE_SIZE / 2);
-    for (size_t idx = 0; idx < volume; ++idx) {
+    for (std::size_t idx = 0; idx < volume; ++idx) {
       ASSERT_EQ(in[idx], idx);
     }
   }
@@ -122,8 +122,8 @@ TEST_F(TreeReduce, Unique)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  size_t num_tasks = 6;
-  size_t tile_size = TILE_SIZE;
+  std::size_t num_tasks = 6;
+  std::size_t tile_size = TILE_SIZE;
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 

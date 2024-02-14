@@ -19,7 +19,7 @@ namespace legate {
 /**
  * @brief Enum to describe partitioning preference on dimensions of a store
  */
-enum class Restriction : int32_t {
+enum class Restriction : std::int32_t {
   ALLOW  = 0, /*!< The dimension can be partitioned */
   AVOID  = 1, /*!< The dimension can be partitioned, but other dimensions are preferred */
   FORBID = 2, /*!< The dimension must not be partitioned */

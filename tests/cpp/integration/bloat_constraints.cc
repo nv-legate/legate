@@ -27,17 +27,17 @@ enum TaskIDs {
   BLOAT_TESTER = 0,
 };
 
-template <int32_t DIM>
+template <std::int32_t DIM>
 struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
-  static const int32_t TASK_ID = BLOAT_TESTER + DIM;
+  static const std::int32_t TASK_ID = BLOAT_TESTER + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto source  = context.input(0);
     auto bloated = context.input(1);
 
-    auto extents      = context.scalar(0).values<size_t>();
-    auto low_offsets  = context.scalar(1).values<size_t>();
-    auto high_offsets = context.scalar(2).values<size_t>();
+    auto extents      = context.scalar(0).values<std::size_t>();
+    auto low_offsets  = context.scalar(1).values<std::size_t>();
+    auto high_offsets = context.scalar(2).values<std::size_t>();
 
     auto source_shape  = source.shape<DIM>();
     auto bloated_shape = bloated.shape<DIM>();
@@ -46,11 +46,12 @@ struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
       return;
     }
 
-    for (int32_t idx = 0; idx < DIM; ++idx) {
-      auto low =
-        std::max<int64_t>(0, source_shape.lo[idx] - static_cast<int64_t>(low_offsets[idx]));
-      auto high = std::min<int64_t>(static_cast<int64_t>(extents[idx] - 1),
-                                    source_shape.hi[idx] + static_cast<int64_t>(high_offsets[idx]));
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
+      auto low = std::max<std::int64_t>(
+        0, source_shape.lo[idx] - static_cast<std::int64_t>(low_offsets[idx]));
+      auto high =
+        std::min<std::int64_t>(static_cast<std::int64_t>(extents[idx] - 1),
+                               source_shape.hi[idx] + static_cast<std::int64_t>(high_offsets[idx]));
       EXPECT_EQ(low, bloated_shape.lo[idx]);
       EXPECT_EQ(high, bloated_shape.hi[idx]);
     }
@@ -72,9 +73,9 @@ void prepare()
 }
 
 struct BloatTestSpec {
-  legate::tuple<uint64_t> extents;
-  legate::tuple<uint64_t> low_offsets;
-  legate::tuple<uint64_t> high_offsets;
+  legate::tuple<std::uint64_t> extents;
+  legate::tuple<std::uint64_t> low_offsets;
+  legate::tuple<std::uint64_t> high_offsets;
 };
 
 void test_bloat(const BloatTestSpec& spec)
@@ -111,8 +112,10 @@ void test_invalid()
     auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
-    task.add_constraint(legate::bloat(
-      part_source, part_bloated, legate::tuple<uint64_t>{2, 3}, legate::tuple<uint64_t>{4, 5}));
+    task.add_constraint(legate::bloat(part_source,
+                                      part_bloated,
+                                      legate::tuple<std::uint64_t>{2, 3},
+                                      legate::tuple<std::uint64_t>{4, 5}));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
@@ -124,8 +127,10 @@ void test_invalid()
     auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
-    task.add_constraint(legate::bloat(
-      part_source, part_bloated, legate::tuple<uint64_t>{2, 3, 3}, legate::tuple<uint64_t>{4, 5}));
+    task.add_constraint(legate::bloat(part_source,
+                                      part_bloated,
+                                      legate::tuple<std::uint64_t>{2, 3, 3},
+                                      legate::tuple<std::uint64_t>{4, 5}));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
@@ -137,8 +142,10 @@ void test_invalid()
     auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
-    task.add_constraint(legate::bloat(
-      part_source, part_bloated, legate::tuple<uint64_t>{2, 3}, legate::tuple<uint64_t>{4, 5, 3}));
+    task.add_constraint(legate::bloat(part_source,
+                                      part_bloated,
+                                      legate::tuple<std::uint64_t>{2, 3},
+                                      legate::tuple<std::uint64_t>{4, 5, 3}));
 
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
@@ -147,22 +154,25 @@ void test_invalid()
 TEST_F(BloatConstraint, 1D)
 {
   prepare();
-  test_bloat({legate::tuple<uint64_t>{10}, legate::tuple<uint64_t>{2}, legate::tuple<uint64_t>{4}});
+  test_bloat({legate::tuple<std::uint64_t>{10},
+              legate::tuple<std::uint64_t>{2},
+              legate::tuple<std::uint64_t>{4}});
 }
 
 TEST_F(BloatConstraint, 2D)
 {
   prepare();
-  test_bloat(
-    {legate::tuple<uint64_t>{9, 9}, legate::tuple<uint64_t>{2, 3}, legate::tuple<uint64_t>{3, 4}});
+  test_bloat({legate::tuple<std::uint64_t>{9, 9},
+              legate::tuple<std::uint64_t>{2, 3},
+              legate::tuple<std::uint64_t>{3, 4}});
 }
 
 TEST_F(BloatConstraint, 3D)
 {
   prepare();
-  test_bloat({legate::tuple<uint64_t>{10, 10, 10},
-              legate::tuple<uint64_t>{2, 3, 4},
-              legate::tuple<uint64_t>{4, 3, 2}});
+  test_bloat({legate::tuple<std::uint64_t>{10, 10, 10},
+              legate::tuple<std::uint64_t>{2, 3, 4},
+              legate::tuple<std::uint64_t>{4, 3, 2}});
 }
 
 TEST_F(BloatConstraint, Invalid)

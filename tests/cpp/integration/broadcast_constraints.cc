@@ -21,17 +21,17 @@ using Broadcast = DefaultFixture;
 
 static const char* library_name = "test_broadcast_constraints";
 
-constexpr size_t EXT_SMALL = 10;
-constexpr size_t EXT_LARGE = 100;
+constexpr std::size_t EXT_SMALL = 10;
+constexpr std::size_t EXT_LARGE = 100;
 
-constexpr int32_t TESTER      = 0;
-constexpr int32_t INITIALIZER = 1;
+constexpr std::int32_t TESTER      = 0;
+constexpr std::int32_t INITIALIZER = 1;
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
   static void cpu_variant(legate::TaskContext context)
   {
-    auto extent  = context.scalar(0).value<uint64_t>();
-    auto dims    = context.scalar(1).values<uint32_t>();
+    auto extent  = context.scalar(0).value<std::uint64_t>();
+    auto dims    = context.scalar(1).values<std::uint32_t>();
     auto is_read = context.scalar(2).value<bool>();
     auto shape   = is_read ? context.input(0).shape<3>() : context.output(0).shape<3>();
 
@@ -59,8 +59,8 @@ void test_normal_store()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto launch_tester = [&](const std::vector<uint32_t>& dims, bool omit_dims_in_broadcast) {
-    std::vector<uint64_t> extents(3, EXT_SMALL);
+  auto launch_tester = [&](const std::vector<std::uint32_t>& dims, bool omit_dims_in_broadcast) {
+    std::vector<std::uint64_t> extents(3, EXT_SMALL);
 
     for (auto dim : dims) {
       extents[dim] = EXT_LARGE;
@@ -101,8 +101,8 @@ void test_promoted_store()
     runtime->submit(std::move(task));
   };
 
-  auto launch_tester = [&](const uint32_t dim) {
-    std::vector<uint64_t> extents(2, EXT_SMALL);
+  auto launch_tester = [&](const std::uint32_t dim) {
+    std::vector<std::uint64_t> extents(2, EXT_SMALL);
     extents[dim] = EXT_LARGE;
     auto store   = runtime->create_store(legate::Shape{extents}, legate::int64());
     initialize(store);
@@ -110,7 +110,7 @@ void test_promoted_store()
     auto task = runtime->create_task(context, TESTER);
     auto part = task.add_input(store.promote(2, EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
-    task.add_scalar_arg(legate::Scalar(std::vector<uint32_t>{dim}));
+    task.add_scalar_arg(legate::Scalar(std::vector<std::uint32_t>{dim}));
     task.add_scalar_arg(legate::Scalar(true));
     task.add_constraint(legate::broadcast(part, legate::tuple<std::uint32_t>{dim}));
     runtime->submit(std::move(task));

@@ -26,7 +26,7 @@ class RegionManager {
  private:
   struct ManagerEntry {
     static constexpr Legion::FieldID FIELD_ID_BASE = 10000;
-    static constexpr int32_t MAX_NUM_FIELDS = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
+    static constexpr std::int32_t MAX_NUM_FIELDS = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
 
     explicit ManagerEntry(const Legion::LogicalRegion& _region) : region{_region} {}
 
@@ -52,7 +52,8 @@ class RegionManager {
 
  public:
   [[nodiscard]] bool has_space() const;
-  [[nodiscard]] std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(size_t field_size);
+  [[nodiscard]] std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(
+    std::size_t field_size);
   void import_region(const Legion::LogicalRegion& region);
 
  private:

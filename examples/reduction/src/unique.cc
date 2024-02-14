@@ -42,10 +42,10 @@ void copy_to_output(legate::Store output, const std::unordered_set<VAL>& values)
     return;
   }
 
-  int64_t num_values = values.size();
+  std::int64_t num_values = values.size();
   auto out_buf =
     output.create_output_buffer<VAL, 1>(legate::Point<1>(num_values), true /*bind_buffer*/);
-  int64_t idx = 0;
+  std::int64_t idx = 0;
   for (const auto& value : values) {
     out_buf[idx++] = value;
   }

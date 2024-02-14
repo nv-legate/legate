@@ -29,15 +29,15 @@ namespace index_attach {
 
 using IndexAttach = DefaultFixture;
 
-constexpr size_t TILE_SIZE = 5;
+constexpr std::size_t TILE_SIZE = 5;
 
 TEST_F(IndexAttach, CPU)
 {
-  constexpr int64_t VAL1 = 42;
-  constexpr int64_t VAL2 = 84;
-  constexpr size_t BYTES = TILE_SIZE * sizeof(int64_t);
+  constexpr std::int64_t VAL1 = 42;
+  constexpr std::int64_t VAL2 = 84;
+  constexpr std::size_t BYTES = TILE_SIZE * sizeof(int64_t);
 
-  std::vector<int64_t> alloc1(TILE_SIZE, VAL1), alloc2(TILE_SIZE, VAL2);
+  std::vector<std::int64_t> alloc1(TILE_SIZE, VAL1), alloc2(TILE_SIZE, VAL2);
   auto runtime = legate::Runtime::get_runtime();
 
   auto ext_alloc1 = legate::ExternalAllocation::create_sysmem(alloc1.data(), BYTES);
@@ -45,15 +45,15 @@ TEST_F(IndexAttach, CPU)
 
   auto [store, _] = runtime->create_store(
     legate::Shape{TILE_SIZE * 2},
-    legate::tuple<uint64_t>{TILE_SIZE},
+    legate::tuple<std::uint64_t>{TILE_SIZE},
     legate::int64(),
-    {{ext_alloc1, legate::tuple<uint64_t>{0}}, {ext_alloc2, legate::tuple<uint64_t>{1}}});
+    {{ext_alloc1, legate::tuple<std::uint64_t>{0}}, {ext_alloc2, legate::tuple<std::uint64_t>{1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<int64_t, 1>();
   auto shape   = p_store.shape<1>();
   for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], static_cast<size_t>((*it)[0]) < TILE_SIZE ? VAL1 : VAL2);
+    EXPECT_EQ(acc[*it], static_cast<std::size_t>((*it)[0]) < TILE_SIZE ? VAL1 : VAL2);
   }
 
   store.detach();
@@ -66,11 +66,11 @@ TEST_F(IndexAttach, GPU)
   }
 
 #if LegateDefined(LEGATE_USE_CUDA)
-  constexpr int64_t VAL1 = 42;
-  constexpr int64_t VAL2 = 84;
-  constexpr size_t BYTES = TILE_SIZE * sizeof(int64_t);
+  constexpr std::int64_t VAL1 = 42;
+  constexpr std::int64_t VAL2 = 84;
+  constexpr std::size_t BYTES = TILE_SIZE * sizeof(int64_t);
 
-  std::vector<int64_t> h_alloc1(TILE_SIZE, VAL1), h_alloc2(TILE_SIZE, VAL2);
+  std::vector<std::int64_t> h_alloc1(TILE_SIZE, VAL1), h_alloc2(TILE_SIZE, VAL2);
 
   void* d_alloc1 = nullptr;
   void* d_alloc2 = nullptr;
@@ -90,15 +90,15 @@ TEST_F(IndexAttach, GPU)
 
   auto [store, _] = runtime->create_store(
     legate::Shape{TILE_SIZE * 2},
-    legate::tuple<uint64_t>{TILE_SIZE},
+    legate::tuple<std::uint64_t>{TILE_SIZE},
     legate::int64(),
-    {{alloc1, legate::tuple<uint64_t>{0}}, {alloc2, legate::tuple<uint64_t>{1}}});
+    {{alloc1, legate::tuple<std::uint64_t>{0}}, {alloc2, legate::tuple<std::uint64_t>{1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<int64_t, 1>();
   auto shape   = p_store.shape<1>();
   for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], static_cast<size_t>((*it)[0]) < TILE_SIZE ? VAL1 : VAL2);
+    EXPECT_EQ(acc[*it], static_cast<std::size_t>((*it)[0]) < TILE_SIZE ? VAL1 : VAL2);
   }
 
   store.detach();
@@ -110,35 +110,35 @@ TEST_F(IndexAttach, Negative)
   auto runtime = legate::Runtime::get_runtime();
 
   {
-    std::vector<int64_t> buf(3, 0);
+    std::vector<std::int64_t> buf(3, 0);
     auto alloc = legate::ExternalAllocation::create_sysmem(
       buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
     // Trying to attach a buffer smaller than what the sub-store requires
     EXPECT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
-                                             legate::tuple<uint64_t>{TILE_SIZE},
+                                             legate::tuple<std::uint64_t>{TILE_SIZE},
                                              legate::int64(),
-                                             {{alloc, legate::tuple<uint64_t>{0}}}),
+                                             {{alloc, legate::tuple<std::uint64_t>{0}}}),
                  std::invalid_argument);
   }
 
   {
-    std::vector<int64_t> buf(TILE_SIZE, 0);
+    std::vector<std::int64_t> buf(TILE_SIZE, 0);
     auto alloc = legate::ExternalAllocation::create_sysmem(
       buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
 
     // Trying to attach a buffer to a non-existent sub-store
     EXPECT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
-                                             legate::tuple<uint64_t>{TILE_SIZE},
+                                             legate::tuple<std::uint64_t>{TILE_SIZE},
                                              legate::int64(),
-                                             {{alloc, legate::tuple<uint64_t>{1}}}),
+                                             {{alloc, legate::tuple<std::uint64_t>{1}}}),
                  std::out_of_range);
 
     // Trying to attach multiple buffers to the same sub-store
-    EXPECT_THROW((void)runtime->create_store(
-                   legate::Shape{TILE_SIZE},
-                   legate::tuple<uint64_t>{TILE_SIZE},
-                   legate::int64(),
-                   {{alloc, legate::tuple<uint64_t>{0}}, {alloc, legate::tuple<uint64_t>{0}}}),
+    EXPECT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
+                                             legate::tuple<std::uint64_t>{TILE_SIZE},
+                                             legate::int64(),
+                                             {{alloc, legate::tuple<std::uint64_t>{0}},
+                                              {alloc, legate::tuple<std::uint64_t>{0}}}),
                  std::invalid_argument);
   }
 }

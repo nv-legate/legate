@@ -35,7 +35,7 @@ class Array {
    *
    * @return Array's dimension
    */
-  [[nodiscard]] int32_t dim() const;
+  [[nodiscard]] std::int32_t dim() const;
   /**
    * @brief Returns the array's type
    *
@@ -67,7 +67,7 @@ class Array {
    *
    * @return Array's domain
    */
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   [[nodiscard]] Rect<DIM> shape() const;
   /**
    * @brief Returns the array's domain in a dimension-erased domain type

@@ -28,7 +28,7 @@ using ReplicatedWrite = DefaultFixture;
 static const char* library_name = "test_replicated_write";
 
 struct WriterTask : public legate::LegateTask<WriterTask> {
-  static const int32_t TASK_ID = 0;
+  static const std::int32_t TASK_ID = 0;
   static void cpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
@@ -48,7 +48,7 @@ struct WriterTask : public legate::LegateTask<WriterTask> {
       auto shape  = output.shape<2>();
       auto acc    = output.data().write_accessor<int64_t, 2>();
       auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
-      auto vals   = std::vector<int64_t>(shape.volume(), 42);
+      auto vals   = std::vector<std::int64_t>(shape.volume(), 42);
       CHECK_CUDA(cudaMemcpyAsync(acc.ptr(shape),
                                  vals.data(),
                                  sizeof(int64_t) * shape.volume(),
@@ -82,8 +82,8 @@ void validate_output(legate::LogicalStore store)
 }
 
 void test_auto_task(legate::Library library,
-                    legate::tuple<uint64_t> extents,
-                    uint32_t num_out_stores)
+                    legate::tuple<std::uint64_t> extents,
+                    std::uint32_t num_out_stores)
 {
   auto runtime  = legate::Runtime::get_runtime();
   auto in_store = runtime->create_store({8, 8}, legate::int64());
@@ -95,7 +95,7 @@ void test_auto_task(legate::Library library,
   task.add_input(in_store);
 
   std::vector<legate::LogicalStore> out_stores;
-  for (uint32_t idx = 0; idx < num_out_stores; ++idx) {
+  for (std::uint32_t idx = 0; idx < num_out_stores; ++idx) {
     auto& out_store = out_stores.emplace_back(
       runtime->create_store(extents, legate::int64(), true /*optimize_scalar*/));
     auto part = task.add_output(out_store);
@@ -109,14 +109,15 @@ void test_auto_task(legate::Library library,
 }
 
 void test_manual_task(legate::Library library,
-                      legate::tuple<uint64_t> extents,
-                      uint32_t num_out_stores)
+                      legate::tuple<std::uint64_t> extents,
+                      std::uint32_t num_out_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, WriterTask::TASK_ID, legate::tuple<uint64_t>{3, 3});
+  auto task =
+    runtime->create_task(library, WriterTask::TASK_ID, legate::tuple<std::uint64_t>{3, 3});
 
   std::vector<legate::LogicalStore> out_stores;
-  for (uint32_t idx = 0; idx < num_out_stores; ++idx) {
+  for (std::uint32_t idx = 0; idx < num_out_stores; ++idx) {
     auto& out_store = out_stores.emplace_back(
       runtime->create_store(extents, legate::int64(), true /*optimize_scalar*/));
     task.add_output(out_store);

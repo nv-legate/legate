@@ -19,25 +19,25 @@ namespace scoped_allocator_test {
 
 using ScopedAllocatorUnit = DefaultFixture;
 
-static const char* library_name     = "legate.scopedallocator";
-constexpr int64_t ALLOCATOR_TASK_ID = 1;
+static const char* library_name          = "legate.scopedallocator";
+constexpr std::int64_t ALLOCATOR_TASK_ID = 1;
 
 struct AllocatorParams {
-  uint32_t op_code;
-  uint64_t kind;
+  std::uint32_t op_code;
+  std::uint64_t kind;
   bool scoped;
-  uint64_t alignment;
-  uint64_t bytes;
+  std::uint64_t alignment;
+  std::uint64_t bytes;
 };
 
-enum class BufferOpCode : uint32_t {
+enum class BufferOpCode : std::uint32_t {
   DEALLOCATE         = 0,
   DOUBLE_DEALLOCATE  = 1,
   INVALID_DEALLOCATE = 2,
 };
 
 struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
-  static const int32_t TASK_ID = ALLOCATOR_TASK_ID;
+  static const std::int32_t TASK_ID = ALLOCATOR_TASK_ID;
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -77,16 +77,22 @@ struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
   }
 }
 
-void test_allocator(
-  BufferOpCode op_code, legate::Memory::Kind kind, bool scoped, size_t bytes, size_t alignment = 16)
+void test_allocator(BufferOpCode op_code,
+                    legate::Memory::Kind kind,
+                    bool scoped,
+                    std::size_t bytes,
+                    std::size_t alignment = 16)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
   auto task    = runtime->create_task(context, ALLOCATOR_TASK_ID);
   auto part    = task.declare_partition();
   static_cast<void>(part);
-  AllocatorParams struct_data = {
-    static_cast<uint32_t>(op_code), static_cast<uint64_t>(kind), scoped, alignment, bytes};
+  AllocatorParams struct_data = {static_cast<std::uint32_t>(op_code),
+                                 static_cast<std::uint64_t>(kind),
+                                 scoped,
+                                 alignment,
+                                 bytes};
   task.add_scalar_arg(legate::Scalar(struct_data,
                                      legate::struct_type(true,
                                                          legate::uint32(),
@@ -138,8 +144,8 @@ TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 
 TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
 {
-  auto allocator             = legate::ScopedAllocator(legate::Memory::SYSTEM_MEM, true);
-  std::vector<uint64_t> data = {1, 2, 3};
+  auto allocator                  = legate::ScopedAllocator(legate::Memory::SYSTEM_MEM, true);
+  std::vector<std::uint64_t> data = {1, 2, 3};
   EXPECT_THROW(allocator.deallocate(data.data()), std::runtime_error);
 
   // invalid deallocate in task launch

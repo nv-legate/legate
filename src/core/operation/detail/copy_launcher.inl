@@ -16,7 +16,7 @@
 
 namespace legate::detail {
 
-inline CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine, int64_t tag)
+inline CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine, std::int64_t tag)
   : machine_{machine}, tag_{tag}
 {
 }

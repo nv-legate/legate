@@ -29,9 +29,9 @@ class Gather final : public Operation {
   Gather(InternalSharedPtr<LogicalStore> target,
          InternalSharedPtr<LogicalStore> source,
          InternalSharedPtr<LogicalStore> source_indirect,
-         uint64_t unique_id,
+         std::uint64_t unique_id,
          mapping::detail::Machine&& machine,
-         std::optional<int32_t> redop);
+         std::optional<std::int32_t> redop);
 
   void set_indirect_out_of_range(bool flag);
 
@@ -48,7 +48,7 @@ class Gather final : public Operation {
   StoreArg source_;
   StoreArg source_indirect_;
   InternalSharedPtr<Constraint> constraint_;
-  std::optional<int32_t> redop_;
+  std::optional<std::int32_t> redop_;
 };
 
 }  // namespace legate::detail

@@ -90,9 +90,9 @@ std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>
   return result;
 }
 
-uint32_t Machine::count() const { return count(preferred_target); }
+std::uint32_t Machine::count() const { return count(preferred_target); }
 
-uint32_t Machine::count(TaskTarget target) const { return processor_range(target).count(); }
+std::uint32_t Machine::count(TaskTarget target) const { return processor_range(target).count(); }
 
 std::string Machine::to_string() const
 {
@@ -107,13 +107,13 @@ std::string Machine::to_string() const
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
-  buffer.pack<int32_t>(static_cast<int32_t>(preferred_target));
-  buffer.pack<uint32_t>(processor_ranges.size());
+  buffer.pack<std::int32_t>(static_cast<std::int32_t>(preferred_target));
+  buffer.pack<std::uint32_t>(processor_ranges.size());
   for (auto& [target, processor_range] : processor_ranges) {
-    buffer.pack<int32_t>(static_cast<int32_t>(target));
-    buffer.pack<uint32_t>(processor_range.low);
-    buffer.pack<uint32_t>(processor_range.high);
-    buffer.pack<uint32_t>(processor_range.per_node_count);
+    buffer.pack<std::int32_t>(static_cast<std::int32_t>(target));
+    buffer.pack<std::uint32_t>(processor_range.low);
+    buffer.pack<std::uint32_t>(processor_range.high);
+    buffer.pack<std::uint32_t>(processor_range.per_node_count);
   }
 }
 
@@ -129,7 +129,10 @@ Machine Machine::only(const std::vector<TaskTarget>& targets) const
   return Machine{std::move(new_processor_ranges)};
 }
 
-Machine Machine::slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_others) const
+Machine Machine::slice(std::uint32_t from,
+                       std::uint32_t to,
+                       TaskTarget target,
+                       bool keep_others) const
 {
   if (keep_others) {
     std::map<TaskTarget, ProcessorRange> new_ranges{processor_ranges};
@@ -140,7 +143,7 @@ Machine Machine::slice(uint32_t from, uint32_t to, TaskTarget target, bool keep_
   return Machine{{{target, processor_range(target).slice(from, to)}}};
 }
 
-Machine Machine::slice(uint32_t from, uint32_t to, bool keep_others) const
+Machine Machine::slice(std::uint32_t from, std::uint32_t to, bool keep_others) const
 {
   return slice(from, to, preferred_target, keep_others);
 }
@@ -193,7 +196,7 @@ std::ostream& operator<<(std::ostream& stream, const Machine& machine)
 // legate::mapping::LocalProcessorRange
 ///////////////////////////////////////////
 
-const Processor& LocalProcessorRange::operator[](uint32_t idx) const
+const Processor& LocalProcessorRange::operator[](std::uint32_t idx) const
 {
   auto local_idx = idx - offset_;
   static_assert(std::is_unsigned_v<decltype(local_idx)>,
@@ -224,8 +227,9 @@ std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range)
 // legate::mapping::LocalMachine
 ///////////////////////////////////////////
 LocalMachine::LocalMachine()
-  : node_id{static_cast<uint32_t>(Realm::Network::my_node_id)},
-    total_nodes{static_cast<uint32_t>(Legion::Machine::get_machine().get_address_space_count())}
+  : node_id{static_cast<std::uint32_t>(Realm::Network::my_node_id)},
+    total_nodes{
+      static_cast<std::uint32_t>(Legion::Machine::get_machine().get_address_space_count())}
 {
   auto legion_machine = Legion::Machine::get_machine();
   Legion::Machine::ProcessorQuery procs{legion_machine};
@@ -298,17 +302,18 @@ const std::vector<Processor>& LocalMachine::procs(TaskTarget target) const
   return cpus_;
 }
 
-size_t LocalMachine::total_frame_buffer_size() const
+std::size_t LocalMachine::total_frame_buffer_size() const
 {
   // We assume that all memories of the same kind are symmetric in size
-  const size_t per_node_size = frame_buffers_.size() * frame_buffers_.begin()->second.capacity();
+  const std::size_t per_node_size =
+    frame_buffers_.size() * frame_buffers_.begin()->second.capacity();
   return per_node_size * total_nodes;
 }
 
-size_t LocalMachine::total_socket_memory_size() const
+std::size_t LocalMachine::total_socket_memory_size() const
 {
   // We assume that all memories of the same kind are symmetric in size
-  const size_t per_node_size =
+  const std::size_t per_node_size =
     socket_memories_.size() * socket_memories_.begin()->second.capacity();
   return per_node_size * total_nodes;
 }
@@ -337,8 +342,8 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 
   auto num_local_procs = local_procs.size();
   auto my_low          = num_local_procs * node_id;
-  const ProcessorRange my_range{static_cast<uint32_t>(my_low),
-                                static_cast<uint32_t>(my_low + num_local_procs),
+  const ProcessorRange my_range{static_cast<std::uint32_t>(my_low),
+                                static_cast<std::uint32_t>(my_low + num_local_procs),
                                 global_range.per_node_count};
 
   auto slice = global_range & my_range;

@@ -42,7 +42,7 @@ class TaskException : public std::exception {
    * @param index Exception id
    * @param error_message Error message
    */
-  TaskException(int32_t index, std::string error_message);
+  TaskException(std::int32_t index, std::string error_message);
 
   /**
    * @brief Constructs a `TaskException` object with an error message. The exception id
@@ -59,7 +59,7 @@ class TaskException : public std::exception {
    *
    * @return The exception id
    */
-  [[nodiscard]] int32_t index() const noexcept;
+  [[nodiscard]] std::int32_t index() const noexcept;
   /**
    * @brief Returns the error message
    *
@@ -68,7 +68,7 @@ class TaskException : public std::exception {
   [[nodiscard]] const std::string& error_message() const noexcept;
 
  private:
-  int32_t index_{-1};
+  std::int32_t index_{-1};
   std::string error_message_{};
 };
 

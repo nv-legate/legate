@@ -60,7 +60,8 @@ template <Legion::PrivilegeMode>
 struct StringArrayAccessor;
 
 template <>
-struct StringArrayAccessor<LEGION_READ_ONLY> : public ListArrayAccessor<LEGION_READ_ONLY, int8_t> {
+struct StringArrayAccessor<LEGION_READ_ONLY>
+  : public ListArrayAccessor<LEGION_READ_ONLY, std::int8_t> {
   StringArrayAccessor(const StringArray& array);
 
   using ListArrayAccessor::operator[];
@@ -69,7 +70,7 @@ struct StringArrayAccessor<LEGION_READ_ONLY> : public ListArrayAccessor<LEGION_R
 
 template <>
 struct StringArrayAccessor<LEGION_WRITE_DISCARD>
-  : public ListArrayAccessor<LEGION_WRITE_DISCARD, int8_t> {
+  : public ListArrayAccessor<LEGION_WRITE_DISCARD, std::int8_t> {
   StringArrayAccessor(const StringArray& array);
 
   using ListArrayAccessor::insert;

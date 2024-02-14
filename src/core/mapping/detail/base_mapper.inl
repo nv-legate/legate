@@ -22,7 +22,7 @@ inline const std::vector<Processor>& BaseMapper::gpus() const { return local_mac
 
 inline const std::vector<Processor>& BaseMapper::omps() const { return local_machine.omps(); }
 
-inline uint32_t BaseMapper::total_nodes() const { return local_machine.total_nodes; }
+inline std::uint32_t BaseMapper::total_nodes() const { return local_machine.total_nodes; }
 
 inline const char* BaseMapper::get_mapper_name() const { return mapper_name.c_str(); }
 

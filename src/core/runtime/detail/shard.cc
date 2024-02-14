@@ -34,13 +34,13 @@ class ToplevelTaskShardingFunctor final : public Legion::ShardingFunctor {
  public:
   [[nodiscard]] Legion::ShardID shard(const DomainPoint& p,
                                       const Domain& launch_space,
-                                      const size_t total_shards) override
+                                      const std::size_t total_shards) override
   {
     // Just tile this space in 1D
-    const Point<1> point = p;
-    const Rect<1> space  = launch_space;
-    const size_t size    = (space.hi[0] - space.lo[0]) + 1;
-    const size_t chunk   = (size + total_shards - 1) / total_shards;
+    const Point<1> point    = p;
+    const Rect<1> space     = launch_space;
+    const std::size_t size  = (space.hi[0] - space.lo[0]) + 1;
+    const std::size_t chunk = (size + total_shards - 1) / total_shards;
     return (point[0] - space.lo[0]) / chunk;
   }
 };
@@ -49,10 +49,10 @@ class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
  public:
   [[nodiscard]] Legion::ShardID shard(const DomainPoint& p,
                                       const Domain& launch_space,
-                                      const size_t total_shards) override
+                                      const std::size_t total_shards) override
   {
-    const size_t size  = launch_space.get_volume();
-    const size_t chunk = (size + total_shards - 1) / total_shards;
+    const std::size_t size  = launch_space.get_volume();
+    const std::size_t chunk = (size + total_shards - 1) / total_shards;
     return linearize(launch_space.lo(), launch_space.hi(), p) / chunk;
   }
 
@@ -61,14 +61,14 @@ class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
   void invert(Legion::ShardID shard,
               const Domain& shard_domain,
               const Domain& full_domain,
-              const size_t total_shards,
+              const std::size_t total_shards,
               std::vector<DomainPoint>& points) override
   {
     LegateCheck(shard_domain == full_domain);
-    const size_t size  = shard_domain.get_volume();
-    const size_t chunk = (size + total_shards - 1) / total_shards;
-    size_t idx         = shard * chunk;
-    const size_t lim   = std::min((shard + 1) * chunk, size);
+    const std::size_t size  = shard_domain.get_volume();
+    const std::size_t chunk = (size + total_shards - 1) / total_shards;
+    std::size_t idx         = shard * chunk;
+    const std::size_t lim   = std::min((shard + 1) * chunk, size);
     if (idx >= lim) {
       return;
     }
@@ -114,7 +114,7 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
 
   [[nodiscard]] Legion::ShardID shard(const DomainPoint& p,
                                       const Domain& launch_space,
-                                      size_t total_shards) override
+                                      std::size_t total_shards) override
   {
     auto lo             = proj_fn_->project_point(launch_space.lo());
     auto hi             = proj_fn_->project_point(launch_space.hi());

@@ -18,7 +18,7 @@
 
 namespace legate::detail {
 
-Operation::Operation(uint64_t unique_id, mapping::detail::Machine&& machine)
+Operation::Operation(std::uint64_t unique_id, mapping::detail::Machine&& machine)
   : unique_id_{unique_id},
     provenance_{Runtime::get_runtime()->provenance_manager()->get_provenance()},
     machine_{std::move(machine)}
@@ -39,7 +39,7 @@ const Variable* Operation::find_or_declare_partition(InternalSharedPtr<LogicalSt
 const Variable* Operation::declare_partition()
 {
   return partition_symbols_
-    .emplace_back(std::make_unique<Variable>(this, static_cast<int32_t>(next_part_id_++)))
+    .emplace_back(std::make_unique<Variable>(this, static_cast<std::int32_t>(next_part_id_++)))
     .get();
 }
 

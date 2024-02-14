@@ -21,7 +21,7 @@ using TaskException = DefaultFixture;
 
 TEST_F(TaskException, Basic)
 {
-  int32_t index1         = 100;
+  std::int32_t index1    = 100;
   const char* ERROR_MSG1 = "Exception Test1";
   legate::TaskException exc1{index1, ERROR_MSG1};
   EXPECT_EQ(exc1.index(), index1);

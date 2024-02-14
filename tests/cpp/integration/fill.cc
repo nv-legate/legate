@@ -87,9 +87,9 @@ void register_tasks()
 template <std::int32_t DIM>
 /*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input    = context.input(0);
-  auto shape    = input.shape<DIM>();
-  int64_t value = context.scalar(0).value<int64_t>();
+  auto input         = context.input(0);
+  auto shape         = input.shape<DIM>();
+  std::int64_t value = context.scalar(0).value<std::int64_t>();
 
   if (shape.empty()) {
     return;
@@ -117,7 +117,7 @@ template <std::int32_t DIM>
   auto shape               = input.shape<DIM>();
   auto value_in_slice      = context.scalar(0);
   auto value_outside_slice = context.scalar(1);
-  auto offset              = context.scalar(2).value<int64_t>();
+  auto offset              = context.scalar(2).value<std::int64_t>();
 
   if (shape.empty()) {
     return;
@@ -134,8 +134,8 @@ template <std::int32_t DIM>
 
   if (!input.nullable()) {
     auto acc         = input.data().read_accessor<int64_t, DIM>(shape);
-    auto v_in_slice  = value_in_slice.value<int64_t>();
-    auto v_out_slice = value_outside_slice.value<int64_t>();
+    auto v_in_slice  = value_in_slice.value<std::int64_t>();
+    auto v_out_slice = value_outside_slice.value<std::int64_t>();
     for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
       EXPECT_EQ(acc[*it], in_slice(*it) ? v_in_slice : v_out_slice);
     }
@@ -144,7 +144,7 @@ template <std::int32_t DIM>
 
   auto val_acc    = input.data().read_accessor<int64_t, DIM>(shape);
   auto mask_acc   = input.null_mask().read_accessor<bool, DIM>(shape);
-  auto v_in_slice = value_in_slice.value<int64_t>();
+  auto v_in_slice = value_in_slice.value<std::int64_t>();
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
     if (in_slice(*it)) {
       EXPECT_EQ(val_acc[*it], v_in_slice);
@@ -178,7 +178,7 @@ void check_output(const legate::LogicalArray& array, legate::Scalar&& value)
 void check_output_slice(const legate::LogicalArray& array,
                         legate::Scalar&& value_in_slice,
                         legate::Scalar&& value_outside_slice,
-                        int64_t offset)
+                        std::int64_t offset)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -226,9 +226,9 @@ void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool 
 {
   auto runtime = legate::Runtime::get_runtime();
 
-  constexpr int64_t v1     = 100;
-  constexpr int64_t v2     = 200;
-  constexpr int64_t offset = 3;
+  constexpr std::int64_t v1     = 100;
+  constexpr std::int64_t v2     = 200;
+  constexpr std::int64_t offset = 3;
 
   auto lhs = runtime->create_array(
     legate::full(static_cast<std::uint64_t>(dim), size), legate::int64(), null_init);

@@ -16,7 +16,7 @@
 
 namespace legate::detail {
 
-inline FillLauncher::FillLauncher(const mapping::detail::Machine& machine, int64_t tag)
+inline FillLauncher::FillLauncher(const mapping::detail::Machine& machine, std::int64_t tag)
   : machine_{machine}, tag_{tag}
 {
   static_cast<void>(tag_);

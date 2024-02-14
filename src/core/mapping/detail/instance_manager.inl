@@ -61,7 +61,7 @@ inline bool BaseInstanceManager::FieldMemInfo::operator==(const FieldMemInfo& rh
   return tid == rhs.tid && fid == rhs.fid && memory == rhs.memory;
 }
 
-inline size_t BaseInstanceManager::FieldMemInfo::hash() const noexcept
+inline std::size_t BaseInstanceManager::FieldMemInfo::hash() const noexcept
 {
   return hash_all(tid, fid, memory.id);
 }

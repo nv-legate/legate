@@ -21,11 +21,11 @@ namespace legate {
 
 Type::Code Type::code() const { return impl()->code; }
 
-uint32_t Type::size() const { return impl()->size(); }
+std::uint32_t Type::size() const { return impl()->size(); }
 
-uint32_t Type::alignment() const { return impl()->alignment(); }
+std::uint32_t Type::alignment() const { return impl()->alignment(); }
 
-uint32_t Type::uid() const { return impl()->uid(); }
+std::uint32_t Type::uid() const { return impl()->uid(); }
 
 bool Type::variable_size() const { return impl()->variable_size(); }
 
@@ -57,24 +57,24 @@ ListType Type::as_list_type() const
   return ListType{impl()};
 }
 
-void Type::record_reduction_operator(int32_t op_kind, int32_t global_op_id) const
+void Type::record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const
 {
   impl()->record_reduction_operator(op_kind, global_op_id);
 }
 
-void Type::record_reduction_operator(ReductionOpKind op_kind, int32_t global_op_id) const
+void Type::record_reduction_operator(ReductionOpKind op_kind, std::int32_t global_op_id) const
 {
-  impl()->record_reduction_operator(static_cast<int32_t>(op_kind), global_op_id);
+  impl()->record_reduction_operator(static_cast<std::int32_t>(op_kind), global_op_id);
 }
 
-int32_t Type::find_reduction_operator(int32_t op_kind) const
+std::int32_t Type::find_reduction_operator(std::int32_t op_kind) const
 {
   return impl()->find_reduction_operator(op_kind);
 }
 
-int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
+std::int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
-  return impl()->find_reduction_operator(static_cast<int32_t>(op_kind));
+  return impl()->find_reduction_operator(static_cast<std::int32_t>(op_kind));
 }
 
 bool Type::operator==(const Type& other) const { return impl()->equal(*other.impl_); }
@@ -85,7 +85,7 @@ Type::Type() = default;
 
 Type::~Type() = default;
 
-uint32_t FixedArrayType::num_elements() const
+std::uint32_t FixedArrayType::num_elements() const
 {
   return static_cast<const detail::FixedArrayType*>(impl().get())->num_elements();
 }
@@ -95,12 +95,12 @@ Type FixedArrayType::element_type() const
   return Type{static_cast<const detail::FixedArrayType*>(impl().get())->element_type()};
 }
 
-uint32_t StructType::num_fields() const
+std::uint32_t StructType::num_fields() const
 {
   return static_cast<const detail::StructType*>(impl().get())->num_fields();
 }
 
-Type StructType::field_type(uint32_t field_idx) const
+Type StructType::field_type(std::uint32_t field_idx) const
 {
   return Type{static_cast<const detail::StructType*>(impl().get())->field_type(field_idx)};
 }
@@ -110,7 +110,7 @@ bool StructType::aligned() const
   return static_cast<const detail::StructType*>(impl().get())->aligned();
 }
 
-std::vector<uint32_t> StructType::offsets() const
+std::vector<std::uint32_t> StructType::offsets() const
 {
   return static_cast<const detail::StructType*>(impl().get())->offsets();
 }
@@ -124,7 +124,7 @@ Type primitive_type(Type::Code code) { return Type{detail::primitive_type(code)}
 
 Type string_type() { return Type{detail::string_type()}; }
 
-Type fixed_array_type(const Type& element_type, uint32_t N)
+Type fixed_array_type(const Type& element_type, std::uint32_t N)
 {
   return Type{detail::fixed_array_type(element_type.impl(), N)};
 }
@@ -144,7 +144,7 @@ Type list_type(const Type& element_type) { return Type{detail::list_type(element
 
 std::ostream& operator<<(std::ostream& ostream, const Type::Code& code)
 {
-  ostream << static_cast<int32_t>(code);
+  ostream << static_cast<std::int32_t>(code);
   return ostream;
 }
 
@@ -182,20 +182,20 @@ Type complex64() { return Type{detail::complex64()}; }
 
 Type complex128() { return Type{detail::complex128()}; }
 
-Type binary_type(uint32_t size) { return Type{detail::binary_type(size)}; }
+Type binary_type(std::uint32_t size) { return Type{detail::binary_type(size)}; }
 
-Type point_type(uint32_t ndim) { return Type{detail::point_type(ndim)}; }
+Type point_type(std::uint32_t ndim) { return Type{detail::point_type(ndim)}; }
 
-Type rect_type(uint32_t ndim) { return Type{detail::rect_type(ndim)}; }
+Type rect_type(std::uint32_t ndim) { return Type{detail::rect_type(ndim)}; }
 
 Type null_type() { return Type{detail::null_type()}; }
 
-bool is_point_type(const Type& type, uint32_t ndim)
+bool is_point_type(const Type& type, std::uint32_t ndim)
 {
   return detail::is_point_type(type.impl(), ndim);
 }
 
-bool is_rect_type(const Type& type, uint32_t ndim)
+bool is_rect_type(const Type& type, std::uint32_t ndim)
 {
   return detail::is_rect_type(type.impl(), ndim);
 }

@@ -73,7 +73,7 @@ std::ostream& operator<<(std::ostream& stream, const StoreTarget& target)
   return ordering;
 }
 
-/*static*/ DimOrdering DimOrdering::custom_order(std::vector<int32_t> dims)
+/*static*/ DimOrdering DimOrdering::custom_order(std::vector<std::int32_t> dims)
 {
   return DimOrdering{make_internal_shared<detail::DimOrdering>(std::move(dims))};
 }
@@ -82,14 +82,14 @@ void DimOrdering::set_c_order() { *this = c_order(); }
 
 void DimOrdering::set_fortran_order() { *this = fortran_order(); }
 
-void DimOrdering::set_custom_order(std::vector<int32_t> dims)
+void DimOrdering::set_custom_order(std::vector<std::int32_t> dims)
 {
   impl_ = make_internal_shared<detail::DimOrdering>(std::move(dims));
 }
 
 DimOrdering::Kind DimOrdering::kind() const { return impl_->kind; }
 
-std::vector<int32_t> DimOrdering::dimensions() const { return impl_->dims; }
+std::vector<std::int32_t> DimOrdering::dimensions() const { return impl_->dims; }
 
 bool DimOrdering::operator==(const DimOrdering& other) const { return *impl_ == *other.impl_; }
 

@@ -30,8 +30,8 @@ namespace legate::detail {
 ////////////////////////////////////////////////////
 
 Task::Task(const Library* library,
-           int64_t task_id,
-           uint64_t unique_id,
+           std::int64_t task_id,
+           std::uint64_t unique_id,
            mapping::detail::Machine&& machine)
   : Operation{unique_id, std::move(machine)}, library_{library}, task_id_{task_id}
 {
@@ -86,7 +86,7 @@ void Task::launch_task(Strategy* p_strategy)
       arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, -1));
   }
 
-  uint32_t idx = 0;
+  std::uint32_t idx = 0;
   for (auto& [arr, mapping, projection] : reductions_) {
     launcher.add_reduction(arr->to_launcher_arg(
       mapping, strategy, launch_domain, projection, LEGION_REDUCE, reduction_ops_[idx++]));
@@ -151,7 +151,7 @@ void Task::demux_scalar_stores(const Legion::Future& result)
   auto num_unbound_outs = unbound_outputs_.size();
 
   auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
-               static_cast<size_t>(can_throw_exception_);
+               static_cast<std::size_t>(can_throw_exception_);
   if (0 == total) {
     return;
   }
@@ -167,7 +167,7 @@ void Task::demux_scalar_stores(const Legion::Future& result)
     }
   } else {
     auto* runtime = detail::Runtime::get_runtime();
-    auto idx      = static_cast<uint32_t>(num_unbound_outs);
+    auto idx      = static_cast<std::uint32_t>(num_unbound_outs);
 
     for (auto& store : scalar_outputs_) {
       store->set_future(runtime->extract_scalar(result, idx++));
@@ -188,7 +188,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   auto num_unbound_outs = unbound_outputs_.size();
 
   auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
-               static_cast<size_t>(can_throw_exception_);
+               static_cast<std::size_t>(can_throw_exception_);
   if (0 == total) {
     return;
   }
@@ -209,7 +209,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
       LegateAssert(1 == num_unbound_outs);
     }
   } else {
-    auto idx = static_cast<uint32_t>(num_unbound_outs);
+    auto idx = static_cast<std::uint32_t>(num_unbound_outs);
 
     if (!scalar_outputs_.empty()) {
       // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
@@ -257,7 +257,7 @@ const Variable* AutoTask::add_output(InternalSharedPtr<LogicalArray> array)
   return symb;
 }
 
-const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array, int32_t redop)
+const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array, std::int32_t redop)
 {
   auto symb = find_or_declare_partition(array);
   add_reduction(std::move(array), redop, symb);
@@ -294,7 +294,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
 }
 
 void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
-                             int32_t redop,
+                             std::int32_t redop,
                              const Variable* partition_symbol)
 {
   if (array->unbound()) {
@@ -390,9 +390,9 @@ void AutoTask::fixup_ranges(Strategy& strategy)
 ////////////////////////////////////////////////////
 
 ManualTask::ManualTask(const Library* library,
-                       int64_t task_id,
+                       std::int64_t task_id,
                        const Domain& launch_domain,
-                       uint64_t unique_id,
+                       std::uint64_t unique_id,
                        mapping::detail::Machine&& machine)
   : Task{library, task_id, unique_id, std::move(machine)},
     strategy_{std::make_unique<detail::Strategy>()}
@@ -437,7 +437,7 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
     outputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
-void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store, int32_t redop)
+void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store, std::int32_t redop)
 {
   if (store->unbound()) {
     throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
@@ -452,11 +452,11 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store, int
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                               int32_t redop,
+                               std::int32_t redop,
                                std::optional<SymbolicPoint> projection)
 {
   auto legion_redop_id =
-    static_cast<int32_t>(store_partition->store()->type()->find_reduction_operator(redop));
+    static_cast<std::int32_t>(store_partition->store()->type()->find_reduction_operator(redop));
 
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_reduction(store_partition->store(),

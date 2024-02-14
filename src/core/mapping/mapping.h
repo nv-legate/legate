@@ -49,7 +49,7 @@ class Task;
  * The enumerators of `TaskTarget` are ordered by their precedence; i.e., `GPU`, if available, is
  * chosen over `OMP` or `CPU, `OMP`, if available, is chosen over `CPU`.
  */
-enum class TaskTarget : int32_t {
+enum class TaskTarget : std::int32_t {
   /**
    * @brief Indicates the task be mapped to a GPU
    */
@@ -70,7 +70,7 @@ std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
  * @ingroup mapping
  * @brief An enum class for store targets
  */
-enum class StoreTarget : int32_t {
+enum class StoreTarget : std::int32_t {
   /**
    * @brief Indicates the store be mapped to the system memory (host memory)
    */
@@ -95,7 +95,7 @@ std::ostream& operator<<(std::ostream& stream, const StoreTarget& target);
  * @ingroup mapping
  * @brief An enum class for instance allocation policies
  */
-enum class AllocPolicy : int32_t {
+enum class AllocPolicy : std::int32_t {
   /**
    * @brief Indicates the store can reuse an existing instance
    */
@@ -110,7 +110,7 @@ enum class AllocPolicy : int32_t {
  * @ingroup mapping
  * @brief An enum class for instant layouts
  */
-enum class InstLayout : int32_t {
+enum class InstLayout : std::int32_t {
   /**
    * @brief Indicates the store must be mapped to an SOA instance
    */
@@ -131,7 +131,7 @@ struct DimOrdering {
   /**
    * @brief An enum class for kinds of dimension ordering
    */
-  enum class Kind : int32_t {
+  enum class Kind : std::int32_t {
     /**
      * @brief Indicates the instance have C layout (i.e., the last dimension is the leading
      * dimension in the instance)
@@ -167,7 +167,7 @@ struct DimOrdering {
    *
    * @return A `DimOrdering` object
    */
-  static DimOrdering custom_order(std::vector<int32_t> dims);
+  static DimOrdering custom_order(std::vector<std::int32_t> dims);
 
   /**
    * @brief Sets the dimension ordering to C
@@ -182,7 +182,7 @@ struct DimOrdering {
    *
    * @param dims A vector that stores the order of dimensions.
    */
-  void set_custom_order(std::vector<int32_t> dims);
+  void set_custom_order(std::vector<std::int32_t> dims);
 
   /**
    * @brief Dimension ordering type
@@ -191,7 +191,7 @@ struct DimOrdering {
   /**
    * @brief Dimension list. Used only when the `kind` is `CUSTOM`.
    */
-  [[nodiscard]] std::vector<int32_t> dimensions() const;
+  [[nodiscard]] std::vector<std::int32_t> dimensions() const;
 
   bool operator==(const DimOrdering&) const;
 
@@ -472,7 +472,7 @@ class MachineQueryInterface {
    *
    * @return Total number of nodes
    */
-  [[nodiscard]] virtual uint32_t total_nodes() const = 0;
+  [[nodiscard]] virtual std::uint32_t total_nodes() const = 0;
 };
 
 /**

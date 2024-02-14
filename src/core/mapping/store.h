@@ -52,7 +52,7 @@ class Store {
    *
    * @return Store's dimension
    */
-  [[nodiscard]] uint32_t dim() const;
+  [[nodiscard]] std::uint32_t dim() const;
 
   /**
    * @brief Indicates whether the store is a reduction store
@@ -66,7 +66,7 @@ class Store {
    *
    * @return Reduction oeprator id
    */
-  [[nodiscard]] int32_t redop() const;
+  [[nodiscard]] std::int32_t redop() const;
 
   /**
    * @brief Indicates whether the store can colocate in an instance with a given store
@@ -83,7 +83,7 @@ class Store {
    *
    * @return Store's domain
    */
-  template <int32_t DIM>
+  template <std::int32_t DIM>
   [[nodiscard]] Rect<DIM> shape() const;
   /**
    * @brief Returns the store's domain in a dimension-erased domain type

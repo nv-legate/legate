@@ -24,17 +24,17 @@ struct ResourceConfig {
   /**
    * @brief Maximum number of tasks that the library can register
    */
-  int64_t max_tasks{1024};  // NOLINT(readability-magic-numbers)
+  std::int64_t max_tasks{1024};  // NOLINT(readability-magic-numbers)
   /**
    * @brief Maximum number of dynamic tasks that the library can register (cannot exceed max_tasks)
    */
-  int64_t max_dyn_tasks{0};
+  std::int64_t max_dyn_tasks{0};
   /**
    * @brief Maximum number of custom reduction operators that the library can register
    */
-  int64_t max_reduction_ops{};
-  int64_t max_projections{};
-  int64_t max_shardings{};
+  std::int64_t max_reduction_ops{};
+  std::int64_t max_projections{};
+  std::int64_t max_shardings{};
 };
 
 }  // namespace legate

@@ -128,7 +128,8 @@ void TaskInfo::register_task(Legion::TaskID task_id) { return impl_->register_ta
 std::ostream& operator<<(std::ostream& os, const VariantInfo& info)
 {
   std::stringstream ss;
-  ss << std::showbase << std::hex << reinterpret_cast<uintptr_t>(info.body) << "," << info.options;
+  ss << std::showbase << std::hex << reinterpret_cast<std::uintptr_t>(info.body) << ","
+     << info.options;
   os << std::move(ss).str();
   return os;
 }

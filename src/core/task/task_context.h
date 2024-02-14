@@ -43,7 +43,7 @@ class TaskContext {
    *
    * @return The global task id
    */
-  [[nodiscard]] int64_t task_id() const noexcept;
+  [[nodiscard]] std::int64_t task_id() const noexcept;
   /**
    * @brief Returns the Legate variant kind of the task
    *
@@ -57,7 +57,7 @@ class TaskContext {
    *
    * @return Array
    */
-  [[nodiscard]] PhysicalArray input(uint32_t index) const;
+  [[nodiscard]] PhysicalArray input(std::uint32_t index) const;
   /**
    * @brief Returns all input arrays of the task
    *
@@ -71,7 +71,7 @@ class TaskContext {
    *
    * @return Array
    */
-  [[nodiscard]] PhysicalArray output(uint32_t index) const;
+  [[nodiscard]] PhysicalArray output(std::uint32_t index) const;
   /**
    * @brief Returns all output arrays of the task
    *
@@ -85,7 +85,7 @@ class TaskContext {
    *
    * @return Array
    */
-  [[nodiscard]] PhysicalArray reduction(uint32_t index) const;
+  [[nodiscard]] PhysicalArray reduction(std::uint32_t index) const;
   /**
    * @brief Returns all reduction arrays of the task
    *
@@ -99,7 +99,7 @@ class TaskContext {
    *
    * @return Scalar
    */
-  [[nodiscard]] const Scalar& scalar(uint32_t index) const;
+  [[nodiscard]] const Scalar& scalar(std::uint32_t index) const;
   /**
    * @brief Returns by-value arguments of the task
    *
@@ -117,7 +117,7 @@ class TaskContext {
    *
    * @return Communicator
    */
-  [[nodiscard]] comm::Communicator communicator(uint32_t index) const;
+  [[nodiscard]] comm::Communicator communicator(std::uint32_t index) const;
   /**
    * @brief Returns communicators of the task
    *
@@ -134,25 +134,25 @@ class TaskContext {
    *
    * @return Number of arrays
    */
-  [[nodiscard]] size_t num_inputs() const;
+  [[nodiscard]] std::size_t num_inputs() const;
   /**
    * @brief Returns the number of task's outputs
    *
    * @return Number of arrays
    */
-  [[nodiscard]] size_t num_outputs() const;
+  [[nodiscard]] std::size_t num_outputs() const;
   /**
    * @brief Returns the number of task's reductions
    *
    * @return Number of arrays
    */
-  [[nodiscard]] size_t num_reductions() const;
+  [[nodiscard]] std::size_t num_reductions() const;
   /**
    * @brief Returns the number of communicators
    *
    * @return Number of communicators
    */
-  [[nodiscard]] size_t num_communicators() const;
+  [[nodiscard]] std::size_t num_communicators() const;
 
   /**
    * @brief Indicates whether the task is parallelized

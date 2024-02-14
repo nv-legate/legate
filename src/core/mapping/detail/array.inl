@@ -30,7 +30,7 @@ inline BaseArray::BaseArray(InternalSharedPtr<Store> data, InternalSharedPtr<Sto
 
 // ==========================================================================================
 
-inline int32_t BaseArray::dim() const { return data_->dim(); }
+inline std::int32_t BaseArray::dim() const { return data_->dim(); }
 
 inline legate::detail::ArrayKind BaseArray::kind() const { return legate::detail::ArrayKind::BASE; }
 

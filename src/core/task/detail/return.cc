@@ -28,14 +28,16 @@
 
 namespace legate::detail {
 
-ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, size_t size)
+ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, std::size_t size)
   : value_{std::move(value)},
     size_{size},
     is_device_value_{value_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM}
 {
 }
 
-/*static*/ ReturnValue ReturnValue::unpack(const void* ptr, size_t size, Memory::Kind memory_kind)
+/*static*/ ReturnValue ReturnValue::unpack(const void* ptr,
+                                           std::size_t size,
+                                           Memory::Kind memory_kind)
 {
   ReturnValue result{Legion::UntypedDeferredValue{size, memory_kind}, size};
 
@@ -61,7 +63,7 @@ const void* ReturnValue::ptr() const
   return acc.ptr(0);
 }
 
-ReturnedException::ReturnedException(int32_t index, std::string_view error_message)
+ReturnedException::ReturnedException(std::int32_t index, std::string_view error_message)
   : raised_{true}, index_{index}
 {
   message_size_ =
@@ -86,7 +88,7 @@ std::optional<TaskException> ReturnedException::to_task_exception() const
 namespace {
 
 template <typename T>
-constexpr size_t max_aligned_size_for_type()
+constexpr std::size_t max_aligned_size_for_type()
 {
   // NOLINTNEXTLINE(bugprone-sizeof-expression) // comparison to 0 is the point
   static_assert(sizeof(T) > 0, "Cannot be used for incomplete type");
@@ -99,7 +101,7 @@ constexpr size_t max_aligned_size_for_type()
 // alignment requirements for each member. It cannot know how much of the extra alignment
 // padding it needs because that depends on how the input pointer is aligned when it goes to
 // pack.
-size_t ReturnedException::legion_buffer_size() const
+std::size_t ReturnedException::legion_buffer_size() const
 {
   auto size = max_aligned_size_for_type<decltype(raised_)>();
 
@@ -115,7 +117,9 @@ namespace {
 
 // REVIEW: why no BufferBuilder? Then we don't have to repeat this logic
 template <typename T>
-[[nodiscard]] std::pair<void*, size_t> pack_buffer(void* buf, size_t remaining_cap, T&& value)
+[[nodiscard]] std::pair<void*, std::size_t> pack_buffer(void* buf,
+                                                        std::size_t remaining_cap,
+                                                        T&& value)
 {
   const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
 
@@ -140,7 +144,9 @@ void ReturnedException::legion_serialize(void* buffer) const
 namespace {
 
 template <typename T>
-[[nodiscard]] std::pair<void*, size_t> unpack_buffer(void* buf, size_t remaining_cap, T* value)
+[[nodiscard]] std::pair<void*, std::size_t> unpack_buffer(void* buf,
+                                                          std::size_t remaining_cap,
+                                                          T* value)
 {
   const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
 
@@ -154,7 +160,7 @@ void ReturnedException::legion_deserialize(const void* buffer)
 {
   // There is no information about the size of the buffer, nor can we know how much we need
   // until we pack all of it. So we just lie and say we have infinite memory.
-  auto rem_cap = std::numeric_limits<size_t>::max();
+  auto rem_cap = std::numeric_limits<std::size_t>::max();
   auto ptr     = const_cast<void*>(buffer);
 
   std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &raised_);
@@ -222,14 +228,14 @@ void ReturnValues::legion_serialize(void* buffer) const
 #endif
       return;
     }
-    memcpy(buffer, ret.ptr(), ret.size());
+    std::memcpy(buffer, ret.ptr(), ret.size());
     return;
   }
 
   *static_cast<uint32_t*>(buffer) = return_values_.size();
   auto ptr                        = static_cast<int8_t*>(buffer) + sizeof(uint32_t);
 
-  uint32_t offset = 0;
+  std::uint32_t offset = 0;
   for (auto ret : return_values_) {
     offset += ret.size();
     *reinterpret_cast<uint32_t*>(ptr) = offset;
@@ -244,7 +250,7 @@ void ReturnValues::legion_serialize(void* buffer) const
       if (ret.is_device_value()) {
         CHECK_CUDA(cudaMemcpyAsync(ptr, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
       } else {
-        memcpy(ptr, ret.ptr(), size);
+        std::memcpy(ptr, ret.ptr(), size);
       }
       ptr += size;
     }
@@ -253,7 +259,7 @@ void ReturnValues::legion_serialize(void* buffer) const
   {
     for (auto&& ret : return_values_) {
       const auto size = ret.size();
-      memcpy(ptr, ret.ptr(), size);
+      std::memcpy(ptr, ret.ptr(), size);
       ptr += size;
     }
   }
@@ -269,7 +275,7 @@ void ReturnValues::legion_deserialize(const void* buffer)
   auto offsets = reinterpret_cast<const uint32_t*>(ptr + sizeof(uint32_t));
   auto values  = ptr + sizeof(uint32_t) + sizeof(uint32_t) * num_values;
 
-  for (uint32_t idx = 0, offset = 0; idx < num_values; ++idx) {
+  for (std::uint32_t idx = 0, offset = 0; idx < num_values; ++idx) {
     const auto next_offset = offsets[idx];
     const auto size        = next_offset - offset;
     return_values_.push_back(ReturnValue::unpack(values + offset, size, mem_kind));
@@ -277,7 +283,7 @@ void ReturnValues::legion_deserialize(const void* buffer)
   }
 }
 
-/*static*/ ReturnValue ReturnValues::extract(const Legion::Future& future, uint32_t to_extract)
+/*static*/ ReturnValue ReturnValues::extract(const Legion::Future& future, std::uint32_t to_extract)
 {
   auto kind          = find_memory_kind_for_executing_processor();
   const auto* buffer = future.get_buffer(kind);
@@ -288,9 +294,9 @@ void ReturnValues::legion_deserialize(const void* buffer)
   auto offsets = reinterpret_cast<const uint32_t*>(ptr + sizeof(uint32_t));
   auto values  = ptr + sizeof(uint32_t) + sizeof(uint32_t) * num_values;
 
-  const uint32_t next_offset = offsets[to_extract];
-  const uint32_t offset      = to_extract == 0 ? 0 : offsets[to_extract - 1];
-  const uint32_t size        = next_offset - offset;
+  const std::uint32_t next_offset = offsets[to_extract];
+  const std::uint32_t offset      = to_extract == 0 ? 0 : offsets[to_extract - 1];
+  const std::uint32_t size        = next_offset - offset;
 
   return ReturnValue::unpack(values + offset, size, kind);
 }
@@ -317,7 +323,7 @@ void ReturnValues::finalize(Legion::Context legion_context) const
   }
 #endif
 
-  const size_t return_size = legion_buffer_size();
+  const std::size_t return_size = legion_buffer_size();
   auto return_buffer =
     Legion::UntypedDeferredValue(return_size, find_memory_kind_for_executing_processor());
   const AccessorWO<int8_t, 1> acc{return_buffer, return_size, false};
@@ -361,7 +367,7 @@ void pack_returned_exception(const ReturnedException& value, void*& ptr, size_t&
   auto new_size = value.legion_buffer_size();
   if (new_size > size) {
     size         = new_size;
-    auto new_ptr = realloc(ptr, new_size);
+    auto new_ptr = std::realloc(ptr, new_size);
     LegateCheck(new_ptr);  // realloc returns nullptr on failure, so check before clobbering ptr
     ptr = new_ptr;
   }

@@ -36,20 +36,20 @@ class Time::Impl {
     }
   }
 
-  [[nodiscard]] int64_t value()
+  [[nodiscard]] std::int64_t value()
   {
     if (!value_) {
-      value_ = future_->get_result<int64_t>();
+      value_ = future_->get_result<std::int64_t>();
     }
     return *value_;
   }
 
  private:
   std::unique_ptr<Legion::Future> future_{};
-  std::optional<int64_t> value_{std::nullopt};
+  std::optional<std::int64_t> value_{std::nullopt};
 };
 
-int64_t Time::value() const { return impl_->value(); }
+std::int64_t Time::value() const { return impl_->value(); }
 
 Time measure_microseconds()
 {

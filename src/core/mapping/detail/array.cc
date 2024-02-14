@@ -38,7 +38,7 @@ InternalSharedPtr<Store> BaseArray::null_mask() const
   return null_mask_;
 }
 
-InternalSharedPtr<Array> BaseArray::child(uint32_t /*index*/) const
+InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
 {
   throw std::invalid_argument("Non-nested array has no child sub-array");
   return {};
@@ -54,11 +54,11 @@ void BaseArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
 
 Domain BaseArray::domain() const { return data_->domain(); }
 
-int32_t ListArray::dim() const { return descriptor_->dim(); }
+std::int32_t ListArray::dim() const { return descriptor_->dim(); }
 
 bool ListArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
 
-InternalSharedPtr<Array> ListArray::child(uint32_t index) const
+InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
 {
   switch (index) {
     case 0: return descriptor_;
@@ -79,7 +79,7 @@ void ListArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
 
 Domain ListArray::domain() const { return descriptor_->domain(); }
 
-int32_t StructArray::dim() const { return fields_.front()->dim(); }
+std::int32_t StructArray::dim() const { return fields_.front()->dim(); }
 
 bool StructArray::unbound() const
 {
@@ -94,7 +94,7 @@ InternalSharedPtr<Store> StructArray::null_mask() const
   return null_mask_;
 }
 
-InternalSharedPtr<Array> StructArray::child(uint32_t index) const { return fields_.at(index); }
+InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const { return fields_.at(index); }
 
 void StructArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {

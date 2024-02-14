@@ -36,15 +36,16 @@ class PartitionManager {
  public:
   explicit PartitionManager(Runtime* runtime);
 
-  [[nodiscard]] const std::vector<uint32_t>& get_factors(const mapping::detail::Machine& machine);
+  [[nodiscard]] const std::vector<std::uint32_t>& get_factors(
+    const mapping::detail::Machine& machine);
 
-  [[nodiscard]] tuple<uint64_t> compute_launch_shape(const mapping::detail::Machine& machine,
-                                                     const Restrictions& restrictions,
-                                                     const tuple<uint64_t>& shape);
-  [[nodiscard]] tuple<uint64_t> compute_tile_shape(const tuple<uint64_t>& extents,
-                                                   const tuple<uint64_t>& launch_shape);
-  [[nodiscard]] bool use_complete_tiling(const tuple<uint64_t>& extents,
-                                         const tuple<uint64_t>& tile_shape);
+  [[nodiscard]] tuple<std::uint64_t> compute_launch_shape(const mapping::detail::Machine& machine,
+                                                          const Restrictions& restrictions,
+                                                          const tuple<std::uint64_t>& shape);
+  [[nodiscard]] tuple<std::uint64_t> compute_tile_shape(const tuple<std::uint64_t>& extents,
+                                                        const tuple<std::uint64_t>& launch_shape);
+  [[nodiscard]] bool use_complete_tiling(const tuple<std::uint64_t>& extents,
+                                         const tuple<std::uint64_t>& tile_shape);
 
   [[nodiscard]] Legion::IndexPartition find_index_partition(const Legion::IndexSpace& index_space,
                                                             const Tiling& tiling) const;
@@ -71,8 +72,8 @@ class PartitionManager {
                                   Legion::FieldID field_id);
 
  private:
-  int64_t min_shard_volume_{};
-  std::unordered_map<uint32_t, std::vector<uint32_t>> all_factors_{};
+  std::int64_t min_shard_volume_{};
+  std::unordered_map<uint32_t, std::vector<std::uint32_t>> all_factors_{};
 
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
   std::unordered_map<TilingCacheKey, Legion::IndexPartition, hasher<TilingCacheKey>>

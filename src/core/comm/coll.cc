@@ -114,7 +114,7 @@ int collAllgather(
 int collInit(int argc, char* argv[])
 {
   if (LegateDefined(LEGATE_USE_NETWORK)) {
-    char* network    = getenv("LEGATE_NEED_NETWORK");
+    char* network    = std::getenv("LEGATE_NEED_NETWORK");
     int need_network = 0;
     if (network != nullptr) {
       need_network = legate::detail::safe_strtoll<int>(network);
@@ -159,11 +159,11 @@ int BackendNetwork::collGetUniqueId(int* id)
   return CollSuccess;
 }
 
-void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, size_t size)
+void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, std::size_t size)
 {
-  void* sendbuf_tmp = malloc(size);
+  void* sendbuf_tmp = std::malloc(size);
   LegateCheck(sendbuf_tmp != nullptr);
-  memcpy(sendbuf_tmp, recvbuf, size);
+  std::memcpy(sendbuf_tmp, recvbuf, size);
   return sendbuf_tmp;
 }
 

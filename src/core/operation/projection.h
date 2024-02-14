@@ -38,32 +38,32 @@ namespace legate {
  */
 class SymbolicExpr {
  public:
-  static constexpr uint32_t UNSET = -1U;
+  static constexpr std::uint32_t UNSET = -1U;
 
   SymbolicExpr() = default;
 
-  SymbolicExpr(uint32_t dim, int32_t weight, int32_t offset = 0);
+  SymbolicExpr(std::uint32_t dim, std::int32_t weight, std::int32_t offset = 0);
 
-  explicit SymbolicExpr(uint32_t dim);
+  explicit SymbolicExpr(std::uint32_t dim);
 
   /**
    * @brief Returns the dimension index of this expression
    *
    * @return Dimension index
    */
-  [[nodiscard]] uint32_t dim() const;
+  [[nodiscard]] std::uint32_t dim() const;
   /**
    * @brief Returns the weight for the coordinates
    *
    * @return Weight value
    */
-  [[nodiscard]] int32_t weight() const;
+  [[nodiscard]] std::int32_t weight() const;
   /**
    * @brief Returns the offset of the expression
    *
    * @return Offset
    */
-  [[nodiscard]] int32_t offset() const;
+  [[nodiscard]] std::int32_t offset() const;
 
   /**
    * @brief Indicates if the expression denotes an identity mapping for the given dimension
@@ -73,7 +73,7 @@ class SymbolicExpr {
    * @return true The expression denotes an identity mapping
    * @return false The expression does not denote an identity mapping
    */
-  [[nodiscard]] bool is_identity(uint32_t dim) const;
+  [[nodiscard]] bool is_identity(std::uint32_t dim) const;
   /**
    * @brief Indicates if the expression denotes a constant
    *
@@ -85,17 +85,17 @@ class SymbolicExpr {
   bool operator==(const SymbolicExpr& other) const;
   bool operator<(const SymbolicExpr& other) const;
 
-  SymbolicExpr operator*(int32_t other) const;
-  SymbolicExpr operator+(int32_t other) const;
+  SymbolicExpr operator*(std::int32_t other) const;
+  SymbolicExpr operator+(std::int32_t other) const;
 
   [[nodiscard]] std::string to_string() const;
 
-  [[nodiscard]] size_t hash() const;
+  [[nodiscard]] std::size_t hash() const;
 
  private:
-  uint32_t dim_{UNSET};
-  int32_t weight_{1};
-  int32_t offset_{};
+  std::uint32_t dim_{UNSET};
+  std::int32_t weight_{1};
+  std::int32_t offset_{};
 };
 
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
@@ -121,7 +121,7 @@ using SymbolicPoint = tuple<SymbolicExpr>;
  *
  * @return A symbolic expression for the given dimension
  */
-[[nodiscard]] SymbolicExpr dimension(uint32_t dim);
+[[nodiscard]] SymbolicExpr dimension(std::uint32_t dim);
 
 /**
  * @ingroup op
@@ -131,7 +131,7 @@ using SymbolicPoint = tuple<SymbolicExpr>;
  *
  * @return A symbolic expression for the given constant
  */
-[[nodiscard]] SymbolicExpr constant(int32_t value);
+[[nodiscard]] SymbolicExpr constant(std::int32_t value);
 
 }  // namespace legate
 

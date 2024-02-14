@@ -21,14 +21,14 @@ using ManualTask = DefaultFixture;
 
 namespace {
 
-constexpr const char* library_name     = "test_manual_task_proj";
-constexpr const size_t DIM_EXTENT      = 32;
-constexpr const size_t N_TILES_PER_DIM = 2;
+constexpr const char* library_name          = "test_manual_task_proj";
+constexpr const std::size_t DIM_EXTENT      = 32;
+constexpr const std::size_t N_TILES_PER_DIM = 2;
 
 }  // namespace
 
 struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
-  static const int32_t TASK_ID = 1;
+  static const std::int32_t TASK_ID = 1;
   static void cpu_variant(legate::TaskContext context)
   {
     auto task_index = context.get_task_index();
@@ -61,8 +61,10 @@ TEST_F(ManualTask, Proj)
 
   // With a launch shape
   {
-    auto task = runtime->create_task(
-      library, ProjTesterTask::TASK_ID, legate::tuple<uint64_t>{N_TILES_PER_DIM, N_TILES_PER_DIM});
+    auto task =
+      runtime->create_task(library,
+                           ProjTesterTask::TASK_ID,
+                           legate::tuple<std::uint64_t>{N_TILES_PER_DIM, N_TILES_PER_DIM});
     task.add_input(row_wise, legate::SymbolicPoint{legate::dimension(0), legate::constant(0)});
     task.add_input(col_wise, legate::SymbolicPoint{legate::constant(0), legate::dimension(1)});
     runtime->submit(std::move(task));

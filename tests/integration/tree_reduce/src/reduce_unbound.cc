@@ -16,9 +16,9 @@ namespace tree_reduce {
 
 /*static*/ void ReduceUnboundTask::cpu_variant(legate::TaskContext context)
 {
-  auto inputs       = context.inputs();
-  auto output       = context.output(0);
-  uint32_t expected = 1;
+  auto inputs            = context.inputs();
+  auto output            = context.output(0);
+  std::uint32_t expected = 1;
   for (auto& input : inputs) {
     auto shape = input.shape<1>();
     LegateAssert(shape.volume() == expected);

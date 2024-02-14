@@ -36,7 +36,7 @@ class Time {
    *
    * @return A timestamp value
    */
-  [[nodiscard]] int64_t value() const;
+  [[nodiscard]] std::int64_t value() const;
 
   Time() = default;
 

@@ -29,7 +29,7 @@ bool CommunicatorFactory::CacheKey<Desc>::operator==(const CacheKey& other) cons
 }
 
 template <class Desc>
-size_t CommunicatorFactory::CacheKey<Desc>::hash() const noexcept
+std::size_t CommunicatorFactory::CacheKey<Desc>::hash() const noexcept
 {
   return hash_all(desc, target, range);
 }

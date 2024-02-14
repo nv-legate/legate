@@ -16,7 +16,7 @@
 
 #include "legate_defines.h"
 
-#include <limits.h>
+#include <climits>
 
 #ifdef LEGION_REDOP_COMPLEX
 #ifdef LEGION_REDOP_HALF
@@ -56,21 +56,21 @@ PREFIX constexpr Type::Code type_code_of<float> = Type::Code::FLOAT32;
 template <>
 PREFIX constexpr Type::Code type_code_of<double> = Type::Code::FLOAT64;
 template <>
-PREFIX constexpr Type::Code type_code_of<int8_t> = Type::Code::INT8;
+PREFIX constexpr Type::Code type_code_of<std::int8_t> = Type::Code::INT8;
 template <>
-PREFIX constexpr Type::Code type_code_of<int16_t> = Type::Code::INT16;
+PREFIX constexpr Type::Code type_code_of<std::int16_t> = Type::Code::INT16;
 template <>
-PREFIX constexpr Type::Code type_code_of<int32_t> = Type::Code::INT32;
+PREFIX constexpr Type::Code type_code_of<std::int32_t> = Type::Code::INT32;
 template <>
-PREFIX constexpr Type::Code type_code_of<int64_t> = Type::Code::INT64;
+PREFIX constexpr Type::Code type_code_of<std::int64_t> = Type::Code::INT64;
 template <>
-PREFIX constexpr Type::Code type_code_of<uint8_t> = Type::Code::UINT8;
+PREFIX constexpr Type::Code type_code_of<std::uint8_t> = Type::Code::UINT8;
 template <>
-PREFIX constexpr Type::Code type_code_of<uint16_t> = Type::Code::UINT16;
+PREFIX constexpr Type::Code type_code_of<std::uint16_t> = Type::Code::UINT16;
 template <>
-PREFIX constexpr Type::Code type_code_of<uint32_t> = Type::Code::UINT32;
+PREFIX constexpr Type::Code type_code_of<std::uint32_t> = Type::Code::UINT32;
 template <>
-PREFIX constexpr Type::Code type_code_of<uint64_t> = Type::Code::UINT64;
+PREFIX constexpr Type::Code type_code_of<std::uint64_t> = Type::Code::UINT64;
 template <>
 PREFIX constexpr Type::Code type_code_of<bool> = Type::Code::BOOL;
 template <>
@@ -99,35 +99,35 @@ struct TypeOf<Type::Code::BOOL> {
 };
 template <>
 struct TypeOf<Type::Code::INT8> {
-  using type = int8_t;
+  using type = std::int8_t;
 };
 template <>
 struct TypeOf<Type::Code::INT16> {
-  using type = int16_t;
+  using type = std::int16_t;
 };
 template <>
 struct TypeOf<Type::Code::INT32> {
-  using type = int32_t;
+  using type = std::int32_t;
 };
 template <>
 struct TypeOf<Type::Code::INT64> {
-  using type = int64_t;
+  using type = std::int64_t;
 };
 template <>
 struct TypeOf<Type::Code::UINT8> {
-  using type = uint8_t;
+  using type = std::uint8_t;
 };
 template <>
 struct TypeOf<Type::Code::UINT16> {
-  using type = uint16_t;
+  using type = std::uint16_t;
 };
 template <>
 struct TypeOf<Type::Code::UINT32> {
-  using type = uint32_t;
+  using type = std::uint32_t;
 };
 template <>
 struct TypeOf<Type::Code::UINT64> {
-  using type = uint64_t;
+  using type = std::uint64_t;
 };
 template <>
 struct TypeOf<Type::Code::FLOAT16> {

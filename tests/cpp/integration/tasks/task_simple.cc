@@ -70,8 +70,8 @@ void register_tasks()
     return;
   }
 
-  auto red_acc1 = red1.reduce_accessor<legate::SumReduction<int32_t>, true, 2>();
-  auto red_acc2 = red2.reduce_accessor<legate::ProdReduction<int64_t>, true, 3>();
+  auto red_acc1 = red1.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();
+  auto red_acc2 = red2.reduce_accessor<legate::ProdReduction<std::int64_t>, true, 3>();
 
   for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
     red_acc1[{0, 0}].reduce(10);

@@ -27,14 +27,14 @@ TEST_F(Mapping, DimOrdering)
   {
     auto order = legate::mapping::DimOrdering();
     EXPECT_EQ(order.kind(), legate::mapping::DimOrdering::Kind::C);
-    EXPECT_EQ(order.dimensions(), std::vector<int32_t>());
+    EXPECT_EQ(order.dimensions(), std::vector<std::int32_t>());
   }
 
   // C ordering
   {
     auto c_order = legate::mapping::DimOrdering::c_order();
     EXPECT_EQ(c_order.kind(), legate::mapping::DimOrdering::Kind::C);
-    EXPECT_EQ(c_order.dimensions(), std::vector<int32_t>());
+    EXPECT_EQ(c_order.dimensions(), std::vector<std::int32_t>());
 
     auto order = legate::mapping::DimOrdering();
     order.set_c_order();
@@ -45,7 +45,7 @@ TEST_F(Mapping, DimOrdering)
   {
     auto fortran_order = legate::mapping::DimOrdering::fortran_order();
     EXPECT_EQ(fortran_order.kind(), legate::mapping::DimOrdering::Kind::FORTRAN);
-    EXPECT_EQ(fortran_order.dimensions(), std::vector<int32_t>());
+    EXPECT_EQ(fortran_order.dimensions(), std::vector<std::int32_t>());
 
     auto order = legate::mapping::DimOrdering();
     order.set_fortran_order();
@@ -54,8 +54,8 @@ TEST_F(Mapping, DimOrdering)
 
   // custom ordering
   {
-    std::vector<int32_t> dim = {0, 1, 2};
-    auto custom_order        = legate::mapping::DimOrdering::custom_order(dim);
+    std::vector<std::int32_t> dim = {0, 1, 2};
+    auto custom_order             = legate::mapping::DimOrdering::custom_order(dim);
     EXPECT_EQ(custom_order.kind(), legate::mapping::DimOrdering::Kind::CUSTOM);
     EXPECT_EQ(custom_order.dimensions(), dim);
 
@@ -67,11 +67,11 @@ TEST_F(Mapping, DimOrdering)
 
   // custom ordering to c order
   {
-    std::vector<int32_t> dim = {0, 1, 2};
-    auto order               = legate::mapping::DimOrdering::custom_order(dim);
+    std::vector<std::int32_t> dim = {0, 1, 2};
+    auto order                    = legate::mapping::DimOrdering::custom_order(dim);
     order.set_c_order();
     EXPECT_EQ(order.kind(), legate::mapping::DimOrdering::Kind::C);
-    EXPECT_EQ(order.dimensions(), std::vector<int32_t>());
+    EXPECT_EQ(order.dimensions(), std::vector<std::int32_t>());
   }
 }
 
@@ -145,11 +145,11 @@ TEST_F(Mapping, InstanceMappingPolicy)
       EXPECT_EQ(policy_a.subsumes(policy_b), expect_result);
     };
 
-    auto target              = legate::mapping::StoreTarget::ZCMEM;
-    auto allocation          = legate::mapping::AllocPolicy::MUST_ALLOC;
-    auto layout              = legate::mapping::InstLayout::AOS;
-    std::vector<int32_t> dim = {0, 1, 2};
-    auto dim_order           = legate::mapping::DimOrdering::custom_order(dim);
+    auto target                   = legate::mapping::StoreTarget::ZCMEM;
+    auto allocation               = legate::mapping::AllocPolicy::MUST_ALLOC;
+    auto layout                   = legate::mapping::InstLayout::AOS;
+    std::vector<std::int32_t> dim = {0, 1, 2};
+    auto dim_order                = legate::mapping::DimOrdering::custom_order(dim);
 
     auto policy_a = legate::mapping::InstanceMappingPolicy{}
                       .with_target(target)

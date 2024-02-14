@@ -19,10 +19,10 @@ namespace legate::detail {
 
 // Commonly used conversion routines for tuples
 
-[[nodiscard]] Domain to_domain(const tuple<uint64_t>& shape);
+[[nodiscard]] Domain to_domain(const tuple<std::uint64_t>& shape);
 
-[[nodiscard]] DomainPoint to_domain_point(const tuple<uint64_t>& shape);
+[[nodiscard]] DomainPoint to_domain_point(const tuple<std::uint64_t>& shape);
 
-[[nodiscard]] tuple<uint64_t> from_domain(const Domain& domain);
+[[nodiscard]] tuple<std::uint64_t> from_domain(const Domain& domain);
 
 }  // namespace legate::detail

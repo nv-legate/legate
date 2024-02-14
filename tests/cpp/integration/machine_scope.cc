@@ -33,13 +33,13 @@ void validate(legate::TaskContext context)
     return;
   }
 
-  int32_t num_tasks = context.get_launch_domain().get_volume();
-  auto to_compare   = context.scalars().at(0).value<int32_t>();
+  std::int32_t num_tasks = context.get_launch_domain().get_volume();
+  auto to_compare        = context.scalars().at(0).value<std::int32_t>();
   EXPECT_EQ(to_compare, num_tasks);
 }
 
 struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
-  static const int32_t TASK_ID = MULTI_VARIANT;
+  static const std::int32_t TASK_ID = MULTI_VARIANT;
 
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 #if LegateDefined(USE_OPENMP)
@@ -51,7 +51,7 @@ struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
 };
 
 struct CpuVariantOnlyTask : public legate::LegateTask<CpuVariantOnlyTask> {
-  static const int32_t TASK_ID = CPU_VARIANT;
+  static const std::int32_t TASK_ID = CPU_VARIANT;
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 };
 

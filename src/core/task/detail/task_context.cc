@@ -126,7 +126,7 @@ ReturnValues TaskContext::pack_return_values() const
   return ReturnValues{std::move(return_values)};
 }
 
-ReturnValues TaskContext::pack_return_values_with_exception(int32_t index,
+ReturnValues TaskContext::pack_return_values_with_exception(std::int32_t index,
                                                             std::string_view error_message) const
 {
   auto return_values = get_return_values();

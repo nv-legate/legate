@@ -792,7 +792,7 @@ typename EnableSharedFromThis<T>::const_shared_type EnableSharedFromThis<T>::sha
 namespace std {
 
 template <typename T>
-size_t hash<legate::InternalSharedPtr<T>>::operator()(
+std::size_t hash<legate::InternalSharedPtr<T>>::operator()(
   const legate::InternalSharedPtr<T>& ptr) const noexcept
 {
   return hash<typename legate::InternalSharedPtr<T>::element_type*>{}(ptr.get());

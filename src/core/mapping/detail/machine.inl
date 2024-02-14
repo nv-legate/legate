@@ -25,16 +25,16 @@ inline Machine Machine::operator[](const std::vector<TaskTarget>& targets) const
 
 // ==========================================================================================
 
-inline LocalProcessorRange::LocalProcessorRange(uint32_t offset,
-                                                uint32_t total_proc_count,
+inline LocalProcessorRange::LocalProcessorRange(std::uint32_t offset,
+                                                std::uint32_t total_proc_count,
                                                 const Processor* local_procs,
-                                                size_t num_local_procs)
+                                                std::size_t num_local_procs)
   : offset_{offset}, total_proc_count_{total_proc_count}, procs_{local_procs, num_local_procs}
 {
 }
 
 inline LocalProcessorRange::LocalProcessorRange(const std::vector<Processor>& procs)
-  : LocalProcessorRange{0, static_cast<uint32_t>(procs.size()), procs.data(), procs.size()}
+  : LocalProcessorRange{0, static_cast<std::uint32_t>(procs.size()), procs.data(), procs.size()}
 {
 }
 
@@ -42,7 +42,7 @@ inline const Processor& LocalProcessorRange::first() const { return *procs_.begi
 
 inline bool LocalProcessorRange::empty() const { return procs_.size() == 0; }
 
-inline uint32_t LocalProcessorRange::total_proc_count() const { return total_proc_count_; }
+inline std::uint32_t LocalProcessorRange::total_proc_count() const { return total_proc_count_; }
 
 // ==========================================================================================
 
@@ -52,11 +52,11 @@ inline const std::vector<Processor>& LocalMachine::gpus() const { return gpus_; 
 
 inline const std::vector<Processor>& LocalMachine::omps() const { return omps_; }
 
-inline size_t LocalMachine::total_cpu_count() const { return total_nodes * cpus().size(); }
+inline std::size_t LocalMachine::total_cpu_count() const { return total_nodes * cpus().size(); }
 
-inline size_t LocalMachine::total_gpu_count() const { return total_nodes * gpus().size(); }
+inline std::size_t LocalMachine::total_gpu_count() const { return total_nodes * gpus().size(); }
 
-inline size_t LocalMachine::total_omp_count() const { return total_nodes * omps().size(); }
+inline std::size_t LocalMachine::total_omp_count() const { return total_nodes * omps().size(); }
 
 inline bool LocalMachine::has_cpus() const { return !cpus_.empty(); }
 

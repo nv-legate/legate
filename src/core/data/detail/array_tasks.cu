@@ -19,13 +19,13 @@ namespace legate::detail {
 
 namespace {
 
-__device__ inline size_t global_tid_1d()
+__device__ inline std::size_t global_tid_1d()
 {
-  return static_cast<size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+  return static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 }
 
 template <typename DescAcc>
-__global__ void fixup_ranges(size_t desc_volume,
+__global__ void fixup_ranges(std::size_t desc_volume,
                              Point<1> desc_lo,
                              Point<1> vardata_lo,
                              DescAcc desc_acc)
@@ -63,8 +63,8 @@ __global__ void fixup_ranges(size_t desc_volume,
     auto vardata_lo = list_arr.vardata().shape<1>().lo;
     auto desc_acc   = desc.data().read_write_accessor<Rect<1>, 1>();
 
-    size_t desc_volume = desc_shape.volume();
-    auto num_blocks    = (desc_volume + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
+    std::size_t desc_volume = desc_shape.volume();
+    auto num_blocks         = (desc_volume + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
     fixup_ranges<<<num_blocks, THREADS_PER_BLOCK, 0, stream>>>(
       desc_volume, desc_shape.lo, vardata_lo, desc_acc);
   }
@@ -72,8 +72,8 @@ __global__ void fixup_ranges(size_t desc_volume,
 namespace {
 
 template <typename RangesAcc, typename OffsetsAcc>
-__global__ void offsets_to_ranges(size_t offsets_volume,
-                                  int64_t vardata_volume,
+__global__ void offsets_to_ranges(std::size_t offsets_volume,
+                                  std::int64_t vardata_volume,
                                   Point<1> offsets_lo,
                                   Point<1> vardata_lo,
                                   RangesAcc ranges_acc,
@@ -112,8 +112,8 @@ __global__ void offsets_to_ranges(size_t offsets_volume,
 
   auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
 
-  size_t offsets_volume = offsets_shape.volume();
-  size_t vardata_volume = vardata_shape.volume();
+  std::size_t offsets_volume = offsets_shape.volume();
+  std::size_t vardata_volume = vardata_shape.volume();
 
   auto num_blocks = (offsets_volume + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
   offsets_to_ranges<<<num_blocks, THREADS_PER_BLOCK, 0, stream>>>(
@@ -123,7 +123,7 @@ __global__ void offsets_to_ranges(size_t offsets_volume,
 namespace {
 
 template <typename OffsetsAcc, typename RangesAcc>
-__global__ void ranges_to_offsets(size_t ranges_volume,
+__global__ void ranges_to_offsets(std::size_t ranges_volume,
                                   Point<1> ranges_lo,
                                   OffsetsAcc offsets_acc,
                                   RangesAcc ranges_acc)

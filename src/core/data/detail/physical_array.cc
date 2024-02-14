@@ -36,7 +36,7 @@ InternalSharedPtr<PhysicalStore> BasePhysicalArray::null_mask() const
   return null_mask_;
 }
 
-InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(uint32_t /*index*/) const
+InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(std::uint32_t /*index*/) const
 {
   throw std::invalid_argument{"Non-nested array has no child sub-array"};
   return {};
@@ -50,7 +50,7 @@ void BasePhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& r
   }
 }
 
-void BasePhysicalArray::check_shape_dimension(int32_t dim) const
+void BasePhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
   return data_->check_shape_dimension(dim);
 }
@@ -61,7 +61,7 @@ bool ListPhysicalArray::valid() const
   return descriptor_->valid();
 }
 
-InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(uint32_t index) const
+InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) const
 {
   switch (index) {
     case 0: return descriptor_;
@@ -80,7 +80,7 @@ void ListPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& r
   vardata_->_stores(result);
 }
 
-void ListPhysicalArray::check_shape_dimension(int32_t dim) const
+void ListPhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
   descriptor_->check_shape_dimension(dim);
 }
@@ -106,7 +106,7 @@ InternalSharedPtr<PhysicalStore> StructPhysicalArray::null_mask() const
   return null_mask_;
 }
 
-InternalSharedPtr<PhysicalArray> StructPhysicalArray::child(uint32_t index) const
+InternalSharedPtr<PhysicalArray> StructPhysicalArray::child(std::uint32_t index) const
 {
   return fields_.at(index);
 }
@@ -121,7 +121,7 @@ void StructPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>&
 
 Domain StructPhysicalArray::domain() const { return fields_.front()->domain(); }
 
-void StructPhysicalArray::check_shape_dimension(int32_t dim) const
+void StructPhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
   fields_.front()->check_shape_dimension(dim);
 }

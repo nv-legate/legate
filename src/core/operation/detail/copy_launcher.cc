@@ -20,7 +20,7 @@
 
 namespace legate::detail {
 
-CopyArg::CopyArg(uint32_t req_idx,
+CopyArg::CopyArg(std::uint32_t req_idx,
                  LogicalStore* store,
                  Legion::FieldID field_id,
                  Legion::PrivilegeMode privilege,
@@ -38,10 +38,10 @@ void CopyArg::pack(BufferBuilder& buffer) const
 {
   store_->pack(buffer);
 
-  buffer.pack<int32_t>(store_proj_->redop);
-  buffer.pack<int32_t>(region_.get_dim());
-  buffer.pack<uint32_t>(req_idx_);
-  buffer.pack<uint32_t>(field_id_);
+  buffer.pack<std::int32_t>(store_proj_->redop);
+  buffer.pack<std::int32_t>(region_.get_dim());
+  buffer.pack<std::uint32_t>(req_idx_);
+  buffer.pack<std::uint32_t>(field_id_);
 }
 
 void CopyLauncher::add_store(std::vector<std::unique_ptr<CopyArg>>& args,
@@ -49,7 +49,7 @@ void CopyLauncher::add_store(std::vector<std::unique_ptr<CopyArg>>& args,
                              std::unique_ptr<StoreProjection> store_proj,
                              Legion::PrivilegeMode privilege)
 {
-  auto req_idx      = static_cast<uint32_t>(args.size());
+  auto req_idx      = static_cast<std::uint32_t>(args.size());
   auto region_field = store->get_region_field();
   auto field_id     = region_field->field_id();
 
@@ -132,7 +132,7 @@ void CopyLauncher::execute_single()
 
 void CopyLauncher::pack_sharding_functor_id(BufferBuilder& buffer)
 {
-  buffer.pack<uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
+  buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
 }
 
 void CopyLauncher::pack_args(BufferBuilder& buffer)
@@ -141,7 +141,7 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
   pack_sharding_functor_id(buffer);
 
   auto pack_args = [&buffer](const std::vector<std::unique_ptr<CopyArg>>& args) {
-    buffer.pack<uint32_t>(static_cast<uint32_t>(args.size()));
+    buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
     for (auto& arg : args) {
       arg->pack(buffer);
     }
@@ -168,7 +168,7 @@ void CopyLauncher::populate_copy(Launcher& launcher)
 {
   auto populate_requirements = [&](auto& args, auto& requirements) {
     requirements.resize(args.size());
-    for (uint32_t idx = 0; idx < args.size(); ++idx) {
+    for (std::uint32_t idx = 0; idx < args.size(); ++idx) {
       auto& req = requirements[idx];
       auto& arg = args[idx];
       arg->template populate_requirement<is_single_v<Launcher>>(req);
