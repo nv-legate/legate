@@ -37,12 +37,13 @@
 #elif defined(_MSC_VER) && !defined(__clang__)  // MSVC
 #define LegateAssume(...) __assume(__VA_ARGS__)
 #elif defined(__clang__) && __has_builtin(__builtin_assume)  // clang
-#define LegateAssume(...)                             \
-  do {                                                \
-    _Pragma("clang diagnostic push");                 \
-    _Pragma("clang diagnostic ignored \"-Wassume\""); \
-    __builtin_assume(!!(__VA_ARGS__));                \
-    _Pragma("clang diagnostic pop");                  \
+#define LegateAssume(...)                                   \
+  do {                                                      \
+    _Pragma("clang diagnostic push");                       \
+    _Pragma("clang diagnostic ignored \"-Wassume\"");       \
+    /* NOLINTNEXTLINE(readability-simplify-boolean-expr) */ \
+    __builtin_assume(!!(__VA_ARGS__));                      \
+    _Pragma("clang diagnostic pop");                        \
   } while (0)
 #elif defined(__GNUC__) && (__GNUC__ >= 13)
 #define LegateAssume(...) __attribute__((__assume__(__VA_ARGS__)))

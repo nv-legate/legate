@@ -63,7 +63,7 @@ inline void check_nccl(ncclResult_t error, const char* file, int line)
 
 class Factory final : public detail::CommunicatorFactory {
  public:
-  Factory(const detail::Library* core_library);
+  explicit Factory(const detail::Library* core_library);
 
   [[nodiscard]] bool needs_barrier() const override;
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;

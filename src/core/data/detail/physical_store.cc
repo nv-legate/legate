@@ -170,15 +170,18 @@ FutureWrapper::FutureWrapper(bool read_only,
       auto p_init_value = future_->get_buffer(mem_kind);
 #if LegateDefined(LEGATE_USE_CUDA)
       if (mem_kind == Memory::Kind::GPU_FB_MEM) {
-        // TODO: This should be done by Legion
+        // TODO(wonchanl): This should be done by Legion
         buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
         const AccessorWO<int8_t, 1> acc{buffer_, field_size, false};
         auto stream = cuda::StreamPool::get_stream_pool().get_stream();
         CHECK_CUDA(
           cudaMemcpyAsync(acc.ptr(0), p_init_value, field_size, cudaMemcpyDeviceToDevice, stream));
-      } else
+      } else {
 #endif
         buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind, p_init_value);
+#if LegateDefined(LEGATE_USE_CUDA)
+      }
+#endif
     } else {
       buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
     }
@@ -243,9 +246,12 @@ void FutureWrapper::initialize_with_identity(int32_t redop_id)
   if (buffer_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
     CHECK_CUDA(cudaMemcpyAsync(ptr, identity, field_size_, cudaMemcpyHostToDevice, stream));
-  } else
+  } else {
 #endif
     std::memcpy(ptr, identity, field_size_);
+#if LegateDefined(LEGATE_USE_CUDA)
+  }
+#endif
 }
 
 ReturnValue FutureWrapper::pack() const { return {buffer_, field_size_}; }

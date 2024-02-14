@@ -36,7 +36,7 @@ struct StreamView {
    *
    * @param stream Raw CUDA stream to wrap
    */
-  StreamView(cudaStream_t stream);
+  explicit StreamView(cudaStream_t stream);
   ~StreamView();
 
   StreamView(const StreamView&)            = delete;
@@ -50,6 +50,7 @@ struct StreamView {
    *
    * @return Raw CUDA stream wrapped by the `StreamView`
    */
+  // NOLINTNEXTLINE(google-explicit-constructor) implicit casting is intended here
   operator cudaStream_t() const;
 
  private:
@@ -83,7 +84,7 @@ struct StreamPool {
 
  private:
   // For now we keep only one stream in the pool
-  // TODO: If this ever changes, the use of non-stream-ordered `DeferredBuffer`s
+  // TODO(mpapadakis): If this ever changes, the use of non-stream-ordered `DeferredBuffer`s
   // in `core/data/buffer.h` will no longer be safe.
   std::unique_ptr<cudaStream_t> cached_stream_{};
 };
