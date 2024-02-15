@@ -156,6 +156,9 @@ class BuildConfig(SectionConfig):
             "zlib",
             "numba",
             "libhwloc=*=*default*",
+            # Brings tcmalloc into the environment, which can be
+            # optionally used by legate invocations.
+            "gperftools",
         )
         if self.compilers:
             pkgs += ("c-compiler", "cxx-compiler")
