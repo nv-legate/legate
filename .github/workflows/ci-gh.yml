@@ -12,13 +12,13 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and test (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.cmake-preset }}, ${{ matrix.ucx-config }})
+    name: Build and test (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.cmake-preset }}, ${{ matrix.ucx-enabled }})
     strategy:
       fail-fast: false
       matrix:
-        ucx-config:
-          - ucx
-          - no_ucx
+        ucx-enabled:
+          - true
+          - false
         platform:
           - linux
         target-device:
@@ -30,13 +30,14 @@ jobs:
           - release-gcc
         exclude:
           - cmake-preset: debug-gcc
-            ucx-config: ucx
+            ucx-enabled: true
           - cmake-preset: debug-sanitizer-gcc
-            ucx-config: ucx
+            ucx-enabled: true
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
       target-device: ${{ matrix.target-device }}
       cmake-preset: ${{ matrix.cmake-preset }}
-      ucx-config: ${{ matrix.ucx-config }}
+      ucx-enabled: ${{ matrix.ucx-enabled }}
+    secrets: inherit

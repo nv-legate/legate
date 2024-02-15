@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-. conda-utils
+set -x
+
+. conda-utils;
 
 make_conda_env() {
     set -xeuo pipefail

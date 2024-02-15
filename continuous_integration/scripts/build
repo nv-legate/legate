@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
+set -x
 
 build_legate_ci() {
     set -xeo pipefail;
     build-legate-cpp;
     build-legate-wheel;
     build-legate-conda;
+    copy_ci_artifacts;
 }
 
 build_legate_release() {
@@ -12,6 +14,8 @@ build_legate_release() {
     mkdir -p /tmp/env_yaml /tmp/conda-build
 
     conda mambabuild --output-folder /tmp/conda-build -c nvidia/label/cuda-${CUDA_VERSION} -c conda-forge --no-include-recipe conda/conda-build
+
+    copy_release_artifacts;
 }
 
 copy_release_artifacts() {
@@ -50,38 +54,19 @@ build_docs() {
     echo "Run link checker"
     cd $REPO_DIR/docs/legate/core
     conda run -n legate /bin/bash -c "make linkcheck"
+
+    copy_docs_artifacts;
 }
 
-build_legate() {
-    set -x;
-
-    . conda-utils;
+build_project() {
     . setup-utils;
 
-    export BUILD_TYPE=$1
-
-    set -xeuo pipefail;
-
-    set_base_defs;
-
-    cd "$PREBUILD_DIR"
-
-    setup_build_env;
-    init_sccache;
-    cd "$REPO_DIR";
-
-    rm -rf "$REPO_DIR/build";
-
-    make-conda-env "$BUILD_TYPE";
-
-    set -xeo pipefail;
-    activate_conda_env;
-    conda_info;
+    init_build_env "$@";
 
     case "$BUILD_TYPE" in
-        ci) build_legate_ci && copy_ci_artifacts;;
-        release) build_legate_release && copy_release_artifacts;;
-        docs) build_docs && copy_docs_artifacts;;
+        ci) build_legate_ci;;
+        release) build_legate_release;;
+        docs) build_docs;;
         *) return 1;;
     esac
 }
@@ -93,7 +78,7 @@ build_legate_fake() {
     touch /tmp/out/legate-core-23.11.00-dummy.tar.bz2
     touch /tmp/conda-build/legate_core/dummy.txt
 
-    copy_ci_artifacts
+    copy_ci_artifacts;
 }
 
-(build_legate "$@");
+(build_project "$@");

@@ -84,7 +84,7 @@ run_test_or_analysis() {
 
             cd "${REPO_DIR}"
             mkdir -p ctest_install
-            sh "${REPO_DIR}"/.artifacts/out/legate_core-*-$(uname).sh \
+            sh "${ARTIFACTS_DIR}"/out/legate_core-*-$(uname).sh \
                --prefix="${REPO_DIR}/ctest_install" \
                --exclude-subdir \
                --skip-license

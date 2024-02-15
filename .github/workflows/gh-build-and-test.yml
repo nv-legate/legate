@@ -10,8 +10,8 @@ on:
       cmake-preset:
         type: string
         required: true
-      ucx-config:
-        type: string
+      ucx-enabled:
+        type: boolean
         required: true
 jobs:
   setup-build:
@@ -32,18 +32,37 @@ jobs:
     needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      ./.github/workflows/gh-build.yml
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v23.11.00
     with:
+      client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
-      repos-name: ${{ github.event.repository.name }}
       runs-on: ${{ needs.setup-build.outputs.runner_type }}
-      sha: ${{ github.sha }}
-      cmake-preset: ${{ inputs.cmake-preset }}
-      ucx-config: ${{ inputs.ucx-config }}
-      ucx-string: ${{ (inputs.ucx-config == 'ucx' && '-ucx') || '' }}
       build-type: ci
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
+      dependencies-file: ""
+      legate-gh-ci-tag: "v23.11.00"
+      cmake-preset: ${{ inputs.cmake-preset }}
+      ucx-enabled: ${{ inputs.ucx-enabled }}
+    secrets: inherit
+
+  build-docs:
+    needs: setup-build
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v23.11.00
+    with:
+      client-repo: ${{ github.event.repository.name }}
+      target-device: ${{ inputs.target-device }}
+      runs-on: ${{ needs.setup-build.outputs.runner_type }}
+      build-type: docs
+      use-container: ${{ inputs.platform == 'linux' }}
+      platform: ${{ inputs.platform }}
+      dependencies-file: ""
+      legate-gh-ci-tag: "v23.11.00"
+      cmake-preset: ${{ inputs.cmake-preset }}
+      ucx-enabled: ${{ inputs.ucx-enabled }}
+    secrets: inherit
 
   setup-test:
     name: Setup test
@@ -86,46 +105,52 @@ jobs:
     needs:
       - setup-test
 
-    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, ${{ inputs.ucx-config }})
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, UCX=${{ inputs.ucx-enabled }})
 
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      ./.github/workflows/gh-test-within-container.yml
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v23.11.00
     with:
+      client-repo: ${{ github.event.repository.name }}
+      build-type: ci
+      name: ${{ matrix.test-config.name }}
       target-device: ${{ inputs.target-device }}
-      repos-name: ${{ github.event.repository.name }}
       runs-on: ${{ matrix.runner.name }}
-      sha: ${{ github.sha }}
-      test-scope: ${{ matrix.test-config.test-scope }}
-      cmake-preset: ${{ inputs.cmake-preset }}
-      ucx-config: ${{ inputs.ucx-config }}
-      ucx-string: ${{ (inputs.ucx-config == 'ucx' && '-ucx') || '' }}
+      has-gpu: ${{ matrix.runner.type == 'gpu' }}
+      test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
+      legate-gh-ci-tag: "v23.11.00"
+      cmake-preset: ${{ inputs.cmake-preset }}
+      ucx-enabled: ${{ inputs.ucx-enabled }}
+    secrets: inherit
+
 
   test-without-container:
     if: github.repository_owner == 'nv-legate' && inputs.platform != 'linux'
-
     needs:
       - setup-test
 
-    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, ${{ inputs.ucx-config }})
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, UCX=${{ inputs.ucx-enabled }})
 
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      ./.github/workflows/gh-test-without-container.yml
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v23.11.00
     with:
+      client-repo: ${{ github.event.repository.name }}
+      build-type: ci
+      name: ${{ matrix.test-config.name }}
       target-device: ${{ inputs.target-device }}
-      repos-name: ${{ github.event.repository.name }}
       runs-on: ${{ matrix.runner.name }}
-      sha: ${{ github.sha }}
-      test-scope: ${{ matrix.test-config.test-scope }}
-      cmake-preset: ${{ inputs.cmake-preset }}
-      ucx-config: ${{ inputs.ucx-config }}
-      ucx-string: ${{ (inputs.ucx-config == 'ucx' && '-ucx') || '' }}
+      has-gpu: ${{ matrix.runner.type == 'gpu' }}
+      test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
+      legate-gh-ci-tag: "v23.11.00"
+      cmake-preset: ${{ inputs.cmake-preset }}
+      ucx-enabled: ${{ inputs.ucx-enabled }}
+    secrets: inherit
