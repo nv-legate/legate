@@ -555,6 +555,7 @@ void test_accessor_future_store()
 
 void test_invalid_accessor()
 {
+  constexpr bool VALIDATE_TYPE = true;
   // invalid dim
   {
     auto runtime       = legate::Runtime::get_runtime();
@@ -562,26 +563,34 @@ void test_invalid_accessor()
     auto store         = logical_store.get_physical_store();
 
     constexpr std::int32_t INVALID_DIM = 3;
-    EXPECT_THROW(static_cast<void>(store.read_accessor<int16_t, INVALID_DIM>()),
+    EXPECT_THROW(static_cast<void>(store.read_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                  std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.write_accessor<int16_t, INVALID_DIM>()),
-                 std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.read_write_accessor<int16_t, INVALID_DIM>()),
-                 std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(
-                   store.reduce_accessor<legate::SumReduction<std::int16_t>, true, INVALID_DIM>()),
-                 std::invalid_argument);
-
-    auto bounds = legate::Rect<INVALID_DIM, std::int16_t>({0, 0, 0}, {0, 0, 0});
-    EXPECT_THROW(static_cast<void>(store.read_accessor<int16_t, INVALID_DIM>(bounds)),
-                 std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.write_accessor<int16_t, INVALID_DIM>(bounds)),
-                 std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.read_write_accessor<int16_t, INVALID_DIM>(bounds)),
+    EXPECT_THROW(static_cast<void>(store.write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                  std::invalid_argument);
     EXPECT_THROW(
+      static_cast<void>(store.read_write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>()),
+      std::invalid_argument);
+    EXPECT_THROW(
       static_cast<void>(
-        store.reduce_accessor<legate::SumReduction<std::int16_t>, false, INVALID_DIM>(bounds)),
+        store
+          .reduce_accessor<legate::SumReduction<std::int16_t>, true, INVALID_DIM, VALIDATE_TYPE>()),
+      std::invalid_argument);
+
+    auto bounds = legate::Rect<INVALID_DIM, std::int16_t>({0, 0, 0}, {0, 0, 0});
+    EXPECT_THROW(
+      static_cast<void>(store.read_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
+      std::invalid_argument);
+    EXPECT_THROW(
+      static_cast<void>(store.write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
+      std::invalid_argument);
+    EXPECT_THROW(
+      static_cast<void>(store.read_write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
+      std::invalid_argument);
+    EXPECT_THROW(
+      static_cast<void>(
+        store
+          .reduce_accessor<legate::SumReduction<std::int16_t>, false, INVALID_DIM, VALIDATE_TYPE>(
+            bounds)),
       std::invalid_argument);
   }
 
@@ -592,22 +601,27 @@ void test_invalid_accessor()
     auto store         = logical_store.get_physical_store();
 
     constexpr std::int32_t DIM = 2;
-    EXPECT_THROW(static_cast<void>(store.read_accessor<int32_t, DIM>()), std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.write_accessor<uint64_t, DIM>()), std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.read_write_accessor<bool, DIM>()), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(store.read_accessor<int32_t, DIM, VALIDATE_TYPE>()),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(store.write_accessor<uint64_t, DIM, VALIDATE_TYPE>()),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(store.read_write_accessor<bool, DIM, VALIDATE_TYPE>()),
+                 std::invalid_argument);
     EXPECT_THROW(
-      static_cast<void>(store.reduce_accessor<legate::SumReduction<std::int8_t>, true, DIM>()),
+      static_cast<void>(
+        store.reduce_accessor<legate::SumReduction<std::int8_t>, true, DIM, VALIDATE_TYPE>()),
       std::invalid_argument);
 
     auto bounds = legate::Rect<DIM, std::uint16_t>{{0, 0}, {0, 0}};
-    EXPECT_THROW(static_cast<void>(store.read_accessor<uint32_t, DIM>(bounds)),
+    EXPECT_THROW(static_cast<void>(store.read_accessor<uint32_t, DIM, VALIDATE_TYPE>(bounds)),
                  std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.write_accessor<int64_t, DIM>(bounds)),
+    EXPECT_THROW(static_cast<void>(store.write_accessor<int64_t, DIM, VALIDATE_TYPE>(bounds)),
                  std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.read_write_accessor<double, DIM>(bounds)),
+    EXPECT_THROW(static_cast<void>(store.read_write_accessor<double, DIM, VALIDATE_TYPE>(bounds)),
                  std::invalid_argument);
     EXPECT_THROW(
-      static_cast<void>(store.reduce_accessor<legate::SumReduction<float>, false, DIM>(bounds)),
+      static_cast<void>(
+        store.reduce_accessor<legate::SumReduction<float>, false, DIM, VALIDATE_TYPE>(bounds)),
       std::invalid_argument);
   }
 }

@@ -247,10 +247,6 @@ set(legate_core_LINKER_OPTIONS "")
 include(${LEGATE_CORE_DIR}/cmake/Modules/set_cpu_arch_flags.cmake)
 set_cpu_arch_flags(legate_core_CXX_OPTIONS)
 
-if (legate_core_COLLECTIVE)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_COLLECTIVE)
-endif()
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND legate_core_CXX_DEFS LEGATE_USE_DEBUG)
   list(APPEND legate_core_CUDA_DEFS LEGATE_USE_DEBUG)

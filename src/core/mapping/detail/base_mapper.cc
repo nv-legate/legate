@@ -141,37 +141,35 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
                                      TaskOptions& output)
 {
   Task legate_task(&task, library, runtime, ctx);
-  if (LegateDefined(LEGATE_USE_COLLECTIVE)) {
-    auto hi = task.index_domain.hi();
-    auto lo = task.index_domain.lo();
-    for (auto& array : legate_task.inputs()) {
-      auto stores = array->stores();
-      for (auto& store : stores) {
-        if (store->is_future()) {
-          continue;
-        }
-        for (auto&& d : store->find_imaginary_dims()) {
-          if ((hi[d] - lo[d]) >= 1) {
-            output.check_collective_regions.insert(store->requirement_index());
-            break;
-          }
+  auto hi = task.index_domain.hi();
+  auto lo = task.index_domain.lo();
+  for (auto& array : legate_task.inputs()) {
+    auto stores = array->stores();
+    for (auto& store : stores) {
+      if (store->is_future()) {
+        continue;
+      }
+      for (auto&& d : store->find_imaginary_dims()) {
+        if ((hi[d] - lo[d]) >= 1) {
+          output.check_collective_regions.insert(store->requirement_index());
+          break;
         }
       }
     }
-    for (auto& array : legate_task.reductions()) {
-      auto stores = array->stores();
-      for (auto& store : stores) {
-        if (store->is_future()) {
-          continue;
-        }
-        auto idx = store->requirement_index();
-        auto req = task.regions[idx];
-        if (req.privilege & LEGION_WRITE_PRIV) {
-          continue;
-        }
-        if (req.handle_type == LEGION_SINGULAR_PROJECTION || req.projection != 0) {
-          output.check_collective_regions.insert(idx);
-        }
+  }
+  for (auto& array : legate_task.reductions()) {
+    auto stores = array->stores();
+    for (auto& store : stores) {
+      if (store->is_future()) {
+        continue;
+      }
+      auto idx   = store->requirement_index();
+      auto&& req = task.regions[idx];
+      if (req.privilege & LEGION_WRITE_PRIV) {
+        continue;
+      }
+      if (req.handle_type == LEGION_SINGULAR_PROJECTION || req.projection != 0) {
+        output.check_collective_regions.insert(idx);
       }
     }
   }
@@ -180,6 +178,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
   auto all_targets   = machine_desc.valid_targets();
 
   std::vector<TaskTarget> options;
+  options.reserve(all_targets.size());
   for (auto& target : all_targets) {
     if (has_variant(ctx, task, target)) {
       options.push_back(target);

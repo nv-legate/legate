@@ -35,6 +35,8 @@ namespace legate {
 
 class PhysicalArray;
 
+#define LEGATE_CORE_TRUE_WHEN_DEBUG LegateDefined(LEGATE_USE_DEBUG)
+
 /**
  * @ingroup data
  *
@@ -53,7 +55,7 @@ class PhysicalStore {
    *
    * @return A read-only accessor to the store
    */
-  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorRO<T, DIM> read_accessor() const;
   /**
    * @brief Returns a write-only accessor to the store for the entire domain.
@@ -66,7 +68,7 @@ class PhysicalStore {
    *
    * @return A write-only accessor to the store
    */
-  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorWO<T, DIM> write_accessor() const;
   /**
    * @brief Returns a read-write accessor to the store for the entire domain.
@@ -79,7 +81,7 @@ class PhysicalStore {
    *
    * @return A read-write accessor to the store
    */
-  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorRW<T, DIM> read_write_accessor() const;
   /**
    * @brief Returns a reduction accessor to the store for the entire domain.
@@ -96,7 +98,10 @@ class PhysicalStore {
    *
    * @return A reduction accessor to the store
    */
-  template <typename OP, bool EXCLUSIVE, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename OP,
+            bool EXCLUSIVE,
+            std::int32_t DIM,
+            bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor() const;
 
   /**
@@ -114,7 +119,7 @@ class PhysicalStore {
    *
    * @return A read-only accessor to the store
    */
-  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorRO<T, DIM> read_accessor(const Rect<DIM>& bounds) const;
   /**
    * @brief Returns a write-only accessor to the store for the entire domain.
@@ -131,7 +136,7 @@ class PhysicalStore {
    *
    * @return A write-only accessor to the store
    */
-  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorWO<T, DIM> write_accessor(const Rect<DIM>& bounds) const;
   /**
    * @brief Returns a read-write accessor to the store for the entire domain.
@@ -148,7 +153,7 @@ class PhysicalStore {
    *
    * @return A read-write accessor to the store
    */
-  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorRW<T, DIM> read_write_accessor(const Rect<DIM>& bounds) const;
   /**
    * @brief Returns a reduction accessor to the store for the entire domain.
@@ -169,7 +174,10 @@ class PhysicalStore {
    *
    * @return A reduction accessor to the store
    */
-  template <typename OP, bool EXCLUSIVE, std::int32_t DIM, bool VALIDATE_TYPE = true>
+  template <typename OP,
+            bool EXCLUSIVE,
+            std::int32_t DIM,
+            bool VALIDATE_TYPE = LEGATE_CORE_TRUE_WHEN_DEBUG>
   [[nodiscard]] AccessorRD<OP, EXCLUSIVE, DIM> reduce_accessor(const Rect<DIM>& bounds) const;
 
   /**
@@ -386,6 +394,8 @@ class PhysicalStore {
  private:
   SharedPtr<detail::PhysicalStore> impl_{};
 };
+
+#undef LEGATE_CORE_TRUE_WHEN_DEBUG
 
 }  // namespace legate
 
