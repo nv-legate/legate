@@ -24,7 +24,7 @@
 namespace legate::detail {
 
 class BufferBuilder;
-struct OutputRegionArg;
+class OutputRegionArg;
 class LogicalStore;
 struct StoreAnalyzer;
 
@@ -72,9 +72,9 @@ struct RegionFieldArg final : public Analyzable {
   std::unique_ptr<StoreProjection> store_proj_;
 };
 
-struct OutputRegionArg final : public Analyzable {
+class OutputRegionArg final : public Analyzable {
  public:
-  OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space);
+  OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space, Legion::FieldID field_id);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;

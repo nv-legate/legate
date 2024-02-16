@@ -16,6 +16,8 @@ namespace legate::detail {
 
 inline Shape::Shape(std::uint32_t dim) : dim_{dim} {}
 
+inline bool Shape::unbound() const { return state_ == State::UNBOUND; }
+
 inline bool Shape::ready() const { return state_ == State::READY; }
 
 inline std::uint32_t Shape::ndim() const { return dim_; }

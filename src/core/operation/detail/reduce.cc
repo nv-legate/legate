@@ -25,6 +25,7 @@
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/library.h"
+#include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
@@ -105,15 +106,18 @@ void Reduce::launch(Strategy* p_strategy)
 
     // adding output region
     auto field_space = runtime->create_field_space();
+    auto field_id =
+      runtime->allocate_field(field_space, RegionManager::FIELD_ID_BASE, input_->type()->size());
+
     // if this is not the last iteration of the while loop, we generate
     // a new output region
     if (n_tasks != 1) {
       new_output = runtime->create_store(input_->type(), 1);
       launcher.add_output(
-        to_array_arg(std::make_unique<OutputRegionArg>(new_output.get(), field_space)));
+        to_array_arg(std::make_unique<OutputRegionArg>(new_output.get(), field_space, field_id)));
     } else {
       launcher.add_output(
-        to_array_arg(std::make_unique<OutputRegionArg>(output_.get(), field_space)));
+        to_array_arg(std::make_unique<OutputRegionArg>(output_.get(), field_space, field_id)));
     }
 
     launch_domain = Domain{DomainPoint{0}, DomainPoint{static_cast<coord_t>(n_tasks - 1)}};

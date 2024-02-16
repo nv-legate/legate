@@ -94,12 +94,12 @@ InternalSharedPtr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_a
 
 InternalSharedPtr<detail::PhysicalStore> TaskDeserializer::unpack_store()
 {
-  auto is_future        = unpack<bool>();
-  auto is_output_region = unpack<bool>();
-  auto dim              = unpack<std::int32_t>();
-  auto type             = unpack_type();
-  auto transform        = unpack_transform();
-  auto redop_id         = unpack<std::int32_t>();
+  auto is_future = unpack<bool>();
+  auto unbound   = unpack<bool>();
+  auto dim       = unpack<std::int32_t>();
+  auto type      = unpack_type();
+  auto transform = unpack_transform();
+  auto redop_id  = unpack<std::int32_t>();
 
   if (is_future) {
     auto fut = unpack<detail::FutureWrapper>();
@@ -110,7 +110,7 @@ InternalSharedPtr<detail::PhysicalStore> TaskDeserializer::unpack_store()
     return make_internal_shared<detail::PhysicalStore>(
       dim, std::move(type), redop_id, std::move(fut), std::move(transform));
   }
-  if (!is_output_region) {
+  if (!unbound) {
     auto rf = unpack<detail::RegionField>();
 
     return make_internal_shared<detail::PhysicalStore>(
@@ -247,10 +247,10 @@ InternalSharedPtr<detail::StructArray> TaskDeserializer::unpack_struct_array()
 
 InternalSharedPtr<detail::Store> TaskDeserializer::unpack_store()
 {
-  auto is_future        = unpack<bool>();
-  auto is_output_region = unpack<bool>();
-  auto dim              = unpack<std::int32_t>();
-  auto type             = unpack_type();
+  auto is_future = unpack<bool>();
+  auto unbound   = unpack<bool>();
+  auto dim       = unpack<std::int32_t>();
+  auto type      = unpack_type();
 
   auto transform = unpack_transform();
 
@@ -264,9 +264,9 @@ InternalSharedPtr<detail::Store> TaskDeserializer::unpack_store()
   }
   auto redop_id = unpack<std::int32_t>();
   detail::RegionField rf;
-  _unpack(rf, is_output_region);
+  _unpack(rf, unbound);
   return make_internal_shared<detail::Store>(
-    runtime_, context_, dim, std::move(type), redop_id, rf, is_output_region, std::move(transform));
+    runtime_, context_, dim, std::move(type), redop_id, rf, unbound, std::move(transform));
 }
 
 void TaskDeserializer::_unpack(detail::FutureWrapper& value)
@@ -279,14 +279,14 @@ void TaskDeserializer::_unpack(detail::FutureWrapper& value)
   value       = detail::FutureWrapper{static_cast<std::uint32_t>(future_index), domain};
 }
 
-void TaskDeserializer::_unpack(detail::RegionField& value, bool is_output_region)
+void TaskDeserializer::_unpack(detail::RegionField& value, bool unbound)
 {
   auto dim = unpack<std::int32_t>();
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
 
-  auto req = is_output_region ? &task_->output_regions[idx] : &task_->regions[idx];
-  value    = detail::RegionField{req, dim, idx, static_cast<Legion::FieldID>(fid)};
+  auto req = unbound ? &task_->output_regions[idx] : &task_->regions[idx];
+  value    = detail::RegionField{req, dim, idx, static_cast<Legion::FieldID>(fid), unbound};
 }
 
 CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
@@ -310,14 +310,14 @@ void CopyDeserializer::next_requirement_list()
 
 void CopyDeserializer::_unpack(detail::Store& store)
 {
-  auto is_future        = unpack<bool>();
-  auto is_output_region = unpack<bool>();
-  auto dim              = unpack<std::int32_t>();
-  auto type             = unpack_type();
+  auto is_future = unpack<bool>();
+  auto unbound   = unpack<bool>();
+  auto dim       = unpack<std::int32_t>();
+  auto type      = unpack_type();
 
   auto transform = unpack_transform();
 
-  LegateCheck(!is_future && !is_output_region);
+  LegateCheck(!is_future && !unbound);
   static_cast<void>(is_future);
 
   auto redop_id = unpack<std::int32_t>();
@@ -325,7 +325,7 @@ void CopyDeserializer::_unpack(detail::Store& store)
 
   _unpack(rf);
   store = detail::Store{
-    runtime_, context_, dim, std::move(type), redop_id, rf, is_output_region, std::move(transform)};
+    runtime_, context_, dim, std::move(type), redop_id, rf, unbound, std::move(transform)};
 }
 
 void CopyDeserializer::_unpack(detail::RegionField& value)
@@ -335,7 +335,8 @@ void CopyDeserializer::_unpack(detail::RegionField& value)
   auto fid = unpack<std::int32_t>();
   auto req = &curr_reqs_->get()[idx];
 
-  value = detail::RegionField{req, dim, idx + req_index_offset_, static_cast<Legion::FieldID>(fid)};
+  value = detail::RegionField{
+    req, dim, idx + req_index_offset_, static_cast<Legion::FieldID>(fid), false /*unbound*/};
 }
 
 }  // namespace legate::mapping

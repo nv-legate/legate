@@ -18,6 +18,7 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/library.h"
+#include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
 
@@ -479,9 +480,12 @@ void ManualTask::add_store(std::vector<ArrayArg>& store_args,
 
   arg.mapping.insert({store, partition_symbol});
   if (unbound) {
-    auto field_space = detail::Runtime::get_runtime()->create_field_space();
+    auto* runtime    = detail::Runtime::get_runtime();
+    auto field_space = runtime->create_field_space();
+    auto field_id =
+      runtime->allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
 
-    strategy_->insert(partition_symbol, std::move(partition), field_space);
+    strategy_->insert(partition_symbol, std::move(partition), field_space, field_id);
   } else {
     strategy_->insert(partition_symbol, std::move(partition));
   }

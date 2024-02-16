@@ -868,17 +868,14 @@ TEST_F(PhysicalArrayUnit, CreateStringNullable) { test_string_array(true); }
 
 TEST_F(PhysicalArrayUnit, FillPrimitiveNonNullable) { test_fill_primitive(false); }
 
-// TODO(issue 374)
-// TEST_F(PhysicalArrayUnit, FillPrimitiveNullable) { test_fill_primitive(true); }
+TEST_F(PhysicalArrayUnit, FillPrimitiveNullable) { test_fill_primitive(true); }
 
 TEST_F(PhysicalArrayUnit, FillListNonNullable) { test_fill_list(false); }
 
-// TODO(issue 374)
-// TEST_F(PhysicalArrayUnit, FillListNullable) { test_fill_list(true); }
+TEST_F(PhysicalArrayUnit, FillListNullable) { test_fill_list(true); }
 
 TEST_F(PhysicalArrayUnit, FillStringNonNullable) { test_fill_string(false); }
 
-// TODO(issue 374)
-// TEST_F(PhysicalArrayUnit, FillStringNullable) { test_fill_string(true); }
+TEST_F(PhysicalArrayUnit, FillStringNullable) { test_fill_string(true); }
 
 }  // namespace physical_array_unit_test

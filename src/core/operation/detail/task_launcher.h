@@ -23,6 +23,7 @@
 namespace legate::detail {
 
 class Library;
+class Runtime;
 
 class TaskLauncher {
  public:
@@ -60,6 +61,8 @@ class TaskLauncher {
 
  private:
   void pack_mapper_arg(BufferBuilder& buffer);
+  void import_output_regions(Runtime* runtime,
+                             const std::vector<Legion::OutputRequirement>& output_requirements);
   void post_process_unbound_stores(
     const std::vector<Legion::OutputRequirement>& output_requirements);
   void post_process_unbound_stores(

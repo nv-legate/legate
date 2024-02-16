@@ -130,7 +130,7 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   void _unpack(detail::Array& array);
   void _unpack(detail::Store& store);
   void _unpack(detail::FutureWrapper& value);
-  void _unpack(detail::RegionField& value, bool is_output_region);
+  void _unpack(detail::RegionField& value, bool unbound);
 
  private:
   const Legion::Task* task_{};

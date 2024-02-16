@@ -38,23 +38,10 @@ namespace legate::detail {
 // legate::detail::Storage
 ////////////////////////////////////////////////////
 
-Storage::Storage(std::uint32_t dim, InternalSharedPtr<Type> type)
+Storage::Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, bool optimize_scalar)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
-    unbound_{true},
-    shape_{make_internal_shared<Shape>(dim)},
-    type_{std::move(type)},
-    offsets_{legate::full(dim, uint64_t{0})}
-{
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "Create " << to_string();
-  }
-}
-
-Storage::Storage(const InternalSharedPtr<Shape>& shape,
-                 InternalSharedPtr<Type> type,
-                 bool optimize_scalar)
-  : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
-    shape_{shape},
+    unbound_{shape->unbound()},
+    shape_{std::move(shape)},
     type_{std::move(type)},
     offsets_{legate::full(dim(), uint64_t{0})}
 {
@@ -67,11 +54,11 @@ Storage::Storage(const InternalSharedPtr<Shape>& shape,
   }
 }
 
-Storage::Storage(const InternalSharedPtr<Shape>& shape,
+Storage::Storage(InternalSharedPtr<Shape> shape,
                  InternalSharedPtr<Type> type,
                  const Legion::Future& future)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
-    shape_{shape},
+    shape_{std::move(shape)},
     type_{std::move(type)},
     kind_{Kind::FUTURE},
     future_{std::make_unique<Legion::Future>(future)},
@@ -82,11 +69,11 @@ Storage::Storage(const InternalSharedPtr<Shape>& shape,
   }
 }
 
-Storage::Storage(tuple<std::uint64_t>&& extents,
+Storage::Storage(tuple<std::uint64_t> extents,
                  InternalSharedPtr<Type> type,
                  InternalSharedPtr<StoragePartition> parent,
-                 tuple<std::uint64_t>&& color,
-                 tuple<std::uint64_t>&& offsets)
+                 tuple<std::uint64_t> color,
+                 tuple<std::uint64_t> offsets)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     type_{std::move(type)},
@@ -382,7 +369,7 @@ void assert_fixed_storage_size(const InternalSharedPtr<Storage>& storage)
 
 }  // namespace
 
-LogicalStore::LogicalStore(InternalSharedPtr<Storage>&& storage)
+LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage)
   : store_id_{Runtime::get_runtime()->get_unique_store_id()},
     shape_{storage->shape()},
     storage_{std::move(storage)},
@@ -395,9 +382,9 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage>&& storage)
   }
 }
 
-LogicalStore::LogicalStore(tuple<std::uint64_t>&& extents,
+LogicalStore::LogicalStore(tuple<std::uint64_t> extents,
                            InternalSharedPtr<Storage> storage,
-                           InternalSharedPtr<TransformStack>&& transform)
+                           InternalSharedPtr<TransformStack> transform)
   : store_id_{Runtime::get_runtime()->get_unique_store_id()},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     storage_{std::move(storage)},
@@ -410,7 +397,7 @@ LogicalStore::LogicalStore(tuple<std::uint64_t>&& extents,
   }
 }
 
-void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
+void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField> region_field)
 {
   LegateAssert(!has_scalar_storage());
   // The shape object of this store must be an alias to that of the storage
@@ -503,8 +490,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice(const InternalSharedPtr<Logi
   }
 
   if (0 == exts[dim]) {
-    return Runtime::get_runtime()->create_store(make_internal_shared<Shape>(std::move(exts)),
-                                                type());
+    return Runtime::get_runtime()->create_store(
+      make_internal_shared<Shape>(std::move(exts)), type(), false /*optimize_scalar*/);
   }
 
   auto transform =
@@ -821,7 +808,8 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   }
 
   if (unbound()) {
-    return std::make_unique<OutputRegionArg>(this, strategy.find_field_space(variable));
+    auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(variable);
+    return std::make_unique<OutputRegionArg>(this, field_space, field_id);
   }
 
   auto partition       = strategy[variable];

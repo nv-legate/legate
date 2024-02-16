@@ -19,8 +19,9 @@ namespace legate::mapping::detail {
 inline RegionField::RegionField(const Legion::RegionRequirement* req,
                                 std::int32_t dim,
                                 std::uint32_t idx,
-                                Legion::FieldID fid)
-  : req_{req}, dim_{dim}, idx_{idx}, fid_{fid}
+                                Legion::FieldID fid,
+                                bool unbound)
+  : req_{req}, dim_{dim}, idx_{idx}, fid_{fid}, unbound_{unbound}
 {
 }
 
@@ -32,7 +33,7 @@ inline std::uint32_t RegionField::index() const { return idx_; }
 
 inline Legion::FieldID RegionField::field_id() const { return fid_; }
 
-inline bool RegionField::unbound() const { return dim() < 0; }
+inline bool RegionField::unbound() const { return unbound_; }
 
 inline const Legion::RegionRequirement* RegionField::get_requirement() const { return req_; }
 

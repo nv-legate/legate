@@ -70,7 +70,7 @@ Store::Store(Legion::Mapping::MapperRuntime* runtime,
              Legion::Mapping::MapperContext context,
              const Legion::RegionRequirement* requirement)
   : dim_{requirement->region.get_dim()},
-    region_field_{requirement, dim_, 0, requirement->instance_fields.front()},
+    region_field_{requirement, dim_, 0, requirement->instance_fields.front(), false /*unbound*/},
     runtime_{runtime},
     context_{context}
 {

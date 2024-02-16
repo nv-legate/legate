@@ -16,6 +16,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/detail/constraint_solver.h"
 #include "core/partitioning/partition.h"
+#include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
 
 #include <algorithm>
@@ -115,10 +116,12 @@ void Strategy::insert(const Variable* partition_symbol, InternalSharedPtr<Partit
 
 void Strategy::insert(const Variable* partition_symbol,
                       InternalSharedPtr<Partition> partition,
-                      Legion::FieldSpace field_space)
+                      Legion::FieldSpace field_space,
+                      Legion::FieldID field_id)
 {
-  LegateAssert(field_spaces_.find(*partition_symbol) == field_spaces_.end());
-  field_spaces_.insert({*partition_symbol, field_space});
+  LegateAssert(fields_for_unbound_stores_.find(*partition_symbol) ==
+               fields_for_unbound_stores_.end());
+  fields_for_unbound_stores_.insert({*partition_symbol, {field_space, field_id}});
   insert(partition_symbol, std::move(partition));
 }
 
@@ -135,11 +138,12 @@ InternalSharedPtr<Partition> Strategy::operator[](const Variable* partition_symb
   return finder->second;
 }
 
-const Legion::FieldSpace& Strategy::find_field_space(const Variable* partition_symbol) const
+const std::pair<Legion::FieldSpace, Legion::FieldID>& Strategy::find_field_for_unbound_store(
+  const Variable* partition_symbol) const
 {
-  auto finder = field_spaces_.find(*partition_symbol);
+  auto finder = fields_for_unbound_stores_.find(*partition_symbol);
 
-  LegateAssert(finder != field_spaces_.end());
+  LegateAssert(finder != fields_for_unbound_stores_.end());
   return finder->second;
 }
 
@@ -154,8 +158,9 @@ void Strategy::dump() const
   for (const auto& [symbol, part] : assignments_) {
     log_legate().debug() << symbol.to_string() << ": " << part->to_string();
   }
-  for (const auto& [symbol, fspace] : field_spaces_) {
-    log_legate().debug() << symbol.to_string() << ": " << fspace;
+  for (const auto& [symbol, field] : fields_for_unbound_stores_) {
+    const auto& [field_space, field_id] = field;
+    log_legate().debug() << symbol.to_string() << ": (" << field_space << "," << field_id << ")";
   }
   for (const auto& [op, domain] : launch_domains_) {
     if (!domain.is_valid()) {
@@ -286,8 +291,7 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
     if (strategy->has_assignment(part_symb)) {
       continue;
     }
-    auto* op   = part_symb->operation();
-    auto store = op->find_store(part_symb);
+    const auto& store = part_symb->store();
 
     if (!store->unbound()) {
       filtered.emplace_back(part_symb);
@@ -296,10 +300,17 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
 
     auto equiv_class = solver.find_equivalence_class(part_symb);
     const InternalSharedPtr<Partition> partition{create_no_partition()};
-    auto field_space = runtime->create_field_space();
+    auto field_space   = runtime->create_field_space();
+    auto next_field_id = RegionManager::FIELD_ID_BASE;
 
     for (auto symb : equiv_class) {
-      strategy->insert(symb, partition, field_space);
+      if (next_field_id - RegionManager::FIELD_ID_BASE >= RegionManager::MAX_NUM_FIELDS) {
+        field_space   = runtime->create_field_space();
+        next_field_id = RegionManager::FIELD_ID_BASE;
+      }
+      auto field_id =
+        runtime->allocate_field(field_space, next_field_id++, symb->store()->type()->size());
+      strategy->insert(symb, partition, field_space, field_id);
     }
   }
 

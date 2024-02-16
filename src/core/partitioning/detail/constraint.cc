@@ -40,6 +40,8 @@ std::string Variable::to_string() const
   return std::move(ss).str();
 }
 
+const InternalSharedPtr<LogicalStore>& Variable::store() const { return op_->find_store(this); }
+
 void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
 {
   partition_symbols.push_back(lhs_);

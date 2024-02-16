@@ -53,13 +53,6 @@ void RegionFieldArg::perform_invalidations() const
   store_->get_region_field()->perform_invalidation_callbacks();
 }
 
-OutputRegionArg::OutputRegionArg(LogicalStore* store, Legion::FieldSpace field_space)
-  : store_{store}, field_space_{field_space}
-{
-  // TODO(wonchanl): We should reuse field ids here
-  field_id_ = Runtime::get_runtime()->allocate_field(field_space_, store->type()->size());
-}
-
 void OutputRegionArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
   store_->pack(buffer);

@@ -251,6 +251,16 @@ void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
   buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
 }
 
+void TaskLauncher::import_output_regions(
+  Runtime* runtime, const std::vector<Legion::OutputRequirement>& output_requirements)
+{
+  for (const auto& req : output_requirements) {
+    const auto& region     = req.parent;
+    auto* const region_mgr = runtime->find_or_create_region_manager(region.get_index_space());
+    region_mgr->import_region(region, static_cast<std::uint32_t>(req.privilege_fields.size()));
+  };
+}
+
 void TaskLauncher::post_process_unbound_stores(
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
@@ -261,6 +271,8 @@ void TaskLauncher::post_process_unbound_stores(
   auto* runtime = Runtime::get_runtime();
   auto no_part  = create_no_partition();
 
+  import_output_regions(runtime, output_requirements);
+
   for (auto& arg : unbound_stores_) {
     LegateAssert(arg->requirement_index() != -1U);
     auto* store = arg->store();
@@ -269,7 +281,9 @@ void TaskLauncher::post_process_unbound_stores(
 
     // This must be done before importing the region field below, as the field manager expects the
     // index space to be available
-    shape->set_index_space(req.parent.get_index_space());
+    if (shape->unbound()) {
+      shape->set_index_space(req.parent.get_index_space());
+    }
 
     auto region_field = runtime->import_region_field(
       store->shape(), req.parent, arg->field_id(), store->type()->size());
@@ -291,6 +305,8 @@ void TaskLauncher::post_process_unbound_stores(
   auto* runtime  = Runtime::get_runtime();
   auto* part_mgr = runtime->partition_manager();
 
+  import_output_regions(runtime, output_requirements);
+
   auto post_process_unbound_store =
     [&runtime, &part_mgr, &launch_domain](
       auto*& arg, const auto& req, const auto& weights, const auto& machine) {
@@ -298,7 +314,9 @@ void TaskLauncher::post_process_unbound_stores(
       auto& shape = store->shape();
       // This must be done before importing the region field below, as the field manager expects the
       // index space to be available
-      shape->set_index_space(req.parent.get_index_space());
+      if (shape->unbound()) {
+        shape->set_index_space(req.parent.get_index_space());
+      }
 
       auto region_field =
         runtime->import_region_field(shape, req.parent, arg->field_id(), store->type()->size());

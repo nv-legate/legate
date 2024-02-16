@@ -49,7 +49,7 @@ class Operation {
 
   [[nodiscard]] const Variable* find_or_declare_partition(InternalSharedPtr<LogicalStore> store);
   [[nodiscard]] const Variable* declare_partition();
-  [[nodiscard]] InternalSharedPtr<LogicalStore> find_store(const Variable* variable) const;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& find_store(const Variable* variable) const;
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] const std::string& provenance() const;
@@ -63,7 +63,7 @@ class Operation {
   std::uint64_t unique_id_{};
   std::uint32_t next_part_id_{};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
-  std::unordered_map<const Variable, InternalSharedPtr<LogicalStore>> store_mappings_{};
+  std::unordered_map<Variable, InternalSharedPtr<LogicalStore>> store_mappings_{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};
   std::string provenance_{};
   mapping::detail::Machine machine_{};

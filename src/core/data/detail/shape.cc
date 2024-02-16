@@ -37,7 +37,8 @@ const tuple<std::uint64_t>& Shape::extents()
       auto domain        = runtime->get_index_space_domain(index_space_);
       extents_           = from_domain(domain);
       state_             = State::READY;
-      runtime->find_or_create_region_manager(index_space_)->update_field_manager_match_credits();
+      auto rgn_mgr       = runtime->find_or_create_region_manager(index_space_);
+      rgn_mgr->update_field_manager_match_credits(this);
       break;
     }
     case State::READY: {
@@ -62,6 +63,15 @@ void Shape::set_index_space(const Legion::IndexSpace& index_space)
   LegateCheck(State::UNBOUND == state_);
   index_space_ = index_space;
   state_       = State::BOUND;
+}
+
+void Shape::copy_extents_from(const Shape& other)
+{
+  LegateCheck(State::BOUND == state_);
+  LegateAssert(dim_ == other.dim_);
+  LegateAssert(index_space_ == other.index_space_);
+  state_   = State::READY;
+  extents_ = other.extents_;
 }
 
 std::string Shape::to_string() const

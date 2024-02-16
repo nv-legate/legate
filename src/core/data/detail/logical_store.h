@@ -46,22 +46,18 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
     FUTURE,
   };
 
-  // Create a RegionField-backed storage whose size is unbound. Initialized lazily.
-  Storage(std::uint32_t dim, InternalSharedPtr<Type> type);
   // Create a RegionField-backed or a Future-backed storage. Initialized lazily.
-  Storage(const InternalSharedPtr<Shape>& shape,
-          InternalSharedPtr<Type> type,
-          bool optimize_scalar);
+  Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, bool optimize_scalar);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(const InternalSharedPtr<Shape>& shape,
+  Storage(InternalSharedPtr<Shape> shape,
           InternalSharedPtr<Type> type,
           const Legion::Future& future);
   // Create a RegionField-backed sub-storage. Initialized lazily.
-  Storage(tuple<std::uint64_t>&& extents,
+  Storage(tuple<std::uint64_t> extents,
           InternalSharedPtr<Type> type,
           InternalSharedPtr<StoragePartition> parent,
-          tuple<std::uint64_t>&& color,
-          tuple<std::uint64_t>&& offsets);
+          tuple<std::uint64_t> color,
+          tuple<std::uint64_t> offsets);
   ~Storage();
 
   [[nodiscard]] std::uint64_t id() const;
@@ -153,12 +149,12 @@ class StoragePartition : public legate::EnableSharedFromThis<StoragePartition> {
 
 class LogicalStore {
  public:
-  explicit LogicalStore(InternalSharedPtr<Storage>&& storage);
+  explicit LogicalStore(InternalSharedPtr<Storage> storage);
   // This constructor is invoked exclusively by store transformations that construct stores from
   // immediate extents.
-  LogicalStore(tuple<std::uint64_t>&& extents,
+  LogicalStore(tuple<std::uint64_t> extents,
                InternalSharedPtr<Storage> storage,
-               InternalSharedPtr<TransformStack>&& transform);
+               InternalSharedPtr<TransformStack> transform);
 
   LogicalStore(LogicalStore&& other) noexcept            = default;
   LogicalStore& operator=(LogicalStore&& other) noexcept = default;
@@ -180,7 +176,7 @@ class LogicalStore {
   [[nodiscard]] const Storage* get_storage() const;
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_region_field();
   [[nodiscard]] Legion::Future get_future();
-  void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
+  void set_region_field(InternalSharedPtr<LogicalRegionField> region_field);
   void set_future(Legion::Future future);
 
   [[nodiscard]] InternalSharedPtr<LogicalStore> promote(std::int32_t extra_dim,

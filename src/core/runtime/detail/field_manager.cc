@@ -18,10 +18,8 @@
 
 namespace legate::detail {
 
-FieldManager::FieldManager(Runtime* runtime,
-                           const InternalSharedPtr<Shape>& shape,
-                           std::uint32_t field_size)
-  : runtime_{runtime}, shape_{shape}, field_size_{field_size}
+FieldManager::FieldManager(InternalSharedPtr<Shape> shape, std::uint32_t field_size)
+  : shape_{std::move(shape)}, field_size_{field_size}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Field manager " << this << " created for shape " << shape_->to_string()
@@ -50,21 +48,13 @@ InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field()
   return create_new_field();
 }
 
-InternalSharedPtr<LogicalRegionField> FieldManager::import_field(
-  const Legion::LogicalRegion& region, Legion::FieldID field_id)
-{
-  runtime_->find_or_create_region_manager(shape_->index_space())->import_region(region);
-  log_legate().debug("Field %u imported in field manager %p", field_id, static_cast<void*>(this));
-  return make_internal_shared<LogicalRegionField>(this, region, field_id);
-}
-
 void FieldManager::free_field(FreeFieldInfo free_field_info, bool /*unordered*/)
 {
   log_legate().debug("Field %u freed in-order in field manager %p",
                      free_field_info.field_id,
                      static_cast<void*>(this));
   auto& info = ordered_free_fields_.emplace_back(std::move(free_field_info));
-  runtime_->discard_field(info.region, info.field_id);
+  Runtime::get_runtime()->discard_field(info.region, info.field_id);
 }
 
 InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field()
@@ -87,7 +77,7 @@ InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field()
 InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field()
 {
   // If there are no more field matches to process, then we completely failed to reuse a field.
-  auto rgn_mgr   = runtime_->find_or_create_region_manager(shape_->index_space());
+  auto rgn_mgr   = Runtime::get_runtime()->find_or_create_region_manager(shape_->index_space());
   auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
   auto* rf       = new LogicalRegionField{this, lr, fid};
 
@@ -97,17 +87,16 @@ InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field()
 
 // ==========================================================================================
 
-ConsensusMatchingFieldManager::ConsensusMatchingFieldManager(Runtime* runtime,
-                                                             const InternalSharedPtr<Shape>& shape,
+ConsensusMatchingFieldManager::ConsensusMatchingFieldManager(InternalSharedPtr<Shape> shape,
                                                              std::uint32_t field_size)
-  : FieldManager{runtime, shape, field_size}
+  : FieldManager{std::move(shape), field_size}
 {
   if (shape_->ready()) {
-    calculate_match_credit();
+    calculate_match_credit(shape_.get());
   } else {
-    field_match_credit_ = runtime_->field_reuse_freq();
-    Runtime::get_runtime()
-      ->find_or_create_region_manager(shape_->index_space())
+    auto* runtime       = Runtime::get_runtime();
+    field_match_credit_ = runtime->field_reuse_freq();
+    runtime->find_or_create_region_manager(shape_->index_space())
       ->record_pending_match_credit_update(this);
   }
 }
@@ -161,9 +150,12 @@ void ConsensusMatchingFieldManager::free_field(FreeFieldInfo free_field_info, bo
   }
 }
 
-void ConsensusMatchingFieldManager::calculate_match_credit()
+void ConsensusMatchingFieldManager::calculate_match_credit(const Shape* initiator)
 {
-  LegateCheck(shape_->ready());
+  if (!shape_->ready()) {
+    LegateAssert(initiator->ready());
+    shape_->copy_extents_from(*initiator);
+  }
   const auto size = shape_->volume() * field_size_;
   if (size > Config::max_field_reuse_size) {
     LegateCheck(Config::max_field_reuse_size > 0);
@@ -173,11 +165,12 @@ void ConsensusMatchingFieldManager::calculate_match_credit()
 
 void ConsensusMatchingFieldManager::issue_field_match()
 {
+  auto* runtime = Runtime::get_runtime();
   // Check if there are any freed fields that are shared across all the shards. We have to
   // test this deterministically no matter what, even if we don't have any fields to offer
   // ourselves, because this is a collective with other shards.
   field_match_counter_ += field_match_credit_;
-  if (field_match_counter_ < runtime_->field_reuse_freq()) {
+  if (field_match_counter_ < runtime->field_reuse_freq()) {
     return;
   }
   field_match_counter_ = 0;
@@ -195,7 +188,7 @@ void ConsensusMatchingFieldManager::issue_field_match()
   unordered_free_fields_.clear();
   // Dispatch the match and put it on the queue of outstanding matches, but don't block on it yet.
   // We'll do that when we run out of ordered fields.
-  matches_.push_back(runtime_->issue_consensus_match(std::move(input)));
+  matches_.push_back(runtime->issue_consensus_match(std::move(input)));
   log_legate().debug("Consensus match emitted with %zu local fields in field manager %p",
                      infos.size(),
                      static_cast<void*>(this));
@@ -217,7 +210,7 @@ void ConsensusMatchingFieldManager::process_next_field_match()
   // detachment has also been emitted on all shards. This makes it safe to later block on any of
   // those detachments, since they are all guaranteed to be in the task stream now, and will
   // eventually complete.
-  runtime_->progress_unordered_operations();
+  Runtime::get_runtime()->progress_unordered_operations();
   // Put all the matched fields into the ordered queue, in the same order as the match result,
   // which is the same order that all shards will see.
   for (const auto& item : match.output()) {

@@ -33,6 +33,7 @@ class Shape {
   explicit Shape(std::uint32_t dim);
   explicit Shape(tuple<std::uint64_t>&& extents);
 
+  [[nodiscard]] bool unbound() const;
   [[nodiscard]] bool ready() const;
   [[nodiscard]] std::uint32_t ndim() const;
   [[nodiscard]] std::size_t volume();
@@ -40,6 +41,7 @@ class Shape {
   [[nodiscard]] const Legion::IndexSpace& index_space();
 
   void set_index_space(const Legion::IndexSpace& index_space);
+  void copy_extents_from(const Shape& other);
 
   [[nodiscard]] std::string to_string() const;
 

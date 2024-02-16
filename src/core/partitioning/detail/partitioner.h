@@ -42,10 +42,12 @@ class Strategy {
   void insert(const Variable* partition_symbol, InternalSharedPtr<Partition> partition);
   void insert(const Variable* partition_symbol,
               InternalSharedPtr<Partition> partition,
-              Legion::FieldSpace field_space);
+              Legion::FieldSpace field_space,
+              Legion::FieldID field_id);
   [[nodiscard]] bool has_assignment(const Variable* partition_symbol) const;
   [[nodiscard]] InternalSharedPtr<Partition> operator[](const Variable* partition_symbol) const;
-  [[nodiscard]] const Legion::FieldSpace& find_field_space(const Variable* partition_symbol) const;
+  [[nodiscard]] const std::pair<Legion::FieldSpace, Legion::FieldID>& find_field_for_unbound_store(
+    const Variable* partition_symbol) const;
   [[nodiscard]] bool is_key_partition(const Variable* partition_symbol) const;
 
   void dump() const;
@@ -54,8 +56,9 @@ class Strategy {
   void compute_launch_domains(const ConstraintSolver& solver);
   void record_key_partition(const Variable* partition_symbol);
 
-  std::unordered_map<const Variable, InternalSharedPtr<Partition>> assignments_{};
-  std::unordered_map<const Variable, Legion::FieldSpace> field_spaces_{};
+  std::unordered_map<Variable, InternalSharedPtr<Partition>> assignments_{};
+  std::unordered_map<Variable, std::pair<Legion::FieldSpace, Legion::FieldID>>
+    fields_for_unbound_stores_{};
   std::unordered_map<const Operation*, Domain> launch_domains_{};
   std::optional<const Variable*> key_partition_{};
 };

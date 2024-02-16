@@ -53,14 +53,14 @@ struct ConstraintSolver {
 
  private:
   ordered_set<const Variable*> partition_symbols_{};
-  std::unordered_map<const Variable, AccessMode> access_modes_{};
+  std::unordered_map<Variable, AccessMode> access_modes_{};
   std::vector<InternalSharedPtr<Constraint>> constraints_{};
 
   struct EquivClass;
-  std::unordered_map<const Variable, EquivClass*> equiv_class_map_{};
+  std::unordered_map<Variable, EquivClass*> equiv_class_map_{};
   std::vector<EquivClass*> equiv_classes_{};
 
-  std::unordered_map<const Variable, bool> is_dependent_{};
+  std::unordered_map<Variable, bool> is_dependent_{};
 };
 
 }  // namespace legate::detail

@@ -179,7 +179,7 @@ inline const Variable* BloatConstraint::var_bloat() const { return var_bloat_; }
 namespace std {
 
 template <>
-struct hash<const legate::detail::Variable> {
+struct hash<legate::detail::Variable> {
   [[nodiscard]] std::size_t operator()(const legate::detail::Variable& v) const noexcept
   {
     return v.hash();

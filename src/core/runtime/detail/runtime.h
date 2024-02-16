@@ -125,9 +125,6 @@ class Runtime {
   void flush_scheduling_window();
   void submit(InternalSharedPtr<Operation> op);
 
-  [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(InternalSharedPtr<Type> type,
-                                                             std::uint32_t dim,
-                                                             bool nullable);
   [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const InternalSharedPtr<Shape>& shape,
                                                              InternalSharedPtr<Type> type,
                                                              bool nullable,
@@ -141,30 +138,25 @@ class Runtime {
 
  private:
   [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
-    InternalSharedPtr<Type> type, std::uint32_t dim, bool nullable);
-  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
     bool nullable,
     bool optimize_scalar);
 
-  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(InternalSharedPtr<Type> type,
-                                                                      std::uint32_t dim,
-                                                                      bool nullable);
   [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(
-    const InternalSharedPtr<Shape>& shape,
+    InternalSharedPtr<Shape> shape,
     InternalSharedPtr<Type> type,
     bool nullable,
     bool optimize_scalar);
 
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Type> type,
-                                                             uint32_t);
-  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const InternalSharedPtr<Shape>& shape,
+                                                             std::uint32_t dim);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Shape> shape,
                                                              InternalSharedPtr<Type> type,
-                                                             bool optimize_scalar = false);
+                                                             bool optimize_scalar);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(const Scalar& scalar,
-                                                             const InternalSharedPtr<Shape>& shape);
+                                                             InternalSharedPtr<Shape> shape);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
@@ -214,7 +206,7 @@ class Runtime {
   void progress_unordered_operations() const;
 
   [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::IndexSpace& index_space);
-  [[nodiscard]] FieldManager* find_or_create_field_manager(const InternalSharedPtr<Shape>& shape,
+  [[nodiscard]] FieldManager* find_or_create_field_manager(InternalSharedPtr<Shape> shape,
                                                            std::uint32_t field_size);
   [[nodiscard]] CommunicatorManager* communicator_manager() const;
   [[nodiscard]] MachineManager* machine_manager() const;

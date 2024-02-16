@@ -33,7 +33,8 @@ class RegionField {
   RegionField(const Legion::RegionRequirement* req,
               std::int32_t dim,
               std::uint32_t idx,
-              Legion::FieldID fid);
+              Legion::FieldID fid,
+              bool unbound);
 
   [[nodiscard]] bool can_colocate_with(const RegionField& other) const;
 
@@ -58,6 +59,7 @@ class RegionField {
   std::int32_t dim_{-1};
   std::uint32_t idx_{-1U};
   Legion::FieldID fid_{-1U};
+  bool unbound_{false};
 };
 
 class FutureWrapper {

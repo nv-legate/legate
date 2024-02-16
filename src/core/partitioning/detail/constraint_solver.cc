@@ -105,7 +105,7 @@ void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol,
 void ConstraintSolver::solve_constraints()
 {
   std::vector<UnionFindEntry> entries;
-  std::unordered_map<const Variable, UnionFindEntry*> table;
+  std::unordered_map<Variable, UnionFindEntry*> table;
 
   // Initialize the table by creating singleton equivalence classes
   const auto& all_symbols = partition_symbols();

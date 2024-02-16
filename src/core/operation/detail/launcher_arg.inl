@@ -42,6 +42,13 @@ inline RegionFieldArg::RegionFieldArg(LogicalStore* store,
 
 // ==========================================================================================
 
+inline OutputRegionArg::OutputRegionArg(LogicalStore* store,
+                                        Legion::FieldSpace field_space,
+                                        Legion::FieldID field_id)
+  : store_{store}, field_space_{std::move(field_space)}, field_id_{field_id}
+{
+}
+
 inline LogicalStore* OutputRegionArg::store() const { return store_; }
 
 inline const Legion::FieldSpace& OutputRegionArg::field_space() const { return field_space_; }

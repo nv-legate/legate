@@ -43,20 +43,16 @@ struct FreeFieldInfo {
 
 class FieldManager {
  public:
-  FieldManager(Runtime* runtime, const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
+  FieldManager(InternalSharedPtr<Shape> shape, std::uint32_t field_size);
   virtual ~FieldManager();
 
   [[nodiscard]] virtual InternalSharedPtr<LogicalRegionField> allocate_field();
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(
-    const Legion::LogicalRegion& region, Legion::FieldID field_id);
-
   virtual void free_field(FreeFieldInfo free_field_info, bool unordered);
 
  protected:
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field();
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field();
 
-  Runtime* runtime_{};
   InternalSharedPtr<Shape> shape_{};
   std::uint32_t field_size_{};
 
@@ -77,15 +73,13 @@ struct MatchItem {
 
 class ConsensusMatchingFieldManager final : public FieldManager {
  public:
-  ConsensusMatchingFieldManager(Runtime* runtime,
-                                const InternalSharedPtr<Shape>& shape,
-                                std::uint32_t field_size);
+  ConsensusMatchingFieldManager(InternalSharedPtr<Shape> shape, std::uint32_t field_size);
   ~ConsensusMatchingFieldManager() final;
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field() override;
   void free_field(FreeFieldInfo free_field_info, bool unordered) override;
 
-  void calculate_match_credit();
+  void calculate_match_credit(const Shape* initiator);
 
  private:
   void issue_field_match();

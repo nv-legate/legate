@@ -43,7 +43,7 @@ const Variable* Operation::declare_partition()
     .get();
 }
 
-InternalSharedPtr<LogicalStore> Operation::find_store(const Variable* variable) const
+const InternalSharedPtr<LogicalStore>& Operation::find_store(const Variable* variable) const
 {
   return store_mappings_.at(*variable);
 }

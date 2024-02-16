@@ -454,31 +454,6 @@ void Runtime::schedule(const std::vector<InternalSharedPtr<Operation>>& operatio
   }
 }
 
-InternalSharedPtr<LogicalArray> Runtime::create_array(InternalSharedPtr<Type> type,
-                                                      std::uint32_t dim,
-                                                      bool nullable)
-{
-  // TODO(wonchanl): We should be able to control colocation of fields for struct types,
-  // instead of special-casing rect types here
-  if (Type::Code::STRUCT == type->code && !is_rect_type(type)) {
-    return create_struct_array(std::move(type), dim, nullable);
-  }
-  if (type->variable_size()) {
-    if (dim != 1) {
-      throw std::invalid_argument{"List/string arrays can only be 1D"};
-    }
-
-    auto elem_type =
-      Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
-    auto descriptor = create_base_array(rect_type(1), dim, nullable);
-    auto vardata    = create_array(std::move(elem_type), 1, false);
-
-    return make_internal_shared<ListLogicalArray>(
-      std::move(type), std::move(descriptor), std::move(vardata));
-  }
-  return create_base_array(std::move(type), dim, nullable);
-}
-
 InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Shape>& shape,
                                                       InternalSharedPtr<Type> type,
                                                       bool nullable,
@@ -498,7 +473,10 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
     auto elem_type =
       Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
     auto descriptor = create_base_array(shape, rect_type(1), nullable, optimize_scalar);
-    auto vardata    = create_array(std::move(elem_type), 1, false);
+    auto vardata    = create_array(make_internal_shared<Shape>(1),
+                                std::move(elem_type),
+                                false /*nullable*/,
+                                false /*optimize_scalar*/);
 
     return make_internal_shared<ListLogicalArray>(
       std::move(type), std::move(descriptor), std::move(vardata));
@@ -514,7 +492,10 @@ InternalSharedPtr<LogicalArray> Runtime::create_array_like(
       "create_array_like doesn't support variable size types or struct types"};
   }
   if (array->unbound()) {
-    return create_array(std::move(type), array->dim(), array->nullable());
+    return create_array(make_internal_shared<Shape>(array->dim()),
+                        std::move(type),
+                        array->nullable(),
+                        false /*optimize_scalar*/);
   }
 
   const bool optimize_scalar = array->data()->has_scalar_storage();
@@ -554,22 +535,6 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
     std::move(type), legate::static_pointer_cast<BaseLogicalArray>(descriptor), std::move(vardata));
 }
 
-InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(InternalSharedPtr<Type> type,
-                                                                   std::uint32_t dim,
-                                                                   bool nullable)
-{
-  std::vector<InternalSharedPtr<LogicalArray>> fields;
-  const auto& st_type = type->as_struct_type();
-  auto null_mask      = nullable ? create_store(bool_(), dim) : nullptr;
-
-  fields.reserve(st_type.field_types().size());
-  for (auto& field_type : st_type.field_types()) {
-    fields.emplace_back(create_array(field_type, dim, false));
-  }
-  return make_internal_shared<StructLogicalArray>(
-    std::move(type), std::move(null_mask), std::move(fields));
-}
-
 InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,
@@ -588,51 +553,66 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(
     std::move(type), std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(InternalSharedPtr<Type> type,
-                                                               std::uint32_t dim,
-                                                               bool nullable)
+InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(InternalSharedPtr<Shape> shape,
+                                                               InternalSharedPtr<Type> type,
+                                                               bool nullable,
+                                                               bool optimize_scalar)
 {
-  auto data      = create_store(std::move(type), dim);
-  auto null_mask = nullable ? create_store(bool_(), dim) : nullptr;
+  auto null_mask = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
+  auto data      = create_store(std::move(shape), std::move(type), optimize_scalar);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array(
-  const InternalSharedPtr<Shape>& shape,
-  InternalSharedPtr<Type> type,
-  bool nullable,
-  bool optimize_scalar)
+namespace {
+
+void validate_store_shape(const InternalSharedPtr<Shape>& shape,
+                          const InternalSharedPtr<Type>& type)
 {
-  auto null_mask = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
-  auto data      = create_store(shape, std::move(type), optimize_scalar);
-  return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
+  if (shape->unbound()) {
+    throw std::invalid_argument{
+      "Shape of an unbound array or store cannot be used to create another store "
+      "until the array or store is initialized by a task"};
+  }
+  if (type->variable_size()) {
+    throw std::invalid_argument{"Store must have a fixed-size type"};
+  }
 }
+
+}  // namespace
 
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> type,
                                                       std::uint32_t dim)
 {
   check_dimensionality(dim);
-  auto storage = make_internal_shared<detail::Storage>(dim, std::move(type));
+  auto storage = make_internal_shared<detail::Storage>(
+    make_internal_shared<Shape>(dim), std::move(type), false /*optimize_scalar*/);
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
-InternalSharedPtr<LogicalStore> Runtime::create_store(const InternalSharedPtr<Shape>& shape,
+// shape can be unbound in this function, so we shouldn't use the same validation as the other
+// variants
+InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> shape,
                                                       InternalSharedPtr<Type> type,
                                                       bool optimize_scalar /*=false*/)
 {
+  if (type->variable_size()) {
+    throw std::invalid_argument{"Store must have a fixed-size type"};
+  }
   check_dimensionality(shape->ndim());
-  auto storage = make_internal_shared<detail::Storage>(shape, std::move(type), optimize_scalar);
+  auto storage =
+    make_internal_shared<detail::Storage>(std::move(shape), std::move(type), optimize_scalar);
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
 InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
-                                                      const InternalSharedPtr<Shape>& shape)
+                                                      InternalSharedPtr<Shape> shape)
 {
+  validate_store_shape(shape, scalar.type());
   if (shape->volume() != 1) {
     throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};
   }
   auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
-  auto storage = make_internal_shared<detail::Storage>(shape, scalar.type(), future);
+  auto storage = make_internal_shared<detail::Storage>(std::move(shape), scalar.type(), future);
   return make_internal_shared<detail::LogicalStore>(std::move(storage));
 }
 
@@ -642,10 +622,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   InternalSharedPtr<ExternalAllocation> allocation,
   const mapping::detail::DimOrdering* ordering)
 {
-  if (type->variable_size()) {
-    throw std::invalid_argument{
-      "stores created by attaching to a buffer must have fixed-size type"};
-  }
+  validate_store_shape(shape, type);
   LegateCheck(allocation->ptr());
   if (allocation->size() < shape->volume() * type->size()) {
     throw std::invalid_argument{"External allocation of size " +
@@ -690,10 +667,7 @@ Runtime::IndexAttachResult Runtime::create_store(
   const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
   const mapping::detail::DimOrdering* ordering)
 {
-  if (type->variable_size()) {
-    throw std::invalid_argument{
-      "stores created by attaching to a buffer must have fixed-size type"};
-  }
+  validate_store_shape(shape, type);
 
   auto type_size = type->size();
   auto store     = create_store(shape, std::move(type), false /*optimize_scalar*/);
@@ -818,7 +792,8 @@ InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(
   Legion::FieldID field_id,
   std::uint32_t field_size)
 {
-  return find_or_create_field_manager(shape, field_size)->import_field(region, field_id);
+  auto field_mgr = find_or_create_field_manager(shape, field_size);
+  return make_internal_shared<LogicalRegionField>(field_mgr, region, field_id);
 }
 
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
@@ -893,13 +868,13 @@ RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& 
     return finder->second.get();
   }
 
-  auto rgn_mgr                  = std::make_unique<RegionManager>(this, index_space);
+  auto rgn_mgr                  = std::make_unique<RegionManager>(index_space);
   auto ptr                      = rgn_mgr.get();
   region_managers_[index_space] = std::move(rgn_mgr);
   return ptr;
 }
 
-FieldManager* Runtime::find_or_create_field_manager(const InternalSharedPtr<Shape>& shape,
+FieldManager* Runtime::find_or_create_field_manager(InternalSharedPtr<Shape> shape,
                                                     std::uint32_t field_size)
 {
   auto key    = FieldManagerKey(shape->index_space(), field_size);
@@ -909,8 +884,8 @@ FieldManager* Runtime::find_or_create_field_manager(const InternalSharedPtr<Shap
   }
 
   auto fld_mgr         = consensus_match_required()
-                           ? std::make_unique<ConsensusMatchingFieldManager>(this, shape, field_size)
-                           : std::make_unique<FieldManager>(this, shape, field_size);
+                           ? std::make_unique<ConsensusMatchingFieldManager>(std::move(shape), field_size)
+                           : std::make_unique<FieldManager>(std::move(shape), field_size);
   auto ptr             = fld_mgr.get();
   field_managers_[key] = std::move(fld_mgr);
   return ptr;

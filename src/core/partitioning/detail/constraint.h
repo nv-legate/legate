@@ -34,6 +34,7 @@ class Broadcast;
 struct Constraint;
 class ImageConstraint;
 class Literal;
+class LogicalStore;
 class ScaleConstraint;
 class Variable;
 
@@ -92,6 +93,7 @@ class Variable final : public Expr {
   [[nodiscard]] const Variable* as_variable() const override;
 
   [[nodiscard]] const Operation* operation() const;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
 
   [[nodiscard]] std::size_t hash() const noexcept;
 

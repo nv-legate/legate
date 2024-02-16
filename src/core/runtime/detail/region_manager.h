@@ -21,14 +21,20 @@ namespace legate::detail {
 
 class ConsensusMatchingFieldManager;
 class Runtime;
+class Shape;
 
 class RegionManager {
+ public:
+  static constexpr Legion::FieldID FIELD_ID_BASE = 10000;
+  static constexpr std::uint32_t MAX_NUM_FIELDS  = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
+
  private:
   struct ManagerEntry {
-    static constexpr Legion::FieldID FIELD_ID_BASE = 10000;
-    static constexpr std::int32_t MAX_NUM_FIELDS = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
-
     explicit ManagerEntry(const Legion::LogicalRegion& _region) : region{_region} {}
+    ManagerEntry(const Legion::LogicalRegion& _region, std::uint32_t num_fields)
+      : region{_region}, next_field_id{FIELD_ID_BASE + num_fields}
+    {
+    }
 
     [[nodiscard]] bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
     [[nodiscard]] Legion::FieldID get_next_field_id() { return next_field_id++; }
@@ -40,10 +46,10 @@ class RegionManager {
   };
 
  public:
-  RegionManager(Runtime* runtime, const Legion::IndexSpace& index_space);
+  explicit RegionManager(Legion::IndexSpace index_space);
   void destroy(bool unordered = false);
   void record_pending_match_credit_update(ConsensusMatchingFieldManager* field_mgr);
-  void update_field_manager_match_credits();
+  void update_field_manager_match_credits(const Shape* initiator);
 
  private:
   [[nodiscard]] const ManagerEntry& active_entry() const { return entries_.back(); }
@@ -54,13 +60,11 @@ class RegionManager {
   [[nodiscard]] bool has_space() const;
   [[nodiscard]] std::pair<Legion::LogicalRegion, Legion::FieldID> allocate_field(
     std::size_t field_size);
-  void import_region(const Legion::LogicalRegion& region);
+  void import_region(const Legion::LogicalRegion& region, std::uint32_t num_fields);
 
  private:
-  Runtime* runtime_{};
   Legion::IndexSpace index_space_{};
   std::vector<ManagerEntry> entries_{};
-  std::vector<ManagerEntry> imported_{};
   std::vector<ConsensusMatchingFieldManager*> pending_match_credit_updates_{};
 };
 

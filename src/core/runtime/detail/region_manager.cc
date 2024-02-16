@@ -26,31 +26,17 @@ void RegionManager::ManagerEntry::destroy(Runtime* runtime, bool unordered) cons
   runtime->destroy_region(region, unordered);
 }
 
-// Silence pass-by-value since Legion::Domain is POD, and the move ctor just does the copy
-// anyways. Unfortunately there is no way to check this programatically (e.g. via a
-// static_assert).
-RegionManager::RegionManager(Runtime* runtime,
-                             // NOLINTNEXTLINE(modernize-pass-by-value)
-                             const Legion::IndexSpace& index_space)
-  : runtime_{runtime}, index_space_{index_space}
+RegionManager::RegionManager(Legion::IndexSpace index_space) : index_space_{std::move(index_space)}
 {
 }
 
 void RegionManager::destroy(bool unordered)
 {
+  auto runtime = Runtime::get_runtime();
   for (auto& entry : entries_) {
-    entry.destroy(runtime_, unordered);
-  }
-  std::unordered_set<Legion::LogicalRegion> deleted;
-  for (auto& entry : imported_) {
-    if (deleted.find(entry.region) != deleted.end()) {
-      continue;
-    }
-    entry.destroy(runtime_, unordered);
-    deleted.insert(entry.region);
+    entry.destroy(runtime, unordered);
   }
   entries_.clear();
-  imported_.clear();
 }
 
 void RegionManager::record_pending_match_credit_update(ConsensusMatchingFieldManager* field_mgr)
@@ -58,17 +44,18 @@ void RegionManager::record_pending_match_credit_update(ConsensusMatchingFieldMan
   pending_match_credit_updates_.push_back(field_mgr);
 }
 
-void RegionManager::update_field_manager_match_credits()
+void RegionManager::update_field_manager_match_credits(const Shape* initiator)
 {
   for (auto* field_mgr : pending_match_credit_updates_) {
-    field_mgr->calculate_match_credit();
+    field_mgr->calculate_match_credit(initiator);
   }
   pending_match_credit_updates_.clear();
 }
 
 void RegionManager::push_entry()
 {
-  entries_.emplace_back(runtime_->create_region(index_space_, runtime_->create_field_space()));
+  auto runtime = Runtime::get_runtime();
+  entries_.emplace_back(runtime->create_region(index_space_, runtime->create_field_space()));
 }
 
 bool RegionManager::has_space() const { return !entries_.empty() && active_entry().has_space(); }
@@ -81,14 +68,14 @@ std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(
   }
 
   auto& entry = active_entry();
-  auto fid =
-    runtime_->allocate_field(entry.region.get_field_space(), entry.get_next_field_id(), field_size);
+  auto fid    = Runtime::get_runtime()->allocate_field(
+    entry.region.get_field_space(), entry.get_next_field_id(), field_size);
   return {entry.region, fid};
 }
 
-void RegionManager::import_region(const Legion::LogicalRegion& region)
+void RegionManager::import_region(const Legion::LogicalRegion& region, std::uint32_t num_fields)
 {
-  imported_.emplace_back(region);
+  entries_.emplace_back(region, num_fields);
 }
 
 }  // namespace legate::detail
