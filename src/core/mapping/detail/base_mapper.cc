@@ -327,19 +327,19 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   auto client_mappings = legate_mapper_->store_mappings(mapping::Task(&legate_task), options);
 
-  const auto validate_colocation = [&](const auto* mapping) {
-    auto* first_store = mapping->stores.front();
-    for (auto it = mapping->stores.begin() + 1; it != mapping->stores.end(); ++it) {
-      if (!(*it)->can_colocate_with(*first_store)) {
-        LEGATE_ABORT("Mapper " << get_mapper_name()
-                               << " tried to colocate stores that cannot colocate");
-      }
-    }
-    LegateCheck(!(mapping->for_future() || mapping->for_unbound_store()) ||
-                mapping->stores.size() == 1);
-  };
-
   if (LegateDefined(LEGATE_USE_DEBUG)) {
+    const auto validate_colocation = [&](const auto* mapping) {
+      auto* first_store = mapping->stores.front();
+      for (auto it = mapping->stores.begin() + 1; it != mapping->stores.end(); ++it) {
+        if (!(*it)->can_colocate_with(*first_store)) {
+          LEGATE_ABORT("Mapper " << get_mapper_name()
+                                 << " tried to colocate stores that cannot colocate");
+        }
+      }
+      LegateCheck(!(mapping->for_future() || mapping->for_unbound_store()) ||
+                  mapping->stores.size() == 1);
+    };
+
     for (auto& client_mapping : client_mappings) {
       validate_colocation(client_mapping.impl());
     }
@@ -917,6 +917,8 @@ void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
                                      SelectVariantOutput& output)
 {
   auto variant = find_variant(ctx, task, input.processor.kind());
+  // It is checked (just not on optimized builds)
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   LegateAssert(variant.has_value());
   output.chosen_variant = *variant;
 }
