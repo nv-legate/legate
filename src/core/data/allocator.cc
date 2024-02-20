@@ -64,7 +64,12 @@ void* ScopedAllocator::Impl::allocate(std::size_t bytes)
   auto buffer = create_buffer<std::int8_t>(bytes, target_kind_, alignment_);
   auto ptr    = buffer.ptr(0);
 
-  buffers_[ptr] = std::move(buffer);
+  try {
+    buffers_[ptr] = std::move(buffer);
+  } catch (...) {
+    buffer.destroy();
+    throw;
+  }
   return ptr;
 }
 
@@ -75,9 +80,8 @@ void ScopedAllocator::Impl::deallocate(void* ptr)
     throw std::runtime_error{"Invalid address for deallocation"};
   }
 
-  auto buffer = finder->second;
+  finder->second.destroy();
   buffers_.erase(finder);
-  buffer.destroy();
 }
 
 ScopedAllocator::ScopedAllocator(Memory::Kind kind, bool scoped, std::size_t alignment)

@@ -37,18 +37,23 @@ namespace {
 
 const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
 {
-  static const std::unordered_map<Processor::Kind, std::vector<StoreTarget>> defaults = {
-    {Processor::Kind::TOC_PROC, {StoreTarget::FBMEM, StoreTarget::ZCMEM}},
-    {Processor::Kind::OMP_PROC, {StoreTarget::SOCKETMEM, StoreTarget::SYSMEM}},
-    {Processor::Kind::LOC_PROC, {StoreTarget::SYSMEM}},
-  };
-
-  auto finder = defaults.find(kind);
-  if (defaults.end() == finder) {
-    LEGATE_ABORT("Could not find ProcessorKind " << static_cast<int>(kind)
-                                                 << " in default store targets");
+  switch (kind) {
+    case Processor::Kind::TOC_PROC: {
+      static const std::vector<StoreTarget> targets = {StoreTarget::FBMEM, StoreTarget::ZCMEM};
+      return targets;
+    }
+    case Processor::Kind::OMP_PROC: {
+      static const std::vector<StoreTarget> targets = {StoreTarget::SOCKETMEM, StoreTarget::SYSMEM};
+      return targets;
+    }
+    case Processor::Kind::LOC_PROC: {
+      static const std::vector<StoreTarget> targets = {StoreTarget::SYSMEM};
+      return targets;
+    }
+    default: break;
   }
-  return finder->second;
+  LEGATE_ABORT("Could not find ProcessorKind " << static_cast<int>(kind)
+                                               << " in default store targets");
 }
 
 std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = false)

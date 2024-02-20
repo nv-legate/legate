@@ -231,6 +231,7 @@ void register_legion_functor(Legion::ProjectionID proj_id,
                              std::unique_ptr<ProjectionFunction> legate_functor)
 {
   auto runtime = Legion::Runtime::get_runtime();
+
   runtime->register_projection_functor(
     proj_id, new LegateProjectionFunctor{runtime, legate_functor.get()}, true /*silence warnings*/);
 

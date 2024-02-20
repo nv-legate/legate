@@ -16,6 +16,7 @@
 #include "core/mapping/mapping.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/scope_guard.h"
 
 #include "mappers/logging_wrapper.h"
 
@@ -152,12 +153,16 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
   // Hold the pointer to the mapper to keep it alive
   mapper_ = std::move(mapper);
 
-  auto base_mapper =
+  const auto base_mapper =
     new mapping::detail::BaseMapper{mapper_.get(), runtime_->get_mapper_runtime(), this};
-  legion_mapper_ = base_mapper;
+
   if (Config::log_mapping_decisions) {
+    LEGATE_SCOPE_FAIL(delete base_mapper);
     legion_mapper_ = new Legion::Mapping::LoggingWrapper{base_mapper, &base_mapper->logger};
+  } else {
+    legion_mapper_ = base_mapper;
   }
+  LEGATE_SCOPE_FAIL(delete legion_mapper_);
 
   if (in_callback) {
     Legion::Runtime::get_runtime()->add_mapper(get_mapper_id(), legion_mapper_);

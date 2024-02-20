@@ -44,6 +44,7 @@ const InternalSharedPtr<LogicalStore>& Variable::store() const { return op_->fin
 
 void Alignment::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
 {
+  partition_symbols.reserve(partition_symbols.size() + 2);
   partition_symbols.push_back(lhs_);
   partition_symbols.push_back(rhs_);
 }

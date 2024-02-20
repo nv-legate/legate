@@ -279,19 +279,21 @@ mapping::Machine Runtime::get_machine() const { return mapping::Machine{impl_->g
 
 /*static*/ Runtime* Runtime::get_runtime()
 {
-  static Runtime* the_runtime{};
-
-  if (!the_runtime) {
+  // Initializing the public runtime with the lambda ensures that the private runtime is
+  // guaranteed to be constructed before it, and therefore ensuring the inverse destruction
+  // order.
+  static const std::unique_ptr<Runtime> the_runtime = [] {
     auto* impl = detail::Runtime::get_runtime();
 
     if (!impl->initialized()) {
       throw std::runtime_error{
-        "Legate runtime has not been initialized. Please invoke legate::start to use the runtime"};
+        "Legate runtime has not been initialized. Please invoke legate::start to use the "
+        "runtime"};
     }
+    return std::unique_ptr<Runtime>{new Runtime{impl}};
+  }();
 
-    the_runtime = new Runtime{impl};
-  }
-  return the_runtime;
+  return the_runtime.get();
 }
 
 std::int32_t start(std::int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }

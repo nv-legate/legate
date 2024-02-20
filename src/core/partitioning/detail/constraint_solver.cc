@@ -224,11 +224,10 @@ void ConstraintSolver::solve_constraints()
 
   equiv_classes_.reserve(distinct_entries.size());
   for (auto* entry : distinct_entries) {
-    auto equiv_class = new EquivClass{entry};
+    auto equiv_class = equiv_classes_.emplace_back(new EquivClass{entry});
     for (auto* symb : equiv_class->partition_symbols) {
       equiv_class_map_.insert({*symb, equiv_class});
     }
-    equiv_classes_.emplace_back(equiv_class);
   }
 }
 

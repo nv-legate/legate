@@ -130,3 +130,6 @@ StatementMacros:
 # Be consistent with indent-width, even for people who use tab for indentation!
 TabWidth: 2
 UseTab: Never
+Macros:
+- LEGATE_SCOPE_GUARD(x)=do { x } while (0)
+- LEGATE_SCOPE_FAIL(x)=do { x } while (0)

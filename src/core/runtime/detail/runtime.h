@@ -339,10 +339,10 @@ class Runtime {
     field_managers_{};
   using RegionManagerKey = Legion::IndexSpace;
   std::unordered_map<RegionManagerKey, std::unique_ptr<RegionManager>> region_managers_{};
-  CommunicatorManager* communicator_manager_{};
-  MachineManager* machine_manager_{};
-  PartitionManager* partition_manager_{};
-  ProvenanceManager* provenance_manager_{};
+  std::unique_ptr<CommunicatorManager> communicator_manager_{};
+  std::unique_ptr<MachineManager> machine_manager_{};
+  std::unique_ptr<PartitionManager> partition_manager_{};
+  std::unique_ptr<ProvenanceManager> provenance_manager_{};
 
   std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
 

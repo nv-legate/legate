@@ -247,7 +247,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
                      return comparison_key(part_symb_a) > comparison_key(part_symb_b);
                    });
 
-  for (auto& part_symb : remaining_symbols) {
+  for (auto* part_symb : remaining_symbols) {
     if (strategy->has_assignment(part_symb) || solver.is_dependent(*part_symb)) {
       continue;
     }
@@ -255,9 +255,9 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     const auto& equiv_class  = solver.find_equivalence_class(part_symb);
     const auto& restrictions = solver.find_restrictions(part_symb);
 
-    auto* op       = part_symb->operation();
-    auto store     = op->find_store(part_symb);
-    auto partition = store->find_or_create_key_partition(op->machine(), restrictions);
+    auto* op = part_symb->operation();
+    auto partition =
+      op->find_store(part_symb)->find_or_create_key_partition(op->machine(), restrictions);
 
     strategy->record_key_partition(part_symb);
     LegateAssert(partition != nullptr);
@@ -291,14 +291,13 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores(
     if (strategy->has_assignment(part_symb)) {
       continue;
     }
-    const auto& store = part_symb->store();
 
-    if (!store->unbound()) {
+    if (!part_symb->operation()->find_store(part_symb)->unbound()) {
       filtered.emplace_back(part_symb);
       continue;
     }
 
-    auto equiv_class = solver.find_equivalence_class(part_symb);
+    auto&& equiv_class = solver.find_equivalence_class(part_symb);
     const InternalSharedPtr<Partition> partition{create_no_partition()};
     auto field_space   = runtime->create_field_space();
     auto next_field_id = RegionManager::FIELD_ID_BASE;

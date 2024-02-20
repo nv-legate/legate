@@ -158,10 +158,8 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
                                       const Legion::DomainAffineTransform& rhs)
 {
   Legion::DomainAffineTransform result;
-  auto transform   = lhs.transform * rhs.transform;
-  auto offset      = lhs.transform * rhs.offset + lhs.offset;
-  result.transform = transform;
-  result.offset    = offset;
+  result.transform = lhs.transform * rhs.transform;
+  result.offset    = lhs.transform * rhs.offset + lhs.offset;
   return result;
 }
 
@@ -236,26 +234,21 @@ Domain Shift::transform(const Domain& input) const
 Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) const
 {
   LegateCheck(dim_ < in_dim);
-  auto out_dim = in_dim;
+  const auto out_dim = in_dim;
+  Legion::DomainAffineTransform result;
 
-  Legion::DomainTransform transform;
-  transform.m = out_dim;
-  transform.n = in_dim;
+  result.transform.m = out_dim;
+  result.transform.n = in_dim;
   for (std::int32_t i = 0; i < out_dim; ++i) {
     for (std::int32_t j = 0; j < in_dim; ++j) {
-      transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);
+      result.transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);
     }
   }
 
-  DomainPoint offset;
-  offset.dim = out_dim;
+  result.offset.dim = out_dim;
   for (std::int32_t i = 0; i < out_dim; ++i) {
-    offset[i] = i == dim_ ? -offset_ : 0;
+    result.offset[i] = i == dim_ ? -offset_ : 0;
   }
-
-  Legion::DomainAffineTransform result;
-  result.transform = transform;
-  result.offset    = offset;
   return result;
 }
 
@@ -341,33 +334,30 @@ Domain Promote::transform(const Domain& input) const
 Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) const
 {
   LegateCheck(extra_dim_ < in_dim);
-  auto out_dim = in_dim - 1;
+  const auto out_dim = in_dim - 1;
+  Legion::DomainAffineTransform result;
 
-  Legion::DomainTransform transform;
-  transform.m = std::max<std::int32_t>(out_dim, 1);
-  transform.n = in_dim;
-  for (std::int32_t i = 0; i < transform.m; ++i) {
-    for (std::int32_t j = 0; j < transform.n; ++j) {
-      transform.matrix[i * in_dim + j] = 0;
+  result.transform.m = std::max<std::int32_t>(out_dim, 1);
+  result.transform.n = in_dim;
+  for (std::int32_t i = 0; i < result.transform.m; ++i) {
+    for (std::int32_t j = 0; j < result.transform.n; ++j) {
+      result.transform.matrix[i * in_dim + j] = 0;
     }
   }
 
   if (out_dim > 0) {
-    for (std::int32_t j = 0, i = 0; j < transform.n; ++j) {
+    for (std::int32_t j = 0, i = 0; j < result.transform.n; ++j) {
       if (j != extra_dim_) {
-        transform.matrix[i++ * in_dim + j] = 1;
+        result.transform.matrix[i++ * in_dim + j] = 1;
       }
     }
   }
-  DomainPoint offset;
-  offset.dim = std::max<std::int32_t>(out_dim, 1);
-  for (std::int32_t i = 0; i < transform.m; ++i) {
-    offset[i] = 0;
+
+  result.offset.dim = std::max<std::int32_t>(out_dim, 1);
+  for (std::int32_t i = 0; i < result.transform.m; ++i) {
+    result.offset[i] = 0;
   }
 
-  Legion::DomainAffineTransform result;
-  result.transform = transform;
-  result.offset    = offset;
   return result;
 }
 
@@ -480,36 +470,32 @@ Legion::DomainAffineTransform Project::inverse_transform(std::int32_t in_dim) co
 {
   auto out_dim = in_dim + 1;
   LegateCheck(dim_ < out_dim);
+  Legion::DomainAffineTransform result;
 
-  Legion::DomainTransform transform;
-  transform.m = out_dim;
+  result.transform.m = out_dim;
   if (in_dim == 0) {
-    transform.n         = out_dim;
-    transform.matrix[0] = 0;
+    result.transform.n         = out_dim;
+    result.transform.matrix[0] = 0;
   } else {
-    transform.n = in_dim;
+    result.transform.n = in_dim;
     for (std::int32_t i = 0; i < out_dim; ++i) {
       for (std::int32_t j = 0; j < in_dim; ++j) {
-        transform.matrix[i * in_dim + j] = 0;
+        result.transform.matrix[i * in_dim + j] = 0;
       }
     }
 
     for (std::int32_t i = 0, j = 0; i < out_dim; ++i) {
       if (i != dim_) {
-        transform.matrix[i * in_dim + j++] = 1;
+        result.transform.matrix[i * in_dim + j++] = 1;
       }
     }
   }
 
-  DomainPoint offset;
-  offset.dim = out_dim;
+  result.offset.dim = out_dim;
   for (std::int32_t i = 0; i < out_dim; ++i) {
-    offset[i] = i == dim_ ? coord_ : 0;
+    result.offset[i] = i == dim_ ? coord_ : 0;
   }
 
-  Legion::DomainAffineTransform result;
-  result.transform = transform;
-  result.offset    = offset;
   return result;
 }
 
@@ -641,28 +627,25 @@ Domain Transpose::transform(const Domain& domain) const
 
 Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) const
 {
-  Legion::DomainTransform transform;
-  transform.m = in_dim;
-  transform.n = in_dim;
+  Legion::DomainAffineTransform result;
+
+  result.transform.m = in_dim;
+  result.transform.n = in_dim;
   for (std::int32_t i = 0; i < in_dim; ++i) {
     for (std::int32_t j = 0; j < in_dim; ++j) {
-      transform.matrix[i * in_dim + j] = 0;
+      result.transform.matrix[i * in_dim + j] = 0;
     }
   }
 
   for (std::int32_t j = 0; j < in_dim; ++j) {
-    transform.matrix[axes_[j] * in_dim + j] = 1;
+    result.transform.matrix[axes_[j] * in_dim + j] = 1;
   }
 
-  DomainPoint offset;
-  offset.dim = in_dim;
+  result.offset.dim = in_dim;
   for (std::int32_t i = 0; i < in_dim; ++i) {
-    offset[i] = 0;
+    result.offset[i] = 0;
   }
 
-  Legion::DomainAffineTransform result;
-  result.transform = transform;
-  result.offset    = offset;
   return result;
 }
 
@@ -838,35 +821,32 @@ Domain Delinearize::transform(const Domain& domain) const
 
 Legion::DomainAffineTransform Delinearize::inverse_transform(std::int32_t in_dim) const
 {
-  Legion::DomainTransform transform;
   const auto out_dim = static_cast<std::int32_t>(in_dim - strides_.size() + 1);
-  transform.m        = out_dim;
-  transform.n        = in_dim;
+  Legion::DomainAffineTransform result;
+
+  result.transform.m = out_dim;
+  result.transform.n = in_dim;
   for (std::int32_t i = 0; i < out_dim; ++i) {
     for (std::int32_t j = 0; j < in_dim; ++j) {
-      transform.matrix[i * in_dim + j] = 0;
+      result.transform.matrix[i * in_dim + j] = 0;
     }
   }
 
   for (std::int32_t i = 0, j = 0; i < out_dim; ++i) {
     if (i == dim_) {
       for (auto stride : strides_) {
-        transform.matrix[i * in_dim + j++] = static_cast<coord_t>(stride);
+        result.transform.matrix[i * in_dim + j++] = static_cast<coord_t>(stride);
       }
     } else {
-      transform.matrix[i * in_dim + j++] = 1;
+      result.transform.matrix[i * in_dim + j++] = 1;
     }
   }
 
-  DomainPoint offset;
-  offset.dim = out_dim;
+  result.offset.dim = out_dim;
   for (std::int32_t i = 0; i < out_dim; ++i) {
-    offset[i] = 0;
+    result.offset[i] = 0;
   }
 
-  Legion::DomainAffineTransform result;
-  result.transform = transform;
-  result.offset    = offset;
   return result;
 }
 

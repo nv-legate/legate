@@ -41,6 +41,7 @@
 #include "core/utilities/detail/strtoll.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/detail/type_traits.h"
+#include "core/utilities/scope_guard.h"
 
 #include "env_defaults.h"
 #include "realm/cmdline.h"
@@ -202,17 +203,27 @@ std::int32_t Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32
 
 void Runtime::initialize(Legion::Context legion_context)
 {
-  if (initialized_) {
+  if (initialized()) {
     throw std::runtime_error{"Legate runtime has already been initialized"};
   }
+  LEGATE_SCOPE_FAIL(
+    // de-initialize everything in reverse order
+    Config::max_field_reuse_size = 0;
+    Config::has_socket_mem       = false;
+    provenance_manager_.reset();
+    machine_manager_.reset();
+    partition_manager_.reset();
+    communicator_manager_.reset();
+    core_library_ = nullptr;
+    initialized_  = false;);
   initialized_    = true;
-  legion_context_ = legion_context;
+  legion_context_ = std::move(legion_context);
   core_library_   = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
-  // TODO(jfaibussowit): Use smart pointers for these
-  communicator_manager_ = new CommunicatorManager{};
-  partition_manager_    = new PartitionManager{this};
-  machine_manager_      = new MachineManager{};
-  provenance_manager_   = new ProvenanceManager{};
+
+  communicator_manager_ = std::make_unique<CommunicatorManager>();
+  partition_manager_    = std::make_unique<PartitionManager>(this);
+  machine_manager_      = std::make_unique<MachineManager>();
+  provenance_manager_   = std::make_unique<ProvenanceManager>();
   Config::has_socket_mem =
     get_tunable<bool>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM);
   Config::max_field_reuse_size = get_tunable<decltype(Config::max_field_reuse_size)>(
@@ -1085,7 +1096,7 @@ std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> Runtime::create_barriers(
 
 void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
 {
-  legion_runtime_->destroy_phase_barrier(legion_context_, barrier);
+  legion_runtime_->destroy_phase_barrier(legion_context_, std::move(barrier));
 }
 
 Legion::Future Runtime::get_tunable(Legion::MapperID mapper_id,
@@ -1478,11 +1489,12 @@ void Runtime::destroy()
   }
   field_managers_.clear();
 
-  delete std::exchange(communicator_manager_, nullptr);
-  delete std::exchange(machine_manager_, nullptr);
-  delete std::exchange(partition_manager_, nullptr);
-  delete std::exchange(provenance_manager_, nullptr);
-  initialized_ = false;
+  communicator_manager_.reset();
+  machine_manager_.reset();
+  partition_manager_.reset();
+  provenance_manager_.reset();
+  core_library_ = nullptr;
+  initialized_  = false;
 }
 
 namespace {

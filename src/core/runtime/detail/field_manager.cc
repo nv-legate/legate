@@ -67,22 +67,22 @@ InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field()
     info.can_dealloc.get_void_result(true /*silence_warnings*/);
     info.attachment->maybe_deallocate();
   }
-  auto* rf = new LogicalRegionField(this, info.region, info.field_id);
+  auto rf = make_internal_shared<LogicalRegionField>(this, info.region, info.field_id);
   log_legate().debug(
     "Field %u recycled in field manager %p", info.field_id, static_cast<void*>(this));
   ordered_free_fields_.pop_front();
-  return InternalSharedPtr<LogicalRegionField>{rf};
+  return rf;
 }
 
 InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field()
 {
   // If there are no more field matches to process, then we completely failed to reuse a field.
-  auto rgn_mgr   = Runtime::get_runtime()->find_or_create_region_manager(shape_->index_space());
+  auto* rgn_mgr  = Runtime::get_runtime()->find_or_create_region_manager(shape_->index_space());
   auto [lr, fid] = rgn_mgr->allocate_field(field_size_);
-  auto* rf       = new LogicalRegionField{this, lr, fid};
+  auto rf        = make_internal_shared<LogicalRegionField>(this, lr, fid);
 
   log_legate().debug("Field %u created in field manager %p", fid, static_cast<void*>(this));
-  return InternalSharedPtr<LogicalRegionField>{rf};
+  return rf;
 }
 
 // ==========================================================================================

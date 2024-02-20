@@ -54,13 +54,16 @@ inline std::uint64_t Runtime::get_unique_storage_id() { return next_storage_id_+
 
 inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
 
-inline PartitionManager* Runtime::partition_manager() const { return partition_manager_; }
+inline PartitionManager* Runtime::partition_manager() const { return partition_manager_.get(); }
 
-inline ProvenanceManager* Runtime::provenance_manager() const { return provenance_manager_; }
+inline ProvenanceManager* Runtime::provenance_manager() const { return provenance_manager_.get(); }
 
-inline CommunicatorManager* Runtime::communicator_manager() const { return communicator_manager_; }
+inline CommunicatorManager* Runtime::communicator_manager() const
+{
+  return communicator_manager_.get();
+}
 
-inline MachineManager* Runtime::machine_manager() const { return machine_manager_; }
+inline MachineManager* Runtime::machine_manager() const { return machine_manager_.get(); }
 
 inline const mapping::detail::LocalMachine& Runtime::local_machine() const
 {

@@ -11,7 +11,7 @@
  */
 
 #include "core/utilities/detail/malloc.h"
-#include "core/utilities/detail/scope_guard.h"
+#include "core/utilities/scope_guard.h"
 #include "core/utilities/typedefs.h"
 
 #include "coll.h"
@@ -388,11 +388,14 @@ int MPINetwork::allgather(
     sendbuf_tmp = allocateInplaceBuffer(recvbuf, type_extent * count);
   }
 
-  auto guard = legate::detail::make_scope_guard([&] {
+  // For some reason clang-format like to pack this one along one line...
+  // clang-format off
+  LEGATE_SCOPE_GUARD(
     if (sendbuf == recvbuf) {
       std::free(sendbuf_tmp);
     }
-  });
+  );
+  // clang-format on
 
   CHECK_COLL(gather(sendbuf_tmp, recvbuf, count, type, 0, global_comm));
   CHECK_COLL(bcast(recvbuf, count * total_size, type, 0, global_comm));

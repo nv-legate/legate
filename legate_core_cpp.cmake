@@ -444,6 +444,7 @@ if (legate_core_BUILD_DOCS)
       src/core/runtime/tracker.h
       src/core/utilities/debug.h
       src/core/utilities/dispatch.h
+      src/core/utilities/scope_guard.h
       src/timing/timing.h
       # main page
       src/legate.h
@@ -604,6 +605,8 @@ install(
         src/core/utilities/assert.h
         src/core/utilities/abort.h
         src/core/utilities/defined.h
+        src/core/utilities/scope_guard.h
+        src/core/utilities/scope_guard.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 install(
