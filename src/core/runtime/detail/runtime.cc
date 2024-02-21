@@ -1216,6 +1216,16 @@ void Runtime::issue_execution_fence(bool block /*=false*/)
   }
 }
 
+void Runtime::begin_trace(std::uint32_t trace_id)
+{
+  legion_runtime_->begin_trace(legion_context_, trace_id);
+}
+
+void Runtime::end_trace(std::uint32_t trace_id)
+{
+  legion_runtime_->end_trace(legion_context_, trace_id);
+}
+
 void Runtime::initialize_toplevel_machine()
 {
   auto mapper_id    = core_library_->get_mapper_id();

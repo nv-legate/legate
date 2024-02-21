@@ -9,6 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from libc.stdint cimport uint32_t
 from libcpp cimport bool
 from libcpp.string cimport string
 
@@ -32,3 +33,5 @@ cdef extern from "core/runtime/detail/runtime.h" namespace "legate" nogil:
     cdef cppclass _RuntimeImpl "legate::detail::Runtime":
         _MachineManagerImpl* machine_manager() const
         _ProvenanceManagerImpl* provenance_manager() const
+        void begin_trace(uint32_t)
+        void end_trace(uint32_t)

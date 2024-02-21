@@ -143,6 +143,7 @@ list(APPEND legate_core_SOURCES
   src/core/data/detail/physical_store.cc
   src/core/data/detail/shape.cc
   src/core/data/detail/transform.cc
+  src/core/experimental/trace.cc
   src/core/mapping/array.cc
   src/core/mapping/machine.cc
   src/core/mapping/mapping.cc
@@ -526,6 +527,10 @@ install(
         src/core/data/slice.h
         src/core/data/slice.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/data)
+
+install(
+  FILES src/core/experimental/trace.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/experimental)
 
 install(
   FILES src/core/mapping/array.h

@@ -301,6 +301,9 @@ class Runtime {
   template <typename T>
   [[nodiscard]] ConsensusMatchResult<T> issue_consensus_match(std::vector<T>&& input);
 
+  void begin_trace(std::uint32_t trace_id);
+  void end_trace(std::uint32_t trace_id);
+
   void initialize_toplevel_machine();
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;

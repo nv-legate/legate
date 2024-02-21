@@ -152,12 +152,13 @@ file(GLOB bug_SRC ${PROJECT_SOURCE_DIR}/bug/*.cc)
 file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
 file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
 file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
+file(GLOB experimental_SRC ${PROJECT_SOURCE_DIR}/experimental/*.cc)
 
 include(GNUInstallDirs)
 
 ConfigureTest(
   cpp_tests
-  ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC}
+  ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC}
 )
 
 if(integration_GPU_SRC)

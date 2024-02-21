@@ -47,6 +47,7 @@ function(legate_core_create_cython_modules)
 endfunction()
 
 add_subdirectory(data)
+add_subdirectory(experimental)
 add_subdirectory(mapping)
 add_subdirectory(operation)
 add_subdirectory(partitioning)

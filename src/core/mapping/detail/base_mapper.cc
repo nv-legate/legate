@@ -1448,9 +1448,9 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
 void BaseMapper::memoize_operation(Legion::Mapping::MapperContext /*ctx*/,
                                    const Legion::Mappable& /*mappable*/,
                                    const MemoizeInput& /*input*/,
-                                   MemoizeOutput& /*output*/)
+                                   MemoizeOutput& output)
 {
-  LEGATE_ABORT("No memoize operation yet");
+  output.memoize = true;
 }
 
 void BaseMapper::map_must_epoch(Legion::Mapping::MapperContext /*ctx*/,
