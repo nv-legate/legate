@@ -621,6 +621,37 @@ install(
         src/core/utilities/detail/type_traits.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities/detail)
 
+# Legate STL headers
+install(
+	FILES src/stl/stl.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/stl)
+
+install(
+	FILES src/stl/detail/for_each.hpp
+		    src/stl/detail/span.hpp
+		    src/stl/detail/registrar.hpp
+		    src/stl/detail/transform_reduce.hpp
+		    src/stl/detail/stlfwd.hpp
+		    src/stl/detail/get_logical_store.hpp
+		    src/stl/detail/config.hpp
+		    src/stl/detail/elementwise.hpp
+		    src/stl/detail/functional.hpp
+		    src/stl/detail/meta.hpp
+		    src/stl/detail/mdspan.hpp
+		    src/stl/detail/suffix.hpp
+		    src/stl/detail/prefix.hpp
+		    src/stl/detail/slice.hpp
+		    src/stl/detail/type_traits.hpp
+		    src/stl/detail/transform.hpp
+		    src/stl/detail/iterator.hpp
+		    src/stl/detail/utility.hpp
+		    src/stl/detail/store.hpp
+		    src/stl/detail/launch_task.hpp
+		    src/stl/detail/ranges.hpp
+		    src/stl/detail/reduce.hpp
+		    src/stl/detail/fill.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/stl/detail)
+
 install(
   DIRECTORY   ${LEGATE_CORE_DIR}/cmake/Modules
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate_core"

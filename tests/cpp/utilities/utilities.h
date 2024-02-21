@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate.h"
+#include "stl/detail/registrar.hpp"
 
 #include <gtest/gtest.h>
 
@@ -40,6 +41,23 @@ class DeathTestFixture : public ::testing::Test {
     argv_ = argv;
   }
 
+  inline static int argc_;
+  inline static char** argv_;
+};
+
+class LegateSTLFixture : public ::testing::Test {
+ public:
+  static void init(int argc, char** argv)
+  {
+    LegateSTLFixture::argc_ = argc;
+    LegateSTLFixture::argv_ = argv;
+  }
+
+  void SetUp() override { init_.emplace(argc_, argv_); }
+  void TearDown() override { init_.reset(); }
+
+ private:
+  inline static std::optional<legate::stl::initialize_library> init_;
   inline static int argc_;
   inline static char** argv_;
 };

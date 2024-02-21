@@ -63,10 +63,12 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '^"core/.*\.h"'
     Priority:        1
-  - Regex:           '^"legion.*'
+  - Regex:           '^"stl/.*\.h"'
     Priority:        2
-  - Regex:           '^".*'
+  - Regex:           '^"legion.*'
     Priority:        3
+  - Regex:           '^".*'
+    Priority:        4
   - Regex:           '^<.*'
     Priority:        99
 IncludeIsMainRegex: '([-_](test|unittest))?$'

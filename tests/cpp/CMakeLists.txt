@@ -78,6 +78,26 @@ rapids_cpm_gtest(
   INSTALL_EXPORT_SET legate-core-exports
 )
 
+# span
+FetchContent_Declare(
+  span
+  GIT_REPOSITORY https://github.com/tcbrindle/span.git
+  GIT_TAG master
+)
+
+FetchContent_Populate(span)
+
+FetchContent_GetProperties(span)
+
+# mdspan
+FetchContent_Declare(
+  mdspan
+  GIT_REPOSITORY https://github.com/kokkos/mdspan.git
+  GIT_TAG stable
+)
+
+FetchContent_MakeAvailable(mdspan)
+
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 
 function(ConfigureTest CMAKE_TEST_NAME)
@@ -110,8 +130,8 @@ function(ConfigureTest CMAKE_TEST_NAME)
                CXX_EXTENSIONS              ON
   )
 
-  target_include_directories(${CMAKE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
-  target_link_libraries(${CMAKE_TEST_NAME} PRIVATE legate::core PRIVATE GTest::gtest)
+  target_include_directories(${CMAKE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR} "$<BUILD_INTERFACE:${span_SOURCE_DIR}/include>")
+  target_link_libraries(${CMAKE_TEST_NAME} PRIVATE legate::core PRIVATE GTest::gtest std::mdspan)
 
   if(Legion_USE_CUDA)
     set_target_properties(
@@ -152,13 +172,14 @@ file(GLOB bug_SRC ${PROJECT_SOURCE_DIR}/bug/*.cc)
 file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
 file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
 file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
+file(GLOB stl_SRC ${PROJECT_SOURCE_DIR}/stl/*.cc)
 file(GLOB experimental_SRC ${PROJECT_SOURCE_DIR}/experimental/*.cc)
 
 include(GNUInstallDirs)
 
 ConfigureTest(
   cpp_tests
-  ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC}
+  ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC} ${stl_SRC}
 )
 
 if(integration_GPU_SRC)
