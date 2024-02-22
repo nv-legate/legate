@@ -133,6 +133,12 @@ class Library {
    * Finally, the contract for `apply` and `fold` is that they must update the
    * reference atomically when the `EXCLUSIVE` is `false`.
    *
+   * @warning Because the runtime can capture the reduction operator and wrap it with CUDA
+   * boilerplates only at compile time, the registration call should be made in a .cu file that
+   * would be compiled by NVCC. Otherwise, the runtime would register the reduction operator in
+   * CPU-only mode, which can degrade the performance when the program performs reductions on
+   * non-scalar stores.
+   *
    * @tparam REDOP Reduction operator to register
    * @param redop_id Library-local reduction operator ID
    *

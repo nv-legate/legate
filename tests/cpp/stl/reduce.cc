@@ -21,10 +21,6 @@ using STL = LegateSTLFixture;
 
 namespace stl = legate::stl;
 
-// TODO(wonchanl): the reduction operator registration doesn't do the right thing for Legate STL
-// when CUDA is enabled. re-enable these test cases once the issue is resolved.
-#if 0
-
 namespace {
 
 void TestReduce1D()
@@ -83,12 +79,6 @@ void TestReduce2D()
 
 }  // namespace
 
-#endif
+TEST_F(STL, TestReduce1D) { TestReduce1D(); }
 
-TEST_F(STL, TestReduce1D)
-{ /* TestReduce1D(); */
-}
-
-TEST_F(STL, TestReduce2D)
-{ /* TestReduce2D(); */
-}
+TEST_F(STL, TestReduce2D) { TestReduce2D(); }

@@ -14,6 +14,7 @@
 
 // Useful for IDEs
 #include "core/runtime/library.h"
+#include "core/utilities/typedefs.h"
 
 namespace legate::detail {
 
@@ -70,9 +71,10 @@ template <typename REDOP>
 std::int64_t Library::register_reduction_operator(std::int32_t redop_id)
 {
   std::int64_t legion_redop_id = get_reduction_op_id(redop_id);
-#if !defined(REALM_COMPILER_IS_NVCC)
+#if !defined(__CUDACC__)
   if (LegateDefined(LEGATE_USE_CUDA)) {
-    LEGATE_ABORT("Reduction operators must be registered in a .cu file when CUDA is enabled");
+    detail::log_legate().warning() << "For the runtime's DMA engine to GPU accelerate reductions, "
+                                      "this reduction operator should be registered in a .cu file.";
   }
 #endif
   perform_callback(detail::register_reduction_callback<REDOP>,
