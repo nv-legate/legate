@@ -91,7 +91,7 @@ struct logical_store : private legate::LogicalStore {
    * logical_store<int, 3> data{{ 10, 20, 30 }};
    * @endcode
    */
-  template(std::size_t Rank)
+  template <std::size_t Rank>
     requires(Rank == Dim)
   explicit logical_store(const std::size_t (&extents)[Rank])
     : LogicalStore(logical_store::create(extents))
@@ -118,7 +118,7 @@ struct logical_store : private legate::LogicalStore {
    * logical_store<int, 3> data{{ 10, 20, 30 }, 42};
    * @endcode
    */
-  template(std::size_t Rank)
+  template <std::size_t Rank>
     requires(Rank == Dim)
   explicit logical_store(const std::size_t (&extents)[Rank], ElementType value)
     : LogicalStore(logical_store::create(extents))
@@ -350,8 +350,8 @@ inline mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalArray& array)
   return stl::as_mdspan<ElementType, Dim>(array.data());
 }
 
-template(class ElementType, std::int32_t Dim, template <class, std::int32_t> class StoreT)
-  requires(fwd same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
+template <class ElementType, std::int32_t Dim, template <class, std::int32_t> class StoreT>
+  requires(same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
 LEGATE_STL_ATTRIBUTE((host, device))  //
   inline mdspan_t<ElementType, Dim> as_mdspan(const StoreT<ElementType, Dim>& store)
 {

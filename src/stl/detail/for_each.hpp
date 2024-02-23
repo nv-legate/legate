@@ -22,7 +22,7 @@
 namespace legate::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template(class Function, class... Inputs)                                   //
+template <class Function, class... Inputs>                                  //
   requires((sizeof...(Inputs) > 0) && (logical_store_like<Inputs> && ...))  //
 void for_each_zip(Function fn, Inputs&&... ins)
 {
@@ -32,8 +32,8 @@ void for_each_zip(Function fn, Inputs&&... ins)
                    stl::constraints(stl::align(stl::inputs)));
 }
 
-template(class Input, class Function)  //
-  requires(logical_store_like<Input>)  //
+template <class Input, class Function>  //
+  requires(logical_store_like<Input>)   //
 void for_each(Input&& input, Function fn)
 {
   stl::launch_task(stl::function(drop_n_fn<1>(fn)),

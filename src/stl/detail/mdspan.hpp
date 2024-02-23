@@ -191,7 +191,7 @@ struct mdspan_accessor {
     return *this;
   }
 
-  template(class OtherElementType)                                              //
+  template <class OtherElementType>                                             //
     requires(std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>)  //
   LEGATE_STL_ATTRIBUTE((host, device))                                          //
     mdspan_accessor(const mdspan_accessor<OtherElementType, Dim, Accessor>& other) noexcept

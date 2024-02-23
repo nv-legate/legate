@@ -177,7 +177,7 @@ detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template(class ValueType, class Reduction)
+template <class ValueType, class Reduction>
   requires(legate_reduction<Reduction>)  //
 auto as_reduction(Reduction red)
 {
@@ -257,7 +257,7 @@ template <class Fun, class ValueType>
 using as_reduction_t = decltype(stl::as_reduction<ValueType>(std::declval<Fun>()));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template(class InputRange, class Init, class BinaryOperation)  //
+template <class InputRange, class Init, class BinaryOperation>  //
   requires(logical_store_like<InputRange> && logical_store_like<Init> &&
            legate_reduction<as_reduction_t<BinaryOperation, element_type_of_t<Init>>>)  //
 auto reduce(InputRange&& input, Init&& init, BinaryOperation op)

@@ -105,6 +105,8 @@ struct projection_policy {
       static_assert(Mdspan::extents_type::rank() == Dim);
       static_assert(std::is_same_v<typename Mdspan::value_type, ElementType>);
 
+      physical_map() = default;
+
       LEGATE_STL_ATTRIBUTE((host, device))
       explicit physical_map(Mdspan span) : span_(span) {}
 
@@ -140,6 +142,8 @@ struct projection_policy {
 
     struct logical_map : affine_map<std::int64_t> {
       using value_type = logical_store<std::remove_cv_t<ElementType>, Dim - sizeof...(ProjDims)>;
+
+      logical_map() = default;
 
       // LEGATE_STL_ATTRIBUTE((host,device))
       explicit logical_map(LogicalStore store) : store_(store)
@@ -185,7 +189,7 @@ struct projection_policy {
       return view{logical_map(store)};
     }
 
-    template(class T, class E, class L, class A)
+    template <class T, class E, class L, class A>
       requires(std::is_same_v<T const, ElementType const>)
     LEGATE_STL_ATTRIBUTE((host, device)) static view<
       physical_map<std::mdspan<T, E, L, A>>> physical_view(std::mdspan<T, E, L, A> span)
@@ -260,6 +264,8 @@ struct element_policy {
       static_assert(Mdspan::extents_type::rank() == Dim);
       static_assert(std::is_same_v<typename Mdspan::value_type, ElementType>);
 
+      physical_map() = default;
+
       LEGATE_STL_ATTRIBUTE((host, device))
       explicit physical_map(Mdspan span) : span_(span) {}
 
@@ -301,7 +307,7 @@ struct element_policy {
       return physical_view(as_mdspan<ElementType, Dim>(store));
     }
 
-    template(class T, class E, class L, class A)
+    template <class T, class E, class L, class A>
       requires(std::is_same_v<T const, ElementType const>)
     LEGATE_STL_ATTRIBUTE((host, device)) static view<
       physical_map<std::mdspan<T, E, L, A>>> physical_view(std::mdspan<T, E, L, A> span)
@@ -365,7 +371,7 @@ struct projection_view {
 template <class ElementType, std::int32_t Dim, class SlicePolicy>
 using slice_view = detail::slice_view_t<ElementType, Dim, SlicePolicy>;
 
-template(class Store)                  //
+template <class Store>                 //
   requires(logical_store_like<Store>)  //
 auto rows_of(Store&& store)            //
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::row_policy>
@@ -374,7 +380,7 @@ auto rows_of(Store&& store)            //
     detail::get_logical_store(store));
 }
 
-template(class Store)                  //
+template <class Store>                 //
   requires(logical_store_like<Store>)  //
 auto columns_of(Store&& store)
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::column_policy>
@@ -383,8 +389,8 @@ auto columns_of(Store&& store)
     detail::get_logical_store(store));
 }
 
-template(std::int32_t... ProjDims, class Store)  //
-  requires(logical_store_like<Store>)            //
+template <std::int32_t... ProjDims, class Store>  //
+  requires(logical_store_like<Store>)             //
 auto projections_of(Store&& store)
   //-> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::projection_policy<ProjDims...>> {
   -> typename detail::projection_view<Store, ProjDims...>::type
@@ -395,7 +401,7 @@ auto projections_of(Store&& store)
                     detail::projection_policy<ProjDims...>>(detail::get_logical_store(store));
 }
 
-template(class Store)                  //
+template <class Store>                 //
   requires(logical_store_like<Store>)  //
 auto elements_of(Store&& store)
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::element_policy>

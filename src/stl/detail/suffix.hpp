@@ -24,13 +24,7 @@
 
 #undef LEGATE_STL_DETAIL_PREFIX_INCLUDED
 
-#undef template
 #undef requires
-
-#if LegateDefined(LEGATE_STL_DETAIL_POP_MACRO_TEMPLATE)
-#pragma pop_macro("template")
-#undef LEGATE_STL_DETAIL_POP_MACRO_TEMPLATE
-#endif
 
 #if LegateDefined(LEGATE_STL_DETAIL_POP_MACRO_REQUIRES)
 #pragma pop_macro("requires")

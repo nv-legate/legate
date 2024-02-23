@@ -129,38 +129,14 @@
 // Concepts emulation and portability macros.
 //   Usage:
 //
-//   LEGATE_STL_TEMPLATE(class A, class B)
-//     LEGATE_STL_REQUIRES([fwd] Fooable<A> && Barable<B>)
+//   template <class A, class B>
+//     LEGATE_STL_REQUIRES(Fooable<A> && Barable<B>)
 //   void foobar(A a, B b) { ... }
 //
-// The optional `fwd` keyword is used to indicate that this is the definition of a
-// constrained function template that has been forward-declared elsewhere.
-#define LEGATE_STL_REQUIRES_EAT_fwd
-#define LEGATE_STL_REQUIRES_EAT_FWD(...) LEGATE_STL_CAT(LEGATE_STL_REQUIRES_EAT_, __VA_ARGS__)
-#define LEGATE_STL_REQUIRES_PROBE(...) LEGATE_STL_PROBE(~)
-#define LEGATE_STL_REQUIRES_PROBE_fwd LEGATE_STL_PROBE(~)
-
-#define LEGATE_STL_REQUIRES_PARENS(A, ...) \
-  LEGATE_STL_CAT(LEGATE_STL_REQUIRES_PARENS_, LEGATE_STL_CHECK(LEGATE_STL_REQUIRES_PROBE A))
-#define LEGATE_STL_REQUIRES_FWD(A, ...)    \
-  LEGATE_STL_CAT(LEGATE_STL_REQUIRES_FWD_, \
-                 LEGATE_STL_CHECK(LEGATE_STL_CAT(LEGATE_STL_REQUIRES_PROBE_, A)))
-
-#define LEGATE_STL_REQUIRES_PARENS_0(...) LEGATE_STL_REQUIRES_FWD(__VA_ARGS__)(__VA_ARGS__)
-
-#define LEGATE_STL_REQUIRES(...) LEGATE_STL_REQUIRES_PARENS(__VA_ARGS__)(__VA_ARGS__)
-
 #if LEGATE_STL_CONCEPTS()
-#define LEGATE_STL_TEMPLATE(...) template <__VA_ARGS__>
-#define LEGATE_STL_REQUIRES_PARENS_1(...) requires(__VA_ARGS__)
-#define LEGATE_STL_REQUIRES_FWD_0(...) requires(__VA_ARGS__)
-#define LEGATE_STL_REQUIRES_FWD_1(...) requires(LEGATE_STL_REQUIRES_EAT_FWD(__VA_ARGS__))
+#define LEGATE_STL_REQUIRES requires
 #else
-#define LEGATE_STL_TEMPLATE(...) template <__VA_ARGS__,
-#define LEGATE_STL_REQUIRES_PARENS_1(...) std::enable_if_t<(__VA_ARGS__), int> Enable = __LINE__ >
-#define LEGATE_STL_REQUIRES_FWD_0(...) std::enable_if_t<(__VA_ARGS__), int> Enable = __LINE__ >
-#define LEGATE_STL_REQUIRES_FWD_1(...) \
-  std::enable_if_t<(LEGATE_STL_REQUIRES_EAT_FWD(__VA_ARGS__)), int> Enable >
+#define LEGATE_STL_REQUIRES LEGATE_STL_EAT
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

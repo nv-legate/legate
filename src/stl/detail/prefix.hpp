@@ -28,23 +28,13 @@
 
 #define LEGATE_STL_DETAIL_PREFIX_INCLUDED
 
-#ifdef template
-#define LEGATE_STL_DETAIL_POP_MACRO_TEMPLATE
-#pragma push_macro("template")
-#undef template
-#endif
-
 #ifdef requires
 #define LEGATE_STL_DETAIL_POP_MACRO_REQUIRES
 #pragma push_macro("requires")
 #undef requires
 #endif
 
-#define template(...) LEGATE_STL_TEMPLATE(__VA_ARGS__)
-
-#if LEGATE_STL_CONCEPTS()
-#define requires requires
-#else
+#if !LEGATE_STL_CONCEPTS()
 #define requires LEGATE_STL_REQUIRES
 #endif
 

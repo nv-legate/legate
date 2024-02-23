@@ -232,7 +232,7 @@ struct store_placeholder {
 };
 
 struct make_inputs {
-  template(class... Ts)                      //
+  template <class... Ts>                     //
     requires(logical_store_like<Ts> && ...)  //
   inputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
   {
@@ -250,7 +250,7 @@ struct make_inputs {
 };
 
 struct make_outputs {
-  template(class... Ts)                      //
+  template <class... Ts>                     //
     requires(logical_store_like<Ts> && ...)  //
   outputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
   {
@@ -302,8 +302,8 @@ struct make_reduction : store_placeholder {
 
   using store_placeholder::operator();
 
-  template(class Store, class ReductionFn)  //
-    requires(logical_store_like<Store>)     // TODO constrain Fun
+  template <class Store, class ReductionFn>  //
+    requires(logical_store_like<Store>)      // TODO constrain Fun
   reduction<std::remove_reference_t<Store>, ReductionFn> operator()(Store&& store,
                                                                     ReductionFn reduction) const
   {
@@ -315,7 +315,7 @@ struct make_reduction : store_placeholder {
 };
 
 struct make_constraints {
-  template(class... Ts)  //
+  template <class... Ts>  //
     requires((callable<Ts, AutoTask&, logical_stores_t, logical_stores_t, const LogicalStore&> &&
               ...))
   constraints<Ts...> operator()(Ts... constraints) const
@@ -369,7 +369,7 @@ struct make_align {
 
   // E.g., `align(inputs[0], inputs[1])`
   //       `align(outputs[0], inputs)`
-  template(class Left, class Right)
+  template <class Left, class Right>
     requires(callable<Left, logical_stores_t, logical_stores_t, const LogicalStore&> &&
              callable<Right, logical_stores_t, logical_stores_t, const LogicalStore&>)  //
   align<Left, Right> operator()(Left left, Right right) const

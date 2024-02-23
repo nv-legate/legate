@@ -23,10 +23,10 @@
 namespace legate::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template(class CvrefInput,
-         class Init,
-         class BinaryReduction,
-         class UnaryTransform)                                                      //
+template <class CvrefInput,
+          class Init,
+          class BinaryReduction,
+          class UnaryTransform>                                                     //
   requires(                                                                         //
     logical_store_like<CvrefInput>                                                  //
     && logical_store_like<Init>                                                     //
@@ -58,11 +58,11 @@ auto transform_reduce(CvrefInput&& input,
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template(class CvrefInput1,
-         class CvrefInput2,
-         class Init,
-         class BinaryReduction,
-         class BinaryTransform)                                                            //
+template <class CvrefInput1,
+          class CvrefInput2,
+          class Init,
+          class BinaryReduction,
+          class BinaryTransform>                                                           //
   requires(logical_store_like<CvrefInput1>                                                 //
            && logical_store_like<CvrefInput2>                                              //
            && logical_store_like<Init>                                                     //

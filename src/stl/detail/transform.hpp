@@ -54,9 +54,9 @@ binary_transform(BinaryOperation) -> binary_transform<BinaryOperation>;
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template(class InputRange,
-         class OutputRange,
-         class UnaryOperation)                                                 //
+template <class InputRange,
+          class OutputRange,
+          class UnaryOperation>                                                //
   requires(logical_store_like<InputRange> && logical_store_like<OutputRange>)  //
 void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
 {
@@ -68,10 +68,10 @@ void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template(class InputRange1,
-         class InputRange2,
-         class OutputRange,
-         class BinaryOperation)                 //
+template <class InputRange1,
+          class InputRange2,
+          class OutputRange,
+          class BinaryOperation>                //
   requires(logical_store_like<InputRange1>      //
            && logical_store_like<InputRange2>   //
            && logical_store_like<OutputRange>)  //

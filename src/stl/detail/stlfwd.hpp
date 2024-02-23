@@ -96,7 +96,7 @@ using element_type_of_t = LEGATE_STL_IMPLEMENTATION_DEFINED(
  * @tparam Storage A type that satisfies the `legate::stl::logical_store_like` concept.
  * @hideinitializer
  */
-template(class Storage)
+template <class Storage>
   requires(detail::has_dim_v<Storage>)
 inline constexpr std::int32_t dim_of_v = std::remove_reference_t<Storage>::dim();
 
@@ -170,7 +170,7 @@ template <class ElementType, std::int32_t Dim>
 LEGATE_STL_ATTRIBUTE((host, device))  //
 mdspan_t<ElementType, Dim> as_mdspan(const legate::LogicalStore& store);
 
-template(class ElementType, std::int32_t Dim, template <class, std::int32_t> class StoreT)
+template <class ElementType, std::int32_t Dim, template <class, std::int32_t> class StoreT>
   requires(same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
 LEGATE_STL_ATTRIBUTE((host, device))  //
   mdspan_t<ElementType, Dim> as_mdspan(const StoreT<ElementType, Dim>& store);

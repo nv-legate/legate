@@ -69,7 +69,7 @@ struct binder_back {
   Fn fn_;
   std::tuple<Args...> args_;
 
-  template(class... Ts)
+  template <class... Ts>
     requires(std::is_invocable_v<Fn, Ts..., Args...>)
   LEGATE_STL_ATTRIBUTE((host, device)) decltype(auto) operator()(Ts&&... params)
   {
