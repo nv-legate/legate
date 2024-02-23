@@ -23,25 +23,25 @@
 namespace legate::stl {
 
 namespace detail {
-template <class UnaryOperation>
+template <typename UnaryOperation>
 struct unary_transform {
   UnaryOperation op;
 
-  template <class Src, class Dst>
+  template <typename Src, typename Dst>
   LEGATE_STL_ATTRIBUTE((host, device))
   void operator()(Src&& src, Dst&& dst)
   {
     static_cast<Dst&&>(dst) = op(static_cast<Src&&>(src));
   }
 };
-template <class UnaryOperation>
+template <typename UnaryOperation>
 unary_transform(UnaryOperation) -> unary_transform<UnaryOperation>;
 
-template <class BinaryOperation>
+template <typename BinaryOperation>
 struct binary_transform {
   BinaryOperation op;
 
-  template <class Src1, class Src2, class Dst>
+  template <typename Src1, typename Src2, typename Dst>
   LEGATE_STL_ATTRIBUTE((host, device))
   void operator()(Src1&& src1, Src2&& src2, Dst&& dst)
   {
@@ -49,14 +49,14 @@ struct binary_transform {
     static_cast<Dst&&>(dst) = op(static_cast<Src1&&>(src1), static_cast<Src2&&>(src2));
   }
 };
-template <class BinaryOperation>
+template <typename BinaryOperation>
 binary_transform(BinaryOperation) -> binary_transform<BinaryOperation>;
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class InputRange,
-          class OutputRange,
-          class UnaryOperation>                                                //
+template <typename InputRange,
+          typename OutputRange,
+          typename UnaryOperation>                                             //
   requires(logical_store_like<InputRange> && logical_store_like<OutputRange>)  //
 void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
 {
@@ -68,10 +68,10 @@ void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class InputRange1,
-          class InputRange2,
-          class OutputRange,
-          class BinaryOperation>                //
+template <typename InputRange1,
+          typename InputRange2,
+          typename OutputRange,
+          typename BinaryOperation>             //
   requires(logical_store_like<InputRange1>      //
            && logical_store_like<InputRange2>   //
            && logical_store_like<OutputRange>)  //

@@ -129,7 +129,7 @@
 // Concepts emulation and portability macros.
 //   Usage:
 //
-//   template <class A, class B>
+//   template <typename A, typename B>
 //     LEGATE_STL_REQUIRES(Fooable<A> && Barable<B>)
 //   void foobar(A a, B b) { ... }
 //

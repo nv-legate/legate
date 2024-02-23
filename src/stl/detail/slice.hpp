@@ -34,7 +34,7 @@ struct broadcast_constraint {
   auto operator()(legate::Variable self) const { return legate::broadcast(self, axes); }
 };
 
-template <std::size_t Index, std::int32_t... ProjDims, class Cursor, class Extents>
+template <std::size_t Index, std::int32_t... ProjDims, typename Cursor, typename Extents>
 LEGATE_STL_ATTRIBUTE((host, device))
 auto project_dimension(Cursor cursor, Extents extents) noexcept
 {
@@ -51,7 +51,7 @@ auto project_dimension(Cursor cursor, Extents extents) noexcept
   }
 }
 
-template <class Map>
+template <typename Map>
 struct view {
   LEGATE_STL_ATTRIBUTE((host, device))
   explicit view(Map map) : map_(std::move(map)) {}
@@ -72,7 +72,7 @@ struct projection_policy {
   static_assert(sizeof...(ProjDims) > 0);
   static_assert(((ProjDims >= 0) && ...));
 
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   struct policy {
     static_assert(sizeof...(ProjDims) < Dim);
     static_assert(((ProjDims < Dim) && ...));
@@ -97,10 +97,10 @@ struct projection_policy {
       return to;
     }
 
-    template <class OtherElementTypeT, std::int32_t OtherDim>
+    template <typename OtherElementTypeT, std::int32_t OtherDim>
     using rebind = policy<OtherElementTypeT, OtherDim>;
 
-    template <class Mdspan>
+    template <typename Mdspan>
     struct physical_map : affine_map<std::int64_t> {
       static_assert(Mdspan::extents_type::rank() == Dim);
       static_assert(std::is_same_v<typename Mdspan::value_type, ElementType>);
@@ -189,7 +189,7 @@ struct projection_policy {
       return view{logical_map(store)};
     }
 
-    template <class T, class E, class L, class A>
+    template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
     LEGATE_STL_ATTRIBUTE((host, device)) static view<
       physical_map<std::mdspan<T, E, L, A>>> physical_view(std::mdspan<T, E, L, A> span)
@@ -228,7 +228,7 @@ struct projection_policy {
     static std::tuple<> partition_constraints(reduction_kind) { return {}; }
   };
 
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   using rebind = policy<ElementType, Dim>;
 };
 
@@ -236,9 +236,9 @@ using row_policy    = projection_policy<0>;
 using column_policy = projection_policy<1>;
 
 struct element_policy {
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   struct policy {
-    template <class OtherElementTypeT, std::int32_t OtherDim>
+    template <typename OtherElementTypeT, std::int32_t OtherDim>
     using rebind = policy<OtherElementTypeT, OtherDim>;
 
     static LogicalStore aligned_promote(LogicalStore from, LogicalStore to)
@@ -256,7 +256,7 @@ struct element_policy {
       return to;
     }
 
-    template <class Mdspan>
+    template <typename Mdspan>
     struct physical_map : affine_map<std::int64_t> {
       using value_type = typename Mdspan::value_type;
       using reference  = typename Mdspan::reference;
@@ -307,7 +307,7 @@ struct element_policy {
       return physical_view(as_mdspan<ElementType, Dim>(store));
     }
 
-    template <class T, class E, class L, class A>
+    template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
     LEGATE_STL_ATTRIBUTE((host, device)) static view<
       physical_map<std::mdspan<T, E, L, A>>> physical_view(std::mdspan<T, E, L, A> span)
@@ -325,15 +325,15 @@ struct element_policy {
     static std::tuple<> partition_constraints(ignore) { return {}; }
   };
 
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   using rebind = policy<ElementType, Dim>;
 };
 
-template <class PolicyT, class ElementType, std::int32_t Dim>
+template <typename PolicyT, typename ElementType, std::int32_t Dim>
 using rebind_policy = typename PolicyT::template rebind<ElementType, Dim>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class ElementType, std::int32_t Dim, class SlicePolicy>
+template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
 class slice_view {
  public:
   using policy = detail::rebind_policy<SlicePolicy, ElementType, Dim>;
@@ -359,19 +359,19 @@ class slice_view {
   mutable LogicalStore store_;
 };
 
-template <class ElementType, std::int32_t Dim, class SlicePolicy>
+template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
 using slice_view_t = slice_view<ElementType, Dim, rebind_policy<SlicePolicy, ElementType, Dim>>;
 
-template <class Store, std::int32_t... ProjDim>
+template <typename Store, std::int32_t... ProjDim>
 struct projection_view {
   using type = slice_view_t<value_type_of_t<Store>, dim_of_v<Store>, projection_policy<ProjDim...>>;
 };
 }  // namespace detail
 
-template <class ElementType, std::int32_t Dim, class SlicePolicy>
+template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
 using slice_view = detail::slice_view_t<ElementType, Dim, SlicePolicy>;
 
-template <class Store>                 //
+template <typename Store>              //
   requires(logical_store_like<Store>)  //
 auto rows_of(Store&& store)            //
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::row_policy>
@@ -380,7 +380,7 @@ auto rows_of(Store&& store)            //
     detail::get_logical_store(store));
 }
 
-template <class Store>                 //
+template <typename Store>              //
   requires(logical_store_like<Store>)  //
 auto columns_of(Store&& store)
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::column_policy>
@@ -389,8 +389,8 @@ auto columns_of(Store&& store)
     detail::get_logical_store(store));
 }
 
-template <std::int32_t... ProjDims, class Store>  //
-  requires(logical_store_like<Store>)             //
+template <std::int32_t... ProjDims, typename Store>  //
+  requires(logical_store_like<Store>)                //
 auto projections_of(Store&& store)
   //-> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::projection_policy<ProjDims...>> {
   -> typename detail::projection_view<Store, ProjDims...>::type
@@ -401,7 +401,7 @@ auto projections_of(Store&& store)
                     detail::projection_policy<ProjDims...>>(detail::get_logical_store(store));
 }
 
-template <class Store>                 //
+template <typename Store>              //
   requires(logical_store_like<Store>)  //
 auto elements_of(Store&& store)
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::element_policy>
@@ -411,10 +411,10 @@ auto elements_of(Store&& store)
 }
 
 namespace detail {
-template <class ElementType>
+template <typename ElementType>
 struct value_type_of_;
 
-template <class ElementType, std::int32_t Dim, class SlicePolicy>
+template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
 struct value_type_of_<slice_view<ElementType, Dim, SlicePolicy>> {
   using type = ElementType;
 };

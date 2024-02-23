@@ -45,23 +45,23 @@ using extents                              = const std::size_t[];
 inline constexpr std::int32_t dynamic_dims = -1;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class ElementType, std::int32_t Dim = dynamic_dims>
+template <typename ElementType, std::int32_t Dim = dynamic_dims>
 struct logical_store;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
-template <class Store>
+template <typename Store>
 struct value_type_of_;
 
-template <class ElementType, class Extents, class Layout, class Accessor>
+template <typename ElementType, typename Extents, typename Layout, typename Accessor>
 struct value_type_of_<std::mdspan<ElementType, Extents, Layout, Accessor>> {
   using type = ElementType;
 };
 
-template <class Storage>
+template <typename Storage>
 using has_dim_ = meta::constant<!(std::int32_t{Storage::dim()} < 0)>;
 
-template <class Storage>
+template <typename Storage>
 inline constexpr bool has_dim_v =
   meta::eval<meta::quote_or<has_dim_, std::false_type>, std::remove_reference_t<Storage>>::value;
 }  // namespace detail
@@ -74,7 +74,7 @@ inline constexpr bool has_dim_v =
  *
  * @tparam Storage A type that satisfies the `legate::stl::logical_store_like` concept.
  */
-template <class Storage>
+template <typename Storage>
 using value_type_of_t =
   LEGATE_STL_IMPLEMENTATION_DEFINED(typename detail::value_type_of_<remove_cvref_t<Storage>>::type);
 
@@ -85,7 +85,7 @@ using value_type_of_t =
  * @tparam Storage A type that satisfies the `legate::stl::logical_store_like` concept.
  * @hideinitializer
  */
-template <class Storage>
+template <typename Storage>
 using element_type_of_t = LEGATE_STL_IMPLEMENTATION_DEFINED(
   const_if_t<std::is_const_v<std::remove_reference_t<Storage>>, value_type_of_t<Storage>>);
 
@@ -96,21 +96,21 @@ using element_type_of_t = LEGATE_STL_IMPLEMENTATION_DEFINED(
  * @tparam Storage A type that satisfies the `legate::stl::logical_store_like` concept.
  * @hideinitializer
  */
-template <class Storage>
+template <typename Storage>
   requires(detail::has_dim_v<Storage>)
 inline constexpr std::int32_t dim_of_v = std::remove_reference_t<Storage>::dim();
 
 /** @cond */
-template <class Storage>
+template <typename Storage>
 inline constexpr std::int32_t dim_of_v<Storage&> = dim_of_v<Storage>;
 
-template <class Storage>
+template <typename Storage>
 inline constexpr std::int32_t dim_of_v<Storage&&> = dim_of_v<Storage>;
 
-template <class Storage>
+template <typename Storage>
 inline constexpr std::int32_t dim_of_v<const Storage> = dim_of_v<Storage>;
 
-template <class ElementType, std::int32_t Dim>
+template <typename ElementType, std::int32_t Dim>
 inline constexpr std::int32_t dim_of_v<logical_store<ElementType, Dim>> = Dim;
 /** @endcond */
 
@@ -125,24 +125,24 @@ inline constexpr std::int32_t dim_of_v<logical_store<ElementType, Dim>> = Dim;
  * @pre The element type of the `LogicalStore` must be the same as `ElementType`,
  *      and the dimensionality of the `LogicalStore` must be the same as `Dim`.
  */
-template <class ElementType, std::int32_t Dim = dynamic_dims>
+template <typename ElementType, std::int32_t Dim = dynamic_dims>
 logical_store<ElementType, Dim> as_typed(const legate::LogicalStore& store);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
-template <class Function, class... InputSpans>
+template <typename Function, typename... InputSpans>
 struct elementwise_accessor;
 
 struct default_accessor;
 
-template <class Op, bool Exclusive>
+template <typename Op, bool Exclusive>
 struct reduction_accessor;
 
-template <class ElementType, std::int32_t Dim, class Accessor /*= default_accessor*/>
+template <typename ElementType, std::int32_t Dim, typename Accessor /*= default_accessor*/>
 struct mdspan_accessor;
 }  // namespace detail
 
-template <class Input>
+template <typename Input>
 using mdspan_for_t = mdspan_t<element_type_of_t<Input>, dim_of_v<Input>>;
 
 /** @cond */
@@ -161,23 +161,23 @@ void as_mdspan(const PhysicalStore&&) = delete;
  *      `ElementType`, and the dimensionality of the `Store` must be the same
  *      as `Dim`.
  */
-template <class ElementType, std::int32_t Dim>
+template <typename ElementType, std::int32_t Dim>
 LEGATE_STL_ATTRIBUTE((host, device))  //
 mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalStore& store);
 
 /** @overload */
-template <class ElementType, std::int32_t Dim>
+template <typename ElementType, std::int32_t Dim>
 LEGATE_STL_ATTRIBUTE((host, device))  //
 mdspan_t<ElementType, Dim> as_mdspan(const legate::LogicalStore& store);
 
-template <class ElementType, std::int32_t Dim, template <class, std::int32_t> class StoreT>
+template <typename ElementType, std::int32_t Dim, template <typename, std::int32_t> typename StoreT>
   requires(same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
 LEGATE_STL_ATTRIBUTE((host, device))  //
   mdspan_t<ElementType, Dim> as_mdspan(const StoreT<ElementType, Dim>& store);
 /** @endcond */
 
 /** @overload */
-template <class ElementType, std::int32_t Dim>
+template <typename ElementType, std::int32_t Dim>
 LEGATE_STL_ATTRIBUTE((host, device))  //
 mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalArray& array);
 
@@ -186,11 +186,11 @@ struct iteration_kind {};
 
 struct reduction_kind {};
 
-template <class... Types>
+template <typename... Types>
 void ignore_all(Types&&...);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-template <class StoreLike>
+template <typename StoreLike>
 auto logical_store_like_concept_impl(StoreLike& storeish,
                                      LogicalStore& lstore,
                                      mdspan_for_t<StoreLike> span,
@@ -205,20 +205,20 @@ auto logical_store_like_concept_impl(StoreLike& storeish,
 {
 }
 
-template <class StoreLike, class Ptr = decltype(&logical_store_like_concept_impl<StoreLike>)>
+template <typename StoreLike, typename Ptr = decltype(&logical_store_like_concept_impl<StoreLike>)>
 constexpr bool is_logical_store_like(int)
 {
   return true;
 }
 
-template <class StoreLike>
+template <typename StoreLike>
 constexpr bool is_logical_store_like(long)
 {
   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Reduction>
+template <typename Reduction>
 auto legate_reduction_concept_impl(Reduction reduction,
                                    typename Reduction::LHS lhs,  //
                                    typename Reduction::RHS rhs)  //
@@ -232,13 +232,13 @@ auto legate_reduction_concept_impl(Reduction reduction,
 {
 }
 
-template <class Reduction, class Ptr = decltype(&legate_reduction_concept_impl<Reduction>)>
+template <typename Reduction, typename Ptr = decltype(&legate_reduction_concept_impl<Reduction>)>
 constexpr bool is_legate_reduction(int)
 {
   return true;
 }
 
-template <class StoreLike>
+template <typename StoreLike>
 constexpr bool is_legate_reduction(long)
 {
   return false;
@@ -251,23 +251,23 @@ constexpr bool is_legate_reduction(long)
  * @brief True when `StoreLike` is a type that implements the `get_logical_store`
  *        customization point.
  */
-template <class StoreLike>
+template <typename StoreLike>
 concept logical_store_like = /* see below */;
 
 /**
  * @brief True when `Reduction` has static `fold` and `apply` member functions.
  */
-template <class Reduction>
+template <typename Reduction>
 concept legate_reduction = /* see below */;
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class StoreLike>
+template <typename StoreLike>
 inline constexpr bool logical_store_like =
   detail::is_logical_store_like<remove_cvref_t<StoreLike>>(0);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Reduction>
+template <typename Reduction>
 inline constexpr bool legate_reduction = detail::is_legate_reduction<remove_cvref_t<Reduction>>(0);
 
 }  // namespace legate::stl

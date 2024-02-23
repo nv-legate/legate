@@ -24,18 +24,18 @@ namespace legate::stl {
 
 namespace detail {
 
-template <class Map>
+template <typename Map>
 using reference_t = decltype(std::declval<const Map&>().read(std::declval<typename Map::cursor>()));
 
-template <class Map, class Iterator>
+template <typename Map, typename Iterator>
 using mixin_ = typename Map::template mixin<Iterator>;
 
-template <class Map, class Iterator>
+template <typename Map, typename Iterator>
 using mixin = meta::eval<meta::quote_or<mixin_, meta::empty>, Map, Iterator>;
 
 }  // namespace detail
 
-template <class Map>
+template <typename Map>
 struct iterator : detail::mixin<Map, iterator<Map>> {
   using difference_type   = std::ptrdiff_t;
   using value_type        = typename Map::value_type;
@@ -167,11 +167,11 @@ struct iterator : detail::mixin<Map, iterator<Map>> {
   LEGATE_STL_ATTRIBUTE((no_unique_address)) Map map_{};
 };
 
-template <class Int>
+template <typename Int>
 struct affine_map {
   using cursor = Int;
 
-  template <class Iterator>
+  template <typename Iterator>
   struct mixin {
     auto point() const
     {

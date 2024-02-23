@@ -31,7 +31,7 @@ void get_logical_store();
 struct tag {
   LogicalStore operator()(LogicalStore store) const noexcept { return store; }
 
-  template <class StoreLike>
+  template <typename StoreLike>
   auto operator()(StoreLike&& store_like) const
     noexcept(noexcept(get_logical_store(std::forward<StoreLike>(store_like))))
       -> decltype(get_logical_store(std::forward<StoreLike>(store_like)))

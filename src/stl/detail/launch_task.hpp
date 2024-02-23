@@ -39,12 +39,12 @@ namespace detail {
 
 using logical_stores_t = const std::vector<LogicalStore>&;
 
-template <class... Ts>
+template <typename... Ts>
 struct inputs {
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data;
 
-  template <class Type, class Kind>
+  template <typename Type, typename Kind>
   void apply(AutoTask& task, Kind kind, std::size_t index) const
   {
     // Add the stores as inputs to the task
@@ -56,7 +56,7 @@ struct inputs {
     std::apply([&](auto... cs) { (task.add_constraint(cs(part)), ...); }, constraints);
   }
 
-  template <class Kind>
+  template <typename Kind>
   void operator()(AutoTask& task, Kind kind) const
   {
     LegateAssert(data.size() == sizeof...(Ts));
@@ -66,12 +66,12 @@ struct inputs {
   }
 };
 
-template <class... Ts>
+template <typename... Ts>
 struct outputs {
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data;
 
-  template <class Type, class Kind>
+  template <typename Type, typename Kind>
   void apply(AutoTask& task, Kind kind, std::size_t index) const
   {
     // Add the stores as outputs to the task
@@ -83,7 +83,7 @@ struct outputs {
     std::apply([&](auto... cs) { (task.add_constraint(cs(part)), ...); }, constraints);
   }
 
-  template <class Kind>
+  template <typename Kind>
   void operator()(AutoTask& task, Kind kind) const
   {
     static_cast<void>(kind);
@@ -94,7 +94,7 @@ struct outputs {
   }
 };
 
-template <class... Ts>
+template <typename... Ts>
 struct constraints {
   std::tuple<Ts...> data;
 
@@ -107,7 +107,7 @@ struct constraints {
   }
 };
 
-template <class... Ts>
+template <typename... Ts>
 struct scalars {
   std::tuple<Ts...> data;
 
@@ -121,13 +121,13 @@ struct scalars {
   }
 };
 
-template <class... Fn>
+template <typename... Fn>
 struct function;
 
 template <>
 struct function<> {};
 
-template <class Fn>
+template <typename Fn>
 struct function<Fn> {
   Fn fn;
 
@@ -143,7 +143,7 @@ inline std::int32_t _next_reduction_id()
   return id.fetch_add(1);
 }
 
-template <class T>
+template <typename T>
 std::int32_t _reduction_id_for()
 {
   static const std::int32_t id = _next_reduction_id();
@@ -156,14 +156,14 @@ inline std::int32_t _next_reduction_kind()
   return id.fetch_add(1);
 }
 
-template <class T>
+template <typename T>
 std::int32_t _reduction_kind_for()
 {
   static const std::int32_t id = _next_reduction_kind();
   return id;
 }
 
-template <class Fun>
+template <typename Fun>
 std::int32_t _get_reduction_id()
 {
   static const std::int32_t ID = []() -> std::int32_t {
@@ -176,7 +176,7 @@ std::int32_t _get_reduction_id()
   return ID;
 }
 
-template <class ElementType, class Fun>
+template <typename ElementType, typename Fun>
 std::int32_t _record_reduction_for()
 {
   static const std::int32_t KIND = []() -> std::int32_t {
@@ -189,13 +189,13 @@ std::int32_t _record_reduction_for()
   return KIND;
 }
 
-template <class...>
+template <typename...>
 struct reduction;
 
 template <>
 struct reduction<> {};
 
-template <class Store, class Fun>
+template <typename Store, typename Fun>
 struct reduction<Store, Fun> {
   LogicalStore data;
   Fun fn;
@@ -232,7 +232,7 @@ struct store_placeholder {
 };
 
 struct make_inputs {
-  template <class... Ts>                     //
+  template <typename... Ts>                  //
     requires(logical_store_like<Ts> && ...)  //
   inputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
   {
@@ -250,7 +250,7 @@ struct make_inputs {
 };
 
 struct make_outputs {
-  template <class... Ts>                     //
+  template <typename... Ts>                  //
     requires(logical_store_like<Ts> && ...)  //
   outputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
   {
@@ -268,7 +268,7 @@ struct make_outputs {
 };
 
 struct make_scalars {
-  template <class... Ts>
+  template <typename... Ts>
   scalars<Ts...> operator()(Ts... scalars) const
   {
     static_assert((std::is_trivially_copyable_v<Ts> && ...),
@@ -278,20 +278,20 @@ struct make_scalars {
 };
 
 struct make_function {
-  template <class Fn>
+  template <typename Fn>
   function<Fn> operator()(Fn fn) const
   {
     return {static_cast<Fn&&>(fn)};
   }
 };
 
-template <class Store>
+template <typename Store>
 constexpr std::int32_t _dim_of() noexcept
 {
   return dim_of_v<Store>;
 }
 
-template <class Store>
+template <typename Store>
 using dim_of_t = meta::constant<_dim_of<Store>()>;
 
 struct make_reduction : store_placeholder {
@@ -302,8 +302,8 @@ struct make_reduction : store_placeholder {
 
   using store_placeholder::operator();
 
-  template <class Store, class ReductionFn>  //
-    requires(logical_store_like<Store>)      // TODO constrain Fun
+  template <typename Store, typename ReductionFn>  //
+    requires(logical_store_like<Store>)            // TODO constrain Fun
   reduction<std::remove_reference_t<Store>, ReductionFn> operator()(Store&& store,
                                                                     ReductionFn reduction) const
   {
@@ -315,7 +315,7 @@ struct make_reduction : store_placeholder {
 };
 
 struct make_constraints {
-  template <class... Ts>  //
+  template <typename... Ts>  //
     requires((callable<Ts, AutoTask&, logical_stores_t, logical_stores_t, const LogicalStore&> &&
               ...))
   constraints<Ts...> operator()(Ts... constraints) const
@@ -353,7 +353,7 @@ struct make_align {
     }
   }
 
-  template <class Left, class Right>
+  template <typename Left, typename Right>
   struct align {
     Left left;
     Right right;
@@ -369,7 +369,7 @@ struct make_align {
 
   // E.g., `align(inputs[0], inputs[1])`
   //       `align(outputs[0], inputs)`
-  template <class Left, class Right>
+  template <typename Left, typename Right>
     requires(callable<Left, logical_stores_t, logical_stores_t, const LogicalStore&> &&
              callable<Right, logical_stores_t, logical_stores_t, const LogicalStore&>)  //
   align<Left, Right> operator()(Left left, Right right) const
@@ -384,7 +384,7 @@ struct make_align {
   auto operator()(make_outputs outputs) const { return (*this)(outputs[0], outputs); }
 };
 
-template <class Fn, class... Views>
+template <typename Fn, typename... Views>
 void _cpu_for_each(Fn fn, Views... views)
 {
   auto&& input0 = front_of(views...);
@@ -394,11 +394,11 @@ void _cpu_for_each(Fn fn, Views... views)
   }
 }
 
-template <class Function, class inputs, class Outputs, class Scalars>
+template <typename Function, typename inputs, typename Outputs, typename Scalars>
 struct iteration_cpu;
 
 // This is a CPU implementation of a for_each operation.
-template <class Fn, class... Is, class... Os, class... Ss>
+template <typename Fn, typename... Is, typename... Os, typename... Ss>
 struct iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
   static void impl(std::index_sequence<IIs...>,
@@ -440,7 +440,7 @@ struct iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>
 
 #if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(REALM_COMPILER_IS_NVCC)
 
-template <class Fn, class... Views>
+template <typename Fn, typename... Views>
 __global__ void _gpu_for_each(Fn fn, Views... views)
 {
   const std::size_t idx = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -452,11 +452,11 @@ __global__ void _gpu_for_each(Fn fn, Views... views)
   }
 }
 
-template <class Function, class inputs, class Outputs, class Scalars>
+template <typename Function, typename inputs, typename Outputs, typename Scalars>
 struct iteration_gpu;
 
 // This is a GPU implementation of a for_each operation.
-template <class Fn, class... Is, class... Os, class... Ss>
+template <typename Fn, typename... Is, typename... Os, typename... Ss>
 struct iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
   static constexpr std::int32_t THREAD_BLOCK_SIZE = 128;
 
@@ -507,7 +507,11 @@ struct iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // iteration operation wrapper implementation
-template <class Function, class Inputs, class Outputs, class Scalars, class Constraints>
+template <typename Function,
+          typename Inputs,
+          typename Outputs,
+          typename Scalars,
+          typename Constraints>
 struct iteration_operation  //
   : LegateTask<iteration_operation<Function, Inputs, Outputs, Scalars, Constraints>> {
   static void cpu_variant(TaskContext context)
@@ -547,7 +551,7 @@ struct iteration_operation  //
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Op, std::int32_t Dim, bool Exclusive = false>
+template <typename Op, std::int32_t Dim, bool Exclusive = false>
 inline auto as_mdspan_reduction(PhysicalArray& array, Rect<Dim> working_set)
   -> mdspan_reduction_t<Op, Dim, Exclusive>
 {
@@ -566,7 +570,7 @@ inline auto as_mdspan_reduction(PhysicalArray& array, Rect<Dim> working_set)
   return mdspan_reduction_t<Op, Dim, Exclusive>{handle, mapping, accessor};
 }
 
-template <class Function, class InOut, class Input>
+template <typename Function, typename InOut, typename Input>
 void _cpu_reduce(Function fn, InOut inout, Input input)
 {
   auto distance = inout.end() - inout.begin();
@@ -577,10 +581,10 @@ void _cpu_reduce(Function fn, InOut inout, Input input)
   }
 }
 
-template <class Reduction, class Inputs, class Outputs, class Scalars>
+template <typename Reduction, typename Inputs, typename Outputs, typename Scalars>
 struct reduction_cpu;
 
-template <class Red, class Fn, class... Is, class... Os, class... Ss>
+template <typename Red, typename Fn, typename... Is, typename... Os, typename... Ss>
 struct reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
   static void impl(std::index_sequence<IIs...>,
@@ -636,7 +640,7 @@ struct reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<
 // then we can launch several kernels, each of which folds in parallel at
 // multiples of that stride, but starting at different offsets. Then those
 // results can be folded together.
-template <class Function, class InOut, class Input>
+template <typename Function, typename InOut, typename Input>
 __global__ void _gpu_reduce(Function fn, InOut inout, Input input)
 {
   const std::size_t tid = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
@@ -649,10 +653,10 @@ __global__ void _gpu_reduce(Function fn, InOut inout, Input input)
   }
 }
 
-template <class Reduction, class Inputs, class Outputs, class Scalars>
+template <typename Reduction, typename Inputs, typename Outputs, typename Scalars>
 struct reduction_gpu;
 
-template <class Red, class Fn, class... Is, class... Os, class... Ss>
+template <typename Red, typename Fn, typename... Is, typename... Os, typename... Ss>
 struct reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
   static constexpr std::int32_t THREAD_BLOCK_SIZE = 128;
 
@@ -712,7 +716,11 @@ struct reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // reduction operation wrapper implementation
-template <class Reduction, class Inputs, class Outputs, class Scalars, class Constraints>
+template <typename Reduction,
+          typename Inputs,
+          typename Outputs,
+          typename Scalars,
+          typename Constraints>
 struct reduction_operation
   : LegateTask<reduction_operation<Reduction, Inputs, Outputs, Scalars, Constraints>> {
   static void cpu_variant(TaskContext context)
@@ -757,31 +765,35 @@ struct reduction_operation
 
 // _is_which is needed to disambiguate between the two overloads of
 // get_arg below for gcc-9.
-template <template <class...> class Which, class What>
+template <template <typename...> typename Which, typename What>
 inline constexpr bool _is_which = false;
 
-template <template <class...> class Which, class... Args>
+template <template <typename...> typename Which, typename... Args>
 inline constexpr bool _is_which<Which, Which<Args...>> = true;
 
-template <template <class...> class Which, class... Ts, class... Tail>
+template <template <typename...> typename Which, typename... Ts, typename... Tail>
 inline const Which<Ts...>& get_arg(const Which<Ts...>& head, const Tail&...)
 {
   return head;
 }
 
-template <template <class...> class Which,
-          class Head,
+template <template <typename...> typename Which,
+          typename Head,
 #if 1  // LEGATE_STL_GCC() && (__GNUC__ <= 9)
           std::enable_if_t<!_is_which<Which, Head>, int> Enable = 0,
 #endif
-          class... Tail>
+          typename... Tail>
 inline decltype(auto) get_arg(const Head&, const Tail&... tail)
 {
   return get_arg<Which>(tail...);
 }
 
 struct launch_task {
-  template <class Function, class Inputs, class Outputs, class Scalars, class Constraints>
+  template <typename Function,
+            typename Inputs,
+            typename Outputs,
+            typename Scalars,
+            typename Constraints>
   static auto make_iteration_task(
     Function function, Inputs inputs, Outputs outputs, Scalars scalars, Constraints constraints)
   {
@@ -800,7 +812,11 @@ struct launch_task {
     runtime->submit(std::move(task));
   }
 
-  template <class Reduction, class Inputs, class Outputs, class Scalars, class Constraints>
+  template <typename Reduction,
+            typename Inputs,
+            typename Outputs,
+            typename Scalars,
+            typename Constraints>
   static auto make_reduction_task(
     Reduction reduction, Inputs inputs, Outputs outputs, Scalars scalars, Constraints constraints)
   {
@@ -819,7 +835,7 @@ struct launch_task {
     runtime->submit(std::move(task));
   }
 
-  template <class... Ts>
+  template <typename... Ts>
   auto operator()(Ts... args) const
   {
     detail::inputs<> no_inputs;

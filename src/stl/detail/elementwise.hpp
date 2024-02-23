@@ -22,7 +22,7 @@
 
 namespace legate::stl {
 namespace detail {
-template <class Function, class... InputSpans>
+template <typename Function, typename... InputSpans>
 struct elementwise_accessor {
   using value_type       = call_result_t<Function, typename InputSpans::reference...>;
   using element_type     = value_type;
@@ -62,7 +62,7 @@ struct elementwise_accessor {
   std::tuple<InputSpans...> spans_;
 };
 
-template <class Function, class... InputSpans>
+template <typename Function, typename... InputSpans>
 using elementwise_span =
   std::mdspan<call_result_t<Function, typename InputSpans::reference...>,
               std::dextents<coord_t, meta::front<InputSpans...>::extents_type::rank()>,
@@ -71,11 +71,11 @@ using elementwise_span =
 
 // a binary function that folds its two arguments together using
 // the given binary function, and stores the result in the first
-template <class Function>
+template <typename Function>
 struct elementwise {
   LEGATE_STL_ATTRIBUTE((no_unique_address)) Function fn;
 
-  template <class InputSpan, class... InputSpans>
+  template <typename InputSpan, typename... InputSpans>
   LEGATE_STL_ATTRIBUTE((host, device))  //
   auto operator()(InputSpan&& head, InputSpans&&... tail) const
     -> elementwise_span<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>
@@ -102,7 +102,7 @@ struct elementwise {
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Function>
+template <typename Function>
 detail::elementwise<Function> elementwise(Function fn)
 {
   return {std::move(fn)};

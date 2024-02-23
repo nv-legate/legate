@@ -27,14 +27,14 @@ namespace legate::stl {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
-template <class Fun, std::size_t... Is>
+template <typename Fun, std::size_t... Is>
 constexpr auto with_indices_impl_1(Fun&& fun, std::index_sequence<Is...>)
   -> decltype(std::forward<Fun>(fun)(Is...))
 {
   return std::forward<Fun>(fun)(Is...);
 }
 
-template <template <std::size_t> class Tfx, class Fun, std::size_t... Is>
+template <template <std::size_t> typename Tfx, typename Fun, std::size_t... Is>
 constexpr auto with_indices_impl_2(Fun&& fun, std::index_sequence<Is...>)
   -> decltype(std::forward<Fun>(fun)(Tfx<Is>()()...))
 {
@@ -47,14 +47,14 @@ struct index_t {
 };
 }  // namespace detail
 
-template <std::size_t N, class Fun>
+template <std::size_t N, typename Fun>
 constexpr auto with_indices(Fun&& fun)
   -> decltype(detail::with_indices_impl_1(std::forward<Fun>(fun), std::make_index_sequence<N>()))
 {
   return detail::with_indices_impl_1(std::forward<Fun>(fun), std::make_index_sequence<N>());
 }
 
-template <std::size_t N, template <std::size_t> class Tfx, class Fun>
+template <std::size_t N, template <std::size_t> typename Tfx, typename Fun>
 constexpr auto with_indices(Fun&& fun)
   -> decltype(detail::with_indices_impl_2<Tfx>(std::forward<Fun>(fun),
                                                std::make_index_sequence<N>()))
@@ -64,12 +64,12 @@ constexpr auto with_indices(Fun&& fun)
 
 /// \cond
 namespace detail {
-template <class Fn, class... Args>
+template <typename Fn, typename... Args>
 struct binder_back {
   Fn fn_;
   std::tuple<Args...> args_;
 
-  template <class... Ts>
+  template <typename... Ts>
     requires(std::is_invocable_v<Fn, Ts..., Args...>)
   LEGATE_STL_ATTRIBUTE((host, device)) decltype(auto) operator()(Ts&&... params)
   {
@@ -78,13 +78,13 @@ struct binder_back {
   }
 };
 
-template <class Fn, class... Args>
+template <typename Fn, typename... Args>
 binder_back(Fn, Args...) -> binder_back<Fn, Args...>;
 }  // namespace detail
 /// \endcond
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Fn, class... Args>
+template <typename Fn, typename... Args>
 LEGATE_STL_ATTRIBUTE((host, device))
 auto bind_back(Fn fn, Args&&... args)
 {
@@ -98,11 +98,11 @@ auto bind_back(Fn fn, Args&&... args)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
-template <class Function, class... Ignore>
+template <typename Function, typename... Ignore>
 struct drop_n_args {
   Function fun_;
 
-  template <class... Args>
+  template <typename... Args>
   constexpr decltype(auto) operator()(Ignore..., Args&&... args) const
   {
     return fun_(std::forward<Args>(args)...);
@@ -110,11 +110,11 @@ struct drop_n_args {
 };
 }  // namespace detail
 
-template <std::size_t Count, class Function>
+template <std::size_t Count, typename Function>
 using drop_n_args =
   meta::fill_n<Count, ignore, meta::bind_front<meta::quote<detail::drop_n_args>, Function>>;
 
-template <std::size_t Count, class Function>
+template <std::size_t Count, typename Function>
 drop_n_args<Count, Function> drop_n_fn(Function fun)
 {
   return {std::move(fun)};

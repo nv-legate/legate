@@ -20,7 +20,7 @@
 namespace legate::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Range>                 //
+template <typename Range>              //
   requires(logical_store_like<Range>)  //
 void fill(Range&& output, value_type_of_t<Range> val)
 {

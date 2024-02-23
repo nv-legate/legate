@@ -68,10 +68,10 @@ LEGATE_STL_PRAGMA_POP()
 
 namespace legate::stl {
 namespace detail {
-template <class Function, class... InputSpans>
+template <typename Function, typename... InputSpans>
 struct elementwise_accessor;
 
-template <Legion::PrivilegeMode Privilege, class ElementType, std::int32_t Dim>
+template <Legion::PrivilegeMode Privilege, typename ElementType, std::int32_t Dim>
 using store_accessor_t =  //
   Legion::FieldAccessor<Privilege,
                         ElementType,
@@ -80,7 +80,7 @@ using store_accessor_t =  //
                         Legion::AffineAccessor<ElementType, Dim>>;
 
 struct default_accessor {
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   using type =  //
     meta::if_c<(Dim == 0),
                store_accessor_t<LEGION_READ_ONLY, const ElementType, 1>,
@@ -88,7 +88,7 @@ struct default_accessor {
                           store_accessor_t<LEGION_READ_ONLY, ElementType, Dim>,
                           store_accessor_t<LEGION_READ_WRITE, ElementType, Dim>>>;
 
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   LEGATE_STL_ATTRIBUTE((host, device))  //
   static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
   {
@@ -104,9 +104,9 @@ struct default_accessor {
   }
 };
 
-template <class Op, bool Exclusive = false>
+template <typename Op, bool Exclusive = false>
 struct reduction_accessor {
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   using type =  //
     meta::if_c<(Dim == 0),
                store_accessor_t<LEGION_READ_ONLY, const ElementType, 1>,
@@ -116,7 +116,7 @@ struct reduction_accessor {
                                          coord_t,
                                          Realm::AffineAccessor<typename Op::RHS, Dim, coord_t>>>;
 
-  template <class ElementType, std::int32_t Dim>
+  template <typename ElementType, std::int32_t Dim>
   LEGATE_STL_ATTRIBUTE((host, device))  //
   static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
   {
@@ -133,7 +133,7 @@ struct reduction_accessor {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // mdspan_accessor:
 //    A custom accessor policy for use with std::mdspan for accessing a Legate store.
-template <class ElementType, std::int32_t ActualDim, class Accessor = default_accessor>
+template <typename ElementType, std::int32_t ActualDim, typename Accessor = default_accessor>
 struct mdspan_accessor {
   static constexpr std::int32_t Dim = std::max(ActualDim, std::int32_t(1));
   using value_type                  = std::remove_const_t<ElementType>;
@@ -143,7 +143,7 @@ struct mdspan_accessor {
   using reference     = decltype(std::declval<const accessor_type&>()[Point<Dim>::ONES()]);
   using offset_policy = mdspan_accessor;
 
-  template <class, std::int32_t, class>
+  template <typename, std::int32_t, typename>
   friend struct mdspan_accessor;
 
   LEGATE_STL_ATTRIBUTE((host, device))  //
@@ -191,7 +191,7 @@ struct mdspan_accessor {
     return *this;
   }
 
-  template <class OtherElementType>                                             //
+  template <typename OtherElementType>                                          //
     requires(std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>)  //
   LEGATE_STL_ATTRIBUTE((host, device))                                          //
     mdspan_accessor(const mdspan_accessor<OtherElementType, Dim, Accessor>& other) noexcept
@@ -202,7 +202,7 @@ struct mdspan_accessor {
   {
   }
 
-  template <class Function, class... InputSpans>
+  template <typename Function, typename... InputSpans>
   LEGATE_STL_ATTRIBUTE((host, device))
   mdspan_accessor(const elementwise_accessor<Function, InputSpans...>& other)
     : elementwise_(&mdspan_accessor::elementwise<Function, InputSpans...>), elementwise_obj_(&other)
@@ -210,7 +210,7 @@ struct mdspan_accessor {
   }
 
   // Apply a function element-wise
-  template <class Function, class... InputSpans>
+  template <typename Function, typename... InputSpans>
   LEGATE_STL_ATTRIBUTE((host, device))  //
   mdspan_accessor& operator=(const elementwise_accessor<Function, InputSpans...>& other)
   {
@@ -253,7 +253,7 @@ struct mdspan_accessor {
   }
 
  private:
-  template <class Function, class... InputSpans>
+  template <typename Function, typename... InputSpans>
   LEGATE_STL_ATTRIBUTE((host, device))
   static void elementwise(mdspan_accessor& self, const void* elementwise_obj)
   {
@@ -269,7 +269,7 @@ struct mdspan_accessor {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Store>
+template <typename Store>
 struct value_type_of_
   : meta::if_c<(type_code_of<Store> == Type::Code::NIL), meta::empty, meta::type<Store>> {};
 }  // namespace detail
@@ -281,14 +281,14 @@ struct value_type_of_
  * @tparam ElementType The element type of the `mdspan`.
  * @tparam Dim The dimensionality of the `mdspan`.
  */
-template <class ElementType, std::int32_t Dim>
+template <typename ElementType, std::int32_t Dim>
 using mdspan_t =  //
   std::mdspan<ElementType,
               std::dextents<coord_t, Dim>,
               std::layout_right,
               detail::mdspan_accessor<ElementType, Dim>>;
 
-template <class Op, std::int32_t Dim, bool Exclusive = false>
+template <typename Op, std::int32_t Dim, bool Exclusive = false>
 using mdspan_reduction_t =  //
   std::mdspan<
     typename Op::RHS,

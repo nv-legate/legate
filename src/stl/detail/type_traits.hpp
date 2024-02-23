@@ -21,42 +21,42 @@
 
 namespace legate::stl {
 namespace detail {
-template <class T>
+template <typename T>
 T&& declval() noexcept;
 }  // namespace detail
 
 #if __cpp_lib_remove_cvref >= 20171L
 using std::remove_cvref_t;
 #else
-template <class T>
+template <typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 #endif
 
-template <class A, class B>
+template <typename A, typename B>
 inline constexpr bool same_as = false;
 
-template <class A>
+template <typename A>
 inline constexpr bool same_as<A, A> = true;
 
 template <const auto& Value>
 using typeof_t = remove_cvref_t<decltype(Value)>;
 
-template <class Fun, class... Args>
+template <typename Fun, typename... Args>
 using call_result_t = decltype(detail::declval<Fun>()(detail::declval<Args>()...));
 
-template <const auto& Fun, class... Args>
+template <const auto& Fun, typename... Args>
 using call_result_c_t = call_result_t<typeof_t<Fun>, Args...>;
 
-template <class Fun, class... Args>
+template <typename Fun, typename... Args>
 inline constexpr bool callable = meta::evaluable_q<call_result_t, Fun, Args...>;
 
-template <const auto& Fun, class... Args>
+template <const auto& Fun, typename... Args>
 inline constexpr bool callable_c = meta::evaluable_q<call_result_t, typeof_t<Fun>, Args...>;
 
-template <class Type>
+template <typename Type>
 using observer_ptr = Type*;
 
-template <bool MakeConst, class Type>
+template <bool MakeConst, typename Type>
 using const_if_t = meta::if_c<MakeConst, const Type, Type>;
 
 }  // namespace legate::stl

@@ -47,22 +47,22 @@ namespace detail {
 namespace begin {
 void begin();
 
-template <class Ty>
+template <typename Ty>
 using member_begin_t = decltype(std::declval<Ty>().begin());
 
-template <class Ty>
+template <typename Ty>
 using free_begin_t = decltype(begin(std::declval<Ty>()));
 
-template <class Ty>
+template <typename Ty>
 using begin_fn = meta::if_c<meta::evaluable_q<member_begin_t, Ty>,
                             meta::quote<member_begin_t>,
                             meta::quote<free_begin_t>>;
 
-template <class Ty>
+template <typename Ty>
 using begin_result_t = meta::eval<begin_fn<Ty>, Ty>;
 
 struct tag {
-  template <class Range>
+  template <typename Range>
   static constexpr bool _nothrow_begin() noexcept
   {
     if constexpr (meta::evaluable_q<member_begin_t, Range>) {
@@ -72,7 +72,7 @@ struct tag {
     }
   }
 
-  template <class Range>
+  template <typename Range>
   auto operator()(Range&& rng) const noexcept(_nothrow_begin<Range>()) -> begin_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_begin_t, Range>) {
@@ -87,21 +87,21 @@ struct tag {
 namespace end {
 void end();
 
-template <class Ty>
+template <typename Ty>
 using member_end_t = decltype(std::declval<Ty>().end());
 
-template <class Ty>
+template <typename Ty>
 using free_end_t = decltype(end(std::declval<Ty>()));
 
-template <class Ty>
+template <typename Ty>
 using end_fn = meta::
   if_c<meta::evaluable_q<member_end_t, Ty>, meta::quote<member_end_t>, meta::quote<free_end_t>>;
 
-template <class Ty>
+template <typename Ty>
 using end_result_t = meta::eval<end_fn<Ty>, Ty>;
 
 struct tag {
-  template <class Range>
+  template <typename Range>
   static constexpr bool _nothrow_end() noexcept
   {
     if constexpr (meta::evaluable_q<member_end_t, Range>) {
@@ -111,7 +111,7 @@ struct tag {
     }
   }
 
-  template <class Range>
+  template <typename Range>
   auto operator()(Range&& rng) const noexcept(_nothrow_end<Range>()) -> end_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_end_t, Range>) {
@@ -132,32 +132,32 @@ inline constexpr detail::end::tag end{};
 using namespace tag;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Range>
+template <typename Range>
 using iterator_t = decltype(stl::begin((std::declval<Range>())));
 
-template <class Range>
+template <typename Range>
 using sentinel_t = decltype(stl::end((std::declval<Range>())));
 
-template <class Range>
+template <typename Range>
 using range_reference_t = decltype(*stl::begin((std::declval<Range>())));
 
-template <class Range>
+template <typename Range>
 using range_value_t = typename std::iterator_traits<iterator_t<Range>>::value_type;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
-template <class Iter>
+template <typename Iter>
 auto is_iterator_like_(Iter iter) -> decltype((void)++iter, (void)*iter, (void)(iter == iter));
 
-template <class Range>
+template <typename Range>
 auto is_range_like_(Range&& rng)
   -> decltype(detail::is_iterator_like_(stl::begin(rng)), (void)(stl::begin(rng) == stl::end(rng)));
 
-template <class Range>
+template <typename Range>
 using is_range_like_t = decltype(detail::is_range_like_(std::declval<Range>()));
 }  // namespace detail
 
-template <class Range>
+template <typename Range>
 inline constexpr bool range = meta::evaluable_q<detail::is_range_like_t, Range>;
 }  // namespace legate::stl
 #endif
@@ -168,18 +168,18 @@ namespace tags {
 namespace as_range {
 void as_range();
 
-template <class T>
+template <typename T>
 using as_range_t = decltype(as_range(std::declval<T>()));
 
-template <class T>
+template <typename T>
 inline constexpr bool range_like_ = meta::evaluable_q<as_range_t, T>;
 
-template <class T>
+template <typename T>
 using as_range_result_t =
   meta::eval<meta::if_c<range<T>, meta::always<T>, meta::quote<as_range_t>>, T>;
 
 struct tag {
-  template <class T>
+  template <typename T>
   static constexpr bool _noexcept_as_range() noexcept
   {
     if constexpr (range<T>) {
@@ -189,7 +189,7 @@ struct tag {
     }
   }
 
-  template <class T>
+  template <typename T>
   as_range_result_t<T> operator()(T&& rng) const noexcept(_noexcept_as_range<T>())
   {
     if constexpr (range<T>) {
@@ -208,7 +208,7 @@ inline constexpr as_range::tag as_range{};
 
 using namespace tags::obj;
 
-template <class T>
+template <typename T>
 using as_range_t = call_result_c_t<as_range, T>;
 
 }  // namespace legate::stl

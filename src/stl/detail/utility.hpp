@@ -26,7 +26,7 @@ namespace legate::stl {
 struct ignore {
   ignore() = default;
 
-  template <class... Args>
+  template <typename... Args>
   LEGATE_STL_ATTRIBUTE((host, device))
   constexpr ignore(Args&&...) noexcept
   {
@@ -35,7 +35,7 @@ struct ignore {
 
 namespace detail {
 
-template <class LegateTask>
+template <typename LegateTask>
 struct task_id_generator {
   std::int64_t operator()(Library& library) const
   {
@@ -48,19 +48,19 @@ struct task_id_generator {
   }
 };
 
-template <class LegateTask>
+template <typename LegateTask>
 inline constexpr task_id_generator<LegateTask> task_id_for{};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // A stateless lambda has a conversion to a function pointer.
-template <class Lambda>
+template <typename Lambda>
 using lambda_fun_ptr_t = decltype(+std::declval<Lambda>());
 
-template <class Lambda>
+template <typename Lambda>
 inline constexpr bool stateless_lambda = meta::evaluable_q<lambda_fun_ptr_t, Lambda>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class Function>
+template <typename Function>
 void check_function_type()
 {
   static_assert(std::is_trivially_copyable_v<Function>,
@@ -81,7 +81,7 @@ void check_function_type()
 
 }  // namespace detail
 
-template <class Reference>
+template <typename Reference>
 Reference scalar_cast(const Scalar& scalar)
 {
   using value_type = remove_cvref_t<Reference>;
@@ -92,20 +92,20 @@ Reference scalar_cast(const Scalar& scalar)
   return *static_cast<const value_type*>(scalar.ptr());
 }
 
-template <class Head, class... Tail>
+template <typename Head, typename... Tail>
 LEGATE_STL_ATTRIBUTE((host, device))
 Head&& front_of(Head&& head, Tail&&... /*tail*/) noexcept
 {
   return std::forward<Head>(head);
 }
 
-template <class Task, class... Parts>
+template <typename Task, typename... Parts>
 void align_all(Task& task, Parts&&...)
 {
   static_assert(sizeof...(Parts) < 2);
 }
 
-template <class Task, class Part1, class Part2, class... OtherParts>
+template <typename Task, typename Part1, typename Part2, typename... OtherParts>
 void align_all(Task& task, Part1&& part1, Part2&& part2, OtherParts&&... other_parts)
 {
   task.add_constraint(legate::align(part1, part2));

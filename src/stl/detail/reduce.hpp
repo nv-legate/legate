@@ -26,7 +26,7 @@ namespace legate::stl {
 namespace detail {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <auto Identity, class Apply, class Fold = Apply>
+template <auto Identity, typename Apply, typename Fold = Apply>
 struct basic_reduction {
   using reduction_type                 = basic_reduction;
   using value_type                     = std::remove_cv_t<decltype(Identity)>;
@@ -60,17 +60,17 @@ struct basic_reduction {
 // The legate.stl library's `reduce` function wants reductions to also define a
 // function-call operator that knows how to apply the reduction to the range's
 // value-type, e.g., to apply it elementwise to all the elements of an mdspan.
-template <class Reduction>
+template <typename Reduction>
 struct reduction_wrapper : Reduction {
   using reduction_type = Reduction;
 
-  template <class LHS, class RHS>
+  template <typename LHS, typename RHS>
   void operator()(LHS&& lhs, RHS rhs) const
   {
     std::forward<LHS>(lhs) <<= rhs;
   }
 
-  template <class LHS, class RHS>
+  template <typename LHS, typename RHS>
   LEGATE_STL_ATTRIBUTE((host, device))
   void operator()(std::size_t tid, LHS&& lhs, RHS rhs) const
   {
@@ -80,15 +80,15 @@ struct reduction_wrapper : Reduction {
   }
 };
 
-template <class Reduction>
+template <typename Reduction>
 reduction_wrapper(Reduction) -> reduction_wrapper<Reduction>;
 
-template <class Reduction>
+template <typename Reduction>
 struct elementwise_reduction : Reduction {
   using reduction_type = Reduction;
 
   // This function expects to be passed mdspan objects
-  template <class State, class Value>
+  template <typename State, typename Value>
   void operator()(State state, Value value) const
   {
     LegateAssert(state.extents() == value.extents());
@@ -114,7 +114,7 @@ struct elementwise_reduction : Reduction {
 
   // This function expects to be passed mdspan objects. This
   // is the GPU implementation, where idx is the thread id.
-  template <class State, class Value>
+  template <typename State, typename Value>
   LEGATE_STL_ATTRIBUTE((host, device))
   void operator()(std::size_t tid, State state, Value value) const
   {
@@ -143,16 +143,16 @@ struct elementwise_reduction : Reduction {
   }
 };
 
-template <class Reduction>
+template <typename Reduction>
 elementwise_reduction(Reduction) -> elementwise_reduction<Reduction>;
 
-template <class Reduction>
+template <typename Reduction>
 elementwise_reduction(reduction_wrapper<Reduction>) -> elementwise_reduction<Reduction>;
 
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class ValueType, ValueType Identity, class Apply, class Fold = Apply>
+template <typename ValueType, ValueType Identity, typename Apply, typename Fold = Apply>
 detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 {
   static_assert(legate::type_code_of<ValueType> != legate::Type::Code::NIL,
@@ -169,7 +169,7 @@ detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <auto Identity, class Apply, class Fold = Apply>
+template <auto Identity, typename Apply, typename Fold = Apply>
 detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 {
   using value_type = std::remove_cv_t<decltype(Identity)>;
@@ -177,7 +177,7 @@ detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class ValueType, class Reduction>
+template <typename ValueType, typename Reduction>
   requires(legate_reduction<Reduction>)  //
 auto as_reduction(Reduction red)
 {
@@ -189,7 +189,7 @@ auto as_reduction(Reduction red)
   }
 }
 
-template <class ValueType, class T>
+template <typename ValueType, typename T>
 auto as_reduction(std::plus<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
@@ -198,7 +198,7 @@ auto as_reduction(std::plus<T>)
   return detail::reduction_wrapper{legate::SumReduction<Type>()};
 }
 
-template <class ValueType, class T>
+template <typename ValueType, typename T>
 auto as_reduction(std::minus<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
@@ -207,7 +207,7 @@ auto as_reduction(std::minus<T>)
   return detail::reduction_wrapper{legate::DiffReduction<Type>()};
 }
 
-template <class ValueType, class T>
+template <typename ValueType, typename T>
 auto as_reduction(std::multiplies<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
@@ -216,7 +216,7 @@ auto as_reduction(std::multiplies<T>)
   return detail::reduction_wrapper{legate::ProdReduction<Type>()};
 }
 
-template <class ValueType, class T>
+template <typename ValueType, typename T>
 auto as_reduction(std::divides<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
@@ -227,7 +227,7 @@ auto as_reduction(std::divides<T>)
 
 // TODO: min and max reductions
 
-template <class ValueType, class T>
+template <typename ValueType, typename T>
 auto as_reduction(std::logical_or<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
@@ -236,7 +236,7 @@ auto as_reduction(std::logical_or<T>)
   return detail::reduction_wrapper{legate::OrReduction<Type>()};
 }
 
-template <class ValueType, class T>
+template <typename ValueType, typename T>
 auto as_reduction(std::logical_and<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
@@ -247,17 +247,17 @@ auto as_reduction(std::logical_and<T>)
 
 // TODO: logical xor
 
-template <class ValueType, class Function>
+template <typename ValueType, typename Function>
 auto as_reduction(detail::elementwise<Function> fn)
 {
   return detail::elementwise_reduction{stl::as_reduction<ValueType>(fn.fn)};
 }
 
-template <class Fun, class ValueType>
+template <typename Fun, typename ValueType>
 using as_reduction_t = decltype(stl::as_reduction<ValueType>(std::declval<Fun>()));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class InputRange, class Init, class BinaryOperation>  //
+template <typename InputRange, typename Init, typename BinaryOperation>  //
   requires(logical_store_like<InputRange> && logical_store_like<Init> &&
            legate_reduction<as_reduction_t<BinaryOperation, element_type_of_t<Init>>>)  //
 auto reduce(InputRange&& input, Init&& init, BinaryOperation op)
