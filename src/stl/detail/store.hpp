@@ -12,14 +12,13 @@
 
 #pragma once
 
-#include "core/utilities/assert.h"
-
 #include "stlfwd.hpp"
 /////////////////
 #include "get_logical_store.hpp"
 #include "legate.h"
 #include "mdspan.hpp"
 #include "slice.hpp"
+#include "span.hpp"
 
 #include <array>
 #include <cstddef>
@@ -33,7 +32,7 @@
 namespace legate::stl {
 
 template <typename ElementType, std::int32_t Dim>
-struct logical_store;
+class logical_store;
 
 namespace detail {
 
@@ -173,7 +172,7 @@ class logical_store : private legate::LogicalStore {
   static LogicalStore create(std::span<const std::size_t, Dim> exts)
   {
     Runtime* runtime = legate::Runtime::get_runtime();
-    Shape shape(std::vector<std::size_t>{exts.begin(), exts.end()});
+    Shape shape({exts.begin(), exts.end()});
     return runtime->create_store(std::move(shape), primitive_type(type_code_of<ElementType>));
   }
 

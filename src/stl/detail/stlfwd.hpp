@@ -12,6 +12,43 @@
 
 #pragma once
 
+// This must go exactly here, because it must come before any Legion/Realm includes. If any of
+// those headers come first, then we get extremely confusing errors:
+//
+// error: implicit instantiation of undefined template 'std::span<const unsigned long, 0>'
+//   explicit logical_store(std::span<const std::size_t, 0>) : LogicalStore(logical_store::create())
+//   {}
+//                                                         ^
+// /Users/jfaibussowit/soft/nv/legate.core.internal/build/debug-sanitizer-clang/_deps/span-src/include/tcb/span.hpp:148:7:
+// note: template is declared here
+// class span;
+//       ^
+//
+// This type *is* complete and defined at that point! However, Realm has its own span
+// implementation, and for whatever reason, this is picked up by the compiler, and used
+// instead. You can verify this by compiling the following program:
+//
+// #include "realm/utils.h"
+// #include "realm/instance.h"
+// #include "tcb/span.hpp"
+//
+// int main()
+// {
+//   std::span<const std::size_t, 0> x;
+// }
+//
+// And you will find the familiar:
+//
+// span_bug.cpp:11:35: error: implicit instantiation of undefined template
+// 'std::span<const unsigned long, 0>'
+//   std::span<const std::size_t, 0> x;
+//                                   ^
+// /Users/jfaibussowit/soft/nv/legate.core.internal/build/debug-sanitizer-clang/_deps/span-src/include/tcb/span.hpp:148:7:
+// note: template is declared here class span;
+//       ^
+#include "span.hpp"
+//
+
 #include "core/utilities/defined.h"
 
 #include "config.hpp"
@@ -46,7 +83,7 @@ inline constexpr std::int32_t dynamic_dims = -1;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename ElementType, std::int32_t Dim = dynamic_dims>
-struct logical_store;
+class logical_store;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
@@ -220,7 +257,7 @@ constexpr bool is_logical_store_like(long)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Reduction>
-auto legate_reduction_concept_impl(Reduction reduction,
+auto legate_reduction_concept_impl(Reduction,
                                    typename Reduction::LHS lhs,  //
                                    typename Reduction::RHS rhs)  //
   -> decltype(detail::ignore_all((                               //

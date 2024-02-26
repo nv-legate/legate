@@ -51,3 +51,10 @@ if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
   set(CMAKE_POLICY_DEFAULT_CMP0135 NEW)
 endif()
+
+if(POLICY CMP0067)
+  # Honor language standard in try_compile() source-file signature.
+  # https://cmake.org/cmake/help/latest/policy/CMP0067.html
+  cmake_policy(SET CMP0067 NEW)
+  set(CMAKE_POLICY_DEFAULT_CMP0067 NEW)
+endif()

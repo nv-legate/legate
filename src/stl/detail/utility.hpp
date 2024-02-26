@@ -102,7 +102,7 @@ Head&& front_of(Head&& head, Tail&&... /*tail*/) noexcept
 }
 
 template <typename Task, typename... Parts>
-void align_all(Task& task, Parts&&...)
+void align_all(Task&, Parts&&...)
 {
   static_assert(sizeof...(Parts) < 2);
 }

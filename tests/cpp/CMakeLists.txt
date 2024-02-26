@@ -78,26 +78,6 @@ rapids_cpm_gtest(
   INSTALL_EXPORT_SET legate-core-exports
 )
 
-# span
-FetchContent_Declare(
-  span
-  GIT_REPOSITORY https://github.com/tcbrindle/span.git
-  GIT_TAG master
-)
-
-FetchContent_Populate(span)
-
-FetchContent_GetProperties(span)
-
-# mdspan
-FetchContent_Declare(
-  mdspan
-  GIT_REPOSITORY https://github.com/kokkos/mdspan.git
-  GIT_TAG stable
-)
-
-FetchContent_MakeAvailable(mdspan)
-
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 
 function(ConfigureTest CMAKE_TEST_NAME)
@@ -130,8 +110,16 @@ function(ConfigureTest CMAKE_TEST_NAME)
                CXX_EXTENSIONS              ON
   )
 
-  target_include_directories(${CMAKE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR} "$<BUILD_INTERFACE:${span_SOURCE_DIR}/include>")
-  target_link_libraries(${CMAKE_TEST_NAME} PRIVATE legate::core PRIVATE GTest::gtest std::mdspan)
+  target_include_directories(
+    ${CMAKE_TEST_NAME}
+    PRIVATE
+    ${PROJECT_SOURCE_DIR})
+
+  target_link_libraries(${CMAKE_TEST_NAME}
+    PRIVATE
+      legate::core
+      GTest::gtest
+  )
 
   if(Legion_USE_CUDA)
     set_target_properties(

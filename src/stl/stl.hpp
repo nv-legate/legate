@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "detail/stlfwd.hpp"
+//
 #include "detail/fill.hpp"
 #include "detail/for_each.hpp"
 #include "detail/launch_task.hpp"

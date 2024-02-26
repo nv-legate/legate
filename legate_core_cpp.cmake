@@ -116,6 +116,20 @@ endif()
 include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_thrust.cmake)
 
 ##############################################################################
+# - std::span ----------------------------------------------------------------
+
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_span.cmake)
+
+find_or_configure_span()
+
+##############################################################################
+# - std::mdspan --------------------------------------------------------------
+
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_mdspan.cmake)
+
+find_or_configure_mdspan()
+
+##############################################################################
 # - legate.core --------------------------------------------------------------
 
 set(legate_core_SOURCES "")
@@ -345,6 +359,8 @@ target_link_libraries(legate_core
           legate::Thrust
           $<TARGET_NAME_IF_EXISTS:CUDA::nvToolsExt>
           $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
+          $<TARGET_NAME_IF_EXISTS:std::mdspan>
+          $<TARGET_NAME_IF_EXISTS:span>
   PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>)
 
 target_compile_definitions(legate_core

@@ -1,0 +1,22 @@
+diff --git a/include/experimental/__p0009_bits/extents.hpp b/include/experimental/__p0009_bits/extents.hpp
+index c075ed6..4baa564 100644
+--- a/include/experimental/__p0009_bits/extents.hpp
++++ b/include/experimental/__p0009_bits/extents.hpp
+@@ -17,7 +17,7 @@
+ #pragma once
+ #include "dynamic_extent.hpp"
+
+-#ifdef __cpp_lib_span
++#if defined(__cpp_lib_span) && __cpp_lib_span >= 202311L
+ #include <span>
+ #endif
+ #include <array>
+@@ -58,7 +58,7 @@ __check_compatible_extents(
+ template<class IndexType, class ... Arguments>
+ MDSPAN_INLINE_FUNCTION
+ static constexpr bool are_valid_indices() {
+-    return
++    return
+       (std::is_convertible<Arguments, IndexType>::value && ... && true) &&
+       (std::is_nothrow_constructible<IndexType, Arguments>::value && ... && true);
+ }

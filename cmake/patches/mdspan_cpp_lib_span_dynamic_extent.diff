@@ -1,0 +1,12 @@
+diff --git a/include/experimental/__p0009_bits/dynamic_extent.hpp b/include/experimental/__p0009_bits/dynamic_extent.hpp
+index 2e29da1..4e45f0e 100644
+--- a/include/experimental/__p0009_bits/dynamic_extent.hpp
++++ b/include/experimental/__p0009_bits/dynamic_extent.hpp
+@@ -17,7 +17,7 @@
+
+ #include "macros.hpp"
+
+-#if defined(__cpp_lib_span)
++#if defined(__cpp_lib_span) && __cpp_lib_span >= 202311L
+ #include <span>
+ #endif
