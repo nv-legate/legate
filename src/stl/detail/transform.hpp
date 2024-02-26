@@ -24,7 +24,8 @@ namespace legate::stl {
 
 namespace detail {
 template <typename UnaryOperation>
-struct unary_transform {
+class unary_transform {
+ public:
   UnaryOperation op;
 
   template <typename Src, typename Dst>
@@ -38,7 +39,8 @@ template <typename UnaryOperation>
 unary_transform(UnaryOperation) -> unary_transform<UnaryOperation>;
 
 template <typename BinaryOperation>
-struct binary_transform {
+class binary_transform {
+ public:
   BinaryOperation op;
 
   template <typename Src1, typename Src2, typename Dst>

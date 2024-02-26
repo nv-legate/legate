@@ -54,7 +54,8 @@ template <typename Store>
 struct value_type_of_;
 
 template <typename ElementType, typename Extents, typename Layout, typename Accessor>
-struct value_type_of_<std::mdspan<ElementType, Extents, Layout, Accessor>> {
+class value_type_of_<std::mdspan<ElementType, Extents, Layout, Accessor>> {
+ public:
   using type = ElementType;
 };
 

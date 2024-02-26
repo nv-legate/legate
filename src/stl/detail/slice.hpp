@@ -28,7 +28,8 @@
 namespace legate::stl {
 
 namespace detail {
-struct broadcast_constraint {
+class broadcast_constraint {
+ public:
   legate::tuple<std::uint32_t> axes;
 
   auto operator()(legate::Variable self) const { return legate::broadcast(self, axes); }
@@ -52,7 +53,8 @@ auto project_dimension(Cursor cursor, Extents extents) noexcept
 }
 
 template <typename Map>
-struct view {
+class view {
+ public:
   LEGATE_STL_ATTRIBUTE((host, device))
   explicit view(Map map) : map_(std::move(map)) {}
 
@@ -68,12 +70,14 @@ struct view {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <std::int32_t... ProjDims>
-struct projection_policy {
+class projection_policy {
+ public:
   static_assert(sizeof...(ProjDims) > 0);
   static_assert(((ProjDims >= 0) && ...));
 
   template <typename ElementType, std::int32_t Dim>
-  struct policy {
+  class policy {
+   public:
     static_assert(sizeof...(ProjDims) < Dim);
     static_assert(((ProjDims < Dim) && ...));
 
@@ -101,7 +105,8 @@ struct projection_policy {
     using rebind = policy<OtherElementTypeT, OtherDim>;
 
     template <typename Mdspan>
-    struct physical_map : affine_map<std::int64_t> {
+    class physical_map : public affine_map<std::int64_t> {
+     public:
       static_assert(Mdspan::extents_type::rank() == Dim);
       static_assert(std::is_same_v<typename Mdspan::value_type, ElementType>);
 
@@ -140,7 +145,8 @@ struct projection_policy {
       using value_type = decltype(physical_map::read_impl(Indices(), {}, 0));
     };
 
-    struct logical_map : affine_map<std::int64_t> {
+    class logical_map : public affine_map<std::int64_t> {
+     public:
       using value_type = logical_store<std::remove_cv_t<ElementType>, Dim - sizeof...(ProjDims)>;
 
       logical_map() = default;
@@ -235,9 +241,11 @@ struct projection_policy {
 using row_policy    = projection_policy<0>;
 using column_policy = projection_policy<1>;
 
-struct element_policy {
+class element_policy {
+ public:
   template <typename ElementType, std::int32_t Dim>
-  struct policy {
+  class policy {
+   public:
     template <typename OtherElementTypeT, std::int32_t OtherDim>
     using rebind = policy<OtherElementTypeT, OtherDim>;
 
@@ -257,7 +265,8 @@ struct element_policy {
     }
 
     template <typename Mdspan>
-    struct physical_map : affine_map<std::int64_t> {
+    class physical_map : public affine_map<std::int64_t> {
+     public:
       using value_type = typename Mdspan::value_type;
       using reference  = typename Mdspan::reference;
 
@@ -363,7 +372,8 @@ template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
 using slice_view_t = slice_view<ElementType, Dim, rebind_policy<SlicePolicy, ElementType, Dim>>;
 
 template <typename Store, std::int32_t... ProjDim>
-struct projection_view {
+class projection_view {
+ public:
   using type = slice_view_t<value_type_of_t<Store>, dim_of_v<Store>, projection_policy<ProjDim...>>;
 };
 }  // namespace detail
@@ -415,7 +425,8 @@ template <typename ElementType>
 struct value_type_of_;
 
 template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
-struct value_type_of_<slice_view<ElementType, Dim, SlicePolicy>> {
+class value_type_of_<slice_view<ElementType, Dim, SlicePolicy>> {
+ public:
   using type = ElementType;
 };
 }  // namespace detail

@@ -61,7 +61,8 @@ using begin_fn = meta::if_c<meta::evaluable_q<member_begin_t, Ty>,
 template <typename Ty>
 using begin_result_t = meta::eval<begin_fn<Ty>, Ty>;
 
-struct tag {
+class tag {
+ public:
   template <typename Range>
   static constexpr bool _nothrow_begin() noexcept
   {
@@ -100,7 +101,8 @@ using end_fn = meta::
 template <typename Ty>
 using end_result_t = meta::eval<end_fn<Ty>, Ty>;
 
-struct tag {
+class tag {
+ public:
   template <typename Range>
   static constexpr bool _nothrow_end() noexcept
   {
@@ -178,7 +180,8 @@ template <typename T>
 using as_range_result_t =
   meta::eval<meta::if_c<range<T>, meta::always<T>, meta::quote<as_range_t>>, T>;
 
-struct tag {
+class tag {
+ public:
   template <typename T>
   static constexpr bool _noexcept_as_range() noexcept
   {

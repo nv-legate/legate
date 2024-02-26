@@ -38,7 +38,8 @@ struct logical_store;
 namespace detail {
 
 template <typename ElementType, std::int32_t Dim>
-struct value_type_of_<logical_store<ElementType, Dim>> {
+class value_type_of_<logical_store<ElementType, Dim>> {
+ public:
   using type = ElementType;
 };
 
@@ -71,7 +72,8 @@ struct ctor_tag {};
  * @endverbatim
  */
 template <typename ElementType, std::int32_t Dim>
-struct logical_store : private legate::LogicalStore {
+class logical_store : private legate::LogicalStore {
+ public:
   static_assert(
     type_code_of<ElementType> != legate::Type::Code::NIL,
     "The type of a logical_store<> must be a type that is valid for legate::LogicalStore.");
@@ -205,7 +207,8 @@ struct logical_store : private legate::LogicalStore {
 /** @cond
  */
 template <typename ElementType>
-struct logical_store<ElementType, 0> : private LogicalStore {
+class logical_store<ElementType, 0> : private LogicalStore {
+ public:
   using value_type = ElementType;
   // By default, the algorithms treat stores as element-wise.
   using policy = detail::element_policy::policy<ElementType, 0>;
@@ -369,13 +372,15 @@ inline auto as_mdspan(std::mdspan<ElementType, Extents, Layout, Accessor> mdspan
 
 namespace detail {
 template <bool>
-struct as_mdspan_result {
+class as_mdspan_result {
+ public:
   template <typename T, typename ElementType, typename Dim>
   using eval = decltype(stl::as_mdspan<ElementType, Dim::value>(std::declval<T>()));
 };
 
 template <>
-struct as_mdspan_result<true> {
+class as_mdspan_result<true> {
+ public:
   template <typename T, typename ElementType, typename Dim>
   using eval = decltype(stl::as_mdspan(std::declval<T>()));
 };

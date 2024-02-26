@@ -23,7 +23,8 @@
 namespace legate::stl {
 namespace detail {
 template <typename Function, typename... InputSpans>
-struct elementwise_accessor {
+class elementwise_accessor {
+ public:
   using value_type       = call_result_t<Function, typename InputSpans::reference...>;
   using element_type     = value_type;
   using data_handle_type = std::size_t;
@@ -72,7 +73,8 @@ using elementwise_span =
 // a binary function that folds its two arguments together using
 // the given binary function, and stores the result in the first
 template <typename Function>
-struct elementwise {
+class elementwise {
+ public:
   LEGATE_STL_ATTRIBUTE((no_unique_address)) Function fn;
 
   template <typename InputSpan, typename... InputSpans>

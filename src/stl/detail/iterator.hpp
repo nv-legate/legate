@@ -36,13 +36,15 @@ using mixin = meta::eval<meta::quote_or<mixin_, meta::empty>, Map, Iterator>;
 }  // namespace detail
 
 template <typename Map>
-struct iterator : detail::mixin<Map, iterator<Map>> {
+class iterator : public detail::mixin<Map, iterator<Map>> {
+ public:
   using difference_type   = std::ptrdiff_t;
   using value_type        = typename Map::value_type;
   using iterator_category = std::random_access_iterator_tag;
   using reference         = detail::reference_t<Map>;
 
-  struct pointer {
+  class pointer {
+   public:
     value_type value_;
 
     value_type* operator->() && noexcept { return &value_; }
@@ -168,11 +170,13 @@ struct iterator : detail::mixin<Map, iterator<Map>> {
 };
 
 template <typename Int>
-struct affine_map {
+class affine_map {
+ public:
   using cursor = Int;
 
   template <typename Iterator>
-  struct mixin {
+  class mixin {
+   public:
     auto point() const
     {
       auto cursor        = static_cast<const Iterator&>(*this).cursor();

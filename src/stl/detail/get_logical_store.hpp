@@ -28,7 +28,8 @@ namespace tags {
 namespace get_logical_store {
 void get_logical_store();
 
-struct tag {
+class tag {
+ public:
   LogicalStore operator()(LogicalStore store) const noexcept { return store; }
 
   template <typename StoreLike>

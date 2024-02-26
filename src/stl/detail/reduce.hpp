@@ -27,7 +27,8 @@ namespace detail {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <auto Identity, typename Apply, typename Fold = Apply>
-struct basic_reduction {
+class basic_reduction {
+ public:
   using reduction_type                 = basic_reduction;
   using value_type                     = std::remove_cv_t<decltype(Identity)>;
   using RHS                            = value_type;
@@ -61,7 +62,8 @@ struct basic_reduction {
 // function-call operator that knows how to apply the reduction to the range's
 // value-type, e.g., to apply it elementwise to all the elements of an mdspan.
 template <typename Reduction>
-struct reduction_wrapper : Reduction {
+class reduction_wrapper : public Reduction {
+ public:
   using reduction_type = Reduction;
 
   template <typename LHS, typename RHS>
@@ -84,7 +86,8 @@ template <typename Reduction>
 reduction_wrapper(Reduction) -> reduction_wrapper<Reduction>;
 
 template <typename Reduction>
-struct elementwise_reduction : Reduction {
+class elementwise_reduction : public Reduction {
+ public:
   using reduction_type = Reduction;
 
   // This function expects to be passed mdspan objects

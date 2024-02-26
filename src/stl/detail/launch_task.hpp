@@ -40,7 +40,8 @@ namespace detail {
 using logical_stores_t = const std::vector<LogicalStore>&;
 
 template <typename... Ts>
-struct inputs {
+class inputs {
+ public:
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data;
 
@@ -67,7 +68,8 @@ struct inputs {
 };
 
 template <typename... Ts>
-struct outputs {
+class outputs {
+ public:
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data;
 
@@ -95,7 +97,8 @@ struct outputs {
 };
 
 template <typename... Ts>
-struct constraints {
+class constraints {
+ public:
   std::tuple<Ts...> data;
 
   void operator()(AutoTask& task,
@@ -108,7 +111,8 @@ struct constraints {
 };
 
 template <typename... Ts>
-struct scalars {
+class scalars {
+ public:
   std::tuple<Ts...> data;
 
   void operator()(AutoTask& task) const
@@ -128,7 +132,8 @@ template <>
 struct function<> {};
 
 template <typename Fn>
-struct function<Fn> {
+class function<Fn> {
+ public:
   Fn fn;
 
   void operator()(AutoTask& task) const
@@ -196,7 +201,8 @@ template <>
 struct reduction<> {};
 
 template <typename Store, typename Fun>
-struct reduction<Store, Fun> {
+class reduction<Store, Fun> {
+ public:
   LogicalStore data;
   Fun fn;
 
@@ -213,7 +219,8 @@ struct reduction<Store, Fun> {
 
 enum class store_type : int { input, output, reduction };
 
-struct store_placeholder {
+class store_placeholder {
+ public:
   store_type which;
   int index;
 
@@ -231,7 +238,8 @@ struct store_placeholder {
   }
 };
 
-struct make_inputs {
+class make_inputs {
+ public:
   template <typename... Ts>                  //
     requires(logical_store_like<Ts> && ...)  //
   inputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
@@ -249,7 +257,8 @@ struct make_inputs {
   }
 };
 
-struct make_outputs {
+class make_outputs {
+ public:
   template <typename... Ts>                  //
     requires(logical_store_like<Ts> && ...)  //
   outputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
@@ -267,7 +276,8 @@ struct make_outputs {
   }
 };
 
-struct make_scalars {
+class make_scalars {
+ public:
   template <typename... Ts>
   scalars<Ts...> operator()(Ts... scalars) const
   {
@@ -277,7 +287,8 @@ struct make_scalars {
   }
 };
 
-struct make_function {
+class make_function {
+ public:
   template <typename Fn>
   function<Fn> operator()(Fn fn) const
   {
@@ -294,7 +305,8 @@ constexpr std::int32_t _dim_of() noexcept
 template <typename Store>
 using dim_of_t = meta::constant<_dim_of<Store>()>;
 
-struct make_reduction : store_placeholder {
+class make_reduction : public store_placeholder {
+ public:
   constexpr make_reduction()  //
     : store_placeholder{store_type::reduction, 0}
   {
@@ -314,7 +326,8 @@ struct make_reduction : store_placeholder {
   }
 };
 
-struct make_constraints {
+class make_constraints {
+ public:
   template <typename... Ts>  //
     requires((callable<Ts, AutoTask&, logical_stores_t, logical_stores_t, const LogicalStore&> &&
               ...))
@@ -324,7 +337,8 @@ struct make_constraints {
   }
 };
 
-struct make_align {
+class make_align {
+ public:
   static void do_align(AutoTask& task, Variable left, Variable right)
   {
     if (left.impl() != right.impl()) {
@@ -354,7 +368,8 @@ struct make_align {
   }
 
   template <typename Left, typename Right>
-  struct align {
+  class align {
+   public:
     Left left;
     Right right;
 
@@ -399,7 +414,8 @@ struct iteration_cpu;
 
 // This is a CPU implementation of a for_each operation.
 template <typename Fn, typename... Is, typename... Os, typename... Ss>
-struct iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+class iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+ public:
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
   static void impl(std::index_sequence<IIs...>,
                    std::index_sequence<OIs...>,
@@ -457,7 +473,8 @@ struct iteration_gpu;
 
 // This is a GPU implementation of a for_each operation.
 template <typename Fn, typename... Is, typename... Os, typename... Ss>
-struct iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+ public:
   static constexpr std::int32_t THREAD_BLOCK_SIZE = 128;
 
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
@@ -585,7 +602,8 @@ template <typename Reduction, typename Inputs, typename Outputs, typename Scalar
 struct reduction_cpu;
 
 template <typename Red, typename Fn, typename... Is, typename... Os, typename... Ss>
-struct reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+ public:
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
   static void impl(std::index_sequence<IIs...>,
                    std::index_sequence<OIs...>,
@@ -657,7 +675,8 @@ template <typename Reduction, typename Inputs, typename Outputs, typename Scalar
 struct reduction_gpu;
 
 template <typename Red, typename Fn, typename... Is, typename... Os, typename... Ss>
-struct reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+ public:
   static constexpr std::int32_t THREAD_BLOCK_SIZE = 128;
 
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
@@ -788,7 +807,8 @@ inline decltype(auto) get_arg(const Head&, const Tail&... tail)
   return get_arg<Which>(tail...);
 }
 
-struct launch_task {
+class launch_task {
+ public:
   template <typename Function,
             typename Inputs,
             typename Outputs,

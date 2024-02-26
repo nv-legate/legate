@@ -79,7 +79,8 @@ using store_accessor_t =  //
                         Legion::coord_t,
                         Legion::AffineAccessor<ElementType, Dim>>;
 
-struct default_accessor {
+class default_accessor {
+ public:
   template <typename ElementType, std::int32_t Dim>
   using type =  //
     meta::if_c<(Dim == 0),
@@ -105,7 +106,8 @@ struct default_accessor {
 };
 
 template <typename Op, bool Exclusive = false>
-struct reduction_accessor {
+class reduction_accessor {
+ public:
   template <typename ElementType, std::int32_t Dim>
   using type =  //
     meta::if_c<(Dim == 0),
@@ -134,7 +136,8 @@ struct reduction_accessor {
 // mdspan_accessor:
 //    A custom accessor policy for use with std::mdspan for accessing a Legate store.
 template <typename ElementType, std::int32_t ActualDim, typename Accessor = default_accessor>
-struct mdspan_accessor {
+class mdspan_accessor {
+ public:
   static constexpr std::int32_t Dim = std::max(ActualDim, std::int32_t(1));
   using value_type                  = std::remove_const_t<ElementType>;
   using element_type                = const_if_t<ActualDim == 0, ElementType>;

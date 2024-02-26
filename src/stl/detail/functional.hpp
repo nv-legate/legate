@@ -42,7 +42,8 @@ constexpr auto with_indices_impl_2(Fun&& fun, std::index_sequence<Is...>)
 }
 
 template <std::size_t N>
-struct index_t {
+class index_t {
+ public:
   std::integral_constant<std::size_t, N> operator()() const { return {}; }
 };
 }  // namespace detail
@@ -65,7 +66,8 @@ constexpr auto with_indices(Fun&& fun)
 /// \cond
 namespace detail {
 template <typename Fn, typename... Args>
-struct binder_back {
+class binder_back {
+ public:
   Fn fn_;
   std::tuple<Args...> args_;
 
@@ -99,7 +101,8 @@ auto bind_back(Fn fn, Args&&... args)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
 template <typename Function, typename... Ignore>
-struct drop_n_args {
+class drop_n_args {
+ public:
   Function fun_;
 
   template <typename... Args>

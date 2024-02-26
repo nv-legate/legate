@@ -30,7 +30,8 @@ constexpr ResourceConfig LEGATE_STL_RESOURCE_CONFIG = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-struct initialize_library {
+class initialize_library {
+ public:
   initialize_library(int argc, char* argv[]) : result_(legate::start(argc, argv)), library_()
   {
     if (result_ == 0) {

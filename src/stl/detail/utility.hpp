@@ -23,7 +23,8 @@
 #include "prefix.hpp"
 
 namespace legate::stl {
-struct ignore {
+class ignore {
+ public:
   ignore() = default;
 
   template <typename... Args>
@@ -36,7 +37,8 @@ struct ignore {
 namespace detail {
 
 template <typename LegateTask>
-struct task_id_generator {
+class task_id_generator {
+ public:
   std::int64_t operator()(Library& library) const
   {
     static const std::int64_t s_task_id = [&] {
