@@ -360,7 +360,7 @@ target_link_libraries(legate_core
           $<TARGET_NAME_IF_EXISTS:CUDA::nvToolsExt>
           $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
           $<TARGET_NAME_IF_EXISTS:std::mdspan>
-          $<TARGET_NAME_IF_EXISTS:span>
+          $<TARGET_NAME_IF_EXISTS:std::span>
   PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>)
 
 target_compile_definitions(legate_core

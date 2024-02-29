@@ -1,0 +1,81 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7ad07e2..4488696 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,14 +1,62 @@
+ 
+ cmake_minimum_required(VERSION 3.8)
+-project(span LANGUAGES CXX)
++project(span VERSION 1.0 LANGUAGES CXX)
++
+ 
+-enable_testing()
+ 
+ add_library(span INTERFACE)
+-target_sources(span INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include/tcb/span.hpp)
+-target_include_directories(span INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
++add_library(std::span ALIAS span)
++target_include_directories(span INTERFACE
++  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
++  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
++)
+ target_compile_features(span INTERFACE cxx_std_11)
+ 
+ set(TCB_SPAN_TEST_CXX_STD 11 CACHE STRING "C++ standard version for testing")
+ 
+-add_subdirectory(test)
++include(GNUInstallDirs)
++
++install(
++  TARGETS  span
++  EXPORT   span_exports
++  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
++)
++
++install(
++  EXPORT      span_exports
++  FILE        spanTargets.cmake
++  NAMESPACE   std::
++  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/span
++)
++
++export(
++  TARGETS   span
++  NAMESPACE std::
++  FILE      spanTargets.cmake
++)
++
++install(
++  DIRECTORY   include/tcb
++  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tcb
++)
++
++include(CMakePackageConfigHelpers)
++
++configure_package_config_file(
++  cmake/spanConfig.cmake.in
++  ${CMAKE_CURRENT_BINARY_DIR}/spanConfig.cmake
++  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/span
++)
++
++write_basic_package_version_file(
++  ${CMAKE_CURRENT_BINARY_DIR}/spanConfigVersion.cmake
++  COMPATIBILITY SameMajorVersion
++  ARCH_INDEPENDENT
++)
++
++install(
++  FILES
++    ${CMAKE_CURRENT_BINARY_DIR}/spanConfig.cmake
++    ${CMAKE_CURRENT_BINARY_DIR}/spanConfigVersion.cmake
++  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/span
++)
+diff --git a/cmake/spanConfig.cmake.in b/cmake/spanConfig.cmake.in
+new file mode 100644
+index 0000000..014752b
+--- /dev/null
++++ b/cmake/spanConfig.cmake.in
+@@ -0,0 +1,3 @@
++@PACKAGE_INIT@
++
++include("${CMAKE_CURRENT_LIST_DIR}/spanTargets.cmake")

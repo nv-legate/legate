@@ -39,8 +39,8 @@
       "git_shallow" : true,
       "patches" : [
         {
-          "file" : "${current_json_dir}/patches/span_disable_testing.diff",
-          "issue" : "span always enables testing, this causes compilation issues on some machines, so disable it",
+          "file" : "${current_json_dir}/patches/span_proper_cmake_project.diff",
+          "issue" : "span does not properly export itself as a cmake project, rectify this",
           "fixed_in" : ""
         }
       ]
