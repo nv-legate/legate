@@ -54,6 +54,14 @@ function(legate_core_add_tidy_target)
   search_for_program(LEGATE_CORE_SED sed)
   find_package(Git)
 
+  include(ProcessorCount)
+  ProcessorCount(PROC_COUNT)
+  if(NOT N EQUAL 0)
+    set(TIDY_PARALLEL_FLAGS -j${PROC_COUNT})
+  else()
+    set(TIDY_PARALLEL_FLAGS)
+  endif()
+
   if (LEGATE_CORE_RUN_CLANG_TIDY AND LEGATE_CORE_CLANG_TIDY)
     _legate_core_add_tidy_target_impl(
       TARGET_NAME tidy
@@ -65,6 +73,8 @@ function(legate_core_add_tidy_target)
         -p ${CMAKE_BINARY_DIR}
         -use-color
         -quiet
+        -extra-arg=-Wno-error=unused-command-line-argument
+        ${TIDY_PARALLEL_FLAGS}
         ${_TIDY_SOURCES}
     )
   else()
@@ -106,6 +116,8 @@ function(legate_core_add_tidy_target)
         -path ${CMAKE_BINARY_DIR}
         -use-color
         -quiet
+        -extra-arg=-Wno-error=unused-command-line-argument
+        ${TIDY_PARALLEL_FLAGS}
     )
   else()
     _legate_core_add_tidy_target_impl(

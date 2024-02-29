@@ -62,6 +62,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
                                                             const tuple<std::uint64_t>& shape)
 {
   auto curr_num_pieces = machine.count();
+  LegateAssert(curr_num_pieces > 0);
   // Easy case if we only have one piece: no parallel launch space
   if (1 == curr_num_pieces) {
     return {};

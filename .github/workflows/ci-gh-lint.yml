@@ -49,7 +49,7 @@ jobs:
         continue-on-error: ${{ matrix.config.canFail }}
 
   tidy:
-    runs-on: 'ubuntu-latest'
+    runs-on: 'linux-amd64-cpu32'
     strategy:
       fail-fast: true
     if: ${{ github.repository_owner == 'nv-legate' }}
@@ -57,61 +57,72 @@ jobs:
       contents: read  # This is required for actions/checkout
 
     steps:
-      - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
       - name: List machine info
         run: |
           uname -a
           lsb_release -a
 
-      - name: List python version
-        run: python3 --version
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install LLVM 17
-        working-directory: ~
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment: legate
+          use-mamba: true
+
+      - name: Get Date
+        id: get-date-hash
         run: |
-          # check if we can't install via apt-get, in which case we can remove all the
-          # lines below this
-          set -e
-          ret=$(sudo apt-get install -y clang-tidy-17 > /dev/null 2>&1; echo $?)
-          if [[ $ret -eq 0 ]]; then
-            echo 'Can install clang-tidy-17 with apt-get, no longer need to install it manually!';
-            exit 1;
-          fi
-          set +e
-          # can remove all this if we can install with apt-get
-          mkdir -p llvm-17
-          cd llvm-17
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x ./llvm.sh
-          sudo ./llvm.sh 17 all
+          echo "today=$(/bin/date -u '+%Y%m%d')" >> ${GITHUB_OUTPUT}
+        shell: bash
+      
+      - name: Cache Conda env
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CONDA }}/envs
+          key:
+            conda-${{ runner.os }}--${{ runner.arch }}--${{
+            steps.get-date-hash.outputs.today }}-${{ env.CACHE_NUMBER }}
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 5
+        id: cache
+
+      - name: Update environment
+        run: |
+          mamba create -n legate cmake clang clang-tools elfutils
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: List Conda packages and info
+        run: |
+          conda info
+          conda list
 
       - name: List clang-tidy version
+        shell: bash -el {0}
         run: |
-          clang-tidy-17 --version
+          clang-tidy --version
           # run-clang-tidy has no --version, so just print its location and help to make
           # sure it's there
-          which run-clang-tidy-17
-          run-clang-tidy-17 --help
-
-      - name: Install Legion pre-reqs
-        run: |
-          # libdwarf
-          sudo apt-get install -y libdw-dev
+          which run-clang-tidy
+          run-clang-tidy --help
 
       - name: Configure legate.core
+        shell: bash -el {0}
         # CMake Error: CMake was unable to find a build program corresponding to "Ninja".
         # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
         # tool.
         run: |
           cmake \
             --preset debug-clang \
-            -G "Unix Makefiles" \
-            -DLEGATE_CORE_CLANG_TIDY=clang-tidy-17 \
-            -DLEGATE_CORE_RUN_CLANG_TIDY=run-clang-tidy-17
+            -G "Unix Makefiles"
 
       - name: Run clang-tidy
-        run: cmake --build --preset debug-clang --target tidy
+        shell: bash -el {0}
+        run: |
+          cmake --build --preset debug-clang --target tidy

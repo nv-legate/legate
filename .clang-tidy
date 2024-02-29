@@ -44,6 +44,8 @@ Checks:
   # touch any member variables, not because they are logically static. So we disable the
   # check.
   - '-readability-convert-member-functions-to-static'
+  # When running in a conda env, ignore options that may have been added by conda but are unused
+  - '-clang-diagnostic-unused-command-line-argument'
   # Given
   #
   # std::make_pair<some_type, some_other_type>(...)
