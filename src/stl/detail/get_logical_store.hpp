@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "config.hpp"
 #include "legate.h"
 
 #include <utility>
@@ -26,14 +27,15 @@
 namespace legate::stl::detail {
 namespace tags {
 namespace get_logical_store {
+
 void get_logical_store();
 
 class tag {
  public:
-  LogicalStore operator()(LogicalStore store) const noexcept { return store; }
+  [[nodiscard]] LogicalStore operator()(LogicalStore store) const noexcept { return store; }
 
   template <typename StoreLike>
-  auto operator()(StoreLike&& store_like) const
+  [[nodiscard]] auto operator()(StoreLike&& store_like) const
     noexcept(noexcept(get_logical_store(std::forward<StoreLike>(store_like))))
       -> decltype(get_logical_store(std::forward<StoreLike>(store_like)))
   {
@@ -41,14 +43,19 @@ class tag {
     return get_logical_store(std::forward<StoreLike>(store_like));
   }
 };
+
 }  // namespace get_logical_store
 
 inline namespace obj {
+
 inline constexpr get_logical_store::tag get_logical_store{};
+
 }  // namespace obj
 }  // namespace tags
 
-using namespace tags::obj;
+// Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::legate::stl::detail::tags::obj;
 
 }  // namespace legate::stl::detail
 

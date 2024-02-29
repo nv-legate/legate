@@ -30,6 +30,8 @@
 
 #define TCB_SPAN_NAMESPACE_NAME std
 #include "tcb/span.hpp"
+// We define this on purpose so that downstream libs can pretend we have span
+// NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define __cpp_lib_span 1
 
 #endif  // LEGATE_STL_HAS_STD_SPAN

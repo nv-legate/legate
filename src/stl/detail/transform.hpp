@@ -23,10 +23,11 @@
 namespace legate::stl {
 
 namespace detail {
+
 template <typename UnaryOperation>
 class unary_transform {
  public:
-  UnaryOperation op;
+  UnaryOperation op{};
 
   template <typename Src, typename Dst>
   LEGATE_STL_ATTRIBUTE((host, device))
@@ -35,13 +36,14 @@ class unary_transform {
     static_cast<Dst&&>(dst) = op(static_cast<Src&&>(src));
   }
 };
+
 template <typename UnaryOperation>
 unary_transform(UnaryOperation) -> unary_transform<UnaryOperation>;
 
 template <typename BinaryOperation>
 class binary_transform {
  public:
-  BinaryOperation op;
+  BinaryOperation op{};
 
   template <typename Src1, typename Src2, typename Dst>
   LEGATE_STL_ATTRIBUTE((host, device))
@@ -51,8 +53,10 @@ class binary_transform {
     static_cast<Dst&&>(dst) = op(static_cast<Src1&&>(src1), static_cast<Src2&&>(src2));
   }
 };
+
 template <typename BinaryOperation>
 binary_transform(BinaryOperation) -> binary_transform<BinaryOperation>;
+
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,8 +68,8 @@ void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
 {
   detail::check_function_type<UnaryOperation>();
   stl::launch_task(stl::function(detail::unary_transform{std::move(op)}),
-                   stl::inputs(input),
-                   stl::outputs(output),
+                   stl::inputs(std::forward<InputRange>(input)),
+                   stl::outputs(std::forward<OutputRange>(output)),
                    stl::constraints(stl::align(stl::inputs[0], stl::outputs[0])));
 }
 
@@ -85,11 +89,12 @@ void transform(InputRange1&& input1, InputRange2&& input2, OutputRange&& output,
   LegateAssert(input1.extents() == input2.extents());
   LegateAssert(input1.extents() == output.extents());
 
-  stl::launch_task(stl::function(detail::binary_transform{std::move(op)}),
-                   stl::inputs(input1, input2),
-                   stl::outputs(output),
-                   stl::constraints(stl::align(stl::inputs[0], stl::outputs[0]),  //
-                                    stl::align(stl::inputs[1], stl::outputs[0])));
+  stl::launch_task(
+    stl::function(detail::binary_transform{std::move(op)}),
+    stl::inputs(std::forward<InputRange1>(input1), std::forward<InputRange2>(input2)),
+    stl::outputs(std::forward<OutputRange>(output)),
+    stl::constraints(stl::align(stl::inputs[0], stl::outputs[0]),  //
+                     stl::align(stl::inputs[1], stl::outputs[0])));
 }
 
 }  // namespace legate::stl

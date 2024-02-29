@@ -24,9 +24,9 @@ namespace legate::stl {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Function, typename... Inputs>                            //
   requires((sizeof...(Inputs) > 0) && (logical_store_like<Inputs> && ...))  //
-void for_each_zip(Function fn, Inputs&&... ins)
+void for_each_zip(Function&& fn, Inputs&&... ins)
 {
-  stl::launch_task(stl::function(drop_n_fn<sizeof...(Inputs)>(fn)),
+  stl::launch_task(stl::function(drop_n_fn<sizeof...(Inputs)>(std::forward<Function>(fn))),
                    stl::inputs(ins...),
                    stl::outputs(ins...),
                    stl::constraints(stl::align(stl::inputs)));
@@ -34,9 +34,9 @@ void for_each_zip(Function fn, Inputs&&... ins)
 
 template <typename Input, typename Function>  //
   requires(logical_store_like<Input>)         //
-void for_each(Input&& input, Function fn)
+void for_each(Input&& input, Function&& fn)
 {
-  stl::launch_task(stl::function(drop_n_fn<1>(fn)),
+  stl::launch_task(stl::function(drop_n_fn<1>(std::forward<Function>(fn))),
                    stl::inputs(input),
                    stl::outputs(input),
                    stl::constraints(stl::align(stl::inputs)));

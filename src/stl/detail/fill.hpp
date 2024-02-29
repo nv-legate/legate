@@ -24,9 +24,9 @@ template <typename Range>              //
   requires(logical_store_like<Range>)  //
 void fill(Range&& output, value_type_of_t<Range> val)
 {
-  auto store                    = get_logical_store(output);
+  auto store                    = get_logical_store(std::forward<Range>(output));
   observer_ptr<Runtime> runtime = legate::Runtime::get_runtime();
-  runtime->issue_fill(store, Scalar(val));
+  runtime->issue_fill(std::move(store), Scalar{std::move(val)});
 }
 
 }  // namespace legate::stl

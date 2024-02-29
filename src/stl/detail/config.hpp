@@ -155,10 +155,12 @@
 // custom handling for specific attribute types
 #define LEGATE_STL_ATTR_WHICH_1(ATTR) LEGATE_STL_IIF(LEGATE_STL_HAS_CUDA(), __host__, )
 #define LEGATE_STL_ATTR_host LEGATE_STL_PROBE(~, 1)
+// NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define LEGATE_STL_ATTR___host__ LEGATE_STL_PROBE(~, 1)
 
 #define LEGATE_STL_ATTR_WHICH_2(ATTR) LEGATE_STL_IIF(LEGATE_STL_HAS_CUDA(), __device__, )
 #define LEGATE_STL_ATTR_device LEGATE_STL_PROBE(~, 2)
+// NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define LEGATE_STL_ATTR___device__ LEGATE_STL_PROBE(~, 2)
 
 #define LEGATE_STL_ATTR(ATTR)                                                                      \

@@ -31,10 +31,10 @@ template <typename CvrefInput,
     logical_store_like<CvrefInput>                                                  //
     && logical_store_like<Init>                                                     //
     && legate_reduction<as_reduction_t<BinaryReduction, element_type_of_t<Init>>>)  //
-auto transform_reduce(CvrefInput&& input,
-                      Init&& init,
-                      BinaryReduction red,
-                      UnaryTransform transform)
+[[nodiscard]] auto transform_reduce(CvrefInput&& input,
+                                    Init&& init,
+                                    BinaryReduction red,
+                                    UnaryTransform transform)
   -> logical_store<value_type_of_t<Init>, dim_of_v<Init>>
 {
   // Check that the operations are trivially relocatable
@@ -67,11 +67,11 @@ template <typename CvrefInput1,
            && logical_store_like<CvrefInput2>                                              //
            && logical_store_like<Init>                                                     //
            && legate_reduction<as_reduction_t<BinaryReduction, element_type_of_t<Init>>>)  //
-auto transform_reduce(CvrefInput1&& input1,
-                      CvrefInput2&& input2,
-                      Init&& init,
-                      BinaryReduction red,
-                      BinaryTransform transform)
+[[nodiscard]] auto transform_reduce(CvrefInput1&& input1,
+                                    CvrefInput2&& input2,
+                                    Init&& init,
+                                    BinaryReduction red,
+                                    BinaryTransform transform)
   -> logical_store<element_type_of_t<Init>, dim_of_v<Init>>
 {
   // Check that the operations are trivially relocatable

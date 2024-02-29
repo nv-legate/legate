@@ -223,6 +223,8 @@ list(APPEND legate_core_SOURCES
   src/core/utilities/detail/buffer_builder.cc
   src/core/utilities/detail/tuple.cc
   src/timing/timing.cc
+  # stl
+  src/stl/detail/clang_tidy_dummy.cpp
 )
 
 if(Legion_NETWORKS)

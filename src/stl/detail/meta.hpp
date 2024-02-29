@@ -20,17 +20,19 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
-namespace meta {
+namespace legate::stl::meta {
+
 struct na;
 
 struct empty {};
 
 namespace detail {
+
 template <typename T>
 struct type_ {
   using type = T;
 };
+
 }  // namespace detail
 
 template <typename T>
@@ -43,11 +45,13 @@ template <auto Value>
 using constant = std::integral_constant<decltype(Value), Value>;
 
 namespace detail {
+
 template <std::size_t>
 struct eval_ {
   template <template <typename...> typename Fun, typename... Args>
   using eval = Fun<Args...>;
 };
+
 }  // namespace detail
 
 template <template <typename...> typename Fun, typename... Args>
@@ -78,6 +82,7 @@ template <typename A>
 using void_t = second_t<A, void>;
 
 namespace detail {
+
 template <template <typename...> typename, typename...>
 struct test_evaluable_with_;
 
@@ -97,6 +102,7 @@ constexpr bool test_evaluable_(...) { return false; }
 template <template <typename...> typename Fun, typename... Args>
 inline constexpr bool evaluable_q =
   test_evaluable_(static_cast<test_evaluable_with_<Fun, Args...>*>(nullptr));
+
 }  // namespace detail
 
 using detail::evaluable_q;
@@ -105,6 +111,7 @@ template <typename Fun, typename... Args>
 inline constexpr bool evaluable = evaluable_q<Fun::template eval, Args...>;
 
 namespace detail {
+
 template <bool>
 struct if_ {
   template <typename Then, typename... Else>
@@ -116,6 +123,7 @@ struct if_<false> {
   template <typename Then, typename Else>
   using eval = Else;
 };
+
 }  // namespace detail
 
 template <bool Cond, typename Then = void, typename... Else>
@@ -152,14 +160,17 @@ struct bind_back {
 };
 
 namespace detail {
+
 template <typename Head, typename... Tail>
 using front_ = Head;
+
 }  // namespace detail
 
 template <typename... Ts>
 using front = eval_q<detail::front_, Ts...>;
 
 namespace detail {
+
 template <typename Indices>
 struct fill_n_;
 
@@ -168,12 +179,12 @@ struct fill_n_<std::index_sequence<Is...>> {
   template <typename Value, typename Continuation>
   using eval = eval<Continuation, first_t<Value, constant<Is>>...>;
 };
+
 }  // namespace detail
 
 template <std::size_t Count, typename Value, typename Continuation = quote<list>>
 using fill_n = eval<detail::fill_n_<std::make_index_sequence<Count>>, Value, Continuation>;
 
-}  // namespace meta
-}  // namespace legate::stl
+}  // namespace legate::stl::meta
 
 #include "suffix.hpp"

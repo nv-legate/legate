@@ -39,7 +39,7 @@ class basic_reduction {
   LEGATE_STL_ATTRIBUTE((host, device))
   static void apply(LHS& lhs, RHS rhs)
   {
-    // TODO: use atomic operations when Exclusive is false
+    // TODO(ericnieblier): use atomic operations when Exclusive is false
     lhs = Apply()(lhs, rhs);
   }
 
@@ -47,13 +47,13 @@ class basic_reduction {
   LEGATE_STL_ATTRIBUTE((host, device))
   static void fold(RHS& lhs, RHS rhs)
   {
-    // TODO: use atomic operations when Exclusive is false
+    // TODO(ericniebler): use atomic operations when Exclusive is false
     lhs = Fold()(lhs, rhs);
   }
 
   void operator()(RHS& lhs, RHS rhs) const
   {
-    // TODO: how to support atomic operations here?
+    // TODO(ericniebler): how to support atomic operations here?
     this->fold<true>(lhs, rhs);
   }
 };
@@ -176,24 +176,24 @@ template <auto Identity, typename Apply, typename Fold = Apply>
 detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 {
   using value_type = std::remove_cv_t<decltype(Identity)>;
-  return stl::make_reduction<value_type, Identity>(Apply(), Fold());
+  return stl::make_reduction<value_type, Identity>(Apply{}, Fold{});
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename ValueType, typename Reduction>
   requires(legate_reduction<Reduction>)  //
-auto as_reduction(Reduction red)
+[[nodiscard]] auto as_reduction(Reduction red)
 {
   using RHS = typename Reduction::RHS;
   if constexpr (callable<Reduction, RHS&, RHS>) {
     return red;
   } else {
-    return detail::reduction_wrapper{red};
+    return detail::reduction_wrapper{std::move(red)};
   }
 }
 
 template <typename ValueType, typename T>
-auto as_reduction(std::plus<T>)
+[[nodiscard]] auto as_reduction(std::plus<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
@@ -202,7 +202,7 @@ auto as_reduction(std::plus<T>)
 }
 
 template <typename ValueType, typename T>
-auto as_reduction(std::minus<T>)
+[[nodiscard]] auto as_reduction(std::minus<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
@@ -211,7 +211,7 @@ auto as_reduction(std::minus<T>)
 }
 
 template <typename ValueType, typename T>
-auto as_reduction(std::multiplies<T>)
+[[nodiscard]] auto as_reduction(std::multiplies<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
@@ -220,7 +220,7 @@ auto as_reduction(std::multiplies<T>)
 }
 
 template <typename ValueType, typename T>
-auto as_reduction(std::divides<T>)
+[[nodiscard]] auto as_reduction(std::divides<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
@@ -228,10 +228,10 @@ auto as_reduction(std::divides<T>)
   return detail::reduction_wrapper{legate::DivReduction<Type>()};
 }
 
-// TODO: min and max reductions
+// TODO(ericniebler): min and max reductions
 
 template <typename ValueType, typename T>
-auto as_reduction(std::logical_or<T>)
+[[nodiscard]] auto as_reduction(std::logical_or<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
@@ -240,7 +240,7 @@ auto as_reduction(std::logical_or<T>)
 }
 
 template <typename ValueType, typename T>
-auto as_reduction(std::logical_and<T>)
+[[nodiscard]] auto as_reduction(std::logical_and<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
   static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
@@ -248,10 +248,10 @@ auto as_reduction(std::logical_and<T>)
   return detail::reduction_wrapper{legate::AndReduction<Type>()};
 }
 
-// TODO: logical xor
+// TODO(ericniebler): logical xor
 
 template <typename ValueType, typename Function>
-auto as_reduction(detail::elementwise<Function> fn)
+[[nodiscard]] auto as_reduction(const detail::elementwise<Function>& fn)
 {
   return detail::elementwise_reduction{stl::as_reduction<ValueType>(fn.fn)};
 }
@@ -263,7 +263,7 @@ using as_reduction_t = decltype(stl::as_reduction<ValueType>(std::declval<Fun>()
 template <typename InputRange, typename Init, typename BinaryOperation>  //
   requires(logical_store_like<InputRange> && logical_store_like<Init> &&
            legate_reduction<as_reduction_t<BinaryOperation, element_type_of_t<Init>>>)  //
-auto reduce(InputRange&& input, Init&& init, BinaryOperation op)
+[[nodiscard]] auto reduce(InputRange&& input, Init&& init, BinaryOperation op)
   -> logical_store<element_type_of_t<InputRange>, dim_of_v<InputRange> - 1>
 {
   detail::check_function_type<as_reduction_t<BinaryOperation, element_type_of_t<Init>>>();
@@ -282,11 +282,12 @@ auto reduce(InputRange&& input, Init&& init, BinaryOperation op)
   LegateAssert(out.dim() == init.dim() + 1);
 
   using OutputRange = slice_view<value_type_of_t<Input>, dim_of_v<Input>, InputPolicy>;
-  OutputRange output(std::move(out));
+  OutputRange output{std::move(out)};
 
-  stl::launch_task(stl::inputs(input),
-                   stl::reduction(output, stl::as_reduction<element_type_of_t<Init>>(op)),
-                   stl::constraints(stl::align(stl::reduction, stl::inputs[0])));
+  stl::launch_task(
+    stl::inputs(std::forward<InputRange>(input)),
+    stl::reduction(std::move(output), stl::as_reduction<element_type_of_t<Init>>(std::move(op))),
+    stl::constraints(stl::align(stl::reduction, stl::inputs[0])));
 
   return as_typed<element_type_of_t<Init>, dim_of_v<Init>>(get_logical_store(init));
 }

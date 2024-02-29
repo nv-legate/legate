@@ -71,11 +71,15 @@
 namespace legate::stl {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace tags {
+
 inline namespace obj {
 }
+
 }  // namespace tags
 
-using namespace tags::obj;
+// Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::legate::stl::tags::obj;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 using extents                              = const std::size_t[];
@@ -87,6 +91,7 @@ class logical_store;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
+
 template <typename Store>
 struct value_type_of_;
 
@@ -102,6 +107,7 @@ using has_dim_ = meta::constant<!(std::int32_t{Storage::dim()} < 0)>;
 template <typename Storage>
 inline constexpr bool has_dim_v =
   meta::eval<meta::quote_or<has_dim_, std::false_type>, std::remove_reference_t<Storage>>::value;
+
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,16 +174,18 @@ logical_store<ElementType, Dim> as_typed(const legate::LogicalStore& store);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
-template <typename Function, typename... InputSpans>
-struct elementwise_accessor;
 
-struct default_accessor;
+template <typename Function, typename... InputSpans>
+class elementwise_accessor;
+
+class default_accessor;
 
 template <typename Op, bool Exclusive>
-struct reduction_accessor;
+class reduction_accessor;
 
 template <typename ElementType, std::int32_t Dim, typename Accessor /*= default_accessor*/>
-struct mdspan_accessor;
+class mdspan_accessor;
+
 }  // namespace detail
 
 template <typename Input>
@@ -201,25 +209,26 @@ void as_mdspan(const PhysicalStore&&) = delete;
  */
 template <typename ElementType, std::int32_t Dim>
 LEGATE_STL_ATTRIBUTE((host, device))  //
-mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalStore& store);
+[[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalStore& store);
 
 /** @overload */
 template <typename ElementType, std::int32_t Dim>
 LEGATE_STL_ATTRIBUTE((host, device))  //
-mdspan_t<ElementType, Dim> as_mdspan(const legate::LogicalStore& store);
+[[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const legate::LogicalStore& store);
 
 template <typename ElementType, std::int32_t Dim, template <typename, std::int32_t> typename StoreT>
   requires(same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
 LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_t<ElementType, Dim> as_mdspan(const StoreT<ElementType, Dim>& store);
+  [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const StoreT<ElementType, Dim>& store);
 /** @endcond */
 
 /** @overload */
 template <typename ElementType, std::int32_t Dim>
 LEGATE_STL_ATTRIBUTE((host, device))  //
-mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalArray& array);
+[[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalArray& array);
 
 namespace detail {
+
 struct iteration_kind {};
 
 struct reduction_kind {};
@@ -237,8 +246,8 @@ auto logical_store_like_concept_impl(StoreLike& storeish,
     StoreLike::policy::logical_view(lstore),
     StoreLike::policy::physical_view(span),
     StoreLike::policy::size(pstore),
-    StoreLike::policy::partition_constraints(iteration_kind()),
-    StoreLike::policy::partition_constraints(reduction_kind()),
+    StoreLike::policy::partition_constraints(iteration_kind{}),
+    StoreLike::policy::partition_constraints(reduction_kind{}),
     get_logical_store(storeish)))
 {
 }
@@ -250,10 +259,12 @@ constexpr bool is_logical_store_like(int)
 }
 
 template <typename StoreLike>
-constexpr bool is_logical_store_like(long)
+constexpr bool is_logical_store_like(std::int64_t)
 {
   return false;
 }
+
+static_assert(!std::is_same_v<int, std::int64_t>);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Reduction>
@@ -277,10 +288,12 @@ constexpr bool is_legate_reduction(int)
 }
 
 template <typename StoreLike>
-constexpr bool is_legate_reduction(long)
+constexpr bool is_legate_reduction(std::int64_t)
 {
   return false;
 }
+
+static_assert(!std::is_same_v<int, std::int64_t>);
 
 }  // namespace detail
 

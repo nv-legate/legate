@@ -24,6 +24,7 @@
 #include "prefix.hpp"
 
 namespace legate::stl {
+
 using std::ranges::begin;
 using std::ranges::end;
 using std::ranges::range;
@@ -32,6 +33,7 @@ using std::ranges::iterator_t;
 using std::ranges::range_reference_t;
 using std::ranges::range_value_t;
 using std::ranges::sentinel_t;
+
 }  // namespace legate::stl
 
 #else
@@ -45,6 +47,7 @@ namespace legate::stl {
 
 namespace detail {
 namespace begin {
+
 void begin();
 
 template <typename Ty>
@@ -74,18 +77,21 @@ class tag {
   }
 
   template <typename Range>
-  auto operator()(Range&& rng) const noexcept(_nothrow_begin<Range>()) -> begin_result_t<Range>
+  [[nodiscard]] auto operator()(Range&& rng) const noexcept(_nothrow_begin<Range>())
+    -> begin_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_begin_t, Range>) {
-      return ((Range&&)rng).begin();
+      return std::forward<Range>(rng).begin();
     } else {
-      return begin(((Range&&)rng));
+      return begin(std::forward<Range>(rng));
     }
   }
 };
+
 }  // namespace begin
 
 namespace end {
+
 void end();
 
 template <typename Ty>
@@ -114,24 +120,30 @@ class tag {
   }
 
   template <typename Range>
-  auto operator()(Range&& rng) const noexcept(_nothrow_end<Range>()) -> end_result_t<Range>
+  [[nodiscard]] auto operator()(Range&& rng) const noexcept(_nothrow_end<Range>())
+    -> end_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_end_t, Range>) {
-      return ((Range&&)rng).end();
+      return std::forward<Range>(rng).end();
     } else {
-      return end(((Range&&)rng));
+      return end(std::forward<Range>(rng));
     }
   }
 };
+
 }  // namespace end
 }  // namespace detail
 
 namespace tag {
+
 inline constexpr detail::begin::tag begin{};
 inline constexpr detail::end::tag end{};
+
 }  // namespace tag
 
-using namespace tag;
+// Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::legate::stl::tag;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Range>
@@ -148,6 +160,7 @@ using range_value_t = typename std::iterator_traits<iterator_t<Range>>::value_ty
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
+
 template <typename Iter>
 auto is_iterator_like_(Iter iter) -> decltype((void)++iter, (void)*iter, (void)(iter == iter));
 
@@ -157,10 +170,12 @@ auto is_range_like_(Range&& rng)
 
 template <typename Range>
 using is_range_like_t = decltype(detail::is_range_like_(std::declval<Range>()));
+
 }  // namespace detail
 
 template <typename Range>
 inline constexpr bool range = meta::evaluable_q<detail::is_range_like_t, Range>;
+
 }  // namespace legate::stl
 #endif
 
@@ -168,6 +183,7 @@ namespace legate::stl {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace tags {
 namespace as_range {
+
 void as_range();
 
 template <typename T>
@@ -193,23 +209,28 @@ class tag {
   }
 
   template <typename T>
-  as_range_result_t<T> operator()(T&& rng) const noexcept(_noexcept_as_range<T>())
+  [[nodiscard]] as_range_result_t<T> operator()(T&& rng) const noexcept(_noexcept_as_range<T>())
   {
     if constexpr (range<T>) {
-      return (T&&)rng;
+      return std::forward<T>(rng);
     } else {
-      return as_range((T&&)rng);
+      return as_range(std::forward<T>(rng));
     }
   }
 };
+
 }  // namespace as_range
 
 inline namespace obj {
+
 inline constexpr as_range::tag as_range{};
+
 }  // namespace obj
 }  // namespace tags
 
-using namespace tags::obj;
+// Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
+// NOLINTNEXTLINE(google-build-using-namespace)
+using namespace ::legate::stl::tags::obj;
 
 template <typename T>
 using as_range_t = call_result_c_t<as_range, T>;

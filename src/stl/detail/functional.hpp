@@ -27,15 +27,16 @@ namespace legate::stl {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
+
 template <typename Fun, std::size_t... Is>
-constexpr auto with_indices_impl_1(Fun&& fun, std::index_sequence<Is...>)
+[[nodiscard]] constexpr auto with_indices_impl_1(Fun&& fun, std::index_sequence<Is...>)
   -> decltype(std::forward<Fun>(fun)(Is...))
 {
   return std::forward<Fun>(fun)(Is...);
 }
 
 template <template <std::size_t> typename Tfx, typename Fun, std::size_t... Is>
-constexpr auto with_indices_impl_2(Fun&& fun, std::index_sequence<Is...>)
+[[nodiscard]] constexpr auto with_indices_impl_2(Fun&& fun, std::index_sequence<Is...>)
   -> decltype(std::forward<Fun>(fun)(Tfx<Is>()()...))
 {
   return std::forward<Fun>(fun)(Tfx<Is>()()...);
@@ -44,19 +45,20 @@ constexpr auto with_indices_impl_2(Fun&& fun, std::index_sequence<Is...>)
 template <std::size_t N>
 class index_t {
  public:
-  std::integral_constant<std::size_t, N> operator()() const { return {}; }
+  [[nodiscard]] constexpr std::integral_constant<std::size_t, N> operator()() const { return {}; }
 };
+
 }  // namespace detail
 
 template <std::size_t N, typename Fun>
-constexpr auto with_indices(Fun&& fun)
+[[nodiscard]] constexpr auto with_indices(Fun&& fun)
   -> decltype(detail::with_indices_impl_1(std::forward<Fun>(fun), std::make_index_sequence<N>()))
 {
   return detail::with_indices_impl_1(std::forward<Fun>(fun), std::make_index_sequence<N>());
 }
 
 template <std::size_t N, template <std::size_t> typename Tfx, typename Fun>
-constexpr auto with_indices(Fun&& fun)
+[[nodiscard]] constexpr auto with_indices(Fun&& fun)
   -> decltype(detail::with_indices_impl_2<Tfx>(std::forward<Fun>(fun),
                                                std::make_index_sequence<N>()))
 {
@@ -65,11 +67,12 @@ constexpr auto with_indices(Fun&& fun)
 
 /// \cond
 namespace detail {
+
 template <typename Fn, typename... Args>
 class binder_back {
  public:
-  Fn fn_;
-  std::tuple<Args...> args_;
+  Fn fn_{};
+  std::tuple<Args...> args_{};
 
   template <typename... Ts>
     requires(std::is_invocable_v<Fn, Ts..., Args...>)
@@ -82,13 +85,14 @@ class binder_back {
 
 template <typename Fn, typename... Args>
 binder_back(Fn, Args...) -> binder_back<Fn, Args...>;
+
 }  // namespace detail
 /// \endcond
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Fn, typename... Args>
 LEGATE_STL_ATTRIBUTE((host, device))
-auto bind_back(Fn fn, Args&&... args)
+[[nodiscard]] auto bind_back(Fn fn, Args&&... args)
 {
   if constexpr (sizeof...(args) == 0) {
     return fn;
@@ -100,17 +104,19 @@ auto bind_back(Fn fn, Args&&... args)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
+
 template <typename Function, typename... Ignore>
 class drop_n_args {
  public:
-  Function fun_;
+  Function fun_{};
 
   template <typename... Args>
-  constexpr decltype(auto) operator()(Ignore..., Args&&... args) const
+  [[nodiscard]] constexpr decltype(auto) operator()(Ignore..., Args&&... args) const
   {
     return fun_(std::forward<Args>(args)...);
   }
 };
+
 }  // namespace detail
 
 template <std::size_t Count, typename Function>
@@ -118,9 +124,9 @@ using drop_n_args =
   meta::fill_n<Count, ignore, meta::bind_front<meta::quote<detail::drop_n_args>, Function>>;
 
 template <std::size_t Count, typename Function>
-drop_n_args<Count, Function> drop_n_fn(Function fun)
+[[nodiscard]] drop_n_args<Count, std::decay_t<Function>> drop_n_fn(Function&& fun)
 {
-  return {std::move(fun)};
+  return {std::forward<Function>(fun)};
 }
 
 }  // namespace legate::stl

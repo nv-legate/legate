@@ -30,14 +30,17 @@ namespace legate::stl {
 namespace detail {
 class broadcast_constraint {
  public:
-  legate::tuple<std::uint32_t> axes;
+  legate::tuple<std::uint32_t> axes{};
 
-  auto operator()(legate::Variable self) const { return legate::broadcast(self, axes); }
+  [[nodiscard]] auto operator()(legate::Variable self) const
+  {
+    return legate::broadcast(std::move(self), axes);
+  }
 };
 
 template <std::size_t Index, std::int32_t... ProjDims, typename Cursor, typename Extents>
 LEGATE_STL_ATTRIBUTE((host, device))
-auto project_dimension(Cursor cursor, Extents extents) noexcept
+[[nodiscard]] auto project_dimension(Cursor cursor, const Extents& extents) noexcept
 {
   if constexpr (((Index != ProjDims) && ...)) {
     return std::full_extent;
@@ -56,16 +59,16 @@ template <typename Map>
 class view {
  public:
   LEGATE_STL_ATTRIBUTE((host, device))
-  explicit view(Map map) : map_(std::move(map)) {}
+  explicit view(Map map) : map_{std::move(map)} {}
 
   LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator<Map> begin() const { return iterator(map_, map_.begin()); }
+  [[nodiscard]] iterator<Map> begin() const { return {map_, map_.begin()}; }
 
   LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator<Map> end() const { return iterator(map_, map_.end()); }
+  [[nodiscard]] iterator<Map> end() const { return {map_, map_.end()}; }
 
  private:
-  Map map_;
+  Map map_{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +84,7 @@ class projection_policy {
     static_assert(sizeof...(ProjDims) < Dim);
     static_assert(((ProjDims < Dim) && ...));
 
-    static LogicalStore aligned_promote(LogicalStore from, LogicalStore to)
+    [[nodiscard]] static LogicalStore aligned_promote(const LogicalStore& from, LogicalStore to)
     {
       LegateAssert(from.dim() == Dim);
       LegateAssert(from.dim() == to.dim() + sizeof...(ProjDims));
@@ -113,23 +116,26 @@ class projection_policy {
       physical_map() = default;
 
       LEGATE_STL_ATTRIBUTE((host, device))
-      explicit physical_map(Mdspan span) : span_(span) {}
+      explicit physical_map(Mdspan span) : span_{std::move(span)} {}
 
       template <std::size_t... Is>
       LEGATE_STL_ATTRIBUTE((host, device))  //
-      static auto read_impl(std::index_sequence<Is...>, Mdspan span, cursor cursor)
+      [[nodiscard]] static auto read_impl(std::index_sequence<Is...>, Mdspan span, cursor cursor)
       {
         auto extents = span.extents();
         return std::submdspan(span, project_dimension<Is, ProjDims...>(cursor, extents)...);
       }
 
       LEGATE_STL_ATTRIBUTE((host, device))  //
-      decltype(auto) read(cursor cur) const { return read_impl(Indices(), span_, cur); }
+      [[nodiscard]] decltype(auto) read(cursor cur) const
+      {
+        return read_impl(Indices{}, span_, cur);
+      }
 
       LEGATE_STL_ATTRIBUTE((host, device))  //
-      cursor end() const { return (span_.extents().extent(ProjDims) * ... * 1); }
+      [[nodiscard]] cursor end() const { return (span_.extents().extent(ProjDims) * ... * 1); }
 
-      std::array<coord_t, Dim - sizeof...(ProjDims)> shape() const
+      [[nodiscard]] std::array<coord_t, Dim - sizeof...(ProjDims)> shape() const
       {
         std::array<coord_t, Dim - sizeof...(ProjDims)> result;
         for (std::int32_t i = 0, j = 0; i < Dim; ++i) {  //
@@ -140,7 +146,7 @@ class projection_policy {
         return result;
       }
 
-      Mdspan span_;
+      Mdspan span_{};
       using Indices    = std::make_index_sequence<Dim>;
       using value_type = decltype(physical_map::read_impl(Indices(), {}, 0));
     };
@@ -152,13 +158,13 @@ class projection_policy {
       logical_map() = default;
 
       // LEGATE_STL_ATTRIBUTE((host,device))
-      explicit logical_map(LogicalStore store) : store_(store)
+      explicit logical_map(LogicalStore store) : store_{std::move(store)}
       {
         LegateAssert(store_.dim() == Dim);
       }
 
       // LEGATE_STL_ATTRIBUTE((host,device))
-      value_type read(cursor cur) const
+      [[nodiscard]] value_type read(cursor cur) const
       {
         auto store = store_;
         int offset = 0;
@@ -172,9 +178,9 @@ class projection_policy {
       }
 
       // LEGATE_STL_ATTRIBUTE((host,device))
-      cursor end() const { return (store_.extents()[ProjDims] * ... * 1); }
+      [[nodiscard]] cursor end() const { return (store_.extents()[ProjDims] * ... * 1); }
 
-      std::array<coord_t, Dim - sizeof...(ProjDims)> shape() const
+      [[nodiscard]] std::array<coord_t, Dim - sizeof...(ProjDims)> shape() const
       {
         std::array<coord_t, Dim - sizeof...(ProjDims)> result;
         for (std::int32_t i = 0, j = 0; i < Dim; ++i) {  //
@@ -186,42 +192,44 @@ class projection_policy {
       }
 
      private:
-      LogicalStore store_;
+      LogicalStore store_{};
     };
 
     // LEGATE_STL_ATTRIBUTE((host,device))
-    static view<logical_map> logical_view(const LogicalStore& store)
+    [[nodiscard]] static view<logical_map> logical_view(LogicalStore store)
     {
-      return view{logical_map(store)};
+      return view{logical_map{std::move(store)}};
     }
 
     template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
-    LEGATE_STL_ATTRIBUTE((host, device)) static view<
-      physical_map<std::mdspan<T, E, L, A>>> physical_view(std::mdspan<T, E, L, A> span)
+    LEGATE_STL_ATTRIBUTE((host, device))  //
+      [[nodiscard]] static view<physical_map<std::mdspan<T, E, L, A>>> physical_view(
+        std::mdspan<T, E, L, A> span)
     {
       static_assert(Dim == E::rank());
-      return view{physical_map<std::mdspan<T, E, L, A>>(span)};
+      return view{physical_map<std::mdspan<T, E, L, A>>(std::move(span))};
     }
 
     LEGATE_STL_ATTRIBUTE((host, device))  //
-    static coord_t size(const LogicalStore& store)
+    [[nodiscard]] static coord_t size(const LogicalStore& store)
     {
-      const Shape shape = store.extents();
+      auto&& shape = store.extents();
       return (shape[ProjDims] * ... * 1);
     }
 
     LEGATE_STL_ATTRIBUTE((host, device))  //
-    static coord_t size(const PhysicalStore& store)
+    [[nodiscard]] static coord_t size(const PhysicalStore& store)
     {
-      const Rect<Dim> shape = store.shape<Dim>();
+      auto&& shape = store.shape<Dim>();
       return ((shape.hi[ProjDims] - shape.lo[ProjDims]) * ... * 1);
     }
 
-    // TODO: maybe cast this into the mold of a segmented range?
-    static std::tuple<broadcast_constraint> partition_constraints(iteration_kind)
+    // TODO(ericniebler): maybe cast this into the mold of a segmented range?
+    [[nodiscard]] static std::tuple<broadcast_constraint> partition_constraints(iteration_kind)
     {
       std::vector<std::uint32_t> axes(Dim);
+
       std::iota(axes.begin(), axes.end(), 0);
       constexpr std::uint32_t proj_dims[] = {ProjDims...};
       axes.erase(
@@ -231,7 +239,7 @@ class projection_policy {
       return std::make_tuple(broadcast_constraint{tuple<std::uint32_t>{std::move(axes)}});
     }
 
-    static std::tuple<> partition_constraints(reduction_kind) { return {}; }
+    [[nodiscard]] static std::tuple<> partition_constraints(reduction_kind) { return {}; }
   };
 
   template <typename ElementType, std::int32_t Dim>
@@ -249,15 +257,15 @@ class element_policy {
     template <typename OtherElementTypeT, std::int32_t OtherDim>
     using rebind = policy<OtherElementTypeT, OtherDim>;
 
-    static LogicalStore aligned_promote(LogicalStore from, LogicalStore to)
+    [[nodiscard]] static LogicalStore aligned_promote(const LogicalStore& from, LogicalStore to)
     {
       LegateAssert(from.dim() == Dim);
       LegateAssert(to.dim() == 1 && to.volume() == 1);
 
       to = to.project(0, 0);
 
-      const Shape shape = from.extents();
-      LegateAssert(shape.ndim() == Dim);
+      auto&& shape = from.extents();
+      LegateAssert(shape.size() == Dim);
       for (std::int32_t dim = 0; dim < Dim; ++dim) {
         to = to.promote(dim, shape[dim]);
       }
@@ -276,10 +284,10 @@ class element_policy {
       physical_map() = default;
 
       LEGATE_STL_ATTRIBUTE((host, device))
-      explicit physical_map(Mdspan span) : span_(span) {}
+      explicit physical_map(Mdspan span) : span_{std::move(span)} {}
 
       LEGATE_STL_ATTRIBUTE((host, device))  //
-      reference read(cursor cur) const
+      [[nodiscard]] reference read(cursor cur) const
       {
         std::array<coord_t, Dim> p;
         for (std::int32_t i = Dim - 1; i >= 0; --i) {
@@ -290,7 +298,7 @@ class element_policy {
       }
 
       LEGATE_STL_ATTRIBUTE((host, device))  //
-      cursor end() const
+      [[nodiscard]] cursor end() const
       {
         cursor result = 1;
         for (std::int32_t i = 0; i < Dim; ++i) {
@@ -299,7 +307,7 @@ class element_policy {
         return result;
       }
 
-      std::array<coord_t, Dim> shape() const
+      [[nodiscard]] std::array<coord_t, Dim> shape() const
       {
         std::array<coord_t, Dim> result;
         for (std::int32_t i = 0; i < Dim; ++i) {
@@ -308,30 +316,38 @@ class element_policy {
         return result;
       }
 
-      Mdspan span_;
+      Mdspan span_{};
     };
 
-    static view<physical_map<mdspan_t<ElementType, Dim>>> logical_view(const LogicalStore& store)
+    [[nodiscard]] static view<physical_map<mdspan_t<ElementType, Dim>>> logical_view(
+      const LogicalStore& store)
     {
       return physical_view(as_mdspan<ElementType, Dim>(store));
     }
 
     template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
-    LEGATE_STL_ATTRIBUTE((host, device)) static view<
-      physical_map<std::mdspan<T, E, L, A>>> physical_view(std::mdspan<T, E, L, A> span)
+    LEGATE_STL_ATTRIBUTE((host, device))  //
+      [[nodiscard]] static view<physical_map<std::mdspan<T, E, L, A>>> physical_view(
+        std::mdspan<T, E, L, A> span)
     {
       static_assert(Dim == E::rank());
-      return view{physical_map<std::mdspan<T, E, L, A>>(span)};
+      return view{physical_map<std::mdspan<T, E, L, A>>{std::move(span)}};
     }
 
     LEGATE_STL_ATTRIBUTE((host, device))  //
-    static coord_t size(const LogicalStore& store) { return store.volume(); }
+    [[nodiscard]] static coord_t size(const LogicalStore& store)
+    {
+      return static_cast<coord_t>(store.volume());
+    }
 
     LEGATE_STL_ATTRIBUTE((host, device))  //
-    static coord_t size(const PhysicalStore& store) { return store.shape<Dim>().volume(); }
+    [[nodiscard]] static coord_t size(const PhysicalStore& store)
+    {
+      return store.shape<Dim>().volume();
+    }
 
-    static std::tuple<> partition_constraints(ignore) { return {}; }
+    [[nodiscard]] static std::tuple<> partition_constraints(ignore) { return {}; }
   };
 
   template <typename ElementType, std::int32_t Dim>
@@ -347,25 +363,28 @@ class slice_view {
  public:
   using policy = detail::rebind_policy<SlicePolicy, ElementType, Dim>;
 
-  explicit slice_view(LogicalStore store) : store_(std::move(store)) {}
+  explicit slice_view(LogicalStore store) : store_{std::move(store)} {}
 
-  static constexpr std::int32_t dim() noexcept { return Dim; }
+  [[nodiscard]] static constexpr std::int32_t dim() noexcept { return Dim; }
 
-  auto begin() const { return policy().logical_view(store_).begin(); }
+  [[nodiscard]] auto begin() const { return policy{}.logical_view(store_).begin(); }
 
-  auto end() const { return policy().logical_view(store_).end(); }
+  [[nodiscard]] auto end() const { return policy{}.logical_view(store_).end(); }
 
-  std::size_t size() const { return static_cast<std::size_t>(end() - begin()); }
+  [[nodiscard]] std::size_t size() const { return static_cast<std::size_t>(end() - begin()); }
 
-  logical_store<std::remove_cv_t<ElementType>, Dim> base() const
+  [[nodiscard]] logical_store<std::remove_cv_t<ElementType>, Dim> base() const
   {
     return stl::as_typed<std::remove_cv_t<ElementType>, Dim>(store_);
   }
 
  private:
-  friend LogicalStore get_logical_store(const slice_view& slice) { return slice.store_; }
+  [[nodiscard]] friend LogicalStore get_logical_store(const slice_view& slice)
+  {
+    return slice.store_;
+  }
 
-  mutable LogicalStore store_;
+  mutable LogicalStore store_{};
 };
 
 template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
@@ -376,51 +395,54 @@ class projection_view {
  public:
   using type = slice_view_t<value_type_of_t<Store>, dim_of_v<Store>, projection_policy<ProjDim...>>;
 };
+
 }  // namespace detail
 
 template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
 using slice_view = detail::slice_view_t<ElementType, Dim, SlicePolicy>;
 
-template <typename Store>              //
-  requires(logical_store_like<Store>)  //
-auto rows_of(Store&& store)            //
+template <typename Store>                  //
+  requires(logical_store_like<Store>)      //
+[[nodiscard]] auto rows_of(Store&& store)  //
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::row_policy>
 {
   return slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::row_policy>(
-    detail::get_logical_store(store));
+    detail::get_logical_store(std::forward<Store>(store)));
 }
 
 template <typename Store>              //
   requires(logical_store_like<Store>)  //
-auto columns_of(Store&& store)
+[[nodiscard]] auto columns_of(Store&& store)
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::column_policy>
 {
   return slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::column_policy>(
-    detail::get_logical_store(store));
+    detail::get_logical_store(std::forward<Store>(store)));
 }
 
 template <std::int32_t... ProjDims, typename Store>  //
   requires(logical_store_like<Store>)                //
-auto projections_of(Store&& store)
+[[nodiscard]] auto projections_of(Store&& store)
   //-> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::projection_policy<ProjDims...>> {
   -> typename detail::projection_view<Store, ProjDims...>::type
 {
   static_assert((((ProjDims >= 0) && (ProjDims < dim_of_v<Store>)) && ...));
   return slice_view<value_type_of_t<Store>,
                     dim_of_v<Store>,
-                    detail::projection_policy<ProjDims...>>(detail::get_logical_store(store));
+                    detail::projection_policy<ProjDims...>>(
+    detail::get_logical_store(std::forward<Store>(store)));
 }
 
 template <typename Store>              //
   requires(logical_store_like<Store>)  //
-auto elements_of(Store&& store)
+[[nodiscard]] auto elements_of(Store&& store)
   -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::element_policy>
 {
   return slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::element_policy>(
-    detail::get_logical_store(store));
+    detail::get_logical_store(std::forward<Store>(store)));
 }
 
 namespace detail {
+
 template <typename ElementType>
 struct value_type_of_;
 
@@ -429,6 +451,7 @@ class value_type_of_<slice_view<ElementType, Dim, SlicePolicy>> {
  public:
   using type = ElementType;
 };
+
 }  // namespace detail
 
 }  // namespace legate::stl

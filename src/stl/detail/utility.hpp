@@ -19,17 +19,20 @@
 #include "meta.hpp"
 #include "type_traits.hpp"
 
+#include <iterator>
+
 // Include this last:
 #include "prefix.hpp"
 
 namespace legate::stl {
+
 class ignore {
  public:
   ignore() = default;
 
   template <typename... Args>
   LEGATE_STL_ATTRIBUTE((host, device))
-  constexpr ignore(Args&&...) noexcept
+  constexpr ignore(Args&&...) noexcept  // NOLINT(google-explicit-constructor)
   {
   }
 };
@@ -39,10 +42,11 @@ namespace detail {
 template <typename LegateTask>
 class task_id_generator {
  public:
-  std::int64_t operator()(Library& library) const
+  [[nodiscard]] std::int64_t operator()(Library& library) const
   {
     static const std::int64_t s_task_id = [&] {
       std::int64_t task_id = library.get_new_task_id();
+
       LegateTask::register_variants(library, task_id);
       return task_id;
     }();
@@ -84,7 +88,7 @@ void check_function_type()
 }  // namespace detail
 
 template <typename Reference>
-Reference scalar_cast(const Scalar& scalar)
+[[nodiscard]] Reference scalar_cast(const Scalar& scalar)
 {
   using value_type = remove_cvref_t<Reference>;
   static_assert(std::is_trivially_copyable_v<value_type>);
@@ -96,7 +100,7 @@ Reference scalar_cast(const Scalar& scalar)
 
 template <typename Head, typename... Tail>
 LEGATE_STL_ATTRIBUTE((host, device))
-Head&& front_of(Head&& head, Tail&&... /*tail*/) noexcept
+[[nodiscard]] Head&& front_of(Head&& head, Tail&&... /*tail*/) noexcept
 {
   return std::forward<Head>(head);
 }
@@ -110,8 +114,15 @@ void align_all(Task&, Parts&&...)
 template <typename Task, typename Part1, typename Part2, typename... OtherParts>
 void align_all(Task& task, Part1&& part1, Part2&& part2, OtherParts&&... other_parts)
 {
-  task.add_constraint(legate::align(part1, part2));
+  task.add_constraint(legate::align(std::forward<Part1>(part1), part2));
   align_all(task, std::forward<Part2>(part2), std::forward<OtherParts>(other_parts)...);
+}
+
+template <typename AtLeastIteratorCategory, typename It>
+void static_assert_iterator_category(const It&)
+{
+  static_assert(std::is_base_of_v<AtLeastIteratorCategory,
+                                  typename std::iterator_traits<It>::iterator_category>);
 }
 
 }  // namespace legate::stl

@@ -32,26 +32,26 @@ constexpr ResourceConfig LEGATE_STL_RESOURCE_CONFIG = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 class initialize_library {
  public:
-  initialize_library(int argc, char* argv[]) : result_(legate::start(argc, argv)), library_()
+  initialize_library(int argc, char* argv[]) : result_{legate::start(argc, argv)}
   {
-    if (result_ == 0) {
-      auto runtime = legate::Runtime::get_runtime();
-      library_     = runtime->create_library("legate.stl", LEGATE_STL_RESOURCE_CONFIG);
+    if (result() == 0) {
+      library_ =
+        legate::Runtime::get_runtime()->create_library("legate.stl", LEGATE_STL_RESOURCE_CONFIG);
     }
   }
 
   ~initialize_library()
   {
-    if (result_ == 0) {
+    if (result() == 0) {
       result_ = legate::finish();
     }
   }
 
-  std::int32_t result() const { return result_; }
+  [[nodiscard]] std::int32_t result() const { return result_; }
 
  private:
-  std::int32_t result_;
-  Library library_;
+  std::int32_t result_{};
+  Library library_{};
 };
 
 }  // namespace legate::stl

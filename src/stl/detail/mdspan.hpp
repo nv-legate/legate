@@ -40,16 +40,23 @@ LEGATE_STL_PRAGMA_EDG_IGNORE(
 
 #include "span.hpp"  // this header must come before mdspan.hpp
 
+// Blame Kokkos for these uses of reserved identifiers...
+// NOLINTBEGIN(bugprone-reserved-identifier)
 #define _MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS 1
 #define _MDSPAN_USE_FAKE_ATTRIBUTE_NO_UNIQUE_ADDRESS
 #define _MDSPAN_NO_UNIQUE_ADDRESS
+// NOLINTEND(bugprone-reserved-identifier)
 
 #define MDSPAN_IMPL_STANDARD_NAMESPACE std
 #define MDSPAN_IMPL_PROPOSED_NAMESPACE mdspan_experimental
 #include <mdspan/mdspan.hpp>
+// We intentionally define this so that downstream libs do the right thing.
+// NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define __cpp_lib_mdspan 1
 
 namespace std {
+// DANGER: this actually is potentially quite dangerous...
+// NOLINTNEXTLINE(google-build-using-namespace, cert-dcl58-cpp)
 using namespace mdspan_experimental;
 }  // namespace std
 
@@ -68,8 +75,9 @@ LEGATE_STL_PRAGMA_POP()
 
 namespace legate::stl {
 namespace detail {
+
 template <typename Function, typename... InputSpans>
-struct elementwise_accessor;
+class elementwise_accessor;
 
 template <Legion::PrivilegeMode Privilege, typename ElementType, std::int32_t Dim>
 using store_accessor_t =  //
@@ -91,7 +99,7 @@ class default_accessor {
 
   template <typename ElementType, std::int32_t Dim>
   LEGATE_STL_ATTRIBUTE((host, device))  //
-  static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
+  [[nodiscard]] static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
   {
     if constexpr (Dim == 0) {
       // 0-dimensional legate stores are backed by read-only futures
@@ -120,7 +128,7 @@ class reduction_accessor {
 
   template <typename ElementType, std::int32_t Dim>
   LEGATE_STL_ATTRIBUTE((host, device))  //
-  static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
+  [[nodiscard]] static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
   {
     if constexpr (Dim == 0) {
       // 0-dimensional legate stores are backed by read-only futures
@@ -138,32 +146,33 @@ class reduction_accessor {
 template <typename ElementType, std::int32_t ActualDim, typename Accessor = default_accessor>
 class mdspan_accessor {
  public:
-  static constexpr std::int32_t Dim = std::max(ActualDim, std::int32_t(1));
-  using value_type                  = std::remove_const_t<ElementType>;
-  using element_type                = const_if_t<ActualDim == 0, ElementType>;
-  using data_handle_type            = std::size_t;
-  using accessor_type               = typename Accessor::template type<ElementType, ActualDim>;
-  using reference     = decltype(std::declval<const accessor_type&>()[Point<Dim>::ONES()]);
-  using offset_policy = mdspan_accessor;
+  static constexpr auto Dim = std::max(ActualDim, std::int32_t{1});
+  using value_type          = std::remove_const_t<ElementType>;
+  using element_type        = const_if_t<ActualDim == 0, ElementType>;
+  using data_handle_type    = std::size_t;
+  using accessor_type       = typename Accessor::template type<ElementType, ActualDim>;
+  using reference           = decltype(std::declval<const accessor_type&>()[Point<Dim>::ONES()]);
+  using offset_policy       = mdspan_accessor;
 
   template <typename, std::int32_t, typename>
-  friend struct mdspan_accessor;
+  friend class mdspan_accessor;
 
   LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_accessor() noexcept {}         //= default; // to work around an nvcc-11 bug
+  mdspan_accessor() noexcept {}         //= default; // NOLINT(modernize-use-equals-default):
+                                        // to work around an nvcc-11 bug
 
   LEGATE_STL_ATTRIBUTE((host, device))
-  explicit mdspan_accessor(PhysicalStore store, const Rect<Dim> shape) noexcept
-    : store_(std::move(store)),
-      shape_(shape.hi - shape.lo + Point<Dim>::ONES()),
-      origin_(shape.lo),
-      accessor_(Accessor::template get<ElementType, ActualDim>(store_))
+  explicit mdspan_accessor(PhysicalStore store, const Rect<Dim>& shape) noexcept
+    : store_{std::move(store)},
+      shape_{shape.hi - shape.lo + Point<Dim>::ONES()},
+      origin_{shape.lo},
+      accessor_{Accessor::template get<ElementType, ActualDim>(store_)}
   {
   }
 
   LEGATE_STL_ATTRIBUTE((host, device))
   explicit mdspan_accessor(const PhysicalStore& store) noexcept
-    : mdspan_accessor(store, store.shape<Dim>())
+    : mdspan_accessor{store, store.shape<Dim>()}
   {
   }
 
@@ -182,6 +191,9 @@ class mdspan_accessor {
   LEGATE_STL_ATTRIBUTE((host, device))  //
   mdspan_accessor& operator=(const mdspan_accessor& other) noexcept
   {
+    if (this == &other) {
+      return *this;
+    }
     LegateAssert(elementwise_ == nullptr);
     if (other.elementwise_) {
       other.elementwise_(*this, other.elementwise_obj_);
@@ -196,19 +208,21 @@ class mdspan_accessor {
 
   template <typename OtherElementType>                                          //
     requires(std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>)  //
-  LEGATE_STL_ATTRIBUTE((host, device))                                          //
+  LEGATE_STL_ATTRIBUTE((host, device))
+    // NOLINTNEXTLINE(google-explicit-constructor)
     mdspan_accessor(const mdspan_accessor<OtherElementType, Dim, Accessor>& other) noexcept
-    : store_(other.store_),
-      shape_(other.shape_),
-      origin_(other.origin_),
-      accessor_(Accessor::template get<ElementType, ActualDim>(store_))
+    : store_{other.store_},
+      shape_{other.shape_},
+      origin_{other.origin_},
+      accessor_{Accessor::template get<ElementType, ActualDim>(store_)}
   {
   }
 
   template <typename Function, typename... InputSpans>
   LEGATE_STL_ATTRIBUTE((host, device))
+  // NOLINTNEXTLINE(google-explicit-constructor)
   mdspan_accessor(const elementwise_accessor<Function, InputSpans...>& other)
-    : elementwise_(&mdspan_accessor::elementwise<Function, InputSpans...>), elementwise_obj_(&other)
+    : elementwise_{&mdspan_accessor::elementwise<Function, InputSpans...>}, elementwise_obj_{&other}
   {
   }
 
@@ -237,11 +251,12 @@ class mdspan_accessor {
   }
 
   LEGATE_STL_ATTRIBUTE((host, device))
-  reference access(data_handle_type handle, std::size_t i) const noexcept
+  [[nodiscard]] reference access(data_handle_type handle, std::size_t i) const noexcept
   {
     Point<Dim> p;
     auto offset = handle + i;
-    for (std::int32_t dim = Dim - 1; dim >= 0; --dim) {
+
+    for (auto dim = Dim - 1; dim >= 0; --dim) {
       p[dim] = offset % shape_[dim];
       offset /= shape_[dim];
     }
@@ -249,8 +264,8 @@ class mdspan_accessor {
   }
 
   LEGATE_STL_ATTRIBUTE((host, device))
-  typename offset_policy::data_handle_type offset(data_handle_type handle,
-                                                  std::size_t i) const noexcept
+  [[nodiscard]] typename offset_policy::data_handle_type offset(data_handle_type handle,
+                                                                std::size_t i) const noexcept
   {
     return handle + i;
   }
@@ -267,14 +282,15 @@ class mdspan_accessor {
   Point<Dim> shape_{};
   Point<Dim> origin_{};
   accessor_type accessor_{};
-  void (*elementwise_)(mdspan_accessor&, const void*) = nullptr;
-  const void* elementwise_obj_                        = nullptr;
+  void (*elementwise_)(mdspan_accessor&, const void*){};
+  const void* elementwise_obj_{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Store>
 struct value_type_of_
   : meta::if_c<(type_code_of<Store> == Type::Code::NIL), meta::empty, meta::type<Store>> {};
+
 }  // namespace detail
 
 /**

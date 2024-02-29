@@ -21,8 +21,10 @@
 
 namespace legate::stl {
 namespace detail {
+
 template <typename T>
 T&& declval() noexcept;
+
 }  // namespace detail
 
 #if __cpp_lib_remove_cvref >= 20171L
