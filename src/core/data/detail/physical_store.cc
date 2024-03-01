@@ -279,10 +279,14 @@ Domain PhysicalStore::domain() const
   }
 
   auto result = is_future() ? future_.domain() : region_field_.domain();
+  // The backing Future or RegionField of any LogicalStorage with an empty shape (e.g. (), (1,0,3))
+  // will actually have the 1d Domain <0>..<0>. Therefore, if we ever see this Domain on a Future or
+  // RegionField, we can't assume it's the "true" one.
+  const bool maybe_fake_domain = result.get_dim() == 1 && result.lo() == 0 && result.hi() == 0;
   if (!transform_->identity()) {
     result = transform_->transform(result);
   }
-  LegateAssert(result.dim == dim() || dim() == 0);
+  LegateAssert(result.dim == dim() || maybe_fake_domain);
   return result;
 }
 
