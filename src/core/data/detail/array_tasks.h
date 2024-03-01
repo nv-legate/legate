@@ -16,7 +16,8 @@ namespace legate::detail {
 
 class Library;
 
-struct FixupRanges : public LegateTask<FixupRanges> {
+class FixupRanges : public LegateTask<FixupRanges> {
+ public:
   static void cpu_variant(legate::TaskContext context);
 #if LegateDefined(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
@@ -26,7 +27,8 @@ struct FixupRanges : public LegateTask<FixupRanges> {
 #endif
 };
 
-struct OffsetsToRanges : public LegateTask<OffsetsToRanges> {
+class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
+ public:
   static void cpu_variant(legate::TaskContext context);
 #if LegateDefined(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
@@ -36,7 +38,8 @@ struct OffsetsToRanges : public LegateTask<OffsetsToRanges> {
 #endif
 };
 
-struct RangesToOffsets : public LegateTask<RangesToOffsets> {
+class RangesToOffsets : public LegateTask<RangesToOffsets> {
+ public:
   static void cpu_variant(legate::TaskContext context);
 #if LegateDefined(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);

@@ -26,15 +26,17 @@ namespace legate::detail {
 class BufferBuilder;
 class OutputRegionArg;
 class LogicalStore;
-struct StoreAnalyzer;
+class StoreAnalyzer;
 
-struct Serializable {
+class Serializable {
+ public:
   virtual ~Serializable() = default;
 
   virtual void pack(BufferBuilder& buffer) const = 0;
 };
 
-struct Analyzable {
+class Analyzable {
+ public:
   virtual ~Analyzable() = default;
 
   virtual void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const = 0;
@@ -45,7 +47,7 @@ struct Analyzable {
   virtual void perform_invalidations() const;
 };
 
-struct ScalarArg final : public Serializable {
+class ScalarArg final : public Serializable {
  public:
   explicit ScalarArg(Scalar&& scalar);
 
@@ -55,7 +57,7 @@ struct ScalarArg final : public Serializable {
   Scalar scalar_;
 };
 
-struct RegionFieldArg final : public Analyzable {
+class RegionFieldArg final : public Analyzable {
  public:
   RegionFieldArg(LogicalStore* store,
                  Legion::PrivilegeMode privilege,
@@ -67,9 +69,9 @@ struct RegionFieldArg final : public Analyzable {
   void perform_invalidations() const override;
 
  private:
-  LogicalStore* store_;
-  Legion::PrivilegeMode privilege_;
-  std::unique_ptr<StoreProjection> store_proj_;
+  LogicalStore* store_{};
+  Legion::PrivilegeMode privilege_{};
+  std::unique_ptr<StoreProjection> store_proj_{};
 };
 
 class OutputRegionArg final : public Analyzable {
@@ -86,13 +88,13 @@ class OutputRegionArg final : public Analyzable {
   [[nodiscard]] std::uint32_t requirement_index() const;
 
  private:
-  LogicalStore* store_;
-  Legion::FieldSpace field_space_;
-  Legion::FieldID field_id_;
+  LogicalStore* store_{};
+  Legion::FieldSpace field_space_{};
+  Legion::FieldID field_id_{};
   mutable std::uint32_t requirement_index_{-1U};
 };
 
-struct FutureStoreArg final : public Analyzable {
+class FutureStoreArg final : public Analyzable {
  public:
   FutureStoreArg(LogicalStore* store,
                  bool read_only,
@@ -103,13 +105,13 @@ struct FutureStoreArg final : public Analyzable {
   void analyze(StoreAnalyzer& analyzer) override;
 
  private:
-  LogicalStore* store_;
-  bool read_only_;
-  bool has_storage_;
-  Legion::ReductionOpID redop_;
+  LogicalStore* store_{};
+  bool read_only_{};
+  bool has_storage_{};
+  Legion::ReductionOpID redop_{};
 };
 
-struct BaseArrayArg final : public Analyzable {
+class BaseArrayArg final : public Analyzable {
  public:
   BaseArrayArg(std::unique_ptr<Analyzable> data, std::unique_ptr<Analyzable> null_mask);
 
@@ -126,7 +128,7 @@ struct BaseArrayArg final : public Analyzable {
   std::unique_ptr<Analyzable> null_mask_{};
 };
 
-struct ListArrayArg final : public Analyzable {
+class ListArrayArg final : public Analyzable {
  public:
   ListArrayArg(InternalSharedPtr<Type> type,
                std::unique_ptr<Analyzable> descriptor,
@@ -139,12 +141,12 @@ struct ListArrayArg final : public Analyzable {
   void perform_invalidations() const override;
 
  private:
-  InternalSharedPtr<Type> type_;
-  std::unique_ptr<Analyzable> descriptor_;
-  std::unique_ptr<Analyzable> vardata_;
+  InternalSharedPtr<Type> type_{};
+  std::unique_ptr<Analyzable> descriptor_{};
+  std::unique_ptr<Analyzable> vardata_{};
 };
 
-struct StructArrayArg final : public Analyzable {
+class StructArrayArg final : public Analyzable {
  public:
   StructArrayArg(InternalSharedPtr<Type> type,
                  std::unique_ptr<Analyzable> null_mask,
@@ -157,9 +159,9 @@ struct StructArrayArg final : public Analyzable {
   void perform_invalidations() const override;
 
  private:
-  InternalSharedPtr<Type> type_;
-  std::unique_ptr<Analyzable> null_mask_;
-  std::vector<std::unique_ptr<Analyzable>> fields_;
+  InternalSharedPtr<Type> type_{};
+  std::unique_ptr<Analyzable> null_mask_{};
+  std::vector<std::unique_ptr<Analyzable>> fields_{};
 };
 
 }  // namespace legate::detail

@@ -22,7 +22,7 @@
 
 namespace legate::detail {
 
-struct ConstraintSolver;
+class ConstraintSolver;
 
 class Gather final : public Operation {
  public:
@@ -44,11 +44,11 @@ class Gather final : public Operation {
 
  private:
   bool out_of_range_{true};
-  StoreArg target_;
-  StoreArg source_;
-  StoreArg source_indirect_;
-  InternalSharedPtr<Constraint> constraint_;
-  std::optional<std::int32_t> redop_;
+  StoreArg target_{};
+  StoreArg source_{};
+  StoreArg source_indirect_{};
+  InternalSharedPtr<Constraint> constraint_{};
+  std::optional<std::int32_t> redop_{};
 };
 
 }  // namespace legate::detail

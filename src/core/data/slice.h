@@ -29,7 +29,8 @@ namespace legate {
  * legate::Slice behaves similarly to how the slice in Python does, and has different semantics
  * from std::slice.
  */
-struct Slice {
+class Slice {
+ public:
   static inline constexpr std::nullopt_t OPEN = std::nullopt;
 
   // NOLINTNEXTLINE(google-explicit-constructor)

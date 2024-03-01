@@ -20,10 +20,11 @@
 
 namespace legate {
 
-struct VariantInfo {
-  VariantImpl body;
-  Legion::CodeDescriptor code_desc;
-  VariantOptions options;
+class VariantInfo {
+ public:
+  VariantImpl body{};
+  Legion::CodeDescriptor code_desc{};
+  VariantOptions options{};
 };
 
 class TaskInfo {

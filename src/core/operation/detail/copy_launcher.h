@@ -30,7 +30,7 @@ class OutputRequirementAnalyzer;
 class RequirementAnalyzer;
 class BufferBuilder;
 
-struct CopyArg final : public Serializable {
+class CopyArg final : public Serializable {
  public:
   CopyArg(std::uint32_t req_idx,
           LogicalStore* store,
@@ -41,11 +41,7 @@ struct CopyArg final : public Serializable {
   void pack(BufferBuilder& buffer) const override;
 
   template <bool SINGLE>
-  void populate_requirement(Legion::RegionRequirement& requirement)
-  {
-    store_proj_->template populate_requirement<SINGLE>(
-      requirement, region_, {field_id_}, privilege_);
-  }
+  void populate_requirement(Legion::RegionRequirement& requirement);
 
  private:
   std::uint32_t req_idx_;

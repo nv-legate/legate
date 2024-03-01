@@ -29,7 +29,7 @@ namespace legate::cuda {
  * When `LEGATE_SYNC_STREAM_VIEW` is set to 1, every `StreamView` synchronizes the CUDA stream
  * that it wraps when it is destroyed.
  */
-struct StreamView {
+class StreamView {
  public:
   /**
    * @brief Creates a `StreamView` with a raw CUDA stream
@@ -61,7 +61,7 @@ struct StreamView {
 /**
  * @brief A stream pool
  */
-struct StreamPool {
+class StreamPool {
  public:
   ~StreamPool();
 

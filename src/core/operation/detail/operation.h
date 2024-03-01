@@ -25,12 +25,13 @@
 #include <vector>
 
 namespace legate::detail {
-struct ConstraintSolver;
+class ConstraintSolver;
 class Strategy;
 
 class Operation {
  protected:
-  struct StoreArg {
+  class StoreArg {
+   public:
     InternalSharedPtr<LogicalStore> store{};
     const Variable* variable{};
   };

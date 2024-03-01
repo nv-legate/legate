@@ -52,7 +52,8 @@ namespace legate {
  * registrar class. (See legate::TaskRegistrar for details.)
  */
 template <typename T>
-struct LegateTask {
+class LegateTask {
+ public:
   // Exports the base class so we can access it via subclass T
   using BASE = LegateTask<T>;
 
@@ -99,7 +100,7 @@ struct LegateTask {
 
  private:
   template <typename, template <typename...> typename, bool>
-  friend struct detail::VariantHelper;
+  friend class detail::VariantHelper;
 
   // A helper to find and register all variants of a task
   [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info(

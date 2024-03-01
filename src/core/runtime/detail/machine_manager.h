@@ -17,7 +17,9 @@
 #include <stack>
 
 namespace legate::mapping::detail {
-struct Machine;
+
+class Machine;
+
 }  // namespace legate::mapping::detail
 
 namespace legate::detail {

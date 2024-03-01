@@ -23,12 +23,14 @@
 #include <vector>
 
 namespace legate {
-struct Partition;
+
+class Partition;
+
 }  // namespace legate
 
 namespace legate::detail {
 
-struct ConstraintSolver;
+class ConstraintSolver;
 class Partitioner;
 
 class Strategy {

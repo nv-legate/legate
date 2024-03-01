@@ -18,7 +18,8 @@
 namespace legate::detail::store_detail {
 
 template <typename ACC, typename T, std::int32_t N>
-struct trans_accessor_fn {
+class trans_accessor_fn {
+ public:
   template <std::int32_t M>
   ACC operator()(const Legion::PhysicalRegion& pr,
                  Legion::FieldID fid,

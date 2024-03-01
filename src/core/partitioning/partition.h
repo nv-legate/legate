@@ -30,7 +30,7 @@ class Storage;
 
 namespace legate {
 
-struct Partition {
+class Partition {
  public:
   enum class Kind : std::int32_t {
     NO_PARTITION,

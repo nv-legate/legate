@@ -21,7 +21,8 @@
 
 namespace legate::detail {
 
-struct PhysicalArray {
+class PhysicalArray {
+ public:
   virtual ~PhysicalArray()                                   = default;
   [[nodiscard]] virtual std::int32_t dim() const             = 0;
   [[nodiscard]] virtual ArrayKind kind() const               = 0;

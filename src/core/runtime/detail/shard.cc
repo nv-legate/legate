@@ -138,7 +138,8 @@ Legion::ShardingID find_sharding_functor_by_projection_functor(Legion::Projectio
   return functor_id_table[proj_id];
 }
 
-struct ShardingCallbackArgs {
+class ShardingCallbackArgs {
+ public:
   Legion::ShardID shard_id{};
   Legion::ProjectionID proj_id{};
   mapping::ProcessorRange range{};

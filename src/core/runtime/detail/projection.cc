@@ -240,7 +240,8 @@ void register_legion_functor(Legion::ProjectionID proj_id,
   functor_table.try_emplace(proj_id, std::move(legate_functor));
 }
 
-struct register_affine_functor_fn {
+class register_affine_functor_fn {
+ public:
   template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
   void operator()(const proj::SymbolicPoint& point, Legion::ProjectionID proj_id)
   {
@@ -248,7 +249,8 @@ struct register_affine_functor_fn {
   }
 };
 
-struct register_compound_functor_fn {
+class register_compound_functor_fn {
+ public:
   template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
   void operator()(const tuple<std::uint64_t>& color_shape,
                   const proj::SymbolicPoint& point,
@@ -306,7 +308,8 @@ void register_compound_projection_functor(const tuple<std::uint64_t>& color_shap
                           proj_id);
 }
 
-struct LinearizingPointTransformFunctor final : public Legion::PointTransformFunctor {
+class LinearizingPointTransformFunctor final : public Legion::PointTransformFunctor {
+ public:
   // This is actually an invertible functor, but we will not use this for inversion
   [[nodiscard]] bool is_invertible() const override { return false; }
 

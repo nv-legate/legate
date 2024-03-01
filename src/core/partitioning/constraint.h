@@ -32,9 +32,12 @@ namespace legate {
 class AutoTask;
 
 namespace detail {
-struct Constraint;
+
+class Constraint;
 class Variable;
+
 }  // namespace detail
+
 extern template struct default_delete<detail::Constraint>;
 
 /**

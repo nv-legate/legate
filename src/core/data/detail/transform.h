@@ -25,7 +25,9 @@
 #include <string>
 
 namespace legate {
-struct Partition;
+
+class Partition;
+
 }  // namespace legate
 
 namespace legate::detail {
@@ -40,7 +42,8 @@ class NonInvertibleTransformation final : public std::exception {
   std::string error_message_{};
 };
 
-struct Transform {
+class Transform {
+ public:
   virtual ~Transform()                                              = default;
   [[nodiscard]] virtual Domain transform(const Domain& input) const = 0;
   [[nodiscard]] virtual Legion::DomainAffineTransform inverse_transform(
@@ -61,12 +64,13 @@ struct Transform {
   virtual void print(std::ostream& out) const       = 0;
 };
 
-struct StoreTransform : public Transform {
+class StoreTransform : public Transform {
+ public:
   [[nodiscard]] virtual std::int32_t target_ndim(std::int32_t source_ndim) const = 0;
   virtual void find_imaginary_dims(std::vector<std::int32_t>&) const             = 0;
 };
 
-struct TransformStack final : public Transform {
+class TransformStack final : public Transform {
  public:
   TransformStack() = default;
   TransformStack(std::unique_ptr<StoreTransform>&& transform,

@@ -31,7 +31,7 @@ enum class AccessMode : std::uint32_t {
   WRITE  = 2,
 };
 
-struct ConstraintSolver {
+class ConstraintSolver {
  public:
   ~ConstraintSolver();
 
@@ -56,7 +56,7 @@ struct ConstraintSolver {
   std::unordered_map<Variable, AccessMode> access_modes_{};
   std::vector<InternalSharedPtr<Constraint>> constraints_{};
 
-  struct EquivClass;
+  class EquivClass;
   std::unordered_map<Variable, EquivClass*> equiv_class_map_{};
   std::vector<EquivClass*> equiv_classes_{};
 

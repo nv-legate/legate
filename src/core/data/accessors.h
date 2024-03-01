@@ -57,10 +57,10 @@ class ListArrayAccessor<LEGION_WRITE_DISCARD, VAL> {
 };
 
 template <Legion::PrivilegeMode>
-struct StringArrayAccessor;
+class StringArrayAccessor;
 
 template <>
-struct StringArrayAccessor<LEGION_READ_ONLY>
+class StringArrayAccessor<LEGION_READ_ONLY>
   : public ListArrayAccessor<LEGION_READ_ONLY, std::int8_t> {
   StringArrayAccessor(const StringArray& array);
 
@@ -69,7 +69,7 @@ struct StringArrayAccessor<LEGION_READ_ONLY>
 };
 
 template <>
-struct StringArrayAccessor<LEGION_WRITE_DISCARD>
+class StringArrayAccessor<LEGION_WRITE_DISCARD>
   : public ListArrayAccessor<LEGION_WRITE_DISCARD, std::int8_t> {
   StringArrayAccessor(const StringArray& array);
 

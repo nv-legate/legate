@@ -18,7 +18,8 @@ namespace legate {
 
 namespace {
 
-struct linearize_fn {
+class linearize_fn {
+ public:
   template <std::int32_t DIM>
   [[nodiscard]] std::size_t operator()(const DomainPoint& lo_dp,
                                        const DomainPoint& hi_dp,
@@ -46,7 +47,8 @@ std::size_t linearize(const DomainPoint& lo, const DomainPoint& hi, const Domain
 
 namespace {
 
-struct delinearize_fn {
+class delinearize_fn {
+ public:
   template <std::int32_t DIM>
   [[nodiscard]] DomainPoint operator()(const DomainPoint& lo_dp,
                                        const DomainPoint& hi_dp,

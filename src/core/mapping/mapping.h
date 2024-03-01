@@ -32,9 +32,11 @@
 namespace legate::mapping {
 
 namespace detail {
+
 class BaseMapper;
-struct DimOrdering;
-struct StoreMapping;
+class DimOrdering;
+class StoreMapping;
+
 }  // namespace detail
 
 class Task;
@@ -126,7 +128,7 @@ enum class InstLayout : std::int32_t {
  * @ingroup mapping
  * @brief A descriptor for dimension ordering
  */
-struct DimOrdering {
+class DimOrdering {
  public:
   /**
    * @brief An enum class for kinds of dimension ordering
@@ -214,7 +216,7 @@ struct DimOrdering {
  * @ingroup mapping
  * @brief A descriptor for instance mapping policy
  */
-struct InstanceMappingPolicy {
+class InstanceMappingPolicy {
  public:
   /**
    * @brief Target memory type for the instance
@@ -344,7 +346,7 @@ struct InstanceMappingPolicy {
  * @ingroup mapping
  * @brief A mapping policy for stores
  */
-struct StoreMapping {
+class StoreMapping {
  public:
   /**
    * @brief Creates a mapping policy for the given store following the default mapping poicy
@@ -435,7 +437,8 @@ struct StoreMapping {
   //
   // The better solution then is to hide the call to delete behind a custom deleter. Hence
   // StoreMappingImplDeleter.
-  struct StoreMappingImplDeleter {
+  class StoreMappingImplDeleter {
+   public:
     void operator()(detail::StoreMapping* ptr) const noexcept;
   };
 

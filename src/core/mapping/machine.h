@@ -35,13 +35,14 @@ namespace legate::mapping {
  *
  * `NodeRange`s are half-open intervals of logical node IDs.
  */
-struct NodeRange {
-  std::uint32_t low{0};
-  std::uint32_t high{0};
+class NodeRange {
+ public:
+  [[nodiscard]] bool operator<(const NodeRange& other) const noexcept;
+  [[nodiscard]] bool operator==(const NodeRange& other) const noexcept;
+  [[nodiscard]] bool operator!=(const NodeRange& other) const noexcept;
 
-  bool operator<(const NodeRange& other) const noexcept;
-  bool operator==(const NodeRange& other) const noexcept;
-  bool operator!=(const NodeRange& other) const noexcept;
+  std::uint32_t low{};
+  std::uint32_t high{};
 };
 
 /**
@@ -50,7 +51,8 @@ struct NodeRange {
  *
  * `ProcessorRange`s are half-open intervals of logical processors IDs.
  */
-struct ProcessorRange {
+class ProcessorRange {
+ public:
   /**
    * @brief Starting processor ID
    */
@@ -122,7 +124,7 @@ struct ProcessorRange {
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);
 
 namespace detail {
-struct Machine;
+class Machine;
 }  // namespace detail
 
 /**

@@ -75,7 +75,8 @@ class ScopedAllocator {
   class Impl;
 
   // See StoreMapping::StoreMappingImplDeleter for why this this exists
-  struct ImplDeleter {
+  class ImplDeleter {
+   public:
     void operator()(Impl* ptr) const noexcept;
   };
 

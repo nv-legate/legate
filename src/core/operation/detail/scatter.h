@@ -22,7 +22,7 @@
 
 namespace legate::detail {
 
-struct ConstraintSolver;
+class ConstraintSolver;
 
 class Scatter final : public Operation {
  public:

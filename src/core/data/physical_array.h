@@ -28,7 +28,9 @@
 namespace legate {
 
 namespace detail {
-struct PhysicalArray;
+
+class PhysicalArray;
+
 }  // namespace detail
 
 class ListPhysicalArray;

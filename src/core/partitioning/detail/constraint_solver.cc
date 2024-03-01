@@ -22,7 +22,8 @@ namespace legate::detail {
 
 namespace {
 
-struct UnionFindEntry {
+class UnionFindEntry {
+ public:
   UnionFindEntry(const Variable* symb, Restrictions rs)
     : partition_symbol{symb}, restrictions{std::move(rs)}
   {
@@ -63,7 +64,8 @@ struct UnionFindEntry {
 
 }  // namespace
 
-struct ConstraintSolver::EquivClass {
+class ConstraintSolver::EquivClass {
+ public:
   explicit EquivClass(const UnionFindEntry* entry)
   {
     partition_symbols.reserve(entry->size);

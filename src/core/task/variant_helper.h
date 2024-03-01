@@ -72,7 +72,8 @@ struct GPUVariant<T, void_t<decltype(T::gpu_variant)>> : std::true_type {
 };
 
 template <typename T, template <typename...> typename SELECTOR, bool VALID = SELECTOR<T>::value>
-struct VariantHelper {
+class VariantHelper {
+ public:
   static void record(TaskInfo* /*task_info*/,
                      const std::map<LegateVariantCode, VariantOptions>& /*all_options*/)
   {
@@ -80,7 +81,8 @@ struct VariantHelper {
 };
 
 template <typename T, template <typename...> typename SELECTOR>
-struct VariantHelper<T, SELECTOR, true> {
+class VariantHelper<T, SELECTOR, true> {
+ public:
   static void record(TaskInfo* task_info,
                      const std::map<LegateVariantCode, VariantOptions>& all_options)
   {

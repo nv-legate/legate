@@ -331,7 +331,8 @@ void ReturnValues::finalize(Legion::Context legion_context) const
   return_buffer.finalize(legion_context);
 }
 
-struct JoinReturnedException {
+class JoinReturnedException {
+ public:
   using LHS = ReturnedException;
   using RHS = LHS;
 

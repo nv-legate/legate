@@ -20,7 +20,9 @@
 #include <vector>
 
 namespace legate::detail {
-struct TransformStack;
+
+class TransformStack;
+
 }  // namespace legate::detail
 
 namespace legate::mapping::detail {

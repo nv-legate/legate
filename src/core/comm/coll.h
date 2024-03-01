@@ -44,13 +44,15 @@ namespace detail {
 }  // namespace detail
 
 #if LegateDefined(LEGATE_USE_NETWORK)
-struct RankMappingTable {
+class RankMappingTable {
+ public:
   int* mpi_rank{};
   int* global_rank{};
 };
 #endif
 
-struct ThreadComm {
+class ThreadComm {
+ public:
   pthread_barrier_t barrier;
   bool ready_flag{};
   const void** buffers{};
@@ -79,7 +81,8 @@ enum CollCommType : int {
   CollLocal = 1,
 };
 
-struct Coll_Comm {
+class Coll_Comm {
+ public:
 #if LegateDefined(LEGATE_USE_NETWORK)
   MPI_Comm mpi_comm{};
   RankMappingTable mapping_table{};

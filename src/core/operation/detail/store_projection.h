@@ -17,7 +17,8 @@
 
 namespace legate::detail {
 
-struct BaseStoreProjection {
+class BaseStoreProjection {
+ public:
   BaseStoreProjection() = default;
 
   BaseStoreProjection(Legion::LogicalPartition partition, Legion::ProjectionID proj_id);
@@ -45,7 +46,8 @@ struct BaseStoreProjection {
   Legion::ReductionOpID redop{-1};
 };
 
-struct StoreProjection : BaseStoreProjection {
+class StoreProjection : public BaseStoreProjection {
+ public:
   using BaseStoreProjection::BaseStoreProjection;
   using BaseStoreProjection::populate_requirement;
 

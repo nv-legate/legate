@@ -950,14 +950,15 @@ namespace {
 using Bandwidth = std::uint32_t;
 
 // Source instance annotated with the memory bandwidth
-struct AnnotatedSourceInstance {
+class AnnotatedSourceInstance {
+ public:
   AnnotatedSourceInstance(Legion::Mapping::PhysicalInstance _instance, Bandwidth _bandwidth)
     : instance{std::move(_instance)}, bandwidth{_bandwidth}
   {
   }
 
-  Legion::Mapping::PhysicalInstance instance;
-  Bandwidth bandwidth;
+  Legion::Mapping::PhysicalInstance instance{};
+  Bandwidth bandwidth{};
 };
 
 void find_source_instance_bandwidth(

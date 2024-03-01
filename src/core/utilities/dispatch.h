@@ -24,7 +24,8 @@
 namespace legate {
 
 template <int DIM>
-struct inner_type_dispatch_fn {
+class inner_type_dispatch_fn {
+ public:
   template <typename Functor, typename... Fnargs>
   constexpr decltype(auto) operator()(Type::Code code, Functor f, Fnargs&&... args)
   {
@@ -79,7 +80,8 @@ struct inner_type_dispatch_fn {
 };
 
 template <int DIM>
-struct inner_dim_dispatch_fn {
+class inner_dim_dispatch_fn {
+ public:
   template <typename Functor, typename... Fnargs>
   constexpr decltype(auto) operator()(int dim, Functor f, Fnargs&&... args)
   {

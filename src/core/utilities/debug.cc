@@ -19,7 +19,8 @@ namespace legate {
 
 namespace {  // anonymous
 
-struct print_dense_array_fn {
+class print_dense_array_fn {
+ public:
   template <Type::Code CODE, int DIM>
   [[nodiscard]] std::string operator()(const PhysicalStore& store) const
   {

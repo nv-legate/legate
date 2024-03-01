@@ -27,7 +27,7 @@
 
 namespace legate {
 
-struct Partition;
+class Partition;
 class Tiling;
 
 }  // namespace legate

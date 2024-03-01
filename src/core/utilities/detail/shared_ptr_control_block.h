@@ -109,7 +109,8 @@ class InplaceControlBlock final : public ControlBlockBase {
   using allocator_type = Allocator;
 
  private:
-  struct aligned_storage {
+  class aligned_storage {
+   public:
     constexpr aligned_storage() noexcept = default;
     // use this ctor to avoid zero-initializing the array
     // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::pair constructor

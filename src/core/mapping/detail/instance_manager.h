@@ -26,7 +26,7 @@
 namespace legate::mapping::detail {
 
 // This class represents a set of regions that colocate in an instance
-struct RegionGroup {
+class RegionGroup {
  public:
   using Region = Legion::LogicalRegion;
 
@@ -64,7 +64,8 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
   using Instance     = Legion::Mapping::PhysicalInstance;
   using RegionGroupP = InternalSharedPtr<RegionGroup>;
 
-  struct InstanceSpec {
+  class InstanceSpec {
+   public:
     InstanceSpec() = default;
 
     InstanceSpec(Instance inst, InstanceMappingPolicy po);
@@ -101,7 +102,8 @@ class ReductionInstanceSet {
   using Instance      = Legion::Mapping::PhysicalInstance;
   using ReductionOpID = Legion::ReductionOpID;
 
-  struct ReductionInstanceSpec {
+  class ReductionInstanceSpec {
+   public:
     ReductionInstanceSpec() = default;
     ReductionInstanceSpec(const ReductionOpID& op, Instance inst, InstanceMappingPolicy po);
 
@@ -133,16 +135,16 @@ class BaseInstanceManager {
   using Instance     = Legion::Mapping::PhysicalInstance;
   using FieldID      = Legion::FieldID;
 
-  struct FieldMemInfo {
+  class FieldMemInfo {
    public:
     FieldMemInfo(RegionTreeID t, FieldID f, Memory m);
 
     bool operator==(const FieldMemInfo& rhs) const;
     [[nodiscard]] std::size_t hash() const noexcept;
 
-    RegionTreeID tid;
-    FieldID fid;
-    Memory memory;
+    RegionTreeID tid{};
+    FieldID fid{};
+    Memory memory{};
   };
 
   [[nodiscard]] Legion::Mapping::LocalLock& manager_lock();

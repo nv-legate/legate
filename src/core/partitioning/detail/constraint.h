@@ -21,7 +21,7 @@
 #include <vector>
 
 namespace legate {
-struct Partition;
+class Partition;
 }  // namespace legate
 
 namespace legate::detail {
@@ -31,18 +31,20 @@ class Strategy;
 class Alignment;
 class BloatConstraint;
 class Broadcast;
-struct Constraint;
+class Constraint;
 class ImageConstraint;
 class Literal;
 class LogicalStore;
 class ScaleConstraint;
 class Variable;
 
-struct Expr {
+class Expr {
+ public:
   enum class Kind : std::int32_t {
     LITERAL  = 0,
     VARIABLE = 1,
   };
+
   Expr()                           = default;
   virtual ~Expr()                  = default;
   Expr(const Expr&)                = default;
@@ -102,7 +104,8 @@ class Variable final : public Expr {
   std::int32_t id_{};
 };
 
-struct Constraint {
+class Constraint {
+ public:
   enum class Kind : std::int32_t {
     ALIGNMENT = 0,
     BROADCAST = 1,
@@ -110,6 +113,7 @@ struct Constraint {
     SCALE     = 3,
     BLOAT     = 4,
   };
+
   virtual ~Constraint() = default;
   virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
   [[nodiscard]] virtual std::string to_string() const                                        = 0;

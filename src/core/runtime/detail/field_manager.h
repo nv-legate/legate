@@ -28,7 +28,8 @@ class LogicalRegionField;
 class RegionManager;
 class Runtime;
 
-struct FreeFieldInfo {
+class FreeFieldInfo {
+ public:
   FreeFieldInfo() = default;
   FreeFieldInfo(Legion::LogicalRegion region,
                 Legion::FieldID field_id,
@@ -61,7 +62,8 @@ class FieldManager {
   std::deque<FreeFieldInfo> ordered_free_fields_;
 };
 
-struct MatchItem {
+class MatchItem {
+ public:
   MatchItem() = default;
   MatchItem(Legion::RegionTreeID tid, Legion::FieldID fid);
 

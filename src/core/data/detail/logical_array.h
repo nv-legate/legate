@@ -19,7 +19,6 @@
 #include "core/operation/projection.h"
 #include "core/utilities/internal_shared_ptr.h"
 
-#include <map>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -27,14 +26,15 @@
 
 namespace legate::detail {
 
-struct PhysicalArray;
+class PhysicalArray;
 class AutoTask;
 class BaseArray;
-struct ConstraintSolver;
+class ConstraintSolver;
 class ListLogicalArray;
 class Variable;
 
-struct LogicalArray {
+class LogicalArray {
+ public:
   LogicalArray(const LogicalArray&)                                   = default;
   LogicalArray(LogicalArray&&)                                        = delete;
   LogicalArray& operator=(const LogicalArray&)                        = default;

@@ -29,7 +29,8 @@ class RegionManager {
   static constexpr std::uint32_t MAX_NUM_FIELDS  = LEGION_MAX_FIELDS - LEGION_DEFAULT_LOCAL_FIELDS;
 
  private:
-  struct ManagerEntry {
+  class ManagerEntry {
+   public:
     explicit ManagerEntry(const Legion::LogicalRegion& _region) : region{_region} {}
     ManagerEntry(const Legion::LogicalRegion& _region, std::uint32_t num_fields)
       : region{_region}, next_field_id{FIELD_ID_BASE + num_fields}

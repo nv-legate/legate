@@ -16,7 +16,8 @@
 
 namespace legate {
 
-struct InlineAllocation {
+class InlineAllocation {
+ public:
   void* ptr{};
   std::vector<std::size_t> strides{};
 };

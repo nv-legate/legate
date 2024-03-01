@@ -21,7 +21,7 @@
 
 namespace legate::detail {
 
-struct ConstraintSolver;
+class ConstraintSolver;
 
 class Copy final : public Operation {
  public:
@@ -39,10 +39,10 @@ class Copy final : public Operation {
   [[nodiscard]] std::string to_string() const override;
 
  private:
-  StoreArg target_;
-  StoreArg source_;
-  InternalSharedPtr<Constraint> constraint_;
-  std::optional<std::int32_t> redop_;
+  StoreArg target_{};
+  StoreArg source_{};
+  InternalSharedPtr<Constraint> constraint_{};
+  std::optional<std::int32_t> redop_{};
 };
 
 }  // namespace legate::detail

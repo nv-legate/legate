@@ -105,7 +105,8 @@ bool too_big(std::size_t union_volume,
 
 }  // namespace
 
-struct construct_overlapping_region_group_fn {
+class construct_overlapping_region_group_fn {
+ public:
   template <std::int32_t DIM>
   RegionGroupP operator()(
     const InstanceSet::Region& region,

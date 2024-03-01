@@ -22,7 +22,7 @@
 
 namespace legate::detail {
 
-struct ReturnValue {
+class ReturnValue {
  public:
   ReturnValue(Legion::UntypedDeferredValue value, std::size_t size);
 
@@ -47,7 +47,7 @@ struct ReturnValue {
   bool is_device_value_{};
 };
 
-struct ReturnedException {
+class ReturnedException {
  public:
   ReturnedException() = default;
   ReturnedException(std::int32_t index, std::string_view error_message);
@@ -71,7 +71,7 @@ struct ReturnedException {
   std::array<char, MAX_MESSAGE_SIZE> error_message_{};
 };
 
-struct ReturnValues {
+class ReturnValues {
  public:
   ReturnValues() = default;
   explicit ReturnValues(std::vector<ReturnValue>&& return_values);

@@ -26,7 +26,8 @@
 
 namespace legate::mapping::detail {
 
-struct Machine {
+class Machine {
+ public:
   Machine() = default;
   explicit Machine(const std::map<TaskTarget, ProcessorRange>& processor_ranges);
   explicit Machine(std::map<TaskTarget, ProcessorRange>&& processor_ranges);

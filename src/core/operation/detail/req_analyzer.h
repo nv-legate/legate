@@ -26,7 +26,7 @@
 
 namespace legate::detail {
 
-struct InterferingStoreError : public std::exception {};
+class InterferingStoreError : public std::exception {};
 
 class ProjectionSet {
  public:
@@ -57,7 +57,8 @@ class FieldSet {
   void populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const;
 
  private:
-  struct Entry {
+  class Entry {
+   public:
     std::vector<Legion::FieldID> fields{};
     bool is_key{};
   };
@@ -108,7 +109,8 @@ class OutputRequirementAnalyzer {
   void populate_output_requirements(std::vector<Legion::OutputRequirement>& out_reqs) const;
 
  private:
-  struct ReqInfo {
+  class ReqInfo {
+   public:
     static constexpr std::uint32_t UNSET = -1U;
     std::uint32_t dim{UNSET};
     std::uint32_t req_idx{};
@@ -136,7 +138,7 @@ class FutureAnalyzer {
   std::vector<Legion::Future> futures_{};
 };
 
-struct StoreAnalyzer {
+class StoreAnalyzer {
  public:
   void insert(const InternalSharedPtr<LogicalRegionField>& region_field,
               Legion::PrivilegeMode privilege,

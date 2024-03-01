@@ -45,9 +45,10 @@ bool RegionField::valid() const
 
 namespace {
 
-struct get_inline_alloc_fn {
+class get_inline_alloc_fn {
+ public:
   template <typename Rect, typename Acc>
-  InlineAllocation create(const std::int32_t DIM, const Rect& rect, Acc&& acc)
+  InlineAllocation create(std::int32_t DIM, const Rect& rect, Acc&& acc)
   {
     std::vector<std::size_t> strides(DIM, 0);
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
@@ -56,7 +57,7 @@ struct get_inline_alloc_fn {
 
   template <std::int32_t DIM>
   InlineAllocation operator()(const Legion::PhysicalRegion& pr,
-                              const Legion::FieldID fid,
+                              Legion::FieldID fid,
                               std::size_t field_size)
   {
     const Rect<DIM> rect{pr};
@@ -66,7 +67,7 @@ struct get_inline_alloc_fn {
 
   template <std::int32_t M, std::int32_t N>
   InlineAllocation operator()(const Legion::PhysicalRegion& pr,
-                              const Legion::FieldID fid,
+                              Legion::FieldID fid,
                               const Domain& domain,
                               const Legion::AffineTransform<M, N>& transform,
                               std::size_t field_size)
@@ -192,7 +193,8 @@ FutureWrapper::FutureWrapper(bool read_only,
 
 namespace {
 
-struct get_inline_alloc_from_future_fn {
+class get_inline_alloc_from_future_fn {
+ public:
   template <std::int32_t DIM>
   InlineAllocation operator()(const Legion::Future& future,
                               const Domain& domain,
@@ -204,7 +206,8 @@ struct get_inline_alloc_from_future_fn {
     const AccessorRO<int8_t, DIM> acc{
       future, rect, Memory::Kind::NO_MEMKIND, field_size, false /*check_field_size*/};
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
-    return InlineAllocation{ptr, std::move(strides)};
+
+    return {ptr, std::move(strides)};
   }
 
   template <std::int32_t DIM>
@@ -217,7 +220,8 @@ struct get_inline_alloc_from_future_fn {
     std::vector<std::size_t> strides(DIM, 0);
     const AccessorRO<int8_t, DIM> acc{value, rect, field_size, false /*check_field_size*/};
     auto ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
-    return InlineAllocation{ptr, std::move(strides)};
+
+    return {ptr, std::move(strides)};
   }
 };
 

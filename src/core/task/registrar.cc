@@ -20,7 +20,8 @@
 
 namespace legate {
 
-struct TaskRegistrar::Impl {
+class TaskRegistrar::Impl {
+ public:
   std::vector<std::pair<int64_t, std::unique_ptr<TaskInfo>>> pending_task_infos{};
 };
 

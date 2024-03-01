@@ -31,7 +31,8 @@ namespace legate {
  * issued operations then will be associated with the provenance information, which will be attached
  * to them in profiling outputs.
  */
-struct ProvenanceTracker {
+class ProvenanceTracker {
+ public:
   /**
    * @brief Creates a tracker that sets a given provenance string for the scope
    *
@@ -63,7 +64,8 @@ struct ProvenanceTracker {
  * only target that sub-machine, instead of the entire machine.
  *
  */
-struct MachineTracker {
+class MachineTracker {
+ public:
   /**
    * @brief Creates a trakcer that sets a given machine for the scope
    *

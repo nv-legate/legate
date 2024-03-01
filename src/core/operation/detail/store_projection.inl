@@ -18,7 +18,7 @@ namespace legate::detail {
 
 inline BaseStoreProjection::BaseStoreProjection(Legion::LogicalPartition _partition,
                                                 Legion::ProjectionID _proj_id)
-  : partition{_partition}, proj_id{_proj_id}
+  : partition{std::move(_partition)}, proj_id{_proj_id}
 {
 }
 

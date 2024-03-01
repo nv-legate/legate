@@ -29,7 +29,7 @@ Memory::Kind to_kind(StoreTarget target);
 
 LegateVariantCode to_variant_code(TaskTarget target);
 
-struct DimOrdering {
+class DimOrdering {
  public:
   using Kind = mapping::DimOrdering::Kind;
 
@@ -41,11 +41,11 @@ struct DimOrdering {
   void populate_dimension_ordering(std::uint32_t ndim,
                                    std::vector<Legion::DimensionKind>& ordering) const;
 
-  Kind kind;
+  Kind kind{};
   std::vector<std::int32_t> dims{};
 };
 
-struct StoreMapping {
+class StoreMapping {
  public:
   [[nodiscard]] bool for_future() const;
   [[nodiscard]] bool for_unbound_store() const;

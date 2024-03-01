@@ -28,7 +28,8 @@ constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
  * @ingroup task
  * @brief A helper class for specifying variant options
  */
-struct VariantOptions {
+class VariantOptions {
+ public:
   /**
    * @brief If the flag is `true`, the variant launches no subtasks. `true` by default.
    */

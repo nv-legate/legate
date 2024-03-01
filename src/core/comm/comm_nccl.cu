@@ -36,7 +36,8 @@ namespace legate::comm::nccl {
 
 namespace {
 
-struct Payload {
+class Payload {
+ public:
   std::uint64_t field0;
   std::uint64_t field1;
 };

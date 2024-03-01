@@ -29,7 +29,7 @@
  */
 
 namespace legate::detail {
-struct LogicalArray;
+class LogicalArray;
 class LogicalStore;
 class LogicalStorePartition;
 }  // namespace legate::detail

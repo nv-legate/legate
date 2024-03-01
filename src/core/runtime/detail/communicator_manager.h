@@ -64,10 +64,11 @@ class CommunicatorFactory {
 
  private:
   template <class Desc>
-  struct CacheKey {
-    Desc desc;
-    mapping::TaskTarget target;
-    mapping::ProcessorRange range;
+  class CacheKey {
+   public:
+    Desc desc{};
+    mapping::TaskTarget target{};
+    mapping::ProcessorRange range{};
 
     [[nodiscard]] mapping::detail::Machine get_machine() const;
     bool operator==(const CacheKey& other) const;

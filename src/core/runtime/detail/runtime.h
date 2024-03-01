@@ -50,7 +50,7 @@ namespace legate::detail {
 class AutoTask;
 class BaseLogicalArray;
 class Library;
-struct LogicalArray;
+class LogicalArray;
 class LogicalRegionField;
 class ManualTask;
 class StructLogicalArray;

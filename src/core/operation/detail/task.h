@@ -33,14 +33,15 @@ class Scalar;
 
 namespace legate::detail {
 class CommunicatorFactory;
-struct ConstraintSolver;
+class ConstraintSolver;
 class Library;
 class Strategy;
 class Runtime;
 
 class Task : public Operation {
  protected:
-  struct ArrayArg {
+  class ArrayArg {
+   public:
     explicit ArrayArg(InternalSharedPtr<LogicalArray> _array);
     ArrayArg(InternalSharedPtr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
 
