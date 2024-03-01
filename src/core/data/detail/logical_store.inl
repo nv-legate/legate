@@ -90,12 +90,12 @@ inline std::uint64_t LogicalStore::id() const { return store_id_; }
 
 inline const Storage* LogicalStore::get_storage() const { return storage_.get(); }
 
-inline InternalSharedPtr<LogicalRegionField> LogicalStore::get_region_field()
+inline const InternalSharedPtr<LogicalRegionField>& LogicalStore::get_region_field() const
 {
   return storage_->get_region_field();
 }
 
-inline Legion::Future LogicalStore::get_future() { return storage_->get_future(); }
+inline Legion::Future LogicalStore::get_future() const { return storage_->get_future(); }
 
 inline InternalSharedPtr<Partition> LogicalStore::get_current_key_partition() const
 {

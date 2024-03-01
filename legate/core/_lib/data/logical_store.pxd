@@ -47,6 +47,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _PhysicalStore get_physical_store() except+
         void detach()
         std_string to_string()
+        bool equal_storage(const _LogicalStore&) const
         const _SharedPtr[_LogicalStoreImpl]& impl() const
 
     cdef cppclass _LogicalStorePartition "legate::LogicalStorePartition":
@@ -73,6 +74,7 @@ cdef class LogicalStore:
     cpdef LogicalStorePartition partition_by_tiling(self, object shape)
     cpdef PhysicalStore get_physical_store(self)
     cpdef void detach(self)
+    cpdef bool equal_storage(self, LogicalStore other)
 
 
 cdef class LogicalStorePartition:

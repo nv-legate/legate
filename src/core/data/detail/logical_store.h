@@ -60,6 +60,9 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
           tuple<std::uint64_t> offsets);
   ~Storage();
 
+  Storage(Storage&&) noexcept            = default;
+  Storage& operator=(Storage&&) noexcept = default;
+
   [[nodiscard]] std::uint64_t id() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
@@ -77,7 +80,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   [[nodiscard]] InternalSharedPtr<const Storage> get_root() const;
   [[nodiscard]] InternalSharedPtr<Storage> get_root();
 
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_region_field();
+  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field();
   [[nodiscard]] Legion::Future get_future() const;
   void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future);
@@ -174,8 +177,8 @@ class LogicalStore {
   [[nodiscard]] std::uint64_t id() const;
 
   [[nodiscard]] const Storage* get_storage() const;
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_region_field();
-  [[nodiscard]] Legion::Future get_future();
+  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
+  [[nodiscard]] Legion::Future get_future() const;
   void set_region_field(InternalSharedPtr<LogicalRegionField> region_field);
   void set_future(Legion::Future future);
 
@@ -277,6 +280,8 @@ class LogicalStore {
 
  public:
   [[nodiscard]] std::string to_string() const;
+
+  [[nodiscard]] bool equal_storage(const LogicalStore& other) const;
 
  private:
   std::uint64_t store_id_{};

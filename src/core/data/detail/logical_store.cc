@@ -178,10 +178,10 @@ InternalSharedPtr<Storage> Storage::get_root()
   return parent_ ? parent_->get_root() : shared_from_this();
 }
 
-InternalSharedPtr<LogicalRegionField> Storage::get_region_field()
+const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field()
 {
-  LegateAssert(Kind::REGION_FIELD == kind_);
-  if (region_field_ != nullptr) {
+  LegateCheck(kind_ == Kind::REGION_FIELD);
+  if (region_field_) {
     return region_field_;
   }
 
@@ -198,7 +198,7 @@ InternalSharedPtr<LogicalRegionField> Storage::get_region_field()
 
 Legion::Future Storage::get_future() const
 {
-  LegateAssert(Kind::FUTURE == kind_);
+  LegateCheck(kind_ == Kind::FUTURE);
   return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
@@ -617,6 +617,9 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
   return mapped_;
 }
 
+// Just because all the member functions used are const, doesn't mean this function
+// is. Detaching a decidedly non-const operation.
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::detach()
 {
   if (transformed()) {
@@ -855,6 +858,34 @@ std::string LogicalStore::to_string() const
   }
   ss << ", storage: " << storage_->id() << "}";
   return std::move(ss).str();
+}
+
+bool LogicalStore::equal_storage(const LogicalStore& other) const
+{
+  if (this == &other) {
+    // fast path
+    return true;
+  }
+
+  const auto kind = get_storage()->kind();
+
+  if (kind != other.get_storage()->kind()) {
+    return false;
+  }
+
+  switch (kind) {
+    case Storage::Kind::REGION_FIELD: {
+      auto&& rf       = get_region_field();
+      auto&& other_rf = other.get_region_field();
+      return rf->field_id() == other_rf->field_id() && rf->region() == other_rf->region();
+    }
+    case Storage::Kind::FUTURE: return get_future() == other.get_future();
+  }
+  // Because sometimes, GCC is really stupid:
+  //
+  // error: control reaches end of non-void function [-Werror=return-type]
+  LegateUnreachable();
+  return false;
 }
 
 ////////////////////////////////////////////////////

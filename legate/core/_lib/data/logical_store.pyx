@@ -398,6 +398,9 @@ cdef class LogicalStore:
     cpdef void detach(self):
         self._handle.detach()
 
+    cpdef bool equal_storage(self, LogicalStore other):
+        return self._handle.equal_storage(other._handle)
+
     @property
     def raw_handle(self) -> uintptr_t:
         return <uintptr_t> &self._handle

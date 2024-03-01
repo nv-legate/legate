@@ -677,4 +677,58 @@ TEST_F(LogicalStoreUnit, PhysicalStoreScalar)
   EXPECT_TRUE(physical_store.valid());
   EXPECT_EQ(physical_store.code(), legate::Type::Code::INT32);
 }
+
+TEST_F(LogicalStoreUnit, EqualStorageSelf)
+{
+  const auto runtime = legate::Runtime::get_runtime();
+  const auto store   = runtime->create_store(legate::Scalar{int32_t{10}});
+
+  EXPECT_TRUE(store.equal_storage(store));
+}
+
+TEST_F(LogicalStoreUnit, EqualStorageNotEqual)
+{
+  const auto runtime = legate::Runtime::get_runtime();
+  const auto store   = runtime->create_store(legate::Scalar{std::int32_t{10}});
+  const auto store2  = runtime->create_store(legate::Scalar{std::int32_t{10}});
+
+  // Unrelated stores are in fact, unrelated
+  EXPECT_FALSE(store.equal_storage(store2));
+  EXPECT_FALSE(store2.equal_storage(store));
+}
+
+TEST_F(LogicalStoreUnit, EqualStorageSliced)
+{
+  const auto runtime = legate::Runtime::get_runtime();
+  /// [Store::equal_storage: Comparing sliced stores]
+  const auto store       = runtime->create_store(legate::Shape{4, 3}, legate::int64());
+  const auto transformed = store.slice(1, legate::Slice{-2, -1});
+
+  // Slices partition a store into a parent and sub-store which both cover distinct regions,
+  // and hence don't share storage.
+  EXPECT_FALSE(store.equal_storage(transformed));
+  /// [Store::equal_storage: Comparing sliced stores]
+  EXPECT_FALSE(transformed.equal_storage(store));
+}
+
+TEST_F(LogicalStoreUnit, EqualStorageTranspoe)
+{
+  const auto runtime = legate::Runtime::get_runtime();
+  /// [Store::equal_storage: Comparing transposed stores]
+  const auto store       = runtime->create_store(legate::Shape{4, 3}, legate::int64());
+  const auto transformed = store.transpose({1, 0});
+
+  // Transposing a store doesn't modify the storage
+  EXPECT_TRUE(store.equal_storage(transformed));
+  /// [Store::equal_storage: Comparing transposed stores]
+  EXPECT_TRUE(transformed.equal_storage(store));
+
+  const auto transformed2 = transformed.transpose({1, 0});
+
+  EXPECT_TRUE(transformed.equal_storage(transformed2));
+  EXPECT_TRUE(transformed2.equal_storage(transformed));
+  EXPECT_TRUE(store.equal_storage(transformed2));
+  EXPECT_TRUE(transformed2.equal_storage(store));
+}
+
 }  // namespace logicalstore_unit

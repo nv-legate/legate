@@ -72,6 +72,11 @@ PhysicalStore LogicalStore::get_physical_store() const
   return PhysicalStore{impl_->get_physical_store()};
 }
 
+bool LogicalStore::equal_storage(const LogicalStore& other) const
+{
+  return impl()->equal_storage(*other.impl());
+}
+
 std::string LogicalStore::to_string() const { return impl_->to_string(); }
 
 void LogicalStore::detach() { impl_->detach(); }

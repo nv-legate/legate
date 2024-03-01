@@ -363,6 +363,30 @@ class LogicalStore {
    */
   void detach();
 
+  /**
+   * @brief Determine whether two stores refer to the same memory.
+   *
+   * @param other The LogicalStore to compare with.
+   *
+   * @return true if two stores cover the same underlying memory region, false otherwise.
+   *
+   * This routine can be used to determine whether two seemingly unrelated stores refer to the
+   * same logical memory region, including through possible transformations in either `this` or
+   * \p other.
+   *
+   * The user should note that some transformations *do* modify the underlying storage. For
+   * example, the store produced by slicing will *not* share the same storage as its parent,
+   * and this routine will return false for it:
+   *
+   * @snippet unit/logical_store.cc Store::equal_storage: Comparing sliced stores
+   *
+   * Transposed stores, on the other hand, still share the same storage, and hence this routine
+   * will return true for them:
+   *
+   * @snippet unit/logical_store.cc Store::equal_storage: Comparing transposed stores
+   */
+  [[nodiscard]] bool equal_storage(const LogicalStore& other) const;
+
   [[nodiscard]] std::string to_string() const;
 
   [[nodiscard]] const SharedPtr<detail::LogicalStore>& impl() const;
