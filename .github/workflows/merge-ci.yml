@@ -11,7 +11,7 @@ jobs:
     runs-on: linux-amd64-cpu4
     steps:
     - name: Legate Core Internal repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.NV_LEGATE_INTER_REPOS_ACCESS }}
 
