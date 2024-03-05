@@ -75,7 +75,7 @@ void test_scoping(legate::Library library)
   runtime->submit(std::move(task));
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
-    legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::CPU));
+    legate::Scope scope{machine.only(legate::mapping::TaskTarget::CPU)};
     auto task_scoped = runtime->create_task(library, MULTI_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
@@ -84,7 +84,7 @@ void test_scoping(legate::Library library)
   }
 
   if (machine.count(legate::mapping::TaskTarget::OMP) > 0) {
-    legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::OMP));
+    legate::Scope tracker{machine.only(legate::mapping::TaskTarget::OMP)};
     auto task_scoped = runtime->create_task(library, MULTI_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
@@ -93,7 +93,7 @@ void test_scoping(legate::Library library)
   }
 
   if (machine.count(legate::mapping::TaskTarget::GPU) > 0) {
-    legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
+    legate::Scope tracker{machine.only(legate::mapping::TaskTarget::GPU)};
     auto task_scoped = runtime->create_task(library, MULTI_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
@@ -114,7 +114,7 @@ void test_cpu_only(legate::Library library)
   runtime->submit(std::move(task));
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
-    legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::CPU));
+    legate::Scope scope{machine.only(legate::mapping::TaskTarget::CPU)};
     auto task_scoped = runtime->create_task(library, CPU_VARIANT);
     auto part_scoped = task_scoped.declare_partition();
     task_scoped.add_output(store, part_scoped);
@@ -124,14 +124,13 @@ void test_cpu_only(legate::Library library)
 
   // checking an empty machine
   {
-    EXPECT_THROW(
-      legate::MachineTracker(machine.only(legate::mapping::TaskTarget::CPU).slice(15, 19)),
-      std::runtime_error);
+    EXPECT_THROW(legate::Scope{machine.only(legate::mapping::TaskTarget::CPU).slice(15, 19)},
+                 std::runtime_error);
   }
 
   // check `slice_machine_for_task` logic
   if (machine.count(legate::mapping::TaskTarget::GPU) > 0) {
-    legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
+    legate::Scope tracker{machine.only(legate::mapping::TaskTarget::GPU)};
     EXPECT_THROW(static_cast<void>(runtime->create_task(library, CPU_VARIANT)),
                  std::invalid_argument);
   }

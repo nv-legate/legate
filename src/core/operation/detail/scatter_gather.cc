@@ -25,9 +25,10 @@ ScatterGather::ScatterGather(InternalSharedPtr<LogicalStore> target,
                              InternalSharedPtr<LogicalStore> source,
                              InternalSharedPtr<LogicalStore> source_indirect,
                              std::uint64_t unique_id,
-                             mapping::detail::Machine&& machine,
+                             std::int32_t priority,
+                             mapping::detail::Machine machine,
                              std::optional<std::int32_t> redop)
-  : Operation{unique_id, std::move(machine)},
+  : Operation{unique_id, priority, std::move(machine)},
     target_{target, declare_partition()},
     target_indirect_{target_indirect, declare_partition()},
     source_{source, declare_partition()},
@@ -72,7 +73,7 @@ void ScatterGather::validate()
 void ScatterGather::launch(Strategy* p_strategy)
 {
   auto& strategy     = *p_strategy;
-  auto launcher      = CopyLauncher{machine_};
+  auto launcher      = CopyLauncher{machine_, priority()};
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));

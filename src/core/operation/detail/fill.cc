@@ -23,8 +23,9 @@ namespace legate::detail {
 Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
            InternalSharedPtr<LogicalStore> value,
            std::uint64_t unique_id,
+           std::int32_t priority,
            mapping::detail::Machine machine)
-  : Operation{unique_id, std::move(machine)},
+  : Operation{unique_id, priority, std::move(machine)},
     lhs_var_{declare_partition()},
     lhs_{std::move(lhs)},
     value_{std::move(value)}
@@ -35,8 +36,9 @@ Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
 Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
            Scalar value,
            std::uint64_t unique_id,
+           std::int32_t priority,
            mapping::detail::Machine machine)
-  : Operation{unique_id, std::move(machine)},
+  : Operation{unique_id, priority, std::move(machine)},
     lhs_var_{declare_partition()},
     lhs_{std::move(lhs)},
     value_{std::move(value)}
@@ -65,7 +67,7 @@ void Fill::launch(Strategy* strategy)
     return;
   }
 
-  auto launcher      = FillLauncher{machine_};
+  auto launcher      = FillLauncher{machine_, priority()};
   auto launch_domain = strategy->launch_domain(this);
   auto part          = (*strategy)[lhs_var_];
   auto lhs_proj      = create_store_partition(lhs_, part)->create_store_projection(launch_domain);

@@ -249,6 +249,7 @@ void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
     key_proj_id.emplace(0);
   }
   buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
+  buffer.pack(priority_);
 }
 
 void TaskLauncher::import_output_regions(

@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable
 
 from .mapping import TaskTarget
 
@@ -22,8 +22,8 @@ class ProcessorSlice:
     target: TaskTarget
     slice: slice
 
-PROC_RANGE_KEY = Union[slice, int]
-MACHINE_KEY = Union[TaskTarget, slice, int, ProcessorSlice]
+PROC_RANGE_KEY = slice | int
+MACHINE_KEY = TaskTarget | slice | int | ProcessorSlice
 
 class ProcessorRange:
     @staticmethod
@@ -54,30 +54,28 @@ class ProcessorRange:
 class Machine:
     def __init__(
         self,
-        ranges: Union[None, dict[TaskTarget, ProcessorRange]] = None,
+        ranges: dict[TaskTarget, ProcessorRange] | None = None,
     ): ...
     @property
     def preferred_target(self) -> TaskTarget: ...
     def get_processor_range(
-        self, target: Optional[TaskTarget] = None
+        self, target: TaskTarget | None = None
     ) -> ProcessorRange: ...
     def get_node_range(
-        self, target: Optional[TaskTarget] = None
+        self, target: TaskTarget | None = None
     ) -> tuple[int, ...]: ...
-    def processor_range(self, target: TaskTarget) -> ProcessorRange: ...
+    def processor_range(self, target: TaskTarget | None) -> ProcessorRange: ...
     @property
     def valid_targets(self) -> tuple[int]: ...
     @property
     def empty(self) -> bool: ...
-    def count(self, target: TaskTarget) -> int: ...
+    def count(self, target: TaskTarget | None = None) -> int: ...
     def __len__(self) -> int: ...
-    def only(
-        self, targets: Union[Iterable[TaskTarget], TaskTarget]
-    ) -> Machine: ...
+    def only(self, targets: TaskTarget | Iterable[TaskTarget]) -> Machine: ...
     def slice(
         self,
         sl: slice,
-        target: Optional[TaskTarget],
+        target: TaskTarget | None = None,
     ) -> Machine: ...
     def __getitem__(self, slicer: MACHINE_KEY) -> Machine: ...
     def __eq__(self, other: object) -> bool: ...

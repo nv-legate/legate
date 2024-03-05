@@ -53,7 +53,8 @@ class Task : public Operation {
   Task(const Library* library,
        std::int64_t task_id,
        std::uint64_t unique_id,
-       mapping::detail::Machine&& machine);
+       std::int32_t priority,
+       mapping::detail::Machine machine);
 
  public:
   void add_scalar_arg(Scalar&& scalar);
@@ -102,7 +103,8 @@ class AutoTask final : public Task {
   AutoTask(const Library* library,
            std::int64_t task_id,
            std::uint64_t unique_id,
-           mapping::detail::Machine&& machine);
+           std::int32_t priority,
+           mapping::detail::Machine machine);
 
   [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array);
   [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array);
@@ -137,7 +139,8 @@ class ManualTask final : public Task {
              std::int64_t task_id,
              const Domain& launch_domain,
              std::uint64_t unique_id,
-             mapping::detail::Machine&& machine);
+             std::int32_t priority,
+             mapping::detail::Machine machine);
 
   void add_input(const InternalSharedPtr<LogicalStore>& store);
   void add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,

@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/detail/scalar.h"
+#include "core/legate_c.h"
 #include "core/mapping/detail/array.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/store.h"
@@ -33,12 +34,14 @@ class Mappable {
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] std::uint32_t sharding_id() const;
+  [[nodiscard]] std::int32_t priority() const;
 
  protected:
   Mappable() = default;
 
   mapping::detail::Machine machine_{};
   std::uint32_t sharding_id_{};
+  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
 
  private:
   struct private_tag {};

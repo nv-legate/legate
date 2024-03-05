@@ -29,7 +29,8 @@ namespace legate {
 ///  template class legate::default_delete<Foo>;        // Explicit instantiation
 /// @endcode
 template <typename T>
-struct default_delete {
+class default_delete {
+ public:
   void operator()(T*) const noexcept;
 };
 

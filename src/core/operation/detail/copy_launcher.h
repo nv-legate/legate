@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/store_projection.h"
@@ -54,7 +55,9 @@ class CopyArg final : public Serializable {
 
 class CopyLauncher {
  public:
-  explicit CopyLauncher(const mapping::detail::Machine& machine, std::int64_t tag = 0);
+  CopyLauncher(const mapping::detail::Machine& machine,
+               std::int32_t priority,
+               std::int64_t tag = 0);
 
   void add_input(const InternalSharedPtr<LogicalStore>& store,
                  std::unique_ptr<StoreProjection> store_proj);
@@ -87,6 +90,7 @@ class CopyLauncher {
 
  private:
   const mapping::detail::Machine& machine_;
+  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
   std::int64_t tag_{};
   Legion::ProjectionID key_proj_id_{};
 

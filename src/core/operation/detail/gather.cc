@@ -24,9 +24,10 @@ Gather::Gather(InternalSharedPtr<LogicalStore> target,
                InternalSharedPtr<LogicalStore> source,
                InternalSharedPtr<LogicalStore> source_indirect,
                std::uint64_t unique_id,
-               mapping::detail::Machine&& machine,
+               std::int32_t priority,
+               mapping::detail::Machine machine,
                std::optional<std::int32_t> redop)
-  : Operation{unique_id, std::move(machine)},
+  : Operation{unique_id, priority, std::move(machine)},
     target_{target, declare_partition()},
     source_{source, declare_partition()},
     source_indirect_{source_indirect, declare_partition()},
@@ -64,7 +65,7 @@ void Gather::validate()
 void Gather::launch(Strategy* p_strategy)
 {
   auto& strategy     = *p_strategy;
-  auto launcher      = CopyLauncher{machine_};
+  auto launcher      = CopyLauncher{machine_, priority()};
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));

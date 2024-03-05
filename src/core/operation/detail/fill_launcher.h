@@ -12,8 +12,11 @@
 
 #pragma once
 
+#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/store_projection.h"
+
+#include <tuple>
 
 namespace legate::detail {
 
@@ -22,7 +25,9 @@ class BufferBuilder;
 
 class FillLauncher {
  public:
-  explicit FillLauncher(const mapping::detail::Machine& machine, std::int64_t tag = 0);
+  FillLauncher(const mapping::detail::Machine& machine,
+               std::int32_t priority,
+               std::int64_t tag = 0);
 
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,
@@ -39,7 +44,8 @@ class FillLauncher {
   void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);
 
   const mapping::detail::Machine& machine_;
-  std::int64_t tag_;
+  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
+  std::int64_t tag_{};
 };
 
 }  // namespace legate::detail

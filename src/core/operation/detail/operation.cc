@@ -18,9 +18,12 @@
 
 namespace legate::detail {
 
-Operation::Operation(std::uint64_t unique_id, mapping::detail::Machine&& machine)
+Operation::Operation(std::uint64_t unique_id,
+                     std::int32_t priority,
+                     mapping::detail::Machine machine)
   : unique_id_{unique_id},
-    provenance_{Runtime::get_runtime()->provenance_manager()->get_provenance()},
+    priority_{priority},
+    provenance_{Runtime::get_runtime()->get_provenance()},
     machine_{std::move(machine)}
 {
 }

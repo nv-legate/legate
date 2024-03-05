@@ -38,8 +38,6 @@ class Variable;
 
 }  // namespace detail
 
-extern template struct default_delete<detail::Constraint>;
-
 /**
  * @ingroup partitioning
  * @brief Class for partition symbols

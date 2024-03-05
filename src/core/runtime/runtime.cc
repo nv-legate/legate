@@ -15,6 +15,7 @@
 #include "core/data/detail/shape.h"
 #include "core/operation/detail/task.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/runtime/scope.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/internal_shared_ptr.h"
 
@@ -275,7 +276,7 @@ void Runtime::register_shutdown_callback_(ShutdownCallback callback)
   detail::Runtime::get_runtime()->register_shutdown_callback(std::move(callback));
 }
 
-mapping::Machine Runtime::get_machine() const { return mapping::Machine{impl_->get_machine()}; }
+mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
 
 /*static*/ Runtime* Runtime::get_runtime()
 {

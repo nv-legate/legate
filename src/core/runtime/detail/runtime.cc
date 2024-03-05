@@ -210,8 +210,7 @@ void Runtime::initialize(Legion::Context legion_context)
     // de-initialize everything in reverse order
     Config::max_field_reuse_size = 0;
     Config::has_socket_mem       = false;
-    provenance_manager_.reset();
-    machine_manager_.reset();
+    scope_                       = Scope{};
     partition_manager_.reset();
     communicator_manager_.reset();
     core_library_ = nullptr;
@@ -222,21 +221,20 @@ void Runtime::initialize(Legion::Context legion_context)
 
   communicator_manager_ = std::make_unique<CommunicatorManager>();
   partition_manager_    = std::make_unique<PartitionManager>(this);
-  machine_manager_      = std::make_unique<MachineManager>();
-  provenance_manager_   = std::make_unique<ProvenanceManager>();
+  static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
+
   Config::has_socket_mem =
     get_tunable<bool>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM);
   Config::max_field_reuse_size = get_tunable<decltype(Config::max_field_reuse_size)>(
     core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE);
-  initialize_toplevel_machine();
   comm::register_builtin_communicator_factories(core_library_);
 }
 
 mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
-                                                         std::int64_t task_id)
+                                                         std::int64_t task_id) const
 {
-  auto* task_info = library->find_task(task_id);
-  auto& machine   = machine_manager_->get_machine();
+  auto* task_info     = library->find_task(task_id);
+  const auto& machine = get_machine();
   std::vector<mapping::TaskTarget> task_targets;
 
   for (const auto& t : machine.valid_targets()) {
@@ -261,7 +259,8 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
 InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, std::int64_t task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
-  auto task = make_internal_shared<AutoTask>(library, task_id, current_op_id(), std::move(machine));
+  auto task    = make_internal_shared<AutoTask>(
+    library, task_id, current_op_id(), scope().priority(), std::move(machine));
   increment_op_id();
   return task;
 }
@@ -275,7 +274,7 @@ InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
   }
   auto machine = slice_machine_for_task(library, task_id);
   auto task    = make_internal_shared<ManualTask>(
-    library, task_id, launch_domain, current_op_id(), std::move(machine));
+    library, task_id, launch_domain, current_op_id(), scope().priority(), std::move(machine));
   increment_op_id();
   return task;
 }
@@ -284,9 +283,12 @@ void Runtime::issue_copy(InternalSharedPtr<LogicalStore> target,
                          InternalSharedPtr<LogicalStore> source,
                          std::optional<std::int32_t> redop)
 {
-  auto machine = machine_manager_->get_machine();
-  submit(make_internal_shared<Copy>(
-    std::move(target), std::move(source), current_op_id(), std::move(machine), redop));
+  submit(make_internal_shared<Copy>(std::move(target),
+                                    std::move(source),
+                                    current_op_id(),
+                                    scope().priority(),
+                                    get_machine(),
+                                    redop));
   increment_op_id();
 }
 
@@ -295,12 +297,12 @@ void Runtime::issue_gather(InternalSharedPtr<LogicalStore> target,
                            InternalSharedPtr<LogicalStore> source_indirect,
                            std::optional<std::int32_t> redop)
 {
-  auto machine = machine_manager_->get_machine();
   submit(make_internal_shared<Gather>(std::move(target),
                                       std::move(source),
                                       std::move(source_indirect),
                                       current_op_id(),
-                                      std::move(machine),
+                                      scope().priority(),
+                                      get_machine(),
                                       redop));
   increment_op_id();
 }
@@ -310,12 +312,12 @@ void Runtime::issue_scatter(InternalSharedPtr<LogicalStore> target,
                             InternalSharedPtr<LogicalStore> source,
                             std::optional<std::int32_t> redop)
 {
-  auto machine = machine_manager_->get_machine();
   submit(make_internal_shared<Scatter>(std::move(target),
                                        std::move(target_indirect),
                                        std::move(source),
                                        current_op_id(),
-                                       std::move(machine),
+                                       scope().priority(),
+                                       get_machine(),
                                        redop));
   increment_op_id();
 }
@@ -326,13 +328,13 @@ void Runtime::issue_scatter_gather(InternalSharedPtr<LogicalStore> target,
                                    InternalSharedPtr<LogicalStore> source_indirect,
                                    std::optional<std::int32_t> redop)
 {
-  auto machine = machine_manager_->get_machine();
   submit(make_internal_shared<ScatterGather>(std::move(target),
                                              std::move(target_indirect),
                                              std::move(source),
                                              std::move(source_indirect),
                                              current_op_id(),
-                                             std::move(machine),
+                                             scope().priority(),
+                                             get_machine(),
                                              redop));
   increment_op_id();
 }
@@ -392,7 +394,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<
   }
 
   submit(make_internal_shared<Fill>(
-    std::move(lhs), std::move(value), current_op_id(), machine_manager_->get_machine()));
+    std::move(lhs), std::move(value), current_op_id(), scope().priority(), get_machine()));
   increment_op_id();
 }
 
@@ -403,7 +405,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
   }
 
   submit(make_internal_shared<Fill>(
-    std::move(lhs), std::move(value), current_op_id(), machine_manager_->get_machine()));
+    std::move(lhs), std::move(value), current_op_id(), scope().priority(), get_machine()));
   increment_op_id();
 }
 
@@ -417,14 +419,14 @@ void Runtime::tree_reduce(const Library* library,
     throw std::runtime_error{"Multi-dimensional stores are not supported"};
   }
 
-  auto machine = machine_manager_->get_machine();
   submit(make_internal_shared<Reduce>(library,
                                       std::move(store),
                                       std::move(out_store),
                                       task_id,
                                       current_op_id(),
                                       radix,
-                                      std::move(machine)));
+                                      scope().priority(),
+                                      get_machine()));
   increment_op_id();
 }
 
@@ -653,7 +655,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
                                   false /*restricted*/,
                                   !allocation->read_only() /*mapped*/};
   launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
-  launcher.provenance = provenance_manager()->get_provenance();
+  launcher.provenance = get_provenance();
   launcher.constraints.ordering_constraint.ordering.clear();
   ordering->populate_dimension_ordering(store->dim(),
                                         launcher.constraints.ordering_constraint.ordering);
@@ -730,7 +732,7 @@ Runtime::IndexAttachResult Runtime::create_store(
 
     launcher.add_external_resource(substore->get_region_field()->region(), alloc->resource());
   }
-  launcher.provenance = provenance_manager()->get_provenance();
+  launcher.provenance = get_provenance();
   launcher.constraints.ordering_constraint.ordering.clear();
   ordering->populate_dimension_ordering(store->dim(),
                                         launcher.constraints.ordering_constraint.ordering);
@@ -815,7 +817,7 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
   auto mapper_id = core_library_->get_mapper_id();
   // TODO(wonchanl): We need to pass the metadata about logical store
   Legion::InlineLauncher launcher{req, mapper_id};
-  launcher.provenance       = provenance_manager()->get_provenance();
+  launcher.provenance       = get_provenance();
   Legion::PhysicalRegion pr = legion_runtime_->map_region(legion_context_, launcher);
   pr.wait_until_valid(true /*silence_warnings*/);
   return pr;
@@ -823,8 +825,7 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
 
 void Runtime::remap_physical_region(Legion::PhysicalRegion pr)
 {
-  legion_runtime_->remap_region(
-    legion_context_, pr, provenance_manager()->get_provenance().c_str());
+  legion_runtime_->remap_region(legion_context_, pr, get_provenance().c_str());
   pr.wait_until_valid(true /*silence_warnings*/);
 }
 
@@ -843,11 +844,8 @@ Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
                                bool unordered)
 {
   LegateCheck(physical_region.exists() && !physical_region.is_mapped());
-  return legion_runtime_->detach_external_resource(legion_context_,
-                                                   physical_region,
-                                                   flush,
-                                                   unordered,
-                                                   provenance_manager()->get_provenance().c_str());
+  return legion_runtime_->detach_external_resource(
+    legion_context_, physical_region, flush, unordered, get_provenance().c_str());
 }
 
 Legion::Future Runtime::detach(const Legion::ExternalResources& external_resources,
@@ -855,11 +853,8 @@ Legion::Future Runtime::detach(const Legion::ExternalResources& external_resourc
                                bool unordered)
 {
   LegateCheck(external_resources.exists());
-  return legion_runtime_->detach_external_resources(legion_context_,
-                                                    external_resources,
-                                                    flush,
-                                                    unordered,
-                                                    provenance_manager()->get_provenance().c_str());
+  return legion_runtime_->detach_external_resources(
+    legion_context_, external_resources, flush, unordered, get_provenance().c_str());
 }
 
 bool Runtime::consensus_match_required() const
@@ -1072,7 +1067,7 @@ Legion::DomainPoint _delinearize_future_map(const DomainPoint& point,
   for (std::int32_t dim = 1; dim < ndim; ++dim) {
     const std::int64_t extent = domain.rect_data[dim + ndim] - domain.rect_data[dim] + 1;
     idx                       = idx * extent + point[dim];
-  }
+  }  // namespace
   result[0] = idx;
   return result;
 }
@@ -1148,9 +1143,9 @@ void Runtime::dispatch(Legion::IndexFillLauncher& launcher)
 
 Legion::Future Runtime::extract_scalar(const Legion::Future& result, std::uint32_t idx) const
 {
-  auto& machine    = get_machine();
-  auto& provenance = provenance_manager()->get_provenance();
-  auto variant     = mapping::detail::to_variant_code(machine.preferred_target);
+  const auto& machine = get_machine();
+  auto& provenance    = get_provenance();
+  auto variant        = mapping::detail::to_variant_code(machine.preferred_target);
   auto launcher =
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
@@ -1163,9 +1158,9 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
                                           std::uint32_t idx,
                                           const Legion::Domain& launch_domain) const
 {
-  auto& machine    = get_machine();
-  auto& provenance = provenance_manager()->get_provenance();
-  auto variant     = mapping::detail::to_variant_code(machine.preferred_target);
+  const auto& machine = get_machine();
+  auto& provenance    = get_provenance();
+  auto variant        = mapping::detail::to_variant_code(machine.preferred_target);
   auto launcher =
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
@@ -1226,7 +1221,7 @@ void Runtime::end_trace(std::uint32_t trace_id)
   legion_runtime_->end_trace(legion_context_, trace_id);
 }
 
-void Runtime::initialize_toplevel_machine()
+InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
 {
   auto mapper_id    = core_library_->get_mapper_id();
   auto num_nodes    = get_tunable<std::uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_NODES);
@@ -1238,19 +1233,16 @@ void Runtime::initialize_toplevel_machine()
     return mapping::ProcessorRange{0, num_procs, per_node_count};
   };
 
-  mapping::detail::Machine machine{{{mapping::TaskTarget::GPU, create_range(num_gpus)},
-                                    {mapping::TaskTarget::OMP, create_range(num_omps)},
-                                    {mapping::TaskTarget::CPU, create_range(num_cpus)}}};
-
-  LegateAssert(machine_manager_ != nullptr);
-  machine_manager_->push_machine(std::move(machine));
+  return make_internal_shared<mapping::detail::Machine>(
+    std::map<mapping::TaskTarget, mapping::ProcessorRange>{
+      {mapping::TaskTarget::GPU, create_range(num_gpus)},
+      {mapping::TaskTarget::OMP, create_range(num_omps)},
+      {mapping::TaskTarget::CPU, create_range(num_cpus)}});
 }
 
-const mapping::detail::Machine& Runtime::get_machine() const
-{
-  LegateAssert(machine_manager_ != nullptr);
-  return machine_manager_->get_machine();
-}
+const mapping::detail::Machine& Runtime::get_machine() const { return *scope().machine(); }
+
+const std::string& Runtime::get_provenance() const { return scope().provenance(); }
 
 Legion::ProjectionID Runtime::get_affine_projection(std::uint32_t src_ndim,
                                                     const proj::SymbolicPoint& point)
@@ -1500,9 +1492,8 @@ void Runtime::destroy()
   field_managers_.clear();
 
   communicator_manager_.reset();
-  machine_manager_.reset();
   partition_manager_.reset();
-  provenance_manager_.reset();
+  scope_        = Scope{};
   core_library_ = nullptr;
   initialized_  = false;
 }

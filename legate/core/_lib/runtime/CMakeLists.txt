@@ -15,6 +15,7 @@ set(
   library.pyx
   resource.pyx
   runtime.pyx
+  scope.pyx
 )
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

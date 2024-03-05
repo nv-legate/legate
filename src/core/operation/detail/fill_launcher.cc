@@ -21,6 +21,20 @@
 
 namespace legate::detail {
 
+namespace {
+
+std::tuple<Legion::LogicalRegion, Legion::LogicalRegion, Legion::FieldID> prepare_lhs(
+  LogicalStore* lhs)
+{
+  const auto& lhs_region_field = lhs->get_region_field();
+  const auto& lhs_region       = lhs_region_field->region();
+  auto field_id                = lhs_region_field->field_id();
+  auto lhs_parent              = Runtime::get_runtime()->find_parent_region(lhs_region);
+  return std::make_tuple(lhs_region, lhs_parent, field_id);
+}
+
+}  // namespace
+
 void FillLauncher::launch(const Legion::Domain& launch_domain,
                           LogicalStore* lhs,
                           const StoreProjection& lhs_proj,
@@ -30,14 +44,11 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
 
   pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
 
-  const auto runtime      = Runtime::get_runtime();
-  auto&& provenance       = runtime->provenance_manager()->get_provenance();
-  auto&& lhs_region_field = lhs->get_region_field();
-  auto&& lhs_region       = lhs_region_field->region();
-  auto field_id           = lhs_region_field->field_id();
-  auto future_value       = value->get_future();
-  auto lhs_parent         = runtime->find_parent_region(lhs_region);
-  auto index_fill         = Legion::IndexFillLauncher{
+  const auto runtime                      = Runtime::get_runtime();
+  const auto& provenance                  = runtime->get_provenance();
+  auto [lhs_region, lhs_parent, field_id] = prepare_lhs(lhs);
+  auto future_value                       = value->get_future();
+  auto index_fill                         = Legion::IndexFillLauncher{
     launch_domain,
     lhs_proj.partition,
     std::move(lhs_parent),
@@ -62,13 +73,10 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
 
   pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
 
-  const auto runtime      = Runtime::get_runtime();
-  auto&& provenance       = runtime->provenance_manager()->get_provenance();
-  auto&& lhs_region_field = lhs->get_region_field();
-  auto&& lhs_region       = lhs_region_field->region();
-  auto field_id           = lhs_region_field->field_id();
-  auto lhs_parent         = runtime->find_parent_region(lhs_region);
-  auto index_fill         = Legion::IndexFillLauncher{
+  const auto runtime                      = Runtime::get_runtime();
+  const auto& provenance                  = runtime->get_provenance();
+  auto [lhs_region, lhs_parent, field_id] = prepare_lhs(lhs);
+  auto index_fill                         = Legion::IndexFillLauncher{
     launch_domain,
     lhs_proj.partition,
     std::move(lhs_parent),
@@ -92,14 +100,11 @@ void FillLauncher::launch_single(LogicalStore* lhs,
 
   pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
 
-  const auto runtime      = Runtime::get_runtime();
-  auto&& provenance       = runtime->provenance_manager()->get_provenance();
-  auto&& lhs_region_field = lhs->get_region_field();
-  auto&& lhs_region       = lhs_region_field->region();
-  auto field_id           = lhs_region_field->field_id();
-  auto future_value       = value->get_future();
-  auto lhs_parent         = runtime->find_parent_region(lhs_region);
-  auto single_fill        = Legion::FillLauncher{
+  const auto runtime                      = Runtime::get_runtime();
+  const auto& provenance                  = runtime->get_provenance();
+  auto [lhs_region, lhs_parent, field_id] = prepare_lhs(lhs);
+  auto future_value                       = value->get_future();
+  auto single_fill                        = Legion::FillLauncher{
     lhs_region,
     std::move(lhs_parent),
     std::move(future_value),
@@ -121,13 +126,10 @@ void FillLauncher::launch_single(LogicalStore* lhs,
 
   pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
 
-  const auto runtime      = Runtime::get_runtime();
-  auto&& provenance       = runtime->provenance_manager()->get_provenance();
-  auto&& lhs_region_field = lhs->get_region_field();
-  auto&& lhs_region       = lhs_region_field->region();
-  auto field_id           = lhs_region_field->field_id();
-  auto lhs_parent         = runtime->find_parent_region(lhs_region);
-  auto single_fill        = Legion::FillLauncher{
+  const auto runtime                      = Runtime::get_runtime();
+  const auto& provenance                  = runtime->get_provenance();
+  auto [lhs_region, lhs_parent, field_id] = prepare_lhs(lhs);
+  auto single_fill                        = Legion::FillLauncher{
     lhs_region,
     std::move(lhs_parent),
     Legion::UntypedBuffer{value.data(), value.size()},
@@ -145,6 +147,7 @@ void FillLauncher::pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID p
 {
   machine_.pack(buffer);
   buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, proj_id));
+  buffer.pack(priority_);
 }
 
 }  // namespace legate::detail

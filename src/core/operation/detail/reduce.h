@@ -33,7 +33,8 @@ class Reduce final : public Operation {
          std::int64_t task_id,
          std::uint64_t unique_id,
          std::int32_t radix,
-         mapping::detail::Machine&& machine);
+         std::int32_t priority,
+         mapping::detail::Machine machine);
 
   void launch(Strategy*) override;
 

@@ -233,8 +233,6 @@ cdef class Runtime:
     cpdef void issue_execution_fence(self, bool block = *)
     cpdef Machine get_machine(self)
     cpdef void destroy(self)
-    cpdef void push_machine(self, Machine machine)
-    cpdef void pop_machine(self)
     cpdef void add_shutdown_callback(self, object callback)
 
 cpdef Runtime get_legate_runtime()

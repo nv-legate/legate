@@ -16,8 +16,8 @@ from libcpp.set cimport set as std_set
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
+from ..runtime.scope cimport Scope
 from ..utilities.shared_ptr cimport _SharedPtr
-from .detail.machine cimport _MachineImpl
 from .mapping cimport TaskTarget
 
 
@@ -69,7 +69,6 @@ cdef extern from "core/mapping/machine.h" namespace "legate::mapping" nogil:
         bool operator!=(const _Machine&) const
         _Machine operator&(const _Machine&) except+
         bool empty() const
-        const _SharedPtr[_MachineImpl]& impl() const
 
 
 cdef class ProcessorRange:
@@ -83,6 +82,7 @@ cdef class ProcessorRange:
 
 cdef class Machine:
     cdef _Machine _handle
+    cdef Scope _scope
 
     @staticmethod
     cdef Machine from_handle(_Machine)

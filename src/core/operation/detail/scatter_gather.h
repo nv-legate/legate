@@ -31,7 +31,8 @@ class ScatterGather final : public Operation {
                 InternalSharedPtr<LogicalStore> source,
                 InternalSharedPtr<LogicalStore> source_indirect,
                 std::uint64_t unique_id,
-                mapping::detail::Machine&& machine,
+                std::int32_t priority,
+                mapping::detail::Machine machine,
                 std::optional<std::int32_t> redop);
 
   void set_source_indirect_out_of_range(bool flag);

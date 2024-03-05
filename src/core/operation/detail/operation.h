@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/detail/logical_store.h"
+#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/store_projection.h"
 #include "core/partitioning/detail/constraint.h"
@@ -36,7 +37,7 @@ class Operation {
     const Variable* variable{};
   };
 
-  Operation(std::uint64_t unique_id, mapping::detail::Machine&& machine);
+  Operation(std::uint64_t unique_id, std::int32_t priority, mapping::detail::Machine machine);
 
  public:
   virtual ~Operation() = default;
@@ -52,6 +53,7 @@ class Operation {
   [[nodiscard]] const Variable* declare_partition();
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& find_store(const Variable* variable) const;
 
+  [[nodiscard]] std::int32_t priority() const;
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] const std::string& provenance() const;
 
@@ -63,6 +65,7 @@ class Operation {
 
   std::uint64_t unique_id_{};
   std::uint32_t next_part_id_{};
+  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
   std::vector<std::unique_ptr<Variable>> partition_symbols_{};
   std::unordered_map<Variable, InternalSharedPtr<LogicalStore>> store_mappings_{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};

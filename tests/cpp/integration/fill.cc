@@ -278,7 +278,7 @@ TEST_P(Whole, Single)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  legate::MachineTracker tracker(machine.slice(0, 1, legate::mapping::TaskTarget::CPU));
+  legate::Scope scope{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
 
   register_tasks();
   const auto& [nullable, dim, size] = GetParam();

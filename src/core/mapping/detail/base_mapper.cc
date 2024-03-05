@@ -315,6 +315,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   Task legate_task(&task, library, runtime, ctx);
 
+  output.task_priority      = legate_task.priority();
+  output.copy_fill_priority = legate_task.priority();
+
   if (task.is_index_space) {
     // If this is an index task, point tasks already have the right targets, so we just need to
     // copy them to the mapper output
@@ -1113,6 +1116,8 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
                           MapCopyOutput& output)
 {
   const Copy legate_copy{&copy, runtime, ctx};
+  output.copy_fill_priority = legate_copy.priority();
+
   auto& machine_desc = legate_copy.machine();
   auto copy_target   = [&]() {
     // If we're mapping an indirect copy and have data resident in GPU memory,

@@ -16,8 +16,10 @@
 
 namespace legate::detail {
 
-inline FillLauncher::FillLauncher(const mapping::detail::Machine& machine, std::int64_t tag)
-  : machine_{machine}, tag_{tag}
+inline FillLauncher::FillLauncher(const mapping::detail::Machine& machine,
+                                  std::int32_t priority,
+                                  std::int64_t tag)
+  : machine_{machine}, priority_{priority}, tag_{tag}
 {
   static_cast<void>(tag_);
 }

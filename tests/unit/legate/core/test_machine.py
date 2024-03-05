@@ -236,6 +236,7 @@ class TestMachine:
         machine = get_machine()
         with machine:
             assert machine == get_machine()
+            machine = get_machine()
             with machine:
                 assert machine == get_machine()
 
@@ -251,6 +252,16 @@ class TestMachine:
         with pytest.raises(EmptyMachineError, match=err_msg):
             with Machine({machine.preferred_target: empty_rng}):
                 pass
+
+    def test_set_machine_twice(self) -> None:
+        from legate.core import get_machine
+
+        machine = get_machine()
+        with machine:
+            err_msg = "Each machine can be set only once to the scope"
+            with pytest.raises(ValueError, match=err_msg):
+                with machine:
+                    pass
 
 
 if __name__ == "__main__":

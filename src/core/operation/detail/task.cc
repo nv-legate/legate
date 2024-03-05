@@ -33,8 +33,9 @@ namespace legate::detail {
 Task::Task(const Library* library,
            std::int64_t task_id,
            std::uint64_t unique_id,
-           mapping::detail::Machine&& machine)
-  : Operation{unique_id, std::move(machine)}, library_{library}, task_id_{task_id}
+           std::int32_t priority,
+           mapping::detail::Machine machine)
+  : Operation{unique_id, priority, std::move(machine)}, library_{library}, task_id_{task_id}
 {
 }
 
@@ -76,6 +77,8 @@ void Task::launch_task(Strategy* p_strategy)
   auto& strategy     = *p_strategy;
   auto launcher      = detail::TaskLauncher{library_, machine_, provenance_, task_id_};
   auto launch_domain = strategy.launch_domain(this);
+
+  launcher.set_priority(priority());
 
   for (auto& [arr, mapping, projection] : inputs_) {
     launcher.add_input(
@@ -378,6 +381,8 @@ void AutoTask::fixup_ranges(Strategy& strategy)
   auto* core_lib = detail::Runtime::get_runtime()->core_library();
   auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES};
 
+  launcher.set_priority(priority());
+
   for (auto* array : arrays_to_fixup_) {
     // TODO(wonchanl): We should pass projection functors here once we start supporting string/list
     // legate arrays in ManualTasks
@@ -394,8 +399,9 @@ ManualTask::ManualTask(const Library* library,
                        std::int64_t task_id,
                        const Domain& launch_domain,
                        std::uint64_t unique_id,
-                       mapping::detail::Machine&& machine)
-  : Task{library, task_id, unique_id, std::move(machine)},
+                       std::int32_t priority,
+                       mapping::detail::Machine machine)
+  : Task{library, task_id, unique_id, priority, std::move(machine)},
     strategy_{std::make_unique<detail::Strategy>()}
 {
   strategy_->set_launch_domain(this, launch_domain);

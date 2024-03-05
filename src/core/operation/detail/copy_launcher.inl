@@ -23,9 +23,10 @@ void CopyArg::populate_requirement(Legion::RegionRequirement& requirement)
 }
 
 // ==========================================================================================
-
-inline CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine, std::int64_t tag)
-  : machine_{machine}, tag_{tag}
+inline CopyLauncher::CopyLauncher(const mapping::detail::Machine& machine,
+                                  std::int32_t priority,
+                                  std::int64_t tag)
+  : machine_{machine}, priority_{priority}, tag_{tag}
 {
 }
 

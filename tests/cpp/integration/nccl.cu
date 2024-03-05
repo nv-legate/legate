@@ -120,7 +120,7 @@ TEST_F(Integration, NCCL)
   if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
     return;
   }
-  legate::MachineTracker tracker(machine.only(legate::mapping::TaskTarget::GPU));
+  legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
 
   for (std::int32_t ndim : {1, 3}) {
     test_nccl_auto(ndim);

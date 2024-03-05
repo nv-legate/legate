@@ -195,14 +195,12 @@ list(APPEND legate_core_SOURCES
   src/core/partitioning/detail/partitioner.cc
   src/core/runtime/library.cc
   src/core/runtime/runtime.cc
-  src/core/runtime/tracker.cc
+  src/core/runtime/scope.cc
   src/core/runtime/detail/communicator_manager.cc
   src/core/runtime/detail/field_manager.cc
   src/core/runtime/detail/library.cc
-  src/core/runtime/detail/machine_manager.cc
   src/core/runtime/detail/partition_manager.cc
   src/core/runtime/detail/projection.cc
-  src/core/runtime/detail/provenance_manager.cc
   src/core/runtime/detail/region_manager.cc
   src/core/runtime/detail/runtime.cc
   src/core/runtime/detail/shard.cc
@@ -460,7 +458,7 @@ if (legate_core_BUILD_DOCS)
       # aliases
       src/core/utilities/typedefs.h
       # utilities
-      src/core/runtime/tracker.h
+      src/core/runtime/scope.h
       src/core/utilities/debug.h
       src/core/utilities/dispatch.h
       src/core/utilities/scope_guard.h
@@ -584,7 +582,7 @@ install(
         src/core/runtime/resource.h
         src/core/runtime/runtime.h
         src/core/runtime/runtime.inl
-        src/core/runtime/tracker.h
+        src/core/runtime/scope.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/runtime)
 
 install(

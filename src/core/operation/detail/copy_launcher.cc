@@ -101,9 +101,9 @@ void CopyLauncher::execute(const Legion::Domain& launch_domain)
 
   pack_args(mapper_arg);
 
-  const auto runtime = Runtime::get_runtime();
-  auto&& provenance  = runtime->provenance_manager()->get_provenance();
-  auto index_copy    = Legion::IndexCopyLauncher{launch_domain,
+  const auto runtime     = Runtime::get_runtime();
+  const auto& provenance = runtime->get_provenance();
+  auto index_copy        = Legion::IndexCopyLauncher{launch_domain,
                                               Legion::Predicate::TRUE_PRED,
                                               runtime->core_library()->get_mapper_id(),
                                               static_cast<Legion::MappingTagID>(tag_),
@@ -119,9 +119,9 @@ void CopyLauncher::execute_single()
 
   pack_args(mapper_arg);
 
-  const auto runtime = Runtime::get_runtime();
-  auto&& provenance  = runtime->provenance_manager()->get_provenance();
-  auto single_copy   = Legion::CopyLauncher{Legion::Predicate::TRUE_PRED,
+  const auto runtime     = Runtime::get_runtime();
+  const auto& provenance = runtime->get_provenance();
+  auto single_copy       = Legion::CopyLauncher{Legion::Predicate::TRUE_PRED,
                                           runtime->core_library()->get_mapper_id(),
                                           static_cast<Legion::MappingTagID>(tag_),
                                           mapper_arg.to_legion_buffer(),
@@ -139,6 +139,7 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
 {
   machine_.pack(buffer);
   pack_sharding_functor_id(buffer);
+  buffer.pack(priority_);
 
   auto pack_args = [&buffer](const std::vector<std::unique_ptr<CopyArg>>& args) {
     buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));

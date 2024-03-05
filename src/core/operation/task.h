@@ -37,7 +37,7 @@ class ManualTask;
 namespace legate {
 
 /**
- * @ingroup op
+ * @ingroup task
  * @brief A class for auto-parallelized task desciptors
  */
 class AutoTask {
@@ -229,7 +229,7 @@ class AutoTask {
 };
 
 /**
- * @ingroup op
+ * @ingroup task
  * @brief A class for manually parallelized task descriptors
  */
 class ManualTask {

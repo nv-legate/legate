@@ -38,6 +38,7 @@ from ..data.scalar cimport Scalar
 from ..data.shape cimport Shape
 from ..mapping.machine cimport Machine
 from ..operation.task cimport AutoTask, ManualTask
+from ..runtime.scope cimport Scope
 from ..type.type_info cimport Type
 from ..utilities.utils cimport (
     domain_from_iterables,
@@ -45,7 +46,6 @@ from ..utilities.utils cimport (
     uint64_tuple_from_iterable,
 )
 from .library cimport Library
-from .tracker cimport _ProvenanceTracker
 
 from ...utils import AnyCallable, ShutdownCallback
 
@@ -506,15 +506,6 @@ cdef class Runtime:
         _shutdown_manager.perform_callbacks()
         destroy()
 
-    cpdef void push_machine(self, Machine machine):
-        cdef _Machine cpp_machine = machine._handle
-        self._handle.impl().machine_manager().push_machine(
-            std_move(cpp_machine.impl().get()[0])
-        )
-
-    cpdef void pop_machine(self):
-        self._handle.impl().machine_manager().pop_machine()
-
     cpdef void add_shutdown_callback(self, callback: ShutdownCallback):
         global _shutdown_manager
         _shutdown_manager.add_shutdown_callback(callback)
@@ -598,26 +589,14 @@ def track_provenance(
     def decorator(func: AnyCallable) -> AnyCallable:
         if nested:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                cdef str provenance = caller_frameinfo()
-                cdef _ProvenanceTracker* tracker = new _ProvenanceTracker(
-                    provenance.encode()
-                )
-                result = func(*args, **kwargs)
-                del tracker
-                return result
+                with Scope(provenance=caller_frameinfo()):
+                    return func(*args, **kwargs)
         else:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                cdef _Runtime* runtime = (
-                    <Runtime> get_legate_runtime()
-                )._handle
-                prov_mgt = runtime.impl().provenance_manager()
-                had_prov = prov_mgt.has_provenance()
-                if not had_prov:
-                    prov_mgt.push_provenance(caller_frameinfo().encode())
-                result = func(*args, **kwargs)
-                if not had_prov:
-                    prov_mgt.pop_provenance()
-                return result
+                if len(Scope.provenance()) > 0:
+                    return func(*args, **kwargs)
+                with Scope(provenance=caller_frameinfo()):
+                    return func(*args, **kwargs)
 
         return wrapper
 

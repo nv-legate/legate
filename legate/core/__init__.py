@@ -47,6 +47,7 @@ from ._lib.runtime.runtime import (
     get_machine,
     track_provenance,
 )
+from ._lib.runtime.scope import Scope
 
 get_legate_runtime()
 from .utils import (

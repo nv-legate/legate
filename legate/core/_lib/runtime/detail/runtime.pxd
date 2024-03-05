@@ -13,25 +13,8 @@ from libc.stdint cimport uint32_t
 from libcpp cimport bool
 from libcpp.string cimport string
 
-from ...mapping.detail.machine cimport _MachineImpl
-
-
-cdef extern from "core/runtime/detail/machine_manager.h" namespace "legate" nogil:  # noqa E501
-    cdef cppclass _MachineManagerImpl "legate::detail::MachineManager":
-        void push_machine(_MachineImpl)
-        void pop_machine()
-
-
-cdef extern from "core/runtime/detail/provenance_manager.h" namespace "legate" nogil:  # noqa E501
-    cdef cppclass _ProvenanceManagerImpl "legate::detail::ProvenanceManager":
-        bool has_provenance() const
-        void push_provenance(const string&)
-        void pop_provenance()
-
 
 cdef extern from "core/runtime/detail/runtime.h" namespace "legate" nogil:
     cdef cppclass _RuntimeImpl "legate::detail::Runtime":
-        _MachineManagerImpl* machine_manager() const
-        _ProvenanceManagerImpl* provenance_manager() const
         void begin_trace(uint32_t)
         void end_trace(uint32_t)

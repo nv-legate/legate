@@ -9,9 +9,23 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libcpp.string cimport string as std_string
+from typing import Any
 
+from ..mapping.machine import Machine
 
-cdef extern from "core/runtime/tracker.h" namespace "legate" nogil:
-    cdef cppclass _ProvenanceTracker "legate::ProvenanceTracker":
-        _ProvenanceTracker(std_string)
+class Scope:
+    def __init__(
+        self,
+        *,
+        priority: int | None = None,
+        provenance: str | None = None,
+        machine: Machine | None = None,
+    ) -> None: ...
+    def __enter__(self) -> None: ...
+    def __exit__(self, _: Any, __: Any, ___: Any) -> None: ...
+    @staticmethod
+    def priority() -> int: ...
+    @staticmethod
+    def provenance() -> str: ...
+    @staticmethod
+    def machine() -> Machine: ...

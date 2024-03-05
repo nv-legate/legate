@@ -18,7 +18,6 @@ from libcpp.map cimport map as std_map
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
-from ..runtime.runtime cimport get_legate_runtime
 from .mapping cimport TaskTarget
 
 from .mapping import TaskTarget as PyTaskTarget
@@ -228,6 +227,7 @@ cdef class Machine:
     cdef Machine from_handle(_Machine handle):
         cdef Machine result = Machine.__new__(Machine)
         result._handle = handle
+        result._scope = None
         return result
 
     def __cinit__(self, ranges: dict | None = None) -> None:
@@ -246,6 +246,7 @@ cdef class Machine:
             cpp_ranges[target] = (<ProcessorRange> range)._handle
 
         self._handle = _Machine(std_move(cpp_ranges))
+        self._scope = None
 
     def __len__(self) -> uint32_t:
         """
@@ -473,13 +474,15 @@ cdef class Machine:
         return str(self)
 
     def __enter__(self) -> None:
-        runtime = get_legate_runtime()
-        new_machine = runtime.get_machine() & self
-        if new_machine.empty:
-            raise EmptyMachineError(
-                "Empty machines cannot be used for resource scoping"
-            )
-        runtime.push_machine(new_machine)
+        if self._scope is not None:
+            raise ValueError("Each machine can be set only once to the scope")
+        self._scope = Scope(machine=self)
+        try:
+            self._scope.__enter__()
+        except RuntimeError as e:
+            self._scope = None
+            raise EmptyMachineError(str(e))
 
     def __exit__(self, _: Any, __: Any, ___: Any) -> None:
-        get_legate_runtime().pop_machine()
+        self._scope.__exit__(_, __, ___)
+        self._scope = None

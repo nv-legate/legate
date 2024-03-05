@@ -36,8 +36,9 @@ Reduce::Reduce(const Library* library,
                std::int64_t task_id,
                std::uint64_t unique_id,
                std::int32_t radix,
-               mapping::detail::Machine&& machine)
-  : Operation{unique_id, std::move(machine)},
+               std::int32_t priority,
+               mapping::detail::Machine machine)
+  : Operation{unique_id, priority, std::move(machine)},
     radix_{radix},
     library_{library},
     task_id_{task_id},
@@ -82,6 +83,8 @@ void Reduce::launch(Strategy* p_strategy)
   do {
     auto launcher =
       detail::TaskLauncher{library_, machine_, provenance_, task_id_, LEGATE_CORE_TREE_REDUCE_TAG};
+
+    launcher.set_priority(priority());
 
     if (n_tasks > 1) {
       // if there are more than 1 sub-task, we add several slices of the input

@@ -25,6 +25,8 @@ inline const mapping::detail::Machine& Mappable::machine() const { return machin
 
 inline std::uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
+inline std::int32_t Mappable::priority() const { return priority_; }
+
 // ==========================================================================================
 
 inline const std::vector<InternalSharedPtr<Array>>& Task::inputs() const { return inputs_; }

@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/detail/scalar.h"
+#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/launcher_arg.h"
 
@@ -50,6 +51,7 @@ class TaskLauncher {
   void add_future_map(const Legion::FutureMap& future_map);
   void add_communicator(const Legion::FutureMap& communicator);
 
+  void set_priority(std::int32_t priority);
   void set_side_effect(bool has_side_effect);
   void set_concurrent(bool is_concurrent);
   void set_insert_barrier(bool insert_barrier);
@@ -77,6 +79,7 @@ class TaskLauncher {
   std::int64_t tag_{};
   const mapping::detail::Machine& machine_;
   std::string provenance_{};
+  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
 
   bool has_side_effect_{true};
   bool concurrent_{};

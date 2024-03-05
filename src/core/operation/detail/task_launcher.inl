@@ -37,6 +37,8 @@ inline TaskLauncher::TaskLauncher(const Library* library,
 {
 }
 
+inline void TaskLauncher::set_priority(std::int32_t priority) { priority_ = priority; }
+
 inline void TaskLauncher::set_side_effect(bool has_side_effect)
 {
   has_side_effect_ = has_side_effect;

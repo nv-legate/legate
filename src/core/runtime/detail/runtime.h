@@ -22,11 +22,10 @@
 #include "core/runtime/detail/consensus_match_result.h"
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/library.h"
-#include "core/runtime/detail/machine_manager.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/projection.h"
-#include "core/runtime/detail/provenance_manager.h"
 #include "core/runtime/detail/region_manager.h"
+#include "core/runtime/detail/scope.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
 #include "core/type/type_info.h"
@@ -90,7 +89,7 @@ class Runtime {
   void initialize(Legion::Context legion_context);
 
   [[nodiscard]] mapping::detail::Machine slice_machine_for_task(const Library* library,
-                                                                std::int64_t task_id);
+                                                                std::int64_t task_id) const;
   [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library* library,
                                                         std::int64_t task_id);
   [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library* library,
@@ -209,9 +208,9 @@ class Runtime {
   [[nodiscard]] FieldManager* find_or_create_field_manager(InternalSharedPtr<Shape> shape,
                                                            std::uint32_t field_size);
   [[nodiscard]] CommunicatorManager* communicator_manager() const;
-  [[nodiscard]] MachineManager* machine_manager() const;
   [[nodiscard]] PartitionManager* partition_manager() const;
-  [[nodiscard]] ProvenanceManager* provenance_manager() const;
+  [[nodiscard]] Scope& scope();
+  [[nodiscard]] const Scope& scope() const;
 
   [[nodiscard]] const Legion::IndexSpace& find_or_create_index_space(
     const tuple<std::uint64_t>& extents);
@@ -304,8 +303,9 @@ class Runtime {
   void begin_trace(std::uint32_t trace_id);
   void end_trace(std::uint32_t trace_id);
 
-  void initialize_toplevel_machine();
+  InternalSharedPtr<mapping::detail::Machine> create_toplevel_machine();
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
+  [[nodiscard]] const std::string& get_provenance() const;
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
 
   [[nodiscard]] Legion::ProjectionID get_affine_projection(std::uint32_t src_ndim,
@@ -343,9 +343,8 @@ class Runtime {
   using RegionManagerKey = Legion::IndexSpace;
   std::unordered_map<RegionManagerKey, std::unique_ptr<RegionManager>> region_managers_{};
   std::unique_ptr<CommunicatorManager> communicator_manager_{};
-  std::unique_ptr<MachineManager> machine_manager_{};
   std::unique_ptr<PartitionManager> partition_manager_{};
-  std::unique_ptr<ProvenanceManager> provenance_manager_{};
+  Scope scope_{};
 
   std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
 

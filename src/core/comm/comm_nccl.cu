@@ -101,14 +101,14 @@ Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine,
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
 
   // Create a communicator ID
-  detail::TaskLauncher init_nccl_id_launcher(
-    core_library_, machine, LEGATE_CORE_INIT_NCCL_ID_TASK_ID, LEGATE_GPU_VARIANT);
+  detail::TaskLauncher init_nccl_id_launcher{
+    core_library_, machine, LEGATE_CORE_INIT_NCCL_ID_TASK_ID, LEGATE_GPU_VARIANT};
   init_nccl_id_launcher.set_side_effect(true);
   auto nccl_id = init_nccl_id_launcher.execute_single();
 
   // Then create the communicators on participating GPUs
-  detail::TaskLauncher init_nccl_launcher(
-    core_library_, machine, LEGATE_CORE_INIT_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+  detail::TaskLauncher init_nccl_launcher{
+    core_library_, machine, LEGATE_CORE_INIT_NCCL_TASK_ID, LEGATE_GPU_VARIANT};
   init_nccl_launcher.add_future(nccl_id);
   init_nccl_launcher.set_concurrent(true);
   return init_nccl_launcher.execute(launch_domain);
@@ -120,8 +120,8 @@ void Factory::finalize(const mapping::detail::Machine& machine,
 {
   Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
 
-  detail::TaskLauncher launcher(
-    core_library_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT);
+  detail::TaskLauncher launcher{
+    core_library_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT};
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);

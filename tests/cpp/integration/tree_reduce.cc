@@ -209,7 +209,7 @@ TEST_F(TreeReduce, AutoProducerSingle)
 
   {
     auto machine = runtime->get_machine();
-    legate::MachineTracker tracker(machine.slice(0, 1, legate::mapping::TaskTarget::CPU));
+    legate::Scope tracker{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
     auto task = runtime->create_task(context, TASK_PRODUCE_UNBOUND);
     task.add_output(store);
     runtime->submit(std::move(task));

@@ -56,14 +56,14 @@ inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq
 
 inline PartitionManager* Runtime::partition_manager() const { return partition_manager_.get(); }
 
-inline ProvenanceManager* Runtime::provenance_manager() const { return provenance_manager_.get(); }
-
 inline CommunicatorManager* Runtime::communicator_manager() const
 {
   return communicator_manager_.get();
 }
 
-inline MachineManager* Runtime::machine_manager() const { return machine_manager_.get(); }
+inline Scope& Runtime::scope() { return scope_; }
+
+inline const Scope& Runtime::scope() const { return scope_; }
 
 inline const mapping::detail::LocalMachine& Runtime::local_machine() const
 {

@@ -52,6 +52,9 @@ cdef extern from "core/legate_c.h" nogil:
         _AND "AND_LT"
         _XOR "XOR_LT"
 
+    ctypedef enum legate_core_task_priority_t:
+        _LEGATE_CORE_DEFAULT_TASK_PRIORITY "LEGATE_CORE_DEFAULT_TASK_PRIORITY"
+
     cpdef enum legate_core_variant_t:
         _LEGATE_NO_VARIANT "LEGATE_NO_VARIANT"
         _LEGATE_CPU_VARIANT "LEGATE_CPU_VARIANT"
