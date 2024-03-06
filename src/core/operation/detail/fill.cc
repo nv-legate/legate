@@ -72,24 +72,22 @@ void Fill::launch(Strategy* strategy)
   auto part          = (*strategy)[lhs_var_];
   auto lhs_proj      = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
 
-  lhs_->set_key_partition(machine(), part.get());
-
   if (value_.index() == 0) {
     if (launch_domain.is_valid()) {
       launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<0>(value_).get());
+      lhs_->set_key_partition(machine(), part.get());
     } else {
       launcher.launch_single(lhs_.get(), *lhs_proj, std::get<0>(value_).get());
     }
   } else {
     if (launch_domain.is_valid()) {
       launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<1>(value_));
+      lhs_->set_key_partition(machine(), part.get());
     } else {
       launcher.launch_single(lhs_.get(), *lhs_proj, std::get<1>(value_));
     }
   }
 }
-
-std::string Fill::to_string() const { return "Fill:" + std::to_string(unique_id_); }
 
 void Fill::add_to_solver(ConstraintSolver& solver)
 {

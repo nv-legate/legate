@@ -41,7 +41,7 @@ class Reduce final : public Operation {
   void validate() override {}
   void add_to_solver(ConstraintSolver& solver) override;
 
-  [[nodiscard]] std::string to_string() const override;
+  [[nodiscard]] Kind kind() const override;
 
  private:
   std::int32_t radix_{};
@@ -54,3 +54,5 @@ class Reduce final : public Operation {
 };
 
 }  // namespace legate::detail
+
+#include "core/operation/detail/reduce.inl"

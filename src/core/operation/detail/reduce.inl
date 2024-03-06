@@ -12,12 +12,10 @@
 
 #pragma once
 
-#include "core/operation/detail/gather.h"
+#include "core/operation/detail/reduce.h"
 
 namespace legate::detail {
 
-inline void Gather::set_indirect_out_of_range(bool flag) { out_of_range_ = flag; }
-
-inline Operation::Kind Gather::kind() const { return Kind::GATHER; }
+inline Operation::Kind Reduce::kind() const { return Kind::REDUCE; }
 
 }  // namespace legate::detail

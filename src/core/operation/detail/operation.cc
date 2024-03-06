@@ -16,7 +16,53 @@
 #include "core/partitioning/detail/partitioner.h"
 #include "core/runtime/detail/runtime.h"
 
+#include <sstream>
+#include <unordered_map>
+
 namespace legate::detail {
+
+namespace {
+
+const std::unordered_map<Operation::Kind, std::string>& OP_NAMES() noexcept
+{
+  static const std::unordered_map<Operation::Kind, std::string> table = {
+    {
+      Operation::Kind::AUTO_TASK,
+      "AutoTask",
+    },
+    {
+      Operation::Kind::COPY,
+      "Copy",
+    },
+    {
+      Operation::Kind::FILL,
+      "Fill",
+    },
+    {
+      Operation::Kind::GATHER,
+      "Gather",
+    },
+    {
+      Operation::Kind::MANUAL_TASK,
+      "ManualTask",
+    },
+    {
+      Operation::Kind::REDUCE,
+      "Reduce",
+    },
+    {
+      Operation::Kind::SCATTER,
+      "Scatter",
+    },
+    {
+      Operation::Kind::SCATTER_GATHER,
+      "ScatterGather",
+    },
+  };
+  return table;
+}
+
+}  // namespace
 
 Operation::Operation(std::uint64_t unique_id,
                      std::int32_t priority,
@@ -26,6 +72,16 @@ Operation::Operation(std::uint64_t unique_id,
     provenance_{Runtime::get_runtime()->get_provenance()},
     machine_{std::move(machine)}
 {
+}
+
+std::string Operation::to_string() const
+{
+  std::stringstream ss;
+  ss << OP_NAMES().at(kind()) << ":" << std::to_string(unique_id_);
+  if (!provenance_.empty()) {
+    ss << "[" << provenance_ << "]";
+  }
+  return std::move(ss).str();
 }
 
 const Variable* Operation::find_or_declare_partition(InternalSharedPtr<LogicalStore> store)

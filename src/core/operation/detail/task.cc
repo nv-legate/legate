@@ -240,6 +240,9 @@ std::string Task::to_string() const
 {
   std::stringstream ss;
   ss << library_->get_task_name(task_id_) << ":" << unique_id_;
+  if (!provenance_.empty()) {
+    ss << "[" << provenance_ << "]";
+  }
   return std::move(ss).str();
 }
 

@@ -99,6 +99,4 @@ void Scatter::add_to_solver(ConstraintSolver& solver)
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
 }
 
-std::string Scatter::to_string() const { return "Scatter:" + std::to_string(unique_id_); }
-
 }  // namespace legate::detail

@@ -99,6 +99,4 @@ void Copy::add_to_solver(ConstraintSolver& solver)
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
 }
 
-std::string Copy::to_string() const { return "Copy:" + std::to_string(unique_id_); }
-
 }  // namespace legate::detail

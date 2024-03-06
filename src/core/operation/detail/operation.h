@@ -40,12 +40,25 @@ class Operation {
   Operation(std::uint64_t unique_id, std::int32_t priority, mapping::detail::Machine machine);
 
  public:
+  enum class Kind : std::uint32_t {
+    AUTO_TASK,
+    COPY,
+    FILL,
+    GATHER,
+    MANUAL_TASK,
+    REDUCE,
+    SCATTER,
+    SCATTER_GATHER,
+  };
+
   virtual ~Operation() = default;
 
   virtual void validate()                              = 0;
   virtual void add_to_solver(ConstraintSolver& solver) = 0;
   virtual void launch(Strategy* strategy)              = 0;
-  [[nodiscard]] virtual std::string to_string() const  = 0;
+
+  [[nodiscard]] virtual Kind kind() const = 0;
+  [[nodiscard]] virtual std::string to_string() const;
   [[nodiscard]] virtual bool always_flush() const;
   [[nodiscard]] virtual bool supports_replicated_write() const;
 

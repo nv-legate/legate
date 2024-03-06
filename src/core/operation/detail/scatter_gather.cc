@@ -110,9 +110,4 @@ void ScatterGather::add_to_solver(ConstraintSolver& solver)
   solver.add_partition_symbol(source_indirect_.variable, AccessMode::READ);
 }
 
-std::string ScatterGather::to_string() const
-{
-  return "ScatterGather:" + std::to_string(unique_id_);
-}
-
 }  // namespace legate::detail

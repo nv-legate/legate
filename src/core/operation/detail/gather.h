@@ -41,7 +41,7 @@ class Gather final : public Operation {
 
   void add_to_solver(ConstraintSolver& solver) override;
 
-  [[nodiscard]] std::string to_string() const override;
+  [[nodiscard]] Kind kind() const override;
 
  private:
   bool out_of_range_{true};

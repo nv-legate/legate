@@ -37,7 +37,7 @@ class Copy final : public Operation {
 
   void add_to_solver(ConstraintSolver& solver) override;
 
-  [[nodiscard]] std::string to_string() const override;
+  [[nodiscard]] Kind kind() const override;
 
  private:
   StoreArg target_{};
@@ -47,3 +47,5 @@ class Copy final : public Operation {
 };
 
 }  // namespace legate::detail
+
+#include "core/operation/detail/copy.inl"

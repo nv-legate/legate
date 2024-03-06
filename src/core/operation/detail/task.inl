@@ -43,6 +43,8 @@ inline AutoTask::AutoTask(const Library* library,
 {
 }
 
+inline Operation::Kind AutoTask::kind() const { return Kind::AUTO_TASK; }
+
 // ==========================================================================================
 
 inline void ManualTask::validate() {}
@@ -52,5 +54,7 @@ inline void ManualTask::launch(Strategy* /*strategy*/) { launch(); }
 inline void ManualTask::launch() { launch_task(strategy_.get()); }
 
 inline void ManualTask::add_to_solver(ConstraintSolver& /*solver*/) {}
+
+inline Operation::Kind ManualTask::kind() const { return Kind::MANUAL_TASK; }
 
 }  // namespace legate::detail

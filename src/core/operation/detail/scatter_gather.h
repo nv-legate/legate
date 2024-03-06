@@ -43,7 +43,7 @@ class ScatterGather final : public Operation {
 
   void add_to_solver(detail::ConstraintSolver& solver) override;
 
-  [[nodiscard]] std::string to_string() const override;
+  [[nodiscard]] Kind kind() const override;
 
  private:
   bool source_indirect_out_of_range_{true};

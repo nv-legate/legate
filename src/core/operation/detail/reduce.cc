@@ -129,7 +129,6 @@ void Reduce::launch(Strategy* p_strategy)
     if (n_tasks != 1) {
       auto weighted = Weighted{result, launch_domain};
 
-      new_output->set_key_partition(machine_, &weighted);
       auto output_partition =
         create_store_partition(new_output, make_internal_shared<Weighted>(std::move(weighted)));
       input_          = new_output;
@@ -143,7 +142,5 @@ void Reduce::add_to_solver(detail::ConstraintSolver& solver)
   solver.add_partition_symbol(output_part_, AccessMode::WRITE);
   solver.add_partition_symbol(input_part_, AccessMode::READ);
 }
-
-std::string Reduce::to_string() const { return "Reduce:" + std::to_string(unique_id_); }
 
 }  // namespace legate::detail

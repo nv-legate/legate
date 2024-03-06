@@ -290,7 +290,6 @@ void TaskLauncher::post_process_unbound_stores(
       store->shape(), req.parent, arg->field_id(), store->type()->size());
 
     store->set_region_field(std::move(region_field));
-    store->set_key_partition(machine_, no_part.get());
   }
 }
 

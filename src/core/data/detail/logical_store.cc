@@ -824,7 +824,8 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   if (privilege == LEGION_REDUCE && store_partition->is_disjoint_for(launch_domain)) {
     privilege = LEGION_READ_WRITE;
   }
-  if (privilege == LEGION_WRITE_ONLY || privilege == LEGION_READ_WRITE) {
+  if ((privilege == LEGION_WRITE_ONLY || privilege == LEGION_READ_WRITE) &&
+      partition->has_launch_domain()) {
     set_key_partition(variable->operation()->machine(), partition.get());
   }
 

@@ -126,6 +126,8 @@ class AutoTask final : public Task {
   void validate() override;
   void launch(Strategy* strategy) override;
 
+  [[nodiscard]] Kind kind() const override;
+
  private:
   void fixup_ranges(Strategy& strategy);
 
@@ -163,6 +165,8 @@ class ManualTask final : public Task {
   void validate() override;
   void launch(Strategy* /*strategy*/) override;
   void launch();
+
+  [[nodiscard]] Kind kind() const override;
 
   void add_to_solver(ConstraintSolver& solver) override;
 
