@@ -22,8 +22,6 @@ using Runtime = DefaultFixture;
 
 constexpr const char* library_name = "test_task_store";
 
-static constexpr std::int32_t TEST_MAX_DIM = 3;
-
 static constexpr std::int32_t INT_VALUE1 = 123;
 static constexpr std::int32_t INT_VALUE2 = 20;
 
@@ -354,7 +352,7 @@ void auto_task_unbound_reduction(legate::LogicalArray array, std::uint32_t index
 void manual_task_normal_input(legate::LogicalStore store,
                               std::uint32_t index,
                               const legate::tuple<std::uint64_t>& launch_shape,
-                              const std::vector<std::size_t>& tile_shape)
+                              const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -383,7 +381,7 @@ void manual_task_normal_input(legate::LogicalStore store,
 void manual_task_normal_output(legate::LogicalStore store,
                                std::uint32_t index,
                                const legate::tuple<std::uint64_t>& launch_shape,
-                               const std::vector<std::size_t>& tile_shape)
+                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -414,7 +412,7 @@ void manual_task_normal_output(legate::LogicalStore store,
 void manual_task_normal_reduction(legate::LogicalStore store,
                                   std::uint32_t index,
                                   const legate::tuple<std::uint64_t>& launch_shape,
-                                  const std::vector<std::size_t>& tile_shape)
+                                  const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -517,7 +515,7 @@ void manual_task_unbound_reduction(legate::LogicalStore store,
 void manual_task_scalar_input(legate::LogicalStore store,
                               std::uint32_t index,
                               const legate::tuple<std::uint64_t>& launch_shape,
-                              const std::vector<std::size_t>& tile_shape)
+                              const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -545,7 +543,7 @@ void manual_task_scalar_input(legate::LogicalStore store,
 void manual_task_scalar_output(legate::LogicalStore store,
                                std::uint32_t index,
                                const legate::tuple<std::uint64_t>& launch_shape,
-                               const std::vector<std::size_t>& tile_shape)
+                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -576,7 +574,7 @@ void manual_task_scalar_output(legate::LogicalStore store,
 void manual_task_scalar_reduction(legate::LogicalStore store,
                                   std::uint32_t index,
                                   const legate::tuple<std::uint64_t>& launch_shape,
-                                  const std::vector<std::size_t>& tile_shape)
+                                  const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -646,7 +644,7 @@ class ManualTaskNormal
     public ::testing::WithParamInterface<
       std::tuple<std::int32_t,
                  std::int32_t,
-                 std::tuple<legate::Shape, legate::Shape, std::vector<std::size_t>>>> {};
+                 std::tuple<legate::Shape, legate::Shape, std::vector<std::uint64_t>>>> {};
 class ManualTaskNormalInput : public ManualTaskNormal {};
 class ManualTaskNormalOutput : public ManualTaskNormal {};
 class ManualTaskNormalReduction : public ManualTaskNormal {};
@@ -661,7 +659,7 @@ class ManualTaskUnboundReduction : public ManualTaskUnbound {};
 class ManualTaskScalar
   : public DefaultFixture,
     public ::testing::WithParamInterface<
-      std::tuple<std::int32_t, std::tuple<legate::Shape, std::vector<std::size_t>>>> {};
+      std::tuple<std::int32_t, std::tuple<legate::Shape, std::vector<std::uint64_t>>>> {};
 class ManualTaskScalarInput : public ManualTaskScalar {};
 class ManualTaskScalarOutput : public ManualTaskScalar {};
 class ManualTaskScalarReduction : public ManualTaskScalar {};
@@ -715,13 +713,13 @@ INSTANTIATE_TEST_SUITE_P(
                      ::testing::Range(0, manual_task_method_count.at(TaskDataMode::INPUT)),
                      ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
                                                        legate::Shape({3, 3}),
-                                                       std::vector<std::size_t>({2, 2})),
+                                                       std::vector<std::uint64_t>({2, 2})),
                                        std::make_tuple(legate::Shape({3, 3}),
                                                        legate::Shape({1}),
-                                                       std::vector<std::size_t>({3, 3})),
+                                                       std::vector<std::uint64_t>({3, 3})),
                                        std::make_tuple(legate::Shape({3, 3}),
                                                        legate::Shape({2, 2}),
-                                                       std::vector<std::size_t>({2, 2})))
+                                                       std::vector<std::uint64_t>({2, 2})))
                      // [failed-case-1], [failed-case-2]
                      // [error 39] LEGION ERROR: Invalid color space
                      // color for child 0 of logical partition (2,1,1)
@@ -737,13 +735,13 @@ INSTANTIATE_TEST_SUITE_P(
                      ::testing::Range(0, manual_task_method_count.at(TaskDataMode::OUTPUT)),
                      ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
                                                        legate::Shape({3, 3}),
-                                                       std::vector<std::size_t>({2, 2})),
+                                                       std::vector<std::uint64_t>({2, 2})),
                                        std::make_tuple(legate::Shape({3, 3}),
                                                        legate::Shape({1}),
-                                                       std::vector<std::size_t>({3, 3})),
+                                                       std::vector<std::uint64_t>({3, 3})),
                                        std::make_tuple(legate::Shape({3, 3}),
                                                        legate::Shape({2, 2}),
-                                                       std::vector<std::size_t>({2, 2})))
+                                                       std::vector<std::uint64_t>({2, 2})))
                      // [failed-case-3], when create_store_index=1, fail,
                      // result: add[*it] = 0, expected: 124. 3 out of 9 results hit this error.
                      // std::make_tuple(legate::Shape({3, 3}), legate::Shape({2, 2, 2}),
@@ -757,13 +755,13 @@ INSTANTIATE_TEST_SUITE_P(
                      ::testing::Range(0, manual_task_method_count.at(TaskDataMode::REDUCTION)),
                      ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
                                                        legate::Shape({3, 3}),
-                                                       std::vector<std::size_t>({2, 2})),
+                                                       std::vector<std::uint64_t>({2, 2})),
                                        std::make_tuple(legate::Shape({3, 3}),
                                                        legate::Shape({1}),
-                                                       std::vector<std::size_t>({3, 3})),
+                                                       std::vector<std::uint64_t>({3, 3})),
                                        std::make_tuple(legate::Shape({3, 3}),
                                                        legate::Shape({2, 2}),
-                                                       std::vector<std::size_t>({2, 2})))));
+                                                       std::vector<std::uint64_t>({2, 2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
@@ -796,24 +794,24 @@ INSTANTIATE_TEST_SUITE_P(
   ManualTaskScalarInput,
   ::testing::Combine(
     ::testing::Range(0, manual_task_method_count.at(TaskDataMode::INPUT)),
-    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::size_t>({2})),
-                      std::make_tuple(legate::Shape({2}), std::vector<std::size_t>({2})))));
+    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::uint64_t>({2})),
+                      std::make_tuple(legate::Shape({2}), std::vector<std::uint64_t>({2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskScalarOutput,
   ::testing::Combine(
     ::testing::Range(0, manual_task_method_count.at(TaskDataMode::OUTPUT)),
-    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::size_t>({2})),
-                      std::make_tuple(legate::Shape({2}), std::vector<std::size_t>({2})))));
+    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::uint64_t>({2})),
+                      std::make_tuple(legate::Shape({2}), std::vector<std::uint64_t>({2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskScalarReduction,
   ::testing::Combine(
     ::testing::Range(0, manual_task_method_count.at(TaskDataMode::REDUCTION)),
-    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::size_t>({2})),
-                      std::make_tuple(legate::Shape({2}), std::vector<std::size_t>({2})))
+    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::uint64_t>({2})),
+                      std::make_tuple(legate::Shape({2}), std::vector<std::uint64_t>({2})))
     // [failed-case-5],
     // Fill(in_value_1), Reduce(in_value_2)
     // if launch shape = {1}, result is in_value_2. Unexpected.
@@ -957,21 +955,24 @@ TEST_F(Runtime, CreateTaskInvalid)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  EXPECT_THROW(runtime->create_task(context, -100), std::out_of_range);
-  EXPECT_THROW(runtime->create_task(context, -100, legate::tuple<std::uint64_t>{2, 3}),
-               std::out_of_range);
-  EXPECT_THROW(runtime->create_task(context, SIMPLE_TASK, legate::tuple<std::uint64_t>{2, 3}),
+  EXPECT_THROW(static_cast<void>(runtime->create_task(context, -100)), std::out_of_range);
+  EXPECT_THROW(
+    static_cast<void>(runtime->create_task(context, -100, legate::tuple<std::uint64_t>{2, 3})),
+    std::out_of_range);
+  EXPECT_THROW(static_cast<void>(
+                 runtime->create_task(context, SIMPLE_TASK, legate::tuple<std::uint64_t>{2, 3})),
                std::out_of_range);
 
-  EXPECT_THROW(runtime->create_task(context,
-                                    SIMPLE_TASK + 1,
-                                    legate::tuple<std::uint64_t>{
-                                      0,
-                                    }),
+  EXPECT_THROW(static_cast<void>(runtime->create_task(context,
+                                                      SIMPLE_TASK + 1,
+                                                      legate::tuple<std::uint64_t>{
+                                                        0,
+                                                      })),
                std::invalid_argument);
 
-  EXPECT_THROW(runtime->create_task(context, SIMPLE_TASK, legate::tuple<std::uint64_t>{}),
-               std::out_of_range);
+  EXPECT_THROW(
+    static_cast<void>(runtime->create_task(context, SIMPLE_TASK, legate::tuple<std::uint64_t>{})),
+    std::out_of_range);
 }
 
 }  // namespace test_task_store
