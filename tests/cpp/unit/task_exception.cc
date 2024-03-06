@@ -21,16 +21,15 @@ using TaskException = DefaultFixture;
 
 TEST_F(TaskException, Basic)
 {
-  std::int32_t index1    = 100;
-  const char* ERROR_MSG1 = "Exception Test1";
-  legate::TaskException exc1{index1, ERROR_MSG1};
-  EXPECT_EQ(exc1.index(), index1);
-  EXPECT_STREQ(exc1.error_message().c_str(), ERROR_MSG1);
+  constexpr const char* ERROR_MSG1 = "Exception Test1";
 
-  const char* ERROR_MSG2 = "Exception Test2";
+  legate::TaskException exc1{ERROR_MSG1};
+  EXPECT_STREQ(exc1.what(), ERROR_MSG1);
+
+  constexpr const char* ERROR_MSG2 = "Exception Test2";
   legate::TaskException exc2{ERROR_MSG2};
-  EXPECT_EQ(exc2.index(), 0);
-  EXPECT_STREQ(exc2.error_message().c_str(), ERROR_MSG2);
+
+  EXPECT_STREQ(exc2.what(), ERROR_MSG2);
 }
 
 }  // namespace task_exception_test

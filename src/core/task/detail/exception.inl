@@ -12,17 +12,19 @@
 
 #pragma once
 
-#include "core/task/detail/return.h"
+#include "core/task/detail/exception.h"
 
-#include <cstring>
+#include <utility>
 
 namespace legate::detail {
 
-inline std::size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
-
-inline const ReturnValue& ReturnValues::operator[](std::int32_t idx) const
+inline PythonTaskException::PythonTaskException(std::uint64_t size, SharedPtr<const char[]> buf)
+  : TaskException{"Python exception"}, size_{size}, bytes_{std::move(buf)}
 {
-  return return_values_[idx];
 }
+
+inline const char* PythonTaskException::data() const noexcept { return bytes_.get(); }
+
+inline std::uint64_t PythonTaskException::size() const noexcept { return size_; }
 
 }  // namespace legate::detail

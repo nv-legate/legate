@@ -36,6 +36,7 @@ cdef class PyTask:
         int64_t                     _task_id
         Library                     _library
         tuple[ConstraintProxy, ...] _constraints
+        bool                        _throws
 
     cpdef int64_t complete_registration(self)
     cdef void _update_variant(self, func: UserFunction, variant: TaskTarget)

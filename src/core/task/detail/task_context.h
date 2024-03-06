@@ -17,11 +17,12 @@
 #include "core/data/scalar.h"
 #include "core/mapping/detail/machine.h"
 #include "core/task/detail/return.h"
+#include "core/task/detail/return_value.h"
+#include "core/task/detail/returned_exception.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <optional>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace legate::detail {
@@ -45,8 +46,8 @@ class TaskContext {
   [[nodiscard]] DomainPoint get_task_index() const;
   [[nodiscard]] Domain get_launch_domain() const;
 
-  void set_exception(std::string what);
-  [[nodiscard]] std::optional<std::string>& get_exception() noexcept;
+  void set_exception(ReturnedException what);
+  [[nodiscard]] std::optional<ReturnedException>& get_exception() noexcept;
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] const std::string& get_provenance() const;
@@ -56,8 +57,7 @@ class TaskContext {
    */
   void make_all_unbound_stores_empty();
   [[nodiscard]] ReturnValues pack_return_values() const;
-  [[nodiscard]] ReturnValues pack_return_values_with_exception(
-    std::int32_t index, std::string_view error_message) const;
+  [[nodiscard]] ReturnValues pack_return_values_with_exception(const ReturnedException& exn) const;
 
  private:
   [[nodiscard]] std::vector<ReturnValue> get_return_values() const;
@@ -73,7 +73,7 @@ class TaskContext {
   std::vector<comm::Communicator> comms_{};
   bool can_raise_exception_{};
   mapping::detail::Machine machine_{};
-  std::optional<std::string> excn_{std::nullopt};
+  std::optional<ReturnedException> excn_{std::nullopt};
 };
 
 }  // namespace legate::detail

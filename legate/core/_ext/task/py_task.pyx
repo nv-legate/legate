@@ -40,6 +40,7 @@ cdef class PyTask:
         func: UserFunction,
         variants: VariantList,
         constraints: Sequence[ConstraintProxy] | None = None,
+        throws_exception: bool = False,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,
@@ -52,6 +53,12 @@ cdef class PyTask:
             The base user function to invoke in the task.
         variants : VariantList
             The list of variants for which ``func`` is applicable.
+        constraints : Sequence[ConstraintProxy], optional
+            The list of constraints which are to be applied to the arguments of
+            ``func``, if any. Defaults to no constraints.
+        throws_exception : bool, False
+            True if any variants of ``func`` throws an exception, False
+            otherwise.
         invoker : VariantInvoker, optional
             The invoker used to store the signature and marshall arguments to
             and manage invoking the user variants. Defaults to constructing the
@@ -113,6 +120,7 @@ cdef class PyTask:
         self._task_id = self.UNREGISTERED_ID
         self._library = library
         self._constraints = constraints
+        self._throws = throws_exception
         if register:
             self.complete_registration()
 
@@ -191,7 +199,8 @@ cdef class PyTask:
         cdef AutoTask task = get_legate_runtime().create_auto_task(
             self._library, self.task_id
         )
-        task.throws_exception(RuntimeError)
+        if self._throws:
+            task._handle.throws_exception(True)
         self._invoker.prepare_call(task, args, kwargs, self._constraints)
         task.lock()
         return task
@@ -248,7 +257,7 @@ cdef class PyTask:
         cdef dict proc_kind_to_variant = {
             TaskTarget.GPU: self._gpu_variant,
             TaskTarget.CPU: self._cpu_variant,
-            TaskTarget.OMP: self.omp_variant,
+            TaskTarget.OMP: self._omp_variant,
         }
 
         cdef list variants = [
@@ -359,9 +368,8 @@ cdef class PyTask:
         }
 
     cdef void _invoke_variant(self, ctx: TaskContext, kind: TaskTarget):
-        assert (
-            variant := self._variants[kind]
-        ) is not None, f"Task has no variant for kind: {kind}"
+        variant = self._variants[kind]
+        assert variant is not None, f"Task has no variant for kind: {kind}"
         self._invoker(ctx, variant)
 
     cdef void _cpu_variant(self, TaskContext ctx):

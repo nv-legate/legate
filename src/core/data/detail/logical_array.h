@@ -28,7 +28,6 @@ namespace legate::detail {
 
 class PhysicalArray;
 class AutoTask;
-class BaseArray;
 class ConstraintSolver;
 class ListLogicalArray;
 class Variable;

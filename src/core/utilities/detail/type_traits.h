@@ -119,4 +119,10 @@ struct ptr_compat : std::is_convertible<From*, To*> {};
 template <typename From, typename To>
 inline constexpr bool ptr_compat_v = ptr_compat<From, To>::value;
 
+template <typename T, typename... Ts>
+struct is_same_as_one_of : std::bool_constant<(... || std::is_same<T, Ts>{})> {};
+
+template <typename T, typename... Ts>
+inline constexpr bool is_same_as_one_of_v = is_same_as_one_of<T, Ts...>::value;
+
 }  // namespace legate::traits::detail

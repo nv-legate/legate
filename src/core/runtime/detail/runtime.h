@@ -27,7 +27,7 @@
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/scope.h"
 #include "core/runtime/resource.h"
-#include "core/task/exception.h"
+#include "core/task/detail/returned_exception.h"
 #include "core/type/type_info.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/hash.h"
@@ -37,6 +37,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <queue>
 #include <set>
 #include <string>
 #include <string_view>
@@ -177,8 +178,8 @@ class Runtime {
 
  public:
   void raise_pending_task_exception();
-  [[nodiscard]] std::optional<TaskException> check_pending_task_exception();
-  void record_pending_exception(const Legion::Future& pending_exception);
+  [[nodiscard]] std::optional<ReturnedException> check_pending_task_exception();
+  void record_pending_exception(Legion::Future pending_exception);
 
   [[nodiscard]] std::uint64_t get_unique_store_id();
   [[nodiscard]] std::uint64_t get_unique_storage_id();
@@ -382,7 +383,7 @@ class Runtime {
 
   // TODO(wonchanl): We keep some of the deferred exception code as we will put it back later
   std::vector<Legion::Future> pending_exceptions_{};
-  std::deque<TaskException> outstanding_exceptions_{};
+  std::queue<ReturnedException> outstanding_exceptions_{};
 };
 
 void initialize_core_library();

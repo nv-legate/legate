@@ -758,38 +758,37 @@ void Runtime::check_dimensionality(std::uint32_t dim)
 
 void Runtime::raise_pending_task_exception()
 {
-  auto exn = check_pending_task_exception();
+  auto&& exn = check_pending_task_exception();
   if (exn.has_value()) {
-    throw std::move(exn).value();
+    exn->throw_exception();
   }
 }
 
-std::optional<TaskException> Runtime::check_pending_task_exception()
+std::optional<ReturnedException> Runtime::check_pending_task_exception()
 {
-  // If there's already an outstanding exception from the previous scan, we just return that.
-  if (!outstanding_exceptions_.empty()) {
-    auto result = std::make_optional(std::move(outstanding_exceptions_.front()));
+  if (outstanding_exceptions_.empty()) {
+    // Otherwise, we unpack all pending exceptions and push them to the outstanding exception queue
+    for (auto& pending_exception : pending_exceptions_) {
+      auto&& exn = pending_exception.get_result<ReturnedException>();
 
-    outstanding_exceptions_.pop_front();
-    return result;
-  }
-
-  // Otherwise, we unpack all pending exceptions and push them to the outstanding exception queue
-  for (auto& pending_exception : pending_exceptions_) {
-    auto returned_exception = pending_exception.get_result<ReturnedException>();
-    auto result             = returned_exception.to_task_exception();
-
-    if (result.has_value()) {
-      outstanding_exceptions_.emplace_back(std::move(result).value());
+      if (exn.raised()) {
+        outstanding_exceptions_.push(std::move(exn));
+      }
     }
+    pending_exceptions_.clear();
   }
-  pending_exceptions_.clear();
-  return outstanding_exceptions_.empty() ? std::nullopt : check_pending_task_exception();
+  if (outstanding_exceptions_.empty()) {
+    return std::nullopt;
+  }
+  auto result = std::move(outstanding_exceptions_.front());
+
+  outstanding_exceptions_.pop();
+  return result;
 }
 
-void Runtime::record_pending_exception(const Legion::Future& pending_exception)
+void Runtime::record_pending_exception(Legion::Future pending_exception)
 {
-  pending_exceptions_.push_back(pending_exception);
+  pending_exceptions_.push_back(std::move(pending_exception));
   raise_pending_task_exception();
 }
 

@@ -646,6 +646,24 @@ InternalSharedPtr<T> static_pointer_cast(const InternalSharedPtr<U>& ptr) noexce
   return {ptr, static_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
 }
 
+template <typename T, typename U>
+InternalSharedPtr<T> static_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept
+{
+  return {std::move(ptr), static_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+}
+
+template <typename T, typename U>
+InternalSharedPtr<T> const_pointer_cast(const InternalSharedPtr<U>& ptr) noexcept
+{
+  return {ptr, const_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+}
+
+template <typename T, typename U>
+InternalSharedPtr<T> const_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept
+{
+  return {std::move(ptr), const_cast<typename InternalSharedPtr<T>::element_type*>(ptr.get())};
+}
+
 // ==========================================================================================
 
 template <typename T, typename U>

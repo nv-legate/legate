@@ -210,6 +210,10 @@ list(APPEND legate_core_SOURCES
   src/core/task/task_info.cc
   src/core/task/variant_options.cc
   src/core/task/detail/return.cc
+  src/core/task/detail/return_value.cc
+  src/core/task/detail/returned_exception.cc
+  src/core/task/detail/returned_cpp_exception.cc
+  src/core/task/detail/returned_python_exception.cc
   src/core/task/detail/task_context.cc
   src/core/type/type_info.cc
   src/core/type/detail/type_info.cc

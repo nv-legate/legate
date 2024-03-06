@@ -9,12 +9,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from cpython.bytes cimport PyBytes_AsStringAndSize
 from libc.stdint cimport int64_t
 
 from ..data.physical_array cimport PhysicalArray
 from ..data.scalar cimport Scalar
+from .detail.returned_python_exception cimport _ReturnedPythonException
 
-import traceback
+import pickle
 
 
 cdef class TaskContext:
@@ -76,7 +78,13 @@ cdef class TaskContext:
         return self._scalars
 
     cpdef void set_exception(self, Exception excn) except *:
-        cdef list excn_lines = traceback.format_exception(excn)
-        cdef str what = "".join(excn_lines)
+        cdef Py_ssize_t length = 0
+        cdef char *buf = NULL
+        cdef bytes exn_bytes = pickle.dumps(excn)
 
-        self._handle.impl().set_exception(what.encode())
+        PyBytes_AsStringAndSize(exn_bytes, &buf, &length)
+        self._handle.impl().set_exception(
+            _ReturnedPythonException(
+                buf, length
+            )
+        )

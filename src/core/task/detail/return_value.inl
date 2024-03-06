@@ -12,17 +12,12 @@
 
 #pragma once
 
-#include "core/task/detail/return.h"
-
-#include <cstring>
+#include "core/task/detail/return_value.h"
 
 namespace legate::detail {
 
-inline std::size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
+inline std::size_t ReturnValue::size() const { return size_; }
 
-inline const ReturnValue& ReturnValues::operator[](std::int32_t idx) const
-{
-  return return_values_[idx];
-}
+inline bool ReturnValue::is_device_value() const { return is_device_value_; }
 
 }  // namespace legate::detail

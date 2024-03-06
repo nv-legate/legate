@@ -39,8 +39,7 @@ TaskContext::TaskContext(const Legion::Task* task,
 
   // Make copies of stores that we need to postprocess, as clients might move the stores away
   for (auto& output : outputs_) {
-    auto stores = output->stores();
-    for (auto& store : stores) {
+    for (auto& store : output->stores()) {
       if (store->is_unbound_store()) {
         unbound_stores_.push_back(std::move(store));
       } else if (store->is_future()) {
@@ -49,8 +48,7 @@ TaskContext::TaskContext(const Legion::Task* task,
     }
   }
   for (auto& reduction : reductions_) {
-    auto stores = reduction->stores();
-    for (auto& store : stores) {
+    for (auto& store : reduction->stores()) {
       if (store->is_future()) {
         scalar_stores_.push_back(std::move(store));
       }
@@ -119,19 +117,18 @@ void TaskContext::make_all_unbound_stores_empty()
 ReturnValues TaskContext::pack_return_values() const
 {
   auto return_values = get_return_values();
-  if (can_raise_exception_) {
-    const ReturnedException exn{};
+  if (can_raise_exception()) {
+    const ReturnedCppException exn{};
+
     return_values.push_back(exn.pack());
   }
   return ReturnValues{std::move(return_values)};
 }
 
-ReturnValues TaskContext::pack_return_values_with_exception(std::int32_t index,
-                                                            std::string_view error_message) const
+ReturnValues TaskContext::pack_return_values_with_exception(const ReturnedException& exn) const
 {
   auto return_values = get_return_values();
-  if (can_raise_exception_) {
-    const ReturnedException exn{index, std::move(error_message)};
+  if (can_raise_exception()) {
     return_values.push_back(exn.pack());
   }
   return ReturnValues{std::move(return_values)};
@@ -141,7 +138,7 @@ std::vector<ReturnValue> TaskContext::get_return_values() const
 {
   std::vector<ReturnValue> return_values;
 
-  return_values.reserve(unbound_stores_.size() + scalar_stores_.size() + can_raise_exception_);
+  return_values.reserve(unbound_stores_.size() + scalar_stores_.size() + can_raise_exception());
   for (auto& store : unbound_stores_) {
     return_values.push_back(store->pack_weight());
   }

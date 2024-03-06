@@ -25,5 +25,6 @@ def task(
     *,
     variants: VariantList = DEFAULT_VARIANT_LIST,
     constraints: Sequence[ConstraintProxy] | None = None,
+    throws_exception: bool = False,
     register: bool = True,
 ) -> Callable[[UserFunction], PyTask]: ...

@@ -12,17 +12,24 @@
 
 #pragma once
 
-#include "core/task/detail/return.h"
-
-#include <cstring>
+#include "core/task/detail/returned_exception.h"
 
 namespace legate::detail {
 
-inline std::size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
-
-inline const ReturnValue& ReturnValues::operator[](std::int32_t idx) const
+#if LEGATE_CPP_VERSION < 26
+template <typename T>
+decltype(auto) ReturnedException::visit(T&& fn)
 {
-  return return_values_[idx];
+  return std::visit(std::forward<T>(fn), *this);
 }
+
+template <typename T>
+decltype(auto) ReturnedException::visit(T&& fn) const
+{
+  return std::visit(std::forward<T>(fn), *this);
+}
+#endif
+
+// ==========================================================================================
 
 }  // namespace legate::detail

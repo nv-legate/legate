@@ -104,19 +104,6 @@ void task_wrapper(VariantImpl variant_impl,
 
   ReturnValues return_values{};
 
-  const auto handle_exception = [&](const legate::TaskException& excn) {
-    if (context.can_raise_exception()) {
-      context.make_all_unbound_stores_empty();
-      return_values = context.pack_return_values_with_exception(excn.index(), excn.error_message());
-    } else {
-      // If a Legate exception is thrown by a task that does not declare any exception,
-      // this is a bug in the library that needs to be reported to the developer
-      LEGATE_ABORT("Task " << get_task_name().data() << " threw an exception \""
-                           << excn.error_message().c_str()
-                           << "\", but the task did not declare any exception.");
-    }
-  };
-
   try {
     const legate::TaskContext ctx{&context};
 
@@ -124,12 +111,34 @@ void task_wrapper(VariantImpl variant_impl,
       (*variant_impl)(ctx);
     }
     if (auto& excn = ctx.impl()->get_exception(); excn.has_value()) {
-      handle_exception(legate::TaskException{*std::move(excn)});
+      if (context.can_raise_exception()) {
+        context.make_all_unbound_stores_empty();
+        return_values = context.pack_return_values_with_exception(*excn);
+      } else {
+        // If a Legate exception is thrown by a task that does not declare any exception,
+        // this is a bug in the library that needs to be reported to the developer
+        LEGATE_ABORT("Task " << get_task_name().data()
+                             << " threw an exception \""
+                             // TODO(jfaibussowit): need to extract the actual error message here
+                             << "Unknown Python exception"
+                             << "\", but the task did not declare any exception.");
+      }
     } else {
       return_values = context.pack_return_values();
     }
   } catch (const legate::TaskException& e) {
-    handle_exception(e);
+    if (context.can_raise_exception()) {
+      // TODO(jfaibussowit): fix this to not construct this unless we have actually thrown!
+      const ReturnedCppException exn{e.index(), e.what()};
+
+      context.make_all_unbound_stores_empty();
+      return_values = context.pack_return_values_with_exception(exn);
+    } else {
+      // If a Legate exception is thrown by a task that does not declare any exception,
+      // this is a bug in the library that needs to be reported to the developer
+      LEGATE_ABORT("Task " << get_task_name().data() << " threw an exception \"" << e.what()
+                           << "\", but the task did not declare any exception.");
+    }
   }
 
   // Legion postamble

@@ -20,6 +20,7 @@ from ..._ext.cython_libcpp.string_view cimport (
 
 import gc
 import inspect
+import pickle
 import sys
 from typing import Any, Iterable
 
@@ -67,23 +68,34 @@ cdef class ShutdownCallbackManager:
 cdef ShutdownCallbackManager _shutdown_manager = ShutdownCallbackManager()
 
 
-create_legate_task_exception()
+create_legate_task_exceptions()
 LegateTaskException = <object> _LegateTaskException
+LegatePyTaskException = <object> _LegatePyTaskException
 
 
-cdef void _reraise_legate_exception(
+cdef void _maybe_reraise_legate_exception(
     tuple[type] exception_types, Exception e
 ) except *:
+    cdef str message
+    cdef bytes pkl_bytes
+    cdef Exception exn_obj
     cdef int index
 
-    message, index = e.args
-    try:
-        exn = exception_types[index]
-    except IndexError:
-        raise RuntimeError(f"Invalid exception index {index}")
-
-    raise exn(message)
-
+    if isinstance(e, LegatePyTaskException):
+        (pkl_bytes,) = e.args
+        exn_obj = pickle.loads(pkl_bytes)
+        raise exn_obj
+    if isinstance(e, LegateTaskException):
+        (message, index) = e.args
+        try:
+            exn_type = exception_types[index]
+        except IndexError:
+            raise RuntimeError(
+                f"Invalid exception index ({index}) while mapping task "
+                f"exception: \"{message}\""
+            )
+        raise exn_type(message)
+    raise
 
 cdef class Runtime:
     @staticmethod
@@ -348,15 +360,15 @@ cdef class Runtime:
                 with nogil:
                     self._handle.submit((<AutoTask> op)._handle)
                 return
-            except LegateTaskException as e:
-                _reraise_legate_exception(op.exception_types, e)
+            except Exception as e:
+                _maybe_reraise_legate_exception(op.exception_types, e)
         elif isinstance(op, ManualTask):
             try:
                 with nogil:
                     self._handle.submit((<ManualTask> op)._handle)
                 return
-            except LegateTaskException as e:
-                _reraise_legate_exception(op.exception_types, e)
+            except Exception as e:
+                _maybe_reraise_legate_exception(op.exception_types, e)
 
         raise RuntimeError(f"Unknown type of operation: {type(op)}")
 

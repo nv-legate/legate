@@ -28,6 +28,7 @@ class PyTask:
         func: UserFunction,
         variants: VariantList,
         constraints: Sequence[ConstraintProxy] | None = None,
+        throws_exception: bool = False,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,

@@ -12,34 +12,37 @@
 
 #pragma once
 
-#include "core/task/detail/return_value.h"
 #include "core/utilities/typedefs.h"
 
-#include <vector>
+#include <cstddef>
 
 namespace legate::detail {
 
-class ReturnValues {
+class ReturnValue {
  public:
-  ReturnValues() = default;
-  explicit ReturnValues(std::vector<ReturnValue>&& return_values);
+  ReturnValue(Legion::UntypedDeferredValue value, std::size_t size);
 
-  [[nodiscard]] const ReturnValue& operator[](std::int32_t idx) const;
+  ReturnValue(const ReturnValue&)            = default;
+  ReturnValue& operator=(const ReturnValue&) = default;
 
-  [[nodiscard]] std::size_t legion_buffer_size() const;
-  void legion_serialize(void* buffer) const;
-  void legion_deserialize(const void* buffer);
+  [[nodiscard]] static ReturnValue unpack(const void* ptr,
+                                          std::size_t size,
+                                          Memory::Kind memory_kind);
 
-  [[nodiscard]] static ReturnValue extract(const Legion::Future& future, std::uint32_t to_extract);
+  [[nodiscard]] void* ptr();
+  [[nodiscard]] const void* ptr() const;
+  [[nodiscard]] std::size_t size() const;
+  [[nodiscard]] bool is_device_value() const;
 
-  // Calls the Legion postamble with an instance that packs all return values
+  // Calls the Legion postamble with an instance
   void finalize(Legion::Context legion_context) const;
 
  private:
-  std::size_t buffer_size_{};
-  std::vector<ReturnValue> return_values_{};
+  Legion::UntypedDeferredValue value_{};
+  std::size_t size_{};
+  bool is_device_value_{};
 };
 
 }  // namespace legate::detail
 
-#include "core/task/detail/return.inl"
+#include "core/task/detail/return_value.inl"

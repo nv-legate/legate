@@ -13,33 +13,38 @@
 #pragma once
 
 #include "core/task/detail/return_value.h"
-#include "core/utilities/typedefs.h"
+#include "core/task/detail/returned_exception_common.h"
 
-#include <vector>
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace legate::detail {
 
-class ReturnValues {
+class ReturnedCppException {
  public:
-  ReturnValues() = default;
-  explicit ReturnValues(std::vector<ReturnValue>&& return_values);
+  ReturnedCppException() = default;
+  ReturnedCppException(std::int32_t index, std::string error_message);
 
-  [[nodiscard]] const ReturnValue& operator[](std::int32_t idx) const;
+  [[nodiscard]] static constexpr ExceptionKind kind();
+  [[nodiscard]] std::int32_t index() const;
+  [[nodiscard]] std::uint64_t size() const;
+  [[nodiscard]] bool raised() const;
 
   [[nodiscard]] std::size_t legion_buffer_size() const;
   void legion_serialize(void* buffer) const;
   void legion_deserialize(const void* buffer);
 
-  [[nodiscard]] static ReturnValue extract(const Legion::Future& future, std::uint32_t to_extract);
+  [[nodiscard]] ReturnValue pack() const;
+  [[nodiscard]] std::string to_string() const;
 
-  // Calls the Legion postamble with an instance that packs all return values
-  void finalize(Legion::Context legion_context) const;
+  [[noreturn]] void throw_exception();
 
  private:
-  std::size_t buffer_size_{};
-  std::vector<ReturnValue> return_values_{};
+  std::int32_t index_{};
+  std::string message_{};
 };
 
 }  // namespace legate::detail
 
-#include "core/task/detail/return.inl"
+#include "core/task/detail/returned_cpp_exception.inl"

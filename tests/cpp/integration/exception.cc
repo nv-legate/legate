@@ -19,15 +19,24 @@ namespace exception {
 
 using Exception = DefaultFixture;
 
-const char* library_name = "test_exception";
+namespace {
 
-static legate::Logger logger(library_name);
+constexpr const char* library_name = "test_exception";
+
+[[nodiscard]] legate::Logger& logger()
+{
+  static legate::Logger logger_{library_name};
+
+  return logger_;
+}
+
+constexpr const char* EXN_MSG = "Exception Test";
+
+}  // namespace
 
 enum TaskIDs {
   EXCEPTION_TASK = 0,
 };
-
-const char* EXN_MSG = "Exception Test";
 
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
   static void cpu_variant(legate::TaskContext context)
@@ -38,20 +47,19 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
     // Make sure only some of the  point tasks raise an exception
     if (raise && (context.is_single_task() || context.get_task_index()[0] == 0)) {
       if (context.is_single_task()) {
-        logger.debug() << "Raise an exception for index " << index;
+        logger().debug() << "Raise an exception for index " << index;
       } else {
-        logger.debug() << "Raise an exception for index " << index << " (task "
-                       << context.get_task_index() << ")";
+        logger().debug() << "Raise an exception for index " << index << " (task "
+                         << context.get_task_index() << ")";
       }
-      throw legate::TaskException(index, EXN_MSG);
-    } else {
-      if (context.is_single_task()) {
-        logger.debug() << "Don't raise an exception for index " << index;
-      } else {
-        logger.debug() << "Don't raise an exception for index " << index << " (task "
-                       << context.get_task_index() << ")";
-      };
+      throw legate::TaskException{EXN_MSG};
     }
+    if (context.is_single_task()) {
+      logger().debug() << "Don't raise an exception for index " << index;
+    } else {
+      logger().debug() << "Don't raise an exception for index " << index << " (task "
+                       << context.get_task_index() << ")";
+    };
   }
 };
 

@@ -43,9 +43,9 @@ inline DomainPoint TaskContext::get_task_index() const { return task_->index_poi
 
 inline Domain TaskContext::get_launch_domain() const { return task_->index_domain; }
 
-inline void TaskContext::set_exception(std::string what) { excn_ = std::move(what); }
+inline void TaskContext::set_exception(ReturnedException what) { excn_ = std::move(what); }
 
-inline std::optional<std::string>& TaskContext::get_exception() noexcept { return excn_; }
+inline std::optional<ReturnedException>& TaskContext::get_exception() noexcept { return excn_; }
 
 inline const mapping::detail::Machine& TaskContext::machine() const { return machine_; }
 

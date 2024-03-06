@@ -40,6 +40,7 @@ def task(
     *,
     variants: VariantList = DEFAULT_VARIANT_LIST,
     constraints: Sequence[ConstraintProxy] | None = None,
+    throws_exception: bool = False,
     register: bool = True,
 ) -> Callable[[UserFunction], PyTask] | PyTask:
     r"""Convert a Python function to a Legate task.
@@ -51,6 +52,12 @@ def task(
     variants : VariantList, optional
         The list of variants for which ``func`` is applicable. Defaults
         to ``{DEFAULT_VARIANT_LIST}``.
+    constraints : Sequence[ConstraintProxy], optional
+        The list of constraints which are to be applied to the arguments of
+        ``func``, if any. Defaults to no constraints.
+    throws_exception : bool, False
+        True if any variants of ``func`` throws an exception, False
+        otherwise.
     register : bool, True
         Whether to immediately complete registration of the task.
 
@@ -69,6 +76,7 @@ def task(
             func=f,
             variants=variants,
             constraints=constraints,
+            throws_exception=throws_exception,
             register=register,
         )
 

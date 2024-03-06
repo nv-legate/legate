@@ -12,17 +12,24 @@
 
 #pragma once
 
-#include "core/task/detail/return.h"
-
-#include <cstring>
+#include "core/task/detail/returned_cpp_exception.h"
 
 namespace legate::detail {
 
-inline std::size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
-
-inline const ReturnValue& ReturnValues::operator[](std::int32_t idx) const
+inline ReturnedCppException::ReturnedCppException(std::int32_t index, std::string error_message)
+  : index_{index}, message_{std::move(error_message)}
 {
-  return return_values_[idx];
 }
+
+inline std::int32_t ReturnedCppException::index() const { return index_; }
+
+inline std::uint64_t ReturnedCppException::size() const
+{
+  return static_cast<std::uint64_t>(message_.size());
+}
+
+inline bool ReturnedCppException::raised() const { return !message_.empty(); }
+
+inline constexpr ExceptionKind ReturnedCppException::kind() { return ExceptionKind::CPP; }
 
 }  // namespace legate::detail

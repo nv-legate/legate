@@ -48,6 +48,10 @@ def fake_auto_task() -> FakeAutoTask:
     return FakeAutoTask()
 
 
+class CustomException(Exception):
+    pass
+
+
 class BaseTest:
     def check_valid_task(self, task: PyTask) -> None:
         assert isinstance(task, PyTask)
@@ -297,13 +301,8 @@ class TestTask(BaseTest):
         self.check_valid_registered_task(bar)
         bar()
 
-    # TODO(jfaibussowit)
-    @pytest.mark.xfail
     def test_raised_exception(self) -> None:
-        class CustomException(Exception):
-            pass
-
-        @lct.task
+        @lct.task(throws_exception=True)
         def raises_exception() -> None:
             raise CustomException("There is no peace but the Pax Romana")
 

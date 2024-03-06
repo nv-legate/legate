@@ -12,8 +12,7 @@
 
 #include "core/task/detail/return.h"
 
-#include "core/runtime/detail/library.h"
-#include "core/utilities/deserializer.h"
+#include "core/task/detail/returned_exception_common.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
 #if LegateDefined(LEGATE_USE_CUDA)
@@ -21,181 +20,32 @@
 #include "core/cuda/stream_pool.h"
 #endif
 
-#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <limits>
+#include <tuple>
+#include <vector>
 
 namespace legate::detail {
 
-ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, std::size_t size)
-  : value_{std::move(value)},
-    size_{size},
-    is_device_value_{value_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM}
-{
-}
-
-/*static*/ ReturnValue ReturnValue::unpack(const void* ptr,
-                                           std::size_t size,
-                                           Memory::Kind memory_kind)
-{
-  ReturnValue result{Legion::UntypedDeferredValue{size, memory_kind}, size};
-
-  LegateAssert(!result.is_device_value());
-  std::memcpy(result.ptr(), ptr, size);
-  return result;
-}
-
-void ReturnValue::finalize(Legion::Context legion_context) const
-{
-  value_.finalize(legion_context);
-}
-
-void* ReturnValue::ptr()
-{
-  const AccessorRW<int8_t, 1> acc{value_, size_, false};
-  return acc.ptr(0);
-}
-
-const void* ReturnValue::ptr() const
-{
-  const AccessorRO<int8_t, 1> acc{value_, size_, false};
-  return acc.ptr(0);
-}
-
-ReturnedException::ReturnedException(std::int32_t index, std::string_view error_message)
-  : raised_{true}, index_{index}
-{
-  message_size_ =
-    static_cast<decltype(message_size_)>(std::min(error_message_.size() - 1, error_message.size()));
-  std::memcpy(error_message_.data(), error_message.data(), message_size_);
-  if (message_size_ < error_message_.size()) {
-    std::memset(error_message_.data() + message_size_, 0, error_message_.size() - message_size_);
-  } else {
-    error_message_.back() = '\0';  // always null-terminate
-  }
-}
-
-std::optional<TaskException> ReturnedException::to_task_exception() const
-{
-  if (!raised_) {
-    return std::nullopt;
-  }
-  return std::make_optional<TaskException>(
-    {index_, {error_message_.data(), error_message_.data() + message_size_}});
-}
-
-namespace {
-
-template <typename T>
-constexpr std::size_t max_aligned_size_for_type()
-{
-  // NOLINTNEXTLINE(bugprone-sizeof-expression) // comparison to 0 is the point
-  static_assert(sizeof(T) > 0, "Cannot be used for incomplete type");
-  return sizeof(T) + alignof(T) - 1;
-}
-
-}  // namespace
-
-// Note, this function returns an upper bound on the size of the type as it also incorporates
-// alignment requirements for each member. It cannot know how much of the extra alignment
-// padding it needs because that depends on how the input pointer is aligned when it goes to
-// pack.
-std::size_t ReturnedException::legion_buffer_size() const
-{
-  auto size = max_aligned_size_for_type<decltype(raised_)>();
-
-  if (raised_) {
-    size += max_aligned_size_for_type<decltype(index_)>();
-    size += max_aligned_size_for_type<decltype(message_size_)>();
-    size += message_size_;
-  }
-  return size;
-}
-
-namespace {
-
-// REVIEW: why no BufferBuilder? Then we don't have to repeat this logic
-template <typename T>
-[[nodiscard]] std::pair<void*, std::size_t> pack_buffer(void* buf,
-                                                        std::size_t remaining_cap,
-                                                        T&& value)
-{
-  const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
-
-  *static_cast<std::decay_t<T>*>(ptr) = std::forward<T>(value);
-  return {static_cast<char*>(ptr) + sizeof(T), remaining_cap - sizeof(T) - align_offset};
-}
-
-}  // namespace
-
-void ReturnedException::legion_serialize(void* buffer) const
-{
-  auto rem_cap = legion_buffer_size();
-
-  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, raised_);
-  if (raised_) {
-    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, index_);
-    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, message_size_);
-    std::memcpy(buffer, error_message_.data(), message_size_);
-  }
-}
-
-namespace {
-
-template <typename T>
-[[nodiscard]] std::pair<void*, std::size_t> unpack_buffer(void* buf,
-                                                          std::size_t remaining_cap,
-                                                          T* value)
-{
-  const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
-
-  *value = *static_cast<std::decay_t<T>*>(ptr);
-  return {static_cast<char*>(ptr) + sizeof(T), remaining_cap - sizeof(T) - align_offset};
-}
-
-}  // namespace
-
-void ReturnedException::legion_deserialize(const void* buffer)
-{
-  // There is no information about the size of the buffer, nor can we know how much we need
-  // until we pack all of it. So we just lie and say we have infinite memory.
-  auto rem_cap = std::numeric_limits<std::size_t>::max();
-  auto ptr     = const_cast<void*>(buffer);
-
-  std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &raised_);
-  if (raised_) {
-    std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &index_);
-    std::tie(ptr, rem_cap) = unpack_buffer(ptr, rem_cap, &message_size_);
-    LegateAssert(message_size_ <= error_message_.size());
-    std::memcpy(error_message_.data(), ptr, message_size_);
-    std::memset(error_message_.data() + message_size_, 0, error_message_.size() - message_size_);
-    error_message_.back() = '\0';  // always null-terminate, regardless of size
-  }
-}
-
-ReturnValue ReturnedException::pack() const
-{
-  auto buffer_size = legion_buffer_size();
-  auto mem_kind    = find_memory_kind_for_executing_processor();
-  auto buffer      = Legion::UntypedDeferredValue(buffer_size, mem_kind);
-
-  const AccessorWO<int8_t, 1> acc{buffer, buffer_size, false};
-  legion_serialize(acc.ptr(0));
-
-  return {buffer, buffer_size};
-}
-
 ReturnValues::ReturnValues(std::vector<ReturnValue>&& return_values)
-  : return_values_(std::move(return_values))
+  : return_values_{std::move(return_values)}
 {
-  if (return_values_.size() > 1) {
-    buffer_size_ += sizeof(uint32_t);
-    for (auto& ret : return_values_) {
-      buffer_size_ += sizeof(uint32_t) + ret.size();
-    }
-  } else if (!return_values_.empty()) {
-    buffer_size_ = return_values_[0].size();
+  switch (return_values_.size()) {
+    case 0: break;
+    case 1: buffer_size_ = return_values_.front().size(); break;
+    default:
+      // total number of values
+      buffer_size_ += max_aligned_size_for_type<std::uint32_t>();
+      for (auto& ret : return_values_) {
+        // offset to scalar i, note we do not align here because these are packed immediately
+        // after the total number (which is also a std::uint32_t), and therefore will never
+        // need to be aligned up or down.
+        buffer_size_ += sizeof(std::uint32_t);
+        // size of value to pack
+        buffer_size_ += ret.size();
+      }
+      break;
   }
 }
 
@@ -211,6 +61,7 @@ void ReturnValues::legion_serialize(void* buffer) const
   //           <============ offsets ===============> <==== values =======>
   //
   // the size of value i is computed by offsets[i] - (i == 0 ? 0 : offsets[i-1])
+  auto rem_cap = legion_buffer_size();
 
   // Special case with a single scalar
   if (return_values_.size() == 1) {
@@ -226,58 +77,75 @@ void ReturnValues::legion_serialize(void* buffer) const
                                  cudaMemcpyDeviceToHost,
                                  cuda::StreamPool::get_stream_pool().get_stream()));
 #endif
-      return;
+    } else {
+      std::tie(buffer, rem_cap) =
+        pack_buffer(buffer, rem_cap, ret.size(), static_cast<const char*>(ret.ptr()));
     }
-    std::memcpy(buffer, ret.ptr(), ret.size());
     return;
   }
 
-  *static_cast<uint32_t*>(buffer) = return_values_.size();
-  auto ptr                        = static_cast<int8_t*>(buffer) + sizeof(uint32_t);
+  std::tie(buffer, rem_cap) =
+    pack_buffer(buffer, rem_cap, static_cast<std::uint32_t>(return_values_.size()));
 
   std::uint32_t offset = 0;
-  for (auto ret : return_values_) {
+  for (auto&& ret : return_values_) {
     offset += ret.size();
-    *reinterpret_cast<uint32_t*>(ptr) = offset;
-    ptr                               = ptr + sizeof(uint32_t);
+
+    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, offset);
   }
 
 #if LegateDefined(LEGATE_USE_CUDA)
   if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+
     for (auto&& ret : return_values_) {
       const auto size = ret.size();
+
       if (ret.is_device_value()) {
-        CHECK_CUDA(cudaMemcpyAsync(ptr, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
+        CHECK_CUDA(cudaMemcpyAsync(buffer, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
+        buffer = static_cast<char*>(buffer) + size;
+        rem_cap -= size;
       } else {
-        std::memcpy(ptr, ret.ptr(), size);
+        std::tie(buffer, rem_cap) =
+          pack_buffer(buffer, rem_cap, size, static_cast<const char*>(ret.ptr()));
       }
-      ptr += size;
     }
   } else
 #endif
   {
     for (auto&& ret : return_values_) {
-      const auto size = ret.size();
-      std::memcpy(ptr, ret.ptr(), size);
-      ptr += size;
+      std::tie(buffer, rem_cap) =
+        pack_buffer(buffer, rem_cap, ret.size(), static_cast<const char*>(ret.ptr()));
     }
   }
 }
 
+namespace {
+
+[[nodiscard]] std::tuple<std::uint32_t, const std::uint32_t*, const char*>
+extract_offsets_and_values(const void* buffer,
+                           std::size_t rem_cap = std::numeric_limits<std::size_t>::max())
+{
+  std::uint32_t num_values{};
+  std::tie(buffer, std::ignore) = unpack_buffer(buffer, rem_cap, &num_values);
+  const auto offsets            = static_cast<const std::uint32_t*>(buffer);
+  const auto values = reinterpret_cast<const char*>(offsets) + (sizeof(*offsets) * num_values);
+
+  return {num_values, offsets, values};
+}
+
+}  // namespace
+
 void ReturnValues::legion_deserialize(const void* buffer)
 {
-  auto mem_kind = find_memory_kind_for_executing_processor();
+  const auto mem_kind                      = find_memory_kind_for_executing_processor();
+  const auto [num_values, offsets, values] = extract_offsets_and_values(buffer);
 
-  auto ptr        = static_cast<const int8_t*>(buffer);
-  auto num_values = *reinterpret_cast<const uint32_t*>(ptr);
-
-  auto offsets = reinterpret_cast<const uint32_t*>(ptr + sizeof(uint32_t));
-  auto values  = ptr + sizeof(uint32_t) + sizeof(uint32_t) * num_values;
-
+  return_values_.reserve(num_values);
   for (std::uint32_t idx = 0, offset = 0; idx < num_values; ++idx) {
     const auto next_offset = offsets[idx];
     const auto size        = next_offset - offset;
+
     return_values_.push_back(ReturnValue::unpack(values + offset, size, mem_kind));
     offset = next_offset;
   }
@@ -285,18 +153,12 @@ void ReturnValues::legion_deserialize(const void* buffer)
 
 /*static*/ ReturnValue ReturnValues::extract(const Legion::Future& future, std::uint32_t to_extract)
 {
-  auto kind          = find_memory_kind_for_executing_processor();
-  const auto* buffer = future.get_buffer(kind);
-
-  auto ptr        = static_cast<const int8_t*>(buffer);
-  auto num_values = *reinterpret_cast<const uint32_t*>(ptr);
-
-  auto offsets = reinterpret_cast<const uint32_t*>(ptr + sizeof(uint32_t));
-  auto values  = ptr + sizeof(uint32_t) + sizeof(uint32_t) * num_values;
-
-  const std::uint32_t next_offset = offsets[to_extract];
-  const std::uint32_t offset      = to_extract == 0 ? 0 : offsets[to_extract - 1];
-  const std::uint32_t size        = next_offset - offset;
+  const auto kind = find_memory_kind_for_executing_processor();
+  const auto [_, offsets, values] =
+    extract_offsets_and_values(future.get_buffer(kind), future.get_untyped_size());
+  const auto next_offset = offsets[to_extract];
+  const auto offset      = to_extract == 0 ? 0 : offsets[to_extract - 1];
+  const auto size        = next_offset - offset;
 
   return ReturnValue::unpack(values + offset, size, kind);
 }
@@ -325,86 +187,11 @@ void ReturnValues::finalize(Legion::Context legion_context) const
 
   const std::size_t return_size = legion_buffer_size();
   auto return_buffer =
-    Legion::UntypedDeferredValue(return_size, find_memory_kind_for_executing_processor());
-  const AccessorWO<int8_t, 1> acc{return_buffer, return_size, false};
+    Legion::UntypedDeferredValue{return_size, find_memory_kind_for_executing_processor()};
+  const AccessorWO<std::int8_t, 1> acc{return_buffer, return_size, false};
+
   legion_serialize(acc.ptr(0));
   return_buffer.finalize(legion_context);
-}
-
-class JoinReturnedException {
- public:
-  using LHS = ReturnedException;
-  using RHS = LHS;
-
-  static const ReturnedException identity;
-
-  template <bool EXCLUSIVE>
-  static void apply(LHS& lhs, RHS rhs)
-  {
-    LegateCheck(EXCLUSIVE);
-    if (lhs.raised() || !rhs.raised()) {
-      return;
-    }
-    lhs = std::move(rhs);
-  }
-
-  template <bool EXCLUSIVE>
-  static void fold(RHS& rhs1, RHS rhs2)
-  {
-    LegateCheck(EXCLUSIVE);
-    if (rhs1.raised() || !rhs2.raised()) {
-      return;
-    }
-    rhs1 = std::move(rhs2);
-  }
-};
-
-/*static*/ const ReturnedException JoinReturnedException::identity;
-
-namespace {
-
-void pack_returned_exception(const ReturnedException& value, void*& ptr, size_t& size)
-{
-  auto new_size = value.legion_buffer_size();
-  if (new_size > size) {
-    size         = new_size;
-    auto new_ptr = std::realloc(ptr, new_size);
-    LegateCheck(new_ptr);  // realloc returns nullptr on failure, so check before clobbering ptr
-    ptr = new_ptr;
-  }
-  value.legion_serialize(ptr);
-}
-
-}  // namespace
-
-static void returned_exception_init(  // NOLINT(misc-use-anonymous-namespace)
-  const Legion::ReductionOp* /*reduction_op*/,
-  void*& ptr,
-  size_t& size)
-{
-  pack_returned_exception(JoinReturnedException::identity, ptr, size);
-}
-
-static void returned_exception_fold(  // NOLINT(misc-use-anonymous-namespace)
-  const Legion::ReductionOp* /*reduction_op*/,
-  void*& lhs_ptr,
-  size_t& lhs_size,
-  const void* rhs_ptr)
-
-{
-  ReturnedException lhs, rhs;
-  lhs.legion_deserialize(lhs_ptr);
-  rhs.legion_deserialize(rhs_ptr);
-  JoinReturnedException::fold<true>(lhs, rhs);
-  pack_returned_exception(lhs, lhs_ptr, lhs_size);
-}
-
-void register_exception_reduction_op(const Library* library)
-{
-  auto redop_id = library->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
-  auto* redop   = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();
-  Legion::Runtime::register_reduction_op(
-    redop_id, redop, returned_exception_init, returned_exception_fold);
 }
 
 }  // namespace legate::detail

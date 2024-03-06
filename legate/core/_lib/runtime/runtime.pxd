@@ -36,12 +36,19 @@ cdef extern from *:
     #include <Python.h>
     #include <stdexcept>
     #include "core/task/exception.h"
+    #include "core/task/detail/exception.h"
 
     PyObject* _LegateTaskException = nullptr;
+    PyObject* _LegatePyTaskException = nullptr;
 
-    void create_legate_task_exception() {
+    void create_legate_task_exceptions()
+    {
       _LegateTaskException =
         PyErr_NewException("legate.core.LegateTaskException", NULL, NULL);
+      assert(_LegateTaskException);
+      _LegatePyTaskException =
+        PyErr_NewException("legate.core.LegatePyTaskException", NULL, NULL);
+      assert(_LegatePyTaskException);
     }
 
     void handle_legate_exception() {
@@ -50,23 +57,64 @@ cdef extern from *:
         // procedure for a custom exception handler in Cython
         if (!PyErr_Occurred()) throw;
 
-      // Re-raise a Legate task exception from C++ as a LegateTaskException
-      // so we can catch it in the outer context and rewrite it to the
-      // user-asked one.
-      } catch (const legate::TaskException& exn) {
-        PyObject* args = PyTuple_New(2);
-        PyObject* message = PyUnicode_FromString(exn.what());
-        PyObject* index = PyLong_FromLong(static_cast<long>(exn.index()));
+        // Re-raise a Legate task exception from C++ as a LegateTaskException
+        // so we can catch it in the outer context and rewrite it to the
+        // user-asked one.
+      } catch (const legate::detail::PythonTaskException& exn) {
+        PyObject* bytes = PyBytes_FromStringAndSize(exn.data(), exn.size());
 
-        int result = PyTuple_SetItem(args, 0, message);
-        assert(result == 0);
+        assert(bytes);
+        PyErr_SetObject(_LegatePyTaskException, bytes);
+      } catch (const legate::TaskException& exn) {
+        PyObject* args = nullptr;
+        PyObject* message = nullptr;
+        PyObject* index = nullptr;
+        int result = 0;
+
+        args = PyTuple_New(2);
+        if (!args) {
+          goto error;
+        }
+        message = PyUnicode_FromString(exn.what());
+        if (!message) {
+          goto error;
+        }
+        index = PyLong_FromLong(static_cast<long>(exn.index()));
+        if (!index) {
+          goto error;
+        }
+
+        result = PyTuple_SetItem(args, 0, message);
+        // PyTuple_SetItem() decrements item refcnt on error, so we don't want
+        // inadvertently decref it below
+        message = nullptr;
+        if (result) {
+          goto error;
+        }
+
         result = PyTuple_SetItem(args, 1, index);
-        assert(result == 0);
-        static_cast<void>(result);
+        // PyTuple_SetItem() decrements item refcnt on error, so we don't want
+        // inadvertently decref it below
+        index = nullptr;
+        if (result) {
+          goto error;
+        }
 
         PyErr_SetObject(_LegateTaskException, args);
+        return;
 
-      // Keep the default exception mapping
+      error:
+        Py_XDECREF(args);
+        Py_XDECREF(message);
+        Py_XDECREF(index);
+        assert(
+          (result == 0)
+          && "Error occured setting values into Python tuple"
+        );
+        assert(
+          false
+          && "Error occurred during C++ to Python exception wrangling"
+        );
       } catch (const std::bad_alloc& exn) {
         PyErr_SetString(PyExc_MemoryError, exn.what());
       } catch (const std::bad_cast& exn) {
@@ -93,7 +141,8 @@ cdef extern from *:
     }
     """
     cdef PyObject* _LegateTaskException
-    cdef void create_legate_task_exception()
+    cdef PyObject* _LegatePyTaskException
+    cdef void create_legate_task_exceptions()
     cdef void handle_legate_exception()
 
 
