@@ -22,6 +22,9 @@ class Trace {
   explicit Trace(std::uint32_t trace_id);
   ~Trace();
 
+  static void begin_trace(std::uint32_t trace_id);
+  static void end_trace(std::uint32_t trace_id);
+
   Trace(const Trace&)            = delete;
   Trace& operator=(const Trace&) = delete;
   Trace(Trace&&)                 = delete;

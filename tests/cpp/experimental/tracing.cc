@@ -26,34 +26,54 @@ struct DummyTask : public legate::LegateTask<DummyTask> {
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
-TEST_F(Tracing, Test)
+legate::LogicalArray setup()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library("tracing_test");
   DummyTask::register_variants(library);
 
-  auto store = runtime->create_array(legate::Shape{10}, legate::int64());
+  return runtime->create_array(legate::Shape{10}, legate::int64());
+}
 
-  auto launch_tasks = [&runtime, &library, &store]() {
-    runtime->issue_fill(store, legate::Scalar{std::int64_t{123}});
-    {
-      auto task = runtime->create_task(library, DummyTask::TASK_ID);
-      task.add_input(store);
-      runtime->submit(std::move(task));
-    }
-    {
-      auto task = runtime->create_task(library, DummyTask::TASK_ID);
-      task.add_input(store);
-      task.add_output(store);
-      runtime->submit(std::move(task));
-    }
-  };
+void launch_tasks(legate::LogicalArray& array)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library("tracing_test");
+  runtime->issue_fill(array, legate::Scalar{std::int64_t{123}});
+  {
+    auto task = runtime->create_task(library, DummyTask::TASK_ID);
+    task.add_input(array);
+    runtime->submit(std::move(task));
+  }
+  {
+    auto task = runtime->create_task(library, DummyTask::TASK_ID);
+    task.add_input(array);
+    task.add_output(array);
+    runtime->submit(std::move(task));
+  }
+}
 
-  constexpr std::uint32_t NUM_ITER = 10;
-  launch_tasks();
+constexpr std::uint32_t NUM_ITER = 10;
+constexpr std::uint32_t TRACE_ID = 42;
+
+TEST_F(Tracing, RAII)
+{
+  auto array = setup();
+  launch_tasks(array);
   for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
-    legate::experimental::Trace trace{42};
-    launch_tasks();
+    legate::experimental::Trace trace{TRACE_ID};
+    launch_tasks(array);
+  }
+}
+
+TEST_F(Tracing, BeginEnd)
+{
+  auto array = setup();
+  launch_tasks(array);
+  for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
+    legate::experimental::Trace::begin_trace(TRACE_ID);
+    launch_tasks(array);
+    legate::experimental::Trace::end_trace(TRACE_ID);
   }
 }
 

@@ -18,11 +18,8 @@ namespace legate::experimental {
 
 class Trace::Impl {
  public:
-  explicit Impl(std::uint32_t trace_id) : trace_id_{trace_id}
-  {
-    detail::Runtime::get_runtime()->begin_trace(trace_id_);
-  }
-  ~Impl() { detail::Runtime::get_runtime()->end_trace(trace_id_); }
+  explicit Impl(std::uint32_t trace_id) : trace_id_{trace_id} { Trace::begin_trace(trace_id_); }
+  ~Impl() { Trace::end_trace(trace_id_); }
 
  private:
   const std::uint32_t trace_id_{};
@@ -31,5 +28,15 @@ class Trace::Impl {
 Trace::Trace(std::uint32_t trace_id) : impl_{std::make_unique<Trace::Impl>(trace_id)} {}
 
 Trace::~Trace() = default;
+
+/*static*/ void Trace::begin_trace(std::uint32_t trace_id)
+{
+  detail::Runtime::get_runtime()->begin_trace(trace_id);
+}
+
+/*static*/ void Trace::end_trace(std::uint32_t trace_id)
+{
+  detail::Runtime::get_runtime()->end_trace(trace_id);
+}
 
 }  // namespace legate::experimental
