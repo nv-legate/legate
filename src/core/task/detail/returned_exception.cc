@@ -33,7 +33,7 @@ namespace legate::detail {
 template <typename T>
 /*static*/ ReturnedException ReturnedException::construct_specific_from_buffer_(const void* buf)
 {
-  static_assert(traits::detail::is_same_as_one_of_v<T, base_type>);
+  static_assert(traits::detail::is_same_as_one_of_v<T, variant_type>);
 
   auto ret = T{};
 

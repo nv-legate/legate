@@ -18,23 +18,38 @@
 
 #include <cstddef>
 #include <string>
+#include <type_traits>
 #include <variant>
 
 namespace legate::detail {
 
-class ReturnedException : public std::variant<ReturnedCppException, ReturnedPythonException> {
-  using base_type = std::variant<ReturnedCppException, ReturnedPythonException>;
-
+class ReturnedException {
  public:
-  using base_type::base_type;
+  using variant_type = std::variant<ReturnedCppException, ReturnedPythonException>;
 
-#if LEGATE_CPP_VERSION < 26
+  ReturnedException() noexcept                               = default;
+  ReturnedException(const ReturnedException&)                = default;
+  ReturnedException(ReturnedException&&) noexcept            = default;
+  ReturnedException& operator=(const ReturnedException&)     = default;
+  ReturnedException& operator=(ReturnedException&&) noexcept = default;
+
+  template <typename T,
+            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, ReturnedException>>>
+  // We want to mimic variant
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  ReturnedException(T&& t) noexcept(std::is_nothrow_constructible_v<variant_type, T>);
+
+  // This should technically just be a typename... T, but we use 3 args to disambiguate from
+  // the other ctors.
+  template <typename T, typename U, typename... V>
+  ReturnedException(T&& arg1, U&& arg2, V&&... rest) noexcept(
+    std::is_nothrow_constructible_v<variant_type, T, U, V...>);
+
   template <typename T>
   [[nodiscard]] decltype(auto) visit(T&& fn);
 
   template <typename T>
   [[nodiscard]] decltype(auto) visit(T&& fn) const;
-#endif
 
   [[nodiscard]] bool raised() const;
 
@@ -52,6 +67,8 @@ class ReturnedException : public std::variant<ReturnedCppException, ReturnedPyth
  private:
   template <typename T>
   [[nodiscard]] static ReturnedException construct_specific_from_buffer_(const void* buf);
+
+  variant_type variant_{};
 };
 
 }  // namespace legate::detail
