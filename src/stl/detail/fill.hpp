@@ -20,6 +20,17 @@
 namespace legate::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * Fills the given range with the specified value.
+ *
+ * This function fills the elements in the range [begin, end) with the specified value.
+ * The range must be a logical store-like object, meaning it supports the necessary
+ * operations for storing values. The value to be filled is specified by the `val`
+ * parameter.
+ *
+ * @param output The range to be filled.
+ * @param val The value to fill the range with.
+ */
 template <typename Range>              //
   requires(logical_store_like<Range>)  //
 void fill(Range&& output, value_type_of_t<Range> val)
