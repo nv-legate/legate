@@ -47,7 +47,7 @@ index 7ad07e2..4488696 100644
 +
 +install(
 +  DIRECTORY   include/tcb
-+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tcb
++  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 +)
 +
 +include(CMakePackageConfigHelpers)
