@@ -58,6 +58,10 @@ inline std::uint64_t ReturnedPythonException::size() const { return size_; }
 
 inline bool ReturnedPythonException::raised() const { return data(); }
 
-inline std::size_t ReturnedPythonException::legion_buffer_size() const { return size() + 1; }
+inline std::size_t ReturnedPythonException::legion_buffer_size() const
+{
+  return max_aligned_size_for_type<decltype(kind())>() +
+         max_aligned_size_for_type<decltype(size())>() + size();
+}
 
 }  // namespace legate::detail

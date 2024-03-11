@@ -18,9 +18,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <limits>
 #include <sstream>
-#include <string_view>
 #include <utility>
 
 namespace legate::detail {
@@ -31,8 +31,7 @@ void ReturnedPythonException::legion_serialize(void* buffer) const
 
   std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, kind());
   std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, size());
-  std::tie(buffer, rem_cap) =
-    pack_buffer(buffer, rem_cap, size(), static_cast<const char*>(data()));
+  static_cast<void>(pack_buffer(buffer, rem_cap, size(), static_cast<const char*>(data())));
 }
 
 void ReturnedPythonException::legion_deserialize(const void* buffer)
@@ -45,16 +44,14 @@ void ReturnedPythonException::legion_deserialize(const void* buffer)
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &kind);
   LegateAssert(kind == ExceptionKind::PYTHON);
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &size_);
-  if (size()) {
-    const auto mem = new char[size()];
+  if (const auto buf_size = size()) {
+    // NOLINTNEXTLINE(readability-magic-numbers)
+    static_assert(LEGATE_CPP_MIN_VERSION < 20, "Use make_unique_for_overwrite below");
+    auto mem       = std::unique_ptr<char[]>{new char[buf_size]};
+    const auto ptr = mem.get();
 
-    try {
-      std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, size(), &mem);
-    } catch (...) {
-      delete[] mem;
-      throw;
-    }
-    pickle_bytes_.reset(mem);
+    static_cast<void>(unpack_buffer(buffer, buf_size, buf_size, &ptr));
+    pickle_bytes_.reset(mem.release());
   }
 }
 
@@ -73,8 +70,12 @@ std::string ReturnedPythonException::to_string() const
 {
   std::stringstream ss;
 
-  ss << "ReturnedPythonException(size = " << size()
-     << ", bytes = " << std::string_view{pickle_bytes_.get(), size()} << ')';
+  ss << "ReturnedPythonException(size = " << size() << ", bytes = ";
+  for (std::uint64_t i = 0; i < size(); ++i) {
+    ss << "\\x" << std::setw(2) << std::setfill('0') << std::hex
+       << static_cast<std::int32_t>(pickle_bytes_.get()[i]);
+  }
+  ss << ')';
   return std::move(ss).str();
 }
 

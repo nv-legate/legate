@@ -301,13 +301,17 @@ class TestTask(BaseTest):
         self.check_valid_registered_task(bar)
         bar()
 
-    def test_raised_exception(self) -> None:
+    @pytest.mark.parametrize(
+        "ExnType",
+        (CustomException, ValueError, TypeError, RuntimeError, IndexError),
+    )
+    def test_raised_exception(self, ExnType: type) -> None:
         @lct.task(throws_exception=True)
         def raises_exception() -> None:
-            raise CustomException("There is no peace but the Pax Romana")
+            raise ExnType("There is no peace but the Pax Romana")
 
         with pytest.raises(
-            CustomException, match=r"There is no peace but the Pax Romana"
+            ExnType, match=r"There is no peace but the Pax Romana"
         ):
             raises_exception()
 
