@@ -21,6 +21,24 @@
 
 namespace legate {
 
+namespace detail {
+
+// T is always the same T given as the shared pointer type. So we use U here because we want to
+// delete the most derived type (which might not be T).
+template <typename /* T */, typename U>
+struct shared_ptr_default_delete : std::default_delete<U> {};
+
+// Unless it is an array type, in which case we fall back to using T to deduce the deleter. U
+// is always given as a pointer-type, not an array, and so we want to preserve the fact that
+// the pointer is deleted via delete[].
+template <typename T, typename U, std::size_t N>
+struct shared_ptr_default_delete<T[N], U> : std::default_delete<T[]> {};
+
+template <typename T, typename U>
+struct shared_ptr_default_delete<T[], U> : std::default_delete<T[]> {};
+
+}  // namespace detail
+
 template <typename T>
 class EnableSharedFromThis;
 
@@ -230,12 +248,14 @@ class InternalSharedPtr {
   void reset() noexcept;
   void reset(std::nullptr_t) noexcept;
   template <typename U,
-            typename D = std::default_delete<U>,
+            typename D = detail::shared_ptr_default_delete<T, U>,
             typename A = std::allocator<U>,
             typename   = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   void reset(U* ptr, D deleter = D{}, A allocator = A{});
 
   // Observers
+  [[nodiscard]] element_type& operator[](std::ptrdiff_t idx) noexcept;
+  [[nodiscard]] const element_type& operator[](std::ptrdiff_t idx) const noexcept;
   [[nodiscard]] element_type* get() const noexcept;
   [[nodiscard]] element_type& operator*() const noexcept;
   [[nodiscard]] element_type* operator->() const noexcept;

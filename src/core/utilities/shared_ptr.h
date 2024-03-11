@@ -117,12 +117,14 @@ class SharedPtr {
   void reset() noexcept;
   void reset(std::nullptr_t) noexcept;
   template <typename U,
-            typename D = std::default_delete<U>,
+            typename D = detail::shared_ptr_default_delete<T, U>,
             typename A = std::allocator<U>,
             typename   = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
   void reset(U* ptr, D deleter = D{}, A allocator = A{});
 
   // Observers
+  [[nodiscard]] element_type& operator[](std::ptrdiff_t idx) noexcept;
+  [[nodiscard]] const element_type& operator[](std::ptrdiff_t idx) const noexcept;
   [[nodiscard]] element_type* get() const noexcept;
   [[nodiscard]] element_type& operator*() const noexcept;
   [[nodiscard]] element_type* operator->() const noexcept;

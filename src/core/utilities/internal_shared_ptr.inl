@@ -353,13 +353,14 @@ catch (...)
 
 template <typename T>
 InternalSharedPtr<T>::InternalSharedPtr(element_type* ptr)
-  : InternalSharedPtr{ptr, std::default_delete<element_type>{}}
+  : InternalSharedPtr{ptr, detail::shared_ptr_default_delete<T, element_type>{}}
 {
 }
 
 template <typename T>
 template <typename U, typename SFINAE>
-InternalSharedPtr<T>::InternalSharedPtr(U* ptr) : InternalSharedPtr{ptr, std::default_delete<U>{}}
+InternalSharedPtr<T>::InternalSharedPtr(U* ptr)
+  : InternalSharedPtr{ptr, detail::shared_ptr_default_delete<T, U>{}}
 {
   static_assert(!std::is_void_v<U>, "incomplete type");
   // NOLINTNEXTLINE(bugprone-sizeof-expression)
@@ -546,7 +547,7 @@ void swap(InternalSharedPtr<T>& lhs, InternalSharedPtr<T>& rhs) noexcept
 template <typename T>
 void InternalSharedPtr<T>::reset() noexcept
 {
-  InternalSharedPtr<T>{}.swap(*this);
+  InternalSharedPtr{}.swap(*this);
 }
 
 template <typename T>
@@ -559,10 +560,26 @@ template <typename T>
 template <typename U, typename D, typename A, typename SFINAE>
 void InternalSharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 {
-  InternalSharedPtr<T>{ptr, std::move(deleter), std::move(allocator)}.swap(*this);
+  InternalSharedPtr{ptr, std::move(deleter), std::move(allocator)}.swap(*this);
 }
 
 // ==========================================================================================
+
+template <typename T>
+typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
+  std::ptrdiff_t idx) noexcept
+{
+  static_assert(std::is_array_v<T>);
+  return get()[idx];
+}
+
+template <typename T>
+const typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
+  std::ptrdiff_t idx) const noexcept
+{
+  static_assert(std::is_array_v<T>);
+  return get()[idx];
+}
 
 template <typename T>
 typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const noexcept

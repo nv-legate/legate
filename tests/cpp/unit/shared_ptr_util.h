@@ -25,10 +25,19 @@ struct UserType {
   std::int32_t value{};
   std::array<char, 128> after_padding{};
 
+  UserType() = default;
+
   explicit UserType(std::int32_t v) : value{v}
   {
     before_padding.fill(0);
     after_padding.fill(0);
+  }
+
+  UserType& operator=(std::int32_t v)
+  {
+    check_mem_corruption();
+    value = v;
+    return *this;
   }
 
   UserType& operator++()
@@ -61,7 +70,7 @@ struct UserType {
 #define SHARED_PTR_UTIL_FN_BEGIN(...) SCOPED_TRACE(__VA_ARGS__)
 
 template <template <typename> typename SharedPtrImpl, typename T, typename U = T>
-inline void test_basic_equal(SharedPtrImpl<T>& ptr, U* bare_ptr)
+inline void test_basic_equal(SharedPtrImpl<T>& ptr, U* bare_ptr, std::size_t N = 0)
 {
   SHARED_PTR_UTIL_FN_BEGIN("");
   ASSERT_EQ(ptr.get(), bare_ptr);
@@ -79,6 +88,14 @@ inline void test_basic_equal(SharedPtrImpl<T>& ptr, U* bare_ptr)
       ASSERT_EQ(*ptr, *bare_ptr);
       *ptr = val_before;
       ASSERT_EQ(*ptr, *bare_ptr);
+
+      if constexpr (std::is_array_v<T>) {
+        for (std::size_t i = 0; i < N; ++i) {
+          ASSERT_EQ(ptr[i], bare_ptr[i]);
+          // ensure const overload is also equal
+          ASSERT_EQ(const_cast<const SharedPtrImpl<T>&>(ptr)[i], bare_ptr[i]);
+        }
+      }
     }
   } else {
     ASSERT_FALSE(ptr);
@@ -181,15 +198,17 @@ struct BasicDerived : Base {
 };
 
 struct TogglingDerived final : BasicDerived {
-  bool* toggle;
+  bool* toggle{};
 
-  TogglingDerived(bool* tptr) : toggle{tptr} {}
+  TogglingDerived() = delete;
+  explicit TogglingDerived(bool* tptr) : toggle{tptr} { check_mem_corruption(); }
 
-  ~TogglingDerived() { *toggle = true; }
+  ~TogglingDerived() override { *toggle = true; }
 
   bool operator==(const TogglingDerived& other) const
   {
-    return BasicDerived::operator==(other) && toggle == other.toggle;
+    check_mem_corruption();
+    return BasicDerived::operator==(other) && *toggle == *other.toggle;
   }
 
   void check_mem_corruption() const override

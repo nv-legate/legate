@@ -468,3 +468,16 @@ TYPED_TEST(SharedPtrUnit, UniqueAssign)
   ASSERT_EQ(uniq.get(), nullptr);
   ASSERT_FALSE(uniq);
 }
+
+TYPED_TEST(SharedPtrUnit, Array)
+{
+  constexpr auto N = 100;
+  auto bare_ptr    = new TypeParam[N];
+
+  for (auto i = 0; i < N; ++i) {
+    bare_ptr[i] = 1;
+  }
+  legate::SharedPtr<TypeParam[]> ptr{bare_ptr};
+
+  test_basic_equal(ptr, bare_ptr, N);
+}
