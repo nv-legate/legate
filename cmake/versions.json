@@ -7,7 +7,7 @@
     },
     "Legion": {
       "git_url" : "https://gitlab.com/StanfordLegion/legion.git",
-      "git_tag" : "ada1f4d6fcb651029798c826ff47a5455d38bc59"
+      "git_tag" : "fc6364ab4d18b8cfe0ec3f484412ce8a4f895fbb"
     },
     "mdspan": {
       "version"     : "0.6",

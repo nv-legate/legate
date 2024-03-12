@@ -11,6 +11,7 @@
  */
 
 #include "core/comm/comm_nccl.h"
+#include "core/comm/comm_util.h"
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #include "core/data/buffer.h"
@@ -245,45 +246,34 @@ void finalize_nccl(const Legion::Task* task,
 
 void register_tasks(const detail::Library* core_library)
 {
-  const auto runtime                 = Legion::Runtime::get_runtime();
-  auto init_nccl_id_task_id          = core_library->get_task_id(LEGATE_CORE_INIT_NCCL_ID_TASK_ID);
-  const char* init_nccl_id_task_name = "core::comm::nccl::init_id";
-  runtime->attach_name(
-    init_nccl_id_task_id, init_nccl_id_task_name, false /*mutable*/, true /*local only*/);
+  const auto runtime = Legion::Runtime::get_runtime();
 
-  auto init_nccl_task_id          = core_library->get_task_id(LEGATE_CORE_INIT_NCCL_TASK_ID);
-  const char* init_nccl_task_name = "core::comm::nccl::init";
-  runtime->attach_name(
-    init_nccl_task_id, init_nccl_task_name, false /*mutable*/, true /*local only*/);
-
-  auto finalize_nccl_task_id = core_library->get_task_id(LEGATE_CORE_FINALIZE_NCCL_TASK_ID);
-  const char* finalize_nccl_task_name = "core::comm::nccl::finalize";
-  runtime->attach_name(
-    finalize_nccl_task_id, finalize_nccl_task_name, false /*mutable*/, true /*local only*/);
-
-  auto make_registrar = [&](auto task_id, auto* task_name, auto proc_kind) {
-    Legion::TaskVariantRegistrar registrar(task_id, task_name);
-    registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
-    registrar.set_leaf(true);
-    registrar.global_registration = false;
-    return registrar;
-  };
+  // TODO(wonchanl): The following should use the Legate API to register task variants, instead of
+  // the Legion API. We can't quite do that today because the tasks have return values, which Legate
+  // currently wouldn't understand.
 
   // Register the task variants
-  {
-    auto registrar =
-      make_registrar(init_nccl_id_task_id, init_nccl_id_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<ncclUniqueId, init_nccl_id>(registrar, LEGATE_GPU_VARIANT);
-  }
-  {
-    auto registrar = make_registrar(init_nccl_task_id, init_nccl_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<ncclComm_t*, init_nccl>(registrar, LEGATE_GPU_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(finalize_nccl_task_id, finalize_nccl_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<finalize_nccl>(registrar, LEGATE_GPU_VARIANT);
-  }
+  runtime->register_task_variant<ncclUniqueId, init_nccl_id>(
+    detail::make_registrar(core_library,
+                           LEGATE_CORE_INIT_NCCL_ID_TASK_ID,
+                           "core::comm::nccl::init_id",
+                           Processor::TOC_PROC,
+                           false),
+    LEGATE_GPU_VARIANT);
+  runtime->register_task_variant<ncclComm_t*, init_nccl>(
+    detail::make_registrar(core_library,
+                           LEGATE_CORE_INIT_NCCL_TASK_ID,
+                           "core::comm::nccl::init",
+                           Processor::TOC_PROC,
+                           true),
+    LEGATE_GPU_VARIANT);
+  runtime->register_task_variant<finalize_nccl>(
+    detail::make_registrar(core_library,
+                           LEGATE_CORE_FINALIZE_NCCL_TASK_ID,
+                           "core::comm::nccl::finalize",
+                           Processor::TOC_PROC,
+                           true),
+    LEGATE_GPU_VARIANT);
 }
 
 void register_factory(const detail::Library* core_library)

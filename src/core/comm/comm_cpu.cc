@@ -13,12 +13,16 @@
 #include "core/comm/comm_cpu.h"
 
 #include "core/comm/coll.h"
+#include "core/comm/comm_util.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/detail/malloc.h"
+#include "core/utilities/detail/zip.h"
+
+#include <utility>
 
 namespace legate::detail {
 
@@ -175,77 +179,35 @@ void register_tasks(const detail::Library* core_library)
   const auto& command_args = Legion::Runtime::get_input_args();
   auto ret                 = coll::collInit(command_args.argc, command_args.argv);
   LegateCheck(ret == coll::CollSuccess);
-  auto init_cpucoll_mapping_task_id =
-    core_library->get_task_id(LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID);
-  const char* init_cpucoll_mapping_task_name = "core::comm::cpu::init_mapping";
-  runtime->attach_name(init_cpucoll_mapping_task_id,
-                       init_cpucoll_mapping_task_name,
-                       false /*mutable*/,
-                       true /*local only*/);
 
-  auto init_cpucoll_task_id          = core_library->get_task_id(LEGATE_CORE_INIT_CPUCOLL_TASK_ID);
-  const char* init_cpucoll_task_name = "core::comm::cpu::init";
-  runtime->attach_name(
-    init_cpucoll_task_id, init_cpucoll_task_name, false /*mutable*/, true /*local only*/);
-
-  auto finalize_cpucoll_task_id = core_library->get_task_id(LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID);
-  const char* finalize_cpucoll_task_name = "core::comm::cpu::finalize";
-  runtime->attach_name(
-    finalize_cpucoll_task_id, finalize_cpucoll_task_name, false /*mutable*/, true /*local only*/);
-
-  auto make_registrar = [&](auto task_id, auto* task_name, auto proc_kind) {
-    Legion::TaskVariantRegistrar registrar(task_id, task_name);
-    registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
-    registrar.set_leaf(true);
-    registrar.global_registration = false;
-    return registrar;
-  };
+  // TODO(wonchanl): The following should use the Legate API to register task variants, instead of
+  // the Legion API. We can't quite do that today because the tasks have return values, which Legate
+  // currently wouldn't understand.
 
   // Register the task variants
-  {
-    auto registrar = make_registrar(
-      init_cpucoll_mapping_task_id, init_cpucoll_mapping_task_name, Processor::LOC_PROC);
-    runtime->register_task_variant<int, init_cpucoll_mapping>(registrar, LEGATE_CPU_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(init_cpucoll_task_id, init_cpucoll_task_name, Processor::LOC_PROC);
-    runtime->register_task_variant<coll::CollComm, init_cpucoll>(registrar, LEGATE_CPU_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(finalize_cpucoll_task_id, finalize_cpucoll_task_name, Processor::LOC_PROC);
-    runtime->register_task_variant<finalize_cpucoll>(registrar, LEGATE_CPU_VARIANT);
-  }
-  {
-    auto registrar = make_registrar(
-      init_cpucoll_mapping_task_id, init_cpucoll_mapping_task_name, Processor::OMP_PROC);
-    runtime->register_task_variant<int, init_cpucoll_mapping>(registrar, LEGATE_OMP_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(init_cpucoll_task_id, init_cpucoll_task_name, Processor::OMP_PROC);
-    runtime->register_task_variant<coll::CollComm, init_cpucoll>(registrar, LEGATE_OMP_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(finalize_cpucoll_task_id, finalize_cpucoll_task_name, Processor::OMP_PROC);
-    runtime->register_task_variant<finalize_cpucoll>(registrar, LEGATE_OMP_VARIANT);
-  }
-  {
-    auto registrar = make_registrar(
-      init_cpucoll_mapping_task_id, init_cpucoll_mapping_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<int, init_cpucoll_mapping>(registrar, LEGATE_GPU_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(init_cpucoll_task_id, init_cpucoll_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<coll::CollComm, init_cpucoll>(registrar, LEGATE_GPU_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(finalize_cpucoll_task_id, finalize_cpucoll_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<finalize_cpucoll>(registrar, LEGATE_GPU_VARIANT);
+  const auto proc_kinds = {Processor::LOC_PROC, Processor::TOC_PROC, Processor::OMP_PROC};
+  const auto variants   = {LEGATE_CPU_VARIANT, LEGATE_GPU_VARIANT, LEGATE_OMP_VARIANT};
+  for (auto&& [proc_kind, variant] : legate::detail::zip(proc_kinds, variants)) {
+    runtime->register_task_variant<int, init_cpucoll_mapping>(
+      detail::make_registrar(core_library,
+                             LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID,
+                             "core::comm::cpu::init_mapping",
+                             proc_kind,
+                             false),
+      variant);
+
+    runtime->register_task_variant<coll::CollComm, init_cpucoll>(
+      detail::make_registrar(
+        core_library, LEGATE_CORE_INIT_CPUCOLL_TASK_ID, "core::comm::cpu::init", proc_kind, true),
+      variant);
+
+    runtime->register_task_variant<finalize_cpucoll>(
+      detail::make_registrar(core_library,
+                             LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID,
+                             "core::comm::cpu::finalize",
+                             proc_kind,
+                             true),
+      variant);
   }
 }
 

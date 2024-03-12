@@ -138,6 +138,7 @@ list(APPEND legate_core_SOURCES
   src/core/comm/comm.cc
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
+  src/core/comm/comm_util.cc
   src/core/data/allocator.cc
   src/core/data/external_allocation.cc
   src/core/data/logical_array.cc

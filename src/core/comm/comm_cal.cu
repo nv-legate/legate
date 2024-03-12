@@ -12,6 +12,7 @@
 
 #include "core/comm/coll.h"
 #include "core/comm/comm_cal.h"
+#include "core/comm/comm_util.h"
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
 #include "core/data/buffer.h"
@@ -215,36 +216,21 @@ void finalize_cal(const Legion::Task* task,
 
 void register_tasks(const detail::Library* core_library)
 {
-  const auto runtime    = Legion::Runtime::get_runtime();
-  auto init_cal_task_id = core_library->get_task_id(LEGATE_CORE_INIT_CAL_TASK_ID);
-  constexpr const char* init_cal_task_name = "core::comm::cal::init";
-  runtime->attach_name(
-    init_cal_task_id, init_cal_task_name, false /*mutable*/, true /*local only*/);
-
-  auto finalize_cal_task_id = core_library->get_task_id(LEGATE_CORE_FINALIZE_CAL_TASK_ID);
-  constexpr const char* finalize_cal_task_name = "core::comm::cal::finalize";
-  runtime->attach_name(
-    finalize_cal_task_id, finalize_cal_task_name, false /*mutable*/, true /*local only*/);
-
-  auto make_registrar = [&](auto task_id, auto* task_name, auto proc_kind) {
-    Legion::TaskVariantRegistrar registrar{task_id, task_name};
-
-    registrar.add_constraint(Legion::ProcessorConstraint{proc_kind});
-    registrar.set_leaf(true);
-    registrar.global_registration = false;
-    return registrar;
-  };
-
-  // Register the task variants
-  {
-    auto registrar = make_registrar(init_cal_task_id, init_cal_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<cal_comm_t, init_cal>(registrar, LEGATE_GPU_VARIANT);
-  }
-  {
-    auto registrar =
-      make_registrar(finalize_cal_task_id, finalize_cal_task_name, Processor::TOC_PROC);
-    runtime->register_task_variant<finalize_cal>(registrar, LEGATE_GPU_VARIANT);
-  }
+  const auto runtime = Legion::Runtime::get_runtime();
+  runtime->register_task_variant<cal_comm_t, init_cal>(
+    detail::make_registrar(core_library,
+                           LEGATE_CORE_INIT_CAL_TASK_ID,
+                           "core::comm::cal::init",
+                           Processor::TOC_PROC,
+                           true),
+    LEGATE_GPU_VARIANT);
+  runtime->register_task_variant<finalize_cal>(
+    detail::make_registrar(core_library,
+                           LEGATE_CORE_FINALIZE_CAL_TASK_ID,
+                           "core::comm::cal::finalize",
+                           Processor::TOC_PROC,
+                           true),
+    LEGATE_GPU_VARIANT);
 }
 
 void register_factory(const detail::Library* core_library)
