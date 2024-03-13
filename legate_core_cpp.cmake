@@ -742,6 +742,15 @@ rapids_export(
   LANGUAGES ${ENABLED_LANGUAES}
 )
 
+# Symlink the module directory into the binary dir, so that the helper functions in
+# legate_core-config.cmake can be used even if the project is not installed.
+message(STATUS "Symlinking cmake module directory into ${CMAKE_CURRENT_BINARY_DIR}")
+file(CREATE_LINK
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules
+  ${CMAKE_CURRENT_BINARY_DIR}/Modules
+  SYMBOLIC
+)
+
 set(legate_core_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)
