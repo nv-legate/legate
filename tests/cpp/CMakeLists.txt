@@ -21,48 +21,6 @@ endif()
 
 if(Legion_USE_CUDA)
   enable_language(CUDA)
-
-  file(GLOB integration_GPU_SRC ${PROJECT_SOURCE_DIR}/integration/*.cu)
-else()
-  # rapids_test_init() calls find_package(CUDAToolKit REQUIRED) if it does not find a
-  # generate_resource_spec executable at exactly at
-  # <build-dir>/rapids-cmake/generate_resource_spec
-  #
-  # Obviously this doesn't work so well on cpu-only builds, so we spoof the file
-  # ourselves. We first find the source file, patch out any CUDA-related nonsense, and
-  # then compile ourselves
-  include(${rapids-cmake-dir}/test/detail/default_names.cmake)
-
-  set(patch_file "${LEGATE_CORE_DIR}/cmake/patches/generate_resource_spec.diff")
-  set(eval_file ${rapids-cmake-dir}/test/detail/generate_resource_spec.cpp)
-  set(eval_exe ${CMAKE_CURRENT_BINARY_DIR}/rapids-cmake/${rapids_test_generate_exe_name})
-
-  if(LEGATE_TESTS_PATCHED_EVAL_FILE VERSION_EQUAL rapids-cmake-version)
-    message("-- Spec generator already patched for rapids version ${rapids-cmake-version}, no need to re-patch")
-  else()
-    message("-- Patching ${eval_file}")
-    find_program(PATCH NAMES patch REQUIRED)
-    execute_process(
-      COMMAND ${PATCH} --unified ${eval_file} --input=${patch_file} --ignore-whitespace --quiet
-      TIMEOUT 15
-      COMMAND_ERROR_IS_FATAL ANY
-    )
-    set(LEGATE_TESTS_PATCHED_EVAL_FILE "${rapids-cmake-version}" CACHE INTERNAL "" FORCE)
-  endif()
-
-  # Compile the (now patched) resource spec generator, and place the result where rapids
-  # expects to find it. try_compile() is a bit of a misnomer here -- this compilation MUST
-  # succeed, as rapids_test_init() below will fail if it doesn't
-  try_compile(
-    SUCCEEDED
-    SOURCES ${eval_file}
-    COPY_FILE ${eval_exe}
-    OUTPUT_VARIABLE compile_ret
-  )
-
-  if(NOT SUCCEEDED)
-    message(FATAL_ERROR "Failed to compile patched resource spec generator for rapids_cmake_test(): ${compile_ret}" )
-  endif()
 endif()
 
 include(rapids-test)
@@ -154,6 +112,10 @@ function(ConfigureTest CMAKE_TEST_NAME)
   # propagate the updated list upwards
   set(LEGATE_CORE_CONFIGURED_TESTS ${LEGATE_CORE_CONFIGURED_TESTS} PARENT_SCOPE)
 endfunction()
+
+if(Legion_USE_CUDA)
+  file(GLOB integration_GPU_SRC ${PROJECT_SOURCE_DIR}/integration/*.cu)
+endif()
 
 file(GLOB main_SRC ${PROJECT_SOURCE_DIR}/main.cc)
 file(GLOB bug_SRC ${PROJECT_SOURCE_DIR}/bug/*.cc)

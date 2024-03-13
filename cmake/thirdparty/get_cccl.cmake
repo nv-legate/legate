@@ -12,23 +12,14 @@
 
 include_guard(GLOBAL)
 
-macro(legate_include_rapids)
-  if(NOT rapids-cmake-version)
-    # default
-    set(rapids-cmake-version 24.02)
-    set(rapids-cmake-sha "32cc49f1478e7e480d0d820d6a569478f72626a8")
-  endif()
-  if (NOT _LEGATE_HAS_RAPIDS)
-    if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-      file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
-           ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-    endif()
-    include(${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-    include(rapids-cmake)
-    include(rapids-cpm)
-    include(rapids-cuda)
-    include(rapids-export)
-    include(rapids-find)
-    set(_LEGATE_HAS_RAPIDS ON)
-  endif()
-endmacro()
+# Use CPM to find or clone thrust
+function(find_or_configure_cccl)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "find_or_configure_cccl")
+
+  include(${rapids-cmake-dir}/cpm/cccl.cmake)
+
+  rapids_cpm_cccl(
+    BUILD_EXPORT_SET   legate-core-exports
+    INSTALL_EXPORT_SET legate-core-exports
+  )
+endfunction()

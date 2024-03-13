@@ -60,9 +60,13 @@ function(find_or_configure_legion)
   if(Legion_FOUND)
     message(STATUS "CPM: using local package Legion@${version}")
   else()
-
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/cpm_helpers.cmake)
-    get_cpm_git_args(legion_cpm_git_args REPOSITORY ${git_repo} BRANCH ${git_branch})
+    get_cpm_git_args(legion_cpm_git_args
+      REPOSITORY ${git_repo}
+      BRANCH     ${git_branch}
+      SHALLOW    ${shallow}
+    )
+
     if(NOT DEFINED Legion_PYTHON_EXTRA_INSTALL_ARGS)
       set(Legion_PYTHON_EXTRA_INSTALL_ARGS "--root / --prefix \"\${CMAKE_INSTALL_PREFIX}\"")
     endif()

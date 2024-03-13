@@ -112,8 +112,12 @@ if(Legion_USE_CUDA)
   include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_nccl.cmake)
 endif()
 
-# Find or install Thrust
-include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_thrust.cmake)
+##############################################################################
+# - CCCL ---------------------------------------------------------------------
+
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_cccl.cmake)
+
+find_or_configure_cccl()
 
 ##############################################################################
 # - std::span ----------------------------------------------------------------
@@ -361,7 +365,7 @@ endif()
 
 target_link_libraries(legate_core
    PUBLIC Legion::Legion
-          legate::Thrust
+          CCCL::Thrust
           $<TARGET_NAME_IF_EXISTS:CUDA::nvToolsExt>
           $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
           $<TARGET_NAME_IF_EXISTS:std::mdspan>
@@ -699,8 +703,8 @@ file(READ ${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake helper_function
 
 string(JOIN "\n" code_string
 [=[
-if(NOT TARGET legate::Thrust)
-  thrust_create_target(legate::Thrust FROM_OPTIONS)
+if(NOT TARGET CCCL::Thrust)
+  thrust_create_target(CCCL::Thrust FROM_OPTIONS)
 endif()
 ]=]
   "set(Legion_USE_CUDA ${Legion_USE_CUDA})"
