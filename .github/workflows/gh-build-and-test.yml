@@ -63,6 +63,7 @@ jobs:
       legate-gh-ci-tag: "v23.11.00"
       cmake-preset: ${{ inputs.cmake-preset }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
+      upload-enabled: false
     secrets: inherit
 
   setup-test:
