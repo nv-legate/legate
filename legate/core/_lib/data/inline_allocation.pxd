@@ -15,22 +15,21 @@ from libcpp.vector cimport vector as std_vector
 from ..mapping.mapping cimport StoreTarget
 from ..type.type_info cimport _Type
 from ..utilities.typedefs cimport _Domain
-from .inline_allocation cimport InlineAllocation, _InlineAllocation
+from .physical_store cimport PhysicalStore
 
 
-cdef extern from "core/data/physical_store.h" namespace "legate" nogil:
-    cdef cppclass _PhysicalStore "legate::PhysicalStore":
-        int32_t dim()
-        _Type type()
-        _Domain domain()
-        _InlineAllocation get_inline_allocation()
-        StoreTarget target()
+cdef extern from "core/data/inline_allocation.h" namespace "legate" nogil:
+    cdef cppclass _InlineAllocation "legate::InlineAllocation":
+        void* ptr
+        std_vector[size_t] strides
 
 
-cdef class PhysicalStore:
-    cdef _PhysicalStore _handle
+cdef class InlineAllocation:
+    cdef _InlineAllocation _handle
+    cdef PhysicalStore _store
+    cdef tuple _shape
 
     @staticmethod
-    cdef PhysicalStore from_handle(_PhysicalStore)
+    cdef InlineAllocation create(PhysicalStore store, _InlineAllocation handle)
 
-    cpdef InlineAllocation get_inline_allocation(self)
+    cdef dict _get_array_interface(self)

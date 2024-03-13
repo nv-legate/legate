@@ -16,6 +16,7 @@
 #include "core/data/physical_array.h"
 #include "core/data/scalar.h"
 #include "core/mapping/machine.h"
+#include "core/mapping/mapping.h"
 
 #include <optional>
 #include <string>
@@ -180,6 +181,12 @@ class TaskContext {
    * @return The task group's launch domain
    */
   [[nodiscard]] Domain get_launch_domain() const;
+  /**
+   * @brief Returns the kind of processor executing this task
+   *
+   * @return The processor kind
+   */
+  [[nodiscard]] mapping::TaskTarget target() const;
 
   [[nodiscard]] mapping::Machine machine() const;
 

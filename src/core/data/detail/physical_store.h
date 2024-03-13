@@ -15,6 +15,7 @@
 #include "core/data/buffer.h"
 #include "core/data/detail/transform.h"
 #include "core/data/inline_allocation.h"
+#include "core/mapping/mapping.h"
 #include "core/task/detail/return.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -51,6 +52,7 @@ class RegionField {
     std::uint32_t field_size,
     const Domain& domain,
     const Legion::DomainAffineTransform& transform) const;
+  [[nodiscard]] mapping::StoreTarget target() const;
 
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;
@@ -115,6 +117,7 @@ class FutureWrapper {
 
   [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  [[nodiscard]] mapping::StoreTarget target() const;
 
   void initialize_with_identity(std::int32_t redop_id);
 
@@ -173,6 +176,7 @@ class PhysicalStore {
 
   [[nodiscard]] Domain domain() const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  [[nodiscard]] mapping::StoreTarget target() const;
 
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;

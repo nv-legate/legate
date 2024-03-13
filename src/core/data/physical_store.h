@@ -14,6 +14,7 @@
 
 #include "core/data/buffer.h"
 #include "core/data/inline_allocation.h"
+#include "core/mapping/mapping.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -293,6 +294,14 @@ class PhysicalStore {
    * @return An `InlineAllocation` object holding a raw pointer and strides
    */
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  /**
+   * @brief Returns the kind of memory where this physical store resides
+   *
+   * @return The memory kind
+   *
+   * @throw std::invalid_argument If this function is called on an unbound store
+   */
+  [[nodiscard]] mapping::StoreTarget target() const;
 
   /**
    * @brief Indicates whether the store can have a read accessor

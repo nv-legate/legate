@@ -21,13 +21,15 @@
 
 namespace legate::mapping::detail {
 
-TaskTarget to_target(Processor::Kind kind);
+[[nodiscard]] TaskTarget to_target(Processor::Kind kind);
 
-Processor::Kind to_kind(TaskTarget target);
+[[nodiscard]] StoreTarget to_target(Memory::Kind kind);
 
-Memory::Kind to_kind(StoreTarget target);
+[[nodiscard]] Processor::Kind to_kind(TaskTarget target);
 
-LegateVariantCode to_variant_code(TaskTarget target);
+[[nodiscard]] Memory::Kind to_kind(StoreTarget target);
+
+[[nodiscard]] LegateVariantCode to_variant_code(TaskTarget target);
 
 class DimOrdering {
  public:
@@ -36,7 +38,7 @@ class DimOrdering {
   explicit DimOrdering(Kind _kind);
   explicit DimOrdering(std::vector<std::int32_t> _dims);
 
-  bool operator==(const DimOrdering& other) const;
+  [[nodiscard]] bool operator==(const DimOrdering& other) const;
 
   void populate_dimension_ordering(std::uint32_t ndim,
                                    std::vector<Legion::DimensionKind>& ordering) const;

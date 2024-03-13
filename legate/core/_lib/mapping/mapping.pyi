@@ -17,4 +17,11 @@ class TaskTarget(IntEnum):
     OMP: int
     CPU: int
 
+@unique
+class StoreTarget(IntEnum):
+    SYSMEM: int
+    FBMEM: int
+    ZCMEM: int
+    SOCKETMEM: int
+
 TASK_TARGET_TO_VARIANT_KIND: dict[TaskTarget, int]

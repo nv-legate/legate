@@ -34,7 +34,7 @@ if is_legion_python == False:
     atexit.register(legion_canonical_python_cleanup)
 
 from .data_interface import LegateDataInterface, Field, Table
-from ._lib.mapping.mapping import TaskTarget
+from ._lib.mapping.mapping import StoreTarget, TaskTarget
 from ._lib.mapping.machine import (
     EmptyMachineError,
     Machine,
@@ -54,6 +54,7 @@ from .utils import (
     Annotation,
 )
 from ._lib.legate_c import LEGATE_MAX_DIM
+from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
 from ._lib.data.scalar import Scalar

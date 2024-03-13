@@ -60,6 +60,8 @@ bool PhysicalStore::is_future() const { return impl_->is_future(); }
 
 bool PhysicalStore::is_unbound_store() const { return impl_->is_unbound_store(); }
 
+mapping::StoreTarget PhysicalStore::target() const { return impl_->target(); }
+
 PhysicalStore::PhysicalStore() noexcept = default;
 
 PhysicalStore::PhysicalStore(const PhysicalArray& array)

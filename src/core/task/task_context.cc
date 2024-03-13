@@ -12,6 +12,7 @@
 
 #include "core/task/task_context.h"
 
+#include "core/mapping/detail/mapping.h"
 #include "core/task/detail/task_context.h"
 
 namespace legate {
@@ -83,6 +84,11 @@ bool TaskContext::can_raise_exception() const { return impl_->can_raise_exceptio
 DomainPoint TaskContext::get_task_index() const { return impl_->get_task_index(); }
 
 Domain TaskContext::get_launch_domain() const { return impl_->get_launch_domain(); }
+
+mapping::TaskTarget TaskContext::target() const
+{
+  return mapping::detail::to_target(Processor::get_executing_processor().kind());
+}
 
 mapping::Machine TaskContext::machine() const { return mapping::Machine{impl_->machine()}; }
 

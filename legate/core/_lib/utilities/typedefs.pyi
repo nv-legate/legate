@@ -9,21 +9,18 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Note import, not cimport. We want the Python version of the enum
-from ..legate_c import legate_core_variant_t
+class DomainPoint:
+    def __init__(self) -> None: ...
+    @property
+    def dim(self) -> int: ...
+    def __getitem__(self, idx: int) -> int: ...
+    def __setitem__(self, idx: int, coord: int) -> None: ...
 
-
-cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
-    cpdef enum class TaskTarget:
-        GPU
-        OMP
-        CPU
-
-cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
-    cpdef enum class StoreTarget:
-        SYSMEM
-        FBMEM
-        ZCMEM
-        SOCKETMEM
-
-cdef dict[TaskTarget, legate_core_variant_t] TASK_TARGET_TO_VARIANT_KIND
+class Domain:
+    def __init__(self) -> None: ...
+    @property
+    def dim(self) -> int: ...
+    @property
+    def lo(self) -> DomainPoint: ...
+    @property
+    def hi(self) -> DomainPoint: ...

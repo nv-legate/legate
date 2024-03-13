@@ -9,21 +9,20 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Note import, not cimport. We want the Python version of the enum
-from ..legate_c import legate_core_variant_t
+from typing import Any
 
+from ..mapping.mapping import StoreTarget
+from ..type.type_info import Type
+from ..utilities.typedefs import Domain
 
-cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
-    cpdef enum class TaskTarget:
-        GPU
-        OMP
-        CPU
-
-cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
-    cpdef enum class StoreTarget:
-        SYSMEM
-        FBMEM
-        ZCMEM
-        SOCKETMEM
-
-cdef dict[TaskTarget, legate_core_variant_t] TASK_TARGET_TO_VARIANT_KIND
+class InlineAllocation:
+    @property
+    def ptr(self) -> int: ...
+    @property
+    def strides(self) -> tuple[int, ...]: ...
+    @property
+    def shape(self) -> tuple[int, ...]: ...
+    @property
+    def __array_interface__(self) -> dict[str, Any]: ...
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...

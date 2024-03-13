@@ -12,6 +12,7 @@
 
 #include "core/data/detail/physical_store.h"
 
+#include "core/mapping/detail/mapping.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/machine.h"
 
@@ -106,6 +107,14 @@ InlineAllocation RegionField::get_inline_allocation(
                          domain,
                          transform,
                          field_size);
+}
+
+mapping::StoreTarget RegionField::target() const
+{
+  std::set<Memory> memories;
+  pr_->get_memories(memories);
+  LegateAssert(memories.size() == 1);
+  return mapping::detail::to_target(memories.begin()->kind());
 }
 
 UnboundRegionField& UnboundRegionField::operator=(UnboundRegionField&& other) noexcept
@@ -242,6 +251,16 @@ InlineAllocation FutureWrapper::get_inline_allocation() const
   return get_inline_allocation(domain_);
 }
 
+mapping::StoreTarget FutureWrapper::target() const
+{
+  // TODO(wonchanl): The following is not entirely accurate, as the custom mapper can override the
+  // default mapping policy for futures. Unfortunately, Legion doesn't expose mapping decisions
+  // for futures, but instead would move the data wherever it's requested. Until Legate gets access
+  // to that information, we potentially give inaccurate answers
+  return mapping::detail::to_target(
+    find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB)));
+}
+
 void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
 {
   const auto untyped_acc = AccessorWO<int8_t, 1>{buffer_, field_size_};
@@ -310,6 +329,17 @@ InlineAllocation PhysicalStore::get_inline_allocation() const
     return future_.get_inline_allocation();
   }
   return region_field_.get_inline_allocation(type()->size());
+}
+
+mapping::StoreTarget PhysicalStore::target() const
+{
+  if (is_unbound_store()) {
+    throw std::invalid_argument{"Target of an unbound store cannot be queried"};
+  }
+  if (is_future()) {
+    return future_.target();
+  }
+  return region_field_.target();
 }
 
 void PhysicalStore::bind_empty_data()
