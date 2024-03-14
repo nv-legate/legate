@@ -30,8 +30,7 @@ class unary_transform {
   UnaryOperation op{};
 
   template <typename Src, typename Dst>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  void operator()(Src&& src, Dst&& dst)
+  LEGATE_HOST_DEVICE void operator()(Src&& src, Dst&& dst)
   {
     static_cast<Dst&&>(dst) = op(static_cast<Src&&>(src));
   }
@@ -46,8 +45,7 @@ class binary_transform {
   BinaryOperation op{};
 
   template <typename Src1, typename Src2, typename Dst>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  void operator()(Src1&& src1, Src2&& src2, Dst&& dst)
+  LEGATE_HOST_DEVICE void operator()(Src1&& src1, Src2&& src2, Dst&& dst)
   {
     static_assert(std::is_lvalue_reference_v<Dst>);
     static_cast<Dst&&>(dst) = op(static_cast<Src1&&>(src1), static_cast<Src2&&>(src2));

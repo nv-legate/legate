@@ -31,8 +31,7 @@ class ignore {
   ignore() = default;
 
   template <typename... Args>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  constexpr ignore(Args&&...) noexcept  // NOLINT(google-explicit-constructor)
+  LEGATE_HOST_DEVICE constexpr ignore(Args&&...) noexcept  // NOLINT(google-explicit-constructor)
   {
   }
 };
@@ -99,8 +98,7 @@ template <typename Reference>
 }
 
 template <typename Head, typename... Tail>
-LEGATE_STL_ATTRIBUTE((host, device))
-[[nodiscard]] Head&& front_of(Head&& head, Tail&&... /*tail*/) noexcept
+LEGATE_HOST_DEVICE [[nodiscard]] Head&& front_of(Head&& head, Tail&&... /*tail*/) noexcept
 {
   return std::forward<Head>(head);
 }

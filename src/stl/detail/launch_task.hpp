@@ -1215,14 +1215,14 @@ inline constexpr detail::launch_task launch_task{};
  *    - \a Example:
  *
  *      @code{cpp}
- *      function([](auto& in, const auto& out) { in = out * out; })
+ *      function([](const auto& in, auto& out) { out = in * in; })
  *      @endcode
  *
  * - `legate::stl::reduction` - specifies the reduction store and the
  *    reduction function to be applied to the inputs.
  *    - The function must be bitwise copyable.
- *    - The function must take as arguments a reduction store and a binary
- *      reduction function.
+ *    - The reduction function must take as `mdspan`s refering to parts
+ *      of the input stores.
  *    - The reduction store can be a `logical_store` or some view of a
  *      store, such as `rows_of(store)`. When operating on a view, the
  *      arguments to the reduction function will be the elements of the
@@ -1261,10 +1261,11 @@ inline constexpr detail::launch_task launch_task{};
  *       - `align(outputs)` - aligns all the outputs with each other
  *
  * @par Example
+ * @parblock
  * The following example shows how to use `launch_task` to implement a `for_each`
  * algorithm that iterates over two input stores.
  *
- * @code{cpp}
+ * @code{.cpp}
  * template <class Function, class Input1, class Input2>
  * void for_each_zip(Function fn, Input1&& input1, Input2&& input2) {
  *   auto drop_inputs = [fn](const auto&, const auto&, auto& out1, auto& out2) {
@@ -1277,7 +1278,7 @@ inline constexpr detail::launch_task launch_task{};
  *     legate::stl::constraints(legate::stl::align(input1, input2)));
  * }
  * @endcode
- *
+ * @endparblock
  */
 template <LaunchParam... Params>
 void launch_task(Params... params);

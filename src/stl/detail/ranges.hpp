@@ -162,11 +162,13 @@ using range_value_t = typename std::iterator_traits<iterator_t<Range>>::value_ty
 namespace detail {
 
 template <typename Iter>
-auto is_iterator_like_(Iter iter) -> decltype((void)++iter, (void)*iter, (void)(iter == iter));
+auto is_iterator_like_(Iter iter, Iter other)
+  -> decltype((void)++iter, (void)*iter, (void)(iter == other));
 
 template <typename Range>
 auto is_range_like_(Range&& rng)
-  -> decltype(detail::is_iterator_like_(stl::begin(rng)), (void)(stl::begin(rng) == stl::end(rng)));
+  -> decltype(detail::is_iterator_like_(stl::begin(rng), stl::begin(rng)),
+              (void)(stl::begin(rng) == stl::end(rng)));
 
 template <typename Range>
 using is_range_like_t = decltype(detail::is_range_like_(std::declval<Range>()));

@@ -69,6 +69,10 @@
 /// @defgroup data Data
 
 namespace legate::stl {
+/**
+ * @cond
+ */
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace tags {
 
@@ -109,6 +113,10 @@ inline constexpr bool has_dim_v =
   meta::eval<meta::quote_or<has_dim_, std::false_type>, std::remove_reference_t<Storage>>::value;
 
 }  // namespace detail
+
+/**
+ * @endcond
+ */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -158,21 +166,14 @@ template <typename ElementType, std::int32_t Dim>
 inline constexpr std::int32_t dim_of_v<logical_store<ElementType, Dim>> = Dim;
 /** @endcond */
 
-/*************************************************************************************************
- * @brief Given an untyped `legate::LogicalStore`, return a strongly-typed
- *        `legate::stl::logical_store`.
- *
- * @tparam ElementType The element type of the `LogicalStore`.
- * @tparam Dim The dimensionality of the `LogicalStore`.
- * @param store The `LogicalStore` to convert.
- * @return logical_store<ElementType, Dim>
- * @pre The element type of the `LogicalStore` must be the same as `ElementType`,
- *      and the dimensionality of the `LogicalStore` must be the same as `Dim`.
- */
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** @cond */
 template <typename ElementType, std::int32_t Dim = dynamic_dims>
 logical_store<ElementType, Dim> as_typed(const legate::LogicalStore& store);
+/** @endcond */
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+/** @cond */
 namespace detail {
 
 template <typename Function, typename... InputSpans>
@@ -187,51 +188,40 @@ template <typename ElementType, std::int32_t Dim, typename Accessor /*= default_
 class mdspan_accessor;
 
 }  // namespace detail
-
-template <typename Input>
-using mdspan_for_t = mdspan_t<element_type_of_t<Input>, dim_of_v<Input>>;
-
-/** @cond */
-void as_mdspan(const PhysicalStore&&) = delete;
 /** @endcond */
 
-/*************************************************************************************************
- * @brief Given an untyped `legate::PhysicalStore`, return a strongly-typed
- *        `legate::stl::logical_store`.
- *
- * @tparam ElementType The element type of the `PhysicalStore`.
- * @tparam Dim The dimensionality of the `PhysicalStore`.
- * @param store The `PhysicalStore` to convert.
- * @return mdspan_t<ElementType, Dim>
- * @pre The element type of the `PhysicalStore` must be the same as
- *      `ElementType`, and the dimensionality of the `Store` must be the same
- *      as `Dim`.
- */
-template <typename ElementType, std::int32_t Dim>
-LEGATE_STL_ATTRIBUTE((host, device))  //
-[[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalStore& store);
+/** @cond */
+template <typename Input>
+using mdspan_for_t = mdspan_t<element_type_of_t<Input>, dim_of_v<Input>>;
+/** @endcond */
 
-/** @overload */
+/** @cond */
 template <typename ElementType, std::int32_t Dim>
-LEGATE_STL_ATTRIBUTE((host, device))  //
-[[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const legate::LogicalStore& store);
+LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
+  const legate::PhysicalStore& store);
+
+template <typename ElementType, std::int32_t Dim>
+LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
+  const legate::LogicalStore& store);
 
 template <typename ElementType, std::int32_t Dim, template <typename, std::int32_t> typename StoreT>
   requires(same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
-LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const StoreT<ElementType, Dim>& store);
-/** @endcond */
+LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
+  const StoreT<ElementType, Dim>& store);
 
-/** @overload */
 template <typename ElementType, std::int32_t Dim>
-LEGATE_STL_ATTRIBUTE((host, device))  //
-[[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(const legate::PhysicalArray& array);
+LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
+  const legate::PhysicalArray& array);
 
-namespace detail {
+void as_mdspan(const PhysicalStore&&) = delete;
+/** @endcond */
 
 struct iteration_kind {};
 
 struct reduction_kind {};
+
+/** @cond */
+namespace detail {
 
 template <typename... Types>
 void ignore_all(Types&&...);
@@ -296,22 +286,71 @@ constexpr bool is_legate_reduction(std::int64_t)
 static_assert(!std::is_same_v<int, std::int64_t>);
 
 }  // namespace detail
+/** @endcond */
 
 #if LegateDefined(LEGATE_STL_DOXYGEN)
+// clang-format off
 /**
- * @brief True when `StoreLike` is a type that implements the `get_logical_store`
- *        customization point.
+ * @brief A type `StoreLike` satisfied `logical_store_like` when it exposes a
+ * `legate::LogicalStore` via the `get_logical_store` customization point.
+ *
+ * @code{.cpp}
+ * requires(StoreLike& storeish,
+ *          legate::LogicalStore& lstore,
+ *          stl::mdspan_for_t<StoreLike> span,
+ *          legate::PhysicalStore& pstore) {
+ *     { get_logical_store(storeish) } -> std::same_as<LogicalStore>;
+ *     { StoreLike::policy::logical_view(lstore) } -> std::ranges::range;
+ *     { StoreLike::policy::physical_view(span) } -> std::ranges::range;
+ *     { StoreLike::policy::size(pstore) } -> legate::coord_t;
+ *     { StoreLike::policy::partition_constraints(iteration_kind{}) } -> tuple-like;
+ *     { StoreLike::policy::partition_constraints(reduction_kind{}) } -> tuple-like;
+ *   };
+ * @endcode
  */
 template <typename StoreLike>
-concept logical_store_like = /* see below */;
+concept logical_store_like =
+  requires(StoreLike& storeish,
+           legate::LogicalStore& lstore,
+           stl::mdspan_for_t<StoreLike> span,
+           legate::PhysicalStore& pstore) {
+      { get_logical_store(storeish) } -> std::same_as<LogicalStore>;
+      { StoreLike::policy::logical_view(lstore) } -> std::ranges::range;
+      { StoreLike::policy::physical_view(span) } -> std::ranges::range;
+      { StoreLike::policy::size(pstore) } -> legate::coord_t;
+      { StoreLike::policy::partition_constraints(iteration_kind{}) } -> tuple-like;
+      { StoreLike::policy::partition_constraints(reduction_kind{}) } -> tuple-like;
+    };
 
 /**
- * @brief True when `Reduction` has static `fold` and `apply` member functions.
+ * @brief A type `Reduction` satisfies `legate_reduction` if the `requires`
+ * clause below is `true`:
+ *
+ * @code{.cpp}
+ * requires (Reduction red, typename Reduction::LHS& lhs, typename Reduction::RHS& rhs) {
+ *   { Reduction::template apply<true>(lhs, std::move(rhs)) } -> std::same_as<void>;
+ *   { Reduction::template apply<false>(lhs, std::move(rhs)) } -> std::same_as<void>;
+ *   { Reduction::template fold<true>(rhs, std::move(rhs)) } -> std::same_as<void>;
+ *   { Reduction::template fold<false>(rhs, std::move(rhs)) } -> std::same_as<void>;
+ *   typename std::integral_constant<typename Reduction::LHS, Reduction::identity>;
+ *   typename std::integral_constant<int, Reduction::REDOP_ID>;
+ * }
+ * @endcode
  */
 template <typename Reduction>
-concept legate_reduction = /* see below */;
+concept legate_reduction =
+  requires (Reduction red, typename Reduction::LHS& lhs, typename Reduction::RHS& rhs) {
+    { Reduction::template apply<true>(lhs, std::move(rhs)) } -> std::same_as<void>;
+    { Reduction::template apply<false>(lhs, std::move(rhs)) } -> std::same_as<void>;
+    { Reduction::template fold<true>(rhs, std::move(rhs)) } -> std::same_as<void>;
+    { Reduction::template fold<false>(rhs, std::move(rhs)) } -> std::same_as<void>;
+    typename std::integral_constant<typename Reduction::LHS, Reduction::identity>;
+    typename std::integral_constant<int, Reduction::REDOP_ID>;
+  };
+// clang-format on
 #endif
 
+/** @cond */
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename StoreLike>
 inline constexpr bool logical_store_like =
@@ -320,6 +359,7 @@ inline constexpr bool logical_store_like =
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Reduction>
 inline constexpr bool legate_reduction = detail::is_legate_reduction<remove_cvref_t<Reduction>>(0);
+/** @endcond */
 
 }  // namespace legate::stl
 

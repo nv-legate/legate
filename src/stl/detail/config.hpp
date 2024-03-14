@@ -98,6 +98,7 @@
 
 #define LEGATE_STL_CAT_IMPL(A, ...) A##__VA_ARGS__
 #define LEGATE_STL_CAT(A, ...) LEGATE_STL_CAT_IMPL(A, __VA_ARGS__)
+
 #define LEGATE_STL_EAT(...)
 #define LEGATE_STL_EVAL(M, ...) M(__VA_ARGS__)
 #define LEGATE_STL_EXPAND(...) __VA_ARGS__
@@ -106,21 +107,6 @@
 #define LEGATE_STL_CHECK_(XP, NP, ...) NP
 #define LEGATE_STL_PROBE(...) LEGATE_STL_PROBE_(__VA_ARGS__, 1)
 #define LEGATE_STL_PROBE_(XP, NP, ...) XP, NP,
-
-#define LEGATE_STL_COUNT(...) LEGATE_STL_COUNT_IMPL(__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
-#define LEGATE_STL_COUNT_IMPL(_1, _2, _3, _4, _5, _6, _7, _8, _9, N, ...) N
-
-#define LEGATE_STL_FOR_EACH_1(M, _0) M(_0)
-#define LEGATE_STL_FOR_EACH_2(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_1(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH_3(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_2(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH_4(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_3(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH_5(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_4(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH_6(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_5(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH_7(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_6(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH_8(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_7(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH_9(M, _0, ...) M(_0) LEGATE_STL_FOR_EACH_8(M, __VA_ARGS__)
-#define LEGATE_STL_FOR_EACH(M, ...) \
-  LEGATE_STL_CAT(LEGATE_STL_FOR_EACH_, LEGATE_STL_COUNT(__VA_ARGS__))(M, __VA_ARGS__)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Concepts emulation and portability macros.
@@ -136,36 +122,6 @@
 #define LEGATE_STL_REQUIRES LEGATE_STL_EAT
 #endif
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#define LEGATE_STL_IIF(BP, TP, FP) LEGATE_STL_CAT(LEGATE_STL_IIF_, BP)(TP, FP)
-#define LEGATE_STL_IIF_0(TP, FP) FP
-#define LEGATE_STL_IIF_1(TP, FP) TP
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// For portably declaring attributes on functions and types
-//   Usage:
-//
-//   LEGATE_STL_ATTRIBUTE((attr1, attr2, ...))
-//   void foo() { ... }
-#define LEGATE_STL_ATTRIBUTE(XP) LEGATE_STL_FOR_EACH(LEGATE_STL_ATTR, LEGATE_STL_EXPAND XP)
-
-// unknown attributes are treated like C++-style attributes
-#define LEGATE_STL_ATTR_WHICH_0(ATTR) [[ATTR]]
-
-// custom handling for specific attribute types
-#define LEGATE_STL_ATTR_WHICH_1(ATTR) LEGATE_STL_IIF(LEGATE_STL_HAS_CUDA(), __host__, )
-#define LEGATE_STL_ATTR_host LEGATE_STL_PROBE(~, 1)
-// NOLINTNEXTLINE(bugprone-reserved-identifier)
-#define LEGATE_STL_ATTR___host__ LEGATE_STL_PROBE(~, 1)
-
-#define LEGATE_STL_ATTR_WHICH_2(ATTR) LEGATE_STL_IIF(LEGATE_STL_HAS_CUDA(), __device__, )
-#define LEGATE_STL_ATTR_device LEGATE_STL_PROBE(~, 2)
-// NOLINTNEXTLINE(bugprone-reserved-identifier)
-#define LEGATE_STL_ATTR___device__ LEGATE_STL_PROBE(~, 2)
-
-#define LEGATE_STL_ATTR(ATTR)                                                                      \
-  LEGATE_STL_CAT(LEGATE_STL_ATTR_WHICH_, LEGATE_STL_CHECK(LEGATE_STL_CAT(LEGATE_STL_ATTR_, ATTR))) \
-  (ATTR)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Before clang-16, clang did not like libstdc++'s ranges implementation

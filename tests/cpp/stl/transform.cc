@@ -22,8 +22,7 @@ namespace stl = legate::stl;
 namespace {
 struct square {
   template <class T>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  T operator()(T x) const
+  LEGATE_HOST_DEVICE T operator()(T x) const
   {
     return x * x;
   }
@@ -34,7 +33,7 @@ void TestTransformSingleInPlace()
   auto store = stl::create_store<std::int64_t>({4, 5});
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
-  auto inc = [] __CUDA_HD__(std::int64_t v) -> std::int64_t { return v + 2; };
+  auto inc = [] LEGATE_HOST_DEVICE(std::int64_t v) -> std::int64_t { return v + 2; };
 
   stl::fill(store, 1);
   stl::transform(store, store, inc);
@@ -51,7 +50,7 @@ void TestTransformSingleCopy()
   auto out_store = stl::create_store<std::int64_t>({4, 5});
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
-  auto inc = [] __CUDA_HD__(std::int64_t v) -> std::int64_t { return v + 2; };
+  auto inc = [] LEGATE_HOST_DEVICE(std::int64_t v) -> std::int64_t { return v + 2; };
 
   stl::fill(stl::elements_of(in_store), 1);
   stl::transform(stl::elements_of(in_store), stl::elements_of(out_store), inc);
@@ -73,7 +72,9 @@ void TestTransformDoubleInPlace()
   auto store2 = stl::create_store<std::int64_t>({4, 5});
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
-  auto shift = [] __CUDA_HD__(std::int64_t a, std::int64_t b) -> std::int64_t { return a << b; };
+  auto shift = [] LEGATE_HOST_DEVICE(std::int64_t a, std::int64_t b) -> std::int64_t {
+    return a << b;
+  };
 
   stl::fill(store1, 2);
   stl::fill(store2, 4);
@@ -96,7 +97,9 @@ void TestTransformDoubleCopy()
   auto store3 = stl::create_store<std::int64_t>({4, 5});
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
-  auto shift = [] __CUDA_HD__(std::int64_t a, std::int64_t b) -> std::int64_t { return a << b; };
+  auto shift = [] LEGATE_HOST_DEVICE(std::int64_t a, std::int64_t b) -> std::int64_t {
+    return a << b;
+  };
 
   stl::fill(store1, 2);
   stl::fill(store2, 4);

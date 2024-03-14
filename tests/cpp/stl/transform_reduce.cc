@@ -25,8 +25,7 @@ namespace {
 
 struct square {
   template <class T>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  T operator()(T x) const
+  LEGATE_HOST_DEVICE T operator()(T x) const
   {
     return x * x;
   }

@@ -76,7 +76,7 @@ class binder_back {
 
   template <typename... Ts>
     requires(std::is_invocable_v<Fn, Ts..., Args...>)
-  LEGATE_STL_ATTRIBUTE((host, device)) decltype(auto) operator()(Ts&&... params)
+  LEGATE_HOST_DEVICE decltype(auto) operator()(Ts&&... params)
   {
     return std::apply([&](auto&... args) { return fn_(std::forward<Ts>(params)..., args...); },
                       args_);
@@ -91,8 +91,7 @@ binder_back(Fn, Args...) -> binder_back<Fn, Args...>;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Fn, typename... Args>
-LEGATE_STL_ATTRIBUTE((host, device))
-[[nodiscard]] auto bind_back(Fn fn, Args&&... args)
+LEGATE_HOST_DEVICE [[nodiscard]] auto bind_back(Fn fn, Args&&... args)
 {
   if constexpr (sizeof...(args) == 0) {
     return fn;

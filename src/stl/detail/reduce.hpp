@@ -36,16 +36,14 @@ class basic_reduction {
   static constexpr value_type identity = Identity;
 
   template <bool Exclusive>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  static void apply(LHS& lhs, RHS rhs)
+  LEGATE_HOST_DEVICE static void apply(LHS& lhs, RHS rhs)
   {
     // TODO(ericnieblier): use atomic operations when Exclusive is false
     lhs = Apply()(lhs, rhs);
   }
 
   template <bool Exclusive>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  static void fold(RHS& lhs, RHS rhs)
+  LEGATE_HOST_DEVICE static void fold(RHS& lhs, RHS rhs)
   {
     // TODO(ericniebler): use atomic operations when Exclusive is false
     lhs = Fold()(lhs, rhs);
@@ -73,8 +71,7 @@ class reduction_wrapper : public Reduction {
   }
 
   template <typename LHS, typename RHS>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  void operator()(std::size_t tid, LHS&& lhs, RHS rhs) const
+  LEGATE_HOST_DEVICE void operator()(std::size_t tid, LHS&& lhs, RHS rhs) const
   {
     if (tid == 0) {
       std::forward<LHS>(lhs) <<= rhs;
@@ -118,8 +115,7 @@ class elementwise_reduction : public Reduction {
   // This function expects to be passed mdspan objects. This
   // is the GPU implementation, where idx is the thread id.
   template <typename State, typename Value>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  void operator()(std::size_t tid, State state, Value value) const
+  LEGATE_HOST_DEVICE void operator()(std::size_t tid, State state, Value value) const
   {
     LegateAssert(state.extents() == value.extents());
 
@@ -253,7 +249,7 @@ template <typename ValueType, typename T>
 template <typename ValueType, typename Function>
 [[nodiscard]] auto as_reduction(const detail::elementwise<Function>& fn)
 {
-  return detail::elementwise_reduction{stl::as_reduction<ValueType>(fn.fn)};
+  return detail::elementwise_reduction{stl::as_reduction<ValueType>(fn.function())};
 }
 
 template <typename Fun, typename ValueType>

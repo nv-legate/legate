@@ -20,9 +20,9 @@
 #include "legion.h"
 
 #ifdef __CUDACC__
-#define LEGATE_DEVICE_PREFIX __device__
+#define LEGATE_HOST_DEVICE __host__ __device__
 #else
-#define LEGATE_DEVICE_PREFIX
+#define LEGATE_HOST_DEVICE
 #endif
 
 #ifndef LEGION_REDOP_HALF

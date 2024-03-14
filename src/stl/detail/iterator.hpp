@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "core/utilities/detail/compressed_pair.h"
+
 #include "config.hpp"
 #include "utility.hpp"
 
@@ -52,127 +54,123 @@ class iterator : public detail::mixin<Map, iterator<Map>> {
 
   iterator() = default;
 
-  LEGATE_STL_ATTRIBUTE((host, device))            //
-  iterator(Map map, typename Map::cursor cursor)  //
-    : cursor_{cursor}, map_{std::move(map)}
+  LEGATE_HOST_DEVICE iterator(Map map, typename Map::cursor cursor)
+    : cursor_map_pair_{cursor, std::move(map)}
   {
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator& operator++()
+  LEGATE_HOST_DEVICE iterator& operator++()
   {
-    cursor_ = map_.next(cursor_);
+    cursor() = map().next(cursor());
     return *this;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator operator++(int)
+  LEGATE_HOST_DEVICE iterator operator++(int)
   {
     auto copy = *this;
     ++*this;
     return copy;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] reference operator*() const { return map_.read(cursor_); }
+  LEGATE_HOST_DEVICE [[nodiscard]] reference operator*() const { return map().read(cursor()); }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] pointer operator->() const { return pointer{operator*()}; }
+  LEGATE_HOST_DEVICE [[nodiscard]] pointer operator->() const { return pointer{operator*()}; }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  friend bool operator==(const iterator& lhs, const iterator& rhs)
+  LEGATE_HOST_DEVICE friend bool operator==(const iterator& lhs, const iterator& rhs)
   {
-    return lhs.map_.equal(lhs.cursor_, rhs.cursor_);
+    return lhs.map().equal(lhs.cursor(), rhs.cursor());
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  friend bool operator!=(const iterator& lhs, const iterator& rhs) { return !(lhs == rhs); }
-
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator& operator--()
+  LEGATE_HOST_DEVICE friend bool operator!=(const iterator& lhs, const iterator& rhs)
   {
-    cursor_ = map_.prev(cursor_);
+    return !(lhs == rhs);
+  }
+
+  LEGATE_HOST_DEVICE iterator& operator--()
+  {
+    cursor() = map().prev(cursor());
     return *this;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator operator--(int)
+  LEGATE_HOST_DEVICE iterator operator--(int)
   {
     auto copy = *this;
     --*this;
     return copy;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] iterator operator+(difference_type n) const
+  LEGATE_HOST_DEVICE [[nodiscard]] iterator operator+(difference_type n) const
   {
-    return {map_, map_.advance(cursor_, n)};
+    return {map(), map().advance(cursor(), n)};
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] friend iterator operator+(difference_type n, const iterator& it) { return it + n; }
-
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator& operator+=(difference_type n)
+  LEGATE_HOST_DEVICE [[nodiscard]] friend iterator operator+(difference_type n, const iterator& it)
   {
-    cursor_ = map_.advance(cursor_, n);
+    return it + n;
+  }
+
+  LEGATE_HOST_DEVICE iterator& operator+=(difference_type n)
+  {
+    cursor() = map().advance(cursor(), n);
     return *this;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] iterator operator-(difference_type n) const
+  LEGATE_HOST_DEVICE [[nodiscard]] iterator operator-(difference_type n) const
   {
-    return {map_, map_.advance(cursor_, -n)};
+    return {map(), map().advance(cursor(), -n)};
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  iterator& operator-=(difference_type n)
+  LEGATE_HOST_DEVICE iterator& operator-=(difference_type n)
   {
-    cursor_ = map_.advance(cursor_, -n);
+    cursor() = map().advance(cursor(), -n);
     return *this;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] friend difference_type operator-(const iterator& to, const iterator& from)
+  LEGATE_HOST_DEVICE [[nodiscard]] friend difference_type operator-(const iterator& to,
+                                                                    const iterator& from)
   {
-    return to.map_.distance(from.cursor_, to.cursor_);
+    return to.map().distance(from.cursor(), to.cursor());
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] friend bool operator<(const iterator& left, const iterator& right)
+  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator<(const iterator& left,
+                                                         const iterator& right)
   {
-    return left.map_.less(left.cursor_, right.cursor_);
+    return left.map().less(left.cursor(), right.cursor());
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] friend bool operator>(const iterator& left, const iterator& right)
+  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator>(const iterator& left,
+                                                         const iterator& right)
   {
-    return right.map_.less(right.cursor_, left.cursor_);
+    return right.map().less(right.cursor(), left.cursor());
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] friend bool operator<=(const iterator& left, const iterator& right)
+  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator<=(const iterator& left,
+                                                          const iterator& right)
   {
-    return !(right.map_.less(right.cursor_, left.cursor_));
+    return !(right.map().less(right.cursor(), left.cursor()));
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] friend bool operator>=(const iterator& left, const iterator& right)
+  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator>=(const iterator& left,
+                                                          const iterator& right)
   {
-    return !(left.map_.less(left.cursor_, right.cursor_));
+    return !(left.map().less(left.cursor(), right.cursor()));
   }
 
  private:
   friend detail::mixin<Map, iterator<Map>>;
 
-  [[nodiscard]] typename Map::cursor cursor() const { return cursor_; }
+  [[nodiscard]] typename Map::cursor& cursor() noexcept { return cursor_map_pair_.first(); }
 
-  [[nodiscard]] Map& map() { return map_; }
+  [[nodiscard]] const typename Map::cursor& cursor() const noexcept
+  {
+    return cursor_map_pair_.first();
+  }
 
-  [[nodiscard]] const Map& map() const { return map_; }
+  [[nodiscard]] Map& map() noexcept { return cursor_map_pair_.second(); }
 
-  typename Map::cursor cursor_{};
-  LEGATE_STL_ATTRIBUTE((no_unique_address)) Map map_{};
+  [[nodiscard]] const Map& map() const noexcept { return cursor_map_pair_.second(); }
+
+  legate::detail::compressed_pair<typename Map::cursor, Map> cursor_map_pair_{};
 };
 
 template <typename Int>
@@ -198,26 +196,31 @@ class affine_map {
     }
   };
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] cursor next(cursor cur) const { return cur + 1; }
+  LEGATE_HOST_DEVICE [[nodiscard]] cursor next(cursor cur) const { return cur + 1; }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] cursor prev(cursor cur) const { return cur - 1; }
+  LEGATE_HOST_DEVICE [[nodiscard]] cursor prev(cursor cur) const { return cur - 1; }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] cursor advance(cursor cur, std::ptrdiff_t n) const { return cur + n; }
+  LEGATE_HOST_DEVICE [[nodiscard]] cursor advance(cursor cur, std::ptrdiff_t n) const
+  {
+    return cur + n;
+  }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] std::ptrdiff_t distance(cursor from, cursor to) const { return to - from; }
+  LEGATE_HOST_DEVICE [[nodiscard]] std::ptrdiff_t distance(cursor from, cursor to) const
+  {
+    return to - from;
+  }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] bool less(cursor left, cursor right) const { return left < right; }
+  LEGATE_HOST_DEVICE [[nodiscard]] bool less(cursor left, cursor right) const
+  {
+    return left < right;
+  }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] bool equal(cursor left, cursor right) const { return left == right; }
+  LEGATE_HOST_DEVICE [[nodiscard]] bool equal(cursor left, cursor right) const
+  {
+    return left == right;
+  }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] cursor begin() const { return 0; }
+  LEGATE_HOST_DEVICE [[nodiscard]] cursor begin() const { return 0; }
 };
 
 }  // namespace legate::stl

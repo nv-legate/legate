@@ -97,12 +97,12 @@ class Library {
    *   static const RHS identity = ...; // Identity of the reduction operator
    *
    *   template <bool EXCLUSIVE>
-   *   __CUDA_HD__ inline static void apply(LHS& lhs, RHS rhs)
+   *   LEGATE_HOST_DEVICE inline static void apply(LHS& lhs, RHS rhs)
    *   {
    *     ...
    *   }
    *   template <bool EXCLUSIVE>
-   *   __CUDA_HD__ inline static void fold(RHS& rhs1, RHS rhs2)
+   *   LEGATE_HOST_DEVICE inline static void fold(RHS& rhs1, RHS rhs2)
    *   {
    *     ...
    *   }

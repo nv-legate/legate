@@ -39,8 +39,8 @@ class broadcast_constraint {
 };
 
 template <std::size_t Index, std::int32_t... ProjDims, typename Cursor, typename Extents>
-LEGATE_STL_ATTRIBUTE((host, device))
-[[nodiscard]] auto project_dimension(Cursor cursor, const Extents& extents) noexcept
+LEGATE_HOST_DEVICE [[nodiscard]] auto project_dimension(Cursor cursor,
+                                                        const Extents& extents) noexcept
 {
   if constexpr (((Index != ProjDims) && ...)) {
     return std::full_extent;
@@ -58,14 +58,11 @@ LEGATE_STL_ATTRIBUTE((host, device))
 template <typename Map>
 class view {
  public:
-  LEGATE_STL_ATTRIBUTE((host, device))
-  explicit view(Map map) : map_{std::move(map)} {}
+  LEGATE_HOST_DEVICE explicit view(Map map) : map_{std::move(map)} {}
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] iterator<Map> begin() const { return {map_, map_.begin()}; }
+  LEGATE_HOST_DEVICE [[nodiscard]] iterator<Map> begin() const { return {map_, map_.begin()}; }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] iterator<Map> end() const { return {map_, map_.end()}; }
+  LEGATE_HOST_DEVICE [[nodiscard]] iterator<Map> end() const { return {map_, map_.end()}; }
 
  private:
   Map map_{};
@@ -115,25 +112,26 @@ class projection_policy {
 
       physical_map() = default;
 
-      LEGATE_STL_ATTRIBUTE((host, device))
-      explicit physical_map(Mdspan span) : span_{std::move(span)} {}
+      LEGATE_HOST_DEVICE explicit physical_map(Mdspan span) : span_{std::move(span)} {}
 
       template <std::size_t... Is>
-      LEGATE_STL_ATTRIBUTE((host, device))  //
-      [[nodiscard]] static auto read_impl(std::index_sequence<Is...>, Mdspan span, cursor cursor)
+      LEGATE_HOST_DEVICE [[nodiscard]] static auto read_impl(std::index_sequence<Is...>,
+                                                             Mdspan span,
+                                                             cursor cursor)
       {
         auto extents = span.extents();
         return std::submdspan(span, project_dimension<Is, ProjDims...>(cursor, extents)...);
       }
 
-      LEGATE_STL_ATTRIBUTE((host, device))  //
-      [[nodiscard]] decltype(auto) read(cursor cur) const
+      LEGATE_HOST_DEVICE [[nodiscard]] decltype(auto) read(cursor cur) const
       {
         return read_impl(Indices{}, span_, cur);
       }
 
-      LEGATE_STL_ATTRIBUTE((host, device))  //
-      [[nodiscard]] cursor end() const { return (span_.extents().extent(ProjDims) * ... * 1); }
+      LEGATE_HOST_DEVICE [[nodiscard]] cursor end() const
+      {
+        return (span_.extents().extent(ProjDims) * ... * 1);
+      }
 
       [[nodiscard]] std::array<coord_t, Dim - sizeof...(ProjDims)> shape() const
       {
@@ -157,13 +155,11 @@ class projection_policy {
 
       logical_map() = default;
 
-      // LEGATE_STL_ATTRIBUTE((host,device))
       explicit logical_map(LogicalStore store) : store_{std::move(store)}
       {
         LegateAssert(store_.dim() == Dim);
       }
 
-      // LEGATE_STL_ATTRIBUTE((host,device))
       [[nodiscard]] value_type read(cursor cur) const
       {
         auto store = store_;
@@ -177,7 +173,6 @@ class projection_policy {
         return as_typed<std::remove_cv_t<ElementType>, Dim - sizeof...(ProjDims)>(store);
       }
 
-      // LEGATE_STL_ATTRIBUTE((host,device))
       [[nodiscard]] cursor end() const { return (store_.extents()[ProjDims] * ... * 1); }
 
       [[nodiscard]] std::array<coord_t, Dim - sizeof...(ProjDims)> shape() const
@@ -195,7 +190,6 @@ class projection_policy {
       LogicalStore store_{};
     };
 
-    // LEGATE_STL_ATTRIBUTE((host,device))
     [[nodiscard]] static view<logical_map> logical_view(LogicalStore store)
     {
       return view{logical_map{std::move(store)}};
@@ -203,23 +197,20 @@ class projection_policy {
 
     template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
-    LEGATE_STL_ATTRIBUTE((host, device))  //
-      [[nodiscard]] static view<physical_map<std::mdspan<T, E, L, A>>> physical_view(
-        std::mdspan<T, E, L, A> span)
+    LEGATE_HOST_DEVICE [[nodiscard]] static view<physical_map<std::mdspan<T, E, L, A>>>
+    physical_view(std::mdspan<T, E, L, A> span)
     {
       static_assert(Dim == E::rank());
       return view{physical_map<std::mdspan<T, E, L, A>>(std::move(span))};
     }
 
-    LEGATE_STL_ATTRIBUTE((host, device))  //
-    [[nodiscard]] static coord_t size(const LogicalStore& store)
+    LEGATE_HOST_DEVICE [[nodiscard]] static coord_t size(const LogicalStore& store)
     {
       auto&& shape = store.extents();
       return (shape[ProjDims] * ... * 1);
     }
 
-    LEGATE_STL_ATTRIBUTE((host, device))  //
-    [[nodiscard]] static coord_t size(const PhysicalStore& store)
+    LEGATE_HOST_DEVICE [[nodiscard]] static coord_t size(const PhysicalStore& store)
     {
       auto&& shape = store.shape<Dim>();
       return ((shape.hi[ProjDims] - shape.lo[ProjDims]) * ... * 1);
@@ -283,11 +274,9 @@ class element_policy {
 
       physical_map() = default;
 
-      LEGATE_STL_ATTRIBUTE((host, device))
-      explicit physical_map(Mdspan span) : span_{std::move(span)} {}
+      LEGATE_HOST_DEVICE explicit physical_map(Mdspan span) : span_{std::move(span)} {}
 
-      LEGATE_STL_ATTRIBUTE((host, device))  //
-      [[nodiscard]] reference read(cursor cur) const
+      LEGATE_HOST_DEVICE [[nodiscard]] reference read(cursor cur) const
       {
         std::array<coord_t, Dim> p;
         for (std::int32_t i = Dim - 1; i >= 0; --i) {
@@ -297,8 +286,7 @@ class element_policy {
         return span_[p];
       }
 
-      LEGATE_STL_ATTRIBUTE((host, device))  //
-      [[nodiscard]] cursor end() const
+      LEGATE_HOST_DEVICE [[nodiscard]] cursor end() const
       {
         cursor result = 1;
         for (std::int32_t i = 0; i < Dim; ++i) {
@@ -327,22 +315,19 @@ class element_policy {
 
     template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
-    LEGATE_STL_ATTRIBUTE((host, device))  //
-      [[nodiscard]] static view<physical_map<std::mdspan<T, E, L, A>>> physical_view(
-        std::mdspan<T, E, L, A> span)
+    LEGATE_HOST_DEVICE [[nodiscard]] static view<physical_map<std::mdspan<T, E, L, A>>>
+    physical_view(std::mdspan<T, E, L, A> span)
     {
       static_assert(Dim == E::rank());
       return view{physical_map<std::mdspan<T, E, L, A>>{std::move(span)}};
     }
 
-    LEGATE_STL_ATTRIBUTE((host, device))  //
-    [[nodiscard]] static coord_t size(const LogicalStore& store)
+    LEGATE_HOST_DEVICE [[nodiscard]] static coord_t size(const LogicalStore& store)
     {
       return static_cast<coord_t>(store.volume());
     }
 
-    LEGATE_STL_ATTRIBUTE((host, device))  //
-    [[nodiscard]] static coord_t size(const PhysicalStore& store)
+    LEGATE_HOST_DEVICE [[nodiscard]] static coord_t size(const PhysicalStore& store)
     {
       return store.shape<Dim>().volume();
     }

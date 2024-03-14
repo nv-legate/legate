@@ -98,8 +98,8 @@ class default_accessor {
                           store_accessor_t<LEGION_READ_WRITE, ElementType, Dim>>>;
 
   template <typename ElementType, std::int32_t Dim>
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
+  LEGATE_HOST_DEVICE [[nodiscard]] static type<ElementType, Dim> get(
+    const PhysicalStore& store) noexcept
   {
     if constexpr (Dim == 0) {
       // 0-dimensional legate stores are backed by read-only futures
@@ -127,8 +127,8 @@ class reduction_accessor {
                                          Realm::AffineAccessor<typename Op::RHS, Dim, coord_t>>>;
 
   template <typename ElementType, std::int32_t Dim>
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] static type<ElementType, Dim> get(const PhysicalStore& store) noexcept
+  LEGATE_HOST_DEVICE [[nodiscard]] static type<ElementType, Dim> get(
+    const PhysicalStore& store) noexcept
   {
     if constexpr (Dim == 0) {
       // 0-dimensional legate stores are backed by read-only futures
@@ -157,12 +157,12 @@ class mdspan_accessor {
   template <typename, std::int32_t, typename>
   friend class mdspan_accessor;
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_accessor() noexcept {}         //= default; // NOLINT(modernize-use-equals-default):
-                                        // to work around an nvcc-11 bug
+  // NOLINTNEXTLINE(modernize-use-equals-default):  to work around an nvcc-11 bug
+  LEGATE_HOST_DEVICE mdspan_accessor() noexcept  // = default;
+  {
+  }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  explicit mdspan_accessor(PhysicalStore store, const Rect<Dim>& shape) noexcept
+  LEGATE_HOST_DEVICE explicit mdspan_accessor(PhysicalStore store, const Rect<Dim>& shape) noexcept
     : store_{std::move(store)},
       shape_{shape.hi - shape.lo + Point<Dim>::ONES()},
       origin_{shape.lo},
@@ -170,26 +170,21 @@ class mdspan_accessor {
   {
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  explicit mdspan_accessor(const PhysicalStore& store) noexcept
+  LEGATE_HOST_DEVICE explicit mdspan_accessor(const PhysicalStore& store) noexcept
     : mdspan_accessor{store, store.shape<Dim>()}
   {
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_accessor(mdspan_accessor&& other) noexcept = default;
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_accessor(const mdspan_accessor& other) = default;
+  LEGATE_HOST_DEVICE mdspan_accessor(mdspan_accessor&& other) noexcept = default;
+  LEGATE_HOST_DEVICE mdspan_accessor(const mdspan_accessor& other)     = default;
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_accessor& operator=(mdspan_accessor&& other) noexcept
+  LEGATE_HOST_DEVICE mdspan_accessor& operator=(mdspan_accessor&& other) noexcept
   {
     *this = other;
     return *this;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_accessor& operator=(const mdspan_accessor& other) noexcept
+  LEGATE_HOST_DEVICE mdspan_accessor& operator=(const mdspan_accessor& other) noexcept
   {
     if (this == &other) {
       return *this;
@@ -206,11 +201,11 @@ class mdspan_accessor {
     return *this;
   }
 
+  // NOLINTBEGIN(google-explicit-constructor)
   template <typename OtherElementType>                                          //
     requires(std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>)  //
-  LEGATE_STL_ATTRIBUTE((host, device))
-    // NOLINTNEXTLINE(google-explicit-constructor)
-    mdspan_accessor(const mdspan_accessor<OtherElementType, Dim, Accessor>& other) noexcept
+  LEGATE_HOST_DEVICE mdspan_accessor(
+    const mdspan_accessor<OtherElementType, Dim, Accessor>& other) noexcept
     : store_{other.store_},
       shape_{other.shape_},
       origin_{other.origin_},
@@ -219,17 +214,16 @@ class mdspan_accessor {
   }
 
   template <typename Function, typename... InputSpans>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  // NOLINTNEXTLINE(google-explicit-constructor)
-  mdspan_accessor(const elementwise_accessor<Function, InputSpans...>& other)
+  LEGATE_HOST_DEVICE mdspan_accessor(const elementwise_accessor<Function, InputSpans...>& other)
     : elementwise_{&mdspan_accessor::elementwise<Function, InputSpans...>}, elementwise_obj_{&other}
   {
   }
+  // NOLINTEND(google-explicit-constructor)
 
   // Apply a function element-wise
   template <typename Function, typename... InputSpans>
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  mdspan_accessor& operator=(const elementwise_accessor<Function, InputSpans...>& other)
+  LEGATE_HOST_DEVICE mdspan_accessor& operator=(
+    const elementwise_accessor<Function, InputSpans...>& other)
   {
     using result_type = call_result_t<Function, typename InputSpans::reference...>;
     static_assert(
@@ -250,8 +244,8 @@ class mdspan_accessor {
     return *this;
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] reference access(data_handle_type handle, std::size_t i) const noexcept
+  LEGATE_HOST_DEVICE [[nodiscard]] reference access(data_handle_type handle,
+                                                    std::size_t i) const noexcept
   {
     Point<Dim> p;
     auto offset = handle + i;
@@ -263,17 +257,15 @@ class mdspan_accessor {
     return accessor_[p + origin_];
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] typename offset_policy::data_handle_type offset(data_handle_type handle,
-                                                                std::size_t i) const noexcept
+  LEGATE_HOST_DEVICE [[nodiscard]] typename offset_policy::data_handle_type offset(
+    data_handle_type handle, std::size_t i) const noexcept
   {
     return handle + i;
   }
 
  private:
   template <typename Function, typename... InputSpans>
-  LEGATE_STL_ATTRIBUTE((host, device))
-  static void elementwise(mdspan_accessor& self, const void* elementwise_obj)
+  LEGATE_HOST_DEVICE static void elementwise(mdspan_accessor& self, const void* elementwise_obj)
   {
     self = *static_cast<const elementwise_accessor<Function, InputSpans...>*>(elementwise_obj);
   }

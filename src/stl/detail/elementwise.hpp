@@ -32,17 +32,15 @@ class elementwise_accessor {
   using reference        = value_type;
   using offset_policy    = elementwise_accessor;
 
-  // LEGATE_STL_ATTRIBUTE((host, device)) //
   elementwise_accessor() noexcept = default;
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  explicit elementwise_accessor(Function fun, InputSpans... spans) noexcept
+  LEGATE_HOST_DEVICE explicit elementwise_accessor(Function fun, InputSpans... spans) noexcept
     : fun_{std::move(fun)}, spans_{std::move(spans)...}
   {
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] reference access(data_handle_type handle, std::size_t i) const noexcept
+  LEGATE_HOST_DEVICE [[nodiscard]] reference access(data_handle_type handle,
+                                                    std::size_t i) const noexcept
   {
     auto offset = this->offset(handle, i);
     return std::apply(
@@ -52,9 +50,8 @@ class elementwise_accessor {
       spans_);
   }
 
-  LEGATE_STL_ATTRIBUTE((host, device))
-  [[nodiscard]] typename offset_policy::data_handle_type offset(data_handle_type handle,
-                                                                std::size_t i) const noexcept
+  LEGATE_HOST_DEVICE [[nodiscard]] typename offset_policy::data_handle_type offset(
+    data_handle_type handle, std::size_t i) const noexcept
   {
     return handle + i;
   }
@@ -74,13 +71,15 @@ using elementwise_span =
 // a binary function that folds its two arguments together using
 // the given binary function, and stores the result in the first
 template <typename Function>
-class elementwise {
+class elementwise : private Function {
  public:
-  LEGATE_STL_ATTRIBUTE((no_unique_address)) Function fn{};
+  elementwise() = default;
+  explicit elementwise(Function fn) : Function{std::move(fn)} {}
+
+  const Function& function() const noexcept { return *this; }
 
   template <typename InputSpan, typename... InputSpans>
-  LEGATE_STL_ATTRIBUTE((host, device))  //
-  [[nodiscard]] auto operator()(InputSpan&& head, InputSpans&&... tail) const
+  LEGATE_HOST_DEVICE [[nodiscard]] auto operator()(InputSpan&& head, InputSpans&&... tail) const
     -> elementwise_span<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>
   {
     // TODO(wonchanl): Put back these assertions once we figure out the compile error
@@ -97,7 +96,7 @@ class elementwise {
       elementwise_span<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>;
 
     Mapping mapping{head.extents()};
-    Accessor accessor{fn,
+    Accessor accessor{function(),
                       stl::as_mdspan(std::forward<InputSpan>(head)),
                       stl::as_mdspan(std::forward<InputSpans>(tail))...};
     return ElementwiseSpan{0, std::move(mapping), std::move(accessor)};
@@ -110,7 +109,7 @@ class elementwise {
 template <typename Function>
 [[nodiscard]] detail::elementwise<std::decay_t<Function>> elementwise(Function&& fn)
 {
-  return {std::forward<Function>(fn)};
+  return detail::elementwise<std::decay_t<Function>>{std::forward<Function>(fn)};
 }
 
 }  // namespace legate::stl
