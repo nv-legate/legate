@@ -14,47 +14,15 @@ from typing import Any
 
 import numpy as np
 import pytest
+from utils.data import ARRAY_TYPES, SCALAR_VALS
 
 from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
-
-ARRAY_TYPES = (
-    ty.bool_,
-    ty.complex128,
-    ty.complex64,
-    ty.float16,
-    ty.float32,
-    ty.float64,
-    ty.int16,
-    ty.int32,
-    ty.int64,
-    ty.int8,
-    ty.uint16,
-    ty.uint32,
-    ty.uint64,
-    ty.uint8,
-)
-
-VALS = (
-    True,
-    complex(1, 5),
-    complex(5, 1),
-    12.5,
-    3.1415,
-    0.7777777,
-    10,
-    1024,
-    4096,
-    -1,
-    65535,
-    4294967295,
-    101010,
-)
 
 
 class TestStoreCreation:
     @pytest.mark.parametrize(
         "val, dtype",
-        zip(VALS, ARRAY_TYPES),
+        zip(SCALAR_VALS, ARRAY_TYPES),
         ids=str,
     )
     def test_create_from_numpy_scalar(self, val: Any, dtype: ty.Type) -> None:
@@ -131,7 +99,7 @@ class TestStoreCreation:
 class TestStoreCreationErrors:
     def test_invalid_shape_value(self) -> None:
         runtime = get_legate_runtime()
-        msg = "shape must be a Shape object or an iterable"
+        msg = "Expected an iterable but got.*"
         with pytest.raises(ValueError, match=msg):
             runtime.create_store(ty.int32, shape=1)
 
@@ -152,7 +120,7 @@ class TestStoreCreationErrors:
 
     def test_string_scalar(self) -> None:
         runtime = get_legate_runtime()
-        msg = "Store cannot be created with variable size type string"
+        msg = "Store must have a fixed-size type"
         scalar = Scalar("abcd", ty.string_type)
         with pytest.raises(ValueError, match=msg):
             runtime.create_store_from_scalar(scalar)

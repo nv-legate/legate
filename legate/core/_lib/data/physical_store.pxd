@@ -23,7 +23,7 @@ cdef extern from "core/data/physical_store.h" namespace "legate" nogil:
         int32_t dim()
         _Type type()
         _Domain domain()
-        _InlineAllocation get_inline_allocation()
+        _InlineAllocation get_inline_allocation() except+
         StoreTarget target()
 
 

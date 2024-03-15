@@ -148,10 +148,12 @@ cdef extern from *:
 
 cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
-        _Library find_library(std_string_view)
-        _AutoTask create_task(_Library, int64_t)
-        _ManualTask create_task(_Library, int64_t, const _tuple[uint64_t]&)
-        _ManualTask create_task(_Library, int64_t, const _Domain&)
+        _Library find_library(std_string_view) except+
+        _AutoTask create_task(_Library, int64_t) except+
+        _ManualTask create_task(
+            _Library, int64_t, const _tuple[uint64_t]&
+        ) except+
+        _ManualTask create_task(_Library, int64_t, const _Domain&) except+
         void issue_copy(_LogicalStore, _LogicalStore) except+
         void issue_copy(_LogicalStore, _LogicalStore, int32_t) except+
         void issue_gather(_LogicalStore, _LogicalStore, _LogicalStore) except+
