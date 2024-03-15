@@ -31,6 +31,7 @@ __all__ = (
     "scrub",
     "white",
     "yellow",
+    "HAVE_COLOR",
 )
 
 
@@ -97,8 +98,10 @@ try:
     if sys.platform == "win32":
         colorama.init()
 
+    HAVE_COLOR = True
 except ImportError:
     bright = dim = white = cyan = red = magenta = green = yellow = _text
+    HAVE_COLOR = False
 
 # ref: https://stackoverflow.com/a/14693789
 _ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")

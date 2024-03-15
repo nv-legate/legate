@@ -14,12 +14,14 @@
 """
 from __future__ import annotations
 
+import sys
 from argparse import ArgumentParser
 from typing import Literal, Union
 
 from typing_extensions import TypeAlias
 
 from ..util.args import ExtendAction, MultipleChoices
+from ..util.colors import HAVE_COLOR
 from . import FEATURES, defaults
 
 PinOptionsType: TypeAlias = Union[
@@ -364,6 +366,7 @@ other.add_argument(
     "--color",
     dest="color",
     action="store_true",
+    default=HAVE_COLOR and sys.stdout.isatty(),
     required=False,
     help="Whether to use color terminal output (if colorama is installed)",
 )
