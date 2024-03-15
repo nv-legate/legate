@@ -82,7 +82,6 @@ option(legate_core_EXCLUDE_LEGION_FROM_ALL "Exclude Legion targets from legate.c
 option(legate_core_BUILD_DOCS "Build doxygen docs" OFF)
 
 set_or_default(NCCL_DIR NCCL_PATH)
-set_or_default(Thrust_DIR THRUST_PATH)
 set_or_default(CUDA_TOOLKIT_ROOT_DIR CUDA)
 set_or_default(Legion_CUDA_ARCH GPU_ARCH all-major)
 set_or_default(Legion_HIJACK_CUDART USE_CUDART_HIJACK OFF)

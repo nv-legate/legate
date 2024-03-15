@@ -51,6 +51,19 @@ endif()
 # add third party dependencies using CPM
 rapids_cpm_init(OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/versions.json)
 
+##############################################################################
+# - CCCL ---------------------------------------------------------------------
+
+# Pull this in before Legion, so that Legion will use the same libcu++ as
+# Legate (the one pull from CCCL)
+
+include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_cccl.cmake)
+
+find_or_configure_cccl()
+
+##############################################################################
+# - Python -------------------------------------------------------------------
+
 macro(_find_package_Python3)
   find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
   message(VERBOSE "legate.core: Has Python3: ${Python3_FOUND}")
@@ -60,6 +73,9 @@ macro(_find_package_Python3)
   message(VERBOSE "legate.core: Python 3 library directories: ${Python3_LIBRARY_DIRS}")
   message(VERBOSE "legate.core: Python 3 version: ${Python3_VERSION}")
 endmacro()
+
+##############################################################################
+# - Legion -------------------------------------------------------------------
 
 if(Legion_USE_Python)
   _find_package_Python3()
@@ -111,13 +127,6 @@ if(Legion_USE_CUDA)
   # Find NCCL
   include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_nccl.cmake)
 endif()
-
-##############################################################################
-# - CCCL ---------------------------------------------------------------------
-
-include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_cccl.cmake)
-
-find_or_configure_cccl()
 
 ##############################################################################
 # - std::span ----------------------------------------------------------------

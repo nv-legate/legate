@@ -32,10 +32,12 @@ class print_dense_array_fn {
 
 }  // namespace
 
-std::string print_dense_array(const PhysicalStore& store)
-{
-  LegateCheck(store.is_readable());
-  return double_dispatch(store.dim(), store.code(), print_dense_array_fn{}, store);
-}
+// TODO(mpapadakis): Disabled while we find a workaround for operator<< missing for
+// cuda::std::complex, see legate.core.internal#475
+// std::string print_dense_array(const PhysicalStore& store)
+// {
+//   LegateCheck(store.is_readable());
+//   return double_dispatch(store.dim(), store.code(), print_dense_array_fn{}, store);
+// }
 
 }  // namespace legate

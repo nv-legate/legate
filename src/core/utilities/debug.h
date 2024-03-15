@@ -51,15 +51,17 @@ template <typename T, int DIM>
  */
 template <int DIM, typename ACC>
 [[nodiscard]] std::string print_dense_array(ACC accessor, const Rect<DIM>& rect);
-/**
- * @ingroup util
- * @brief Converts the store to a string
- *
- * @param store Store to convert
- *
- * @return A string expressing the contents of the store
- */
-[[nodiscard]] std::string print_dense_array(const PhysicalStore& store);
+// TODO(mpapadakis): Disabled while we find a workaround for operator<< missing for
+// cuda::std::complex, see legate.core.internal#475
+// /**
+//  * @ingroup util
+//  * @brief Converts the store to a string
+//  *
+//  * @param store Store to convert
+//  *
+//  * @return A string expressing the contents of the store
+//  */
+// [[nodiscard]] std::string print_dense_array(const PhysicalStore& store);
 
 }  // namespace legate
 

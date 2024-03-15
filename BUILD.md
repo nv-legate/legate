@@ -214,7 +214,7 @@ environment file.
 - `nccl`
 - `nvml`
 - `nvtx`
-- `thrust` (pulled from github)
+- `CCCL` (pulled from github)
 
 If you wish to provide alternative installations for these, then you can remove
 them from the environment file (or invoke `generate-conda-envs.py` with `--ctk
