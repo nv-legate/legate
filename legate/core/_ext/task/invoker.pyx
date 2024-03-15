@@ -285,10 +285,12 @@ cdef class VariantInvoker:
             unhandled_kwargs.remove(name)
             VariantInvoker._handle_param(task, param_mapping, sig, param)
 
+        cdef str error_str
+
         if unhandled_kwargs:
+            error_str = ", ".join(map(str, unhandled_kwargs))
             raise TypeError(
-                "Task does not have keyword argument(s): "
-                f"{', '.join(map(str, unhandled_kwargs))}"
+                f"Task does not have keyword argument(s): {error_str}"
             )
 
         cdef list missing_params
@@ -296,9 +298,10 @@ cdef class VariantInvoker:
         if missing_params := [
             params[name] for name, tup in param_mapping.items() if not tup.seen
         ]:
+            error_str = ", ".join(map(str, missing_params))
             raise TypeError(
                 f"missing {len(missing_params)} required argument(s): "
-                f"{', '.join(map(str, missing_params))}"
+                f"{error_str}"
             )
         return param_mapping
 
