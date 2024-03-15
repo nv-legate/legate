@@ -113,7 +113,7 @@ using TypeList = ::testing::
 template <typename>
 struct EnableSharedFromThisUnit : ::testing::Test {};
 
-TYPED_TEST_SUITE(EnableSharedFromThisUnit, TypeList);
+TYPED_TEST_SUITE(EnableSharedFromThisUnit, TypeList, );
 
 TYPED_TEST(EnableSharedFromThisUnit, Create)
 {

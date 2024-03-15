@@ -407,6 +407,35 @@ macro(legate_core_add_target_link_option TARGET_NAME VIS OPTION_NAME)
   endif()
 endmacro()
 
+if((CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA") AND (NOT legate_core_SKIP_NVCC_PEDANTIC_CHECK))
+  foreach(remove_re
+      [=[\-Wpedantic]=]
+      # We want to catch either "-pedantic" or "--compiler-option=-pedantic", but we do
+      # NOT want to catch -Wformat-pedantic!
+      [=[[ |=]\-pedantic]=]
+    )
+    # This might seems strange why are are doing a match then replace but... we first do the
+    # regex match because we only want to emit the warning if the user actually has the
+    # offending flags. But if we've done the match and didn't find the flags, then there's
+    # no point in doing the replace, so we move it inside the if as well.
+    string(REGEX MATCH "${remove_re}" match_var "${legate_core_CUDA_FLAGS}")
+    if(match_var)
+      message(
+        WARNING
+        "-pedantic (or -Wpedantic) is not supported by nvcc and will lead to spurious "
+        "warnings in generated code. Removing it from build flags. If you would like to "
+        "override this behavior, reconfigure with "
+        "-Dlegate_core_SKIP_NVCC_PEDANTIC_CHECK=ON."
+      )
+      string(
+        REGEX REPLACE
+        "${remove_re}" ""
+        legate_core_CUDA_FLAGS "${legate_core_CUDA_FLAGS}"
+      )
+    endif()
+  endforeach()
+endif()
+
 legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_OPTIONS)
 legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_OPTIONS)
 

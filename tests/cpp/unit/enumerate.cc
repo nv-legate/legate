@@ -51,7 +51,7 @@ using EnumerateTypeList =
 template <typename>
 struct EnumerateUnit : ::testing::Test {};
 
-TYPED_TEST_SUITE(EnumerateUnit, EnumerateTypeList);
+TYPED_TEST_SUITE(EnumerateUnit, EnumerateTypeList, );
 
 TYPED_TEST(EnumerateUnit, Basic)
 {

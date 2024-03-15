@@ -17,7 +17,7 @@
 template <typename T>
 struct InternalSharedPtrUnit : BasicSharedPtrUnit<T> {};
 
-TYPED_TEST_SUITE(InternalSharedPtrUnit, BasicSharedPtrTypeList);
+TYPED_TEST_SUITE(InternalSharedPtrUnit, BasicSharedPtrTypeList, );
 
 TYPED_TEST(InternalSharedPtrUnit, CreateBasic)
 {

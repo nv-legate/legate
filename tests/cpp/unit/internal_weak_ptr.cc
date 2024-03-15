@@ -19,7 +19,7 @@ using BasicSharedPtrTypeList = ::testing::Types<std::int8_t, std::int32_t, std::
 template <typename>
 struct InternalWeakPtrUnit : ::testing::Test {};
 
-TYPED_TEST_SUITE(InternalWeakPtrUnit, BasicSharedPtrTypeList);
+TYPED_TEST_SUITE(InternalWeakPtrUnit, BasicSharedPtrTypeList, );
 
 TYPED_TEST(InternalWeakPtrUnit, Create)
 {

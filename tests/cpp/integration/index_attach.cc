@@ -255,7 +255,7 @@ TEST_F(IndexAttach, SysmemAccessByTask)
   do_test<std::uint64_t>(10);
   do_test<std::int16_t>(-10);
   do_test<float>(100.0f);
-  do_test<double>(10000.8d);
+  do_test<double>(10000.8);
   do_test<__half>(static_cast<__half>(0.9f));
   do_test<complex<float>>({15, 20});
   do_test<complex<double>>({-3.9, 5.8});
@@ -360,17 +360,22 @@ TEST_F(IndexAttach, InvalidCreation)
 {
   void* ptr = nullptr;
 
-  EXPECT_THROW(legate::ExternalAllocation::create_sysmem(ptr, 10), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_sysmem(ptr, 10)),
+               std::invalid_argument);
 #if LegateDefined(LEGATE_USE_CUDA)
   EXPECT_THROW(legate::ExternalAllocation::create_zcmem(ptr, 10), std::invalid_argument);
   if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) > 0) {
-    EXPECT_THROW(legate::ExternalAllocation::create_fbmem(0, ptr, 10), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+                 std::invalid_argument);
   } else {
-    EXPECT_THROW(legate::ExternalAllocation::create_fbmem(0, ptr, 10), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+                 std::out_of_range);
   }
 #else
-  EXPECT_THROW(legate::ExternalAllocation::create_zcmem(ptr, 10), std::runtime_error);
-  EXPECT_THROW(legate::ExternalAllocation::create_fbmem(0, ptr, 10), std::runtime_error);
+  EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(ptr, 10)),
+               std::runtime_error);
+  EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+               std::runtime_error);
 #endif
 }
 
