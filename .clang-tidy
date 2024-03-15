@@ -73,7 +73,6 @@ ImplementationFileExtensions:
   - cxx
   - cu
 HeaderFilterRegex: '.*/src/.*'
-AnalyzeTemporaryDtors: false
 SystemHeaders: false
 CheckOptions:
   cert-dcl16-c.NewSuffixes: 'L;LL;LU;LLU'
