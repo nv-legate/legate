@@ -53,6 +53,10 @@ Checks:
   # Results in: error: for C++11-compatibility, use pair directly. But we don't care about
   # C++11, and so we don't care about this warning.
   - '-google-build-explicit-make-pair'
+  # This check is incredibly expensive for absolutely no reason, and since we a) use
+  # modern google-test and b) don't have clang-tidy enabled on our testing code, we don't
+  # need to enable it!
+  - '-google-upgrade-googletest-case'
 WarningsAsErrors: '*'
 HeaderFileExtensions:
   - ''
