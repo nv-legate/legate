@@ -32,7 +32,7 @@ jobs:
     needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -41,7 +41,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v23.11.00"
+      legate-gh-ci-tag: "v1"
       cmake-preset: ${{ inputs.cmake-preset }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: false
@@ -51,7 +51,7 @@ jobs:
     needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -60,7 +60,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v23.11.00"
+      legate-gh-ci-tag: "v1"
       cmake-preset: ${{ inputs.cmake-preset }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: false
@@ -114,7 +114,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ci
@@ -124,7 +124,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v23.11.00"
+      legate-gh-ci-tag: "v1"
       cmake-preset: ${{ inputs.cmake-preset }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
     secrets: inherit
@@ -142,7 +142,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ci
@@ -152,7 +152,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v23.11.00"
+      legate-gh-ci-tag: "v1"
       cmake-preset: ${{ inputs.cmake-preset }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
     secrets: inherit
