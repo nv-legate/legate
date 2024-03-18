@@ -273,12 +273,14 @@ add_library(legate::core ALIAS legate_core)
 
 set(legate_core_CXX_DEFS "")
 set(legate_core_CUDA_DEFS "")
-set(legate_core_CXX_OPTIONS "")
-set(legate_core_CUDA_OPTIONS "")
+set(legate_core_CXX_PRIVATE_OPTIONS "")
+set(legate_core_CUDA_PRIVATE_OPTIONS "")
+set(legate_core_CXX_PUBLIC_OPTIONS "")
+set(legate_core_CUDA_PUBLIC_OPTIONS "")
 set(legate_core_LINKER_OPTIONS "")
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/set_cpu_arch_flags.cmake)
-set_cpu_arch_flags(legate_core_CXX_OPTIONS)
+set_cpu_arch_flags(legate_core_CXX_PRIVATE_OPTIONS)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND legate_core_CXX_DEFS LEGATE_USE_DEBUG)
@@ -291,10 +293,10 @@ if(Legion_USE_CUDA)
 
   add_cuda_architecture_defines(legate_core_CUDA_DEFS ARCHS ${Legion_CUDA_ARCH})
 
-  list(APPEND legate_core_CUDA_OPTIONS -Xfatbin=-compress-all)
-  list(APPEND legate_core_CUDA_OPTIONS --expt-extended-lambda)
-  list(APPEND legate_core_CUDA_OPTIONS --expt-relaxed-constexpr)
-  list(APPEND legate_core_CUDA_OPTIONS -Wno-deprecated-gpu-targets)
+  list(APPEND legate_core_CUDA_PRIVATE_OPTIONS -Xfatbin=-compress-all)
+  list(APPEND legate_core_CUDA_PRIVATE_OPTIONS --expt-extended-lambda)
+  list(APPEND legate_core_CUDA_PRIVATE_OPTIONS --expt-relaxed-constexpr)
+  list(APPEND legate_core_CUDA_PRIVATE_OPTIONS -Wno-deprecated-gpu-targets)
 endif()
 
 if(Legion_NETWORKS)
@@ -303,7 +305,10 @@ if(Legion_NETWORKS)
 endif()
 
 # Change THRUST_DEVICE_SYSTEM for `.cpp` files
-# TODO: This is what we do in cuNumeric, should we do it here as well?
+# If we include Thrust in "CUDA mode" in .cc files, that ends up pulling the
+# definition of __half from the CUDA toolkit, and Legion defines a custom __half
+# when compiling outside of nvcc (because CUDA's __half doesn't define any
+# __host__ functions), which causes a conflict.
 if(Legion_USE_OpenMP)
   find_package(OpenMP REQUIRED)
 
@@ -312,17 +317,12 @@ if(Legion_USE_OpenMP)
   list(APPEND legate_core_CXX_DEFS LEGATE_USE_OPENMP)
   list(APPEND legate_core_CUDA_DEFS LEGATE_USE_OPENMP)
 
-  list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-  list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP)
-elseif(NOT Legion_USE_CUDA)
-  list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-  list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
+  list(APPEND legate_core_CXX_PUBLIC_OPTIONS -UTHRUST_DEVICE_SYSTEM)
+  list(APPEND legate_core_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP)
+else()
+  list(APPEND legate_core_CXX_PUBLIC_OPTIONS -UTHRUST_DEVICE_SYSTEM)
+  list(APPEND legate_core_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
 endif()
-# Or should we only do it if OpenMP and CUDA are both disabled?
-# if(NOT Legion_USE_OpenMP AND (NOT Legion_USE_CUDA))
-#   list(APPEND legate_core_CXX_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-#   list(APPEND legate_core_CXX_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
-# endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(LEGATE_CORE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
@@ -445,8 +445,11 @@ if((CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA") AND (NOT legate_core_SKIP_NVCC_PEDA
   endforeach()
 endif()
 
-legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_OPTIONS)
-legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_OPTIONS)
+legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_PRIVATE_OPTIONS)
+legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_PRIVATE_OPTIONS)
+
+legate_core_add_target_compile_option(legate_core CXX PUBLIC legate_core_CXX_PUBLIC_OPTIONS)
+legate_core_add_target_compile_option(legate_core CUDA PUBLIC legate_core_CUDA_PUBLIC_OPTIONS)
 
 legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_FLAGS)
 legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_FLAGS)
