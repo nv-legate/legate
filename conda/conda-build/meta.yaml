@@ -151,7 +151,7 @@ requirements:
   host:
     - zlib
     - python
-    - cython
+    - cython >=3.0.1
     - llvm-openmp
     - scikit-build
     - elfutils # [linux]
