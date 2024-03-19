@@ -46,10 +46,10 @@ legate_include_rapids()
 # For now we want the optimization flags to match on both normal make and cmake
 # builds so we override the cmake defaults here for release, this changes
 # -O3 to -O2 and removes -DNDEBUG
-if(NOT DEFINED CMAKE_CXX_FLAGS_DEBUG)
+if(NOT CMAKE_CXX_FLAGS_DEBUG)
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 endif()
-if(NOT DEFINED CMAKE_CUDA_FLAGS_DEBUG)
+if(NOT CMAKE_CUDA_FLAGS_DEBUG)
   set(CMAKE_CUDA_FLAGS_DEBUG "-O0 -g")
 endif()
 if (NOT CMAKE_CXX_FLAGS_RELEASE)
@@ -62,8 +62,14 @@ if (NOT CMAKE_CUDA_FLAGS_RELEASE)
 endif()
 set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os")
 set(CMAKE_CUDA_FLAGS_MINSIZEREL "-Os")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
-set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-O2 -g")
+if(NOT CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+  # Order is important, we want the release flags *last*. We want the enable-optimization
+  # flags to supersede any disable-optimization flags set by the debug flags.
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_RELEASE} -g")
+endif()
+if(NOT CMAKE_CUDA_FLAGS_RELWITHDEBINFO)
+  set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "${CMAKE_CUDA_FLAGS_DEBUG} ${CMAKE_CUDA_FLAGS_RELEASE} -g")
+endif()
 
 if(NOT SKBUILD)
   project(legate_core VERSION ${legate_core_version} LANGUAGES C CXX)

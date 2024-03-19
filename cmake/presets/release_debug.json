@@ -1,0 +1,90 @@
+{
+    "version": 4,
+    "include": [
+        "debug.json",
+        "release.json"
+    ],
+    "configurePresets": [
+        {
+            "inherits": [
+                "base-release",
+                "base-debug"
+
+            ],
+            "name": "base-release-debug",
+            "hidden": true,
+            "environment": {
+                // CXX flags
+                "LEGATE_RELEASE_DEBUG_PRESET_CMAKE_CXX_FLAGS": "$env{LEGATE_DEBUG_PRESET_CMAKE_CXX_FLAGS} $env{LEGATE_RELEASE_PRESET_CMAKE_CXX_FLAGS}",
+                "LEGATE_RELEASE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS} $env{LEGATE_RELEASE_PRESET_LEGATE_CORE_CXX_FLAGS}",
+                // CUDA flags, no sanitizers enabled because nvcc chokes on the arguments...
+                "LEGATE_RELEASE_DEBUG_PRESET_CMAKE_CUDA_FLAGS": "$env{LEGATE_DEBUG_PRESET_CMAKE_CUDA_FLAGS} $env{LEGATE_RELEASE_PRESET_CMAKE_CUDA_FLAGS}",
+                "LEGATE_RELEASE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS} $env{LEGATE_RELEASE_PRESET_LEGATE_CORE_CUDA_FLAGS}",
+                // Linker flags
+                "LEGATE_RELEASE_DEBUG_PRESET_LEGATE_CORE_LINKER_FLAGS": "$env{LEGATE_DEBUG_PRESET_LEGATE_CORE_LINKER_FLAGS} $env{LEGATE_RELEASE_PRESET_LEGATE_CORE_LINKER_FLAGS}"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": {
+                    "type": "STRING",
+                    "value": "RelWithDebInfo"
+                },
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_DEBUG_PRESET_CMAKE_CXX_FLAGS}"
+                },
+                "legate_core_CXX_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_DEBUG_PRESET_LEGATE_CORE_CXX_FLAGS}"
+                },
+                "CMAKE_CUDA_FLAGS_RELWITHDEBINFO": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_DEBUG_PRESET_CMAKE_CUDA_FLAGS}"
+                },
+                "legate_core_CUDA_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_DEBUG_PRESET_LEGATE_CORE_CUDA_FLAGS}"
+                },
+                "legate_core_LINKER_FLAGS": {
+                    "type": "STRING",
+                    "value": "$env{LEGATE_RELEASE_DEBUG_PRESET_LEGATE_CORE_LINKER_FLAGS}"
+                }
+            }
+        },
+        {
+            "inherits": ["base-release-debug", "debug-clang", "release-clang"],
+            "name": "release-debug-clang",
+            "displayName": "Release Clang Build With Debug Symbols",
+            "description": "Release Clang Build With Debug Symbols"
+        },
+        {
+            "inherits": ["base-release-debug", "debug-gcc", "release-gcc"],
+            "name": "release-debug-gcc",
+            "displayName": "Release GCC Build With Debug Symbols",
+            "description": "Release GCC Build With Debug Symbols"
+        }
+    ],
+    "buildPresets": [
+        {
+            "inherits": "debug-clang",
+            "name": "release-debug-clang",
+            "configurePreset": "release-debug-clang"
+        },
+        {
+            "inherits": "debug-gcc",
+            "name": "release-debug-gcc",
+            "configurePreset": "release-debug-gcc"
+        }
+    ],
+    "testPresets": [
+        {
+            "inherits": "debug-clang",
+            "name": "release-debug-clang",
+            "configurePreset": "release-debug-clang"
+        },
+        {
+            "inherits": "debug-clang",
+            "name": "release-debug-gcc",
+            "configurePreset": "release-debug-gcc"
+        }
+    ]
+}

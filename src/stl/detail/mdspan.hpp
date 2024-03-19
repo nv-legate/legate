@@ -175,8 +175,36 @@ class mdspan_accessor {
   {
   }
 
+  // Need this specifically for GCC only, since clang does not understand maybe-uninitialized
+  // (but it also doesn't have a famously broken "maybe uninitialized" checker...).
+  //
+  // This ignore is needed to silence the following spurious warnings, because I guess the
+  // Kokkos guys don't default-initialize their compressed pairs?
+  //
+  // legate.core.internal/src/stl/detail/mdspan.hpp:171:3: error:
+  // '<unnamed>.std::detail::__compressed_pair<std::layout_right::mapping<std::extents<long
+  // long int, 18446744073709551615> >, legate::stl::detail::mdspan_accessor<long int, 1,
+  // legate::stl::detail::default_accessor>,
+  // void>::__t2_val.legate::stl::detail::mdspan_accessor<long int, 1,
+  // legate::stl::detail::default_accessor>::shape_' may be used uninitialized
+  // [-Werror=maybe-uninitialized]
+  // 171 |   mdspan_accessor(mdspan_accessor&& other) noexcept = default;
+  //     |   ^~~~~~~~~~~~~~~
+  //
+  // legate.core.internal/arch-ci-linux-gcc-py-pkgs-release/cmake_build/_deps/mdspan-src/include/experimental/__p0009_bits/mdspan.hpp:198:36:
+  // note: '<anonymous>' declared here
+  //   198 |     : __members(other.__ptr_ref(), __map_acc_pair_t(other.__mapping_ref(),
+  //   other.__accessor_ref()))
+  //       |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+#if LegateDefined(LEGATE_STL_GCC())
+  LEGATE_STL_PRAGMA_PUSH()
+  LEGATE_STL_PRAGMA_GNU_IGNORE("-Wmaybe-uninitialized")
+#endif
   LEGATE_HOST_DEVICE mdspan_accessor(mdspan_accessor&& other) noexcept = default;
   LEGATE_HOST_DEVICE mdspan_accessor(const mdspan_accessor& other)     = default;
+#if LegateDefined(LEGATE_STL_GCC())
+  LEGATE_STL_PRAGMA_POP()
+#endif
 
   LEGATE_HOST_DEVICE mdspan_accessor& operator=(mdspan_accessor&& other) noexcept
   {

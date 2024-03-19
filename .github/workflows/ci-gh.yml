@@ -28,6 +28,7 @@ jobs:
           - debug-gcc
           - debug-sanitizer-gcc
           - release-gcc
+          - release-debug-gcc
         exclude:
           - cmake-preset: debug-gcc
             ucx-enabled: true

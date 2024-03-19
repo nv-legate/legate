@@ -713,11 +713,11 @@ def driver():
         "debugging checks with sanitizer support.",
     )
     preset_group.add_argument(
-        "--debug-release",
-        dest="preset_debug_release",
+        "--release-debug",
+        dest="preset_release_debug",
         action="store_true",
         required=False,
-        default=os.environ.get("DEBUG_RELEASE", "0") == "1",
+        default=os.environ.get("RELEASE_DEBUG", "0") == "1",
         help="Build Legate and Legion with optimizations enabled, but include "
         "debugging symbols.",
     )
