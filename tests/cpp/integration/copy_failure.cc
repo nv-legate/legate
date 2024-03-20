@@ -17,6 +17,8 @@
 
 namespace copy_failure {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using Copy = DefaultFixture;
 
 void test_invalid_stores()
@@ -132,5 +134,7 @@ TEST_F(Copy, FailureDifferentShapes) { test_shape_check_failure(); }
 TEST_F(Copy, FailureNonPointTypes) { test_non_point_types_failure(); }
 
 TEST_F(Copy, FailureDimensionMismatch) { test_dimension_mismatch_failure(); }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace copy_failure

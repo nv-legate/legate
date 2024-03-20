@@ -32,9 +32,11 @@ TEST_F(Integration, RegionManager)
 
   std::vector<legate::LogicalStore> stores;
   for (std::uint32_t idx = 0; idx < legate::detail::RegionManager::MAX_NUM_FIELDS * 2; ++idx) {
-    auto store = runtime->create_store(legate::Shape{10}, legate::int64());
+    constexpr auto SHAPE_SIZE = 10;
+    auto store                = runtime->create_store(legate::Shape{SHAPE_SIZE}, legate::int64());
+
     task.add_output(store);
-    stores.push_back(store);
+    stores.emplace_back(std::move(store));
   }
   runtime->submit(std::move(task));
 }

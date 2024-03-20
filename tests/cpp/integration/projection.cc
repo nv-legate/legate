@@ -20,12 +20,15 @@ namespace projection_test {
 using ProjectionTest = DefaultFixture;
 
 namespace {
+
 constexpr std::uint64_t BIG_EXTENT   = 100;
 constexpr std::uint64_t SMALL_EXTENT = 2;
+
 }  // namespace
 
 struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> {
   static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     if (context.is_single_task()) {
@@ -76,7 +79,7 @@ struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
   }
 };
 
-void test_extra_projection(legate::LogicalArray arr1)
+void test_extra_projection(const legate::LogicalArray& arr1)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_or_create_library("lib_projection_test");
@@ -90,7 +93,7 @@ void test_extra_projection(legate::LogicalArray arr1)
   runtime->submit(std::move(task));
 }
 
-void test_delinearization(legate::LogicalArray arr1)
+void test_delinearization(const legate::LogicalArray& arr1)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_or_create_library("lib_projection_test");

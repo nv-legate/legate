@@ -44,7 +44,7 @@ class task_id_generator {
   [[nodiscard]] std::int64_t operator()(Library& library) const
   {
     static const std::int64_t s_task_id = [&] {
-      std::int64_t task_id = library.get_new_task_id();
+      const std::int64_t task_id = library.get_new_task_id();
 
       LegateTask::register_variants(library, task_id);
       return task_id;

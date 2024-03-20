@@ -21,6 +21,8 @@ namespace tracing_test {
 
 using Tracing = DefaultFixture;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 struct DummyTask : public legate::LegateTask<DummyTask> {
   static constexpr std::int32_t TASK_ID = 0;
   static void cpu_variant(legate::TaskContext /*context*/) {}
@@ -28,9 +30,9 @@ struct DummyTask : public legate::LegateTask<DummyTask> {
 
 legate::LogicalArray setup()
 {
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library("tracing_test");
-  DummyTask::register_variants(library);
+  const auto runtime = legate::Runtime::get_runtime();
+  auto library       = runtime->create_library("tracing_test");
+  DummyTask::register_variants(std::move(library));
 
   return runtime->create_array(legate::Shape{10}, legate::int64());
 }
@@ -61,7 +63,8 @@ TEST_F(Tracing, RAII)
   auto array = setup();
   launch_tasks(array);
   for (std::uint32_t idx = 0; idx < NUM_ITER; ++idx) {
-    legate::experimental::Trace trace{TRACE_ID};
+    const legate::experimental::Trace trace{TRACE_ID};
+
     launch_tasks(array);
   }
 }
@@ -76,5 +79,7 @@ TEST_F(Tracing, BeginEnd)
     legate::experimental::Trace::end_trace(TRACE_ID);
   }
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace tracing_test

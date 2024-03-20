@@ -278,7 +278,7 @@ template <typename InputRange, typename Init, typename BinaryOperation>  //
   LegateAssert(out.dim() == init.dim() + 1);
 
   using OutputRange = slice_view<value_type_of_t<Input>, dim_of_v<Input>, InputPolicy>;
-  OutputRange output{std::move(out)};
+  OutputRange output{std::move(out)};  // NOLINT(misc-const-correctness)
 
   stl::launch_task(
     stl::inputs(std::forward<InputRange>(input)),

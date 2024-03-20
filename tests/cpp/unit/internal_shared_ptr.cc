@@ -17,6 +17,8 @@
 template <typename T>
 struct InternalSharedPtrUnit : BasicSharedPtrUnit<T> {};
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 TYPED_TEST_SUITE(InternalSharedPtrUnit, BasicSharedPtrTypeList, );
 
 TYPED_TEST(InternalSharedPtrUnit, CreateBasic)
@@ -268,7 +270,7 @@ TYPED_TEST(InternalSharedPtrUnit, UniqueCtor)
   auto val  = TypeParam{123};
   auto uniq = std::make_unique<TypeParam>(val);
 
-  legate::InternalSharedPtr<TypeParam> sh_ptr{std::move(uniq)};
+  const legate::InternalSharedPtr<TypeParam> sh_ptr{std::move(uniq)};
 
   ASSERT_EQ(sh_ptr.use_count(), 1);
   ASSERT_EQ(*sh_ptr, val);
@@ -380,3 +382,5 @@ TYPED_TEST(InternalSharedPtrUnit, Array)
 
   test_basic_equal(ptr, bare_ptr, N);
 }
+
+// NOLINTEND(readability-magic-numbers)

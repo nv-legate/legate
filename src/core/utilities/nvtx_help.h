@@ -18,8 +18,10 @@
 #include <nvtx3/nvToolsExt.h>
 #else
 using nvtxRangeId_t = char;
+// NOLINTBEGIN(readability-redundant-inline-specifier)
 inline constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
 inline constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
+// NOLINTEND(readability-redundant-inline-specifier)
 #endif
 
 namespace legate::nvtx {

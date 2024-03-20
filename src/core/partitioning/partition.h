@@ -32,7 +32,7 @@ namespace legate {
 
 class Partition {
  public:
-  enum class Kind : std::int32_t {
+  enum class Kind : std::uint8_t {
     NO_PARTITION,
     TILING,
     WEIGHTED,

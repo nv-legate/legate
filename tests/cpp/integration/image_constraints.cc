@@ -19,15 +19,26 @@
 
 namespace image_constraints {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using ImageConstraint = DefaultFixture;
 
-static const char* library_name = "test_image_constraints";
+namespace {
 
-static const std::int32_t TEST_MAX_DIM = 3;
+constexpr const char library_name[] = "test_image_constraints";
 
-static legate::Logger logger(library_name);
+constexpr std::int32_t TEST_MAX_DIM = 3;
 
-enum TaskIDs {
+[[nodiscard]] legate::Logger& logger()
+{
+  static legate::Logger log{library_name};
+
+  return log;
+}
+
+}  // namespace
+
+enum TaskIDs : std::uint8_t {
   INIT_FUNC    = 0,
   IMAGE_TESTER = INIT_FUNC + TEST_MAX_DIM * 2,
 };
@@ -45,6 +56,9 @@ legate::Point<DIM> delinearize(std::size_t index, const legate::Point<DIM>& exte
 
 template <std::int32_t DIM, bool RECT>
 struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RECT>> {
+  static constexpr std::int32_t TASK_ID =
+    INIT_FUNC + static_cast<std::int32_t>(RECT) * TEST_MAX_DIM + DIM;
+
   struct InitializeRects {
     template <std::int32_t TGT_DIM>
     void operator()(legate::PhysicalStore& output,
@@ -55,7 +69,7 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
       auto acc     = output.write_accessor<legate::Rect<TGT_DIM>, DIM>();
 
-      std::size_t vol     = shape.volume();
+      const auto vol      = shape.volume();
       std::size_t tgt_vol = 1;
       for (std::int32_t dim = 0; dim < TGT_DIM; ++dim) {
         tgt_vol *= extents[dim];
@@ -69,15 +83,17 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
         }
         return true;
       };
-      std::int64_t idx  = ascending ? 0 : vol - 1;
-      std::int64_t diff = ascending ? 1 : -1;
-      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
+      const std::int64_t diff = ascending ? 1 : -1;
+      auto idx                = static_cast<std::int64_t>(ascending ? 0 : vol - 1);
+
+      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
         auto lo = delinearize(idx * tgt_vol / vol, extents);
         auto hi = lo + legate::Point<TGT_DIM>::ONES();
+
         if (in_bounds(hi)) {
-          acc[*it] = legate::Rect<TGT_DIM>(lo, hi);
+          acc[*it] = legate::Rect<TGT_DIM>{lo, hi};
         } else {
-          acc[*it] = legate::Rect<TGT_DIM>(lo, lo);
+          acc[*it] = legate::Rect<TGT_DIM>{lo, lo};
         }
         idx += diff;
       }
@@ -94,24 +110,22 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
       auto acc     = output.write_accessor<legate::Point<TGT_DIM>, DIM>();
 
-      std::size_t vol     = shape.volume();
+      const auto vol      = shape.volume();
       std::size_t tgt_vol = 1;
       for (std::int32_t dim = 0; dim < TGT_DIM; ++dim) {
         tgt_vol *= extents[dim];
       }
 
-      std::int64_t idx  = ascending ? 0 : vol - 1;
-      std::int64_t diff = ascending ? 1 : -1;
-      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
-        auto p   = delinearize(idx * tgt_vol / vol, extents);
-        acc[*it] = p;
+      const std::int64_t diff = ascending ? 1 : -1;
+      auto idx                = static_cast<std::int64_t>(ascending ? 0 : vol - 1);
+
+      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
+        acc[*it] = delinearize(idx * tgt_vol / vol, extents);
         idx += diff;
       }
     }
   };
 
-  static const std::int32_t TASK_ID =
-    INIT_FUNC + static_cast<std::int32_t>(RECT) * TEST_MAX_DIM + DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto output    = context.output(0).data();
@@ -132,8 +146,9 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
 template <std::int32_t DIM, bool RECT>
 struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
-  static const std::int32_t TASK_ID =
+  static constexpr std::int32_t TASK_ID =
     IMAGE_TESTER + static_cast<std::int32_t>(RECT) * TEST_MAX_DIM + DIM;
+
   struct CheckRects {
     template <std::int32_t TGT_DIM>
     void operator()(legate::PhysicalStore& func, const legate::Domain& range)
@@ -152,6 +167,7 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
       }
     }
   };
+
   struct CheckPoints {
     template <std::int32_t TGT_DIM>
     void operator()(legate::PhysicalStore& func, const legate::Domain& range)
@@ -168,6 +184,7 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
       }
     }
   };
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto func  = context.input(0).data();
@@ -184,11 +201,11 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
     }
 
     if (context.get_task_index() == context.get_launch_domain().lo()) {
-      logger.debug() << "== Image received in task 0 ==";
+      logger().debug() << "== Image received in task 0 ==";
       for (legate::Domain::DomainPointIterator it(range); it; ++it) {
-        logger.debug() << "  " << *it;
+        logger().debug() << "  " << *it;
       }
-      logger.debug() << "==============================";
+      logger().debug() << "==============================";
     }
   }
 };
@@ -216,7 +233,7 @@ void prepare()
   ImageTester<3, false>::register_variants(context);
 }
 
-void initialize_function(legate::LogicalStore func,
+void initialize_function(const legate::LogicalStore& func,
                          const std::vector<std::uint64_t>& range_extents,
                          bool ascending)
 {
@@ -236,7 +253,7 @@ void initialize_function(legate::LogicalStore func,
   func.impl()->reset_key_partition();
 }
 
-void check_image(legate::LogicalStore func, legate::LogicalStore range)
+void check_image(const legate::LogicalStore& func, const legate::LogicalStore& range)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -268,11 +285,11 @@ void test_image(const ImageTestSpec& spec)
 
   auto tgt_dim    = static_cast<std::int32_t>(spec.range_extents.size());
   auto image_type = spec.is_rect ? legate::rect_type(tgt_dim) : legate::point_type(tgt_dim);
-  auto func  = runtime->create_store(legate::Shape{spec.domain_extents}, std::move(image_type));
-  auto range = runtime->create_store(legate::Shape{spec.range_extents}, legate::int64());
+  auto func       = runtime->create_store(legate::Shape{spec.domain_extents}, image_type);
+  auto range      = runtime->create_store(legate::Shape{spec.range_extents}, legate::int64());
 
   initialize_function(func, spec.range_extents, true);
-  runtime->issue_fill(range, legate::Scalar(int64_t(1234)));
+  runtime->issue_fill(range, legate::Scalar(std::int64_t{1234}));
   check_image(func, range);
   runtime->issue_execution_fence();
   check_image(func, range);
@@ -342,5 +359,7 @@ TEST_F(ImageConstraint, Invalid)
   prepare();
   test_invalid();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace image_constraints

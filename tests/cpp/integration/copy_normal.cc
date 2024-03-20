@@ -27,13 +27,18 @@ extern void silence_unused_function_warnings()
 
 namespace copy_normal {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using Copy = DefaultFixture;
 
-static const char* library_name = "test_copy_normal";
+namespace {
 
-static constexpr std::int32_t TEST_MAX_DIM = 3;
+constexpr const char library_name[]              = "test_copy_normal";
+constexpr std::int32_t TEST_MAX_DIM              = 3;
+constexpr std::int32_t CHECK_COPY_TASK           = FILL_TASK + TEST_MAX_DIM;
+constexpr std::int32_t CHECK_COPY_REDUCTION_TASK = CHECK_COPY_TASK + TEST_MAX_DIM;
 
-constexpr std::int32_t CHECK_COPY_TASK = FILL_TASK + TEST_MAX_DIM;
+}  // namespace
 
 template <std::int32_t DIM>
 struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
@@ -46,7 +51,7 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
       using VAL = legate::type_of<CODE>;
       auto src  = source.read_accessor<VAL, DIM>(shape);
       auto tgt  = target.read_accessor<VAL, DIM>(shape);
-      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
+      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
         EXPECT_EQ(src[*it], tgt[*it]);
       }
     }
@@ -67,8 +72,6 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
   }
 };
 
-constexpr std::int32_t CHECK_COPY_REDUCTION_TASK = CHECK_COPY_TASK + TEST_MAX_DIM;
-
 template <std::int32_t DIM>
 struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask<DIM>> {
   struct CheckCopyReductionTaskBody {
@@ -82,7 +85,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
       auto src      = source.read_accessor<VAL, DIM>(shape);
       auto tgt      = target.read_accessor<VAL, DIM>(shape);
       std::size_t i = 1;
-      for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it, ++i) {
+      for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it, ++i) {
         EXPECT_EQ(src[*it] + i * seed.value<VAL>(), tgt[*it]);
       }
     }
@@ -96,7 +99,8 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
     }
   };
 
-  static const std::int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
+  static constexpr std::int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto source = legate::PhysicalStore{context.input(0)};
@@ -221,18 +225,22 @@ void test_normal_copy_reduction(const NormalCopyReductionSpec& spec)
 TEST_F(Copy, Single)
 {
   register_tasks();
-  test_normal_copy({{4, 7}, legate::int64(), legate::Scalar(int64_t(12))});
-  test_normal_copy({{1000, 100}, legate::uint32(), legate::Scalar(uint32_t(3))});
-  test_normal_copy({{1}, legate::int64(), legate::Scalar(int64_t(12))});
+  test_normal_copy({{4, 7}, legate::int64(), legate::Scalar{std::int64_t{12}}});
+  test_normal_copy({{1000, 100}, legate::uint32(), legate::Scalar{std::uint32_t{3}}});
+  test_normal_copy({{1}, legate::int64(), legate::Scalar{std::int64_t{12}}});
 }
 
 TEST_F(Copy, SingleReduction)
 {
   register_tasks();
   test_normal_copy_reduction(
-    {{4, 7}, legate::int64(), legate::Scalar(int64_t(12)), legate::ReductionOpKind::ADD});
-  test_normal_copy_reduction(
-    {{1000, 100}, legate::uint32(), legate::Scalar(uint32_t(3)), legate::ReductionOpKind::ADD});
+    {{4, 7}, legate::int64(), legate::Scalar{std::int64_t{12}}, legate::ReductionOpKind::ADD});
+  test_normal_copy_reduction({{1000, 100},
+                              legate::uint32(),
+                              legate::Scalar{std::uint32_t{3}},
+                              legate::ReductionOpKind::ADD});
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace copy_normal

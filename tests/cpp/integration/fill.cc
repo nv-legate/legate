@@ -20,11 +20,17 @@
 
 namespace fill_test {
 
-constexpr const char* library_name = "test_fill";
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
+
+constexpr const char library_name[] = "test_fill";
 
 constexpr std::size_t SIZE = 10;
 
-enum TaskIDs {
+}  // namespace
+
+enum TaskIDs : std::uint8_t {
   CHECK_TASK         = 0,
   CHECK_SLICE_TASK   = 3,
   WRAP_FILL_VAL_TASK = 7,
@@ -52,18 +58,18 @@ INSTANTIATE_TEST_SUITE_P(FillTests,
 
 template <std::int32_t DIM>
 struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
-  static const std::int32_t TASK_ID = CHECK_TASK + DIM;
+  static constexpr std::int32_t TASK_ID = CHECK_TASK + DIM;
   static void cpu_variant(legate::TaskContext context);
 };
 
 template <std::int32_t DIM>
 struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
-  static const std::int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
+  static constexpr std::int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WrapFillValueTask : public legate::LegateTask<WrapFillValueTask> {
-  static const std::int32_t TASK_ID = WRAP_FILL_VAL_TASK;
+  static constexpr std::int32_t TASK_ID = WRAP_FILL_VAL_TASK;
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -87,9 +93,9 @@ void register_tasks()
 template <std::int32_t DIM>
 /*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input         = context.input(0);
-  auto shape         = input.shape<DIM>();
-  std::int64_t value = context.scalar(0).value<std::int64_t>();
+  auto input       = context.input(0);
+  auto shape       = input.shape<DIM>();
+  const auto value = context.scalar(0).value<std::int64_t>();
 
   if (shape.empty()) {
     return;
@@ -113,11 +119,11 @@ template <std::int32_t DIM>
 template <std::int32_t DIM>
 /*static*/ void CheckSliceTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input               = context.input(0);
-  auto shape               = input.shape<DIM>();
-  auto value_in_slice      = context.scalar(0);
-  auto value_outside_slice = context.scalar(1);
-  auto offset              = context.scalar(2).value<std::int64_t>();
+  auto input                      = context.input(0);
+  auto shape                      = input.shape<DIM>();
+  const auto& value_in_slice      = context.scalar(0);
+  const auto& value_outside_slice = context.scalar(1);
+  auto offset                     = context.scalar(2).value<std::int64_t>();
 
   if (shape.empty()) {
     return;
@@ -157,8 +163,8 @@ template <std::int32_t DIM>
 
 /*static*/ void WrapFillValueTask::cpu_variant(legate::TaskContext context)
 {
-  auto output = context.output(0);
-  auto scalar = context.scalar(0);
+  auto output        = context.output(0);
+  const auto& scalar = context.scalar(0);
 
   auto acc = output.data().write_accessor<int8_t, 1, false>();
   std::memcpy(acc.ptr(0), scalar.ptr(), scalar.size());
@@ -278,7 +284,7 @@ TEST_P(Whole, Single)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  legate::Scope scope{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
+  const legate::Scope scope{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
 
   register_tasks();
   const auto& [nullable, dim, size] = GetParam();
@@ -293,5 +299,7 @@ TEST_P(Slice, Index)
 }
 
 TEST_F(FillTests, Invalid) { test_invalid(); }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace fill_test

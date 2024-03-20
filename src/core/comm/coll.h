@@ -59,7 +59,7 @@ class ThreadComm {
   const int** displs{};
 };
 
-enum class CollDataType : int {
+enum class CollDataType : std::uint8_t {
   CollInt8   = 0,
   CollChar   = 1,
   CollUint8  = 2,
@@ -71,12 +71,12 @@ enum class CollDataType : int {
   CollDouble = 8,
 };
 
-enum CollStatus : int {
+enum CollStatus : std::uint8_t {
   CollSuccess = 0,
   CollError   = 1,
 };
 
-enum CollCommType : int {
+enum CollCommType : std::uint8_t {
   CollMPI   = 0,
   CollLocal = 1,
 };

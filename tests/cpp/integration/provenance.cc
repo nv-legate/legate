@@ -21,14 +21,17 @@ namespace provenance {
 
 using Integration = DefaultFixture;
 
-static const char* library_name = "test_provenance";
+// NOLINTBEGIN(readability-magic-numbers)
 
-enum TaskIDs {
-  PROVENANCE = 0,
-};
+namespace {
+
+constexpr const char library_name[] = "test_provenance";
+
+}  // namespace
 
 struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
-  static const std::int32_t TASK_ID = PROVENANCE;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -41,18 +44,19 @@ void register_tasks()
 
 /*static*/ void ProvenanceTask::cpu_variant(legate::TaskContext context)
 {
-  std::string scalar = context.scalar(0).value<std::string>();
-  auto provenance    = context.get_provenance();
+  const std::string scalar = context.scalar(0).value<std::string>();
+  const auto& provenance   = context.get_provenance();
+
   EXPECT_TRUE(provenance.find(scalar) != std::string::npos);
 }
 
 void test_provenance(legate::Library library)
 {
   const auto provenance = std::string(__FILE__) + ":" + std::to_string(__LINE__);
-  legate::Scope scope{provenance};
+  const legate::Scope scope{provenance};
   auto runtime = legate::Runtime::get_runtime();
   // auto task
-  auto task = runtime->create_task(library, PROVENANCE);
+  auto task = runtime->create_task(library, ProvenanceTask::TASK_ID);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
@@ -60,11 +64,11 @@ void test_provenance(legate::Library library)
 void test_nested_provenance(legate::Library library)
 {
   const auto provenance = std::string(__FILE__) + ":" + std::to_string(__LINE__);
-  legate::Scope scope{provenance};
+  const legate::Scope scope{provenance};
   test_provenance(library);
   // The provenance string used by test_provenance should be popped out at this point
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, PROVENANCE);
+  auto task    = runtime->create_task(library, ProvenanceTask::TASK_ID);
   task.add_scalar_arg(legate::Scalar(provenance));
   runtime->submit(std::move(task));
 }
@@ -79,5 +83,7 @@ TEST_F(Integration, Provenance)
   test_provenance(library);
   test_nested_provenance(library);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace provenance

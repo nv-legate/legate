@@ -33,12 +33,12 @@ TEST_F(ChildStore, Simple)
   auto store   = runtime->create_store(legate::Shape{EXTENT, EXTENT}, legate::int64());
   auto part    = store.partition_by_tiling({TILE_SIZE, TILE_SIZE});
 
-  runtime->issue_fill(store, legate::Scalar{int64_t(-1)});
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{-1}});
   for (std::uint64_t dim0 = 0; dim0 < 2; ++dim0) {
     for (std::uint64_t dim1 = 0; dim1 < 2; ++dim1) {
       auto child    = part.get_child_store(legate::tuple<std::uint64_t>{dim0, dim1});
       auto& extents = child.extents();
-      std::cout << "Child store (" << dim0 << "," << dim1 << ") " << child.to_string() << std::endl;
+      std::cout << "Child store (" << dim0 << "," << dim1 << ") " << child.to_string() << '\n';
       EXPECT_EQ(extents[0], dim0 == 0 ? TILE_SIZE : EXTENT - TILE_SIZE);
       EXPECT_EQ(extents[1], dim1 == 0 ? TILE_SIZE : EXTENT - TILE_SIZE);
 
@@ -46,7 +46,7 @@ TEST_F(ChildStore, Simple)
       auto acc     = p_child.write_accessor<int64_t, 2>();
       for (std::int64_t i = 0; i < static_cast<std::int64_t>(extents[0]); ++i) {
         for (std::int64_t j = 0; j < static_cast<std::int64_t>(extents[1]); ++j) {
-          acc[{i, j}] = dim0 * FACTOR + dim1;
+          acc[{i, j}] = static_cast<legate::coord_t>(dim0 * FACTOR + dim1);
         }
       }
     }

@@ -21,9 +21,14 @@ struct InternalWeakPtrUnit : ::testing::Test {};
 
 TYPED_TEST_SUITE(InternalWeakPtrUnit, BasicSharedPtrTypeList, );
 
+namespace {
+
+constexpr auto MAGIC_NUMBER = 66;
+}
+
 TYPED_TEST(InternalWeakPtrUnit, Create)
 {
-  legate::InternalWeakPtr<TypeParam> ptr;
+  const legate::InternalWeakPtr<TypeParam> ptr;
 
   EXPECT_EQ(ptr.use_count(), 0);
   EXPECT_TRUE(ptr.expired());
@@ -32,8 +37,8 @@ TYPED_TEST(InternalWeakPtrUnit, Create)
 
 TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrCtor)
 {
-  auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{66});
-  legate::InternalWeakPtr<TypeParam> ptr{shared_ptr};
+  auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{MAGIC_NUMBER});
+  const legate::InternalWeakPtr<TypeParam> ptr{shared_ptr};
 
   EXPECT_EQ(ptr.use_count(), 1);
   EXPECT_FALSE(ptr.expired());
@@ -43,7 +48,7 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrCtor)
 TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrEq)
 {
   legate::InternalWeakPtr<TypeParam> ptr;
-  auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{66});
+  auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{MAGIC_NUMBER});
 
   ptr = shared_ptr;
 
@@ -57,7 +62,7 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromSharedPtrDrop)
   legate::InternalWeakPtr<TypeParam> ptr;
 
   {
-    auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{66});
+    auto shared_ptr = legate::make_internal_shared<TypeParam>(TypeParam{MAGIC_NUMBER});
 
     ptr = shared_ptr;
 
@@ -76,7 +81,7 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromEmptySharedPtrDrop)
 
   {
     // This shared ptr owns nothing, so the weak ptr shouldn't either
-    legate::InternalSharedPtr<TypeParam> shared_ptr;
+    const legate::InternalSharedPtr<TypeParam> shared_ptr;
 
     ptr = shared_ptr;
 
@@ -91,8 +96,10 @@ TYPED_TEST(InternalWeakPtrUnit, CreateFromEmptySharedPtrDrop)
 
 TYPED_TEST(InternalWeakPtrUnit, Swap)
 {
-  auto shared_1 = legate::make_internal_shared<TypeParam>(TypeParam{66});
-  auto shared_2 = legate::make_internal_shared<TypeParam>(TypeParam{88});
+  constexpr auto MAGIC_NUMBER_2 = 88;
+
+  auto shared_1 = legate::make_internal_shared<TypeParam>(TypeParam{MAGIC_NUMBER});
+  auto shared_2 = legate::make_internal_shared<TypeParam>(TypeParam{MAGIC_NUMBER_2});
 
   legate::InternalWeakPtr<TypeParam> weak_1{shared_1};
   legate::InternalWeakPtr<TypeParam> weak_2{shared_2};

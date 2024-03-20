@@ -16,6 +16,8 @@
 
 namespace legate::detail {
 
+inline void Reduce::validate() {}
+
 inline Operation::Kind Reduce::kind() const { return Kind::REDUCE; }
 
 }  // namespace legate::detail

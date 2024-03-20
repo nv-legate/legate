@@ -51,7 +51,7 @@ class Task;
  * The enumerators of `TaskTarget` are ordered by their precedence; i.e., `GPU`, if available, is
  * chosen over `OMP` or `CPU, `OMP`, if available, is chosen over `CPU`.
  */
-enum class TaskTarget : std::int32_t {
+enum class TaskTarget : std::uint8_t {
   /**
    * @brief Indicates the task be mapped to a GPU
    */
@@ -72,7 +72,7 @@ std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
  * @ingroup mapping
  * @brief An enum class for store targets
  */
-enum class StoreTarget : std::int32_t {
+enum class StoreTarget : std::uint8_t {
   /**
    * @brief Indicates the store be mapped to the system memory (host memory)
    */
@@ -97,7 +97,7 @@ std::ostream& operator<<(std::ostream& stream, const StoreTarget& target);
  * @ingroup mapping
  * @brief An enum class for instance allocation policies
  */
-enum class AllocPolicy : std::int32_t {
+enum class AllocPolicy : std::uint8_t {
   /**
    * @brief Indicates the store can reuse an existing instance
    */
@@ -112,7 +112,7 @@ enum class AllocPolicy : std::int32_t {
  * @ingroup mapping
  * @brief An enum class for instant layouts
  */
-enum class InstLayout : std::int32_t {
+enum class InstLayout : std::uint8_t {
   /**
    * @brief Indicates the store must be mapped to an SOA instance
    */
@@ -133,7 +133,7 @@ class DimOrdering {
   /**
    * @brief An enum class for kinds of dimension ordering
    */
-  enum class Kind : std::int32_t {
+  enum class Kind : std::uint8_t {
     /**
      * @brief Indicates the instance have C layout (i.e., the last dimension is the leading
      * dimension in the instance)
@@ -155,13 +155,13 @@ class DimOrdering {
    *
    * @return A `DimOrdering` object
    */
-  static DimOrdering c_order();
+  [[nodiscard]] static DimOrdering c_order();
   /**
    * @brief Creates a Fortran ordering object
    *
    * @return A `DimOrdering` object
    */
-  static DimOrdering fortran_order();
+  [[nodiscard]] static DimOrdering fortran_order();
   /**
    * @brief Creates a custom ordering object
    *
@@ -169,7 +169,7 @@ class DimOrdering {
    *
    * @return A `DimOrdering` object
    */
-  static DimOrdering custom_order(std::vector<std::int32_t> dims);
+  [[nodiscard]] static DimOrdering custom_order(std::vector<std::int32_t> dims);
 
   /**
    * @brief Sets the dimension ordering to C
@@ -196,6 +196,7 @@ class DimOrdering {
   [[nodiscard]] std::vector<std::int32_t> dimensions() const;
 
   bool operator==(const DimOrdering&) const;
+  bool operator!=(const DimOrdering&) const;
 
   [[nodiscard]] const detail::DimOrdering* impl() const noexcept;
 
@@ -422,7 +423,8 @@ class StoreMapping {
 
  private:
   friend class detail::BaseMapper;
-  detail::StoreMapping* release() noexcept;
+
+  [[nodiscard]] detail::StoreMapping* release() noexcept;
 
   explicit StoreMapping(detail::StoreMapping* impl) noexcept;
 

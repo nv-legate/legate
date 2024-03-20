@@ -18,11 +18,13 @@
 
 namespace multiscalarout {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using Integration = DefaultFixture;
 
 void test_writer_auto(legate::Library library,
-                      legate::LogicalStore scalar1,
-                      legate::LogicalStore scalar2)
+                      const legate::LogicalStore& scalar1,
+                      const legate::LogicalStore& scalar2)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, task::simple::WRITER);
@@ -32,9 +34,9 @@ void test_writer_auto(legate::Library library,
 }
 
 void test_reducer_auto(legate::Library library,
-                       legate::LogicalStore scalar1,
-                       legate::LogicalStore scalar2,
-                       legate::LogicalStore store)
+                       const legate::LogicalStore& scalar1,
+                       const legate::LogicalStore& scalar2,
+                       const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, task::simple::REDUCER);
@@ -45,9 +47,9 @@ void test_reducer_auto(legate::Library library,
 }
 
 void test_reducer_manual(legate::Library library,
-                         legate::LogicalStore scalar1,
-                         legate::LogicalStore scalar2,
-                         legate::LogicalStore store)
+                         const legate::LogicalStore& scalar1,
+                         const legate::LogicalStore& scalar2,
+                         const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, task::simple::REDUCER, {2});
@@ -57,8 +59,8 @@ void test_reducer_manual(legate::Library library,
   runtime->submit(std::move(task));
 }
 
-void validate_stores(legate::LogicalStore scalar1,
-                     legate::LogicalStore scalar2,
+void validate_stores(const legate::LogicalStore& scalar1,
+                     const legate::LogicalStore& scalar2,
                      std::int32_t to_match1,
                      std::int64_t to_match2)
 {
@@ -66,8 +68,8 @@ void validate_stores(legate::LogicalStore scalar1,
   static_cast<void>(runtime);
   auto p_scalar1 = scalar1.get_physical_store();
   auto p_scalar2 = scalar2.get_physical_store();
-  auto acc1      = p_scalar1.read_accessor<int32_t, 2>();
-  auto acc2      = p_scalar2.read_accessor<int64_t, 3>();
+  auto acc1      = p_scalar1.read_accessor<std::int32_t, 2>();
+  auto acc2      = p_scalar2.read_accessor<std::int64_t, 3>();
   auto v1        = acc1[{0, 0}];
   auto v2        = acc2[{0, 0, 0}];
   EXPECT_EQ(v1, to_match1);
@@ -84,7 +86,7 @@ TEST_F(Integration, MultiScalarOut)
   auto scalar1 = runtime->create_store(legate::Shape{1, 1}, legate::int32(), true);
   auto scalar2 = runtime->create_store(legate::Shape{1, 1, 1}, legate::int64(), true);
   auto store   = runtime->create_store(legate::Shape{5}, legate::int64());
-  runtime->issue_fill(store, legate::Scalar(int64_t(0)));
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
 
   test_writer_auto(library, scalar1, scalar2);
   validate_stores(scalar1, scalar2, 10, 20);
@@ -93,5 +95,7 @@ TEST_F(Integration, MultiScalarOut)
   test_reducer_manual(library, scalar1, scalar2, store);
   validate_stores(scalar1, scalar2, 110, 20480);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace multiscalarout

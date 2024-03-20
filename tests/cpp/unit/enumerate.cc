@@ -55,7 +55,9 @@ TYPED_TEST_SUITE(EnumerateUnit, EnumerateTypeList, );
 
 TYPED_TEST(EnumerateUnit, Basic)
 {
-  std::vector<typename TypeParam::value_type> init_values{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  // NOLINTNEXTLINE(readibility-magic-numbers)
+  const std::vector<typename TypeParam::value_type> init_values{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
   TestContainer<TypeParam>(init_values);
 }
 
@@ -78,6 +80,7 @@ TYPED_TEST(EnumerateUnit, Bidirectional)
 
 TEST(EnumerateUnit, DoxySnippets)
 {
+  // NOLINTBEGIN(readability-magic-numbers)
   /// [Constructing an enumerator]
   std::vector<int> my_vector{1, 2, 3, 4, 5};
 
@@ -98,4 +101,5 @@ TEST(EnumerateUnit, DoxySnippets)
     EXPECT_EQ(my_vector[idx - enum_start], val);
   }
   /// [Constructing an enumerator]
+  // NOLINTEND(readability-magic-numbers)
 }

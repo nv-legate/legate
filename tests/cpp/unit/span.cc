@@ -17,6 +17,8 @@
 
 namespace span_test {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using SpanUnit = DefaultFixture;
 
 constexpr bool BOOL_VALUE            = true;
@@ -28,31 +30,35 @@ constexpr std::uint8_t UINT8_VALUE   = 128;
 constexpr std::uint16_t UINT16_VALUE = 65535;
 constexpr std::uint32_t UINT32_VALUE = 999;
 constexpr std::uint64_t UINT64_VALUE = 100;
-constexpr float FLOAT_VALUE          = 1.23f;
+constexpr float FLOAT_VALUE          = 1.23F;
 constexpr double DOUBLE_VALUE        = -4.567;
-const std::string STRING_VALUE       = "123";
-const __half FLOAT16_VALUE1(0.1f);
-const __half FLOAT16_VALUE2(0.2f);
-const __half FLOAT16_VALUE3(0.3f);
+// NOLINTBEGIN(cert-err58-cpp)
+const std::string STRING_VALUE = "123";
+const __half FLOAT16_VALUE1(0.1F);
+const __half FLOAT16_VALUE2(0.2F);
+const __half FLOAT16_VALUE3(0.3F);
 const complex<float> COMPLEX_FLOAT_VALUE1{0, 1};
 const complex<float> COMPLEX_FLOAT_VALUE2{2, 3};
 const complex<float> COMPLEX_FLOAT_VALUE3{4, 5};
 const complex<double> COMPLEX_DOUBLE_VALUE1{6, 7};
 const complex<double> COMPLEX_DOUBLE_VALUE2{8, 9};
 const complex<double> COMPLEX_DOUBLE_VALUE3{10, 11};
+// NOLINTEND(cert-err58-cpp)
 
 constexpr std::uint32_t DATA_SIZE = 3;
 
 template <typename T>
 void create(T value1, T value2, T value3)
 {
-  std::array<T, DATA_SIZE> data = {value1, value2, value3};
-  legate::Span span             = legate::Span<const T>(data.data(), DATA_SIZE);
+  const auto data = std::array<T, DATA_SIZE>{value1, value2, value3};
+  const auto span = legate::Span<const T>{data.data(), DATA_SIZE};
+
   EXPECT_EQ(span.ptr(), data.data());
   EXPECT_EQ(span.size(), DATA_SIZE);
   EXPECT_EQ(span.end() - span.begin(), DATA_SIZE);
   for (auto& to_compare : span) {
-    auto i = std::distance(span.begin(), &to_compare);
+    const auto i = std::distance(span.begin(), &to_compare);
+
     EXPECT_EQ(data.at(i), to_compare);
   }
   EXPECT_EQ(span[0], value1);
@@ -85,7 +91,7 @@ TEST_F(SpanUnit, Create)
   create(UINT64_VALUE,
          static_cast<std::uint64_t>(UINT64_VALUE + 1),
          static_cast<std::uint64_t>(UINT64_VALUE + 2));
-  create(FLOAT_VALUE, FLOAT_VALUE + 1.0f, FLOAT_VALUE + 2.0f);
+  create(FLOAT_VALUE, FLOAT_VALUE + 1.0F, FLOAT_VALUE + 2.0F);
   create(DOUBLE_VALUE, DOUBLE_VALUE + 1.0, DOUBLE_VALUE + 2.0);
   create(STRING_VALUE, STRING_VALUE + "1", STRING_VALUE + "2");
   create(FLOAT16_VALUE1, FLOAT16_VALUE2, FLOAT16_VALUE3);
@@ -95,10 +101,11 @@ TEST_F(SpanUnit, Create)
 
 TEST_F(SpanUnit, Subspan)
 {
-  auto data_vec        = std::vector<std::uint64_t>(DATA_SIZE, UINT64_VALUE);
-  const auto* data     = data_vec.data();
-  legate::Span span    = legate::Span<const std::uint64_t>(data, DATA_SIZE);
-  legate::Span subspan = span.subspan(DATA_SIZE - 1);
+  const auto data_vec        = std::vector<std::uint64_t>(DATA_SIZE, UINT64_VALUE);
+  const auto* data           = data_vec.data();
+  legate::Span span          = legate::Span<const std::uint64_t>{data, DATA_SIZE};
+  const legate::Span subspan = span.subspan(DATA_SIZE - 1);
+
   EXPECT_EQ(subspan.ptr(), &data[DATA_SIZE - 1]);
   EXPECT_EQ(subspan.size(), 1);
   EXPECT_EQ(subspan.end() - subspan.begin(), 1);
@@ -106,4 +113,7 @@ TEST_F(SpanUnit, Subspan)
     EXPECT_EQ(UINT64_VALUE, to_compare);
   }
 }
+
+// NOLINTEND(readability-magic-numbers)
+
 }  // namespace span_test

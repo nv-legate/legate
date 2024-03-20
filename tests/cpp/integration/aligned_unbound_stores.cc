@@ -19,7 +19,7 @@ namespace aligned_unbound_stores_test {
 
 using AlignedUnboundStores = DefaultFixture;
 
-constexpr const char* library_name = "test_unbound_nullable_array_test";
+constexpr const char library_name[] = "test_unbound_nullable_array_test";
 
 struct Producer : public legate::LegateTask<Producer> {
   static const std::int32_t TASK_ID = 0;

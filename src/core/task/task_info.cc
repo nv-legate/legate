@@ -123,7 +123,7 @@ const VariantInfo& TaskInfo::find_variant(LegateVariantCode vid) const
 
 bool TaskInfo::has_variant(LegateVariantCode vid) const { return impl_->has_variant(vid); }
 
-void TaskInfo::register_task(Legion::TaskID task_id) { return impl_->register_task(task_id); }
+void TaskInfo::register_task(Legion::TaskID task_id) { impl_->register_task(task_id); }
 
 std::ostream& operator<<(std::ostream& os, const VariantInfo& info)
 {
@@ -138,7 +138,7 @@ std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
 {
   std::stringstream ss;
   ss << info.name() << " {";
-  for (auto [vid, vinfo] : info.impl_->variants()) {
+  for (auto&& [vid, vinfo] : info.impl_->variants()) {
     ss << VARIANT_NAMES[vid] << ":[" << vinfo << "],";
   }
   ss << "}";

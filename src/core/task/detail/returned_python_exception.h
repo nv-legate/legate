@@ -27,7 +27,7 @@ class ReturnedPythonException {
  public:
   ReturnedPythonException() = default;
   ReturnedPythonException(const void* buf, std::size_t len);
-  explicit ReturnedPythonException(Span<const void> pickle_bytes);
+  explicit ReturnedPythonException(Span<const void> span);
 
   ReturnedPythonException(const ReturnedPythonException& other)            = default;
   ReturnedPythonException& operator=(const ReturnedPythonException& other) = default;
@@ -49,7 +49,7 @@ class ReturnedPythonException {
   [[noreturn]] void throw_exception();
 
  private:
-  ReturnedPythonException(Span<const void> pickle_bytes, InternalSharedPtr<char[]> mem);
+  ReturnedPythonException(Span<const void> span, InternalSharedPtr<char[]> mem);
 
   std::uint64_t size_{};
   InternalSharedPtr<char[]> pickle_bytes_{};

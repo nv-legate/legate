@@ -23,12 +23,19 @@
 
 namespace replicated_write_test {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using ReplicatedWrite = DefaultFixture;
 
-static const char* library_name = "test_replicated_write";
+namespace {
+
+constexpr const char library_name[] = "test_replicated_write";
+
+}  // namespace
 
 struct WriterTask : public legate::LegateTask<WriterTask> {
-  static const std::int32_t TASK_ID = 0;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
@@ -71,7 +78,7 @@ void register_tasks()
   WriterTask::register_variants(library);
 }
 
-void validate_output(legate::LogicalStore store)
+void validate_output(const legate::LogicalStore& store)
 {
   auto p_store = store.get_physical_store();
   auto shape   = p_store.shape<2>();
@@ -82,7 +89,7 @@ void validate_output(legate::LogicalStore store)
 }
 
 void test_auto_task(legate::Library library,
-                    legate::tuple<std::uint64_t> extents,
+                    const legate::tuple<std::uint64_t>& extents,
                     std::uint32_t num_out_stores)
 {
   auto runtime  = legate::Runtime::get_runtime();
@@ -104,12 +111,12 @@ void test_auto_task(legate::Library library,
   runtime->submit(std::move(task));
 
   for (auto&& out_store : out_stores) {
-    validate_output(std::move(out_store));
+    validate_output(out_store);
   }
 }
 
 void test_manual_task(legate::Library library,
-                      legate::tuple<std::uint64_t> extents,
+                      const legate::tuple<std::uint64_t>& extents,
                       std::uint32_t num_out_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -125,7 +132,7 @@ void test_manual_task(legate::Library library,
   runtime->submit(std::move(task));
 
   for (auto&& out_store : out_stores) {
-    validate_output(std::move(out_store));
+    validate_output(out_store);
   }
 }
 
@@ -168,5 +175,7 @@ TEST_F(ReplicatedWrite, ManualScalar)
   test_manual_task(library, {1, 1}, 1);
   test_manual_task(library, {1, 1}, 2);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace replicated_write_test

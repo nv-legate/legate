@@ -36,9 +36,17 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
     return;
   }
   const auto exec_proc     = runtime->get_executing_processor(ctx);
-  const auto proc_kind_str = (exec_proc.kind() == Processor::LOC_PROC)   ? "CPU"
-                             : (exec_proc.kind() == Processor::TOC_PROC) ? "GPU"
-                                                                         : "OpenMP";
+  const auto proc_kind_str = [&] {
+    switch (const auto kind = exec_proc.kind()) {
+      case Processor::LOC_PROC: return "CPU";
+      case Processor::TOC_PROC: return "GPU";
+      case Processor::OMP_PROC: return "OpenMP";
+      default:
+        LEGATE_ABORT("Unhandled processor kind: " << legate::traits::detail::to_underlying(kind));
+        break;
+    }
+    return "";
+  }();
 
   std::stringstream point_str;
   const auto& point = task->index_point;

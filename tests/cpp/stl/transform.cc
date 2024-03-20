@@ -30,7 +30,8 @@ struct square {
 
 void TestTransformSingleInPlace()
 {
-  auto store = stl::create_store<std::int64_t>({4, 5});
+  constexpr std::size_t extents[] = {4, 5};
+  auto store                      = stl::create_store<std::int64_t>(extents);
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
   auto inc = [] LEGATE_HOST_DEVICE(std::int64_t v) -> std::int64_t { return v + 2; };
@@ -46,8 +47,9 @@ void TestTransformSingleInPlace()
 
 void TestTransformSingleCopy()
 {
-  auto in_store  = stl::create_store<std::int64_t>({4, 5});
-  auto out_store = stl::create_store<std::int64_t>({4, 5});
+  constexpr std::size_t extents[] = {4, 5};
+  auto in_store                   = stl::create_store<std::int64_t>(extents);
+  auto out_store                  = stl::create_store<std::int64_t>(extents);
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
   auto inc = [] LEGATE_HOST_DEVICE(std::int64_t v) -> std::int64_t { return v + 2; };
@@ -68,8 +70,9 @@ void TestTransformSingleCopy()
 
 void TestTransformDoubleInPlace()
 {
-  auto store1 = stl::create_store<std::int64_t>({4, 5});
-  auto store2 = stl::create_store<std::int64_t>({4, 5});
+  constexpr std::size_t extents[] = {4, 5};
+  auto store1                     = stl::create_store<std::int64_t>(extents);
+  auto store2                     = stl::create_store<std::int64_t>(extents);
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
   auto shift = [] LEGATE_HOST_DEVICE(std::int64_t a, std::int64_t b) -> std::int64_t {
@@ -92,9 +95,10 @@ void TestTransformDoubleInPlace()
 
 void TestTransformDoubleCopy()
 {
-  auto store1 = stl::create_store<std::int64_t>({4, 5});
-  auto store2 = stl::create_store<std::int64_t>({4, 5});
-  auto store3 = stl::create_store<std::int64_t>({4, 5});
+  constexpr std::size_t extents[] = {4, 5};
+  auto store1                     = stl::create_store<std::int64_t>(extents);
+  auto store2                     = stl::create_store<std::int64_t>(extents);
+  auto store3                     = stl::create_store<std::int64_t>(extents);
 
   // Stateless extended lambdas work with both clang CUDA and nvcc
   auto shift = [] LEGATE_HOST_DEVICE(std::int64_t a, std::int64_t b) -> std::int64_t {
@@ -131,7 +135,7 @@ void TestTransformRows()
   }
 
   // Transform by rows
-  auto result = stl::create_store({3, 4}, std::int64_t(0));
+  auto result = stl::create_store({3, 4}, std::int64_t{0});
   stl::transform(stl::rows_of(input),  //
                  stl::rows_of(result),
                  stl::elementwise(square()));

@@ -19,7 +19,13 @@ namespace partitioner_test {
 
 using PartitionerTest = DefaultFixture;
 
-constexpr const char* library_name = "test_partitioner";
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
+
+constexpr const char library_name[] = "test_partitioner";
+
+}  // namespace
 
 struct Initializer : public legate::LegateTask<Initializer> {
   static const std::int32_t TASK_ID = 0;
@@ -67,5 +73,7 @@ TEST_F(PartitionerTest, FavorPartitionedStore)
     runtime->submit(std::move(task));
   }
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace partitioner_test

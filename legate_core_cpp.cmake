@@ -794,9 +794,7 @@ file(CREATE_LINK
 
 set(legate_core_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
-include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)
-
-legate_core_add_tidy_target(SOURCES ${legate_core_SOURCES})
+list(APPEND legate_core_TIDY_SOURCES ${legate_core_SOURCES})
 
 if(legate_core_BUILD_TESTS)
   include(CTest)
@@ -821,6 +819,10 @@ endif()
 if(legate_core_BUILD_EXAMPLES)
   add_subdirectory(${LEGATE_CORE_DIR}/examples)
 endif()
+
+include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)
+
+legate_core_add_tidy_target(SOURCES ${legate_core_TIDY_SOURCES})
 
 # touch these variables so they are not marked as "unused"
 set(legate_core_maybe_ignored_variables_ "${legate_core_CMAKE_PRESET_NAME};${CMAKE_BUILD_PARALLEL_LEVEL};")

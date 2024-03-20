@@ -21,8 +21,6 @@
 #include "core/operation/detail/operation.h"
 #include "core/utilities/internal_shared_ptr.h"
 
-#include <string>
-
 namespace legate::detail {
 
 class Reduce final : public Operation {
@@ -37,8 +35,7 @@ class Reduce final : public Operation {
          mapping::detail::Machine machine);
 
   void launch(Strategy*) override;
-
-  void validate() override {}
+  void validate() override;
   void add_to_solver(ConstraintSolver& solver) override;
 
   [[nodiscard]] Kind kind() const override;

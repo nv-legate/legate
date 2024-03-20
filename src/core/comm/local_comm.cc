@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <utility>
 
 namespace legate::comm::coll {
 
@@ -70,10 +71,7 @@ int LocalNetwork::comm_create(CollComm global_comm,
     thread_comms[global_comm->unique_id]->ready_flag = true;
   }
   __sync_synchronize();
-  volatile ThreadComm* data = thread_comms[global_comm->unique_id];
-  while (!data->ready_flag) {
-    data = thread_comms[global_comm->unique_id];
-  }
+  while (!static_cast<volatile ThreadComm*>(thread_comms[global_comm->unique_id])->ready_flag) {}
   global_comm->local_comm = thread_comms[global_comm->unique_id];
   barrierLocal(global_comm);
   LegateCheck(global_comm->local_comm->ready_flag == true);
@@ -86,20 +84,25 @@ int LocalNetwork::comm_create(CollComm global_comm,
 int LocalNetwork::comm_destroy(CollComm global_comm)
 {
   barrierLocal(global_comm);
+  auto* thread_comm = [&] {
+    const auto id = global_comm->unique_id;
+
+    LegateAssert(id >= 0);
+    return thread_comms[static_cast<std::size_t>(id)];
+  }();
+
   if (global_comm->global_rank == 0) {
-    pthread_barrier_destroy(&(thread_comms[global_comm->unique_id]->barrier));
-    std::free(thread_comms[global_comm->unique_id]->buffers);
-    thread_comms[global_comm->unique_id]->buffers = nullptr;
-    std::free(thread_comms[global_comm->unique_id]->displs);
-    thread_comms[global_comm->unique_id]->displs = nullptr;
+    auto ret = pthread_barrier_destroy(&(thread_comm->barrier));
+    LegateCheck(ret == 0);
+    // NOLINTBEGIN(bugprone-multi-level-implicit-pointer-conversion)
+    std::free(std::exchange(thread_comm->buffers, nullptr));
+    std::free(std::exchange(thread_comm->displs, nullptr));
+    // NOLINTEND(bugprone-multi-level-implicit-pointer-conversion)
     __sync_synchronize();
-    thread_comms[global_comm->unique_id]->ready_flag = false;
+    thread_comm->ready_flag = false;
   }
   __sync_synchronize();
-  volatile ThreadComm* data = thread_comms[global_comm->unique_id];
-  while (data->ready_flag) {
-    data = thread_comms[global_comm->unique_id];
-  }
+  while (static_cast<volatile ThreadComm*>(thread_comm)->ready_flag) {}
   global_comm->status = false;
   return CollSuccess;
 }
@@ -147,13 +150,16 @@ int LocalNetwork::alltoallv(const void* sendbuf,
   for (int i = 1; i < total_size + 1; i++) {
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     // wait for other threads to update the buffer address
-    while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr ||
-           global_comm->local_comm->displs[recvfrom_global_rank] == nullptr) {}
-    src_base  = global_comm->local_comm->buffers[recvfrom_global_rank];
-    displs    = global_comm->local_comm->displs[recvfrom_global_rank];
-    char* src = static_cast<char*>(const_cast<void*>(src_base)) +
-                static_cast<std::ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent;
-    char* dst = static_cast<char*>(recvbuf) +
+    while (static_cast<const void* volatile*>(
+             global_comm->local_comm->buffers)[recvfrom_global_rank] == nullptr ||
+           static_cast<const int* volatile*>(
+             global_comm->local_comm->displs)[recvfrom_global_rank] == nullptr) {}
+    src_base = global_comm->local_comm->buffers[recvfrom_global_rank];
+    displs   = global_comm->local_comm->displs[recvfrom_global_rank];
+    const auto* src =
+      static_cast<const void*>(static_cast<const char*>(src_base) +
+                               static_cast<std::ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent);
+    auto* dst = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
@@ -165,7 +171,7 @@ int LocalNetwork::alltoallv(const void* sendbuf,
         recvfrom_global_rank,
         recvfrom_seg_id,
         sdispls[recvfrom_seg_id],
-        static_cast<void*>(src),
+        src,
         global_rank,
         recvfrom_global_rank,
         rdispls[recvfrom_global_rank],
@@ -201,11 +207,13 @@ int LocalNetwork::alltoall(
   for (int i = 1; i < total_size + 1; i++) {
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     // wait for other threads to update the buffer address
-    while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr) {}
-    src_base  = global_comm->local_comm->buffers[recvfrom_global_rank];
-    char* src = static_cast<char*>(const_cast<void*>(src_base)) +
-                static_cast<std::ptrdiff_t>(recvfrom_seg_id) * type_extent * count;
-    char* dst = static_cast<char*>(recvbuf) +
+    while (static_cast<const void* volatile*>(
+             global_comm->local_comm->buffers)[recvfrom_global_rank] == nullptr) {}
+    src_base = global_comm->local_comm->buffers[recvfrom_global_rank];
+    const auto* src =
+      static_cast<const void*>(static_cast<const char*>(src_base) +
+                               static_cast<std::ptrdiff_t>(recvfrom_seg_id) * type_extent * count);
+    auto* dst = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
     if (LegateDefined(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
@@ -216,7 +224,7 @@ int LocalNetwork::alltoall(
         type_extent,
         recvfrom_global_rank,
         recvfrom_seg_id,
-        static_cast<void*>(src),
+        src,
         global_rank,
         recvfrom_global_rank,
         static_cast<void*>(dst));
@@ -252,8 +260,10 @@ int LocalNetwork::allgather(
   __sync_synchronize();
 
   for (int recvfrom_global_rank = 0; recvfrom_global_rank < total_size; recvfrom_global_rank++) {
-    // wait for other threads to update the buffer address
-    while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr) {}
+    // wait for other threads to update the buffer address, need to make it volatile so that
+    // compilers don't delete the loop.
+    while (static_cast<const void* volatile*>(
+             global_comm->local_comm->buffers)[recvfrom_global_rank] == nullptr) {}
     const void* src = global_comm->local_comm->buffers[recvfrom_global_rank];
     char* dst       = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;

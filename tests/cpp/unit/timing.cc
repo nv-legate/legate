@@ -19,7 +19,9 @@
 
 namespace {
 
-static constexpr const char* library_name = "test_timing";
+// NOLINTBEGIN(readability-magic-numbers)
+
+constexpr const char library_name[] = "test_timing";
 
 void hello_cpu_variant(legate::TaskContext& context)
 {
@@ -62,7 +64,7 @@ void test_hello_task()
   runtime->submit(std::move(task));
 }
 
-TEST_F(Timing, measure_microseconds)
+TEST_F(Timing, MeasureMicroseconds)
 {
   auto t1 = legate::timing::measure_microseconds();
   test_hello_task();
@@ -70,12 +72,14 @@ TEST_F(Timing, measure_microseconds)
   EXPECT_GT(t2.value(), t1.value());
 }
 
-TEST_F(Timing, measure_nanoseconds)
+TEST_F(Timing, MeasureNanoseconds)
 {
   auto t1 = legate::timing::measure_nanoseconds();
   test_hello_task();
   auto t2 = legate::timing::measure_nanoseconds();
   EXPECT_GT(t2.value(), t1.value());
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace

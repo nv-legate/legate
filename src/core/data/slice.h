@@ -31,7 +31,7 @@ namespace legate {
  */
 class Slice {
  public:
-  static inline constexpr std::nullopt_t OPEN = std::nullopt;
+  static constexpr std::nullopt_t OPEN = std::nullopt;
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   Slice(std::optional<std::int64_t> _start = OPEN, std::optional<std::int64_t> _stop = OPEN);

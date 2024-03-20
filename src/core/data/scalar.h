@@ -159,7 +159,7 @@ class Scalar {
    * isn't string
    */
   template <typename VAL>
-  VAL value() const;
+  [[nodiscard]] VAL value() const;
   /**
    * @brief Returns values stored in the `Scalar`. If the `Scalar` does not have a fixed array type,
    * a unit span will be returned.
@@ -173,7 +173,7 @@ class Scalar {
    * 3) the scalar's type isn't a fixed array type and the size is different from size of `VAL`
    */
   template <typename VAL>
-  Span<const VAL> values() const;
+  [[nodiscard]] Span<const VAL> values() const;
   /**
    * @brief Returns a raw pointer to the backing allocation
    *
@@ -185,11 +185,11 @@ class Scalar {
   [[nodiscard]] detail::Scalar* impl();
 
  private:
-  static detail::Scalar* checked_create_impl(const Type& type,
-                                             const void* data,
-                                             bool copy,
-                                             std::size_t size);
-  static detail::Scalar* create_impl(const Type& type, const void* data, bool copy);
+  [[nodiscard]] static detail::Scalar* checked_create_impl(const Type& type,
+                                                           const void* data,
+                                                           bool copy,
+                                                           std::size_t size);
+  [[nodiscard]] static detail::Scalar* create_impl(const Type& type, const void* data, bool copy);
 
   struct private_tag {};
 

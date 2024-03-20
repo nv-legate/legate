@@ -12,6 +12,8 @@
 
 #include "core/runtime/detail/library.h"
 
+#include "core/utilities/detail/strtoll.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
 
@@ -44,14 +46,20 @@ class LibraryMapper : public legate::mapping::Mapper {
 };
 
 using Library = DefaultFixture;
-TEST_F(Library, Create)
 
+TEST_F(Library, Create)
 {
   const char* LIBNAME = "test_library.libA";
   auto* runtime       = legate::Runtime::get_runtime();
   auto lib            = runtime->create_library(LIBNAME);
+
   EXPECT_EQ(lib, runtime->find_library(LIBNAME));
-  EXPECT_EQ(lib, runtime->maybe_find_library(LIBNAME).value());
+
+  const auto found_lib = runtime->maybe_find_library(LIBNAME);
+
+  ASSERT_TRUE(found_lib.has_value());
+  // We check the optional above ^^^
+  EXPECT_EQ(lib, found_lib.value());  // NOLINT(bugprone-unchecked-optional-access)
   EXPECT_STREQ(lib.get_library_name().c_str(), LIBNAME);
 }
 
@@ -93,11 +101,12 @@ TEST_F(Library, InvalidReductionOPID)
 
   static constexpr const char* LIBNAME = "test_library.libD";
 
-  auto* runtime        = legate::Runtime::get_runtime();
-  auto lib             = runtime->create_library(LIBNAME);
-  auto local_id        = 0;
-  auto value           = std::getenv("REALM_BACKTRACE");
-  bool realm_backtrace = value != nullptr && atoi(value) != 0;
+  auto* runtime              = legate::Runtime::get_runtime();
+  auto lib                   = runtime->create_library(LIBNAME);
+  auto local_id              = 0;
+  const auto value           = std::getenv("REALM_BACKTRACE");
+  const bool realm_backtrace = value != nullptr && legate::detail::safe_strtoll(value) != 0;
+
   if (realm_backtrace) {
     EXPECT_DEATH((void)lib.register_reduction_operator<SumReduction_Int32>(local_id), "");
   } else {
@@ -119,6 +128,7 @@ TEST_F(Library, RegisterReductionOP)
   auto lib      = runtime->create_library(LIBNAME, config);
   auto local_id = 0;
   auto id       = lib.register_reduction_operator<SumReduction_Int32>(local_id);
+
   EXPECT_TRUE(lib.valid_reduction_op_id(static_cast<Legion::ReductionOpID>(id)));
   EXPECT_EQ(lib.get_local_reduction_op_id(static_cast<Legion::ReductionOpID>(id)), local_id);
 }

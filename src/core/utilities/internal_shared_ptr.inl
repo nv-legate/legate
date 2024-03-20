@@ -170,6 +170,7 @@ bool InternalWeakPtr<T>::expired() const noexcept
   return use_count() == 0;
 }
 
+// NOLINTBEGIN(bugprone-exception-escape)
 template <typename T>
 InternalSharedPtr<T> InternalWeakPtr<T>::lock() const noexcept
 {
@@ -177,6 +178,7 @@ InternalSharedPtr<T> InternalWeakPtr<T>::lock() const noexcept
   // in this case know it is not, and hence this function is noexcept
   return expired() ? InternalSharedPtr<T>{} : InternalSharedPtr<T>{*this};
 }
+// NOLINTEND(bugprone-exception-escape)
 
 template <typename T>
 void InternalWeakPtr<T>::swap(InternalWeakPtr& other) noexcept
@@ -590,7 +592,7 @@ typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const n
 template <typename T>
 typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator*() const noexcept
 {
-  return *ptr_;
+  return *get();
 }
 
 template <typename T>

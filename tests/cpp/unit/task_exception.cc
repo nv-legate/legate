@@ -23,11 +23,11 @@ TEST_F(TaskException, Basic)
 {
   constexpr const char* ERROR_MSG1 = "Exception Test1";
 
-  legate::TaskException exc1{ERROR_MSG1};
+  const legate::TaskException exc1{ERROR_MSG1};
   EXPECT_STREQ(exc1.what(), ERROR_MSG1);
 
   constexpr const char* ERROR_MSG2 = "Exception Test2";
-  legate::TaskException exc2{ERROR_MSG2};
+  const legate::TaskException exc2{ERROR_MSG2};
 
   EXPECT_STREQ(exc2.what(), ERROR_MSG2);
 }

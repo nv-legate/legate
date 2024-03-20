@@ -22,6 +22,8 @@ namespace aligned_unpack_test {
 
 using AlignedUnpack = DefaultFixture;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 class TestDeserializer : public legate::BaseDeserializer<TestDeserializer> {
  public:
   TestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer(args, arglen) {}
@@ -44,5 +46,7 @@ TEST_F(AlignedUnpack, Bug1)
 
   EXPECT_EQ(unpacked.value<complex<double>>(), to_pack.value<complex<double>>());
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace aligned_unpack_test

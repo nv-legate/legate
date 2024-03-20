@@ -154,7 +154,8 @@ class outputs {
   {
     LegateAssert(data().size() == sizeof...(Ts));
 
-    std::size_t index = 0;
+    // No, clang-tidy, index can *not* be marked as const
+    std::size_t index = 0;  // NOLINT(misc-const-correctness)
     (this->apply<Ts>(task, kind, index++), ...);
   }
 
@@ -282,7 +283,8 @@ template <typename T>
 
 [[nodiscard]] inline std::int32_t _next_reduction_kind()
 {
-  static std::atomic<std::int32_t> id{static_cast<std::int32_t>(ReductionOpKind::XOR) + 1};
+  static std::atomic<std::int32_t> id{legate::traits::detail::to_underlying(ReductionOpKind::XOR) +
+                                      1};
   return id.fetch_add(1);
 }
 
@@ -297,8 +299,8 @@ template <typename Fun>
 [[nodiscard]] std::int32_t _get_reduction_id()
 {
   static const std::int32_t ID = []() -> std::int32_t {
-    std::int32_t id               = _reduction_id_for<Fun>();
-    observer_ptr<Runtime> runtime = Runtime::get_runtime();
+    const std::int32_t id               = _reduction_id_for<Fun>();
+    const observer_ptr<Runtime> runtime = Runtime::get_runtime();
     Library library = runtime->find_or_create_library("legate.stl", LEGATE_STL_RESOURCE_CONFIG);
 
     return library.register_reduction_operator<Fun>(id);
@@ -372,7 +374,7 @@ class reduction<Store, Fun> {
 /**
  * @cond
  */
-enum class store_type : int { input, output, reduction };
+enum class store_type : std::uint8_t { input, output, reduction };
 
 class store_placeholder {
  public:
@@ -777,14 +779,14 @@ template <typename Op, std::int32_t Dim, bool Exclusive = false>
   PhysicalStore store = array.data();
 
   using Mapping = std::layout_right::mapping<std::dextents<coord_t, Dim>>;
-  Mapping mapping{detail::dynamic_extents<Dim>(working_set)};
+  Mapping mapping{detail::dynamic_extents<Dim>(working_set)};  // NOLINT(misc-const-correctness)
 
   using Policy   = reduction_accessor<Op, Exclusive>;
   using Accessor = detail::mdspan_accessor<typename Op::RHS, Dim, Policy>;
-  Accessor accessor{std::move(store), std::move(working_set)};
+  Accessor accessor{std::move(store), std::move(working_set)};  // NOLINT(misc-const-correctness)
 
   using Handle = typename Accessor::data_handle_type;
-  Handle handle{};
+  Handle handle{};  // NOLINT(misc-const-correctness)
 
   return {std::move(handle), std::move(mapping), std::move(accessor)};
 }
@@ -1118,12 +1120,14 @@ class launch_task {
   template <typename... Ts>
   void operator()(Ts... args) const
   {
-    detail::inputs<> no_inputs;
-    detail::outputs<> no_outputs;
-    detail::scalars<> no_scalars;
-    detail::function<> no_function;
-    detail::reduction<> no_reduction;
-    detail::constraints<> no_constraints;
+    // TODO(ericniebler) these could also be made constexpr if we defined the inputs<> template
+    // directly.
+    const detail::inputs<> no_inputs;
+    const detail::outputs<> no_outputs;
+    constexpr detail::scalars<> no_scalars;
+    constexpr detail::function<> no_function;
+    constexpr detail::reduction<> no_reduction;
+    constexpr detail::constraints<> no_constraints;
 
     auto function  = detail::get_arg<detail::function>(args..., no_function);
     auto reduction = detail::get_arg<detail::reduction>(args..., no_reduction);

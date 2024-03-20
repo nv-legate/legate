@@ -26,6 +26,7 @@
 #define LegateDefinedEnabledForm_1 ignored,
 #define LegateDefinedEnabledForm_ ignored,
 
+// NOLINTBEGIN(bugprone-reserved-identifier)
 // arguments are either
 // - (0, 1, 0, dummy)
 // - (1, 0, dummy)
@@ -40,3 +41,4 @@
 // NOLINTNEXTLINE(bugprone-macro-parentheses)
 #define LegateDefinedPrivate(x) LegateDefinedPrivate_(x 1, 0, dummy)
 #define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))
+// NOLINTEND(bugprone-reserved-identifier)

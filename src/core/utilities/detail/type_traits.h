@@ -125,4 +125,11 @@ struct is_same_as_one_of : std::bool_constant<(... || std::is_same<T, Ts>{})> {}
 template <typename T, typename... Ts>
 inline constexpr bool is_same_as_one_of_v = is_same_as_one_of<T, Ts...>::value;
 
+template <typename T>
+[[nodiscard]] constexpr std::underlying_type_t<T> to_underlying(T e) noexcept
+{
+  static_assert(std::is_enum_v<T>);
+  return static_cast<std::underlying_type_t<T>>(e);
+}
+
 }  // namespace legate::traits::detail

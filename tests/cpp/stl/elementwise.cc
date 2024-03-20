@@ -32,7 +32,7 @@ struct square {
 void TestElementwiseRowOperation()
 {
   auto input  = stl::create_store<std::int64_t>({3, 4});
-  auto result = stl::create_store({3, 4}, std::int64_t(0));
+  auto result = stl::create_store({3, 4}, std::int64_t{0});
 
   // Fill the input
   {

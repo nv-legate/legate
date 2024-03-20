@@ -19,14 +19,17 @@ namespace scalarout {
 
 using Integration = DefaultFixture;
 
-static const char* library_name = "test_scalar_out";
+// NOLINTBEGIN(readability-magic-numbers)
 
-enum TaskIDs {
-  COPY = 0,
-};
+namespace {
+
+constexpr const char library_name[] = "test_scalar_out";
+
+}  // namespace
 
 struct Copy : public legate::LegateTask<Copy> {
-  static const std::int32_t TASK_ID = COPY;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto input  = context.input(0).data();
@@ -53,7 +56,7 @@ void test_scalar_out()
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
 
-  legate::Shape extents{16};
+  const legate::Shape extents{16};
   auto input  = runtime->create_store(extents, legate::int64(), false /* optimize_scalar */);
   auto output = runtime->create_store(legate::Scalar{int64_t{0}});
 
@@ -61,7 +64,7 @@ void test_scalar_out()
 
   {
     auto sliced   = input.slice(0, legate::Slice{2, 3});
-    auto task     = runtime->create_task(library, COPY);
+    auto task     = runtime->create_task(library, Copy::TASK_ID);
     auto part_in  = task.add_input(sliced);
     auto part_out = task.add_output(output);
     task.add_constraint(legate::align(part_in, part_out));
@@ -78,5 +81,7 @@ TEST_F(Integration, ScalarOut)
   register_tasks();
   test_scalar_out();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace scalarout

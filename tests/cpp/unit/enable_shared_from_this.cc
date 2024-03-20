@@ -21,20 +21,22 @@ namespace enable_shared_from_this_tests {
 
 class EnsureDeleted : public legate::EnableSharedFromThis<EnsureDeleted> {
  public:
-  static inline constexpr auto SIZE = 100;
+  static constexpr auto SIZE = 100;
 
   explicit EnsureDeleted(bool* deleted) : values_(SIZE, 0), deleted_{deleted}
   {
     SCOPED_TRACE("EnsureDeleted::EnsureDeleted()");
     *deleted_ = false;
     std::iota(values_.begin(), values_.end(), 0);
-    validate();
+    // Yes, clang-tidy, I know that this won't do an actual virtual call, but we can at least
+    // check this class
+    validate();  // NOLINT(clang-analyzer-optin.cplusplus.VirtualCall)
   }
 
   virtual ~EnsureDeleted()
   {
     SCOPED_TRACE("EnsureDeleted::~EnsureDeleted()");
-    validate();
+    validate();  // NOLINT(clang-analyzer-optin.cplusplus.VirtualCall)
     *deleted_ = true;
   }
 
@@ -76,14 +78,13 @@ class EnsureDeletedVirtual : public EnsureDeleted {
     : EnsureDeleted{deleted}, set_{this->values_.begin(), this->values_.end()}
   {
     SCOPED_TRACE("EnsureDeletedVirtual::EnsureDeletedVirtual()");
-    validate();
+    validate();  // NOLINT(clang-analyzer-optin.cplusplus.VirtualCall)
   }
 
   bool operator==(const EnsureDeletedVirtual& other) const
   {
     SCOPED_TRACE("EnsureDeletedVirtual::operator==()");
-    EnsureDeleted::operator==(other);
-    return set_ == other.set_;
+    return EnsureDeleted::operator==(other) && set_ == other.set_;
   }
 
   void validate() const override
@@ -186,8 +187,7 @@ class EnsureDeletedRecursive : public EnsureDeletedVirtual {
   bool operator==(const EnsureDeletedRecursive& other) const
   {
     SCOPED_TRACE("EnsureDeletedRecursive::operator==()");
-    EnsureDeletedVirtual::operator==(other);
-    return parent_ == other.parent_;
+    return EnsureDeletedVirtual::operator==(other) && parent_ == other.parent_;
   }
 
   void validate() const override

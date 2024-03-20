@@ -16,23 +16,20 @@
 
 #include "legate.h"
 
-namespace task {
-
-namespace region_manager {
+namespace task::region_manager {
 
 enum TaskOpCode {
   PROVENANCE = 0,
 };
 
-static const char* library_name = "test_region_manager";
+constexpr const char library_name[] = "test_region_manager";
 
 void register_tasks();
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
-  static const std::int32_t TASK_ID = 0;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context);
 };
 
-}  // namespace region_manager
-
-}  // namespace task
+}  // namespace task::region_manager

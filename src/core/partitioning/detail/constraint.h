@@ -40,7 +40,7 @@ class Variable;
 
 class Expr {
  public:
-  enum class Kind : std::int32_t {
+  enum class Kind : std::uint8_t {
     LITERAL  = 0,
     VARIABLE = 1,
   };
@@ -106,7 +106,7 @@ class Variable final : public Expr {
 
 class Constraint {
  public:
-  enum class Kind : std::int32_t {
+  enum class Kind : std::uint8_t {
     ALIGNMENT = 0,
     BROADCAST = 1,
     IMAGE     = 2,

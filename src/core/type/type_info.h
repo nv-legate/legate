@@ -38,6 +38,9 @@ class FixedArrayType;
 class ListType;
 class StructType;
 
+// Silence warnings here since the range is determined by whatever Legion sets, so we do not
+// want to inadvertently muck that up.
+// NOLINTBEGIN(performance-enum-size)
 /**
  * @ingroup types
  * @brief Enum for reduction operator kinds
@@ -53,6 +56,7 @@ enum class ReductionOpKind : std::int32_t {
   AND = AND_LT, /*!< Bitwse AND */
   XOR = XOR_LT, /*!< Bitwas XOR */
 };
+// NOLINTEND(performance-enum-size)
 
 /**
  * @ingroup types
@@ -60,6 +64,8 @@ enum class ReductionOpKind : std::int32_t {
  */
 class Type {
  public:
+  // We silence this warning for the same reason we silence it for ReductionOpKind.
+  // NOLINTBEGIN(performance-enum-size)
   /**
    * @ingroup types
    * @brief Enum for type codes
@@ -86,6 +92,7 @@ class Type {
     STRING      = STRING_LT,      /*!< String type */
     LIST        = LIST_LT,        /*!< List type */
   };
+  // NOLINTEND(performance-enum-size)
 
   /**
    * @brief Code of the type

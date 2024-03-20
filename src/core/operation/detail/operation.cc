@@ -112,8 +112,8 @@ void Operation::record_partition(const Variable* variable, InternalSharedPtr<Log
   auto finder = store_mappings_.find(*variable);
   if (finder != store_mappings_.end()) {
     if (finder->second->id() != store->id()) {
-      throw std::invalid_argument("Variable " + variable->to_string() +
-                                  " is already assigned to another store");
+      throw std::invalid_argument{"Variable " + variable->to_string() +
+                                  " is already assigned to another store"};
     }
     return;
   }

@@ -19,21 +19,28 @@ namespace type_test {
 
 using TypeUnit = DefaultFixture;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 constexpr std::int32_t GLOBAL_OP_ID = 0x1F;
 
-const std::vector<legate::Type> PRIMITIVE_TYPE = {legate::bool_(),
-                                                  legate::int16(),
-                                                  legate::int32(),
-                                                  legate::int64(),
-                                                  legate::uint8(),
-                                                  legate::uint16(),
-                                                  legate::uint32(),
-                                                  legate::uint64(),
-                                                  legate::float16(),
-                                                  legate::float32(),
-                                                  legate::float64(),
-                                                  legate::complex64(),
-                                                  legate::complex128()};
+const std::array<legate::Type, 13>& PRIMITIVE_TYPE()
+{
+  static const std::array<legate::Type, 13> arr = {legate::bool_(),
+                                                   legate::int16(),
+                                                   legate::int32(),
+                                                   legate::int64(),
+                                                   legate::uint8(),
+                                                   legate::uint16(),
+                                                   legate::uint32(),
+                                                   legate::uint64(),
+                                                   legate::float16(),
+                                                   legate::float32(),
+                                                   legate::float64(),
+                                                   legate::complex64(),
+                                                   legate::complex128()};
+
+  return arr;
+}
 
 template <typename T>
 struct alignment_of : std::integral_constant<std::size_t, alignof(T)> {};
@@ -42,7 +49,9 @@ template <>
 struct alignment_of<void> : std::integral_constant<std::size_t, 0> {};
 
 template <typename T>
-void test_primitive_type(const legate::Type& type, std::string type_string, std::uint32_t size)
+void test_primitive_type(const legate::Type& type,
+                         const std::string& type_string,
+                         std::uint32_t size)
 {
   EXPECT_EQ(type.code(), legate::type_code_of<T>);
   EXPECT_EQ(type.size(), size);
@@ -51,7 +60,9 @@ void test_primitive_type(const legate::Type& type, std::string type_string, std:
   EXPECT_FALSE(type.variable_size());
   EXPECT_TRUE(type.is_primitive());
   EXPECT_EQ(type.to_string(), type_string);
-  legate::Type other(type);
+
+  const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
+
   EXPECT_EQ(other, type);
 }
 
@@ -63,7 +74,9 @@ void test_string_type(const legate::Type& type)
   EXPECT_TRUE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
   EXPECT_EQ(type.to_string(), "string");
-  legate::Type other(type);
+
+  const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
+
   EXPECT_EQ(other, type);
 }
 
@@ -75,14 +88,16 @@ void test_binary_type(const legate::Type& type, std::uint32_t size)
   EXPECT_FALSE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
   EXPECT_EQ(type.to_string(), "binary(" + std::to_string(size) + ")");
-  legate::Type other(type);
+
+  const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
+
   EXPECT_EQ(other, type);
 }
 
 void test_fixed_array_type(const legate::Type& type,
                            const legate::Type& element_type,
                            std::uint32_t N,
-                           std::string to_string)
+                           const std::string& to_string)
 {
   EXPECT_EQ(type.code(), legate::Type::Code::FIXED_ARRAY);
   EXPECT_EQ(type.size(), element_type.size() * N);
@@ -90,7 +105,9 @@ void test_fixed_array_type(const legate::Type& type,
   EXPECT_FALSE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
   EXPECT_EQ(type.to_string(), to_string);
-  legate::Type other(type);
+
+  const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
+
   EXPECT_EQ(other, type);
 
   auto fixed_array_type = type.as_fixed_array_type();
@@ -102,16 +119,18 @@ void test_struct_type(const legate::Type& type,
                       bool aligned,
                       std::uint32_t size,
                       std::uint32_t alignment,
-                      std::string to_string,
-                      std::vector<legate::Type> field_types,
-                      std::vector<std::uint32_t> /*offsets*/)
+                      const std::string& to_string,
+                      const std::vector<legate::Type>& field_types,
+                      const std::vector<std::uint32_t>& /*offsets*/)
 {
   EXPECT_EQ(type.code(), legate::Type::Code::STRUCT);
   EXPECT_EQ(type.size(), size);
   EXPECT_EQ(type.alignment(), alignment);
   EXPECT_FALSE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
-  legate::Type other(type);
+
+  const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
+
   EXPECT_EQ(other, type);
 
   auto struct_type = type.as_struct_type();
@@ -123,7 +142,7 @@ void test_struct_type(const legate::Type& type,
   }
 }
 
-void test_list_type(const legate::Type& element_type, std::string to_string)
+void test_list_type(const legate::Type& element_type, const std::string& to_string)
 {
   auto type = legate::list_type(element_type);
   EXPECT_EQ(type.code(), legate::Type::Code::LIST);
@@ -131,7 +150,9 @@ void test_list_type(const legate::Type& element_type, std::string to_string)
   EXPECT_EQ(type.alignment(), 0);
   EXPECT_TRUE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
-  legate::Type other(type);
+
+  const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
+
   EXPECT_EQ(other, type);
 
   auto list_type = type.as_list_type();
@@ -217,25 +238,25 @@ TEST_F(TypeUnit, FixedArrayType)
 {
   // element type is a primitive type
   {
-    std::uint32_t N       = 10;
-    auto element_type     = legate::uint64();
-    auto fixed_array_type = legate::fixed_array_type(element_type, N);
+    constexpr std::uint32_t N = 10;
+    auto element_type         = legate::uint64();
+    auto fixed_array_type     = legate::fixed_array_type(element_type, N);
     test_fixed_array_type(fixed_array_type, element_type, N, "uint64[10]");
   }
 
   // element type is not a primitive type
   {
-    std::uint32_t N       = 10;
-    auto element_type     = legate::fixed_array_type(legate::uint16(), N);
-    auto fixed_array_type = legate::fixed_array_type(element_type, N);
+    constexpr std::uint32_t N = 10;
+    auto element_type         = legate::fixed_array_type(legate::uint16(), N);
+    auto fixed_array_type     = legate::fixed_array_type(element_type, N);
     test_fixed_array_type(fixed_array_type, element_type, N, "uint16[10][10]");
   }
 
   // N > 0xFFU
   {
-    std::uint32_t N       = 256;
-    auto element_type     = legate::float64();
-    auto fixed_array_type = legate::fixed_array_type(element_type, N);
+    constexpr std::uint32_t N = 256;
+    auto element_type         = legate::float64();
+    auto fixed_array_type     = legate::fixed_array_type(element_type, N);
     test_fixed_array_type(fixed_array_type, element_type, N, "float64[256]");
   }
 
@@ -255,39 +276,49 @@ TEST_F(TypeUnit, StructType)
 {
   // aligned
   {
-    auto type = legate::struct_type(true, legate::int16(), legate::bool_(), legate::float64());
-    std::vector<legate::Type> field_types = {legate::int16(), legate::bool_(), legate::float64()};
-    std::vector<std::uint32_t> offsets    = {0, 2, 8};
-    // size: 16 = 8 (std::int16_t bool) + 8 (double)
+    const auto type =
+      legate::struct_type(true, legate::int16(), legate::bool_(), legate::float64());
+    const std::vector<legate::Type> field_types = {
+      legate::int16(), legate::bool_(), legate::float64()};
+    const std::vector<std::uint32_t> offsets = {0, 2, 8};
+    constexpr auto size                      = 16;  //  size = 8 (std::int16_t bool) + 8 (double)
+
     test_struct_type(
-      type, true, 16, sizeof(double), "{int16:0,bool:2,float64:8}", field_types, offsets);
+      type, true, size, sizeof(double), "{int16:0,bool:2,float64:8}", field_types, offsets);
   }
 
   // aligned
   {
-    std::vector<legate::Type> field_types = {legate::bool_(), legate::float64(), legate::int16()};
-    auto type                             = legate::struct_type(field_types, true);
-    std::vector<std::uint32_t> offsets    = {0, 8, 16};
-    // size: 24 = 8 (bool) + 8 (double) + 8 (int16_t)
+    const std::vector<legate::Type> field_types = {
+      legate::bool_(), legate::float64(), legate::int16()};
+    const auto type                          = legate::struct_type(field_types, true);
+    const std::vector<std::uint32_t> offsets = {0, 8, 16};
+    constexpr auto size = 24;  // size: 24 = 8 (bool) + 8 (double) + 8 (int16_t)
+
     test_struct_type(
-      type, true, 24, sizeof(double), "{bool:0,float64:8,int16:16}", field_types, offsets);
+      type, true, size, sizeof(double), "{bool:0,float64:8,int16:16}", field_types, offsets);
   }
 
   // not aligned
   {
-    auto type = legate::struct_type(false, legate::int16(), legate::bool_(), legate::float64());
-    std::vector<legate::Type> field_types = {legate::int16(), legate::bool_(), legate::float64()};
-    std::vector<std::uint32_t> offsets    = {0, 2, 3};
-    auto size                             = sizeof(int16_t) + sizeof(bool) + sizeof(double);
+    const auto type =
+      legate::struct_type(false, legate::int16(), legate::bool_(), legate::float64());
+    const std::vector<legate::Type> field_types = {
+      legate::int16(), legate::bool_(), legate::float64()};
+    const std::vector<std::uint32_t> offsets = {0, 2, 3};
+    constexpr auto size                      = sizeof(int16_t) + sizeof(bool) + sizeof(double);
+
     test_struct_type(type, false, size, 1, "{int16:0,bool:2,float64:3}", field_types, offsets);
   }
 
   // not aligned
   {
-    std::vector<legate::Type> field_types = {legate::bool_(), legate::float64(), legate::int16()};
-    auto type                             = legate::struct_type(field_types);
-    std::vector<std::uint32_t> offsets    = {0, 1, 9};
-    auto size                             = sizeof(int16_t) + sizeof(bool) + sizeof(double);
+    const std::vector<legate::Type> field_types = {
+      legate::bool_(), legate::float64(), legate::int16()};
+    const auto type                          = legate::struct_type(field_types);
+    const std::vector<std::uint32_t> offsets = {0, 1, 9};
+    constexpr auto size                      = sizeof(int16_t) + sizeof(bool) + sizeof(double);
+
     test_struct_type(type, false, size, 1, "{bool:0,float64:1,int16:9}", field_types, offsets);
   }
 
@@ -306,6 +337,7 @@ TEST_F(TypeUnit, PointType)
 {
   for (std::uint32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     auto type = legate::point_type(idx);
+
     test_fixed_array_type(type, legate::int64(), idx, "int64[" + std::to_string(idx) + "]");
     EXPECT_TRUE(legate::is_point_type(type, idx));
   }
@@ -330,12 +362,15 @@ TEST_F(TypeUnit, PointType)
 TEST_F(TypeUnit, RectType)
 {
   for (std::uint32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
-    auto type                             = legate::rect_type(idx);
-    std::vector<legate::Type> field_types = {legate::point_type(idx), legate::point_type(idx)};
-    std::vector<std::uint32_t> offsets    = {0, (uint32_t)(sizeof(uint64_t)) * idx};
-    auto full_size                        = (field_types.size() * sizeof(uint64_t)) * idx;
-    auto to_string = "{int64[" + std::to_string(idx) + "]:0,int64[" + std::to_string(idx) +
-                     "]:" + std::to_string(idx * sizeof(int64_t)) + "}";
+    const auto type                             = legate::rect_type(idx);
+    const std::vector<legate::Type> field_types = {legate::point_type(idx),
+                                                   legate::point_type(idx)};
+    const std::vector<std::uint32_t> offsets    = {0,
+                                                   static_cast<std::uint32_t>(sizeof(uint64_t)) * idx};
+    const auto full_size                        = (field_types.size() * sizeof(uint64_t)) * idx;
+    const auto to_string = "{int64[" + std::to_string(idx) + "]:0,int64[" + std::to_string(idx) +
+                           "]:" + std::to_string(idx * sizeof(int64_t)) + "}";
+
     test_struct_type(type, true, full_size, sizeof(uint64_t), to_string, field_types, offsets);
     EXPECT_TRUE(legate::is_rect_type(type, idx));
   }
@@ -389,10 +424,11 @@ TEST_F(TypeUnit, ListType)
 TEST_F(TypeUnit, Uid)
 {
   // fixed array type
-  for (std::uint32_t idx = 0; idx < PRIMITIVE_TYPE.size(); ++idx) {
-    auto element_type     = PRIMITIVE_TYPE.at(idx);
-    auto N                = idx + 1;
+  for (std::uint32_t idx = 0; idx < PRIMITIVE_TYPE().size(); ++idx) {
+    auto element_type     = PRIMITIVE_TYPE().at(idx);
+    const auto N          = idx + 1;
     auto fixed_array_type = legate::fixed_array_type(element_type, N);
+
     EXPECT_EQ(fixed_array_type.uid() & 0x00FF, static_cast<std::int32_t>(element_type.code()));
     EXPECT_EQ(fixed_array_type.uid() >> 8, N);
     EXPECT_EQ(fixed_array_type.as_fixed_array_type().num_elements(), N);
@@ -418,7 +454,7 @@ TEST_F(TypeUnit, Uid)
     EXPECT_NE(array_of_array_type1.uid(), array_of_array_type2.uid());
 
     // array of point types
-    auto dim                  = N % LEGATE_MAX_DIM + 1;
+    const auto dim            = N % LEGATE_MAX_DIM + 1;
     auto array_of_point_type1 = legate::fixed_array_type(legate::point_type(dim), N);
     auto array_of_point_type2 = legate::fixed_array_type(legate::point_type(dim), N);
     EXPECT_NE(array_of_point_type1.uid(), array_of_point_type2.uid());
@@ -440,10 +476,10 @@ TEST_F(TypeUnit, Uid)
   EXPECT_EQ(legate::string_type().uid(), static_cast<std::int32_t>(legate::Type::Code::STRING));
 
   // struct type
-  for (std::uint32_t idx = 0; idx < PRIMITIVE_TYPE.size(); ++idx) {
-    auto element_type = PRIMITIVE_TYPE.at(idx);
+  for (auto&& element_type : PRIMITIVE_TYPE()) {
     auto struct_type1 = legate::struct_type(true, element_type);
     auto struct_type2 = legate::struct_type(true, element_type);
+
     EXPECT_NE(struct_type1.uid(), struct_type2.uid());
     EXPECT_TRUE(struct_type1.uid() >= 0x10000);
     EXPECT_TRUE(struct_type2.uid() >= 0x10000);
@@ -455,10 +491,10 @@ TEST_F(TypeUnit, Uid)
   }
 
   // list type
-  for (std::uint32_t idx = 0; idx < PRIMITIVE_TYPE.size(); ++idx) {
-    auto element_type = PRIMITIVE_TYPE.at(idx);
-    auto list_type1   = legate::list_type(element_type);
-    auto list_type2   = legate::list_type(element_type);
+  for (auto&& element_type : PRIMITIVE_TYPE()) {
+    auto list_type1 = legate::list_type(element_type);
+    auto list_type2 = legate::list_type(element_type);
+
     EXPECT_NE(list_type1.uid(), list_type2.uid());
     EXPECT_TRUE(list_type1.uid() >= 0x10000);
     EXPECT_TRUE(list_type2.uid() >= 0x10000);
@@ -473,6 +509,7 @@ TEST_F(TypeUnit, Uid)
   auto binary_type      = legate::binary_type(678);
   auto same_binary_type = legate::binary_type(678);
   auto diff_binary_type = legate::binary_type(67);
+
   EXPECT_EQ(binary_type.uid(), same_binary_type.uid());
   EXPECT_NE(binary_type.uid(), diff_binary_type.uid());
 }
@@ -674,4 +711,7 @@ TEST_F(TypeUnit, TypeUtils)
   EXPECT_FALSE(legate::is_complex_type<void>::value);
   EXPECT_FALSE(legate::is_complex_type<std::string>::value);
 }
+
+// NOLINTEND(readability-magic-numbers)
+
 }  // namespace type_test

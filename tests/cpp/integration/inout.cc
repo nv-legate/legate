@@ -17,22 +17,26 @@
 
 namespace inout {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using Integration = DefaultFixture;
 
-enum TaskOpCode {
-  INOUT = 1,
-};
+namespace {
 
-static const char* library_name = "test_inout";
+constexpr const char library_name[] = "test_inout";
+
+}  // namespace
 
 class TesterMapper : public legate::mapping::Mapper {
   void set_machine(const legate::mapping::MachineQueryInterface* /*machine*/) override {}
+
   legate::mapping::TaskTarget task_target(
     const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::TaskTarget>& options) override
   {
     return options.front();
   }
+
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override
@@ -50,6 +54,7 @@ class TesterMapper : public legate::mapping::Mapper {
     }
     return mappings;
   }
+
   legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
   {
     return legate::Scalar{};
@@ -57,7 +62,8 @@ class TesterMapper : public legate::mapping::Mapper {
 };
 
 struct InoutTask : public legate::LegateTask<InoutTask> {
-  static const std::int32_t TASK_ID = INOUT;
+  static constexpr std::int32_t TASK_ID = 1;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
@@ -67,8 +73,8 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
       return;
     }
 
-    auto acc = output.read_write_accessor<int64_t, 2>(shape);
-    for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
+    auto acc = output.read_write_accessor<std::int64_t, 2>(shape);
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
       auto p = *it;
       EXPECT_EQ(acc[p], 123);
       acc[*it] = (p[0] + 1) + (p[1] + 1) * 1000;
@@ -94,15 +100,15 @@ void test_inout()
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
 
-  std::vector<legate::LogicalStore> stores{
+  const auto stores = {
     runtime->create_store(legate::Shape{10, 10}, legate::int64()),
     runtime->create_store(legate::Scalar{int64_t{0}}, legate::Shape{1, 1}),
   };
 
   for (auto& store : stores) {
-    runtime->issue_fill(store, legate::Scalar(int64_t(123)));
+    runtime->issue_fill(store, legate::Scalar{std::int64_t{123}});
 
-    auto task     = runtime->create_task(library, INOUT);
+    auto task     = runtime->create_task(library, InoutTask::TASK_ID);
     auto in_part  = task.add_input(store);
     auto out_part = task.add_output(store);
     task.add_constraint(legate::align(in_part, out_part));
@@ -111,7 +117,7 @@ void test_inout()
     auto p_out = store.get_physical_store();
     auto acc   = p_out.read_accessor<int64_t, 2>();
     auto shape = p_out.shape<2>();
-    for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
+    for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
       auto p = *it;
       EXPECT_EQ(acc[p], (p[0] + 1) + (p[1] + 1) * 1000);
     }
@@ -123,5 +129,7 @@ TEST_F(Integration, InOut)
   register_tasks();
   test_inout();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace inout

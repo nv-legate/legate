@@ -19,9 +19,15 @@ namespace physical_array_unit_test {
 
 using PhysicalArrayUnit = DefaultFixture;
 
-static const char* library_name = "legate.physical_array";
+// NOLINTBEGIN(readability-magic-numbers)
 
-enum class ArrayTaskID : std::int32_t {
+namespace {
+
+constexpr const char library_name[] = "legate.physical_array";
+
+}  // namespace
+
+enum class ArrayTaskID : std::uint8_t {
   PRIMITIVE_UNBOUND_ARRAY_TASK_ID = 0,
   LIST_ARRAY_TASK_ID              = 1,
   STRING_ARRAY_TASK_ID            = 2,
@@ -29,7 +35,7 @@ enum class ArrayTaskID : std::int32_t {
   CHECK_ARRAY_TASK_ID             = 4,
 };
 
-enum class ArrayType : std::int32_t {
+enum class ArrayType : std::uint8_t {
   PRIMITIVE_ARRAY = 0,
   LIST_ARRAY      = 1,
   STRING_TYPE     = 2,
@@ -424,7 +430,7 @@ void check_string_array(legate::PhysicalArray& array, bool nullable, bool unboun
   auto i                            = 0;
   if (!chars_shape.empty()) {
     for (legate::PointInRectIterator<1> it{chars_shape}; it.valid(); ++it) {
-      rw_chars[*it] = i;
+      rw_chars[*it] = static_cast<std::int8_t>(i);
       i++;
     }
     i = 0;
@@ -877,5 +883,7 @@ TEST_F(PhysicalArrayUnit, FillListNullable) { test_fill_list(true); }
 TEST_F(PhysicalArrayUnit, FillStringNonNullable) { test_fill_string(false); }
 
 TEST_F(PhysicalArrayUnit, FillStringNullable) { test_fill_string(true); }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace physical_array_unit_test

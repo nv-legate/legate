@@ -20,13 +20,27 @@ namespace copy_scatter {
 
 using Copy = DefaultFixture;
 
-static const char* library_name = "test_copy_scatter";
-static legate::Logger logger(library_name);
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
+
+constexpr const char library_name[] = "test_copy_scatter";
+
+[[nodiscard]] legate::Logger& logger()
+{
+  static legate::Logger log{library_name};
+
+  return log;
+}
 
 constexpr std::int32_t CHECK_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
+}  // namespace
+
 template <std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TGT_DIM>> {
+  static constexpr std::int32_t TASK_ID = CHECK_SCATTER_TASK + IND_DIM * TEST_MAX_DIM + TGT_DIM;
+
   struct CheckScatterTaskBody {
     template <legate::Type::Code CODE>
     void operator()(legate::TaskContext context)
@@ -45,8 +59,8 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
 
       auto tgt_shape = tgt_store.shape<TGT_DIM>();
 
-      legate::Buffer<bool, TGT_DIM> mask(tgt_shape, legate::Memory::Kind::SYSTEM_MEM);
-      for (legate::PointInRectIterator<TGT_DIM> it(tgt_shape); it.valid(); ++it) {
+      const legate::Buffer<bool, TGT_DIM> mask{tgt_shape, legate::Memory::Kind::SYSTEM_MEM};
+      for (legate::PointInRectIterator<TGT_DIM> it{tgt_shape}; it.valid(); ++it) {
         mask[*it] = false;
       }
 
@@ -54,7 +68,7 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
       auto tgt_acc = tgt_store.read_accessor<VAL, TGT_DIM>();
       auto ind_acc = ind_store.read_accessor<legate::Point<TGT_DIM>, IND_DIM>();
 
-      for (legate::PointInRectIterator<IND_DIM> it(ind_shape); it.valid(); ++it) {
+      for (legate::PointInRectIterator<IND_DIM> it{ind_shape}; it.valid(); ++it) {
         auto p      = ind_acc[*it];
         auto copy   = tgt_acc[p];
         auto source = src_acc[*it];
@@ -62,7 +76,7 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
         mask[p] = true;
       }
 
-      for (legate::PointInRectIterator<TGT_DIM> it(tgt_shape); it.valid(); ++it) {
+      for (legate::PointInRectIterator<TGT_DIM> it{tgt_shape}; it.valid(); ++it) {
         auto p = *it;
         if (mask[p]) {
           continue;
@@ -72,7 +86,6 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
     }
   };
 
-  static const std::int32_t TASK_ID = CHECK_SCATTER_TASK + IND_DIM * TEST_MAX_DIM + TGT_DIM;
   static void cpu_variant(legate::TaskContext context)
   {
     auto type_code = context.input(0).type().code();
@@ -121,7 +134,7 @@ struct ScatterSpec {
   legate::Scalar seed;
   legate::Scalar init;
 
-  std::string to_string() const
+  [[nodiscard]] std::string to_string() const
   {
     std::stringstream ss;
 
@@ -141,7 +154,8 @@ void check_scatter_output(legate::Library library,
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
 
-  std::int32_t task_id = CHECK_SCATTER_TASK + ind.dim() * TEST_MAX_DIM + tgt.dim();
+  const auto task_id =
+    static_cast<std::int32_t>(CHECK_SCATTER_TASK + ind.dim() * TEST_MAX_DIM + tgt.dim());
 
   auto task = runtime->create_task(library, task_id);
 
@@ -163,7 +177,7 @@ void check_scatter_output(legate::Library library,
 void test_scatter(const ScatterSpec& spec)
 {
   LegateAssert(spec.seed.type() == spec.init.type());
-  logger.print() << "Scatter Copy: " << spec.to_string();
+  logger().print() << "Scatter Copy: " << spec.to_string();
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(library_name);
@@ -187,30 +201,32 @@ void test_scatter(const ScatterSpec& spec)
 TEST_F(Copy, Scatter1Dto2D)
 {
   register_tasks();
-  std::vector<std::uint64_t> shape1d{5};
+  const std::vector<std::uint64_t> shape1d{5};
   test_scatter(
-    ScatterSpec{shape1d, {7, 11}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
+    ScatterSpec{shape1d, {7, 11}, legate::Scalar(int64_t{123}), legate::Scalar(int64_t{42})});
 }
 
 TEST_F(Copy, Scatter2Dto3D)
 {
   register_tasks();
   test_scatter(
-    ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
+    ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar(uint32_t{456}), legate::Scalar(uint32_t{42})});
 }
 
 TEST_F(Copy, Scatter2Dto2D)
 {
   register_tasks();
   test_scatter(
-    ScatterSpec{{4, 5}, {10, 11}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
+    ScatterSpec{{4, 5}, {10, 11}, legate::Scalar(int64_t{12}), legate::Scalar(int64_t{42})});
 }
 
 TEST_F(Copy, Scatter3Dto2D)
 {
   register_tasks();
   test_scatter(
-    ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar(int64_t(1)), legate::Scalar(int64_t(42))});
+    ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar(int64_t{1}), legate::Scalar(int64_t{42})});
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace copy_scatter

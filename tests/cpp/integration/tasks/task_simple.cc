@@ -12,11 +12,9 @@
 
 #include "task_simple.h"
 
-namespace task {
+namespace task::simple {
 
-namespace simple {
-
-Legion::Logger logger(library_name);
+// NOLINTBEGIN(readability-magic-numbers)
 
 void register_tasks()
 {
@@ -42,7 +40,7 @@ void register_tasks()
   }
 
   auto acc = output.write_accessor<int64_t, 2>(shape);
-  for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
+  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
     acc[*it] = (*it)[0] + (*it)[1] * 1000;
   }
 }
@@ -73,12 +71,12 @@ void register_tasks()
   auto red_acc1 = red1.reduce_accessor<legate::SumReduction<std::int32_t>, true, 2>();
   auto red_acc2 = red2.reduce_accessor<legate::ProdReduction<std::int64_t>, true, 3>();
 
-  for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
+  for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
     red_acc1[{0, 0}].reduce(10);
     red_acc2[{0, 0, 0}].reduce(2);
   }
 }
 
-}  // namespace simple
+// NOLINTEND(readability-magic-numbers)
 
-}  // namespace task
+}  // namespace task::simple

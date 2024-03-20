@@ -57,6 +57,23 @@ Checks:
   # modern google-test and b) don't have clang-tidy enabled on our testing code, we don't
   # need to enable it!
   - '-google-upgrade-googletest-case'
+  # This warning will warn if you have redundant default-initializers for class
+  # members. For example:
+  #
+  # class Foo
+  # {
+  #   int x_{}; // WARNING: redundant initializer here
+  #
+  # public:
+  #   Foo(int x) : x_{x} { }
+  # };
+  #
+  # Since Foo can only ever be constructed with an explicit value for x_ via its constructor,
+  # the default initializer is technically redundant. However, if we change the definition
+  # of Foo to now allow a default ctor, then the initializer becomes non-redundant
+  # again. It is easier to just follow the rule of "always explicitly default initialize
+  # members" than to remember to change 2 places at once.
+  - '-readability-redundant-member-init'
 WarningsAsErrors: '*'
 HeaderFileExtensions:
   - ''

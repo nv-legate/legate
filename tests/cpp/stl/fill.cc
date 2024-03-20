@@ -19,6 +19,8 @@ using STL = LegateSTLFixture;
 
 namespace stl = legate::stl;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 TEST_F(STL, Test1DFill)
 {
   auto store = stl::create_store<std::int64_t>({4});
@@ -101,3 +103,5 @@ TEST_F(STL, TestFillSlice)
   EXPECT_EQ(span(1, 0), 1);
   EXPECT_EQ(span(1, 1), 1);
 }
+
+// NOLINTEND(readability-magic-numbers)

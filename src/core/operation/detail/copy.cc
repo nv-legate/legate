@@ -84,9 +84,10 @@ void Copy::launch(Strategy* p_strategy)
   }
 
   if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
+    launcher.execute(launch_domain);
+    return;
   }
-  return launcher.execute_single();
+  launcher.execute_single();
 }
 
 void Copy::add_to_solver(ConstraintSolver& solver)

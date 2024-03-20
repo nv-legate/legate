@@ -143,6 +143,22 @@ inline void test_create_with_copy_n(
   test_create_with_copy_n(std::move(ptrs), bare_ptr, Tag{});
 }
 
+// clang-tidy emits a new use-after-move diagnostic when using a class after it has been moved
+// from. The only two special cases are for std::unique_ptr and std::shared_ptr, which have
+// clearly defined moved-from states.
+//
+// However, clang-tidy does not realize that SharedPtr and InternalSharedPtr have the exact
+// same semantics as std::shared_ptr, and hence it will warn if these objects are used after a
+// move.
+//
+// Calling this function on either, after they were moved, will make clang-tidy think the
+// object is "re-initialized". See
+// https://clang.llvm.org/extra/clang-tidy/checks/bugprone/use-after-move.html#silencing-erroneous-warnings
+template <typename T>
+void silence_spurious_clang_tidy_use_after_move(T&)
+{
+}
+
 struct Base {
   std::array<char, 128> padding{};
   std::int32_t value{};

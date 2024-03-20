@@ -19,13 +19,18 @@ namespace physical_store_test {
 
 using PhysicalStoreUnit = DefaultFixture;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
+
 constexpr std::uint64_t UINT64_VALUE          = 1;
 constexpr std::uint32_t BOUND_STORE_EXTENTS   = 0;
 constexpr std::uint32_t UNBOUND_STORE_EXTENTS = 9;
+constexpr const char library_name[]           = "legate.physical_store";
 
-static const char* library_name = "legate.physical_store";
+}  // namespace
 
-enum class UnboundStoreOpCode : std::uint32_t {
+enum class UnboundStoreOpCode : std::uint8_t {
   BIND_EMPTY,
   BIND_CREATED_BUFFER,
   BIND_BUFFER,
@@ -35,21 +40,21 @@ enum class UnboundStoreOpCode : std::uint32_t {
   BASIC_FEATURES,
 };
 
-enum class AccessorCode : std::uint32_t {
+enum class AccessorCode : std::uint8_t {
   READ       = 0,
   WRITE      = 1,
   READ_WRITE = 2,
   REDUCE     = 3,
 };
 
-enum class ArrayType : std::uint32_t {
+enum class ArrayType : std::uint8_t {
   PRIMITIVE_ARRAY = 0,
   LIST_ARRAY      = 1,
   STRING_ARRAY    = 2,
   STRUCT_ARRAY    = 3,
 };
 
-enum StoreTaskID : std::int32_t {
+enum StoreTaskID : std::int8_t {
   UNBOUND_STORE_TASK_ID         = 0,
   ACCESSOR_TASK_ID              = 1,
   PRIMITIVE_ARRAY_STORE_TASK_ID = 2,
@@ -82,8 +87,9 @@ struct unbound_store_fn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& store, std::uint32_t op_code)
   {
-    using T                 = legate::type_of<CODE>;
-    UnboundStoreOpCode code = static_cast<UnboundStoreOpCode>(op_code);
+    using T         = legate::type_of<CODE>;
+    const auto code = static_cast<UnboundStoreOpCode>(op_code);
+
     switch (code) {
       case UnboundStoreOpCode::BIND_EMPTY: {
         store.bind_empty_data();
@@ -282,9 +288,11 @@ struct reduce_accessor_fn {
     using T         = legate::type_of<CODE>;
     auto reduce_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
     auto op_shape   = store.shape<DIM>();
+
     if (!op_shape.empty()) {
       for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
-        legate::Point<DIM> pos{*it};
+        const legate::Point<DIM> pos{*it};
+
         reduce_acc.reduce(pos, static_cast<T>(10));
       }
     }
@@ -296,7 +304,8 @@ struct reduce_accessor_fn {
 
     auto reduce_acc_bounds = store.reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
     for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-      legate::Point<DIM> pos(*it);
+      const legate::Point<DIM> pos{*it};
+
       reduce_acc_bounds.reduce(pos, static_cast<T>(10));
     }
 
@@ -319,7 +328,7 @@ struct reduce_accessor_fn {
 };
 
 struct UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
-  static const std::int32_t TASK_ID = StoreTaskID::UNBOUND_STORE_TASK_ID;
+  static constexpr std::int32_t TASK_ID = StoreTaskID::UNBOUND_STORE_TASK_ID;
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -331,15 +340,15 @@ struct UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
 }
 
 struct AccessorTestTask : public legate::LegateTask<AccessorTestTask> {
-  static const std::int32_t TASK_ID = StoreTaskID::ACCESSOR_TASK_ID;
+  static constexpr std::int32_t TASK_ID = StoreTaskID::ACCESSOR_TASK_ID;
   static void cpu_variant(legate::TaskContext context);
 };
 
 /*static*/ void AccessorTestTask::cpu_variant(legate::TaskContext context)
 {
-  auto op_code = context.scalar(0).value<std::uint32_t>();
+  const auto op_code = context.scalar(0).value<std::uint32_t>();
+  const auto code    = static_cast<AccessorCode>(op_code);
 
-  AccessorCode code = static_cast<AccessorCode>(op_code);
   switch (code) {
     case AccessorCode::READ: {
       auto value = context.scalar(1).value<std::int64_t>();
@@ -366,7 +375,7 @@ struct AccessorTestTask : public legate::LegateTask<AccessorTestTask> {
 }
 
 struct PrimitiveArrayStoreTask : public legate::LegateTask<PrimitiveArrayStoreTask> {
-  static const std::int32_t TASK_ID = StoreTaskID::PRIMITIVE_ARRAY_STORE_TASK_ID;
+  static constexpr std::int32_t TASK_ID = StoreTaskID::PRIMITIVE_ARRAY_STORE_TASK_ID;
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -403,7 +412,7 @@ struct array_store_fn {
 }
 
 struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
-  static const std::int32_t TASK_ID = StoreTaskID::LIST_ARRAY_STORE_TASK_ID;
+  static constexpr std::int32_t TASK_ID = StoreTaskID::LIST_ARRAY_STORE_TASK_ID;
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -428,7 +437,7 @@ struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
 }
 
 struct StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
-  static const std::int32_t TASK_ID = StoreTaskID::STRING_ARRAY_STORE_TASK_ID;
+  static constexpr std::int32_t TASK_ID = StoreTaskID::STRING_ARRAY_STORE_TASK_ID;
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -786,7 +795,8 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     constexpr std::int32_t DIM = 1;
     auto logical_store         = runtime->create_store({5}, legate::int64());
     auto store                 = logical_store.get_physical_store();
-    legate::Rect<DIM> expect_rect{0, 4};
+    const legate::Rect<DIM> expect_rect{0, 4};
+
     test_bound_store<int64_t, DIM>(store, expect_rect);
   }
 #endif
@@ -795,7 +805,8 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     constexpr std::int32_t DIM = 2;
     auto logical_store         = runtime->create_store({6, 5}, legate::bool_());
     auto store                 = logical_store.get_physical_store();
-    legate::Rect<DIM> expect_rect{{0, 0}, {5, 4}};
+    const legate::Rect<DIM> expect_rect{{0, 0}, {5, 4}};
+
     test_bound_store<bool, DIM>(store, expect_rect);
   }
 #endif
@@ -804,7 +815,8 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     constexpr std::int32_t DIM = 3;
     auto logical_store         = runtime->create_store({100, 10, 1}, legate::float16());
     auto store                 = logical_store.get_physical_store();
-    legate::Rect<DIM> expect_rect{{0, 0, 0}, {99, 9, 0}};
+    const legate::Rect<DIM> expect_rect{{0, 0, 0}, {99, 9, 0}};
+
     test_bound_store<__half, DIM>(store, expect_rect);
   }
 #endif
@@ -813,7 +825,8 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     constexpr std::int32_t DIM = 4;
     auto logical_store         = runtime->create_store({7, 100, 8, 1000}, legate::complex128());
     auto store                 = logical_store.get_physical_store();
-    legate::Rect<DIM> expect_rect{{0, 0, 0, 0}, {6, 99, 7, 999}};
+    const legate::Rect<DIM> expect_rect{{0, 0, 0, 0}, {6, 99, 7, 999}};
+
     test_bound_store<complex<double>, DIM>(store, expect_rect);
   }
 #endif
@@ -822,9 +835,10 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     constexpr std::int32_t DIM = 5;
     auto logical_store         = runtime->create_store({20, 6, 4, 10, 50}, legate::uint16());
     auto store                 = logical_store.get_physical_store();
-    std::vector<legate::coord_t> lo{0, 0, 0, 0, 0};
-    std::vector<legate::coord_t> hi{19, 5, 3, 9, 49};
-    legate::Rect<DIM> expect_rect{legate::Point<5>{lo.data()}, legate::Point<5>{hi.data()}};
+    const std::vector<legate::coord_t> lo{0, 0, 0, 0, 0};
+    const std::vector<legate::coord_t> hi{19, 5, 3, 9, 49};
+    const legate::Rect<DIM> expect_rect{legate::Point<5>{lo.data()}, legate::Point<5>{hi.data()}};
+
     test_bound_store<uint16_t, DIM>(store, expect_rect);
   }
 #endif
@@ -833,9 +847,10 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     constexpr std::int32_t DIM = 6;
     auto logical_store         = runtime->create_store({1, 2, 3, 4, 5, 6}, legate::float64());
     auto store                 = logical_store.get_physical_store();
-    std::vector<legate::coord_t> lo{0, 0, 0, 0, 0, 0};
-    std::vector<legate::coord_t> hi{0, 1, 2, 3, 4, 5};
-    legate::Rect<DIM> expect_rect{legate::Point<6>{lo.data()}, legate::Point<6>{hi.data()}};
+    const std::vector<legate::coord_t> lo{0, 0, 0, 0, 0, 0};
+    const std::vector<legate::coord_t> hi{0, 1, 2, 3, 4, 5};
+    const legate::Rect<DIM> expect_rect{legate::Point<6>{lo.data()}, legate::Point<6>{hi.data()}};
+
     test_bound_store<double, DIM>(store, expect_rect);
   }
 #endif
@@ -844,9 +859,10 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     constexpr std::int32_t DIM = 7;
     auto logical_store         = runtime->create_store({7, 6, 5, 4, 3, 2, 1}, legate::complex64());
     auto store                 = logical_store.get_physical_store();
-    std::vector<legate::coord_t> lo = {0, 0, 0, 0, 0, 0, 0};
-    std::vector<legate::coord_t> hi = {6, 5, 4, 3, 2, 1, 0};
-    legate::Rect<DIM> expect_rect{legate::Point<7>{lo.data()}, legate::Point<7>{hi.data()}};
+    const std::vector<legate::coord_t> lo = {0, 0, 0, 0, 0, 0, 0};
+    const std::vector<legate::coord_t> hi = {6, 5, 4, 3, 2, 1, 0};
+    const legate::Rect<DIM> expect_rect{legate::Point<7>{lo.data()}, legate::Point<7>{hi.data()}};
+
     test_bound_store<complex<float>, DIM>(store, expect_rect);
   }
 #endif
@@ -1035,12 +1051,16 @@ TEST_F(PhysicalStoreUnit, StoreCreationLike)
     auto runtime       = legate::Runtime::get_runtime();
     auto logical_store = runtime->create_store({2, 3}, legate::int64());
     auto store         = logical_store.get_physical_store();
-    legate::PhysicalStore other1{store};
+    // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+    const legate::PhysicalStore other1{store};
+
     EXPECT_EQ(other1.dim(), store.dim());
     EXPECT_EQ(other1.type().code(), store.type().code());
     EXPECT_EQ(other1.shape<2>(), store.shape<2>());
 
-    legate::PhysicalStore other2{logical_store.get_physical_store()};
+    // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+    const legate::PhysicalStore other2{logical_store.get_physical_store()};
+
     EXPECT_EQ(other2.dim(), store.dim());
     EXPECT_EQ(other2.type().code(), store.type().code());
     EXPECT_EQ(other2.shape<2>(), store.shape<2>());
@@ -1051,12 +1071,16 @@ TEST_F(PhysicalStoreUnit, StoreCreationLike)
     auto runtime       = legate::Runtime::get_runtime();
     auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
     auto store         = logical_store.get_physical_store();
-    legate::PhysicalStore other1{store};
+    // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+    const legate::PhysicalStore other1{store};
+
     EXPECT_EQ(other1.dim(), store.dim());
     EXPECT_EQ(other1.type().code(), store.type().code());
     EXPECT_EQ(other1.shape<1>(), store.shape<1>());
 
-    legate::PhysicalStore other2{logical_store.get_physical_store()};
+    // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+    const legate::PhysicalStore other2{logical_store.get_physical_store()};
+
     EXPECT_EQ(other2.dim(), store.dim());
     EXPECT_EQ(other2.type().code(), store.type().code());
     EXPECT_EQ(other2.shape<1>(), store.shape<1>());
@@ -1070,12 +1094,15 @@ TEST_F(PhysicalStoreUnit, Assignment)
     auto runtime       = legate::Runtime::get_runtime();
     auto logical_store = runtime->create_store({2, 3}, legate::int64());
     auto store         = logical_store.get_physical_store();
-    auto other1        = store;
+    const auto other1  = store;  // NOLINT(performance-unnecessary-copy-initialization)
+
     EXPECT_EQ(other1.dim(), store.dim());
     EXPECT_EQ(other1.type().code(), store.type().code());
     EXPECT_EQ(other1.shape<2>(), store.shape<2>());
 
-    auto other2 = logical_store.get_physical_store();
+    // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+    const auto other2 = logical_store.get_physical_store();
+
     EXPECT_EQ(other2.dim(), store.dim());
     EXPECT_EQ(other2.type().code(), store.type().code());
     EXPECT_EQ(other2.shape<2>(), store.shape<2>());
@@ -1086,12 +1113,15 @@ TEST_F(PhysicalStoreUnit, Assignment)
     auto runtime       = legate::Runtime::get_runtime();
     auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
     auto store         = logical_store.get_physical_store();
-    auto other1        = store;
+    const auto other1  = store;  // NOLINT(performance-unnecessary-copy-initialization)
+
     EXPECT_EQ(other1.dim(), store.dim());
     EXPECT_EQ(other1.type().code(), store.type().code());
     EXPECT_EQ(other1.shape<1>(), store.shape<1>());
 
-    auto other2 = logical_store.get_physical_store();
+    // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+    const auto other2 = logical_store.get_physical_store();
+
     EXPECT_EQ(other2.dim(), store.dim());
     EXPECT_EQ(other2.type().code(), store.type().code());
     EXPECT_EQ(other2.shape<1>(), store.shape<1>());
@@ -1156,4 +1186,7 @@ TEST_F(PhysicalStoreUnit, FutureStoreAccessor) { test_accessor_future_store(); }
 TEST_F(PhysicalStoreUnit, FutureStoreAccessorWithTask) { test_accessors_future_store_by_task(); }
 
 TEST_F(PhysicalStoreUnit, InvalidAccessor) { test_invalid_accessor(); }
+
+// NOLINTEND(readability-magic-numbers)
+
 }  // namespace physical_store_test

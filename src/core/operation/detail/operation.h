@@ -40,7 +40,7 @@ class Operation {
   Operation(std::uint64_t unique_id, std::int32_t priority, mapping::detail::Machine machine);
 
  public:
-  enum class Kind : std::uint32_t {
+  enum class Kind : std::uint8_t {
     AUTO_TASK,
     COPY,
     FILL,

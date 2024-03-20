@@ -17,16 +17,21 @@
 
 namespace weighted {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using Integration = DefaultFixture;
 
-const char* library_name = "test_weighted";
+namespace {
 
-enum TaskIDs {
+constexpr const char library_name[] = "test_weighted";
+constexpr std::uint32_t NUM_TASKS   = 4;
+
+}  // namespace
+
+enum TaskIDs : std::uint8_t {
   INIT  = 0,
   CHECK = 3,
 };
-
-constexpr std::uint32_t NUM_TASKS = 4;
 
 struct Initializer : public legate::LegateTask<Initializer> {
   static void cpu_variant(legate::TaskContext context)
@@ -74,7 +79,6 @@ void initialize(legate::Runtime* runtime,
 {
   auto task = runtime->create_task(library, INIT, {NUM_TASKS});
 
-  std::vector<const legate::Variable*> parts;
   for (auto& output : outputs) {
     task.add_output(output);
   }
@@ -126,5 +130,7 @@ TEST_F(Integration, WeightedMultiple)
 
   test_weighted(3);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace weighted

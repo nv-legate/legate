@@ -97,6 +97,9 @@ class default_accessor {
                           store_accessor_t<LEGION_READ_ONLY, ElementType, Dim>,
                           store_accessor_t<LEGION_READ_WRITE, ElementType, Dim>>>;
 
+  // If an exception is thrown here, then we are well and truly screwed anyways, so may as well
+  // have the compiler abort
+  // NOLINTBEGIN(bugprone-exception-escape)
   template <typename ElementType, std::int32_t Dim>
   LEGATE_HOST_DEVICE [[nodiscard]] static type<ElementType, Dim> get(
     const PhysicalStore& store) noexcept
@@ -111,6 +114,7 @@ class default_accessor {
       return store.read_write_accessor<ElementType, Dim>();
     }
   }
+  // NOLINTEND(bugprone-exception-escape)
 };
 
 template <typename Op, bool Exclusive = false>
@@ -126,6 +130,9 @@ class reduction_accessor {
                                          coord_t,
                                          Realm::AffineAccessor<typename Op::RHS, Dim, coord_t>>>;
 
+  // If an exception is thrown here, then we are well and truly screwed anyways, so may as well
+  // have the compiler abort
+  // NOLINTBEGIN(bugprone-exception-escape)
   template <typename ElementType, std::int32_t Dim>
   LEGATE_HOST_DEVICE [[nodiscard]] static type<ElementType, Dim> get(
     const PhysicalStore& store) noexcept
@@ -138,6 +145,7 @@ class reduction_accessor {
       return store.reduce_accessor<Op, Exclusive, Dim>();
     }
   }
+  // NOLINTEND(bugprone-exception-escape)
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

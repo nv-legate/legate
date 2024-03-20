@@ -19,7 +19,13 @@ namespace singleton_index_task_test {
 
 using SingletonIndexTask = DefaultFixture;
 
-constexpr const char* library_name = "test_singleton_index_task";
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
+
+constexpr const char library_name[] = "test_singleton_index_task";
+
+}  // namespace
 
 struct Checker : public legate::LegateTask<Checker> {
   static const std::int32_t TASK_ID = 0;
@@ -46,5 +52,7 @@ TEST_F(SingletonIndexTask, Bug1)
   task.add_communicator("cpu");
   runtime->submit(std::move(task));
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace singleton_index_task_test

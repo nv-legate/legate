@@ -9,6 +9,8 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
+#include "core/utilities/detail/strtoll.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
 
@@ -21,14 +23,14 @@ using DeathTestExample = DeathTestFixture;
 
 void KillProcess(int /*argc*/, char** /*argv*/)
 {
-  (void)legate::start(0, NULL);
+  (void)legate::start(0, nullptr);
   std::abort();
 }
 
 TEST_F(DeathTestExample, Simple)
 {
-  auto value           = std::getenv("REALM_BACKTRACE");
-  bool realm_backtrace = value != nullptr && atoi(value) != 0;
+  const auto value           = std::getenv("REALM_BACKTRACE");
+  const bool realm_backtrace = value != nullptr && legate::detail::safe_strtoll(value) != 0;
 
   if (realm_backtrace) {
     // We can't check that the subprocess dies with SIGABRT when we run with REALM_BACKTRACE=1,

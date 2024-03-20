@@ -21,7 +21,7 @@ using ManualTask = DefaultFixture;
 
 namespace {
 
-constexpr const char* library_name          = "test_manual_task_proj";
+constexpr const char library_name[]         = "test_manual_task_proj";
 constexpr const std::size_t DIM_EXTENT      = 32;
 constexpr const std::size_t N_TILES_PER_DIM = 2;
 
@@ -71,8 +71,8 @@ TEST_F(ManualTask, Proj)
   }
   // With a launch domain
   {
-    legate::Domain launch_domain{legate::Point<2>{1, 1},
-                                 legate::Point<2>{N_TILES_PER_DIM - 1, N_TILES_PER_DIM - 1}};
+    const legate::Domain launch_domain{legate::Point<2>{1, 1},
+                                       legate::Point<2>{N_TILES_PER_DIM - 1, N_TILES_PER_DIM - 1}};
     auto task = runtime->create_task(library, ProjTesterTask::TASK_ID, launch_domain);
     task.add_input(row_wise, legate::SymbolicPoint{legate::dimension(0), legate::constant(0)});
     task.add_input(col_wise, legate::SymbolicPoint{legate::constant(0), legate::dimension(1)});

@@ -17,16 +17,19 @@
 
 namespace req_analyzer {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using ReqAnalyzer = DefaultFixture;
 
-static const char* library_name = "test_req_analyzer";
+namespace {
 
-enum TaskIDs {
-  TESTER = 0,
-};
+constexpr const char library_name[] = "test_req_analyzer";
+
+}  // namespace
 
 struct Tester : public legate::LegateTask<Tester> {
-  static const std::int32_t TASK_ID = TESTER;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto inputs  = context.inputs();
@@ -60,10 +63,10 @@ void test_inout_store()
 
   auto store1 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
-  runtime->issue_fill(store1, legate::Scalar(int64_t{0}));
-  runtime->issue_fill(store2, legate::Scalar(int64_t{0}));
+  runtime->issue_fill(store1, legate::Scalar{std::int64_t{0}});
+  runtime->issue_fill(store2, legate::Scalar{std::int64_t{0}});
 
-  auto task  = runtime->create_task(context, TESTER);
+  auto task  = runtime->create_task(context, Tester::TASK_ID);
   auto part1 = task.add_input(store1);
   auto part2 = task.add_input(store2);
   task.add_output(store1);
@@ -77,12 +80,12 @@ void test_isomorphic_transformed_stores()
   auto context = runtime->find_library(library_name);
 
   auto store = runtime->create_store(legate::Shape{10}, legate::int64());
-  runtime->issue_fill(store, legate::Scalar(int64_t{0}));
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
 
   // Create aliased stores that are semantically equivalent
   auto promoted1 = store.promote(1, 5);
   auto promoted2 = store.promote(1, 5);
-  auto task      = runtime->create_task(context, TESTER);
+  auto task      = runtime->create_task(context, Tester::TASK_ID);
   task.add_input(promoted1);
   task.add_output(promoted2);
   runtime->submit(std::move(task));
@@ -99,5 +102,7 @@ TEST_F(ReqAnalyzer, IsomorphicTransformedStores)
   prepare();
   test_isomorphic_transformed_stores();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace req_analyzer

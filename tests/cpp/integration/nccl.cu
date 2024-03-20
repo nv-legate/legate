@@ -23,7 +23,11 @@ namespace nccl {
 
 using Integration = DefaultFixture;
 
-const char* library_name = "test_nccl";
+namespace {
+
+constexpr const char library_name[] = "test_nccl";
+
+}  // namespace
 
 enum TaskIDs {
   NCCL_TESTER = 0,

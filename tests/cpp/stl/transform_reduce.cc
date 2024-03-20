@@ -23,6 +23,8 @@ namespace stl = legate::stl;
 
 namespace {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 struct square {
   template <class T>
   LEGATE_HOST_DEVICE T operator()(T x) const
@@ -37,13 +39,13 @@ void TestTransformReduce1D()
 
   // fill the store with data
   auto elems = stl::elements_of(store);
-  std::iota(elems.begin(), elems.end(), std::int64_t(1));
+  std::iota(elems.begin(), elems.end(), std::int64_t{1});
 
   // sum the squared elements
   auto result = stl::transform_reduce(store,  //
-                                      stl::scalar(std::int64_t(0)),
-                                      std::plus(),
-                                      square());
+                                      stl::scalar(std::int64_t{0}),
+                                      std::plus<>{},
+                                      square{});
 
   auto result_span = stl::as_mdspan(result);
   auto&& value     = result_span();
@@ -64,11 +66,11 @@ void TestTransformReduce2D()
 
   // Reduce by rows
   {
-    auto init   = stl::create_store({4}, std::int64_t(0));
+    auto init   = stl::create_store({4}, std::int64_t{0});
     auto result = stl::transform_reduce(stl::rows_of(store),  //
                                         init,
-                                        stl::elementwise(std::plus()),
-                                        stl::elementwise(square()));
+                                        stl::elementwise(std::plus<>{}),
+                                        stl::elementwise(square{}));
 
     auto result_span = stl::as_mdspan(result);
     EXPECT_EQ(result_span.rank(), 1);
@@ -81,8 +83,8 @@ void TestTransformReduce2D()
 
   // Reduce by columns
   {
-    auto init        = stl::create_store({3}, std::int64_t(0));
-    auto result      = stl::reduce(stl::columns_of(store), init, stl::elementwise(std::plus<>()));
+    auto init        = stl::create_store({3}, std::int64_t{0});
+    auto result      = stl::reduce(stl::columns_of(store), init, stl::elementwise(std::plus<>{}));
     auto result_span = stl::as_mdspan(result);
     EXPECT_EQ(result_span.rank(), 1);
     EXPECT_EQ(result_span.extent(0), 3);
@@ -91,6 +93,8 @@ void TestTransformReduce2D()
     EXPECT_EQ(result_span(2), 8);
   }
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace
 

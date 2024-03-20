@@ -19,16 +19,19 @@
 
 namespace inline_map {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using InlineMap = DefaultFixture;
 
-static const char* library_name = "test_inline_map";
+namespace {
 
-enum TaskOpCode {
-  ADDER,
-};
+constexpr const char library_name[] = "test_inline_map";
+
+}  // namespace
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
-  static const std::int32_t TASK_ID = ADDER;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
@@ -80,7 +83,7 @@ void test_inline_map_and_task()
     auto acc     = p_store.write_accessor<int64_t, 1>();
     acc[2]       = 42;
   }
-  auto task = runtime->create_task(context, ADDER, {1});
+  auto task = runtime->create_task(context, AdderTask::TASK_ID, {1});
   task.add_input(l_store);
   task.add_output(l_store);
   runtime->submit(std::move(task));
@@ -98,5 +101,7 @@ TEST_F(InlineMap, WithTask)
   register_tasks();
   test_inline_map_and_task();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace inline_map

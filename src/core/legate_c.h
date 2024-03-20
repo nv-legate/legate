@@ -21,7 +21,8 @@
 #include <cstdint>
 #endif
 
-// NOLINTBEGIN(modernize-use-using)
+// We cannot specify enum types here since these declarations are supposed to be c-compatible
+// NOLINTBEGIN(modernize-use-using, performance-enum-size)
 typedef enum legate_core_task_id_t {
   LEGATE_CORE_TOPLEVEL_TASK_ID,
   LEGATE_CORE_EXTRACT_SCALAR_TASK_ID,
@@ -144,7 +145,7 @@ typedef enum legate_core_task_priority_t {
   LEGATE_CORE_DEFAULT_TASK_PRIORITY = 0,
 } legate_core_task_priority_t;
 
-// NOLINTEND(modernize-use-using)
+// NOLINTEND(modernize-use-using, performance-enum-size)
 
 #ifdef __cplusplus
 extern "C" {

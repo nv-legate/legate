@@ -19,20 +19,20 @@ namespace dispatch_test {
 
 using DispatchTest = DefaultFixture;
 
-const std::vector<legate::Type::Code> PRIMITIVE_TYPE_CODE = {legate::Type::Code::BOOL,
-                                                             legate::Type::Code::INT8,
-                                                             legate::Type::Code::INT16,
-                                                             legate::Type::Code::INT32,
-                                                             legate::Type::Code::INT64,
-                                                             legate::Type::Code::UINT8,
-                                                             legate::Type::Code::UINT16,
-                                                             legate::Type::Code::UINT32,
-                                                             legate::Type::Code::UINT64,
-                                                             legate::Type::Code::FLOAT16,
-                                                             legate::Type::Code::FLOAT32,
-                                                             legate::Type::Code::FLOAT64,
-                                                             legate::Type::Code::COMPLEX64,
-                                                             legate::Type::Code::COMPLEX128};
+constexpr std::array<legate::Type::Code, 14> PRIMITIVE_TYPE_CODE = {legate::Type::Code::BOOL,
+                                                                    legate::Type::Code::INT8,
+                                                                    legate::Type::Code::INT16,
+                                                                    legate::Type::Code::INT32,
+                                                                    legate::Type::Code::INT64,
+                                                                    legate::Type::Code::UINT8,
+                                                                    legate::Type::Code::UINT16,
+                                                                    legate::Type::Code::UINT32,
+                                                                    legate::Type::Code::UINT64,
+                                                                    legate::Type::Code::FLOAT16,
+                                                                    legate::Type::Code::FLOAT32,
+                                                                    legate::Type::Code::FLOAT64,
+                                                                    legate::Type::Code::COMPLEX64,
+                                                                    legate::Type::Code::COMPLEX128};
 
 struct DoubleDispatchData {
   std::int32_t data1;
@@ -146,7 +146,8 @@ TEST_F(DispatchTest, DoubleDispatchWithDims)
 TEST_F(DispatchTest, DimDispatch)
 {
   for (std::int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
-    auto scalar = legate::Scalar(idx);
+    auto scalar = legate::Scalar{idx};
+
     legate::dim_dispatch(idx, dim_dispatch_fn{}, scalar);
   }
 
@@ -160,9 +161,9 @@ TEST_F(DispatchTest, DimDispatch)
 
 TEST_F(DispatchTest, TypeDispatch)
 {
-  for (std::size_t idx = 0; idx < PRIMITIVE_TYPE_CODE.size(); ++idx) {
-    auto code   = PRIMITIVE_TYPE_CODE.at(idx);
-    auto scalar = legate::Scalar(static_cast<std::uint32_t>(code));
+  for (auto code : PRIMITIVE_TYPE_CODE) {
+    auto scalar = legate::Scalar{static_cast<std::uint32_t>(code)};
+
     legate::type_dispatch(code, type_dispatch_fn{}, scalar);
   }
 

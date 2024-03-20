@@ -23,7 +23,7 @@ namespace legate::detail {
 
 class Shape {
  private:
-  enum class State : std::uint64_t {
+  enum class State : std::uint8_t {
     UNBOUND,
     BOUND,
     READY,

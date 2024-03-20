@@ -33,8 +33,8 @@ template <typename CvrefInput,
     && legate_reduction<as_reduction_t<BinaryReduction, element_type_of_t<Init>>>)  //
 [[nodiscard]] auto transform_reduce(CvrefInput&& input,
                                     Init&& init,
-                                    BinaryReduction red,
-                                    UnaryTransform transform)
+                                    BinaryReduction&& red,
+                                    UnaryTransform&& transform)
   -> logical_store<value_type_of_t<Init>, dim_of_v<Init>>
 {
   // Check that the operations are trivially relocatable
@@ -47,14 +47,16 @@ template <typename CvrefInput,
   using InputPolicy     = typename std::remove_reference_t<CvrefInput>::policy;
   using TransformResult = value_type_of_t<call_result_t<UnaryTransform, Reference>>;
 
+  // NOLINTNEXTLINE(misc-const-correctness)
   as_range_t<CvrefInput> input_rng = as_range(std::forward<CvrefInput>(input));
 
   auto result = stl::slice_as<InputPolicy>(
     stl::create_store<TransformResult, dim_of_v<CvrefInput>>(input_rng.base().extents()));
 
-  stl::transform(std::forward<as_range_t<CvrefInput>>(input_rng), result, std::move(transform));
+  stl::transform(std::move(input_rng), result, std::forward<UnaryTransform>(transform));
 
-  return stl::reduce(result, std::forward<Init>(init), std::move(red));
+  return stl::reduce(
+    std::move(result), std::forward<Init>(init), std::forward<BinaryReduction>(red));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,8 +72,8 @@ template <typename CvrefInput1,
 [[nodiscard]] auto transform_reduce(CvrefInput1&& input1,
                                     CvrefInput2&& input2,
                                     Init&& init,
-                                    BinaryReduction red,
-                                    BinaryTransform transform)
+                                    BinaryReduction&& red,
+                                    BinaryTransform&& transform)
   -> logical_store<element_type_of_t<Init>, dim_of_v<Init>>
 {
   // Check that the operations are trivially relocatable
@@ -101,9 +103,10 @@ template <typename CvrefInput1,
   stl::transform(std::forward<as_range_t<CvrefInput1>>(input_rng1),
                  std::forward<as_range_t<CvrefInput2>>(input_rng2),
                  result,
-                 std::move(transform));
+                 std::forward<BinaryTransform>(transform));
 
-  return stl::reduce(result, std::forward<Init>(init), std::move(red));
+  return stl::reduce(
+    std::move(result), std::forward<Init>(init), std::forward<BinaryReduction>(red));
 }
 
 }  // namespace legate::stl

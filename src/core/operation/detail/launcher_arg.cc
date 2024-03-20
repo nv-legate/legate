@@ -95,7 +95,7 @@ void FutureStoreArg::analyze(StoreAnalyzer& analyzer)
 
 void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::BASE));
+  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::BASE));
   data_->pack(buffer, analyzer);
 
   const bool nullable = null_mask_ != nullptr;
@@ -134,7 +134,7 @@ void BaseArrayArg::perform_invalidations() const
 
 void ListArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::LIST));
+  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::LIST));
   type_->pack(buffer);
   descriptor_->pack(buffer, analyzer);
   vardata_->pack(buffer, analyzer);
@@ -165,7 +165,7 @@ void ListArrayArg::perform_invalidations() const
 
 void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::STRUCT));
+  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::STRUCT));
   type_->pack(buffer);
 
   const bool nullable = null_mask_ != nullptr;

@@ -28,8 +28,10 @@ inline std::uint64_t ReturnedCppException::size() const
   return static_cast<std::uint64_t>(message_.size());
 }
 
+// NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline bool ReturnedCppException::raised() const { return !message_.empty(); }
 
+// NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline constexpr ExceptionKind ReturnedCppException::kind() { return ExceptionKind::CPP; }
 
 }  // namespace legate::detail

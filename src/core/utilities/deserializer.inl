@@ -162,14 +162,14 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
         // we have aligned the pointer, but we cannot align the pointer without knowing the
         // true size of the string... so we give a lower bound
         return detail::align_for_unpack<std::byte>(
-          ptr, capacity, sizeof(uint32_t) + sizeof(char), alignof(std::max_align_t));
+          ptr, capacity, sizeof(std::uint32_t) + sizeof(char), alignof(std::max_align_t));
       case Type::Code::LIST:
         // don't know how to handle these yet
         break;
         // do not add a default clause! compilers will warn about missing enum values if there is
         // ever a new value added to Type::Code. We want to catch that!
     }
-    LEGATE_ABORT("unhandled type code: " << static_cast<int>(ty->code));
+    LEGATE_ABORT("unhandled type code: " << legate::traits::detail::to_underlying(ty->code));
     return {nullptr, 0};
   };
 
@@ -197,10 +197,12 @@ void BaseDeserializer<Deserializer>::_unpack(mapping::ProcessorRange& value)
 template <typename Deserializer>
 void BaseDeserializer<Deserializer>::_unpack(mapping::detail::Machine& value)
 {
-  value.preferred_target = unpack<mapping::TaskTarget>();
-  auto num_ranges        = unpack<std::uint32_t>();
+  value.preferred_target =
+    static_cast<mapping::TaskTarget>(unpack<std::underlying_type_t<mapping::TaskTarget>>());
+  auto num_ranges = unpack<std::uint32_t>();
   for (std::uint32_t idx = 0; idx < num_ranges; ++idx) {
-    auto kind  = unpack<mapping::TaskTarget>();
+    auto kind =
+      static_cast<mapping::TaskTarget>(unpack<std::underlying_type_t<mapping::TaskTarget>>());
     auto range = unpack<mapping::ProcessorRange>();
     if (!range.empty()) {
       value.processor_ranges.insert({kind, range});
@@ -275,7 +277,7 @@ InternalSharedPtr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack
 template <typename Deserializer>
 InternalSharedPtr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
 {
-  auto code = static_cast<Type::Code>(unpack<std::int32_t>());
+  auto code = static_cast<Type::Code>(unpack<std::underlying_type_t<Type::Code>>());
   switch (code) {
     case Type::Code::FIXED_ARRAY: {
       auto uid  = unpack<std::uint32_t>();
@@ -358,7 +360,7 @@ InternalSharedPtr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
     }
     default: break;
   }
-  LEGATE_ABORT("unhandled type code: " << static_cast<int>(code));
+  LEGATE_ABORT("unhandled type code: " << legate::traits::detail::to_underlying(code));
   return {};
 }
 

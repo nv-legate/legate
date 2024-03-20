@@ -18,9 +18,11 @@
 
 namespace manual_task_test {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using ManualTask = DefaultFixture;
 
-void test_auto_task(legate::Library library, legate::LogicalStore store)
+void test_auto_task(legate::Library library, const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, task::simple::HELLO);
@@ -29,7 +31,7 @@ void test_auto_task(legate::Library library, legate::LogicalStore store)
   runtime->submit(std::move(task));
 }
 
-void test_manual_task(legate::Library library, legate::LogicalStore store)
+void test_manual_task(legate::Library library, const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task =
@@ -39,14 +41,14 @@ void test_manual_task(legate::Library library, legate::LogicalStore store)
   runtime->submit(std::move(task));
 }
 
-void validate_store(legate::LogicalStore store)
+void validate_store(const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   static_cast<void>(runtime);
   auto p_store = store.get_physical_store();
-  auto acc     = p_store.read_accessor<int64_t, 2>();
+  auto acc     = p_store.read_accessor<std::int64_t, 2>();
   auto shape   = p_store.shape<2>();
-  for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
+  for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
     auto p = *it;
     EXPECT_EQ(acc[p], p[0] + p[1] * 1000);
   }
@@ -73,7 +75,7 @@ TEST_F(ManualTask, Invalid)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(task::simple::library_name);
 
-  auto scalar_store  = runtime->create_store(legate::Scalar(1));
+  auto scalar_store  = runtime->create_store(legate::Scalar{1});
   auto unbound_store = runtime->create_store(legate::int64(), 1);
 
   auto task =
@@ -83,5 +85,7 @@ TEST_F(ManualTask, Invalid)
   EXPECT_THROW(task.add_reduction(unbound_store, legate::ReductionOpKind::ADD),
                std::invalid_argument);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace manual_task_test

@@ -17,15 +17,21 @@
 
 namespace broadcast_constraints {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using Broadcast = DefaultFixture;
 
-static const char* library_name = "test_broadcast_constraints";
+namespace {
+
+constexpr const char library_name[] = "test_broadcast_constraints";
 
 constexpr std::size_t EXT_SMALL = 10;
 constexpr std::size_t EXT_LARGE = 100;
 
 constexpr std::int32_t TESTER      = 0;
 constexpr std::int32_t INITIALIZER = 1;
+
+}  // namespace
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
   static void cpu_variant(legate::TaskContext context)
@@ -150,5 +156,7 @@ TEST_F(Broadcast, Invalid)
   prepare();
   test_invalid_broadcast();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace broadcast_constraints

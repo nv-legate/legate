@@ -24,15 +24,16 @@ using Alignment       = DefaultFixture;
 using Broadcast       = DefaultFixture;
 using ImageConstraint = DefaultFixture;
 
-static const char* library_name = "test_constraints";
+namespace {
 
-enum TaskIDs {
-  INIT = 0,
-};
+constexpr const char library_name[] = "test_constraints";
+
+}  // namespace
 
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
-  static const std::int32_t TASK_ID = INIT;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -54,7 +55,7 @@ TEST_F(Variable, BasicMethods)
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, INIT);
+  auto task    = runtime->create_task(context, Initializer::TASK_ID);
 
   // Test basic properties
   auto part     = task.declare_partition();
@@ -89,7 +90,7 @@ TEST_F(Alignment, BasicMethods)
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, INIT);
+  auto task    = runtime->create_task(context, Initializer::TASK_ID);
 
   auto part1 = task.declare_partition();
   auto part2 = task.declare_partition();
@@ -117,7 +118,7 @@ TEST_F(Broadcast, BasicMethods)
 
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, INIT);
+  auto task    = runtime->create_task(context, Initializer::TASK_ID);
   auto part1   = task.declare_partition();
 
   auto dims      = legate::from_range<std::uint32_t>(3);
@@ -142,7 +143,7 @@ TEST_F(ImageConstraint, BasicMethods)
 
   auto runtime    = legate::Runtime::get_runtime();
   auto context    = runtime->find_library(library_name);
-  auto task       = runtime->create_task(context, INIT);
+  auto task       = runtime->create_task(context, Initializer::TASK_ID);
   auto part_func  = task.declare_partition();
   auto part_range = task.declare_partition();
 

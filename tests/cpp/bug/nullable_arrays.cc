@@ -19,7 +19,7 @@ namespace unbound_nullable_array_test {
 
 using UnboundNullableArray = DefaultFixture;
 
-constexpr const char* library_name = "test_unbound_nullable_array_test";
+constexpr const char library_name[] = "test_unbound_nullable_array_test";
 
 struct Initialize : public legate::LegateTask<Initialize> {
   static const std::int32_t TASK_ID = 0;

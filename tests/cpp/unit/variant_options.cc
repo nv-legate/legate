@@ -40,7 +40,7 @@ TEST_F(VariantOptions, Basic)
   options.with_concurrent(true);
   EXPECT_EQ(options.concurrent, true);
 
-  options.with_return_size(256);
+  options.with_return_size(256);  // NOLINT(readability-magic-numbers)
   EXPECT_EQ(options.return_size, 256);
 }
 

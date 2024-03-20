@@ -238,7 +238,7 @@ Weighted::~Weighted()
   if (!detail::Runtime::get_runtime()->initialized()) {
     // FIXME: Leak the FutureMap handle if the runtime has already shut down, as there's no hope
     // that this would be collected by the Legion runtime
-    static_cast<void>(weights_.release());
+    static_cast<void>(weights_.release());  // NOLINT(bugprone-unused-return-value)
   }
 }
 

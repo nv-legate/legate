@@ -41,7 +41,7 @@ class Variable;
 
 class Storage : public legate::EnableSharedFromThis<Storage> {
  public:
-  enum class Kind : std::int32_t {
+  enum class Kind : std::uint8_t {
     REGION_FIELD,
     FUTURE,
   };

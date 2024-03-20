@@ -25,13 +25,14 @@ TEST_F(ScopeFailUnit, Construct)
     void operator()() noexcept {}
   };
 
-  legate::ScopeFail<Callable> guard{Callable{}};
+  const legate::ScopeFail<Callable> guard{Callable{}};
   // nothing to do...
 }
 
 TEST_F(ScopeFailUnit, ConstructFromHelper)
 {
-  auto guard = legate::make_scope_fail([]() noexcept {});
+  // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
+  const auto guard = legate::make_scope_fail([]() noexcept {});
   // nothing to do
 }
 
@@ -39,7 +40,8 @@ TEST_F(ScopeFailUnit, ConstructAndExecute)
 {
   auto executed = false;
   {
-    auto guard = legate::make_scope_fail([&]() noexcept { executed = true; });
+    // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
+    const auto guard = legate::make_scope_fail([&]() noexcept { executed = true; });
 
     // ensure that func was never run
     EXPECT_FALSE(executed);
@@ -51,7 +53,8 @@ TEST_F(ScopeFailUnit, ConstructAndExecuteThrow)
 {
   auto executed = false;
   try {
-    auto guard = legate::make_scope_fail([&]() noexcept { executed = true; });
+    // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
+    const auto guard = legate::make_scope_fail([&]() noexcept { executed = true; });
 
     // ensure that func was never run
     EXPECT_FALSE(executed);
@@ -68,9 +71,10 @@ TEST_F(ScopeFailUnit, ConstructAndExecuteUnrelatedThrow)
   auto executed         = false;
   auto caught_outer_exn = false;
   try {
-    auto guard      = legate::make_scope_fail([&]() noexcept { executed = true; });
-    auto thrower    = [] { throw std::runtime_error{"from inside lambda"}; };
-    auto caught_exn = false;
+    // NOLINTNEXTLINE(clang-analyzer-deadcode.DeadStores)
+    const auto guard = legate::make_scope_fail([&]() noexcept { executed = true; });
+    auto thrower     = [] { throw std::runtime_error{"from inside lambda"}; };
+    auto caught_exn  = false;
 
     try {
       thrower();

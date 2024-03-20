@@ -171,6 +171,8 @@ class logical_store : private legate::LogicalStore {
   [[nodiscard]] static LogicalStore create(std::span<const std::size_t, Dim> exts)
   {
     Runtime* runtime = legate::Runtime::get_runtime();
+    // create_store() takes const-ref for now, but may not always be the case
+    // NOLINTNEXTLINE(misc-const-correctness)
     Shape shape({exts.begin(), exts.end()});
     return runtime->create_store(std::move(shape), primitive_type(type_code_of<ElementType>));
   }
@@ -321,6 +323,8 @@ template <typename ElementType, std::int32_t Dim>
 LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
   const legate::PhysicalStore& store)
 {
+  // These can all be *sometimes* moved.
+  // NOLINTBEGIN(misc-const-correctness)
   using Mapping = std::layout_right::mapping<std::dextents<coord_t, Dim>>;
   Mapping mapping{detail::dynamic_extents<Dim>(store)};
 
@@ -329,6 +333,7 @@ LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
 
   using Handle = typename Accessor::data_handle_type;
   Handle handle{};
+  // NOLINTEND(misc-const-correctness)
 
   return {std::move(handle), std::move(mapping), std::move(accessor)};
 }

@@ -36,6 +36,7 @@ function(legate_core_add_tidy_target)
   if (NOT _TIDY_SOURCES)
     message(FATAL_ERROR "Must provide SOURCES option")
   endif()
+  list(REMOVE_DUPLICATES _TIDY_SOURCES)
 
   macro(search_for_program VARIABLE_NAME PROGRAM_NAME)
     if (${VARIABLE_NAME})

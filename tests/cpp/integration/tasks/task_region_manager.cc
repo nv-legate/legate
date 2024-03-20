@@ -12,9 +12,7 @@
 
 #include "task_region_manager.h"
 
-namespace task {
-
-namespace region_manager {
+namespace task::region_manager {
 
 /*static*/ void TesterTask::cpu_variant(legate::TaskContext context)
 {
@@ -31,10 +29,9 @@ void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->create_library(library_name);
-  auto options = legate::VariantOptions{}.with_return_size(8192);
+  auto options =
+    legate::VariantOptions{}.with_return_size(8192);  // NOLINT(readability-magic-numbers)
   TesterTask::register_variants(context, {{LEGATE_CPU_VARIANT, options}});
 }
 
-}  // namespace region_manager
-
-}  // namespace task
+}  // namespace task::region_manager

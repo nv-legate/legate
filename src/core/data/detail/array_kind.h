@@ -16,7 +16,7 @@
 
 namespace legate::detail {
 
-enum class ArrayKind : std::int32_t {
+enum class ArrayKind : std::uint8_t {
   BASE   = 0,
   LIST   = 1,
   STRUCT = 2,

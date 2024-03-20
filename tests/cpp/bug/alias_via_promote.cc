@@ -19,7 +19,13 @@ namespace alias_via_promote_test {
 
 using AliasViaPromote = DefaultFixture;
 
-constexpr const char* library_name = "test_alias_via_promote";
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
+
+constexpr const char library_name[] = "test_alias_via_promote";
+
+}  // namespace
 
 struct Checker : public legate::LegateTask<Checker> {
   static const std::int32_t TASK_ID = 0;
@@ -40,5 +46,7 @@ TEST_F(AliasViaPromote, Bug1)
   task.add_constraint(legate::broadcast(part1, {0}));
   runtime->submit(std::move(task));
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace alias_via_promote_test

@@ -93,6 +93,8 @@ std::vector<std::int32_t> DimOrdering::dimensions() const { return impl_->dims; 
 
 bool DimOrdering::operator==(const DimOrdering& other) const { return *impl_ == *other.impl_; }
 
+bool DimOrdering::operator!=(const DimOrdering& other) const { return !(*this == other); }
+
 DimOrdering::~DimOrdering() noexcept = default;
 
 bool InstanceMappingPolicy::subsumes(const InstanceMappingPolicy& other) const

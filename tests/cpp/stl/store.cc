@@ -20,6 +20,8 @@ using STL = LegateSTLFixture;
 
 namespace stl = legate::stl;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 TEST_F(STL, Test1DStore)
 {
   auto store  = stl::create_store<std::int64_t>({4});
@@ -130,24 +132,29 @@ TEST_F(STL, Constructors)
   static_assert(!std::is_default_constructible_v<stl::logical_store<int, 1>>);
   static_assert(!std::is_default_constructible_v<stl::logical_store<int, 2>>);
 
-  stl::logical_store<int, 0> store0{{}};
-  stl::logical_store<int, 0> store1{{}, 42};
-  stl::logical_store store2{{}, 42};
+  const stl::logical_store<int, 0> store0{{}};
+  const stl::logical_store<int, 0> store1{{}, 42};
+  const stl::logical_store store2{{}, 42};
+
   EXPECT_EQ(store2.dim(), 0);
   EXPECT_EQ(stl::as_mdspan(store2)(), 42);
 
-  stl::logical_store<int, 1> store3{{100}};
-  stl::logical_store<int, 1> store4{{100}, 42};
-  stl::logical_store store5{{100}, 42};
+  const stl::logical_store<int, 1> store3{{100}};
+  const stl::logical_store<int, 1> store4{{100}, 42};
+  const stl::logical_store store5{{100}, 42};
+
   EXPECT_EQ(store5.dim(), 1);
   EXPECT_EQ(store5.extents()[0], 100);
   EXPECT_EQ(stl::as_mdspan(store5)(0), 42);
 
-  stl::logical_store<int, 2> store6{{100, 200}};
-  stl::logical_store<int, 2> store7{{100, 200}, 42};
-  stl::logical_store store8{{100, 200}, 42};
+  const stl::logical_store<int, 2> store6{{100, 200}};
+  const stl::logical_store<int, 2> store7{{100, 200}, 42};
+  const stl::logical_store store8{{100, 200}, 42};
+
   EXPECT_EQ(store8.dim(), 2);
   EXPECT_EQ(store8.extents()[0], 100);
   EXPECT_EQ(store8.extents()[1], 200);
   EXPECT_EQ(stl::as_mdspan(store8)(0, 0), 42);
 }
+
+// NOLINTEND(readability-magic-numbers)

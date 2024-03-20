@@ -107,10 +107,10 @@ std::string Machine::to_string() const
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(preferred_target));
+  buffer.pack(legate::traits::detail::to_underlying(preferred_target));
   buffer.pack<std::uint32_t>(processor_ranges.size());
   for (auto& [target, processor_range] : processor_ranges) {
-    buffer.pack<std::int32_t>(static_cast<std::int32_t>(target));
+    buffer.pack(legate::traits::detail::to_underlying(target));
     buffer.pack<std::uint32_t>(processor_range.low);
     buffer.pack<std::uint32_t>(processor_range.high);
     buffer.pack<std::uint32_t>(processor_range.per_node_count);
@@ -365,7 +365,7 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     case StoreTarget::FBMEM: return frame_buffers_.at(proc);
     case StoreTarget::ZCMEM: return zerocopy_memory_;
     case StoreTarget::SOCKETMEM: return socket_memories_.at(proc);
-    default: LEGATE_ABORT("invalid StoreTarget: " << static_cast<int>(target));
+    default: LEGATE_ABORT("invalid StoreTarget: " << legate::traits::detail::to_underlying(target));
   }
   return Legion::Memory::NO_MEMORY;
 }

@@ -22,7 +22,11 @@ namespace field_reuse {
 
 using Integration = DefaultFixture;
 
-static const char* library_name = "field_reuse";
+namespace {
+
+constexpr const char library_name[] = "field_reuse";
+
+}  // namespace
 
 void register_tasks()
 {
@@ -34,14 +38,15 @@ void register_tasks()
 void check_field_is_new(Legion::FieldID fid)
 {
   static std::set<Legion::FieldID> unique_fields;
-  std::size_t prev_size = unique_fields.size();
+  const auto prev_size = unique_fields.size();
+
   unique_fields.insert(fid);
   EXPECT_EQ(unique_fields.size(), prev_size + 1);
 }
 
 TEST_F(Integration, FieldReuse)
 {
-  // TODO: Also test the reuse of a field originally returned by an unbounded-output task.
+  // TODO(wonchanl): Also test the reuse of a field originally returned by an unbounded-output task.
 
   auto runtime = legate::Runtime::get_runtime();
   register_tasks();
@@ -49,20 +54,22 @@ TEST_F(Integration, FieldReuse)
   static_cast<void>(context);
 
   Legion::Runtime* legion_runtime = Legion::Runtime::get_runtime();
-  Legion::Context legion_context  = legion_runtime->get_context();
-  Legion::ShardID sid             = legion_runtime->get_shard_id(legion_context, true);
+  Legion::Context legion_context  = Legion::Runtime::get_context();
+  const Legion::ShardID sid       = legion_runtime->get_shard_id(legion_context, true);
   std::vector<legate::LogicalStore> shard_local_stores;
 
   if (legion_runtime->get_num_shards(legion_context, true) < 2) {
     return;
   }
 
-  std::uint32_t field_reuse_freq = runtime->impl()->field_reuse_freq();
+  const std::uint32_t field_reuse_freq = runtime->impl()->field_reuse_freq();
   EXPECT_GE(field_reuse_freq, 7);  // otherwise the consensus match would be triggered too early
   std::uint32_t num_allocations = 0;
   auto make_store               = [&]() {
+    constexpr auto SHAPE_SIZE = 5;
+
     ++num_allocations;
-    return runtime->create_store(legate::Shape{5, 5}, legate::int64());
+    return runtime->create_store(legate::Shape{SHAPE_SIZE, SHAPE_SIZE}, legate::int64());
   };
 
   // A Store freed in-order will be reused immediately.
@@ -164,7 +171,7 @@ TEST_F(Integration, FieldReuse)
 
   // No more in-order-freed fields remain, so we will block on the consensus match. The next three
   // allocations should reuse fid3, fid4 and fid5, but in an undefined order.
-  std::vector<legate::LogicalStore> stores345 = {make_store(), make_store(), make_store()};
+  const auto stores345 = {make_store(), make_store(), make_store()};
   std::set<Legion::FieldID> fields345;
   for (const auto& store : stores345) {
     fields345.insert(store.impl()->get_region_field()->field_id());
@@ -172,8 +179,8 @@ TEST_F(Integration, FieldReuse)
   EXPECT_TRUE(fields345.count(fid3) && fields345.count(fid4) && fields345.count(fid5));
 
   // The next allocation will need to create a new field.
-  auto store8          = make_store();
-  Legion::FieldID fid8 = store8.impl()->get_region_field()->field_id();
+  auto store8                = make_store();
+  const Legion::FieldID fid8 = store8.impl()->get_region_field()->field_id();
   check_field_is_new(fid8);
 }
 

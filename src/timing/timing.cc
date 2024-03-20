@@ -32,7 +32,7 @@ class Time::Impl {
     if (!detail::Runtime::get_runtime()->initialized()) {
       // Leak the Future handle if the runtime has already shut down, as there's no hope that
       // this would be collected by the Legion runtime
-      static_cast<void>(future_.release());
+      static_cast<void>(future_.release());  // NOLINT(bugprone-unused-return-value)
     }
   }
 

@@ -76,7 +76,7 @@ class elementwise : private Function {
   elementwise() = default;
   explicit elementwise(Function fn) : Function{std::move(fn)} {}
 
-  const Function& function() const noexcept { return *this; }
+  [[nodiscard]] const Function& function() const noexcept { return *this; }
 
   template <typename InputSpan, typename... InputSpans>
   LEGATE_HOST_DEVICE [[nodiscard]] auto operator()(InputSpan&& head, InputSpans&&... tail) const
@@ -95,10 +95,13 @@ class elementwise : private Function {
     using ElementwiseSpan =
       elementwise_span<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>;
 
+    // These can *sometimes* be moved
+    // NOLINTBEGIN(misc-const-correctness)
     Mapping mapping{head.extents()};
     Accessor accessor{function(),
                       stl::as_mdspan(std::forward<InputSpan>(head)),
                       stl::as_mdspan(std::forward<InputSpans>(tail))...};
+    // NOLINTEND(misc-const-correctness)
     return ElementwiseSpan{0, std::move(mapping), std::move(accessor)};
   }
 };

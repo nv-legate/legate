@@ -52,7 +52,7 @@ void BasePhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& r
 
 void BasePhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
-  return data_->check_shape_dimension(dim);
+  data_->check_shape_dimension(dim);
 }
 
 bool ListPhysicalArray::valid() const

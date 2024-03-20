@@ -1119,25 +1119,25 @@ Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher& launcher,
 void Runtime::dispatch(Legion::CopyLauncher& launcher)
 {
   LegateCheck(nullptr != legion_context_);
-  return legion_runtime_->issue_copy_operation(legion_context_, launcher);
+  legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
 void Runtime::dispatch(Legion::IndexCopyLauncher& launcher)
 {
   LegateCheck(nullptr != legion_context_);
-  return legion_runtime_->issue_copy_operation(legion_context_, launcher);
+  legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
 void Runtime::dispatch(Legion::FillLauncher& launcher)
 {
   LegateCheck(nullptr != legion_context_);
-  return legion_runtime_->fill_fields(legion_context_, launcher);
+  legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
 void Runtime::dispatch(Legion::IndexFillLauncher& launcher)
 {
   LegateCheck(nullptr != legion_context_);
-  return legion_runtime_->fill_fields(legion_context_, launcher);
+  legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
 Legion::Future Runtime::extract_scalar(const Legion::Future& result, std::uint32_t idx) const

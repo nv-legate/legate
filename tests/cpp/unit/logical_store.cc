@@ -21,14 +21,17 @@ namespace logicalstore_unit {
 
 using LogicalStoreUnit = DefaultFixture;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 template <typename T>
 void test_unbound_store(std::int32_t dim)
 {
   auto runtime = legate::Runtime::get_runtime();
   // primitive type
   {
-    legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
+    const legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
     auto store = runtime->create_store(type, dim);
+
     EXPECT_TRUE(store.unbound());
     EXPECT_EQ(store.dim(), dim);
     EXPECT_THROW(static_cast<void>(store.extents()), std::invalid_argument);
@@ -38,7 +41,7 @@ void test_unbound_store(std::int32_t dim)
     EXPECT_FALSE(store.has_scalar_storage());
   }
 
-  const std::vector<legate::Type> TYPES = {
+  const auto TYPES = {
     legate::binary_type(10),
     legate::fixed_array_type(legate::bool_(), dim),
     legate::struct_type(false, legate::bool_(), legate::uint32()),
@@ -46,6 +49,7 @@ void test_unbound_store(std::int32_t dim)
 
   for (const auto& type : TYPES) {
     auto store = runtime->create_store(type, dim);
+
     EXPECT_TRUE(store.unbound());
     EXPECT_EQ(store.dim(), dim);
     EXPECT_THROW(static_cast<void>(store.extents()), std::invalid_argument);
@@ -60,8 +64,9 @@ template <typename T>
 void test_bound_store(const legate::Shape& shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
+  const legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
   auto store = runtime->create_store(shape, type);
+
   EXPECT_FALSE(store.unbound());
   EXPECT_EQ(store.dim(), shape.ndim());
   EXPECT_EQ(store.extents(), shape.extents());
@@ -75,8 +80,9 @@ template <typename T>
 void test_scalar_store(T value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
-  auto store = runtime->create_store(legate::Scalar(value));
+  const legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
+  auto store = runtime->create_store(legate::Scalar{value});
+
   EXPECT_FALSE(store.unbound());
   static constexpr std::int32_t DIM = 1;
   EXPECT_EQ(store.dim(), DIM);
@@ -88,7 +94,8 @@ void test_scalar_store(T value)
   for (const auto& extents : {legate::tuple<std::uint64_t>{1},
                               legate::tuple<std::uint64_t>{1, 1},
                               legate::tuple<std::uint64_t>{1, 1, 1}}) {
-    auto temp_store = runtime->create_store(legate::Scalar(value), extents);
+    auto temp_store = runtime->create_store(legate::Scalar{value}, extents);
+
     EXPECT_FALSE(temp_store.unbound());
     EXPECT_EQ(temp_store.dim(), extents.size());
     EXPECT_EQ(temp_store.extents(), extents);
@@ -119,10 +126,12 @@ TEST_F(LogicalStoreUnit, BoundStoreCreation)
 {
   constexpr auto do_test = [](auto dim) {
     legate::tuple<std::uint64_t> extents{};
+
     for (auto i = 1; i <= dim; ++i) {
-      extents.data().push_back(i);
+      extents.data().push_back(static_cast<std::uint64_t>(i));
     }
     auto shape = legate::Shape{extents};
+
     test_bound_store<std::uint32_t>(shape);
     test_bound_store<std::int16_t>(shape);
     test_bound_store<bool>(shape);
@@ -557,35 +566,37 @@ TEST_F(LogicalStoreUnit, PartitionBoundStore)
   auto runtime   = legate::Runtime::get_runtime();
   auto store     = runtime->create_store(legate::Shape{7, 8}, legate::int64());
   auto partition = store.partition_by_tiling({2, 4});
-  std::vector<std::uint64_t> shape1{4, 2};
+  const std::vector<std::uint64_t> shape1{4, 2};
+
   EXPECT_EQ(partition.color_shape().data(), shape1);
 
   partition = store.partition_by_tiling({5, 3});
-  std::vector<std::uint64_t> shape2{2, 3};
+  const std::vector<std::uint64_t> shape2{2, 3};
+
   EXPECT_EQ(partition.color_shape().data(), shape2);
 
   partition = store.partition_by_tiling({1, 1});
-  std::vector<std::uint64_t> shape3{7, 8};
+  const std::vector<std::uint64_t> shape3{7, 8};
   EXPECT_EQ(partition.color_shape().data(), shape3);
 
   partition = store.partition_by_tiling({7, 8});
-  std::vector<std::uint64_t> shape4{1, 1};
+  const std::vector<std::uint64_t> shape4{1, 1};
   EXPECT_EQ(partition.color_shape().data(), shape4);
 
   partition = store.partition_by_tiling({8, 4});
-  std::vector<std::uint64_t> shape5{1, 2};
+  const std::vector<std::uint64_t> shape5{1, 2};
   EXPECT_EQ(partition.color_shape().data(), shape5);
 
   partition = store.partition_by_tiling({9, 5});
-  std::vector<std::uint64_t> shape6{1, 2};
+  const std::vector<std::uint64_t> shape6{1, 2};
   EXPECT_EQ(partition.color_shape().data(), shape6);
 
   partition = store.partition_by_tiling({2, 10});
-  std::vector<std::uint64_t> shape7{4, 1};
+  const std::vector<std::uint64_t> shape7{4, 1};
   EXPECT_EQ(partition.color_shape().data(), shape7);
 
   partition = store.partition_by_tiling({10, 20});
-  std::vector<std::uint64_t> shape8{1, 1};
+  const std::vector<std::uint64_t> shape8{1, 1};
   EXPECT_EQ(partition.color_shape().data(), shape8);
 }
 
@@ -730,5 +741,7 @@ TEST_F(LogicalStoreUnit, EqualStorageTranspoe)
   EXPECT_TRUE(store.equal_storage(transformed2));
   EXPECT_TRUE(transformed2.equal_storage(store));
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace logicalstore_unit

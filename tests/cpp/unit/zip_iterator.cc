@@ -20,6 +20,8 @@
 #include <type_traits>
 #include <vector>
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 TEST(ZipIteratorUnit, Construct)
 {
   // These are mostly to test that the code compiles
@@ -195,6 +197,7 @@ void ModifyTestBase(std::vector<int> base, std::optional<std::size_t> expected_s
   auto count              = 0;
   auto zipper             = legate::detail::zip(base, x, y, z);
   using pair_type         = std::decay_t<decltype(z)>::value_type;
+  using count_type        = std::decay_t<decltype(count)>;
 
   for (auto&& [bi, xi, yi, zi] : zipper) {
     ++count;
@@ -212,14 +215,15 @@ void ModifyTestBase(std::vector<int> base, std::optional<std::size_t> expected_s
   const auto compare_simple_container = [&](const auto& container) {
     count = 0;
     for (const auto& cit : container) {
-      if (++count <= static_cast<decltype(count)>(base.size())) {
+      ++count;
+      if (count <= static_cast<count_type>(base.size())) {
         // values modified in loop above
         EXPECT_EQ(cit, -count);
       } else {
         // the reference should never get here, since the iteration above is based on its size,
         // and so it should only ever have negative values
         EXPECT_NE((void*)std::addressof(container), (void*)std::addressof(base));
-        // values untoched by loop
+        // values untouched by loop
         EXPECT_EQ(cit, count);
       }
     }
@@ -231,7 +235,8 @@ void ModifyTestBase(std::vector<int> base, std::optional<std::size_t> expected_s
   // special treatment for map, since it has 2 elems per iterator
   count = 0;
   for (const auto& [_, zi] : z) {
-    if (++count <= static_cast<decltype(count)>(base.size())) {
+    ++count;
+    if (count <= static_cast<count_type>(base.size())) {
       EXPECT_EQ(zi, -count);
     } else {
       EXPECT_EQ(zi, count);
@@ -330,8 +335,10 @@ TEST(ZipIteratorUnit, DoxySnippets)
 
   // Add all elements of a list to each element of a vector
   for (auto&& [vi, li] : legate::detail::zip(vec, list)) {
-    vi = li + 10;
+    vi = static_cast<float>(li + 10);
     std::cout << vi << ", ";
   }
   /// [Constructing a zipper]
 }
+
+// NOLINTEND(readability-magic-numbers)

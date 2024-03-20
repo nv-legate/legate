@@ -21,17 +21,17 @@ inline ReturnedPythonException::ReturnedPythonException(const void* buf, std::si
 {
 }
 
-inline ReturnedPythonException::ReturnedPythonException(Span<const void> pickle_bytes)
-  : ReturnedPythonException{pickle_bytes, InternalSharedPtr<char[]>{new char[pickle_bytes.size()]}}
+inline ReturnedPythonException::ReturnedPythonException(Span<const void> span)
+  : ReturnedPythonException{span, InternalSharedPtr<char[]>{new char[span.size()]}}
 {
 }
 
-inline ReturnedPythonException::ReturnedPythonException(Span<const void> pickle_bytes,
+inline ReturnedPythonException::ReturnedPythonException(Span<const void> span,
                                                         InternalSharedPtr<char[]> mem)
-  : size_{pickle_bytes.size()}, pickle_bytes_{std::move(mem)}
+  : size_{span.size()}, pickle_bytes_{std::move(mem)}
 {
   if (size()) {
-    std::memcpy(pickle_bytes_.get(), pickle_bytes.ptr(), size());
+    std::memcpy(pickle_bytes_.get(), span.ptr(), size());
   }
 }
 
@@ -50,6 +50,7 @@ inline ReturnedPythonException& ReturnedPythonException::operator=(
   return *this;
 }
 
+// NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline constexpr ExceptionKind ReturnedPythonException::kind() { return ExceptionKind::PYTHON; }
 
 inline const void* ReturnedPythonException::data() const { return pickle_bytes_.get(); }

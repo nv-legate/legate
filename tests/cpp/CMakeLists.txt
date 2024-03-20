@@ -41,7 +41,7 @@ include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 function(ConfigureTest CMAKE_TEST_NAME)
   set(options)
   set(one_value GPUS PERCENT)
-  set(multi_value)
+  set(multi_value SOURCES)
   cmake_parse_arguments(_LEGATE_TEST "${options}" "${one_value}" "${multi_value}" ${ARGN})
   if(NOT DEFINED _LEGATE_TEST_GPUS AND NOT DEFINED _LEGATE_TEST_PERCENT)
     set(_LEGATE_TEST_GPUS 0)
@@ -52,9 +52,7 @@ function(ConfigureTest CMAKE_TEST_NAME)
     set(_LEGATE_TEST_PERCENT 1)
   endif()
 
-  # TODO:
-  # use a SOURCES argument instead of UNPARSED_ARGUMENTS
-  add_executable(${CMAKE_TEST_NAME} ${_LEGATE_TEST_UNPARSED_ARGUMENTS})
+  add_executable(${CMAKE_TEST_NAME} ${_LEGATE_TEST_SOURCES})
   set_target_properties(
     ${CMAKE_TEST_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
@@ -111,6 +109,9 @@ function(ConfigureTest CMAKE_TEST_NAME)
   list(APPEND LEGATE_CORE_CONFIGURED_TESTS ${CMAKE_TEST_NAME})
   # propagate the updated list upwards
   set(LEGATE_CORE_CONFIGURED_TESTS ${LEGATE_CORE_CONFIGURED_TESTS} PARENT_SCOPE)
+
+  list(APPEND legate_core_TIDY_SOURCES ${_LEGATE_TEST_SOURCES})
+  set(legate_core_TIDY_SOURCES ${legate_core_TIDY_SOURCES} PARENT_SCOPE)
 endfunction()
 
 if(Legion_USE_CUDA)
@@ -129,13 +130,13 @@ include(GNUInstallDirs)
 
 ConfigureTest(
   cpp_tests
-  ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC} ${stl_SRC}
+  SOURCES ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC} ${stl_SRC}
 )
 
 if(integration_GPU_SRC)
   ConfigureTest(
     gpu_tests
-    ${main_SRC} ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC}
+    SOURCES ${main_SRC} ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC}
     GPUS 1
     PERCENT 30
   )
@@ -150,3 +151,6 @@ rapids_test_install_relocatable(
 # Add a dummy target whose only job it is to depend on the tests being built.
 add_custom_target(build_tests)
 add_dependencies(build_tests ${LEGATE_CORE_CONFIGURED_TESTS})
+
+# propagate to main CMakeLists.txt
+set(legate_core_TIDY_SOURCES ${legate_core_TIDY_SOURCES} PARENT_SCOPE)

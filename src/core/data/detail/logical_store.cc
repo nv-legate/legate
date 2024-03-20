@@ -92,7 +92,7 @@ Storage::~Storage()
   if (!Runtime::get_runtime()->initialized()) {
     // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
     // this would be collected by the Legion runtime
-    static_cast<void>(future_.release());
+    static_cast<void>(future_.release());  // NOLINT(bugprone-unused-return-value)
   }
 }
 
@@ -145,7 +145,6 @@ InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
 
   const auto root  = get_root();
   const auto shape = root->extents();
-
   const auto can_tile_completely =
     (shape % tile_shape).sum() == 0 && (offsets % tile_shape).sum() == 0 &&
     Runtime::get_runtime()->partition_manager()->use_complete_tiling(shape, tile_shape);
@@ -159,7 +158,7 @@ InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
   } else {
     color_shape    = legate::full<std::uint64_t>(shape.size(), 1);
     color          = legate::full<std::uint64_t>(shape.size(), 0);
-    signed_offsets = apply([](std::size_t v) { return static_cast<std::int64_t>(v); }, offsets);
+    signed_offsets = apply([](auto&& v) { return static_cast<std::int64_t>(v); }, offsets);
   }
 
   auto tiling =

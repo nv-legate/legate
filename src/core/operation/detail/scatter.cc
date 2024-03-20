@@ -86,9 +86,10 @@ void Scatter::launch(Strategy* p_strategy)
   launcher.set_target_indirect_out_of_range(out_of_range_);
 
   if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
+    launcher.execute(launch_domain);
+  } else {
+    launcher.execute_single();
   }
-  return launcher.execute_single();
 }
 
 void Scatter::add_to_solver(ConstraintSolver& solver)

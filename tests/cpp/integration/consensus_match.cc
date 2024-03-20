@@ -22,7 +22,11 @@ namespace consensus_match {
 
 using Integration = DefaultFixture;
 
-static const char* library_name = "consensus_match";
+namespace {
+
+constexpr const char library_name[] = "consensus_match";
+
+}  // namespace
 
 void register_tasks()
 {
@@ -45,8 +49,8 @@ TEST_F(Integration, ConsensusMatch)
   static_cast<void>(context);
 
   Legion::Runtime* legion_runtime = Legion::Runtime::get_runtime();
-  Legion::Context legion_context  = legion_runtime->get_context();
-  Legion::ShardID sid             = legion_runtime->get_shard_id(legion_context, true);
+  Legion::Context legion_context  = Legion::Runtime::get_context();
+  const Legion::ShardID sid       = legion_runtime->get_shard_id(legion_context, true);
 
   std::vector<Thing> input;
   // All shards insert 4 items, but in a different order.
@@ -55,6 +59,8 @@ TEST_F(Integration, ConsensusMatch)
     // Make sure the padding bits have deterministic values. Apparently there is no reliable way to
     // force the compiler to do zero initialization.
     std::memset(&input.back(), 0, sizeof(Thing));
+    // We silence the lint below because 0-3 covers any % 4
+    // NOLINTNEXTLINE(bugprone-switch-missing-default-case)
     switch ((i + sid) % 4) {
       case 0:  // shared between shards
         input.back().flag   = true;
@@ -62,7 +68,7 @@ TEST_F(Integration, ConsensusMatch)
         break;
       case 1:  // unique among shards
         input.back().flag   = true;
-        input.back().number = sid;
+        input.back().number = static_cast<std::int32_t>(sid);
         break;
       case 2:  // shared between shards
         input.back().flag   = false;
@@ -70,7 +76,7 @@ TEST_F(Integration, ConsensusMatch)
         break;
       case 3:  // unique among shards
         input.back().flag   = false;
-        input.back().number = sid;
+        input.back().number = static_cast<std::int32_t>(sid);
         break;
     }
   }
@@ -85,8 +91,9 @@ TEST_F(Integration, ConsensusMatch)
     EXPECT_EQ(result.output()[2], result.input()[2]);
     EXPECT_EQ(result.output()[3], result.input()[3]);
   } else {
-    Thing ta{true, -1};
-    Thing tb{false, -2};
+    const Thing ta{true, -1};
+    const Thing tb{false, -2};
+
     EXPECT_EQ(result.output().size(), 2);
     EXPECT_TRUE((result.output()[0] == ta && result.output()[1] == tb) ||
                 (result.output()[0] == tb && result.output()[1] == ta));

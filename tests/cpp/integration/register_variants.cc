@@ -18,21 +18,13 @@
 
 namespace register_variants {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using RegisterVariants = DefaultFixture;
 
-static const char* library_name = "test_register_variants";
+namespace {
 
-struct Registry {
-  static legate::TaskRegistrar& get_registrar();
-};
-
-legate::TaskRegistrar& Registry::get_registrar()
-{
-  static legate::TaskRegistrar registrar;
-  return registrar;
-}
-
-enum TaskID {
+enum TaskID : std::uint8_t {
   HELLO  = 0,
   HELLO1 = 1,
   HELLO2 = 2,
@@ -40,7 +32,23 @@ enum TaskID {
   HELLO4 = 4,
   HELLO5 = 5,
 };
-static constexpr std::array<TaskID, 6> task_ids = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
+
+constexpr std::array<TaskID, 6> task_ids = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
+
+constexpr const char library_name[] = "test_register_variants";
+
+}  // namespace
+
+struct Registry {
+  [[nodiscard]] static legate::TaskRegistrar& get_registrar();
+};
+
+legate::TaskRegistrar& Registry::get_registrar()
+{
+  static legate::TaskRegistrar registrar{};
+
+  return registrar;
+}
 
 void hello_cpu_variant(legate::TaskContext& context)
 {
@@ -59,8 +67,8 @@ void hello_cpu_variant(legate::TaskContext& context)
 
 template <std::int32_t TID>
 struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
-  using Registrar                   = Registry;
-  static const std::int32_t TASK_ID = TID;
+  using Registrar                       = Registry;
+  static constexpr std::int32_t TASK_ID = TID;
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
@@ -160,5 +168,7 @@ TEST_F(RegisterVariants, All)
     validate_store(store);
   }
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace register_variants

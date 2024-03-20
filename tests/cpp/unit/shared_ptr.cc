@@ -19,6 +19,8 @@ struct SharedPtrUnit : BasicSharedPtrUnit<T> {};
 
 TYPED_TEST_SUITE(SharedPtrUnit, BasicSharedPtrTypeList, );
 
+// NOLINTBEGIN(readability-magic-numbers, clang-analyzer-cplusplus.Move)
+
 TYPED_TEST(SharedPtrUnit, CreateBasic)
 {
   legate::SharedPtr<TypeParam> ptr;
@@ -271,13 +273,13 @@ TYPED_TEST(SharedPtrUnit, FromOrphanInternalCopy)
 
 TYPED_TEST(SharedPtrUnit, FromOrphanInternalCopyCascading)
 {
-  auto bare_ptr  = new TypeParam{1};
-  auto bare_ptr2 = new TypeParam{2};
+  TypeParam* bare_ptr2 = nullptr;
   legate::SharedPtr<TypeParam> sh_ptr;
 
   // sanity checks
   test_basic_equal(sh_ptr, static_cast<TypeParam*>(nullptr));
   {
+    auto bare_ptr = new TypeParam{1};
     legate::InternalSharedPtr<TypeParam> itrnl_ptr{bare_ptr};
 
     sh_ptr = itrnl_ptr;
@@ -292,6 +294,7 @@ TYPED_TEST(SharedPtrUnit, FromOrphanInternalCopyCascading)
     test_basic_equal(itrnl_ptr, bare_ptr);
     test_basic_equal(sh_ptr, bare_ptr);
     {
+      bare_ptr2 = new TypeParam{2};
       legate::InternalSharedPtr<TypeParam> itrnl_ptr2{bare_ptr2};
 
       sh_ptr = itrnl_ptr2;
@@ -323,6 +326,7 @@ TYPED_TEST(SharedPtrUnit, FromOrphanInternalMove)
     legate::InternalSharedPtr<TypeParam> itrnl_ptr{bare_ptr};
 
     sh_ptr = std::move(itrnl_ptr);
+    silence_spurious_clang_tidy_use_after_move(itrnl_ptr);
     // since itrnl_ptr has moved all of these should be ZERO
     ASSERT_EQ(itrnl_ptr.strong_ref_count(), 0);
     ASSERT_EQ(itrnl_ptr.user_ref_count(), 0);
@@ -338,16 +342,17 @@ TYPED_TEST(SharedPtrUnit, FromOrphanInternalMove)
 
 TYPED_TEST(SharedPtrUnit, FromOrphanInternalMoveCascading)
 {
-  auto bare_ptr  = new TypeParam{1};
-  auto bare_ptr2 = new TypeParam{2};
+  TypeParam* bare_ptr2 = nullptr;
   legate::SharedPtr<TypeParam> sh_ptr;
 
   // sanity checks
   test_basic_equal(sh_ptr, static_cast<TypeParam*>(nullptr));
   {
+    auto bare_ptr = new TypeParam{1};
     legate::InternalSharedPtr<TypeParam> itrnl_ptr{bare_ptr};
 
     sh_ptr = std::move(itrnl_ptr);
+    silence_spurious_clang_tidy_use_after_move(itrnl_ptr);
     // since itrnl_ptr has moved all of these should be ZERO
     ASSERT_EQ(itrnl_ptr.strong_ref_count(), 0);
     ASSERT_EQ(itrnl_ptr.user_ref_count(), 0);
@@ -356,9 +361,11 @@ TYPED_TEST(SharedPtrUnit, FromOrphanInternalMoveCascading)
     test_basic_equal(sh_ptr, bare_ptr);
     test_basic_equal(itrnl_ptr, static_cast<TypeParam*>(nullptr));
     {
+      bare_ptr2 = new TypeParam{2};
       legate::InternalSharedPtr<TypeParam> itrnl_ptr2{bare_ptr2};
 
       sh_ptr = std::move(itrnl_ptr2);
+      silence_spurious_clang_tidy_use_after_move(itrnl_ptr2);
       // since itrnl_ptr has moved all of these should be ZERO
       ASSERT_EQ(itrnl_ptr2.strong_ref_count(), 0);
       ASSERT_EQ(itrnl_ptr2.user_ref_count(), 0);
@@ -443,7 +450,7 @@ TYPED_TEST(SharedPtrUnit, UniqueCtor)
   auto val  = TypeParam{123};
   auto uniq = std::make_unique<TypeParam>(val);
 
-  legate::SharedPtr<TypeParam> sh_ptr{std::move(uniq)};
+  const legate::SharedPtr<TypeParam> sh_ptr{std::move(uniq)};
 
   ASSERT_EQ(sh_ptr.use_count(), 1);
   ASSERT_EQ(*sh_ptr, val);
@@ -481,3 +488,5 @@ TYPED_TEST(SharedPtrUnit, Array)
 
   test_basic_equal(ptr, bare_ptr, N);
 }
+
+// NOLINTEND(readability-magic-numbers, clang-analyzer-cplusplus.Move)

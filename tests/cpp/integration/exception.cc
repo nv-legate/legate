@@ -21,7 +21,7 @@ using Exception = DefaultFixture;
 
 namespace {
 
-constexpr const char* library_name = "test_exception";
+constexpr const char library_name[] = "test_exception";
 
 [[nodiscard]] legate::Logger& logger()
 {
@@ -30,13 +30,10 @@ constexpr const char* library_name = "test_exception";
   return logger_;
 }
 
-constexpr const char* EXN_MSG = "Exception Test";
+constexpr const char EXN_MSG[]        = "Exception Test";
+constexpr std::int64_t EXCEPTION_TASK = 0;
 
 }  // namespace
-
-enum TaskIDs {
-  EXCEPTION_TASK = 0,
-};
 
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
   static void cpu_variant(legate::TaskContext context)

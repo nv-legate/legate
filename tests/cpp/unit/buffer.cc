@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/detail/zip.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
 
@@ -19,8 +21,13 @@ namespace buffer_test {
 
 using BufferUnit = DefaultFixture;
 
-static const char* library_name       = "legate.buffer";
+namespace {
+
+constexpr const char library_name[]   = "legate.buffer";
 constexpr std::int64_t BUFFER_TASK_ID = 0;
+constexpr auto MAX_ALIGNMENT          = 16;
+
+}  // namespace
 
 struct BufferParams {
   std::int32_t dim;
@@ -79,16 +86,16 @@ struct BufferTask : public legate::LegateTask<BufferTask> {
 void test_buffer(std::int32_t dim,
                  std::uint64_t bytes,
                  legate::Memory::Kind kind,
-                 std::size_t alignment = 16)
+                 std::size_t alignment = MAX_ALIGNMENT)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(library_name);
   auto task          = runtime->create_task(context, BUFFER_TASK_ID);
   BufferParams param = {dim, bytes, static_cast<std::uint64_t>(kind), alignment};
   task.add_scalar_arg(
-    legate::Scalar(param,
+    legate::Scalar{std::move(param),
                    legate::struct_type(
-                     true, legate::int32(), legate::uint64(), legate::uint64(), legate::uint64())));
+                     true, legate::int32(), legate::uint64(), legate::uint64(), legate::uint64())});
   runtime->submit(std::move(task));
 }
 
@@ -109,10 +116,16 @@ TEST_F(BufferUnit, CreateBuffer)
   register_tasks();
 
   // Todo: need to add tests for REGDMA_MEM
-  test_buffer(1, 10, legate::Memory::SYSTEM_MEM);
-  test_buffer(2, 10, legate::Memory::NO_MEMKIND);
-  test_buffer(3, 10, legate::Memory::SYSTEM_MEM);
-  test_buffer(4, 10, legate::Memory::SYSTEM_MEM);
+  const auto memtypes = {legate::Memory::SYSTEM_MEM,
+                         legate::Memory::NO_MEMKIND,
+                         legate::Memory::SYSTEM_MEM,
+                         legate::Memory::SYSTEM_MEM};
+
+  for (auto memtype : memtypes) {
+    constexpr auto num_bytes = 10;
+
+    test_buffer(1, num_bytes, memtype);
+  }
 }
 
 TEST_F(BufferUnit, NegativeTest)
@@ -120,6 +133,7 @@ TEST_F(BufferUnit, NegativeTest)
   register_tasks();
 
   test_buffer(1, 0, legate::Memory::SYSTEM_MEM);
+  // NOLINTNEXTLINE(readability-magic-numbers)
   test_buffer(2, 10, legate::Memory::SYSTEM_MEM, 0);
 
   // Note: test passes when bytes / alignment set to -1.

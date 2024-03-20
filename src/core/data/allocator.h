@@ -35,7 +35,7 @@ namespace legate {
  */
 class ScopedAllocator {
  public:
-  static inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
+  static constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 
   // Iff 'scoped', all allocations will be released upon destruction.
   // Otherwise this is up to the runtime after the task has finished.

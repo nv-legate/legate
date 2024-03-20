@@ -19,17 +19,19 @@ namespace bloat_constraints {
 
 using BloatConstraint = DefaultFixture;
 
-static const char* library_name = "test_bloat_constraints";
+// NOLINTBEGIN(readability-magic-numbers)
 
-static legate::Logger logger(library_name);
+namespace {
 
-enum TaskIDs {
-  BLOAT_TESTER = 0,
-};
+constexpr const char library_name[] = "test_bloat_constraints";
+constexpr std::int64_t BLOAT_TESTER = 0;
+
+}  // namespace
 
 template <std::int32_t DIM>
 struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
-  static const std::int32_t TASK_ID = BLOAT_TESTER + DIM;
+  static constexpr std::int32_t TASK_ID = BLOAT_TESTER + DIM;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto source  = context.input(0);
@@ -180,5 +182,7 @@ TEST_F(BloatConstraint, Invalid)
   prepare();
   test_invalid();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace bloat_constraints

@@ -113,7 +113,8 @@ class InternalWeakPtr {
   [[nodiscard]] bool expired() const noexcept;
 
   // Getters
-  [[nodiscard]] InternalSharedPtr<T> lock() const noexcept;
+  // See definition of lock() for why we are silencing this
+  [[nodiscard]] InternalSharedPtr<T> lock() const noexcept;  // NOLINT(bugprone-exception-escape)
 
   // Modifiers
   void swap(InternalWeakPtr& other) noexcept;
@@ -424,7 +425,7 @@ class shared_from_this_enabled {
   static constexpr std::false_type test(...);
 
  public:
-  static inline constexpr bool value = decltype(test<T>(nullptr))::value;
+  static constexpr bool value = decltype(test<T>(nullptr))::value;
 };
 
 template <typename T>

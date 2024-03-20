@@ -17,16 +17,19 @@
 
 namespace mixed_dim {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using Partitioner = DefaultFixture;
 
-static const char* library_name = "test_mixed_dim";
+namespace {
 
-enum TaskIDs {
-  TESTER = 0,
-};
+constexpr const char library_name[] = "test_mixed_dim";
+
+}  // namespace
 
 struct Tester : public legate::LegateTask<Tester> {
-  static const std::int32_t TASK_ID = TESTER;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE(context.is_single_task());
@@ -46,7 +49,7 @@ TEST_F(Partitioner, MixedDim)
     auto normal1 = runtime->create_store(extents1, legate::int64());
     auto normal2 = runtime->create_store(extents2, legate::float64());
 
-    auto task = runtime->create_task(library, TESTER);
+    auto task = runtime->create_task(library, Tester::TASK_ID);
     task.add_output(unbound);
     task.add_output(normal1);
     task.add_output(normal2);
@@ -67,5 +70,7 @@ TEST_F(Partitioner, MixedDim)
   test(2, extents3d, extents3d);
   test(3, extents1d, extents1d);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace mixed_dim

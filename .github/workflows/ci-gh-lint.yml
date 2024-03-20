@@ -80,7 +80,7 @@ jobs:
         run: |
           echo "today=$(/bin/date -u '+%Y%m%d')" >> ${GITHUB_OUTPUT}
         shell: bash
-      
+
       - name: Cache Conda env
         uses: actions/cache@v4
         with:
@@ -120,7 +120,8 @@ jobs:
         run: |
           cmake \
             --preset debug-clang \
-            -G "Unix Makefiles"
+            -G "Unix Makefiles" \
+            -Dlegate_core_BUILD_TESTS=ON
 
       - name: Run clang-tidy
         shell: bash -el {0}

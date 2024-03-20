@@ -96,9 +96,10 @@ void ScatterGather::launch(Strategy* p_strategy)
   launcher.set_source_indirect_out_of_range(source_indirect_out_of_range_);
 
   if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
+    launcher.execute(launch_domain);
+  } else {
+    launcher.execute_single();
   }
-  return launcher.execute_single();
 }
 
 void ScatterGather::add_to_solver(ConstraintSolver& solver)

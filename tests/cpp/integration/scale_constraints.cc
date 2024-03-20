@@ -19,19 +19,24 @@
 
 namespace scale_constraints {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using ScaleConstraint = DefaultFixture;
 
-static const char* library_name = "test_scale_constraints";
+namespace {
 
-static legate::Logger logger(library_name);
+constexpr const char library_name[] = "test_scale_constraints";
 
-enum TaskIDs {
+}  // namespace
+
+enum TaskIDs : std::uint8_t {
   SCALE_TESTER = 0,
 };
 
 template <std::int32_t DIM>
 struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
-  static const std::int32_t TASK_ID = SCALE_TESTER + DIM;
+  static constexpr std::int32_t TASK_ID = SCALE_TESTER + DIM;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto smaller = context.output(0);
@@ -149,5 +154,7 @@ TEST_F(ScaleConstraint, Invalid)
   prepare();
   test_invalid();
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace scale_constraints

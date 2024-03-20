@@ -24,7 +24,7 @@ TEST_F(ScopeGuardUnit, Construct)
     void operator()() noexcept {}
   };
 
-  legate::ScopeGuard<Callable> guard{Callable{}};
+  const legate::ScopeGuard<Callable> guard{Callable{}};
 
   EXPECT_TRUE(guard.enabled());
 }
@@ -35,18 +35,18 @@ TEST_F(ScopeGuardUnit, EnableConstruct)
     void operator()() noexcept {}
   };
 
-  legate::ScopeGuard<Callable> guard{Callable{}, true};
+  const legate::ScopeGuard<Callable> guard{Callable{}, true};
 
   EXPECT_TRUE(guard.enabled());
 
-  legate::ScopeGuard<Callable> guard2{Callable{}, false};
+  const legate::ScopeGuard<Callable> guard2{Callable{}, false};
 
   EXPECT_FALSE(guard2.enabled());
 }
 
 TEST_F(ScopeGuardUnit, ConstructFromHelper)
 {
-  auto guard = legate::make_scope_guard([]() noexcept {});
+  const auto guard = legate::make_scope_guard([]() noexcept {});
 
   EXPECT_TRUE(guard.enabled());
 }
@@ -55,7 +55,7 @@ TEST_F(ScopeGuardUnit, ConstructAndExecute)
 {
   bool executed = false;
   {
-    auto guard = legate::make_scope_guard([&]() noexcept { executed = true; });
+    const auto guard = legate::make_scope_guard([&]() noexcept { executed = true; });
 
     // ensure that func was never run
     EXPECT_FALSE(executed);
@@ -69,11 +69,11 @@ TEST_F(ScopeGuardUnit, ConstructAndExecuteNested)
 {
   int executed = 0;
   {
-    auto guard1 = legate::make_scope_guard([&]() noexcept { ++executed; });
+    const auto guard1 = legate::make_scope_guard([&]() noexcept { ++executed; });
 
     EXPECT_EQ(executed, 0);
     {
-      auto guard2 = legate::make_scope_guard([&]() noexcept { ++executed; });
+      const auto guard2 = legate::make_scope_guard([&]() noexcept { ++executed; });
 
       EXPECT_EQ(executed, 0);
     }

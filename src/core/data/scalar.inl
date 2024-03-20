@@ -26,12 +26,12 @@ namespace legate {
 namespace detail {
 
 template <typename T>
-inline constexpr legate::Type::Code canonical_type_code_of() noexcept
+constexpr legate::Type::Code canonical_type_code_of() noexcept
 {
   using legate::Type;  // to disambiguate from legate::detail::Type;
 
   if constexpr (std::is_same_v<size_t, T>) {
-    static_assert(sizeof(T) == sizeof(uint64_t));
+    static_assert(sizeof(T) == sizeof(std::uint64_t));
     return Type::Code::UINT64;
   } else {
     constexpr auto ret = type_code_of<T>;
@@ -50,7 +50,7 @@ inline decltype(auto) canonical_value_of(T&& v) noexcept
   return std::forward<T>(v);
 }
 
-inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return uint64_t{v}; }
+inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return std::uint64_t{v}; }
 
 }  // namespace detail
 

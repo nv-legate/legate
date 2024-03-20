@@ -19,6 +19,8 @@ namespace logical_array_test {
 
 using LogicalArrayUnit = DefaultFixture;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 void test_primitive_array(bool nullable)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -907,5 +909,7 @@ TEST_F(LogicalArrayUnit, Delinearize)
   test_delinearize(true);
   test_delinearize(false);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace logical_array_test

@@ -20,6 +20,9 @@ using STL = LegateSTLFixture;
 namespace stl = legate::stl;
 
 namespace {
+
+// NOLINTBEGIN(readability-magic-numbers)
+
 void TestRowsOf2DStore()
 {
   auto store      = stl::create_store<std::int64_t>({4, 5}, 0);
@@ -66,10 +69,10 @@ void TestRowsOf2DStore()
 
 void TestColumnsOf2DStore()
 {
-  auto store                   = stl::create_store<std::int64_t>({4, 5}, 0);
-  auto store_span              = stl::as_mdspan(store);
-  legate::PhysicalStore pstore = stl::detail::get_logical_store(store).get_physical_store();
-  auto acc                     = pstore.read_accessor<std::int64_t, 2>();
+  auto store                         = stl::create_store<std::int64_t>({4, 5}, 0);
+  auto store_span                    = stl::as_mdspan(store);
+  const legate::PhysicalStore pstore = stl::detail::get_logical_store(store).get_physical_store();
+  auto acc                           = pstore.read_accessor<std::int64_t, 2>();
 
   auto cols = stl::columns_of(store);
   EXPECT_EQ(cols.size(), 5);
@@ -78,7 +81,8 @@ void TestColumnsOf2DStore()
   static_assert(std::is_same_v<decltype(col), stl::logical_store<std::int64_t, 1>>);
   EXPECT_EQ(col.extents()[0], 4);
 
-  legate::PhysicalStore col_pstore = stl::detail::get_logical_store(col).get_physical_store();
+  const legate::PhysicalStore col_pstore = stl::detail::get_logical_store(col).get_physical_store();
+
   EXPECT_EQ(col_pstore.dim(), 1);
   EXPECT_EQ(col_pstore.shape<1>(), (legate::Rect<1>{{0}, {3}}));
   auto col_acc = col_pstore.read_accessor<std::int64_t, 1>();
@@ -120,6 +124,8 @@ void TestColumnsOf2DStore()
   EXPECT_EQ(store_span(2, 1), 33);
   EXPECT_EQ(store_span(3, 1), 44);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace
 

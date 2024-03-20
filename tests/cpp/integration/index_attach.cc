@@ -28,11 +28,16 @@
 
 namespace index_attach {
 
-constexpr std::size_t TILE_SIZE    = 5;
-constexpr std::uint64_t INIT_VALUE = 10;
+// NOLINTBEGIN(readability-magic-numbers)
 
-static constexpr const char* library_name = "legate.external_allocation";
-constexpr std::int32_t ACCESS_TASK_ID     = 0;
+namespace {
+
+constexpr std::size_t TILE_SIZE       = 5;
+constexpr std::uint64_t INIT_VALUE    = 10;
+constexpr const char library_name[]   = "legate.external_allocation";
+constexpr std::int32_t ACCESS_TASK_ID = 0;
+
+}  // namespace
 
 struct access_store_fn {
   template <legate::Type::Code CODE>
@@ -232,8 +237,8 @@ TEST_F(IndexAttach, NegativeAttach)
 
   {
     // Trying to attach buffer with variable size to store
-    const std::string value = "hello world";
-    auto ext_alloc = legate::ExternalAllocation::create_sysmem(value.data(), sizeof(value));
+    constexpr const char value[] = "hello world";
+    auto ext_alloc               = legate::ExternalAllocation::create_sysmem(value, sizeof(value));
 
     EXPECT_THROW(
       (void)runtime->create_store(legate::Shape{sizeof(value)}, legate::string_type(), ext_alloc),
@@ -254,9 +259,9 @@ TEST_F(IndexAttach, SysmemAccessByTask)
 {
   do_test<std::uint64_t>(10);
   do_test<std::int16_t>(-10);
-  do_test<float>(100.0f);
+  do_test<float>(100.0F);
   do_test<double>(10000.8);
-  do_test<__half>(static_cast<__half>(0.9f));
+  do_test<__half>(static_cast<__half>(0.9F));
   do_test<complex<float>>({15, 20});
   do_test<complex<double>>({-3.9, 5.8});
 }
@@ -378,5 +383,7 @@ TEST_F(IndexAttach, InvalidCreation)
                std::runtime_error);
 #endif
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace index_attach

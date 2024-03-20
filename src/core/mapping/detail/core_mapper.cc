@@ -125,10 +125,16 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
     }
     case LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: {
       // Multiply this by the total number of nodes and then scale by the frac
-      const std::uint64_t global_mem_size =
-        machine.has_gpus() ? machine.total_frame_buffer_size()
-                           : (machine.has_socket_memory() ? machine.total_socket_memory_size()
-                                                          : machine.system_memory().capacity());
+      const auto global_mem_size = [&] {
+        if (machine.has_gpus()) {
+          return machine.total_frame_buffer_size();
+        }
+        if (machine.has_socket_memory()) {
+          return machine.total_socket_memory_size();
+        }
+        return machine.system_memory().capacity();
+      }();
+
       return Scalar{global_mem_size / field_reuse_frac};
     }
     case LEGATE_CORE_TUNABLE_MAX_LRU_LENGTH: {

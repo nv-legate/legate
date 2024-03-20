@@ -127,7 +127,7 @@ class ZiperatorBase {
   void minuseq_(std::index_sequence<Idx...>, difference_type n);
 
   template <size_t... Idx>
-  bool lessthan_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;
+  [[nodiscard]] bool lessthan_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;
 
   template <size_t... Idx>
   [[nodiscard]] bool eq_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;

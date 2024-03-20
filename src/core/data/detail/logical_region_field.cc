@@ -28,7 +28,7 @@ LogicalRegionField::~LogicalRegionField()
     if (!runtime->initialized()) {
       // FIXME: Leak the PhysicalRegion handle if the runtime has already shut down, as
       // there's no hope that this would be collected by the Legion runtime
-      static_cast<void>(pr_.release());
+      static_cast<void>(pr_.release());  // NOLINT(bugprone-unused-return-value)
       return;
     }
 
@@ -106,7 +106,7 @@ void LogicalRegionField::detach()
   if (!runtime->initialized()) {
     // FIXME: Leak the PhysicalRegion handle if the runtime has already shut down, as
     // there's no hope that this would be collected by the Legion runtime
-    static_cast<void>(pr_.release());
+    static_cast<void>(pr_.release());  // NOLINT(bugprone-unused-return-value)
     return;
   }
   if (nullptr != parent_) {
