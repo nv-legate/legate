@@ -420,20 +420,8 @@ class TestStage(Protocol):
         stage_args = self.args + self.shard_args(shard, config)
         file_args = self.file_args(test_file, config)
 
-        launcher_args = (
-            ["--launcher=mpirun"]
-            + [f"--ranks-per-node={config.multi_node.ranks_per_node}"]
-            + ["--launcher-extra=--merge-stderr-to-stdout"]
-        )
-        if filename := config.multi_node.mpi_output_filename:
-            launcher_args += [
-                '--launcher-extra="--output-filename"',
-                f"--launcher-extra={shlex.quote(filename)}",
-            ]
-
         cmd = (
             [str(config.legate_path)]
-            + launcher_args
             + stage_args
             + cov_args
             + [str(test_file), f"--gtest_filter={arg_test}"]
@@ -465,27 +453,42 @@ class TestStage(Protocol):
             self.shards.put(shard)
 
     @staticmethod
-    def _handle_multi_node_args(config: Config) -> ArgList:
+    def handle_multi_node_args(config: Config) -> ArgList:
         args: ArgList = []
+
+        if config.multi_node.launcher != "none":
+            args += ["--launcher", str(config.multi_node.launcher)]
+
         if config.multi_node.ranks_per_node > 1:
             args += [
                 "--ranks-per-node",
                 str(config.multi_node.ranks_per_node),
             ]
+
+        if config.multi_node.launcher == "mpirun":
+            # this only really matter for gtest runs, but doesn't hurt to
+            # add to python runs, so add it all the time to keep things simple
+            args += ["--launcher-extra=--merge-stderr-to-stdout"]
+
+            if filename := config.multi_node.mpi_output_filename:
+                args += [
+                    '--launcher-extra="--output-filename"',
+                    f"--launcher-extra={shlex.quote(filename)}",
+                ]
+
         if config.multi_node.nodes > 1:
             args += [
                 "--nodes",
                 str(config.multi_node.nodes),
             ]
-        if config.multi_node.launcher != "none":
-            args += ["--launcher", str(config.multi_node.launcher)]
+
         for extra in config.multi_node.launcher_extra:
             args += ["--launcher-extra=" + str(extra)]
 
         return args
 
     @staticmethod
-    def _handle_cpu_pin_args(config: Config, shard: Shard) -> ArgList:
+    def handle_cpu_pin_args(config: Config, shard: Shard) -> ArgList:
         args: ArgList = []
         if config.execution.cpu_pin != "none":
             args += [

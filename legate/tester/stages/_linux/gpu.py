@@ -62,7 +62,7 @@ class GPU(TestStage):
             "--sysmem",
             str(SMALL_SYSMEM),
         ]
-        args += self._handle_multi_node_args(config)
+        args += self.handle_multi_node_args(config)
         return args
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
