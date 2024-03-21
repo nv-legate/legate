@@ -1,18 +1,16 @@
-name: Build and test
+name: Build conda Nightly release package
 
 concurrency:
-  group: ci-build-and-test-on-${{ github.event_name }}-from-${{ github.ref_name }}
+  group: ci-nightly-release-on-${{ github.event_name }}-from-${{ github.ref_name }}
   cancel-in-progress: true
 
 on:
-  push:
-    branches:
-      - "pull-request/[0-9]+"
-      - "cpp-branch-*"
+  workflow_dispatch:
+  schedule:
+    - cron: '0 22 * * *'  # Nightly at 10:00 PM
 
 jobs:
   build-and-test:
-    name: Build and test (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.cmake-preset }}, ${{ matrix.ucx-enabled }})
     strategy:
       fail-fast: false
       matrix:
@@ -22,18 +20,20 @@ jobs:
         platform:
           - linux
         target-device:
-          - cpu
           - gpu
+          - cpu
         cmake-preset:
-          - debug-gcc
-          - debug-sanitizer-gcc
           - release-gcc
-          - release-debug-gcc
+          - debug-sanitizer-gcc
+          - debug-gcc
+        upload-enabled:
+          - true
+          - false
         exclude:
           - cmake-preset: debug-gcc
             ucx-enabled: true
           - cmake-preset: debug-sanitizer-gcc
-            ucx-enabled: true
+            target-device: gpu
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
@@ -41,6 +41,6 @@ jobs:
       target-device: ${{ matrix.target-device }}
       cmake-preset: ${{ matrix.cmake-preset }}
       ucx-enabled: ${{ matrix.ucx-enabled }}
-      build-type: ci
-      upload-enabled: false
+      build-type: release
+      upload-enabled: ${{ matrix.upload-enabled }}
     secrets: inherit

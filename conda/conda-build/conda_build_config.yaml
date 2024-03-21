@@ -2,6 +2,10 @@ debug_build:
   - true
   - false
 
+upload_enabled:
+  - true
+  - false
+
 gpu_enabled:
   - true
   - false

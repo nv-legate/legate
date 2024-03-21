@@ -13,6 +13,12 @@ on:
       ucx-enabled:
         type: boolean
         required: true
+      build-type:
+        type: string
+        required: true
+      upload-enabled:
+        type: boolean
+        required: true
 jobs:
   setup-build:
     name: Setup build
@@ -37,19 +43,19 @@ jobs:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ needs.setup-build.outputs.runner_type }}
-      build-type: ci
+      build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
       legate-gh-ci-tag: "v1"
       cmake-preset: ${{ inputs.cmake-preset }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
-      upload-enabled: false
+      upload-enabled: ${{ inputs.upload-enabled }}
     secrets: inherit
 
   build-docs:
     needs: setup-build
-    if: ${{ github.repository_owner == 'nv-legate' }}
+    if: ${{ github.repository_owner == 'nv-legate' && inputs.upload-enabled == false }}
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1
     with:
@@ -63,11 +69,68 @@ jobs:
       legate-gh-ci-tag: "v1"
       cmake-preset: ${{ inputs.cmake-preset }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
-      upload-enabled: false
+      upload-enabled: ${{ inputs.upload-enabled }}
     secrets: inherit
+
+  upload:
+    needs: build
+    runs-on: linux-amd64-gpu-v100-earliest-1
+    container:
+      options: -u root
+      image: condaforge/miniforge3:latest
+
+    if: ${{ github.repository_owner == 'nv-legate' && inputs.upload-enabled == true }}
+    steps:
+      
+      - name: Set environment variables
+        shell: bash --noprofile --norc -xeuo pipefail {0}
+        run: |
+          UCX_STR=${{ (inputs.ucx-enabled == true && '-ucx') || '' }}
+          UPL_STR=${{ (inputs.upload-enabled == true && '-upload') || '' }}
+          CMAKE_PRESET="${{ inputs.cmake-preset }}"
+          CMAKE_PRESET_STR=""
+          [ -n "${CMAKE_PRESET}" ] && CMAKE_PRESET_STR="-${CMAKE_PRESET}"
+
+          echo "ARTIFACT_NAME=${{ inputs.platform }}-${{ inputs.build-type }}-${{ github.event.repository.name }}-${{ inputs.target-device }}${CMAKE_PRESET_STR}${UCX_STR}${UPL_STR}-${{ github.sha }}" >> $GITHUB_ENV
+          echo "ARTIFACTS_DIR=${{ github.workspace }}/artifacts"  >> $GITHUB_ENV
+          echo "OUTPUT_FOLDER=conda-build/legate_core" >> $GITHUB_ENV
+          echo "TARGET_PLATFORM=linux-64" >> $GITHUB_ENV
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACTS_DIR }}
+
+      - name: Display structure of downloaded artifacts
+        run: |
+          ls -aR $ARTIFACTS_DIR
+
+      - name: Get Build Date
+        run: |
+          echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: Dump relevant environment variables
+        run: |
+          echo "ARTIFACTS_DIR=$ARTIFACTS_DIR" 
+          echo "ARTIFACT_NAME=$ARTIFACT_NAME" 
+          echo "TARGET_PLATFORM=$TARGET_PLATFORM"
+          echo "BUILD_DATE=$BUILD_DATE"
+
+      - name: Upload to URM
+        run: |
+          apt-get update
+          apt-get install -y curl
+          for f in $(find $ARTIFACTS_DIR/$OUTPUT_FOLDER/$TARGET_PLATFORM/. -name 'legate-core*.tar.bz2')
+          do
+            fname=$(basename $f)
+            echo "File to upload: $fname"
+            curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -T $f "https://urm.nvidia.com/artifactory/sw-legate-conda-local/$TARGET_PLATFORM/$fname;buildDate=$BUILD_DATE;sha=${{ github.sha }}";
+          done
 
   setup-test:
     name: Setup test
+    if: inputs.upload-enabled == false
     needs:
       - build
     runs-on: linux-amd64-cpu4
@@ -117,7 +180,7 @@ jobs:
       nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1
     with:
       client-repo: ${{ github.event.repository.name }}
-      build-type: ci
+      build-type: ${{ inputs.build-type }}
       name: ${{ matrix.test-config.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ matrix.runner.name }}
@@ -145,7 +208,7 @@ jobs:
       nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1
     with:
       client-repo: ${{ github.event.repository.name }}
-      build-type: ci
+      build-type: ${{ inputs.build-type }}
       name: ${{ matrix.test-config.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ matrix.runner.name }}

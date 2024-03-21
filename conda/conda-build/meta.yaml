@@ -15,6 +15,14 @@
   {# We need to have a default value for the initial pass over the recipe #}
   {% set debug_build_bool = false %}
 {% endif %}
+{% if upload_enabled == "true" %}
+  {% set upload_enabled_bool = true %}
+{% elif upload_enabled == "false" %}
+  {% set upload_enabled_bool = false %}
+{% else %}
+  {# We need to have a default value for the initial pass over the recipe #}
+  {% set upload_enabled_bool = false %}
+{% endif %}
 {% if ucx_configured == "true" %}
   {% set ucx_configured_bool = true %}
 {% elif ucx_configured == "false" %}
@@ -61,6 +69,12 @@
 {% set debug_tag='' %}
 {% endif %}
 
+{% if upload_enabled_bool %}
+{% set upload_tag='_nightly' %}
+{% else %}
+{% set upload_tag='' %}
+{% endif %}
+
 {% if ucx_configured_bool %}
 {% set ucx_tag='_ucx' %}
 {% else %}
@@ -86,8 +100,7 @@ build:
   missing_dso_whitelist:
     -  '*libcuda.so*'
 
-  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ ucx_tag }}{{ cpu_tag }}{{ debug_tag }}"
-
+  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ ucx_tag }}{{ cpu_tag }}{{ debug_tag }}{{ upload_tag }}"
   script_env:
     - SCCACHE_BUCKET
     - SCCACHE_REGION
@@ -100,6 +113,7 @@ build:
     - CMAKE_CXX_COMPILER_LAUNCHER
     - CMAKE_CUDA_COMPILER_LAUNCHER
     - SED
+    - LEGATE_CORE_CMAKE_PRESET
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1
   track_features:
@@ -107,6 +121,9 @@ build:
 {% endif %}
 {% if debug_build_bool %}
     - DEBUG_BUILD=1
+{% endif %}
+{% if upload_enabled_bool %}
+    - UPLOAD_ENABLED=1
 {% endif %}
   run_exports:
 {% if not gpu_enabled_bool %}
@@ -155,7 +172,6 @@ requirements:
     - llvm-openmp
     - scikit-build
     - elfutils # [linux]
-    - libdwarf # [linux]
     - libhwloc =* =*default*
 {% if debug_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
@@ -163,7 +179,6 @@ requirements:
 {% if gpu_enabled_bool %}
     - nccl
     - cuda-nvtx ={{ cuda_version }}
-    - cuda-cccl ={{ cuda_version }}
     - cuda-cudart ={{ cuda_version }}
     - cuda-cudart-static ={{ cuda_version }}
     - cuda-nvml-dev ={{ cuda_version }}

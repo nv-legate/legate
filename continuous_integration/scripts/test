@@ -83,11 +83,6 @@ run_test_or_analysis() {
             fi
 
             cd "${REPO_DIR}"
-            mkdir -p ctest_install
-            sh "${ARTIFACTS_DIR}"/out/legate_core-*-$(uname).sh \
-               --prefix="${REPO_DIR}/ctest_install" \
-               --exclude-subdir \
-               --skip-license
 
             EXTRA_ARGS=
             # TODO (wonchanl, jfaibussowit) Sanitizers can raise false alarms if the code does
@@ -95,19 +90,20 @@ run_test_or_analysis() {
             if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
               EXTRA_ARGS="-ll:force_kthreads"
             fi
-            python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+            python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
 
             # Also do some multi-CPU testing
             if [[ "$(uname)" == "Darwin" ]]; then
-                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 2 "${EXTRA_ARGS}"
+                python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 2 "${EXTRA_ARGS}"
             else
-                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 4 "${EXTRA_ARGS}"
+                python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 4 "${EXTRA_ARGS}"
             fi
 
             [[ -f ./ctest_install/bin/gpu_tests ]] && {
-              python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+              python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/gpu_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
             }
-            ;;
+            ;;            
+
         *)
             echo "Invalid command: $1"
             return 1

@@ -73,6 +73,8 @@ package_version:
   - "$(git -C /tmp/legate describe --abbrev=0 --tags | $SED 's/[a-zA-Z]//g' | cut -d '.' -f -2).00"
 ucx_configured:
   - "${UCX_CONFIGURED}"
+upload_enabled:
+  - "false"
 EOF
 if [[ "${UCX_ENABLED}" = "ON" ]]; then
     cat <<EOF >> /tmp/legate/conda/conda-build/conda_build_config.yaml

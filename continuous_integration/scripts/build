@@ -11,6 +11,58 @@ build_legate_ci() {
 
 build_legate_release() {
     set -xeo pipefail;
+
+    mkdir -p /tmp/env_yaml /tmp/conda-build
+    local conda_build_args=();
+    conda_build_args+=(--override-channels);
+
+    # The channel sequence below needs to be preserved 
+    conda_build_args+=(-c nvidia/label/cuda-${CUDA_VERSION});
+    conda_build_args+=(-c conda-forge);
+
+    conda_build_args+=(--croot /tmp/conda-croot/legate_core);
+    conda_build_args+=(--numpy 1.22);
+    conda_build_args+=(--no-test);
+    conda_build_args+=(--no-verify);
+    conda_build_args+=(--no-build-id);
+    conda_build_args+=("--build-id-pat=''");
+    conda_build_args+=(--no-include-recipe);
+    conda_build_args+=(--no-anaconda-upload);
+    conda_build_args+=(--output-folder /tmp/conda-build/legate_core);
+
+    GPU_ENABLED=true
+    [ "${USE_CUDA:-}" = "OFF" ] && GPU_ENABLED=false
+
+    UCX_CONFIGURED=true
+    [ "${UCX_ENABLED:-}" = "OFF" ] && UCX_CONFIGURED=false
+
+    UPLOAD_BUILD=true
+    [ "${UPLOAD_ENABLED:-}" = "OFF" ] && UPLOAD_BUILD=false
+
+    if [[ ${LEGATE_CORE_CMAKE_PRESET} == *debug* ]]; then
+    debug_enabled=true
+    else
+    debug_enabled=false
+    fi
+    
+    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION]}")
+
+    conda_build_args+=(--variants "$variantOpts")
+
+    conda mambabuild "${conda_build_args[@]}" conda/conda-build;
+
+    copy_release_artifacts
+}
+
+copy_release_artifacts() {
+    echo Copying release artifacts
+    cp -r /tmp/out          "$ARTIFACTS_DIR"
+    cp -r /tmp/conda-build  "$ARTIFACTS_DIR"
+    ls -lahR $ARTIFACTS_DIR
+}
+
+_build_legate_release() {
+    set -xeo pipefail;
     mkdir -p /tmp/env_yaml /tmp/conda-build
 
     conda mambabuild --output-folder /tmp/conda-build -c nvidia/label/cuda-${CUDA_VERSION} -c conda-forge --no-include-recipe conda/conda-build
@@ -18,12 +70,13 @@ build_legate_release() {
     copy_release_artifacts;
 }
 
-copy_release_artifacts() {
+_copy_release_artifacts() {
     echo Copying release artifacts
-
+    ls -lahR /tmp/conda-build/legate_core/linux-64/
     mkdir -p "$ARTIFACTS_DIR"
 
-    cp /tmp/conda-build/linux-64/legate-core-*.tar.bz2 "$ARTIFACTS_DIR"
+    cp -r /tmp/conda-build/legate_core/linux-64 "$ARTIFACTS_DIR"
+    ls -lahR $ARTIFACTS_DIR
 }
 
 copy_ci_artifacts() {

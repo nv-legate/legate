@@ -16,7 +16,12 @@
 #include "core/utilities/detail/zip.h"
 
 #include <cstddef>
+
+// As of 3/14/2024, this include causes shadow warnings in GPU debug mode compilation
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <thrust/iterator/counting_iterator.h>
+#pragma GCC diagnostic pop
 
 static_assert(LEGATE_CPP_MIN_VERSION <
                 23,  // NOLINT(readability-magic-numbers) std::enumerate since C++23

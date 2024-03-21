@@ -53,7 +53,13 @@
 
 #include "config.hpp"
 #include "legate.h"
+
+// As of 3/14/2024, this include causes shadow warnings in GPU debug mode compilation
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include "mdspan.hpp"
+#pragma GCC diagnostic pop
+
 #include "meta.hpp"
 #include "ranges.hpp"
 #include "type_traits.hpp"
