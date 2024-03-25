@@ -128,16 +128,6 @@ class Config:
         # feature configuration
         self.features = self._compute_features(args)
 
-        # test selection
-        self.examples = False if args.cov_bin else True
-        self.integration = True
-        self.unit = args.unit
-        self.files = args.files
-        self.last_failed = args.last_failed
-        self.gtest_file = args.gtest_file
-        self.gtest_tests = self._compute_gtest_tests(args)
-        self.test_root = args.test_root
-
         self.core = object_to_dataclass(args, Core)
         self.memory = object_to_dataclass(args, Memory)
         self.multi_node = object_to_dataclass(args, MultiNode)
@@ -145,6 +135,17 @@ class Config:
         self.info = object_to_dataclass(args, Info)
         self.other = object_to_dataclass(args, Other)
         self.other.legate_dir = self._compute_legate_dir(args)
+
+        # test selection
+        self.examples = False if args.cov_bin else True
+        self.integration = True
+        self.unit = args.unit
+        self.files = args.files
+        self.last_failed = args.last_failed
+        self.gtest_file = args.gtest_file
+        self.test_root = args.test_root
+        # NOTE: This reads the rest of the configuration, so do it last
+        self.gtest_tests = self._compute_gtest_tests(args)
 
     @property
     def dry_run(self) -> bool:
@@ -311,6 +312,15 @@ class Config:
             # Check if this is a test group
             if line[0] != " ":
                 test_group = line.split("#")[0].strip()
+                continue
+
+            # Skip death tests when running with multiple processes. It looks
+            # as if GTest catches the failure and declares the test successful,
+            # but for some reason the failure is not actually completely
+            # neutralized, and the exit code is non-zero.
+            if (
+                self.multi_node.ranks_per_node > 1 or self.multi_node.nodes > 1
+            ) and (test_group.endswith("DeathTest.")):
                 continue
 
             test_name = test_group + line.split("#")[0].strip()

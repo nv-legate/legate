@@ -31,14 +31,6 @@ from legate.tester.config import Config  # noqa E402
 from legate.tester.test_plan import TestPlan  # noqa E402
 from legate.tester.test_system import TestSystem  # noqa E402
 
-# Skip these tests in mutli-node testing, as they don't pass with MPI; for some
-# reason the abort calls in these tests are not completely neutralized by Gtest
-# in an MPI environment.
-SKIP_LIST = {
-    "AttachDeathTest.MissingManualDetach",
-    "DeathTestExample.Simple",
-}
-
 BUILD_DIR = "./build"
 
 
