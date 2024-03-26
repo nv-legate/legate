@@ -55,10 +55,14 @@
 #include "legate.h"
 
 // As of 3/14/2024, this include causes shadow warnings in GPU debug mode compilation
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#if LegateDefined(LEGATE_STL_GCC())
+LEGATE_STL_PRAGMA_PUSH()
+LEGATE_STL_PRAGMA_GNU_IGNORE("-Wmaybe-uninitialized")
+#endif
 #include "mdspan.hpp"
-#pragma GCC diagnostic pop
+#if LegateDefined(LEGATE_STL_GCC())
+LEGATE_STL_PRAGMA_POP()
+#endif
 
 #include "meta.hpp"
 #include "ranges.hpp"
