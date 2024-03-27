@@ -10,6 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "type")
+
 set(
   cython_sources
   type_info.pyx

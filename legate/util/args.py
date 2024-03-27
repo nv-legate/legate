@@ -23,13 +23,10 @@ from typing import (
     NoReturn,
     Sequence,
     Type,
+    TypeAlias,
     TypeVar,
     Union,
 )
-
-from typing_extensions import TypeAlias
-
-from . import info
 
 
 class _UnsetType:
@@ -158,5 +155,7 @@ class InfoAction(Action):
         values: Union[str, Sequence[T], None],
         option_string: Union[str, None] = None,
     ) -> NoReturn:
-        info.print_build_info()
+        from .info import print_build_info
+
+        print_build_info()
         sys.exit()

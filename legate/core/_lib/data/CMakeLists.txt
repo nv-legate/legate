@@ -10,6 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "data")
+
 set(
   cython_sources
   external_allocation.pyx

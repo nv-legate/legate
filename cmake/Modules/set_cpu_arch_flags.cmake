@@ -18,6 +18,7 @@ if(BUILD_MARCH AND BUILD_MCPU)
 endif()
 
 function(set_cpu_arch_flags out_var)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "set_cpu_arch_flags")
   # Try -march first. On platforms that don't support it, GCC will issue a hard
   # error, so we'll know not to use it. Default is "native", but explicitly
   # setting BUILD_MARCH="" disables use of the flag

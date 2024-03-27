@@ -15,11 +15,11 @@
 # from the environment for the first two.
 SPHINXOPTS     ?= -v -W
 PARALLEL_BUILD ?= 1
-SPHINXBUILD    ?= $(shell which sphinx-build)
+SPHINXBUILD    ?= sphinx-build
 SOURCEDIR      = source
-BUILDDIR       = build
+BUILDDIR       = ${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}/docs
 
-.PHONY: help clean html linkcheck
+.PHONY: help clean html linkcheck all
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of"
@@ -31,13 +31,12 @@ help:
 all: clean html linkcheck
 
 clean:
-	rm -rf build/html/docs
+	rm -rf $(BUILDDIR)/html
 	find source/ -name "generated" | xargs rm -rf
 
 html:
 	@start=$$(date +%s) \
 	; $(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) -j $(PARALLEL_BUILD) \
-	&& mkdir -p build/html/docs \
 	&& echo "\nBuild finished in $$(($$(date +%s)-start)) seconds\n"
 
 linkcheck: html

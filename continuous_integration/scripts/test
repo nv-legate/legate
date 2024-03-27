@@ -19,14 +19,25 @@ run_test_or_analysis() {
 
     set -xeuo pipefail
 
-    cd "$REPO_DIR"
+    # rename
+    export LEGATE_CORE_DIR="${REPO_DIR}"
+
+    # HACK: this should be done much better, and in a much more transparent manner... but
+    # alas, we no longer have any control of the setup phases in github ci, so we must do
+    # it here.
+    if [[ -z "${LEGATE_CORE_ARCH:-}" ]]; then
+        local locase_uname="$(uname | tr '[:upper:]' '[:lower:]')"
+        LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_CORE_CMAKE_PRESET%-gcc}"
+
+        export LEGATE_CORE_ARCH
+    fi
+
+    cd "$LEGATE_CORE_DIR"
 
     case "$1" in
         "python")
-            ucx_libs=
-            [ "${UCX_ENABLED}" = "ON" ] && ucx_libs=ucx\ openmpi
             echo "Executing python tests..."
-            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
+            if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
               echo "============================================================================"
               echo "x ------------------------------------------------------------------------ x"
               echo "Cannot yet handle running Python tests using Address Sanitizer, bailing!"
@@ -35,16 +46,19 @@ run_test_or_analysis() {
               return 0
             fi
 
+            ucx_libs=
+            [ "${UCX_ENABLED}" = "ON" ] && ucx_libs=ucx\ openmpi\ openssh
+
             set +eou pipefail
             mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
             set -eou pipefail
 
-            cd $REPO_DIR/tests/unit
+            cd $LEGATE_CORE_DIR/tests/unit
             # Leaving this here in case we ever decide to enable this. If we don't do
             # this, we get
             # ImportError: could not load libasan.6.so
             # when loading the Cython extension libs.
-            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-gcc ]]; then
+            if [[ ${LEGATE_CORE_ARCH} == *gcc-*-sanitizer* ]]; then
               # Trying to reproduce this on macOS? See
               # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
               #
@@ -61,7 +75,7 @@ run_test_or_analysis() {
               for test_file in $(find . -name 'test_*.py'); do
                 LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest ${test_file}
               done
-            elif [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-clang ]]; then
+            elif [[ ${LEGATE_CORE_ARCH} == *clang-*-sanitizer* ]]; then
               echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
               echo "See impls for GCC above"
               return 1
@@ -78,31 +92,36 @@ run_test_or_analysis() {
 
             if [[ "${UCX_ENABLED}" == "ON" ]]; then
               set +eou pipefail
-              mamba install -y -n "${CONDA_ENV}" ucx openmpi
+              mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
               set -eou pipefail
             fi
 
-            cd "${REPO_DIR}"
+            cd "${LEGATE_CORE_DIR}"
+            mkdir -p ctest_install
+            sh "${ARTIFACTS_DIR}"/out/legate_core-*-$(uname).sh \
+               --prefix="${LEGATE_CORE_DIR}/ctest_install" \
+               --exclude-subdir \
+               --skip-license
 
             EXTRA_ARGS=
             # TODO (wonchanl, jfaibussowit) Sanitizers can raise false alarms if the code does
             # user-level threading, so we turn it off for sanitizer-enabled tests
-            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
+            if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
               EXTRA_ARGS="-ll:force_kthreads"
             fi
-            python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+            python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
 
             # Also do some multi-CPU testing
             if [[ "$(uname)" == "Darwin" ]]; then
-                python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 2 "${EXTRA_ARGS}"
+                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 2 "${EXTRA_ARGS}"
             else
-                python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 4 "${EXTRA_ARGS}"
+                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 4 "${EXTRA_ARGS}"
             fi
 
             [[ -f ./ctest_install/bin/gpu_tests ]] && {
-              python3 "${REPO_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/gpu_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+              python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
             }
-            ;;            
+            ;;
 
         *)
             echo "Invalid command: $1"

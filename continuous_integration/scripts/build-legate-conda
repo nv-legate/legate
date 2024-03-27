@@ -11,7 +11,7 @@ build_legate_conda_package() {
 
     # Patch post.py
     if [[ "${UNAME}" == "Darwin" ]]; then
-      patch "$CONDA_PREFIX/lib/python${PYTHON_VERSION}/site-packages/conda_build/post.py" < "$REPO_DIR/continuous_integration/post_py.patch"
+      patch "$CONDA_PREFIX/lib/python${PYTHON_VERSION}/site-packages/conda_build/post.py" < "$LEGATE_CORE_DIR/continuous_integration/post_py.patch"
     fi
 
     local conda_build_args=();
@@ -44,7 +44,7 @@ build_legate_conda_package() {
     conda_build_args+=(--variants "{gpu_enabled:${GPU_ENABLED},python:${PYTHON_VERSION},debug_enabled:${debug_enabled},ucx_configured:${UCX_CONFIGURED}}");
 
     rm -rf /tmp/legate;
-    cp -ar $REPO_DIR /tmp/legate;
+    cp -ar "${LEGATE_CORE_DIR}" /tmp/legate;
     git config --global --add safe.directory /tmp/legate
 
     rm -rf /tmp/conda-croot/legate_core;
@@ -90,7 +90,7 @@ set -xeuo pipefail
 # Install legate_core C++ libs
 sh /tmp/out/legate_core-*-${UNAME}.sh --skip-license --exclude-subdir --prefix="\$PREFIX"
 ${SED} -E -i "s@${CONDA_PREFIX}@\$PREFIX@g" "\$PREFIX/share/Legion/cmake/LegionConfigCommon.cmake";
-${SED} -E -i "s@${REPO_DIR}/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/${UNAME}/STGZ/legate_core-(.*)-${UNAME}@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
+${SED} -E -i "s@${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}/cmake_build/_CPack_Packages/${UNAME}/STGZ/legate_core-(.*)-${UNAME}@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
 
 # Install legate_core Python wheel
 pip install --no-deps --root / --prefix "\$PREFIX" /tmp/out/legate_core-*.whl;

@@ -1,0 +1,26 @@
+--- CMakeLists.txt
++++ CMakeLists.txt
+@@ -22,6 +22,8 @@ if(NOT Legion_SOURCE_DIR)
+   find_package(Legion REQUIRED)
+ endif()
+
++cmake_path(SET lib_install_dir NORMALIZE "${Legion_BINARY_DIR}")
++cmake_path(APPEND lib_install_dir ${CMAKE_INSTALL_LIBDIR})
+ add_executable(legion_python
+   main.cc
+ )
+@@ -34,6 +36,7 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+   set_property(TARGET legion_python APPEND PROPERTY BUILD_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+   set_property(TARGET legion_python APPEND PROPERTY INSTALL_RPATH "@loader_path/../${CMAKE_INSTALL_LIBDIR}")
+ endif ()
++set_property(TARGET legion_python APPEND PROPERTY INSTALL_RPATH "${lib_install_dir}")
+ if(BINDINGS_DEFAULT_MODULE)
+   target_compile_definitions(legion_python PRIVATE "BINDINGS_DEFAULT_MODULE=${BINDINGS_DEFAULT_MODULE}")
+ endif()
+@@ -51,5 +54,6 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+   set_property(TARGET legion_canonical_python APPEND PROPERTY BUILD_RPATH "@loader_path")
+   set_property(TARGET legion_canonical_python APPEND PROPERTY INSTALL_RPATH "@loader_path")
+ endif ()
++set_property(TARGET legion_canonical_python APPEND PROPERTY INSTALL_RPATH "${lib_install_dir}")
+
+ target_compile_options(legion_canonical_python PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${CXX_BUILD_WARNING_FLAGS}>)

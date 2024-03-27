@@ -9,13 +9,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-def get_libpath() -> str: ...
+def get_libpath(lib_base_name: str, full_lib_name: str) -> str: ...
 
 libpath: str
 
 header: str
 
 networks: list[str]
+
+max_dim: int
+
+max_fields: int
 
 conduit: str
 

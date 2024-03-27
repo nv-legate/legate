@@ -45,3 +45,6 @@ out/
 venv/
 !cmake/presets/*.json
 !CMakePresets.json
+arch-*
+configure.log
+reconfigure-*

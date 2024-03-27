@@ -927,6 +927,8 @@ void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
   // It is checked (just not on optimized builds)
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   LegateAssert(variant.has_value());
+  // It is checked (just not on optimized builds)
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   output.chosen_variant = *variant;
 }
 

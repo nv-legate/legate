@@ -1,12 +1,38 @@
 #!/usr/bin/env bash
 set -x
 
+setup_legate_core_env() {
+    set -xeou pipefail
+
+    # rename REPO_DIR
+    export LEGATE_CORE_DIR="${REPO_DIR}"
+
+    # HACK: this should be done much better, and in a much more transparent manner... but
+    # alas, we no longer have any control of the setup phases in github ci, so we must do
+    # it here.
+    if [[ -z "${LEGATE_CORE_ARCH:-}" ]]; then
+        case "${BUILD_TYPE}" in
+            ci|release)
+                local locase_uname="$(uname | tr '[:upper:]' '[:lower:]')"
+                LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_CORE_CMAKE_PRESET%-gcc}"
+                ;;
+            docs)
+                LEGATE_CORE_ARCH='arch-ci-linux-docs'
+                ;;
+            *) return 1;;
+        esac
+        export LEGATE_CORE_ARCH
+    fi
+
+    mkdir -p "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
+}
+
 build_legate_ci() {
-    set -xeo pipefail;
-    build-legate-cpp;
-    build-legate-wheel;
-    build-legate-conda;
-    copy_ci_artifacts;
+  set -xeo pipefail;
+  build-legate-cpp;
+  build-legate-wheel;
+  build-legate-conda;
+  copy_ci_artifacts;
 }
 
 build_legate_release() {
@@ -90,31 +116,38 @@ copy_ci_artifacts() {
 
 copy_docs_artifacts() {
     echo Copying artifacts
-    cp -r $REPO_DIR/docs/legate/core/build/html/* "$ARTIFACTS_DIR/."
+    cp -r "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/docs/html/* "$ARTIFACTS_DIR/."
 }
 
 build_docs() {
     set -x;
-    cd $REPO_DIR;
+    cd "${LEGATE_CORE_DIR}";
 
-    echo "Build doxygen documentation through install.py"
-    conda run -n legate /bin/bash -c "./install.py --docs"
+    set +xu
+    conda activate legate
+    set -xu
 
-    echo "Build documentation using Makefile"
-    cd $REPO_DIR/docs/legate/core
-    conda run -n legate /bin/bash -c "make html"
+    echo "Configuring Legate.Core"
+    cat "./config/examples/${LEGATE_CORE_ARCH}.py"
+    "./config/examples/${LEGATE_CORE_ARCH}.py"
 
-    echo "Run link checker"
-    cd $REPO_DIR/docs/legate/core
-    conda run -n legate /bin/bash -c "make linkcheck"
+    echo "Installing Legate.Core Python bindings so the Python docs build works"
+    python3 -m pip install .
 
-    copy_docs_artifacts;
+    echo "Build documentation"
+    make docs
+
+    copy_docs_artifacts
 }
 
 build_project() {
+    set -xeou pipefail
+
     . setup-utils;
 
     init_build_env "$@";
+
+    setup_legate_core_env
 
     case "$BUILD_TYPE" in
         ci) build_legate_ci;;

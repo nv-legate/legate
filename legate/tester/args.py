@@ -14,8 +14,10 @@
 """
 from __future__ import annotations
 
+import os
 import sys
 from argparse import ArgumentParser
+from pathlib import Path
 from typing import Literal, Union
 
 from typing_extensions import TypeAlias
@@ -37,9 +39,80 @@ PIN_OPTIONS: tuple[PinOptionsType, ...] = (
 )
 
 
+def __find_latest_cpp_test_dir() -> tuple[Path, Path] | tuple[None, None]:
+    if not (LEGATE_CORE_ARCH := os.environ.get("LEGATE_CORE_ARCH")):
+        return None, None
+
+    if not (env_lg_core_dir := os.environ.get("LEGATE_CORE_DIR")):
+        LEGATE_CORE_DIR = Path(__file__).parent.parent.parent.resolve()
+    else:
+        LEGATE_CORE_DIR = Path(env_lg_core_dir).resolve()
+
+    lg_arch_dir = LEGATE_CORE_DIR / LEGATE_CORE_ARCH
+
+    def make_test_dir(prefix: Path) -> Path:
+        return prefix / "tests" / "cpp"
+
+    def make_test_bin(prefix: Path) -> Path:
+        return prefix / "bin" / "cpp_tests"
+
+    def get_cpp_lib_dir() -> tuple[Path, Path] | None:
+        cpp_lib = make_test_dir(lg_arch_dir / "cmake_build")
+        cpp_bin = make_test_bin(cpp_lib)
+        if cpp_bin.exists():
+            return cpp_lib, cpp_bin
+        return None
+
+    def get_py_lib_dir() -> tuple[Path, Path] | None:
+        # Skbuild puts everything under a
+        # <os-name>-<os-version>-<cpu-arch>-<py-version> directory inside the
+        # skbuild directory. Since we are not interested in reverse engineering
+        # the entire naming scheme, we just find the one which matches the
+        # python version (which is the most likely to change).
+        py_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+        skbuild_base = lg_arch_dir / "_skbuild"
+        try:
+            for os_dir in skbuild_base.iterdir():
+                if os_dir.is_dir() and os_dir.name.endswith(py_version):
+                    skbuild_base /= os_dir
+                    break
+            else:
+                # Didn't find it, just bail
+                return None
+        except FileNotFoundError:
+            # skbuild_base does not exist
+            return None
+        py_lib = make_test_dir(
+            skbuild_base / "cmake-build" / "legate-core-cpp"
+        )
+        py_bin = make_test_bin(py_lib)
+        if py_bin.exists():
+            return py_lib, py_bin
+        return None
+
+    if (cpp_exists := get_cpp_lib_dir()) is not None:
+        cpp_lib_dir, cpp_bin = cpp_exists
+    if (py_exists := get_py_lib_dir()) is not None:
+        py_lib_dir, py_bin = py_exists
+
+    if cpp_exists and py_exists:
+        if cpp_bin.stat().st_mtime > py_bin.stat().st_mtime:
+            return cpp_lib_dir, cpp_bin
+        return py_lib_dir, py_bin
+    elif cpp_exists:
+        return cpp_lib_dir, cpp_bin
+    elif py_exists:
+        return py_lib_dir, py_bin
+    return None, None
+
+
+__test_dir, __gtest_tests_bin = __find_latest_cpp_test_dir()
+
 #: The argument parser for test.py
 parser = ArgumentParser(
-    description="Run the Cunumeric test suite",
+    description=(
+        f"Run the {Path(__file__).parent.parent.name.title()} test suite"
+    ),
     epilog="Any extra arguments will be forwarded to the Legate script",
 )
 
@@ -92,7 +165,7 @@ selection.add_argument(
 selection.add_argument(
     "--gtest-file",
     dest="gtest_file",
-    default=None,
+    default=__gtest_tests_bin,
     help="Path to GTest binary",
 )
 
@@ -239,7 +312,7 @@ multi_node.add_argument(
 multi_node.add_argument(
     "--mpi-output-filename",
     dest="mpi_output_filename",
-    default=None,
+    default=__test_dir / "mpi_result" if __test_dir else None,
     help="Directory to dump mpirun output",
 )
 
@@ -370,3 +443,7 @@ other.add_argument(
     required=False,
     help="Whether to use color terminal output (if colorama is installed)",
 )
+
+del __test_dir
+del __gtest_tests_bin
+del __find_latest_cpp_test_dir

@@ -141,4 +141,4 @@ class TestParserConfig:
         )
 
     def test_parser_description(self) -> None:
-        assert m.parser.description == "Run the Cunumeric test suite"
+        assert m.parser.description == "Run the Legate test suite"

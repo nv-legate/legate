@@ -3,12 +3,11 @@
 build_legate_wheel() {
     set -xeuo pipefail;
 
-    rm -rf $REPO_DIR/_skbuild;
-
-    mkdir -p /tmp/out;
+    local tmp_dir="/tmp/out"
+    mkdir -p "${tmp_dir}";
 
     local pip_args=(-vv);
-    pip_args+=(--wheel-dir /tmp/out);
+    pip_args+=(--wheel-dir "${tmp_dir}");
 
     if type conda 2>&1 >/dev/null; then
         pip_args+=(--no-deps);
@@ -19,22 +18,11 @@ build_legate_wheel() {
     ninja_args+=("-v");
     ninja_args+=("-j${JOBS:-$(nproc --ignore=1)}");
 
-    local global_cmake_args=(${CMAKE_ARGS:-})
-    local cmake_args=()
-    for value in "${global_cmake_args[@]}"; do
-      # the cmake preset will set this for us
-      [[ "${value}" != -DCMAKE_BUILD_TYPE=* ]] && cmake_args+=("${value}")
-    done
-
-    cmake_args+=("-DFIND_LEGATE_CORE_CPP=ON");
-    cmake_args+=("-Dlegate_core_ROOT=$REPO_DIR/build/${LEGATE_CORE_CMAKE_PRESET}");
-
     # Build + package legate.core Python wheel
-    time CMAKE_GENERATOR="Ninja" \
-         CMAKE_ARGS="${cmake_args[@]}" \
-         SKBUILD_BUILD_OPTIONS="${ninja_args[@]}" \
-         pip wheel "${pip_args[@]}" $REPO_DIR;
+    time SKBUILD_BUILD_OPTIONS="${ninja_args[@]}" \
+         pip wheel "${pip_args[@]}" ${LEGATE_CORE_DIR};
 
+    cp "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}"/_skbuild/*/*.log "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
 }
 
 (build_legate_wheel "$@");

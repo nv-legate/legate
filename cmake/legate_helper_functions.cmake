@@ -11,6 +11,8 @@
 #=============================================================================
 
 function(legate_default_cpp_install target)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "default_cpp_install")
+
   set(options)
   set(one_value_args EXPORT)
   set(multi_value_args)
@@ -64,6 +66,8 @@ function(legate_default_cpp_install target)
 endfunction()
 
 function(legate_add_cffi header)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "add_cffi")
+
   if (NOT DEFINED CMAKE_C_COMPILER)
     message(FATAL_ERROR "Must enable C language to build Legate projects")
   endif()
@@ -178,6 +182,8 @@ header: str = """
 endfunction()
 
 function(legate_default_python_install target)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "default_python_install")
+
   set(options)
   set(one_value_args EXPORT)
   set(multi_value_args)
@@ -215,8 +221,10 @@ function(legate_default_python_install target)
 endfunction()
 
 function(legate_add_cpp_subdirectory dir)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "add_cpp_subdirectory")
+
   set(options)
-  set(one_value_args EXPORT TARGET)
+  set(one_value_args EXPORT TARGET VERSION)
   set(multi_value_args)
   cmake_parse_arguments(
     LEGATE_OPT
@@ -233,6 +241,20 @@ function(legate_add_cpp_subdirectory dir)
   if (NOT LEGATE_OPT_TARGET)
     message(FATAL_ERROR "Need TARGET name for Legate package")
   endif()
+
+  set(legate_core_version)
+  if (LEGATE_OPT_VERSION)
+    set(legate_core_version ${LEGATE_OPT_VERSION})
+  else()
+    if ((PROJECT_NAME STREQUAL "legate_core") OR (PROJECT_NAME STREQUAL "legate_core_python"))
+      # called directly by our own cmake lists
+      set(legate_core_version "${PROJECT_VERSION}")
+    elseif ((CMAKE_PROJECT_NAME STREQUAL "legate_core") OR (CMAKE_PROJECT_NAME STREQUAL "legate_core_python"))
+      # our cmake lists are top-level
+      set(legate_core_version "${CMAKE_PROJECT_VERSION}")
+    endif()
+  endif()
+
   # abbreviate for the function
   set(target ${LEGATE_OPT_TARGET})
 
@@ -264,7 +286,6 @@ function(legate_add_cpp_subdirectory dir)
     add_subdirectory(${dir} ${CMAKE_BINARY_DIR}/legate_${target})
     legate_default_cpp_install(${target} EXPORT ${LEGATE_OPT_EXPORT})
   endif()
-
 endfunction()
 
 function(legate_cpp_library_template target output_sources_variable)
@@ -360,33 +381,33 @@ void @target@_perform_registration(void)
 endfunction()
 
 function(legate_python_library_template py_path)
-set(options)
-set(one_value_args TARGET PY_IMPORT_PATH)
-set(multi_value_args)
-cmake_parse_arguments(
-  LEGATE_OPT
-  "${options}"
-  "${one_value_args}"
-  "${multi_value_args}"
-  ${ARGN}
-)
+  set(options)
+  set(one_value_args TARGET PY_IMPORT_PATH)
+  set(multi_value_args)
+  cmake_parse_arguments(
+    LEGATE_OPT
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
-if (DEFINED LEGATE_OPT_TARGET)
+  if (DEFINED LEGATE_OPT_TARGET)
     set(target "${LEGATE_OPT_TARGET}")
-else()
+  else()
     string(REPLACE "/" "_" target "${py_path}")
-endif()
+  endif()
 
-if (DEFINED LEGATE_OPT_PY_IMPORT_PATH)
+  if (DEFINED LEGATE_OPT_PY_IMPORT_PATH)
     set(py_import_path "${LEGATE_OPT_PY_IMPORT_PATH}")
-else()
+  else()
     string(REPLACE "/" "." py_import_path "${py_path}")
-endif()
+  endif()
 
-set(fn_library "${CMAKE_CURRENT_SOURCE_DIR}/${py_path}/library.py")
+  set(fn_library "${CMAKE_CURRENT_SOURCE_DIR}/${py_path}/library.py")
 
-set(file_template
-[=[
+  set(file_template
+    [=[
 # SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #

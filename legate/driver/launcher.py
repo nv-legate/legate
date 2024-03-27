@@ -220,7 +220,8 @@ class Launcher:
             ),
         )
         if LEGATE_MAX_DIM is None:
-            raise RuntimeError("Cannot determine LEGATE_MAX_DIM")
+            LEGATE_MAX_DIM = str(install_info.max_dim)
+
         env["LEGATE_MAX_DIM"] = LEGATE_MAX_DIM
 
         LEGATE_MAX_FIELDS = system.env.get(
@@ -230,7 +231,8 @@ class Launcher:
             ),
         )
         if LEGATE_MAX_FIELDS is None:
-            raise RuntimeError("Cannot determine LEGATE_MAX_FIELDS")
+            LEGATE_MAX_FIELDS = str(install_info.max_fields)
+
         env["LEGATE_MAX_FIELDS"] = LEGATE_MAX_FIELDS
 
         assert env["LEGATE_MAX_DIM"] is not None

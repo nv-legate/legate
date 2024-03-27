@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+import sys
+
+MIN_PY = (3, 10)
+
+if sys.version_info < MIN_PY:
+    banner_len = 80
+    banner_sep = "*"
+    banner = banner_sep * banner_len
+
+    def banner_print(line):
+        print(banner_sep + line.center(banner_len - 2) + banner_sep)
+
+    print(banner)
+    banner_print(
+        "Python version "
+        + ".".join(map(str, MIN_PY))
+        + "+ is required to run configure"
+    )
+    info = sys.version_info
+    banner_print(
+        "Current Python version: "
+        + ".".join(map(str, [info.major, info.minor, info.micro]))
+    )
+    print(banner)
+    sys.exit(1)
+
+import os  # noqa E402
+
+sys.path.insert(0, os.path.abspath("config"))
+
+from config.aedifix.main import basic_configure  # noqa E402
+from config.legate_core_internal.main_package import LegateCore  # noqa E402
+
+
+def main():
+    return basic_configure(tuple(sys.argv[1:]), LegateCore)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

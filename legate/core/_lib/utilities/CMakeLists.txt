@@ -10,6 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "utilities")
+
 set(
   cython_sources
   typedefs.pyx

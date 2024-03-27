@@ -23,6 +23,9 @@ Req = str
 Reqs = Tuple[Req, ...]
 OSType = Literal["linux", "osx"]
 
+MAX_SANITIZER_VERSION = (11, 4)
+MAX_SANITIZER_VERSION_STR = ".".join(map(str, MAX_SANITIZER_VERSION))
+
 
 def V(version: str) -> tuple[int, ...]:
     padded_version = (version.split(".") + ["0", "0"])[:3]
@@ -135,6 +138,7 @@ class BuildConfig(SectionConfig):
     compilers: bool
     openmpi: bool
     ucx: bool
+    sanitizers: bool
     os: OSType
 
     header = "build"
@@ -176,6 +180,8 @@ class BuildConfig(SectionConfig):
             pkgs += ("openmpi<5",)
         if self.ucx:
             pkgs += ("ucx>=1.14",)
+        if self.sanitizers:
+            pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
         if self.os == "linux":
             pkgs += ("elfutils",)
         return sorted(pkgs)
@@ -184,16 +190,21 @@ class BuildConfig(SectionConfig):
         val = "-compilers" if self.compilers else ""
         val += "-openmpi" if self.openmpi else ""
         val += "-ucx" if self.ucx else ""
+        if self.sanitizers:
+            val += "-sanitizer"
         return val
 
 
 @dataclass(frozen=True)
 class RuntimeConfig(SectionConfig):
+    sanitizers: bool
+    openmpi: bool
+
     header = "runtime"
 
     @property
     def conda(self) -> Reqs:
-        return (
+        pkgs = (
             "cffi",
             "llvm-openmp",
             "numpy>=1.22",
@@ -206,6 +217,12 @@ class RuntimeConfig(SectionConfig):
             "typing_extensions",
             "libhwloc=*=*default*",
         )
+        if self.sanitizers:
+            pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
+        if self.openmpi:
+            # see https://github.com/spack/spack/issues/18084
+            pkgs += ("openssh",)
+        return pkgs
 
 
 @dataclass(frozen=True)
@@ -273,6 +290,7 @@ class EnvConfig:
     compilers: bool
     openmpi: bool
     ucx: bool
+    sanitizers: bool
 
     @property
     def channels(self) -> str:
@@ -298,11 +316,13 @@ class EnvConfig:
 
     @property
     def build(self) -> BuildConfig:
-        return BuildConfig(self.compilers, self.openmpi, self.ucx, self.os)
+        return BuildConfig(
+            self.compilers, self.openmpi, self.ucx, self.sanitizers, self.os
+        )
 
     @property
     def runtime(self) -> RuntimeConfig:
-        return RuntimeConfig()
+        return RuntimeConfig(self.sanitizers, self.openmpi)
 
     @property
     def tests(self) -> TestsConfig:
@@ -422,6 +442,13 @@ if __name__ == "__main__":
         help="Whether to include conda compilers or not",
     )
     parser.add_argument(
+        "--sanitizers",
+        action=BooleanFlag,
+        dest="sanitizers",
+        default=False,
+        help="Whether to include libsanitizers or not",
+    )
+    parser.add_argument(
         "--openmpi",
         action=BooleanFlag,
         dest="openmpi",
@@ -475,6 +502,7 @@ if __name__ == "__main__":
         args.compilers,
         args.openmpi,
         args.ucx,
+        args.sanitizers,
     )
 
     conda_sections = indent(

@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -101,19 +102,13 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
     """
     # If using a local non-scikit-build CMake build dir, read
     # Legion_BINARY_DIR and Legion_SOURCE_DIR from CMakeCache.txt
-    legate_build_dir = legate_dir / "build"
-    cmake_cache_txt = legate_build_dir.joinpath("CMakeCache.txt")
-    if legate_build_dir.exists():
-        if cmake_cache_txt.exists():
-            return legate_build_dir
-        import os
+    legate_arch_dir = legate_dir / os.environ["LEGATE_CORE_ARCH"]
+    legate_build_dir = legate_arch_dir / "cmake_build"
+    cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
+    if cmake_cache_txt.exists():
+        return legate_build_dir
 
-        if (lg_arch := os.environ.get("LEGATE_CORE_ARCH")) and (
-            (lg_arch_dir := legate_build_dir / lg_arch) / "CMakeCache.txt"
-        ).exists():
-            return lg_arch_dir
-
-    skbuild_dir = legate_dir / "_skbuild"
+    skbuild_dir = legate_arch_dir / "_skbuild"
     if not skbuild_dir.exists():
         return None
 
@@ -124,38 +119,41 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
         legate_build_dir = skbuild_dir / f / "cmake-build"
         cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
-        if legate_build_dir.exists() and cmake_cache_txt.exists():
-            try:
-                # Test whether FIND_LEGATE_CORE_CPP is set to ON. If it
-                # isn't, then we built legate_core C++ as a side-effect of
-                # building legate_core_python.
+        if not cmake_cache_txt.exists():
+            continue
+
+        try:
+            # Test whether _legate_core_FOUND_METHOD is set to
+            # SELF_BUILT. If it is, then we built legate_core C++ as a
+            # side-effect of building legate_core_python.
+            read_cmake_cache_value(
+                cmake_cache_txt,
+                "_legate_core_FOUND_METHOD:INTERNAL=SELF_BUILT",
+            )
+        except Exception:
+            # _legate_core_FOUND_METHOD is either PRE_BUILT or INSTALLED,
+            # so check to see if legate_core_DIR is a valid path. If it is,
+            # check whether legate_core_DIR is a path to a legate_core
+            # build dir i.e.  `-D legate_core_ROOT=/legate.core/build`
+            legate_core_dir = Path(
                 read_cmake_cache_value(
-                    cmake_cache_txt, "FIND_LEGATE_CORE_CPP:BOOL=OFF"
+                    cmake_cache_txt, "legate_core_DIR:PATH="
                 )
-            except Exception:
-                # If FIND_LEGATE_CORE_CPP is set to ON, check to see if
-                # legate_core_DIR is a valid path. If it is, check whether
-                # legate_core_DIR is a path to a legate_core build dir i.e.
-                # `-D legate_core_ROOT=/legate.core/build`
-                legate_core_dir = Path(
+            )
+
+            # If legate_core_dir doesn't have a CMakeCache.txt, CMake's
+            # find_package found a system legate_core installation.
+            # Return the installation paths.
+            cmake_cache_txt = legate_core_dir / "CMakeCache.txt"
+            if cmake_cache_txt.exists():
+                return Path(
                     read_cmake_cache_value(
-                        cmake_cache_txt, "legate_core_DIR:PATH="
+                        cmake_cache_txt, "legate_core_BINARY_DIR:STATIC="
                     )
                 )
+            return None
 
-                # If legate_core_dir doesn't have a CMakeCache.txt, CMake's
-                # find_package found a system legate_core installation.
-                # Return the installation paths.
-                cmake_cache_txt = legate_core_dir / "CMakeCache.txt"
-                if cmake_cache_txt.exists():
-                    return Path(
-                        read_cmake_cache_value(
-                            cmake_cache_txt, "legate_core_BINARY_DIR:STATIC="
-                        )
-                    )
-                return None
-
-            return legate_build_dir
+        return legate_build_dir
 
     return None
 
@@ -181,7 +179,7 @@ def get_legate_paths() -> LegatePaths:
             legate_lib_path=legate_dir.parents[2] / "lib",
         )
 
-    cmake_cache_txt = legate_build_dir.joinpath("CMakeCache.txt")
+    cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
     legate_source_dir = Path(
         read_cmake_cache_value(

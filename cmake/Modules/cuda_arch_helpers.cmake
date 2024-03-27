@@ -10,7 +10,11 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+include_guard(GLOBAL)
+
 function(set_cuda_arch_from_names)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "set_cuda_arch_from_names")
+
   set(cuda_archs "")
   # translate legacy arch names into numbers
   if(Legion_CUDA_ARCH MATCHES "fermi")
@@ -61,6 +65,8 @@ function(set_cuda_arch_from_names)
 endfunction()
 
 function(add_cuda_architecture_defines)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "add_cuda_architecture_defines")
+
   set(options )
   set(oneValueArgs DEFS)
   set(multiValueArgs ARCHS)

@@ -10,6 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "options")
+
 option(legate_core_BUILD_TESTS "Whether to build the C++ tests")
 option(legate_core_BUILD_INTEGRATION "Whether to build the C++ integration tests")
 option(legate_core_BUILD_EXAMPLES "Whether to build the C++/python examples")
@@ -41,6 +43,7 @@ set_or_default(Legion_USE_HDF5 USE_HDF OFF)
 set_or_default(Legion_NETWORKS NETWORKS "")
 set_or_default(Legion_USE_OpenMP USE_OPENMP OFF)
 set_or_default(Legion_BOUNDS_CHECKS CHECK_BOUNDS OFF)
+set_or_default(legate_core_SKIP_NVCC_PEDANTIC_CHECK legate_core_SKIP_NVCC_PEDANTIC_CHECK OFF)
 
 option(Legion_SPY "Enable detailed logging for Legion Spy" OFF)
 option(Legion_USE_LLVM "Use LLVM JIT operations" OFF)
@@ -50,6 +53,7 @@ option(Legion_NETWORKS "Networking backends to use (semicolon-separated)" "")
 option(Legion_USE_OpenMP "Use OpenMP" OFF)
 option(Legion_USE_Python "Use Python" OFF)
 option(Legion_BOUNDS_CHECKS "Enable bounds checking in Legion accessors" OFF)
+option(legate_core_SKIP_NVCC_PEDANTIC_CHECK "Skip checking for -pedantic or -Wpedantic compiler flags for NVCC" OFF)
 
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   set_or_default(GASNet_ROOT_DIR GASNET)
@@ -123,9 +127,11 @@ endif()
 
 set(legate_core_CXX_FLAGS "" CACHE STRING "C++ flags for legate core")
 set(legate_core_CUDA_FLAGS "" CACHE STRING "CUDA flags for legate core")
-set(legate_core_LINKER_FLAGS "" CACHE STRING "CUDA flags for legate core")
+set(legate_core_LINKER_FLAGS "" CACHE STRING "Linker flags for legate core")
 
 # there must be some way to automate creating these for all dependent packages...
 set(Legion_CXX_FLAGS "" CACHE STRING "C++ flags for Legion")
 set(Legion_CUDA_FLAGS "" CACHE STRING "CUDA flags for Legion")
-set(Legion_LINKER_FLAGS "" CACHE STRING "CUDA flags for Legion")
+set(Legion_LINKER_FLAGS "" CACHE STRING "Linker flags for Legion")
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)

@@ -22,7 +22,7 @@ repos:
       hooks:
         - id: mypy
           pass_filenames: false
-          args: ['legate', 'tests']
+          args: ['legate', 'tests', 'config', 'test.py']
           additional_dependencies: [numpy,pytest,pytest_mock,types-psutil]
     - repo: https://github.com/MarcoGorelli/cython-lint
       rev: v0.16.0

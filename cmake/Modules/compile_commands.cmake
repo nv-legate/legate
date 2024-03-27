@@ -12,13 +12,15 @@
 
 include_guard(GLOBAL)
 
-macro(legate_core_export_compile_commands)
+function(legate_core_export_compile_commands)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "export_compile_commands")
+
   if (NOT DEFINED CMAKE_EXPORT_COMPILE_COMMANDS)
-    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON PARENT_SCOPE)
   endif()
 
   if (CMAKE_EXPORT_COMPILE_COMMANDS)
-    message("-- Symlinking compile_commands.json to root directory")
+    message(STATUS "Symlinking compile_commands.json to root directory")
     file(
       CREATE_LINK
       # Using CMAKE_BINARY_DIR vs CMAKE_CURRENT_BINARY_DIR is intentional. If we use
@@ -30,4 +32,4 @@ macro(legate_core_export_compile_commands)
       SYMBOLIC
     )
   endif()
-endmacro()
+endfunction()

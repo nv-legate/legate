@@ -13,6 +13,8 @@
 include_guard(GLOBAL)
 
 function(_legate_core_debug_syms_macos target install_dir)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "macos")
+
   # Both clang and gcc will automatically generate a <TARGET>.dSYM directory (the debug
   # symbols) when creating single executables, but refuse to do so when creating
   # libraries. So we must do this ourselves...
@@ -39,6 +41,8 @@ function(_legate_core_debug_syms_macos target install_dir)
 endfunction()
 
 function(legate_core_debug_syms target)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "debug_syms")
+
   set(options)
   set(one_value_args INSTALL_DIR)
   set(multi_value_keywords)

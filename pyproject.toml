@@ -13,10 +13,77 @@ requires = [
     "cmake>=3.22.1,!=3.23.0,!=3.25.0",
     "cython>=3.0.1",
     "ninja",
-    "scikit-build>=0.13.1",
-    "setuptools>=60",
+    "scikit-build",
+    "setuptools>=61",
     "wheel",
+    # pip needs to be listed here so that legion can call "pip install" during its cmake
+    # install. If we don't list pip here, then it is not found when using the "build
+    # isolation" (read: everything is installed using a temp venv) feature of pip.
+    "pip",
 ]
+build-backend = "setuptools.build_meta:__legacy__"
+python-requires = 3.10
+
+[project]
+name = "legate-core"
+authors = [{name = "NVIDIA Corporation"}]
+license = {text = "Proprietary"}
+description = "legate.core - The Foundation for All Legate Libraries"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering",
+    "License :: Proprietary :: Nvidia Proprietary",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12"
+]
+dependencies = [
+  "cffi",
+  "numpy",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+    "numpy",
+    "colorama",
+    "coverage",
+    "mock",
+    "mypy>=0.961",
+    "pynvml",
+    "pytest-cov",
+    "pytest",
+    "pytest-mock",
+    "jupyter_client"
+]
+
+[project.urls]
+homepage = "https://github.com/nv-legate/legate.core"
+
+[project.scripts]
+legate = "legate.driver:main"
+legate-issue = "legate.issue:main"
+legate-jupyter = "legate.jupyter:main"
+lgpatch = "legate.lgpatch:main"
+
+[tool.setuptools]
+zip-safe = false
+script-files = ["bind.sh"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "legate",
+    "legate.*"
+]
+namespaces = false
+
+# I'm not sure why, but uncommenting this makes the Cython modules not get picked up by
+# setuptools (the typing stuff is never picked up anyway).
+# [tool.setuptools.package-data]
+# "*" = ["py.typed", "*.pyi", "*.so"]
 
 [tool.black]
 line-length = 79
@@ -103,6 +170,9 @@ ignore_errors = true
 [tool.pytest.ini_options]
 cache_dir = "./.cache/pytest"
 required_plugins = "pytest-mock"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
 
 
 [tool.isort]

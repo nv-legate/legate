@@ -10,6 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
+list(APPEND CMAKE_MESSAGE_CONTEXT "cpp")
+
 ##############################################################################
 # - User Options  ------------------------------------------------------------
 
@@ -65,7 +67,13 @@ find_or_configure_cccl()
 # - Python -------------------------------------------------------------------
 
 macro(_find_package_Python3)
-  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+  rapids_find_package(Python3
+    BUILD_EXPORT_SET   legate-core-exports
+    INSTALL_EXPORT_SET legate-core-exports
+    COMPONENTS         Interpreter Development
+    FIND_ARGS
+      REQUIRED
+  )
   message(VERBOSE "legate.core: Has Python3: ${Python3_FOUND}")
   message(VERBOSE "legate.core: Has Python 3 interpreter: ${Python3_Interpreter_FOUND}")
   message(VERBOSE "legate.core: Python 3 include directories: ${Python3_INCLUDE_DIRS}")
@@ -108,7 +116,14 @@ if(Legion_USE_Python AND (NOT Python3_FOUND))
 endif()
 
 if(Legion_NETWORKS)
-  find_package(MPI REQUIRED COMPONENTS CXX)
+  rapids_find_package(MPI
+    GLOBAL_TARGETS     MPI::MPI_CXX
+    BUILD_EXPORT_SET   legate-core-exports
+    INSTALL_EXPORT_SET legate-core-exports
+    COMPONENTS         CXX
+    FIND_ARGS
+      REQUIRED
+  )
 endif()
 
 if(Legion_USE_CUDA)
@@ -145,12 +160,11 @@ find_or_configure_mdspan()
 ##############################################################################
 # - legate.core --------------------------------------------------------------
 
-set(legate_core_SOURCES "")
-
 list(APPEND legate_core_SOURCES
   src/core/comm/comm.cc
   src/core/comm/comm_cpu.cc
   src/core/comm/coll.cc
+  src/core/comm/local_comm.cc
   src/core/comm/comm_util.cc
   src/core/data/allocator.cc
   src/core/data/external_allocation.cc
@@ -245,11 +259,7 @@ list(APPEND legate_core_SOURCES
 
 if(Legion_NETWORKS)
   list(APPEND legate_core_SOURCES
-    src/core/comm/mpi_comm.cc
-    src/core/comm/local_comm.cc)
-else()
-  list(APPEND legate_core_SOURCES
-    src/core/comm/local_comm.cc)
+    src/core/comm/mpi_comm.cc)
 endif()
 
 if(Legion_USE_OpenMP)
@@ -310,9 +320,14 @@ endif()
 # when compiling outside of nvcc (because CUDA's __half doesn't define any
 # __host__ functions), which causes a conflict.
 if(Legion_USE_OpenMP)
-  find_package(OpenMP REQUIRED)
-
-  target_link_libraries(legate_core PRIVATE OpenMP::OpenMP_CXX)
+  rapids_find_package(OpenMP
+    GLOBAL_TARGETS     OpenMP::OpenMP_CXX
+    BUILD_EXPORT_SET   legate-core-exports
+    INSTALL_EXPORT_SET legate-core-exports
+    COMPONENTS         CXX
+    FIND_ARGS
+      REQUIRED
+  )
 
   list(APPEND legate_core_CXX_DEFS LEGATE_USE_OPENMP)
   list(APPEND legate_core_CUDA_DEFS LEGATE_USE_OPENMP)
@@ -328,6 +343,11 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(LEGATE_CORE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(LEGATE_CORE_PLATFORM_RPATH_ORIGIN "@loader_path")
+else()
+  message(
+    FATAL_ERROR
+    "Unsupported system: ${CMAKE_SYSTEM_NAME}, don't know how to set rpath 'origin' on this platform"
+  )
 endif ()
 
 set_target_properties(legate_core
@@ -335,21 +355,21 @@ set_target_properties(legate_core
                       LIBRARY_OUTPUT_NAME                 lgcore
                       BUILD_RPATH                         "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}"
                       INSTALL_RPATH                       "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}"
-                      CXX_STANDARD                        17
+                      CXX_STANDARD                        ${CMAKE_CXX_STANDARD}
                       CXX_STANDARD_REQUIRED               ON
-                      CUDA_STANDARD                       17
+                      CUDA_STANDARD                       ${CMAKE_CUDA_STANDARD}
                       CUDA_STANDARD_REQUIRED              ON
                       POSITION_INDEPENDENT_CODE           ON
                       INTERFACE_POSITION_INDEPENDENT_CODE ON
-                      LIBRARY_OUTPUT_DIRECTORY            lib)
+                      LIBRARY_OUTPUT_DIRECTORY            lib
+                      SOVERSION                           ${legate_core_version})
+
+# export this so that install_info.py can properly locate the versioned and unversioned
+# library names
+set_property(TARGET legate_core APPEND PROPERTY EXPORT_PROPERTIES LIBRARY_OUTPUT_NAME)
 
 if(Legion_USE_CUDA)
   set_property(TARGET legate_core PROPERTY CUDA_ARCHITECTURES ${Legion_CUDA_ARCH})
-endif()
-
-# Add Conda library, and include paths if specified
-if(TARGET conda_env)
-  target_link_libraries(legate_core PRIVATE conda_env)
 endif()
 
 if(Legion_USE_CUDA)
@@ -373,13 +393,18 @@ if(Legion_USE_CUDA AND CAL_DIR)
 endif()
 
 target_link_libraries(legate_core
-   PUBLIC Legion::Legion
-          CCCL::Thrust
-          $<TARGET_NAME_IF_EXISTS:CUDA::nvToolsExt>
-          $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
-          $<TARGET_NAME_IF_EXISTS:std::mdspan>
-          $<TARGET_NAME_IF_EXISTS:std::span>
-  PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>)
+  PUBLIC
+    Legion::Legion
+    CCCL::Thrust
+    $<TARGET_NAME_IF_EXISTS:CUDA::nvToolsExt>
+    $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
+    $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+    $<TARGET_NAME_IF_EXISTS:std::mdspan>
+    $<TARGET_NAME_IF_EXISTS:std::span>
+  PRIVATE
+    $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
+    $<TARGET_NAME_IF_EXISTS:conda_env>
+)
 
 target_compile_definitions(legate_core
   PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${legate_core_CXX_DEFS}>"
@@ -416,34 +441,34 @@ macro(legate_core_add_target_link_option TARGET_NAME VIS OPTION_NAME)
   endif()
 endmacro()
 
-if((CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA") AND (NOT legate_core_SKIP_NVCC_PEDANTIC_CHECK))
-  foreach(remove_re
-      [=[\-Wpedantic]=]
-      # We want to catch either "-pedantic" or "--compiler-option=-pedantic", but we do
-      # NOT want to catch -Wformat-pedantic!
-      [=[[ |=]\-pedantic]=]
+function(check_nvcc_pedantic_flags)
+  if(legate_core_SKIP_NVCC_PEDANTIC_CHECK)
+    message(VERBOSE "Skipping nvcc pedantic check (explicitly skipped by user)")
+    return()
+  endif()
+  if(NOT (CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA"))
+    message(VERBOSE "Skipping nvcc pedantic check (compiler \"${CMAKE_CUDA_COMPILER_ID}\" is not nvcc)")
+    return()
+  endif()
+  # We want to catch either "-pedantic" or "--compiler-option=-pedantic" or
+  # --compiler-options='-pedantic' but we do NOT want to catch -Wformat-pedantic!
+  string(REGEX MATCH [=[[ |=|='|="]\-W?pedantic]=] match_var "${legate_core_CUDA_FLAGS}")
+  if(match_var)
+    message(
+      FATAL_ERROR
+      "-pedantic (or -Wpedantic) is not supported by nvcc and will lead to "
+      "spurious warnings in generated code. Please remove it from your build flags. If "
+      "you would like to override this behavior, reconfigure with "
+      "-Dlegate_core_SKIP_NVCC_PEDANTIC_CHECK=ON."
     )
-    # This might seems strange why are are doing a match then replace but... we first do the
-    # regex match because we only want to emit the warning if the user actually has the
-    # offending flags. But if we've done the match and didn't find the flags, then there's
-    # no point in doing the replace, so we move it inside the if as well.
-    string(REGEX MATCH "${remove_re}" match_var "${legate_core_CUDA_FLAGS}")
-    if(match_var)
-      message(
-        WARNING
-        "-pedantic (or -Wpedantic) is not supported by nvcc and will lead to spurious "
-        "warnings in generated code. Removing it from build flags. If you would like to "
-        "override this behavior, reconfigure with "
-        "-Dlegate_core_SKIP_NVCC_PEDANTIC_CHECK=ON."
-      )
-      string(
-        REGEX REPLACE
-        "${remove_re}" ""
-        legate_core_CUDA_FLAGS "${legate_core_CUDA_FLAGS}"
-      )
-    endif()
-  endforeach()
-endif()
+  endif()
+endfunction()
+check_nvcc_pedantic_flags()
+
+include(${LEGATE_CORE_DIR}/cmake/Modules/default_flags.cmake)
+
+legate_core_configure_default_compiler_flags()
+legate_core_configure_default_linker_flags()
 
 legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_PRIVATE_OPTIONS)
 legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_PRIVATE_OPTIONS)
@@ -454,7 +479,7 @@ legate_core_add_target_compile_option(legate_core CUDA PUBLIC legate_core_CUDA_P
 legate_core_add_target_compile_option(legate_core CXX PRIVATE legate_core_CXX_FLAGS)
 legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_FLAGS)
 
-legate_core_add_target_link_option(legate_core INTERFACE legate_core_LINKER_FLAGS)
+legate_core_add_target_link_option(legate_core PUBLIC legate_core_LINKER_FLAGS)
 
 target_include_directories(legate_core
   PUBLIC
@@ -466,74 +491,70 @@ target_include_directories(legate_core
 ##############################################################################
 # - Doxygen target------------------------------------------------------------
 
-if (legate_core_BUILD_DOCS)
-  find_package(Doxygen)
-  if(Doxygen_FOUND)
-    set(legate_core_DOC_SOURCES "")
-    list(APPEND legate_core_DOC_SOURCES
-      # type
-      src/core/type/type_info.h
-      src/core/type/type_traits.h
-      # task
-      src/core/task/task.h
-      src/core/task/task_context.h
-      src/core/task/registrar.h
-      src/core/task/variant_options.h
-      src/core/task/exception.h
-      src/core/cuda/stream_pool.h
-      # data
-      src/core/data/logical_array.h
-      src/core/data/logical_store.h
-      src/core/data/physical_array.h
-      src/core/data/physical_store.h
-      src/core/data/scalar.h
-      src/core/data/shape.h
-      src/core/data/buffer.h
-      src/core/data/external_allocation.h
-      src/core/utilities/span.h
-      src/core/data/allocator.h
-      # runtime
-      src/core/runtime/library.h
-      src/core/runtime/runtime.h
-      # operation
-      src/core/operation/task.h
-      src/core/operation/projection.h
-      # partitioning
-      src/core/partitioning/constraint.h
-      # mapping
-      src/core/mapping/machine.h
-      src/core/mapping/mapping.h
-      src/core/mapping/operation.h
-      src/core/mapping/store.h
-      # aliases
-      src/core/utilities/typedefs.h
-      # utilities
-      src/core/runtime/scope.h
-      src/core/utilities/debug.h
-      src/core/utilities/dispatch.h
-      src/core/utilities/scope_guard.h
-      src/timing/timing.h
-      # main page
-      src/legate.h
-    )
-    set(DOXYGEN_PROJECT_NAME "Legate")
-    set(DOXYGEN_FULL_PATH_NAMES NO)
-    set(DOXYGEN_GENERATE_HTML YES)
-    set(DOXYGEN_GENERATE_LATEX NO)
-    set(DOXYGEN_EXTENSION_MAPPING cu=C++ cuh=C++)
-    set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
-    set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
-    set(DOXYGEN_USE_MATHJAX YES)
-    set(DOXYGEN_MATHJAX_VERSION MathJax_3)
-    set(DOXYGEN_STRIP_FROM_INC_PATH ${LEGATE_CORE_DIR}/src)
-    set(DOXYGEN_EXAMPLE_PATH tests/cpp)
-    doxygen_add_docs("doxygen_legate" ALL
-      ${legate_core_DOC_SOURCES}
-      COMMENT "Custom command for building Doxygen docs."
-    )
-  else()
-    message(STATUS "cannot find Doxygen. not generating docs.")
-  endif()
+if(legate_core_BUILD_DOCS)
+  find_package(Doxygen REQUIRED)
+  list(APPEND legate_core_DOC_SOURCES
+    # type
+    src/core/type/type_info.h
+    src/core/type/type_traits.h
+    # task
+    src/core/task/task.h
+    src/core/task/task_context.h
+    src/core/task/registrar.h
+    src/core/task/variant_options.h
+    src/core/task/exception.h
+    src/core/cuda/stream_pool.h
+    # data
+    src/core/data/logical_array.h
+    src/core/data/logical_store.h
+    src/core/data/physical_array.h
+    src/core/data/physical_store.h
+    src/core/data/scalar.h
+    src/core/data/shape.h
+    src/core/data/buffer.h
+    src/core/data/external_allocation.h
+    src/core/utilities/span.h
+    src/core/data/allocator.h
+    # runtime
+    src/core/runtime/library.h
+    src/core/runtime/runtime.h
+    # operation
+    src/core/operation/task.h
+    src/core/operation/projection.h
+    # partitioning
+    src/core/partitioning/constraint.h
+    # mapping
+    src/core/mapping/machine.h
+    src/core/mapping/mapping.h
+    src/core/mapping/operation.h
+    src/core/mapping/store.h
+    # aliases
+    src/core/utilities/typedefs.h
+    # utilities
+    src/core/runtime/scope.h
+    src/core/utilities/debug.h
+    src/core/utilities/dispatch.h
+    src/core/utilities/scope_guard.h
+    src/timing/timing.h
+    # main page
+    src/legate.h
+  )
+  set(DOXYGEN_PROJECT_NAME "Legate")
+  set(DOXYGEN_FULL_PATH_NAMES NO)
+  set(DOXYGEN_GENERATE_HTML YES)
+  set(DOXYGEN_GENERATE_LATEX NO)
+  set(DOXYGEN_EXTENSION_MAPPING cu=C++ cuh=C++)
+  set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
+  set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
+  set(DOXYGEN_USE_MATHJAX YES)
+  set(DOXYGEN_MATHJAX_VERSION MathJax_3)
+  set(DOXYGEN_STRIP_FROM_INC_PATH ${LEGATE_CORE_DIR}/src)
+  set(DOXYGEN_EXAMPLE_PATH tests/cpp)
+  set(DOXYGEN_QUIET YES)
+  doxygen_add_docs("doxygen_legate" ALL
+    ${legate_core_DOC_SOURCES}
+    COMMENT "Custom command for building Doxygen docs."
+  )
 endif()
 
 ##############################################################################
@@ -742,6 +763,19 @@ Imported Targets:
 
 file(READ ${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake helper_functions)
 
+# This variable contains the names of the variables that a downstream build wants us to
+# "export" back out to them.
+#
+# Normally this is done transparently (via the "code_string" below, embedded in the
+# Findlegate_core.cmake) if the CMakeLists.txt calling this one finds the legate core via
+# a find_package() call. But if we are being built as a subdirectory, then we need to
+# explicitly set(<the_variable> ... PARENT_SCOPE) in order for downstream to see it...
+if(legate_core_SUBDIR_CMAKE_EXPORT_VARS)
+  foreach(_var IN LISTS legate_core_SUBDIR_CMAKE_EXPORT_VARS)
+    set(${_var} ${${_var}} PARENT_SCOPE)
+  endforeach()
+endif()
+
 string(JOIN "\n" code_string
 [=[
 if(NOT TARGET CCCL::Thrust)
@@ -754,6 +788,8 @@ endif()
   "set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH})"
   "set(Legion_NETWORKS ${Legion_NETWORKS})"
   "set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS})"
+  "set(Legion_MAX_DIM ${Legion_MAX_DIM})"
+  "set(Legion_MAX_FIELDS ${Legion_MAX_FIELDS})"
 [=[
 if(Legion_NETWORKS)
   find_package(MPI REQUIRED COMPONENTS CXX)
@@ -831,3 +867,5 @@ if(NOT Legion_USE_CUDA)
   list(APPEND legate_core_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_DEBUG}")
   list(APPEND legate_core_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_RELEASE}")
 endif()
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)

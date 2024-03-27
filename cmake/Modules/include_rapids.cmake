@@ -13,6 +13,8 @@
 include_guard(GLOBAL)
 
 macro(legate_include_rapids)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "include_rapids")
+
   if(NOT rapids-cmake-version)
     # default
     set(rapids-cmake-version 24.02)
@@ -31,4 +33,6 @@ macro(legate_include_rapids)
     include(rapids-find)
     set(_LEGATE_HAS_RAPIDS ON)
   endif()
+
+  list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endmacro()

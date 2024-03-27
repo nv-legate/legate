@@ -10,4 +10,4 @@
 
 from __future__ import annotations
 
-from legate.timing._lib.timing import time
+from ._lib.timing import time
