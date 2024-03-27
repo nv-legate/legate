@@ -1,7 +1,7 @@
 changelog:
   exclude:
     labels:
-      - category:task
+      - category:housekeeping
   categories:
     - title: 🐛 Bug Fixes
       labels:

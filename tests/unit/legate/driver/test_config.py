@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import os
@@ -446,17 +443,145 @@ class TestConfig:
         c = m.Config(["legate"] + list(args) + ["foo.py", "-a", "1"])
 
         assert c.user_opts == ("-a", "1")
-        assert c.user_script == "foo.py"
+        assert c.user_program == "foo.py"
 
-    def test_console_true(self) -> None:
+    USER_OPTS: tuple[list[str], ...] = (
+        [],
+        ["-a"],
+        ["-a", "-b", "1", "--long"],
+    )
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_exec_run_mode_with_prog_with_module(
+        self, opts: list[str]
+    ) -> None:
+        with pytest.raises(RuntimeError):
+            m.Config(
+                ["legate", "--run-mode", "exec", "--module", "mod", "prog"]
+                + opts
+            )
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_exec_run_mode_with_prog_no_module(self, opts: list[str]) -> None:
+        c = m.Config(["legate", "--run-mode", "exec", "prog"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.run_mode == "exec"
+        assert not c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_python_run_mode_with_prog_with_module(
+        self, opts: list[str]
+    ) -> None:
+        c = m.Config(
+            ["legate", "--run-mode", "python", "--module", "mod", "prog"]
+            + opts
+        )
+
+        assert c.user_opts == tuple(opts)
+        assert c.run_mode == "python"
+        assert not c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_python_run_mode_with_prog_no_module(
+        self, opts: list[str]
+    ) -> None:
+        c = m.Config(["legate", "--run-mode", "python", "prog"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.run_mode == "python"
+        assert not c.console
+
+    def test_python_run_mode_no_prog_with_module(self) -> None:
+        c = m.Config(["legate", "--run-mode", "python", "--module", "mod"])
+
+        assert c.user_opts == ()
+        assert c.run_mode == "python"
+        assert c.console
+
+    def test_python_run_mode_no_prog_no_module(self) -> None:
+        c = m.Config(["legate", "--run-mode", "python"])
+
+        assert c.user_opts == ()
+        assert c.run_mode == "python"
+        assert c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_default_run_mode_with_script_with_module(
+        self, opts: list[str]
+    ) -> None:
+        c = m.Config(
+            [
+                "legate",
+                "--rlwrap",
+                "--gpus",
+                "2",
+                "--module",
+                "mod",
+                "script.py",
+            ]
+            + opts
+        )
+
+        assert c.user_opts == tuple(opts)
+        assert c.user_program == "script.py"
+        assert c.run_mode == "python"
+        assert not c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_default_run_mode_with_script_no_module(
+        self, opts: list[str]
+    ) -> None:
+        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "script.py"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.user_program == "script.py"
+        assert c.run_mode == "python"
+        assert not c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_default_run_mode_with_prog_with_modue(
+        self, opts: list[str]
+    ) -> None:
+        c = m.Config(
+            ["legate", "--rlwrap", "--gpus", "2", "--module", "mod", "prog"]
+            + opts
+        )
+
+        assert c.user_opts == tuple(opts)
+        assert c.user_program == "prog"
+        assert c.run_mode == "python"
+        assert not c.console
+
+    @pytest.mark.parametrize("opts", USER_OPTS)
+    def test_default_run_mode_with_prog_no_modue(
+        self, opts: list[str]
+    ) -> None:
+        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "prog"] + opts)
+
+        assert c.user_opts == tuple(opts)
+        assert c.user_program == "prog"
+        assert c.run_mode == "exec"
+        assert not c.console
+
+    def test_default_run_mode_no_prog_with_module(self) -> None:
+        c = m.Config(["legate", "--module", "mod"])
+
+        assert c.user_opts == ()
+        assert c.run_mode == "python"
+        assert c.console
+
+    def test_default_run_mode_no_prog_no_module(self) -> None:
         c = m.Config(["legate"])
 
         assert c.user_opts == ()
+        assert c.run_mode == "python"
         assert c.console
 
-    def test_console_false(self) -> None:
-        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "foo.py", "-a"])
+    def test_exec_run_mode_no_prog_with_module(self) -> None:
+        with pytest.raises(RuntimeError):
+            m.Config(["legate", "--run-mode", "exec", "--module", "mod"])
 
-        assert c.user_opts == ("-a",)
-        assert c.user_script == "foo.py"
-        assert not c.console
+    def test_exec_run_mode_no_prog_no_module(self) -> None:
+        with pytest.raises(RuntimeError):
+            m.Config(["legate", "--run-mode", "exec"])

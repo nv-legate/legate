@@ -1,40 +1,37 @@
-/* Copyright 2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
-#include "legate.h"
+#include "legate_defines.h"
 
-#ifdef LEGATE_USE_CUDA
-
+#if LegateDefined(LEGATE_USE_CUDA)
 #include <nvtx3/nvToolsExt.h>
+#else
+using nvtxRangeId_t = char;
+inline constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
+inline constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
+#endif
 
-namespace legate {
-namespace nvtx {
+namespace legate::nvtx {
 
 class Range {
  public:
-  Range(const char* message) { range_ = nvtxRangeStartA(message); }
-  ~Range() { nvtxRangeEnd(range_); }
+  explicit Range(const char* message) noexcept : range_{nvtxRangeStartA(message)} {}
+
+  ~Range() noexcept { nvtxRangeEnd(range_); }
 
  private:
   nvtxRangeId_t range_;
 };
 
-}  // namespace nvtx
-}  // namespace legate
-
-#endif
+}  // namespace legate::nvtx

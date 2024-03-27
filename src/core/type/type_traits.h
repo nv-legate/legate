@@ -1,24 +1,22 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
 #include "core/type/type_info.h"
 
-#include <limits.h>
+#include "legate_defines.h"
+
+#include <climits>
 
 #ifdef LEGION_REDOP_COMPLEX
 #ifdef LEGION_REDOP_HALF
@@ -50,97 +48,110 @@ namespace legate {
  * @brief A template constexpr that converts types to type codes
  */
 template <class>
-PREFIX constexpr Type::Code legate_type_code_of = Type::Code::INVALID;
+PREFIX constexpr Type::Code type_code_of = Type::Code::NIL;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<__half> = Type::Code::FLOAT16;
+PREFIX constexpr Type::Code type_code_of<__half> = Type::Code::FLOAT16;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<float> = Type::Code::FLOAT32;
+PREFIX constexpr Type::Code type_code_of<float> = Type::Code::FLOAT32;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<double> = Type::Code::FLOAT64;
+PREFIX constexpr Type::Code type_code_of<double> = Type::Code::FLOAT64;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<int8_t> = Type::Code::INT8;
+PREFIX constexpr Type::Code type_code_of<std::int8_t> = Type::Code::INT8;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<int16_t> = Type::Code::INT16;
+PREFIX constexpr Type::Code type_code_of<std::int16_t> = Type::Code::INT16;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<int32_t> = Type::Code::INT32;
+PREFIX constexpr Type::Code type_code_of<std::int32_t> = Type::Code::INT32;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<int64_t> = Type::Code::INT64;
+PREFIX constexpr Type::Code type_code_of<std::int64_t> = Type::Code::INT64;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<uint8_t> = Type::Code::UINT8;
+PREFIX constexpr Type::Code type_code_of<std::uint8_t> = Type::Code::UINT8;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<uint16_t> = Type::Code::UINT16;
+PREFIX constexpr Type::Code type_code_of<std::uint16_t> = Type::Code::UINT16;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<uint32_t> = Type::Code::UINT32;
+PREFIX constexpr Type::Code type_code_of<std::uint32_t> = Type::Code::UINT32;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<uint64_t> = Type::Code::UINT64;
+PREFIX constexpr Type::Code type_code_of<std::uint64_t> = Type::Code::UINT64;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<bool> = Type::Code::BOOL;
+PREFIX constexpr Type::Code type_code_of<bool> = Type::Code::BOOL;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<complex<float>> = Type::Code::COMPLEX64;
+PREFIX constexpr Type::Code type_code_of<complex<float>> = Type::Code::COMPLEX64;
 template <>
-PREFIX constexpr Type::Code legate_type_code_of<complex<double>> = Type::Code::COMPLEX128;
+PREFIX constexpr Type::Code type_code_of<complex<double>> = Type::Code::COMPLEX128;
+// When the CUDA build is off, complex<T> is an alias to std::complex<T>
+#if LegateDefined(LEGATE_USE_CUDA)
+template <>
+PREFIX constexpr Type::Code type_code_of<std::complex<float>> = Type::Code::COMPLEX64;
+template <>
+PREFIX constexpr Type::Code type_code_of<std::complex<double>> = Type::Code::COMPLEX128;
+#endif
+template <>
+PREFIX constexpr Type::Code type_code_of<std::string> = Type::Code::STRING;
 
 #undef PREFIX
 
 template <Type::Code CODE>
-struct LegateTypeOf {
+struct TypeOf {
   using type = void;
 };
 template <>
-struct LegateTypeOf<Type::Code::BOOL> {
+struct TypeOf<Type::Code::BOOL> {
   using type = bool;
 };
 template <>
-struct LegateTypeOf<Type::Code::INT8> {
-  using type = int8_t;
+struct TypeOf<Type::Code::INT8> {
+  using type = std::int8_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::INT16> {
-  using type = int16_t;
+struct TypeOf<Type::Code::INT16> {
+  using type = std::int16_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::INT32> {
-  using type = int32_t;
+struct TypeOf<Type::Code::INT32> {
+  using type = std::int32_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::INT64> {
-  using type = int64_t;
+struct TypeOf<Type::Code::INT64> {
+  using type = std::int64_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::UINT8> {
-  using type = uint8_t;
+struct TypeOf<Type::Code::UINT8> {
+  using type = std::uint8_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::UINT16> {
-  using type = uint16_t;
+struct TypeOf<Type::Code::UINT16> {
+  using type = std::uint16_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::UINT32> {
-  using type = uint32_t;
+struct TypeOf<Type::Code::UINT32> {
+  using type = std::uint32_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::UINT64> {
-  using type = uint64_t;
+struct TypeOf<Type::Code::UINT64> {
+  using type = std::uint64_t;
 };
 template <>
-struct LegateTypeOf<Type::Code::FLOAT16> {
+struct TypeOf<Type::Code::FLOAT16> {
   using type = __half;
 };
 template <>
-struct LegateTypeOf<Type::Code::FLOAT32> {
+struct TypeOf<Type::Code::FLOAT32> {
   using type = float;
 };
 template <>
-struct LegateTypeOf<Type::Code::FLOAT64> {
+struct TypeOf<Type::Code::FLOAT64> {
   using type = double;
 };
 template <>
-struct LegateTypeOf<Type::Code::COMPLEX64> {
+struct TypeOf<Type::Code::COMPLEX64> {
   using type = complex<float>;
 };
 template <>
-struct LegateTypeOf<Type::Code::COMPLEX128> {
+struct TypeOf<Type::Code::COMPLEX128> {
   using type = complex<double>;
+};
+template <>
+struct TypeOf<Type::Code::STRING> {
+  using type = std::string;
 };
 
 /**
@@ -148,7 +159,7 @@ struct LegateTypeOf<Type::Code::COMPLEX128> {
  * @brief A template that converts type codes to types
  */
 template <Type::Code CODE>
-using legate_type_of = typename LegateTypeOf<CODE>::type;
+using type_of = typename TypeOf<CODE>::type;
 
 /**
  * @ingroup util
@@ -156,7 +167,7 @@ using legate_type_of = typename LegateTypeOf<CODE>::type;
  */
 template <Type::Code CODE>
 struct is_integral {
-  static constexpr bool value = std::is_integral<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_integral_v<type_of<CODE>>;
 };
 
 /**
@@ -165,7 +176,11 @@ struct is_integral {
  */
 template <Type::Code CODE>
 struct is_signed {
-  static constexpr bool value = std::is_signed<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_signed_v<type_of<CODE>>;
+};
+template <>
+struct is_signed<Type::Code::FLOAT16> {
+  static constexpr bool value = true;
 };
 
 /**
@@ -174,7 +189,7 @@ struct is_signed {
  */
 template <Type::Code CODE>
 struct is_unsigned {
-  static constexpr bool value = std::is_unsigned<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_unsigned_v<type_of<CODE>>;
 };
 
 /**
@@ -183,7 +198,7 @@ struct is_unsigned {
  */
 template <Type::Code CODE>
 struct is_floating_point {
-  static constexpr bool value = std::is_floating_point<legate_type_of<CODE>>::value;
+  static constexpr bool value = std::is_floating_point_v<type_of<CODE>>;
 };
 
 template <>
@@ -216,5 +231,14 @@ struct is_complex_type<complex<float>> : std::true_type {};
 
 template <>
 struct is_complex_type<complex<double>> : std::true_type {};
+
+// When the CUDA build is off, complex<T> is an alias to std::complex<T>
+#if LegateDefined(LEGATE_USE_CUDA)
+template <>
+struct is_complex_type<std::complex<float>> : std::true_type {};
+
+template <>
+struct is_complex_type<std::complex<double>> : std::true_type {};
+#endif
 
 }  // namespace legate

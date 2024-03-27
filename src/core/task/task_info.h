@@ -1,17 +1,13 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
@@ -19,36 +15,49 @@
 #include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
 
+#include <map>
+#include <memory>
+
 namespace legate {
 
-struct VariantInfo {
-  VariantImpl body;
-  Legion::CodeDescriptor code_desc;
-  VariantOptions options;
+class VariantInfo {
+ public:
+  VariantImpl body{};
+  Legion::CodeDescriptor code_desc{};
+  VariantOptions options{};
 };
 
 class TaskInfo {
  public:
-  TaskInfo(const std::string& task_name);
+  explicit TaskInfo(std::string task_name);
+  ~TaskInfo();
 
- public:
-  const std::string& name() const { return task_name_; }
+  [[nodiscard]] const std::string& name() const;
 
- public:
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options);
-  const VariantInfo* find_variant(LegateVariantCode vid) const;
-  bool has_variant(LegateVariantCode vid) const;
+  void add_variant(LegateVariantCode vid,
+                   VariantImpl body,
+                   RealmCallbackFn entry,
+                   const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+  [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
+  [[nodiscard]] bool has_variant(LegateVariantCode vid) const;
 
- public:
   void register_task(Legion::TaskID task_id);
+
+  TaskInfo(const TaskInfo&)            = delete;
+  TaskInfo& operator=(const TaskInfo&) = delete;
+  TaskInfo(TaskInfo&&)                 = delete;
+  TaskInfo& operator=(TaskInfo&&)      = delete;
 
  private:
   friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);
-  std::string task_name_;
-  std::map<LegateVariantCode, VariantInfo> variants_;
+
+  class Impl;
+
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace legate

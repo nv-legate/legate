@@ -1,21 +1,19 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
+// NOLINTBEGIN(bugprone-reserved-identifier)
 #ifndef __LEGATE_C_H__
 #define __LEGATE_C_H__
+// NOLINTEND(bugprone-reserved-identifier)
 
 #ifndef LEGATE_USE_PYTHON_CFFI
 #include "legion/legion_config.h"
@@ -23,15 +21,28 @@
 #include <cstdint>
 #endif
 
+// NOLINTBEGIN(modernize-use-using)
 typedef enum legate_core_task_id_t {
+  LEGATE_CORE_TOPLEVEL_TASK_ID,
   LEGATE_CORE_EXTRACT_SCALAR_TASK_ID,
   LEGATE_CORE_INIT_NCCL_ID_TASK_ID,
   LEGATE_CORE_INIT_NCCL_TASK_ID,
   LEGATE_CORE_FINALIZE_NCCL_TASK_ID,
+  LEGATE_CORE_INIT_CAL_TASK_ID,
+  LEGATE_CORE_FINALIZE_CAL_TASK_ID,
   LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID,
   LEGATE_CORE_INIT_CPUCOLL_TASK_ID,
   LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID,
-  LEGATE_CORE_NUM_TASK_IDS,  // must be last
+  LEGATE_CORE_FIXUP_RANGES,
+  LEGATE_CORE_OFFSETS_TO_RANGES,
+  LEGATE_CORE_RANGES_TO_OFFSETS,
+  LEGATE_CORE_FIRST_DYNAMIC_TASK_ID,
+  // Legate core runtime allocates LEGATE_CORE_MAX_TASK_ID tasks from Legion upfront. All ID's
+  // prior to LEGATE_CORE_FIRST_DYNAMIC_TASK_ID are for specific, bespoke
+  // tasks. LEGATE_CORE_MAX_TASK_ID - LEGATE_CORE_FIRST_DYNAMIC_TASK_ID are for "dynamic"
+  // tasks, e.g. those created from Python or elsewhere. Hence we make LEGATE_CORE_MAX_TASK_ID
+  // large enough so that theres enough slack
+  LEGATE_CORE_MAX_TASK_ID = 512,  // must be last
 } legate_core_task_id_t;
 
 typedef enum legate_core_proj_id_t {
@@ -57,12 +68,8 @@ typedef enum legate_core_tunable_t {
   LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM,
   LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME,
   LEGATE_CORE_TUNABLE_WINDOW_SIZE,
-  LEGATE_CORE_TUNABLE_MAX_PENDING_EXCEPTIONS,
-  LEGATE_CORE_TUNABLE_PRECISE_EXCEPTION_TRACE,
   LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE,
-  LEGATE_CORE_TUNABLE_FIELD_REUSE_FREQUENCY,
   LEGATE_CORE_TUNABLE_MAX_LRU_LENGTH,
-  LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER,
 } legate_core_tunable_t;
 
 typedef enum legate_core_variant_t {
@@ -89,12 +96,16 @@ typedef enum legate_core_type_code_t {
   FLOAT64_LT    = LEGION_TYPE_FLOAT64,
   COMPLEX64_LT  = LEGION_TYPE_COMPLEX64,
   COMPLEX128_LT = LEGION_TYPE_COMPLEX128,
+  // Null type
+  NULL_LT,
+  // Opaque binary type
+  BINARY_LT,
   // Compound types
   FIXED_ARRAY_LT,
   STRUCT_LT,
   // Variable size types
   STRING_LT,
-  INVALID_LT = -1,
+  LIST_LT,
 } legate_core_type_code_t;
 
 typedef enum legate_core_reduction_op_kind_t {
@@ -129,27 +140,19 @@ typedef enum legate_core_reduction_op_id_t {
   LEGATE_CORE_MAX_REDUCTION_OP_ID = 1,
 } legate_core_reduction_op_id_t;
 
+typedef enum legate_core_task_priority_t {
+  LEGATE_CORE_DEFAULT_TASK_PRIORITY = 0,
+} legate_core_task_priority_t;
+
+// NOLINTEND(modernize-use-using)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void legate_parse_config(void);
-void legate_shutdown(void);
-
 void legate_core_perform_registration(void);
 
-void legate_register_affine_projection_functor(
-  int32_t, int32_t, int32_t*, int32_t*, int32_t*, legion_projection_id_t);
-
-void legate_create_sharding_functor_using_projection(
-  legion_sharding_id_t, legion_projection_id_t, uint32_t, uint32_t, uint32_t);
-
-// TODO: the return type should be legion_point_transform_functor_t
-void* legate_linearizing_point_transform_functor();
-
-void legate_cpucoll_finalize(void);
-
-int legate_cpucoll_initcomm(void);
+bool legate_has_cal();
 
 #ifdef __cplusplus
 }

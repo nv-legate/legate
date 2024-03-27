@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import os
@@ -21,6 +18,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import legate.util.system as m
+from legate.util.types import CPUInfo
 
 
 def test___all__() -> None:
@@ -55,20 +53,6 @@ class TestSystem:
         msg = "Legate does not work on junk"
         with pytest.raises(RuntimeError, match=msg):
             s.os
-
-    def test_LIBPATH_Linux(self, mocker: MockerFixture) -> None:
-        mocker.patch("platform.system", return_value="Linux")
-
-        s = m.System()
-
-        assert s.LIB_PATH == "LD_LIBRARY_PATH"
-
-    def test_LIBPATH_Darwin(self, mocker: MockerFixture) -> None:
-        mocker.patch("platform.system", return_value="Darwin")
-
-        s = m.System()
-
-        assert s.LIB_PATH == "DYLD_LIBRARY_PATH"
 
     # These properties delegate to util functions, just verify plumbing
 
@@ -184,3 +168,14 @@ class Test_extract_values:
     @pytest.mark.parametrize("val,expected", testdata_mixed)
     def test_mixed(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
+
+
+@pytest.mark.skipif(platform.system() == "Darwin", reason="non-OSX test")
+def test_linux_cpus_repects_affinity(mocker: MockerFixture) -> None:
+    mocker.patch(
+        "legate.util.system.linux_load_sibling_sets",
+        return_value={(0, 2), (1, 3)},
+    )
+    mocker.patch("os.sched_getaffinity", return_value={0})
+
+    assert m.System().cpus == (CPUInfo((0, 2)),)

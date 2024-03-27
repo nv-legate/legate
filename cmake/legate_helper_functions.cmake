@@ -1,34 +1,14 @@
 #=============================================================================
-# Copyright 2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 #=============================================================================
-
-macro(legate_include_rapids)
-  if (NOT _LEGATE_HAS_RAPIDS)
-    if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-      file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-23.08/RAPIDS.cmake
-           ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-    endif()
-    include(${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-    include(rapids-cmake)
-    include(rapids-cpm)
-    include(rapids-cuda)
-    include(rapids-export)
-    include(rapids-find)
-    set(_LEGATE_HAS_RAPIDS ON)
-  endif()
-endmacro()
 
 function(legate_default_cpp_install target)
   set(options)
@@ -46,6 +26,8 @@ function(legate_default_cpp_install target)
     message(FATAL_ERROR "Need EXPORT name for legate_default_install")
   endif()
 
+  include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/include_rapids.cmake")
+
   legate_include_rapids()
 
   rapids_cmake_install_lib_dir(lib_dir)
@@ -53,6 +35,10 @@ function(legate_default_cpp_install target)
   install(TARGETS ${target}
           DESTINATION ${lib_dir}
 	  EXPORT ${LEGATE_OPT_EXPORT})
+
+  include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/debug_symbols.cmake")
+
+  legate_core_debug_syms(${target} INSTALL_DIR ${lib_dir})
 
   set(final_code_block
     "set(${target}_BUILD_LIBDIR ${CMAKE_BINARY_DIR}/legate_${target})"
@@ -216,6 +202,8 @@ function(legate_default_python_install target)
             DESTINATION ${lib_dir}
             EXPORT ${LEGATE_OPT_EXPORT})
 
+    include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/include_rapids.cmake")
+
     legate_include_rapids()
     rapids_export(
       INSTALL ${target}_python
@@ -247,6 +235,8 @@ function(legate_add_cpp_subdirectory dir)
   endif()
   # abbreviate for the function
   set(target ${LEGATE_OPT_TARGET})
+
+  include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/include_rapids.cmake")
 
   legate_include_rapids()
 
@@ -280,20 +270,16 @@ endfunction()
 function(legate_cpp_library_template target output_sources_variable)
   set(file_template
 [=[
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
@@ -319,20 +305,16 @@ struct Task : public legate::LegateTask<T> {
 
   set(file_template
 [=[
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #include "legate_library.h"
@@ -362,10 +344,7 @@ extern "C" {
 
 void @target@_perform_registration(void)
 {
-  // Tell the runtime about our registration callback so we hook it
-  // in before the runtime starts and make it global so that we know
-  // that this call back is invoked everywhere across all nodes
-  legate::Core::perform_registration<@target@::registration_callback>();
+  @target@::registration_callback();
 }
 
 }
@@ -408,32 +387,57 @@ set(fn_library "${CMAKE_CURRENT_SOURCE_DIR}/${py_path}/library.py")
 
 set(file_template
 [=[
-# Copyright 2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 
 from legate.core import (
-    Library,
     get_legate_runtime,
 )
 import os
+import platform
 from typing import Any
+from ctypes import CDLL, RTLD_GLOBAL
 
-class UserLibrary(Library):
+# TODO: Make sure we only have one ffi instance?
+from legion_cffi import ffi
+
+def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:
+    # Use an already-opened library handle, which cffi will convert to a
+    # regular FFI object (using the definitions previously added using
+    # ffi.cdef), but will not automatically dlclose() on collection.
+    lib = CDLL(lib_path, mode=RTLD_GLOBAL)
+    return ffi.dlopen(ffi.cast("void *", lib._handle))
+
+class UserLibrary:
     def __init__(self, name: str) -> None:
         self.name = name
         self.shared_object: Any = None
+
+        shared_lib_path = self.get_shared_library()
+        if shared_lib_path is not None:
+            header = self.get_c_header()
+            if header is not None:
+                ffi.cdef(header)
+            # Don't use ffi.dlopen(), because that will call dlclose()
+            # automatically when the object gets collected, thus removing
+            # symbols that may be needed when destroying C++ objects later
+            # (e.g. vtable entries, which will be queried for virtual
+            # destructors), causing errors at shutdown.
+            shared_lib = dlopen_no_autoclose(ffi, shared_lib_path)
+            self.initialize(shared_lib)
+            callback_name = self.get_registration_callback()
+            callback = getattr(shared_lib, callback_name)
+            callback()
+        else:
+            self.initialize(None)
+
 
     @property
     def cffi(self) -> Any:
@@ -460,8 +464,17 @@ class UserLibrary(Library):
     def destroy(self) -> None:
         pass
 
+    @staticmethod
+    def get_library_extension() -> str:
+        os_name = platform.system()
+        if os_name == "Linux":
+            return ".so"
+        elif os_name == "Darwin":
+            return ".dylib"
+        raise RuntimeError(f"unknown platform {os_name!r}")
+
 user_lib = UserLibrary("@target@")
-user_context = get_legate_runtime().register_library(user_lib)
+user_context = get_legate_runtime().find_library(user_lib.get_name())
 ]=])
   string(CONFIGURE "${file_template}" file_content @ONLY)
   file(WRITE "${fn_library}" "${file_content}")

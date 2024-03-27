@@ -6,8 +6,15 @@ gpu_enabled:
   - true
   - false
 
+debug_enabled:
+  - true
+  - false
+
+ucx_configured:
+  - true
+  - false
+
 python:
-  - 3.9
   - 3.10
   - 3.11
 

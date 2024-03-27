@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+build_legate_conda_package() {
+    set -xeuo pipefail;
+
+    if [[ -z "${CONDA_PLATFORM}" ]]; then
+      exit 1
+    fi
+
+    UNAME=$(uname)
+
+    # Patch post.py
+    if [[ "${UNAME}" == "Darwin" ]]; then
+      patch "$CONDA_PREFIX/lib/python${PYTHON_VERSION}/site-packages/conda_build/post.py" < "$REPO_DIR/continuous_integration/post_py.patch"
+    fi
+
+    local conda_build_args=();
+    conda_build_args+=(--override-channels);
+    conda_build_args+=(-c conda-forge);
+    conda_build_args+=(-c nvidia/label/cuda-${CUDA_VERSION});
+    conda_build_args+=(--croot /tmp/conda-croot/legate_core);
+    conda_build_args+=(--numpy 1.22);
+    conda_build_args+=(--python ${PYTHON_VERSION});
+    conda_build_args+=(--no-test);
+    conda_build_args+=(--no-verify);
+    conda_build_args+=(--no-build-id);
+    conda_build_args+=("--build-id-pat=''");
+    conda_build_args+=(--no-include-recipe);
+    conda_build_args+=(--no-anaconda-upload);
+    conda_build_args+=(--output-folder /tmp/conda-build/legate_core);
+
+    GPU_ENABLED=true
+    [ "${USE_CUDA:-}" = "OFF" ] && GPU_ENABLED=false
+
+    UCX_CONFIGURED=true
+    [ "${UCX_ENABLED:-}" = "OFF" ] && UCX_CONFIGURED=false
+
+    if [[ ${LEGATE_CORE_CMAKE_PRESET} == *debug* ]]; then
+      debug_enabled=true
+    else
+      debug_enabled=false
+    fi
+
+    conda_build_args+=(--variants "{gpu_enabled:${GPU_ENABLED},python:${PYTHON_VERSION},debug_enabled:${debug_enabled},ucx_configured:${UCX_CONFIGURED}}");
+
+    rm -rf /tmp/legate;
+    cp -ar $REPO_DIR /tmp/legate;
+    git config --global --add safe.directory /tmp/legate
+
+    rm -rf /tmp/conda-croot/legate_core;
+    mkdir -p /tmp/conda-croot/legate_core;
+    rm -rf /tmp/conda-build/legate_core;
+    mkdir -p /tmp/conda-build/legate_core;
+
+    # Synthesize new legate_core conda-build build.sh script
+
+    cat <<EOF > /tmp/legate/conda/conda-build/conda_build_config.yaml
+numpy:
+  - 1.22
+python:
+  - "${PYTHON_VERSION}"
+numpy_version:
+  - ">=1.22"
+use_local_path:
+  - "true"
+gpu_enabled:
+  - "${GPU_ENABLED}"
+debug_enabled:
+  - "${debug_enabled}"
+cmake_version:
+  - ">=3.20.1,!=3.23.0"
+package_version:
+  - "$(git -C /tmp/legate describe --abbrev=0 --tags | $SED 's/[a-zA-Z]//g' | cut -d '.' -f -2).00"
+ucx_configured:
+  - "${UCX_CONFIGURED}"
+EOF
+if [[ "${UCX_ENABLED}" = "ON" ]]; then
+    cat <<EOF >> /tmp/legate/conda/conda-build/conda_build_config.yaml
+ucx:
+  - ">=1.14"
+EOF
+fi
+
+    cat <<EOF > /tmp/legate/conda/conda-build/build.sh
+echo "---------------------build.sh-------------------------"
+set -xeuo pipefail
+
+# Install legate_core C++ libs
+sh /tmp/out/legate_core-*-${UNAME}.sh --skip-license --exclude-subdir --prefix="\$PREFIX"
+${SED} -E -i "s@${CONDA_PREFIX}@\$PREFIX@g" "\$PREFIX/share/Legion/cmake/LegionConfigCommon.cmake";
+${SED} -E -i "s@${REPO_DIR}/build/${LEGATE_CORE_CMAKE_PRESET}/_CPack_Packages/${UNAME}/STGZ/legate_core-(.*)-${UNAME}@\$PREFIX@g" "\$SP_DIR/legion_canonical_cffi.py";
+
+# Install legate_core Python wheel
+pip install --no-deps --root / --prefix "\$PREFIX" /tmp/out/legate_core-*.whl;
+
+# Legion leaves .egg-info files, which confuses conda trying to pick up the information
+# Remove them so legate-core is the only egg-info file added.
+rm -rf "\$SP_DIR"/legion*egg-info;
+EOF
+
+    git -C /tmp/legate add .;
+    git -C /tmp/legate commit --allow-empty --allow-empty-message -n -m "";
+
+    # Build legate_core conda package
+    conda mambabuild "${conda_build_args[@]}" /tmp/legate/conda/conda-build;
+
+    git -C /tmp/legate reset --hard HEAD~1;
+
+    rm -rf /tmp/legate;
+
+    cp /tmp/conda-build/legate_core/"${CONDA_PLATFORM}"/legate-*.tar.bz2 /tmp/out/;
+
+    { set +x; } 2>/dev/null;
+}
+
+(build_legate_conda_package "$@");

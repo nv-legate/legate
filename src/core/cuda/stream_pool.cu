@@ -1,53 +1,51 @@
-/* Copyright 2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
+#include "core/mapping/machine.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 
-namespace legate {
-namespace cuda {
+namespace legate::cuda {
 
 StreamView::~StreamView()
 {
-  if (valid_ && Core::synchronize_stream_view) {
-#ifdef DEBUG_LEGATE
-    CHECK_CUDA_STREAM(stream_);
-#else
-    CHECK_CUDA(cudaStreamSynchronize(stream_));
-#endif
+  if (valid_ && detail::Config::synchronize_stream_view) {
+    if (LegateDefined(LEGATE_USE_DEBUG)) {
+      CHECK_CUDA_STREAM(stream_);
+    } else {
+      CHECK_CUDA(cudaStreamSynchronize(stream_));
+    }
   }
 }
 
-StreamView::StreamView(StreamView&& rhs) : valid_(rhs.valid_), stream_(rhs.stream_)
+StreamView::StreamView(StreamView&& rhs) noexcept
+  : valid_{std::exchange(rhs.valid_, false)}, stream_(rhs.stream_)
 {
-  rhs.valid_ = false;
 }
 
-StreamView& StreamView::operator=(StreamView&& rhs)
+StreamView& StreamView::operator=(StreamView&& rhs) noexcept
 {
-  valid_     = rhs.valid_;
-  stream_    = rhs.stream_;
-  rhs.valid_ = false;
+  valid_  = std::exchange(rhs.valid_, false);
+  stream_ = rhs.stream_;
   return *this;
 }
 
 StreamPool::~StreamPool()
 {
-  if (cached_stream_ != nullptr) CHECK_CUDA(cudaStreamDestroy(*cached_stream_));
+  if (cached_stream_ != nullptr) {
+    CHECK_CUDA(cudaStreamDestroy(*cached_stream_));
+  }
 }
 
 StreamView StreamPool::get_stream()
@@ -68,5 +66,4 @@ StreamView StreamPool::get_stream()
   return pools[proc_id];
 }
 
-}  // namespace cuda
-}  // namespace legate
+}  // namespace legate::cuda

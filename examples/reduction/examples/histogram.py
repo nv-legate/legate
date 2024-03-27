@@ -1,35 +1,31 @@
-# Copyright 2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 
 import argparse
 
 import cunumeric as np
-from reduction import bincount, categorize, histogram, user_context
+from reduction import bincount, categorize, histogram
 
 import legate.core.types as ty
+from legate.core import get_legate_runtime
 
 
 def test(size: int, num_bins: int):
-    input = user_context.create_store(ty.int32, size)
+    input = get_legate_runtime().create_store(ty.int32, (size,))
     np.asarray(input)[:] = np.random.randint(
         low=0, high=size - 1, size=size, dtype="int32"
     )
-    bins = user_context.create_store(ty.int32, (num_bins + 1,))
-    np.asarray(bins)[:] = np.array(
-        [size * v // num_bins for v in range(num_bins + 1)]
-    )
+    bins = get_legate_runtime().create_store(ty.int32, (num_bins + 1,))
+    np.asarray(bins)[:] = np.arange(num_bins + 1) * size // num_bins
     print("Input:")
     print(np.asarray(input))
     print("Bin edges:")

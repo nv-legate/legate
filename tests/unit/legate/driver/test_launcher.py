@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import os
@@ -51,6 +48,7 @@ def test_LAUNCHER_VAR_PREFIXES() -> None:
         "NCCL_",
         "CUNUMERIC_",
         "NVIDIA_",
+        "LD_",
     )
 
 
@@ -173,49 +171,6 @@ class TestLauncherEnv:
         env = m.Launcher.create(config, SYSTEM).env
 
         assert env["GASNET_MPI_THREAD"] == "MPI_THREAD_MULTIPLE"
-
-    def test_libpath_no_system(
-        self,
-        genconfig: GenConfig,
-        monkeypatch: pytest.MonkeyPatch,
-        launch: LauncherType,
-    ) -> None:
-        # need to create a new System after env update, we will assume
-        # that SYSTEM.LIB_PATH and later system.LIB_PATH are the same
-        monkeypatch.delenv(SYSTEM.LIB_PATH, raising=False)
-        system = System()
-        config = genconfig(["--launcher", launch])
-
-        env = m.Launcher.create(config, system).env
-
-        assert env[system.LIB_PATH] == os.pathsep.join(
-            [
-                str(system.legion_paths.legion_lib_path),
-                str(system.legate_paths.legate_lib_path),
-            ]
-        )
-
-    def test_libpath_with_system(
-        self,
-        genconfig: GenConfig,
-        monkeypatch: pytest.MonkeyPatch,
-        launch: LauncherType,
-    ) -> None:
-        # need to create a new System after env update, we will assume
-        # that SYSTEM.LIB_PATH and later system.LIB_PATH are the same
-        monkeypatch.setenv(SYSTEM.LIB_PATH, "TEST/LIB/PATH")
-        system = System()
-        config = genconfig(["--launcher", launch])
-
-        env = m.Launcher.create(config, system).env
-
-        assert env[system.LIB_PATH] == os.pathsep.join(
-            [
-                str(system.legion_paths.legion_lib_path),
-                str(system.legate_paths.legate_lib_path),
-                "TEST/LIB/PATH",
-            ]
-        )
 
     def test_need_cuda_false(
         self, genconfig: GenConfig, launch: LauncherType

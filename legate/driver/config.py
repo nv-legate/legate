@@ -1,17 +1,14 @@
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 """Consolidate driver configuration from command-line and environment.
 
 """
@@ -29,6 +26,7 @@ from ..util.types import (
     ArgList,
     DataclassMixin,
     LauncherType,
+    RunMode,
     object_to_dataclass,
 )
 from ..util.ui import warn
@@ -152,7 +150,7 @@ class ConfigProtocol(Protocol):
 
     argv: ArgList
 
-    user_script: Optional[str]
+    user_program: Optional[str]
     user_opts: tuple[str, ...]
     multi_node: MultiNode
     binding: Binding
@@ -163,6 +161,10 @@ class ConfigProtocol(Protocol):
     debugging: Debugging
     info: Info
     other: Other
+
+    @cached_property
+    def run_mode(self) -> RunMode:
+        pass
 
 
 class Config:
@@ -186,8 +188,9 @@ class Config:
         # only saving this for help with testing
         self._args = args
 
-        self.user_script = args.command[0] if args.command else None
-        self.user_opts = tuple(args.command[1:]) if self.user_script else ()
+        self.user_program = args.command[0] if args.command else None
+        self.user_opts = tuple(args.command[1:]) if self.user_program else ()
+        self._user_run_mode = args.run_mode
 
         # these may modify the args, so apply before dataclass conversions
         self._fixup_nocr(args)
@@ -203,10 +206,40 @@ class Config:
         self.info = object_to_dataclass(args, Info)
         self.other = object_to_dataclass(args, Other)
 
+        if self.run_mode == "exec":
+            if self.user_program is None:
+                raise RuntimeError(
+                    "'exec' run mode requires a program to execute"
+                )
+            if self.other.module is not None:
+                raise RuntimeError(
+                    "'exec' run mode cannot be used with --module"
+                )
+
     @cached_property
     def console(self) -> bool:
         """Whether we are starting Legate as an interactive console."""
-        return self.user_script is None
+        return self.user_program is None and self.run_mode == "python"
+
+    @cached_property
+    def run_mode(self) -> RunMode:
+        # honor any explicit user configuration
+        if self._user_run_mode is not None:
+            return self._user_run_mode
+
+        # no user program, just run legion_python
+        if self.user_program is None:
+            return "python"
+
+        # --module specified means run with legion_python
+        if self.other.module is not None:
+            return "python"
+
+        # otherwise assume .py means run with legion_python
+        if self.user_program.endswith(".py"):
+            return "python"
+
+        return "exec"
 
     def _fixup_nocr(self, args: Namespace) -> None:
         # this is slightly duplicative of MultiNode.ranks property, but fixup

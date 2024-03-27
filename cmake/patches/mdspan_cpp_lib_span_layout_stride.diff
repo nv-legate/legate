@@ -1,0 +1,13 @@
+diff --git a/include/experimental/__p0009_bits/layout_stride.hpp b/include/experimental/__p0009_bits/layout_stride.hpp
+index 773efec..64deb97 100644
+--- a/include/experimental/__p0009_bits/layout_stride.hpp
++++ b/include/experimental/__p0009_bits/layout_stride.hpp
+@@ -27,7 +27,7 @@
+ #include <algorithm>
+ #include <numeric>
+ #include <array>
+-#ifdef __cpp_lib_span
++#if defined(__cpp_lib_span) && __cpp_lib_span >= 202311L
+ #include <span>
+ #endif
+ #if defined(_MDSPAN_USE_CONCEPTS) && MDSPAN_HAS_CXX_20 && defined(__cpp_lib_concepts)

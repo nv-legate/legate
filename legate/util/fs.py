@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import re
@@ -106,8 +103,15 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
     # Legion_BINARY_DIR and Legion_SOURCE_DIR from CMakeCache.txt
     legate_build_dir = legate_dir / "build"
     cmake_cache_txt = legate_build_dir.joinpath("CMakeCache.txt")
-    if legate_build_dir.exists() and cmake_cache_txt.exists():
-        return legate_build_dir
+    if legate_build_dir.exists():
+        if cmake_cache_txt.exists():
+            return legate_build_dir
+        import os
+
+        if (lg_arch := os.environ.get("LEGATE_CORE_ARCH")) and (
+            (lg_arch_dir := legate_build_dir / lg_arch) / "CMakeCache.txt"
+        ).exists():
+            return lg_arch_dir
 
     skbuild_dir = legate_dir / "_skbuild"
     if not skbuild_dir.exists():

@@ -1,23 +1,19 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
+
+#include "core/utilities/dispatch.h"
 
 #include "legate_library.h"
 #include "reduction_cffi.h"
-
-#include "core/utilities/dispatch.h"
 
 namespace reduction {
 
@@ -32,8 +28,10 @@ struct categorize_fn {
     auto in_shape  = result.shape<1>();
     auto bin_shape = bins.shape<1>();
 
-    assert(!bin_shape.empty());
-    if (in_shape.empty()) return;
+    LegateCheck(!bin_shape.empty());
+    if (in_shape.empty()) {
+      return;
+    }
 
     auto num_bins = bin_shape.hi[0] - bin_shape.lo[0];
 
@@ -46,7 +44,7 @@ struct categorize_fn {
       auto& value = in_acc[p];
       for (auto bin_idx = 0; bin_idx < num_bins; ++bin_idx) {
         if (bin_acc[bin_idx] <= value && value < bin_acc[bin_idx + 1]) {
-          res_acc[p] = static_cast<uint64_t>(bin_idx);
+          res_acc[p] = static_cast<std::uint64_t>(bin_idx);
           break;
         }
       }
@@ -56,7 +54,7 @@ struct categorize_fn {
   template <legate::Type::Code CODE, std::enable_if_t<legate::is_complex<CODE>::value>* = nullptr>
   void operator()(legate::Store& result, legate::Store& input, legate::Store& bins)
   {
-    assert(false);
+    LegateCheck(false);
   }
 };
 
@@ -64,11 +62,11 @@ struct categorize_fn {
 
 class CategorizeTask : public Task<CategorizeTask, CATEGORIZE> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto& input  = context.inputs().at(0);
-    auto& bins   = context.inputs().at(1);
-    auto& result = context.outputs().at(0);
+    auto input  = context.input(0).data();
+    auto bins   = context.input(1).data();
+    auto result = context.output(0).data();
 
     legate::type_dispatch(input.code(), categorize_fn{}, result, input, bins);
   }

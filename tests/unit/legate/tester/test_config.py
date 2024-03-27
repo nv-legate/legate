@@ -1,41 +1,27 @@
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 """Consolidate test configuration from command-line and environment.
 
 """
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path, PurePath
 
 import pytest
 from pytest_mock import MockerFixture
 
-from legate.tester import (
-    DEFAULT_CPUS_PER_NODE,
-    DEFAULT_GPU_BLOAT_FACTOR,
-    DEFAULT_GPU_DELAY,
-    DEFAULT_GPU_MEMORY_BUDGET,
-    DEFAULT_GPUS_PER_NODE,
-    DEFAULT_NODES,
-    DEFAULT_OMPS_PER_NODE,
-    DEFAULT_OMPTHREADS,
-    DEFAULT_RANKS_PER_NODE,
-    FEATURES,
-    config as m,
-)
+from legate.tester import FEATURES, config as m, defaults
 from legate.tester.args import PIN_OPTIONS, PinOptionsType
 from legate.util import colors
 
@@ -48,49 +34,51 @@ class TestConfig:
 
         assert colors.ENABLED is False
 
+        assert c.features == ("cpus",)
+
         assert c.examples is True
         assert c.integration is True
         assert c.unit is False
         assert c.files is None
         assert c.last_failed is False
-
-        assert c.features == ("cpus",)
-
-        assert c.cpus == DEFAULT_CPUS_PER_NODE
-        assert c.gpus == DEFAULT_GPUS_PER_NODE
-        assert c.cpu_pin == "partial"
-        assert c.gpu_delay == DEFAULT_GPU_DELAY
-        assert c.fbmem == DEFAULT_GPU_MEMORY_BUDGET
-        assert c.bloat_factor == DEFAULT_GPU_BLOAT_FACTOR
-        assert c.omps == DEFAULT_OMPS_PER_NODE
-        assert c.ompthreads == DEFAULT_OMPTHREADS
-        assert c.ranks_per_node == DEFAULT_RANKS_PER_NODE
-        assert c.launcher == "none"
-        assert c.launcher_extra == []
-        assert c.nodes == DEFAULT_NODES
-
-        assert c.timeout is None
-        assert c.debug is False
-        assert c.dry_run is False
-        assert c.verbose == 0
+        assert c.gtest_file is None
+        assert c.gtest_tests == []
         assert c.test_root is None
-        assert c.requested_workers is None
-        assert c.legate_dir is None
+
+        assert c.core.cpus == defaults.CPUS_PER_NODE
+        assert c.core.gpus == defaults.GPUS_PER_NODE
+        assert c.core.omps == defaults.OMPS_PER_NODE
+        assert c.core.ompthreads == defaults.OMPTHREADS
+
+        assert c.memory.sysmem == defaults.SYS_MEMORY_BUDGET
+        assert c.memory.fbmem == defaults.GPU_MEMORY_BUDGET
+        assert c.memory.numamem == defaults.NUMA_MEMORY_BUDGET
+
+        assert c.multi_node.nodes == defaults.NODES
+        assert c.multi_node.ranks_per_node == defaults.RANKS_PER_NODE
+        assert c.multi_node.launcher == "none"
+        assert c.multi_node.launcher_extra == []
+        assert c.multi_node.mpi_output_filename is None
+
+        assert c.execution.workers is None
+        assert c.execution.timeout is None
+        assert c.execution.gpu_delay == defaults.GPU_DELAY
+        assert c.execution.bloat_factor == defaults.GPU_BLOAT_FACTOR
+        assert c.execution.cpu_pin == "partial"
+
+        assert c.info.debug is False
+        assert c.info.verbose == 0
+
+        assert c.other.dry_run is False
+        assert c.other.cov_bin is None
+        assert c.other.cov_args == "run -a --branch"
+        assert c.other.cov_src_path is None
+        assert c.other.legate_dir is None
 
         assert c.extra_args == []
         assert c.root_dir == PurePath(os.getcwd())
-
-        # TODO (bv) restore when generalized
-        # assert len(c.test_files) > 0
-        # assert any("examples" in str(x) for x in c.test_files)
-        # assert any("integration" in str(x) for x in c.test_files)
-        # assert all("unit" not in str(x) for x in c.test_files)
-
-        assert c.legate_path == "legate"
-
-        assert c.cov_bin is None
-        assert c.cov_args == "run -a --branch"
-        assert c.cov_src_path is None
+        assert c.dry_run is False
+        assert c.legate_path == shutil.which("legate")
 
     def test_color_arg(self) -> None:
         m.Config(["test.py", "--color"])
@@ -129,42 +117,49 @@ class TestConfig:
         c = m.Config(["test.py", "--use", f"cpus,{feature}"])
         assert set(c.features) == {"cpus", feature}
 
-    @pytest.mark.parametrize(
-        "opt", ("cpus", "gpus", "gpu-delay", "fbmem", "omps", "ompthreads")
-    )
-    def test_feature_options(self, opt: str) -> None:
+    @pytest.mark.parametrize("opt", ("cpus", "gpus", "omps", "ompthreads"))
+    def test_core_options(self, opt: str) -> None:
         c = m.Config(["test.py", f"--{opt}", "1234"])
-        assert getattr(c, opt.replace("-", "_")) == 1234
+        assert getattr(c.core, opt.replace("-", "_")) == 1234
+
+    @pytest.mark.parametrize("opt", ("sysmem", "fbmem", "numamem"))
+    def test_memory_options(self, opt: str) -> None:
+        c = m.Config(["test.py", f"--{opt}", "1234"])
+        assert getattr(c.memory, opt.replace("-", "_")) == 1234
+
+    def test_gpu_delay(self) -> None:
+        c = m.Config(["test.py", "--gpu-delay", "1234"])
+        assert c.execution.gpu_delay == 1234
 
     @pytest.mark.parametrize("value", PIN_OPTIONS)
     def test_cpu_pin(self, value: PinOptionsType) -> None:
         c = m.Config(["test.py", "--cpu-pin", value])
-        assert c.cpu_pin == value
+        assert c.execution.cpu_pin == value
 
     def test_workers(self) -> None:
         c = m.Config(["test.py", "-j", "1234"])
-        assert c.requested_workers == 1234
+        assert c.execution.workers == 1234
 
     def test_timeout(self) -> None:
         c = m.Config(["test.py", "--timeout", "10"])
-        assert c.timeout == 10
+        assert c.execution.timeout == 10
 
     def test_debug(self) -> None:
         c = m.Config(["test.py", "--debug"])
-        assert c.debug is True
+        assert c.info.debug is True
 
     def test_dry_run(self) -> None:
         c = m.Config(["test.py", "--dry-run"])
-        assert c.dry_run is True
+        assert c.other.dry_run is True
 
     @pytest.mark.parametrize("arg", ("-v", "--verbose"))
     def test_verbose1(self, arg: str) -> None:
         c = m.Config(["test.py", arg])
-        assert c.verbose == 1
+        assert c.info.verbose == 1
 
     def test_verbose2(self) -> None:
         c = m.Config(["test.py", "-vv"])
-        assert c.verbose == 2
+        assert c.info.verbose == 2
 
     @pytest.mark.parametrize("arg", ("-C", "--directory"))
     def test_test_root(self, arg: str) -> None:
@@ -173,14 +168,14 @@ class TestConfig:
 
     def test_legate_dir(self) -> None:
         c = m.Config([])
-        assert c.legate_dir is None
-        assert c.legate_path == "legate"
+        assert c.other.legate_dir is None
+        assert c.legate_path == shutil.which("legate")
         assert c._legate_source == "install"
 
     def test_cmd_legate_dir_good(self) -> None:
         legate_dir = Path("/usr/local")
         c = m.Config(["test.py", "--legate", str(legate_dir)])
-        assert c.legate_dir == legate_dir
+        assert c.other.legate_dir == legate_dir
         assert c.legate_path == str(legate_dir / "bin" / "legate")
         assert c._legate_source == "cmd"
 
@@ -190,7 +185,7 @@ class TestConfig:
         legate_dir = Path("/usr/local")
         monkeypatch.setenv("LEGATE_DIR", str(legate_dir))
         c = m.Config([])
-        assert c.legate_dir == legate_dir
+        assert c.other.legate_dir == legate_dir
         assert c.legate_path == str(legate_dir / "bin" / "legate")
         assert c._legate_source == "env"
 
@@ -208,7 +203,7 @@ class TestConfig:
     def test_cov_args(self) -> None:
         cov_args = ["--cov-args", "run -a"]
         c = m.Config(["test.py"] + cov_args)
-        assert c.cov_args == "run -a"
+        assert c.other.cov_args == "run -a"
 
 
 class Test_test_files:

@@ -1,24 +1,21 @@
-/* Copyright 2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
-#include "core/data/buffer.h"
+#include "core/utilities/typedefs.h"
 
-#include <unordered_map>
+#include <cstddef>
+#include <memory>
 
 /**
  * @file
@@ -38,10 +35,7 @@ namespace legate {
  */
 class ScopedAllocator {
  public:
-  using ByteBuffer = Buffer<int8_t>;
-
- public:
-  ScopedAllocator() = default;
+  static inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 
   // Iff 'scoped', all allocations will be released upon destruction.
   // Otherwise this is up to the runtime after the task has finished.
@@ -54,10 +48,10 @@ class ScopedAllocator {
    * (and unless explicitly deallocated).
    * @param alignment Alignment for the allocations
    */
-  ScopedAllocator(Memory::Kind kind, bool scoped = true, size_t alignment = 16);
-  ~ScopedAllocator();
+  explicit ScopedAllocator(Memory::Kind kind,
+                           bool scoped           = true,
+                           std::size_t alignment = DEFAULT_ALIGNMENT);
 
- public:
   /**
    * @brief Allocates a contiguous buffer of the given Memory::Kind
    *
@@ -68,7 +62,7 @@ class ScopedAllocator {
    *
    * @return A raw pointer to the allocation
    */
-  void* allocate(size_t bytes);
+  [[nodiscard]] void* allocate(std::size_t bytes);
   /**
    * @brief Deallocates an allocation. The input pointer must be one that was previously
    * returned by an `allocate` call, otherwise the code will fail with an error message.
@@ -78,10 +72,15 @@ class ScopedAllocator {
   void deallocate(void* ptr);
 
  private:
-  Memory::Kind target_kind_{Memory::Kind::SYSTEM_MEM};
-  bool scoped_;
-  size_t alignment_;
-  std::unordered_map<const void*, ByteBuffer> buffers_{};
+  class Impl;
+
+  // See StoreMapping::StoreMappingImplDeleter for why this this exists
+  class ImplDeleter {
+   public:
+    void operator()(Impl* ptr) const noexcept;
+  };
+
+  std::unique_ptr<Impl, ImplDeleter> impl_{};
 };
 
 }  // namespace legate

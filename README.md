@@ -1,18 +1,13 @@
 <!--
-Copyright 2021-2022 NVIDIA Corporation
+SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+property and proprietary rights in and to this material, related
+documentation and any modifications thereto. Any use, reproduction,
+disclosure or distribution of this material and related documentation
+without an express license agreement from NVIDIA CORPORATION or
+its affiliates is strictly prohibited.
 -->
 
 # Legate
@@ -62,7 +57,6 @@ If you have questions, please contact us at legate(at)nvidia.com.
     - [Configuring the Jupyter Notebook](#configuring-the-jupyter-notebook)
     - [Magic Command](#magic-command)
   - [Other FAQs](#other-faqs)
-  - [Contributing](#contributing)
   - [Documentation](#documentation)
   - [Next Steps](#next-steps)
 
@@ -215,7 +209,14 @@ as though they are running on a single processor.
 
 ## How Do I Install Legate?
 
-Legate Core is available [on conda](https://anaconda.org/legate/legate-core):
+Legate Core is available [on conda](https://anaconda.org/legate/legate-core).
+Create a new environment containing Legate Core:
+
+```
+mamba create -n myenv -c nvidia -c conda-forge -c legate legate-core
+```
+
+or install it into an existing environment:
 
 ```
 mamba install -c nvidia -c conda-forge -c legate legate-core
@@ -226,7 +227,12 @@ Only linux-64 packages are available at the moment.
 The default package contains GPU support, and is compatible with CUDA >= 12.0
 (CUDA driver version >= r520), and Volta or later GPU architectures. There are
 also CPU-only packages available, and will be automatically selected when
-installing on a machine without GPUs.
+installing on a machine without GPUs. You can force installation of a CPU-only
+package by requesting it as follows:
+
+```
+mamba ... legate-core=*=*_cpu
+```
 
 See [BUILD.md](BUILD.md) for instructions on building Legate Core from source.
 
@@ -458,10 +464,6 @@ Memory:
   If you are interested in pursuing this approach please open an issue
   on the [Legion github issue tracker](https://github.com/StanfordLegion/legion/issues)
   as it will be almost entirely orthogonal to how you use Legate.
-
-## Contributing
-
-See the discussion of contributing in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
 

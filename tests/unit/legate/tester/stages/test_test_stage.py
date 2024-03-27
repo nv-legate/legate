@@ -1,17 +1,14 @@
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 """Consolidate test configuration from command-line and environment.
 
 """
@@ -28,8 +25,6 @@ from legate.tester.test_system import ProcessResult, TestSystem as _TestSystem
 from legate.util.types import ArgList, EnvDict
 
 from . import FakeSystem
-
-s = FakeSystem()
 
 
 class MockTestStage(m.TestStage):
@@ -56,17 +51,17 @@ class MockTestStage(m.TestStage):
 class TestTestStage:
     def test_name(self) -> None:
         c = Config([])
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         assert stage.name == "mock"
 
     def test_intro(self) -> None:
         c = Config([])
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         assert "Entering stage: mock" in stage.intro
 
     def test_outro(self) -> None:
         c = Config([])
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         stage.result = StageResult(
             [ProcessResult("invoke", Path("test/file"))],
             timedelta(seconds=2.123),
@@ -78,33 +73,36 @@ class TestTestStage:
 
     def test_file_args_default(self) -> None:
         c = Config([])
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         assert stage.file_args(Path("integration/foo"), c) == []
         assert stage.file_args(Path("unit/foo"), c) == []
 
     def test_file_args_v(self) -> None:
         c = Config(["test.py", "-v"])
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         assert stage.file_args(Path("integration/foo"), c) == ["-v"]
         assert stage.file_args(Path("unit/foo"), c) == []
 
     def test_file_args_vv(self) -> None:
         c = Config(["test.py", "-vv"])
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         assert stage.file_args(Path("integration/foo"), c) == ["-v", "-s"]
         assert stage.file_args(Path("unit/foo"), c) == []
 
     def test_cov_args_without_cov_bin(self) -> None:
         c = m.Config(["test.py", "--cov-args", "run -a"])
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         assert stage.cov_args(c) == []
 
     def test_cov_args_with_cov_bin(self) -> None:
         cov_bin = "conda/envs/legate/bin/coverage"
         args = ["--cov-bin", cov_bin]
         c = m.Config(["test.py"] + args)
-        expected_result = [cov_bin] + c.cov_args.split()
-        stage = MockTestStage(c, s)
+        expected_result = [
+            "--run-mode=python",
+            cov_bin,
+        ] + c.other.cov_args.split()
+        stage = MockTestStage(c, FakeSystem())
         assert stage.cov_args(c) == expected_result
 
     def test_cov_args_with_cov_bin_args_and_src_path(self) -> None:
@@ -118,7 +116,9 @@ class TestTestStage:
         )
         c = m.Config(["test.py"] + args)
         expected_result = (
-            [cov_bin] + cov_args.split() + ["--source", cov_src_path]
+            ["--run-mode=python", cov_bin]
+            + cov_args.split()
+            + ["--source", cov_src_path]
         )
-        stage = MockTestStage(c, s)
+        stage = MockTestStage(c, FakeSystem())
         assert stage.cov_args(c) == expected_result

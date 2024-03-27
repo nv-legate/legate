@@ -1,77 +1,70 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
+
+#include "core/data/detail/scalar.h"
 
 #include "core/data/scalar.h"
 
+#include <stdexcept>
+#include <utility>
+
 namespace legate {
 
-Scalar::Scalar(const Scalar& other) : own_(other.own_), type_(other.type_->clone()) { copy(other); }
+Scalar::Scalar(const Scalar& other) : impl_{new detail::Scalar{*other.impl_}} {}
 
-Scalar::Scalar(Scalar&& other) : own_(other.own_), type_(std::move(other.type_)), data_(other.data_)
+Scalar::Scalar(Scalar&& other) noexcept : impl_{std::exchange(other.impl_, nullptr)} {}
+
+Scalar::Scalar() : impl_(create_impl(null_type(), nullptr, false)) {}
+
+Scalar::~Scalar() { delete impl_; }
+
+Scalar::Scalar(const Type& type, const void* data, bool copy) : impl_{create_impl(type, data, copy)}
 {
-  other.own_  = false;
-  other.type_ = nullptr;
-  other.data_ = nullptr;
 }
 
-Scalar::Scalar(std::unique_ptr<Type> type, const void* data) : type_(std::move(type)), data_(data)
-{
-}
-
-Scalar::Scalar(const std::string& string) : own_(true), type_(string_type())
-{
-  auto data_size                  = sizeof(char) * string.size();
-  auto buffer                     = malloc(sizeof(uint32_t) + data_size);
-  *static_cast<uint32_t*>(buffer) = string.size();
-  memcpy(static_cast<int8_t*>(buffer) + sizeof(uint32_t), string.data(), data_size);
-  data_ = buffer;
-}
-
-Scalar::~Scalar()
-{
-  if (own_)
-    // We know we own this buffer
-    free(const_cast<void*>(data_));
-}
+Scalar::Scalar(std::string_view string) : impl_{new detail::Scalar{std::move(string)}} {}
 
 Scalar& Scalar::operator=(const Scalar& other)
 {
-  own_  = other.own_;
-  type_ = other.type_->clone();
-  copy(other);
+  if (this != &other) {
+    *impl_ = *other.impl_;
+  }
   return *this;
 }
 
-void Scalar::copy(const Scalar& other)
+Type Scalar::type() const { return Type{impl_->type()}; }
+
+std::size_t Scalar::size() const { return impl_->size(); }
+
+const void* Scalar::ptr() const { return impl_->data(); }
+
+/*static*/ detail::Scalar* Scalar::checked_create_impl(const Type& type,
+                                                       const void* data,
+                                                       bool copy,
+                                                       std::size_t size)
 {
-  if (other.own_) {
-    auto size   = other.size();
-    auto buffer = malloc(size);
-    memcpy(buffer, other.data_, size);
-    data_ = buffer;
-  } else
-    data_ = other.data_;
+  if (type.code() == Type::Code::NIL) {
+    throw std::invalid_argument{"Null type cannot be used"};
+  }
+  if (type.size() != size) {
+    throw std::invalid_argument{"Size of the value doesn't match with the type"};
+  }
+
+  return create_impl(type, data, copy);
 }
 
-size_t Scalar::size() const
+/*static*/ detail::Scalar* Scalar::create_impl(const Type& type, const void* data, bool copy)
 {
-  if (type_->code == Type::Code::STRING)
-    return *static_cast<const uint32_t*>(data_) + sizeof(uint32_t);
-  else
-    return type_->size();
+  return new detail::Scalar{type.impl(), data, copy};
 }
 
 }  // namespace legate

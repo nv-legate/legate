@@ -1,17 +1,14 @@
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 """Consolidate test configuration from command-line and environment.
 
 """
@@ -20,6 +17,7 @@ from __future__ import annotations
 import pytest
 
 from legate.tester.config import Config
+from legate.tester.defaults import SMALL_SYSMEM
 from legate.tester.stages._linux import gpu as m
 from legate.tester.stages.util import Shard
 
@@ -52,6 +50,8 @@ class TestSingleRank:
             f"{len(shard)}",
             "--gpu-bind",
             expected,
+            "--sysmem",
+            str(SMALL_SYSMEM),
         ]
 
     def test_spec_with_gpus_1(self) -> None:
@@ -108,14 +108,16 @@ class TestSingleRank:
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem()
         c = Config(["test.py", "-j", "0"])
-        assert c.requested_workers == 0
+        assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.GPU(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem()
-        c = Config(["test.py", "-j", f"{len(s.gpus)+100}"])
-        assert c.requested_workers > len(s.gpus)
+        c = Config(["test.py", "-j", f"{len(s.gpus) + 100}"])
+        requested_workers = c.execution.workers
+        assert requested_workers is not None
+        assert requested_workers > len(s.gpus)
         with pytest.raises(RuntimeError):
             m.GPU(c, s)
 
@@ -145,6 +147,8 @@ class TestMultiRank:
             f"{len(shard)}",
             "--gpu-bind",
             expected,
+            "--sysmem",
+            str(SMALL_SYSMEM),
         ]
 
     def test_spec_with_gpus_1(self) -> None:

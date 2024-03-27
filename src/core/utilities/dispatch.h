@@ -1,22 +1,21 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
 #include "core/type/type_info.h"
+
+#include <stdexcept>
+#include <utility>
 
 /**
  * @file
@@ -25,7 +24,8 @@
 namespace legate {
 
 template <int DIM>
-struct inner_type_dispatch_fn {
+class inner_type_dispatch_fn {
+ public:
   template <typename Functor, typename... Fnargs>
   constexpr decltype(auto) operator()(Type::Code code, Functor f, Fnargs&&... args)
   {
@@ -74,13 +74,14 @@ struct inner_type_dispatch_fn {
       }
       default: break;
     }
-    assert(false);
+    throw std::runtime_error("Unsupported type code");
     return f.template operator()<Type::Code::BOOL, DIM>(std::forward<Fnargs>(args)...);
   }
 };
 
 template <int DIM>
-struct inner_dim_dispatch_fn {
+class inner_dim_dispatch_fn {
+ public:
   template <typename Functor, typename... Fnargs>
   constexpr decltype(auto) operator()(int dim, Functor f, Fnargs&&... args)
   {
@@ -128,8 +129,9 @@ struct inner_dim_dispatch_fn {
         return f.template operator()<DIM, 9>(std::forward<Fnargs>(args)...);
       }
 #endif
+      default: break;
     }
-    assert(false);
+    throw std::runtime_error{"Unsupported number of dimensions"};
     return f.template operator()<DIM, 1>(std::forward<Fnargs>(args)...);
   }
 };
@@ -197,8 +199,9 @@ constexpr decltype(auto) double_dispatch(int dim, Type::Code code, Functor f, Fn
       return inner_type_dispatch_fn<9>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
+    default: break;
   }
-  assert(false);
+  throw std::runtime_error("Unsupported number of dimensions");
   return inner_type_dispatch_fn<1>{}(code, f, std::forward<Fnargs>(args)...);
 }
 
@@ -265,8 +268,9 @@ constexpr decltype(auto) double_dispatch(int dim1, int dim2, Functor f, Fnargs&&
       return inner_dim_dispatch_fn<9>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
+    default: break;
   }
-  assert(false);
+  throw std::runtime_error("Unsupported number of dimensions");
   return inner_dim_dispatch_fn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
 }
 
@@ -332,8 +336,9 @@ constexpr decltype(auto) dim_dispatch(int dim, Functor f, Fnargs&&... args)
       return f.template operator()<9>(std::forward<Fnargs>(args)...);
     }
 #endif
+    default: break;
   }
-  assert(false);
+  throw std::runtime_error("Unsupported number of dimensions");
   return f.template operator()<1>(std::forward<Fnargs>(args)...);
 }
 
@@ -398,7 +403,7 @@ constexpr decltype(auto) type_dispatch(Type::Code code, Functor f, Fnargs&&... a
     }
     default: break;
   }
-  assert(false);
+  throw std::runtime_error("Unsupported type code");
   return f.template operator()<Type::Code::BOOL>(std::forward<Fnargs>(args)...);
 }
 

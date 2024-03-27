@@ -1,23 +1,23 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 // These values are copied manually in legate.settings and there is a Python
 // unit test that will maintain that these values and the Python settings
 // values agree. If these values are modified, the corresponding Python values
 // must also be updated.
+
+#pragma once
+
+#include "legate_defines.h"
 
 // 1 << 20 (need actual number for python to parse)
 #define MIN_GPU_CHUNK_DEFAULT 1048576
@@ -34,7 +34,7 @@
 #define WINDOW_SIZE_DEFAULT 1
 #define WINDOW_SIZE_TEST 1
 
-#ifdef DEBUG_LEGATE
+#if LegateDefined(LEGATE_USE_DEBUG)
 // In debug mode, the default is always block on tasks that can throw exceptions
 #define MAX_PENDING_EXCEPTIONS_DEFAULT 1
 #else
@@ -46,13 +46,16 @@
 #define PRECISE_EXCEPTION_TRACE_TEST 0
 
 #define FIELD_REUSE_FRAC_DEFAULT 256
-#define FIELD_REUSE_FRAC_TEST 256
+#define FIELD_REUSE_FRAC_TEST 1
 
 #define FIELD_REUSE_FREQ_DEFAULT 32
-#define FIELD_REUSE_FREQ_TEST 32
+#define FIELD_REUSE_FREQ_TEST 8
 
 #define MAX_LRU_LENGTH_DEFAULT 5
 #define MAX_LRU_LENGTH_TEST 1
 
 #define DISABLE_MPI_DEFAULT 0
 #define DISABLE_MPI_TEST 0
+
+#define CONSENSUS_DEFAULT 0
+#define CONSENSUS_TEST 0

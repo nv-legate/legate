@@ -1,150 +1,130 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
-#include <memory>
-#include <tuple>
-
 #include "core/data/scalar.h"
-#include "core/data/transform.h"
-#include "core/mapping/machine.h"
-#include "core/mapping/store.h"
-#include "core/runtime/context.h"
+#include "core/mapping/array.h"
+
+#include <vector>
 
 /**
  * @file
  * @brief Class definitions for operations and stores used in mapping
  */
 
-namespace legate {
+namespace legate::mapping {
 
-class LibraryContext;
-
-namespace mapping {
-
-class Mappable {
- protected:
-  Mappable();
-
- public:
-  Mappable(const Legion::Mappable* mappable);
-
- public:
-  const mapping::MachineDesc& machine_desc() const { return machine_desc_; }
-  uint32_t sharding_id() const { return sharding_id_; }
-
- protected:
-  mapping::MachineDesc machine_desc_;
-  uint32_t sharding_id_;
-};
+namespace detail {
+class Task;
+}  // namespace detail
 
 /**
  * @ingroup mapping
  * @brief A metadata class for tasks
  */
-class Task : public Mappable {
- public:
-  Task(const Legion::Task* task,
-       const LibraryContext* library,
-       Legion::Mapping::MapperRuntime* runtime,
-       const Legion::Mapping::MapperContext context);
-
+class Task {
  public:
   /**
    * @brief Returns the task id
    *
    * @return Task id
    */
-  int64_t task_id() const;
+  [[nodiscard]] std::int64_t task_id() const;
 
- public:
   /**
-   * @brief Returns metadata for the task's input stores
+   * @brief Returns metadata for the task's input arrays
    *
-   * @return Vector of store metadata objects
+   * @return Vector of array metadata objects
    */
-  const std::vector<Store>& inputs() const { return inputs_; }
+  [[nodiscard]] std::vector<Array> inputs() const;
   /**
-   * @brief Returns metadata for the task's output stores
+   * @brief Returns metadata for the task's output arrays
    *
-   * @return Vector of store metadata objects
+   * @return Vector of array metadata objects
    */
-  const std::vector<Store>& outputs() const { return outputs_; }
+  [[nodiscard]] std::vector<Array> outputs() const;
   /**
-   * @brief Returns metadata for the task's reduction stores
+   * @brief Returns metadata for the task's reduction arrays
    *
-   * @return Vector of store metadata objects
+   * @return Vector of array metadata objects
    */
-  const std::vector<Store>& reductions() const { return reductions_; }
+  [[nodiscard]] std::vector<Array> reductions() const;
   /**
-   * @brief Returns the vector of the task's by-value arguments. Unlike `mapping::Store`
-   * objects that have no access to data in the stores, the returned `Scalar` objects
+   * @brief Returns the vector of the task's by-value arguments. Unlike `mapping::Array`
+   * objects that have no access to data in the arrays, the returned `Scalar` objects
    * contain valid arguments to the task
    *
    * @return Vector of `Scalar` objects
    */
-  const std::vector<Scalar>& scalars() const { return scalars_; }
+  [[nodiscard]] const std::vector<Scalar>& scalars() const;
 
- public:
   /**
-   * @brief Returns the point of the task
+   * @brief Returns metadata for the task's input array
    *
-   * @return The point of the task
+   * @param index Index of the input array
+   *
+   * @return Array metadata object
    */
-  DomainPoint point() const { return task_->index_point; }
+  [[nodiscard]] Array input(std::uint32_t index) const;
+  /**
+   * @brief Returns metadata for the task's output array
+   *
+   * @param index Index of the output array
+   *
+   * @return Array metadata object
+   */
+  [[nodiscard]] Array output(std::uint32_t index) const;
+  /**
+   * @brief Returns metadata for the task's reduction array
+   *
+   * @param index Index of the reduction array
+   *
+   * @return Array metadata object
+   */
+  [[nodiscard]] Array reduction(std::uint32_t index) const;
 
- public:
-  TaskTarget target() const;
+  /**
+   * @brief Returns the number of task's inputs
+   *
+   * @return Number of arrays
+   */
+  [[nodiscard]] std::size_t num_inputs() const;
+  /**
+   * @brief Returns the number of task's outputs
+   *
+   * @return Number of arrays
+   */
+  [[nodiscard]] std::size_t num_outputs() const;
+  /**
+   * @brief Returns the number of task's reductions
+   *
+   * @return Number of arrays
+   */
+  [[nodiscard]] std::size_t num_reductions() const;
+
+  explicit Task(detail::Task* impl);
+
+  Task(const Task&)            = delete;
+  Task& operator=(const Task&) = delete;
+  Task(Task&&)                 = delete;
+  Task& operator=(Task&&)      = delete;
 
  private:
-  const LibraryContext* library_;
-  const Legion::Task* task_;
+  [[nodiscard]] detail::Task* impl() const noexcept;
 
- private:
-  std::vector<Store> inputs_, outputs_, reductions_;
-  std::vector<Scalar> scalars_;
+  detail::Task* impl_{};
 };
 
-class Copy : public Mappable {
- public:
-  Copy(const Legion::Copy* copy,
-       Legion::Mapping::MapperRuntime* runtime,
-       const Legion::Mapping::MapperContext context);
-
- public:
-  const std::vector<Store>& inputs() const { return inputs_; }
-  const std::vector<Store>& outputs() const { return outputs_; }
-  const std::vector<Store>& input_indirections() const { return input_indirections_; }
-  const std::vector<Store>& output_indirections() const { return output_indirections_; }
-
- public:
-  DomainPoint point() const { return copy_->index_point; }
-
- private:
-  const Legion::Copy* copy_;
-
- private:
-  std::vector<Store> inputs_;
-  std::vector<Store> outputs_;
-  std::vector<Store> input_indirections_;
-  std::vector<Store> output_indirections_;
-};
-
-}  // namespace mapping
-}  // namespace legate
+}  // namespace legate::mapping
 
 #include "core/mapping/operation.inl"

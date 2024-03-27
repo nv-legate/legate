@@ -1,0 +1,43 @@
+name: Build and test
+
+concurrency:
+  group: ci-build-and-test-on-${{ github.event_name }}-from-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "pull-request/[0-9]+"
+      - "cpp-branch-*"
+
+jobs:
+  build-and-test:
+    name: Build and test (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.cmake-preset }}, ${{ matrix.ucx-enabled }})
+    strategy:
+      fail-fast: false
+      matrix:
+        ucx-enabled:
+          - true
+          - false
+        platform:
+          - linux
+        target-device:
+          - cpu
+          - gpu
+        cmake-preset:
+          - debug-gcc
+          - debug-sanitizer-gcc
+          - release-gcc
+        exclude:
+          - cmake-preset: debug-gcc
+            ucx-enabled: true
+          - cmake-preset: debug-sanitizer-gcc
+            ucx-enabled: true
+    uses:
+      ./.github/workflows/gh-build-and-test.yml
+    with:
+      platform: ${{ matrix.platform }}
+      target-device: ${{ matrix.target-device }}
+      cmake-preset: ${{ matrix.cmake-preset }}
+      ucx-enabled: ${{ matrix.ucx-enabled }}
+    secrets: inherit

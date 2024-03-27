@@ -1,17 +1,12 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 
 from typing import Any
 
@@ -61,18 +56,11 @@ LEGION_TYPE_FLOAT64: int
 LEGION_TYPE_COMPLEX64: int
 LEGION_TYPE_COMPLEX128: int
 
-LEGATE_CORE_TUNABLE_WINDOW_SIZE: int
-LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: int
-LEGATE_CORE_TUNABLE_FIELD_REUSE_FREQUENCY: int
-LEGATE_CORE_TUNABLE_MAX_LRU_LENGTH: int
-LEGATE_CORE_TUNABLE_MAX_PENDING_EXCEPTIONS: int
-LEGATE_CORE_TUNABLE_PRECISE_EXCEPTION_TRACE: int
 LEGATE_CORE_TUNABLE_TOTAL_CPUS: int
 LEGATE_CORE_TUNABLE_TOTAL_OMPS: int
 LEGATE_CORE_TUNABLE_TOTAL_GPUS: int
 LEGATE_CORE_TUNABLE_NUM_NODES: int
-LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME: int
-LEGATE_CORE_TUNABLE_NCCL_NEEDS_BARRIER: int
+LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: int
 
 def legion_acquire_launcher_add_field(*args: Any) -> Any: ...
 def legion_acquire_launcher_create(*args: Any) -> Any: ...
@@ -403,7 +391,6 @@ __all__ = (
     "LEGION_TYPE_COMPLEX128",
     "LEGATE_CORE_TUNABLE_WINDOW_SIZE",
     "LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE",
-    "LEGATE_CORE_TUNABLE_FIELD_REUSE_FREQUENCY",
     "LEGATE_CORE_TUNABLE_NUM_PIECES",
     "LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME",
     "legion_acquire_launcher_add_field",

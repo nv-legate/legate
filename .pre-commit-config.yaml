@@ -1,29 +1,72 @@
 repos:
     - repo: https://github.com/PyCQA/isort
-      rev: 5.12.0
+      rev: 5.13.2
       hooks:
             - id: isort
     - repo: https://github.com/psf/black
-      rev: 23.9.1
+      rev: 24.1.1
       hooks:
             - id: black
     - repo: https://github.com/PyCQA/flake8
-      rev: 6.1.0
+      rev: 7.0.0
       hooks:
             - id: flake8
     - repo: https://github.com/pre-commit/mirrors-clang-format
-      rev: 'v16.0.6'
+      rev: 'v17.0.6'
       hooks:
         - id: clang-format
-          files: \.(cu|cuh|h|cc|inl)$
+          files: \.(cu|cuh|h|hpp|cc|inl)$
           types_or: []
     - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v1.5.1'
+      rev: 'v1.8.0'
       hooks:
         - id: mypy
           pass_filenames: false
           args: ['legate', 'tests']
-          additional_dependencies: [numpy,pytest,pytest_mock]
+          additional_dependencies: [numpy,pytest,pytest_mock,types-psutil]
+    - repo: https://github.com/MarcoGorelli/cython-lint
+      rev: v0.16.0
+      hooks:
+      - id: cython-lint
+      - id: double-quote-cython-strings
+    - repo: https://github.com/netromdk/vermin
+      rev: 'v1.6.0'
+      hooks:
+      - id: vermin
+        args: ['--config-file', './setup.cfg']
+    - repo: https://github.com/jumanjihouse/pre-commit-hooks
+      rev: '3.0.0'
+      hooks:
+        - id: shellcheck
+          args: ['--enable=all', '--color=always', '-x', '--severity=error']
+    - repo: local
+      hooks:
+        -   id: legate-defined
+            name: legate-defined
+            description: 'Find uses of ifdef LEGATE_ that should be using LegateDefined()'
+            entry: ./scripts/pre-commit/legate_defined.sh
+            language: script
+            'types_or': [c++, c, cuda]
+            require_serial: false
+            stages: [pre-commit]
+            exclude: '^(src/core/legate_c\.h|src/legate_preamble\.h|src/stl/detail/config\.hpp)$'
+        -   id: legate-assert
+            name: legate-assert
+            description: 'Find uses of assert() that should be using LegateAssert()'
+            entry: ./scripts/pre-commit/legate_assert.py
+            language: python
+            'types_or': [c++, c, cuda]
+            require_serial: false
+            stages: [pre-commit]
+            exclude: '^(src/core/utilities/assert\.h)$'
+        -   id: c-begone
+            name: c-begone
+            description: 'Convert C standard library functions and types to C++ equivalent'
+            entry: ./scripts/pre-commit/c_begone.py
+            language: python
+            'types_or': [c++, c, cuda]
+            require_serial: false
+            stages: [pre-commit]
 
 ci:
     autoupdate_schedule: quarterly

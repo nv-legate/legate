@@ -1,36 +1,48 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
 #include "core/legate_c.h"
+#include "core/utilities/shared_ptr.h"
 
-#include <memory>
+#include <iosfwd>
+#include <string>
+#include <type_traits>
 #include <vector>
+
+/**
+ * @file
+ * @brief Legate type system
+ */
 
 /** @defgroup types Type system
  */
 
+namespace legate::detail {
+class Type;
+}  // namespace legate::detail
+
 namespace legate {
+
+class FixedArrayType;
+class ListType;
+class StructType;
 
 /**
  * @ingroup types
  * @brief Enum for reduction operator kinds
  */
-enum class ReductionOpKind : int32_t {
+enum class ReductionOpKind : std::int32_t {
   ADD = ADD_LT, /*!< Addition */
   SUB = SUB_LT, /*!< Subtraction */
   MUL = MUL_LT, /*!< Multiplication */
@@ -52,7 +64,8 @@ class Type {
    * @ingroup types
    * @brief Enum for type codes
    */
-  enum class Code : int32_t {
+  enum class Code : std::int32_t {
+    NIL         = NULL_LT,        /*!< Null type */
     BOOL        = BOOL_LT,        /*!< Boolean type */
     INT8        = INT8_LT,        /*!< 8-bit signed integer type */
     INT16       = INT16_LT,       /*!< 16-bit signed integer type */
@@ -67,69 +80,81 @@ class Type {
     FLOAT64     = FLOAT64_LT,     /*!< Double-precision floating point type */
     COMPLEX64   = COMPLEX64_LT,   /*!< Single-precision complex type */
     COMPLEX128  = COMPLEX128_LT,  /*!< Double-precision complex type */
+    BINARY      = BINARY_LT,      /*!< Opaque binary type */
     FIXED_ARRAY = FIXED_ARRAY_LT, /*!< Fixed-size array type */
     STRUCT      = STRUCT_LT,      /*!< Struct type */
     STRING      = STRING_LT,      /*!< String type */
-    INVALID     = INVALID_LT,     /*!< Invalid type */
+    LIST        = LIST_LT,        /*!< List type */
   };
 
- protected:
-  Type(Code code);
-
- public:
-  virtual ~Type() {}
-
+  /**
+   * @brief Code of the type
+   *
+   * @return Type code
+   */
+  [[nodiscard]] Code code() const;
   /**
    * @brief Size of the data type in bytes
    *
    * @return Data type size in bytes
    */
-  virtual uint32_t size() const = 0;
-
+  [[nodiscard]] std::uint32_t size() const;
   /**
    * @brief Alignment of the type
    *
    * @return Alignment in bytes
    */
-  virtual uint32_t alignment() const = 0;
-
+  [[nodiscard]] std::uint32_t alignment() const;
   /**
    * @brief Unique ID of the data type
    *
    * @return Unique ID
    */
-  virtual int32_t uid() const = 0;
-
+  [[nodiscard]] std::uint32_t uid() const;
   /**
    * @brief Inidicates whether the data type is of varible size elements
    *
    * @return true Elements can be variable size
    * @return false Elements have fixed size
    */
-  virtual bool variable_size() const = 0;
-
-  /**
-   * @brief Returns a copy of the data type
-   *
-   * @return A copy of the data type
-   */
-  virtual std::unique_ptr<Type> clone() const = 0;
-
+  [[nodiscard]] bool variable_size() const;
   /**
    * @brief Converts the data type into a string
    *
    * @return A string of the data type
    */
-  virtual std::string to_string() const = 0;
-
+  [[nodiscard]] std::string to_string() const;
   /**
    * @brief Indicates whether the type is a primitive type
    *
    * @return true If the type is a primitive type
    * @return false Otherwise
    */
-  virtual bool is_primitive() const = 0;
-
+  [[nodiscard]] bool is_primitive() const;
+  /**
+   * @brief Dynamically casts the type into a fixed size array type.
+   *
+   * If the type is not a fixed size array type, an exception will be raised.
+   *
+   * @return Type object
+   */
+  [[nodiscard]] FixedArrayType as_fixed_array_type() const;
+  /**
+   * @brief Dynamically casts the type into a struct type.
+   *
+   * If the type is not a struct type, an exception will be raised.
+   *
+   * @return Type object
+   */
+  [[nodiscard]] StructType as_struct_type() const;
+  /**
+   * @brief Dynamically casts the type into a struct type.
+   *
+   * If the type is not a struct type, an exception will be raised.
+   *
+   * @return Type object
+   */
+  [[nodiscard]] ListType as_list_type() const;
   /**
    * @brief Records a reduction operator.
    *
@@ -139,8 +164,17 @@ class Type {
    * @param op_kind Reduction operator kind
    * @param global_op_id Global reduction operator ID
    */
-  void record_reduction_operator(int32_t op_kind, int32_t global_op_id) const;
-
+  void record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const;
+  /**
+   * @brief Records a reduction operator.
+   *
+   * The global ID of the reduction operator is issued when that operator is registered
+   * to the runtime.
+   *
+   * @param op_kind Reduction operator kind
+   * @param global_op_id Global reduction operator ID
+   */
+  void record_reduction_operator(ReductionOpKind op_kind, std::int32_t global_op_id) const;
   /**
    * @brief Finds the global operator ID for a given reduction operator kind.
    *
@@ -150,131 +184,83 @@ class Type {
    *
    * @return Global reduction operator ID
    */
-  int32_t find_reduction_operator(int32_t op_kind) const;
-
-  const Code code;
-};
-
-/**
- * @ingroup types
- * @brief A class for primitive data types
- */
-class PrimitiveType : public Type {
- public:
+  [[nodiscard]] std::int32_t find_reduction_operator(std::int32_t op_kind) const;
   /**
-   * @brief Constructs a primitive type metadata object
+   * @brief Finds the global operator ID for a given reduction operator kind.
    *
-   * @param code Type code. Must be one of the primitive types.
+   * Raises an exception if no reduction operator has been registered for the kind.
+   *
+   * @param op_kind Reduction operator kind
+   *
+   * @return Global reduction operator ID
    */
-  PrimitiveType(Code code);
-  uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return size_; }
-  int32_t uid() const override;
-  bool variable_size() const override { return false; }
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
-  bool is_primitive() const override { return true; }
+  [[nodiscard]] std::int32_t find_reduction_operator(ReductionOpKind op_kind) const;
+  /**
+   * @brief Equality check between types
+   *
+   * Note that type checks are name-based; two isomorphic fixed-size array types are considered
+   * different if their uids are different (the same applies to struct types).
+   *
+   * @param other Type to compare
+   *
+   * @return true Types are equal
+   * @return false Types are different
+   */
+  bool operator==(const Type& other) const;
+  bool operator!=(const Type& other) const;
 
- private:
-  const uint32_t size_;
-};
+  Type();
+  Type(const Type&)                = default;
+  Type(Type&&) noexcept            = default;
+  Type& operator=(const Type&)     = default;
+  Type& operator=(Type&&) noexcept = default;
 
-/**
- * @ingroup types
- * @brief String data type
- */
-class StringType : public Type {
- public:
-  StringType();
-  bool variable_size() const override { return true; }
-  uint32_t size() const override { return 0; }
-  uint32_t alignment() const override { return 0; }
-  int32_t uid() const override;
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
-  bool is_primitive() const override { return false; }
-};
+  virtual ~Type();
 
-/**
- * @ingroup types
- * @brief A class for all extension types. Each extension type expects a unique ID.
- */
-class ExtensionType : public Type {
- public:
-  ExtensionType(int32_t uid, Type::Code code);
-  int32_t uid() const override { return uid_; }
-  bool is_primitive() const override { return false; }
+  explicit Type(InternalSharedPtr<detail::Type> impl);
+
+  [[nodiscard]] const SharedPtr<detail::Type>& impl() const;
 
  protected:
-  const uint32_t uid_;
+  SharedPtr<detail::Type> impl_{};
 };
 
 /**
  * @ingroup types
  * @brief A class for fixed-size array data types
  */
-class FixedArrayType : public ExtensionType {
+class FixedArrayType : public Type {
  public:
-  /**
-   * @brief Constructs a metadata object for a fixed-size array type
-   *
-   * @param uid Unique ID
-   * @param element_type Type of the array elements
-   * @param N Size of the array
-   */
-  FixedArrayType(int32_t uid, std::unique_ptr<Type> element_type, uint32_t N) noexcept(false);
-  uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return element_type_->alignment(); }
-  bool variable_size() const override { return false; }
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
   /**
    * @brief Returns the number of elements
    *
    * @return Number of elements
    */
-  uint32_t num_elements() const { return N_; }
+  [[nodiscard]] std::uint32_t num_elements() const;
   /**
    * @brief Returns the element type
    *
    * @return Element type
    */
-  const Type& element_type() const { return *element_type_; }
+  [[nodiscard]] Type element_type() const;
 
  private:
-  const std::unique_ptr<Type> element_type_;
-  const uint32_t N_;
-  const uint32_t size_;
+  friend class Type;
+  explicit FixedArrayType(InternalSharedPtr<detail::Type> type);
 };
 
 /**
  * @ingroup types
  * @brief A class for struct data types
  */
-class StructType : public ExtensionType {
+class StructType : public Type {
  public:
-  /**
-   * @brief Constructs a metadata object for a struct type
-   *
-   * @param uid Unique ID
-   * @param field_types A vector of field types
-   * @param align Optional boolean flag indicating whether the struct fields should be aligned.
-   *              false by default.
-   */
-  StructType(int32_t uid,
-             std::vector<std::unique_ptr<Type>>&& field_types,
-             bool align = false) noexcept(false);
-  uint32_t size() const override { return size_; }
-  uint32_t alignment() const override { return alignment_; }
-  bool variable_size() const override { return false; }
-  std::unique_ptr<Type> clone() const override;
-  std::string to_string() const override;
   /**
    * @brief Returns the number of fields
    *
    * @return Number of fields
    */
-  uint32_t num_fields() const { return field_types_.size(); }
+  [[nodiscard]] std::uint32_t num_fields() const;
   /**
    * @brief Returns the element type
    *
@@ -282,34 +268,53 @@ class StructType : public ExtensionType {
    *
    * @return Element type
    */
-  const Type& field_type(uint32_t field_idx) const;
+  [[nodiscard]] Type field_type(std::uint32_t field_idx) const;
   /**
    * @brief Indiciates whether the fields are aligned
    *
    * @return true Fields are aligned
    * @return false Fields are compact
    */
-  bool aligned() const { return aligned_; }
+  [[nodiscard]] bool aligned() const;
+  /**
+   * @brief Returns offsets to fields
+   *
+   * @return Field offsets in a vector
+   */
+  [[nodiscard]] std::vector<std::uint32_t> offsets() const;
 
  private:
-  bool aligned_;
-  uint32_t size_;
-  uint32_t alignment_;
-  std::vector<std::unique_ptr<Type>> field_types_{};
-  std::vector<uint32_t> offsets_{};
+  friend class Type;
+  explicit StructType(InternalSharedPtr<detail::Type> type);
+};
+
+/**
+ * @ingroup types
+ * @brief A class for list types
+ */
+class ListType : public Type {
+ public:
+  /**
+   * @brief Returns the element type
+   *
+   * @return Element type
+   */
+  [[nodiscard]] Type element_type() const;
+
+ private:
+  friend class Type;
+  explicit ListType(InternalSharedPtr<detail::Type> type);
 };
 
 /**
  * @ingroup types
  * @brief Creates a metadata object for a primitive type
  *
- * @param uid Unique ID
- * @param element_type Type of the array elements
- * @param N Size of the array
+ * @param code Type code
  *
  * @return Type object
  */
-std::unique_ptr<Type> primitive_type(Type::Code code);
+[[nodiscard]] Type primitive_type(Type::Code code);
 
 /**
  * @ingroup types
@@ -317,7 +322,17 @@ std::unique_ptr<Type> primitive_type(Type::Code code);
  *
  * @return Type object
  */
-std::unique_ptr<Type> string_type();
+[[nodiscard]] Type string_type();
+
+/**
+ * @ingroup types
+ * @brief Creates an opaque binary type of a given size
+ *
+ * @param size Element size
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type binary_type(std::uint32_t size);
 
 /**
  * @ingroup types
@@ -328,22 +343,210 @@ std::unique_ptr<Type> string_type();
  *
  * @return Type object
  */
-std::unique_ptr<Type> fixed_array_type(std::unique_ptr<Type> element_type,
-                                       uint32_t N) noexcept(false);
+[[nodiscard]] Type fixed_array_type(const Type& element_type, std::uint32_t N);
 
 /**
  * @ingroup types
  * @brief Creates a metadata object for a struct type
  *
  * @param field_types A vector of field types
+ * @param align If true, fields in the struct are aligned
  *
  * @return Type object
  */
-std::unique_ptr<Type> struct_type(std::vector<std::unique_ptr<Type>>&& field_types,
-                                  bool align = false) noexcept(false);
+[[nodiscard]] Type struct_type(const std::vector<Type>& field_types, bool align = false);
+
+/**
+ * @ingroup types
+ * @brief Creates a metadata object for a list type
+ *
+ * @param element_type Type of the list elements
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type list_type(const Type& element_type);
+
+/**
+ * @ingroup types
+ * @brief Creates a metadata object for a struct type
+ *
+ * @param align If true, fields in the struct are aligned
+ * @param field_types Field types
+ *
+ * @return Type object
+ */
+template <typename... Args>
+[[nodiscard]] std::enable_if_t<std::conjunction_v<std::is_same<std::decay_t<Args>, Type>...>, Type>
+struct_type(bool align, Args&&... field_types);
 
 std::ostream& operator<<(std::ostream&, const Type::Code&);
 
 std::ostream& operator<<(std::ostream&, const Type&);
 
+/**
+ * @ingroup types
+ * @brief Creates a boolean type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type bool_();
+
+/**
+ * @ingroup types
+ * @brief Creates a 8-bit signed integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type int8();
+
+/**
+ * @ingroup types
+ * @brief Creates a 16-bit signed integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type int16();
+
+/**
+ * @ingroup types
+ * @brief Creates a 32-bit signed integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type int32();
+
+/**
+ * @ingroup types
+ * @brief Creates a 64-bit signed integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type int64();
+
+/**
+ * @ingroup types
+ * @brief Creates a 8-bit unsigned integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type uint8();
+
+/**
+ * @ingroup types
+ * @brief Creates a 16-bit unsigned integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type uint16();
+
+/**
+ * @ingroup types
+ * @brief Creates a 32-bit unsigned integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type uint32();
+
+/**
+ * @ingroup types
+ * @brief Creates a 64-bit unsigned integer type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type uint64();
+
+/**
+ * @ingroup types
+ * @brief Creates a half-precision floating point type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type float16();
+
+/**
+ * @ingroup types
+ * @brief Creates a single-precision floating point type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type float32();
+
+/**
+ * @ingroup types
+ * @brief Creates a double-precision floating point type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type float64();
+
+/**
+ * @ingroup types
+ * @brief Creates a single-precision complex number type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type complex64();
+
+/**
+ * @ingroup types
+ * @brief Creates a double-precision complex number type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type complex128();
+
+/**
+ * @ingroup types
+ * @brief Creates a point type
+ *
+ * @param ndim Number of dimensions
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type point_type(std::uint32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Creates a rect type
+ *
+ * @param ndim Number of dimensions
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type rect_type(std::uint32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Creates a null type
+ *
+ * @return Type object
+ */
+[[nodiscard]] Type null_type();
+
+/**
+ * @ingroup types
+ * @brief Checks if the type is a point type of the given dimensionality
+ *
+ * @param type Type to check
+ * @param ndim Number of dimensions the point type should have
+ *
+ * @return true If the `type` is a point type
+ * @return false Otherwise
+ */
+[[nodiscard]] bool is_point_type(const Type& type, std::uint32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Checks if the type is a rect type of the given dimensionality
+ *
+ * @param type Type to check
+ * @param ndim Number of dimensions the rect type should have
+ *
+ * @return true If the `type` is a rect type
+ * @return false Otherwise
+ */
+[[nodiscard]] bool is_rect_type(const Type& type, std::uint32_t ndim);
+
 }  // namespace legate
+
+#include "core/type/type_info.inl"

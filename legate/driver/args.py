@@ -1,26 +1,26 @@
 #!/usr/bin/env python
 
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
+import re
 from argparse import REMAINDER, ArgumentDefaultsHelpFormatter, ArgumentParser
+from os import getenv
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any
+    from ..util.types import RunMode
 
 from .. import __version__
 from ..util.args import InfoAction
@@ -45,51 +45,154 @@ from . import defaults
 
 __all__ = ("parser",)
 
+RUN_MODE_OPTIONS: tuple[RunMode, ...] = ("python", "exec")
+
+
+def _get_ompi_config() -> tuple[int, int] | None:
+    if not (ranks_env := getenv("OMPI_COMM_WORLD_SIZE")):
+        return None
+
+    if not (ranks_per_node_env := getenv("OMPI_COMM_WORLD_LOCAL_SIZE")):
+        return None
+
+    try:
+        ranks, ranks_per_node = int(ranks_env), int(ranks_per_node_env)
+    except ValueError:
+        raise ValueError(
+            "Expected OMPI_COMM_WORLD_SIZE and OMPI_COMM_WORLD_LOCAL_SIZE to "
+            f"be integers, got OMPI_COMM_WORLD_SIZE={ranks_env} and "
+            f"OMPI_COMM_WORLD_LOCAL_SIZE={ranks_per_node_env}"
+        )
+
+    if ranks % ranks_per_node != 0:
+        raise ValueError(
+            "Detected incompatible ranks and ranks-per-node from "
+            f"OMPI_COMM_WORLD_SIZE={ranks} and "
+            f"OMPI_COMM_WORLD_LOCAL_SIZE={ranks_per_node}"
+        )
+
+    return ranks // ranks_per_node, ranks_per_node
+
+
+def _get_mv2_config() -> tuple[int, int] | None:
+    if not (ranks_env := getenv("MV2_COMM_WORLD_SIZE")):
+        return None
+
+    if not (ranks_per_node_env := getenv("MV2_COMM_WORLD_LOCAL_SIZE")):
+        return None
+
+    try:
+        ranks, ranks_per_node = int(ranks_env), int(ranks_per_node_env)
+    except ValueError:
+        raise ValueError(
+            "Expected MV2_COMM_WORLD_SIZE and MV2_COMM_WORLD_LOCAL_SIZE to "
+            f"be integers, got MV2_COMM_WORLD_SIZE={ranks_env} and "
+            f"MV2_COMM_WORLD_LOCAL_SIZE={ranks_per_node_env}"
+        )
+
+    if ranks % ranks_per_node != 0:
+        raise ValueError(
+            "Detected incompatible ranks and ranks-per-node from "
+            f"MV2_COMM_WORLD_SIZE={ranks} and "
+            f"MV2_COMM_WORLD_LOCAL_SIZE={ranks_per_node}"
+        )
+
+    return ranks // ranks_per_node, ranks_per_node
+
+
+_SLURM_CONFIG_ERROR = (
+    "Expected SLURM_TASKS_PER_NODE to be a single integer ranks per node, or "
+    "of the form 'A(xB)' where A is an integer ranks per node, and B is an "
+    "integer number of nodes, got SLURM_TASKS_PER_NODE={value}"
+)
+
+
+def _get_slurm_config() -> tuple[int, int] | None:
+    if not (nodes_env := getenv("SLURM_JOB_NUM_NODES")):
+        return None
+
+    nprocs_env = getenv("SLURM_NPROCS")
+    ntasks_env = getenv("SLURM_NTASKS")
+    tasks_per_node_env = getenv("SLURM_TASKS_PER_NODE")
+
+    # at least one of these needs to be set
+    if not any((nprocs_env, ntasks_env, tasks_per_node_env)):
+        return None
+
+    # use SLURM_TASKS_PER_NODE if it is given
+    if tasks_per_node_env is not None:
+        try:
+            return 1, int(tasks_per_node_env)
+        except ValueError:
+            m = re.match(r"^(\d*)\(x(\d*)\)$", tasks_per_node_env.strip())
+            if m:
+                try:
+                    return int(m.group(2)), int(m.group(1))
+                except ValueError:
+                    pass
+            raise ValueError(
+                _SLURM_CONFIG_ERROR.format(value=tasks_per_node_env)
+            )
+
+    # prefer newer SLURM_NTASKS over SLURM_NPROCS
+    if ntasks_env is not None:
+        try:
+            nodes, ranks = int(nodes_env), int(ntasks_env)
+        except ValueError:
+            raise ValueError(
+                "Expected SLURM_JOB_NUM_NODES and SLURM_NTASKS to "
+                f"be integers, got SLURM_JOB_NUM_NODES={nodes_env} and "
+                f"SLURM_NTASKS={ntasks_env}"
+            )
+
+        if ranks % nodes != 0:
+            raise ValueError(
+                "Detected incompatible ranks and ranks-per-node from "
+                f"SLURM_JOB_NUM_NODES={nodes} and "
+                f"SLURM_NTASKS={ranks}"
+            )
+
+        return nodes, ranks // nodes
+
+    # fall back to older SLURM_NPROCS
+    if nprocs_env is not None:
+        try:
+            nodes, ranks = int(nodes_env), int(nprocs_env)
+        except ValueError:
+            raise ValueError(
+                "Expected SLURM_JOB_NUM_NODES and SLURM_NPROCS to "
+                f"be integers, got SLURM_JOB_NUM_NODES={nodes_env} and "
+                f"SLURM_NPROCS={nprocs_env}"
+            )
+
+        if ranks % nodes != 0:
+            raise ValueError(
+                "Detected incompatible ranks and ranks-per-node from "
+                f"SLURM_JOB_NUM_NODES={nodes} and "
+                f"SLURM_NPROCS={ranks}"
+            )
+
+        return nodes, ranks // nodes
+
+    return None
+
 
 def detect_multi_node_defaults() -> tuple[dict[str, Any], dict[str, Any]]:
-    from os import getenv
-
     nodes_kw = dict(NODES.kwargs)
     ranks_per_node_kw = dict(RANKS_PER_NODE.kwargs)
     where = None
 
-    if ranks_env := getenv("OMPI_COMM_WORLD_SIZE"):
-        if ranks_per_node_env := getenv("OMPI_COMM_WORLD_LOCAL_SIZE"):
-            ranks, ranks_per_node = int(ranks_env), int(ranks_per_node_env)
-            if ranks % ranks_per_node != 0:
-                raise ValueError(
-                    "Detected incompatible ranks and ranks-per-node from "
-                    "the environment"
-                )
-            nodes = ranks // ranks_per_node
-            where = "OMPI"
-
-    elif ranks_env := getenv("MV2_COMM_WORLD_SIZE"):
-        if ranks_per_node_env := getenv("MV2_COMM_WORLD_LOCAL_SIZE"):
-            ranks, ranks_per_node = int(ranks_env), int(ranks_per_node_env)
-            if ranks % ranks_per_node != 0:
-                raise ValueError(
-                    "Detected incompatible ranks and ranks-per-node from "
-                    "the environment"
-                )
-            nodes = ranks // ranks_per_node
-            where = "MV2"
-
-    elif nodes_env := getenv("SLURM_JOB_NUM_NODES"):
-        if ranks_env := getenv("SLURM_NTASKS"):
-            nodes, ranks = int(nodes_env), int(ranks_env)
-            if ranks % nodes != 0:
-                raise ValueError(
-                    "Detected incompatible nodes and ranks from the "
-                    "environment"
-                )
-            ranks_per_node = ranks // nodes
-            where = "SLURM"
-
+    if config := _get_ompi_config():
+        where = "OMPI"
+    elif config := _get_mv2_config():
+        where = "MV2"
+    elif config := _get_slurm_config():
+        where = "SLURM"
     else:
-        nodes = defaults.LEGATE_NODES
-        ranks_per_node = defaults.LEGATE_RANKS_PER_NODE
+        config = defaults.LEGATE_NODES, defaults.LEGATE_RANKS_PER_NODE
+        where = None
 
+    nodes, ranks_per_node = config
     nodes_kw["default"] = nodes
     ranks_per_node_kw["default"] = ranks_per_node
 
@@ -113,6 +216,17 @@ parser.add_argument(
     help="A python script to run, plus any arguments for the script. "
     "Any arguments after the script will be passed to the script, i.e. "
     "NOT used as arguments to legate itself.",
+)
+
+parser.add_argument(
+    "--run-mode",
+    default=None,
+    choices=RUN_MODE_OPTIONS,
+    help="Whether to run the command as python code with legion_python, or "
+    "as a bare executable. By default, commands that end in .py will be run "
+    "as a python script, and those that don't will be run as an executable. "
+    "If --module is specified, python mode will also be assumed by default. "
+    "[legate-only, not supported with standard Python invocation]",
 )
 
 nodes_kw, ranks_per_node_kw = detect_multi_node_defaults()
@@ -416,9 +530,9 @@ other.add_argument(
     action="append",
     default=[],
     help="Specify another executable (and any command-line arguments for that "
-    "executable) to wrap the Legate executable invocation. This wrapper will "
+    "executable) to wrap the remaining command invocation. This wrapper will "
     "come right after the launcher invocation, and will be passed the rest of "
-    "the Legate invocation (including any other wrappers) to execute. May "
+    "the command invocation (including any other wrappers) to execute. May "
     "contain the special string %%%%LEGATE_GLOBAL_RANK%%%% that will be "
     "replaced with the rank of the current process by bind.sh. If multiple "
     "--wrapper values are provided, they will execute in the order given. "
@@ -432,9 +546,9 @@ other.add_argument(
     action="append",
     default=[],
     help="Specify another executable (and any command-line arguments for that "
-    "executable) to wrap the Legate executable invocation. This wrapper will "
-    "come right before the legion_python invocation (after any other "
-    "wrappers) and will be passed the rest of the legion_python invocation to "
+    "executable) to wrap the remaining command invocation. This wrapper will "
+    "come right before the command invocation (after any other "
+    "wrappers) and will be passed the rest of the command invocation to "
     "execute. May contain the special string %%%%LEGATE_GLOBAL_RANK%%%% that "
     "will be replaced with the rank of the current process by bind.sh. If "
     "multiple --wrapper-inner values are given, they will execute in the "
@@ -447,7 +561,8 @@ other.add_argument(
     dest="module",
     default=None,
     required=False,
-    help="Specify a Python module to load before running "
+    help="Specify a Python module to load before running. Only applicable "
+    "when run mode is 'python' (i.e. when running Python scripts). "
     "[legate-only, not supported with standard Python invocation]",
 )
 

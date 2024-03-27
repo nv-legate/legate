@@ -1,20 +1,16 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
-import re
 from shlex import quote
 
 import pytest
@@ -34,14 +30,6 @@ from ...util import Capsys
 from .util import GenConfig
 
 SYSTEM = System()
-
-DARWIN_GDB_WARN_EXPECTED_PAT = """\
-WARNING: You must start the debugging session with the following command,
-as LLDB no longer forwards the environment to subprocesses for security
-reasons:
-
-[(]lldb[)] process launch -v LIB_PATH=(.*) -v PYTHONPATH=(.*)
-"""
 
 
 class TestDriver:
@@ -113,7 +101,7 @@ class TestDriver:
         mock_run.assert_called_once_with(driver.cmd, env=driver.env)
 
     @pytest.mark.parametrize("launch", LAUNCHERS)
-    def test_verbose(
+    def test_format_verbose(
         self,
         capsys: Capsys,
         genconfig: GenConfig,
@@ -127,9 +115,7 @@ class TestDriver:
 
         run_out = scrub(capsys.readouterr()[0]).strip()
 
-        m.print_verbose(driver.system, driver)
-
-        pv_out = scrub(capsys.readouterr()[0]).strip()
+        pv_out = scrub(m.format_verbose(driver.system, driver)).strip()
 
         assert pv_out in run_out
 
@@ -157,42 +143,16 @@ class TestDriver:
 
         run_out = scrub(capsys.readouterr()[0]).strip()
 
-        m.print_verbose(driver.system, driver)
-
-        pv_out = scrub(capsys.readouterr()[0]).strip()
+        pv_out = scrub(m.format_verbose(driver.system, driver)).strip()
 
         assert pv_out not in run_out
 
-    @pytest.mark.parametrize("launch", LAUNCHERS)
-    def test_darwin_gdb_warning(
-        self,
-        mocker: MockerFixture,
-        capsys: Capsys,
-        genconfig: GenConfig,
-        launch: str,
-    ) -> None:
-        mocker.patch("platform.system", return_value="Darwin")
 
-        system = m.System()
-
-        # set --dry-run to avoid needing to mock anything
-        config = genconfig(["--launcher", launch, "--gdb", "--dry-run"])
-        driver = m.LegateDriver(config, system)
-
-        driver.run()
-
-        out, _ = capsys.readouterr()
-
-        assert re.search(DARWIN_GDB_WARN_EXPECTED_PAT, scrub(out))
-
-
-class Test_print_verbose:
-    def test_system_only(self, capsys: Capsys) -> None:
+class Test_format_verbose:
+    def test_system_only(self) -> None:
         system = System()
 
-        m.print_verbose(system)
-
-        out = scrub(capsys.readouterr()[0]).strip()
+        out = scrub(m.format_verbose(system)).strip()
 
         assert out.startswith(f"{'--- Legion Python Configuration ':-<80}")
         assert "Legate paths:" in out
@@ -208,9 +168,7 @@ class Test_print_verbose:
         system = System()
         driver = m.LegateDriver(config, system)
 
-        m.print_verbose(system, driver)
-
-        out = scrub(capsys.readouterr()[0]).strip()
+        out = scrub(m.format_verbose(system, driver)).strip()
 
         assert out.startswith(f"{'--- Legion Python Configuration ':-<80}")
         assert "Legate paths:" in out

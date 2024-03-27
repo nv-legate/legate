@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 import os
@@ -46,6 +43,7 @@ LAUNCHER_VAR_PREFIXES = (
     "NCCL_",
     "CUNUMERIC_",
     "NVIDIA_",
+    "LD_",
 )
 
 
@@ -193,17 +191,6 @@ class Launcher:
                 system.legion_paths.legion_lib_path
                 / "realm_ucp_bootstrap_mpi.so"
             )
-
-        # Set some environment variables depending on our configuration that
-        # we will check in the Legate binary to ensure that it is properly.
-        # configured. Always make sure we include the Legion library
-        lpaths = [
-            str(system.legion_paths.legion_lib_path),
-            str(system.legate_paths.legate_lib_path),
-        ]
-        if system.LIB_PATH in system.env:
-            lpaths.append(system.env[system.LIB_PATH])
-        env[system.LIB_PATH] = os.pathsep.join(lpaths)
 
         if config.core.gpus > 0:
             assert "LEGATE_NEED_CUDA" not in system.env

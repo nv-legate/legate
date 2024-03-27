@@ -1,26 +1,23 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
-#include <fstream>
-
-#include "legateio.h"
 #include "util.h"
 
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
+
+#include "legateio.h"
+
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -29,7 +26,7 @@ namespace legateio {
 namespace {
 
 struct write_fn {
-  template <legate::Type::Code CODE, int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(const legate::Store& store, const fs::path& path)
   {
     using VAL = legate::legate_type_of<CODE>;
@@ -39,17 +36,20 @@ struct write_fn {
     auto extents =
       empty ? legate::Point<DIM>::ZEROES() : shape.hi - shape.lo + legate::Point<DIM>::ONES();
 
-    int32_t dim  = DIM;
-    int32_t code = store.code<int32_t>();
+    std::int32_t dim  = DIM;
+    std::int32_t code = store.code<std::int32_t>();
 
     logger.print() << "Write a sub-array " << shape << " to " << path;
 
     std::ofstream out(path, std::ios::binary | std::ios::out | std::ios::trunc);
     // Each file for a chunk starts with the extents
-    for (int32_t idx = 0; idx < DIM; ++idx)
+    for (std::int32_t idx = 0; idx < DIM; ++idx) {
       out.write(reinterpret_cast<const char*>(&extents[idx]), sizeof(legate::coord_t));
+    }
 
-    if (empty) return;
+    if (empty) {
+      return;
+    }
     auto acc = store.read_accessor<VAL, DIM>();
     // The iteration order here should be consistent with that in the reader task, otherwise
     // the read data can be transposed.
@@ -62,8 +62,8 @@ struct write_fn {
 
 }  // namespace
 
-std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext& context,
-                                                     int32_t ndim,
+std::filesystem::path get_unique_path_for_task_index(legate::TaskContext context,
+                                                     std::int32_t ndim,
                                                      const std::string& dirname)
 {
   auto task_index = context.get_task_index();
@@ -74,8 +74,10 @@ std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext& 
   }
 
   std::stringstream ss;
-  for (int32_t idx = 0; idx < task_index.dim; ++idx) {
-    if (idx != 0) ss << ".";
+  for (std::int32_t idx = 0; idx < task_index.dim; ++idx) {
+    if (idx != 0) {
+      ss << ".";
+    }
     ss << task_index[idx];
   }
   auto filename = ss.str();
@@ -83,7 +85,7 @@ std::filesystem::path get_unique_path_for_task_index(const legate::TaskContext& 
   return fs::path(dirname) / filename;
 }
 
-void write_to_file(legate::TaskContext& task_context,
+void write_to_file(legate::TaskContext task_context,
                    const std::string& dirname,
                    const legate::Store& store)
 {

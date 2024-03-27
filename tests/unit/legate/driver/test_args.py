@@ -1,17 +1,14 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 from argparse import SUPPRESS
@@ -221,12 +218,39 @@ class TestMultiNodeDefaults:
         assert ranks_per_node_kw["default"] == 2
         assert "OMPI" in ranks_per_node_kw["help"]
 
-    def test_with_OMPI_bad(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_with_OMPI_incompatible(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("OMPI_COMM_WORLD_SIZE", "5")
         monkeypatch.setenv("OMPI_COMM_WORLD_LOCAL_SIZE", "3")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as e:
             m.detect_multi_node_defaults()
+
+        assert "OMPI_COMM_WORLD_SIZE=5" in str(e.value)
+        assert "OMPI_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
+
+    def test_with_OMPI_bad_world_size(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("OMPI_COMM_WORLD_SIZE", "5.2")
+        monkeypatch.setenv("OMPI_COMM_WORLD_LOCAL_SIZE", "3")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "OMPI_COMM_WORLD_SIZE=5.2" in str(e.value)
+        assert "OMPI_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
+
+    def test_with_OMPI_bad_local_size(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("OMPI_COMM_WORLD_SIZE", "5")
+        monkeypatch.setenv("OMPI_COMM_WORLD_LOCAL_SIZE", "3.2")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "OMPI_COMM_WORLD_SIZE=5" in str(e.value)
+        assert "OMPI_COMM_WORLD_LOCAL_SIZE=3.2" in str(e.value)
 
     def test_with_MV2(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("MV2_COMM_WORLD_SIZE", "6")
@@ -240,14 +264,80 @@ class TestMultiNodeDefaults:
         assert ranks_per_node_kw["default"] == 2
         assert "MV2" in ranks_per_node_kw["help"]
 
-    def test_with_MV2_bad(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_with_MV2_incompatible(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("MV2_COMM_WORLD_SIZE", "5")
         monkeypatch.setenv("MV2_COMM_WORLD_LOCAL_SIZE", "3")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as e:
             m.detect_multi_node_defaults()
+        assert "MV2_COMM_WORLD_SIZE=5" in str(e.value)
+        assert "MV2_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
 
-    def test_with_SLURM(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_with_MV2_bad_world_size(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("MV2_COMM_WORLD_SIZE", "5.2w")
+        monkeypatch.setenv("MV2_COMM_WORLD_LOCAL_SIZE", "3")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "MV2_COMM_WORLD_SIZE=5.2" in str(e.value)
+        assert "MV2_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
+
+    def test_with_MV2_bad_local_size(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("MV2_COMM_WORLD_SIZE", "5")
+        monkeypatch.setenv("MV2_COMM_WORLD_LOCAL_SIZE", "3.2")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "MV2_COMM_WORLD_SIZE=5" in str(e.value)
+        assert "MV2_COMM_WORLD_LOCAL_SIZE=3.2" in str(e.value)
+
+    def test_with_SLURM_with_integer_tasks_per_node(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_TASKS_PER_NODE", "3")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "2")
+
+        node_kw, ranks_per_node_kw = m.detect_multi_node_defaults()
+
+        assert node_kw["default"] == 1
+        assert "SLURM" in node_kw["help"]
+
+        assert ranks_per_node_kw["default"] == 3
+        assert "SLURM" in ranks_per_node_kw["help"]
+
+    def test_with_SLURM_with_combined_tasks_per_node(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_TASKS_PER_NODE", "3(x2)")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "2")
+
+        node_kw, ranks_per_node_kw = m.detect_multi_node_defaults()
+
+        assert node_kw["default"] == 2
+        assert "SLURM" in node_kw["help"]
+
+        assert ranks_per_node_kw["default"] == 3
+        assert "SLURM" in ranks_per_node_kw["help"]
+
+    def test_with_SLURM_with_bad_tasks_per_node(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_TASKS_PER_NODE", "3(x2),10")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "2")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "SLURM_TASKS_PER_NODE=3(x2),10" in str(e.value)
+
+    def test_with_SLURM_with_ntasks(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("SLURM_NTASKS", "6")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "2")
 
@@ -259,12 +349,100 @@ class TestMultiNodeDefaults:
         assert ranks_per_node_kw["default"] == 3
         assert "SLURM" in ranks_per_node_kw["help"]
 
-    def test_with_SLURM_bad(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_with_SLURM_with_nprocs(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_NPROCS", "6")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "2")
+
+        node_kw, ranks_per_node_kw = m.detect_multi_node_defaults()
+
+        assert node_kw["default"] == 2
+        assert "SLURM" in node_kw["help"]
+
+        assert ranks_per_node_kw["default"] == 3
+        assert "SLURM" in ranks_per_node_kw["help"]
+
+    def test_with_SLURM_prefers_ntasks_over_procs(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_PROCS", "80")
+        monkeypatch.setenv("SLURM_NTASKS", "6")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "2")
+
+        node_kw, ranks_per_node_kw = m.detect_multi_node_defaults()
+
+        assert node_kw["default"] == 2
+        assert "SLURM" in node_kw["help"]
+
+        assert ranks_per_node_kw["default"] == 3
+        assert "SLURM" in ranks_per_node_kw["help"]
+
+    def test_with_SLURM_incompatible_num_nodes(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("SLURM_NTASKS", "5")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as e:
             m.detect_multi_node_defaults()
+        assert "SLURM_NTASKS=5" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
+
+    def test_with_SLURM_bad_num_nodes(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_NTASKS", "5")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3.2")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "SLURM_NTASKS=5" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES=3.2" in str(e.value)
+
+    def test_with_SLURM_bad_ntasks(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_NTASKS", "5.2")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "SLURM_NTASKS=5.2" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
+
+    def test_with_SLURM_incompatible_ntasks(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_NTASKS", "5")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "SLURM_NTASKS=5" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
+
+    def test_with_SLURM_bad_nprocs(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_NPROCS", "5.2")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "SLURM_NPROCS=5.2" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
+
+    def test_with_SLURM_incompatible_nprocs(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("SLURM_NPROCS", "5")
+        monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
+
+        with pytest.raises(ValueError) as e:
+            m.detect_multi_node_defaults()
+        assert "SLURM_NPROCS=5" in str(e.value)
+        assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
 
     # test same as no_env -- auto-detect for PMI is unsupported
     def test_with_PMI(self, monkeypatch: pytest.MonkeyPatch) -> None:

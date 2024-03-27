@@ -1,25 +1,21 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
-#include <fstream>
+#include "core/utilities/dispatch.h"
 
 #include "legate_library.h"
 #include "legateio.h"
 
-#include "core/utilities/dispatch.h"
+#include <fstream>
 
 namespace legateio {
 
@@ -31,9 +27,9 @@ struct write_fn {
   {
     using VAL = legate::legate_type_of<CODE>;
 
-    auto shape  = input.shape<1>();
-    auto code   = input.code<int64_t>();
-    size_t size = shape.volume();
+    auto shape       = input.shape<1>();
+    auto code        = input.code<std::int64_t>();
+    std::size_t size = shape.volume();
 
     // Store the type code and the number of elements in the array at the beginning of the file
     std::ofstream out(filename, std::ios::binary | std::ios::out | std::ios::trunc);
@@ -52,10 +48,10 @@ struct write_fn {
 
 class WriteFileTask : public Task<WriteFileTask, WRITE_FILE> {
  public:
-  static void cpu_variant(legate::TaskContext& context)
+  static void cpu_variant(legate::TaskContext context)
   {
-    auto filename = context.scalars().at(0).value<std::string>();
-    auto& input   = context.inputs().at(0);
+    auto filename = context.scalar(0).value<std::string>();
+    auto input    = context.input(0).data();
     logger.print() << "Write to " << filename;
 
     legate::type_dispatch(input.code(), write_fn{}, input, filename);

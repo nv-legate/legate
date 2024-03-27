@@ -1,26 +1,26 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
-#include "core/runtime/context.h"
+#include "core/runtime/library.h"
 #include "core/task/task_info.h"
 #include "core/task/variant_helper.h"
 #include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
+
+#include <map>
+#include <memory>
+#include <string>
 
 /** @defgroup task Task
  */
@@ -52,7 +52,8 @@ namespace legate {
  * registrar class. (See legate::TaskRegistrar for details.)
  */
 template <typename T>
-struct LegateTask {
+class LegateTask {
+ public:
   // Exports the base class so we can access it via subclass T
   using BASE = LegateTask<T>;
 
@@ -72,31 +73,47 @@ struct LegateTask {
   /**
    * @brief Registers all variants of this task immediately.
    *
-   * Unlike the other method, this one takes a library context so the registration can be done
-   * immediately.
+   * Unlike the other method, this one takes a library so the registration can be done immediately.
+   * The value of T::TASK_ID is used as the task id.
    *
-   * @param context Library to which the task should be registered
+   * @param library Library to which the task should be registered
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
    * use the default set of options
    */
   static void register_variants(
-    LibraryContext* context, const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+    Library library, const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+
+  /**
+   * @brief Registers all variants of this task immediately.
+   *
+   * Unlike the other method, this one takes a library so the registration can be done immediately.
+   *
+   * @param library Library to which the task should be registered
+   * @param task_id Task id
+   * @param all_options Options for task variants. Variants with no entires in `all_options` will
+   * use the default set of options
+   */
+  static void register_variants(
+    Library library,
+    std::int64_t task_id,
+    const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 
  private:
   template <typename, template <typename...> typename, bool>
-  friend struct detail::VariantHelper;
-
-  // A wrapper that wraps all Legate task variant implementations. Provides
-  // common functionalities and instrumentations
-  template <VariantImpl VARIANT_IMPL>
-  static void legate_task_wrapper(
-    const void* args, size_t arglen, const void* userdata, size_t userlen, Processor p);
+  friend class detail::VariantHelper;
 
   // A helper to find and register all variants of a task
-  static std::unique_ptr<TaskInfo> create_task_info(
+  [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info(
     const std::map<LegateVariantCode, VariantOptions>& all_options);
 
-  static const std::string& task_name();
+  [[nodiscard]] static const std::string& task_name();
+
+  template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+  static void task_wrapper_(const void* args,
+                            std::size_t arglen,
+                            const void* userdata,
+                            std::size_t userlen,
+                            Legion::Processor p);
 };
 
 }  // namespace legate

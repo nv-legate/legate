@@ -1,17 +1,13 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
@@ -25,15 +21,25 @@
 #include "legion.h"
 // legion.h has to go before these
 #include "core/data/allocator.h"
+#include "core/data/external_allocation.h"
+#include "core/data/logical_store.h"
+#include "core/data/physical_store.h"
 #include "core/data/scalar.h"
-#include "core/data/store.h"
 #include "core/legate_c.h"
 #include "core/mapping/mapping.h"
+#include "core/mapping/operation.h"
+#include "core/operation/projection.h"
+#include "core/operation/task.h"
+#include "core/partitioning/constraint.h"
+#include "core/runtime/library.h"
 #include "core/runtime/runtime.h"
+#include "core/runtime/scope.h"
+#include "core/task/exception.h"
 #include "core/task/registrar.h"
 #include "core/task/task.h"
+#include "core/task/task_context.h"
 #include "core/type/type_traits.h"
-#include "core/utilities/deserializer.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/typedefs.h"
+
 #include "legate_defines.h"

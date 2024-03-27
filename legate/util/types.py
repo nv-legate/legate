@@ -1,17 +1,14 @@
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 """Provide types that are useful throughout the test driver code.
 
 """
@@ -37,6 +34,7 @@ __all__ = (
     "LauncherType",
     "LegatePaths",
     "LegionPaths",
+    "RunMode",
     "object_to_dataclass",
 )
 
@@ -45,7 +43,7 @@ __all__ = (
 class CPUInfo:
     """Encapsulate information about a single CPU"""
 
-    #: IDs of hypterthreading sibling cores for a given physscal core
+    #: IDs of hypterthreading sibling cores for a given physical core
     ids: tuple[int, ...]
 
 
@@ -80,6 +78,10 @@ CommandPart: TypeAlias = Tuple[str, ...]
 
 #: Represent all the parts of a command-line command to execute
 Command: TypeAlias = Tuple[str, ...]
+
+
+#: Represent how to run the application -- as python script or binary
+RunMode: TypeAlias = Literal["python", "exec"]
 
 
 # This seems like it ought to be in stdlib

@@ -1,17 +1,14 @@
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 """Consolidate test configuration from command-line and environment.
 
 """
@@ -20,6 +17,7 @@ from __future__ import annotations
 import pytest
 
 from legate.tester.config import Config
+from legate.tester.defaults import SMALL_SYSMEM
 from legate.tester.stages._linux import omp as m
 from legate.tester.stages.util import UNPIN_ENV, Shard
 
@@ -54,6 +52,26 @@ def test_cpu_pin_strict() -> None:
     assert "--cpu-bind" in stage.shard_args(Shard([shard]), c)
 
 
+def test_cpu_pin_strict_zero_computed_workers() -> None:
+    c = Config(["test.py", "--cpu-pin", "strict", "--omps", "16"])
+    s = FakeSystem(cpus=12)
+    with pytest.raises(RuntimeError, match="not enough"):
+        m.OMP(c, s)
+
+
+def test_cpu_pin_nonstrict_zero_computed_workers() -> None:
+    c = Config(["test.py", "--omps", "16"])
+    s = FakeSystem(cpus=12)
+    stage = m.OMP(c, s)
+    assert stage.kind == "openmp"
+    assert stage.args == []
+    assert stage.env(c, s) == unpin_and_test
+    assert stage.spec.workers == 1
+
+    shard = tuple(range(12))
+    assert "--cpu-bind" in stage.shard_args(Shard([shard]), c)
+
+
 def test_cpu_pin_none() -> None:
     c = Config(["test.py", "--cpu-pin", "none"])
     s = FakeSystem(cpus=12)
@@ -78,11 +96,13 @@ class TestSingleRank:
         result = stage.shard_args(Shard([shard]), c)
         assert result == [
             "--omps",
-            f"{c.omps}",
+            f"{c.core.omps}",
             "--ompthreads",
-            f"{c.ompthreads}",
+            f"{c.core.ompthreads}",
             "--numamem",
-            f"{c.numamem}",
+            f"{c.memory.numamem}",
+            "--sysmem",
+            str(SMALL_SYSMEM),
             "--cpu-bind",
             expected,
         ]
@@ -154,14 +174,16 @@ class TestSingleRank:
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem(cpus=12)
         c = Config(["test.py", "-j", "0"])
-        assert c.requested_workers == 0
+        assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.OMP(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem(cpus=12)
-        c = Config(["test.py", "-j", f"{len(s.cpus)+1}"])
-        assert c.requested_workers > len(s.cpus)
+        c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"])
+        requested_workers = c.execution.workers
+        assert requested_workers is not None
+        assert requested_workers > len(s.cpus)
         with pytest.raises(RuntimeError):
             m.OMP(c, s)
 
@@ -173,6 +195,45 @@ class TestSingleRank:
 
         spec, vspec = m.OMP(c, s).spec, m.OMP(cv, s).spec
         assert vspec == spec
+
+    @pytest.mark.parametrize("threads", (4, 5, 10, 20))
+    def test_oversubscription_with_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--cpu-pin",
+            "strict",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.raises(RuntimeError):
+            m.OMP(c, s)
+
+    @pytest.mark.parametrize("threads", (4, 5, 10, 20))
+    def test_oversubscription_no_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--cpu-pin",
+            "none",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.warns():
+            stage = m.OMP(c, s)
+
+        assert stage.spec.workers == 1
+        assert stage.spec.shards == [
+            Shard([(0, 1, 2, 3)]),
+        ]
 
 
 class TestMultiRank:
@@ -186,11 +247,13 @@ class TestMultiRank:
         result = stage.shard_args(Shard([shard]), c)
         assert result == [
             "--omps",
-            f"{c.omps}",
+            f"{c.core.omps}",
             "--ompthreads",
-            f"{c.ompthreads}",
+            f"{c.core.ompthreads}",
             "--numamem",
-            f"{c.numamem}",
+            f"{c.memory.numamem}",
+            "--sysmem",
+            str(SMALL_SYSMEM),
             "--cpu-bind",
             expected,
         ]
@@ -316,4 +379,47 @@ class TestMultiRank:
         assert stage.spec.shards == [
             Shard([(0, 1), (2, 3)]),
             Shard([(4, 5), (6, 7)]),
+        ]
+
+    @pytest.mark.parametrize("threads", (2, 3, 10, 20))
+    def test_oversubscription_with_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--ranks-per-node",
+            "2",
+            "--cpu-pin",
+            "strict",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.raises(RuntimeError):
+            m.OMP(c, s)
+
+    @pytest.mark.parametrize("threads", (2, 3, 10, 20))
+    def test_oversubscription_no_pin(self, threads: int) -> None:
+        args = [
+            "test.py",
+            "--omps",
+            "1",
+            "--ompthreads",
+            str(threads),
+            "--ranks-per-node",
+            "2",
+            "--cpu-pin",
+            "none",
+        ]
+        c = Config(args)
+        s = FakeSystem(cpus=4)
+
+        with pytest.warns():
+            stage = m.OMP(c, s)
+
+        assert stage.spec.workers == 1
+        assert stage.spec.shards == [
+            Shard([(0, 1, 2, 3)]),
         ]

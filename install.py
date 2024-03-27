@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
 
-# Copyright 2021-2023 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
 
 import argparse
 import multiprocessing
 import os
 import platform
+import re
 import shutil
 import subprocess
 import sys
+
+try:
+    import skbuild
+except ModuleNotFoundError as ie:
+    raise ImportError("Must install scikit-build!") from ie
+
 from distutils import sysconfig
 
 # Flush output on newlines
@@ -45,9 +48,11 @@ class BooleanFlag(argparse.Action):
 
         option_strings = flatten(
             [
-                [opt, "--no-" + opt[2:], "--no" + opt[2:]]
-                if opt.startswith("--")
-                else [opt]
+                (
+                    [opt, "--no-" + opt[2:], "--no" + opt[2:]]
+                    if opt.startswith("--")
+                    else [opt]
+                )
                 for opt in option_strings
             ]
         )
@@ -110,12 +115,16 @@ def find_active_python_version_and_path():
 
 
 def scikit_build_cmake_build_dir(skbuild_dir):
-    if os.path.exists(skbuild_dir):
-        for f in os.listdir(skbuild_dir):
-            if os.path.exists(
-                cmake_build := os.path.join(skbuild_dir, f, "cmake-build")
-            ):
-                return cmake_build
+    def yield_guesses():
+        sk_cmake_build_dir = skbuild.constants.CMAKE_BUILD_DIR()
+
+        yield os.path.join(skbuild_dir, sk_cmake_build_dir)
+        par_skbuild_dir = os.path.dirname(skbuild_dir)
+        yield os.path.join(par_skbuild_dir, sk_cmake_build_dir)
+
+    for guess in yield_guesses():
+        if os.path.exists(guess):
+            return os.path.abspath(guess)
     return None
 
 
@@ -263,14 +272,85 @@ def install_legion_jupyter_notebook(
         )
 
 
+def configure_cmake_preset(argparse_args):
+    def vprint(*args, flush=True, **kwargs):
+        if argparse_args.verbose:
+            print(*args, **kwargs, flush=flush)
+
+    def yield_compiler_guesses():
+        for gen_fn, *args in (
+            (os.environ.get, "CMAKE_CXX_COMPILER", ""),
+            (os.environ.get, "CXX", ""),
+            # cmake likes to use cc and c++ to pick the compilers
+            (shutil.which, "c++"),
+            (os.environ.get, "CMAKE_C_COMPILER", ""),
+            (os.environ.get, "CC", ""),
+            (shutil.which, "cc"),
+            # last resort
+            (shutil.which, "gcc"),
+            (shutil.which, "clang"),
+        ):
+            vprint(f"Trying: {gen_fn.__qualname__}{args}")
+            compiler = gen_fn(*args)
+            if not compiler:
+                continue
+
+            vprint(compiler, "exists")
+            try:
+                stdout = subprocess.check_output(
+                    [compiler, "--version"]
+                ).decode()
+            except subprocess.CalledProcessError as cpe:
+                vprint(cpe)
+                continue
+
+            vprint(stdout)
+            if re.search(r"clang\s+version", stdout):
+                vprint("Detected clang")
+                yield "clang"
+            if re.search(r"Free\s+Software\s+Foundation", stdout):
+                vprint("Detected GCC")
+                yield "gcc"
+            vprint("Detected neither!")
+
+        raise RuntimeError("Could not find suitable compiler!")
+
+    cmake_preset = []
+    for attr, val in dict(vars(argparse_args)).items():
+        if not attr.startswith("preset_"):
+            continue
+
+        vprint("Found preset attr", attr, "=", val, end="")
+        delattr(argparse_args, attr)
+        vprint("... deleted")
+        if val:
+            cmake_preset = attr.split("_")[1:]  # skip "preset_"
+            vprint("Set cmake preset:", cmake_preset)
+
+    if not cmake_preset:
+        vprint("No cmake preset attr found, using default")
+        cmake_preset = ["release"]  # default to release if unset
+
+    vprint("Base cmake preset configured:", cmake_preset)
+    for guess in yield_compiler_guesses():
+        if guess:
+            vprint("Guess successful, using", guess)
+            cmake_preset.append(guess)
+            break
+
+    ret = "-".join(cmake_preset)
+    vprint("Final cmake preset set:", ret)
+    return ret
+
+
 def install(
+    cmake_preset,
     networks,
     cuda,
     arch,
     openmp,
     march,
-    hdf,
-    llvm,
+    profiler,
     spy,
     build_docs,
     conduit,
@@ -283,8 +363,6 @@ def install(
     cuda_dir,
     maxdim,
     maxfields,
-    debug,
-    debug_release,
     check_bounds,
     clean_first,
     extra_flags,
@@ -297,6 +375,7 @@ def install(
     thread_count,
     verbose,
     thrust_dir,
+    cal_dir,
     legion_dir,
     legion_src_dir,
     legion_url,
@@ -317,13 +396,13 @@ def install(
 
     print(f"Verbose build is {'on' if verbose else 'off'}")
     if verbose:
+        print(f"cmake_preset: {cmake_preset}")
         print(f"networks: {networks}")
         print(f"cuda: {cuda}")
         print(f"arch: {arch}")
         print(f"openmp: {openmp}")
         print(f"march: {march}")
-        print(f"hdf: {hdf}")
-        print(f"llvm: {llvm}")
+        print(f"profiler: {profiler}")
         print(f"spy: {spy}")
         print(f"build_docs: {build_docs}")
         print(f"conduit: {conduit}")
@@ -336,8 +415,6 @@ def install(
         print(f"cuda_dir: {cuda_dir}")
         print(f"maxdim: {maxdim}")
         print(f"maxfields: {maxfields}")
-        print(f"debug: {debug}")
-        print(f"debug_release: {debug_release}")
         print(f"check_bounds: {check_bounds}")
         print(f"clean_first: {clean_first}")
         print(f"extra_flags: {extra_flags}")
@@ -347,6 +424,7 @@ def install(
         print(f"thread_count: {thread_count}")
         print(f"verbose: {verbose}")
         print(f"thrust_dir: {thrust_dir}")
+        print(f"cal_dir: {cal_dir}")
         print(f"legion_dir: {legion_dir}")
         print(f"legion_src_dir: {legion_src_dir}")
         print(f"legion_url: {legion_url}")
@@ -380,6 +458,7 @@ def install(
     gasnet_dir = validate_path(gasnet_dir)
     ucx_dir = validate_path(ucx_dir)
     thrust_dir = validate_path(thrust_dir)
+    cal_dir = validate_path(cal_dir)
 
     if verbose:
         print(f"legate_core_dir: {legate_core_dir}")
@@ -390,6 +469,7 @@ def install(
         print(f"gasnet_dir: {gasnet_dir}")
         print(f"ucx_dir: {ucx_dir}")
         print(f"thrust_dir: {thrust_dir}")
+        print(f"cal_dir: {cal_dir}")
 
     if thread_count is None:
         thread_count = multiprocessing.cpu_count()
@@ -437,7 +517,8 @@ def install(
     if clean_first:
         shutil.rmtree(skbuild_dir, ignore_errors=True)
         shutil.rmtree(join(legate_core_dir, "dist"), ignore_errors=True)
-        shutil.rmtree(join(legate_core_dir, "build"), ignore_errors=True)
+        build_dir = join(legate_core_dir, "build", cmake_preset)
+        shutil.rmtree(build_dir, ignore_errors=True)
         shutil.rmtree(
             join(legate_core_dir, "legate_core.egg-info"),
             ignore_errors=True,
@@ -447,7 +528,14 @@ def install(
     pip_install_cmd = [sys.executable, "-m", "pip", "install"]
 
     # Use preexisting CMAKE_ARGS from conda if set
-    cmake_flags = cmd_env.get("CMAKE_ARGS", "").split(" ")
+    cmake_flags = ["--preset", cmake_preset]
+
+    if env_cmake_args := [
+        f
+        for f in cmd_env.get("CMAKE_ARGS", "").split()
+        if not f.startswith("-DCMAKE_BUILD_TYPE")
+    ]:
+        cmake_flags.extend(env_cmake_args)
 
     if unknown is None:
         unknown = []
@@ -477,35 +565,36 @@ def install(
     else:
         pip_install_cmd += ["--upgrade"]
 
-    pip_install_cmd += ["."]
+    pip_install_cmd += [os.getcwd()]
 
     if verbose:
         pip_install_cmd += ["-vv"]
 
-    if debug or verbose:
-        cmake_flags += [f"--log-level={'DEBUG' if debug else 'VERBOSE'}"]
+    if cmake_preset.startswith("debug"):
+        cmake_flags += ["--log-level=DEBUG"]
+
+    # make "Debug" from debug-sanitizer-clang or "Release" from release-gcc
+    cmake_flags += [f"-DCMAKE_BUILD_TYPE={cmake_preset.split('-')[0].title()}"]
 
     cmake_flags += f"""\
--DCMAKE_BUILD_TYPE={(
-    "Debug" if debug else "RelWithDebInfo" if debug_release else "Release"
-)}
 -DBUILD_SHARED_LIBS=ON
--DBUILD_MARCH={march}
 -DLegion_MAX_DIM={str(maxdim)}
 -DLegion_MAX_FIELDS={str(maxfields)}
 -DLegion_SPY={("ON" if spy else "OFF")}
 -DLegion_BOUNDS_CHECKS={("ON" if check_bounds else "OFF")}
 -DLegion_USE_CUDA={("ON" if cuda else "OFF")}
 -DLegion_USE_OpenMP={("ON" if openmp else "OFF")}
--DLegion_USE_LLVM={("ON" if llvm else "OFF")}
 -DLegion_NETWORKS={";".join(networks)}
--DLegion_USE_HDF5={("ON" if hdf else "OFF")}
 -DLegion_USE_Python=ON
 -DLegion_Python_Version={pyversion}
 -DLegion_BUILD_JUPYTER=ON
 -DLegion_EMBED_GASNet_CONFIGURE_ARGS="--with-ibv-max-hcas=8"
 """.splitlines()
 
+    if march:
+        cmake_flags += [f"-DBUILD_MARCH={march}"]
+    if profiler:
+        cmake_flags += ["-DLegion_BUILD_RUST_PROFILER=ON"]
     if cuda:
         cmake_flags += [f"-DLegion_CUDA_ARCH={arch}"]
     if nccl_dir:
@@ -522,6 +611,8 @@ def install(
         cmake_flags += [f"-DCUDAToolkit_ROOT={cuda_dir}"]
     if thrust_dir:
         cmake_flags += [f"-DThrust_ROOT={thrust_dir}"]
+    if cal_dir:
+        cmake_flags += [f"-DCAL_DIR={cal_dir}"]
     if legion_dir:
         cmake_flags += [f"-DLegion_ROOT={legion_dir}"]
     elif legion_src_dir:
@@ -568,7 +659,6 @@ def install(
 
     # execute python -m pip install <args> .
     execute_command(pip_install_cmd, verbose, cwd=legate_core_dir, env=cmd_env)
-
     install_legion_python_bindings(
         verbose,
         cmake_exe,
@@ -590,25 +680,54 @@ def driver():
         "PREFIX" in os.environ and os.environ.get("CONDA_BUILD", "0") == "1"
     )
 
-    parser = argparse.ArgumentParser(description="Install Legate front end.")
-    parser.add_argument(
+    parser = argparse.ArgumentParser(
+        description="Install Legate front end.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    preset_group_super = parser.add_argument_group(
+        title="Build Presets",
+        description="Configure Legate core to a specific build preset",
+    )
+
+    # a bit of a hack to make this group have a title and description
+    preset_group = preset_group_super.add_mutually_exclusive_group()
+    preset_group.add_argument(
+        "--release",
+        dest="preset_release",
+        action="store_true",
+        required=False,
+        default=os.environ.get("RELEASE", "1") == "1",
+        help="Build Legate and Legion with full optimizations enabled",
+    )
+    preset_group.add_argument(
         "--debug",
-        dest="debug",
+        dest="preset_debug",
         action="store_true",
         required=False,
         default=os.environ.get("DEBUG", "0") == "1",
         help="Build Legate and Legion with no optimizations, and full "
         "debugging checks.",
     )
-    parser.add_argument(
+    preset_group.add_argument(
+        "--debug-sanitizer",
+        dest="preset_debug_sanitizer",
+        action="store_true",
+        required=False,
+        default=os.environ.get("DEBUG_SANITZER", "0") == "1",
+        help="Build Legate and Legion with no optimizations, and full "
+        "debugging checks with sanitizer support.",
+    )
+    preset_group.add_argument(
         "--debug-release",
-        dest="debug_release",
+        dest="preset_debug_release",
         action="store_true",
         required=False,
         default=os.environ.get("DEBUG_RELEASE", "0") == "1",
         help="Build Legate and Legion with optimizations enabled, but include "
         "debugging symbols.",
     )
+
     parser.add_argument(
         "--check-bounds",
         dest="check_bounds",
@@ -688,25 +807,15 @@ def driver():
         "--march",
         dest="march",
         required=False,
-        default=("haswell" if platform.machine() == "x86_64" else "native"),
+        default=("haswell" if platform.machine() == "x86_64" else None),
         help="Specify the target CPU architecture.",
     )
     parser.add_argument(
-        "--llvm",
-        dest="llvm",
-        action="store_true",
-        required=False,
-        default=os.environ.get("USE_LLVM", "0") == "1",
-        help="Build Legate with LLVM support.",
-    )
-    parser.add_argument(
-        "--hdf5",
-        "--hdf",
-        dest="hdf",
-        action="store_true",
-        required=False,
-        default=os.environ.get("USE_HDF", "0") == "1",
-        help="Build Legate with HDF support.",
+        "--profiler",
+        dest="profiler",
+        action=BooleanFlag,
+        default=False,
+        help="Build Rust version of Legion profiler.",
     )
     parser.add_argument(
         "--spy",
@@ -854,6 +963,14 @@ def driver():
         "provided, Thrust will be installed automatically.",
     )
     parser.add_argument(
+        "--with-cal",
+        dest="cal_dir",
+        metavar="DIR",
+        required=False,
+        default=os.environ.get("CAL_PATH"),
+        help="Path to CAL installation directory.",
+    )
+    parser.add_argument(
         "--with-legion",
         dest="legion_dir",
         required=False,
@@ -899,7 +1016,14 @@ def driver():
         print(f"Attempted to execute: {args.cmake_exe}")
         sys.exit(1)
 
-    install(unknown=unknown, is_conda=is_conda, **vars(args))
+    cmake_preset = configure_cmake_preset(args)
+
+    install(
+        unknown=unknown,
+        is_conda=is_conda,
+        cmake_preset=cmake_preset,
+        **vars(args),
+    )
 
 
 if __name__ == "__main__":

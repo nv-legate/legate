@@ -1,28 +1,24 @@
-# Copyright 2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 
 import pytest
 
-from legate.core import get_legate_runtime, types as ty
+from legate.core import Scalar, get_legate_runtime, types as ty
 
 
 class Test_store_creation:
     def test_bound(self) -> None:
         runtime = get_legate_runtime()
-        context = runtime.core_context
-        store = context.create_store(ty.int64, shape=(4, 4))
+        store = runtime.create_store(ty.int64, shape=(4, 4))
         assert not store.unbound
         assert store.ndim == 2
         assert store.shape == (4, 4)
@@ -31,21 +27,76 @@ class Test_store_creation:
 
     def test_unbound(self) -> None:
         runtime = get_legate_runtime()
-        context = runtime.core_context
-        store = context.create_store(ty.int64)
+        store = runtime.create_store(ty.int64)
         assert store.unbound
         assert store.ndim == 1
         assert store.type == ty.int64
         assert not store.transformed
         with pytest.raises(ValueError):
-            store.shape
+            store.shape.extents
+
+    def test_ndim(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int64, ndim=2)
+        assert store.unbound
+        assert store.ndim == 2
+        assert store.type == ty.int64
+        assert not store.transformed
+
+    def test_optimize_scalar(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(
+            ty.int64, shape=(1,), optimize_scalar=True
+        )
+        assert store.has_scalar_storage
+
+    def test_create_store_from_scalar(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store_from_scalar(Scalar(123, ty.int64))
+        assert not store.unbound
+        assert store.ndim == 1
+        assert store.shape == (1,)
+        assert store.type == ty.int64
+        assert not store.transformed
+
+    @pytest.mark.parametrize("shape", [(1,), (1, 1), (1, 1, 1)], ids=str)
+    def test_create_store_from_scalar_shape(self, shape: tuple[int]) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store_from_scalar(
+            Scalar(123, ty.int64), shape=shape
+        )
+        assert not store.unbound
+        assert store.ndim == len(shape)
+        assert store.shape == shape
+        assert store.type == ty.int64
+        assert not store.transformed
+
+
+class Test_store_creation_error:
+    def test_ndim_with_shape(self) -> None:
+        runtime = get_legate_runtime()
+        with pytest.raises(ValueError, match="ndim cannot be used with shape"):
+            runtime.create_store(ty.int32, shape=(1,), ndim=1)
+
+    def test_scalar_size_mismatch(self) -> None:
+        runtime = get_legate_runtime()
+        msg = (
+            "Type int32 expects a value of size 4, but the size of value is 5"
+        )
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_store_from_scalar(Scalar(b"12345", ty.int32))
+
+    def test_scalar_volume_mismatch(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "Scalar stores must have a shape of volume 1"
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_store_from_scalar(Scalar(123, ty.int64), (1, 2))
 
 
 class Test_store_valid_transform:
     def test_bound(self) -> None:
         runtime = get_legate_runtime()
-        context = runtime.core_context
-        store = context.create_store(ty.int64, shape=(4, 3))
+        store = runtime.create_store(ty.int64, shape=(4, 3))
 
         promoted = store.promote(0, 5)
         assert promoted.shape == (5, 4, 3)
@@ -71,8 +122,7 @@ class Test_store_valid_transform:
 class Test_store_invalid_transform:
     def test_bound(self) -> None:
         runtime = get_legate_runtime()
-        context = runtime.core_context
-        store = context.create_store(ty.int64, shape=(4, 3))
+        store = runtime.create_store(ty.int64, shape=(4, 3))
 
         with pytest.raises(ValueError):
             store.promote(3, 5)
@@ -115,8 +165,7 @@ class Test_store_invalid_transform:
 
     def test_unbound(self) -> None:
         runtime = get_legate_runtime()
-        context = runtime.core_context
-        store = context.create_store(ty.int64)
+        store = runtime.create_store(ty.int64)
         with pytest.raises(ValueError):
             store.promote(1, 1)
 

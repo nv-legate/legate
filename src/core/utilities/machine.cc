@@ -1,42 +1,31 @@
-/* Copyright 2021-2022 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #include "core/utilities/machine.h"
 
-#include "core/runtime/runtime.h"
-#include "legate_defines.h"
+#include "core/runtime/detail/runtime.h"
 
 namespace legate {
 
 Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
 {
-  auto proc = Processor::get_executing_processor();
-  switch (proc.kind()) {
-    case Processor::Kind::LOC_PROC: {
-      return Memory::Kind::SYSTEM_MEM;
-    }
-    case Processor::Kind::TOC_PROC: {
+  switch (const auto kind = Processor::get_executing_processor().kind()) {
+    case Processor::Kind::LOC_PROC: return Memory::Kind::SYSTEM_MEM;
+    case Processor::Kind::TOC_PROC:
       return host_accessible ? Memory::Kind::Z_COPY_MEM : Memory::Kind::GPU_FB_MEM;
-    }
-    case Processor::Kind::OMP_PROC: {
-      return Core::has_socket_mem ? Memory::Kind::SOCKET_MEM : Memory::Kind::SYSTEM_MEM;
-    }
-    default: break;
+    case Processor::Kind::OMP_PROC:
+      return detail::Config::has_socket_mem ? Memory::Kind::SOCKET_MEM : Memory::Kind::SYSTEM_MEM;
+    default: LEGATE_ABORT("Unknown processor kind " << kind);
   }
-  LEGATE_ABORT;
   return Memory::Kind::SYSTEM_MEM;
 }
 

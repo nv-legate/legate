@@ -1,29 +1,45 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
 
-#include "legion.h"
-
 #include "core/task/task_info.h"
 #include "core/task/variant_options.h"
 
-namespace legate {
+#include "legion.h"
 
-namespace detail {
+#include <optional>
+#include <string_view>
+
+namespace legate::detail {
+
+void task_wrapper(VariantImpl,
+                  LegateVariantCode,
+                  std::optional<std::string_view>,
+                  const void*,
+                  size_t,
+                  const void*,
+                  size_t,
+                  Legion::Processor);
+
+template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+inline void task_wrapper_dyn_name(const void* args,
+                                  std::size_t arglen,
+                                  const void* userdata,
+                                  std::size_t userlen,
+                                  Legion::Processor p)
+{
+  task_wrapper(variant_fn, variant_kind, {}, args, arglen, userdata, userlen, std::move(p));
+}
 
 template <typename T>
 using void_t = void;
@@ -56,31 +72,28 @@ struct GPUVariant<T, void_t<decltype(T::gpu_variant)>> : std::true_type {
 };
 
 template <typename T, template <typename...> typename SELECTOR, bool VALID = SELECTOR<T>::value>
-struct VariantHelper {
-  static void record(TaskInfo* task_info,
-                     const std::map<LegateVariantCode, VariantOptions>& all_options)
+class VariantHelper {
+ public:
+  static void record(TaskInfo* /*task_info*/,
+                     const std::map<LegateVariantCode, VariantOptions>& /*all_options*/)
   {
   }
 };
 
 template <typename T, template <typename...> typename SELECTOR>
-struct VariantHelper<T, SELECTOR, true> {
+class VariantHelper<T, SELECTOR, true> {
+ public:
   static void record(TaskInfo* task_info,
                      const std::map<LegateVariantCode, VariantOptions>& all_options)
   {
     // Construct the code descriptor for this task so that the library
     // can register it later when it is ready
-    constexpr auto VARIANT_IMPL = SELECTOR<T>::variant;
-    constexpr auto WRAPPER      = T::BASE::template legate_task_wrapper<VARIANT_IMPL>;
-    constexpr auto VARIANT_ID   = SELECTOR<T>::id;
-    auto finder                 = all_options.find(VARIANT_ID);
-    task_info->add_variant(VARIANT_ID,
-                           VARIANT_IMPL,
-                           Legion::CodeDescriptor(WRAPPER),
-                           finder != all_options.end() ? finder->second : VariantOptions{});
+    constexpr auto variant_impl = SELECTOR<T>::variant;
+    constexpr auto variant_kind = SELECTOR<T>::id;
+    constexpr auto entry        = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
+
+    task_info->add_variant(variant_kind, variant_impl, entry, all_options);
   }
 };
 
-}  // namespace detail
-
-}  // namespace legate
+}  // namespace legate::detail

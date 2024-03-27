@@ -1,46 +1,35 @@
-# Copyright 2021-2022 NVIDIA Corporation
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from io import StringIO
 from shlex import quote
 from subprocess import run
 from textwrap import indent
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..util.system import System
 from ..util.types import DataclassMixin
-from ..util.ui import kvtable, rule, section, value, warn
-from .command import CMD_PARTS_CANONICAL, CMD_PARTS_LEGION
+from ..util.ui import kvtable, rule, section, value
+from .command import CMD_PARTS_CANONICAL, CMD_PARTS_EXEC, CMD_PARTS_LEGION
 from .config import ConfigProtocol
 from .launcher import Launcher, SimpleLauncher
 
 if TYPE_CHECKING:
     from ..util.types import Command, EnvDict
 
-__all__ = ("LegateDriver", "CanonicalDriver", "print_verbose")
-
-_DARWIN_GDB_WARN = """\
-You must start the debugging session with the following command,
-as LLDB no longer forwards the environment to subprocesses for security
-reasons:
-
-(lldb) process launch -v LIB_PATH={libpath} -v PYTHONPATH={pythonpath}
-
-"""
+__all__ = ("LegateDriver", "CanonicalDriver", "format_verbose")
 
 
 @dataclass(frozen=True)
@@ -69,12 +58,16 @@ class LegateDriver:
 
     @property
     def cmd(self) -> Command:
-        """The full command invocation that should be used to start Legate."""
+        """The full command invocation to use to run the Legate program."""
         config = self.config
         launcher = self.launcher
         system = self.system
 
-        parts = (part(config, system, launcher) for part in CMD_PARTS_LEGION)
+        cmd_parts = (
+            CMD_PARTS_LEGION if config.run_mode == "python" else CMD_PARTS_EXEC
+        )
+
+        parts = (part(config, system, launcher) for part in cmd_parts)
         return launcher.cmd + sum(parts, ())
 
     @property
@@ -102,14 +95,8 @@ class LegateDriver:
 
         """
         if self.config.info.verbose:
-            # we only want to print verbose output on a "head" node
-            if (
-                self.launcher.kind != "none"
-                or self.launcher.detected_rank_id == "0"
-            ):
-                print_verbose(self.system, self)
-
-        self._darwin_gdb_warn()
+            msg = format_verbose(self.system, self)
+            self.print_on_head_node(msg, flush=True)
 
         return self.config.other.dry_run
 
@@ -125,42 +112,34 @@ class LegateDriver:
             return 0
 
         if self.config.other.timing:
-            print(f"Legate start: {datetime.now()}")
+            self.print_on_head_node(f"Legate start: {datetime.now()}")
 
         ret = run(self.cmd, env=self.env).returncode
 
         if self.config.other.timing:
-            print(f"Legate end: {datetime.now()}")
+            self.print_on_head_node(f"Legate end: {datetime.now()}")
 
         log_dir = self.config.logging.logdir
 
         if self.config.profiling.profile:
-            print(
+            self.print_on_head_node(
                 f"Profiles have been generated under {log_dir}, run "
                 f"legion_prof --view {log_dir}/legate_*.prof to view them"
             )
 
         if self.config.debugging.spy:
-            print(
+            self.print_on_head_node(
                 f"Legion Spy logs have been generated under {log_dir}, run "
                 f"legion_spy.py {log_dir}/legate_*.log to process them"
             )
 
         return ret
 
-    def _darwin_gdb_warn(self) -> None:
-        gdb = self.config.debugging.gdb
+    def print_on_head_node(self, *args: Any, **kw: Any) -> None:
+        launcher = self.launcher
 
-        if gdb and self.system.os == "Darwin":
-            libpath = self.env[self.system.LIB_PATH]
-            pythonpath = self.env["PYTHONPATH"]
-            print(
-                warn(
-                    _DARWIN_GDB_WARN.format(
-                        libpath=libpath, pythonpath=pythonpath
-                    )
-                )
-            )
+        if launcher.kind != "none" or launcher.detected_rank_id == "0":
+            print(*args, **kw)
 
 
 class CanonicalDriver(LegateDriver):
@@ -209,10 +188,10 @@ def get_versions() -> LegateVersions:
     return LegateVersions(legate_version=lg_version)
 
 
-def print_verbose(
+def format_verbose(
     system: System,
     driver: LegateDriver | None = None,
-) -> None:
+) -> str:
     """Print system and driver configuration values.
 
     Parameters
@@ -226,35 +205,36 @@ def print_verbose(
 
     Returns
     -------
-        None
+        str
 
     """
+    out = StringIO()
 
-    print(f"\n{rule('Legion Python Configuration')}")
+    out.write(f"\n{rule('Legion Python Configuration')}\n")
 
-    print(section("\nLegate paths:"))
-    print(indent(str(system.legate_paths), prefix="  "))
+    out.write(section("\nLegate paths:\n"))
+    out.write(indent(str(system.legate_paths), prefix="  "))
 
-    print(section("\nLegion paths:"))
-    print(indent(str(system.legion_paths), prefix="  "))
+    out.write(section("\n\nLegion paths:\n"))
+    out.write(indent(str(system.legion_paths), prefix="  "))
 
-    print(section("\nVersions:"))
-    print(indent(str(get_versions()), prefix="  "))
+    out.write(section("\n\nVersions:\n"))
+    out.write(indent(str(get_versions()), prefix="  "))
 
     if driver:
-        print(section("\nCommand:"))
+        out.write(section("\n\nCommand:\n"))
         cmd = " ".join(quote(t) for t in driver.cmd)
-        print(f"  {value(cmd)}")
+        out.write(f"  {value(cmd)}")
 
         if keys := sorted(driver.custom_env_vars):
-            print(section("\nCustomized Environment:"))
-            print(
+            out.write(section("\n\nCustomized Environment:\n"))
+            out.write(
                 indent(
                     kvtable(driver.env, delim="=", align=False, keys=keys),
                     prefix="  ",
                 )
             )
 
-    print(f"\n{rule()}")
+    out.write(f"\n\n{rule()}\n")
 
-    print(flush=True)
+    return out.getvalue()

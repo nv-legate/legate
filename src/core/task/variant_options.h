@@ -1,17 +1,13 @@
-/* Copyright 2023 NVIDIA Corporation
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
  */
 
 #pragma once
@@ -26,13 +22,14 @@ namespace legate {
 
 // Each scalar output store can take up to 12 bytes, so in the worst case there can be only up to
 // 341 scalar output stores.
-constexpr size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
+constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
 
 /**
  * @ingroup task
  * @brief A helper class for specifying variant options
  */
-struct VariantOptions {
+class VariantOptions {
+ public:
   /**
    * @brief If the flag is `true`, the variant launches no subtasks. `true` by default.
    */
@@ -46,7 +43,7 @@ struct VariantOptions {
   /**
    * @brief Maximum aggregate size for scalar output values. 4096 by default.
    */
-  size_t return_size{LEGATE_MAX_SIZE_SCALAR_RETURN};
+  std::size_t return_size{LEGATE_MAX_SIZE_SCALAR_RETURN};
 
   /**
    * @brief Changes the value of the `leaf` flag
@@ -67,9 +64,9 @@ struct VariantOptions {
    *
    * @param `return_size` A new maximum aggregate size for scalar output values
    */
-  VariantOptions& with_return_size(size_t return_size);
+  VariantOptions& with_return_size(std::size_t return_size);
 
-  void populate_registrar(Legion::TaskVariantRegistrar& registrar);
+  void populate_registrar(Legion::TaskVariantRegistrar& registrar) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options);
