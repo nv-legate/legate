@@ -19,7 +19,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from .base import Configurable
-from .util.utility import prune_command_line_args
+from .util.utility import (
+    deduplicate_command_line_args,
+    prune_command_line_args,
+)
 
 if TYPE_CHECKING:
     from .manager import ConfigurationManager
@@ -101,16 +104,8 @@ class Reconfigure(Configurable):
         )
 
     def _sanitized_argv(self, ephemeral_args: set[str]) -> list[str]:
-        pruned_cl_args = prune_command_line_args(
-            self.manager.argv, ephemeral_args
-        )
-        # remove duplicates from the arguments
-        seen = set()
-        cl_args = []
-        for f in pruned_cl_args:
-            if f not in seen:
-                seen.add(f)
-                cl_args.append(f)
+        cl_args = prune_command_line_args(self.manager.argv, ephemeral_args)
+        cl_args = deduplicate_command_line_args(cl_args)
         # We want to include an explicit --PROJECT_ARCH=<whatever> in the
         # reconfigure script, in case the current project arch was taken via
         # environment variables.
@@ -119,7 +114,7 @@ class Reconfigure(Configurable):
             if arch_flag in arg:
                 break
         else:
-            cl_args.insert(0, f'"{arch_flag}={self.project_arch}"')
+            cl_args.insert(0, f"{arch_flag}={self.project_arch}")
         return cl_args
 
     def emit_file(self, text: str) -> None:
@@ -201,6 +196,6 @@ class Reconfigure(Configurable):
             PROJECT_DIR=self.project_dir,
             MAIN_PACKAGE_IMPORT_LINE=self._gen_import_line(main_package_type),
             MAIN_PACKAGE_TYPE=main_package_type.__name__,
-            ARGV_LIST="\n".join(f"        {arg}," for arg in cl_args),
+            ARGV_LIST="\n".join(f'        "{arg}",' for arg in cl_args),
         ).strip()
         self.emit_file(template)

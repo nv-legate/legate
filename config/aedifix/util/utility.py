@@ -180,6 +180,32 @@ def find_active_python_version_and_path() -> tuple[str, Path]:
 def prune_command_line_args(
     argv: Sequence[str], remove_args: set[str]
 ) -> list[str]:
+    r"""Remove a set of command line arguments from argv.
+
+    Parameters
+    ----------
+    argv : Sequence[str]
+        The command line arguments to prune.
+    remove_args : set[str]
+        The arguments to remove.
+
+    Returns
+    -------
+    argv : list[str]
+        The pruned command line arguments.
+
+    Raises
+    ------
+    ValueError
+        If any of the arguments in `remove_args` do not start with '-'.
+    """
+    for arg in remove_args:
+        if not arg.startswith("-"):
+            raise ValueError(f"Argument '{arg}' must start with '-'")
+
+    if not remove_args:
+        return [a for a in argv]
+
     idx = 0
     cl_args = []
     nargs = len(argv)
@@ -203,5 +229,42 @@ def prune_command_line_args(
                     break
                 idx += 1
             continue
-        cl_args.append(f'"{arg}"')
+        cl_args.append(arg)
     return cl_args
+
+
+def deduplicate_command_line_args(argv: Sequence[str]) -> list[str]:
+    r"""Deduplicate a set of command-line arguments.
+
+    Parameters
+    ----------
+    argv : Sequence[str]
+        The command line arguments to deduplicate.
+
+    Returns
+    -------
+    argv : list[str]
+        The deduplicated command line arguments.
+
+    Notes
+    -----
+    Deduplicates the arguments by keeping only the *last* occurance of each
+    command line flag and its values.
+    """
+    # A dummy name that is used only in case the first arguments are
+    # positional. Currently configure does not actually have any such arguments
+    # (and, in fact, this function does not handle any remaining positional
+    # arguments correctly), but good to be forward-looking.
+    arg_name = "===POSITIONAL=FIRST=ARGUMENTS==="
+    last_seen: dict[str, list[str]] = {arg_name: []}
+    for arg in argv:
+        if arg.startswith("-"):
+            # --foo=bar
+            # -> arg_name = --foo
+            # -> *rest = bar
+            arg_name, *rest = arg.split("=")
+            # Clobbering the old last_seen[arg_name] is intentional
+            last_seen[arg_name] = []
+        last_seen[arg_name].append(arg)
+
+    return [v for values in last_seen.values() for v in values]
