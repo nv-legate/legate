@@ -151,6 +151,17 @@ class ConfigurationManager:
             usage="%(prog)s [options...]",
             description=f"Configure {self.project_name}",
             formatter_class=ArgumentDefaultsHelpFormatter,
+            # This may lead to confusing errors. E.g.
+            #
+            # ./configure --cuda --something-else
+            #
+            # would result in "argument --cuda-arch: expected one argument"
+            # because --cuda would disambiguate to --cuda-arch. This would be
+            # confusing to the user because clearly they never passed
+            # "--cuda-arch" as a flag.
+            allow_abbrev=False,
+            # We want to catch this as an exception so we can properly log it.
+            exit_on_error=False,
         )
 
         for conf_obj in self._modules:
