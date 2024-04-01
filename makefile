@@ -14,16 +14,27 @@ endif
 
 include $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/gmakevariables
 
+ifeq ($(strip $(V)),1)
+export VERBOSE ?= 1
+else ifeq ($(strip $(V)),0)
+export VERBOSE ?= 0
+endif
+
+## Common options for all commands:
+##
+## - VERBOSE=0|1                    - whether to enable verbose output
+## - V=0|1                          - alias for VERBOSE
+## - LEGATE_CORE_DIR=/absolute/path - override (or set) the root directory for Legate.Core
+## - LEGATE_CORE_ARCH=directory     - override (or set) the current arch directory
+
 ## Print this help message
+##
 .PHONY: help
 help: default_help
-
-## -- Commonly used options --
 
 ## Build the library
 ##
 ## Options:
-## - VERBOSE=0|1                  - whether to enable a verbose build
 ## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
 ##
 .PHONY: all
@@ -32,7 +43,6 @@ all: default_all
 ## Remove build artifacts
 ##
 ## Options:
-## - VERBOSE=0|1                  - whether to enable a verbose clean
 ## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
 ##
 .PHONY: clean
@@ -42,7 +52,6 @@ clean: default_clean
 ## Install the library
 ##
 ## Options:
-## - VERBOSE=0|1                  - whether to enable a verbose install
 ## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
 ##
 .PHONY: install
@@ -51,7 +60,6 @@ install: default_install
 ## Create an installable package of the library
 ##
 ## Options:
-## - VERBOSE=0|1                  - whether to enable a verbose build
 ## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
 ##
 .PHONY: package
@@ -60,17 +68,23 @@ package: default_package
 ## Run clang-tidy over the repository
 ##
 ## Options:
-## - VERBOSE=0|1                  - whether to enable a verbose build
 ## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
 ##
 .PHONY: tidy
 tidy:
 	@$(LEGATE_CORE_BUILD_COMMAND) --target tidy $(LEGATE_CORE_CMAKE_ARGS)
 
+## Build only the C++ documentation
+##
+## Options:
+## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
+##
 .PHONY: cpp-docs
 cpp-docs:
 	@$(LEGATE_CORE_BUILD_COMMAND) --target doxygen_legate $(LEGATE_CORE_CMAKE_ARGS)
 
+## Build only the Python binding documentation
+##
 .PHONY: py-docs
 py-docs:
 ifeq ($(LEGATE_CORE_USE_PYTHON),1)
@@ -87,5 +101,7 @@ else
 	@echo "$(LEGATE_CORE_ARCH) not configured for python, skipping docs build"
 endif
 
+## Build all available documentation
+##
 .PHONY: docs
 docs: cpp-docs py-docs
