@@ -12,16 +12,12 @@ from __future__ import annotations
 
 import os
 import shutil
+from argparse import Action, ArgumentParser, Namespace
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from ...cmake import (
-    CMAKE_VARIABLE,
-    CMakeExecutable,
-    CMakeList,
-    CMakePath,
-    CMakeString,
-)
+from ...cmake import CMAKE_VARIABLE, CMakeExecutable, CMakeList, CMakePath
 from ...util.argument_parser import ArgSpec, ConfigArgument
 from ..package import EnableState, Package
 
@@ -37,6 +33,48 @@ def _guess_cuda_compiler() -> str | None:
         if guess := shutil.which(ccguess):
             return guess
     return None
+
+
+class CudaArchAction(Action):
+    @staticmethod
+    def map_cuda_arch_names(in_arch: str) -> list[str]:
+        arch_map = {
+            "pascal": "60",
+            "volta": "70",
+            "turing": "75",
+            "ampere": "80",
+            "ada": "89",
+            "hopper": "90",
+            # TODO(jfaibussowit): blackwell?
+        }
+        arch = []
+        for sub_arch in in_arch.split(","):
+            # support Turing, TURING, and, if the user is feeling spicy, tUrInG
+            sub_arch = sub_arch.strip().casefold()
+            if not sub_arch:
+                # in_arch = "something,,something_else"
+                continue
+            arch.append(arch_map.get(sub_arch, sub_arch))
+        return arch
+
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: str | Sequence[str] | None,
+        option_string: str | None = None,
+    ) -> None:
+        if isinstance(values, (list, tuple)):
+            str_values = ",".join(values)
+        elif isinstance(values, str):
+            str_values = values
+        elif values is None:
+            str_values = getattr(namespace, self.dest)
+        else:
+            raise TypeError(type(values))
+
+        cuda_arch = self.map_cuda_arch_names(str_values)
+        setattr(namespace, self.dest, cuda_arch)
 
 
 class CUDA(Package):
@@ -81,9 +119,15 @@ class CUDA(Package):
             dest="cuda_arch",
             required=False,
             default="all-major",
-            help="Specify the target GPU architecture.",
+            action=CudaArchAction,
+            help=(
+                "Specify the target GPU architecture. Available choices are: "
+                "'all-major', 'all', 'native', a comma-separated list of "
+                "numbers: '60' or '70, 80', or comma-separated list of names "
+                "'ampere' or 'hopper, blackwell'"
+            ),
         ),
-        cmake_var=CMAKE_VARIABLE("CMAKE_CUDA_ARCHITECTURES", CMakeString),
+        cmake_var=CMAKE_VARIABLE("CMAKE_CUDA_ARCHITECTURES", CMakeList),
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:
@@ -126,9 +170,7 @@ class CUDA(Package):
         )
 
         self.cuda_arch = self.cl_args.cuda_arch
-        self.set_flag_if_user_set(
-            self.CMAKE_CUDA_ARCHITECTURES, self.cuda_arch
-        )
+        self.append_flags_if_set(self.CMAKE_CUDA_ARCHITECTURES, self.cuda_arch)
         self.set_flag_if_user_set(self.CUDAToolkit_ROOT, self.cl_args.cuda_dir)
 
     def summarize(self) -> str:
@@ -142,8 +184,9 @@ class CUDA(Package):
         if not self.state.enabled():
             return ""
 
-        ret = [("Architectures", self.cuda_arch.value)]
-        if (cuda_dir := self.cl_args.cuda_dir).value:
+        arches = self.manager.get_cmake_variable(self.CMAKE_CUDA_ARCHITECTURES)
+        ret = [("Architectures", " ".join(arches))]
+        if cuda_dir := self.manager.get_cmake_variable(self.CUDAToolkit_ROOT):
             ret.append(("CUDA Dir", cuda_dir))
         try:
             cc = self.manager.read_cmake_variable(self.CMAKE_CUDA_COMPILER)

@@ -42,17 +42,20 @@ NotRequired = Union[_UnsetType, T]
 
 
 # https://docs.python.org/3/library/argparse.html#action
-ActionType: TypeAlias = Literal[
-    "store",
-    "store_const",
-    "store_true",
-    "append",
-    "append_const",
-    "count",
-    "help",
-    "version",
-    "extend",
-]
+ActionType: TypeAlias = (
+    Literal[
+        "store",
+        "store_const",
+        "store_true",
+        "append",
+        "append_const",
+        "count",
+        "help",
+        "version",
+        "extend",
+    ]
+    | type[Action]
+)
 
 # https://docs.python.org/3/library/argparse.html#nargs
 NargsType: TypeAlias = Literal["?", "*", "+", "..."]

@@ -138,7 +138,7 @@ class Legion(Package):
         cmake_var=CMAKE_VARIABLE("Legion_CUDA_FLAGS", CMakeList),
     )
 
-    Legion_CUDA_ARCH: Final = CMAKE_VARIABLE("Legion_CUDA_ARCH", CMakeString)
+    Legion_CUDA_ARCH: Final = CMAKE_VARIABLE("Legion_CUDA_ARCH", CMakeList)
     Legion_EMBED_GASNet_CONFIGURE_ARGS: Final = CMAKE_VARIABLE(
         "Legion_EMBED_GASNet_CONFIGURE_ARGS", CMakeList
     )
@@ -245,7 +245,7 @@ class Legion(Package):
             self.append_flags_if_set(
                 self.Legion_CUDA_FLAGS, self.cl_args.legion_cuda_flags
             )
-            self.set_flag_if_user_set(
+            self.append_flags_if_set(
                 self.Legion_CUDA_ARCH, self.cuda.cuda_arch
             )
         elif self.cl_args.legion_cuda_flags.cl_set:
