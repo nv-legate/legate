@@ -893,18 +893,18 @@ class ConfigurationManager:
         summary = "\n".join(gen_summary())
         self.log_divider(tee=True)
         self.log(summary, tee=True, caller_context=False)
-        self.log_boxed(
-            "\n".join(
-                [
-                    "Please set the following:",
-                    "",
-                    f"export {self.project_arch_name}='{self.project_arch}'",
-                    f"export {self.project_dir_name}='{self.project_dir}'",
-                    "",
-                    "Then build libraries:",
-                    "$ make",
-                ]
-            ),
-            title="Configuration Complete",
-        )
+        install_mess = [
+            "Please set the following:",
+            "",
+            f"export {self.project_arch_name}='{self.project_arch}'",
+            f"export {self.project_dir_name}='{self.project_dir}'",
+            "",
+            "Then build libraries:",
+            "$ make",
+        ]
+        if self._get_package("python").state.enabled():
+            install_mess.extend(
+                ("And install Python bindings:", "$ pip install .")
+            )
+        self.log_boxed("\n".join(install_mess), title="Configuration Complete")
         self._logger.copy_log(self.project_arch_dir / "configure.log")
