@@ -29,6 +29,15 @@ class Scope::Impl {
     priority_ = detail::Runtime::get_runtime()->scope().exchange_priority(priority);
   }
 
+  void set_exception_mode(ExceptionMode exception_mode)
+  {
+    if (exception_mode_) {
+      throw std::invalid_argument{"Exception mode can be set only once for each scope"};
+    }
+    exception_mode_ =
+      detail::Runtime::get_runtime()->scope().exchange_exception_mode(exception_mode);
+  }
+
   void set_provenance(std::string provenance)
   {
     if (provenance_) {
@@ -51,6 +60,10 @@ class Scope::Impl {
     if (priority_) {
       static_cast<void>(detail::Runtime::get_runtime()->scope().exchange_priority(*priority_));
     }
+    if (exception_mode_) {
+      static_cast<void>(
+        detail::Runtime::get_runtime()->scope().exchange_exception_mode(*exception_mode_));
+    }
     if (provenance_) {
       static_cast<void>(
         detail::Runtime::get_runtime()->scope().exchange_provenance(std::move(*provenance_)));
@@ -63,6 +76,7 @@ class Scope::Impl {
 
  private:
   std::optional<std::int32_t> priority_{};
+  std::optional<ExceptionMode> exception_mode_{};
   std::optional<std::string> provenance_{};
   InternalSharedPtr<mapping::detail::Machine> machine_{};
 };
@@ -73,6 +87,8 @@ Scope::Scope() : impl_{new Scope::Impl{}} {}
 
 Scope::Scope(std::int32_t priority) : Scope{} { set_priority(priority); }
 
+Scope::Scope(ExceptionMode exception_mode) : Scope{} { set_exception_mode(exception_mode); }
+
 Scope::Scope(std::string provenance) : Scope{} { set_provenance(std::move(provenance)); }
 
 Scope::Scope(const mapping::Machine& machine) : Scope{} { set_machine(machine); }
@@ -80,6 +96,12 @@ Scope::Scope(const mapping::Machine& machine) : Scope{} { set_machine(machine); 
 Scope&& Scope::with_priority(std::int32_t priority) &&
 {
   set_priority(priority);
+  return std::move(*this);
+}
+
+Scope&& Scope::with_exception_mode(ExceptionMode exception_mode) &&
+{
+  set_exception_mode(exception_mode);
   return std::move(*this);
 }
 
@@ -97,6 +119,11 @@ Scope&& Scope::with_machine(const mapping::Machine& machine) &&
 
 void Scope::set_priority(std::int32_t priority) { impl_->set_priority(priority); }
 
+void Scope::set_exception_mode(ExceptionMode exception_mode)
+{
+  impl_->set_exception_mode(exception_mode);
+}
+
 void Scope::set_provenance(std::string provenance) { impl_->set_provenance(std::move(provenance)); }
 
 void Scope::set_machine(const mapping::Machine& machine)
@@ -113,6 +140,11 @@ Scope::~Scope() = default;
 /*static*/ std::int32_t Scope::priority()
 {
   return detail::Runtime::get_runtime()->scope().priority();
+}
+
+/*static*/ legate::ExceptionMode Scope::exception_mode()
+{
+  return detail::Runtime::get_runtime()->scope().exception_mode();
 }
 
 /*static*/ const std::string& Scope::provenance()

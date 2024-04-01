@@ -529,6 +529,20 @@ class Runtime {
    */
   void issue_execution_fence(bool block = false);
 
+  /**
+   * @brief Raises a pending exception
+   *
+   * When the exception mode of a scope is "deferred" (i.e., Scope::exception_mode() ==
+   * ExceptionMode::DEFERRED), the exceptions from tasks in the scope are not immediately handled,
+   * but are pushed to the pending exception queue. Accumulated pending exceptions are not flushed
+   * until raise_pending_exception is invoked. The function throws the first exception in the
+   * pending exception queue and clears the queue. If there is no pending exception to be raised,
+   * the function does nothing.
+   *
+   * @throw legate::TaskException When there is a pending exception to raise
+   */
+  void raise_pending_exception();
+
   template <typename T>
   void register_shutdown_callback(T&& callback);
 

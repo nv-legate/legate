@@ -37,7 +37,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <set>
 #include <string>
 #include <string_view>
@@ -177,7 +176,7 @@ class Runtime {
   void increment_op_id();
 
  public:
-  void raise_pending_task_exception();
+  void raise_pending_exception();
   [[nodiscard]] std::optional<ReturnedException> check_pending_task_exception();
   void record_pending_exception(Legion::Future pending_exception);
 
@@ -381,9 +380,7 @@ class Runtime {
   using ReductionOpTableKey = std::pair<uint32_t, std::int32_t>;
   std::unordered_map<ReductionOpTableKey, int32_t, hasher<ReductionOpTableKey>> reduction_ops_{};
 
-  // TODO(wonchanl): We keep some of the deferred exception code as we will put it back later
   std::vector<Legion::Future> pending_exceptions_{};
-  std::queue<ReturnedException> outstanding_exceptions_{};
 };
 
 void initialize_core_library();

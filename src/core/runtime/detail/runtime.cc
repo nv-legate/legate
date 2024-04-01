@@ -756,40 +756,41 @@ void Runtime::check_dimensionality(std::uint32_t dim)
   }
 }
 
-void Runtime::raise_pending_task_exception()
+void Runtime::raise_pending_exception()
 {
-  auto&& exn = check_pending_task_exception();
-  if (exn.has_value()) {
-    exn->throw_exception();
-  }
-}
+  std::optional<ReturnedException> found{};
 
-std::optional<ReturnedException> Runtime::check_pending_task_exception()
-{
-  if (outstanding_exceptions_.empty()) {
-    // Otherwise, we unpack all pending exceptions and push them to the outstanding exception queue
-    for (auto& pending_exception : pending_exceptions_) {
-      auto&& exn = pending_exception.get_result<ReturnedException>();
+  for (auto& pending_exception : pending_exceptions_) {
+    auto&& exn = pending_exception.get_result<ReturnedException>();
 
-      if (exn.raised()) {
-        outstanding_exceptions_.push(std::move(exn));
-      }
+    if (exn.raised()) {
+      found = std::move(exn);
+      break;
     }
-    pending_exceptions_.clear();
   }
-  if (outstanding_exceptions_.empty()) {
-    return std::nullopt;
-  }
-  auto result = std::move(outstanding_exceptions_.front());
+  pending_exceptions_.clear();
 
-  outstanding_exceptions_.pop();
-  return result;
+  if (found.has_value()) {
+    found->throw_exception();
+  }
 }
 
 void Runtime::record_pending_exception(Legion::Future pending_exception)
 {
-  pending_exceptions_.push_back(std::move(pending_exception));
-  raise_pending_task_exception();
+  switch (scope().exception_mode()) {
+    case ExceptionMode::IGNORED: return;
+    case ExceptionMode::DEFERRED: {
+      pending_exceptions_.push_back(std::move(pending_exception));
+      break;
+    }
+    case ExceptionMode::IMMEDIATE: {
+      auto&& exn = pending_exception.get_result<ReturnedException>();
+      if (exn.raised()) {
+        exn.throw_exception();
+      }
+      break;
+    }
+  }
 }
 
 InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(

@@ -14,6 +14,7 @@ from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
 from ..mapping.machine cimport Machine, _Machine
+from .exception_mode cimport ExceptionMode
 
 
 cdef extern from "core/runtime/scope.h" namespace "legate" nogil:
@@ -21,11 +22,15 @@ cdef extern from "core/runtime/scope.h" namespace "legate" nogil:
         _Scope()
 
         void set_priority(int32_t) except+
+        void set_exception_mode(ExceptionMode) except+
         void set_provenance(std_string) except+
         void set_machine(_Machine) except+
 
         @staticmethod
         int32_t priority()
+
+        @staticmethod
+        ExceptionMode exception_mode()
 
         @staticmethod
         std_string provenance()
@@ -37,6 +42,7 @@ cdef extern from "core/runtime/scope.h" namespace "legate" nogil:
 cdef class Scope:
     cdef:
         int32_t _priority
+        ExceptionMode _exception_mode
         str _provenance
         Machine _machine
         std_optional[_Scope] _handle

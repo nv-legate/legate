@@ -194,6 +194,7 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
             const _Shape&, const _Type&, const _ExternalAllocation&
         ) except+
         void issue_execution_fence(bool)
+        void raise_pending_exception() except +handle_legate_exception
         _Machine get_machine() const
         _RuntimeImpl* impl() const
 
@@ -286,5 +287,6 @@ cdef class Runtime:
     cpdef void destroy(self)
     cpdef void add_shutdown_callback(self, object callback)
 
+cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()
 cpdef Machine get_machine()

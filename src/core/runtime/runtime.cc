@@ -271,6 +271,8 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
 
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }
 
+void Runtime::raise_pending_exception() { impl_->raise_pending_exception(); }
+
 void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 {
   detail::Runtime::get_runtime()->register_shutdown_callback(std::move(callback));

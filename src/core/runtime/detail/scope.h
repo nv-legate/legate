@@ -14,6 +14,7 @@
 
 #include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
+#include "core/runtime/exception_mode.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <cstdint>
@@ -27,15 +28,18 @@ class Scope {
 
  public:
   [[nodiscard]] std::int32_t priority() const;
+  [[nodiscard]] ExceptionMode exception_mode() const;
   [[nodiscard]] const std::string& provenance() const;
   [[nodiscard]] const InternalSharedPtr<Machine>& machine() const;
 
   [[nodiscard]] std::int32_t exchange_priority(std::int32_t priority);
+  [[nodiscard]] ExceptionMode exchange_exception_mode(ExceptionMode exception_mode);
   [[nodiscard]] std::string exchange_provenance(std::string provenance);
   [[nodiscard]] InternalSharedPtr<Machine> exchange_machine(InternalSharedPtr<Machine> machine);
 
  private:
   std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
+  ExceptionMode exception_mode_{ExceptionMode::IMMEDIATE};
   std::string provenance_{};
   InternalSharedPtr<Machine> machine_{};
 };

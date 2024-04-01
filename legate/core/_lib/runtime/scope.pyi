@@ -12,12 +12,14 @@
 from typing import Any
 
 from ..mapping.machine import Machine
+from .exception_mode import ExceptionMode
 
 class Scope:
     def __init__(
         self,
         *,
         priority: int | None = None,
+        exception_mode: ExceptionMode | None = None,
         provenance: str | None = None,
         machine: Machine | None = None,
     ) -> None: ...
@@ -25,6 +27,8 @@ class Scope:
     def __exit__(self, _: Any, __: Any, ___: Any) -> None: ...
     @staticmethod
     def priority() -> int: ...
+    @staticmethod
+    def exception_mode() -> ExceptionMode: ...
     @staticmethod
     def provenance() -> str: ...
     @staticmethod

@@ -14,6 +14,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "runtime")
 
 set(
   cython_sources
+  exception_mode.pyx
   library.pyx
   resource.pyx
   runtime.pyx

@@ -518,6 +518,7 @@ if(legate_core_BUILD_DOCS)
     # runtime
     src/core/runtime/library.h
     src/core/runtime/runtime.h
+    src/core/runtime/exception_mode.h
     # operation
     src/core/operation/task.h
     src/core/operation/projection.h
@@ -648,7 +649,8 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/partitioning)
 
 install(
-  FILES src/core/runtime/library.h
+  FILES src/core/runtime/exception_mode.h
+        src/core/runtime/library.h
         src/core/runtime/library.inl
         src/core/runtime/resource.h
         src/core/runtime/runtime.h

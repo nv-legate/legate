@@ -20,6 +20,8 @@ namespace legate::detail {
 
 inline std::int32_t Scope::priority() const { return priority_; }
 
+inline ExceptionMode Scope::exception_mode() const { return exception_mode_; }
+
 inline const std::string& Scope::provenance() const { return provenance_; }
 
 inline const InternalSharedPtr<Scope::Machine>& Scope::machine() const { return machine_; }
@@ -27,6 +29,11 @@ inline const InternalSharedPtr<Scope::Machine>& Scope::machine() const { return 
 inline std::int32_t Scope::exchange_priority(std::int32_t priority)
 {
   return std::exchange(priority_, priority);
+}
+
+inline ExceptionMode Scope::exchange_exception_mode(ExceptionMode exception_mode)
+{
+  return std::exchange(exception_mode_, exception_mode);
 }
 
 inline std::string Scope::exchange_provenance(std::string provenance)

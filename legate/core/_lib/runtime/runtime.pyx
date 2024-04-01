@@ -74,7 +74,7 @@ LegatePyTaskException = <object> _LegatePyTaskException
 
 
 cdef void _maybe_reraise_legate_exception(
-    tuple[type] exception_types, Exception e
+    Exception e, exception_types : tuple[type] | None = None,
 ) except *:
     cdef str message
     cdef bytes pkl_bytes
@@ -88,7 +88,11 @@ cdef void _maybe_reraise_legate_exception(
     if isinstance(e, LegateTaskException):
         (message, index) = e.args
         try:
-            exn_type = exception_types[index]
+            exn_type = (
+                RuntimeError
+                if exception_types is None
+                else exception_types[index]
+            )
         except IndexError:
             raise RuntimeError(
                 f"Invalid exception index ({index}) while mapping task "
@@ -361,14 +365,14 @@ cdef class Runtime:
                     self._handle.submit((<AutoTask> op)._handle)
                 return
             except Exception as e:
-                _maybe_reraise_legate_exception(op.exception_types, e)
+                _maybe_reraise_legate_exception(e, op.exception_types)
         elif isinstance(op, ManualTask):
             try:
                 with nogil:
                     self._handle.submit((<ManualTask> op)._handle)
                 return
             except Exception as e:
-                _maybe_reraise_legate_exception(op.exception_types, e)
+                _maybe_reraise_legate_exception(e, op.exception_types)
 
         raise RuntimeError(f"Unknown type of operation: {type(op)}")
 
@@ -542,6 +546,12 @@ cdef Runtime initialize():
 
 cdef Runtime _runtime = initialize()
 
+cdef void raise_pending_exception():
+    try:
+        with nogil:
+            _Runtime.get_runtime().raise_pending_exception()
+    except Exception as e:
+        _maybe_reraise_legate_exception(e)
 
 cpdef Runtime get_legate_runtime():
     """
