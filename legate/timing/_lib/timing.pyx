@@ -13,8 +13,6 @@ from libcpp.utility cimport move
 
 from typing import Union
 
-from legate.core import get_legate_runtime
-
 
 cdef class PyTime:
     @staticmethod
@@ -67,9 +65,6 @@ cdef class PyTime:
 
 
 def time(units: str = "us") -> PyTime:
-    # Issue a Legion execution fence and then perform a timing operation
-    # immediately after it
-    get_legate_runtime().issue_execution_fence()
     if units == "us":
         return PyTime.measure_microseconds()
     elif units == "ns":

@@ -56,7 +56,9 @@ Time measure_microseconds()
   auto runtime = Legion::Runtime::get_runtime();
   auto context = Legion::Runtime::get_context();
 
-  auto future = runtime->get_current_time_in_microseconds(context);
+  // Capture the completion of all outstanding ops and pass it as a precondition to the timing op
+  auto precondition = runtime->issue_execution_fence(context);
+  auto future       = runtime->get_current_time_in_microseconds(context, precondition);
 
   return Time{std::make_shared<Time::Impl>(std::move(future))};
 }
@@ -66,7 +68,9 @@ Time measure_nanoseconds()
   auto runtime = Legion::Runtime::get_runtime();
   auto context = Legion::Runtime::get_context();
 
-  auto future = runtime->get_current_time_in_nanoseconds(context);
+  // Capture the completion of all outstanding ops and pass it as a precondition to the timing op
+  auto precondition = runtime->issue_execution_fence(context);
+  auto future       = runtime->get_current_time_in_nanoseconds(context, precondition);
 
   return Time{std::make_shared<Time::Impl>(std::move(future))};
 }

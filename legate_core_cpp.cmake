@@ -739,6 +739,11 @@ install(
 		    src/stl/detail/fill.hpp
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/stl/detail)
 
+# Legate timing header
+install(
+	FILES src/timing/timing.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/timing)
+
 install(
   DIRECTORY   ${LEGATE_CORE_DIR}/cmake/Modules
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate_core"
