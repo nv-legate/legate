@@ -1,8 +1,86 @@
 #!/usr/bin/env bash
-set -x
+
+# begin_group: Start a named section of log output, possibly with color.
+# Usage: begin_group "Group Name" [Color]
+#   Group Name: A string specifying the name of the group.
+#   Color (optional): ANSI color code to set text color. Default is blue (1;34).
+function begin_group()
+{
+    # See options for colors here: https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124
+    local blue='34'
+    local name="${1:-'(unnamed group)'}"
+    local color="${2:-${blue}}"
+
+    if [[ "${LEGATE_CI_GROUP:-}" == "" ]]; then
+      LEGATE_CI_GROUP=0
+    fi
+
+    if [[ "${LEGATE_CI_GROUP}" == "0" ]]; then
+      echo -e "::group::\e[${color}m${name}\e[0m"
+    else
+      echo -e "\e[${color}m== ${name} ===========================================================================\e[0m"
+    fi
+    export LEGATE_CI_GROUP=$((LEGATE_CI_GROUP+1))
+}
+export -f begin_group
+
+# end_group: End a named section of log output and print status based on exit status.
+# Usage: end_group "Group Name" [Exit Status]
+#   Group Name: A string specifying the name of the group.
+#   Exit Status (optional): The exit status of the command run within the group. Default is 0.
+function end_group()
+{
+    local name="${1:-'(unnamed group)'}"
+    local build_status="${2:-0}"
+    local duration="${3:-}"
+    local red='31'
+    local blue='34'
+
+    if [[ "${LEGATE_CI_GROUP:-}" == "" ]]; then
+      echo "end_group called without matching begin_group!"
+      exit 1
+    fi
+
+    export LEGATE_CI_GROUP=$((LEGATE_CI_GROUP-1))
+    if [[ "${LEGATE_CI_GROUP}" == "0" ]]; then
+      echo '::endgroup::'
+    else
+      echo -e "\e[${blue}m== ${name} ===========================================================================\e[0m"
+    fi
+
+    if [[ "${build_status}" != "0" ]]; then
+      echo -e "::error::\e[${red}m ${name} - Failed (⬆️ click above for full log ⬆️)\e[0m"
+    fi
+}
+export -f end_group
+
+# Runs a command within a named group, handles the exit status, and prints appropriate
+# messages based on the result.
+# Usage: run_command "Group Name" command [arguments...]
+function run_command()
+{
+    { set +x; } 2>/dev/null;
+
+    local group_name="${1:-}"
+    shift
+    local command=("$@")
+    local status
+
+    begin_group "${group_name}"
+    set +e
+    local start_time=$(date +%s)
+    "${command[@]}"
+    status=$?
+    local end_time=$(date +%s)
+    set -e
+    local duration=$((end_time - start_time))
+    end_group "${group_name}" ${status} ${duration}
+    return ${status}
+}
+export -f run_command
 
 setup_legate_core_env() {
-    set -xeou pipefail
+    set -eou pipefail
 
     # rename REPO_DIR
     export LEGATE_CORE_DIR="${REPO_DIR}"
@@ -23,16 +101,19 @@ setup_legate_core_env() {
         esac
         export LEGATE_CORE_ARCH
     fi
+    echo "export LEGATE_CORE_DIR=${LEGATE_CORE_DIR}"
+    echo "export LEGATE_CORE_ARCH=${LEGATE_CORE_ARCH}"
 
     mkdir -p "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
 }
 
 build_legate_ci() {
-  set -xeo pipefail;
-  build-legate-cpp;
-  build-legate-wheel;
-  build-legate-conda;
-  copy_ci_artifacts;
+  set -eou pipefail
+
+  run_command "Build Legate.Core C++ Core" build-legate-cpp
+  run_command "Build Legate.Core Wheel" build-legate-wheel
+  run_command "Build Legate.Core Conda Package" build-legate-conda
+  run_command "Copy CI artifacts" copy_ci_artifacts
 }
 
 build_legate_release() {
@@ -42,7 +123,7 @@ build_legate_release() {
     local conda_build_args=();
     conda_build_args+=(--override-channels);
 
-    # The channel sequence below needs to be preserved 
+    # The channel sequence below needs to be preserved
     conda_build_args+=(-c nvidia/label/cuda-${CUDA_VERSION});
     conda_build_args+=(-c conda-forge);
 
@@ -70,7 +151,7 @@ build_legate_release() {
     else
     debug_enabled=false
     fi
-    
+
     variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION]}")
 
     conda_build_args+=(--variants "$variantOpts")
@@ -141,15 +222,13 @@ build_docs() {
 }
 
 build_project() {
-    set -xeou pipefail
+    set -eou pipefail
 
-    . setup-utils;
+    run_command "Source setup-util" . setup-utils;
+    run_command "Init build environment" init_build_env "$@";
+    run_command "Setup Legate.Core Env" setup_legate_core_env
 
-    init_build_env "$@";
-
-    setup_legate_core_env
-
-    case "$BUILD_TYPE" in
+    case "${BUILD_TYPE}" in
         ci) build_legate_ci;;
         release) build_legate_release;;
         docs) build_docs;;

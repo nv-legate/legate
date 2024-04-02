@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 build_legate_wheel() {
-    set -xeuo pipefail;
+    set -euo pipefail;
 
     local tmp_dir="/tmp/out"
     mkdir -p "${tmp_dir}";

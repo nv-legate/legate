@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 build_legate_cpp() {
-    set -xeuo pipefail;
+    set -euo pipefail;
 
+    begin_group "Configure Legate.Core"
     sccache --stop-server >/dev/null 2>&1 || true;
 
     if test -n "${CONDA_PREFIX:-}"; then
@@ -43,6 +44,8 @@ build_legate_cpp() {
 
     cp "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}"/configure.log "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
     cp "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}/reconfigure-${LEGATE_CORE_ARCH}.py" "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
+    end_group
+    begin_group "Build Legate.Core C++ Files"
 
     make package VERBOSE=1 | tee make.log
 
@@ -52,8 +55,7 @@ build_legate_cpp() {
 
     mkdir -p /tmp/out;
     cp "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/cmake_build/*-$(uname).sh /tmp/out/
-
-    { set +x; } 2>/dev/null;
+    end_group
 }
 
 (build_legate_cpp "$@");
