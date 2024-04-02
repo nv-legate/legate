@@ -66,7 +66,9 @@ cdef class InlineAllocation:
             # For some reason NumPy doesn't like a null pointer even when the
             # array size is 0, so we just make an empty ndarray and return its
             # array interface object
-            return np.array([], dtype=ty.to_numpy_dtype()).__array_interface__
+            return np.empty(
+                shape, dtype=ty.to_numpy_dtype()
+            ).__array_interface__
 
         return {
             "version": 3,

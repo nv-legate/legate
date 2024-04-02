@@ -43,7 +43,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
         _LogicalStorePartition partition_by_tiling(
             std_vector[uint64_t] tile_shape
-        )
+        ) except+
         _PhysicalStore get_physical_store() except+
         void detach()
         std_string to_string()
@@ -55,7 +55,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition(const _LogicalStorePartition&)
         _LogicalStore store()
         const _tuple[uint64_t]& color_shape() except+
-        _LogicalStore get_child_store(const _tuple[uint64_t]&)
+        _LogicalStore get_child_store(const _tuple[uint64_t]&) except+
 
 
 cdef class LogicalStore:

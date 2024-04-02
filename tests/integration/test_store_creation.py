@@ -83,9 +83,10 @@ class TestStoreCreation:
         assert arr_np.shape == arr_store.shape
         assert np.allclose(arr_np, arr_store)
 
-    def test_create_from_numpy_array(self) -> None:
+    @pytest.mark.parametrize("shape", [(0,), (4, 2, 3), (1, 0, 1)], ids=str)
+    def test_create_from_numpy_array(self, shape: tuple[int]) -> None:
         runtime = get_legate_runtime()
-        arr_np = np.random.random((4, 2, 3))
+        arr_np = np.random.random(shape)
         store = runtime.create_store_from_buffer(
             ty.float64, arr_np.shape, arr_np, False
         )
@@ -111,12 +112,14 @@ class TestStoreCreationErrors:
 
     def test_exceed_max_dim(self) -> None:
         runtime = get_legate_runtime()
-        msg = (
-            "The maximum number of dimensions is 4, "
-            "but a 5-D store is requested"
-        )
-        with pytest.raises(IndexError, match=msg):
+        with pytest.raises(IndexError, match="maximum number of dimensions"):
             runtime.create_store(ty.int32, shape=(1,) * (LEGATE_MAX_DIM + 1))
+
+    def test_buffer_exceed_max_dim(self) -> None:
+        runtime = get_legate_runtime()
+        arr = np.ndarray(range(1, LEGATE_MAX_DIM + 2))
+        with pytest.raises(IndexError, match="maximum number of dimensions"):
+            runtime.create_store_from_buffer(ty.int32, arr.shape, arr, False)
 
     def test_string_scalar(self) -> None:
         runtime = get_legate_runtime()
