@@ -118,7 +118,7 @@ class CUDA(Package):
         spec=ArgSpec(
             dest="cuda_arch",
             required=False,
-            default="all-major",
+            default=["all-major"],
             action=CudaArchAction,
             help=(
                 "Specify the target GPU architecture. Available choices are: "
