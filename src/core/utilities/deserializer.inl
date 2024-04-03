@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <sstream>
 #include <stdexcept>
 
 namespace legate::detail {
@@ -31,9 +32,13 @@ std::pair<void*, std::size_t> align_for_unpack(void* ptr,
   auto avail_space            = orig_avail_space;
 
   if (!std::align(align, bytes, ptr, avail_space)) {
+    std::stringstream ss;
+
     // If we get here, it means that someone did not pack the value correctly, likely without
     // first aligning the pointer!
-    throw std::runtime_error{"Failed to align pointer to unpack value"};
+    ss << "Failed to align buffer " << ptr << " (of size: " << bytes << ") to " << align
+       << "-byte alignment (remaining capacity: " << capacity << ')';
+    throw std::runtime_error{std::move(ss).str()};
   }
   return {ptr, orig_avail_space - avail_space};
 }
@@ -44,7 +49,7 @@ namespace legate {
 
 template <typename Deserializer>
 BaseDeserializer<Deserializer>::BaseDeserializer(const void* args, std::size_t arglen)
-  : args_{Span<const std::int8_t>{static_cast<const int8_t*>(args), arglen}}
+  : args_{static_cast<const std::int8_t*>(args), arglen}
 {
 }
 
@@ -61,7 +66,7 @@ template <typename Deserializer>
 template <typename T, std::enable_if_t<type_code_of<T> != Type::Code::NIL>*>
 void BaseDeserializer<Deserializer>::_unpack(T& value)
 {
-  const auto vptr          = static_cast<void*>(const_cast<int8_t*>(args_.ptr()));
+  const auto vptr          = static_cast<void*>(const_cast<std::int8_t*>(args_.ptr()));
   auto [ptr, align_offset] = detail::align_for_unpack<T>(vptr, args_.size());
 
   // We need to align-up the incoming args_.ptr() since the value was stored according to
