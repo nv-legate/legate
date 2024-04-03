@@ -40,7 +40,7 @@ from .util.argument_parser import ConfigArgument
 from .util.callables import classify_callable, get_calling_function
 from .util.cl_arg import CLArg
 from .util.constants import Constants
-from .util.exception import WrongOrderError
+from .util.exception import UnsatisfiableConfigurationError, WrongOrderError
 from .util.types import copy_method_signature
 from .util.utility import ValueProvenance, subprocess_capture_output
 
@@ -274,8 +274,29 @@ class ConfigurationManager:
                     "before re-running configure!"
                 )
             if not clean_first:
-                self.log(f"Successfully setup arch directory: {arch_dir}")
-                return
+                reconfigure_file = self._reconfigure.reconfigure_file
+                if Path(sys.argv[0]).resolve() == reconfigure_file:
+                    # The user is following our advice below and reconfiguring,
+                    # so it's OK if the arch already exists.
+                    self.log("User is reconfiguring, so no need to error out")
+                    return
+
+                raise UnsatisfiableConfigurationError(
+                    f"{proj_name} arch directory {arch_dir} already exists and"
+                    " would be overwritten by this configure command. If you:"
+                    "\n"
+                    "\n"
+                    "  1. Meant to update an existing configuration, use "
+                    f'{reconfigure_file.name} in place of "configure".'
+                    "\n"
+                    "  2. Meant to create a new configuration, re-run the "
+                    "current configure command with "
+                    f"--{self.project_arch_name}='some-other-name'."
+                    "\n"
+                    f"  3. Meant to redo the current arch ({arch_dir.name!r}) "
+                    "from scratch, re-run configure with --with-clean option"
+                    "\n\n"
+                )
 
             self.log("Deleting arch directory, then recreating it")
             proj_dir = self.project_dir
