@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Final
 
 from .manager import ConfigurationManager
+from .package.main_package import ON_ERROR_DEBUGGER_FLAG
 from .util.exception import (
     CMakeConfigureError,
     UnsatisfiableConfigurationError,
@@ -81,14 +82,25 @@ def basic_configure(
         The return code to return to the calling shell. On success, returns
         `SUCCESS`, on failure, returns `FAILURE`.
     """
+    try:
+        import ipdb as py_db  # type: ignore[import, unused-ignore]
+    except ModuleNotFoundError:
+        import pdb as py_db
+
+    post_mortem = any(ON_ERROR_DEBUGGER_FLAG in arg for arg in argv)
     excn_obj = None
     # If the following throws, then something is seriously beansed. Better to
     # eschew pretty-printing and just allow the entire exception to be printed.
     config = ConfigurationManager(argv, MainPackageType)
     try:
-        config.setup()
-        config.configure()
-        config.finalize()
+        try:
+            config.setup()
+            config.configure()
+            config.finalize()
+        except:  # noqa E722
+            if post_mortem:
+                py_db.post_mortem()
+            raise
     except UnsatisfiableConfigurationError as excn:
         excn_trace, message, excn_obj = _format_exception(
             excn, "Configuration is not satisfiable"

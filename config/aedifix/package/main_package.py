@@ -114,7 +114,23 @@ def _guess_cxx_compiler() -> str | None:
     return None
 
 
+ON_ERROR_DEBUGGER_FLAG: Final = "--on-error-debugger"
+
+
 class MainPackage(Package, ABC):
+    ON_ERROR_DEBUGGER: Final = ConfigArgument(
+        name=ON_ERROR_DEBUGGER_FLAG,
+        spec=ArgSpec(
+            dest=ON_ERROR_DEBUGGER_FLAG.lstrip("-")
+            .casefold()
+            .replace("-", "_"),
+            type=bool,
+            help=(
+                "Start a post-mortem debugger if a Python exception was raised"
+            ),
+        ),
+        ephemeral=True,
+    )
     WITH_CLEAN: Final = ConfigArgument(
         name="--with-clean",
         spec=ArgSpec(

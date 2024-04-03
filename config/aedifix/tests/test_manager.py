@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from ..manager import ConfigurationManager
+from ..package.main_package import ON_ERROR_DEBUGGER_FLAG
 from ..util.cl_arg import CLArg
 from ..util.exception import WrongOrderError
 from .fixtures.dummy_main_module import DummyMainModule
@@ -87,7 +88,10 @@ class TestConfigurationManager:
         assert manager.cl_args.AEDIFIX_PYTEST_ARCH == CLArg(
             name="AEDIFIX_PYTEST_ARCH", value=AEDIFIX_PYTEST_ARCH, cl_set=False
         )
-        assert manager._ephemeral_args == {"--with-clean"}
+        assert manager._ephemeral_args == {
+            "--with-clean",
+            ON_ERROR_DEBUGGER_FLAG,
+        }
         assert manager.project_dir.exists()
         assert manager.project_dir.is_dir()
         assert manager.project_arch_dir.exists()
