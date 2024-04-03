@@ -16,9 +16,7 @@ import queue
 import shlex
 from datetime import datetime
 from pathlib import Path
-from typing import Any, NoReturn
-
-from typing_extensions import Protocol
+from typing import Any, NoReturn, Protocol
 
 from ...util.colors import yellow
 from ...util.types import ArgList, EnvDict

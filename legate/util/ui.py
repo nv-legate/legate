@@ -19,9 +19,7 @@ text output (i.e. without ANSI color codes) will be generated.
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Iterable
-
-from typing_extensions import TypeAlias
+from typing import Any, Iterable, TypeAlias
 
 from .colors import bright, cyan, dim, green, magenta, red, white, yellow
 

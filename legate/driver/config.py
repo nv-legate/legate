@@ -19,7 +19,7 @@ from argparse import Namespace
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from ..util import colors
 from ..util.types import (
@@ -150,7 +150,7 @@ class ConfigProtocol(Protocol):
 
     argv: ArgList
 
-    user_program: Optional[str]
+    user_program: str | None
     user_opts: tuple[str, ...]
     multi_node: MultiNode
     binding: Binding

@@ -17,15 +17,12 @@ from __future__ import annotations
 import os
 
 from dataclasses import dataclass
-from typing import Union
-from typing_extensions import Literal, TypeAlias
+from typing import Literal, TypeAlias
 
 from ..util.types import ArgList
 
 #: Define the available feature types for tests
-FeatureType: TypeAlias = Union[
-    Literal["cpus"], Literal["cuda"], Literal["eager"], Literal["openmp"]
-]
+FeatureType: TypeAlias = Literal["cpus", "cuda", "eager", "openmp"]
 
 #: Feature values that are accepted for --use, in the relative order
 #: that the corresponding test stages should always execute in

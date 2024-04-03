@@ -18,19 +18,13 @@ import os
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Literal, Union
-
-from typing_extensions import TypeAlias
+from typing import Literal, TypeAlias
 
 from ..util.args import ExtendAction, MultipleChoices
 from ..util.colors import HAVE_COLOR
 from . import FEATURES, defaults
 
-PinOptionsType: TypeAlias = Union[
-    Literal["partial"],
-    Literal["none"],
-    Literal["strict"],
-]
+PinOptionsType: TypeAlias = Literal["partial", "none", "strict"]
 
 PIN_OPTIONS: tuple[PinOptionsType, ...] = (
     "partial",

@@ -13,9 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Tuple, Union
-
-from typing_extensions import TypeAlias
+from typing import TypeAlias
 
 from ...util.ui import dim, failed, passed, shell, skipped, timeout, yellow
 from ..config import Config
@@ -33,7 +31,7 @@ EAGER_ENV = {
 }
 
 
-RankShard: TypeAlias = Tuple[int, ...]
+RankShard: TypeAlias = tuple[int, ...]
 
 
 @dataclass(frozen=True)
@@ -79,7 +77,7 @@ class StageResult:
         return sum(p.returncode == 0 for p in self.procs)
 
 
-def adjust_workers(workers: int, requested_workers: Union[int, None]) -> int:
+def adjust_workers(workers: int, requested_workers: int | None) -> int:
     """Adjust computed workers according to command line requested workers.
 
     The final number of workers will only be adjusted down by this function.

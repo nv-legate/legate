@@ -11,7 +11,7 @@
 
 
 from enum import IntEnum
-from typing import Any, Tuple
+from typing import Any
 
 import legate.core.types as ty
 from legate.core import Rect, ReductionOp, Store
@@ -23,7 +23,7 @@ class OpCode(IntEnum):
     COLLECTIVE = user_lib.cffi.COLLECTIVE
 
 
-def create_int64_store(shape: Tuple[Any, ...]) -> Store:
+def create_int64_store(shape: tuple[Any, ...]) -> Store:
     store = context.create_store(ty.int64, shape=shape)
     # call empty function on the store to make Legion to think
     # that we initialized the store
@@ -36,7 +36,7 @@ def create_int64_store(shape: Tuple[Any, ...]) -> Store:
 
 
 def collective_test(
-    store: Store, shape: Tuple[Any, ...], tile_shape: Tuple[Any, ...]
+    store: Store, shape: tuple[Any, ...], tile_shape: tuple[Any, ...]
 ) -> None:
     assert store.ndim == len(shape)
     if store.shape != shape:

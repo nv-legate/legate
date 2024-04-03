@@ -11,9 +11,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
-
-from typing_extensions import Protocol
+from typing import TYPE_CHECKING, Protocol, TypedDict
 
 if TYPE_CHECKING:
     from ._lib.data.logical_array import LogicalArray
@@ -143,9 +141,9 @@ class Table(LegateDataInterface):
 
         Parameters
         ----------
-        arrays : List[LogicalArray]
+        arrays : list[LogicalArray]
             Equal-length arrays that should form the table.
-        names : List[str], optional
+        names : list[str], optional
             Names for the table columns. If not passed, schema must be passed
 
         Returns

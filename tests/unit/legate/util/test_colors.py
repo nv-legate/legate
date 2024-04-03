@@ -11,11 +11,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypeAlias
 
 import pytest
 from pytest_mock import MockerFixture
-from typing_extensions import TypeAlias
 
 import legate.util.colors as m
 

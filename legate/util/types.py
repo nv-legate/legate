@@ -16,9 +16,7 @@ from __future__ import annotations
 
 from dataclasses import Field, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Protocol, Tuple, Type, TypeVar, Union
-
-from typing_extensions import Literal, TypeAlias
+from typing import Any, Literal, Protocol, Type, TypeAlias, TypeVar
 
 from .ui import kvtable
 
@@ -59,25 +57,23 @@ class GPUInfo:
 
 
 #: Define the available launcher for the driver to use
-LauncherType: TypeAlias = Union[
-    Literal["mpirun"], Literal["jsrun"], Literal["srun"], Literal["none"]
-]
+LauncherType: TypeAlias = Literal["mpirun", "jsrun", "srun", "none"]
 
 
 #: Represent command line arguments
-ArgList = List[str]
+ArgList = list[str]
 
 
 #: Represent str->str environment variable mappings
-EnvDict: TypeAlias = Dict[str, str]
+EnvDict: TypeAlias = dict[str, str]
 
 
 #: Represent part of a command-line command to execute
-CommandPart: TypeAlias = Tuple[str, ...]
+CommandPart: TypeAlias = tuple[str, ...]
 
 
 #: Represent all the parts of a command-line command to execute
-Command: TypeAlias = Tuple[str, ...]
+Command: TypeAlias = tuple[str, ...]
 
 
 #: Represent how to run the application -- as python script or binary

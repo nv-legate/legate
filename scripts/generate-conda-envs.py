@@ -15,12 +15,12 @@ from __future__ import annotations
 from argparse import Action, ArgumentParser
 from dataclasses import dataclass
 from textwrap import indent
-from typing import Literal, Tuple, Union
+from typing import Literal
 
 # --- Types -------------------------------------------------------------------
 
 Req = str
-Reqs = Tuple[Req, ...]
+Reqs = tuple[Req, ...]
 OSType = Literal["linux", "osx"]
 
 MAX_SANITIZER_VERSION = (11, 4)
@@ -60,7 +60,7 @@ class SectionConfig:
 
 @dataclass(frozen=True)
 class CUDAConfig(SectionConfig):
-    ctk_version: Union[str, None]
+    ctk_version: str | None
     compilers: bool
     os: OSType
 
@@ -214,7 +214,6 @@ class RuntimeConfig(SectionConfig):
             "openblas<=0.3.21",
             "opt_einsum",
             "scipy",
-            "typing_extensions",
             "libhwloc=*=*default*",
         )
         if self.sanitizers:
@@ -286,7 +285,7 @@ class EnvConfig:
     use: str
     python: str
     os: OSType
-    ctk_version: Union[str, None]
+    ctk_version: str | None
     compilers: bool
     openmpi: bool
     ucx: bool
@@ -301,7 +300,7 @@ class EnvConfig:
         return "- " + "\n- ".join(channels)
 
     @property
-    def sections(self) -> Tuple[SectionConfig, ...]:
+    def sections(self) -> tuple[SectionConfig, ...]:
         return (
             self.cuda,
             self.build,
@@ -341,7 +340,7 @@ class EnvConfig:
 
 PYTHON_VERSIONS = ("3.10", "3.11")
 
-OS_NAMES: Tuple[OSType, ...] = ("linux", "osx")
+OS_NAMES: tuple[OSType, ...] = ("linux", "osx")
 
 
 ENV_TEMPLATE = """\

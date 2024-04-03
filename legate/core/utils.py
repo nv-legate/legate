@@ -20,7 +20,6 @@ from typing import (
     Iterable,
     Iterator,
     MutableSet,
-    Optional,
     Protocol,
     TypeVar,
 )
@@ -48,7 +47,7 @@ class OrderedSet(MutableSet[T]):
     shards in a replicated context.
     """
 
-    def __init__(self, copy_from: Optional[Iterable[T]] = None) -> None:
+    def __init__(self, copy_from: Iterable[T] | None = None) -> None:
         self._dict: dict[T, None] = {}
         if copy_from is not None:
             for obj in copy_from:
@@ -79,7 +78,7 @@ class OrderedSet(MutableSet[T]):
 
 def capture_traceback_repr(
     skip_core_frames: bool = True,
-) -> Optional[str]:
+) -> str | None:
     tb = None
     for frame, _ in traceback.walk_stack(None):
         if frame.f_globals["__name__"].startswith("legate.core"):
