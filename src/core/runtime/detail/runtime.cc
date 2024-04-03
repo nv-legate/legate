@@ -959,6 +959,7 @@ Legion::IndexPartition Runtime::create_image_partition(
   BufferBuilder buffer;
   machine.pack(buffer);
   buffer.pack<std::uint32_t>(get_sharding(machine, 0));
+  buffer.pack<std::int32_t>(scope().priority());
 
   if (is_range) {
     return legion_runtime_->create_partition_by_image_range(legion_context_,

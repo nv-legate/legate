@@ -54,19 +54,19 @@ void ConsensusMatchResult<T>::wait()
   LegateCheck(num_matched <= output_.size());
   output_.resize(num_matched);
   complete_ = true;
-};
+}
 
 template <typename T>
 const std::vector<T>& ConsensusMatchResult<T>::input() const
 {
   return input_;
-};
+}
 
 template <typename T>
 const std::vector<T>& ConsensusMatchResult<T>::output() const
 {
   LegateCheck(complete_);
   return output_;
-};
+}
 
 }  // namespace legate::detail
