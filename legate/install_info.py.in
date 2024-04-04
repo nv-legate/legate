@@ -28,6 +28,9 @@ def get_libpath(lib_base_name: str, full_lib_name: str) -> str:
     }[platform.system()]
 
     def find_liblgcore(libdir):
+        if not libdir:
+            return None
+
         def lib_exists(path: str) -> bool:
             return exists(join(libdir, path))
 
