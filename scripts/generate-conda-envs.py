@@ -73,16 +73,9 @@ class CUDAConfig(SectionConfig):
 
         deps = (
             f"cuda-version={drop_patch(self.ctk_version)}",  # runtime
-            # cuTensor package notes:
-            # - We are pinning to 1.X major version.
-            #   See https://github.com/nv-legate/cunumeric/issues/1092.
-            # - The cuTensor packages on the nvidia channel are not well
-            #   structured. The multiple levels of packages are not connected
-            #   by strict dependencies, and the CTK compatibility is encoded
-            #   in the package name, rather than a constraint or label.
-            #   For now we pin to the conda-forge versions (which use build
-            #   numbers starting with h).
-            "cutensor=1.7*=h*",  # runtime
+            # We are pinning to cuTensor 1.X major version.
+            # See https://github.com/nv-legate/cunumeric/issues/1092.
+            "cutensor=1.7",  # runtime
             "nccl",  # runtime
             "pynvml",  # tests
         )
@@ -91,12 +84,13 @@ class CUDAConfig(SectionConfig):
             deps += (f"cudatoolkit={self.ctk_version}",)
         else:
             deps += (
-                "cuda-cccl",  # no cuda-cccl-dev package on the nvidia channel
+                f"cuda-toolkit={self.ctk_version}",
+                "cuda-cccl",  # no cuda-cccl-dev package exists
                 "cuda-cudart-dev",
                 "cuda-cudart-static",
                 "cuda-driver-dev",
                 "cuda-nvml-dev",
-                "cuda-nvtx",  # no cuda-nvtx-dev package on the nvidia channel
+                "cuda-nvtx-dev",
                 "libcublas-dev",
                 "libcufft-dev",
                 "libcurand-dev",
@@ -294,8 +288,6 @@ class EnvConfig:
     @property
     def channels(self) -> str:
         channels = []
-        if self.ctk_version and V(self.ctk_version) >= (12, 0, 0):
-            channels.append(f"nvidia/label/cuda-{self.ctk_version}")
         channels.append("conda-forge")
         return "- " + "\n- ".join(channels)
 
@@ -470,14 +462,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args(sys.argv[1:])
-
-    if (
-        args.ctk_version
-        and V(args.ctk_version) >= (12, 0, 0)
-        and len(args.ctk_version.split(".")) != 3
-    ):
-        # This is necessary to match on the exact label on the nvidia channel
-        raise ValueError("CTK 12 versions must be in the form 12.X.Y")
 
     selected_sections = None
 
