@@ -16,7 +16,7 @@
 //
 // INCLUDE GUARDS ARE NOT NEEDED IN THIS HEADER
 
-#include "core/utilities/defined.h"
+#include "core/utilities/macros.h"
 
 #if !LegateDefined(LEGATE_STL_DETAIL_CONFIG_INCLUDED)
 #error "config.hpp must be included before prefix.hpp"
@@ -38,11 +38,11 @@
 #define requires LEGATE_STL_REQUIRES
 #endif
 
-LEGATE_STL_PRAGMA_PUSH()
-LEGATE_STL_PRAGMA_EDG_IGNORE(737)  // using-declaration ignored; it refers to the current namespace
-LEGATE_STL_PRAGMA_EDG_IGNORE(20011)  // calling a __host__ function [...] from a __host__ __device__
-                                     // function is not allowed
-LEGATE_STL_PRAGMA_EDG_IGNORE(20012)  // __host__ annotation is ignored on a function[...] that is
-                                     // explicitly defaulted on its first declaration
-LEGATE_STL_PRAGMA_EDG_IGNORE(20014)  // calling a __host__ function [...] from a __host__ __device__
-                                     // function is not allowed
+LEGATE_PRAGMA_PUSH()
+LEGATE_PRAGMA_EDG_IGNORE(737)    // using-declaration ignored; it refers to the current namespace
+LEGATE_PRAGMA_EDG_IGNORE(20011)  // calling a __host__ function [...] from a __host__
+                                 // __device__ function is not allowed
+LEGATE_PRAGMA_EDG_IGNORE(20012)  // __host__ annotation is ignored on a function[...] that is
+                                 // explicitly defaulted on its first declaration
+LEGATE_PRAGMA_EDG_IGNORE(20014)  // calling a __host__ function [...] from a __host__
+                                 // __device__ function is not allowed

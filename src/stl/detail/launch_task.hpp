@@ -13,7 +13,7 @@
 #pragma once
 
 #include "core/utilities/assert.h"
-#include "core/utilities/defined.h"
+#include "core/utilities/macros.h"
 
 #include "legate.h"
 
@@ -1177,7 +1177,7 @@ inline constexpr detail::launch_task launch_task{};
  * @endcond
  */
 
-#if LegateDefined(LEGATE_STL_DOXYGEN)
+#if LegateDefined(LEGATE_DOXYGEN)
 /**
  * @brief A function that launches a task with the given inputs, outputs,
  * scalars, and constraints.

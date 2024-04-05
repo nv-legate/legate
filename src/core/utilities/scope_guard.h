@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "core/utilities/defined.h"
 #include "core/utilities/detail/compressed_pair.h"
+#include "core/utilities/macros.h"
 
 #include <type_traits>
 

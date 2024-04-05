@@ -15,7 +15,7 @@
 #include "core/utilities/abort.h"
 #include "core/utilities/assert.h"
 #include "core/utilities/cpp_version.h"
-#include "core/utilities/defined.h"
+#include "core/utilities/macros.h"
 
 #include "legion.h"
 

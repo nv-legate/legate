@@ -16,7 +16,7 @@
 //
 // INCLUDE GUARDS ARE NOT NEEDED IN THIS HEADER
 
-#include "core/utilities/defined.h"
+#include "core/utilities/macros.h"
 
 #if !LegateDefined(LEGATE_STL_DETAIL_PREFIX_INCLUDED)
 #error "Did you forget to add prefix.hpp at the top of the file?"
@@ -31,4 +31,4 @@
 #undef LEGATE_STL_DETAIL_POP_MACRO_REQUIRES
 #endif
 
-LEGATE_STL_PRAGMA_POP()
+LEGATE_PRAGMA_POP()

@@ -82,6 +82,7 @@ tidy:
 .PHONY: cpp-docs
 cpp-docs:
 	@$(LEGATE_CORE_BUILD_COMMAND) --target doxygen_legate $(LEGATE_CORE_CMAKE_ARGS)
+	@echo "-- Documentation generated and written to $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/cmake_build/html"
 
 ## Build only the Python binding documentation
 ##

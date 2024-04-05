@@ -536,6 +536,8 @@ if(legate_core_BUILD_DOCS)
     src/core/utilities/debug.h
     src/core/utilities/dispatch.h
     src/core/utilities/scope_guard.h
+    src/core/utilities/macros.h
+    src/core/utilities/compiler.h
     src/timing/timing.h
     # main page
     src/legate.h
@@ -552,6 +554,7 @@ if(legate_core_BUILD_DOCS)
   set(DOXYGEN_STRIP_FROM_INC_PATH ${LEGATE_CORE_DIR}/src)
   set(DOXYGEN_EXAMPLE_PATH tests/cpp)
   set(DOXYGEN_QUIET YES)
+  set(DOXYGEN_PREDEFINED DOXYGEN)
   doxygen_add_docs("doxygen_legate" ALL
     ${legate_core_DOC_SOURCES}
     COMMENT "Custom command for building Doxygen docs."
@@ -698,9 +701,10 @@ install(
         src/core/utilities/cpp_version.h
         src/core/utilities/assert.h
         src/core/utilities/abort.h
-        src/core/utilities/defined.h
         src/core/utilities/scope_guard.h
         src/core/utilities/scope_guard.inl
+        src/core/utilities/compiler.h
+        src/core/utilities/macros.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 install(

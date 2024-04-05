@@ -13,7 +13,8 @@
 #pragma once
 
 #include "core/utilities/assert.h"
-#include "core/utilities/defined.h"
+#include "core/utilities/compiler.h"
+#include "core/utilities/macros.h"
 
 #include "config.hpp"  // includes <version>
 
@@ -29,8 +30,8 @@
 
 #else
 
-LEGATE_STL_PRAGMA_PUSH()
-LEGATE_STL_PRAGMA_EDG_IGNORE(
+LEGATE_PRAGMA_PUSH()
+LEGATE_PRAGMA_EDG_IGNORE(
   737,
   useless_using_declaration,  // using-declaration ignored -- it refers to the current namespace
   20011,
@@ -60,7 +61,7 @@ namespace std {
 using namespace mdspan_experimental;
 }  // namespace std
 
-LEGATE_STL_PRAGMA_POP()
+LEGATE_PRAGMA_POP()
 
 #endif  // LEGATE_STL_HAS_STD_MDSPAN
 
@@ -204,15 +205,11 @@ class mdspan_accessor {
   //   198 |     : __members(other.__ptr_ref(), __map_acc_pair_t(other.__mapping_ref(),
   //   other.__accessor_ref()))
   //       |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-#if LegateDefined(LEGATE_STL_GCC())
-  LEGATE_STL_PRAGMA_PUSH()
-  LEGATE_STL_PRAGMA_GNU_IGNORE("-Wmaybe-uninitialized")
-#endif
+  LEGATE_PRAGMA_PUSH()
+  LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized")
   LEGATE_HOST_DEVICE mdspan_accessor(mdspan_accessor&& other) noexcept = default;
   LEGATE_HOST_DEVICE mdspan_accessor(const mdspan_accessor& other)     = default;
-#if LegateDefined(LEGATE_STL_GCC())
-  LEGATE_STL_PRAGMA_POP()
-#endif
+  LEGATE_PRAGMA_POP()
 
   LEGATE_HOST_DEVICE mdspan_accessor& operator=(mdspan_accessor&& other) noexcept
   {

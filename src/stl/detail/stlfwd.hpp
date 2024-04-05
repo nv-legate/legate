@@ -49,20 +49,17 @@
 #include "span.hpp"
 //
 
-#include "core/utilities/defined.h"
+#include "core/utilities/compiler.h"
+#include "core/utilities/macros.h"
 
 #include "config.hpp"
 #include "legate.h"
 
 // As of 3/14/2024, this include causes shadow warnings in GPU debug mode compilation
-#if LegateDefined(LEGATE_STL_GCC())
-LEGATE_STL_PRAGMA_PUSH()
-LEGATE_STL_PRAGMA_GNU_IGNORE("-Wmaybe-uninitialized")
-#endif
+LEGATE_PRAGMA_PUSH()
+LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized")
 #include "mdspan.hpp"
-#if LegateDefined(LEGATE_STL_GCC())
-LEGATE_STL_PRAGMA_POP()
-#endif
+LEGATE_PRAGMA_POP()
 
 #include "meta.hpp"
 #include "ranges.hpp"
@@ -298,7 +295,7 @@ static_assert(!std::is_same_v<int, std::int64_t>);
 }  // namespace detail
 /** @endcond */
 
-#if LegateDefined(LEGATE_STL_DOXYGEN)
+#if LegateDefined(LEGATE_DOXYGEN)
 // clang-format off
 /**
  * @brief A type `StoreLike` satisfied `logical_store_like` when it exposes a

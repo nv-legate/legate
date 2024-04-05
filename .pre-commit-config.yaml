@@ -49,7 +49,7 @@ repos:
             'types_or': [c++, c, cuda]
             require_serial: false
             stages: [pre-commit]
-            exclude: '^(src/core/legate_c\.h|src/legate_preamble\.h|src/stl/detail/config\.hpp)$'
+            exclude: '^(src/core/legate_c\.h|src/legate_preamble\.h|src/stl/detail/config\.hpp|src/core/utilities/compiler\.h)$'
         -   id: legate-assert
             name: legate-assert
             description: 'Find uses of assert() that should be using LegateAssert()'

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/utilities/defined.h"
+#include "core/utilities/macros.h"
 
 #include "config.hpp"  // includes <version>
 
