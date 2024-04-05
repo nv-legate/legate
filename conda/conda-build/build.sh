@@ -36,19 +36,21 @@ fi
 
 export CUDAHOSTCXX="${CXX}"
 export OPENSSL_DIR="${PREFIX}"
-export CUDAFLAGS="-ccbin ${CXX} -isystem ${PREFIX}/include -L${PREFIX}/lib"
+export CUDAFLAGS="-isystem ${PREFIX}/include -L${PREFIX}/lib"
+export LEGATE_CORE_DIR=`pwd`
 export LEGATE_CORE_ARCH='arch-conda'
-
-echo "Environment"
-env
 
 echo "Build starting on $(date)"
 ./configure \
   --LEGATE_CORE_ARCH="${LEGATE_CORE_ARCH}" \
+  --CUDAFLAGS="${CUDAFLAGS}" \
   --with-python \
+  --with-cc="${CC}" \
+  --with-cxx="${CXX}" \
+  --build-march="${BUILD_MARCH}" \
   "${configure_args[@]}"
 
-SKBUILD_BUILD_OPTIONS=-j$CPU_COUNT \
+SKBUILD_BUILD_OPTIONS="-j$CPU_COUNT VERBOSE=1" \
 $PYTHON -m pip install             \
   --root /                         \
   --no-deps                        \

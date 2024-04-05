@@ -109,11 +109,9 @@ build:
     - SCCACHE_S3_KEY_PREFIX
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
-    - CMAKE_C_COMPILER_LAUNCHER
-    - CMAKE_CXX_COMPILER_LAUNCHER
-    - CMAKE_CUDA_COMPILER_LAUNCHER
     - SED
-    - LEGATE_CORE_CMAKE_PRESET
+    - USE_OPENMP
+    - ARTIFACTS_DIR
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1
   track_features:
@@ -163,6 +161,7 @@ requirements:
 {% if gpu_enabled_bool %}
     - cuda-nvcc ={{ cuda_version }}
 {% endif %}
+    - doxygen
 
   # Libraries and header files (C/C++).
   host:
