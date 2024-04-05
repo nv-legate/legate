@@ -35,3 +35,32 @@ class WrongOrderError(BaseError):
     accessing an object before it has been setup, or retrieving a resource
     before it has been registered.
     """
+
+
+class CommandError(BaseError):
+    r"""An error raised when an external command returns an error."""
+
+    def __init__(
+        self,
+        return_code: int,
+        stdout: str,
+        stderr: str,
+        summary: str | None = None,
+    ) -> None:
+        self.return_code = return_code
+        self.stdout = stdout
+        self.stderr = stderr
+        if summary is None:
+            summary = self._make_summary(return_code, stdout, stderr)
+        self.summary = summary
+
+    @staticmethod
+    def _make_summary(return_code: int, stdout: str, stderr: str) -> str:
+        lines = (
+            f"Subprocess error, returned exit-code: {return_code}",
+            "stdout:",
+            f"{stdout}",
+            "stderr:",
+            f"{stderr}",
+        )
+        return "\n".join(lines)

@@ -40,7 +40,11 @@ from .util.argument_parser import ConfigArgument
 from .util.callables import classify_callable, get_calling_function
 from .util.cl_arg import CLArg
 from .util.constants import Constants
-from .util.exception import UnsatisfiableConfigurationError, WrongOrderError
+from .util.exception import (
+    CommandError,
+    UnsatisfiableConfigurationError,
+    WrongOrderError,
+)
 from .util.types import copy_method_signature
 from .util.utility import ValueProvenance, subprocess_capture_output
 
@@ -126,6 +130,45 @@ class ConfigurationManager:
             + "\n".join(f"{key} = {val}" for key, val in os.environ.items())
         )
         self.log_divider()
+
+    def _log_git_info(self) -> None:
+        r"""Log information about the current commit and branch of the
+        repository."""
+        git_exe = shutil.which("git")
+        if git_exe is None:
+            self.log(
+                "'git' command not found, likely not a developement repository"
+            )
+            return
+
+        try:
+            branch = self.log_execute_command(
+                [git_exe, "branch", "--show-current"]
+            ).stdout.strip()
+        except CommandError as ce:
+            if ce.return_code == 128:
+                self.log(
+                    "git branch --show-current returned exit code "
+                    f"{ce.return_code}. Current directory is not a git "
+                    "repository."
+                )
+            # Silently gobble this error, it's mostly just informational
+            return
+
+        if not branch:
+            # Per git branch --help: 'In detached HEAD state, nothing is
+            # printed.'
+            branch = "<detached HEAD>"
+
+        try:
+            commit = self.log_execute_command(
+                [git_exe, "rev-parse", "HEAD"]
+            ).stdout.strip()
+        except CommandError:
+            return
+
+        self.log(f"Git branch: {branch}")
+        self.log(f"Git commit: {commit}")
 
     def _parse_args(self, argv: Sequence[str]) -> Namespace:
         r"""Parse arguments as specified in arg list.
@@ -844,6 +887,7 @@ class ConfigurationManager:
         This routine will also ensure the creation of the arch directory.
         """
         self._setup_log()
+        self.log_execute_func(self._log_git_info)
         self._modules.extend(
             self.log_execute_func(packages.load_packages, self)
         )

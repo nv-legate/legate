@@ -20,6 +20,8 @@ from subprocess import CalledProcessError, CompletedProcess
 from sys import version_info
 from typing import Any, TypeVar
 
+from .exception import CommandError
+
 _T = TypeVar("_T")
 
 
@@ -40,7 +42,7 @@ def subprocess_check_returncode(
 
     Raises
     ------
-    RuntimeError
+    CommandError
       If `ret.returncode` is nonzero
     """
     try:
@@ -56,7 +58,12 @@ def subprocess_check_returncode(
                 f"{cpe}",
             ]
         )
-        raise RuntimeError(emess) from cpe
+        raise CommandError(
+            return_code=cpe.returncode,
+            stdout=cpe.stdout,
+            stderr=cpe.stderr,
+            summary=emess,
+        ) from cpe
     return ret
 
 
@@ -87,7 +94,7 @@ def subprocess_capture_output(
 
     Notes
     -----
-    Turns a `subprocess.CalledProcessError` into a `RuntimeError` with more
+    Turns a `subprocess.CalledProcessError` into a `CommandError` with more
     diagnostics.
     """
     ret = subprocess.run(
