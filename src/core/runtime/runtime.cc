@@ -307,6 +307,16 @@ void destroy() { detail::Runtime::get_runtime()->destroy(); }
 
 mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
 
+bool is_running_in_task()
+{
+  // If the Legion runtime hasn't been started, we always return false
+  if (!Legion::Runtime::has_runtime()) {
+    return false;
+  }
+  const auto* task = Legion::Runtime::get_context_task(Legion::Runtime::get_context());
+  return task->task_id != LEGATE_CORE_TOPLEVEL_TASK_ID;
+}
+
 }  // namespace legate
 
 extern "C" {

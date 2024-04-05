@@ -623,6 +623,16 @@ void register_shutdown_callback(T&& callback);
  */
 [[nodiscard]] mapping::Machine get_machine();
 
+/**
+ * @ingroup runtime
+ *
+ * @brief Checks if the code is running in a task
+ *
+ * @return true If the code is running in a task
+ * @return false If the code is not running in a task
+ */
+[[nodiscard]] bool is_running_in_task();
+
 }  // namespace legate
 
 #include "core/runtime/runtime.inl"
