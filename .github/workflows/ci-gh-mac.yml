@@ -20,4 +20,6 @@ jobs:
       target-device: cpu
       cmake-preset: release
       ucx-enabled: false
+      build-type: ci
+      upload-enabled: false
     secrets: inherit

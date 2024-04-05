@@ -26,9 +26,10 @@ jobs:
           - gpu
         cmake-preset:
           - debug
-          # The common github ci setup check for exactly "debug-sanitizer-gcc" when
-          # checking whether it should pin the libsanitizer version, and so we must use
-          # that here. This will be removed once it is updated though.
+          # The common github ci setup check for exactly "debug-sanitizer-gcc"
+          # when checking whether it should pin the libsanitizer version, and so
+          # we must use that here. This will be removed once it is updated
+          # though.
           - debug-sanitizer-gcc
           - release
           - release-debug
