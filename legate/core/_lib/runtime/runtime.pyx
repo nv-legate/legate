@@ -625,6 +625,10 @@ def track_provenance(
     return decorator
 
 
+cpdef bool is_running_in_task():
+    return _is_running_in_task()
+
+
 cdef void _cleanup_legate_runtime():
     get_legate_runtime().destroy()
     gc.collect()

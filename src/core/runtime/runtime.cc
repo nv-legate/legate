@@ -314,7 +314,7 @@ bool is_running_in_task()
     return false;
   }
   const auto* task = Legion::Runtime::get_context_task(Legion::Runtime::get_context());
-  return task->task_id != LEGATE_CORE_TOPLEVEL_TASK_ID;
+  return task->has_parent_task();
 }
 
 }  // namespace legate

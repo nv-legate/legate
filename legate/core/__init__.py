@@ -46,6 +46,7 @@ from ._lib.runtime.runtime import (
     get_legate_runtime,
     get_machine,
     track_provenance,
+    is_running_in_task,
 )
 from ._lib.runtime.scope import Scope
 

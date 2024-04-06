@@ -50,4 +50,8 @@ TEST_F(IsRunningInTask, InIndexTask)
     runtime->create_task(library, Checker::TASK_ID, legate::tuple<std::uint64_t>{2, 2}));
 }
 
+using IsRunningInTaskNoRuntime = ::testing::Test;
+
+TEST_F(IsRunningInTaskNoRuntime, BeforeInit) { EXPECT_FALSE(legate::is_running_in_task()); }
+
 }  // namespace test_is_running_in_task

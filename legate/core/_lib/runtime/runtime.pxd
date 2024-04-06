@@ -207,6 +207,8 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
 
     cdef void destroy()
 
+    cdef bool _is_running_in_task "legate::is_running_in_task"()
+
 
 cdef class Runtime:
     cdef _Runtime* _handle
@@ -290,3 +292,4 @@ cdef class Runtime:
 cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()
 cpdef Machine get_machine()
+cpdef bool is_running_in_task()
