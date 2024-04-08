@@ -53,7 +53,7 @@ run_test_or_analysis() {
             mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
             set -eou pipefail
 
-            cd $LEGATE_CORE_DIR/tests/unit
+            cd $LEGATE_CORE_DIR
             # Leaving this here in case we ever decide to enable this. If we don't do
             # this, we get
             # ImportError: could not load libasan.6.so
@@ -72,17 +72,13 @@ run_test_or_analysis() {
               # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
               # /path/to/your/file.py
               GCC_ASAN_PRELOAD=$(gcc -print-file-name=libasan.so)
-              for test_file in $(find . -name 'test_*.py'); do
-                LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest ${test_file}
-              done
+              LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest tests/unit
             elif [[ ${LEGATE_CORE_ARCH} == *clang-*-sanitizer* ]]; then
               echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
               echo "See impls for GCC above"
               return 1
             else
-              for test_file in $(find . -name 'test_*.py'); do
-                pytest ${test_file}
-              done
+              pytest tests/unit
             fi
 
             ;;
