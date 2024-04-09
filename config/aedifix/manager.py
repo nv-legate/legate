@@ -766,8 +766,11 @@ class ConfigurationManager:
         self.log(f"Executing command: {' '.join(map(str, command))}")
         try:
             ret = subprocess_capture_output(command, check=True)
-        except RuntimeError as rte:
-            self.log(str(rte))
+        except CommandError as ce:
+            self.log(ce.summary)
+            raise
+        except Exception as e:
+            self.log(str(e))
             raise
 
         self.log(f"STDOUT:\n{ret.stdout}")
