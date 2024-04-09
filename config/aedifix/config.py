@@ -41,6 +41,7 @@ class ConfigFile(Configurable):
         "_project_rules",
         "_project_search_variables",
         "_project_variables",
+        "_raw_lines",
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:
@@ -57,6 +58,7 @@ class ConfigFile(Configurable):
         ] = {}
         self._project_search_variables: dict[str, str] = {}
         self._project_variables: dict[str, tuple[bool, str]] = {}
+        self._raw_lines: list[str] = []
 
     @property
     def project_variables_file(self) -> Path:
@@ -131,9 +133,20 @@ class ConfigFile(Configurable):
             "--target clean "
             f"$({PROJ_NAME}_CMAKE_ARGS)",
         )
+        self.add_raw_lines(
+            [
+                "ifeq ($(strip $(PREFIX)),)",
+                f"{PROJ_NAME}_INSTALL_PREFIX_COMMAND = # nothing",
+                "else",
+                f"{PROJ_NAME}_INSTALL_PREFIX_COMMAND = --prefix $(PREFIX)",
+                "endif",
+            ]
+        )
         self.add_rule(
             "default_install",
-            f"$({PROJ_NAME}_INSTALL_COMMAND) $({PROJ_NAME}_CMAKE_ARGS)",
+            f"$({PROJ_NAME}_INSTALL_COMMAND) "
+            f"$({PROJ_NAME}_INSTALL_PREFIX_COMMAND) "
+            f"$({PROJ_NAME}_CMAKE_ARGS)",
         )
         self.add_rule(
             "default_package",
@@ -321,6 +334,24 @@ class ConfigFile(Configurable):
             self.log(f"Project rule '{rule_name}' does not exist, adding it")
         self._project_rules[rule_name] = (phony, deps, rule_lines)
 
+    def add_raw_lines(self, lines: Sequence[str]) -> None:
+        r"""Add raw text to the config file.
+
+        Parameters
+        ----------
+        lines : Sequence[str]
+            The sequence of lines to insert into the config file.
+
+        Notes
+        -----
+        There is absolutely no formatting appleid to `lines`, and hence,
+        they must be properly formatted. They are inserted after all project
+        variables are defined, but before the rules are defined.
+        """
+        line_text = "\n".join(lines)
+        self.log(f"Adding raw lines to config file:\n{line_text}")
+        self._raw_lines.extend(lines)
+
     def add_variable(
         self, var_name: str, value: str, override_ok: bool = False
     ) -> None:
@@ -352,17 +383,18 @@ class ConfigFile(Configurable):
         except KeyError:
             self.log(
                 f"Adding project variable: {var_name} = "
-                f"({override_ok = }, {value = })"
+                f"(override_ok = {override_ok}, value = {value})"
             )
         else:
             if not old_ovr_ok:
                 raise ValueError(
                     f"Project variable {var_name} already registered:"
-                    f" ({old_ovr_ok = }, {old_val = })"
+                    f" (old_over_ok = {old_ovr_ok}, old_val = {old_val})"
                 )
             self.log(
                 f"project variable '{var_name}' already exists, will be "
-                f"overriden! New value = ({override_ok = }, {value = })"
+                f"overriden! New value = (override_ok = {override_ok}, "
+                f"value = {value})"
             )
         self._project_variables[var_name] = (override_ok, value)
 
@@ -456,6 +488,11 @@ class ConfigFile(Configurable):
         project_file = self.project_variables_file
         self.log(f"Using project file: {project_file}")
         project_file.write_text(
-            "\n".join(header_lines + project_variables + project_rules)
+            "\n".join(
+                header_lines
+                + project_variables
+                + self._raw_lines
+                + project_rules
+            )
         )
         self.log(f"Wrote to project file: {project_file}")

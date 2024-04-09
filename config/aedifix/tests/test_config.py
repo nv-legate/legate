@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import sys
+from copy import deepcopy
 
 import pytest
 
@@ -30,6 +31,7 @@ class TestConfigFile:
         assert config._project_rules == {}
         assert config._project_search_variables == {}
         assert config._project_variables == {}
+        assert config._raw_lines == []
 
     def add_rule_common(
         self,
@@ -341,6 +343,23 @@ class TestConfigFile:
         # There is a lot this function does, so here we just test it doesn't
         # die.
         config_file.setup()
+
+    @pytest.mark.parametrize("lines", ([], ["hello"], ["hello", "world"]))
+    def test_add_raw_lines(
+        self, config_file: ConfigFile, lines: list[str]
+    ) -> None:
+        copied_lines = deepcopy(lines)
+        config_file.add_raw_lines(lines)
+        # add_raw_lines should not modify the original object
+        assert copied_lines == lines
+        assert config_file._raw_lines == copied_lines
+
+        new_lines = ["foo", "bar", "baz"]
+        lines.extend(new_lines)
+        copied_lines = deepcopy(lines)
+        config_file.add_raw_lines(new_lines)
+        assert copied_lines == lines
+        assert config_file._raw_lines == copied_lines
 
     @pytest.mark.xfail(reason="TODO")  # TODO
     def test_finalize(self, config_file: ConfigFile) -> None:
