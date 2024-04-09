@@ -236,13 +236,26 @@ class CMaker:
         def create_cmake_extra_commands(quote: bool) -> list[str]:
             # These are the commands should go in the cmake_command.txt since
             # they are general for any invocation
-            return [
-                "--log-context",
-                "--log-level=DEBUG",
-                f"-D{manager.project_arch_name}:STRING"
-                f"='{manager.project_arch}'",
-                f"-D{manager.project_dir_name}:PATH='{manager.project_dir}'",
-            ] + [value.to_command_line(quote=quote) for value in args.values()]
+            flags = ["--log-context", "--log-level=DEBUG"]
+            debug_value: int = manager.cl_args.debug_configure.value
+            if debug_value >= 1:
+                flags.append("--debug-find")
+            if debug_value >= 2:
+                flags.append("--trace")
+            if debug_value >= 3:
+                flags.append("--trace-expand")
+            flags.extend(
+                (
+                    f"-D{manager.project_arch_name}:STRING"
+                    f"='{manager.project_arch}'",
+                    f"-D{manager.project_dir_name}:PATH="
+                    f"'{manager.project_dir}'",
+                )
+            )
+
+            return flags + [
+                value.to_command_line(quote=quote) for value in args.values()
+            ]
 
         cmake_extra_command = create_cmake_extra_commands(quote=False)
         cmake_command = list(

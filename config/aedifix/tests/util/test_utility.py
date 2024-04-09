@@ -16,6 +16,7 @@ import pytest
 
 from ...util.utility import (
     deduplicate_command_line_args,
+    flag_to_dest,
     prune_command_line_args,
 )
 
@@ -93,6 +94,13 @@ class TestUtility:
     def test_deduplicate_command_line_args_positional_arg(self) -> None:
         new_argv = deduplicate_command_line_args(["foo", "--bar", "--foo"])
         assert new_argv == ["foo", "--bar", "--foo"]
+
+    @pytest.mark.parametrize(
+        "flag_str, expected",
+        (("", ""), ("--foo", "foo"), ("-f", "f"), ("-foo--bar", "foo__bar")),
+    )
+    def test_flag_to_dest(self, flag_str: str, expected: str) -> None:
+        assert flag_to_dest(flag_str) == expected
 
 
 if __name__ == "__main__":

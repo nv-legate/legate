@@ -275,3 +275,20 @@ def deduplicate_command_line_args(argv: Sequence[str]) -> list[str]:
         last_seen[arg_name].append(arg)
 
     return [v for values in last_seen.values() for v in values]
+
+
+def flag_to_dest(flag: str) -> str:
+    r"""Convert a command-line flag to a 'dest' argument usable in an
+    ArgumentParser.
+
+    Parameters
+    ----------
+    flag : str
+        The flag to convert.
+
+    Returns
+    -------
+    dest : str
+        The flag in 'dest' form.
+    """
+    return flag.lstrip("-").casefold().replace("-", "_")

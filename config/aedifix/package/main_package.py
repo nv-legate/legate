@@ -29,7 +29,7 @@ from ..cmake.cmake_flags import (
     CMakeString,
 )
 from ..util.argument_parser import ArgSpec, ConfigArgument, _str_to_bool
-from ..util.utility import ValueProvenance
+from ..util.utility import ValueProvenance, flag_to_dest
 from .package import Package
 
 if TYPE_CHECKING:
@@ -115,15 +115,29 @@ def _guess_cxx_compiler() -> str | None:
 
 
 ON_ERROR_DEBUGGER_FLAG: Final = "--on-error-debugger"
+DEBUG_CONFIGURE_FLAG: Final = "--debug-configure"
 
 
 class MainPackage(Package, ABC):
+    DEBUG_CONFIGURE: Final = ConfigArgument(
+        name=DEBUG_CONFIGURE_FLAG,
+        spec=ArgSpec(
+            dest=flag_to_dest(DEBUG_CONFIGURE_FLAG),
+            type=int,
+            default=0,
+            const=1,
+            nargs="?",
+            help=(
+                "Enable additional debugging flags to help debug configure. "
+                "A higher value means more debug info."
+            ),
+        ),
+        ephemeral=True,
+    )
     ON_ERROR_DEBUGGER: Final = ConfigArgument(
         name=ON_ERROR_DEBUGGER_FLAG,
         spec=ArgSpec(
-            dest=ON_ERROR_DEBUGGER_FLAG.lstrip("-")
-            .casefold()
-            .replace("-", "_"),
+            dest=flag_to_dest(ON_ERROR_DEBUGGER_FLAG),
             type=bool,
             help=(
                 "Start a post-mortem debugger if a Python exception was raised"
@@ -210,6 +224,8 @@ class MainPackage(Package, ABC):
         "CMAKE_COLOR_MAKEFILE", CMakeBool
     )
     __package_ignore_attrs__ = (
+        "DEBUG_CONFIGURE",
+        "ON_ERROR_DEBUGGER",
         "WITH_CLEAN",
         "THREADS",
         "CMAKE_BUILD_TYPE",
