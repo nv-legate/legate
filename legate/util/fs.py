@@ -143,8 +143,15 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
     if legate_core_arch is None:
         return None
 
-    skbuild_dir = legate_dir / legate_core_arch / "_skbuild"
+    legate_arch_dir = legate_dir / legate_core_arch
+    skbuild_dir = legate_arch_dir / "_skbuild"
     if not skbuild_dir.exists():
+        cmake_build_dir = legate_arch_dir / "cmake_build"
+        if (
+            cmake_build_dir.exists()
+            and (cmake_build_dir / "CMakeCache.txt").exists()
+        ):
+            return cmake_build_dir
         return None
 
     for f in skbuild_dir.iterdir():
