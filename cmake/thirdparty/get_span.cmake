@@ -13,6 +13,8 @@
 include_guard(GLOBAL)
 
 function(find_or_configure_span)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "span")
+
   if(CMAKE_CXX_STANDARD GREATER_EQUAL 20)
     include(CheckIncludeFileCXX)
 

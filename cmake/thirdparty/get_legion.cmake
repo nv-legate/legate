@@ -12,7 +12,7 @@
 
 include_guard(GLOBAL)
 
-function(find_or_configure_legion)
+function(find_or_configure_legion_impl)
   set(oneValueArgs VERSION REPOSITORY BRANCH EXCLUDE_FROM_ALL)
   cmake_parse_arguments(PKG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -36,13 +36,13 @@ function(find_or_configure_legion)
   endif()
 
   set(FIND_PKG_ARGS
-      GLOBAL_TARGETS     Legion::Realm
-                         Legion::Regent
-                         Legion::Legion
-                         Legion::RealmRuntime
-                         Legion::LegionRuntime
-      BUILD_EXPORT_SET   legate-core-exports
-      INSTALL_EXPORT_SET legate-core-exports)
+    GLOBAL_TARGETS     Legion::Realm
+    Legion::Regent
+    Legion::Legion
+    Legion::RealmRuntime
+    Legion::LegionRuntime
+    BUILD_EXPORT_SET   legate-core-exports
+    INSTALL_EXPORT_SET legate-core-exports)
 
   if((NOT CPM_Legion_SOURCE) AND (NOT CPM_DOWNLOAD_Legion))
     # First try to find Legion via find_package()
@@ -138,24 +138,24 @@ function(find_or_configure_legion)
     set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON CACHE INTERNAL "" FORCE)
 
     rapids_cpm_find(Legion ${version} ${FIND_PKG_ARGS}
-        CPM_ARGS
-          ${legion_cpm_git_args}
-          # HACK: Legion headers contain *many* warnings, but we would like to build with
-          # -Wall -Werror. But there is a work-around. Compilers treat system headers as
-          # special and do not emit any warnings about suspect code in them, so until
-          # legion cleans house, we mark their headers as "system" headers.
-          FIND_PACKAGE_ARGUMENTS EXACT
-          SYSTEM                 TRUE
-          EXCLUDE_FROM_ALL       ${exclude_from_all}
-          PATCH_COMMAND          ${patch_command} -d ./bindings/python --verbose
-          OPTIONS                ${_legion_cuda_options}
-                                 "CMAKE_CXX_STANDARD ${_cxx_std}"
-                                 "Legion_VERSION ${version}"
-                                 "Legion_BUILD_BINDINGS ON"
-                                 "Legion_REDOP_HALF ON"
-                                 "Legion_REDOP_COMPLEX ON"
-                                 "Legion_UCX_DYNAMIC_LOAD ON"
-                                 "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON"
+      CPM_ARGS
+      ${legion_cpm_git_args}
+      # HACK: Legion headers contain *many* warnings, but we would like to build with
+      # -Wall -Werror. But there is a work-around. Compilers treat system headers as
+      # special and do not emit any warnings about suspect code in them, so until
+      # legion cleans house, we mark their headers as "system" headers.
+      FIND_PACKAGE_ARGUMENTS EXACT
+      SYSTEM                 TRUE
+      EXCLUDE_FROM_ALL       ${exclude_from_all}
+      PATCH_COMMAND          ${patch_command} -d ./bindings/python --verbose
+      OPTIONS                ${_legion_cuda_options}
+      "CMAKE_CXX_STANDARD ${_cxx_std}"
+      "Legion_VERSION ${version}"
+      "Legion_BUILD_BINDINGS ON"
+      "Legion_REDOP_HALF ON"
+      "Legion_REDOP_COMPLEX ON"
+      "Legion_UCX_DYNAMIC_LOAD ON"
+      "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON"
     )
     set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ${no_dev_warnings_backup} CACHE INTERNAL "" FORCE)
   endif()
@@ -173,30 +173,43 @@ function(find_or_configure_legion)
   message(VERBOSE "Legion_CUDA_ARCH=${Legion_CUDA_ARCH}")
   message(VERBOSE "Legion_BOUNDS_CHECKS=${Legion_BOUNDS_CHECKS}")
   message(VERBOSE "Legion_NETWORKS=${Legion_NETWORKS}")
-
 endfunction()
 
-foreach(_var IN ITEMS "legate_core_LEGION_VERSION"
-                      "legate_core_LEGION_BRANCH"
-                      "legate_core_LEGION_REPOSITORY"
-                      "legate_core_EXCLUDE_LEGION_FROM_ALL")
-  if(DEFINED ${_var})
-    # Create a legate_core_LEGION_BRANCH variable in the current scope either from the existing
-    # current-scope variable, or the cache variable.
-    set(${_var} "${${_var}}")
-    # Remove legate_core_LEGION_BRANCH from the CMakeCache.txt. This ensures reconfiguring the same
-    # build dir without passing `-Dlegate_core_LEGION_BRANCH=` reverts to the value in versions.json
-    # instead of reusing the previous `-Dlegate_core_LEGION_BRANCH=` value.
-    unset(${_var} CACHE)
+function(find_or_configure_legion)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "legion")
+
+  foreach(_var IN ITEMS "legate_core_LEGION_VERSION"
+      "legate_core_LEGION_BRANCH"
+      "legate_core_LEGION_REPOSITORY"
+      "legate_core_EXCLUDE_LEGION_FROM_ALL")
+    if(DEFINED ${_var})
+      # Create a legate_core_LEGION_BRANCH variable in the current scope either from the existing
+      # current-scope variable, or the cache variable.
+      set(${_var} "${${_var}}")
+      set(${_var} "${${_var}}" PARENT_SCOPE)
+      # Remove legate_core_LEGION_BRANCH from the CMakeCache.txt. This ensures reconfiguring the same
+      # build dir without passing `-Dlegate_core_LEGION_BRANCH=` reverts to the value in versions.json
+      # instead of reusing the previous `-Dlegate_core_LEGION_BRANCH=` value.
+      unset(${_var} CACHE)
+    endif()
+  endforeach()
+
+  if(NOT DEFINED legate_core_LEGION_VERSION)
+    set(legate_core_LEGION_VERSION "${legate_core_VERSION}")
   endif()
-endforeach()
 
-if(NOT DEFINED legate_core_LEGION_VERSION)
-  set(legate_core_LEGION_VERSION "${legate_core_VERSION}")
-endif()
+  find_or_configure_legion_impl(
+    VERSION          ${legate_core_LEGION_VERSION}
+    REPOSITORY       ${legate_core_LEGION_REPOSITORY}
+    BRANCH           ${legate_core_LEGION_BRANCH}
+    EXCLUDE_FROM_ALL ${legate_core_EXCLUDE_LEGION_FROM_ALL}
+  )
 
-find_or_configure_legion(VERSION          ${legate_core_LEGION_VERSION}
-                         REPOSITORY       ${legate_core_LEGION_REPOSITORY}
-                         BRANCH           ${legate_core_LEGION_BRANCH}
-                         EXCLUDE_FROM_ALL ${legate_core_EXCLUDE_LEGION_FROM_ALL}
-)
+  set(legate_core_LEGION_VERSION "${legate_core_LEGION_VERSION}" PARENT_SCOPE)
+  set(Legion_USE_CUDA ${Legion_USE_CUDA} PARENT_SCOPE)
+  set(Legion_USE_OpenMP ${Legion_USE_OpenMP} PARENT_SCOPE)
+  set(Legion_USE_Python ${Legion_USE_Python} PARENT_SCOPE)
+  set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH} PARENT_SCOPE)
+  set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS} PARENT_SCOPE)
+  set(Legion_NETWORKS ${Legion_NETWORKS} PARENT_SCOPE)
+endfunction()

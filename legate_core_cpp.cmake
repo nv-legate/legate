@@ -53,15 +53,15 @@ endif()
 # add third party dependencies using CPM
 rapids_cpm_init(OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/versions.json)
 
+include(${LEGATE_CORE_DIR}/cmake/Modules/find_or_configure.cmake)
+
 ##############################################################################
 # - CCCL ---------------------------------------------------------------------
 
 # Pull this in before Legion, so that Legion will use the same libcu++ as
 # Legate (the one pull from CCCL)
 
-include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_cccl.cmake)
-
-find_or_configure_cccl()
+legate_core_find_or_configure(PACKAGE cccl)
 
 ##############################################################################
 # - Python -------------------------------------------------------------------
@@ -108,7 +108,7 @@ endif()
 # these features based on how Legion was configured (it doesn't make sense to
 # build legate.core's Python bindings if Legion's bindings weren't compiled).
 ###
-include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_legion.cmake)
+legate_core_find_or_configure(PACKAGE Legion)
 
 # If Legion_USE_Python was toggled ON by find_package(Legion), find Python3
 if(Legion_USE_Python AND (NOT Python3_FOUND))
@@ -140,22 +140,20 @@ if(Legion_USE_CUDA)
     INSTALL_EXPORT_SET legate-core-exports
   )
   # Find NCCL
-  include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_nccl.cmake)
+  legate_core_find_or_configure(PACKAGE nccl)
 endif()
 
 ##############################################################################
 # - std::span ----------------------------------------------------------------
 
-include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_span.cmake)
+legate_core_find_or_configure(PACKAGE span)
 
-find_or_configure_span()
+# find_or_configure_span()
 
 ##############################################################################
 # - std::mdspan --------------------------------------------------------------
 
-include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_mdspan.cmake)
-
-find_or_configure_mdspan()
+legate_core_find_or_configure(PACKAGE mdspan)
 
 ##############################################################################
 # - legate.core --------------------------------------------------------------

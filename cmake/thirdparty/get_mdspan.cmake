@@ -13,6 +13,8 @@
 include_guard(GLOBAL)
 
 function(find_or_configure_mdspan)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "mdspan")
+
   if(CMAKE_CXX_STANDARD GREATER_EQUAL 23)
     include(CheckIncludeFileCXX)
 
