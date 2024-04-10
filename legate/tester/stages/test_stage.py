@@ -229,6 +229,36 @@ class TestStage(Protocol):
 
         return args
 
+    def gtest_args(
+        self, test_file: Path, arg_test: str, config: Config
+    ) -> ArgList:
+        """GoogleTest binary and assorted arguments.
+
+        Parameters
+        ----------
+        test_file : Path
+            Test file to execute.
+
+        arg_test : str
+            Test name to be executed.
+
+        config : Config
+            Test runner configuration.
+
+        Returns
+        -------
+        args : ArgList
+            The GoogleTest arguments.
+        """
+        from ...util import colors
+
+        args = [str(test_file), f"--gtest_filter={arg_test}"]
+        if colors.ENABLED:
+            args.append("--gtest_color=yes")
+        if config.other.gdb:
+            args.append("--gtest_catch_exceptions=0")
+        return args
+
     def _run_common(
         self,
         cmd: ArgList,
@@ -362,21 +392,19 @@ class TestStage(Protocol):
             stage_args += ["--gdb"]
 
         file_args = self.file_args(test_file, config)
+        gtest_args = self.gtest_args(test_file, arg_test, config)
 
         cmd = (
             [str(config.legate_path)]
             + stage_args
             + cov_args
-            + [str(test_file), f"--gtest_filter={arg_test}"]
+            + gtest_args
             + file_args
             + config.extra_args
         )
 
         if custom_args:
             cmd += custom_args
-
-        if config.other.gdb:
-            cmd += ["--gtest_catch_exceptions=0"]
 
         if config.other.gdb:
             return self._run_gdb(cmd, Path(arg_test), config, system, shard)
@@ -417,12 +445,13 @@ class TestStage(Protocol):
 
         stage_args = self.args + self.shard_args(shard, config)
         file_args = self.file_args(test_file, config)
+        gtest_args = self.gtest_args(test_file, arg_test, config)
 
         cmd = (
             [str(config.legate_path)]
             + stage_args
             + cov_args
-            + [str(test_file), f"--gtest_filter={arg_test}"]
+            + gtest_args
             + file_args
             + config.extra_args
         )
