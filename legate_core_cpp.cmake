@@ -51,7 +51,7 @@ endif()
 # - Dependencies -------------------------------------------------------------
 
 # add third party dependencies using CPM
-rapids_cpm_init(OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/versions.json)
+rapids_cpm_init(OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/versions/versions.json)
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/find_or_configure.cmake)
 

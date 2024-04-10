@@ -14,7 +14,7 @@ include_guard(GLOBAL)
 
 # Use CPM to find or clone CCCL
 function(find_or_configure_cccl)
-  list(APPEND CMAKE_MESSAGE_CONTEXT "find_or_configure_cccl")
+  list(APPEND CMAKE_MESSAGE_CONTEXT "cccl")
 
   include(${rapids-cmake-dir}/cpm/cccl.cmake)
 

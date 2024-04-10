@@ -1,11 +1,5 @@
 {
   "packages" : {
-    "Legion": {
-      "version" : "24.1.0",
-      "git_url" : "https://gitlab.com/StanfordLegion/legion.git",
-      "git_tag" : "1a5e1d237b4f07a39ddfde0bd43f30018045cd10",
-      "git_shallow" : false
-    },
     "mdspan": {
       "version"     : "0.6",
       "git_url"     : "https://github.com/kokkos/mdspan.git",
@@ -13,17 +7,17 @@
       "git_shallow" : true,
       "patches" : [
         {
-          "file" : "${current_json_dir}/patches/mdspan_cpp_lib_span_dynamic_extent.diff",
+          "file" : "${current_json_dir}/../patches/mdspan_cpp_lib_span_dynamic_extent.diff",
           "issue" : "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead",
           "fixed_in" : ""
         },
         {
-          "file" : "${current_json_dir}/patches/mdspan_cpp_lib_span_extents.diff",
+          "file" : "${current_json_dir}/../patches/mdspan_cpp_lib_span_extents.diff",
           "issue" : "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead",
           "fixed_in" : ""
         },
         {
-          "file" : "${current_json_dir}/patches/mdspan_cpp_lib_span_layout_stride.diff",
+          "file" : "${current_json_dir}/../patches/mdspan_cpp_lib_span_layout_stride.diff",
           "issue" : "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead",
           "fixed_in" : ""
         }
@@ -36,7 +30,7 @@
       "git_shallow" : true,
       "patches" : [
         {
-          "file" : "${current_json_dir}/patches/span_proper_cmake_project.diff",
+          "file" : "${current_json_dir}/../patches/span_proper_cmake_project.diff",
           "issue" : "span does not properly export itself as a cmake project, rectify this",
           "fixed_in" : ""
         }

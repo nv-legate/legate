@@ -12,9 +12,45 @@
 
 include_guard(GLOBAL)
 
+function(legate_core_maybe_override_legion user_repository user_branch)
+  # CPM_ARGS GIT_TAG and GIT_REPOSITORY don't do anything if you have already overridden
+  # those options via a rapids_cpm_package_override() call. So we have to conditionally
+  # override the defaults (by creating a temporary json file in build dir) only if the
+  # user sets them.
+
+  # See https://github.com/rapidsai/rapids-cmake/issues/575. Specifically, this function
+  # is pretty much identical to
+  # https://github.com/rapidsai/rapids-cmake/issues/575#issuecomment-2045374410.
+  cmake_path(SET legion_overrides_json NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/versions/legion_version.json")
+  if(user_repository OR user_branch)
+    # The user has set either one of these, time to create our cludge.
+    file(READ "${legion_overrides_json}" default_legion_json)
+    set(new_legion_json "${default_legion_json}")
+
+    if(user_repository)
+      string(JSON new_legion_json SET "${new_legion_json}" "packages" "Legion" "git_url" "\"${user_repository}\"")
+    endif()
+
+    if(user_branch)
+      string(JSON new_legion_json SET "${new_legion_json}" "packages" "Legion" "git_tag" "\"${user_branch}\"")
+    endif()
+
+    string(JSON eq_json EQUAL "${default_legion_json}" "${new_legion_json}")
+    if(NOT eq_json)
+      cmake_path(SET legion_overrides_json NORMALIZE "${CMAKE_CURRENT_BINARY_DIR}/legion_version.json")
+      file(WRITE "${legion_overrides_json}" "${new_legion_json}")
+    endif()
+  endif()
+  rapids_cpm_package_override("${legion_overrides_json}")
+endfunction()
+
 function(find_or_configure_legion_impl)
+  set(options)
   set(oneValueArgs VERSION REPOSITORY BRANCH EXCLUDE_FROM_ALL)
+  set(multiValueArgs)
   cmake_parse_arguments(PKG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  legate_core_maybe_override_legion("${PKG_REPOSITORY}" "${PKG_BRANCH}")
 
   include("${rapids-cmake-dir}/export/detail/parse_version.cmake")
   rapids_export_parse_version(${PKG_VERSION} Legion PKG_VERSION)
@@ -28,13 +64,6 @@ function(find_or_configure_legion_impl)
 
   set(version "${Legion_major_version}.${Legion_minor_version}.${Legion_patch_version}")
   set(exclude_from_all ${PKG_EXCLUDE_FROM_ALL})
-  if(PKG_BRANCH)
-    set(git_branch "${PKG_BRANCH}")
-  endif()
-  if(PKG_REPOSITORY)
-    set(git_repo "${PKG_REPOSITORY}")
-  endif()
-
   set(FIND_PKG_ARGS
     GLOBAL_TARGETS     Legion::Realm
     Legion::Regent
