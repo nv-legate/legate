@@ -78,7 +78,10 @@ class OMP(TestStage):
 
         workers = min(omp_workers, mem_workers)
 
-        workers = adjust_workers(workers, config.execution.workers)
+        detail = f"{omp_workers=} {mem_workers=}"
+        workers = adjust_workers(
+            workers, config.execution.workers, detail=detail
+        )
 
         # return a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]

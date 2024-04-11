@@ -79,8 +79,11 @@ class GPU(TestStage):
 
         mem_workers = system.memory // (SMALL_SYSMEM * bloat_factor)
 
+        workers = min(gpu_workers, mem_workers)
+
+        detail = f"{fbsize=} {oversub_factor=} {gpu_workers=} {mem_workers=}"
         workers = adjust_workers(
-            min(gpu_workers, mem_workers), config.execution.workers
+            workers, config.execution.workers, detail=detail
         )
 
         shards: list[Shard] = []

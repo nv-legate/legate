@@ -47,19 +47,37 @@ class Test_adjust_workers:
         assert m.adjust_workers(10, n) == n
 
     def test_negative_requested(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match="requested workers must be non-negative"
+        ):
             assert m.adjust_workers(10, -1)
 
     def test_zero_requested(self) -> None:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(
+            RuntimeError, match="requested workers must not be zero"
+        ):
             assert m.adjust_workers(10, 0)
 
-    def test_zero_computed(self) -> None:
-        with pytest.raises(RuntimeError):
+    def test_zero_adjusted(self) -> None:
+        with pytest.raises(
+            RuntimeError, match="Current configuration results in zero workers"
+        ):
             assert m.adjust_workers(0, None)
 
+    def test_zero_adjusted_with_detail(self) -> None:
+        with pytest.raises(
+            RuntimeError,
+            match="Current configuration results in zero workers "
+            r"\[details: foo bar\]",
+        ):
+            assert m.adjust_workers(0, None, detail="foo bar")
+
     def test_requested_too_large(self) -> None:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(
+            RuntimeError,
+            match=r"Requested workers \(11\) is greater than "
+            r"computed workers \(10\)",
+        ):
             assert m.adjust_workers(10, 11)
 
 

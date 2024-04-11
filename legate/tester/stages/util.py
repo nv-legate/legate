@@ -77,7 +77,9 @@ class StageResult:
         return sum(p.returncode == 0 for p in self.procs)
 
 
-def adjust_workers(workers: int, requested_workers: int | None) -> int:
+def adjust_workers(
+    workers: int, requested_workers: int | None, *, detail: str | None = None
+) -> int:
     """Adjust computed workers according to command line requested workers.
 
     The final number of workers will only be adjusted down by this function.
@@ -90,6 +92,10 @@ def adjust_workers(workers: int, requested_workers: int | None) -> int:
     requested_workers: int | None, optional
         Requested number of workers from the user, if supplied (default: None)
 
+    detail: str | None, optional
+        Additional information to provide in case the adjusted number of
+        workers is zero (default: None)
+
     Returns
     -------
     int
@@ -99,15 +105,22 @@ def adjust_workers(workers: int, requested_workers: int | None) -> int:
     if requested_workers is not None and requested_workers < 0:
         raise ValueError("requested workers must be non-negative")
 
+    if requested_workers == 0:
+        raise RuntimeError("requested workers must not be zero")
+
     if requested_workers is not None:
         if requested_workers > workers:
             raise RuntimeError(
-                "Requested workers greater than assignable workers"
+                f"Requested workers ({requested_workers}) is greater than "
+                f"computed workers ({workers})"
             )
         workers = requested_workers
 
     if workers == 0:
-        raise RuntimeError("Current configuration results in zero workers")
+        msg = "Current configuration results in zero workers"
+        if detail:
+            msg += f" [details: {detail}]"
+        raise RuntimeError(msg)
 
     return workers
 

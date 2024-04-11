@@ -60,7 +60,10 @@ class Eager(TestStage):
 
         workers = min(N, mem_workers, 60)  # LEGION_MAX_NUM_PROCS just in case
 
-        workers = adjust_workers(workers, config.execution.workers)
+        detail = f"{mem_workers=}"
+        workers = adjust_workers(
+            workers, config.execution.workers, detail=detail
+        )
 
         # make a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]
