@@ -329,7 +329,17 @@ def install_legion_python_bindings() -> None:
     install_dir = get_install_dir()
     cmake_cmd = [CMAKE_EXE, "--install", bdir, "--prefix", install_dir]
     verbose_print(f"Running: {cmake_cmd}")
-    subprocess_check_call(cmake_cmd)
+    if BUILD_MODE == "develop":
+        # This is needed when we are in editable mode, because we will not
+        # actually be installing liblegion.so, only
+        # liblegion_canonical_python.so (but cmake doesn't know that).
+        #
+        # So we should install the libs as symlinks, so that the rpaths from
+        # liblegion_canonical_python.so.1 still point to the right Legion.
+        env = os.environ | {"CMAKE_INSTALL_MODE": "ABS_SYMLINK"}
+    else:
+        env = None
+    subprocess_check_call(cmake_cmd, env=env)
 
     # pip is able to uninstall most installed packages. Known exceptions
     # are:
