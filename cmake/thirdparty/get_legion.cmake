@@ -73,6 +73,7 @@ function(find_or_configure_legion_impl)
     BUILD_EXPORT_SET   legate-core-exports
     INSTALL_EXPORT_SET legate-core-exports)
 
+  # This guard is extremely important! See cmake/Modules/find_or_configure.cmake
   if((NOT CPM_Legion_SOURCE) AND (NOT CPM_DOWNLOAD_Legion))
     # First try to find Legion via find_package()
     # so the `Legion_USE_*` variables are visible

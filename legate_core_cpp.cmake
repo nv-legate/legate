@@ -394,7 +394,8 @@ target_link_libraries(legate_core
   PUBLIC
     Legion::Legion
     CCCL::Thrust
-    $<TARGET_NAME_IF_EXISTS:CUDA::nvToolsExt>
+    # See https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
+    $<TARGET_NAME_IF_EXISTS:$<IF:$<TARGET_EXISTS:CUDA::nvtx3>,CUDA::nvtx3,CUDA::nvToolsExt>>
     $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
     $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
     $<TARGET_NAME_IF_EXISTS:std::mdspan>
