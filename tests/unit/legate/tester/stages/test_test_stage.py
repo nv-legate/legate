@@ -162,18 +162,27 @@ class TestTestStage_handle_multi_node_args:
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == []
 
-    def test_ranks(self) -> None:
-        c = Config(["test.py", "--ranks-per-node", "4"])
+    @pytest.mark.parametrize("launch", ("jsrun", "srun"))
+    def test_ranks(self, launch: str) -> None:
+        c = Config(["test.py", "--ranks-per-node", "4", "--launcher", launch])
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == [
+            "--launcher",
+            launch,
             "--ranks-per-node",
             "4",
         ]
 
-    def test_nodes(self) -> None:
-        c = Config(["test.py", "--nodes", "4"])
+    @pytest.mark.parametrize("launch", ("jsrun", "srun"))
+    def test_nodes(self, launch: str) -> None:
+        c = Config(["test.py", "--nodes", "4", "--launcher", launch])
         stage = MockTestStage(c, FakeSystem())
-        assert stage.handle_multi_node_args(c) == ["--nodes", "4"]
+        assert stage.handle_multi_node_args(c) == [
+            "--launcher",
+            launch,
+            "--nodes",
+            "4",
+        ]
 
     def test_launcher_none(self) -> None:
         c = Config(["test.py", "--launcher", "none"])
@@ -181,13 +190,25 @@ class TestTestStage_handle_multi_node_args:
         assert stage.handle_multi_node_args(c) == []
 
     def test_launcher_mpirun(self) -> None:
-        c = Config(["test.py", "--launcher", "mpirun"])
+        c = Config(
+            [
+                "test.py",
+                "--launcher",
+                "mpirun",
+                "--mpi-output-filename",
+                "mpi_result",
+            ]
+        )
         stage = MockTestStage(c, FakeSystem())
-        assert stage.handle_multi_node_args(c) == [
+        args = stage.handle_multi_node_args(c)
+        assert args[:-1] == [
             "--launcher",
             "mpirun",
             "--launcher-extra=--merge-stderr-to-stdout",
+            '--launcher-extra="--output-filename"',
         ]
+        assert args[-1].startswith("--launcher-extra=")
+        assert args[-1].endswith("mpi_result")
 
     @pytest.mark.parametrize("launch", ("jsrun", "srun"))
     def test_launcher_others(self, launch: str) -> None:

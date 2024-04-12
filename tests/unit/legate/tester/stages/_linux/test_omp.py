@@ -268,6 +268,9 @@ class TestMultiRank:
                 "1",
                 "--ranks-per-node",
                 "2",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=12)
@@ -289,6 +292,9 @@ class TestMultiRank:
                 "2",
                 "--ranks-per-node",
                 "2",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=12)
@@ -309,6 +315,9 @@ class TestMultiRank:
                 "1",
                 "--ranks-per-node",
                 "2",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=12)
@@ -329,6 +338,9 @@ class TestMultiRank:
                 "2",
                 "--ranks-per-node",
                 "2",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=12)
@@ -350,6 +362,9 @@ class TestMultiRank:
                 "3",
                 "--ranks-per-node",
                 "2",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=16)
@@ -371,6 +386,9 @@ class TestMultiRank:
                 "2",
                 "--ranks-per-node",
                 "2",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=12)
@@ -393,6 +411,9 @@ class TestMultiRank:
             "2",
             "--cpu-pin",
             "strict",
+            # any launcher will do
+            "--launcher",
+            "srun",
         ]
         c = Config(args)
         s = FakeSystem(cpus=4)
@@ -412,6 +433,9 @@ class TestMultiRank:
             "2",
             "--cpu-pin",
             "none",
+            # any launcher will do
+            "--launcher",
+            "srun",
         ]
         c = Config(args)
         s = FakeSystem(cpus=4)

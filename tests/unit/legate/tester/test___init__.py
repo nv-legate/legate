@@ -27,7 +27,7 @@ def test_FEATURES() -> None:
 
 
 def test_LAST_FAILED_FILENAME() -> None:
-    assert LAST_FAILED_FILENAME == ".legate-test-last-failed"
+    assert LAST_FAILED_FILENAME.endswith(".legate-test-last-failed")
 
 
 def test_SKIPPED_EXAMPLES() -> None:

@@ -80,7 +80,9 @@ class TestParserDefaults:
         assert m.parser.get_default("launcher_extra") == []
 
     def test_mpi_output_filename(self) -> None:
-        assert m.parser.get_default("mpi_output_filename") is None
+        filename = m.parser.get_default("mpi_output_filename")
+        # best we can do with dynamically computed default
+        assert filename is None or str(filename).endswith("mpi_result")
 
     # -- execution
 

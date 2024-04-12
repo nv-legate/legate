@@ -147,6 +147,24 @@ class Config:
         # NOTE: This reads the rest of the configuration, so do it last
         self.gtest_tests = self._compute_gtest_tests(args)
 
+        if self.multi_node.nodes > 1 and self.multi_node.launcher == "none":
+            raise RuntimeError(
+                "Requested multi-node configuration with "
+                f"--nodes {self.multi_node.nodes} but did not specify a "
+                "launcher. Must use --launcher to specify a launcher."
+            )
+
+        if (
+            self.multi_node.ranks_per_node > 1
+            and self.multi_node.launcher == "none"
+        ):
+            raise RuntimeError(
+                "Requested multi-rank configuration with "
+                f"--ranks-per-node {self.multi_node.ranks_per_node} but did "
+                "not specify a launcher. Must use --launcher to specify a "
+                "launcher."
+            )
+
     @property
     def dry_run(self) -> bool:
         """Whether a dry run is configured."""

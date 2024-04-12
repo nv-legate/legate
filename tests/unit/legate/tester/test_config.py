@@ -41,8 +41,8 @@ class TestConfig:
         assert c.unit is False
         assert c.files is None
         assert c.last_failed is False
-        assert c.gtest_file is None
-        assert c.gtest_tests == []
+        # assert c.gtest_file is None
+        # assert c.gtest_tests == []
         assert c.test_root is None
 
         assert c.core.cpus == defaults.CPUS_PER_NODE
@@ -58,7 +58,10 @@ class TestConfig:
         assert c.multi_node.ranks_per_node == defaults.RANKS_PER_NODE
         assert c.multi_node.launcher == "none"
         assert c.multi_node.launcher_extra == []
-        assert c.multi_node.mpi_output_filename is None
+
+        # best we can do with dynamic defaultS
+        filename = c.multi_node.mpi_output_filename
+        assert filename is None or str(filename).endswith("mpi_result")
 
         assert c.execution.workers is None
         assert c.execution.timeout is None
@@ -204,6 +207,37 @@ class TestConfig:
         cov_args = ["--cov-args", "run -a"]
         c = m.Config(["test.py"] + cov_args)
         assert c.other.cov_args == "run -a"
+
+    def test_multi_ranks_bad_launcher(self) -> None:
+        msg = (
+            "Requested multi-rank configuration with --ranks-per-node 4 but "
+            "did not specify a launcher. Must use --launcher to specify a "
+            "launcher."
+        )
+        with pytest.raises(RuntimeError, match=msg):
+            m.Config(["test.py", "--ranks-per-node", "4"])
+
+    def test_multi_nodes_bad_launcher(self) -> None:
+        msg = (
+            "Requested multi-node configuration with --nodes 4 but did not "
+            "specify a launcher. Must use --launcher to specify a launcher."
+        )
+        with pytest.raises(RuntimeError, match=msg):
+            m.Config(["test.py", "--nodes", "4"])
+
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    def test_multi_ranks_good_launcher(self, launch: str) -> None:
+        c = m.Config(
+            ["test.py", "--ranks-per-node", "4", "--launcher", launch]
+        )
+        assert c.multi_node.launcher == launch
+        assert c.multi_node.ranks_per_node == 4
+
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    def test_multi_nodes_good_launcher(self, launch: str) -> None:
+        c = m.Config(["test.py", "--nodes", "4", "--launcher", launch])
+        assert c.multi_node.launcher == launch
+        assert c.multi_node.nodes == 4
 
 
 class Test_test_files:

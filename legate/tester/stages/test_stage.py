@@ -500,7 +500,7 @@ class TestStage(Protocol):
             if filename := config.multi_node.mpi_output_filename:
                 args += [
                     '--launcher-extra="--output-filename"',
-                    f"--launcher-extra={shlex.quote(filename)}",
+                    f"--launcher-extra={shlex.quote(str(filename))}",
                 ]
 
         if config.multi_node.nodes > 1:
