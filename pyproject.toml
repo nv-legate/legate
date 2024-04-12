@@ -22,7 +22,7 @@ requires = [
     "pip",
 ]
 build-backend = "setuptools.build_meta:__legacy__"
-python-requires = 3.10
+python-requires = "3.10"
 
 [project]
 name = "legate-core"
@@ -70,6 +70,7 @@ lgpatch = "legate.lgpatch:main"
 
 [tool.setuptools]
 zip-safe = false
+include-package-data = true
 script-files = ["bind.sh"]
 
 [tool.setuptools.packages.find]
@@ -80,10 +81,8 @@ include = [
 ]
 namespaces = false
 
-# I'm not sure why, but uncommenting this makes the Cython modules not get picked up by
-# setuptools (the typing stuff is never picked up anyway).
-# [tool.setuptools.package-data]
-# "*" = ["py.typed", "*.pyi", "*.so"]
+[tool.setuptools.package-data]
+"*" = ["py.typed", "*.pyi", "*.so"]
 
 [tool.black]
 line-length = 79

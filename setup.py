@@ -765,8 +765,10 @@ def do_setup_impl() -> None:
     version = versioneer_get_version()
     print(f"Using version: {version}")
     packages = find_packages(where=".", include=["legate", "legate.*"])
-    print("Using packages:")
-    print("\n".join(packages))
+    package_data = {pack: ["py.typed", "*.pyi", "*.so"] for pack in packages}
+    print("Using package data:")
+    for pack, data in package_data.items():
+        print(f"{pack} = {data}")
     print("Using command class:")
     cmd_class = versioneer_get_cmdclass(
         {"develop": Develop, "bdist_wheel": BdistWheel}
@@ -777,7 +779,7 @@ def do_setup_impl() -> None:
     languages = ("CXX",)
     print(f"Using languages: {languages}")
     print(MINI_BANNER)
-    print(BANNER)
+    print(BANNER, flush=True)
 
     if (
         read_cmake_cache_value(
@@ -800,6 +802,9 @@ def do_setup_impl() -> None:
         cmake_languages=languages,
         include_package_data=True,
         cmake_process_manifest_hook=fixup_manifest,
+        # Need to specify this twice (both here and in pyproject.toml) because
+        # scikit-build does not read it from there.
+        package_data=package_data,
     )
 
 
