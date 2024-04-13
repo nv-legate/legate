@@ -2,6 +2,12 @@ debug_build:
   - true
   - false
 
+build_mode_str:
+  - debug
+  - debug-sanitizer-gc
+  - release
+  - release-debug
+
 upload_enabled:
   - true
   - false

@@ -34,11 +34,13 @@ build_legate_conda_package() {
     UCX_CONFIGURED=true
     [ "${UCX_ENABLED:-}" = "OFF" ] && UCX_CONFIGURED=false
 
-    if [[ ${LEGATE_CORE_CMAKE_PRESET} == *debug* ]]; then
+    if [[ ${LEGATE_CORE_BUILD_MODE} == *debug* ]]; then
       debug_enabled=true
     else
       debug_enabled=false
     fi
+    # meta.yaml does not accept only '-'.
+    build_mode_str=$(echo ${LEGATE_CORE_BUILD_MODE} | sed -r 's/-/_/g')
 
     conda_build_args+=(--variants "{gpu_enabled:${GPU_ENABLED},python:${PYTHON_VERSION},debug_enabled:${debug_enabled},ucx_configured:${UCX_CONFIGURED}}");
 
@@ -74,6 +76,8 @@ ucx_configured:
   - "${UCX_CONFIGURED}"
 upload_enabled:
   - "false"
+build_mode_str:
+  - "${build_mode_str}"
 EOF
 if [[ "${UCX_ENABLED}" = "ON" ]]; then
     cat <<EOF >> /tmp/legate/conda/conda-build/conda_build_config.yaml

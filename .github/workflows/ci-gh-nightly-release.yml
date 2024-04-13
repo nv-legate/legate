@@ -22,7 +22,7 @@ jobs:
         target-device:
           - gpu
           - cpu
-        cmake-preset:
+        build-mode:
           - debug
           # The common github ci setup check for exactly "debug-sanitizer-gcc" when
           # checking whether it should pin the libsanitizer version, and so we must use
@@ -34,16 +34,16 @@ jobs:
           - true
           - false
         exclude:
-          - cmake-preset: debug
+          - build-mode: debug
             ucx-enabled: true
-          - cmake-preset: debug-sanitizer-gcc
+          - build-mode: debug-sanitizer-gcc
             ucx-enabled: true         
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
       target-device: ${{ matrix.target-device }}
-      cmake-preset: ${{ matrix.cmake-preset }}
+      build-mode: ${{ matrix.build-mode }}
       ucx-enabled: ${{ matrix.ucx-enabled }}
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}

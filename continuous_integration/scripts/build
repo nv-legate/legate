@@ -92,7 +92,7 @@ setup_legate_core_env() {
         case "${BUILD_TYPE}" in
             ci|release)
                 local locase_uname="$(uname | tr '[:upper:]' '[:lower:]')"
-                LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_CORE_CMAKE_PRESET%-gcc}"
+                LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_CORE_BUILD_MODE%-gcc}"
                 ;;
             docs)
                 LEGATE_CORE_ARCH='arch-ci-linux-docs'
@@ -146,14 +146,18 @@ build_legate_release() {
     UPLOAD_BUILD=true
     [ "${UPLOAD_ENABLED:-}" = "OFF" ] && UPLOAD_BUILD=false
 
-    if [[ ${LEGATE_CORE_CMAKE_PRESET} == *debug* ]]; then
+    if [[ ${LEGATE_CORE_BUILD_MODE} == *debug* ]]; then
     debug_enabled=true
     else
     debug_enabled=false
     fi
 
-    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION]}")
+    pkgVer="$(git -C $REPO_DIR describe --abbrev=0 --tags | $SED 's/[a-zA-Z]//g' | cut -d '.' -f -2).00"
 
+    # convert '-' to '_' for meta.yaml to accept.
+    build_mode_str=$(echo ${LEGATE_CORE_BUILD_MODE} | sed -r 's/-/_/g')
+
+    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"build_mode_str\": [$build_mode_str], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION], \"package_version\": [$pkgVer]}")
     conda_build_args+=(--variants "$variantOpts")
 
     conda mambabuild "${conda_build_args[@]}" conda/conda-build;

@@ -64,7 +64,7 @@
 {% endif %}
 
 {% if debug_build_bool %}
-{% set debug_tag='_debug' %}
+{% set debug_tag='_'+ build_mode_str %}
 {% else %}
 {% set debug_tag='' %}
 {% endif %}
@@ -125,7 +125,7 @@ build:
 {% endif %}
   run_exports:
 {% if not gpu_enabled_bool %}
-    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_cpu
+    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_cpu*
 {% else %}
     - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }}
 {% endif %}
