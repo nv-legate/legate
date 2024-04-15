@@ -51,7 +51,7 @@ class ControlBlockBase {
 
  protected:
   template <typename T>
-  static void destroy_control_block_impl_(T* cb_impl);
+  static void destroy_control_block_impl_(T* cb_impl) noexcept;
 
  private:
   [[nodiscard]] static ref_count_type load_refcount_(

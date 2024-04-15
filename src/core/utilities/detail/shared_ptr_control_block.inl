@@ -96,8 +96,9 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_deref() 
 // ==========================================================================================
 
 template <typename T>
-void ControlBlockBase::destroy_control_block_impl_(T* cb_impl)
+void ControlBlockBase::destroy_control_block_impl_(T* cb_impl) noexcept
 {
+  // This entire function is not allowed to throw
   auto alloc         = cb_impl->template rebind_alloc<T>();
   using alloc_traits = std::allocator_traits<std::decay_t<decltype(alloc)>>;
 

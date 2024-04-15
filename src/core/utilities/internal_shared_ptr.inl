@@ -325,26 +325,35 @@ InternalSharedPtr<T>::InternalSharedPtr(AllocatedControlBlockTag,
                                         U* ptr) noexcept
   : ctrl_{ctrl_impl}, ptr_{ptr}
 {
+  static_assert(!std::is_void_v<U>, "incomplete type");
   init_shared_from_this_(ptr, ptr);
+}
+
+template <typename T>
+template <typename U, typename D, typename A>
+InternalSharedPtr<T>::InternalSharedPtr(NoCatchAndDeleteTag, U* ptr, D&& deleter, A&& allocator)
+  : InternalSharedPtr{AllocatedControlBlockTag{},
+                      detail::construct_from_allocator_<
+                        detail::SeparateControlBlock<U, std::decay_t<D>, std::decay_t<A>>>(
+                        allocator, ptr, ptr, std::forward<D>(deleter), allocator),
+                      ptr}
+{
 }
 
 // ==========================================================================================
 
 template <typename T>
-InternalSharedPtr<T>::InternalSharedPtr(std::nullptr_t) noexcept
+constexpr InternalSharedPtr<T>::InternalSharedPtr(std::nullptr_t) noexcept
 {
 }
 
 // clang-format off
 template <typename T>
 template <typename U, typename D, typename A, typename SFINAE>
- InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator) try :
-  InternalSharedPtr{
-    AllocatedControlBlockTag{},
-    detail::construct_from_allocator_<detail::SeparateControlBlock<U, D, A>>(allocator, ptr, ptr, deleter, allocator),
-    ptr
-  }
+InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator)
+  try : InternalSharedPtr{NoCatchAndDeleteTag{}, ptr, deleter, std::move(allocator)}
 {
+  // Cannot move the deleter, since we may need to use it
 }
 catch (...)
 {
@@ -364,7 +373,6 @@ template <typename U, typename SFINAE>
 InternalSharedPtr<T>::InternalSharedPtr(U* ptr)
   : InternalSharedPtr{ptr, detail::shared_ptr_default_delete<T, U>{}}
 {
-  static_assert(!std::is_void_v<U>, "incomplete type");
   // NOLINTNEXTLINE(bugprone-sizeof-expression)
   static_assert(sizeof(U) > 0, "incomplete type");
 }
@@ -438,9 +446,19 @@ InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(InternalSharedPtr<U>&& oth
 template <typename T>
 template <typename U, typename D, typename SFINAE>
 InternalSharedPtr<T>::InternalSharedPtr(std::unique_ptr<U, D>&& ptr)
-  : InternalSharedPtr{ptr.get(), std::move(ptr.get_deleter())}
+  : InternalSharedPtr{NoCatchAndDeleteTag{}, ptr.get(), std::move(ptr.get_deleter())}
 {
-  // Release only after we have fully constructed ourselves to preserve strong exception
+  // We don't want to catch a potentially thrown exception by the constructor above, since
+  // normally this would result in a double-delete:
+  //
+  // 1. We call InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator).
+  // 2. An exception is thrown, in construct_from_allocator_() (or elsewhere).
+  // 3. Ctor in (1.) catches, then calls deleter(ptr) (where deleter is the
+  //    unique_ptr.get_deleter()) above, then re-raises.
+  // 4. Exception propagates.
+  // 5. unique_ptr eventually destructs, and calls get_deleter()(ptr) again.
+  //
+  // So we release only after we have fully constructed ourselves to preserve strong exception
   // guarantee. If the above constructor throws, this has no effect.
   static_cast<void>(ptr.release());
 }

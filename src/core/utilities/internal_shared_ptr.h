@@ -155,7 +155,7 @@ class InternalSharedPtr {
   constexpr InternalSharedPtr() noexcept = default;
 
   // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::shared_ptr ctor
-  InternalSharedPtr(std::nullptr_t) noexcept;
+  constexpr InternalSharedPtr(std::nullptr_t) noexcept;
 
   template <typename U,
             typename D,
@@ -303,9 +303,17 @@ class InternalSharedPtr {
   void weak_dereference_() noexcept;
 
   struct AllocatedControlBlockTag {};
+  struct NoCatchAndDeleteTag {};
 
   template <typename U>
   InternalSharedPtr(AllocatedControlBlockTag, control_block_type* ctrl_impl, U* ptr) noexcept;
+
+  template <typename U, typename D, typename A = std::allocator<U>>
+  InternalSharedPtr(NoCatchAndDeleteTag, U* ptr, D&& deleter, A&& allocator = A{});
+
+#if LegateDefined(LEGATE_INTERNAL_SHARED_PTR_TESTS)
+  FRIEND_TEST(InternalSharedPtrUnitFriend, UniqThrow);
+#endif
 
   control_block_type* ctrl_{};
   element_type* ptr_{};

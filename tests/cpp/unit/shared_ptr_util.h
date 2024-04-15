@@ -236,5 +236,5 @@ struct TogglingDerived final : BasicDerived {
 
 using BasicSharedPtrTypeList = ::testing::Types<std::int8_t, std::int32_t, std::uint64_t, UserType>;
 
-template <typename>
+template <typename = void>
 struct BasicSharedPtrUnit : ::testing::Test {};

@@ -10,9 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
+// Must go first
+#include <gtest/gtest.h>
+#define LEGATE_INTERNAL_SHARED_PTR_TESTS 1
+//
 #include "core/utilities/internal_shared_ptr.h"
 
 #include "shared_ptr_util.h"
+
+#include <stdexcept>
 
 template <typename T>
 struct InternalSharedPtrUnit : BasicSharedPtrUnit<T> {};
@@ -382,5 +388,70 @@ TYPED_TEST(InternalSharedPtrUnit, Array)
 
   test_basic_equal(ptr, bare_ptr, N);
 }
+
+namespace legate {
+
+class InternalSharedPtrUnitFriend : public BasicSharedPtrUnit<> {};
+
+namespace {
+
+constexpr const char exception_text[] = "There is no peace but the Pax Romana";
+
+template <typename T>
+class ThrowingAllocator {
+ public:
+  using size_type  = std::size_t;
+  using value_type = T;
+
+  constexpr ThrowingAllocator() noexcept = default;
+
+  template <typename U>
+  constexpr ThrowingAllocator(ThrowingAllocator<U>) noexcept  // NOLINT(google-explicit-constructor)
+  {
+  }
+
+  [[nodiscard]] static T* allocate(size_type, const void* = nullptr)
+  {
+    throw std::runtime_error{exception_text};
+  }
+
+  static void deallocate(const void* ptr, size_type n = 1)
+  {
+    FAIL() << "Trying to deallocate " << ptr << " (size " << n << ") from ThrowingAllocator";
+  }
+};
+
+}  // namespace
+
+TEST_F(InternalSharedPtrUnitFriend, UniqThrow)
+{
+  constexpr int val = 123;
+  auto uniq         = std::make_unique<int>(val);
+  auto ptr          = uniq.get();
+  auto deleter      = uniq.get_deleter();
+
+  ASSERT_NE(uniq.get(), nullptr);
+  ASSERT_TRUE(uniq);
+  ASSERT_EQ(*uniq, val);
+
+  bool threw = false;
+  try {
+    const InternalSharedPtr<int> sh_ptr{
+      InternalSharedPtr<int>::NoCatchAndDeleteTag{}, ptr, deleter, ThrowingAllocator<int>{}};
+
+    static_cast<void>(sh_ptr);
+  } catch (const std::runtime_error& exn) {
+    ASSERT_STREQ(exn.what(), exception_text);
+    threw = true;
+  } catch (...) {
+    FAIL() << "Test threw the wrong exception!";
+  }
+  ASSERT_TRUE(threw);
+  ASSERT_NE(uniq.get(), nullptr);
+  ASSERT_TRUE(uniq);
+  ASSERT_EQ(*uniq, val);
+}
+
+}  // namespace legate
 
 // NOLINTEND(readability-magic-numbers)
