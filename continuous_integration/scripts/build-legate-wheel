@@ -19,10 +19,23 @@ build_legate_wheel() {
     ninja_args+=("-j${JOBS:-$(nproc --ignore=1)}");
 
     # Build + package legate.core Python wheel
+    set +e
     time SKBUILD_BUILD_OPTIONS="${ninja_args[@]}" \
          pip wheel "${pip_args[@]}" ${LEGATE_CORE_DIR};
+    ret=$?
 
     cp "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}"/_skbuild/*/*.log "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
+    set -e
+    if [[ "${ret}" != "0" ]]; then
+      set +e
+      for log_file in "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}"/_skbuild/*/*.log; do
+        echo "= ${log_file} =========================================================================================="
+        cat "${log_file}"
+        echo "= ${log_file} =========================================================================================="
+      done
+      set -e
+      return ${ret}
+    fi
 }
 
 (build_legate_wheel "$@");

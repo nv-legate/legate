@@ -3,7 +3,8 @@
 build_legate_cpp() {
     set -euo pipefail;
 
-    begin_group "Configure Legate.Core"
+    group_name='Configure Legate.Core'
+    begin_group "${group_name}"
     sccache --stop-server >/dev/null 2>&1 || true;
 
     if test -n "${CONDA_PREFIX:-}"; then
@@ -36,26 +37,44 @@ build_legate_cpp() {
 
     cat ./config/examples/"${LEGATE_CORE_ARCH}".py
 
+    set +e
     ./config/examples/"${LEGATE_CORE_ARCH}".py \
                      --build-march "${BUILD_MARCH}" \
                      "${extra_configure_args[@]}"
+    ret=$?
 
     sccache --show-stats;
 
     cp "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}"/configure.log "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
     cp "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}/reconfigure-${LEGATE_CORE_ARCH}.py" "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
-    end_group
-    begin_group "Build Legate.Core C++ Files"
+    end_group "${group_name}" ${ret}
+    set -e
+    if [[ "${ret}" != "0" ]]; then
+      set +e
+      cat "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}"/configure.log
+      set -e
+      return ${ret}
+    fi
+    group_name='Build Legate.Core C++ Files'
+    begin_group "${group_name}"
 
+    set +e
     make package VERBOSE=1 | tee make.log
+    ret=$?
 
     cp make.log "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
+    end_group "${group_name}" ${ret}
+    set -e
+    if [[ "${ret}" != "0" ]]; then
+      # Don't need to cat the make.log here, tee will do that for us
+      return ${ret}
+    fi
 
     sccache --show-stats;
 
     mkdir -p /tmp/out;
     cp "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/cmake_build/*-$(uname).sh /tmp/out/
-    end_group
+    end_group "${group_name}"
 }
 
 (build_legate_cpp "$@");
