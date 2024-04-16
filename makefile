@@ -48,6 +48,7 @@ all: default_all
 .PHONY: clean
 clean: default_clean
 	@$(CMAKE) -E rm -rf -- $(LEGATE_CORE_DIR)/legate_core.egg-info
+	@$(CMAKE) -E rm -rf -- $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/_skbuild
 
 ## Install the library
 ##
