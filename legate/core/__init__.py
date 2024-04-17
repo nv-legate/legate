@@ -110,7 +110,7 @@ def _warn_seed(func: AnyCallable) -> AnyCallable:
         Seeding the random number generator with a non-constant value
         inside Legate can lead to undefined behavior and/or errors when
         the program is executed with multiple ranks."""
-        warnings.warn(msg, Warning)
+        warnings.warn(msg, Warning, stacklevel=2)
         return func(*args, **kw)
 
     return wrapper
