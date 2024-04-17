@@ -200,7 +200,6 @@ requirements:
     - numpy {{ numpy_version }}
     - typing_extensions
     - elfutils # [linux]
-    - libdwarf # [linux]
     - libhwloc =* =*default*
 {% if debug_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
