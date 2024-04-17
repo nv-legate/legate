@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import re
 import sys
+import textwrap
 from copy import deepcopy
 from pathlib import Path
 
@@ -99,6 +100,48 @@ class TestConfigurationManager:
         assert manager.project_arch_dir.is_dir()
         assert manager._logger.file_path.exists()
         assert manager._logger.file_path.is_file()
+
+    @pytest.mark.slow
+    def test_read_cmake_variable(
+        self, manager: ConfigurationManager, AEDIFIX_PYTEST_DIR: Path
+    ) -> None:
+        main_cpp_template = textwrap.dedent(
+            r"""
+        #include <iostream>
+
+        int main(int argc, char *argv[])
+        {
+          std::cout << "hello, world!\n";
+          return 0;
+        }
+        """
+        ).strip()
+        cmakelists_template = textwrap.dedent(
+            """
+        cmake_minimum_required(VERSION 3.13...3.16 FATAL_ERROR)
+
+        project(example_exec VERSION 0.0.1 LANGUAGES CXX)
+
+        add_executable(example_exec src/main.cpp)
+
+        set(
+          MY_VARIABLE
+          -foo=bar -baz=bop -hello --world
+          CACHE STRING "My variable" FORCE
+        )
+        install(TARGETS example_exec)
+        """
+        ).strip()
+        src_dir = AEDIFIX_PYTEST_DIR / "src"
+        src_dir.mkdir()
+        (src_dir / "main.cpp").write_text(main_cpp_template)
+        (AEDIFIX_PYTEST_DIR / "CMakeLists.txt").write_text(cmakelists_template)
+        manager.setup()
+        manager.configure()
+        manager.finalize()
+        var = manager.read_cmake_variable("MY_VARIABLE")
+        assert isinstance(var, str)
+        assert var.split(";") == ["-foo=bar", "-baz=bop", "-hello", "--world"]
 
 
 if __name__ == "__main__":
