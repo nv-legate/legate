@@ -1,10 +1,10 @@
 # -*- mode: makefile-gmake -*-
 ifndef LEGATE_CORE_DIR
-$(error LEGATE_CORE_DIR not defined!)
+export LEGATE_CORE_DIR := $(shell ./scripts/get_legate_core_dir.py)
 endif
 
 ifndef LEGATE_CORE_ARCH
-$(error LEGATE_CORE_ARCH not defined!)
+$(error LEGATE_CORE_ARCH not defined)
 endif
 
 .SUFFIXES:

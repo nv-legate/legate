@@ -89,12 +89,12 @@ if BUILD_MODE.startswith("-"):
 
 try:
     lg_core_dir = os.environ["LEGATE_CORE_DIR"]
-except KeyError as ke:
-    raise RuntimeError(
-        "ERROR: Must export LEGATE_CORE_DIR in environment before continuing"
-    ) from ke
-else:
-    LEGATE_CORE_DIR = Path(lg_core_dir).resolve(strict=True)
+except KeyError:
+    from scripts.get_legate_core_dir import get_legate_core_dir
+
+    lg_core_dir = get_legate_core_dir()
+
+LEGATE_CORE_DIR = Path(lg_core_dir).resolve(strict=True)
 
 try:
     LEGATE_CORE_ARCH = os.environ["LEGATE_CORE_ARCH"]
