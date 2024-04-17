@@ -4,7 +4,7 @@ debug_build:
 
 build_mode_str:
   - debug
-  - debug-sanitizer-gc
+  - debug-sanitizer
   - release
   - release-debug
 
