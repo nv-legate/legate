@@ -42,6 +42,12 @@ _CMAKE_BUILD_TYPE_MAP: Final = {
     "debug": "Debug",
     "release": "Release",
     "relwithdebinfo": "RelWithDebInfo",
+    # This still maps to Debug because we don't want to invent a new build type
+    # for it. Specifically, we want the main package to be both debug and
+    # sanitized, but have all other packages be regular debug builds. It is up
+    # to the main package to properly set sanitizer flags for itself based on
+    # the --build-type command line argument.
+    "debug-sanitizer": "Debug",
 }
 
 

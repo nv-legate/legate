@@ -43,8 +43,16 @@ function(legate_core_set_default_flags_impl)
     return()
   endif()
 
+  set(cmake_req_link_backup "${CMAKE_REQUIRED_LINK_OPTIONS}")
   foreach(flag IN LISTS _FLAGS_FLAGS)
-    string(REGEX REPLACE "[\-|=| |'|\"|:]" "_" flag_sanitized "${flag}")
+    string(MAKE_C_IDENTIFIER "${flag}" flag_sanitized)
+
+    # The sanitizers need to also have the flag passed to the linker. This is kind of a
+    # hack, but oh well.
+    if(flag MATCHES "sanitize=.*")
+      set(CMAKE_REQUIRED_LINK_OPTIONS "${CMAKE_REQUIRED_LINK_OPTIONS};${flag}")
+    endif()
+
     if(_FLAGS_IS_LINKER)
       check_linker_flag(${_FLAGS_LANG} "${flag}" ${flag_sanitized}_supported)
     else()
@@ -54,19 +62,13 @@ function(legate_core_set_default_flags_impl)
       message(STATUS "${flag} supported, adding to ${_FLAGS_DEST_VAR}")
       list(APPEND dest "${flag}")
     endif()
+    set(CMAKE_REQUIRED_LINK_OPTIONS "${cmake_req_link_backup}")
   endforeach()
+
   set(${_FLAGS_DEST_VAR} "${dest}" PARENT_SCOPE)
   if(_FLAGS_SET_CACHE)
     set(${_FLAGS_DEST_VAR} "${dest}" CACHE STRING "" FORCE)
   endif()
-endfunction()
-
-function(cxx_flags_to_cuda_flags cuda_flags_var cxx_flags)
-  set(cuda_flags "${${cxx_flags}}")
-  list(REMOVE_ITEM cuda_flags "-pedantic")
-  list(REMOVE_ITEM cuda_flags "-Wpedantic")
-  list(JOIN cuda_flags " " cuda_flags)
-  set(${cuda_flags_var} "--compiler-options='${cuda_flags}'" PARENT_SCOPE)
 endfunction()
 
 function(legate_core_configure_default_compiler_flags)
@@ -92,20 +94,45 @@ function(legate_core_configure_default_compiler_flags)
     "-D_LIBCPP_ENABLE_ASSERTIONS=1"
     "-D_LIBCPP_ENABLE_NODISCARD=1"
   )
+  set(default_cxx_flags_sanitizer
+    "-fsanitize=address,undefined,bounds"
+    "-fno-sanitize-recover=undefined"
+    "-fno-omit-frame-pointer"
+    "-g"
+  )
   set(default_cxx_flags_release
     "-O3"
     "-fstack-protector-strong"
   )
+  set(default_cxx_flags_relwithdebinfo
+    ${default_cxx_flags_debug}
+    ${default_cxx_flags_release}
+  )
+
+  function(cxx_flags_to_cuda_flags cuda_flags_var cxx_flags)
+    set(cuda_flags "${${cxx_flags}}")
+    list(REMOVE_ITEM cuda_flags "-pedantic")
+    list(REMOVE_ITEM cuda_flags "-Wpedantic")
+    list(JOIN cuda_flags " " cuda_flags)
+    set(${cuda_flags_var} --compiler-options="${cuda_flags}" PARENT_SCOPE)
+  endfunction()
+
+  macro(set_flags flags_var)
+    set(default_cxx_flags "${${flags_var}}")
+    if(legate_core_ENABLE_SANITIZERS)
+      list(APPEND default_cxx_flags ${default_cxx_flags_sanitizer})
+    endif()
+    cxx_flags_to_cuda_flags(default_cuda_flags default_cxx_flags)
+  endmacro()
+
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(default_cxx_flags "${default_cxx_flags_debug}")
-    cxx_flags_to_cuda_flags(default_cuda_flags default_cxx_flags)
-    list(APPEND default_cuda_flags "-g")
+    set_flags(default_cxx_flags_debug)
+    list(APPEND default_cuda_flags "-g" "-G" "-lineinfo")
   elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(default_cxx_flags "${default_cxx_flags_release}")
-    cxx_flags_to_cuda_flags(default_cuda_flags default_cxx_flags)
+    set_flags(default_cxx_flags_release)
   elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set(default_cxx_flags "${default_cxx_flags_debug} ${default_cxx_flags_release}")
-    cxx_flags_to_cuda_flags(default_cuda_flags default_cxx_flags)
+    set_flags(default_cxx_flags_relwithdebinfo)
+    list(APPEND default_cuda_flags "-g" "-lineinfo")
   else()
     set(default_cxx_flags )
     set(default_cuda_flags )
@@ -134,6 +161,12 @@ endfunction()
 function(legate_core_configure_default_linker_flags)
   # There are no default linker flags currently.
   set(default_linker_flags)
+  if(legate_core_ENABLE_SANITIZERS)
+    list(APPEND default_linker_flags
+      "-fsanitize=address,undefined,bounds"
+      "-fno-sanitize-recover=undefined"
+    )
+  endif()
 
   if(NOT legate_core_LINKER_FLAGS)
     legate_core_set_default_flags_impl(

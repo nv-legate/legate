@@ -79,6 +79,7 @@ class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
     for (; idx < lim; ++idx) {
       points.push_back(point);
       for (int dim = shard_domain.dim - 1; dim >= 0; --dim) {
+        LegateCheck(shard_domain.dim <= Domain::MAX_RECT_DIM);
         if (point[dim] < shard_domain.hi()[dim]) {
           point[dim]++;
           break;

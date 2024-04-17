@@ -597,7 +597,7 @@ class ConfigurationManager:
         re_pat = re.compile(name)
         with cmake_cache_txt.open() as fd:
             for line in filter(re_pat.match, fd):
-                return line.split("=")[1].strip()
+                return line.split("=", maxsplit=1)[1].strip()
 
         raise ValueError(f"Did not find {name} in {cmake_cache_txt}")
 

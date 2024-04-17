@@ -117,6 +117,9 @@ class LegateCore(MainPackage):
     legate_core_LEGION_BRANCH: Final = CMAKE_VARIABLE(
         "legate_core_LEGION_BRANCH", CMakeString
     )
+    legate_core_ENABLE_SANITIZERS: Final = CMAKE_VARIABLE(
+        "legate_core_ENABLE_SANITIZERS", CMakeBool
+    )
 
     def __init__(
         self, manager: ConfigurationManager, argv: Sequence[str]
@@ -259,6 +262,15 @@ class LegateCore(MainPackage):
             self.legate_core_BUILD_EXAMPLES, self.cl_args.with_examples
         )
         self.set_flag_if_user_set(self.BUILD_MARCH, self.cl_args.build_march)
+        build_type = self.cl_args.build_type
+        if build_type.value == "debug-sanitizer":
+            self.manager.set_cmake_variable(
+                self.legate_core_ENABLE_SANITIZERS, True
+            )
+        elif build_type.cl_set:
+            self.manager.set_cmake_variable(
+                self.legate_core_ENABLE_SANITIZERS, False
+            )
 
     def configure_legion(self) -> None:
         r"""Configure Legion for use with Legate.Core."""

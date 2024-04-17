@@ -41,7 +41,7 @@ def main() -> int:
     argv = [
         # core args
         f"--LEGATE_CORE_ARCH={arch}",
-        "--build-type=debug",
+        "--build-type=debug-sanitizer",
         "--cmake-generator=Ninja",
         # compilers and flags
         "--with-cc=gcc",
