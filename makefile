@@ -50,13 +50,22 @@ clean: default_clean
 	@$(CMAKE) -E rm -rf -- $(LEGATE_CORE_DIR)/legate_core.egg-info
 	@$(CMAKE) -E rm -rf -- $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/_skbuild
 
+
+.PHONY: install_private
+install_private: all
+	@$(MAKE) --no-print-directory default_install
+
 ## Install the library
 ##
 ## Options:
 ## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
 ##
 .PHONY: install
-install: default_install
+install: install_private
+
+.PHONY: package_private
+package_private: all
+	@$(MAKE) --no-print-directory default_package
 
 ## Create an installable package of the library
 ##
@@ -64,7 +73,7 @@ install: default_install
 ## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
 ##
 .PHONY: package
-package: default_package
+package: package_private
 
 ## Run clang-tidy over the repository
 ##
