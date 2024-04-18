@@ -133,13 +133,15 @@ class LegateCore(MainPackage):
         argv : Sequence[str]
             The command line arguments for this configuration.
         """
+        from scripts.get_legate_core_dir import get_legate_core_dir
+
         super().__init__(
             manager=manager,
             argv=argv,
             name="Legate.Core",
             arch_name="LEGATE_CORE_ARCH",
             project_dir_name="LEGATE_CORE_DIR",
-            project_dir_value=Path(__file__).resolve().parent.parent.parent,
+            project_dir_value=Path(get_legate_core_dir()),
         )
 
     @classmethod

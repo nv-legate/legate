@@ -21,7 +21,11 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "legate.core")
 
 if(NOT DEFINED LEGATE_CORE_DIR)
   # this one we can figure out on our own
-  set(LEGATE_CORE_DIR "${CMAKE_CURRENT_LIST_DIR}")
+  execute_process(
+    COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/get_legate_core_dir.py
+    OUTPUT_VARIABLE LEGATE_CORE_DIR
+    COMMAND_ERROR_IS_FATAL ANY
+  )
 endif()
 
 cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${LEGATE_CORE_DIR}")

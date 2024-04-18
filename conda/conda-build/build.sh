@@ -4,6 +4,13 @@ echo -e "\n\n--------------------- CONDA/CONDA-BUILD/BUILD.SH ------------------
 
 set -xeo pipefail
 
+# LICENSE, README.md, conda/, and configure are guaranteed to always be at the root
+# directory. If we can't find them, then probably we are not in the root directory.
+if [ ! -f LICENSE ] || [ ! -f README.md ] || [ ! -d conda ] || [ ! -f configure ]; then
+  echo "Must run this script from the root directory"
+  exit 1
+fi
+
 # Rewrite conda's -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY to
 #                 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH
 CMAKE_ARGS="$(echo "$CMAKE_ARGS" | $SED -r "s@_INCLUDE=ONLY@_INCLUDE=BOTH@g")"
@@ -37,7 +44,8 @@ fi
 export CUDAHOSTCXX="${CXX}"
 export OPENSSL_DIR="${PREFIX}"
 export CUDAFLAGS="-isystem ${PREFIX}/include -L${PREFIX}/lib"
-export LEGATE_CORE_DIR=`pwd`
+LEGATE_CORE_DIR="$(${PYTHON} ./scripts/get_legate_core_dir.py)"
+export LEGATE_CORE_DIR
 export LEGATE_CORE_ARCH='arch-conda'
 
 echo "Build starting on $(date)"
