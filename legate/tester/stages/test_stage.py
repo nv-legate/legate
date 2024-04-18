@@ -14,6 +14,7 @@ from __future__ import annotations
 import multiprocessing
 import queue
 import shlex
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn, Protocol
@@ -290,10 +291,10 @@ class TestStage(Protocol):
         system: TestSystem,
         shard: Shard,
     ) -> NoReturn:
-        import subprocess
-        import sys
+        from os import environ
+        from subprocess import run
 
-        subprocess.run(cmd, env=self._env(config, system))
+        run(cmd, env=environ | self._env(config, system))
         sys.exit()
 
     def run_python(
@@ -332,7 +333,7 @@ class TestStage(Protocol):
         file_args = self.file_args(test_file, config)
 
         cmd = (
-            [str(config.legate_path)]
+            [sys.executable, str(config.legate_path)]
             + stage_args
             + cov_args
             # If both the python and Realm signal handlers are active, we may
@@ -395,7 +396,7 @@ class TestStage(Protocol):
         gtest_args = self.gtest_args(test_file, arg_test, config)
 
         cmd = (
-            [str(config.legate_path)]
+            [sys.executable, str(config.legate_path)]
             + stage_args
             + cov_args
             + gtest_args
@@ -448,7 +449,7 @@ class TestStage(Protocol):
         gtest_args = self.gtest_args(test_file, arg_test, config)
 
         cmd = (
-            [str(config.legate_path)]
+            [sys.executable, str(config.legate_path)]
             + stage_args
             + cov_args
             + gtest_args
