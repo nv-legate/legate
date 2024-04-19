@@ -152,8 +152,14 @@ class TestSystem(System):
                 text=True,
                 timeout=timeout,
             )
-        except TimeoutExpired:
-            return ProcessResult(invocation, test_file, timeout=True)
+        except TimeoutExpired as te:
+            if te.stdout is None:
+                output = ""
+            else:
+                output = te.stdout.decode()
+            return ProcessResult(
+                invocation, test_file, timeout=True, output=output
+            )
 
         end = datetime.now()
 

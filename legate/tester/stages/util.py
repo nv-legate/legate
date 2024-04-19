@@ -145,7 +145,7 @@ def log_proc(
     if proc.skipped:
         LOG(skipped(msg))
     elif proc.timeout:
-        LOG(timeout(msg))
+        LOG(timeout(msg, details=details))
     elif proc.returncode == 0:
         LOG(passed(msg, details=details))
     else:
