@@ -38,7 +38,6 @@ class TestConfig:
 
         assert c.examples is True
         assert c.integration is True
-        assert c.unit is False
         assert c.files is None
         assert c.last_failed is False
         # assert c.gtest_file is None
@@ -250,14 +249,6 @@ class Test_test_files:
         assert len(c.test_files) > 0
         assert any("examples" in str(x) for x in c.test_files)
         assert any("integration" in str(x) for x in c.test_files)
-
-        assert not any("unit" in str(x) for x in c.test_files)
-
-    @pytest.mark.skip
-    def test_unit(self) -> None:
-        c = m.Config(["test.py", "--unit", "--root-dir", str(REPO_TOP)])
-        assert len(c.test_files) > 0
-        assert any("unit" in str(x) for x in c.test_files)
 
     def test_error(self) -> None:
         c = m.Config(["test.py", "--files", "a", "b", "--last-failed"])

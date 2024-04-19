@@ -79,19 +79,16 @@ class TestTestStage_file_args:
         c = Config([])
         stage = MockTestStage(c, FakeSystem())
         assert stage.file_args(Path("integration/foo"), c) == []
-        assert stage.file_args(Path("unit/foo"), c) == []
 
     def test_v(self) -> None:
         c = Config(["test.py", "-v"])
         stage = MockTestStage(c, FakeSystem())
         assert stage.file_args(Path("integration/foo"), c) == ["-v"]
-        assert stage.file_args(Path("unit/foo"), c) == []
 
     def test_vv(self) -> None:
         c = Config(["test.py", "-vv"])
         stage = MockTestStage(c, FakeSystem())
         assert stage.file_args(Path("integration/foo"), c) == ["-v", "-s"]
-        assert stage.file_args(Path("unit/foo"), c) == []
 
 
 class TestTestStage_cov_args:

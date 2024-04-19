@@ -139,7 +139,6 @@ class Config:
         # test selection
         self.examples = False if args.cov_bin else True
         self.integration = True
-        self.unit = args.unit
         self.files = args.files
         self.last_failed = args.last_failed
         self.gtest_file = args.gtest_file
@@ -226,15 +225,6 @@ class Config:
                 )
             )
             files.extend(sorted(integration_tests))
-
-        if self.unit:
-            unit_tests = (
-                path.relative_to(self.root_dir)
-                for path in self.root_dir.joinpath("tests/unit").glob(
-                    "**/*.py"
-                )
-            )
-            files.extend(sorted(unit_tests))
 
         return tuple(files)
 

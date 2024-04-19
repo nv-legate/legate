@@ -60,14 +60,6 @@ selection.add_argument(
 )
 
 selection.add_argument(
-    "--unit",
-    dest="unit",
-    action="store_true",
-    default=False,
-    help="Include unit tests",
-)
-
-selection.add_argument(
     "-C",
     "--directory",
     dest="test_root",

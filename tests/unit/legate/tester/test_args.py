@@ -29,9 +29,6 @@ class TestParserDefaults:
     def test_files(self) -> None:
         assert m.parser.get_default("files") is None
 
-    def test_unit(self) -> None:
-        assert m.parser.get_default("unit") is False
-
     def test_last_failed(self) -> None:
         assert m.parser.get_default("last_failed") is False
 
