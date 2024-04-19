@@ -128,6 +128,18 @@ file(GLOB experimental_SRC ${PROJECT_SOURCE_DIR}/experimental/*.cc)
 
 include(GNUInstallDirs)
 
+# See https://github.com/rapidsai/rapids-cmake/issues/583
+if("${rapids-cmake-version}" VERSION_LESS "24.06.00")
+  string(JOIN "\n" code_string
+    [[
+if(POLICY CMP0159)
+  cmake_policy(SET CMP0159 OLD)
+  set(CMAKE_POLICY_DEFAULT_CMP0159 OLD)
+endif()
+]])
+  install(CODE "${code_string}")
+endif()
+
 ConfigureTest(
   cpp_tests
   SOURCES ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC} ${stl_SRC}
