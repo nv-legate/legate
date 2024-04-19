@@ -55,7 +55,7 @@ cdef class InlineAllocation:
         cdef DomainPoint hi = domain.hi
         cdef int32_t ndim = domain.dim
 
-        self._shape = tuple(hi[i] - lo[i] + 1 for i in range(ndim))
+        self._shape = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))
         return self._shape
 
     cdef dict _get_array_interface(self):

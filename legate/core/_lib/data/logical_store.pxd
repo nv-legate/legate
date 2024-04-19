@@ -71,6 +71,7 @@ cdef class LogicalStore:
     cpdef LogicalStore slice(self, int32_t dim, slice sl)
     cpdef LogicalStore transpose(self, object axes)
     cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)
+    cpdef void fill(self, object value)
     cpdef LogicalStorePartition partition_by_tiling(self, object shape)
     cpdef PhysicalStore get_physical_store(self)
     cpdef void detach(self)

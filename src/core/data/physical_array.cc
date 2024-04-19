@@ -27,7 +27,7 @@ bool PhysicalArray::nullable() const noexcept { return impl_->nullable(); }
 
 std::int32_t PhysicalArray::dim() const noexcept { return impl_->dim(); }
 
-Type PhysicalArray::type() const { return Type{impl_->type()}; }
+Type PhysicalArray::type() const noexcept { return Type{impl_->type()}; }
 
 bool PhysicalArray::nested() const noexcept { return impl_->nested(); }
 

@@ -33,6 +33,15 @@ cdef class DomainPoint:
     def __setitem__(self, int32_t idx, int64_t coord) -> None:
         self._handle[idx] = coord
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, DomainPoint):
+            return NotImplemented
+
+        return self._handle == (<DomainPoint> other)._handle
+
+    def __str__(self) -> str:
+        return f"<{','.join(str(self[i]) for i in range(self.dim))}>"
+
 
 cdef class Domain:
     @staticmethod
@@ -55,3 +64,12 @@ cdef class Domain:
     @property
     def hi(self) -> DomainPoint:
         return DomainPoint.from_handle(self._handle.hi())
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Domain):
+            return NotImplemented
+
+        return self._handle == (<Domain> other)._handle
+
+    def __str__(self) -> str:
+        return f"[{self.lo} ... {self.hi}]"

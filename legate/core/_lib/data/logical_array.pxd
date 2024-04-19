@@ -16,6 +16,7 @@ from libcpp.vector cimport vector as std_vector
 from ..type.type_info cimport _Type
 from ..utilities.tuple cimport _tuple
 from .logical_store cimport _LogicalStore
+from .physical_array cimport PhysicalArray, _PhysicalArray
 from .shape cimport _Shape
 from .slice cimport _Slice
 
@@ -39,6 +40,7 @@ cdef extern from "core/data/logical_array.h" namespace "legate" nogil:
         _LogicalStore data() except+
         _LogicalStore null_mask() except+
         _LogicalArray child(uint32_t) except+
+        _PhysicalArray get_physical_array() except+
         _LogicalArray()
         _LogicalArray(const _LogicalStore&)
         _LogicalArray(const _LogicalArray&)
@@ -55,7 +57,9 @@ cdef class LogicalArray:
     cpdef LogicalArray slice(self, int32_t dim, slice sl)
     cpdef LogicalArray transpose(self, object axes)
     cpdef LogicalArray delinearize(self, int32_t dim, object shape)
+    cpdef void fill(self, object value)
     cpdef LogicalArray child(self, uint32_t index)
+    cpdef PhysicalArray get_physical_array(self)
 
 
 cdef _LogicalArray to_cpp_logical_array(object array_or_store)

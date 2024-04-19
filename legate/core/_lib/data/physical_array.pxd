@@ -9,12 +9,24 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from libc.stdint cimport int32_t, uint32_t
+from libcpp cimport bool
+
+from ..type.type_info cimport _Type
+from ..utilities.typedefs cimport Domain, _Domain
 from .physical_store cimport PhysicalStore, _PhysicalStore
 
 
 cdef extern from "core/data/physical_array.h" namespace "legate" nogil:
     cdef cppclass _PhysicalArray "legate::PhysicalArray":
-        _PhysicalStore data() except +
+        bool nullable()
+        int32_t dim()
+        _Type type()
+        bool nested()
+        _PhysicalStore data() except+
+        _PhysicalStore null_mask() except+
+        _PhysicalArray child(uint32_t index) except+
+        _Domain domain() except+
 
 cdef class PhysicalArray:
     cdef _PhysicalArray _handle
@@ -23,3 +35,9 @@ cdef class PhysicalArray:
     cdef PhysicalArray from_handle(const _PhysicalArray &array)
 
     cpdef PhysicalStore data(self)
+
+    cpdef PhysicalStore null_mask(self)
+
+    cpdef PhysicalArray child(self, uint32_t index)
+
+    cpdef Domain domain(self)

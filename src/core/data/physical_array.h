@@ -63,7 +63,7 @@ class PhysicalArray {
    *
    * @return Type
    */
-  [[nodiscard]] Type type() const /* noexcept? */;
+  [[nodiscard]] Type type() const noexcept;
   /**
    * @brief Indicates if the array has child arrays
    *

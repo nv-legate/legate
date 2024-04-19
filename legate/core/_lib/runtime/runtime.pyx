@@ -306,17 +306,19 @@ cdef class Runtime:
             or the ``array_or_store`` is unbound
         """
         cdef _LogicalArray arr = to_cpp_logical_array(array_or_store)
+        cdef Scalar fill_value
         if isinstance(value, LogicalStore):
             self._handle.issue_fill(
                 arr, (<LogicalStore> value)._handle
             )
         elif isinstance(value, Scalar):
             self._handle.issue_fill(arr, (<Scalar> value)._handle)
+        elif value is None:
+            fill_value = Scalar.null()
+            self._handle.issue_fill(arr, fill_value._handle)
         else:
-            raise ValueError(
-                "Fill value must be a logical store or a scalar but "
-                f"got {type(value)}"
-            )
+            fill_value = Scalar(value, Type.from_handle(arr.type()))
+            self._handle.issue_fill(arr, fill_value._handle)
 
     cpdef LogicalStore tree_reduce(
         self,

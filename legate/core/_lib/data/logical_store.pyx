@@ -16,6 +16,7 @@ from libcpp.vector cimport vector as std_vector
 
 from ...data_interface import Field, LegateDataInterfaceItem
 
+from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type
 from ..utilities.utils cimport is_iterable
 from .logical_array cimport LogicalArray
@@ -91,6 +92,26 @@ cdef class LogicalStore:
 
     def __repr__(self) -> str:
         return str(self)
+
+    def __getitem__(
+        self, indices: int64_t | slice | tuple[int64_t | slice, ...],
+    ) -> LogicalStore:
+        cdef LogicalStore result = self
+
+        if not isinstance(indices, tuple):
+            indices = (indices,)
+
+        cdef int dim
+
+        for dim, index in enumerate(indices):
+            if isinstance(index, slice):
+                result = result.slice(dim, index)
+            elif index is None:
+                result = result.promote(dim, 1)
+            else:
+                result = result.project(dim, index)
+
+        return result
 
     cpdef LogicalStore promote(self, int32_t extra_dim, size_t dim_size):
         """
@@ -366,6 +387,9 @@ cdef class LogicalStore:
         return LogicalStore.from_handle(
             self._handle.delinearize(dim, std_move(sizes))
         )
+
+    cpdef void fill(self, object value):
+        get_legate_runtime().issue_fill(self, value)
 
     cpdef LogicalStorePartition partition_by_tiling(self, object shape):
         """

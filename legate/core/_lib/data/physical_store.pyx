@@ -51,3 +51,11 @@ cdef class PhysicalStore:
             self,
             self._handle.get_inline_allocation()
         )
+
+    @property
+    def __array_interface__(self) -> dict[str, Any]:
+        return self.get_inline_allocation().__array_interface__
+
+    @property
+    def __cuda_array_interface__(self) -> dict[str, Any]:
+        return self.get_inline_allocation().__cuda_array_interface__

@@ -93,6 +93,9 @@ class Field:
         """
         return self._nullable
 
+    def __repr__(self) -> str:
+        return f"Field({self.name!r})"
+
 
 class Table(LegateDataInterface):
     def __init__(
