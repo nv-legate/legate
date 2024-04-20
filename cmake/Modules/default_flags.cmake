@@ -127,7 +127,11 @@ function(legate_core_configure_default_compiler_flags)
 
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set_flags(default_cxx_flags_debug)
-    list(APPEND default_cuda_flags "-g" "-G" "-lineinfo")
+    list(APPEND default_cuda_flags "-g" "-G")
+    # nvcc warning : '--device-debug (-G)' overrides '--generate-line-info (-lineinfo)'
+    # ptxas warning : Conflicting options --device-debug and --generate-line-info
+    # specified, ignoring --generate-line-info option
+    list(REMOVE_ITEM default_cuda_flags "-lineinfo" "--generate-line-info")
   elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     set_flags(default_cxx_flags_release)
   elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
