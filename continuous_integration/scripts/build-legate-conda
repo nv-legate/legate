@@ -113,8 +113,6 @@ EOF
 
     rm -rf /tmp/legate;
 
-    cp /tmp/conda-build/legate_core/"${CONDA_PLATFORM}"/legate-*.tar.bz2 /tmp/out/;
-
     { set +x; } 2>/dev/null;
 }
 
