@@ -1494,6 +1494,7 @@ class Reduce(AutoOperation):
         )
         self._radix = radix
         self._task_id = task_id
+        self._scalar_args: list[tuple[Any, ty.Dtype]] = []
 
     def add_input(self, store: Store) -> None:
         self._check_store(store)
@@ -1507,6 +1508,9 @@ class Reduce(AutoOperation):
         self._unbound_outputs.append(len(self._outputs))
         self._outputs.append(store)
         self._output_parts.append(partition)
+
+    def add_scalar_arg(self, value: Any, dtype: ty.Dtype) -> None:
+        self._scalar_args.append((value, dtype))
 
     def launch(self, strategy: Strategy) -> None:
         assert len(self._inputs) == 1 and len(self._outputs) == 1
@@ -1536,6 +1540,9 @@ class Reduce(AutoOperation):
                 tag=tag,
                 provenance=self.provenance,
             )
+
+            for scalar, dtype in self._scalar_args:
+                launcher.add_scalar_arg(scalar, dtype)
 
             if num_tasks > 1:
                 for proj_fn in proj_fns:
