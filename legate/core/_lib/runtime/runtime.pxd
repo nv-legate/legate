@@ -195,6 +195,8 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
         ) except+
         void issue_execution_fence(bool)
         void raise_pending_exception() except +handle_legate_exception
+        uint32_t node_count()
+        uint32_t node_id()
         _Machine get_machine() const
         _RuntimeImpl* impl() const
 

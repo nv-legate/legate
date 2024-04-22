@@ -108,7 +108,7 @@ const TaskInfo* Library::find_task(std::int64_t local_task_id) const
 void Library::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
                                const Legion::UntypedBuffer& buffer)
 {
-  Legion::Runtime::perform_registration_callback(callback, buffer, true /*global*/);
+  Legion::Runtime::perform_registration_callback(callback, buffer, false /*global*/);
 }
 
 }  // namespace legate

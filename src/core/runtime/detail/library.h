@@ -39,13 +39,12 @@ class Library {
     [[nodiscard]] std::int64_t translate(std::int64_t local_resource_id) const;
     [[nodiscard]] std::int64_t invert(std::int64_t resource_id) const;
     [[nodiscard]] std::int64_t generate_id();
-    [[nodiscard]] bool valid() const;
     [[nodiscard]] bool in_scope(std::int64_t resource_id) const;
     [[nodiscard]] std::int64_t size() const;
 
    private:
-    std::int64_t base_{-1};
-    std::int64_t size_{-1};
+    std::int64_t base_{};
+    std::int64_t size_{};
     std::int64_t next_{};
   };
 

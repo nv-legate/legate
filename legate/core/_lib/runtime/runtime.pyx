@@ -512,6 +512,14 @@ cdef class Runtime:
             # since those can't run if we are stuck here holding the bag.
             self._handle.issue_execution_fence(block)
 
+    @property
+    def node_count(self) -> uint32_t:
+        return self._handle.node_count()
+
+    @property
+    def node_id(self) -> uint32_t:
+        return self._handle.node_id()
+
     cpdef Machine get_machine(self):
         return Machine.from_handle(self._handle.get_machine())
 

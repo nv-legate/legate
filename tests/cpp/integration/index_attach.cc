@@ -133,18 +133,19 @@ TEST_F(IndexAttach, CPU)
   auto ext_alloc1 = legate::ExternalAllocation::create_sysmem(alloc1.data(), BYTES);
   auto ext_alloc2 = legate::ExternalAllocation::create_sysmem(alloc2.data(), BYTES);
 
-  auto [store, _] = runtime->create_store(
-    legate::Shape{TILE_SIZE * 2},
-    legate::tuple<std::uint64_t>{TILE_SIZE},
-    legate::int64(),
-    {{ext_alloc1, legate::tuple<std::uint64_t>{0}}, {ext_alloc2, legate::tuple<std::uint64_t>{1}}});
+  auto [store, _] =
+    runtime->create_store(legate::Shape{TILE_SIZE * 2 * runtime->node_count()},
+                          legate::tuple<std::uint64_t>{TILE_SIZE},
+                          legate::int64(),
+                          {{ext_alloc1, legate::tuple<std::uint64_t>{runtime->node_id() * 2}},
+                           {ext_alloc2, legate::tuple<std::uint64_t>{runtime->node_id() * 2 + 1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<std::int64_t, 1>();
   auto shape   = p_store.shape<1>();
 
   for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], static_cast<std::size_t>((*it)[0]) < TILE_SIZE ? VAL1 : VAL2);
+    EXPECT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
   }
 
   store.detach();
@@ -179,18 +180,19 @@ TEST_F(IndexAttach, GPU)
     legate::ExternalAllocation::create_fbmem(0, d_alloc2, BYTES, true /*read_only*/, deleter);
   auto runtime = legate::Runtime::get_runtime();
 
-  auto [store, _] = runtime->create_store(
-    legate::Shape{TILE_SIZE * 2},
-    legate::tuple<std::uint64_t>{TILE_SIZE},
-    legate::int64(),
-    {{alloc1, legate::tuple<std::uint64_t>{0}}, {alloc2, legate::tuple<std::uint64_t>{1}}});
+  auto [store, _] =
+    runtime->create_store(legate::Shape{TILE_SIZE * 2 * runtime->node_count()},
+                          legate::tuple<std::uint64_t>{TILE_SIZE},
+                          legate::int64(),
+                          {{alloc1, legate::tuple<std::uint64_t>{runtime->node_id() * 2}},
+                           {alloc2, legate::tuple<std::uint64_t>{runtime->node_id() * 2 + 1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<std::int64_t, 1>();
   auto shape   = p_store.shape<1>();
 
   for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], static_cast<std::size_t>((*it)[0]) < TILE_SIZE ? VAL1 : VAL2);
+    EXPECT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
   }
 
   store.detach();

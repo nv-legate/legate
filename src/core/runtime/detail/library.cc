@@ -45,13 +45,11 @@ Library::Library(std::string library_name, const ResourceConfig& config)
 
 Legion::TaskID Library::get_task_id(std::int64_t local_task_id) const
 {
-  LegateCheck(task_scope_.valid());
   return static_cast<Legion::TaskID>(task_scope_.translate(local_task_id));
 }
 
 Legion::ReductionOpID Library::get_reduction_op_id(std::int64_t local_redop_id) const
 {
-  LegateCheck(redop_scope_.valid());
   return static_cast<Legion::ReductionOpID>(redop_scope_.translate(local_redop_id));
 }
 
@@ -60,25 +58,21 @@ Legion::ProjectionID Library::get_projection_id(std::int64_t local_proj_id) cons
   if (local_proj_id == 0) {
     return 0;
   }
-  LegateCheck(proj_scope_.valid());
   return static_cast<Legion::ProjectionID>(proj_scope_.translate(local_proj_id));
 }
 
 Legion::ShardingID Library::get_sharding_id(std::int64_t local_shard_id) const
 {
-  LegateCheck(shard_scope_.valid());
   return static_cast<Legion::ShardingID>(shard_scope_.translate(local_shard_id));
 }
 
 std::int64_t Library::get_local_task_id(Legion::TaskID task_id) const
 {
-  LegateCheck(task_scope_.valid());
   return task_scope_.invert(task_id);
 }
 
 std::int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
 {
-  LegateCheck(redop_scope_.valid());
   return redop_scope_.invert(redop_id);
 }
 
@@ -87,13 +81,11 @@ std::int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) cons
   if (proj_id == 0) {
     return 0;
   }
-  LegateCheck(proj_scope_.valid());
   return proj_scope_.invert(proj_id);
 }
 
 std::int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
 {
-  LegateCheck(shard_scope_.valid());
   return shard_scope_.invert(shard_id);
 }
 
@@ -175,9 +167,11 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
 
 void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
-  auto task_id = get_task_id(local_task_id);
+  std::int64_t task_id{};
 
-  if (!task_scope_.in_scope(task_id)) {
+  try {
+    task_id = get_task_id(local_task_id);
+  } catch (const std::out_of_range&) {
     std::stringstream ss;
 
     ss << "Task " << local_task_id << " is invalid for library '" << library_name_

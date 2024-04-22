@@ -70,4 +70,8 @@ inline const mapping::detail::LocalMachine& Runtime::local_machine() const
   return local_machine_;
 }
 
+inline std::uint32_t Runtime::node_count() const { return local_machine().total_nodes; }
+
+inline std::uint32_t Runtime::node_id() const { return local_machine().node_id; }
+
 }  // namespace legate::detail

@@ -81,7 +81,7 @@ TEST_F(Library, FindOrCreate)
   EXPECT_FALSE(created);
   EXPECT_EQ(p_lib1, p_lib2);
   EXPECT_TRUE(p_lib2.valid_task_id(p_lib2.get_task_id(0)));
-  EXPECT_FALSE(p_lib2.valid_task_id(p_lib2.get_task_id(1)));
+  EXPECT_THROW(static_cast<void>(p_lib2.get_task_id(1)), std::out_of_range);
 }
 
 TEST_F(Library, FindNonExistent)
@@ -90,7 +90,7 @@ TEST_F(Library, FindNonExistent)
 
   auto* runtime = legate::Runtime::get_runtime();
 
-  EXPECT_THROW((void)runtime->find_library(LIBNAME), std::out_of_range);
+  EXPECT_THROW(static_cast<void>(runtime->find_library(LIBNAME)), std::out_of_range);
 
   EXPECT_EQ(runtime->maybe_find_library(LIBNAME), std::nullopt);
 }
@@ -101,19 +101,11 @@ TEST_F(Library, InvalidReductionOPID)
 
   static constexpr const char* LIBNAME = "test_library.libD";
 
-  auto* runtime              = legate::Runtime::get_runtime();
-  auto lib                   = runtime->create_library(LIBNAME);
-  auto local_id              = 0;
-  const auto value           = std::getenv("REALM_BACKTRACE");
-  const bool realm_backtrace = value != nullptr && legate::detail::safe_strtoll(value) != 0;
-
-  if (realm_backtrace) {
-    EXPECT_DEATH((void)lib.register_reduction_operator<SumReduction_Int32>(local_id), "");
-  } else {
-    EXPECT_EXIT((void)lib.register_reduction_operator<SumReduction_Int32>(local_id),
-                ::testing::KilledBySignal(SIGABRT),
-                "");
-  }
+  auto* runtime = legate::Runtime::get_runtime();
+  auto lib      = runtime->create_library(LIBNAME);
+  auto local_id = 0;
+  EXPECT_THROW(static_cast<void>(lib.register_reduction_operator<SumReduction_Int32>(local_id)),
+               std::out_of_range);
 }
 
 TEST_F(Library, RegisterReductionOP)

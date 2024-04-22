@@ -19,8 +19,7 @@
 
 namespace attach {
 
-using Attach          = DefaultFixture;
-using AttachDeathTest = DeathTestFixture;
+using Attach = DefaultFixture;
 
 class Positive : public DefaultFixture,
                  public ::testing::WithParamInterface<

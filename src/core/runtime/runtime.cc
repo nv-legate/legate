@@ -273,6 +273,10 @@ void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execut
 
 void Runtime::raise_pending_exception() { impl_->raise_pending_exception(); }
 
+std::uint32_t Runtime::node_count() const { return impl_->node_count(); }
+
+std::uint32_t Runtime::node_id() const { return impl_->node_id(); }
+
 void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 {
   detail::Runtime::get_runtime()->register_shutdown_callback(std::move(callback));

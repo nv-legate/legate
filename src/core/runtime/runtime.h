@@ -547,6 +547,20 @@ class Runtime {
   void register_shutdown_callback(T&& callback);
 
   /**
+   * @brief Returns the total number of nodes
+   *
+   * @return Total number of nodes
+   */
+  [[nodiscard]] std::uint32_t node_count() const;
+
+  /**
+   * @brief Returns the current rank
+   *
+   * @return Rank ID
+   */
+  [[nodiscard]] std::uint32_t node_id() const;
+
+  /**
    * @brief Returns the machine of the current scope
    *
    * @return Machine object

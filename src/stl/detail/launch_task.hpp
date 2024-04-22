@@ -270,7 +270,7 @@ class function<Fn> {
  */
 [[nodiscard]] inline std::int32_t _next_reduction_id()
 {
-  static std::atomic<std::int32_t> id{LEGION_REDOP_LAST};
+  static std::atomic<std::int32_t> id{};
   return id.fetch_add(1);
 }
 

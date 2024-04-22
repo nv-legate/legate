@@ -35,6 +35,12 @@ inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
 
 inline std::int64_t Library::ResourceIdScope::translate(std::int64_t local_resource_id) const
 {
+  if (local_resource_id >= size_) {
+    std::stringstream ss;
+
+    ss << "Maximum local ID is " << size_ - 1 << " but received a local ID " << local_resource_id;
+    throw std::out_of_range{std::move(ss).str()};
+  }
   return base_ + local_resource_id;
 }
 
@@ -51,8 +57,6 @@ inline std::int64_t Library::ResourceIdScope::generate_id()
   }
   return next_++;
 }
-
-inline bool Library::ResourceIdScope::valid() const { return base_ != -1; }
 
 inline bool Library::ResourceIdScope::in_scope(std::int64_t resource_id) const
 {

@@ -145,7 +145,7 @@ class Library {
    * @return Global reduction operator ID
    */
   template <typename REDOP>
-  [[nodiscard]] std::int64_t register_reduction_operator(std::int32_t redop_id);
+  [[nodiscard]] std::int32_t register_reduction_operator(std::int32_t redop_id);
   /**
    * @brief Registers a library mapper. Replaces the existing mapper if there already is one.
    *

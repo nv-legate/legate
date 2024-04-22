@@ -419,6 +419,8 @@ void Runtime::tree_reduce(const Library* library,
     throw std::runtime_error{"Multi-dimensional stores are not supported"};
   }
 
+  auto machine = slice_machine_for_task(library, task_id);
+
   submit(make_internal_shared<Reduce>(library,
                                       std::move(store),
                                       std::move(out_store),
@@ -426,7 +428,7 @@ void Runtime::tree_reduce(const Library* library,
                                       current_op_id(),
                                       radix,
                                       scope().priority(),
-                                      get_machine()));
+                                      std::move(machine)));
   increment_op_id();
 }
 
