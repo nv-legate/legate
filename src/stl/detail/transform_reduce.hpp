@@ -94,8 +94,7 @@ template <typename CvrefInput1,
   as_range_t<CvrefInput1> input_rng1 = as_range(std::forward<CvrefInput1>(input1));
   as_range_t<CvrefInput2> input_rng2 = as_range(std::forward<CvrefInput2>(input2));
 
-  LegateAssert(input_rng1.extents() == input_rng2.extents(),
-               "Input ranges must have the same extents");
+  LegateAssert(input_rng1.extents() == input_rng2.extents());
 
   auto result = stl::slice_as<InputPolicy>(
     stl::create_store<TransformResult, dim_of_v<CvrefInput1>>(input_rng1.base().extents()));
