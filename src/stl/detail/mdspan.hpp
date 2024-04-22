@@ -70,6 +70,7 @@ LEGATE_PRAGMA_POP()
 #include "type_traits.hpp"
 
 #include <cstdint>
+#include <type_traits>
 
 // Include this last:
 #include "prefix.hpp"
@@ -222,15 +223,10 @@ class mdspan_accessor {
     if (this == &other) {
       return *this;
     }
-    LegateAssert(elementwise_ == nullptr);
-    if (other.elementwise_) {
-      other.elementwise_(*this, other.elementwise_obj_);
-    } else {
-      store_    = other.store_;
-      shape_    = other.shape_;
-      origin_   = other.origin_;
-      accessor_ = other.accessor_;
-    }
+    store_    = other.store_;
+    shape_    = other.shape_;
+    origin_   = other.origin_;
+    accessor_ = other.accessor_;
     return *this;
   }
 
@@ -244,37 +240,6 @@ class mdspan_accessor {
       origin_{other.origin_},
       accessor_{Accessor::template get<ElementType, ActualDim>(store_)}
   {
-  }
-
-  template <typename Function, typename... InputSpans>
-  LEGATE_HOST_DEVICE mdspan_accessor(const elementwise_accessor<Function, InputSpans...>& other)
-    : elementwise_{&mdspan_accessor::elementwise<Function, InputSpans...>}, elementwise_obj_{&other}
-  {
-  }
-  // NOLINTEND(google-explicit-constructor)
-
-  // Apply a function element-wise
-  template <typename Function, typename... InputSpans>
-  LEGATE_HOST_DEVICE mdspan_accessor& operator=(
-    const elementwise_accessor<Function, InputSpans...>& other)
-  {
-    using result_type = call_result_t<Function, typename InputSpans::reference...>;
-    static_assert(
-      std::is_assignable_v<reference, result_type>,
-      "The elementwise function must return a type that is assignable to the reference type of "
-      "the accessor");
-    std::size_t size = 1;
-    for (std::int32_t i = 0; i < Dim; ++i) {
-      size *= shape_[i];
-    }
-
-    // BUGBUG HACKHACK. This isn't actually 100% correct.
-    // Come back and rethink the whole elementwise_accessor thing.
-    auto handle = std::get<0>(other.spans_).data_handle();
-    for (std::size_t i = 0; i < size; ++i) {
-      access(handle, i) = other.access(0, i);
-    }
-    return *this;
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] reference access(data_handle_type handle,
@@ -297,18 +262,10 @@ class mdspan_accessor {
   }
 
  private:
-  template <typename Function, typename... InputSpans>
-  LEGATE_HOST_DEVICE static void elementwise(mdspan_accessor& self, const void* elementwise_obj)
-  {
-    self = *static_cast<const elementwise_accessor<Function, InputSpans...>*>(elementwise_obj);
-  }
-
   PhysicalStore store_{};
   Point<Dim> shape_{};
   Point<Dim> origin_{};
   accessor_type accessor_{};
-  void (*elementwise_)(mdspan_accessor&, const void*){};
-  const void* elementwise_obj_{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -339,6 +296,61 @@ using mdspan_reduction_t =  //
     std::dextents<coord_t, Dim>,
     std::layout_right,
     detail::mdspan_accessor<typename Op::RHS, Dim, detail::reduction_accessor<Op, Exclusive>>>;
+
+namespace detail {
+template <typename T>
+constexpr bool is_mdspan_v = false;
+
+template <typename T>
+constexpr bool is_mdspan_v<T&> = is_mdspan_v<T>;
+
+template <typename T>
+constexpr bool is_mdspan_v<T const> = is_mdspan_v<T>;
+
+template <typename Element, typename Extent, typename Layout, typename Accessor>
+constexpr bool is_mdspan_v<std::mdspan<Element, Extent, Layout, Accessor>> = true;
+}  // namespace detail
+
+template <typename LHS, typename RHS>
+void assign(LHS&& lhs, RHS&& rhs)
+{
+  static_assert(!detail::is_mdspan_v<LHS> && !detail::is_mdspan_v<RHS>);
+  static_assert(std::is_assignable_v<LHS, RHS>);
+  static_cast<LHS&&>(lhs) = static_cast<RHS&&>(rhs);
+}
+
+template <typename LeftElement,
+          typename RightElement,
+          typename Extent,
+          typename Layout,
+          typename LeftAccessor,
+          typename RightAccessor>
+void assign(std::mdspan<LeftElement, Extent, Layout, LeftAccessor>&& lhs,
+            std::mdspan<RightElement, Extent, Layout, RightAccessor>&& rhs)
+{
+  static_assert(
+    std::is_assignable_v<typename LeftAccessor::reference, typename RightAccessor::reference>);
+  LegateAssert(lhs.extents() == rhs.extents());
+
+  std::size_t size = 1;
+  auto&& extents   = lhs.extents();
+  for (std::size_t i = 0; i < extents.rank(); ++i) {
+    size *= extents.extent(i);
+  }
+
+  const auto lhs_hdl = lhs.data_handle();
+  const auto rhs_hdl = rhs.data_handle();
+
+  const auto& lhs_map = lhs.mapping();
+  const auto& rhs_map = rhs.mapping();
+
+  const auto& lhs_acc = lhs.accessor();
+  const auto& rhs_acc = rhs.accessor();
+
+  for (std::size_t idx = 0; idx < size; ++idx) {
+    lhs_acc.access(lhs_hdl, lhs_map(idx)) = rhs_acc.access(rhs_hdl, rhs_map(idx));
+  }
+}
 
 }  // namespace legate::stl
 

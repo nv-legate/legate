@@ -56,8 +56,8 @@ void TestElementwiseRowOperation()
   EXPECT_EQ(result_view.extent(1), 4);
 
   {
-    auto res_row            = *res_iter;
-    stl::as_mdspan(res_row) = stl::elementwise(square())(stl::as_mdspan(*in_iter));
+    auto res_row = *res_iter;
+    stl::assign(stl::as_mdspan(res_row), stl::elementwise(square())(stl::as_mdspan(*in_iter)));
   }
 
   EXPECT_EQ(result_view(0, 0), 0);
@@ -68,8 +68,8 @@ void TestElementwiseRowOperation()
   {
     ++in_iter;
     ++res_iter;
-    auto res_row            = *res_iter;
-    stl::as_mdspan(res_row) = stl::elementwise(square())(stl::as_mdspan(*in_iter));
+    auto res_row = *res_iter;
+    stl::assign(stl::as_mdspan(res_row), stl::elementwise(square())(stl::as_mdspan(*in_iter)));
   }
 
   EXPECT_EQ(result_view(1, 0), 16);
@@ -80,8 +80,8 @@ void TestElementwiseRowOperation()
   {
     ++in_iter;
     ++res_iter;
-    auto res_row            = *res_iter;
-    stl::as_mdspan(res_row) = stl::elementwise(square())(stl::as_mdspan(*in_iter));
+    auto res_row = *res_iter;
+    stl::assign(stl::as_mdspan(res_row), stl::elementwise(square())(stl::as_mdspan(*in_iter)));
   }
 
   EXPECT_EQ(result_view(2, 0), 64);
