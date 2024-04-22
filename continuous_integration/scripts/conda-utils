@@ -1,5 +1,5 @@
 make_conda_env_from_yaml() {
-    mamba env create -n "${CONDA_ENV}" -f "${yaml_file}" --force;
+    mamba env create -n "${CONDA_ENV}" -f "${yaml_file}";
 }
 
 generate_yaml_file() {
