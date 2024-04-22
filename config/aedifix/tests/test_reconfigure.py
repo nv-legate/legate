@@ -251,6 +251,44 @@ class TestReconfigure:
             main_fn=main_fn,
         )
 
+    def test_finalize_extra_argv(
+        self,
+        reconf: Reconfigure,
+        AEDIFIX_PYTEST_DIR: Path,
+        AEDIFIX_PYTEST_ARCH: str,
+    ) -> None:
+        argv = ("--arg_1", "value_1", "--arg2=value2", "--arg-end")
+        ephemeral_args: set[str] = set()
+        extra_argv = ["-DFOO=BAR", "-DBAZ='BOP BLIP'"]
+        main_fn = r"""
+        def main() -> int:
+            argv = [
+                "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
+                "--arg_1",
+                "value_1",
+                "--arg2=value2",
+                "--arg-end",
+                "--",
+                "-DFOO=BAR",
+                "-DBAZ='BOP BLIP'",
+            ] + sys.argv[1:]
+            return basic_configure(
+                tuple(argv), DummyMainModule
+            )
+
+        if __name__ == "__main__":
+            sys.exit(main())
+        """.format(
+            AEDIFIX_PYTEST_ARCH=AEDIFIX_PYTEST_ARCH
+        )
+        reconf_file = self.pre_test_finalize(reconf=reconf, argv=argv)
+        reconf.finalize(DummyMainModule, ephemeral_args, extra_argv=extra_argv)
+        self.post_test_finalize(
+            reconf_file=reconf_file,
+            symlink=AEDIFIX_PYTEST_DIR / reconf_file.name,
+            main_fn=main_fn,
+        )
+
 
 if __name__ == "__main__":
     sys.exit(pytest.main())

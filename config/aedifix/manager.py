@@ -46,7 +46,11 @@ from .util.exception import (
     WrongOrderError,
 )
 from .util.types import copy_method_signature
-from .util.utility import ValueProvenance, subprocess_capture_output
+from .util.utility import (
+    ValueProvenance,
+    partition_argv,
+    subprocess_capture_output,
+)
 
 if TYPE_CHECKING:
     from .cmake.cmake_flags import CMakeFlagBase
@@ -65,6 +69,7 @@ class ConfigurationManager:
     __slots__ = (
         "_cl_args",
         "_argv",
+        "_extra_argv",
         "_main_package",
         "_modules",
         "_logger",
@@ -93,7 +98,9 @@ class ConfigurationManager:
         os.environ["AEDIFIX"] = "1"
         main_package = MainModuleType.from_argv(self, argv)
         self._cl_args: Namespace | None = None
-        self._argv = tuple(argv)
+        main_argv, extra_argv = partition_argv(argv)
+        self._argv = tuple(main_argv)
+        self._extra_argv = extra_argv
         self._main_package = main_package
         self._modules: list[Package] = [main_package]
         self._logger = Logger(self.project_dir / "configure.log")
@@ -423,16 +430,12 @@ class ConfigurationManager:
     # Member variable access
     @property
     def argv(self) -> tuple[str, ...]:
-        r"""Get the parsed command-line arguments.
+        r"""Get the unparsed command-line arguments.
 
         Returns
         -------
-        args : Namespace
-            The parsed command-line arguments.
-
-        Notes
-        -----
-        Can only be called after `ConfigurationManager.setup()`.
+        args : tuple[str, ...]
+            The unparsed command-line arguments.
         """
         return self._argv
 
@@ -937,6 +940,7 @@ class ConfigurationManager:
             self,
             self.project_dir,
             self.project_cmake_dir,
+            extra_argv=self._extra_argv,
         )
 
         self.log_execute_func(self._config.finalize)
@@ -944,6 +948,7 @@ class ConfigurationManager:
             self._reconfigure.finalize,
             main_package_type=type(self._main_package),
             ephemeral_args=self._ephemeral_args,
+            extra_argv=self._extra_argv,
         )
 
         def gen_summary() -> Iterator[str]:

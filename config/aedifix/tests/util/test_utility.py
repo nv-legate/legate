@@ -17,6 +17,7 @@ import pytest
 from ...util.utility import (
     deduplicate_command_line_args,
     flag_to_dest,
+    partition_argv,
     prune_command_line_args,
 )
 
@@ -101,6 +102,26 @@ class TestUtility:
     )
     def test_flag_to_dest(self, flag_str: str, expected: str) -> None:
         assert flag_to_dest(flag_str) == expected
+
+    @pytest.mark.parametrize(
+        "argv, expected",
+        [
+            ([], ([], [])),
+            (["-foo"], (["-foo"], [])),
+            (["-foo", "--bar"], (["-foo", "--bar"], [])),
+            (["--foo", " --   "], (["--foo"], [])),
+            (["--foo", " --   ", "-baz"], (["--foo"], ["-baz"])),
+            ([" --", "-baz", "-bop"], ([], ["-baz", "-bop"])),
+            (["--"], ([], [])),
+        ],
+    )
+    def test_partition_argv(
+        self, argv: list[str], expected: tuple[list[str], list[str]]
+    ) -> None:
+        main_expected, rest_expected = expected
+        main_ret, rest_ret = partition_argv(argv)
+        assert main_ret == main_expected
+        assert rest_ret == rest_expected
 
 
 if __name__ == "__main__":

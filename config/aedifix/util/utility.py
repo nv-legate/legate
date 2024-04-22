@@ -14,7 +14,7 @@ import enum
 import platform
 import subprocess
 import sysconfig
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from subprocess import CalledProcessError, CompletedProcess
 from sys import version_info
@@ -292,3 +292,34 @@ def flag_to_dest(flag: str) -> str:
         The flag in 'dest' form.
     """
     return flag.lstrip("-").casefold().replace("-", "_")
+
+
+def partition_argv(argv: Iterable[str]) -> tuple[list[str], list[str]]:
+    r"""Split a command-line list of arguments into 2.
+
+    Parameters
+    ----------
+    argv : Iterable[str]
+        The original argv to split.
+
+    Returns
+    -------
+    main_argv : list[str]
+        The argument before the first '--'
+    rest_argv : list[str]
+        The arguments after the first '--'
+    """
+    main_argv = []
+    rest_argv = []
+    found_sep = False
+    for arg in argv:
+        if arg.strip() == "--":
+            found_sep = True
+            continue
+
+        if found_sep:
+            rest_argv.append(arg)
+        else:
+            main_argv.append(arg)
+
+    return main_argv, rest_argv

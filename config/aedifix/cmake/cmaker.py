@@ -199,7 +199,11 @@ class CMaker:
             json.dump(cmd_spec, fd)
 
     def finalize(
-        self, manager: ConfigurationManager, source_dir: Path, build_dir: Path
+        self,
+        manager: ConfigurationManager,
+        source_dir: Path,
+        build_dir: Path,
+        extra_argv: list[str] | None = None,
     ) -> None:
         r"""Execute the CMake configuration.
 
@@ -212,10 +216,21 @@ class CMaker:
             synonymous with the project directory.
         build_dir : Path
             The full path to the build directory in which to invoke cmake.
+        extra_argv : list[str], optional
+            Additional verbatim commands to pass to CMake.
+
+        Raises
+        ------
+        CMakeConfigureError
+            If the CMake configuration fails.
         """
+        if extra_argv is None:
+            extra_argv = []
+
         assert source_dir.exists(), "Source directory doesn't exist"
         manager.log(f"Using source dir: {source_dir}")
         manager.log(f"Using build dir: {build_dir}")
+        manager.log(f"Using extra commands: {extra_argv}")
         if not build_dir.exists():
             build_dir.mkdir(parents=True)
         args = self._canonical_args()
@@ -259,7 +274,7 @@ class CMaker:
 
         cmake_extra_command = create_cmake_extra_commands(quote=False)
         cmake_command = list(
-            map(str, cmake_base_command + cmake_extra_command)
+            map(str, cmake_base_command + cmake_extra_command + extra_argv)
         )
         manager.log("Built CMake arguments:")
         manager.log("- " + "\n- ".join(cmake_command))

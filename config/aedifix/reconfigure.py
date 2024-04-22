@@ -172,7 +172,10 @@ class Reconfigure(Configurable):
         shutil.copy2(symlink, self._backup, follow_symlinks=True)
 
     def finalize(  # type: ignore [override]
-        self, main_package_type: type, ephemeral_args: set[str]
+        self,
+        main_package_type: type,
+        ephemeral_args: set[str],
+        extra_argv: list[str] | None = None,
     ) -> None:
         r"""Finalize the reconfigure script (i.e. instantiate it).
 
@@ -183,6 +186,8 @@ class Reconfigure(Configurable):
         ephemeral_args : set[str]
             A set of arguments which appeared on the command line, but should
             not make it into the reconfigure script.
+        extra_argv : list[str], optional
+            Additional verbatim commands passed to CMake.
 
         Notes
         -----
@@ -191,6 +196,9 @@ class Reconfigure(Configurable):
         to delete and recreate the arch directory.
         """
         cl_args = self._sanitized_argv(ephemeral_args)
+        if extra_argv:
+            cl_args.append("--")
+            cl_args.extend(extra_argv)
         template = self.TEMPLATE.format(
             PYTHON_EXECUTABLE=sys.executable,
             PROJECT_DIR=self.project_dir,
