@@ -34,9 +34,24 @@ macro(legate_core_find_or_configure)
     message(FATAL_ERROR "Error getting: ${_LEGATE_CORE_FOC_PACKAGE}, no such package")
   endif()
 
+  if(legate_core_IGNORE_INSTALLED_PACKAGES)
+    message(STATUS "Ignoring all installed packages when searching for ${_LEGATE_CORE_FOC_PACKAGE}")
+    set(CPM_DOWNLOAD_${_LEGATE_CORE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
+  endif()
+
   cmake_language(CALL "find_or_configure_${_LEGATE_CORE_FOC_PACKAGE_LOWER}")
 
-  if((NOT ${_LEGATE_CORE_FOC_PACKAGE}_DIR) AND (NOT ${_LEGATE_CORE_FOC_PACKAGE}_ROOT))
+  if(${_LEGATE_CORE_FOC_PACKAGE}_DIR)
+    message(
+      STATUS
+      "Found external ${_LEGATE_CORE_FOC_PACKAGE}_DIR = ${${_LEGATE_CORE_FOC_PACKAGE}_DIR}"
+    )
+  elseif(${_LEGATE_CORE_FOC_PACKAGE}_ROOT)
+    message(
+      STATUS
+      "Found external ${_LEGATE_CORE_FOC_PACKAGE}_ROOT = ${${_LEGATE_CORE_FOC_PACKAGE}_ROOT}"
+    )
+  else()
     # The following is to head off:
     #
     # 1. ./configure --with-foo (CMake downloads and builds Foo)
@@ -60,11 +75,26 @@ macro(legate_core_find_or_configure)
     # else()
     #    rapids_cpm_find(Foo)
     # endif()
-    set(CPM_DOWNLOAD_${_LEGATE_CORE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
-    set(
-      CPM_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE "${FETCHCONTENT_BASE_DIR}/${_LEGATE_CORE_FOC_PACKAGE_LOWER}-src"
-      CACHE PATH "" FORCE
+    message(
+      STATUS
+      "${_LEGATE_CORE_FOC_PACKAGE}_DIR and ${_LEGATE_CORE_FOC_PACKAGE}_ROOT undefined, "
+      "forcing CPM to re-use downloaded ${_LEGATE_CORE_FOC_PACKAGE} from now on"
     )
+    set(CPM_DOWNLOAD_${_LEGATE_CORE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
+    if(CPM_PACKAGE_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE_DIR)
+      # If the local package path was supplied by the user, this will be populated to the
+      # right place.
+      set(
+        CPM_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE "${CPM_PACKAGE_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE_DIR}"
+        CACHE PATH "" FORCE
+      )
+    else()
+      set(
+        CPM_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE "${FETCHCONTENT_BASE_DIR}/${_LEGATE_CORE_FOC_PACKAGE_LOWER}-src"
+        CACHE PATH "" FORCE
+      )
+    endif()
+
   endif()
 
   unset(_LEGATE_CORE_FOC_PACKAGE)

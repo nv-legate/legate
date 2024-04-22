@@ -48,3 +48,4 @@ venv/
 arch-*
 configure.log
 reconfigure-*
+*-arch

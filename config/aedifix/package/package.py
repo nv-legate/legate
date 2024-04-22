@@ -254,11 +254,14 @@ class Package(Configurable):
             title = self.name
         return parser.add_argument_group(title=title)
 
+    def set_flag(self, name: str | ConfigArgument, value: CLArg[_T]) -> None:
+        self.manager.set_cmake_variable(name=name, value=value.value)
+
     def set_flag_if_user_set(
         self, name: str | ConfigArgument, value: CLArg[_T]
     ) -> None:
         if value.cl_set:
-            self.manager.set_cmake_variable(name=name, value=value.value)
+            self.set_flag(name=name, value=value)
 
     def append_flags_if_user_set(
         self, name: str | ConfigArgument, value: CLArg[Sequence[str]]

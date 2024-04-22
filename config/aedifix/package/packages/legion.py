@@ -363,18 +363,53 @@ class Legion(Package):
         summary : str
             A summary of configured Legion.
         """
-        lines = []
-        dir_group = self.DirGroup
-        if root_dir := self.manager.get_cmake_variable(
-            dir_group.Legion_ROOT  # type: ignore[attr-defined]
-        ):
-            lines.append(("Root dir", root_dir))
-        elif root_dir := self.manager.get_cmake_variable(
-            dir_group.CPM_Legion_SOURCE  # type: ignore[attr-defined]
-        ):
-            lines.append(("Root dir", root_dir))
-        else:
-            lines.append(("Downloaded", True))
+
+        def get_location() -> Path | None:
+            dir_group = self.DirGroup
+            try:
+                root_dir = self.manager.read_cmake_variable(
+                    dir_group.Legion_ROOT  # type: ignore[attr-defined]
+                )
+            except ValueError:
+                pass
+            else:
+                if root_dir := root_dir.strip():
+                    return Path(root_dir)
+
+            try:
+                root_dir = self.manager.read_cmake_variable("Legion_DIR")
+            except ValueError:
+                pass
+            else:
+                root_dir = root_dir.strip()
+                if "NOTFOUND" not in root_dir:
+                    return Path(root_dir)
+
+            try:
+                root_dir = self.manager.read_cmake_variable(
+                    dir_group.CPM_Legion_SOURCE  # type: ignore[attr-defined]
+                )
+            except ValueError:
+                pass
+            else:
+                if root_dir := root_dir.strip():
+                    root_path = Path(root_dir)
+                    # If the source directory is relative to the cmake
+                    # directory, then we downloaded Legion, but set
+                    # CPM_Legion_Source ourselves.
+                    if not root_path.is_relative_to(
+                        self.manager.project_cmake_dir
+                    ):
+                        return root_path
+            return None
+
+        lines: list[tuple[str, Any]] = []
+        root_dir = get_location()
+        downloaded = root_dir is None
+        lines.append(("Downloaded", downloaded))
+        if not downloaded:
+            assert root_dir is not None  # pacify mypy
+            lines.append(("  Root dir", root_dir))
 
         if cxx_flags := self.manager.get_cmake_variable(self.Legion_CXX_FLAGS):
             lines.append(("C++ flags", cxx_flags))

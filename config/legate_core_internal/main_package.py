@@ -120,6 +120,25 @@ class LegateCore(MainPackage):
     legate_core_ENABLE_SANITIZERS: Final = CMAKE_VARIABLE(
         "legate_core_ENABLE_SANITIZERS", CMakeBool
     )
+    legate_core_IGNORE_INSTALLED_PACKAGES: Final = ConfigArgument(
+        name="--ignore-installed-packages",
+        spec=ArgSpec(
+            dest="ignore_installed_packages",
+            type=bool,
+            default=True,
+            help=(
+                "If true, when deciding to search for, or download third-party"
+                " packages, never search and always download. WARNING: "
+                "setting this option to false may make your builds "
+                "non-idempotent! Prior builds (and installations) may affect "
+                "the current ones in non-trivial ways. reconfiguring may "
+                "yield different results."
+            ),
+        ),
+        cmake_var=CMAKE_VARIABLE(
+            "legate_core_IGNORE_INSTALLED_PACKAGES", CMakeBool
+        ),
+    )
 
     def __init__(
         self, manager: ConfigurationManager, argv: Sequence[str]
@@ -265,7 +284,7 @@ class LegateCore(MainPackage):
         )
         self.set_flag_if_user_set(self.BUILD_MARCH, self.cl_args.build_march)
         build_type = self.cl_args.build_type
-        if build_type.value == "debug-sanitizer":
+        if "sanitizer" in build_type.value:
             self.manager.set_cmake_variable(
                 self.legate_core_ENABLE_SANITIZERS, True
             )
@@ -273,6 +292,39 @@ class LegateCore(MainPackage):
             self.manager.set_cmake_variable(
                 self.legate_core_ENABLE_SANITIZERS, False
             )
+        ignore_packages = self.cl_args.ignore_installed_packages
+        if (not ignore_packages.value) and ignore_packages.cl_set:
+            flag_name = ignore_packages.name.replace("_", "-")
+            self.log_warning(
+                f"Setting --{flag_name} to false may make your builds "
+                "non-idempotent! Prior builds (and installations) may affect "
+                "the current one in non-trivial ways."
+                "\n"
+                "\n"
+                "** If you are a developer, building a development build, "
+                "this is probably not what you want. Please consider removing "
+                "this flag from your command-line arguments. **"
+                "\n"
+                "\n"
+                "For example, consider the following:"
+                "\n"
+                "\n"
+                f" 1. ./configure --{flag_name}=0 --with-foo (CMake downloads and builds libfoo.so)\n"  # noqa e501
+                f" 2. pip install . (CMake -- as a byproduct of installing {self.project_name} -- installs libfoo.so)\n"  # noqa E501
+                " 3. ./reconfigure... (CMake now picks up installed libfoo.so instead of reusing the downloaded one)\n"  # noqa E501
+                "\n"
+                "The package can now no longer be built."
+                "\n"
+                "\n"
+                "CMake still has a local target libfoo.so (from step 1), but "
+                "now due to step 3, libfoo.so is considered 'imported' "
+                "(because CMake found the installed version first). Imported "
+                "packages provide no recipes to build their products "
+                "(libfoo.so) and so the build is broken."
+            )
+        self.set_flag(
+            self.legate_core_IGNORE_INSTALLED_PACKAGES, ignore_packages
+        )
 
     def configure_legion(self) -> None:
         r"""Configure Legion for use with Legate.Core."""
