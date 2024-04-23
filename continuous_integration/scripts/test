@@ -99,6 +99,7 @@ run_test_or_analysis() {
             # user-level threading, so we turn it off for sanitizer-enabled tests
             if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
               EXTRA_ARGS="-ll:force_kthreads"
+              sysctl vm.mmap_rnd_bits=28
             fi
             python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
 

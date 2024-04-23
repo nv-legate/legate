@@ -38,7 +38,7 @@ jobs:
     needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.1.3
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.2.0
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -48,7 +48,7 @@ jobs:
       platform: ${{ inputs.platform }}
       dependencies-file: ""
       dependencies-workflow: ""
-      legate-gh-ci-tag: "v1.1.3"
+      legate-gh-ci-tag: "v1.2.0"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
@@ -58,7 +58,7 @@ jobs:
     needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' && inputs.upload-enabled == false }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.1.3
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.2.0
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -68,7 +68,7 @@ jobs:
       platform: ${{ inputs.platform }}
       dependencies-file: ""
       dependencies-workflow: ""
-      legate-gh-ci-tag: "v1.1.3"
+      legate-gh-ci-tag: "v1.2.0"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
@@ -182,7 +182,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.1.3
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.2.0
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
@@ -192,7 +192,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.1.3"
+      legate-gh-ci-tag: "v1.2.0"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
@@ -211,7 +211,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.1.3
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.2.0
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
@@ -221,7 +221,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.1.3"
+      legate-gh-ci-tag: "v1.2.0"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
