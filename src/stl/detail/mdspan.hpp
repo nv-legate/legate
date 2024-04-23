@@ -241,6 +241,7 @@ class mdspan_accessor {
       accessor_{Accessor::template get<ElementType, ActualDim>(store_)}
   {
   }
+  // NOLINTEND(google-explicit-constructor)
 
   LEGATE_HOST_DEVICE [[nodiscard]] reference access(data_handle_type handle,
                                                     std::size_t i) const noexcept
