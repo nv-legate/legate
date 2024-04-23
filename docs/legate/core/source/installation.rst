@@ -4,8 +4,11 @@ Installation
 How Do I Install Legate
 -----------------------
 
-Legate Core is available `on conda <https://anaconda.org/legate/legate-core>`_.
-Create a new environment containing Legate Core:
+Legate Core is available from `conda <https://docs.conda.io/projects/conda/en/latest/index.html>`_
+on the `legate channel <https://anaconda.org/legate/legate-core>`_.
+Please make sure you have at least conda version 24.1 installed, then create
+a new environment containing Legate Core:
+
 
 .. code-block:: sh
 
