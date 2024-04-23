@@ -130,28 +130,26 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
   LegateCheck(task->futures.size() == static_cast<std::size_t>(num_ranks + 1));
   const int unique_id = task->futures[0].get_result<int>();
 
-  coll::CollComm comm;
+  auto comm = std::make_unique<coll::Coll_Comm>();
 
-  legate::detail::typed_malloc(&comm, 1);
   if (LegateDefined(LEGATE_USE_NETWORK) &&
       (coll::backend_network->comm_type == coll::CollCommType::CollMPI)) {
-    int* mapping_table;
+    std::vector<int> mapping_table;
 
-    legate::detail::typed_malloc(&mapping_table, num_ranks);
+    mapping_table.reserve(num_ranks);
     for (int i = 0; i < num_ranks; i++) {
       const auto mapping_table_element = task->futures[i + 1].get_result<int>();
-      mapping_table[i]                 = mapping_table_element;
+      mapping_table.push_back(mapping_table_element);
     }
-    auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, mapping_table);
+    auto ret = coll::collCommCreate(comm.get(), num_ranks, point, unique_id, mapping_table.data());
     LegateCheck(ret == coll::CollSuccess);
     LegateCheck(mapping_table[point] == comm->mpi_rank);
-    std::free(mapping_table);
   } else {
-    auto ret = coll::collCommCreate(comm, num_ranks, point, unique_id, nullptr);
+    auto ret = coll::collCommCreate(comm.get(), num_ranks, point, unique_id, nullptr);
     LegateCheck(ret == coll::CollSuccess);
   }
 
-  return comm;
+  return comm.release();
 }
 
 void finalize_cpucoll(const Legion::Task* task,
@@ -162,13 +160,11 @@ void finalize_cpucoll(const Legion::Task* task,
   legate::detail::show_progress(task, context, runtime);
 
   LegateCheck(task->futures.size() == 1);
-  auto comm        = task->futures[0].get_result<coll::CollComm>();
-  const auto point = static_cast<int>(task->index_point[0]);
-  LegateCheck(comm->global_rank == point);
-  auto ret = coll::collCommDestroy(comm);
+  std::unique_ptr<coll::Coll_Comm> comm{task->futures[0].get_result<coll::CollComm>()};
+
+  LegateCheck(comm->global_rank == static_cast<int>(task->index_point[0]));
+  auto ret = coll::collCommDestroy(comm.get());
   LegateCheck(ret == coll::CollSuccess);
-  std::free(comm);
-  comm = nullptr;
 }
 
 }  // namespace

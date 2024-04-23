@@ -16,24 +16,18 @@
 
 #include "legate_defines.h"
 
+#include <atomic>
 #include <cstdbool>
 #include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <vector>
 
 #if LegateDefined(LEGATE_USE_NETWORK)
 #include <mpi.h>
 #endif
 
-// If we aren't building with networking, we'll use pthread_barrier to
-// construct a communicator for thread-local communication. Mac OS
-// does not implement pthread barriers, so we need to include an
-// implementation in case they are not defined. We also need to
-// include unistd.h since that defines _POSIX_BARRIERS.
-#include <pthread.h>
-#include <unistd.h>
-#if !defined(_POSIX_BARRIERS) || (_POSIX_BARRIERS < 0)
 #include "core/comm/pthread_barrier.h"
-#endif
 
 namespace legate::comm::coll {
 
@@ -53,10 +47,21 @@ class RankMappingTable {
 
 class ThreadComm {
  public:
-  pthread_barrier_t barrier;
-  bool ready_flag{};
-  const void** buffers{};
+  std::atomic<const void*>* buffers{};
   const int** displs{};
+
+  void init(std::int32_t global_comm_size);
+  void finalize(std::int32_t global_comm_size, bool is_finalizer);
+  void clear() noexcept;
+  void barrier_local();
+  [[nodiscard]] bool ready() const;
+
+  ~ThreadComm() noexcept;
+
+ private:
+  std::atomic<bool> ready_flag_{};
+  std::atomic<std::int32_t> entered_finalize_{};
+  pthread_barrier_t barrier_{};
 };
 
 enum class CollDataType : std::uint8_t {
@@ -257,7 +262,7 @@ class LocalNetwork : public BackendNetwork {
   void barrierLocal(CollComm global_comm);
 
  private:
-  std::vector<ThreadComm*> thread_comms{};
+  std::vector<std::unique_ptr<ThreadComm>> thread_comms{};
 };
 
 extern BackendNetwork* backend_network;

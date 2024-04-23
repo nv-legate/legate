@@ -20,6 +20,68 @@
 
 namespace legate::comm::coll {
 
+void ThreadComm::init(std::int32_t global_comm_size)
+{
+  const auto uint_comm_size = static_cast<unsigned int>(global_comm_size);
+
+  CHECK_PTHREAD_CALL_V(pthread_barrier_init(&barrier_, nullptr, uint_comm_size));
+  // Allocate with unique_ptr so RAII cleans these up in case of exception
+  std::unique_ptr<std::atomic<const void*>[]> buff_tmp{
+    new std::atomic<const void*>[global_comm_size]};
+  std::unique_ptr<const int*[]> displ_tmp{new const int*[global_comm_size]};
+
+  buffers = buff_tmp.release();
+  displs  = displ_tmp.release();
+  for (std::int32_t i = 0; i < global_comm_size; ++i) {
+    buffers[i] = nullptr;
+    displs[i]  = nullptr;
+  }
+  entered_finalize_ = 0;
+  ready_flag_       = true;
+}
+
+void ThreadComm::finalize(std::int32_t global_comm_size, bool is_finalizer)
+{
+  ++entered_finalize_;
+  if (is_finalizer) {
+    // Need to ensure that all other threads have left the barrier before we can destroy the
+    // thread_comm.
+    while (entered_finalize_ != global_comm_size) {}
+    entered_finalize_ = 0;
+    clear();
+  } else {
+    // The remaining threads are not allowed to leave until the finalizer thread has finished
+    // its work.
+    while (ready()) {}
+  }
+}
+
+void ThreadComm::clear() noexcept
+{
+  CHECK_PTHREAD_CALL_V(pthread_barrier_destroy(&barrier_));
+  delete[] std::exchange(buffers, nullptr);
+  delete[] std::exchange(displs, nullptr);
+  ready_flag_ = false;
+}
+
+void ThreadComm::barrier_local()
+{
+  if (const auto ret = pthread_barrier_wait(&barrier_)) {
+    if (ret == PTHREAD_BARRIER_SERIAL_THREAD) {
+      return;
+    }
+    CHECK_PTHREAD_CALL_V(ret);
+  }
+}
+
+bool ThreadComm::ready() const { return ready_flag_; }
+
+ThreadComm::~ThreadComm() noexcept
+{
+  delete[] buffers;
+  delete[] displs;
+}
+
 // public functions start from here
 
 LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
@@ -35,11 +97,9 @@ LocalNetwork::~LocalNetwork()
 {
   detail::log_coll().debug("Finalize LocalNetwork");
   LegateCheck(BackendNetwork::coll_inited == true);
-  for (ThreadComm* thread_comm : thread_comms) {
-    LegateCheck(!thread_comm->ready_flag);
-    std::free(thread_comm);
+  for (auto&& thread_comm : thread_comms) {
+    LegateCheck(!thread_comm->ready());
   }
-  thread_comms.clear();
   BackendNetwork::coll_inited = false;
 }
 
@@ -58,51 +118,24 @@ int LocalNetwork::comm_create(CollComm global_comm,
   global_comm->mpi_comm_size_actual = 1;
   global_comm->mpi_rank             = 0;
   if (global_comm->global_rank == 0) {
-    pthread_barrier_init(
-      &(thread_comms[global_comm->unique_id]->barrier), nullptr, global_comm->global_comm_size);
-    legate::detail::typed_malloc(&(thread_comms[global_comm->unique_id]->buffers),
-                                 global_comm_size);
-    legate::detail::typed_malloc(&(thread_comms[global_comm->unique_id]->displs), global_comm_size);
-    for (int i = 0; i < global_comm_size; i++) {
-      thread_comms[global_comm->unique_id]->buffers[i] = nullptr;
-      thread_comms[global_comm->unique_id]->displs[i]  = nullptr;
-    }
-    __sync_synchronize();
-    thread_comms[global_comm->unique_id]->ready_flag = true;
+    thread_comms[global_comm->unique_id]->init(global_comm->global_comm_size);
   }
-  __sync_synchronize();
-  while (!static_cast<volatile ThreadComm*>(thread_comms[global_comm->unique_id])->ready_flag) {}
-  global_comm->local_comm = thread_comms[global_comm->unique_id];
+  while (!thread_comms[global_comm->unique_id]->ready()) {}
+  global_comm->local_comm = thread_comms[global_comm->unique_id].get();
   barrierLocal(global_comm);
-  LegateCheck(global_comm->local_comm->ready_flag == true);
-  LegateCheck(global_comm->local_comm->buffers != nullptr);
-  LegateCheck(global_comm->local_comm->displs != nullptr);
+  LegateCheck(const_cast<const ThreadComm*>(global_comm->local_comm)->ready());
   global_comm->nb_threads = global_comm->global_comm_size;
   return CollSuccess;
 }
 
 int LocalNetwork::comm_destroy(CollComm global_comm)
 {
+  const auto id = global_comm->unique_id;
+
+  LegateAssert(id >= 0);
   barrierLocal(global_comm);
-  auto* thread_comm = [&] {
-    const auto id = global_comm->unique_id;
-
-    LegateAssert(id >= 0);
-    return thread_comms[static_cast<std::size_t>(id)];
-  }();
-
-  if (global_comm->global_rank == 0) {
-    auto ret = pthread_barrier_destroy(&(thread_comm->barrier));
-    LegateCheck(ret == 0);
-    // NOLINTBEGIN(bugprone-multi-level-implicit-pointer-conversion)
-    std::free(std::exchange(thread_comm->buffers, nullptr));
-    std::free(std::exchange(thread_comm->displs, nullptr));
-    // NOLINTEND(bugprone-multi-level-implicit-pointer-conversion)
-    __sync_synchronize();
-    thread_comm->ready_flag = false;
-  }
-  __sync_synchronize();
-  while (static_cast<volatile ThreadComm*>(thread_comm)->ready_flag) {}
+  thread_comms[static_cast<std::size_t>(id)]->finalize(global_comm->global_comm_size,
+                                                       global_comm->global_rank == 0);
   global_comm->status = false;
   return CollSuccess;
 }
@@ -114,13 +147,7 @@ int LocalNetwork::init_comm()
   LegateCheck(ret == CollSuccess);
   LegateCheck(id >= 0 && thread_comms.size() == static_cast<std::size_t>(id));
   // create thread comm
-  ThreadComm* thread_comm;
-
-  legate::detail::typed_malloc(&thread_comm, 1);
-  thread_comm->ready_flag = false;
-  thread_comm->buffers    = nullptr;
-  thread_comm->displs     = nullptr;
-  thread_comms.push_back(thread_comm);
+  thread_comms.emplace_back(std::make_unique<ThreadComm>());
   detail::log_coll().debug("Init comm id %d", id);
   return id;
 }
@@ -150,8 +177,7 @@ int LocalNetwork::alltoallv(const void* sendbuf,
   for (int i = 1; i < total_size + 1; i++) {
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     // wait for other threads to update the buffer address
-    while (static_cast<const void* volatile*>(
-             global_comm->local_comm->buffers)[recvfrom_global_rank] == nullptr ||
+    while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr ||
            static_cast<const int* volatile*>(
              global_comm->local_comm->displs)[recvfrom_global_rank] == nullptr) {}
     src_base = global_comm->local_comm->buffers[recvfrom_global_rank];
@@ -207,8 +233,7 @@ int LocalNetwork::alltoall(
   for (int i = 1; i < total_size + 1; i++) {
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
     // wait for other threads to update the buffer address
-    while (static_cast<const void* volatile*>(
-             global_comm->local_comm->buffers)[recvfrom_global_rank] == nullptr) {}
+    while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr) {}
     src_base = global_comm->local_comm->buffers[recvfrom_global_rank];
     const auto* src =
       static_cast<const void*>(static_cast<const char*>(src_base) +
@@ -260,10 +285,8 @@ int LocalNetwork::allgather(
   __sync_synchronize();
 
   for (int recvfrom_global_rank = 0; recvfrom_global_rank < total_size; recvfrom_global_rank++) {
-    // wait for other threads to update the buffer address, need to make it volatile so that
-    // compilers don't delete the loop.
-    while (static_cast<const void* volatile*>(
-             global_comm->local_comm->buffers)[recvfrom_global_rank] == nullptr) {}
+    // wait for other threads to update the buffer address
+    while (global_comm->local_comm->buffers[recvfrom_global_rank] == nullptr) {}
     const void* src = global_comm->local_comm->buffers[recvfrom_global_rank];
     char* dst       = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
@@ -341,7 +364,7 @@ void LocalNetwork::resetLocalBuffer(CollComm global_comm)
 void LocalNetwork::barrierLocal(CollComm global_comm)
 {
   LegateCheck(BackendNetwork::coll_inited == true);
-  pthread_barrier_wait(const_cast<pthread_barrier_t*>(&(global_comm->local_comm->barrier)));
+  const_cast<ThreadComm*>(global_comm->local_comm)->barrier_local();
 }
 
 }  // namespace legate::comm::coll
