@@ -313,12 +313,12 @@ mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
 
 bool is_running_in_task()
 {
-  // If the Legion runtime hasn't been started, we always return false
-  if (!Legion::Runtime::has_runtime()) {
-    return false;
+  // Make sure Legion runtime has been started and that we are not running in an user-thread
+  // without a Legion context
+  if (Legion::Runtime::has_runtime() && Legion::Runtime::has_context()) {
+    return Legion::Runtime::get_context_task(Legion::Runtime::get_context())->has_parent_task();
   }
-  const auto* task = Legion::Runtime::get_context_task(Legion::Runtime::get_context());
-  return task->has_parent_task();
+  return false;
 }
 
 }  // namespace legate

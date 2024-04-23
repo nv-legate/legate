@@ -14,6 +14,7 @@
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>
+#include <thread>
 
 namespace test_is_running_in_task {
 
@@ -22,6 +23,12 @@ using IsRunningInTask = DefaultFixture;
 constexpr const char library_name[] = "test_is_running_in_task";
 
 TEST_F(IsRunningInTask, Toplevel) { EXPECT_FALSE(legate::is_running_in_task()); }
+
+TEST_F(IsRunningInTask, UserThread)
+{
+  std::thread thd{[] { EXPECT_FALSE(legate::is_running_in_task()); }};
+  thd.join();
+}
 
 struct Checker : public legate::LegateTask<Checker> {
   static constexpr std::int32_t TASK_ID = 0;
@@ -53,5 +60,11 @@ TEST_F(IsRunningInTask, InIndexTask)
 using IsRunningInTaskNoRuntime = ::testing::Test;
 
 TEST_F(IsRunningInTaskNoRuntime, BeforeInit) { EXPECT_FALSE(legate::is_running_in_task()); }
+
+TEST_F(IsRunningInTaskNoRuntime, UserThread)
+{
+  std::thread thd{[] { EXPECT_FALSE(legate::is_running_in_task()); }};
+  thd.join();
+}
 
 }  // namespace test_is_running_in_task
