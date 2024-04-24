@@ -26,9 +26,7 @@ specific cluster is not covered, you may be able to adapt an existing workflow.
 
 The primary method of retrieving dependencies for Legate Core and downstream
 libraries is through [conda](https://docs.conda.io/en/latest/). You will need
-an installation of conda to follow the instructions below. We suggest using
-the [conda](https://github.com/conda/conda) implementation of the conda
-package manager.
+an installation of conda to follow the instructions below.
 
 Please use the `scripts/generate-conda-envs.py` script to create a conda
 environment file listing all the packages that are required to build, run and
