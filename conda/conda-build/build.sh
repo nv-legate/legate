@@ -41,6 +41,10 @@ else
   configure_args+=(--build-type=release)
 fi
 
+if [[ "${UCX_ENABLED}" == "1" ]]; then
+  configure_args+=(--with-ucx)
+fi
+
 export CUDAHOSTCXX="${CXX}"
 export OPENSSL_DIR="${PREFIX}"
 export CUDAFLAGS="-isystem ${PREFIX}/include -L${PREFIX}/lib"

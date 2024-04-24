@@ -123,6 +123,9 @@ build:
 {% if upload_enabled_bool %}
     - UPLOAD_ENABLED=1
 {% endif %}
+{% if ucx_configured_bool %}
+    - UCX_ENABLED=1
+{% endif %}
   run_exports:
 {% if not gpu_enabled_bool %}
     - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_cpu*

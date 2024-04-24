@@ -86,32 +86,34 @@ run_test_or_analysis() {
             echo "Running C++ unit tests..."
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
 
+            WORKERS=""
             if [[ "${UCX_ENABLED}" == "ON" ]]; then
               set +eou pipefail
               mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
               set -eou pipefail
+              WORKERS="-j 1"
             fi
 
             cd "${LEGATE_CORE_DIR}"
 
-            EXTRA_ARGS=
+            EXTRA_ARGS=""
             # TODO (wonchanl, jfaibussowit) Sanitizers can raise false alarms if the code does
             # user-level threading, so we turn it off for sanitizer-enabled tests
             if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
               EXTRA_ARGS="-ll:force_kthreads"
               sysctl vm.mmap_rnd_bits=28
             fi
-            python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+            python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug ${WORKERS} --cpus 1 "${EXTRA_ARGS}"
 
             # Also do some multi-CPU testing
             if [[ "$(uname)" == "Darwin" ]]; then
-                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 2 "${EXTRA_ARGS}"
+                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug ${WORKERS} --cpus 2 "${EXTRA_ARGS}"
             else
-                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --cpus 4 "${EXTRA_ARGS}"
+                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug ${WORKERS} --cpus 4 "${EXTRA_ARGS}"
             fi
 
             [[ -f ${CONDA_PREFIX}/bin/gpu_tests ]] && {
-              python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/gpu_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+              python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/gpu_tests --verbose --debug ${WORKERS} --cpus 1 "${EXTRA_ARGS}"
             }
             ;;
 
