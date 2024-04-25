@@ -235,7 +235,7 @@ Only linux-64 packages are available at the moment.
 The default package contains GPU support, and is compatible with CUDA >= 11.8
 (driver >= 520), and Volta or later GPU architectures. There are also CPU-only
 packages available, which will be automatically selected when installing on a
-machine without GPUs available. [BUILD.md](BUILD.md) for instructions on 
+machine without GPUs available. See [BUILD.md](BUILD.md) for instructions on 
 building Legate Core from source.
 
 ## How Do I Use Legate?
