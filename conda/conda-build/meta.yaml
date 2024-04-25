@@ -192,7 +192,7 @@ requirements:
     - libcusolver-dev
 {% endif %}
 {% if ucx_configured_bool %}
-    - ucx >=1.14
+    - ucx >=1.16
     - openmpi <5
 {% endif %}
 
@@ -213,7 +213,7 @@ requirements:
     - nccl
 {% endif %}
 {% if ucx_configured_bool %}
-    - ucx >=1.14
+    - ucx >=1.16
     - openmpi <5
 {% endif %}
 
