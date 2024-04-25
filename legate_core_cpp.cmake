@@ -135,7 +135,12 @@ if(Legion_USE_CUDA)
   set(CMAKE_INCLUDE_SYSTEM_FLAG_CUDA "-isystem ")
   # Find the CUDAToolkit
   rapids_find_package(
-    CUDAToolkit REQUIRED
+    # Min version of CUDA is 11.8, but we want CMake to prefer the highest version
+    # possible. It seems that it only does that if you give it a range...
+    #
+    # So in 100 years time, if we ever get to CUDA version 100000000, someone must
+    # remember to add another 9 below.
+    CUDAToolkit 11.8...99999999.99 REQUIRED
     BUILD_EXPORT_SET legate-core-exports
     INSTALL_EXPORT_SET legate-core-exports
   )
