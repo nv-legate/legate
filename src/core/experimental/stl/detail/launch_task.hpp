@@ -394,8 +394,8 @@ class store_placeholder {
       case store_type::output: return outputs[index];
       case store_type::reduction: return reduction;
     }
-    // src/stl/detail/launch_task.hpp:238:3: error: control reaches end of non-void function
-    // [-Werror=return-type]
+    // src/core/experimental/stl/detail/launch_task.hpp:238:3: error: control reaches end
+    // of non-void function [-Werror=return-type]
     //
     // ... I mean, it doesn't, since that switch above is fully covered...
     LegateUnreachable();

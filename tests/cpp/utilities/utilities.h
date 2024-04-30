@@ -12,8 +12,8 @@
 
 #pragma once
 
+#include "core/experimental/stl/detail/registrar.hpp"
 #include "legate.h"
-#include "stl/detail/registrar.hpp"
 
 #include <gtest/gtest.h>
 

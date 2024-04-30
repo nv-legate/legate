@@ -257,7 +257,7 @@ list(APPEND legate_core_SOURCES
   src/core/utilities/detail/tuple.cc
   src/timing/timing.cc
   # stl
-  src/stl/detail/clang_tidy_dummy.cpp
+  src/core/experimental/stl/detail/clang_tidy_dummy.cpp
 )
 
 if(Legion_NETWORKS)
@@ -720,34 +720,34 @@ install(
 
 # Legate STL headers
 install(
-	FILES src/stl/stl.hpp
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/stl)
+	FILES src/core/experimental/stl.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/experimental)
 
 install(
-	FILES src/stl/detail/for_each.hpp
-		    src/stl/detail/span.hpp
-		    src/stl/detail/registrar.hpp
-		    src/stl/detail/transform_reduce.hpp
-		    src/stl/detail/stlfwd.hpp
-		    src/stl/detail/get_logical_store.hpp
-		    src/stl/detail/config.hpp
-		    src/stl/detail/elementwise.hpp
-		    src/stl/detail/functional.hpp
-		    src/stl/detail/meta.hpp
-		    src/stl/detail/mdspan.hpp
-		    src/stl/detail/suffix.hpp
-		    src/stl/detail/prefix.hpp
-		    src/stl/detail/slice.hpp
-		    src/stl/detail/type_traits.hpp
-		    src/stl/detail/transform.hpp
-		    src/stl/detail/iterator.hpp
-		    src/stl/detail/utility.hpp
-		    src/stl/detail/store.hpp
-		    src/stl/detail/launch_task.hpp
-		    src/stl/detail/ranges.hpp
-		    src/stl/detail/reduce.hpp
-		    src/stl/detail/fill.hpp
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/stl/detail)
+	FILES src/core/experimental/stl/detail/for_each.hpp
+		    src/core/experimental/stl/detail/span.hpp
+		    src/core/experimental/stl/detail/registrar.hpp
+		    src/core/experimental/stl/detail/transform_reduce.hpp
+		    src/core/experimental/stl/detail/stlfwd.hpp
+		    src/core/experimental/stl/detail/get_logical_store.hpp
+		    src/core/experimental/stl/detail/config.hpp
+		    src/core/experimental/stl/detail/elementwise.hpp
+		    src/core/experimental/stl/detail/functional.hpp
+		    src/core/experimental/stl/detail/meta.hpp
+		    src/core/experimental/stl/detail/mdspan.hpp
+		    src/core/experimental/stl/detail/suffix.hpp
+		    src/core/experimental/stl/detail/prefix.hpp
+		    src/core/experimental/stl/detail/slice.hpp
+		    src/core/experimental/stl/detail/type_traits.hpp
+		    src/core/experimental/stl/detail/transform.hpp
+		    src/core/experimental/stl/detail/iterator.hpp
+		    src/core/experimental/stl/detail/utility.hpp
+		    src/core/experimental/stl/detail/store.hpp
+		    src/core/experimental/stl/detail/launch_task.hpp
+		    src/core/experimental/stl/detail/ranges.hpp
+		    src/core/experimental/stl/detail/reduce.hpp
+		    src/core/experimental/stl/detail/fill.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/experimental/stl/detail)
 
 # Legate timing header
 install(

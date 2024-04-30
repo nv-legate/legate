@@ -191,7 +191,7 @@ class mdspan_accessor {
   // This ignore is needed to silence the following spurious warnings, because I guess the
   // Kokkos guys don't default-initialize their compressed pairs?
   //
-  // legate.core.internal/src/stl/detail/mdspan.hpp:171:3: error:
+  // legate.core.internal/src/core/experimental/stl/detail/mdspan.hpp:171:3: error:
   // '<unnamed>.std::detail::__compressed_pair<std::layout_right::mapping<std::extents<long
   // long int, 18446744073709551615> >, legate::stl::detail::mdspan_accessor<long int, 1,
   // legate::stl::detail::default_accessor>,

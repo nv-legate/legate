@@ -12,21 +12,21 @@
 
 #pragma once
 
-#include "detail/stlfwd.hpp"
+#include "core/experimental/stl/detail/stlfwd.hpp"
 //
-#include "detail/fill.hpp"
-#include "detail/for_each.hpp"
-#include "detail/launch_task.hpp"
-#include "detail/reduce.hpp"
-#include "detail/registrar.hpp"
-#include "detail/slice.hpp"
-#include "detail/transform.hpp"
-#include "detail/transform_reduce.hpp"
+#include "core/experimental/stl/detail/fill.hpp"
+#include "core/experimental/stl/detail/for_each.hpp"
+#include "core/experimental/stl/detail/launch_task.hpp"
+#include "core/experimental/stl/detail/reduce.hpp"
+#include "core/experimental/stl/detail/registrar.hpp"
+#include "core/experimental/stl/detail/slice.hpp"
+#include "core/experimental/stl/detail/transform.hpp"
+#include "core/experimental/stl/detail/transform_reduce.hpp"
 
 // Include this last:
-#include "detail/prefix.hpp"
+#include "core/experimental/stl/detail/prefix.hpp"
 
 namespace legate::stl {
 }
 
-#include "detail/suffix.hpp"
+#include "core/experimental/stl/detail/suffix.hpp"

@@ -123,7 +123,7 @@ file(GLOB bug_SRC ${PROJECT_SOURCE_DIR}/bug/*.cc)
 file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
 file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
 file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
-file(GLOB stl_SRC ${PROJECT_SOURCE_DIR}/stl/*.cc)
+file(GLOB stl_SRC ${PROJECT_SOURCE_DIR}/experimental/stl/*.cc)
 file(GLOB experimental_SRC ${PROJECT_SOURCE_DIR}/experimental/*.cc)
 
 include(GNUInstallDirs)

@@ -10,20 +10,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "stl/detail/stlfwd.hpp"
-#include "stl/stl.hpp"
+#include "core/experimental/stl/detail/stlfwd.hpp"
+#include "core/experimental/stl.hpp"
 //
-#include "stl/detail/fill.hpp"
-#include "stl/detail/for_each.hpp"
-#include "stl/detail/launch_task.hpp"
-#include "stl/detail/reduce.hpp"
-#include "stl/detail/registrar.hpp"
-#include "stl/detail/slice.hpp"
-#include "stl/detail/transform.hpp"
-#include "stl/detail/transform_reduce.hpp"
+#include "core/experimental/stl/detail/fill.hpp"
+#include "core/experimental/stl/detail/for_each.hpp"
+#include "core/experimental/stl/detail/launch_task.hpp"
+#include "core/experimental/stl/detail/reduce.hpp"
+#include "core/experimental/stl/detail/registrar.hpp"
+#include "core/experimental/stl/detail/slice.hpp"
+#include "core/experimental/stl/detail/transform.hpp"
+#include "core/experimental/stl/detail/transform_reduce.hpp"
 
 // Include this last:
-#include "stl/detail/prefix.hpp"
+#include "core/experimental/stl/detail/prefix.hpp"
 
 // This file exists only to add a cpp file that includes the headers, so that clang-tidy will
 // check them for us
@@ -33,4 +33,4 @@ void internal_private_do_not_call_or_you_will_be_fired() {}
 
 }  // namespace legate::stl::detail::clang_tidy_dummy
 
-#include "stl/detail/suffix.hpp"
+#include "core/experimental/stl/detail/suffix.hpp"
