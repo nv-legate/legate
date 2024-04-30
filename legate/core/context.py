@@ -18,8 +18,6 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 import numpy as np
 
-import legate.core.types as ty
-
 from . import Future, legion
 from ._legion.util import Logger
 from ._lib.context import (  # type: ignore[import-not-found]
@@ -377,7 +375,7 @@ class Context:
         task_id: int,
         store: Store,
         radix: int = 4,
-        scalar_args: list[tuple[Any, ty.Dtype]] = [],
+        scalar_args: list[tuple[Any, Dtype]] = [],
     ) -> Store:
         """
         Performs a user-defined reduction by building a tree of reduction
