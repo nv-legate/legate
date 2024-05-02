@@ -36,6 +36,18 @@ def drop_patch(version: str) -> str:
     return ".".join(version.split(".")[:2])
 
 
+def normalize_platform_arch() -> str:
+    import platform
+
+    match arch := platform.machine():
+        case "x86_64":
+            return "64"
+        case "aarch64":
+            return arch
+        case _:
+            raise RuntimeError(f"Unknown platform architecture: {arch}")
+
+
 class SectionConfig:
     header: str
 
@@ -102,20 +114,23 @@ class CUDAConfig(SectionConfig):
         if self.compilers:
             if self.os == "linux":
                 if V(self.ctk_version) < (12, 0, 0):
-                    deps += (f"nvcc_linux-64={drop_patch(self.ctk_version)}",)
+                    arch = normalize_platform_arch()
+                    deps += (
+                        f"nvcc_linux-{arch}={drop_patch(self.ctk_version)}",
+                    )
                 else:
                     deps += ("cuda-nvcc",)
 
                 # gcc 11.3 is incompatible with nvcc < 11.6.
                 if V(self.ctk_version) < (11, 6, 0):
                     deps += (
-                        "gcc_linux-64<=11.2",
-                        "gxx_linux-64<=11.2",
+                        "gcc<=11.2",
+                        "gxx<=11.2",
                     )
                 else:
                     deps += (
-                        "gcc_linux-64=11.*",
-                        "gxx_linux-64=11.*",
+                        "gcc=11.*",
+                        "gxx=11.*",
                     )
 
         return deps
