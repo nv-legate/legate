@@ -31,13 +31,13 @@ environment file listing all the packages that are required to build, run and
 test Legate Core and all downstream libraries. For example:
 
 ```shell
-$ ./scripts/generate-conda-envs.py --python 3.10 --ctk 12.2.2 --os linux --ucx
---- generating: environment-test-linux-py310-cuda-12.2.2-ucx.yaml
+$ ./scripts/generate-conda-envs.py --ctk 12.2.2 --os linux --ucx
+--- generating: environment-test-linux-cuda-12.2.2-ucx.yaml
 ```
 
 Run this script with `-h` to see all available configuration options for the
-generated environment file (e.g. all the supported Python versions). See the
-[Dependencies](#dependency-listing) section for more details.
+generated environment file. See the [Dependencies](#dependency-listing) section
+for more details.
 
 Once you have this environment file, you can install the required packages by
 creating a new conda environment:
@@ -154,9 +154,6 @@ of `generate-conda-envs.py`.
 
 In terms of Python compatibility, Legate *roughly* follows the timeline outlined
 in [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
-
-Specify your desired Python version when creating a conda environment file
-through the `--python` flag of `generate-conda-envs.py`.
 
 #### C++ compiler
 

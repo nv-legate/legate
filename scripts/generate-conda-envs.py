@@ -292,7 +292,6 @@ class DocsConfig(SectionConfig):
 @dataclass(frozen=True)
 class EnvConfig:
     use: str
-    python: str
     os: OSType
     ctk_version: str | None
     compilers: bool
@@ -340,13 +339,25 @@ class EnvConfig:
 
     @property
     def filename(self) -> str:
-        return f"environment-{self.use}-{self.os}-py{self.python}{self.cuda}{self.build}"  # noqa
+        return (
+            f"environment-{self.use}-{self.os}{self.cuda}{self.build}"  # noqa
+        )
 
 
 # --- Setup -------------------------------------------------------------------
+def get_min_py() -> str:
+    from pathlib import Path
 
-PYTHON_VERSIONS = ("3.10", "3.11")
+    try:
+        import tomllib  # novermin
+    except ModuleNotFoundError:
+        from pip._vendor import tomli as tomllib
 
+    with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as f:
+        return tomllib.load(f)["build-system"]["python-requires"]
+
+
+MIN_PYTHON_VERSION = get_min_py()
 OS_NAMES: tuple[OSType, ...] = ("linux", "osx")
 
 
@@ -356,7 +367,7 @@ channels:
 {channels}
 dependencies:
 
-  - python={python}
+  - python>={min_python_version}
 
 {conda_sections}{pip}
 """
@@ -424,12 +435,6 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument(
-        "--python",
-        choices=PYTHON_VERSIONS,
-        default=PYTHON_VERSIONS[0],
-        help="Python version to generate for",
-    )
-    parser.add_argument(
         "--ctk",
         dest="ctk_version",
         help="CTK version to generate for",
@@ -494,7 +499,6 @@ if __name__ == "__main__":
 
     config = EnvConfig(
         "test",
-        args.python,
         args.os,
         args.ctk_version,
         args.compilers,
@@ -529,7 +533,7 @@ if __name__ == "__main__":
     out = ENV_TEMPLATE.format(
         use=config.use,
         channels=config.channels,
-        python=config.python,
+        min_python_version=MIN_PYTHON_VERSION,
         conda_sections=conda_sections,
         pip=(
             PIP_TEMPLATE.format(pip_sections=pip_sections)
