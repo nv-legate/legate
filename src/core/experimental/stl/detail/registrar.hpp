@@ -18,7 +18,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -96,6 +96,6 @@ class initialize_library {
   Library library_{};      ///< The library instance.
 };
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

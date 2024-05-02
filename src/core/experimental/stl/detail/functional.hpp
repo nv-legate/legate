@@ -23,7 +23,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
@@ -128,6 +128,6 @@ template <std::size_t Count, typename Function>
   return {std::forward<Function>(fun)};
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

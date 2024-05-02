@@ -19,7 +19,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -66,6 +66,6 @@ void for_each(Input&& input, Function&& fn)
                    stl::constraints(stl::align(stl::inputs)));
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

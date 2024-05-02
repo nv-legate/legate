@@ -19,7 +19,7 @@
 
 using STL = LegateSTLFixture;
 
-namespace stl = legate::stl;
+namespace stl = legate::experimental::stl;
 
 namespace {
 

@@ -20,7 +20,7 @@
 #include <functional>
 #include <utility>
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 namespace detail {
 
 template <typename Function, typename... InputSpans>
@@ -115,4 +115,4 @@ template <typename Function>
   return detail::elementwise<std::decay_t<Function>>{std::forward<Function>(fn)};
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl

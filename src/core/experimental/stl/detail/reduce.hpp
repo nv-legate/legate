@@ -21,7 +21,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 namespace detail {
 
@@ -288,6 +288,6 @@ template <typename InputRange, typename Init, typename BinaryOperation>  //
   return as_typed<element_type_of_t<Init>, dim_of_v<Init>>(get_logical_store(init));
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

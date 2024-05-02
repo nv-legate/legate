@@ -24,7 +24,7 @@
 // get_logical_store
 //   A customizable accessor for getting the underlying legate::LogicalStore from a
 //   logical_store_like object.
-namespace legate::stl::detail {
+namespace legate::experimental::stl::detail {
 namespace tags {
 namespace get_logical_store {
 
@@ -55,8 +55,8 @@ inline constexpr get_logical_store::tag get_logical_store{};
 
 // Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
 // NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::legate::stl::detail::tags::obj;
+using namespace ::legate::experimental::stl::detail::tags::obj;
 
-}  // namespace legate::stl::detail
+}  // namespace legate::experimental::stl::detail
 
 #include "suffix.hpp"

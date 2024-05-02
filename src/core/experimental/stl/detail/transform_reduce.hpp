@@ -20,7 +20,7 @@
 #include "stlfwd.hpp"
 #include "transform.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename CvrefInput,
@@ -108,6 +108,6 @@ template <typename CvrefInput1,
     std::move(result), std::forward<Init>(init), std::forward<BinaryReduction>(red));
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

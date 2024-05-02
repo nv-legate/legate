@@ -57,7 +57,7 @@ class LegateSTLFixture : public ::testing::Test {
   void TearDown() override { init_.reset(); }
 
  private:
-  inline static std::optional<legate::stl::initialize_library> init_;
+  inline static std::optional<legate::experimental::stl::initialize_library> init_;
   inline static int argc_;
   inline static char** argv_;
 };

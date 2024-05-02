@@ -35,7 +35,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 namespace detail {
 
@@ -1184,28 +1184,28 @@ inline constexpr detail::launch_task launch_task{};
  *
  * Launch parameter arguments can be one of the following in any order:
  *
- * - `legate::stl::inputs` - specifies the input stores for the task
+ * - `legate::experimental::stl::inputs` - specifies the input stores for the task
  *    - \a Example:
  *
  *      @code
  *      inputs(store1, store2, store3)
  *      @endcode
  *
- * - `legate::stl::outputs` - specifies the output stores for the task
+ * - `legate::experimental::stl::outputs` - specifies the output stores for the task
  *    - \a Example:
  *
  *      @code
  *      outputs(store1, store2, store3)
  *      @endcode
  *
- * - `legate::stl::scalars` - specifies the scalar arguments for the task
+ * - `legate::experimental::stl::scalars` - specifies the scalar arguments for the task
  *    - \a Example:
  *
  *      @code
  *      scalars(42, 3.14f)
  *      @endcode
  *
- * - `legate::stl::function` - specifies the function to be applied
+ * - `legate::experimental::stl::function` - specifies the function to be applied
  *    iteratively to the inputs.
  *    - The function will take as arguments the current elements of the
  *      input stores, in order, followed by the current elements of the
@@ -1222,7 +1222,7 @@ inline constexpr detail::launch_task launch_task{};
  *      function([](const auto& in, auto& out) { out = in * in; })
  *      @endcode
  *
- * - `legate::stl::reduction` - specifies the reduction store and the
+ * - `legate::experimental::stl::reduction` - specifies the reduction store and the
  *    reduction function to be applied to the inputs.
  *    - The function must be bitwise copyable.
  *    - The reduction function must take as `mdspan`s refering to parts
@@ -1241,7 +1241,7 @@ inline constexpr detail::launch_task launch_task{};
  *      stl::reduction(stl::rows_of(store), stl::elementwise(std::plus{}))
  *      @endcode
  *
- * - `legate::stl::constraints` - specifies the constraints for the task
+ * - `legate::experimental::stl::constraints` - specifies the constraints for the task
  *    - A constraint is a callable that takes an `legate::AutoTask&` and
  *      the input, output, and reduction stores as arguments. Its function
  *      signature must be:
@@ -1253,7 +1253,7 @@ inline constexpr detail::launch_task launch_task{};
  *           const LogicalStore&)              // the reduction store
  *      @endcode
  *
- *    - Legate provides one constraint generator, `legate::stl::align`, for specifying
+ *    - Legate provides one constraint generator, `legate::experimental::stl::align`, for specifying
  *      the alignment constraints for the task. It can be used many different ways:
  *       - `align(inputs[0], inputs[1])` - aligns the first input with the second input
  *       - `align(inputs[0], outputs[0])` - aligns the first input with the first output
@@ -1275,11 +1275,11 @@ inline constexpr detail::launch_task launch_task{};
  *   auto drop_inputs = [fn](const auto&, const auto&, auto& out1, auto& out2) {
  *     fn(out1, out2);
  *   };
- *   legate::stl::launch_task(
- *     legate::stl::inputs(input1, input2),
- *     legate::stl::outputs(input1, input2),
- *     legate::stl::function(drop_inputs),
- *     legate::stl::constraints(legate::stl::align(input1, input2)));
+ *   legate::experimental::stl::launch_task(
+ *     legate::experimental::stl::inputs(input1, input2),
+ *     legate::experimental::stl::outputs(input1, input2),
+ *     legate::experimental::stl::function(drop_inputs),
+ *     legate::experimental::stl::constraints(legate::experimental::stl::align(input1, input2)));
  * }
  * @endcode
  * @endparblock
@@ -1288,6 +1288,6 @@ template <LaunchParam... Params>
 void launch_task(Params... params);
 #endif
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

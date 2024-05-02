@@ -25,7 +25,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 namespace detail {
 class broadcast_constraint {
@@ -439,6 +439,6 @@ class value_type_of_<slice_view<ElementType, Dim, SlicePolicy>> {
 
 }  // namespace detail
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

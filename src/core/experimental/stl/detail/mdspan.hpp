@@ -75,7 +75,7 @@ LEGATE_PRAGMA_POP()
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 namespace detail {
 
 template <typename Function, typename... InputSpans>
@@ -193,10 +193,10 @@ class mdspan_accessor {
   //
   // legate.core.internal/src/core/experimental/stl/detail/mdspan.hpp:171:3: error:
   // '<unnamed>.std::detail::__compressed_pair<std::layout_right::mapping<std::extents<long
-  // long int, 18446744073709551615> >, legate::stl::detail::mdspan_accessor<long int, 1,
-  // legate::stl::detail::default_accessor>,
-  // void>::__t2_val.legate::stl::detail::mdspan_accessor<long int, 1,
-  // legate::stl::detail::default_accessor>::shape_' may be used uninitialized
+  // long int, 18446744073709551615> >, legate::experimental::stl::detail::mdspan_accessor<long int,
+  // 1, legate::experimental::stl::detail::default_accessor>,
+  // void>::__t2_val.legate::experimental::stl::detail::mdspan_accessor<long int, 1,
+  // legate::experimental::stl::detail::default_accessor>::shape_' may be used uninitialized
   // [-Werror=maybe-uninitialized]
   // 171 |   mdspan_accessor(mdspan_accessor&& other) noexcept = default;
   //     |   ^~~~~~~~~~~~~~~
@@ -353,6 +353,6 @@ void assign(std::mdspan<LeftElement, Extent, Layout, LeftAccessor>&& lhs,
   }
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

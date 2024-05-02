@@ -24,7 +24,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 class ignore {
  public:
@@ -123,6 +123,6 @@ void static_assert_iterator_category(const It&)
                                   typename std::iterator_traits<It>::iterator_category>);
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

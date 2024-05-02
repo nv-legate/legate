@@ -22,7 +22,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 namespace detail {
 
@@ -223,6 +223,6 @@ class affine_map {
   LEGATE_HOST_DEVICE [[nodiscard]] cursor begin() const { return 0; }
 };
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

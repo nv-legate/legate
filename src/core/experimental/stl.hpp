@@ -26,7 +26,7 @@
 // Include this last:
 #include "core/experimental/stl/detail/prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 }
 
 #include "core/experimental/stl/detail/suffix.hpp"

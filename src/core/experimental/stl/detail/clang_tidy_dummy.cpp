@@ -27,10 +27,10 @@
 
 // This file exists only to add a cpp file that includes the headers, so that clang-tidy will
 // check them for us
-namespace legate::stl::detail::clang_tidy_dummy {
+namespace legate::experimental::stl::detail::clang_tidy_dummy {
 
 void internal_private_do_not_call_or_you_will_be_fired() {}
 
-}  // namespace legate::stl::detail::clang_tidy_dummy
+}  // namespace legate::experimental::stl::detail::clang_tidy_dummy
 
 #include "core/experimental/stl/detail/suffix.hpp"

@@ -19,7 +19,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 namespace detail {
 
 template <typename T>
@@ -61,6 +61,6 @@ using observer_ptr = Type*;
 template <bool MakeConst, typename Type>
 using const_if_t = meta::if_c<MakeConst, const Type, Type>;
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

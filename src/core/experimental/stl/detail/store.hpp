@@ -29,7 +29,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 /** @cond */
 template <typename ElementType, std::int32_t Dim>
@@ -266,7 +266,7 @@ logical_store(std::array<std::size_t, Dim>, ElementType) -> logical_store<Elemen
 
 /**
  * @brief Given an untyped `legate::LogicalStore`, return a strongly-typed
- *        `legate::stl::logical_store`.
+ *        `legate::experimental::stl::logical_store`.
  *
  * @tparam ElementType The element type of the `LogicalStore`.
  * @tparam Dim The dimensionality of the `LogicalStore`.
@@ -309,7 +309,7 @@ template <std::int32_t Dim>
 
 /**
  * @brief Given an untyped `legate::PhysicalStore`, return a strongly-typed
- *        `legate::stl::logical_store`.
+ *        `legate::experimental::stl::logical_store`.
  *
  * @tparam ElementType The element type of the `PhysicalStore`.
  * @tparam Dim The dimensionality of the `PhysicalStore`.
@@ -462,6 +462,6 @@ template <typename SlicePolicy, typename ElementType, std::int32_t Dim>
   return slice_view<ElementType, Dim, SlicePolicy>{get_logical_store(store)};
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

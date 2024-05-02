@@ -23,7 +23,7 @@
 // Include this last
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 using std::ranges::begin;
 using std::ranges::end;
@@ -34,7 +34,7 @@ using std::ranges::range_reference_t;
 using std::ranges::range_value_t;
 using std::ranges::sentinel_t;
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #else
 
@@ -43,7 +43,7 @@ using std::ranges::sentinel_t;
 // Include this last
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 namespace detail {
 namespace begin {
@@ -143,7 +143,7 @@ inline constexpr detail::end::tag end{};
 
 // Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
 // NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::legate::stl::tag;
+using namespace ::legate::experimental::stl::tag;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Range>
@@ -178,10 +178,10 @@ using is_range_like_t = decltype(detail::is_range_like_(std::declval<Range>()));
 template <typename Range>
 inline constexpr bool range = meta::evaluable_q<detail::is_range_like_t, Range>;
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 #endif
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace tags {
 namespace as_range {
@@ -232,11 +232,11 @@ inline constexpr as_range::tag as_range{};
 
 // Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
 // NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::legate::stl::tags::obj;
+using namespace ::legate::experimental::stl::tags::obj;
 
 template <typename T>
 using as_range_t = call_result_c_t<as_range, T>;
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

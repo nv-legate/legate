@@ -17,7 +17,7 @@
 // Include this last
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -40,6 +40,6 @@ void fill(Range&& output, value_type_of_t<Range> val)
   runtime->issue_fill(std::move(store), Scalar{std::move(val)});
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

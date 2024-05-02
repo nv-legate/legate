@@ -20,7 +20,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 
 namespace detail {
 
@@ -95,6 +95,6 @@ void transform(InputRange1&& input1, InputRange2&& input2, OutputRange&& output,
                      stl::align(stl::inputs[1], stl::outputs[0])));
 }
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"

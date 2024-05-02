@@ -20,7 +20,7 @@
 // Include this last:
 #include "prefix.hpp"
 
-namespace legate::stl::meta {
+namespace legate::experimental::stl::meta {
 
 struct na;
 
@@ -185,6 +185,6 @@ struct fill_n_<std::index_sequence<Is...>> {
 template <std::size_t Count, typename Value, typename Continuation = quote<list>>
 using fill_n = eval<detail::fill_n_<std::make_index_sequence<Count>>, Value, Continuation>;
 
-}  // namespace legate::stl::meta
+}  // namespace legate::experimental::stl::meta
 
 #include "suffix.hpp"

@@ -75,7 +75,7 @@ LEGATE_PRAGMA_POP()
 
 /// @defgroup data Data
 
-namespace legate::stl {
+namespace legate::experimental::stl {
 /**
  * @cond
  */
@@ -90,7 +90,7 @@ inline namespace obj {
 
 // Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
 // NOLINTNEXTLINE(google-build-using-namespace)
-using namespace ::legate::stl::tags::obj;
+using namespace ::legate::experimental::stl::tags::obj;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 using extents                              = const std::size_t[];
@@ -128,20 +128,22 @@ inline constexpr bool has_dim_v =
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @brief An alias for the value type of a `legate::stl::logical_store_like` type. A
+ * @brief An alias for the value type of a `legate::experimental::stl::logical_store_like` type. A
  *        store's value type is its element type stripped of any `const` qualification.
  *
- * @tparam Storage A type that satisfies the `legate::stl::logical_store_like` concept.
+ * @tparam Storage A type that satisfies the `legate::experimental::stl::logical_store_like`
+ * concept.
  */
 template <typename Storage>
 using value_type_of_t =
   LEGATE_STL_IMPLEMENTATION_DEFINED(typename detail::value_type_of_<remove_cvref_t<Storage>>::type);
 
 /**
- * @brief An alias for the element type of a `legate::stl::logical_store_like` type. A
+ * @brief An alias for the element type of a `legate::experimental::stl::logical_store_like` type. A
  *        store's element type is `const` qualified if the store is read-only.
  *
- * @tparam Storage A type that satisfies the `legate::stl::logical_store_like` concept.
+ * @tparam Storage A type that satisfies the `legate::experimental::stl::logical_store_like`
+ * concept.
  * @hideinitializer
  */
 template <typename Storage>
@@ -150,9 +152,10 @@ using element_type_of_t = LEGATE_STL_IMPLEMENTATION_DEFINED(
 
 /**
  * @brief A constexpr variable constant for the dimensionality of a
- *        `legate::stl::logical_store_like` type.
+ *        `legate::experimental::stl::logical_store_like` type.
  *
- * @tparam Storage A type that satisfies the `legate::stl::logical_store_like` concept.
+ * @tparam Storage A type that satisfies the `legate::experimental::stl::logical_store_like`
+ * concept.
  * @hideinitializer
  */
 template <typename Storage>
@@ -368,6 +371,6 @@ template <typename Reduction>
 inline constexpr bool legate_reduction = detail::is_legate_reduction<remove_cvref_t<Reduction>>(0);
 /** @endcond */
 
-}  // namespace legate::stl
+}  // namespace legate::experimental::stl
 
 #include "suffix.hpp"
