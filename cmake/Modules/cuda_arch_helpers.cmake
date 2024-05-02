@@ -94,6 +94,7 @@ function(add_cuda_architecture_defines)
   add_def_if_arch_enabled("70" "VOLTA_ARCH")
   add_def_if_arch_enabled("75" "TURING_ARCH")
   add_def_if_arch_enabled("80" "AMPERE_ARCH")
+  add_def_if_arch_enabled("89" "ADA_ARCH")
   add_def_if_arch_enabled("90" "HOPPER_ARCH")
 
   set(${cuda_DEFS} ${_defs} PARENT_SCOPE)
