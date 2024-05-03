@@ -48,7 +48,7 @@ ScopedAllocator::Impl::Impl(Memory::Kind kind, bool scoped, std::size_t alignmen
 ScopedAllocator::Impl::~Impl() noexcept
 {
   if (scoped_) {
-    for (auto& pair : buffers_) {
+    for (auto&& pair : buffers_) {
       pair.second.destroy();
     }
     buffers_.clear();

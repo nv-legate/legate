@@ -457,14 +457,14 @@ void Runtime::schedule(const std::vector<InternalSharedPtr<Operation>>& operatio
   std::vector<Operation*> op_pointers{};
 
   op_pointers.reserve(operations.size());
-  for (auto& op : operations) {
+  for (auto&& op : operations) {
     op_pointers.push_back(op.get());
   }
 
   Partitioner partitioner{std::move(op_pointers)};
   auto strategy = partitioner.partition_stores();
 
-  for (auto& op : operations) {
+  for (auto&& op : operations) {
     op->launch(strategy.get());
   }
 }
@@ -561,7 +561,7 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array(
   auto null_mask      = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
 
   fields.reserve(st_type.field_types().size());
-  for (auto& field_type : st_type.field_types()) {
+  for (auto&& field_type : st_type.field_types()) {
     fields.emplace_back(create_array(shape, field_type, false, optimize_scalar));
   }
   return make_internal_shared<StructLogicalArray>(
@@ -762,7 +762,7 @@ void Runtime::raise_pending_exception()
 {
   std::optional<ReturnedException> found{};
 
-  for (auto& pending_exception : pending_exceptions_) {
+  for (auto&& pending_exception : pending_exceptions_) {
     auto&& exn = pending_exception.get_result<ReturnedException>();
 
     if (exn.raised()) {
@@ -1462,10 +1462,10 @@ void Runtime::destroy()
   communicator_manager_->destroy();
 
   // Destroy all Legion handles used by Legate
-  for (auto& [_, region_manager] : region_managers_) {
+  for (auto&& [_, region_manager] : region_managers_) {
     region_manager->destroy(true /*unordered*/);
   }
-  for (auto& [_, index_space] : cached_index_spaces_) {
+  for (auto&& [_, index_space] : cached_index_spaces_) {
     legion_runtime_->destroy_index_space(legion_context_, index_space, true /*unordered*/);
   }
   cached_index_spaces_.clear();
@@ -1481,15 +1481,15 @@ void Runtime::destroy()
   pending_exceptions_.clear();
 
   // We finally deallocate managers
-  for (auto& [_, library] : libraries_) {
+  for (auto&& [_, library] : libraries_) {
     library.reset();
   }
   libraries_.clear();
-  for (auto& [_, region_manager] : region_managers_) {
+  for (auto&& [_, region_manager] : region_managers_) {
     region_manager.reset();
   }
   region_managers_.clear();
-  for (auto& [_, field_manager] : field_managers_) {
+  for (auto&& [_, field_manager] : field_managers_) {
     field_manager.reset();
   }
   field_managers_.clear();

@@ -89,7 +89,7 @@ void Reduce::launch(Strategy* p_strategy)
     if (n_tasks > 1) {
       // if there are more than 1 sub-task, we add several slices of the input
       // for each sub-task
-      for (auto& projection : projections) {
+      for (auto&& projection : projections) {
         auto store_proj = input_partition->create_store_projection(launch_domain, projection);
 
         launcher.add_input(to_array_arg(

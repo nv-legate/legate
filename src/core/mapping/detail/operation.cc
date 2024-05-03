@@ -71,16 +71,16 @@ Copy::Copy(const Legion::Copy* copy,
   input_indirections_ = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();
   output_indirections_ = dez.unpack<std::vector<Store>>();
-  for (auto& input : inputs_) {
+  for (auto&& input : inputs_) {
     LegateAssert(!input.is_future());
   }
-  for (auto& output : outputs_) {
+  for (auto&& output : outputs_) {
     LegateAssert(!output.is_future());
   }
-  for (auto& input_indirection : input_indirections_) {
+  for (auto&& input_indirection : input_indirections_) {
     LegateAssert(!input_indirection.is_future());
   }
-  for (auto& output_indirection : output_indirections_) {
+  for (auto&& output_indirection : output_indirections_) {
     LegateAssert(!output_indirection.is_future());
   }
 }

@@ -38,7 +38,7 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
 
 void CommunicatorFactory::destroy()
 {
-  for (auto& [key, communicator] : communicators_) {
+  for (auto&& [key, communicator] : communicators_) {
     finalize(key.get_machine(), key.desc, communicator);
   }
   communicators_.clear();

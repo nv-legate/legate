@@ -118,7 +118,7 @@ BaseMapper::~BaseMapper()
       REALM_MEMORY_KINDS(MEM_NAMES)
 #undef MEM_NAMES
     };
-    for (auto& pair : mem_sizes) {
+    for (auto&& pair : mem_sizes) {
       const auto& mem            = pair.first;
       const std::size_t capacity = mem.capacity();
       logger.print(
@@ -148,9 +148,9 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
   Task legate_task(&task, library, runtime, ctx);
   auto hi = task.index_domain.hi();
   auto lo = task.index_domain.lo();
-  for (auto& array : legate_task.inputs()) {
+  for (auto&& array : legate_task.inputs()) {
     auto stores = array->stores();
-    for (auto& store : stores) {
+    for (auto&& store : stores) {
       if (store->is_future()) {
         continue;
       }
@@ -162,9 +162,9 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
       }
     }
   }
-  for (auto& array : legate_task.reductions()) {
+  for (auto&& array : legate_task.reductions()) {
     auto stores = array->stores();
-    for (auto& store : stores) {
+    for (auto&& store : stores) {
       if (store->is_future()) {
         continue;
       }
@@ -184,7 +184,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
 
   std::vector<TaskTarget> options;
   options.reserve(all_targets.size());
-  for (auto& target : all_targets) {
+  for (auto&& target : all_targets) {
     if (has_variant(ctx, task, target)) {
       options.push_back(target);
     }
@@ -222,7 +222,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   auto local_range   = local_machine.slice(legate_task.target(), machine_desc);
 
   Legion::ProjectionID projection = 0;
-  for (auto& req : task.regions) {
+  for (auto&& req : task.regions) {
     if (req.tag == LEGATE_CORE_KEY_STORE_TAG) {
       projection = req.projection;
       break;
@@ -347,7 +347,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                   mapping->stores.size() == 1);
     };
 
-    for (auto& client_mapping : client_mappings) {
+    for (auto&& client_mapping : client_mappings) {
       validate_colocation(client_mapping.impl());
     }
   }
@@ -358,7 +358,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   std::map<uint32_t, const StoreMapping*> mapped_futures;
   std::set<RegionField::Id> mapped_regions;
 
-  for (auto& client_mapping : client_mappings) {
+  for (auto&& client_mapping : client_mappings) {
     auto* mapping = client_mapping.impl();
     if (mapping->for_future()) {
       auto fut_idx = mapping->store()->future_index();
@@ -405,9 +405,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   // Generate default mappings for stores that are not yet mapped by the client mapper
   auto default_option            = options.front();
   auto generate_default_mappings = [&](auto& arrays) {
-    for (auto& array : arrays) {
+    for (auto&& array : arrays) {
       auto stores = array->stores();
-      for (auto& store : stores) {
+      for (auto&& store : stores) {
         auto mapping = StoreMapping::default_mapping(store.get(), default_option);
         if (store->is_future()) {
           auto fut_idx = store->future_index();
@@ -451,7 +451,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   // Map future-backed stores
   output.future_locations.resize(mapped_futures.size());
-  for (auto& mapping : for_futures) {
+  for (auto&& mapping : for_futures) {
     auto fut_idx       = mapping->store()->future_index();
     StoreTarget target = mapping->policy.target;
     if (LegateDefined(LEGATE_NO_FUTURES_ON_FB)) {
@@ -464,7 +464,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   // Map unbound stores
   auto map_unbound_stores = [&](auto& mappings) {
-    for (auto& mapping : mappings) {
+    for (auto&& mapping : mappings) {
       auto req_idx = mapping->requirement_index();
       output.output_targets[req_idx] =
         local_machine.get_memory(task.target_proc, mapping->policy.target);
@@ -517,7 +517,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
   auto try_mapping = [&](bool can_fail) {
     const Legion::Mapping::PhysicalInstance NO_INST{};
     std::vector<Legion::Mapping::PhysicalInstance> instances;
-    for (auto& mapping : mappings) {
+    for (auto&& mapping : mappings) {
       Legion::Mapping::PhysicalInstance result = NO_INST;
       auto reqs                                = mapping->requirements();
       // Point tasks collectively writing to the same region must be doing so via distinct
@@ -542,7 +542,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
                               must_alloc_collective_writes)) {
         if (NO_INST == result) {
           LegateAssert(can_fail);
-          for (auto& instance : instances) {
+          for (auto&& instance : instances) {
             runtime->release_instance(ctx, instance);
           }
           return false;
@@ -580,7 +580,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
     for (std::uint32_t idx = 0; idx < mappings.size(); ++idx) {
       auto& mapping  = mappings[idx];
       auto& instance = instances[idx];
-      for (auto& req : mapping->requirements()) {
+      for (auto&& req : mapping->requirements()) {
         output_map[req]->push_back(instance);
       }
     }
@@ -590,7 +590,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
   // We can retry the mapping with tightened policies only if at least one of the policies
   // is lenient
   bool can_fail = false;
-  for (auto& mapping : mappings) {
+  for (auto&& mapping : mappings) {
     can_fail = can_fail || !mapping->policy.exact;
   }
 
@@ -611,7 +611,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
 void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
                                         std::vector<std::unique_ptr<StoreMapping>>& mappings)
 {
-  for (auto& mapping : mappings) {
+  for (auto&& mapping : mappings) {
     // If the policy is exact, there's nothing we can tighten
     if (mapping->policy.exact) {
       continue;
@@ -728,7 +728,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
         Realm::LoggerMessage msg = logger.debug();
         msg << "Operation " << mappable.get_unique_id() << ": created reduction instance " << result
             << " for";
-        for (auto& r : regions) {
+        for (auto&& r : regions) {
           msg << " " << r;
         }
         msg << " (size: " << footprint << " bytes, memory: " << target_memory << ")";
@@ -1039,7 +1039,7 @@ void BaseMapper::legate_select_sources(
     });
   }
   // Record all instances from the one of the largest bandwidth to that of the smallest
-  for (auto& source : all_sources) {
+  for (auto&& source : all_sources) {
     ranking.emplace_back(source.instance);
   }
 }
@@ -1415,7 +1415,7 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
       if (input.tag == LEGATE_CORE_JOIN_EXCEPTION_TAG) {
         output.destination_memories.push_back(local_machine.zerocopy_memory());
       } else {
-        for (auto& pair : local_machine.frame_buffers()) {
+        for (auto&& pair : local_machine.frame_buffers()) {
           output.destination_memories.push_back(pair.second);
         }
       }
@@ -1423,7 +1423,7 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
       output.destination_memories.push_back(local_machine.zerocopy_memory());
     }
   } else if (local_machine.has_socket_memory()) {
-    for (auto& pair : local_machine.socket_memories()) {
+    for (auto&& pair : local_machine.socket_memories()) {
       output.destination_memories.push_back(pair.second);
     }
   }

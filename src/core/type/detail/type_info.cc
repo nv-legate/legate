@@ -260,7 +260,7 @@ StructType::StructType(std::uint32_t uid,
       return (offset + (alignment - 1)) & -alignment;
     };
 
-    for (auto& field_type : field_types_) {
+    for (auto&& field_type : field_types_) {
       if (field_type->variable_size()) {
         throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
       }
@@ -273,7 +273,7 @@ StructType::StructType(std::uint32_t uid,
     }
     size_ = align_offset(size_, alignment_);
   } else {
-    for (auto& field_type : field_types_) {
+    for (auto&& field_type : field_types_) {
       if (field_type->variable_size()) {
         throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
       }
@@ -303,7 +303,7 @@ void StructType::pack(BufferBuilder& buffer) const
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
   buffer.pack<std::uint32_t>(uid_);
   buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(field_types_.size()));
-  for (auto& field_type : field_types_) {
+  for (auto&& field_type : field_types_) {
     field_type->pack(buffer);
   }
   buffer.pack<bool>(aligned_);

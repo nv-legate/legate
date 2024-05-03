@@ -33,7 +33,7 @@ void TaskRegistrar::record_task(std::int64_t local_task_id, std::unique_ptr<Task
 void TaskRegistrar::register_all_tasks(Library library)
 {
   auto* lib_impl = library.impl();
-  for (auto& [local_task_id, task_info] : impl_->pending_task_infos) {
+  for (auto&& [local_task_id, task_info] : impl_->pending_task_infos) {
     lib_impl->register_task(local_task_id, std::move(task_info));
   }
   impl_->pending_task_infos.clear();

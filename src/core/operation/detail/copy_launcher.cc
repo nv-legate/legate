@@ -143,7 +143,7 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
 
   auto pack_args = [&buffer](const std::vector<std::unique_ptr<CopyArg>>& args) {
     buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
-    for (auto& arg : args) {
+    for (auto&& arg : args) {
       arg->pack(buffer);
     }
   };

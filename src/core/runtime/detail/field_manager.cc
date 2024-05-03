@@ -105,8 +105,8 @@ ConsensusMatchingFieldManager::~ConsensusMatchingFieldManager()
 {
   // We are shutting down, so just free all the buffer copies we've made to attach to, without
   // waiting on the detachments to finish.
-  for (auto& infos : info_for_match_items_) {
-    for (auto& [item, info] : infos) {
+  for (auto&& infos : info_for_match_items_) {
+    for (auto&& [item, info] : infos) {
       if (info.attachment) {
         info.attachment->maybe_deallocate();
       }
@@ -180,7 +180,7 @@ void ConsensusMatchingFieldManager::issue_field_match()
   std::vector<MatchItem> input;
 
   input.reserve(unordered_free_fields_.size());
-  for (auto& info : unordered_free_fields_) {
+  for (auto&& info : unordered_free_fields_) {
     auto&& item = input.emplace_back(info.region.get_tree_id(), info.field_id);
     infos[item] = std::move(info);
   }
@@ -221,7 +221,7 @@ void ConsensusMatchingFieldManager::process_next_field_match()
   }
   // All fields that weren't matched can go back into the unordered queue, to be included in the
   // next consensus match that we run.
-  for (auto& [_, info] : infos) {
+  for (auto&& [_, info] : infos) {
     unordered_free_fields_.push_back(std::move(info));
   }
   matches_.pop_front();

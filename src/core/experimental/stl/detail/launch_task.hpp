@@ -433,7 +433,7 @@ class align {
                        const std::vector<LogicalStore>& right)
   {
     auto left_part = task.find_or_declare_partition(left);
-    for (auto& store : right) {
+    for (auto&& store : right) {
       do_align(task, left_part, task.find_or_declare_partition(store));
     }
   }
@@ -443,7 +443,7 @@ class align {
                        const LogicalStore& right)
   {
     auto right_part = task.find_or_declare_partition(right);
-    for (auto& store : left) {
+    for (auto&& store : left) {
       do_align(task, task.find_or_declare_partition(store), right_part);
     }
   }

@@ -51,7 +51,7 @@ class UnionFindEntry {
   }
   void restrict_all()
   {
-    for (auto& restriction : restrictions.data()) {
+    for (auto&& restriction : restrictions.data()) {
       restriction = Restriction::FORBID;
     }
   }
@@ -113,7 +113,7 @@ void ConstraintSolver::solve_constraints()
   const auto& all_symbols = partition_symbols();
 
   entries.reserve(all_symbols.size());
-  for (auto& symb : all_symbols) {
+  for (auto&& symb : all_symbols) {
     // TODO(wonchanl): partition symbols can be independent of any stores of the operation
     // (e.g., when a symbol subsumes a union of two other symbols)
     auto store  = symb->operation()->find_store(symb);
@@ -185,7 +185,7 @@ void ConstraintSolver::solve_constraints()
   };
 
   // Reflect each constraint to the solver state
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::ALIGNMENT: {
         auto* alignment = constraint->as_alignment();
@@ -220,7 +220,7 @@ void ConstraintSolver::solve_constraints()
   // values are already unique? Why do we need to create another set, especially since we just
   // use this set to loop over below, why can't we just reuse the map?
   distinct_entries.reserve(table.size());
-  for (auto& [_, entry] : table) {
+  for (auto&& [_, entry] : table) {
     distinct_entries.insert(entry);
   }
 
@@ -250,7 +250,7 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
     strategy.insert(bloat_constraint->var_bloat(), std::move(bloated));
   };
 
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::IMAGE: {
         solve_image_constraint(constraint->as_image_constraint());
@@ -286,16 +286,16 @@ void ConstraintSolver::dump()
 {
   log_legate().debug("===== Constraint Graph =====");
   log_legate().debug() << "Stores:";
-  for (auto& symbol : partition_symbols_.elements()) {
+  for (auto&& symbol : partition_symbols_.elements()) {
     auto store = symbol->operation()->find_store(symbol);
     log_legate().debug() << "  " << symbol->to_string() << " ~> " << store->to_string();
   }
   log_legate().debug() << "Variables:";
-  for (auto& symbol : partition_symbols_.elements()) {
+  for (auto&& symbol : partition_symbols_.elements()) {
     log_legate().debug() << "  " << symbol->to_string();
   }
   log_legate().debug() << "Constraints:";
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     log_legate().debug() << "  " << constraint->to_string();
   }
   log_legate().debug("============================");

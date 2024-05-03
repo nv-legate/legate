@@ -46,7 +46,7 @@ bool RegionGroup::subsumes(const RegionGroup* other)
   if (finder != subsumption_cache.end()) {
     return finder->second;
   }
-  for (auto& region : other->regions) {
+  for (auto&& region : other->regions) {
     if (regions.find(region) == regions.end()) {
       subsumption_cache[other] = false;
       return false;
@@ -207,7 +207,7 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
     instances_[group.get()] = InstanceSpec{instance, policy};
   }
 
-  for (auto& region : group->regions) {
+  for (auto&& region : group->regions) {
     auto it = groups_.find(region);
     if (it == groups_.end()) {
       groups_[region] = group;
@@ -217,7 +217,7 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
     }
   }
 
-  for (auto& removed_group : removed_groups) {
+  for (auto&& removed_group : removed_groups) {
     // Because of exact policies, we can't simply remove the groups where regions in the `group`
     // originally belonged, because one region can be included in multiple region groups. (Note that
     // the exact mapping bypasses the coalescing heuristic and always creates a fresh singleton
@@ -296,7 +296,7 @@ bool InstanceSet::erase(const Instance& inst)
 std::size_t InstanceSet::get_instance_size() const
 {
   std::size_t sum = 0;
-  for (auto& pair : instances_) {
+  for (auto&& pair : instances_) {
     sum += pair.second.instance.get_instance_size();
   }
   return sum;
@@ -305,20 +305,20 @@ std::size_t InstanceSet::get_instance_size() const
 void InstanceSet::dump_and_sanity_check() const
 {
 #ifdef DEBUG_INSTANCE_MANAGER
-  for (auto& entry : groups_) {
+  for (auto&& entry : groups_) {
     log_instmgr().debug() << "  " << entry.first << " ~> " << *entry.second;
   }
-  for (auto& entry : instances_) {
+  for (auto&& entry : instances_) {
     log_instmgr().debug() << "  " << *entry.first << " ~> " << entry.second.instance;
   }
 #endif
   std::unordered_set<RegionGroup*> found_groups;
-  for (auto& entry : groups_) {
+  for (auto&& entry : groups_) {
     found_groups.insert(entry.second.get());
     LegateCheck(instances_.count(entry.second.get()) > 0);
     LegateCheck(entry.second->regions.count(entry.first) > 0);
   }
-  for (auto& entry : instances_) {
+  for (auto&& entry : instances_) {
     LegateCheck(found_groups.count(entry.first) > 0);
   }
 }
@@ -433,7 +433,7 @@ std::map<Memory, std::size_t> InstanceManager::aggregate_instance_sizes() const
 {
   std::map<Memory, std::size_t> result;
 
-  for (auto& pair : instance_sets_) {
+  for (auto&& pair : instance_sets_) {
     auto& memory = pair.first.memory;
     if (result.find(memory) == result.end()) {
       result[memory] = 0;

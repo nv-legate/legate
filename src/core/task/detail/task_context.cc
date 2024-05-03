@@ -38,8 +38,8 @@ TaskContext::TaskContext(const Legion::Task* task,
   scalars_    = dez.unpack_scalars();
 
   // Make copies of stores that we need to postprocess, as clients might move the stores away
-  for (auto& output : outputs_) {
-    for (auto& store : output->stores()) {
+  for (auto&& output : outputs_) {
+    for (auto&& store : output->stores()) {
       if (store->is_unbound_store()) {
         unbound_stores_.push_back(std::move(store));
       } else if (store->is_future()) {
@@ -47,8 +47,8 @@ TaskContext::TaskContext(const Legion::Task* task,
       }
     }
   }
-  for (auto& reduction : reductions_) {
-    for (auto& store : reduction->stores()) {
+  for (auto&& reduction : reductions_) {
+    for (auto&& store : reduction->stores()) {
       if (store->is_future()) {
         scalar_stores_.push_back(std::move(store));
       }
@@ -73,7 +73,7 @@ TaskContext::TaskContext(const Legion::Task* task,
   // To simplify the programming mode, we filter out those "invalid" stores out.
   if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
     std::vector<InternalSharedPtr<PhysicalArray>> inputs;
-    for (auto& input : inputs_) {
+    for (auto&& input : inputs_) {
       if (input->valid()) {
         inputs.push_back(std::move(input));
       }
@@ -94,7 +94,7 @@ TaskContext::TaskContext(const Legion::Task* task,
     // If the task is running on a GPU and there is at least one scalar store for reduction,
     // we need to wait for all the host-to-device copies for initialization to finish
     if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
-      for (auto& reduction : reductions_) {
+      for (auto&& reduction : reductions_) {
         auto reduction_store = reduction->data();
         if (reduction_store->is_future()) {
 #if LegateDefined(LEGATE_USE_CUDA)
@@ -109,7 +109,7 @@ TaskContext::TaskContext(const Legion::Task* task,
 
 void TaskContext::make_all_unbound_stores_empty()
 {
-  for (auto& store : unbound_stores_) {
+  for (auto&& store : unbound_stores_) {
     store->bind_empty_data();
   }
 }
@@ -139,10 +139,10 @@ std::vector<ReturnValue> TaskContext::get_return_values() const
   std::vector<ReturnValue> return_values;
 
   return_values.reserve(unbound_stores_.size() + scalar_stores_.size() + can_raise_exception());
-  for (auto& store : unbound_stores_) {
+  for (auto&& store : unbound_stores_) {
     return_values.push_back(store->pack_weight());
   }
-  for (auto& store : scalar_stores_) {
+  for (auto&& store : scalar_stores_) {
     return_values.push_back(store->pack());
   }
 

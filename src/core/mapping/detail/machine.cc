@@ -70,7 +70,7 @@ std::vector<TaskTarget> Machine::valid_targets() const
   std::vector<TaskTarget> result;
 
   result.reserve(processor_ranges.size());
-  for (auto& [target, range] : processor_ranges) {
+  for (auto&& [target, range] : processor_ranges) {
     if (range.empty()) {
       continue;
     }
@@ -82,7 +82,7 @@ std::vector<TaskTarget> Machine::valid_targets() const
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
   std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges) {
+  for (auto&& [target, _] : processor_ranges) {
     if (to_exclude.find(target) == to_exclude.end()) {
       result.push_back(target);
     }
@@ -98,7 +98,7 @@ std::string Machine::to_string() const
 {
   std::stringstream ss;
   ss << "Machine(preferred_target: " << preferred_target;
-  for (auto& [kind, range] : processor_ranges) {
+  for (auto&& [kind, range] : processor_ranges) {
     ss << ", " << kind << ": " << range.to_string();
   }
   ss << ")";
@@ -109,7 +109,7 @@ void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
   buffer.pack(legate::traits::detail::to_underlying(preferred_target));
   buffer.pack<std::uint32_t>(processor_ranges.size());
-  for (auto& [target, processor_range] : processor_ranges) {
+  for (auto&& [target, processor_range] : processor_ranges) {
     buffer.pack(legate::traits::detail::to_underlying(target));
     buffer.pack<std::uint32_t>(processor_range.low);
     buffer.pack<std::uint32_t>(processor_range.high);
@@ -269,7 +269,7 @@ LocalMachine::LocalMachine()
     zerocopy_memory_ = zcmem.first();
   }
 
-  for (auto& gpu : gpus_) {
+  for (auto&& gpu : gpus_) {
     Legion::Machine::MemoryQuery framebuffer{legion_machine};
 
     framebuffer.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
@@ -277,7 +277,7 @@ LocalMachine::LocalMachine()
     frame_buffers_[gpu] = framebuffer.first();
   }
 
-  for (auto& omp : omps_) {
+  for (auto&& omp : omps_) {
     Legion::Machine::MemoryQuery sockmem{legion_machine};
 
     sockmem.local_address_space().only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);

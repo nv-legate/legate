@@ -174,7 +174,7 @@ void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
     null_mask_->pack(buffer, analyzer);
   }
 
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->pack(buffer, analyzer);
   }
 }
@@ -184,14 +184,14 @@ void StructArrayArg::analyze(StoreAnalyzer& analyzer)
   if (null_mask_) {
     null_mask_->analyze(analyzer);
   }
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->analyze(analyzer);
   }
 }
 
 std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
 {
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     auto proj_id = field->get_key_proj_id();
     if (proj_id.has_value()) {
       return proj_id;
@@ -205,7 +205,7 @@ void StructArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& 
   if (null_mask_) {
     null_mask_->record_unbound_stores(args);
   }
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->record_unbound_stores(args);
   }
 }
@@ -215,7 +215,7 @@ void StructArrayArg::perform_invalidations() const
   if (null_mask_) {
     null_mask_->perform_invalidations();
   }
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->perform_invalidations();
   }
 }

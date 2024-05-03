@@ -100,7 +100,7 @@ constexpr bool is_single_v<Legion::IndexTaskLauncher> = false;
 template <class Launcher>
 void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const
 {
-  for (auto& [key, entry] : coalesced_) {
+  for (auto&& [key, entry] : coalesced_) {
     auto& [fields, is_key]        = entry;
     auto& [privilege, store_proj] = key;
     auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement());
@@ -136,7 +136,7 @@ std::uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRe
 void RequirementAnalyzer::analyze_requirements()
 {
   std::uint32_t num_reqs = 0;
-  for (auto& [_, entry] : field_sets_) {
+  for (auto&& [_, entry] : field_sets_) {
     auto& [field_set, req_offset] = entry;
     field_set.coalesce();
     req_offset = num_reqs;
@@ -157,7 +157,7 @@ void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 template <class Launcher>
 void RequirementAnalyzer::_populate_launcher(Launcher& task) const
 {
-  for (auto& [region, entry] : field_sets_) {
+  for (auto&& [region, entry] : field_sets_) {
     entry.first.populate_launcher(task, region);
   }
 }
@@ -196,7 +196,7 @@ void OutputRequirementAnalyzer::analyze_requirements()
 void OutputRequirementAnalyzer::populate_output_requirements(
   std::vector<Legion::OutputRequirement>& out_reqs) const
 {
-  for (auto& [field_space, fields] : field_groups_) {
+  for (auto&& [field_space, fields] : field_groups_) {
     auto& [dim, _] = req_infos_.at(field_space);
 
     out_reqs.emplace_back(field_space, fields, dim, true /*global_indexing*/);
@@ -229,7 +229,7 @@ void FutureAnalyzer::analyze_futures()
 template <class Launcher>
 void FutureAnalyzer::_populate_launcher(Launcher& task) const
 {
-  for (auto& future : coalesced_) {
+  for (auto&& future : coalesced_) {
     task.add_future(future);
   }
 }

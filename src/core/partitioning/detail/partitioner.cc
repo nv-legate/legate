@@ -176,7 +176,7 @@ void Strategy::compute_launch_domains(const ConstraintSolver& solver)
 {
   std::map<const Operation*, LaunchDomainResolver> domain_resolvers;
 
-  for (auto& [part_symb, partition] : assignments_) {
+  for (auto&& [part_symb, partition] : assignments_) {
     auto* op              = part_symb.operation();
     auto& domain_resolver = domain_resolvers[op];
 
@@ -193,7 +193,7 @@ void Strategy::compute_launch_domains(const ConstraintSolver& solver)
     }
   }
 
-  for (auto& [op, domain_resolver] : domain_resolvers) {
+  for (auto&& [op, domain_resolver] : domain_resolvers) {
     launch_domains_[op] = domain_resolver.resolve_launch_domain();
   }
 }

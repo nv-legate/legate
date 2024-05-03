@@ -82,7 +82,7 @@ void TaskInfo::Impl::register_task(Legion::TaskID task_id)
 {
   auto runtime = Legion::Runtime::get_runtime();
   runtime->attach_name(task_id, task_name_.c_str(), false /*mutable*/, true /*local_only*/);
-  for (auto& [vid, vinfo] : variants_) {
+  for (auto&& [vid, vinfo] : variants_) {
     Legion::TaskVariantRegistrar registrar(task_id, false /*global*/, VARIANT_NAMES[vid]);
     registrar.add_constraint(Legion::ProcessorConstraint(VARIANT_PROC_KINDS[vid]));
     vinfo.options.populate_registrar(registrar);

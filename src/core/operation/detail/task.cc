@@ -80,24 +80,24 @@ void Task::launch_task(Strategy* p_strategy)
 
   launcher.set_priority(priority());
 
-  for (auto& [arr, mapping, projection] : inputs_) {
+  for (auto&& [arr, mapping, projection] : inputs_) {
     launcher.add_input(
       arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, -1));
   }
 
-  for (auto& [arr, mapping, projection] : outputs_) {
+  for (auto&& [arr, mapping, projection] : outputs_) {
     launcher.add_output(
       arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, -1));
   }
 
   std::uint32_t idx = 0;
-  for (auto& [arr, mapping, projection] : reductions_) {
+  for (auto&& [arr, mapping, projection] : reductions_) {
     launcher.add_reduction(arr->to_launcher_arg(
       mapping, strategy, launch_domain, projection, LEGION_REDUCE, reduction_ops_[idx++]));
   }
 
   // Add by-value scalars
-  for (auto& scalar : scalars_) {
+  for (auto&& scalar : scalars_) {
     launcher.add_scalar(std::move(scalar));
   }
 
@@ -173,10 +173,10 @@ void Task::demux_scalar_stores(const Legion::Future& result)
     auto* runtime = detail::Runtime::get_runtime();
     auto idx      = static_cast<std::uint32_t>(num_unbound_outs);
 
-    for (auto& store : scalar_outputs_) {
+    for (auto&& store : scalar_outputs_) {
       store->set_future(runtime->extract_scalar(result, idx++));
     }
-    for (auto& [store, _] : scalar_reductions_) {
+    for (auto&& [store, _] : scalar_reductions_) {
       store->set_future(runtime->extract_scalar(result, idx++));
     }
     if (can_throw_exception_) {
@@ -219,11 +219,11 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
       // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
       // extract the first one to get the code running
       auto first_future = result[launch_domain.lo()];
-      for (auto& store : scalar_outputs_) {
+      for (auto&& store : scalar_outputs_) {
         store->set_future(runtime->extract_scalar(first_future, idx++));
       }
     }
-    for (auto& [store, redop] : scalar_reductions_) {
+    for (auto&& [store, redop] : scalar_reductions_) {
       auto values = runtime->extract_scalar(result, idx++, launch_domain);
 
       store->set_future(runtime->reduce_future_map(values, redop, store->get_future()));
@@ -280,7 +280,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
   auto& arg = inputs_.emplace_back(std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
-  for (auto& [store, symb] : arg.mapping) {
+  for (auto&& [store, symb] : arg.mapping) {
     record_partition(symb, store);
   }
 }
@@ -295,7 +295,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
   auto& arg = outputs_.emplace_back(std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
-  for (auto& [store, symb] : arg.mapping) {
+  for (auto&& [store, symb] : arg.mapping) {
     record_partition(symb, store);
   }
 }
@@ -319,7 +319,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
   auto& arg = reductions_.emplace_back(std::move(array));
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
-  for (auto& [store, symb] : arg.mapping) {
+  for (auto&& [store, symb] : arg.mapping) {
     record_partition(symb, store);
   }
 }
@@ -336,24 +336,24 @@ void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint)
 
 void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 {
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     solver.add_constraint(std::move(constraint));
   }
-  for (auto& output : outputs_) {
-    for (auto& [store, symb] : output.mapping) {
+  for (auto&& output : outputs_) {
+    for (auto&& [store, symb] : output.mapping) {
       solver.add_partition_symbol(symb, AccessMode::WRITE);
       if (store->has_scalar_storage()) {
         solver.add_constraint(broadcast(symb));
       }
     }
   }
-  for (auto& input : inputs_) {
-    for (auto& [_, symb] : input.mapping) {
+  for (auto&& input : inputs_) {
+    for (auto&& [_, symb] : input.mapping) {
       solver.add_partition_symbol(symb, AccessMode::READ);
     }
   }
-  for (auto& reduction : reductions_) {
-    for (auto& [_, symb] : reduction.mapping) {
+  for (auto&& reduction : reductions_) {
+    for (auto&& [_, symb] : reduction.mapping) {
       solver.add_partition_symbol(symb, AccessMode::REDUCE);
     }
   }
@@ -361,7 +361,7 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 
 void AutoTask::validate()
 {
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     constraint->validate();
   }
 }

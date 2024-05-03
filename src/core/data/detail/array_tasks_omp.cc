@@ -23,7 +23,7 @@ namespace legate::detail {
 
   auto outputs = context.outputs();
   // TODO(wonchanl): We need to extend this to nested cases
-  for (auto& output : outputs) {
+  for (auto&& output : outputs) {
     auto list_arr = output.as_list_array();
 
     auto list_desc  = list_arr.descriptor();

@@ -51,7 +51,7 @@ __global__ void fixup_ranges(std::size_t desc_volume,
   auto stream  = legate::cuda::StreamPool::get_stream_pool().get_stream();
 
   // TODO(wonchanl): We need to extend this to nested cases
-  for (auto& output : outputs) {
+  for (auto&& output : outputs) {
     auto list_arr = output.as_list_array();
 
     auto desc       = list_arr.descriptor();

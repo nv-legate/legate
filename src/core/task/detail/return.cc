@@ -37,7 +37,7 @@ ReturnValues::ReturnValues(std::vector<ReturnValue>&& return_values)
     default:
       // total number of values
       buffer_size_ += max_aligned_size_for_type<std::uint32_t>();
-      for (auto& ret : return_values_) {
+      for (auto&& ret : return_values_) {
         // offset to scalar i, note we do not align here because these are packed immediately
         // after the total number (which is also a std::uint32_t), and therefore will never
         // need to be aligned up or down.

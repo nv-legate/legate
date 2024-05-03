@@ -432,7 +432,7 @@ InternalSharedPtr<LogicalStore> StructLogicalArray::primary_store() const
 
 void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->record_scalar_or_unbound_outputs(task);
   }
 
@@ -449,7 +449,7 @@ void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 
 void StructLogicalArray::record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const
 {
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->record_scalar_reductions(task, redop);
   }
   if (nullable() && null_mask_->has_scalar_storage()) {

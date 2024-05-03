@@ -33,7 +33,7 @@ RegionManager::RegionManager(Legion::IndexSpace index_space) : index_space_{std:
 void RegionManager::destroy(bool unordered)
 {
   auto runtime = Runtime::get_runtime();
-  for (auto& entry : entries_) {
+  for (auto&& entry : entries_) {
     entry.destroy(runtime, unordered);
   }
   entries_.clear();

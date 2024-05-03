@@ -99,7 +99,7 @@ void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,
 
 bool StoreMapping::for_future() const
 {
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     return store->is_future();
   }
   return false;
@@ -107,7 +107,7 @@ bool StoreMapping::for_future() const
 
 bool StoreMapping::for_unbound_store() const
 {
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     return store->unbound();
   }
   return false;
@@ -121,7 +121,7 @@ std::uint32_t StoreMapping::requirement_index() const
     std::uint32_t result = -1U;
 
     LegateAssert(!stores.empty());
-    for (auto& store : stores) {
+    for (auto&& store : stores) {
       auto idx = store->requirement_index();
 
       LegateAssert(result == -1U || result == idx);
@@ -141,7 +141,7 @@ std::set<std::uint32_t> StoreMapping::requirement_indices() const
 {
   std::set<std::uint32_t> indices;
 
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     if (store->is_future()) {
       continue;
     }
@@ -154,7 +154,7 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
 {
   std::set<const Legion::RegionRequirement*> reqs;
 
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     if (store->is_future()) {
       continue;
     }
@@ -190,7 +190,7 @@ void StoreMapping::populate_layout_constraints(
   if (stores.size() > 1) {
     std::unordered_set<Legion::FieldID> field_set{};
 
-    for (auto& store : stores) {
+    for (auto&& store : stores) {
       auto field_id = store->region_field().field_id();
       if (field_set.find(field_id) == field_set.end()) {
         fields.push_back(field_id);
