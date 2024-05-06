@@ -96,7 +96,6 @@ class CUDAConfig(SectionConfig):
             deps += (f"cudatoolkit={self.ctk_version}",)
         else:
             deps += (
-                f"cuda-toolkit={self.ctk_version}",
                 "cuda-cccl",  # no cuda-cccl-dev package exists
                 "cuda-cudart-dev",
                 "cuda-cudart-static",
