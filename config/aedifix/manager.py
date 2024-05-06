@@ -49,7 +49,7 @@ from .util.types import copy_method_signature
 from .util.utility import (
     ValueProvenance,
     partition_argv,
-    subprocess_capture_output,
+    subprocess_capture_output_live,
 )
 
 if TYPE_CHECKING:
@@ -766,19 +766,24 @@ class ConfigurationManager:
         RuntimeError
             If the command returns a non-zero errorcode
         """
+
+        def callback(stdout: str, stderr: str) -> None:
+            if stdout := stdout.strip():
+                self.log(stdout, caller_context=False)
+            if stderr := stderr.strip():
+                self.log(f"STDERR:\n{stderr}", caller_context=False)
+
         self.log(f"Executing command: {' '.join(map(str, command))}")
         try:
-            ret = subprocess_capture_output(command, check=True)
+            return subprocess_capture_output_live(
+                command, callback=callback, check=True
+            )
         except CommandError as ce:
             self.log(ce.summary)
             raise
         except Exception as e:
             self.log(str(e))
             raise
-
-        self.log(f"STDOUT:\n{ret.stdout}")
-        self.log(f"STDERR:\n{ret.stderr}")
-        return ret
 
     def log_execute_func(
         self, fn: Callable[_P, _T], *args: _P.args, **kwargs: _P.kwargs

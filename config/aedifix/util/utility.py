@@ -16,7 +16,13 @@ import subprocess
 import sysconfig
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from subprocess import CalledProcessError, CompletedProcess
+from subprocess import (
+    PIPE,
+    CalledProcessError,
+    CompletedProcess,
+    Popen,
+    TimeoutExpired,
+)
 from sys import version_info
 from typing import Any, TypeVar
 
@@ -88,9 +94,9 @@ def subprocess_capture_output(
 
     Raises
     ------
-    RuntimeError
+    CommandError
         If `subprocess.run()` raises a `subprocess.CalledProcessError`, this
-        routine converts it into a `RuntimeError` with the output attached.
+        routine converts it into a `CommandError` with the output attached.
 
     Notes
     -----
@@ -104,6 +110,112 @@ def subprocess_capture_output(
         check=False,
         **kwargs,
     )
+    if check:
+        ret = subprocess_check_returncode(ret)
+    return ret
+
+
+def subprocess_capture_output_live_impl(
+    callback: Callable[[str, str], None], *args: Any, **kwargs: Any
+) -> CompletedProcess[str]:
+    def decode_output(output: bytes | None | str) -> str:
+        if not output:
+            return ""
+        if isinstance(output, bytes):
+            return output.decode()
+        return output
+
+    kwargs.setdefault("stdout", PIPE)
+    kwargs.setdefault("stderr", PIPE)
+    timeout = kwargs.pop("timeout", 1)
+
+    total_stdout = ""
+    total_stderr = ""
+
+    with Popen(*args, **kwargs) as process:
+        done = False
+        while not done:
+            try:
+                stdout_bytes, stderr_bytes = process.communicate(
+                    timeout=timeout
+                )
+            except TimeoutExpired as te:
+                stdout_bytes, stderr_bytes = te.stdout, te.stderr
+            except:  # noqa E722
+                process.kill()
+                raise
+            else:
+                # Don't break, instead wait for end of loop, in case stdout
+                # and/or stderr were updated.
+                done = True
+
+            stderr = decode_output(stderr_bytes)
+            stdout = decode_output(stdout_bytes)
+
+            if total_stdout == stdout and total_stderr == stderr:
+                # The process hasn't printed anything new, retry the
+                # communicate
+                continue
+
+            # The streams will always contain the sum-total output of the
+            # subprocess call, so we need to strip the stuff we've already
+            # "seen" from the output before sending it to the callback.
+            new_stdout = stdout.removeprefix(total_stdout)
+            new_stderr = stderr.removeprefix(total_stderr)
+            # Now we replace the complete stdout
+            total_stdout = stdout
+            total_stderr = stderr
+            callback(new_stdout, new_stderr)
+
+    retcode = process.poll()
+    if retcode is None:
+        retcode = 0
+    return CompletedProcess(process.args, retcode, total_stdout, total_stderr)
+
+
+def subprocess_capture_output_live(
+    *args: Any,
+    callback: Callable[[str, str], None] | None = None,
+    check: bool = True,
+    **kwargs: Any,
+) -> CompletedProcess[str]:
+    r"""Execute a subprocess call with a live callback.
+
+    Parameters
+    ----------
+    *args : Any
+        Positional arguments to Popen.
+    callback : Callable[[str, str], None], optional
+        The callback to intermittently execute.
+    check : bool, True
+        Whether to check the returncode.
+    **kwargs : Any
+        Keyword arguments to Popen.
+
+    Returns
+    -------
+    ret : CompletedProcess
+        The object representing the subprocess results.
+
+    Raises
+    ------
+    CommandError
+        If `subprocess.run()` raises a `subprocess.CalledProcessError`, this
+        routine converts it into a `CommandError` with the output attached.
+
+    Notes
+    -----
+    The utility of this routine is to be able to monitor the output of the
+    running subprocess in real time. This is done via the callback argument,
+    which takes as arguments the stdout and stderr of the executing process.
+
+    If callback is None, this routine is identical to
+    subprocess_capture_output().
+    """
+    if callback is None:
+        return subprocess_capture_output(*args, check=check, **kwargs)
+
+    ret = subprocess_capture_output_live_impl(callback, *args, **kwargs)
     if check:
         ret = subprocess_check_returncode(ret)
     return ret
