@@ -120,7 +120,14 @@ CheckOptions:
   # copies wholesale (which is OK because they are just pimpls, and thus, very cheap to
   # copy).
   performance-unnecessary-value-param.AllowedTypes: 'legate::TaskContext'
-  performance-inefficient-vector-operation.VectorLikeClasses: 'legate::tuple;legate::Shape'
+  performance-inefficient-vector-operation.VectorLikeClasses: '::std::vector;legate::tuple;legate::Shape'
+  performance-inefficient-string-concatenation.StrictMode: 'true'
   readability-simplify-boolean-expr.ChainedConditionalReturn: 'true'
   readability-simplify-boolean-expr.ChainedConditionalAssignment: 'true'
+  bugprone-dangling-handle.HandleClasses: 'legate::Span,std::span'
+  bugprone-misplaced-widening-cast.CheckImplicitCasts: 'true'
+  bugprone-unused-return-value.AllowCastToVoid: 'true'
+  readability-enum-initial-value.AllowExplicitZeroFirstInitialValue: 'false'
+  readability-enum-initial-value.AllowExplicitSequentialInitialValues: 'false'
+  readability-redundant-access-specifiers.CheckFirstDeclaration: 'true'
 ...

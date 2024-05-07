@@ -23,7 +23,7 @@
 
 namespace legate::comm::coll {
 
-enum CollTag : int {
+enum CollTag : std::uint8_t {
   BCAST_TAG     = 0,
   GATHER_TAG    = 1,
   ALLTOALL_TAG  = 2,
@@ -266,7 +266,9 @@ int MPINetwork::alltoallv(const void* sendbuf,
   for (int i = 1; i < total_size + 1; i++) {
     sendto_global_rank   = (global_rank + i) % total_size;
     recvfrom_global_rank = (global_rank + total_size - i) % total_size;
-    char* src            = static_cast<char*>(const_cast<void*>(sendbuf)) +
+    // How else are we supposed to make a char* out of const void*?????????????????????????
+    // NOLINTNEXTLINE(bugprone-casting-through-void)
+    char* src = static_cast<char*>(const_cast<void*>(sendbuf)) +
                 static_cast<std::ptrdiff_t>(sdispls[sendto_global_rank]) * type_extent;
     char* dst = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
@@ -325,7 +327,9 @@ int MPINetwork::alltoall(
   for (int i = 1; i < total_size + 1; i++) {
     const auto sendto_global_rank   = (global_rank + i) % total_size;
     const auto recvfrom_global_rank = (global_rank + total_size - i) % total_size;
-    const char* src                 = static_cast<char*>(const_cast<void*>(sendbuf)) +
+    // How else are we supposed to make a char* out of const void*?????????????????????????
+    // NOLINTNEXTLINE(bugprone-casting-through-void)
+    const char* src = static_cast<char*>(const_cast<void*>(sendbuf)) +
                       static_cast<std::ptrdiff_t>(sendto_global_rank) * type_extent * count;
     char* dst = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;

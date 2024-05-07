@@ -30,7 +30,6 @@ class Runtime;
 void register_mapper_callback(const Legion::RegistrationCallbackArgs& args);
 
 class Library {
- private:
   class ResourceIdScope {
    public:
     ResourceIdScope() = default;

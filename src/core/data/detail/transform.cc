@@ -776,8 +776,12 @@ void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
 Delinearize::Delinearize(std::int32_t dim, std::vector<std::uint64_t>&& sizes)
   : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
 {
+  // Need this double cast since sizes_.size() might be < 2, and since the condition is >= 0,
+  // we cannot just use std::size_t here
   for (auto size_dim = static_cast<std::int32_t>(sizes_.size() - 2); size_dim >= 0; --size_dim) {
-    strides_[size_dim] = strides_[size_dim + 1] * sizes_[size_dim + 1];
+    const auto usize_dim = static_cast<std::size_t>(size_dim);
+
+    strides_[usize_dim] = strides_[usize_dim + 1] * sizes_[usize_dim + 1];
   }
   for (auto size : sizes_) {
     volume_ *= size;

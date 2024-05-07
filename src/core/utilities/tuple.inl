@@ -170,7 +170,7 @@ tuple<T> tuple<T>::insert(std::int32_t pos, U&& value) const
   const auto len = static_cast<std::int32_t>(size());
   tuple new_values;
 
-  new_values.reserve(len + 1);
+  new_values.reserve(static_cast<std::size_t>(len) + 1);
   for (std::int32_t idx = 0; idx < pos; ++idx) {
     new_values.append_inplace(data()[idx]);
   }

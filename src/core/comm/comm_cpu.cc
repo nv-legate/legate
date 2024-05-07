@@ -137,7 +137,7 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
     std::vector<int> mapping_table;
 
     mapping_table.reserve(num_ranks);
-    for (int i = 0; i < num_ranks; i++) {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(num_ranks); i++) {
       const auto mapping_table_element = task->futures[i + 1].get_result<int>();
       mapping_table.push_back(mapping_table_element);
     }

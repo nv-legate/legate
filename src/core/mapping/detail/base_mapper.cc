@@ -472,7 +472,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
       // FIXME: Unbound stores can have more than one dimension later
       std::vector<Legion::DimensionKind> dimension_ordering;
 
-      dimension_ordering.reserve(ndim + 1);
+      dimension_ordering.reserve(static_cast<std::size_t>(ndim) + 1);
       for (std::int32_t dim = ndim - 1; dim >= 0; --dim) {
         dimension_ordering.push_back(static_cast<Legion::DimensionKind>(
           static_cast<std::int32_t>(Legion::DimensionKind::LEGION_DIM_X) + dim));

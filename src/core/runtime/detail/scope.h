@@ -23,7 +23,6 @@
 namespace legate::detail {
 
 class Scope {
- private:
   using Machine = legate::mapping::detail::Machine;
 
  public:

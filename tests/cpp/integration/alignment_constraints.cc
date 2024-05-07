@@ -175,7 +175,8 @@ void test_alignment_transformed()
   auto context = runtime->find_library(library_name);
 
   auto launch_tester = [&](auto store1, auto store2) {
-    auto task  = runtime->create_task(context, TRANSFORMED_TESTER + store1.dim());
+    auto task =
+      runtime->create_task(context, static_cast<std::int64_t>(TRANSFORMED_TESTER) + store1.dim());
     auto part1 = task.add_input(store1);
     auto part2 = task.add_input(store2);
 
@@ -242,7 +243,8 @@ void test_invalid_alignment()
 
   auto store1 = runtime->create_store(legate::Shape{10}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{9}, legate::int64());
-  auto task   = runtime->create_task(context, TRANSFORMED_TESTER + store1.dim());
+  auto task =
+    runtime->create_task(context, static_cast<std::int64_t>(TRANSFORMED_TESTER) + store1.dim());
 
   auto part1 = task.add_output(store1);
   auto part2 = task.add_output(store2);

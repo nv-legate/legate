@@ -17,47 +17,27 @@
 #include "core/runtime/detail/runtime.h"
 
 #include <sstream>
+#include <string_view>
 #include <unordered_map>
 
 namespace legate::detail {
 
 namespace {
 
-const std::unordered_map<Operation::Kind, std::string>& OP_NAMES() noexcept
+// If this function throws, then we are screwed anyways, and most definitely just want to
+// abort.
+// NOLINTNEXTLINE(bugprone-exception-escape)
+const std::unordered_map<Operation::Kind, std::string_view>& OP_NAMES() noexcept
 {
-  static const std::unordered_map<Operation::Kind, std::string> table = {
-    {
-      Operation::Kind::AUTO_TASK,
-      "AutoTask",
-    },
-    {
-      Operation::Kind::COPY,
-      "Copy",
-    },
-    {
-      Operation::Kind::FILL,
-      "Fill",
-    },
-    {
-      Operation::Kind::GATHER,
-      "Gather",
-    },
-    {
-      Operation::Kind::MANUAL_TASK,
-      "ManualTask",
-    },
-    {
-      Operation::Kind::REDUCE,
-      "Reduce",
-    },
-    {
-      Operation::Kind::SCATTER,
-      "Scatter",
-    },
-    {
-      Operation::Kind::SCATTER_GATHER,
-      "ScatterGather",
-    },
+  static const std::unordered_map<Operation::Kind, std::string_view> table = {
+    {Operation::Kind::AUTO_TASK, "AutoTask"},
+    {Operation::Kind::COPY, "Copy"},
+    {Operation::Kind::FILL, "Fill"},
+    {Operation::Kind::GATHER, "Gather"},
+    {Operation::Kind::MANUAL_TASK, "ManualTask"},
+    {Operation::Kind::REDUCE, "Reduce"},
+    {Operation::Kind::SCATTER, "Scatter"},
+    {Operation::Kind::SCATTER_GATHER, "ScatterGather"},
   };
   return table;
 }
@@ -77,7 +57,7 @@ Operation::Operation(std::uint64_t unique_id,
 std::string Operation::to_string() const
 {
   std::stringstream ss;
-  ss << OP_NAMES().at(kind()) << ":" << std::to_string(unique_id_);
+  ss << OP_NAMES().at(kind()) << ":" << unique_id_;
   if (!provenance_.empty()) {
     ss << "[" << provenance_ << "]";
   }

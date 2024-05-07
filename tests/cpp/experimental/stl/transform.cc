@@ -130,7 +130,7 @@ void TestTransformRows()
   auto input_view = stl::as_mdspan(input);
   for (int i = 0; i < 3; ++i) {
     for (int j = 0; j < 4; ++j) {
-      input_view(i, j) = i * 4 + j;
+      input_view(i, j) = static_cast<std::int64_t>(i) * 4 + j;
     }
   }
 

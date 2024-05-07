@@ -139,7 +139,6 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
 };
 
 class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {
- private:
   using Requirements = std::vector<Legion::RegionRequirement>;
   using ReqsRef      = std::reference_wrapper<const Requirements>;
 

@@ -30,7 +30,6 @@ namespace legate::detail {
 ////////////////////////////////////////////////////
 
 class LaunchDomainResolver {
- private:
   static constexpr std::uint32_t UNSET = -1U;
 
  public:

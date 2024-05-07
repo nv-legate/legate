@@ -175,7 +175,7 @@ void check_output(const legate::LogicalArray& array, legate::Scalar&& value)
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto task = runtime->create_task(context, CHECK_TASK + array.dim());
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(CHECK_TASK) + array.dim());
   task.add_input(array);
   task.add_scalar_arg(std::move(value));
   runtime->submit(std::move(task));
@@ -189,7 +189,8 @@ void check_output_slice(const legate::LogicalArray& array,
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto task = runtime->create_task(context, CHECK_SLICE_TASK + array.dim());
+  auto task =
+    runtime->create_task(context, static_cast<std::int64_t>(CHECK_SLICE_TASK) + array.dim());
   task.add_input(array);
   task.add_scalar_arg(std::move(value_in_slice));
   task.add_scalar_arg(std::move(value_outside_slice));

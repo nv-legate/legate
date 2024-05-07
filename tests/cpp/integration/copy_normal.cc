@@ -142,7 +142,7 @@ void check_copy_output(legate::Library library,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task    = runtime->create_task(library, CHECK_COPY_TASK + tgt.dim());
+  auto task = runtime->create_task(library, static_cast<std::int64_t>(CHECK_COPY_TASK) + tgt.dim());
 
   auto src_part = task.declare_partition();
   auto tgt_part = task.declare_partition();
@@ -161,7 +161,8 @@ void check_copy_reduction_output(legate::Library library,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task    = runtime->create_task(library, CHECK_COPY_REDUCTION_TASK + tgt.dim());
+  auto task =
+    runtime->create_task(library, static_cast<std::int64_t>(CHECK_COPY_REDUCTION_TASK) + tgt.dim());
 
   auto src_part = task.declare_partition();
   auto tgt_part = task.declare_partition();

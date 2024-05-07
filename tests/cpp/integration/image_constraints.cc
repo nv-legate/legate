@@ -241,8 +241,10 @@ void initialize_function(const legate::LogicalStore& func,
   auto context = runtime->find_library(library_name);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
-  auto task    = runtime->create_task(
-    context, INIT_FUNC + static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
+  auto task =
+    runtime->create_task(context,
+                         static_cast<std::int64_t>(INIT_FUNC) +
+                           static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
   auto part = task.declare_partition();
   task.add_output(func, part);
   task.add_scalar_arg(legate::Scalar{range_extents});
@@ -259,8 +261,10 @@ void check_image(const legate::LogicalStore& func, const legate::LogicalStore& r
   auto context = runtime->find_library(library_name);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
-  auto task    = runtime->create_task(
-    context, IMAGE_TESTER + static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
+  auto task =
+    runtime->create_task(context,
+                         static_cast<std::int64_t>(IMAGE_TESTER) +
+                           static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
   auto part_domain = task.declare_partition();
   auto part_range  = task.declare_partition();
 
@@ -307,7 +311,7 @@ void test_invalid()
   auto func  = runtime->create_store(legate::Shape{10, 10}, legate::int32());
   auto range = runtime->create_store(legate::Shape{10, 10}, legate::int64());
 
-  auto task        = runtime->create_task(context, IMAGE_TESTER + 1);
+  auto task        = runtime->create_task(context, static_cast<std::int64_t>(IMAGE_TESTER) + 1);
   auto part_domain = task.declare_partition();
   auto part_range  = task.declare_partition();
 

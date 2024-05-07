@@ -20,7 +20,6 @@ namespace legate::detail {
 
 template <typename T>
 class ConsensusMatchResult {
- private:
   friend class Runtime;
   ConsensusMatchResult(std::vector<T>&& input, Legion::Context ctx, Legion::Runtime* runtime);
 

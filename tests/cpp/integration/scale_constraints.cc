@@ -91,7 +91,8 @@ void test_scale(const ScaleTestSpec& spec)
   auto smaller = runtime->create_store(spec.smaller_extents, legate::float16());
   auto bigger  = runtime->create_store(spec.bigger_extents, legate::int64());
 
-  auto task         = runtime->create_task(context, SCALE_TESTER + smaller.dim());
+  auto task =
+    runtime->create_task(context, static_cast<std::int64_t>(SCALE_TESTER) + smaller.dim());
   auto part_smaller = task.add_output(smaller);
   auto part_bigger  = task.add_output(bigger);
   task.add_constraint(legate::scale(spec.factors, part_smaller, part_bigger));

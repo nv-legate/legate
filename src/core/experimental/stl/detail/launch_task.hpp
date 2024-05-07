@@ -47,7 +47,6 @@ namespace detail {
  */
 template <typename... Ts>
 class inputs {
- private:
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data_{};
 
@@ -109,7 +108,6 @@ class inputs {
  */
 template <typename... Ts>
 class outputs {
- private:
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data_{};
 

@@ -44,6 +44,8 @@ class TesterMapper : public legate::mapping::Mapper {
     std::vector<legate::mapping::StoreMapping> mappings;
     auto inputs  = task.inputs();
     auto outputs = task.outputs();
+
+    mappings.reserve(inputs.size() + outputs.size());
     for (auto& input : inputs) {
       mappings.push_back(
         legate::mapping::StoreMapping::default_mapping(input.data(), options.front()));

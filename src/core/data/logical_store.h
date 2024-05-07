@@ -72,7 +72,6 @@ class Runtime;
  * the logical store.
  */
 class LogicalStore {
- private:
   friend class Runtime;
   friend class LogicalArray;
   friend class LogicalStorePartition;
