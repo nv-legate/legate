@@ -180,7 +180,7 @@ requirements:
 {% endif %}
 {% if gpu_enabled_bool %}
     - nccl
-    - cuda-nvtx ={{ cuda_version }}
+    - cuda-nvtx-dev ={{ cuda_version }}
     - cuda-cudart ={{ cuda_version }}
     - cuda-cudart-static ={{ cuda_version }}
     - cuda-nvml-dev ={{ cuda_version }}

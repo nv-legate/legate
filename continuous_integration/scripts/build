@@ -124,7 +124,6 @@ build_legate_release() {
     conda_build_args+=(--override-channels);
 
     # The channel sequence below needs to be preserved
-    conda_build_args+=(-c nvidia/label/cuda-${CUDA_VERSION});
     conda_build_args+=(-c conda-forge);
 
     conda_build_args+=(--croot /tmp/conda-croot/legate_core);
