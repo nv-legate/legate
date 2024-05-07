@@ -12,7 +12,7 @@
 
 #include "core/comm/comm_nccl.h"
 #include "core/comm/comm_util.h"
-#include "core/cuda/cuda_help.h"
+#include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
 #include "core/data/buffer.h"
 #include "core/operation/detail/task_launcher.h"
@@ -187,14 +187,14 @@ ncclComm_t* init_nccl(const Legion::Task* task,
   // Perform a warm-up all-to-all
 
   cudaEvent_t ev_start, ev_end_all_to_all, ev_end_all_gather;
-  CHECK_CUDA(cudaEventCreate(&ev_start));
-  CHECK_CUDA(cudaEventCreate(&ev_end_all_to_all));
-  CHECK_CUDA(cudaEventCreate(&ev_end_all_gather));
+  LegateCheckCUDA(cudaEventCreate(&ev_start));
+  LegateCheckCUDA(cudaEventCreate(&ev_end_all_to_all));
+  LegateCheckCUDA(cudaEventCreate(&ev_end_all_gather));
 
   auto src_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
   auto tgt_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
 
-  CHECK_CUDA(cudaEventRecord(ev_start, stream));
+  LegateCheckCUDA(cudaEventRecord(ev_start, stream));
 
   CHECK_NCCL(ncclGroupStart());
   for (std::size_t idx = 0; idx < num_ranks; ++idx) {
@@ -203,18 +203,18 @@ ncclComm_t* init_nccl(const Legion::Task* task,
   }
   CHECK_NCCL(ncclGroupEnd());
 
-  CHECK_CUDA(cudaEventRecord(ev_end_all_to_all, stream));
+  LegateCheckCUDA(cudaEventRecord(ev_end_all_to_all, stream));
 
   CHECK_NCCL(ncclAllGather(src_buffer.ptr(0), tgt_buffer.ptr(0), 1, ncclUint64, *comm, stream));
 
-  CHECK_CUDA(cudaEventRecord(ev_end_all_gather, stream));
+  LegateCheckCUDA(cudaEventRecord(ev_end_all_gather, stream));
 
-  CHECK_CUDA(cudaEventSynchronize(ev_end_all_gather));
+  LegateCheckCUDA(cudaEventSynchronize(ev_end_all_gather));
 
   float time_all_to_all = 0.;
   float time_all_gather = 0.;
-  CHECK_CUDA(cudaEventElapsedTime(&time_all_to_all, ev_start, ev_end_all_to_all));
-  CHECK_CUDA(cudaEventElapsedTime(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
+  LegateCheckCUDA(cudaEventElapsedTime(&time_all_to_all, ev_start, ev_end_all_to_all));
+  LegateCheckCUDA(cudaEventElapsedTime(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
 
   if (0 == rank_id) {
     legate::detail::log_legate().debug(

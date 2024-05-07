@@ -12,11 +12,8 @@
 
 #pragma once
 
+#include "core/cuda/cuda.h"
 #include "core/utilities/debug.h"
-
-#if LegateDefined(LEGATE_USE_CUDA)
-#include <cuda_runtime_api.h>
-#endif
 
 #include <sstream>
 
@@ -27,16 +24,11 @@ template <typename T, int DIM>
                                             const Point<DIM>& extents,
                                             std::size_t strides[DIM])
 {
-  T* buf                        = nullptr;
-  const auto is_device_only_ptr = [](const void* ptr) {
-#if LegateDefined(LEGATE_USE_CUDA)
+  T* buf                            = nullptr;
+  constexpr auto is_device_only_ptr = [](const void* ptr) {
     cudaPointerAttributes attrs;
     auto res = cudaPointerGetAttributes(&attrs, ptr);
     return res == cudaSuccess && attrs.type == cudaMemoryTypeDevice;
-#else
-    static_cast<void>(ptr);
-    return false;
-#endif
   };
 
   if (is_device_only_ptr(base)) {
@@ -47,11 +39,9 @@ template <typename T, int DIM>
     for (std::size_t dim = 0; dim < DIM; ++dim) {
       num_elems = max_different_types(num_elems, strides[dim] * extents[dim]);
     }
-    buf = new T[num_elems];
-#if LegateDefined(LEGATE_USE_CUDA)
+    buf      = new T[num_elems];
     auto res = cudaMemcpy(buf, base, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
     LegateCheck(res == cudaSuccess);
-#endif
     base = buf;
   }
   std::stringstream ss;

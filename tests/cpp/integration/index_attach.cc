@@ -18,7 +18,7 @@
 #include "utilities/utilities.h"
 
 #if LegateDefined(LEGATE_USE_CUDA)
-#include "core/cuda/cuda_help.h"
+#include "core/cuda/cuda.h"
 
 #include <cuda_runtime.h>
 #endif
@@ -167,13 +167,13 @@ TEST_F(IndexAttach, GPU)
   void* d_alloc1 = nullptr;
   void* d_alloc2 = nullptr;
 
-  CHECK_CUDA(cudaMalloc(&d_alloc1, BYTES));
-  CHECK_CUDA(cudaMalloc(&d_alloc2, BYTES));
+  LegateCheckCUDA(cudaMalloc(&d_alloc1, BYTES));
+  LegateCheckCUDA(cudaMalloc(&d_alloc2, BYTES));
 
-  CHECK_CUDA(cudaMemcpy(d_alloc1, h_alloc1.data(), BYTES, cudaMemcpyHostToDevice));
-  CHECK_CUDA(cudaMemcpy(d_alloc2, h_alloc2.data(), BYTES, cudaMemcpyHostToDevice));
+  LegateCheckCUDA(cudaMemcpy(d_alloc1, h_alloc1.data(), BYTES, cudaMemcpyHostToDevice));
+  LegateCheckCUDA(cudaMemcpy(d_alloc2, h_alloc2.data(), BYTES, cudaMemcpyHostToDevice));
 
-  auto deleter = [](void* ptr) noexcept { CHECK_CUDA(cudaFree(ptr)); };
+  auto deleter = [](void* ptr) noexcept { LegateCheckCUDA(cudaFree(ptr)); };
   auto alloc1 =
     legate::ExternalAllocation::create_fbmem(0, d_alloc1, BYTES, true /*read_only*/, deleter);
   auto alloc2 =
@@ -300,15 +300,15 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
     void* h_buffer = std::malloc(BYTES);
 
     EXPECT_NE(h_buffer, nullptr);
-    CHECK_CUDA(cudaMemcpy(h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
+    LegateCheckCUDA(cudaMemcpy(h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
     // TODO(issue 464)
     // EXPECT_EQ(*(static_cast<std::uint64_t*>(h_buffer)), INIT_VALUE - 1);
-    CHECK_CUDA(cudaFree(ptr));
+    LegateCheckCUDA(cudaFree(ptr));
     std::free(h_buffer);
   };
 
-  CHECK_CUDA(cudaMalloc(&d_alloc, BYTES));
-  CHECK_CUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
+  LegateCheckCUDA(cudaMalloc(&d_alloc, BYTES));
+  LegateCheckCUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
 
   legate::ExternalAllocation ext_alloc;
   switch (store_target) {
@@ -321,7 +321,7 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
       break;
     }
     default: {
-      CHECK_CUDA(cudaFree(d_alloc));
+      LegateCheckCUDA(cudaFree(d_alloc));
       return;
     }
   }

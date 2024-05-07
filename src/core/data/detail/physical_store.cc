@@ -12,6 +12,8 @@
 
 #include "core/data/detail/physical_store.h"
 
+#include "core/cuda/cuda.h"
+#include "core/cuda/stream_pool.h"
 #include "core/mapping/detail/mapping.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/machine.h"
@@ -19,11 +21,6 @@
 #include <cstring>  // std::memcpy
 #include <stdexcept>
 #include <string>
-
-#if LegateDefined(LEGATE_USE_CUDA)
-#include "core/cuda/cuda_help.h"
-#include "core/cuda/stream_pool.h"
-#endif
 
 namespace legate::detail {
 
@@ -180,20 +177,16 @@ FutureWrapper::FutureWrapper(bool read_only,
       find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB));
     if (initialize) {
       auto p_init_value = future_->get_buffer(mem_kind);
-#if LegateDefined(LEGATE_USE_CUDA)
       if (mem_kind == Memory::Kind::GPU_FB_MEM) {
         // TODO(wonchanl): This should be done by Legion
         buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
         const AccessorWO<int8_t, 1> acc{buffer_, field_size, false};
         auto stream = cuda::StreamPool::get_stream_pool().get_stream();
-        CHECK_CUDA(
+        LegateCheckCUDA(
           cudaMemcpyAsync(acc.ptr(0), p_init_value, field_size, cudaMemcpyDeviceToDevice, stream));
       } else {
-#endif
         buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind, p_init_value);
-#if LegateDefined(LEGATE_USE_CUDA)
       }
-#endif
     } else {
       buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
     }
@@ -269,16 +262,12 @@ void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
   auto redop = Legion::Runtime::get_reduction_op(redop_id);
   LegateAssert(redop->sizeof_lhs == field_size_);
   auto identity = redop->identity;
-#if LegateDefined(LEGATE_USE_CUDA)
   if (buffer_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
-    CHECK_CUDA(cudaMemcpyAsync(ptr, identity, field_size_, cudaMemcpyHostToDevice, stream));
+    LegateCheckCUDA(cudaMemcpyAsync(ptr, identity, field_size_, cudaMemcpyHostToDevice, stream));
   } else {
-#endif
     std::memcpy(ptr, identity, field_size_);
-#if LegateDefined(LEGATE_USE_CUDA)
   }
-#endif
 }
 
 ReturnValue FutureWrapper::pack() const { return {buffer_, field_size_}; }

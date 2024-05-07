@@ -10,11 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/cuda/cuda_help.h"
 #include "core/cuda/stream_pool.h"
-#include "core/mapping/machine.h"
+
 #include "core/runtime/detail/runtime.h"
-#include "core/runtime/runtime.h"
 
 namespace legate::cuda {
 
@@ -22,40 +20,29 @@ StreamView::~StreamView()
 {
   if (valid_ && detail::Config::synchronize_stream_view) {
     if (LegateDefined(LEGATE_USE_DEBUG)) {
-      CHECK_CUDA_STREAM(stream_);
+      LegateCheckCUDAStream(stream_);
     } else {
-      CHECK_CUDA(cudaStreamSynchronize(stream_));
+      LegateCheckCUDA(cudaStreamSynchronize(stream_));
     }
   }
 }
 
-StreamView::StreamView(StreamView&& rhs) noexcept
-  : valid_{std::exchange(rhs.valid_, false)}, stream_(rhs.stream_)
-{
-}
-
-StreamView& StreamView::operator=(StreamView&& rhs) noexcept
-{
-  valid_  = std::exchange(rhs.valid_, false);
-  stream_ = rhs.stream_;
-  return *this;
-}
-
 StreamPool::~StreamPool()
 {
-  if (cached_stream_ != nullptr) {
-    CHECK_CUDA(cudaStreamDestroy(*cached_stream_));
+  if (cached_stream_) {
+    LegateCheckCUDA(cudaStreamDestroy(*cached_stream_));
   }
 }
 
 StreamView StreamPool::get_stream()
 {
-  if (nullptr == cached_stream_) {
+  if (!cached_stream_.has_value()) {
     cudaStream_t stream;
-    CHECK_CUDA(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
-    cached_stream_ = std::make_unique<cudaStream_t>(stream);
+
+    LegateCheckCUDA(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    cached_stream_.emplace(stream);
   }
-  return StreamView(*cached_stream_);
+  return StreamView{*cached_stream_};
 }
 
 /*static*/ StreamPool& StreamPool::get_stream_pool()

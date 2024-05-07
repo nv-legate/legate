@@ -35,13 +35,13 @@ class CUDAReductionOpWrapper : public T {
   static const bool has_cuda_reductions = true;
 
   template <bool EXCLUSIVE>
-  __device__ static void apply_cuda(typename T::LHS& lhs, typename T::RHS rhs)
+  LEGATE_DEVICE static void apply_cuda(typename T::LHS& lhs, typename T::RHS rhs)
   {
     T::template apply<EXCLUSIVE>(lhs, rhs);
   }
 
   template <bool EXCLUSIVE>
-  __device__ static void fold_cuda(typename T::RHS& lhs, typename T::RHS rhs)
+  LEGATE_DEVICE static void fold_cuda(typename T::RHS& lhs, typename T::RHS rhs)
   {
     T::template fold<EXCLUSIVE>(lhs, rhs);
   }

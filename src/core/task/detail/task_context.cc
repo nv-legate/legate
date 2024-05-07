@@ -12,12 +12,9 @@
 
 #include "core/task/detail/task_context.h"
 
+#include "core/cuda/cuda.h"
 #include "core/data/detail/physical_store.h"
 #include "core/utilities/deserializer.h"
-
-#if LegateDefined(LEGATE_USE_CUDA)
-#include "core/cuda/cuda_help.h"
-#endif
 
 namespace legate::detail {
 
@@ -90,18 +87,16 @@ TaskContext::TaskContext(const Legion::Task* task,
     arrival.arrive();
     wait.wait();
   }
-  if (LegateDefined(LEGATE_USE_CUDA)) {
-    // If the task is running on a GPU and there is at least one scalar store for reduction,
-    // we need to wait for all the host-to-device copies for initialization to finish
-    if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
-      for (auto&& reduction : reductions_) {
-        auto reduction_store = reduction->data();
-        if (reduction_store->is_future()) {
-#if LegateDefined(LEGATE_USE_CUDA)
-          CHECK_CUDA(cudaDeviceSynchronize());
-#endif
-          break;
-        }
+
+  // If the task is running on a GPU and there is at least one scalar store for reduction,
+  // we need to wait for all the host-to-device copies for initialization to finish
+  if (LegateDefined(LEGATE_USE_CUDA) &&
+      Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
+    for (auto&& reduction : reductions_) {
+      auto reduction_store = reduction->data();
+      if (reduction_store->is_future()) {
+        LegateCheckCUDA(cudaDeviceSynchronize());
+        break;
       }
     }
   }

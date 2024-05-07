@@ -12,13 +12,11 @@
 
 #include "core/task/detail/return.h"
 
+#include "core/cuda/cuda.h"
+#include "core/cuda/stream_pool.h"
 #include "core/task/detail/returned_exception_common.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
-#if LegateDefined(LEGATE_USE_CUDA)
-#include "core/cuda/cuda_help.h"
-#include "core/cuda/stream_pool.h"
-#endif
 
 #include <cstddef>
 #include <cstdint>
@@ -69,14 +67,11 @@ void ReturnValues::legion_serialize(void* buffer) const
 
     if (ret.is_device_value()) {
       LegateAssert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
-      // TODO (jfaibussowit): expose cudaMemcpyAsync() as a stub instead
-#if LegateDefined(LEGATE_USE_CUDA)
-      CHECK_CUDA(cudaMemcpyAsync(buffer,
-                                 ret.ptr(),
-                                 ret.size(),
-                                 cudaMemcpyDeviceToHost,
-                                 cuda::StreamPool::get_stream_pool().get_stream()));
-#endif
+      LegateCheckCUDA(cudaMemcpyAsync(buffer,
+                                      ret.ptr(),
+                                      ret.size(),
+                                      cudaMemcpyDeviceToHost,
+                                      cuda::StreamPool::get_stream_pool().get_stream()));
     } else {
       std::tie(buffer, rem_cap) =
         pack_buffer(buffer, rem_cap, ret.size(), static_cast<const char*>(ret.ptr()));
@@ -94,7 +89,6 @@ void ReturnValues::legion_serialize(void* buffer) const
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, offset);
   }
 
-#if LegateDefined(LEGATE_USE_CUDA)
   if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
 
@@ -102,7 +96,7 @@ void ReturnValues::legion_serialize(void* buffer) const
       const auto size = ret.size();
 
       if (ret.is_device_value()) {
-        CHECK_CUDA(cudaMemcpyAsync(buffer, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
+        LegateCheckCUDA(cudaMemcpyAsync(buffer, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
         buffer = static_cast<char*>(buffer) + size;
         rem_cap -= size;
       } else {
@@ -110,9 +104,7 @@ void ReturnValues::legion_serialize(void* buffer) const
           pack_buffer(buffer, rem_cap, size, static_cast<const char*>(ret.ptr()));
       }
     }
-  } else
-#endif
-  {
+  } else {
     for (auto&& ret : return_values_) {
       std::tie(buffer, rem_cap) =
         pack_buffer(buffer, rem_cap, ret.size(), static_cast<const char*>(ret.ptr()));
@@ -174,16 +166,14 @@ void ReturnValues::finalize(Legion::Context legion_context) const
     return;
   }
 
-#if LegateDefined(LEGATE_USE_CUDA)
   auto kind = Processor::get_executing_processor().kind();
   // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
   //        as doing so would require the packing to be chained up with all preceding kernels,
   //        potentially launched with different streams, within the task. Until we find
   //        the right approach, we simply synchronize the device before proceeding.
   if (kind == Processor::TOC_PROC) {
-    CHECK_CUDA(cudaDeviceSynchronize());
+    LegateCheckCUDA(cudaDeviceSynchronize());
   }
-#endif
 
   const std::size_t return_size = legion_buffer_size();
   auto return_buffer =

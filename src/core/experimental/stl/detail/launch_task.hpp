@@ -662,7 +662,7 @@ class iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
 #if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(REALM_COMPILER_IS_NVCC)
 
 template <typename Fn, typename... Views>
-__global__ void _gpu_for_each(Fn fn, Views... views)
+LEGATE_KERNEL void _gpu_for_each(Fn fn, Views... views)
 {
   const auto idx = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
   auto&& input0  = front_of(views...);
@@ -866,7 +866,7 @@ class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
 // multiples of that stride, but starting at different offsets. Then those
 // results can be folded together.
 template <typename Function, typename InOut, typename Input>
-__global__ void _gpu_reduce(Function fn, InOut inout, Input input)
+LEGATE_KERNEL void _gpu_reduce(Function fn, InOut inout, Input input)
 {
   const auto tid      = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
   const auto distance = inout.end() - inout.begin();

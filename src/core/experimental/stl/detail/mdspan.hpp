@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/cuda/cuda.h"
 #include "core/utilities/assert.h"
 #include "core/utilities/compiler.h"
 #include "core/utilities/macros.h"

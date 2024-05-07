@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/cuda/cuda_help.h"
+#include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
 
 #include "legate.h"
@@ -62,7 +62,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
     auto result = ncclAllGather(p_send, p_recv, 1, ncclUint64, *comm, stream);
     EXPECT_EQ(result, ncclSuccess);
-    CHECK_CUDA(cudaStreamSynchronize(stream));
+    LegateCheckCUDA(cudaStreamSynchronize(stream));
     for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
       EXPECT_EQ(p_recv[idx], 12345);
     }

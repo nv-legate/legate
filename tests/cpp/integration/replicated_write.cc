@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 #if LegateDefined(LEGATE_USE_CUDA)
-#include "core/cuda/cuda_help.h"
+#include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
 
 #include <cuda_runtime.h>
@@ -56,11 +56,11 @@ struct WriterTask : public legate::LegateTask<WriterTask> {
       auto acc    = output.data().write_accessor<int64_t, 2>();
       auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
       auto vals   = std::vector<std::int64_t>(shape.volume(), 42);
-      CHECK_CUDA(cudaMemcpyAsync(acc.ptr(shape),
-                                 vals.data(),
-                                 sizeof(int64_t) * shape.volume(),
-                                 cudaMemcpyHostToDevice,
-                                 stream));
+      LegateCheckCUDA(cudaMemcpyAsync(acc.ptr(shape),
+                                      vals.data(),
+                                      sizeof(int64_t) * shape.volume(),
+                                      cudaMemcpyHostToDevice,
+                                      stream));
     }
   }
 #endif

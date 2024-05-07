@@ -14,10 +14,24 @@
 
 #include "core/cuda/stream_pool.h"
 
+#include <utility>
+
 namespace legate::cuda {
 
 inline StreamView::StreamView(cudaStream_t stream) : valid_{true}, stream_{stream} {}
 
 inline StreamView::operator cudaStream_t() const { return stream_; }
+
+inline StreamView::StreamView(StreamView&& rhs) noexcept
+  : valid_{std::exchange(rhs.valid_, false)}, stream_{rhs.stream_}
+{
+}
+
+inline StreamView& StreamView::operator=(StreamView&& rhs) noexcept
+{
+  valid_  = std::exchange(rhs.valid_, false);
+  stream_ = rhs.stream_;
+  return *this;
+}
 
 }  // namespace legate::cuda

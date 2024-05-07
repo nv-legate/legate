@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/cuda/cuda_help.h"
+#include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
 #include "core/data/detail/array_tasks.h"
 #include "core/task/task_context.h"
@@ -19,16 +19,16 @@ namespace legate::detail {
 
 namespace {
 
-__device__ inline std::size_t global_tid_1d()
+LEGATE_DEVICE inline std::size_t global_tid_1d()
 {
   return static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 }
 
 template <typename DescAcc>
-__global__ void fixup_ranges(std::size_t desc_volume,
-                             Point<1> desc_lo,
-                             Point<1> vardata_lo,
-                             DescAcc desc_acc)
+LEGATE_KERNEL void fixup_ranges(std::size_t desc_volume,
+                                Point<1> desc_lo,
+                                Point<1> vardata_lo,
+                                DescAcc desc_acc)
 {
   auto tid = global_tid_1d();
   if (tid >= desc_volume) {
@@ -64,20 +64,20 @@ __global__ void fixup_ranges(std::size_t desc_volume,
     auto desc_acc   = desc.data().read_write_accessor<Rect<1>, 1>();
 
     std::size_t desc_volume = desc_shape.volume();
-    auto num_blocks         = (desc_volume + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-    fixup_ranges<<<num_blocks, THREADS_PER_BLOCK, 0, stream>>>(
+    auto num_blocks = (desc_volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
+    fixup_ranges<<<num_blocks, LEGATE_THREADS_PER_BLOCK, 0, stream>>>(
       desc_volume, desc_shape.lo, vardata_lo, desc_acc);
   }
 }
 namespace {
 
 template <typename RangesAcc, typename OffsetsAcc>
-__global__ void offsets_to_ranges(std::size_t offsets_volume,
-                                  std::int64_t vardata_volume,
-                                  Point<1> offsets_lo,
-                                  Point<1> vardata_lo,
-                                  RangesAcc ranges_acc,
-                                  OffsetsAcc offsets_acc)
+LEGATE_KERNEL void offsets_to_ranges(std::size_t offsets_volume,
+                                     std::int64_t vardata_volume,
+                                     Point<1> offsets_lo,
+                                     Point<1> vardata_lo,
+                                     RangesAcc ranges_acc,
+                                     OffsetsAcc offsets_acc)
 {
   auto tid = global_tid_1d();
   if (tid >= offsets_volume) {
@@ -115,18 +115,18 @@ __global__ void offsets_to_ranges(std::size_t offsets_volume,
   std::size_t offsets_volume = offsets_shape.volume();
   std::size_t vardata_volume = vardata_shape.volume();
 
-  auto num_blocks = (offsets_volume + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-  offsets_to_ranges<<<num_blocks, THREADS_PER_BLOCK, 0, stream>>>(
+  auto num_blocks = (offsets_volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
+  offsets_to_ranges<<<num_blocks, LEGATE_THREADS_PER_BLOCK, 0, stream>>>(
     offsets_volume, vardata_volume, offsets_shape.lo, vardata_shape.lo, ranges_acc, offsets_acc);
 }
 
 namespace {
 
 template <typename OffsetsAcc, typename RangesAcc>
-__global__ void ranges_to_offsets(std::size_t ranges_volume,
-                                  Point<1> ranges_lo,
-                                  OffsetsAcc offsets_acc,
-                                  RangesAcc ranges_acc)
+LEGATE_KERNEL void ranges_to_offsets(std::size_t ranges_volume,
+                                     Point<1> ranges_lo,
+                                     OffsetsAcc offsets_acc,
+                                     RangesAcc ranges_acc)
 {
   auto tid = global_tid_1d();
   if (tid >= ranges_volume) {
@@ -156,8 +156,8 @@ __global__ void ranges_to_offsets(std::size_t ranges_volume,
   auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
 
   auto ranges_volume = ranges_shape.volume();
-  auto num_blocks    = (ranges_volume + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK;
-  ranges_to_offsets<<<num_blocks, THREADS_PER_BLOCK, 0, stream>>>(
+  auto num_blocks    = (ranges_volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
+  ranges_to_offsets<<<num_blocks, LEGATE_THREADS_PER_BLOCK, 0, stream>>>(
     ranges_volume, ranges_shape.lo, offsets_acc, ranges_acc);
 }
 

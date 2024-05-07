@@ -169,6 +169,7 @@ list(APPEND legate_core_SOURCES
   src/core/comm/coll.cc
   src/core/comm/local_comm.cc
   src/core/comm/comm_util.cc
+  src/core/cuda/stream_pool.cc
   src/core/data/allocator.cc
   src/core/data/external_allocation.cc
   src/core/data/logical_array.cc
@@ -273,7 +274,6 @@ endif()
 if(Legion_USE_CUDA)
   list(APPEND legate_core_SOURCES
     src/core/comm/comm_nccl.cu
-    src/core/cuda/stream_pool.cu
     src/core/data/detail/array_tasks.cu)
   if(CAL_DIR)
     list(APPEND legate_core_SOURCES
@@ -596,7 +596,7 @@ install(
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/comm)
 
 install(
-  FILES src/core/cuda/cuda_help.h
+  FILES src/core/cuda/cuda.h
         src/core/cuda/stream_pool.h
         src/core/cuda/stream_pool.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/cuda)

@@ -12,8 +12,9 @@
 
 #pragma once
 
-#include <cuda_runtime.h>
-#include <memory>
+#include "core/cuda/cuda.h"
+
+#include <optional>
 
 /**
  * @file
@@ -71,7 +72,7 @@ class StreamPool {
    * @return A `StreamView` object. Currently, all stream views returned from this pool are backed
    * by the same CUDA stream.
    */
-  StreamView get_stream();
+  [[nodiscard]] StreamView get_stream();
 
   /**
    * @brief Returns a singleton stream pool
@@ -86,7 +87,7 @@ class StreamPool {
   // For now we keep only one stream in the pool
   // TODO(mpapadakis): If this ever changes, the use of non-stream-ordered `DeferredBuffer`s
   // in `core/data/buffer.h` will no longer be safe.
-  std::unique_ptr<cudaStream_t> cached_stream_{};
+  std::optional<cudaStream_t> cached_stream_{};
 };
 
 }  // namespace legate::cuda

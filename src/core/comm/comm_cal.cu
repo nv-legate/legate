@@ -13,7 +13,7 @@
 #include "core/comm/coll.h"
 #include "core/comm/comm_cal.h"
 #include "core/comm/comm_util.h"
-#include "core/cuda/cuda_help.h"
+#include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
 #include "core/data/buffer.h"
 #include "core/operation/detail/task_launcher.h"
@@ -180,7 +180,7 @@ namespace {
   auto cpu_comm = task->futures[0].get_result<comm::coll::CollComm>();
 
   int device = -1;
-  CHECK_CUDA(cudaGetDevice(&device));
+  LegateCheckCUDA(cudaGetDevice(&device));
 
   /* Create communicator */
   cal_comm_t cal_comm = nullptr;
