@@ -77,14 +77,27 @@ class CMake(Package):
         super().__init__(manager=manager, name="CMake", always_enabled=True)
 
     def configure_cmake_version(self) -> None:
-        r"""Determine the version of the cmake executable."""
+        r"""Determine the version of the cmake executable.
+
+        Raises
+        ------
+        RuntimeError
+            If the cmake version is not all numeric.
+        """
         cmake_exe = self.manager.get_cmake_variable(self.CMAKE_EXECUTABLE)
         version = (
             self.log_execute_command([cmake_exe, "--version"])
             .stdout.splitlines()[0]  # "cmake version XX.YY.ZZ"
             .split()[2]  # ["cmake", "version", "XX.YY.ZZ"]
         )
-        assert all(num.isdigit() for num in version.split("."))
+        # In case we have, e.g. 3.27.4-gdfbe7aa-dirty
+        version = version.split("-")[0]
+        if not all(num.isdigit() for num in version.split(".")):
+            raise RuntimeError(
+                f"Unknown CMake version {version!r}, could not parse. "
+                'Expected <version>.split(".") to be all numeric.'
+            )
+
         self.log(f"CMake executable version: {version}")
         self.version = version
 
