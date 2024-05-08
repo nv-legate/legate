@@ -99,8 +99,10 @@ inline const tuple<std::uint32_t>& Broadcast::axes() const { return axes_; }
 
 // ==========================================================================================
 
-inline ImageConstraint::ImageConstraint(const Variable* var_function, const Variable* var_range)
-  : var_function_{var_function}, var_range_{var_range}
+inline ImageConstraint::ImageConstraint(const Variable* var_function,
+                                        const Variable* var_range,
+                                        ImageComputationHint hint)
+  : var_function_{var_function}, var_range_{var_range}, hint_{hint}
 {
 }
 

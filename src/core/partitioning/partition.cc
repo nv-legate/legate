@@ -325,21 +325,19 @@ std::string Weighted::to_string() const
 
 Image::Image(InternalSharedPtr<detail::LogicalStore> func,
              InternalSharedPtr<Partition> func_partition,
-             mapping::detail::Machine machine)
-  : func_{std::move(func)}, func_partition_{std::move(func_partition)}, machine_{std::move(machine)}
+             mapping::detail::Machine machine,
+             ImageComputationHint hint)
+  : func_{std::move(func)},
+    func_partition_{std::move(func_partition)},
+    machine_{std::move(machine)},
+    hint_{hint}
 {
 }
 
-bool Image::operator==(const Image& /*other*/) const
+bool Image::operator==(const Image& other) const
 {
-  // FIXME: This needs to be implemented to cache image partitions
-  return false;
-}
-
-bool Image::operator<(const Image& /*other*/) const
-{
-  // FIXME: This needs to be implemented to cache image partitions
-  return false;
+  return func_->id() == other.func_->id() && func_partition_ == other.func_partition_ &&
+         hint_ == other.hint_;
 }
 
 bool Image::is_complete_for(const detail::Storage* /*storage*/) const
@@ -380,6 +378,7 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
   if (!has_launch_domain()) {
     return Legion::LogicalPartition::NO_PART;
   }
+
   auto func_rf     = func_->get_region_field();
   auto func_region = func_rf->region();
   auto func_partition =
@@ -388,21 +387,34 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
   auto runtime  = detail::Runtime::get_runtime();
   auto part_mgr = runtime->partition_manager();
 
-  auto target = region.get_index_space();
-  auto index_partition =
-    part_mgr->find_image_partition(target, func_partition, func_rf->field_id());
+  auto target          = region.get_index_space();
+  auto field_id        = func_rf->field_id();
+  auto index_partition = part_mgr->find_image_partition(target, func_partition, field_id, hint_);
+
+  auto construct_image_partition = [&] {
+    switch (hint_) {
+      case ImageComputationHint::NO_HINT: {
+        const bool is_range = func_->type()->code == Type::Code::STRUCT;
+        auto color_space    = runtime->find_or_create_index_space(color_shape());
+        return runtime->create_image_partition(
+          target, color_space, func_region, func_partition, field_id, is_range, machine_);
+      }
+      case ImageComputationHint::MIN_MAX: {
+        return runtime->create_approximate_image_partition(func_, func_partition_, target, false);
+      }
+      case ImageComputationHint::FIRST_LAST: {
+        return runtime->create_approximate_image_partition(func_, func_partition_, target, true);
+      }
+    }
+    LegateUnreachable();
+  };
 
   if (Legion::IndexPartition::NO_PART == index_partition) {
-    const bool is_range = func_->type()->code == Type::Code::STRUCT;
-    auto color_space    = runtime->find_or_create_index_space(color_shape());
-
-    auto field_id   = func_rf->field_id();
-    index_partition = runtime->create_image_partition(
-      target, color_space, func_region, func_partition, field_id, is_range, machine_);
-    part_mgr->record_image_partition(target, func_partition, field_id, index_partition);
-    func_rf->add_invalidation_callback([target, func_partition, field_id]() noexcept {
+    index_partition = construct_image_partition();
+    part_mgr->record_image_partition(target, func_partition, field_id, hint_, index_partition);
+    func_rf->add_invalidation_callback([target, func_partition, field_id, hint = hint_]() noexcept {
       detail::Runtime::get_runtime()->partition_manager()->invalidate_image_partition(
-        target, func_partition, field_id);
+        target, func_partition, field_id, hint);
     });
   }
 
@@ -453,9 +465,11 @@ std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
 
 std::unique_ptr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
                                     InternalSharedPtr<Partition> func_partition,
-                                    mapping::detail::Machine machine)
+                                    mapping::detail::Machine machine,
+                                    ImageComputationHint hint)
 {
-  return std::make_unique<Image>(std::move(func), std::move(func_partition), std::move(machine));
+  return std::make_unique<Image>(
+    std::move(func), std::move(func_partition), std::move(machine), hint);
 }
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition)

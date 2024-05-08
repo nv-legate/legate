@@ -225,6 +225,7 @@ list(APPEND legate_core_SOURCES
   src/core/partitioning/detail/constraint.cc
   src/core/partitioning/detail/constraint_solver.cc
   src/core/partitioning/detail/partitioner.cc
+  src/core/partitioning/detail/partitioning_tasks.cc
   src/core/runtime/library.cc
   src/core/runtime/runtime.cc
   src/core/runtime/scope.cc
@@ -268,13 +269,16 @@ endif()
 
 if(Legion_USE_OpenMP)
   list(APPEND legate_core_SOURCES
-    src/core/data/detail/array_tasks_omp.cc)
+    src/core/data/detail/array_tasks_omp.cc
+    src/core/partitioning/detail/partitioning_tasks_omp.cc
+  )
 endif()
 
 if(Legion_USE_CUDA)
   list(APPEND legate_core_SOURCES
     src/core/comm/comm_nccl.cu
-    src/core/data/detail/array_tasks.cu)
+    src/core/data/detail/array_tasks.cu
+    src/core/partitioning/detail/partitioning_tasks.cu)
   if(CAL_DIR)
     list(APPEND legate_core_SOURCES
       src/core/comm/comm_cal.cu)

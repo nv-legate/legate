@@ -190,14 +190,22 @@ Type rect_type(std::uint32_t ndim) { return Type{detail::rect_type(ndim)}; }
 
 Type null_type() { return Type{detail::null_type()}; }
 
+bool is_point_type(const Type& type) { return detail::is_point_type(type.impl()); }
+
 bool is_point_type(const Type& type, std::uint32_t ndim)
 {
   return detail::is_point_type(type.impl(), ndim);
 }
 
+std::int32_t ndim_point_type(const Type& type) { return detail::ndim_point_type(type.impl()); }
+
+bool is_rect_type(const Type& type) { return detail::is_rect_type(type.impl()); }
+
 bool is_rect_type(const Type& type, std::uint32_t ndim)
 {
   return detail::is_rect_type(type.impl(), ndim);
 }
+
+std::int32_t ndim_rect_type(const Type& type) { return detail::ndim_rect_type(type.impl()); }
 
 }  // namespace legate

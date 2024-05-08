@@ -112,20 +112,19 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::child(std::uint32_t /*index*/)
 
 void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
-  if (data_->unbound()) {
-    task->record_unbound_output(data_);
-  } else if (data_->has_scalar_storage()) {
+  if (data_->has_scalar_storage()) {
     task->record_scalar_output(data_);
+  } else if (data_->unbound()) {
+    task->record_unbound_output(data_);
   }
-
   if (!nullable()) {
     return;
   }
 
-  if (null_mask_->unbound()) {
-    task->record_unbound_output(null_mask_);
-  } else if (null_mask_->has_scalar_storage()) {
+  if (null_mask_->has_scalar_storage()) {
     task->record_scalar_output(null_mask_);
+  } else if (null_mask_->unbound()) {
+    task->record_unbound_output(null_mask_);
   }
 }
 
@@ -282,7 +281,7 @@ void ListLogicalArray::generate_constraints(
   auto part_vardata = task->declare_partition();
   vardata_->generate_constraints(task, mapping, part_vardata);
   if (!unbound()) {
-    task->add_constraint(image(partition_symbol, part_vardata));
+    task->add_constraint(image(partition_symbol, part_vardata, ImageComputationHint::FIRST_LAST));
   }
 }
 
@@ -468,7 +467,7 @@ void StructLogicalArray::generate_constraints(
   for (; it != fields_.end(); ++it) {
     auto part_field = task->declare_partition();
     (*it)->generate_constraints(task, mapping, part_field);
-    task->add_constraint(image(partition_symbol, part_field));
+    task->add_constraint(align(partition_symbol, part_field));
   }
 
   if (!nullable()) {

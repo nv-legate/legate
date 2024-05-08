@@ -532,6 +532,17 @@ std::ostream& operator<<(std::ostream&, const Type&);
 
 /**
  * @ingroup types
+ * @brief Checks if the type is a point type
+ *
+ * @param type Type to check
+ *
+ * @return true If the `type` is a point type
+ * @return false Otherwise
+ */
+[[nodiscard]] bool is_point_type(const Type& type);
+
+/**
+ * @ingroup types
  * @brief Checks if the type is a point type of the given dimensionality
  *
  * @param type Type to check
@@ -544,6 +555,29 @@ std::ostream& operator<<(std::ostream&, const Type&);
 
 /**
  * @ingroup types
+ * @brief Returns the number of dimensions of a given point type
+ *
+ * @param type Point type
+ *
+ * @return Number of dimensions
+ *
+ * @throw std::invalid_argument IF the type is not a point type
+ */
+[[nodiscard]] std::int32_t ndim_point_type(const Type& type);
+
+/**
+ * @ingroup types
+ * @brief Checks if the type is a rect type
+ *
+ * @param type Type to check
+ *
+ * @return true If the `type` is a rect type
+ * @return false Otherwise
+ */
+[[nodiscard]] bool is_rect_type(const Type& type);
+
+/**
+ * @ingroup types
  * @brief Checks if the type is a rect type of the given dimensionality
  *
  * @param type Type to check
@@ -553,6 +587,18 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return false Otherwise
  */
 [[nodiscard]] bool is_rect_type(const Type& type, std::uint32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Returns the number of dimensions of a given rect type
+ *
+ * @param type Rect type
+ *
+ * @return Number of dimensions
+ *
+ * @throw std::invalid_argument IF the type is not a rect type
+ */
+[[nodiscard]] std::int32_t ndim_rect_type(const Type& type);
 
 }  // namespace legate
 

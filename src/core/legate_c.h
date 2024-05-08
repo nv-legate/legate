@@ -37,6 +37,8 @@ typedef enum legate_core_task_id_t {
   LEGATE_CORE_FIXUP_RANGES,
   LEGATE_CORE_OFFSETS_TO_RANGES,
   LEGATE_CORE_RANGES_TO_OFFSETS,
+  LEGATE_CORE_FIND_BOUNDING_BOX,
+  LEGATE_CORE_FIND_BOUNDING_BOX_SORTED,
   LEGATE_CORE_FIRST_DYNAMIC_TASK_ID,
   // Legate core runtime allocates LEGATE_CORE_MAX_TASK_ID tasks from Legion upfront. All ID's
   // prior to LEGATE_CORE_FIRST_DYNAMIC_TASK_ID are for specific, bespoke

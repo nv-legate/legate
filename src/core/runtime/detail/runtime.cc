@@ -32,10 +32,12 @@
 #include "core/operation/detail/task.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/detail/partitioner.h"
+#include "core/partitioning/detail/partitioning_tasks.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/shard.h"
 #include "core/runtime/runtime.h"
 #include "core/task/detail/task_context.h"
+#include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/detail/strtoll.h"
@@ -596,11 +598,12 @@ void validate_store_shape(const InternalSharedPtr<Shape>& shape,
 }  // namespace
 
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> type,
-                                                      std::uint32_t dim)
+                                                      std::uint32_t dim,
+                                                      bool optimize_scalar)
 {
   check_dimensionality(dim);
   auto storage = make_internal_shared<detail::Storage>(
-    make_internal_shared<Shape>(dim), std::move(type), false /*optimize_scalar*/);
+    make_internal_shared<Shape>(dim), std::move(type), optimize_scalar);
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
@@ -987,6 +990,30 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                     core_library_->get_mapper_id(),
                                                     0,
                                                     buffer.to_legion_buffer());
+}
+
+Legion::IndexPartition Runtime::create_approximate_image_partition(
+  const InternalSharedPtr<LogicalStore>& store,
+  const InternalSharedPtr<Partition>& partition,
+  const Legion::IndexSpace& index_space,
+  bool sorted)
+{
+  LegateAssert(partition->has_launch_domain());
+  auto&& launch_domain = partition->launch_domain();
+  auto output          = create_store(domain_type(), 1, true);
+  auto task =
+    create_task(core_library_,
+                sorted ? LEGATE_CORE_FIND_BOUNDING_BOX_SORTED : LEGATE_CORE_FIND_BOUNDING_BOX,
+                launch_domain);
+
+  task->add_input(create_store_partition(store, partition, std::nullopt), std::nullopt);
+  task->add_output(output);
+  submit(std::move(task));
+
+  auto domains     = output->get_future_map();
+  auto color_space = find_or_create_index_space(launch_domain);
+  return legion_runtime_->create_partition_by_domain(
+    legion_context_, index_space, domains, color_space);
 }
 
 Legion::FieldSpace Runtime::create_field_space()
@@ -1551,6 +1578,7 @@ void register_legate_core_tasks(Library* core_lib)
   core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
 
   register_array_tasks(core_lib);
+  register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
 }
 

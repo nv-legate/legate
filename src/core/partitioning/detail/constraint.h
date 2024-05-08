@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/shape.h"
+#include "core/partitioning/constraint.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/tuple.h"
 
@@ -185,7 +186,9 @@ class Broadcast final : public Constraint {
 
 class ImageConstraint final : public Constraint {
  public:
-  ImageConstraint(const Variable* var_function, const Variable* var_range);
+  ImageConstraint(const Variable* var_function,
+                  const Variable* var_range,
+                  ImageComputationHint hint);
 
   [[nodiscard]] Kind kind() const override;
 
@@ -209,6 +212,7 @@ class ImageConstraint final : public Constraint {
  private:
   const Variable* var_function_{};
   const Variable* var_range_{};
+  ImageComputationHint hint_{};
 };
 
 class ScaleConstraint final : public Constraint {
@@ -283,7 +287,8 @@ class BloatConstraint final : public Constraint {
                                                      tuple<std::uint32_t> axes);
 
 [[nodiscard]] InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
-                                                       const Variable* var_range);
+                                                       const Variable* var_range,
+                                                       ImageComputationHint hint);
 
 [[nodiscard]] InternalSharedPtr<ScaleConstraint> scale(tuple<std::uint64_t> factors,
                                                        const Variable* var_smaller,

@@ -147,7 +147,8 @@ TEST_F(ImageConstraint, BasicMethods)
   auto part_func  = task.declare_partition();
   auto part_range = task.declare_partition();
 
-  auto image_constraint = legate::detail::image(part_func.impl(), part_range.impl());
+  auto image_constraint = legate::detail::image(
+    part_func.impl(), part_range.impl(), legate::ImageComputationHint::NO_HINT);
   EXPECT_EQ(image_constraint->kind(), legate::detail::Constraint::Kind::IMAGE);
   EXPECT_EQ(image_constraint->var_function(), part_func.impl());
   EXPECT_EQ(image_constraint->var_range(), part_range.impl());

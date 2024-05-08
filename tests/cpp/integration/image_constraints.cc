@@ -23,6 +23,19 @@ namespace image_constraints {
 
 using ImageConstraint = DefaultFixture;
 
+class Valid
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::ImageComputationHint, bool, bool>> {};
+
+INSTANTIATE_TEST_SUITE_P(
+  ImageConstraint,
+  Valid,
+  ::testing::Combine(::testing::Values(legate::ImageComputationHint::NO_HINT,
+                                       legate::ImageComputationHint::MIN_MAX,
+                                       legate::ImageComputationHint::FIRST_LAST),
+                     ::testing::Bool(),
+                     ::testing::Bool()));
+
 namespace {
 
 constexpr const char library_name[] = "test_image_constraints";
@@ -44,12 +57,13 @@ enum TaskIDs : std::uint8_t {
 };
 
 template <std::int32_t DIM>
-legate::Point<DIM> delinearize(std::size_t index, const legate::Point<DIM>& extents)
+legate::Point<DIM> delinearize(std::size_t index,
+                               std::size_t vol,
+                               const legate::Point<DIM>& extents)
 {
   legate::Point<DIM> result;
   for (std::int32_t dim = 0; dim < DIM; ++dim) {
-    result[dim] = index % extents[dim];
-    index       = index / extents[dim];
+    result[dim] = index * extents[dim] / vol;
   }
   return result;
 }
@@ -69,12 +83,7 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
       auto acc     = output.write_accessor<legate::Rect<TGT_DIM>, DIM>();
 
-      const auto vol      = shape.volume();
-      std::size_t tgt_vol = 1;
-      for (std::int32_t dim = 0; dim < TGT_DIM; ++dim) {
-        tgt_vol *= extents[dim];
-      }
-
+      const auto vol = shape.volume();
       auto in_bounds = [&](const auto& point) {
         for (std::int32_t dim = 0; dim < TGT_DIM; ++dim) {
           if (point[dim] >= extents[dim]) {
@@ -87,7 +96,7 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       auto idx                = static_cast<std::int64_t>(ascending ? 0 : vol - 1);
 
       for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-        auto lo = delinearize(idx * tgt_vol / vol, extents);
+        auto lo = delinearize(idx, vol, extents);
         auto hi = lo + legate::Point<TGT_DIM>::ONES();
 
         if (in_bounds(hi)) {
@@ -110,17 +119,12 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
       auto extents = extents_scalar.value<legate::Point<TGT_DIM>>();
       auto acc     = output.write_accessor<legate::Point<TGT_DIM>, DIM>();
 
-      const auto vol      = shape.volume();
-      std::size_t tgt_vol = 1;
-      for (std::int32_t dim = 0; dim < TGT_DIM; ++dim) {
-        tgt_vol *= extents[dim];
-      }
-
+      const auto vol          = shape.volume();
       const std::int64_t diff = ascending ? 1 : -1;
       auto idx                = static_cast<std::int64_t>(ascending ? 0 : vol - 1);
 
       for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-        acc[*it] = delinearize(idx * tgt_vol / vol, extents);
+        acc[*it] = delinearize(idx, vol, extents);
         idx += diff;
       }
     }
@@ -142,6 +146,10 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
         point_type.num_elements(), InitializePoints{}, output, extents, ascending);
     }
   }
+
+#if LegateDefined(LEGATE_USE_OPENMP)
+  static void omp_variant(legate::TaskContext context) { cpu_variant(context); }
+#endif
 };
 
 template <std::int32_t DIM, bool RECT>
@@ -189,7 +197,18 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
   {
     auto func  = context.input(0).data();
     auto range = context.input(1).domain();
-    EXPECT_TRUE(context.is_single_task() || range.get_volume() <= 1 || !range.dense());
+    auto hint  = context.scalar(0).value<legate::ImageComputationHint>();
+
+    switch (hint) {
+      case legate::ImageComputationHint::NO_HINT: {
+        EXPECT_TRUE(context.is_single_task() || range.get_volume() <= 1 || !range.dense());
+        break;
+      }
+      case legate::ImageComputationHint::MIN_MAX:
+      case legate::ImageComputationHint::FIRST_LAST: {
+        EXPECT_TRUE(range.dense());
+      }
+    }
 
     if constexpr (RECT) {
       const auto& rect_type  = func.type().as_struct_type();
@@ -255,7 +274,9 @@ void initialize_function(const legate::LogicalStore& func,
   func.impl()->reset_key_partition();
 }
 
-void check_image(const legate::LogicalStore& func, const legate::LogicalStore& range)
+void check_image(const legate::LogicalStore& func,
+                 const legate::LogicalStore& range,
+                 legate::ImageComputationHint hint)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
@@ -270,7 +291,8 @@ void check_image(const legate::LogicalStore& func, const legate::LogicalStore& r
 
   task.add_input(func, part_domain);
   task.add_input(range, part_range);
-  task.add_constraint(legate::image(part_domain, part_range));
+  task.add_scalar_arg(legate::Scalar{legate::traits::detail::to_underlying(hint)});
+  task.add_constraint(legate::image(part_domain, part_range, hint));
 
   runtime->submit(std::move(task));
 }
@@ -278,7 +300,9 @@ void check_image(const legate::LogicalStore& func, const legate::LogicalStore& r
 struct ImageTestSpec {
   std::vector<std::uint64_t> domain_extents;
   std::vector<std::uint64_t> range_extents;
+  legate::ImageComputationHint hint;
   bool is_rect;
+  bool ascending;
 };
 
 void test_image(const ImageTestSpec& spec)
@@ -292,15 +316,11 @@ void test_image(const ImageTestSpec& spec)
   auto func       = runtime->create_store(legate::Shape{spec.domain_extents}, image_type);
   auto range      = runtime->create_store(legate::Shape{spec.range_extents}, legate::int64());
 
-  initialize_function(func, spec.range_extents, true);
+  initialize_function(func, spec.range_extents, spec.ascending);
   runtime->issue_fill(range, legate::Scalar(std::int64_t{1234}));
-  check_image(func, range);
+  check_image(func, range, spec.hint);
   runtime->issue_execution_fence();
-  check_image(func, range);
-  initialize_function(func, spec.range_extents, false);
-  check_image(func, range);
-  runtime->issue_execution_fence();
-  check_image(func, range);
+  check_image(func, range, spec.hint);
 }
 
 void test_invalid()
@@ -322,40 +342,25 @@ void test_invalid()
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
 
-TEST_F(ImageConstraint, Point1D)
+TEST_P(Valid, 1D)
 {
+  auto& [hint, is_rect, ascending] = GetParam();
   prepare();
-  test_image({{9}, {100}, false});
+  test_image({{9}, {100}, hint, is_rect, ascending});
 }
 
-TEST_F(ImageConstraint, Point2D)
+TEST_P(Valid, 2D)
 {
+  auto& [hint, is_rect, ascending] = GetParam();
   prepare();
-  test_image({{4, 4}, {10, 10}, false});
+  test_image({{4, 4}, {10, 10}, hint, is_rect, ascending});
 }
 
-TEST_F(ImageConstraint, Point3D)
+TEST_P(Valid, 3D)
 {
+  auto& [hint, is_rect, ascending] = GetParam();
   prepare();
-  test_image({{2, 3, 4}, {5, 5, 5}, false});
-}
-
-TEST_F(ImageConstraint, Rect1D)
-{
-  prepare();
-  test_image({{9}, {100}, true});
-}
-
-TEST_F(ImageConstraint, Rect2D)
-{
-  prepare();
-  test_image({{4, 4}, {10, 10}, true});
-}
-
-TEST_F(ImageConstraint, Rect3D)
-{
-  prepare();
-  test_image({{2, 3, 4}, {5, 5, 5}, true});
+  test_image({{2, 3, 4}, {5, 5, 5}, hint, is_rect, ascending});
 }
 
 TEST_F(ImageConstraint, Invalid)

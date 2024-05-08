@@ -46,8 +46,12 @@ Storage::Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, b
     offsets_{legate::full(dim(), uint64_t{0})}
 {
   // We should not blindly check the shape volume as it would flush the scheduling window
-  if (optimize_scalar && shape_->ready() && volume() == 1) {
-    kind_ = Kind::FUTURE;
+  if (optimize_scalar) {
+    if (shape_->unbound()) {
+      kind_ = Kind::FUTURE_MAP;
+    } else if (shape_->ready() && volume() == 1) {
+      kind_ = Kind::FUTURE;
+    }
   }
   if (LegateDefined(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -87,14 +91,20 @@ Storage::Storage(tuple<std::uint64_t> extents,
   }
 }
 
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 Storage::~Storage()
 {
   if (!Runtime::get_runtime()->initialized()) {
     // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
     // this would be collected by the Legion runtime
     static_cast<void>(future_.release());  // NOLINT(bugprone-unused-return-value)
+    if (future_map_.has_value()) {
+      // NOLINTNEXTLINE(bugprone-unused-return-value)
+      static_cast<void>(std::make_unique<Legion::FutureMap>(*std::move(future_map_)).release());
+    }
   }
 }
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 const tuple<std::uint64_t>& Storage::offsets() const
 {
@@ -201,6 +211,12 @@ Legion::Future Storage::get_future() const
   return future_ != nullptr ? *future_ : Legion::Future{};
 }
 
+Legion::FutureMap Storage::get_future_map() const
+{
+  LegateCheck(kind_ == Kind::FUTURE_MAP);
+  return future_map_.value_or(Legion::FutureMap{});
+}
+
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
   LegateCheck(unbound_ && region_field_ == nullptr);
@@ -217,6 +233,8 @@ void Storage::set_future(Legion::Future future)
 {
   future_ = std::make_unique<Legion::Future>(std::move(future));
 }
+
+void Storage::set_future_map(Legion::FutureMap future_map) { future_map_ = std::move(future_map); }
 
 RegionField Storage::map()
 {
@@ -286,10 +304,18 @@ InternalSharedPtr<StoragePartition> Storage::create_partition(
 
 std::string Storage::to_string() const
 {
+  auto kind_str = [&] {
+    switch (kind_) {
+      case Kind::REGION_FIELD: return "Region";
+      case Kind::FUTURE: return "Future";
+      case Kind::FUTURE_MAP: return "Future map";
+    }
+    LegateUnreachable();
+  }();
+
   std::stringstream ss;
 
-  ss << "Storage(" << storage_id_ << ") {" << shape_->to_string()
-     << ", kind: " << (kind_ == Kind::REGION_FIELD ? "Region" : "Future")
+  ss << "Storage(" << storage_id_ << ") {" << shape_->to_string() << ", kind: " << kind_str
      << ", type: " << type_->to_string() << ", level: " << level_ << "}";
 
   return std::move(ss).str();
@@ -409,6 +435,12 @@ void LogicalStore::set_future(Legion::Future future)
 {
   LegateAssert(has_scalar_storage());
   storage_->set_future(std::move(future));
+}
+
+void LogicalStore::set_future_map(Legion::FutureMap future_map)
+{
+  LegateAssert(has_scalar_storage());
+  storage_->set_future_map(std::move(future_map));
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size)
@@ -799,7 +831,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   std::int64_t redop)
 {
   LegateAssert(self.get() == this);
-  if (has_scalar_storage()) {
+  if (get_storage()->kind() == Storage::Kind::FUTURE) {
     if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
       privilege = LEGION_READ_WRITE;
     }
@@ -807,6 +839,9 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
     auto has_storage = get_future().valid() && privilege != LEGION_REDUCE;
 
     return std::make_unique<FutureStoreArg>(this, read_only, has_storage, redop);
+  }
+  if (get_storage()->kind() == Storage::Kind::FUTURE_MAP) {
+    return std::make_unique<FutureStoreArg>(this, false, false, -1);
   }
 
   if (unbound()) {
@@ -880,6 +915,7 @@ bool LogicalStore::equal_storage(const LogicalStore& other) const
       return rf->field_id() == other_rf->field_id() && rf->region() == other_rf->region();
     }
     case Storage::Kind::FUTURE: return get_future() == other.get_future();
+    case Storage::Kind::FUTURE_MAP: return get_future_map() == other.get_future_map();
   }
   // Because sometimes, GCC is really stupid:
   //

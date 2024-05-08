@@ -91,9 +91,9 @@ namespace legate::detail {
 
 void register_array_tasks(Library* core_lib)
 {
-  FixupRanges::register_variants(legate::Library(core_lib), LEGATE_CORE_FIXUP_RANGES);
-  OffsetsToRanges::register_variants(legate::Library(core_lib), LEGATE_CORE_OFFSETS_TO_RANGES);
-  RangesToOffsets::register_variants(legate::Library(core_lib), LEGATE_CORE_RANGES_TO_OFFSETS);
+  FixupRanges::register_variants(legate::Library{core_lib}, LEGATE_CORE_FIXUP_RANGES);
+  OffsetsToRanges::register_variants(legate::Library{core_lib}, LEGATE_CORE_OFFSETS_TO_RANGES);
+  RangesToOffsets::register_variants(legate::Library{core_lib}, LEGATE_CORE_RANGES_TO_OFFSETS);
 }
 
 }  // namespace legate::detail

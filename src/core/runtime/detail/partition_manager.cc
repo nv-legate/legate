@@ -275,9 +275,10 @@ Legion::IndexPartition PartitionManager::find_index_partition(const Legion::Inde
 Legion::IndexPartition PartitionManager::find_image_partition(
   const Legion::IndexSpace& index_space,
   const Legion::LogicalPartition& func_partition,
-  Legion::FieldID field_id) const
+  Legion::FieldID field_id,
+  ImageComputationHint hint) const
 {
-  auto finder = image_cache_.find({index_space, func_partition, field_id});
+  auto finder = image_cache_.find({index_space, func_partition, field_id, hint});
 
   if (finder != image_cache_.end()) {
     return finder->second;
@@ -302,16 +303,18 @@ void PartitionManager::record_index_partition(const Legion::IndexSpace& index_sp
 void PartitionManager::record_image_partition(const Legion::IndexSpace& index_space,
                                               const Legion::LogicalPartition& func_partition,
                                               Legion::FieldID field_id,
+                                              ImageComputationHint hint,
                                               const Legion::IndexPartition& index_partition)
 {
-  image_cache_[{index_space, func_partition, field_id}] = index_partition;
+  image_cache_[{index_space, func_partition, field_id, hint}] = index_partition;
 }
 
 void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& index_space,
                                                   const Legion::LogicalPartition& func_partition,
-                                                  Legion::FieldID field_id)
+                                                  Legion::FieldID field_id,
+                                                  ImageComputationHint hint)
 {
-  auto finder = image_cache_.find({index_space, func_partition, field_id});
+  auto finder = image_cache_.find({index_space, func_partition, field_id, hint});
 
   LegateAssert(finder != image_cache_.end());
   image_cache_.erase(finder);

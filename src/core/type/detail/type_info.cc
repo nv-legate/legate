@@ -572,9 +572,33 @@ InternalSharedPtr<Type> null_type()
   return result;
 }
 
+InternalSharedPtr<Type> domain_type()
+{
+  static auto result = detail::binary_type(sizeof(Domain));
+  return result;
+}
+
+bool is_point_type(const InternalSharedPtr<Type>& type)
+{
+  const auto uid = type->uid();
+  return type->code == Type::Code::INT64 ||
+         (uid > BASE_POINT_TYPE_UID && uid <= BASE_POINT_TYPE_UID + LEGATE_MAX_DIM);
+}
+
 bool is_point_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 {
-  return type->code == Type::Code::INT64 || type->uid() == BASE_POINT_TYPE_UID + ndim;
+  return (ndim == 1 && type->code == Type::Code::INT64) ||
+         type->uid() == BASE_POINT_TYPE_UID + ndim;
+}
+
+std::int32_t ndim_point_type(const InternalSharedPtr<Type>& type)
+{
+  if (!is_point_type(type)) {
+    throw std::invalid_argument{"Expected a point type but got " + type->to_string()};
+  }
+  return type->code == Type::Code::INT64
+           ? 1
+           : static_cast<std::int32_t>(type->uid() - BASE_POINT_TYPE_UID);
 }
 
 bool is_rect_type(const InternalSharedPtr<Type>& type)
@@ -586,6 +610,14 @@ bool is_rect_type(const InternalSharedPtr<Type>& type)
 bool is_rect_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 {
   return type->uid() == BASE_RECT_TYPE_UID + ndim;
+}
+
+std::int32_t ndim_rect_type(const InternalSharedPtr<Type>& type)
+{
+  if (!is_rect_type(type)) {
+    throw std::invalid_argument{"Expected a rect type but got " + type->to_string()};
+  }
+  return static_cast<std::int32_t>(type->uid() - BASE_RECT_TYPE_UID);
 }
 
 }  // namespace legate::detail

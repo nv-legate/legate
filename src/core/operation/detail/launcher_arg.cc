@@ -83,7 +83,12 @@ void FutureStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(has_storage_ ? analyzer.get_index(store_->get_future()) : -1);
   buffer.pack<std::uint32_t>(store_->type()->size());
-  buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+  if (store_->get_storage()->kind() == Storage::Kind::FUTURE) {
+    buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+  } else {
+    LegateAssert(store_->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
+    buffer.pack<std::uint64_t>(std::vector<std::uint64_t>{1});
+  }
 }
 
 void FutureStoreArg::analyze(StoreAnalyzer& analyzer)

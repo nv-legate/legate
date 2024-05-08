@@ -143,7 +143,8 @@ InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& st
   auto src_part   = strategy[src];
   if (src_part->has_launch_domain()) {
     auto* op = src->operation();
-    return create_image(op->find_store(src).as_user_ptr(), src_part.as_user_ptr(), op->machine());
+    return create_image(
+      op->find_store(src).as_user_ptr(), src_part.as_user_ptr(), op->machine(), hint_);
   }
   return create_no_partition();
 }
@@ -242,9 +243,11 @@ InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<std::uint
   return make_internal_shared<Broadcast>(variable, std::move(axes));
 }
 
-InternalSharedPtr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
+InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
+                                         const Variable* var_range,
+                                         ImageComputationHint hint)
 {
-  return make_internal_shared<ImageConstraint>(var_function, var_range);
+  return make_internal_shared<ImageConstraint>(var_function, var_range, hint);
 }
 
 InternalSharedPtr<ScaleConstraint> scale(tuple<std::uint64_t> factors,

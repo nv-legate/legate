@@ -104,6 +104,9 @@ struct cudaPointerAttributes {
 #define LEGATE_HOST_DEVICE LEGATE_HOST LEGATE_DEVICE
 
 #define LEGATE_THREADS_PER_BLOCK 128
+#define LEGATE_MIN_CTAS_PER_SM 4
+#define LEGATE_MAX_REDUCTION_CTAS 1024
+#define LEGATE_WARP_SIZE 32
 #define LegateCheckCUDA(...)                                                 \
   do {                                                                       \
     const cudaError_t legate_cuda_error_result_ = __VA_ARGS__;               \

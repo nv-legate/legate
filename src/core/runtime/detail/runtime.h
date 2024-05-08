@@ -150,7 +150,8 @@ class Runtime {
 
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Type> type,
-                                                             std::uint32_t dim);
+                                                             std::uint32_t dim,
+                                                             bool optimize_scalar = false);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Shape> shape,
                                                              InternalSharedPtr<Type> type,
                                                              bool optimize_scalar);
@@ -233,6 +234,11 @@ class Runtime {
     Legion::FieldID func_field_id,
     bool is_range,
     const mapping::detail::Machine& machine);
+  [[nodiscard]] Legion::IndexPartition create_approximate_image_partition(
+    const InternalSharedPtr<LogicalStore>& store,
+    const InternalSharedPtr<Partition>& partition,
+    const Legion::IndexSpace& index_space,
+    bool sorted);
   [[nodiscard]] Legion::FieldSpace create_field_space();
   [[nodiscard]] Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
                                                     const Legion::FieldSpace& field_space);

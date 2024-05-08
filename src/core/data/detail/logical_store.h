@@ -44,6 +44,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   enum class Kind : std::uint8_t {
     REGION_FIELD,
     FUTURE,
+    FUTURE_MAP,
   };
 
   // Create a RegionField-backed or a Future-backed storage. Initialized lazily.
@@ -82,8 +83,11 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
 
   [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field();
   [[nodiscard]] Legion::Future get_future() const;
+  [[nodiscard]] Legion::FutureMap get_future_map() const;
+
   void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future);
+  void set_future_map(Legion::FutureMap future_map);
 
   [[nodiscard]] RegionField map();
   void allow_out_of_order_destruction();
@@ -110,6 +114,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
 
   InternalSharedPtr<LogicalRegionField> region_field_{};
   std::unique_ptr<Legion::Future> future_{};
+  std::optional<Legion::FutureMap> future_map_{};
 
   std::int32_t level_{};
   InternalSharedPtr<StoragePartition> parent_{};
@@ -179,8 +184,10 @@ class LogicalStore {
   [[nodiscard]] const Storage* get_storage() const;
   [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
   [[nodiscard]] Legion::Future get_future() const;
+  [[nodiscard]] Legion::FutureMap get_future_map() const;
   void set_region_field(InternalSharedPtr<LogicalRegionField> region_field);
   void set_future(Legion::Future future);
+  void set_future_map(Legion::FutureMap future_map);
 
   [[nodiscard]] InternalSharedPtr<LogicalStore> promote(std::int32_t extra_dim,
                                                         std::size_t dim_size);

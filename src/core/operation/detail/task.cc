@@ -200,9 +200,16 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
   const auto runtime = detail::Runtime::get_runtime();
   if (1 == total) {
     if (1 == num_scalar_outs) {
-      // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
-      // extract the first one to get the code running
-      scalar_outputs_.front()->set_future(result[launch_domain.lo()]);
+      auto& store = scalar_outputs_.front();
+      if (store->get_storage()->kind() == Storage::Kind::FUTURE) {
+        // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
+        // extract the first one to get the code running (the current implementation of future
+        // map-backed stores is not meant to be user-facing yet).
+        store->set_future(result[launch_domain.lo()]);
+      } else {
+        LegateAssert(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
+        store->set_future_map(result);
+      }
     } else if (1 == num_scalar_reds) {
       auto& [store, redop] = scalar_reductions_.front();
 
@@ -220,7 +227,12 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
       // extract the first one to get the code running
       auto first_future = result[launch_domain.lo()];
       for (auto&& store : scalar_outputs_) {
-        store->set_future(runtime->extract_scalar(first_future, idx++));
+        if (store->get_storage()->kind() == Storage::Kind::FUTURE) {
+          store->set_future(runtime->extract_scalar(first_future, idx++));
+        } else {
+          LegateAssert(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
+          store->set_future_map(runtime->extract_scalar(result, idx++, launch_domain));
+        }
       }
     }
     for (auto&& [store, redop] : scalar_reductions_) {

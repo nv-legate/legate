@@ -79,7 +79,7 @@ inline bool LogicalStore::overlaps(const InternalSharedPtr<LogicalStore>& other)
 
 inline bool LogicalStore::has_scalar_storage() const
 {
-  return storage_->kind() == Storage::Kind::FUTURE;
+  return storage_->kind() != Storage::Kind::REGION_FIELD;
 }
 
 inline InternalSharedPtr<Type> LogicalStore::type() const { return storage_->type(); }
@@ -96,6 +96,8 @@ inline const InternalSharedPtr<LogicalRegionField>& LogicalStore::get_region_fie
 }
 
 inline Legion::Future LogicalStore::get_future() const { return storage_->get_future(); }
+
+inline Legion::FutureMap LogicalStore::get_future_map() const { return storage_->get_future_map(); }
 
 inline InternalSharedPtr<Partition> LogicalStore::get_current_key_partition() const
 {
