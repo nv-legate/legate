@@ -15,8 +15,11 @@
 #include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
 
+#include <iosfwd>
 #include <map>
 #include <memory>
+#include <string>
+#include <string_view>
 
 namespace legate {
 
@@ -32,7 +35,7 @@ class TaskInfo {
   explicit TaskInfo(std::string task_name);
   ~TaskInfo();
 
-  [[nodiscard]] const std::string& name() const;
+  [[nodiscard]] std::string_view name() const;
 
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,

@@ -54,7 +54,7 @@ template <typename T>
 /*static*/ std::unique_ptr<TaskInfo> LegateTask<T>::create_task_info(
   const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  auto task_info = std::make_unique<TaskInfo>(task_name());
+  auto task_info = std::make_unique<TaskInfo>(std::string{task_name()});
   detail::VariantHelper<T, detail::CPUVariant>::record(task_info.get(), all_options);
   detail::VariantHelper<T, detail::OMPVariant>::record(task_info.get(), all_options);
   detail::VariantHelper<T, detail::GPUVariant>::record(task_info.get(), all_options);
@@ -62,7 +62,7 @@ template <typename T>
 }
 
 template <typename T>
-/*static*/ const std::string& LegateTask<T>::task_name()
+/*static*/ std::string_view LegateTask<T>::task_name()
 {
   static const std::string result = detail::generate_task_name(typeid(T));
   return result;

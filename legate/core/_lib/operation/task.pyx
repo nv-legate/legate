@@ -15,6 +15,7 @@ from libcpp.optional cimport make_optional, optional as std_optional
 from libcpp.utility cimport move as std_move
 
 from ..._ext.cython_libcpp.string_view cimport (
+    str_from_string_view,
     string_view_from_py as std_string_view_from_py,
 )
 
@@ -245,7 +246,7 @@ cdef class AutoTask:
         return Variable.from_handle(self._handle.declare_partition())
 
     cpdef str provenance(self):
-        return self._handle.provenance().decode()
+        return str_from_string_view(self._handle.provenance())
 
     cpdef void set_concurrent(self, bool concurrent):
         self._handle.set_concurrent(concurrent)
@@ -479,7 +480,7 @@ cdef class ManualTask:
         self._handle.add_scalar_arg(scalar._handle)
 
     cpdef str provenance(self):
-        return self._handle.provenance().decode()
+        return str_from_string_view(self._handle.provenance())
 
     cpdef void set_concurrent(self, bool concurrent):
         self._handle.set_concurrent(concurrent)

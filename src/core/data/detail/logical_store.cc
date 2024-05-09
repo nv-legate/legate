@@ -60,12 +60,12 @@ Storage::Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, b
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
                  InternalSharedPtr<Type> type,
-                 const Legion::Future& future)
+                 Legion::Future future)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{std::move(shape)},
     type_{std::move(type)},
     kind_{Kind::FUTURE},
-    future_{std::make_unique<Legion::Future>(future)},
+    future_{std::move(future)},
     offsets_{legate::full(dim(), uint64_t{0})}
 {
   if (LegateDefined(LEGATE_USE_DEBUG)) {
@@ -95,11 +95,12 @@ Storage::Storage(tuple<std::uint64_t> extents,
 Storage::~Storage()
 {
   if (!Runtime::get_runtime()->initialized()) {
-    // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
-    // this would be collected by the Legion runtime
-    static_cast<void>(future_.release());  // NOLINT(bugprone-unused-return-value)
+    if (future_.has_value() && future_->exists()) {
+      // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
+      // this would be collected by the Legion runtime
+      static_cast<void>(std::make_unique<Legion::Future>(*std::move(future_)).release());
+    }
     if (future_map_.has_value()) {
-      // NOLINTNEXTLINE(bugprone-unused-return-value)
       static_cast<void>(std::make_unique<Legion::FutureMap>(*std::move(future_map_)).release());
     }
   }
@@ -208,7 +209,7 @@ const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field()
 Legion::Future Storage::get_future() const
 {
   LegateCheck(kind_ == Kind::FUTURE);
-  return future_ != nullptr ? *future_ : Legion::Future{};
+  return future_.value_or(Legion::Future{});
 }
 
 Legion::FutureMap Storage::get_future_map() const
@@ -229,10 +230,7 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
   }
 }
 
-void Storage::set_future(Legion::Future future)
-{
-  future_ = std::make_unique<Legion::Future>(std::move(future));
-}
+void Storage::set_future(Legion::Future future) { future_ = std::move(future); }
 
 void Storage::set_future_map(Legion::FutureMap future_map) { future_map_ = std::move(future_map); }
 

@@ -19,6 +19,8 @@
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/internal_shared_ptr.h"
 
+#include <optional>
+
 namespace legate {
 
 Library Runtime::find_library(std::string_view library_name) const
@@ -284,12 +286,15 @@ void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 
 mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
 
+namespace {
+
+std::optional<Runtime> the_public_runtime{};
+
+}  // namespace
+
 /*static*/ Runtime* Runtime::get_runtime()
 {
-  // Initializing the public runtime with the lambda ensures that the private runtime is
-  // guaranteed to be constructed before it, and therefore ensuring the inverse destruction
-  // order.
-  static const std::unique_ptr<Runtime> the_runtime = [] {
+  if (LegateUnlikely(!the_public_runtime.has_value())) {
     auto* impl = detail::Runtime::get_runtime();
 
     if (!impl->initialized()) {
@@ -297,15 +302,20 @@ mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
         "Legate runtime has not been initialized. Please invoke legate::start to use the "
         "runtime"};
     }
-    return std::unique_ptr<Runtime>{new Runtime{impl}};
-  }();
-
-  return the_runtime.get();
+    the_public_runtime.emplace(Runtime{impl});
+  }
+  return &*the_public_runtime;
 }
 
 std::int32_t start(std::int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
 
-std::int32_t finish() { return Runtime::get_runtime()->impl()->finish(); }
+std::int32_t finish()
+{
+  const auto ret = Runtime::get_runtime()->impl()->finish();
+
+  the_public_runtime.reset();
+  return ret;
+}
 
 void destroy() { detail::Runtime::get_runtime()->destroy(); }
 

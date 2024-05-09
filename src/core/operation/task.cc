@@ -84,7 +84,7 @@ Variable AutoTask::find_or_declare_partition(const LogicalArray& array)
 
 Variable AutoTask::declare_partition() { return Variable{impl_->declare_partition()}; }
 
-const std::string& AutoTask::provenance() const { return impl_->provenance(); }
+std::string_view AutoTask::provenance() const { return impl_->provenance(); }
 
 void AutoTask::set_concurrent(bool concurrent) { impl_->set_concurrent(concurrent); }
 
@@ -148,7 +148,7 @@ void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
 
 void ManualTask::add_scalar_arg(Scalar scalar) { impl_->add_scalar_arg(std::move(*scalar.impl())); }
 
-const std::string& ManualTask::provenance() const { return impl_->provenance(); }
+std::string_view ManualTask::provenance() const { return impl_->provenance(); }
 
 void ManualTask::set_concurrent(bool concurrent) { impl_->set_concurrent(concurrent); }
 

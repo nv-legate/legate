@@ -27,9 +27,12 @@ inline std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::reductions()
   return reductions_;
 }
 
-inline const std::vector<legate::Scalar>& TaskContext::scalars() { return scalars_; }
+inline const std::vector<legate::Scalar>& TaskContext::scalars() const noexcept { return scalars_; }
 
-inline std::vector<comm::Communicator>& TaskContext::communicators() { return comms_; }
+inline const std::vector<comm::Communicator>& TaskContext::communicators() const noexcept
+{
+  return comms_;
+}
 
 inline std::int64_t TaskContext::task_id() const noexcept { return task_->task_id; }
 
@@ -39,9 +42,9 @@ inline bool TaskContext::is_single_task() const { return !task_->is_index_space;
 
 inline bool TaskContext::can_raise_exception() const { return can_raise_exception_; }
 
-inline DomainPoint TaskContext::get_task_index() const { return task_->index_point; }
+inline const DomainPoint& TaskContext::get_task_index() const { return task_->index_point; }
 
-inline Domain TaskContext::get_launch_domain() const { return task_->index_domain; }
+inline const Domain& TaskContext::get_launch_domain() const { return task_->index_domain; }
 
 inline void TaskContext::set_exception(ReturnedException what) { excn_ = std::move(what); }
 
@@ -49,7 +52,7 @@ inline std::optional<ReturnedException>& TaskContext::get_exception() noexcept {
 
 inline const mapping::detail::Machine& TaskContext::machine() const { return machine_; }
 
-inline const std::string& TaskContext::get_provenance() const
+inline std::string_view TaskContext::get_provenance() const
 {
   return task_->get_provenance_string();
 }

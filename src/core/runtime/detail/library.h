@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 namespace legate::detail {
@@ -54,7 +55,7 @@ class Library {
   Library(const Library&) = delete;
   Library(Library&&)      = delete;
 
-  [[nodiscard]] const std::string& get_library_name() const;
+  [[nodiscard]] std::string_view get_library_name() const;
 
   [[nodiscard]] Legion::TaskID get_task_id(std::int64_t local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
@@ -74,7 +75,7 @@ class Library {
 
   [[nodiscard]] std::int64_t get_new_task_id();
 
-  [[nodiscard]] const std::string& get_task_name(std::int64_t local_task_id) const;
+  [[nodiscard]] std::string_view get_task_name(std::int64_t local_task_id) const;
   [[nodiscard]] std::unique_ptr<Scalar> get_tunable(std::int64_t tunable_id,
                                                     InternalSharedPtr<Type> type) const;
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);

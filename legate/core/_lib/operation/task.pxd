@@ -42,7 +42,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         void add_constraint(_Constraint)
         _Variable find_or_declare_partition(_LogicalArray)
         _Variable declare_partition()
-        const std_string provenance() const
+        std_string_view provenance() const
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)
@@ -64,7 +64,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
             _LogicalStorePartition, int32_t, std_optional[_SymbolicPoint]
         ) except+
         void add_scalar_arg(const _Scalar& scalar)
-        const std_string provenance() const
+        std_string_view provenance() const
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)

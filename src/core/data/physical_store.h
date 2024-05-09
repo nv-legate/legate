@@ -388,8 +388,8 @@ class PhysicalStore {
   [[nodiscard]] ACC create_reduction_accessor(const Rect<DIM>& bounds) const;
 
   [[nodiscard]] bool is_read_only_future() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
+  [[nodiscard]] const Legion::Future& get_future() const;
+  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
 
   void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const;
   void update_num_elements(std::size_t num_elements) const;

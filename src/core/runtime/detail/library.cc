@@ -106,7 +106,7 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
   return shard_scope_.in_scope(shard_id);
 }
 
-const std::string& Library::get_task_name(std::int64_t local_task_id) const
+std::string_view Library::get_task_name(std::int64_t local_task_id) const
 {
   return find_task(local_task_id)->name();
 }
@@ -196,8 +196,10 @@ const TaskInfo* Library::find_task(std::int64_t local_task_id) const
   auto finder = tasks_.find(local_task_id);
 
   if (tasks_.end() == finder) {
-    throw std::out_of_range{"Library " + get_library_name() + " does not have task " +
-                            std::to_string(local_task_id)};
+    std::stringstream ss;
+
+    ss << "Library " << get_library_name() << " does not have task " << local_task_id;
+    throw std::out_of_range{std::move(ss).str()};
   }
   return finder->second.get();
 }

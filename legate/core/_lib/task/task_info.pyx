@@ -15,6 +15,7 @@ from libc.stdlib cimport abort as std_abort
 from libcpp.string cimport string as std_string
 from libcpp.unordered_map cimport unordered_map as std_unordered_map
 
+from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..legate_c cimport legate_core_variant_t
 from ..utilities.typedefs cimport RealmCallbackFn
 from .task_context cimport TaskContext, _TaskContext
@@ -210,7 +211,7 @@ cdef class TaskInfo:
     @property
     def name(self) -> str:
         assert self.valid
-        return self._handle.name().decode()
+        return str_from_string_view(self._handle.name())
 
     cpdef bool has_variant(self, int variant_id):
         assert self.valid

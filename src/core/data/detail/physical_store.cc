@@ -166,26 +166,24 @@ FutureWrapper::FutureWrapper(bool read_only,
                              const Domain& domain,  // NOLINT(modernize-pass-by-value)
                              Legion::Future future,
                              bool initialize /*= false*/)
-  : read_only_{read_only},
-    field_size_{field_size},
-    domain_{domain},
-    future_{std::make_unique<Legion::Future>(std::move(future))}
+  : read_only_{read_only}, field_size_{field_size}, domain_{domain}, future_{std::move(future)}
 {
   if (!read_only) {
-    LegateAssert(!initialize || future_->get_untyped_size() == field_size);
+    LegateAssert(!initialize || future_.get_untyped_size() == field_size);
     auto mem_kind =
       find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB));
     if (initialize) {
-      auto p_init_value = future_->get_buffer(mem_kind);
+      const auto* init_value = future_.get_buffer(mem_kind);
+
       if (mem_kind == Memory::Kind::GPU_FB_MEM) {
         // TODO(wonchanl): This should be done by Legion
         buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
         const AccessorWO<int8_t, 1> acc{buffer_, field_size, false};
         auto stream = cuda::StreamPool::get_stream_pool().get_stream();
         LegateCheckCUDA(
-          cudaMemcpyAsync(acc.ptr(0), p_init_value, field_size, cudaMemcpyDeviceToDevice, stream));
+          cudaMemcpyAsync(acc.ptr(0), init_value, field_size, cudaMemcpyDeviceToDevice, stream));
       } else {
-        buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind, p_init_value);
+        buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind, init_value);
       }
     } else {
       buffer_ = Legion::UntypedDeferredValue(field_size, mem_kind);
@@ -233,7 +231,7 @@ InlineAllocation FutureWrapper::get_inline_allocation(const Domain& domain) cons
 {
   if (is_read_only()) {
     return dim_dispatch(
-      std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, *future_, domain, field_size_);
+      std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, future_, domain, field_size_);
   }
   return dim_dispatch(
     std::max(1, domain.dim), get_inline_alloc_from_future_fn{}, buffer_, domain, field_size_);
@@ -271,11 +269,6 @@ void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
 }
 
 ReturnValue FutureWrapper::pack() const { return {buffer_, field_size_}; }
-
-Legion::Future FutureWrapper::get_future() const
-{
-  return future_ != nullptr ? *future_ : Legion::Future{};
-}
 
 bool PhysicalStore::valid() const
 {
@@ -399,13 +392,13 @@ void PhysicalStore::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID
   fid = region_field_.get_field_id();
 }
 
-Legion::Future PhysicalStore::get_future() const
+const Legion::Future& PhysicalStore::get_future() const
 {
   LegateAssert(is_future());
   return future_.get_future();
 }
 
-Legion::UntypedDeferredValue PhysicalStore::get_buffer() const
+const Legion::UntypedDeferredValue& PhysicalStore::get_buffer() const
 {
   LegateAssert(is_future());
   return future_.get_buffer();

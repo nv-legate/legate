@@ -830,7 +830,7 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
 
 void Runtime::remap_physical_region(Legion::PhysicalRegion pr)
 {
-  legion_runtime_->remap_region(legion_context_, pr, get_provenance().c_str());
+  legion_runtime_->remap_region(legion_context_, pr, get_provenance().data());
   pr.wait_until_valid(true /*silence_warnings*/);
 }
 
@@ -850,7 +850,7 @@ Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
 {
   LegateCheck(physical_region.exists() && !physical_region.is_mapped());
   return legion_runtime_->detach_external_resource(
-    legion_context_, physical_region, flush, unordered, get_provenance().c_str());
+    legion_context_, physical_region, flush, unordered, get_provenance().data());
 }
 
 Legion::Future Runtime::detach(const Legion::ExternalResources& external_resources,
@@ -859,7 +859,7 @@ Legion::Future Runtime::detach(const Legion::ExternalResources& external_resourc
 {
   LegateCheck(external_resources.exists());
   return legion_runtime_->detach_external_resources(
-    legion_context_, external_resources, flush, unordered, get_provenance().c_str());
+    legion_context_, external_resources, flush, unordered, get_provenance().data());
 }
 
 bool Runtime::consensus_match_required() const
@@ -1174,13 +1174,13 @@ void Runtime::dispatch(Legion::IndexFillLauncher& launcher)
 Legion::Future Runtime::extract_scalar(const Legion::Future& result, std::uint32_t idx) const
 {
   const auto& machine = get_machine();
-  auto& provenance    = get_provenance();
+  auto provenance     = get_provenance();
   auto variant        = mapping::detail::to_variant_code(machine.preferred_target);
   auto launcher =
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
   launcher.add_future(result);
-  launcher.add_scalar(Scalar(idx));
+  launcher.add_scalar(Scalar{idx});
   return launcher.execute_single();
 }
 
@@ -1189,13 +1189,13 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
                                           const Legion::Domain& launch_domain) const
 {
   const auto& machine = get_machine();
-  auto& provenance    = get_provenance();
+  auto provenance     = get_provenance();
   auto variant        = mapping::detail::to_variant_code(machine.preferred_target);
   auto launcher =
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
   launcher.add_future_map(result);
-  launcher.add_scalar(Scalar(idx));
+  launcher.add_scalar(Scalar{idx});
   return launcher.execute(launch_domain);
 }
 
@@ -1272,7 +1272,7 @@ InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
 
 const mapping::detail::Machine& Runtime::get_machine() const { return *scope().machine(); }
 
-const std::string& Runtime::get_provenance() const { return scope().provenance(); }
+std::string_view Runtime::get_provenance() const { return scope().provenance(); }
 
 Legion::ProjectionID Runtime::get_affine_projection(std::uint32_t src_ndim,
                                                     const proj::SymbolicPoint& point)
@@ -1443,6 +1443,12 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   return result;
 }
 
+namespace {
+
+std::optional<Runtime> the_runtime{};
+
+}  // namespace
+
 std::int32_t Runtime::finish()
 {
   if (!initialized()) {
@@ -1453,15 +1459,26 @@ std::int32_t Runtime::finish()
   // After this call the context is no longer valid
   Legion::Runtime::get_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
 
-  // The previous call is asynchronous so we still need to
-  // wait for the shutdown of the runtime to complete
-  return Legion::Runtime::wait_for_shutdown();
+  auto ret = Legion::Runtime::wait_for_shutdown();
+  // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
+  // circumstances.
+  //
+  // They must stay exactly as they are. the_runtime.reset() calls "delete this", and hence any
+  // modification of the runtime object, or any of its derivatives hereafter is strictly
+  // undefined behavior.
+  //
+  // BEGIN DO NOT MODIFY
+  the_runtime.reset();
+  return ret;
+  // END DO NOT MODIFY
 }
 
 /*static*/ Runtime* Runtime::get_runtime()
 {
-  static auto runtime = std::make_unique<Runtime>();
-  return runtime.get();
+  if (LegateUnlikely(!the_runtime.has_value())) {
+    the_runtime.emplace();
+  }
+  return &*the_runtime;
 }
 
 void Runtime::destroy()
@@ -1546,7 +1563,7 @@ void extract_scalar_task(const void* args,
 
   legate::detail::show_progress(task, legion_context, runtime);
 
-  detail::TaskContext context{task, variant_kind, *regions};
+  const detail::TaskContext context{task, variant_kind, *regions};
   auto idx            = context.scalars()[0].value<std::int32_t>();
   auto value_and_size = ReturnValues::extract(task->futures[0], idx);
 

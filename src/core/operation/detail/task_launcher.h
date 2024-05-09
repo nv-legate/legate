@@ -19,6 +19,8 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
+#include <variant>
 #include <vector>
 
 namespace legate::detail {
@@ -30,7 +32,7 @@ class TaskLauncher {
  public:
   TaskLauncher(const Library* library,
                const mapping::detail::Machine& machine,
-               std::string provenance,
+               std::variant<std::string_view, std::string> provenance,
                std::int64_t task_id,
                std::int64_t tag = 0);
 
@@ -60,6 +62,7 @@ class TaskLauncher {
 
   Legion::FutureMap execute(const Legion::Domain& launch_domain);
   Legion::Future execute_single();
+  [[nodiscard]] std::string_view provenance() const;
 
  private:
   void pack_mapper_arg(BufferBuilder& buffer);
@@ -78,7 +81,7 @@ class TaskLauncher {
   std::int64_t task_id_{};
   std::int64_t tag_{};
   const mapping::detail::Machine& machine_;
-  std::string provenance_{};
+  std::variant<std::string_view, std::string> provenance_{};
   std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
 
   bool has_side_effect_{true};

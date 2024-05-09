@@ -15,6 +15,7 @@ from libcpp.optional cimport nullopt as std_nullopt
 
 from typing import Any
 
+from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..mapping.machine cimport Machine
 from .exception_mode cimport ExceptionMode
 from .runtime cimport raise_pending_exception
@@ -71,7 +72,7 @@ cdef class Scope:
 
     @staticmethod
     def provenance() -> str:
-        return _Scope.provenance().decode()
+        return str_from_string_view(_Scope.provenance())
 
     @staticmethod
     def machine() -> Machine:

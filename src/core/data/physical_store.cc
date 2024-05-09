@@ -37,7 +37,7 @@ void PhysicalStore::bind_empty_data() const { impl_->bind_empty_data(); }
 
 std::int32_t PhysicalStore::dim() const { return impl_->dim(); }
 
-Type PhysicalStore::type() const { return Type(impl_->type()); }
+Type PhysicalStore::type() const { return Type{impl_->type()}; }
 
 Domain PhysicalStore::domain() const { return impl_->domain(); }
 
@@ -109,9 +109,12 @@ void PhysicalStore::get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID
 
 std::int32_t PhysicalStore::get_redop_id() const { return impl_->get_redop_id(); }
 
-Legion::Future PhysicalStore::get_future() const { return impl_->get_future(); }
+const Legion::Future& PhysicalStore::get_future() const { return impl_->get_future(); }
 
-Legion::UntypedDeferredValue PhysicalStore::get_buffer() const { return impl_->get_buffer(); }
+const Legion::UntypedDeferredValue& PhysicalStore::get_buffer() const
+{
+  return impl_->get_buffer();
+}
 
 void PhysicalStore::get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const
 {

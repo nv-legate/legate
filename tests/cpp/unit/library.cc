@@ -49,9 +49,10 @@ using Library = DefaultFixture;
 
 TEST_F(Library, Create)
 {
-  const char* LIBNAME = "test_library.libA";
-  auto* runtime       = legate::Runtime::get_runtime();
-  auto lib            = runtime->create_library(LIBNAME);
+  static constexpr const char LIBNAME[] = "test_library.libA";
+
+  auto* runtime = legate::Runtime::get_runtime();
+  auto lib      = runtime->create_library(LIBNAME);
 
   EXPECT_EQ(lib, runtime->find_library(LIBNAME));
 
@@ -60,12 +61,12 @@ TEST_F(Library, Create)
   ASSERT_TRUE(found_lib.has_value());
   // We check the optional above ^^^
   EXPECT_EQ(lib, found_lib.value());  // NOLINT(bugprone-unchecked-optional-access)
-  EXPECT_STREQ(lib.get_library_name().c_str(), LIBNAME);
+  EXPECT_STREQ(lib.get_library_name().data(), LIBNAME);
 }
 
 TEST_F(Library, FindOrCreate)
 {
-  const char* LIBNAME = "test_library.libB";
+  static constexpr const char LIBNAME[] = "test_library.libB";
 
   auto* runtime = legate::Runtime::get_runtime();
 
@@ -86,7 +87,7 @@ TEST_F(Library, FindOrCreate)
 
 TEST_F(Library, FindNonExistent)
 {
-  const char* LIBNAME = "test_library.libC";
+  static constexpr const char LIBNAME[] = "test_library.libC";
 
   auto* runtime = legate::Runtime::get_runtime();
 

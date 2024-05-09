@@ -21,6 +21,7 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/enumerate.h"
 
 #include <cstdint>
 #include <optional>
@@ -134,7 +135,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
                                        static_cast<Legion::MapperID>(legion_mapper_id()),
                                        static_cast<Legion::MappingTagID>(tag_),
                                        mapper_arg.to_legion_buffer(),
-                                       provenance_.c_str()};
+                                       provenance().data()};
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -208,7 +209,7 @@ Legion::Future TaskLauncher::execute_single()
                                    static_cast<Legion::MapperID>(legion_mapper_id()),
                                    static_cast<Legion::MappingTagID>(tag_),
                                    mapper_arg.to_legion_buffer(),
-                                   provenance_.c_str()};
+                                   provenance().data()};
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -340,18 +341,18 @@ void TaskLauncher::post_process_unbound_stores(
 
     post_process_unbound_store(arg, req, result, machine_);
   } else {
-    std::uint32_t idx = 0;
-
-    for (auto&& arg : unbound_stores_) {
+    for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores_)) {
       const auto& req = output_requirements[arg->requirement_index()];
 
       if (arg->store()->dim() == 1) {
         post_process_unbound_store(
-          arg, req, runtime->extract_scalar(result, idx, launch_domain), machine_);
+          arg,
+          req,
+          runtime->extract_scalar(result, static_cast<std::uint32_t>(idx), launch_domain),
+          machine_);
       } else {
         post_process_unbound_store(arg, req, result, machine_);
       }
-      ++idx;
     }
   }
 }

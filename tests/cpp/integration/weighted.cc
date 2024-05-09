@@ -34,19 +34,23 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct Initializer : public legate::LegateTask<Initializer> {
+  static constexpr std::int32_t TASK_ID = INIT;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto task_idx = context.get_task_index()[0];
     auto outputs  = context.outputs();
     for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto output = outputs.at(idx).data();
-      (void)output.create_output_buffer<int32_t, 1>(legate::Point<1>(task_idx + 10 * (idx + 1)),
-                                                    true);
+      static_cast<void>(
+        output.create_output_buffer<int32_t, 1>(legate::Point<1>{task_idx + 10 * (idx + 1)}, true));
     }
   }
 };
 
 struct Tester : public legate::LegateTask<Tester> {
+  static constexpr std::int32_t TASK_ID = CHECK;
+
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_FALSE(context.is_single_task());
@@ -69,15 +73,15 @@ void prepare()
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library(library_name);
-  Initializer::register_variants(library, INIT);
-  Tester::register_variants(library, CHECK);
+  Initializer::register_variants(library);
+  Tester::register_variants(library);
 }
 
 void initialize(legate::Runtime* runtime,
                 legate::Library library,
                 const std::vector<legate::LogicalStore>& outputs)
 {
-  auto task = runtime->create_task(library, INIT, {NUM_TASKS});
+  auto task = runtime->create_task(library, Initializer::TASK_ID, {NUM_TASKS});
 
   for (auto& output : outputs) {
     task.add_output(output);
@@ -90,7 +94,7 @@ void check(legate::Runtime* runtime,
            legate::Library library,
            const std::vector<legate::LogicalStore>& inputs)
 {
-  auto task = runtime->create_task(library, CHECK);
+  auto task = runtime->create_task(library, Tester::TASK_ID);
 
   for (auto& input : inputs) {
     auto part_in  = task.add_input(input);

@@ -17,7 +17,7 @@
 
 namespace legate {
 
-const std::string& Library::get_library_name() const { return impl()->get_library_name(); }
+std::string_view Library::get_library_name() const { return impl()->get_library_name(); }
 
 Legion::TaskID Library::get_task_id(std::int64_t local_task_id) const
 {
@@ -80,7 +80,7 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
 
 std::int64_t Library::get_new_task_id() { return impl()->get_new_task_id(); }
 
-const std::string& Library::get_task_name(std::int64_t local_task_id) const
+std::string_view Library::get_task_name(std::int64_t local_task_id) const
 {
   return impl()->get_task_name(local_task_id);
 }

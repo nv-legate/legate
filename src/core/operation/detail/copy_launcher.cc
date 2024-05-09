@@ -108,7 +108,7 @@ void CopyLauncher::execute(const Legion::Domain& launch_domain)
                                               runtime->core_library()->get_mapper_id(),
                                               static_cast<Legion::MappingTagID>(tag_),
                                               mapper_arg.to_legion_buffer(),
-                                              provenance.c_str()};
+                                              provenance.data()};
   populate_copy(index_copy);
   runtime->dispatch(index_copy);
 }
@@ -125,7 +125,7 @@ void CopyLauncher::execute_single()
                                           runtime->core_library()->get_mapper_id(),
                                           static_cast<Legion::MappingTagID>(tag_),
                                           mapper_arg.to_legion_buffer(),
-                                          provenance.c_str()};
+                                          provenance.data()};
   populate_copy(single_copy);
   runtime->dispatch(single_copy);
 }

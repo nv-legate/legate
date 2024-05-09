@@ -350,16 +350,14 @@ InternalSharedPtr<Type> primitive_type(Type::Code code)
 {
   static std::unordered_map<Type::Code, InternalSharedPtr<Type>> cache{};
   if (SIZEOF().find(code) == SIZEOF().end()) {
-    throw std::invalid_argument{std::to_string(static_cast<std::int32_t>(code)) +
+    throw std::invalid_argument{std::to_string(traits::detail::to_underlying(code)) +
                                 " is not a valid type code for a primitive type"};
   }
   auto finder = cache.find(code);
   if (finder != cache.end()) {
     return finder->second;
   }
-  auto result = make_internal_shared<PrimitiveType>(code);
-  cache[code] = result;
-  return result;
+  return cache[code] = make_internal_shared<PrimitiveType>(code);
 }
 
 ListType::ListType(std::uint32_t uid, InternalSharedPtr<Type> element_type)
@@ -402,7 +400,7 @@ bool ListType::equal(const Type& other) const
 
 InternalSharedPtr<Type> string_type()
 {
-  static auto type = make_internal_shared<StringType>();
+  static const auto type = make_internal_shared<StringType>();
   return type;
 }
 
@@ -452,85 +450,85 @@ InternalSharedPtr<Type> list_type(InternalSharedPtr<Type> element_type)
 
 InternalSharedPtr<Type> bool_()
 {
-  static auto result = detail::primitive_type(Type::Code::BOOL);
+  static const auto result = detail::primitive_type(Type::Code::BOOL);
   return result;
 }
 
 InternalSharedPtr<Type> int8()
 {
-  static auto result = detail::primitive_type(Type::Code::INT8);
+  static const auto result = detail::primitive_type(Type::Code::INT8);
   return result;
 }
 
 InternalSharedPtr<Type> int16()
 {
-  static auto result = detail::primitive_type(Type::Code::INT16);
+  static const auto result = detail::primitive_type(Type::Code::INT16);
   return result;
 }
 
 InternalSharedPtr<Type> int32()
 {
-  static auto result = detail::primitive_type(Type::Code::INT32);
+  static const auto result = detail::primitive_type(Type::Code::INT32);
   return result;
 }
 
 InternalSharedPtr<Type> int64()
 {
-  static auto result = detail::primitive_type(Type::Code::INT64);
+  static const auto result = detail::primitive_type(Type::Code::INT64);
   return result;
 }
 
 InternalSharedPtr<Type> uint8()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT8);
+  static const auto result = detail::primitive_type(Type::Code::UINT8);
   return result;
 }
 
 InternalSharedPtr<Type> uint16()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT16);
+  static const auto result = detail::primitive_type(Type::Code::UINT16);
   return result;
 }
 
 InternalSharedPtr<Type> uint32()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT32);
+  static const auto result = detail::primitive_type(Type::Code::UINT32);
   return result;
 }
 
 InternalSharedPtr<Type> uint64()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT64);
+  static const auto result = detail::primitive_type(Type::Code::UINT64);
   return result;
 }
 
 InternalSharedPtr<Type> float16()
 {
-  static auto result = detail::primitive_type(Type::Code::FLOAT16);
+  static const auto result = detail::primitive_type(Type::Code::FLOAT16);
   return result;
 }
 
 InternalSharedPtr<Type> float32()
 {
-  static auto result = detail::primitive_type(Type::Code::FLOAT32);
+  static const auto result = detail::primitive_type(Type::Code::FLOAT32);
   return result;
 }
 
 InternalSharedPtr<Type> float64()
 {
-  static auto result = detail::primitive_type(Type::Code::FLOAT64);
+  static const auto result = detail::primitive_type(Type::Code::FLOAT64);
   return result;
 }
 
 InternalSharedPtr<Type> complex64()
 {
-  static auto result = detail::primitive_type(Type::Code::COMPLEX64);
+  static const auto result = detail::primitive_type(Type::Code::COMPLEX64);
   return result;
 }
 
 InternalSharedPtr<Type> complex128()
 {
-  static auto result = detail::primitive_type(Type::Code::COMPLEX128);
+  static const auto result = detail::primitive_type(Type::Code::COMPLEX128);
   return result;
 }
 
@@ -568,7 +566,7 @@ InternalSharedPtr<Type> rect_type(std::uint32_t ndim)
 
 InternalSharedPtr<Type> null_type()
 {
-  static auto result = detail::primitive_type(Type::Code::NIL);
+  static const auto result = detail::primitive_type(Type::Code::NIL);
   return result;
 }
 

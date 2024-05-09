@@ -17,7 +17,7 @@
 #include "core/utilities/typedefs.h"
 
 #include <memory>
-#include <string>
+#include <string_view>
 
 /**
  * @file
@@ -47,7 +47,7 @@ class Library {
    *
    * @return Library name
    */
-  [[nodiscard]] const std::string& get_library_name() const;
+  [[nodiscard]] std::string_view get_library_name() const;
 
   [[nodiscard]] Legion::TaskID get_task_id(std::int64_t local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
@@ -73,7 +73,7 @@ class Library {
    * @param local_task_id Task id
    * @return Name of the task
    */
-  [[nodiscard]] const std::string& get_task_name(std::int64_t local_task_id) const;
+  [[nodiscard]] std::string_view get_task_name(std::int64_t local_task_id) const;
   /**
    * @brief Retrieves a tunable parameter
    *

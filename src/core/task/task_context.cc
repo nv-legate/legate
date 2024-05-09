@@ -15,11 +15,17 @@
 #include "core/mapping/detail/mapping.h"
 #include "core/task/detail/task_context.h"
 
+#include <type_traits>
+
+#define CHECK_IF_CAN_USE_MEMBER_FUNCTION(op)                 \
+  static_assert(!std::is_lvalue_reference_v<decltype(op())>, \
+                "Can use this->" LegateStringize(op) "() instead")
+
 namespace legate {
 
 namespace {
 
-std::vector<PhysicalArray> to_arrays(
+[[nodiscard]] std::vector<PhysicalArray> to_arrays(
   const std::vector<InternalSharedPtr<detail::PhysicalArray>>& array_impls)
 {
   return {array_impls.begin(), array_impls.end()};
@@ -27,71 +33,97 @@ std::vector<PhysicalArray> to_arrays(
 
 }  // namespace
 
-std::int64_t TaskContext::task_id() const noexcept { return impl_->task_id(); }
+std::int64_t TaskContext::task_id() const noexcept { return impl()->task_id(); }
 
-LegateVariantCode TaskContext::variant_kind() const noexcept { return impl_->variant_kind(); }
+LegateVariantCode TaskContext::variant_kind() const noexcept { return impl()->variant_kind(); }
 
 PhysicalArray TaskContext::input(std::uint32_t index) const
 {
-  return PhysicalArray{impl_->inputs().at(index)};
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(inputs);
+  return PhysicalArray{impl()->inputs().at(index)};
 }
 
-std::vector<PhysicalArray> TaskContext::inputs() const { return to_arrays(impl_->inputs()); }
+std::vector<PhysicalArray> TaskContext::inputs() const { return to_arrays(impl()->inputs()); }
 
 PhysicalArray TaskContext::output(std::uint32_t index) const
 {
-  return PhysicalArray{impl_->outputs().at(index)};
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(outputs);
+  return PhysicalArray{impl()->outputs().at(index)};
 }
 
-std::vector<PhysicalArray> TaskContext::outputs() const { return to_arrays(impl_->outputs()); }
+std::vector<PhysicalArray> TaskContext::outputs() const { return to_arrays(impl()->outputs()); }
 
 PhysicalArray TaskContext::reduction(std::uint32_t index) const
 {
-  return PhysicalArray{impl_->reductions().at(index)};
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(reductions);
+  return PhysicalArray{impl()->reductions().at(index)};
 }
 
 std::vector<PhysicalArray> TaskContext::reductions() const
 {
-  return to_arrays(impl_->reductions());
+  return to_arrays(impl()->reductions());
 }
 
-const Scalar& TaskContext::scalar(std::uint32_t index) const { return impl_->scalars().at(index); }
+const Scalar& TaskContext::scalar(std::uint32_t index) const
+{
+  // Revert back to using impl()->scalars() if scalars() ever returns a non-ref. No point in
+  // creating a whole temporary vector just to peek at one of them :)
+  static_assert(std::is_lvalue_reference_v<decltype(scalars())>);
+  return scalars().at(index);
+}
 
-const std::vector<Scalar>& TaskContext::scalars() const { return impl_->scalars(); }
+const std::vector<Scalar>& TaskContext::scalars() const { return impl()->scalars(); }
 
 comm::Communicator TaskContext::communicator(std::uint32_t index) const
 {
-  return impl_->communicators().at(index);
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(communicators);
+  return impl()->communicators().at(index);
 }
 
 std::vector<comm::Communicator> TaskContext::communicators() const
 {
-  return impl_->communicators();
+  return impl()->communicators();
 }
 
-std::size_t TaskContext::num_inputs() const { return impl_->inputs().size(); }
+std::size_t TaskContext::num_inputs() const
+{
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(inputs);
+  return impl()->inputs().size();
+}
 
-std::size_t TaskContext::num_outputs() const { return impl_->outputs().size(); }
+std::size_t TaskContext::num_outputs() const
+{
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(outputs);
+  return impl()->outputs().size();
+}
 
-std::size_t TaskContext::num_reductions() const { return impl_->reductions().size(); }
+std::size_t TaskContext::num_reductions() const
+{
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(reductions);
+  return impl()->reductions().size();
+}
 
-std::size_t TaskContext::num_communicators() const { return impl_->communicators().size(); }
+std::size_t TaskContext::num_communicators() const
+{
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(communicators);
+  return impl()->communicators().size();
+}
 
-bool TaskContext::is_single_task() const { return impl_->is_single_task(); }
+bool TaskContext::is_single_task() const { return impl()->is_single_task(); }
 
-bool TaskContext::can_raise_exception() const { return impl_->can_raise_exception(); }
+bool TaskContext::can_raise_exception() const { return impl()->can_raise_exception(); }
 
-DomainPoint TaskContext::get_task_index() const { return impl_->get_task_index(); }
+DomainPoint TaskContext::get_task_index() const { return impl()->get_task_index(); }
 
-Domain TaskContext::get_launch_domain() const { return impl_->get_launch_domain(); }
+Domain TaskContext::get_launch_domain() const { return impl()->get_launch_domain(); }
 
 mapping::TaskTarget TaskContext::target() const
 {
   return mapping::detail::to_target(Processor::get_executing_processor().kind());
 }
 
-mapping::Machine TaskContext::machine() const { return mapping::Machine{impl_->machine()}; }
+mapping::Machine TaskContext::machine() const { return mapping::Machine{impl()->machine()}; }
 
-const std::string& TaskContext::get_provenance() const { return impl_->get_provenance(); }
+std::string_view TaskContext::get_provenance() const { return impl()->get_provenance(); }
 
 }  // namespace legate

@@ -12,7 +12,6 @@
 
 #include "core/data/detail/array_tasks.h"
 
-#include "core/legate_c.h"
 #include "core/task/task_context.h"
 
 namespace legate::detail {
@@ -91,9 +90,9 @@ namespace legate::detail {
 
 void register_array_tasks(Library* core_lib)
 {
-  FixupRanges::register_variants(legate::Library{core_lib}, LEGATE_CORE_FIXUP_RANGES);
-  OffsetsToRanges::register_variants(legate::Library{core_lib}, LEGATE_CORE_OFFSETS_TO_RANGES);
-  RangesToOffsets::register_variants(legate::Library{core_lib}, LEGATE_CORE_RANGES_TO_OFFSETS);
+  FixupRanges::register_variants(legate::Library{core_lib});
+  OffsetsToRanges::register_variants(legate::Library{core_lib});
+  RangesToOffsets::register_variants(legate::Library{core_lib});
 }
 
 }  // namespace legate::detail

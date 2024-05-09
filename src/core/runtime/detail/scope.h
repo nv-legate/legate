@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 namespace legate::detail {
 
@@ -28,7 +29,7 @@ class Scope {
  public:
   [[nodiscard]] std::int32_t priority() const;
   [[nodiscard]] ExceptionMode exception_mode() const;
-  [[nodiscard]] const std::string& provenance() const;
+  [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] const InternalSharedPtr<Machine>& machine() const;
 
   [[nodiscard]] std::int32_t exchange_priority(std::int32_t priority);

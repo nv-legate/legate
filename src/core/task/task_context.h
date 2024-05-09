@@ -18,8 +18,7 @@
 #include "core/mapping/machine.h"
 #include "core/mapping/mapping.h"
 
-#include <optional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -190,7 +189,7 @@ class TaskContext {
 
   [[nodiscard]] mapping::Machine machine() const;
 
-  [[nodiscard]] const std::string& get_provenance() const;
+  [[nodiscard]] std::string_view get_provenance() const;
 
   [[nodiscard]] detail::TaskContext* impl() const;
 

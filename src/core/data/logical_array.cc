@@ -75,7 +75,7 @@ PhysicalArray LogicalArray::get_physical_array() const
 ListLogicalArray LogicalArray::as_list_array() const
 {
   if (impl_->kind() != detail::ArrayKind::LIST) {
-    throw std::invalid_argument("Array is not a list array");
+    throw std::invalid_argument{"Array is not a list array"};
   }
   return ListLogicalArray{impl_};
 }
@@ -83,7 +83,7 @@ ListLogicalArray LogicalArray::as_list_array() const
 StringLogicalArray LogicalArray::as_string_array() const
 {
   if (type().code() != Type::Code::STRING) {
-    throw std::invalid_argument("Array is not a string array");
+    throw std::invalid_argument{"Array is not a string array"};
   }
   return StringLogicalArray{impl_};
 }

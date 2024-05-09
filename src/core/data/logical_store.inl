@@ -16,7 +16,7 @@
 
 namespace legate {
 
-inline LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore>&& impl)
+inline LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore> impl)
   : impl_{std::move(impl)}
 {
 }

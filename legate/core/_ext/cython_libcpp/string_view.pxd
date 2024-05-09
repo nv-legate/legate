@@ -9,7 +9,11 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 from cpython.bytes cimport PyBytes_AS_STRING, PyBytes_Check, PyBytes_GET_SIZE
-from cpython.unicode cimport PyUnicode_AsUTF8AndSize, PyUnicode_Check
+from cpython.unicode cimport (
+    PyUnicode_AsUTF8AndSize,
+    PyUnicode_Check,
+    PyUnicode_FromStringAndSize,
+)
 
 
 cdef extern from "<string_view>" namespace "std::string_view" nogil:
@@ -271,3 +275,6 @@ cdef inline string_view string_view_from_py(object obj):
     raise RuntimeError(
         "string_view_from_py: expected bytes or unicode object"
     )
+
+cdef inline str str_from_string_view(string_view sv):
+    return PyUnicode_FromStringAndSize(sv.data(), sv.size())

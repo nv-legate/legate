@@ -210,7 +210,7 @@ class Scope {
    *
    * @return Current provenance string
    */
-  [[nodiscard]] static const std::string& provenance();
+  [[nodiscard]] static std::string_view provenance();
   /**
    * @brief Returns the machine of the current scope
    *

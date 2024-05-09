@@ -112,7 +112,7 @@ class FutureWrapper {
                 bool initialize = false);
 
   [[nodiscard]] std::int32_t dim() const;
-  [[nodiscard]] Domain domain() const;
+  [[nodiscard]] const Domain& domain() const;
   [[nodiscard]] bool valid() const;
 
   [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
@@ -124,14 +124,14 @@ class FutureWrapper {
   [[nodiscard]] ReturnValue pack() const;
 
   [[nodiscard]] bool is_read_only() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
+  [[nodiscard]] const Legion::Future& get_future() const;
+  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
 
  private:
   bool read_only_{true};
   std::uint32_t field_size_{};
   Domain domain_{};
-  std::unique_ptr<Legion::Future> future_{};
+  Legion::Future future_{};
   Legion::UntypedDeferredValue buffer_{};
 };
 
@@ -141,26 +141,16 @@ class PhysicalStore {
                 InternalSharedPtr<Type> type,
                 std::int32_t redop_id,
                 FutureWrapper future,
-                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
+                InternalSharedPtr<detail::TransformStack> transform = nullptr);
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
                 std::int32_t redop_id,
                 RegionField&& region_field,
-                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
+                InternalSharedPtr<detail::TransformStack> transform = nullptr);
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
                 UnboundRegionField&& unbound_field,
-                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
-  PhysicalStore(std::int32_t dim,
-                InternalSharedPtr<Type> type,
-                std::int32_t redop_id,
-                FutureWrapper future,
-                const InternalSharedPtr<detail::TransformStack>& transform);
-  PhysicalStore(std::int32_t dim,
-                InternalSharedPtr<Type> type,
-                std::int32_t redop_id,
-                RegionField&& region_field,
-                const InternalSharedPtr<detail::TransformStack>& transform);
+                InternalSharedPtr<detail::TransformStack> transform = nullptr);
 
   PhysicalStore(PhysicalStore&& other) noexcept            = default;
   PhysicalStore& operator=(PhysicalStore&& other) noexcept = default;
@@ -205,8 +195,8 @@ class PhysicalStore {
   [[nodiscard]] std::int32_t get_redop_id() const;
 
   [[nodiscard]] bool is_read_only_future() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
+  [[nodiscard]] const Legion::Future& get_future() const;
+  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
 
   void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
   void update_num_elements(std::size_t num_elements);

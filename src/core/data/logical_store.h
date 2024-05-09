@@ -77,7 +77,7 @@ class LogicalStore {
   friend class LogicalStorePartition;
 
  public:
-  explicit LogicalStore(InternalSharedPtr<detail::LogicalStore>&& impl);
+  explicit LogicalStore(InternalSharedPtr<detail::LogicalStore> impl);
 
   /**
    * @brief Returns the number of dimensions of the store.

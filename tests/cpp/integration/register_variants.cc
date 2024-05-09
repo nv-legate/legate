@@ -154,7 +154,7 @@ TEST_F(RegisterVariants, All)
     const std::string task_name =
       task_id >= HELLO4 ? "register_variants::BaseTask2"
                         : "register_variants::BaseTask<" + std::to_string(task_id) + ">";
-    EXPECT_STREQ(context.get_task_name(task_id).c_str(), task_name.c_str());
+    EXPECT_STREQ(context.get_task_name(task_id).data(), task_name.c_str());
   }
 
   auto store = runtime->create_store(legate::Shape{5, 5}, legate::int64());

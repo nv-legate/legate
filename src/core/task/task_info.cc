@@ -31,7 +31,7 @@ class TaskInfo::Impl {
  public:
   explicit Impl(std::string task_name);
 
-  [[nodiscard]] const std::string& name() const { return task_name_; }
+  [[nodiscard]] std::string_view name() const { return task_name_; }
 
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
@@ -54,7 +54,7 @@ class TaskInfo::Impl {
 
 TaskInfo::Impl::Impl(std::string task_name) : task_name_{std::move(task_name)} {}
 
-const std::string& TaskInfo::name() const { return impl_->name(); }
+std::string_view TaskInfo::name() const { return impl_->name(); }
 
 void TaskInfo::Impl::add_variant(LegateVariantCode vid,
                                  VariantImpl body,

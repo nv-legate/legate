@@ -21,6 +21,7 @@
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/detail/zip.h"
 
 #include <sstream>
 
@@ -75,7 +76,7 @@ void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
 void Task::launch_task(Strategy* p_strategy)
 {
   auto& strategy     = *p_strategy;
-  auto launcher      = detail::TaskLauncher{library_, machine_, provenance_, task_id_};
+  auto launcher      = detail::TaskLauncher{library_, machine_, provenance(), task_id_};
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.set_priority(priority());
@@ -90,10 +91,11 @@ void Task::launch_task(Strategy* p_strategy)
       arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, -1));
   }
 
-  std::uint32_t idx = 0;
-  for (auto&& [arr, mapping, projection] : reductions_) {
-    launcher.add_reduction(arr->to_launcher_arg(
-      mapping, strategy, launch_domain, projection, LEGION_REDUCE, reduction_ops_[idx++]));
+  for (auto&& [redop, rest] : legate::detail::zip(reduction_ops_, reductions_)) {
+    auto&& [arr, mapping, projection] = rest;
+
+    launcher.add_reduction(
+      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_REDUCE, redop));
   }
 
   // Add by-value scalars
@@ -394,7 +396,7 @@ void AutoTask::fixup_ranges(Strategy& strategy)
   }
 
   auto* core_lib = detail::Runtime::get_runtime()->core_library();
-  auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance_, LEGATE_CORE_FIXUP_RANGES};
+  auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance(), LEGATE_CORE_FIXUP_RANGES};
 
   launcher.set_priority(priority());
 

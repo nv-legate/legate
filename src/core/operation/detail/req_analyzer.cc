@@ -13,6 +13,7 @@
 #include "core/operation/detail/req_analyzer.h"
 
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/enumerate.h"
 
 namespace legate::detail {
 
@@ -103,7 +104,7 @@ void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& re
   for (auto&& [key, entry] : coalesced_) {
     auto& [fields, is_key]        = entry;
     auto& [privilege, store_proj] = key;
-    auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement());
+    auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement{});
 
     store_proj.template populate_requirement<is_single_v<Launcher>>(
       requirement, region, fields, privilege, is_key);
@@ -187,9 +188,10 @@ std::uint32_t OutputRequirementAnalyzer::get_requirement_index(
 
 void OutputRequirementAnalyzer::analyze_requirements()
 {
-  std::uint32_t idx = 0;
-  for (const auto& [field_space, _] : field_groups_) {
-    req_infos_[field_space].req_idx = idx++;
+  for (const auto& [idx, rest] : legate::detail::enumerate(field_groups_)) {
+    auto&& [field_space, _] = rest;
+
+    req_infos_[field_space].req_idx = idx;
   }
 }
 

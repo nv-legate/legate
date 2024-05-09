@@ -58,7 +58,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
     runtime->core_library()->get_mapper_id(),
     static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
     mapper_arg.to_legion_buffer(),
-    provenance.c_str()};
+    provenance.data()};
 
   index_fill.add_field(field_id);
   runtime->dispatch(index_fill);
@@ -86,7 +86,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
     runtime->core_library()->get_mapper_id(),
     static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
     mapper_arg.to_legion_buffer(),
-    provenance.c_str()};
+    provenance.data()};
 
   index_fill.add_field(field_id);
   runtime->dispatch(index_fill);
@@ -112,7 +112,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
     runtime->core_library()->get_mapper_id(),
     static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
     mapper_arg.to_legion_buffer(),
-    provenance.c_str()};
+    provenance.data()};
 
   single_fill.add_field(field_id);
   runtime->dispatch(single_fill);
@@ -137,7 +137,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
     runtime->core_library()->get_mapper_id(),
     static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
     mapper_arg.to_legion_buffer(),
-    provenance.c_str()};
+    provenance.data()};
 
   single_fill.add_field(field_id);
   runtime->dispatch(single_fill);

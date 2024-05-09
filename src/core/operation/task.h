@@ -20,7 +20,6 @@
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
-#include <string>
 #include <string_view>
 #include <type_traits>
 
@@ -182,7 +181,7 @@ class AutoTask {
    *
    * @return Provenance
    */
-  [[nodiscard]] const std::string& provenance() const;
+  [[nodiscard]] std::string_view provenance() const;
 
   /**
    * @brief Sets whether the task needs a concurrent task launch.
@@ -328,7 +327,7 @@ class ManualTask {
    *
    * @return Provenance
    */
-  [[nodiscard]] const std::string& provenance() const;
+  [[nodiscard]] std::string_view provenance() const;
 
   /**
    * @brief Sets whether the task needs a concurrent task launch.

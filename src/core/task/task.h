@@ -20,7 +20,7 @@
 
 #include <map>
 #include <memory>
-#include <string>
+#include <string_view>
 
 /** @defgroup task Task
  */
@@ -106,7 +106,7 @@ class LegateTask {
   [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info(
     const std::map<LegateVariantCode, VariantOptions>& all_options);
 
-  [[nodiscard]] static const std::string& task_name();
+  [[nodiscard]] static std::string_view task_name();
 
   template <VariantImpl variant_fn, LegateVariantCode variant_kind>
   static void task_wrapper_(const void* args,

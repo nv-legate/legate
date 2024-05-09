@@ -50,9 +50,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   // Create a RegionField-backed or a Future-backed storage. Initialized lazily.
   Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, bool optimize_scalar);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(InternalSharedPtr<Shape> shape,
-          InternalSharedPtr<Type> type,
-          const Legion::Future& future);
+  Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, Legion::Future future);
   // Create a RegionField-backed sub-storage. Initialized lazily.
   Storage(tuple<std::uint64_t> extents,
           InternalSharedPtr<Type> type,
@@ -72,7 +70,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;
-  [[nodiscard]] InternalSharedPtr<Type> type() const;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const;
   [[nodiscard]] Kind kind() const;
   [[nodiscard]] std::int32_t level() const;
 
@@ -113,7 +111,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   Kind kind_{Kind::REGION_FIELD};
 
   InternalSharedPtr<LogicalRegionField> region_field_{};
-  std::unique_ptr<Legion::Future> future_{};
+  std::optional<Legion::Future> future_{};
   std::optional<Legion::FutureMap> future_map_{};
 
   std::int32_t level_{};
@@ -133,7 +131,7 @@ class StoragePartition : public legate::EnableSharedFromThis<StoragePartition> {
                    InternalSharedPtr<Partition> partition,
                    bool complete);
 
-  [[nodiscard]] InternalSharedPtr<Partition> partition() const;
+  [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
   [[nodiscard]] InternalSharedPtr<const Storage> get_root() const;
   [[nodiscard]] InternalSharedPtr<Storage> get_root();
   [[nodiscard]] InternalSharedPtr<Storage> get_child_storage(tuple<std::uint64_t> color);
@@ -176,7 +174,7 @@ class LogicalStore {
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<LogicalStore>& other) const;
   [[nodiscard]] bool has_scalar_storage() const;
-  [[nodiscard]] InternalSharedPtr<Type> type() const;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const;
   [[nodiscard]] const InternalSharedPtr<TransformStack>& transform() const;
   [[nodiscard]] bool transformed() const;
   [[nodiscard]] std::uint64_t id() const;
@@ -234,7 +232,7 @@ class LogicalStore {
   [[nodiscard]] InternalSharedPtr<Partition> find_or_create_key_partition(
     const mapping::detail::Machine& machine, const Restrictions& restrictions);
 
-  [[nodiscard]] InternalSharedPtr<Partition> get_current_key_partition() const;
+  [[nodiscard]] const InternalSharedPtr<Partition>& get_current_key_partition() const;
   [[nodiscard]] bool has_key_partition(const mapping::detail::Machine& machine,
                                        const Restrictions& restrictions) const;
   void set_key_partition(const mapping::detail::Machine& machine, const Partition* partition);
@@ -307,9 +305,9 @@ class LogicalStorePartition {
                         InternalSharedPtr<StoragePartition> storage_partition,
                         InternalSharedPtr<LogicalStore> store);
 
-  [[nodiscard]] InternalSharedPtr<Partition> partition() const;
-  [[nodiscard]] InternalSharedPtr<StoragePartition> storage_partition() const;
-  [[nodiscard]] InternalSharedPtr<LogicalStore> store() const;
+  [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
+  [[nodiscard]] const InternalSharedPtr<StoragePartition>& storage_partition() const;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
   [[nodiscard]] InternalSharedPtr<LogicalStore> get_child_store(
     const tuple<std::uint64_t>& color) const;
   [[nodiscard]] std::unique_ptr<StoreProjection> create_store_projection(

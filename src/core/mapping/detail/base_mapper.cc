@@ -124,7 +124,7 @@ BaseMapper::~BaseMapper()
       logger.print(
         "%s used %ld bytes of %s memory %llx with "
         "%ld total bytes (%.2g%%)",
-        library->get_library_name().c_str(),
+        library->get_library_name().data(),
         pair.second,
         memory_kinds[mem.kind()],
         mem.id,

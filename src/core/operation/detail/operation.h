@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -68,7 +69,7 @@ class Operation {
 
   [[nodiscard]] std::int32_t priority() const;
   [[nodiscard]] const mapping::detail::Machine& machine() const;
-  [[nodiscard]] const std::string& provenance() const;
+  [[nodiscard]] std::string_view provenance() const;
 
  protected:
   void record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store);

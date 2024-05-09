@@ -147,7 +147,7 @@ Scope::~Scope() = default;
   return detail::Runtime::get_runtime()->scope().exception_mode();
 }
 
-/*static*/ const std::string& Scope::provenance()
+/*static*/ std::string_view Scope::provenance()
 {
   return detail::Runtime::get_runtime()->scope().provenance();
 }
