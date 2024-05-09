@@ -29,12 +29,6 @@
 #define LEGATE_STL_CONCEPTS() 0
 #endif
 
-#ifdef __CUDACC__
-#define LEGATE_STL_HAS_CUDA() 1
-#else
-#define LEGATE_STL_HAS_CUDA() 0
-#endif
-
 #define LEGATE_STL_EAT(...)
 #define LEGATE_STL_EVAL(M, ...) M(__VA_ARGS__)
 #define LEGATE_STL_EXPAND(...) __VA_ARGS__

@@ -13,53 +13,47 @@
 #pragma once
 
 // Useful for IDEs
+#include "core/cuda/cuda.h"
 #include "core/runtime/library.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/typedefs.h"
 
 namespace legate::detail {
 
-#ifndef REALM_COMPILER_IS_NVCC
-
-template <typename REDOP>
-void register_reduction_callback(const Legion::RegistrationCallbackArgs& args)
-{
-  auto legion_redop_id = *static_cast<const Legion::ReductionOpID*>(args.buffer.get_ptr());
-  Legion::Runtime::register_reduction_op<REDOP>(legion_redop_id);
-}
-
-#else  // ifndef REALM_COMPILER_IS_NVCC
-
 template <typename T>
 class CUDAReductionOpWrapper : public T {
  public:
-  static const bool has_cuda_reductions = true;
+  static constexpr bool has_cuda_reductions = true;
 
   template <bool EXCLUSIVE>
   LEGATE_DEVICE static void apply_cuda(typename T::LHS& lhs, typename T::RHS rhs)
   {
-    T::template apply<EXCLUSIVE>(lhs, rhs);
+    T::template apply<EXCLUSIVE>(lhs, std::move(rhs));
   }
 
   template <bool EXCLUSIVE>
   LEGATE_DEVICE static void fold_cuda(typename T::RHS& lhs, typename T::RHS rhs)
   {
-    T::template fold<EXCLUSIVE>(lhs, rhs);
+    T::template fold<EXCLUSIVE>(lhs, std::move(rhs));
   }
 };
 
 template <typename REDOP>
 void register_reduction_callback(const Legion::RegistrationCallbackArgs& args)
 {
-  auto legion_redop_id = *static_cast<const Legion::ReductionOpID*>(args.buffer.get_ptr());
-  Legion::Runtime::register_reduction_op(
-    legion_redop_id,
-    Realm::ReductionOpUntyped::create_reduction_op<detail::CUDAReductionOpWrapper<REDOP>>(),
-    nullptr,
-    nullptr,
-    false);
-}
+  const auto legion_redop_id = *static_cast<const Legion::ReductionOpID*>(args.buffer.get_ptr());
 
-#endif  // ifndef REALM_COMPILER_IS_NVCC
+  if constexpr (LegateDefined(LEGATE_NVCC)) {
+    Legion::Runtime::register_reduction_op(
+      legion_redop_id,
+      Realm::ReductionOpUntyped::create_reduction_op<detail::CUDAReductionOpWrapper<REDOP>>(),
+      nullptr,
+      nullptr,
+      false);
+  } else {
+    Legion::Runtime::register_reduction_op<REDOP>(legion_redop_id);
+  }
+}
 
 }  // namespace legate::detail
 
@@ -71,14 +65,14 @@ template <typename REDOP>
 std::int32_t Library::register_reduction_operator(std::int32_t redop_id)
 {
   auto legion_redop_id = get_reduction_op_id(redop_id);
-#if !defined(__CUDACC__)
+#ifndef __CUDACC__
   if (LegateDefined(LEGATE_USE_CUDA)) {
     detail::log_legate().warning() << "For the runtime's DMA engine to GPU accelerate reductions, "
                                       "this reduction operator should be registered in a .cu file.";
   }
 #endif
   perform_callback(detail::register_reduction_callback<REDOP>,
-                   Legion::UntypedBuffer(&legion_redop_id, sizeof(decltype(legion_redop_id))));
+                   Legion::UntypedBuffer{&legion_redop_id, sizeof(decltype(legion_redop_id))});
   return legion_redop_id;
 }
 

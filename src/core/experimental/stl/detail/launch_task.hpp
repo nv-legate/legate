@@ -17,7 +17,7 @@
 
 #include "legate.h"
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(REALM_COMPILER_IS_NVCC)
+#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
 #include "core/cuda/stream_pool.h"
 #endif
 
@@ -657,7 +657,7 @@ class iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
   }
 };
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(REALM_COMPILER_IS_NVCC)
+#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
 
 template <typename Fn, typename... Views>
 LEGATE_KERNEL void _gpu_for_each(Fn fn, Views... views)
@@ -748,7 +748,7 @@ struct iteration_operation  //
       dim, iteration_cpu<Function, Inputs, Outputs, Scalars>{}, inputs, outputs, scalars);
   }
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(REALM_COMPILER_IS_NVCC)
+#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
   // FIXME(wonchanl): In case where this template is instantiated multiple times with the exact same
   // template arguments, the exact class definition changes depending on what compiler is compiling
   // this header, which could lead to inconsistent class definitions across compile units.
@@ -856,7 +856,7 @@ class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
   }
 };
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(REALM_COMPILER_IS_NVCC)
+#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
 
 // TODO: this can be parallelized as well with care to avoid data races.
 // If the view types carried metadata about the stride that avoids interference,
@@ -962,7 +962,7 @@ struct reduction_operation
                  scalars);
   }
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(REALM_COMPILER_IS_NVCC)
+#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
   // FIXME(wonchanl): In case where this template is instantiated multiple times with the exact same
   // template arguments, the exact class definition changes depending on what compiler is compiling
   // this header, which could lead to inconsistent class definitions across compile units.

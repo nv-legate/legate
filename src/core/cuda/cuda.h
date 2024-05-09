@@ -91,6 +91,8 @@ struct cudaPointerAttributes {
 
 #endif  // LegateDefined(LEGATE_USE_CUDA)
 
+// Use of __CUDACC__ vs LEGATE_USE_CUDA or LEGATE_NVCC is deliberate here, we only want these
+// defined when compiling kernels
 #ifdef __CUDACC__
 #define LEGATE_HOST __host__
 #define LEGATE_DEVICE __device__
