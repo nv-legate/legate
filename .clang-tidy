@@ -124,10 +124,11 @@ CheckOptions:
   performance-inefficient-string-concatenation.StrictMode: 'true'
   readability-simplify-boolean-expr.ChainedConditionalReturn: 'true'
   readability-simplify-boolean-expr.ChainedConditionalAssignment: 'true'
-  bugprone-dangling-handle.HandleClasses: 'legate::Span,std::span'
+  bugprone-dangling-handle.HandleClasses: 'legate::Span;::std::span'
   bugprone-misplaced-widening-cast.CheckImplicitCasts: 'true'
   bugprone-unused-return-value.AllowCastToVoid: 'true'
   readability-enum-initial-value.AllowExplicitZeroFirstInitialValue: 'false'
   readability-enum-initial-value.AllowExplicitSequentialInitialValues: 'false'
   readability-redundant-access-specifiers.CheckFirstDeclaration: 'true'
+  bugprone-lambda-function-name.IgnoreMacros: 'true'
 ...

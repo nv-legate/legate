@@ -12,9 +12,12 @@
 
 #pragma once
 
+#include "core/utilities/macros.h"
 #include "core/utilities/typedefs.h"  // for log_legate()
 
+#include <cassert>
 #include <cstdlib>  // for std::abort()
+#include <nv/target>
 
 namespace legate::comm::coll {
 
@@ -22,14 +25,28 @@ void collAbort() noexcept;
 
 }  // namespace legate::comm::coll
 
+// Some implementations of assert() don't macro-expand their arguments before stringizing, so
+// we enforce that they are via this extra indirection
+#define LEGATE_DEVICE_ASSERT_PRIVATE(...) assert(__VA_ARGS__)
+
 #define LEGATE_ABORT(...)                                                                     \
   do {                                                                                        \
-    legate::detail::log_legate().error()                                                      \
-      << "Legate called abort at " << __FILE__ << ':' << __LINE__ << " in " << __func__       \
-      << "(): " << __VA_ARGS__;                                                               \
-    /* if the collective library has a bespoke abort function, call that first */             \
-    legate::comm::coll::collAbort();                                                          \
-    /* if we are here, then either the comm library has not been initialized, or it didn't */ \
-    /* have an abort mechanism. Either way, we abort normally now. */                         \
-    std::abort();                                                                             \
+    NV_IF_TARGET(                                                                           \
+      NV_IS_HOST,                                                                           \
+      (                                                                                     \
+        legate::detail::log_legate().error()                                                \
+        << "Legate called abort at "  __FILE__  ":" LegateStringize(__LINE__)  " in "       \
+        << __func__ << "(): " << __VA_ARGS__;                                               \
+        /* if the collective library has a bespoke abort function, call that first */       \
+        legate::comm::coll::collAbort();                                                    \
+        /* if we are here, then either the comm library has not been initialized, or it */  \
+        /* didn't have an abort mechanism. Either way, we abort normally now. */            \
+        std::abort();                                                                       \
+      ),                                                                                    \
+      (                                                                                     \
+        LEGATE_DEVICE_ASSERT_PRIVATE(                                                       \
+          0 && "Legate called abort at " __FILE__ ":" LegateStringize(__LINE__)             \
+          " in <unknown device function>: " LegateStringize(__VA_ARGS__));                  \
+      )                                                                                     \
+    ) \
   } while (0)
