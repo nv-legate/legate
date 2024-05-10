@@ -554,9 +554,12 @@ LEGATE_HOST_DEVICE void assign(std::mdspan<LeftElement, Extent, Layout, LeftAcce
   const auto lhs_view = detail::flatten(std::move(lhs));
   const auto rhs_view = detail::flatten(std::move(rhs));
 
+  LEGATE_PRAGMA_PUSH();
+  LEGATE_PRAGMA_CLANG_IGNORE("-Wgnu-zero-variadic-macro-arguments");
   NV_IF_TARGET(NV_IS_HOST,
                (thrust::copy(thrust::host, rhs_view.begin(), rhs_view.end(), lhs_view.begin());),
                (thrust::copy(thrust::device, rhs_view.begin(), rhs_view.end(), lhs_view.begin());))
+  LEGATE_PRAGMA_POP();
 }
 
 }  // namespace legate::experimental::stl
