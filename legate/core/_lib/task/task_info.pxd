@@ -46,6 +46,8 @@ cdef class TaskInfo:
         int64_t _local_id
         dict _registered_variants
 
+    cdef void _assert_valid(self)
+
     @staticmethod
     cdef TaskInfo from_handle(_TaskInfo*, int64_t)
     cdef _TaskInfo *release(self) except NULL
