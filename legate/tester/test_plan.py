@@ -53,7 +53,7 @@ class TestPlan:
         if self._config.other.gdb:
             if len(self._stages) != 1:
                 raise ValueError("--gdb only works with a single stage")
-            self._stages[0](self._config, self._system)
+            self._stages[0].execute(self._config, self._system)
 
         LOG.clear()
 
@@ -61,7 +61,7 @@ class TestPlan:
 
         for stage in self._stages:
             LOG(stage.intro)
-            stage(self._config, self._system)
+            stage.execute(self._config, self._system)
             LOG(stage.outro)
 
         all_procs = tuple(
@@ -165,7 +165,7 @@ class TestPlan:
     def _record_last_failed(
         self, all_procs: tuple[ProcessResult, ...]
     ) -> None:
-        fails = {proc.test_file for proc in all_procs if not proc.passed}
+        fails = {proc.test_display for proc in all_procs if not proc.passed}
 
         if not fails:
             return

@@ -200,7 +200,7 @@ class Config:
         if self.files and self.last_failed:
             raise RuntimeError("Cannot specify both --files and --last-failed")
 
-        if self.files:
+        if self.files is not None:
             return self.files
 
         if self.last_failed:

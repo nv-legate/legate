@@ -140,7 +140,7 @@ def log_proc(
         end = proc.end.strftime("%H:%M:%S.%f")[:-4]
         duration = f" {yellow(time)} " + dim(f"{{{start}, {end}}}")
 
-    msg = f"({name}){duration} {proc.test_file}"
+    msg = f"({name}){duration} {proc.test_display}"
     details = proc.output.split("\n") if verbose else None
     if proc.skipped:
         LOG(skipped(msg))
