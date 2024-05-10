@@ -84,3 +84,9 @@
 #else
 #define LEGATE_PRAGMA_GCC_IGNORE(...)
 #endif
+
+#if LegateDefined(LEGATE_CLANG)
+#define LEGATE_PRAGMA_CLANG_IGNORE(...) LEGATE_PRAGMA_GNU_IGNORE(__VA_ARGS__)
+#else
+#define LEGATE_PRAGMA_CLANG_IGNORE(...)
+#endif

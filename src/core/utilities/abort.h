@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/utilities/compiler.h"
 #include "core/utilities/macros.h"
 #include "core/utilities/typedefs.h"  // for log_legate()
 
@@ -31,6 +32,8 @@ void collAbort() noexcept;
 
 #define LEGATE_ABORT(...)                                                                     \
   do {                                                                                        \
+    LEGATE_PRAGMA_PUSH();                                                                     \
+    LEGATE_PRAGMA_CLANG_IGNORE("-Wgnu-zero-variadic-macro-arguments");                        \
     NV_IF_TARGET(                                                                           \
       NV_IS_HOST,                                                                           \
       (                                                                                     \
@@ -49,4 +52,5 @@ void collAbort() noexcept;
           " in <unknown device function>: " LegateStringize(__VA_ARGS__));                  \
       )                                                                                     \
     ) \
+    LEGATE_PRAGMA_POP();                                                                      \
   } while (0)
