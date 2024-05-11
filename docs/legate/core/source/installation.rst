@@ -12,13 +12,13 @@ a new environment containing Legate Core:
 
 .. code-block:: sh
 
-    conda create -n myenv -c nvidia -c conda-forge -c legate legate-core
+    conda create -n myenv -c conda-forge -c legate legate-core
 
 or install it into an existing environment:
 
 .. code-block:: sh
 
-    conda install -c nvidia -c conda-forge -c legate legate-core
+    conda install -c conda-forge -c legate legate-core
 
 Only linux-64 packages are available at the moment.
 

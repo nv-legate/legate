@@ -123,8 +123,9 @@ build_legate_release() {
     local conda_build_args=();
     conda_build_args+=(--override-channels);
 
-    # The channel sequence below needs to be preserved
     conda_build_args+=(-c conda-forge);
+    # Until real UCX 1.17 is not released
+    conda_build_args+=(-c https://raw.githubusercontent.com/nv-legate/ucx-package/main)
 
     conda_build_args+=(--croot /tmp/conda-croot/legate_core);
     conda_build_args+=(--numpy 1.22);
@@ -175,7 +176,8 @@ _build_legate_release() {
     set -xeo pipefail;
     mkdir -p /tmp/env_yaml /tmp/conda-build
 
-    conda mambabuild --output-folder /tmp/conda-build -c conda-forge --no-include-recipe conda/conda-build
+    # Remove the URM channel when real UCX 1.17 is released
+    conda mambabuild --output-folder /tmp/conda-build -c conda-forge -c https://raw.githubusercontent.com/nv-legate/ucx-package/main --no-include-recipe conda/conda-build
 
     copy_release_artifacts;
 }

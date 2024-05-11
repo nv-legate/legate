@@ -50,7 +50,8 @@ run_test_or_analysis() {
             [ "${UCX_ENABLED}" = "ON" ] && ucx_libs=ucx\ openmpi\ openssh
 
             set +eou pipefail
-            mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
+            # Remove the URM channel when the real UCX 1.17 is released
+            mamba install -y -n "${CONDA_ENV}" -c conda-forge -c https://raw.githubusercontent.com/nv-legate/ucx-package/main psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
             set -eou pipefail
 
             cd $LEGATE_CORE_DIR

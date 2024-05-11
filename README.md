@@ -55,13 +55,13 @@ Please make sure you have at least conda version 24.1 installed, then create
 a new environment containing Legate Core:
 
 ```
-conda create -n myenv -c nvidia -c conda-forge -c legate legate-core
+conda create -n myenv -c conda-forge -c legate legate-core
 ```
 
 or install it into an existing environment:
 
 ```
-conda install -c nvidia -c conda-forge -c legate legate-core
+conda install -c conda-forge -c legate legate-core
 ```
 
 Only linux-64 packages are available at the moment.
