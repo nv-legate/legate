@@ -26,6 +26,7 @@ author = "NVIDIA"
 # -- General configuration ---------------------------------------------------
 
 extensions = [
+    "breathe",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
@@ -67,6 +68,8 @@ html_theme_options = {
 # -- Options for extensions --------------------------------------------------
 
 autosummary_generate = True
+
+breathe_default_project = "legate_core"
 
 copybutton_prompt_text = ">>> "
 

@@ -24,7 +24,6 @@ fi
 
 if [ -z "$UPLOAD_ENABLED" ]; then
   configure_args+=(--with-tests)
-  configure_args+=(--with-docs)
 fi
 
 # We rely on an environment variable to determine if we need to build cpu-only bits
@@ -60,7 +59,11 @@ echo "Build starting on $(date)"
   --with-cc="${CC}" \
   --with-cxx="${CXX}" \
   --build-march="${BUILD_MARCH}" \
-  "${configure_args[@]}"
+  "${configure_args[@]}" || {
+  ret=$?
+  cat configure.log
+  exit ${ret}
+}
 
 SKBUILD_BUILD_OPTIONS="-j$CPU_COUNT VERBOSE=1" \
 $PYTHON -m pip install             \

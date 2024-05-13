@@ -39,7 +39,7 @@ class LegateCore(MainPackage):
     legate_core_BUILD_DOCS: Final = ConfigArgument(
         name="--with-docs",
         spec=ArgSpec(
-            dest="with_docs", type=bool, help="Build Doxygen documentation"
+            dest="with_docs", type=bool, help="Generate docs build makefile"
         ),
         cmake_var=CMAKE_VARIABLE("legate_core_BUILD_DOCS", CMakeBool),
     )

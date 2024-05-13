@@ -285,7 +285,7 @@ class DocsConfig(SectionConfig):
 
     @property
     def pip(self) -> Reqs:
-        return ()
+        return ("breathe",)
 
 
 @dataclass(frozen=True)

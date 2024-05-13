@@ -84,35 +84,15 @@ package: package_private
 tidy:
 	@$(LEGATE_CORE_BUILD_COMMAND) --target tidy $(LEGATE_CORE_CMAKE_ARGS)
 
-## Build only the C++ documentation
+## Generate raw doxygen output
 ##
-## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
-##
-.PHONY: cpp-docs
-cpp-docs:
-	@$(LEGATE_CORE_BUILD_COMMAND) --target doxygen_legate $(LEGATE_CORE_CMAKE_ARGS)
-	@echo "-- Documentation generated and written to $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/cmake_build/html"
+.PHONY: doxygen
+doxygen:
+	@$(LEGATE_CORE_BUILD_COMMAND) --target Doxygen $(LEGATE_CORE_CMAKE_ARGS)
 
-## Build only the Python binding documentation
-##
-.PHONY: py-docs
-py-docs:
-ifeq ($(LEGATE_CORE_USE_PYTHON),1)
-	@ret=`$(PYTHON) \
-         -c \
-         "import sys; sys.path.pop(0); import pkgutil; print(1 if pkgutil.get_loader('legate') else 0)"`; \
-    if [ "$${ret}"  = "0" ]; then \
-      echo "--- ERROR: Must install python bindings before building Python documentation!"; \
-      exit 1; \
-    fi
-	@$(MAKE) -C $(LEGATE_CORE_DIR)/docs/legate/core html
-	@$(MAKE) -C $(LEGATE_CORE_DIR)/docs/legate/core linkcheck
-else
-	@echo "$(LEGATE_CORE_ARCH) not configured for python, skipping docs build"
-endif
-
-## Build all available documentation
+## Build combined Sphinx documentation
 ##
 .PHONY: docs
-docs: cpp-docs py-docs
+docs: doxygen
+	@$(LEGATE_CORE_BUILD_COMMAND) --target Sphinx $(LEGATE_CORE_CMAKE_ARGS)
+

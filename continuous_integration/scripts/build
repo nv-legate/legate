@@ -202,7 +202,7 @@ copy_ci_artifacts() {
 
 copy_docs_artifacts() {
     echo Copying artifacts
-    cp -r "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/docs/html/* "$ARTIFACTS_DIR/."
+    cp -r "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/cmake_build/docs/legate/core/sphinx/* "$ARTIFACTS_DIR/."
 }
 
 build_docs() {

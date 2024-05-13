@@ -1,0 +1,5 @@
+~~~~~~~~~~~~
+Partitioning
+~~~~~~~~~~~~
+
+.. doxygengroup:: partitioning

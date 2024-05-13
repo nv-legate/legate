@@ -489,84 +489,17 @@ legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_
 
 legate_core_add_target_link_option(legate_core PUBLIC legate_core_LINKER_FLAGS)
 
+set(legate_core_LOCAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
 target_include_directories(legate_core
   PUBLIC
-    $<BUILD_INTERFACE:${legate_core_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${legate_core_LOCAL_INCLUDE_DIR}>
   INTERFACE
     $<INSTALL_INTERFACE:include/legate>
 )
 
-##############################################################################
-# - Doxygen target------------------------------------------------------------
-
 if(legate_core_BUILD_DOCS)
-  find_package(Doxygen REQUIRED)
-  list(APPEND legate_core_DOC_SOURCES
-    # type
-    src/core/type/type_info.h
-    src/core/type/type_traits.h
-    # task
-    src/core/task/task.h
-    src/core/task/task_context.h
-    src/core/task/registrar.h
-    src/core/task/variant_options.h
-    src/core/task/exception.h
-    src/core/cuda/stream_pool.h
-    # data
-    src/core/data/logical_array.h
-    src/core/data/logical_store.h
-    src/core/data/physical_array.h
-    src/core/data/physical_store.h
-    src/core/data/scalar.h
-    src/core/data/shape.h
-    src/core/data/buffer.h
-    src/core/data/external_allocation.h
-    src/core/utilities/span.h
-    src/core/data/allocator.h
-    # runtime
-    src/core/runtime/library.h
-    src/core/runtime/runtime.h
-    src/core/runtime/exception_mode.h
-    # operation
-    src/core/operation/task.h
-    src/core/operation/projection.h
-    # partitioning
-    src/core/partitioning/constraint.h
-    # mapping
-    src/core/mapping/machine.h
-    src/core/mapping/mapping.h
-    src/core/mapping/operation.h
-    src/core/mapping/store.h
-    # aliases
-    src/core/utilities/typedefs.h
-    # utilities
-    src/core/runtime/scope.h
-    src/core/utilities/debug.h
-    src/core/utilities/dispatch.h
-    src/core/utilities/scope_guard.h
-    src/core/utilities/macros.h
-    src/core/utilities/compiler.h
-    src/timing/timing.h
-    # main page
-    src/legate.h
-  )
-  set(DOXYGEN_PROJECT_NAME "Legate")
-  set(DOXYGEN_FULL_PATH_NAMES NO)
-  set(DOXYGEN_GENERATE_HTML YES)
-  set(DOXYGEN_GENERATE_LATEX NO)
-  set(DOXYGEN_EXTENSION_MAPPING cu=C++ cuh=C++)
-  set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
-  set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
-  set(DOXYGEN_USE_MATHJAX YES)
-  set(DOXYGEN_MATHJAX_VERSION MathJax_3)
-  set(DOXYGEN_STRIP_FROM_INC_PATH ${LEGATE_CORE_DIR}/src)
-  set(DOXYGEN_EXAMPLE_PATH tests/cpp)
-  set(DOXYGEN_QUIET YES)
-  set(DOXYGEN_PREDEFINED DOXYGEN)
-  doxygen_add_docs("doxygen_legate" ALL
-    ${legate_core_DOC_SOURCES}
-    COMMENT "Custom command for building Doxygen docs."
-  )
+  add_subdirectory(docs/legate/core)
 endif()
 
 ##############################################################################
