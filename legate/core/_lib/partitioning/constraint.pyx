@@ -13,22 +13,18 @@ from libc.stdint cimport uint32_t
 from libcpp.utility cimport move as std_move
 
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable, uint64_tuple_from_iterable
 
 from collections.abc import Callable, Collection
 
 
-cdef class Variable:
+cdef class Variable(Unconstructable):
     @staticmethod
     cdef Variable from_handle(_Variable handle):
         cdef Variable result = Variable.__new__(Variable)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     def __str__(self) -> str:
         return self._handle.to_string().decode()
@@ -37,17 +33,12 @@ cdef class Variable:
         return str(self)
 
 
-cdef class Constraint:
+cdef class Constraint(Unconstructable):
     @staticmethod
     cdef Constraint from_handle(_Constraint handle):
         cdef Constraint result = Constraint.__new__(Constraint)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     def __str__(self) -> str:
         return self._handle.to_string().decode()

@@ -16,6 +16,7 @@
 #include "core/data/shape.h"
 #include "core/data/slice.h"
 #include "core/type/type_info.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
@@ -390,7 +391,8 @@ class LogicalStore {
 
   [[nodiscard]] const SharedPtr<detail::LogicalStore>& impl() const;
 
-  LogicalStore()                                         = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(LogicalStore);
+
   LogicalStore(const LogicalStore& other)                = default;
   LogicalStore& operator=(const LogicalStore& other)     = default;
   LogicalStore(LogicalStore&& other) noexcept            = default;

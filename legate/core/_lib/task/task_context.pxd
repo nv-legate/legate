@@ -16,6 +16,7 @@ from libcpp.vector cimport vector as std_vector
 from ..data.physical_array cimport PhysicalArray, _PhysicalArray
 from ..data.scalar cimport Scalar, _Scalar
 from ..legate_c cimport legate_core_variant_t
+from ..utilities.unconstructable cimport Unconstructable
 from .detail.task_context cimport _TaskContextImpl
 
 
@@ -34,7 +35,7 @@ cdef extern from "core/task/task_context.h" namespace "legate" nogil:
         const std_vector[_Scalar]& scalars() except +
 
 
-cdef class TaskContext:
+cdef class TaskContext(Unconstructable):
     cdef:
         _TaskContext* _handle
     cdef readonly:

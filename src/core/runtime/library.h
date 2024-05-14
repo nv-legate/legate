@@ -14,6 +14,7 @@
 
 #include "core/data/scalar.h"
 #include "core/task/task_info.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/typedefs.h"
 
 #include <memory>
@@ -156,7 +157,8 @@ class Library {
   void register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(std::int64_t local_task_id) const;
 
-  Library() = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(Library);
+
   explicit Library(detail::Library* impl);
   Library(const Library&)            = default;
   Library& operator=(const Library&) = default;

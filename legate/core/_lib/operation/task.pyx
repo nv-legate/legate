@@ -31,6 +31,7 @@ from ..data.scalar cimport Scalar
 from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
 from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type, array_type
+from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
 from .projection cimport SymbolicExpr, _SymbolicPoint
 
@@ -56,7 +57,7 @@ cdef Type sanitized_scalar_arg_type(
     return sanitized
 
 
-cdef class AutoTask:
+cdef class AutoTask(Unconstructable):
     @staticmethod
     cdef AutoTask from_handle(_AutoTask handle):
         cdef AutoTask result = AutoTask.__new__(AutoTask)
@@ -77,11 +78,6 @@ cdef class AutoTask:
         usually the final action performed by a `PyTask`.
         """
         self._locked = True
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cpdef Variable add_input(
         self, object array_or_store, partition: Union[Variable, None] = None
@@ -384,18 +380,13 @@ cdef std_optional[_SymbolicPoint] to_cpp_projection(object projection):
     return make_optional[_SymbolicPoint](std_move(result))
 
 
-cdef class ManualTask:
+cdef class ManualTask(Unconstructable):
     @staticmethod
     cdef ManualTask from_handle(_ManualTask handle):
         cdef ManualTask result = ManualTask.__new__(ManualTask)
         result._handle = std_move(handle)
         result._exception_types = []
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cpdef void add_input(
         self,

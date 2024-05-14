@@ -61,12 +61,12 @@ class initialize_library {
    * @param argc The number of command line arguments.
    * @param argv An array of C-style strings representing the command line arguments.
    */
-  initialize_library(int argc, char* argv[]) : result_{legate::start(argc, argv)}
+  initialize_library(int argc, char* argv[])
+    : result_{legate::start(argc, argv)},
+      library_{result() == 0 ? legate::Runtime::get_runtime()->create_library(
+                                 "legate.stl", LEGATE_STL_RESOURCE_CONFIG)
+                             : Library{nullptr}}
   {
-    if (result() == 0) {
-      library_ =
-        legate::Runtime::get_runtime()->create_library("legate.stl", LEGATE_STL_RESOURCE_CONFIG);
-    }
   }
 
   /**
@@ -93,7 +93,7 @@ class initialize_library {
 
  private:
   std::int32_t result_{};  ///< The result of the library initialization.
-  Library library_{};      ///< The library instance.
+  Library library_;        ///< The library instance.
 };
 
 }  // namespace legate::experimental::stl

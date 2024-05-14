@@ -14,21 +14,17 @@ from libc.stdint cimport int32_t
 
 from ..type.type_info cimport Type
 from ..utilities.typedefs cimport Domain
+from ..utilities.unconstructable cimport Unconstructable
 from .inline_allocation cimport InlineAllocation
 from .physical_store cimport _PhysicalStore
 
 
-cdef class PhysicalStore:
+cdef class PhysicalStore(Unconstructable):
     @staticmethod
     cdef PhysicalStore from_handle(_PhysicalStore handle):
         cdef PhysicalStore result = PhysicalStore.__new__(PhysicalStore)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     @property
     def ndim(self) -> int32_t:

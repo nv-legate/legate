@@ -15,6 +15,7 @@ from libcpp.vector cimport vector as std_vector
 from ..mapping.mapping cimport StoreTarget
 from ..type.type_info cimport _Type
 from ..utilities.typedefs cimport _Domain
+from ..utilities.unconstructable cimport Unconstructable
 from .inline_allocation cimport InlineAllocation, _InlineAllocation
 
 
@@ -27,7 +28,7 @@ cdef extern from "core/data/physical_store.h" namespace "legate" nogil:
         StoreTarget target()
 
 
-cdef class PhysicalStore:
+cdef class PhysicalStore(Unconstructable):
     cdef _PhysicalStore _handle
 
     @staticmethod

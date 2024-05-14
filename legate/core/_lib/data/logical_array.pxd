@@ -15,6 +15,7 @@ from libcpp.vector cimport vector as std_vector
 
 from ..type.type_info cimport _Type
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 from .logical_store cimport _LogicalStore
 from .physical_array cimport PhysicalArray, _PhysicalArray
 from .shape cimport _Shape
@@ -46,7 +47,7 @@ cdef extern from "core/data/logical_array.h" namespace "legate" nogil:
         _LogicalArray(const _LogicalArray&)
 
 
-cdef class LogicalArray:
+cdef class LogicalArray(Unconstructable):
     cdef _LogicalArray _handle
 
     @staticmethod

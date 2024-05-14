@@ -17,6 +17,7 @@ from libcpp.vector cimport vector as std_vector
 from ..type.type_info cimport _Type
 from ..utilities.shared_ptr cimport _SharedPtr
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 from .detail.logical_store cimport _LogicalStoreImpl
 from .physical_store cimport PhysicalStore, _PhysicalStore
 from .shape cimport _Shape
@@ -58,7 +59,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore get_child_store(const _tuple[uint64_t]&) except+
 
 
-cdef class LogicalStore:
+cdef class LogicalStore(Unconstructable):
     cdef _LogicalStore _handle
 
     @staticmethod

@@ -14,6 +14,7 @@ from libcpp cimport bool
 
 from ..type.type_info cimport _Type
 from ..utilities.typedefs cimport Domain, _Domain
+from ..utilities.unconstructable cimport Unconstructable
 from .physical_store cimport PhysicalStore, _PhysicalStore
 
 
@@ -28,7 +29,7 @@ cdef extern from "core/data/physical_array.h" namespace "legate" nogil:
         _PhysicalArray child(uint32_t index) except+
         _Domain domain() except+
 
-cdef class PhysicalArray:
+cdef class PhysicalArray(Unconstructable):
     cdef _PhysicalArray _handle
 
     @staticmethod

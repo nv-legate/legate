@@ -62,8 +62,6 @@ bool PhysicalStore::is_unbound_store() const { return impl_->is_unbound_store();
 
 mapping::StoreTarget PhysicalStore::target() const { return impl_->target(); }
 
-PhysicalStore::PhysicalStore() noexcept = default;
-
 PhysicalStore::PhysicalStore(const PhysicalArray& array)
   : impl_{array.nullable()
             ? throw std::invalid_argument{"Nullable array cannot be converted to a store"}

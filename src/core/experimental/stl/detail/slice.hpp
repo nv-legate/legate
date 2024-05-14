@@ -153,8 +153,6 @@ class projection_policy {
      public:
       using value_type = logical_store<std::remove_cv_t<ElementType>, Dim - sizeof...(ProjDims)>;
 
-      logical_map() = default;
-
       explicit logical_map(LogicalStore store) : store_{std::move(store)}
       {
         LegateAssert(store_.dim() == Dim);
@@ -187,7 +185,7 @@ class projection_policy {
       }
 
      private:
-      LogicalStore store_{};
+      LogicalStore store_;
     };
 
     [[nodiscard]] static view<logical_map> logical_view(LogicalStore store)
@@ -369,7 +367,7 @@ class slice_view {
     return slice.store_;
   }
 
-  mutable LogicalStore store_{};
+  mutable LogicalStore store_;
 };
 
 template <typename ElementType, std::int32_t Dim, typename SlicePolicy>

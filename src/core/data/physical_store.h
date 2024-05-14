@@ -16,6 +16,7 @@
 #include "core/data/inline_allocation.h"
 #include "core/mapping/mapping.h"
 #include "core/type/type_traits.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
@@ -369,6 +370,12 @@ class PhysicalStore {
   // NOLINTNEXTLINE(google-explicit-constructor) very common pattern in cuNumeric
   PhysicalStore(const PhysicalArray& array);
 
+  LEGATE_CYTHON_DEFAULT_CTOR(PhysicalStore);
+
+  explicit PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl);
+
+  [[nodiscard]] const SharedPtr<detail::PhysicalStore>& impl() const;
+
  private:
   void check_accessor_dimension(std::int32_t dim) const;
   void check_buffer_dimension(std::int32_t dim) const;
@@ -394,13 +401,6 @@ class PhysicalStore {
   void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const;
   void update_num_elements(std::size_t num_elements) const;
 
- public:
-  PhysicalStore() noexcept;
-
-  explicit PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl);
-  [[nodiscard]] const SharedPtr<detail::PhysicalStore>& impl() const;
-
- private:
   SharedPtr<detail::PhysicalStore> impl_{};
 };
 

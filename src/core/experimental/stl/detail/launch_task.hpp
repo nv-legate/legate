@@ -347,8 +347,9 @@ class reduction<> {};
 template <typename Store, typename Fun>
 class reduction<Store, Fun> {
  public:
-  LogicalStore data{}; /**< The logical store on which the reduction operation is performed. */
-  Fun fn{};            /**< The reduction function to be applied. */
+  LogicalStore data{
+    nullptr}; /**< The logical store on which the reduction operation is performed. */
+  Fun fn{};   /**< The reduction function to be applied. */
 
   /**
    * @brief Function call operator for the reduction operation.

@@ -273,7 +273,7 @@ class mdspan_accessor {
   }
 
  private:
-  PhysicalStore store_{};
+  PhysicalStore store_{nullptr};
   Point<Dim> shape_{};
   Point<Dim> origin_{};
   accessor_type accessor_{};

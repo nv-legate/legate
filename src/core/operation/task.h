@@ -17,6 +17,7 @@
 #include "core/data/scalar.h"
 #include "core/operation/projection.h"
 #include "core/partitioning/constraint.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
@@ -214,7 +215,8 @@ class AutoTask {
    */
   void add_communicator(std::string_view name);
 
-  AutoTask()                               = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(AutoTask);
+
   AutoTask(AutoTask&&) noexcept            = default;
   AutoTask& operator=(AutoTask&&) noexcept = default;
   AutoTask(const AutoTask&)                = default;
@@ -360,12 +362,13 @@ class ManualTask {
    */
   void add_communicator(std::string_view name);
 
-  ~ManualTask() noexcept;
-  ManualTask()                                 = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(ManualTask);
+
   ManualTask(ManualTask&&) noexcept            = default;
   ManualTask& operator=(ManualTask&&) noexcept = default;
   ManualTask(const ManualTask&)                = default;
   ManualTask& operator=(const ManualTask&)     = default;
+  ~ManualTask() noexcept;
 
  private:
   friend class Runtime;

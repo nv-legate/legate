@@ -18,6 +18,7 @@ from ...data_interface import Field, LegateDataInterfaceItem
 
 from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type
+from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
 from .logical_array cimport LogicalArray
 from .physical_store cimport PhysicalStore
@@ -25,7 +26,7 @@ from .shape cimport Shape
 from .slice cimport from_python_slice
 
 
-cdef class LogicalStore:
+cdef class LogicalStore(Unconstructable):
     @staticmethod
     cdef LogicalStore from_handle(_LogicalStore handle):
         cdef LogicalStore result = LogicalStore.__new__(LogicalStore)
@@ -33,11 +34,6 @@ cdef class LogicalStore:
         # Enable out-of-order destruction, as we're in a GC language
         handle.impl().get().allow_out_of_order_destruction()
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     @property
     def shape(self) -> Shape:

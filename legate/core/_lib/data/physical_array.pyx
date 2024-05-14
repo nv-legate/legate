@@ -12,20 +12,16 @@
 from libc.stdint cimport uint32_t
 
 from ..type.type_info cimport Type
+from ..utilities.unconstructable cimport Unconstructable
 from .physical_store cimport PhysicalStore
 
 
-cdef class PhysicalArray:
+cdef class PhysicalArray(Unconstructable):
     @staticmethod
     cdef PhysicalArray from_handle(const _PhysicalArray &array):
         cdef PhysicalArray result = PhysicalArray.__new__(PhysicalArray)
         result._handle = array
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     @property
     def nullable(self) -> bool:

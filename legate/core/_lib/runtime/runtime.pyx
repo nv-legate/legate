@@ -41,6 +41,7 @@ from ..mapping.machine cimport Machine
 from ..operation.task cimport AutoTask, ManualTask
 from ..runtime.scope cimport Scope
 from ..type.type_info cimport Type
+from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport (
     domain_from_iterables,
     is_iterable,
@@ -101,17 +102,12 @@ cdef void _maybe_reraise_legate_exception(
         raise exn_type(message)
     raise
 
-cdef class Runtime:
+cdef class Runtime(Unconstructable):
     @staticmethod
     cdef Runtime from_handle(_Runtime* handle):
         cdef Runtime result = Runtime.__new__(Runtime)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cpdef Library find_library(self, str library_name):
         return Library.from_handle(

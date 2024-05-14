@@ -90,13 +90,16 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
     auto storeType = static_cast<StoreType>(context.scalar(1).value<std::uint32_t>());
     auto value     = context.scalar(2).value<std::int32_t>();
 
-    legate::PhysicalStore store;
-    switch (dataMode) {
-      case TaskDataMode::INPUT: store = context.input(0).data(); break;
-      case TaskDataMode::OUTPUT: store = context.output(0).data(); break;
-      case TaskDataMode::REDUCTION: store = context.reduction(0).data(); break;
-      default: break;
-    }
+    const legate::PhysicalStore store = [&] {
+      switch (dataMode) {
+        case TaskDataMode::INPUT: return context.input(0).data(); break;
+        case TaskDataMode::OUTPUT: return context.output(0).data(); break;
+        case TaskDataMode::REDUCTION: return context.reduction(0).data(); break;
+        default: break;
+      }
+      LEGATE_ABORT("Invalid data mode");
+    }();
+
     if (storeType == StoreType::UNBOUND_STORE) {
       store.bind_empty_data();
       if (dataMode == TaskDataMode::OUTPUT && context.output(0).nullable()) {

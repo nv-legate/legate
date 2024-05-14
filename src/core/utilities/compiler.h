@@ -18,6 +18,20 @@
 #define LEGATE_DOXYGEN 1
 #endif
 
+// Cython does not define a "standard" way of detecting cythonized source compilation, so we
+// just check for any one of these macros which I found to be defined in the preamble on my
+// machine. We need to check enough of them in case the Cython devs ever decide to change one
+// of their names to keep our bases covered.
+#if defined(CYTHON_HEX_VERSION) || defined(CYTHON_ABI) || defined(CYTHON_INLINE) ||         \
+  defined(CYTHON_RESTRICT) || defined(CYTHON_UNUSED) || defined(CYTHON_USE_CPP_STD_MOVE) || \
+  defined(CYTHON_FALLTHROUGH)
+#define LEGATE_CYTHON 1
+#define LEGATE_CYTHON_DEFAULT_CTOR(class_name) class_name() = default
+#else
+#define LEGATE_CYTHON 0
+#define LEGATE_CYTHON_DEFAULT_CTOR(class_name) static_assert(sizeof(class_name*))
+#endif
+
 // The order of these checks is deliberate. Also the fact that they are one unbroken set of if
 // -> elif -> endif. For example, clang defines both __clang__ and __GNUC__ so in order to
 // detect the actual GCC, we must catch clang first.

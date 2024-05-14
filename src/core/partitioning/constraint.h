@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/shape.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/memory.h"
 #include "core/utilities/shared_ptr.h"
@@ -44,7 +45,8 @@ class Variable;
  */
 class Variable {
  public:
-  Variable() = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(Variable);
+
   explicit Variable(const detail::Variable* impl);
 
   [[nodiscard]] std::string to_string() const;
@@ -63,7 +65,8 @@ class Constraint {
  public:
   [[nodiscard]] std::string to_string() const;
 
-  Constraint() = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(Constraint);
+
   explicit Constraint(InternalSharedPtr<detail::Constraint>&& impl);
   Constraint(const Constraint&)                = default;
   Constraint(Constraint&&) noexcept            = default;

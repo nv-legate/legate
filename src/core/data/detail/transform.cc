@@ -535,7 +535,7 @@ std::unique_ptr<Partition> Project::invert(const Partition* partition) const
 
 proj::SymbolicPoint Project::invert(const proj::SymbolicPoint& point) const
 {
-  return point.insert(dim_, proj::SymbolicExpr());
+  return point.insert(dim_, proj::SymbolicExpr{});
 }
 
 Restrictions Project::convert(const Restrictions& restrictions, bool /*forbid_fake_dim*/) const

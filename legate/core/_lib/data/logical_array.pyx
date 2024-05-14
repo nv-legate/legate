@@ -18,23 +18,19 @@ from ...data_interface import Field, LegateDataInterfaceItem
 
 from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type
+from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
 from .logical_store cimport LogicalStore
 from .shape cimport Shape
 from .slice cimport from_python_slice
 
 
-cdef class LogicalArray:
+cdef class LogicalArray(Unconstructable):
     @staticmethod
     cdef LogicalArray from_handle(_LogicalArray handle):
         cdef LogicalArray result = LogicalArray.__new__(LogicalArray)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     @staticmethod
     def from_store(LogicalStore store) -> LogicalArray:

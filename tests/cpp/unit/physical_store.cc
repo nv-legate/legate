@@ -1223,13 +1223,6 @@ TEST_F(PhysicalStoreUnit, FutureStoreAccessorWithTask) { test_accessors_future_s
 
 TEST_F(PhysicalStoreUnit, InvalidAccessor) { test_invalid_accessor(); }
 
-TEST_F(PhysicalStoreUnit, Negative)
-{
-  // impl_ is nullptr
-  auto physical_store = legate::PhysicalStore();
-  EXPECT_FALSE(physical_store.valid());
-}
-
 TEST_F(PhysicalStoreUnit, ReadOnlyFutureStoreInlineAllocation)
 {
   auto runtime       = legate::Runtime::get_runtime();

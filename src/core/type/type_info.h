@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/legate_c.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/shared_ptr.h"
 
 #include <iosfwd>
@@ -216,13 +217,13 @@ class Type {
   bool operator==(const Type& other) const;
   bool operator!=(const Type& other) const;
 
-  Type();
+  LEGATE_CYTHON_DEFAULT_CTOR(Type);
+
   Type(const Type&)                = default;
   Type(Type&&) noexcept            = default;
   Type& operator=(const Type&)     = default;
   Type& operator=(Type&&) noexcept = default;
-
-  virtual ~Type();
+  virtual ~Type()                  = default;
 
   explicit Type(InternalSharedPtr<detail::Type> impl);
 

@@ -25,6 +25,7 @@ from ..partitioning.constraint cimport (
     _Variable,
 )
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 from .projection cimport _SymbolicPoint
 
 
@@ -71,7 +72,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         void add_communicator(std_string_view)
 
 
-cdef class AutoTask:
+cdef class AutoTask(Unconstructable):
     cdef _AutoTask _handle
     cdef list[type] _exception_types
     cdef bool _locked
@@ -107,7 +108,7 @@ cdef class AutoTask:
     cpdef void add_cpu_communicator(self)
     cpdef void add_cal_communicator(self)
 
-cdef class ManualTask:
+cdef class ManualTask(Unconstructable):
     cdef _ManualTask _handle
     cdef list[type] _exception_types
 

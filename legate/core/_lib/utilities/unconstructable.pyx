@@ -1,5 +1,5 @@
-#=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -8,15 +8,9 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-#=============================================================================
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "utilities")
-
-set(
-  cython_sources
-  typedefs.pyx
-  utils.pyx
-  unconstructable.pyx
-)
-
-legate_core_create_cython_modules(SOURCES "${cython_sources}")
+cdef class Unconstructable:
+    def __init__(self) -> None:
+        raise ValueError(
+            f"{type(self).__name__} objects must not be constructed directly"
+        )

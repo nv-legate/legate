@@ -81,10 +81,6 @@ bool Type::operator==(const Type& other) const { return impl()->equal(*other.imp
 
 bool Type::operator!=(const Type& other) const { return !operator==(other); }
 
-Type::Type() = default;
-
-Type::~Type() = default;
-
 std::uint32_t FixedArrayType::num_elements() const
 {
   return static_cast<const detail::FixedArrayType*>(impl().get())->num_elements();

@@ -13,6 +13,7 @@ from libc.stdint cimport uint32_t, uint64_t
 from libcpp.string cimport string as std_string
 
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 
 from collections.abc import Iterable
 
@@ -47,14 +48,14 @@ cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:
     )
 
 
-cdef class Variable:
+cdef class Variable(Unconstructable):
     cdef _Variable _handle
 
     @staticmethod
     cdef Variable from_handle(_Variable)
 
 
-cdef class Constraint:
+cdef class Constraint(Unconstructable):
     cdef _Constraint _handle
 
     @staticmethod

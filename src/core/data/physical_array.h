@@ -14,6 +14,7 @@
 
 #include "core/data/physical_store.h"
 #include "core/type/type_info.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 #include "core/utilities/typedefs.h"
@@ -135,7 +136,8 @@ class PhysicalArray {
 
   [[nodiscard]] const SharedPtr<detail::PhysicalArray>& impl() const;
 
-  PhysicalArray()                                    = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(PhysicalArray);
+
   virtual ~PhysicalArray() noexcept                  = default;
   PhysicalArray(const PhysicalArray&) noexcept       = default;
   PhysicalArray& operator=(const PhysicalArray&)     = default;

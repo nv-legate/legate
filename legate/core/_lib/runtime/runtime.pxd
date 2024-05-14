@@ -26,6 +26,7 @@ from ..task.exception cimport _TaskException
 from ..type.type_info cimport Type, _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain
+from ..utilities.unconstructable cimport Unconstructable
 from .detail.runtime cimport _RuntimeImpl
 from .library cimport Library, _Library
 from .resource cimport _ResourceConfig
@@ -212,7 +213,7 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
     cdef bool _is_running_in_task "legate::is_running_in_task"()
 
 
-cdef class Runtime:
+cdef class Runtime(Unconstructable):
     cdef _Runtime* _handle
 
     @staticmethod

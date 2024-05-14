@@ -18,6 +18,7 @@ from libcpp.unordered_map cimport unordered_map as std_unordered_map
 from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..legate_c cimport legate_core_variant_t
 from ..utilities.typedefs cimport RealmCallbackFn
+from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
 
@@ -122,7 +123,7 @@ cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] _init_vmap():
 cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] \
     _variant_to_callback = _init_vmap()
 
-cdef class TaskInfo:
+cdef class TaskInfo(Unconstructable):
     cdef void _assert_valid(self):
         assert self.valid, "TaskInfo object is in an invalid state"
 
@@ -135,11 +136,6 @@ cdef class TaskInfo:
         result._local_id = local_task_id
         result._registered_variants = {}
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cdef _TaskInfo *release(self) except NULL:
         if not self.valid:
