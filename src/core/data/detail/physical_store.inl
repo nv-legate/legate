@@ -18,22 +18,6 @@
 
 namespace legate::detail {
 
-inline std::int32_t RegionField::dim() const { return dim_; }
-
-inline void RegionField::set_logical_region(const Legion::LogicalRegion& lr) { lr_ = lr; }
-
-inline bool RegionField::is_readable() const { return readable_; }
-
-inline bool RegionField::is_writable() const { return writable_; }
-
-inline bool RegionField::is_reducible() const { return reducible_; }
-
-inline Legion::PhysicalRegion RegionField::get_physical_region() const { return *pr_; }
-
-inline Legion::FieldID RegionField::get_field_id() const { return fid_; }
-
-// ==========================================================================================
-
 inline UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
   : num_elements_{Legion::UntypedDeferredValue(sizeof(size_t),
                                                find_memory_kind_for_executing_processor())},
