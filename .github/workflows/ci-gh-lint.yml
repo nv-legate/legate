@@ -88,7 +88,7 @@ jobs:
   tidy:
     env:
       LEGATE_CORE_ARCH: arch-ci-lint
-    runs-on: 'linux-amd64-cpu32'
+    runs-on: 'linux-amd64-cpu16'
     strategy:
       fail-fast: true
     if: ${{ github.repository_owner == 'nv-legate' }}
