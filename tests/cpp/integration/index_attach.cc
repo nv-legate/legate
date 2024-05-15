@@ -256,7 +256,7 @@ void do_test(T value)
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(T);
 
   test_sysmem<T>(alloc.data(), value, BYTES, false);
-};
+}
 
 TEST_F(IndexAttach, SysmemAccessByTask)
 {

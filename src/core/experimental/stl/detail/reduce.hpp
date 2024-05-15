@@ -275,7 +275,7 @@ template <typename InputRange, typename Init, typename BinaryOperation>  //
 
   LogicalStore out =
     InputPolicy::aligned_promote(get_logical_store(input), get_logical_store(init));
-  LegateAssert(out.dim() == init.dim() + 1);
+  LegateAssert(static_cast<std::size_t>(out.dim()) == static_cast<std::size_t>(init.dim() + 1));
 
   using OutputRange = slice_view<value_type_of_t<Input>, dim_of_v<Input>, InputPolicy>;
   OutputRange output{std::move(out)};  // NOLINT(misc-const-correctness)

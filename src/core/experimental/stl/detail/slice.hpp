@@ -43,6 +43,8 @@ LEGATE_HOST_DEVICE [[nodiscard]] auto project_dimension(Cursor cursor,
                                                         const Extents& extents) noexcept
 {
   if constexpr (((Index != ProjDims) && ...)) {
+    static_cast<void>(cursor);
+    static_cast<void>(extents);
     return std::full_extent;
   } else {
     for (auto i : {ProjDims...}) {
