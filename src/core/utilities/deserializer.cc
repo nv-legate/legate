@@ -130,9 +130,9 @@ void TaskDeserializer::_unpack(detail::FutureWrapper& value)
   auto field_size   = unpack<std::uint32_t>();
   auto domain       = unpack<Domain>();
 
-  auto has_storage      = future_index >= 0;
-  Legion::Future future = has_storage ? futures_[future_index] : Legion::Future{};
-  value = detail::FutureWrapper{read_only, field_size, domain, std::move(future), has_storage};
+  const auto has_storage = future_index >= 0;
+  Legion::Future future  = has_storage ? futures_[future_index] : Legion::Future{};
+  value                  = detail::FutureWrapper{read_only, field_size, domain, std::move(future)};
 }
 
 void TaskDeserializer::_unpack(detail::RegionField& value)

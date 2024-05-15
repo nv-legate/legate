@@ -13,14 +13,15 @@
 #pragma once
 
 #include "core/data/detail/physical_store.h"
+#include "core/utilities/machine.h"
 
 #include <utility>
 
 namespace legate::detail {
 
 inline UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
-  : num_elements_{Legion::UntypedDeferredValue(sizeof(size_t),
-                                               find_memory_kind_for_executing_processor())},
+  : num_elements_{Legion::UntypedDeferredValue{sizeof(std::size_t),
+                                               find_memory_kind_for_executing_processor()}},
     out_{out},
     fid_{fid}
 {
@@ -28,8 +29,8 @@ inline UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, L
 
 inline UnboundRegionField::UnboundRegionField(UnboundRegionField&& other) noexcept
   : bound_{std::exchange(other.bound_, false)},
-    num_elements_{std::exchange(other.num_elements_, Legion::UntypedDeferredValue())},
-    out_{std::exchange(other.out_, Legion::OutputRegion())},
+    num_elements_{std::exchange(other.num_elements_, Legion::UntypedDeferredValue{})},
+    out_{std::exchange(other.out_, Legion::OutputRegion{})},
     fid_{std::exchange(other.fid_, -1)}
 {
 }
@@ -41,20 +42,6 @@ inline void UnboundRegionField::set_bound(bool bound) { bound_ = bound; }
 inline Legion::OutputRegion UnboundRegionField::get_output_region() const { return out_; }
 
 inline Legion::FieldID UnboundRegionField::get_field_id() const { return fid_; }
-
-// ==========================================================================================
-
-inline std::int32_t FutureWrapper::dim() const { return domain_.dim; }
-
-inline const Domain& FutureWrapper::domain() const { return domain_; }
-
-inline bool FutureWrapper::valid() const { return get_future().valid(); }
-
-inline bool FutureWrapper::is_read_only() const { return read_only_; }
-
-inline const Legion::Future& FutureWrapper::get_future() const { return future_; }
-
-inline const Legion::UntypedDeferredValue& FutureWrapper::get_buffer() const { return buffer_; }
 
 // ==========================================================================================
 

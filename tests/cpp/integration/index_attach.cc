@@ -23,6 +23,7 @@
 #include <cuda_runtime.h>
 #endif
 
+#include <cstring>
 #include <gtest/gtest.h>
 #include <vector>
 

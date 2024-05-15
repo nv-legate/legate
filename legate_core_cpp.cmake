@@ -189,6 +189,7 @@ list(APPEND legate_core_SOURCES
   src/core/data/detail/physical_store.cc
   src/core/data/detail/shape.cc
   src/core/data/detail/transform.cc
+  src/core/data/detail/future_wrapper.cc
   src/core/data/detail/region_field.cc
   src/core/experimental/trace.cc
   src/core/mapping/array.cc

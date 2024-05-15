@@ -12,16 +12,16 @@
 
 #pragma once
 
-#include "core/data/buffer.h"
+#include "core/data/detail/future_wrapper.h"
 #include "core/data/detail/region_field.h"
 #include "core/data/detail/transform.h"
 #include "core/data/inline_allocation.h"
 #include "core/mapping/mapping.h"
-#include "core/task/detail/return.h"
+#include "core/task/detail/return_value.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
+#include <cstdint>
 
 namespace legate {
 class PhysicalStore;
@@ -61,39 +61,6 @@ class UnboundRegionField {
   Legion::FieldID fid_{-1U};
 };
 
-class FutureWrapper {
- public:
-  FutureWrapper() = default;
-  FutureWrapper(bool read_only,
-                std::uint32_t field_size,
-                const Domain& domain,
-                Legion::Future future,
-                bool initialize = false);
-
-  [[nodiscard]] std::int32_t dim() const;
-  [[nodiscard]] const Domain& domain() const;
-  [[nodiscard]] bool valid() const;
-
-  [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
-  [[nodiscard]] InlineAllocation get_inline_allocation() const;
-  [[nodiscard]] mapping::StoreTarget target() const;
-
-  void initialize_with_identity(std::int32_t redop_id);
-
-  [[nodiscard]] ReturnValue pack() const;
-
-  [[nodiscard]] bool is_read_only() const;
-  [[nodiscard]] const Legion::Future& get_future() const;
-  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
-
- private:
-  bool read_only_{true};
-  std::uint32_t field_size_{};
-  Domain domain_{};
-  Legion::Future future_{};
-  Legion::UntypedDeferredValue buffer_{};
-};
-
 class PhysicalStore {
  public:
   PhysicalStore(std::int32_t dim,
@@ -126,6 +93,8 @@ class PhysicalStore {
   [[nodiscard]] Domain domain() const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
   [[nodiscard]] mapping::StoreTarget target() const;
+  [[nodiscard]] const Legion::Future& get_future() const;
+  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
 
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;
@@ -154,8 +123,6 @@ class PhysicalStore {
   [[nodiscard]] std::int32_t get_redop_id() const;
 
   [[nodiscard]] bool is_read_only_future() const;
-  [[nodiscard]] const Legion::Future& get_future() const;
-  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
 
   void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
   void update_num_elements(std::size_t num_elements);
