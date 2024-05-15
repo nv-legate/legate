@@ -14,6 +14,7 @@
 
 #include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/task/detail/returned_exception_common.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
@@ -66,7 +67,8 @@ void ReturnValues::legion_serialize(void* buffer) const
     auto& ret = return_values_.front();
 
     if (ret.is_device_value()) {
-      LegateAssert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
+      LegateAssert(detail::Runtime::get_runtime()->get_executing_processor().kind() ==
+                   Processor::Kind::TOC_PROC);
       LegateCheckCUDA(cudaMemcpyAsync(buffer,
                                       ret.ptr(),
                                       ret.size(),
@@ -89,7 +91,8 @@ void ReturnValues::legion_serialize(void* buffer) const
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, offset);
   }
 
-  if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
+  if (detail::Runtime::get_runtime()->get_executing_processor().kind() ==
+      Processor::Kind::TOC_PROC) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
 
     for (auto&& ret : return_values_) {
@@ -166,7 +169,7 @@ void ReturnValues::finalize(Legion::Context legion_context) const
     return;
   }
 
-  auto kind = Processor::get_executing_processor().kind();
+  auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind();
   // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
   //        as doing so would require the packing to be chained up with all preceding kernels,
   //        potentially launched with different streams, within the task. Until we find

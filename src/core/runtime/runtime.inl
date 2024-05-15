@@ -27,6 +27,8 @@ inline Runtime::Runtime(detail::Runtime* runtime) : impl_{runtime} {}
 
 inline detail::Runtime* Runtime::impl() { return impl_; }
 
+inline const detail::Runtime* Runtime::impl() const { return impl_; }
+
 template <typename T>
 void register_shutdown_callback(T&& callback)
 {

@@ -568,6 +568,13 @@ class Runtime {
   [[nodiscard]] mapping::Machine get_machine() const;
 
   /**
+   * @brief Returns the current Processor on which the caller is executing.
+   *
+   * @return The current Processor.
+   */
+  [[nodiscard]] Processor get_executing_processor() const;
+
+  /**
    * @brief Returns a singleton runtime object
    *
    * @return The runtime object
@@ -575,6 +582,8 @@ class Runtime {
   [[nodiscard]] static Runtime* get_runtime();
 
   [[nodiscard]] detail::Runtime* impl();
+
+  [[nodiscard]] const detail::Runtime* impl() const;
 
  private:
   explicit Runtime(detail::Runtime* runtime);

@@ -74,4 +74,11 @@ inline std::uint32_t Runtime::node_count() const { return local_machine().total_
 
 inline std::uint32_t Runtime::node_id() const { return local_machine().node_id; }
 
+inline Processor Runtime::get_executing_processor() const
+{
+  // Cannot use member legion_context_ here since we may be calling this function from within a
+  // task, where the context will have changed.
+  return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
+}
+
 }  // namespace legate::detail

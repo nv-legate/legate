@@ -13,6 +13,7 @@
 #include "core/task/task_context.h"
 
 #include "core/mapping/detail/mapping.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/task/detail/task_context.h"
 
 #include <type_traits>
@@ -119,7 +120,8 @@ Domain TaskContext::get_launch_domain() const { return impl()->get_launch_domain
 
 mapping::TaskTarget TaskContext::target() const
 {
-  return mapping::detail::to_target(Processor::get_executing_processor().kind());
+  return mapping::detail::to_target(
+    detail::Runtime::get_runtime()->get_executing_processor().kind());
 }
 
 mapping::Machine TaskContext::machine() const { return mapping::Machine{impl()->machine()}; }

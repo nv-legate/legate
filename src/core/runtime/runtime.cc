@@ -286,6 +286,8 @@ void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 
 mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
 
+Processor Runtime::get_executing_processor() const { return impl()->get_executing_processor(); }
+
 namespace {
 
 std::optional<Runtime> the_public_runtime{};

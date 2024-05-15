@@ -21,10 +21,8 @@ Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
   if (!Legion::Runtime::has_runtime()) {
     throw std::runtime_error{"Runtime has not started"};
   }
-  auto legion_runtime = Legion::Runtime::get_runtime();
 
-  switch (const auto kind =
-            legion_runtime->get_executing_processor(Legion::Runtime::get_context()).kind()) {
+  switch (const auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind()) {
     case Processor::Kind::LOC_PROC: return Memory::Kind::SYSTEM_MEM;
     case Processor::Kind::TOC_PROC:
       return host_accessible ? Memory::Kind::Z_COPY_MEM : Memory::Kind::GPU_FB_MEM;

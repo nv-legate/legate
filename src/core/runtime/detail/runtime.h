@@ -325,6 +325,8 @@ class Runtime {
   [[nodiscard]] Legion::ShardingID get_sharding(const mapping::detail::Machine& machine,
                                                 Legion::ProjectionID proj_id);
 
+  [[nodiscard]] Processor get_executing_processor() const;
+
  private:
   static void schedule(const std::vector<InternalSharedPtr<Operation>>& operations);
 

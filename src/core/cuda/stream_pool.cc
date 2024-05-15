@@ -48,7 +48,7 @@ StreamView StreamPool::get_stream()
 /*static*/ StreamPool& StreamPool::get_stream_pool()
 {
   static StreamPool pools[LEGION_MAX_NUM_PROCS];
-  const auto proc = Legion::Processor::get_executing_processor();
+  const auto proc = detail::Runtime::get_runtime()->get_executing_processor();
   auto proc_id    = proc.id & (LEGION_MAX_NUM_PROCS - 1);
   return pools[proc_id];
 }
