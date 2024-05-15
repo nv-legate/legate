@@ -107,15 +107,6 @@ setup_legate_core_env() {
     mkdir -p "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
 }
 
-build_legate_ci() {
-  set -eou pipefail
-
-  run_command "Build Legate.Core C++ Core" build-legate-cpp
-  run_command "Build Legate.Core Wheel" build-legate-wheel
-  run_command "Build Legate.Core Conda Package" build-legate-conda
-  run_command "Copy CI artifacts" copy_ci_artifacts
-}
-
 build_legate_release() {
     set -xeo pipefail;
 
@@ -172,34 +163,6 @@ copy_release_artifacts() {
     ls -lahR $ARTIFACTS_DIR
 }
 
-_build_legate_release() {
-    set -xeo pipefail;
-    mkdir -p /tmp/env_yaml /tmp/conda-build
-
-    # Remove the URM channel when real UCX 1.17 is released
-    conda mambabuild --output-folder /tmp/conda-build -c conda-forge -c https://raw.githubusercontent.com/nv-legate/ucx-package/main --no-include-recipe conda/conda-build
-
-    copy_release_artifacts;
-}
-
-_copy_release_artifacts() {
-    echo Copying release artifacts
-    ls -lahR /tmp/conda-build/legate_core/linux-64/
-    mkdir -p "$ARTIFACTS_DIR"
-
-    cp -r /tmp/conda-build/legate_core/linux-64 "$ARTIFACTS_DIR"
-    ls -lahR $ARTIFACTS_DIR
-}
-
-copy_ci_artifacts() {
-    echo Copying CI artifacts
-
-    mkdir -p "$ARTIFACTS_DIR"
-
-    cp -r /tmp/out          "$ARTIFACTS_DIR"
-    cp -r /tmp/conda-build  "$ARTIFACTS_DIR"
-}
-
 copy_docs_artifacts() {
     echo Copying artifacts
     cp -r "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/cmake_build/docs/legate/core/sphinx/* "$ARTIFACTS_DIR/."
@@ -234,21 +197,10 @@ build_project() {
     run_command "Setup Legate.Core Env" setup_legate_core_env
 
     case "${BUILD_TYPE}" in
-        ci) build_legate_ci;;
         release) build_legate_release;;
         docs) build_docs;;
         *) return 1;;
     esac
-}
-
-build_legate_fake() {
-    set -xeuo pipefail;
-
-    mkdir -p /tmp/out /tmp/conda-build/legate_core
-    touch /tmp/out/legate-core-23.11.00-dummy.tar.bz2
-    touch /tmp/conda-build/legate_core/dummy.txt
-
-    copy_ci_artifacts;
 }
 
 (build_project "$@");
