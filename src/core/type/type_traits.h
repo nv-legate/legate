@@ -13,10 +13,15 @@
 #pragma once
 
 #include "core/type/type_info.h"
+#include "core/utilities/macros.h"
 
 #include "legate_defines.h"
 
 #include <climits>
+
+#if LegateDefined(LEGATE_USE_CUDA)
+#include <complex>
+#endif
 
 #ifdef LEGION_REDOP_COMPLEX
 #ifdef LEGION_REDOP_HALF
