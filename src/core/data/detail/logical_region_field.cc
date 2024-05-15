@@ -19,6 +19,20 @@
 
 namespace legate::detail {
 
+namespace {
+
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
+void intentionally_leak_physical_region(Legion::PhysicalRegion pr)
+{
+  if (pr.exists()) {
+    static_cast<void>(std::make_unique<Legion::PhysicalRegion>(std::move(pr))
+                        .release());  // NOLINT(bugprone-unused-return-value)
+  }
+}
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
+
+}  // namespace
+
 LogicalRegionField::~LogicalRegionField()
 {
   // Only free associated resources when the top-level region is deleted.
@@ -26,9 +40,7 @@ LogicalRegionField::~LogicalRegionField()
     auto* runtime = Runtime::get_runtime();
     // If the runtime is already destroyed, no need to clean up the resource
     if (!runtime->initialized()) {
-      // FIXME: Leak the PhysicalRegion handle if the runtime has already shut down, as
-      // there's no hope that this would be collected by the Legion runtime
-      static_cast<void>(pr_.release());  // NOLINT(bugprone-unused-return-value)
+      intentionally_leak_physical_region(std::move(pr_));
       return;
     }
 
@@ -44,8 +56,8 @@ LogicalRegionField::~LogicalRegionField()
     // RegionField, there should be no Stores remaining that use it (or any of its sub-regions).
     // Moreover, the field will only start to get reused once all shards have agreed that it's
     // been collected.
-    if (pr_ && pr_->is_mapped()) {
-      runtime->unmap_physical_region(*pr_);
+    if (pr_.is_mapped()) {
+      runtime->unmap_physical_region(pr_);
     }
     auto can_dealloc = attachment_ ? attachment_->detach(destroyed_out_of_order_ /*unordered*/)
                                    : Legion::Future();  // waiting on this is a noop
@@ -69,16 +81,15 @@ Domain LogicalRegionField::domain() const
 RegionField LogicalRegionField::map()
 {
   if (parent_ != nullptr) {
-    LegateAssert(!pr_);
+    LegateAssert(!pr_.exists());
     return parent_->map();
   }
-  if (!pr_) {
-    pr_ =
-      std::make_unique<Legion::PhysicalRegion>(Runtime::get_runtime()->map_region_field(lr_, fid_));
-  } else if (!pr_->is_mapped()) {
-    Runtime::get_runtime()->remap_physical_region(*pr_);
+  if (!pr_.exists()) {
+    pr_ = Runtime::get_runtime()->map_region_field(lr_, fid_);
+  } else if (!pr_.is_mapped()) {
+    Runtime::get_runtime()->remap_physical_region(pr_);
   }
-  return {dim(), *pr_, fid_};
+  return {dim(), pr_, fid_};
 }
 
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
@@ -86,9 +97,9 @@ void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
 {
   LegateAssert(!parent_);
   LegateAssert(physical_region.exists());
-  LegateAssert(!attachment_ && !pr_);
-  pr_         = std::make_unique<Legion::PhysicalRegion>(std::move(physical_region));
-  attachment_ = std::make_unique<SingleAttachment>(pr_.get(), std::move(allocation));
+  LegateAssert(!attachment_ && !pr_.exists());
+  pr_         = std::move(physical_region);
+  attachment_ = std::make_unique<SingleAttachment>(&pr_, std::move(allocation));
 }
 
 void LogicalRegionField::attach(const Legion::ExternalResources& external_resources,
@@ -104,9 +115,7 @@ void LogicalRegionField::detach()
 {
   auto* runtime = Runtime::get_runtime();
   if (!runtime->initialized()) {
-    // FIXME: Leak the PhysicalRegion handle if the runtime has already shut down, as
-    // there's no hope that this would be collected by the Legion runtime
-    static_cast<void>(pr_.release());  // NOLINT(bugprone-unused-return-value)
+    intentionally_leak_physical_region(std::move(pr_));
     return;
   }
   if (nullptr != parent_) {
@@ -115,16 +124,17 @@ void LogicalRegionField::detach()
   if (!attachment_) {
     throw std::invalid_argument{"Store has no attachment to detach"};
   }
-  LegateCheck(pr_ && pr_->exists());
-  if (pr_->is_mapped()) {
-    runtime->unmap_physical_region(*pr_);
+  LegateCheck(pr_.exists());
+  if (pr_.is_mapped()) {
+    runtime->unmap_physical_region(pr_);
   }
   auto fut = attachment_->detach(false /*unordered*/);
   fut.get_void_result(true /*silence_warnings*/);
   attachment_->maybe_deallocate();
 
-  pr_         = nullptr;
-  attachment_ = nullptr;
+  // Reset the object
+  attachment_.reset();
+  pr_ = Legion::PhysicalRegion{};
 }
 
 void LogicalRegionField::allow_out_of_order_destruction()

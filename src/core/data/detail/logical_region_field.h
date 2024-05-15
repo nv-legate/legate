@@ -37,7 +37,7 @@ namespace legate::detail {
 class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
  public:
   LogicalRegionField(FieldManager* manager,
-                     const Legion::LogicalRegion& lr,
+                     Legion::LogicalRegion lr,
                      Legion::FieldID fid,
                      InternalSharedPtr<LogicalRegionField> parent = nullptr);
 
@@ -80,7 +80,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{};
   InternalSharedPtr<LogicalRegionField> parent_{};
-  std::unique_ptr<Legion::PhysicalRegion> pr_{};
+  Legion::PhysicalRegion pr_{};
   std::unique_ptr<Attachment> attachment_{};
   bool destroyed_out_of_order_{};
   std::vector<std::function<void()>> callbacks_{};

@@ -36,20 +36,24 @@ void SingleAttachment::maybe_deallocate() noexcept
 
 // ==========================================================================================
 
+// Leak is intentional
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 IndexAttachment::~IndexAttachment()
 {
   maybe_deallocate();
   // FIXME: Leak the ExternalResources handle if the runtime has already shut down, as
   // there's no hope that this would be collected by the Legion runtime
-  if (!Runtime::get_runtime()->initialized()) {
-    static_cast<void>(external_resources_.release());  // NOLINT(bugprone-unused-return-value)
+  if (!Runtime::get_runtime()->initialized() && external_resources_.exists()) {
+    static_cast<void>(std::make_unique<Legion::ExternalResources>(std::move(external_resources_))
+                        .release());  // NOLINT(bugprone-unused-return-value)
   }
 }
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 Legion::Future IndexAttachment::detach(bool unordered) const
 {
   // Index attachments are always read-only, so no need to flush
-  return Runtime::get_runtime()->detach(*external_resources_, false /*flush*/, unordered);
+  return Runtime::get_runtime()->detach(external_resources_, false /*flush*/, unordered);
 }
 
 void IndexAttachment::maybe_deallocate() noexcept
