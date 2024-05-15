@@ -20,7 +20,8 @@
 #include <cstdio>
 #include <cstdlib>
 
-#if LegateDefined(LEGATE_USE_CUDA) || LegateDefined(LEGATE_NVCC)
+#if LegateDefined(LEGATE_USE_CUDA) || LegateDefined(LEGATE_NVCC) || __has_include(<cuda_runtime.h>)
+#define LEGATE_CUDA_STUBS 0
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #else  // LegateDefined(LEGATE_USE_CUDA)
