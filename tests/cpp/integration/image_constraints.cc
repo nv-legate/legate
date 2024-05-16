@@ -328,18 +328,31 @@ void test_invalid()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(library_name);
 
-  auto func  = runtime->create_store(legate::Shape{10, 10}, legate::int32());
-  auto range = runtime->create_store(legate::Shape{10, 10}, legate::int64());
+  auto create_task = [&](auto func, auto range) {
+    auto task = runtime->create_task(context, static_cast<std::int64_t>(IMAGE_TESTER) + func.dim());
+    auto part_domain = task.declare_partition();
+    auto part_range  = task.declare_partition();
 
-  auto task        = runtime->create_task(context, static_cast<std::int64_t>(IMAGE_TESTER) + 1);
-  auto part_domain = task.declare_partition();
-  auto part_range  = task.declare_partition();
+    task.add_input(func, part_domain);
+    task.add_input(range, part_range);
+    task.add_constraint(legate::image(part_domain, part_range));
 
-  task.add_input(func, part_domain);
-  task.add_input(range, part_range);
-  task.add_constraint(legate::image(part_domain, part_range));
+    return task;
+  };
 
-  EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
+  {
+    auto func1  = runtime->create_store(legate::Shape{10, 10}, legate::int32());
+    auto range1 = runtime->create_store(legate::Shape{10, 10}, legate::int64());
+    auto task   = create_task(func1, range1);
+    EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
+  }
+
+  {
+    auto func2  = runtime->create_store(legate::Shape{4, 4}, legate::point_type(2));
+    auto range2 = runtime->create_store(legate::Shape{10}, legate::int64());
+    auto task   = create_task(func2, range2.promote(1, 1));
+    EXPECT_THROW(runtime->submit(std::move(task)), std::runtime_error);
+  }
 }
 
 TEST_P(Valid, 1D)
