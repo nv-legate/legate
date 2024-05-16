@@ -120,32 +120,6 @@ message(STATUS "legate_core_python: cython_lib_dir='${cython_lib_dir}'")
 
 rapids_cython_add_rpath_entries(TARGET legate::core PATHS "${cython_lib_dir}")
 
-# Legion sets this to "OFF" if not enabled, normalize it to an empty list instead
-if(NOT Legion_NETWORKS)
-  set(Legion_NETWORKS "")
-endif()
-
-# NOTE: if you need any of these values to be guaranteed to be defined, add them to
-# legate_core_SUBDIR_CMAKE_EXPORT_VARS above!
-add_custom_target(generate_install_info_py ALL
-  COMMAND ${CMAKE_COMMAND}
-  -DLegion_NETWORKS="${Legion_NETWORKS}"
-  -DGASNet_CONDUIT="${GASNet_CONDUIT}"
-  -DLegion_USE_CUDA="${Legion_USE_CUDA}"
-  -DLegion_USE_OpenMP="${Legion_USE_OpenMP}"
-  -DLegion_MAX_DIM="${Legion_MAX_DIM}"
-  -DLegion_MAX_FIELDS="${Legion_MAX_FIELDS}"
-  -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
-  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-  -DLEGATE_CORE_DIR="${LEGATE_CORE_DIR}"
-  -DLEGATE_CORE_ARCH="${LEGATE_CORE_ARCH}"
-  -Dlegate_core_LIB_NAME="$<TARGET_FILE_PREFIX:legate::core>$<TARGET_FILE_BASE_NAME:legate::core>"
-  -Dlegate_core_FULL_LIB_NAME="$<TARGET_FILE_NAME:legate::core>"
-  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_install_info_py.cmake"
-  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/legate/install_info.py
-  COMMENT "Generate install_info.py"
-)
-
 ##############################################################################
 # - install targets-----------------------------------------------------------
 

@@ -92,23 +92,6 @@ macro(find_legate_core_cpp_impl legate_core_version build_export_set install_exp
   if(NOT legate_core_FOUND)
     set(SKBUILD OFF)
     set(Legion_USE_Python ON)
-    # These are the names of the variables that we want the C++ build to export up to
-    # us.
-    #
-    # Normally this is done transparently if we find the package above (via the final code
-    # snippet embedded in the Findlegate_core.cmake), but if we build it ourselves, then we
-    # need legate_core_cpp.cmake to explicitly set(<the variable> ... PARENT_SCOPE) in order
-    # for us to see it...
-    set(legate_core_SUBDIR_CMAKE_EXPORT_VARS
-      "Legion_USE_CUDA"
-      "Legion_USE_Python"
-      "Legion_USE_OpenMP"
-      "Legion_BOUNDS_CHECKS"
-      "Legion_MAX_DIM"
-      "Legion_MAX_FIELDS"
-      "GASNet_CONDUIT"
-      CACHE INTERNAL "" FORCE
-    )
     add_subdirectory(. legate_core_cpp)
     set(SKBUILD ON)
     set(_legate_core_FOUND_METHOD "SELF_BUILT")

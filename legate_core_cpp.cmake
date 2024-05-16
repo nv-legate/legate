@@ -717,17 +717,22 @@ Imported Targets:
 
 file(READ ${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake helper_functions)
 
-# This variable contains the names of the variables that a downstream build wants us to
-# "export" back out to them.
-#
 # Normally this is done transparently (via the "code_string" below, embedded in the
 # Findlegate_core.cmake) if the CMakeLists.txt calling this one finds the legate core via
 # a find_package() call. But if we are being built as a subdirectory, then we need to
 # explicitly set(<the_variable> ... PARENT_SCOPE) in order for downstream to see it...
-if(legate_core_SUBDIR_CMAKE_EXPORT_VARS)
-  foreach(_var IN LISTS legate_core_SUBDIR_CMAKE_EXPORT_VARS)
-    set(${_var} ${${_var}} PARENT_SCOPE)
-  endforeach()
+if(NOT PROJECT_IS_TOP_LEVEL)
+  # These must match the decls below
+  # BEGIN MUST MATCH
+  set(Legion_USE_CUDA "${Legion_USE_CUDA}" PARENT_SCOPE)
+  set(Legion_USE_OpenMP "${Legion_USE_OpenMP}" PARENT_SCOPE)
+  set(Legion_USE_Python "${Legion_USE_Python}" PARENT_SCOPE)
+  set(Legion_CUDA_ARCH "${Legion_CUDA_ARCH}" PARENT_SCOPE)
+  set(Legion_NETWORKS "${Legion_NETWORKS}" PARENT_SCOPE)
+  set(Legion_BOUNDS_CHECKS "${Legion_BOUNDS_CHECKS}" PARENT_SCOPE)
+  set(Legion_MAX_DIM "${Legion_MAX_DIM}" PARENT_SCOPE)
+  set(Legion_MAX_FIELDS "${Legion_MAX_FIELDS}" PARENT_SCOPE)
+  # END MUST MATCH
 endif()
 
 string(JOIN "\n" code_string
@@ -736,6 +741,8 @@ if(NOT TARGET CCCL::Thrust)
   thrust_create_target(CCCL::Thrust FROM_OPTIONS)
 endif()
 ]=]
+  # These must match the decls above
+  # BEGIN MUST MATCH
   "set(Legion_USE_CUDA ${Legion_USE_CUDA})"
   "set(Legion_USE_OpenMP ${Legion_USE_OpenMP})"
   "set(Legion_USE_Python ${Legion_USE_Python})"
@@ -744,6 +751,7 @@ endif()
   "set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS})"
   "set(Legion_MAX_DIM ${Legion_MAX_DIM})"
   "set(Legion_MAX_FIELDS ${Legion_MAX_FIELDS})"
+  # END MUST MATCH
 [=[
 if(Legion_NETWORKS)
   find_package(MPI REQUIRED COMPONENTS CXX)
@@ -813,6 +821,31 @@ endif()
 include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)
 
 legate_core_add_tidy_target(SOURCES ${legate_core_TIDY_SOURCES})
+
+# Legion sets this to "OFF" if not enabled, normalize it to an empty list instead
+if(NOT Legion_NETWORKS)
+  set(Legion_NETWORKS "")
+endif()
+
+add_custom_target(generate_install_info_py ALL
+  COMMAND ${CMAKE_COMMAND}
+  -DLegion_NETWORKS="${Legion_NETWORKS}"
+  -DGASNet_CONDUIT="${GASNet_CONDUIT}"
+  -DLegion_USE_CUDA="${Legion_USE_CUDA}"
+  -DLegion_USE_OpenMP="${Legion_USE_OpenMP}"
+  -DLegion_MAX_DIM="${Legion_MAX_DIM}"
+  -DLegion_MAX_FIELDS="${Legion_MAX_FIELDS}"
+  -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+  -DLEGATE_CORE_DIR="${LEGATE_CORE_DIR}"
+  -DLEGATE_CORE_ARCH="${LEGATE_CORE_ARCH}"
+  -Dlegate_core_LIB_NAME="$<TARGET_FILE_PREFIX:legate::core>$<TARGET_FILE_BASE_NAME:legate::core>"
+  -Dlegate_core_FULL_LIB_NAME="$<TARGET_FILE_NAME:legate::core>"
+  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_install_info_py.cmake"
+  DEPENDS "${LEGATE_CORE_DIR}/legate/install_info.py.in"
+  BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/legate/install_info.py
+  COMMENT "Generate install_info.py"
+)
 
 # touch these variables so they are not marked as "unused"
 set(legate_core_maybe_ignored_variables_ "${legate_core_CMAKE_PRESET_NAME};${CMAKE_BUILD_PARALLEL_LEVEL};")
