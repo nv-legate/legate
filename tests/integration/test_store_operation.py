@@ -335,6 +335,12 @@ class TestLogicalStoreOperationErrors:
         with pytest.raises(ValueError, match="Invalid axis"):
             store.transpose((1, 2, 3))
 
+    def test_empty_volume(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int16, (2, 2, 2))
+        with pytest.raises(ValueError, match="volume greater than 0"):
+            store.partition_by_tiling((0, 0, 0))
+
     def test_incompatible_tile_shape(self) -> None:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int16, (2, 2, 2))

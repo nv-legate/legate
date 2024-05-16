@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from legate.core import types as ty
+from legate.core import LEGATE_MAX_DIM, types as ty
 
 ARRAY_TYPES = (
     ty.bool_,
@@ -44,3 +44,14 @@ SCALAR_VALS = (
     4294967295,
     101010,
 )
+
+SHAPES = (
+    (1, 3, 1),
+    (3, 1, 3),
+    (2, 1024, 1),
+    (1024,),
+    (3, 6, 9),
+    tuple(range(1, LEGATE_MAX_DIM + 1)),
+)
+
+EMPTY_SHAPES = ((1, 0, 3), (0, 0, 0), (1024, 0), (0,))

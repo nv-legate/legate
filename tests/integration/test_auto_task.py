@@ -80,7 +80,7 @@ class TestAutoTask:
         [(1, 2, 1), (2, 101, 10), (3, 4096, 12), (65535, 1, 2)],
         ids=str,
     )
-    def test_input_output(self, shape: tuple[int]) -> None:
+    def test_input_output(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
             runtime.core_library, tasks.copy_store_task.task_id
@@ -190,7 +190,9 @@ class TestAutoTask:
         ],
         ids=["accessed", "unaccessed"],
     )
-    def test_uninitialized_input_store(self, shape, accessed) -> None:
+    def test_uninitialized_input_store(
+        self, shape: tuple[int, ...], accessed: bool
+    ) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
             runtime.core_library, tasks.copy_store_task.task_id
@@ -245,7 +247,7 @@ class TestAutoTaskErrors:
     @pytest.mark.parametrize(
         "dtype", [(ty.int32, ty.int64), (np.int32,)], ids=str
     )
-    def test_unsupported_scalar_arg_type(self, dtype: tuple[Any]) -> None:
+    def test_unsupported_scalar_arg_type(self, dtype: tuple[Any, ...]) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
             runtime.core_library, tasks.basic_task.task_id
@@ -302,7 +304,10 @@ class TestAutoTaskErrors:
         tmp_store = runtime.create_store(ty.int32, (1,))
         auto_task.add_input(in_store)
         auto_task.add_alignment(in_store, tmp_store)
-        with pytest.raises(IndexError, match="_Map_base::at"):
+        # not asserting on the error message for this particular case due to
+        # the message being unintuitive and may be compiler-dependent
+        # match="unordered_map::at"
+        with pytest.raises(IndexError):
             auto_task.execute()
         runtime.issue_execution_fence(block=True)
 
