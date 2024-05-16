@@ -190,7 +190,7 @@ TEST_F(LogicalStoreUnit, InvalidScalarStoreCreation)
   auto runtime = legate::Runtime::get_runtime();
   // volume > 1
   EXPECT_THROW(
-    static_cast<void>(runtime->create_store(legate::Scalar(int64_t{10}), legate::Shape{1, 3})),
+    static_cast<void>(runtime->create_store(legate::Scalar{std::int64_t{10}}, legate::Shape{1, 3})),
     std::invalid_argument);
 }
 
@@ -199,7 +199,7 @@ TEST_F(LogicalStoreUnit, OverlapsUnboundStore)
   auto runtime = legate::Runtime::get_runtime();
   auto store   = runtime->create_store(legate::int32(), 2);
   EXPECT_TRUE(store.overlaps(store));
-  EXPECT_TRUE(store.overlaps(legate::LogicalStore(store)));
+  EXPECT_TRUE(store.overlaps(legate::LogicalStore{store}));
 
   auto other = runtime->create_store(legate::int64(), 1);
   EXPECT_FALSE(store.overlaps(other));
@@ -217,7 +217,7 @@ TEST_F(LogicalStoreUnit, OverlapsBoundStore)
 
   // Same root
   auto store_multi_dims = runtime->create_store(legate::Shape{4, 6, 8}, legate::int32());
-  auto sliced           = store_multi_dims.slice(1, legate::Slice(1, 2));
+  auto sliced           = store_multi_dims.slice(1, legate::Slice{1, 2});
   EXPECT_TRUE(store_multi_dims.overlaps(sliced));
   EXPECT_TRUE(sliced.overlaps(store_multi_dims));
 
@@ -236,11 +236,11 @@ TEST_F(LogicalStoreUnit, OverlapsBoundStore)
 TEST_F(LogicalStoreUnit, OverlapsScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{1}));
-  auto other   = runtime->create_store(legate::Scalar(int64_t{2}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{1}});
+  auto other   = runtime->create_store(legate::Scalar{std::int64_t{2}});
   EXPECT_TRUE(store.overlaps(store));
-  EXPECT_TRUE(store.overlaps(legate::LogicalStore(store)));
-  EXPECT_FALSE(store.overlaps(legate::LogicalStore(other)));
+  EXPECT_TRUE(store.overlaps(legate::LogicalStore{store}));
+  EXPECT_FALSE(store.overlaps(legate::LogicalStore{other}));
   EXPECT_FALSE(store.overlaps(other));
 }
 
@@ -265,7 +265,7 @@ TEST_F(LogicalStoreUnit, PromoteBoundStore)
 TEST_F(LogicalStoreUnit, PromoteScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   auto test_promote = [&store](auto&& promote, auto&& shape) {
     EXPECT_EQ(promote.extents().data(), shape);
@@ -292,7 +292,7 @@ TEST_F(LogicalStoreUnit, InvalidPromoteBoundStore)
 TEST_F(LogicalStoreUnit, InvalidPromoteScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   // invalid extra_dim
   EXPECT_THROW(static_cast<void>(store.promote(2, 2)), std::invalid_argument);
@@ -301,9 +301,8 @@ TEST_F(LogicalStoreUnit, InvalidPromoteScalarStore)
 
 TEST_F(LogicalStoreUnit, ProjectBoundStore)
 {
-  auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Shape{4, 3}, legate::int64());
-
+  auto runtime      = legate::Runtime::get_runtime();
+  auto store        = runtime->create_store(legate::Shape{4, 3}, legate::int64());
   auto test_project = [&store](auto&& project, auto&& shape) {
     EXPECT_EQ(project.extents().data(), shape);
     EXPECT_TRUE(project.transformed());
@@ -311,14 +310,16 @@ TEST_F(LogicalStoreUnit, ProjectBoundStore)
     EXPECT_TRUE(project.overlaps(store));
     EXPECT_EQ(project.dim(), 1);
   };
-
   test_project(store.project(0, 1), std::vector<std::uint64_t>{3});
+  // project bound store where volume is 0
+  store = runtime->create_store(legate::Shape{0, 4}, legate::uint32());
+  test_project(store.project(1, 0), std::vector<std::uint64_t>{0});
 }
 
 TEST_F(LogicalStoreUnit, ProjectScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   auto test_project = [&store](auto&& project, auto&& shape) {
     EXPECT_EQ(project.extents().data(), shape);
@@ -347,7 +348,7 @@ TEST_F(LogicalStoreUnit, InvalidProjectBoundStore)
 TEST_F(LogicalStoreUnit, InvalidProjectScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   // invalid dim
   EXPECT_THROW(static_cast<void>(store.project(1, 0)), std::invalid_argument);
@@ -370,25 +371,25 @@ TEST_F(LogicalStoreUnit, SliceBoundStore)
     EXPECT_EQ(slice.dim(), store.dim());
   };
 
-  test_slice(store.slice(1, legate::Slice(-2, -1)), std::vector<std::uint64_t>{4, 1}, true, true);
-  test_slice(store.slice(1, legate::Slice(1, 2)), std::vector<std::uint64_t>{4, 1}, true, true);
-  test_slice(store.slice(0, legate::Slice()), std::vector<std::uint64_t>{4, 3}, false, true);
-  test_slice(store.slice(0, legate::Slice(0, 0)), std::vector<std::uint64_t>{0, 3}, false, false);
-  test_slice(store.slice(1, legate::Slice(1, 1)), std::vector<std::uint64_t>{4, 0}, false, false);
+  test_slice(store.slice(1, legate::Slice{-2, -1}), std::vector<std::uint64_t>{4, 1}, true, true);
+  test_slice(store.slice(1, legate::Slice{1, 2}), std::vector<std::uint64_t>{4, 1}, true, true);
+  test_slice(store.slice(0, legate::Slice{}), std::vector<std::uint64_t>{4, 3}, false, true);
+  test_slice(store.slice(0, legate::Slice{0, 0}), std::vector<std::uint64_t>{0, 3}, false, false);
+  test_slice(store.slice(1, legate::Slice{1, 1}), std::vector<std::uint64_t>{4, 0}, false, false);
 
-  test_slice(store.slice(0, legate::Slice(-9, -8)), std::vector<std::uint64_t>{0, 3}, false, false);
+  test_slice(store.slice(0, legate::Slice{-9, -8}), std::vector<std::uint64_t>{0, 3}, false, false);
   test_slice(
-    store.slice(0, legate::Slice(-8, -10)), std::vector<std::uint64_t>{0, 3}, false, false);
-  test_slice(store.slice(0, legate::Slice(1, 1)), std::vector<std::uint64_t>{0, 3}, false, false);
-  test_slice(store.slice(0, legate::Slice(-1, 0)), std::vector<std::uint64_t>{0, 3}, false, false);
-  test_slice(store.slice(0, legate::Slice(-1, 1)), std::vector<std::uint64_t>{0, 3}, false, false);
-  test_slice(store.slice(0, legate::Slice(10, 8)), std::vector<std::uint64_t>{0, 3}, false, false);
+    store.slice(0, legate::Slice{-8, -10}), std::vector<std::uint64_t>{0, 3}, false, false);
+  test_slice(store.slice(0, legate::Slice{1, 1}), std::vector<std::uint64_t>{0, 3}, false, false);
+  test_slice(store.slice(0, legate::Slice{-1, 0}), std::vector<std::uint64_t>{0, 3}, false, false);
+  test_slice(store.slice(0, legate::Slice{-1, 1}), std::vector<std::uint64_t>{0, 3}, false, false);
+  test_slice(store.slice(0, legate::Slice{10, 8}), std::vector<std::uint64_t>{0, 3}, false, false);
 }
 
 TEST_F(LogicalStoreUnit, SliceScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   auto test_slice = [&store](auto&& slice, auto&& shape, bool transformed, bool overlaps) {
     EXPECT_EQ(slice.extents().data(), shape);
@@ -398,10 +399,10 @@ TEST_F(LogicalStoreUnit, SliceScalarStore)
     EXPECT_EQ(slice.dim(), store.dim());
   };
 
-  test_slice(store.slice(0, legate::Slice(-2, -1)), std::vector<std::uint64_t>{0}, false, false);
-  test_slice(store.slice(0, legate::Slice()), std::vector<std::uint64_t>{1}, false, true);
-  test_slice(store.slice(0, legate::Slice(0, 0)), std::vector<std::uint64_t>{0}, false, false);
-  test_slice(store.slice(0, legate::Slice(1, 1)), std::vector<std::uint64_t>{0}, false, false);
+  test_slice(store.slice(0, legate::Slice{-2, -1}), std::vector<std::uint64_t>{0}, false, false);
+  test_slice(store.slice(0, legate::Slice{}), std::vector<std::uint64_t>{1}, false, true);
+  test_slice(store.slice(0, legate::Slice{0, 0}), std::vector<std::uint64_t>{0}, false, false);
+  test_slice(store.slice(0, legate::Slice{1, 1}), std::vector<std::uint64_t>{0}, false, false);
 }
 
 TEST_F(LogicalStoreUnit, InvalidSliceBoundStore)
@@ -410,25 +411,25 @@ TEST_F(LogicalStoreUnit, InvalidSliceBoundStore)
   auto store   = runtime->create_store(legate::Shape{4, 3}, legate::int64());
 
   // invalid dim
-  EXPECT_THROW(static_cast<void>(store.slice(2, legate::Slice(1, 3))), std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(store.slice(-2, legate::Slice(1, 3))), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(2, legate::Slice{1, 3})), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(-2, legate::Slice{1, 3})), std::invalid_argument);
 
   // Out of bounds
-  EXPECT_THROW(static_cast<void>(store.slice(0, legate::Slice(4, 5))), std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(store.slice(1, legate::Slice(1, 4))), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(0, legate::Slice{4, 5})), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(1, legate::Slice{1, 4})), std::invalid_argument);
 }
 
 TEST_F(LogicalStoreUnit, InvalidSliceScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   // invalid dim
-  EXPECT_THROW(static_cast<void>(store.slice(1, legate::Slice(0, 1))), std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(store.slice(-1, legate::Slice(0, 1))), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(1, legate::Slice{0, 1})), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(-1, legate::Slice{0, 1})), std::invalid_argument);
 
   // Out of bounds
-  EXPECT_THROW(static_cast<void>(store.slice(0, legate::Slice(0, 2))), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(0, legate::Slice{0, 2})), std::invalid_argument);
 }
 
 TEST_F(LogicalStoreUnit, TransposeBoundStore)
@@ -450,7 +451,7 @@ TEST_F(LogicalStoreUnit, TransposeBoundStore)
 TEST_F(LogicalStoreUnit, TransposeScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   auto test_transpose = [&store](auto&& transpose, auto&& shape) {
     EXPECT_EQ(transpose.extents().data(), shape);
@@ -482,7 +483,7 @@ TEST_F(LogicalStoreUnit, InvalidTransposeBoundStore)
 TEST_F(LogicalStoreUnit, InvalidTransposeScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   // invalid axes length, axes has duplicates
   EXPECT_THROW(static_cast<void>(store.transpose({0, 0})), std::invalid_argument);
@@ -513,7 +514,7 @@ TEST_F(LogicalStoreUnit, DelinearizeBoundStore)
 TEST_F(LogicalStoreUnit, DelinearizeScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::int64_t{10}});
 
   auto test_delinearize = [&store](auto&& delinearize, auto&& shape) {
     EXPECT_EQ(delinearize.extents().data(), shape);
@@ -542,7 +543,7 @@ TEST_F(LogicalStoreUnit, InvalidDelinearizeBoundStore)
 TEST_F(LogicalStoreUnit, InvalidDelinearizeScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(uint64_t{10}));
+  auto store   = runtime->create_store(legate::Scalar{std::uint64_t{10}});
 
   // invalid dim
   EXPECT_THROW(static_cast<void>(store.delinearize(1, {1, 1})), std::invalid_argument);
@@ -556,7 +557,7 @@ TEST_F(LogicalStoreUnit, TransformUnboundStore)
   auto runtime = legate::Runtime::get_runtime();
   auto store   = runtime->create_store(legate::int64());
   EXPECT_THROW(static_cast<void>(store.promote(1, 1)), std::invalid_argument);
-  EXPECT_THROW(static_cast<void>(store.slice(0, legate::Slice(1))), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(store.slice(0, legate::Slice{1})), std::invalid_argument);
   EXPECT_THROW(static_cast<void>(store.transpose({-1, -1})), std::invalid_argument);
   EXPECT_THROW(static_cast<void>(store.delinearize(0, {1})), std::invalid_argument);
 }
@@ -603,7 +604,7 @@ TEST_F(LogicalStoreUnit, PartitionBoundStore)
 TEST_F(LogicalStoreUnit, PartitionScalarStore)
 {
   auto runtime   = legate::Runtime::get_runtime();
-  auto store     = runtime->create_store(legate::Scalar(uint64_t{10}));
+  auto store     = runtime->create_store(legate::Scalar{std::uint64_t{10}});
   auto partition = store.partition_by_tiling({1});
   EXPECT_EQ(partition.color_shape().data(), std::vector<std::uint64_t>{1});
 }
@@ -622,7 +623,7 @@ TEST_F(LogicalStoreUnit, InvalidPartitionBoundStore)
 TEST_F(LogicalStoreUnit, InvalidPartitionScalarStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(uint32_t{1}));
+  auto store   = runtime->create_store(legate::Scalar{std::uint32_t{1}});
   // shape size mismatch
   EXPECT_THROW(static_cast<void>(store.partition_by_tiling({1, 1})), std::invalid_argument);
 
@@ -636,6 +637,49 @@ TEST_F(LogicalStoreUnit, InvalidPartitionUnboundStore)
   auto store   = runtime->create_store(legate::int64());
   EXPECT_THROW(static_cast<void>(store.partition_by_tiling({})), std::invalid_argument);
   EXPECT_THROW(static_cast<void>(store.partition_by_tiling({0})), std::invalid_argument);
+}
+
+TEST_F(LogicalStoreUnit, ChildStore)
+{
+  auto runtime   = legate::Runtime::get_runtime();
+  auto store     = runtime->create_store(legate::Shape{9, 8}, legate::int64());
+  auto partition = store.partition_by_tiling({2, 4});
+  const std::vector<std::uint64_t> shape1{5, 2};
+  EXPECT_EQ(partition.color_shape().data(), shape1);
+  EXPECT_EQ(partition.store().shape(), store.shape());
+  EXPECT_EQ(partition.get_child_store({0, 0}).shape(), (legate::Shape{2, 4}));
+  EXPECT_EQ(partition.get_child_store({2, 1}).shape(), (legate::Shape{2, 4}));
+  EXPECT_EQ(partition.get_child_store({4, 1}).shape(), (legate::Shape{1, 4}));
+
+  // TODO(issue 686)
+  // EXPECT_EQ(partition.get_child_store({5, 1}).shape(), (legate::Shape{18446744073709551615, 4}));
+  // EXPECT_EQ(partition.get_child_store({0, 2}).shape(), (legate::Shape{2, 0}));
+
+  partition = store.partition_by_tiling({3, 5});
+  const std::vector<std::uint64_t> shape2{3, 2};
+  EXPECT_EQ(partition.color_shape().data(), shape2);
+  EXPECT_EQ(partition.store().shape(), store.shape());
+  EXPECT_EQ(partition.get_child_store({0, 0}).shape(), (legate::Shape{3, 5}));
+  EXPECT_EQ(partition.get_child_store({1, 1}).shape(), (legate::Shape{3, 3}));
+  EXPECT_EQ(partition.get_child_store({2, 1}).shape(), (legate::Shape{3, 3}));
+
+  // TODO(issue 686)
+  // EXPECT_EQ(partition.get_child_store({3, 1}).shape(), (legate::Shape{0, 3}));
+  // EXPECT_EQ(partition.get_child_store({0, 2}).shape(), (legate::Shape{3, 18446744073709551615}));
+}
+
+TEST_F(LogicalStoreUnit, InvalidChildStore)
+{
+  auto runtime   = legate::Runtime::get_runtime();
+  auto store     = runtime->create_store(legate::Shape{4, 8}, legate::int64());
+  auto partition = store.partition_by_tiling({1, 4});
+  const std::vector<std::uint64_t> shape{4, 2};
+  EXPECT_EQ(partition.color_shape().data(), shape);
+
+  // Invalid color
+  EXPECT_THROW(static_cast<void>(partition.get_child_store({4, 2})), std::out_of_range);
+  EXPECT_THROW(static_cast<void>(partition.get_child_store({5, 2})), std::out_of_range);
+  EXPECT_THROW(static_cast<void>(partition.get_child_store({5, 0})), std::out_of_range);
 }
 
 TEST_F(LogicalStoreUnit, PhysicalStoreBound)
@@ -678,7 +722,7 @@ TEST_F(LogicalStoreUnit, PhysicalStoreUnbound)
 TEST_F(LogicalStoreUnit, PhysicalStoreScalar)
 {
   auto runtime        = legate::Runtime::get_runtime();
-  auto store          = runtime->create_store(legate::Scalar(int32_t{10}));
+  auto store          = runtime->create_store(legate::Scalar{std::int32_t{10}});
   auto physical_store = store.get_physical_store();
   EXPECT_FALSE(physical_store.is_unbound_store());
   EXPECT_TRUE(physical_store.is_future());
@@ -692,7 +736,7 @@ TEST_F(LogicalStoreUnit, PhysicalStoreScalar)
 TEST_F(LogicalStoreUnit, EqualStorageSelf)
 {
   const auto runtime = legate::Runtime::get_runtime();
-  const auto store   = runtime->create_store(legate::Scalar{int32_t{10}});
+  const auto store   = runtime->create_store(legate::Scalar{std::int32_t{10}});
 
   EXPECT_TRUE(store.equal_storage(store));
 }
@@ -740,6 +784,16 @@ TEST_F(LogicalStoreUnit, EqualStorageTranspoe)
   EXPECT_TRUE(transformed2.equal_storage(transformed));
   EXPECT_TRUE(store.equal_storage(transformed2));
   EXPECT_TRUE(transformed2.equal_storage(store));
+}
+
+TEST_F(LogicalStoreUnit, EqualStorageFuture)
+{
+  const auto runtime  = legate::Runtime::get_runtime();
+  const auto store    = runtime->create_store(legate::Scalar{std::int32_t{10}});
+  const auto promoted = store.promote(0, 5);
+  EXPECT_TRUE(promoted.get_physical_store().is_future());
+  EXPECT_TRUE(promoted.equal_storage(store));
+  EXPECT_TRUE(store.equal_storage(promoted));
 }
 
 // NOLINTEND(readability-magic-numbers)
