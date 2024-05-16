@@ -113,7 +113,10 @@ void test_cpu_communicator_manual(std::int32_t ndim)
 }
 
 // Test case with single unbound store
-TEST_F(Integration, CPUCommunicator)
+// TODO(jfaibussowit)
+// Currently causes unexplained hangs in CI. To be fixed by
+// https://github.com/nv-legate/legate.core.internal/pull/700
+TEST_F(Integration, DISABLED_CPUCommunicator)
 {
   prepare();
 
