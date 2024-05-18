@@ -20,50 +20,15 @@ on:
         type: boolean
         required: true
 jobs:
-  setup-build:
-    name: Setup build
-    runs-on: linux-amd64-cpu4
-    outputs:
-      runner_type: ${{ steps.set_runner.outputs.runner_type }}
-    steps:
-      - id: set_runner
-        run: |
-          if [ "${{ inputs.platform }}" = "linux" ]; then
-            echo "runner_type=linux-amd64-cpu16" >> $GITHUB_OUTPUT
-          elif [ "${{ inputs.platform }}" = "mac" ]; then
-            echo "runner_type=macos-latest"  >> $GITHUB_OUTPUT
-          fi
-
   build:
-    needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.3
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
-      runs-on: ${{ needs.setup-build.outputs.runner_type }}
+      runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
       build-type: ${{ inputs.build-type }}
-      use-container: ${{ inputs.platform == 'linux' }}
-      platform: ${{ inputs.platform }}
-      dependencies-file: ""
-      dependencies-workflow: ""
-      legate-gh-ci-tag: "v1.3"
-      build-mode: ${{ inputs.build-mode }}
-      ucx-enabled: ${{ inputs.ucx-enabled }}
-      upload-enabled: ${{ inputs.upload-enabled }}
-    secrets: inherit
-
-  build-docs:
-    needs: setup-build
-    if: ${{ github.repository_owner == 'nv-legate' && inputs.upload-enabled == false }}
-    uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.3
-    with:
-      client-repo: ${{ github.event.repository.name }}
-      target-device: ${{ inputs.target-device }}
-      runs-on: ${{ needs.setup-build.outputs.runner_type }}
-      build-type: docs
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""

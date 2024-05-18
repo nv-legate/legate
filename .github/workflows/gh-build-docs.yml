@@ -1,0 +1,34 @@
+on:
+  workflow_call:
+    inputs:
+      platform:
+        type: string
+        required: true
+      target-device:
+        type: string
+        required: true
+      build-mode:
+        type: string
+        required: true
+      ucx-enabled:
+        type: boolean
+        required: true
+jobs:
+  build-docs:
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.3
+    with:
+      client-repo: ${{ github.event.repository.name }}
+      target-device: ${{ inputs.target-device }}
+      runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu4') || (inputs.platform == 'mac' && 'macos-latest') }}
+      build-type: docs
+      use-container: ${{ inputs.platform == 'linux' }}
+      platform: ${{ inputs.platform }}
+      dependencies-file: ""
+      dependencies-workflow: ""
+      legate-gh-ci-tag: "v1.3"
+      build-mode: ${{ inputs.build-mode }}
+      ucx-enabled: ${{ inputs.ucx-enabled }}
+      upload-enabled: false
+    secrets: inherit
