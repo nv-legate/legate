@@ -54,17 +54,6 @@ class LogicalRegionField;
 class ManualTask;
 class StructLogicalArray;
 
-struct Config {
-  static bool show_progress_requested;
-  static bool use_empty_task;
-  static bool synchronize_stream_view;
-  static bool log_mapping_decisions;
-  static bool log_partitioning_decisions;
-  static bool has_socket_mem;
-  static std::uint64_t max_field_reuse_size;
-  static bool warmup_nccl;
-};
-
 class Runtime {
  public:
   Runtime();

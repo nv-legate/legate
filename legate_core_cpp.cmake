@@ -239,6 +239,7 @@ list(APPEND legate_core_SOURCES
   src/core/runtime/detail/region_manager.cc
   src/core/runtime/detail/runtime.cc
   src/core/runtime/detail/shard.cc
+  src/core/runtime/detail/config.cc
   src/core/task/registrar.cc
   src/core/task/task.cc
   src/core/task/task_context.cc
@@ -257,6 +258,7 @@ list(APPEND legate_core_SOURCES
   src/core/utilities/machine.cc
   src/core/utilities/linearize.cc
   src/core/utilities/internal_shared_ptr.cc
+  src/core/utilities/env.cc
   src/core/utilities/detail/buffer_builder.cc
   src/core/utilities/detail/tuple.cc
   src/timing/timing.cc
@@ -648,6 +650,7 @@ install(
         src/core/utilities/scope_guard.inl
         src/core/utilities/compiler.h
         src/core/utilities/macros.h
+        src/core/utilities/env.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 install(

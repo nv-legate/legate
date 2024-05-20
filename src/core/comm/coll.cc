@@ -13,6 +13,7 @@
 #include "coll.h"
 
 #include "core/utilities/detail/strtoll.h"
+#include "core/utilities/env.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -114,12 +115,7 @@ int collAllgather(
 int collInit(int argc, char* argv[])
 {
   if (LegateDefined(LEGATE_USE_NETWORK)) {
-    char* network    = std::getenv("LEGATE_NEED_NETWORK");
-    int need_network = 0;
-    if (network != nullptr) {
-      need_network = legate::detail::safe_strtoll<int>(network);
-    }
-    if (need_network) {
+    if (LEGATE_NEED_NETWORK.get().value_or(false)) {
 #if LegateDefined(LEGATE_USE_NETWORK)
       backend_network = new MPINetwork{argc, argv};
 #endif

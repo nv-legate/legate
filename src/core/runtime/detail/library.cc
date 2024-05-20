@@ -14,6 +14,7 @@
 
 #include "core/mapping/detail/base_mapper.h"
 #include "core/mapping/mapping.h"
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/scope_guard.h"

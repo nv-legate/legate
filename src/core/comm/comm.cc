@@ -17,6 +17,7 @@
 #include "core/comm/comm_cpu.h"
 #include "core/comm/comm_nccl.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/env.h"
 
 #include "env_defaults.h"
 
@@ -30,8 +31,7 @@ void register_tasks(const detail::Library* library)
   if (LegateDefined(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
-  const bool disable_mpi =
-    static_cast<bool>(extract_env("LEGATE_DISABLE_MPI", DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST));
+  const bool disable_mpi = LEGATE_DISABLE_MPI.get(DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST);
   if (!disable_mpi) {
     cpu::register_tasks(library);
   }

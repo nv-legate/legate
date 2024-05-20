@@ -16,6 +16,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/detail/constraint_solver.h"
 #include "core/partitioning/partition.h"
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
 

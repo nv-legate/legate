@@ -20,6 +20,7 @@
 #include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/shard.h"
 #include "core/utilities/detail/strtoll.h"
+#include "core/utilities/env.h"
 #include "core/utilities/linearize.h"
 
 #include "mappers/mapping_utilities.h"
@@ -99,19 +100,7 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
 BaseMapper::~BaseMapper()
 {
   // Compute the size of all our remaining instances in each memory
-  const auto lg_show_usage = std::getenv("LEGATE_SHOW_USAGE");
-
-  if (lg_show_usage == nullptr) {
-    return;
-  }
-  bool show_usage;
-
-  try {
-    show_usage = legate::detail::safe_strtoll(lg_show_usage) > 0;
-  } catch (const std::exception& excn) {
-    LEGATE_ABORT(excn.what());
-  }
-  if (show_usage) {
+  if (LEGATE_SHOW_USAGE.get().value_or(false)) {
     auto mem_sizes             = local_instances->aggregate_instance_sizes();
     const char* memory_kinds[] = {
 #define MEM_NAMES(name, desc) desc,

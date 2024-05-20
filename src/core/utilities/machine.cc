@@ -12,6 +12,7 @@
 
 #include "core/utilities/machine.h"
 
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/runtime.h"
 
 namespace legate {

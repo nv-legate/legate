@@ -33,6 +33,7 @@
 #include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/detail/partitioning_tasks.h"
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/shard.h"
 #include "core/runtime/runtime.h"
@@ -40,21 +41,20 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/hash.h"
-#include "core/utilities/detail/strtoll.h"
 #include "core/utilities/detail/tuple.h"
-#include "core/utilities/detail/type_traits.h"
+#include "core/utilities/env.h"
 #include "core/utilities/scope_guard.h"
 
 #include "env_defaults.h"
 #include "realm/cmdline.h"
 #include "realm/network.h"
 
-#include <cinttypes>
 #include <cstdlib>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_set>
+#include <utility>
 
 namespace legate::detail {
 
@@ -67,22 +67,6 @@ Logger& log_legate()
 
 void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
 
-/*static*/ bool Config::show_progress_requested = false;
-
-/*static*/ bool Config::use_empty_task = false;
-
-/*static*/ bool Config::synchronize_stream_view = false;
-
-/*static*/ bool Config::log_mapping_decisions = false;
-
-/*static*/ bool Config::has_socket_mem = false;
-
-/*static*/ std::uint64_t Config::max_field_reuse_size = 0;
-
-/*static*/ bool Config::warmup_nccl = false;
-
-/*static*/ bool Config::log_partitioning_decisions = false;
-
 namespace {
 
 // This is the unique string name for our library which can be used from both C++ and Python to
@@ -94,9 +78,8 @@ constexpr const char* const TOPLEVEL_NAME     = "Legate Core Toplevel Task";
 
 Runtime::Runtime()
   : legion_runtime_{Legion::Runtime::get_runtime()},
-    field_reuse_freq_{
-      extract_env("LEGATE_FIELD_REUSE_FREQ", FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)},
-    force_consensus_match_{!!extract_env("LEGATE_CONSENSUS", CONSENSUS_DEFAULT, CONSENSUS_TEST)}
+    field_reuse_freq_{LEGATE_FIELD_REUSE_FREQ.get(FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)},
+    force_consensus_match_{LEGATE_CONSENSUS.get(CONSENSUS_DEFAULT, CONSENSUS_TEST)}
 {
 }
 
@@ -1649,67 +1632,9 @@ void register_builtin_reduction_ops()
 
 extern void register_exception_reduction_op(const Library* context);
 
-namespace {
-
-void parse_config()
-{
-  if (!LegateDefined(LEGATE_USE_CUDA)) {
-    const char* need_cuda = std::getenv("LEGATE_NEED_CUDA");
-    if (need_cuda != nullptr) {
-      // ignore fprintf return values here, we are about to exit anyways
-      static_cast<void>(fprintf(stderr,
-                                "Legate was run with GPUs but was not built with GPU support. "
-                                "Please install Legate again with the \"--cuda\" flag.\n"));
-      std::exit(1);
-    }
-  }
-  if (!LegateDefined(LEGATE_USE_OPENMP)) {
-    const char* need_openmp = std::getenv("LEGATE_NEED_OPENMP");
-    if (need_openmp != nullptr) {
-      static_cast<void>(
-        // TODO(jfaibussowit): Change --openmp -> --with-openmp in build-system update
-        std::fprintf(stderr,
-                     "Legate was run with OpenMP enabled, but was not built with OpenMP support. "
-                     "Please install Legate again with the \"--openmp\" flag.\n"));
-      std::exit(1);
-    }
-  }
-  if (!LegateDefined(LEGATE_USE_NETWORK)) {
-    const char* need_network = std::getenv("LEGATE_NEED_NETWORK");
-    if (need_network != nullptr) {
-      static_cast<void>(
-        std::fprintf(stderr,
-                     "Legate was run on multiple nodes but was not built with networking "
-                     "support. Please install Legate again with \"--network\".\n"));
-      std::exit(1);
-    }
-  }
-
-  auto parse_variable = [](const char* variable, bool& result) {
-    const char* value = std::getenv(variable);
-    try {
-      if (value != nullptr && safe_strtoll(value) > 0) {
-        result = true;
-      }
-    } catch (const std::exception& excn) {  // thrown by safe_strtoll()
-      static_cast<void>(fprintf(stderr, "failed to parse %s: %s\n", variable, excn.what()));
-      std::terminate();
-    }
-  };
-
-  parse_variable("LEGATE_SHOW_PROGRESS", Config::show_progress_requested);
-  parse_variable("LEGATE_EMPTY_TASK", Config::use_empty_task);
-  parse_variable("LEGATE_SYNC_STREAM_VIEW", Config::synchronize_stream_view);
-  parse_variable("LEGATE_LOG_MAPPING", Config::log_mapping_decisions);
-  parse_variable("LEGATE_LOG_PARTITIONING", Config::log_partitioning_decisions);
-  parse_variable("LEGATE_WARMUP_NCCL", Config::warmup_nccl);
-}
-
-}  // namespace
-
 void initialize_core_library()
 {
-  parse_config();
+  Config::parse();
 
   ResourceConfig config;
   config.max_tasks       = LEGATE_CORE_MAX_TASK_ID;
@@ -1847,15 +1772,15 @@ void handle_legate_args(std::int32_t argc, char** argv)
   try_set_property(rt, "cuda", "zcmem", zcmem, "unable to set --zcmem");
 
   if (gpus.value() > 0) {
-    setenv("LEGATE_NEED_CUDA", "1", true);
+    LEGATE_NEED_CUDA.set(true);
   }
 
   // Set OpenMP configuration properties
-  if (omps.value() > 0 && ompthreads.value() == 0) {
-    LEGATE_ABORT("--omps configured with zero threads");
-  }
   if (omps.value() > 0) {
-    setenv("LEGATE_NEED_OPENMP", "1", true);
+    if (ompthreads.value() <= 0) {
+      LEGATE_ABORT("--omps configured with zero threads");
+    }
+    LEGATE_NEED_OPENMP.set(true);
   }
   try_set_property(rt, "openmp", "ocpu", omps, "unable to set --omps");
   try_set_property(rt, "openmp", "othr", ompthreads, "unable to set --ompthreads");
@@ -1867,10 +1792,10 @@ void handle_legate_args(std::int32_t argc, char** argv)
 
   // eager alloc has to be passed via env var
   ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
-  if (const char* existing_default_args = std::getenv("LEGION_DEFAULT_ARGS")) {
+  if (const char* existing_default_args = std::getenv(LEGION_DEFAULT_ARGS.data())) {
     ss << existing_default_args;
   }
-  setenv("LEGION_DEFAULT_ARGS", ss.str().c_str(), true);
+  setenv(LEGION_DEFAULT_ARGS.data(), ss.str().c_str(), /* overwrite */ 1);
 }
 
 }  // namespace legate::detail

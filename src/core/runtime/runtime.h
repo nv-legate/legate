@@ -45,10 +45,6 @@ namespace legate {
 class Scalar;
 class Type;
 
-extern std::uint32_t extract_env(const char* env_name,
-                                 std::uint32_t default_value,
-                                 std::uint32_t test_value);
-
 namespace detail {
 class Runtime;
 }  // namespace detail

@@ -40,6 +40,7 @@
 #include "core/task/task_context.h"
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
+#include "core/utilities/env.h"
 #include "core/utilities/typedefs.h"
 
 #include "legate_defines.h"

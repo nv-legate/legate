@@ -13,6 +13,7 @@
 #include "core/runtime/detail/field_manager.h"
 
 #include "core/data/detail/logical_region_field.h"
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
 

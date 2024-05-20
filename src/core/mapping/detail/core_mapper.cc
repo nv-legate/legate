@@ -15,32 +15,12 @@
 #include "core/comm/comm_cal.h"
 #include "core/comm/comm_nccl.h"
 #include "core/mapping/detail/machine.h"
-#include "core/utilities/detail/strtoll.h"
+#include "core/utilities/env.h"
 
 #include "env_defaults.h"
 
 #include <cstdlib>
 #include <vector>
-
-namespace legate {
-
-std::uint32_t extract_env(const char* env_name,
-                          std::uint32_t default_value,
-                          std::uint32_t test_value)
-{
-  const char* env_value = std::getenv(env_name);
-  if (nullptr == env_value) {
-    const char* legate_test = std::getenv("LEGATE_TEST");
-
-    if (legate_test != nullptr && detail::safe_strtoll(legate_test) > 0) {
-      return test_value;
-    }
-    return default_value;
-  }
-  return detail::safe_strtoll<std::uint32_t>(env_value);
-}
-
-}  // namespace legate
 
 namespace legate::mapping::detail {
 
@@ -62,17 +42,16 @@ class CoreMapper final : public Mapper {
   const LocalMachine machine{};
   // TODO(wonchanl): Some of these should be moved to legate::detail::Config
   const std::int64_t min_gpu_chunk{
-    extract_env("LEGATE_MIN_GPU_CHUNK", MIN_GPU_CHUNK_DEFAULT, MIN_GPU_CHUNK_TEST)};
+    LEGATE_MIN_GPU_CHUNK.get(MIN_GPU_CHUNK_DEFAULT, MIN_GPU_CHUNK_TEST)};
   const std::int64_t min_cpu_chunk{
-    extract_env("LEGATE_MIN_CPU_CHUNK", MIN_CPU_CHUNK_DEFAULT, MIN_CPU_CHUNK_TEST)};
+    LEGATE_MIN_CPU_CHUNK.get(MIN_CPU_CHUNK_DEFAULT, MIN_CPU_CHUNK_TEST)};
   const std::int64_t min_omp_chunk{
-    extract_env("LEGATE_MIN_OMP_CHUNK", MIN_OMP_CHUNK_DEFAULT, MIN_OMP_CHUNK_TEST)};
-  const std::uint32_t window_size{
-    extract_env("LEGATE_WINDOW_SIZE", WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
+    LEGATE_MIN_OMP_CHUNK.get(MIN_OMP_CHUNK_DEFAULT, MIN_OMP_CHUNK_TEST)};
+  const std::uint32_t window_size{LEGATE_WINDOW_SIZE.get(WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
   const std::uint32_t field_reuse_frac{
-    extract_env("LEGATE_FIELD_REUSE_FRAC", FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
+    LEGATE_FIELD_REUSE_FRAC.get(FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
   const std::uint32_t max_lru_length{
-    extract_env("LEGATE_MAX_LRU_LENGTH", MAX_LRU_LENGTH_DEFAULT, MAX_LRU_LENGTH_TEST)};
+    LEGATE_MAX_LRU_LENGTH.get(MAX_LRU_LENGTH_DEFAULT, MAX_LRU_LENGTH_TEST)};
 };
 
 void CoreMapper::set_machine(const legate::mapping::MachineQueryInterface* /*m*/) {}

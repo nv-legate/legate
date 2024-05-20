@@ -17,6 +17,7 @@
 #include "core/data/buffer.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/communicator_manager.h"
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"

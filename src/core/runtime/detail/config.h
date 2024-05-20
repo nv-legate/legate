@@ -12,24 +12,22 @@
 
 #pragma once
 
-#include <cerrno>
-#include <cstdlib>
-#include <system_error>
+#include <cstdint>
 
 namespace legate::detail {
 
-template <typename T = long long>  // NOLINT(google-runtime-int) default to match strtoll()
-[[nodiscard]] T safe_strtoll(const char* env_value, char** end_ptr = nullptr)
-{
-  constexpr auto radix = 10;
+class Config {
+ public:
+  static inline bool show_progress_requested       = false;
+  static inline bool use_empty_task                = false;
+  static inline bool synchronize_stream_view       = false;
+  static inline bool log_mapping_decisions         = false;
+  static inline bool log_partitioning_decisions    = false;
+  static inline bool has_socket_mem                = false;
+  static inline std::uint64_t max_field_reuse_size = 0;
+  static inline bool warmup_nccl                   = false;
 
-  // must reset errno before calling std::strtoll()
-  errno    = 0;
-  auto ret = std::strtoll(env_value, end_ptr, radix);
-  if (const auto eval = errno) {
-    throw std::system_error{eval, std::generic_category(), "error occurred calling std::strtol()"};
-  }
-  return static_cast<T>(ret);
-}
+  static void parse();
+};
 
 }  // namespace legate::detail

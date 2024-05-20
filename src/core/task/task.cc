@@ -12,8 +12,7 @@
 
 #include "core/task/task.h"
 
-#include "core/runtime/detail/runtime.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/config.h"
 #include "core/task/detail/return.h"
 #include "core/task/detail/task_context.h"
 #include "core/task/exception.h"
