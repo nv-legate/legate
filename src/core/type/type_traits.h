@@ -41,58 +41,49 @@
 
 namespace legate {
 
-// This maps a type to its type code
-#if defined(__clang__) && !defined(__NVCC__)
-#define PREFIX static
-#else
-#define PREFIX
-#endif
-
 /**
  * @ingroup util
  * @brief A template constexpr that converts types to type codes
  */
 template <class>
-PREFIX constexpr Type::Code type_code_of = Type::Code::NIL;
+inline constexpr Type::Code type_code_of = Type::Code::NIL;
 template <>
-PREFIX constexpr Type::Code type_code_of<__half> = Type::Code::FLOAT16;
+inline constexpr Type::Code type_code_of<__half> = Type::Code::FLOAT16;
 template <>
-PREFIX constexpr Type::Code type_code_of<float> = Type::Code::FLOAT32;
+inline constexpr Type::Code type_code_of<float> = Type::Code::FLOAT32;
 template <>
-PREFIX constexpr Type::Code type_code_of<double> = Type::Code::FLOAT64;
+inline constexpr Type::Code type_code_of<double> = Type::Code::FLOAT64;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::int8_t> = Type::Code::INT8;
+inline constexpr Type::Code type_code_of<std::int8_t> = Type::Code::INT8;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::int16_t> = Type::Code::INT16;
+inline constexpr Type::Code type_code_of<std::int16_t> = Type::Code::INT16;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::int32_t> = Type::Code::INT32;
+inline constexpr Type::Code type_code_of<std::int32_t> = Type::Code::INT32;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::int64_t> = Type::Code::INT64;
+inline constexpr Type::Code type_code_of<std::int64_t> = Type::Code::INT64;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::uint8_t> = Type::Code::UINT8;
+inline constexpr Type::Code type_code_of<std::uint8_t> = Type::Code::UINT8;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::uint16_t> = Type::Code::UINT16;
+inline constexpr Type::Code type_code_of<std::uint16_t> = Type::Code::UINT16;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::uint32_t> = Type::Code::UINT32;
+inline constexpr Type::Code type_code_of<std::uint32_t> = Type::Code::UINT32;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::uint64_t> = Type::Code::UINT64;
+inline constexpr Type::Code type_code_of<std::uint64_t> = Type::Code::UINT64;
 template <>
-PREFIX constexpr Type::Code type_code_of<bool> = Type::Code::BOOL;
+inline constexpr Type::Code type_code_of<bool> = Type::Code::BOOL;
 template <>
-PREFIX constexpr Type::Code type_code_of<complex<float>> = Type::Code::COMPLEX64;
+inline constexpr Type::Code type_code_of<complex<float>> = Type::Code::COMPLEX64;
 template <>
-PREFIX constexpr Type::Code type_code_of<complex<double>> = Type::Code::COMPLEX128;
+inline constexpr Type::Code type_code_of<complex<double>> = Type::Code::COMPLEX128;
 // When the CUDA build is off, complex<T> is an alias to std::complex<T>
 #if LegateDefined(LEGATE_USE_CUDA)
 template <>
-PREFIX constexpr Type::Code type_code_of<std::complex<float>> = Type::Code::COMPLEX64;
+inline constexpr Type::Code type_code_of<std::complex<float>> = Type::Code::COMPLEX64;
 template <>
-PREFIX constexpr Type::Code type_code_of<std::complex<double>> = Type::Code::COMPLEX128;
+inline constexpr Type::Code type_code_of<std::complex<double>> = Type::Code::COMPLEX128;
 #endif
 template <>
-PREFIX constexpr Type::Code type_code_of<std::string> = Type::Code::STRING;
-
-#undef PREFIX
+inline constexpr Type::Code type_code_of<std::string> = Type::Code::STRING;
 
 template <Type::Code CODE>
 struct TypeOf {
@@ -171,45 +162,34 @@ using type_of = typename TypeOf<CODE>::type;
  * @brief A predicate that holds if the type code is of an integral type
  */
 template <Type::Code CODE>
-struct is_integral {
-  static constexpr bool value = std::is_integral_v<type_of<CODE>>;
-};
+struct is_integral : std::is_integral<type_of<CODE>> {};
 
 /**
  * @ingroup util
  * @brief A predicate that holds if the type code is of a signed integral type
  */
 template <Type::Code CODE>
-struct is_signed {
-  static constexpr bool value = std::is_signed_v<type_of<CODE>>;
-};
+struct is_signed : std::is_signed<type_of<CODE>> {};
+
 template <>
-struct is_signed<Type::Code::FLOAT16> {
-  static constexpr bool value = true;
-};
+struct is_signed<Type::Code::FLOAT16> : std::true_type {};
 
 /**
  * @ingroup util
  * @brief A predicate that holds if the type code is of an unsigned integral type
  */
 template <Type::Code CODE>
-struct is_unsigned {
-  static constexpr bool value = std::is_unsigned_v<type_of<CODE>>;
-};
+struct is_unsigned : std::is_unsigned<type_of<CODE>> {};
 
 /**
  * @ingroup util
  * @brief A predicate that holds if the type code is of a floating point type
  */
 template <Type::Code CODE>
-struct is_floating_point {
-  static constexpr bool value = std::is_floating_point_v<type_of<CODE>>;
-};
+struct is_floating_point : std::is_floating_point<type_of<CODE>> {};
 
 template <>
-struct is_floating_point<Type::Code::FLOAT16> {
-  static constexpr bool value = true;
-};
+struct is_floating_point<Type::Code::FLOAT16> : std::true_type {};
 
 /**
  * @ingroup util
