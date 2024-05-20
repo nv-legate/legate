@@ -112,6 +112,8 @@ build:
     - SED
     - USE_OPENMP
     - ARTIFACTS_DIR
+    - LEGATE_CI
+    - BUILD_MARCH
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1
   track_features:

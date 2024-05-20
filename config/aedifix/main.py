@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import sys
 import traceback
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Final
@@ -64,24 +65,9 @@ def _handle_exception(
         print(excn_trace, flush=True)
 
 
-def basic_configure(
+def _basic_configure_impl(
     argv: Sequence[str], MainPackageType: type[MainPackage]
 ) -> int:
-    r"""Run a basic configuration.
-
-    Parameters
-    ----------
-    argv : Sequence[str]
-        The command line arguments to configure with.
-    MainPackageType : type[MainPackage]
-        The type of the main package for which to configure.
-
-    Returns
-    -------
-    ret : int
-        The return code to return to the calling shell. On success, returns
-        `SUCCESS`, on failure, returns `FAILURE`.
-    """
     try:
         import ipdb as py_db  # type: ignore[import, unused-ignore]
     except ModuleNotFoundError:
@@ -126,3 +112,37 @@ def basic_configure(
         _handle_exception(config, excn_trace, message, excn_obj)
         return FAILURE
     return SUCCESS
+
+
+def basic_configure(
+    argv: Sequence[str], MainPackageType: type[MainPackage]
+) -> int:
+    r"""Run a basic configuration.
+
+    Parameters
+    ----------
+    argv : Sequence[str]
+        The command line arguments to configure with.
+    MainPackageType : type[MainPackage]
+        The type of the main package for which to configure.
+
+    Returns
+    -------
+    ret : int
+        The return code to return to the calling shell. On success, returns
+        `SUCCESS`, on failure, returns `FAILURE`.
+    """
+    try:
+        return _basic_configure_impl(argv, MainPackageType)
+    finally:
+        # Flush both streams on end. This is needed because if there is an
+        # error in CI, the internal buffering won't properly flush the error
+        # message and we get garbled output.
+        try:
+            sys.stdout.flush()
+        except:  # noqa E722
+            pass
+        try:
+            sys.stderr.flush()
+        except:  # noqa E722
+            pass

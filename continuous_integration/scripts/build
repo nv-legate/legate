@@ -1,83 +1,5 @@
 #!/usr/bin/env bash
-
-# begin_group: Start a named section of log output, possibly with color.
-# Usage: begin_group "Group Name" [Color]
-#   Group Name: A string specifying the name of the group.
-#   Color (optional): ANSI color code to set text color. Default is blue (1;34).
-function begin_group()
-{
-    # See options for colors here: https://gist.github.com/JBlond/2fea43a3049b38287e5e9cefc87b2124
-    local blue='34'
-    local name="${1:-'(unnamed group)'}"
-    local color="${2:-${blue}}"
-
-    if [[ "${LEGATE_CI_GROUP:-}" == "" ]]; then
-      LEGATE_CI_GROUP=0
-    fi
-
-    if [[ "${LEGATE_CI_GROUP}" == "0" ]]; then
-      echo -e "::group::\e[${color}m${name}\e[0m"
-    else
-      echo -e "\e[${color}m== ${name} ===========================================================================\e[0m"
-    fi
-    export LEGATE_CI_GROUP=$((LEGATE_CI_GROUP+1))
-}
-export -f begin_group
-
-# end_group: End a named section of log output and print status based on exit status.
-# Usage: end_group "Group Name" [Exit Status]
-#   Group Name: A string specifying the name of the group.
-#   Exit Status (optional): The exit status of the command run within the group. Default is 0.
-function end_group()
-{
-    local name="${1:-'(unnamed group)'}"
-    local build_status="${2:-0}"
-    local duration="${3:-}"
-    local red='31'
-    local blue='34'
-
-    if [[ "${LEGATE_CI_GROUP:-}" == "" ]]; then
-      echo "end_group called without matching begin_group!"
-      exit 1
-    fi
-
-    export LEGATE_CI_GROUP=$((LEGATE_CI_GROUP-1))
-    if [[ "${LEGATE_CI_GROUP}" == "0" ]]; then
-      echo '::endgroup::'
-    else
-      echo -e "\e[${blue}m== ${name} ===========================================================================\e[0m"
-    fi
-
-    if [[ "${build_status}" != "0" ]]; then
-      echo -e "::error::\e[${red}m ${name} - Failed (⬆️ click above for full log ⬆️)\e[0m"
-    fi
-}
-export -f end_group
-
-# Runs a command within a named group, handles the exit status, and prints appropriate
-# messages based on the result.
-# Usage: run_command "Group Name" command [arguments...]
-function run_command()
-{
-    { set +x; } 2>/dev/null;
-
-    local group_name="${1:-}"
-    shift
-    local command=("$@")
-    local status
-
-    begin_group "${group_name}"
-    set +e
-    local start_time=$(date +%s)
-    "${command[@]}"
-    status=$?
-    local end_time=$(date +%s)
-    set -e
-    local duration=$((end_time - start_time))
-    end_group "${group_name}" ${status} ${duration}
-    return ${status}
-}
-export -f run_command
+. pretty_printing.bash
 
 setup_legate_core_env() {
     set -eou pipefail
@@ -108,10 +30,11 @@ setup_legate_core_env() {
 }
 
 build_legate_release() {
-    set -xeo pipefail;
+    set -eo pipefail;
 
     mkdir -p /tmp/env_yaml /tmp/conda-build
     local conda_build_args=();
+    conda_build_args+=(--quiet);
     conda_build_args+=(--override-channels);
 
     # Until real UCX 1.17 is not released
@@ -139,9 +62,9 @@ build_legate_release() {
     [ "${UPLOAD_ENABLED:-}" = "OFF" ] && UPLOAD_BUILD=false
 
     if [[ ${LEGATE_CORE_BUILD_MODE} == *debug* ]]; then
-    debug_enabled=true
+      debug_enabled=true
     else
-    debug_enabled=false
+      debug_enabled=false
     fi
 
     pkgVer="$(git -C $REPO_DIR describe --abbrev=0 --tags | $SED 's/[a-zA-Z]//g' | cut -d '.' -f -2).00"
@@ -152,9 +75,15 @@ build_legate_release() {
     variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"build_mode_str\": [$build_mode_str], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION], \"package_version\": [$pkgVer]}")
     conda_build_args+=(--variants "$variantOpts")
 
-    conda mambabuild "${conda_build_args[@]}" conda/conda-build;
+    # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to
+    # only explicit warnings. If you want more verbose output, set this to 2 or higher.
+    export CONDA_VERBOSITY=0
+    # For whatever reason, the default buffering of conda/mamba is not sufficient, and
+    # leads to garbled output in CI (mixing conda output and whatever build.sh prints). So
+    # we need to force unbuffered output.
+    run_command 'Mamba Preamble' stdbuf -o0 -e0 conda mambabuild "${conda_build_args[@]}" conda/conda-build;
 
-    copy_release_artifacts
+    run_command 'Copy Artifacts' copy_release_artifacts
 }
 
 copy_release_artifacts() {
@@ -165,34 +94,32 @@ copy_release_artifacts() {
 }
 
 copy_docs_artifacts() {
+    set -x
     echo Copying artifacts
     cp -r "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/cmake_build/docs/legate/core/sphinx/* "$ARTIFACTS_DIR/."
 }
 
 build_docs() {
-    set -x;
-    cd "${LEGATE_CORE_DIR}";
+    set -eou pipefail
 
-    set +xu
-    conda activate legate
-    set -xu
-
-    echo "Configuring Legate.Core"
-    cat "./config/examples/${LEGATE_CORE_ARCH}.py"
-    "./config/examples/${LEGATE_CORE_ARCH}.py"
-
-    echo "Installing Legate.Core Python bindings so the Python docs build works"
-    python3 -m pip install .
-
-    echo "Build documentation"
-    make docs
-
-    copy_docs_artifacts
+    cd "${LEGATE_CORE_DIR}"
+    set +u
+    run_command 'Activate Conda' conda activate legate
+    set -u
+    run_command 'Dump configure.py' cat "./config/examples/${LEGATE_CORE_ARCH}.py"
+    run_command 'Configure Legate' "./config/examples/${LEGATE_CORE_ARCH}.py"
+    # Install Legate.Core Python bindings so the Python docs build works
+    run_command 'pip install Legate' python3 -m pip install . -vv
+    run_command 'Build Documentation' make docs
+    run_command 'Copy Artifacts' copy_docs_artifacts
 }
 
 build_project() {
     set -eou pipefail
+    { set +x; } 2>/dev/null
 
+    export LEGATE_CI=1
+    export PYTHONUNBUFFERED=1
     run_command "Source setup-util" . setup-utils;
     run_command "Init build environment" init_build_env "$@";
     run_command "Setup Legate.Core Env" setup_legate_core_env
