@@ -19,7 +19,7 @@
 
 namespace unit {
 
-using DeathTestExample = DeathTestFixture;
+using ExampleDeathTest = DeathTestNoInitFixture;
 
 void KillProcess(int /*argc*/, char** /*argv*/)
 {
@@ -27,7 +27,7 @@ void KillProcess(int /*argc*/, char** /*argv*/)
   std::abort();
 }
 
-TEST_F(DeathTestExample, Simple)
+TEST_F(ExampleDeathTest, Simple)
 {
   const auto value           = std::getenv("REALM_BACKTRACE");
   const bool realm_backtrace = value != nullptr && legate::detail::safe_strtoll(value) != 0;

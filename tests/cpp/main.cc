@@ -41,14 +41,33 @@ const char* __lsan_default_suppressions()
   return "leak:librealm.*\n"
          "leak:liblegion.*\n";
 }
+
+const char* __tsan_default_options()
+{
+  return "halt_on_error=1:"
+         "second_deadlock_stack=1:"
+         "symbolize=1:"
+         "detect_deadlocks=1:";
+}
+
+const char* __tsan_default_suppressions()
+{
+  return "race:Legion::Internal::MemoryManager::create_eager_instance\n"
+         "race:Legion::Internal::Operation::perform_registration\n";
+}
 // NOLINTEND(bugprone-reserved-identifier)
 }
 
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
+  // Order is important, as DeathTestFixture may override this
+  GTEST_FLAG_SET(death_test_style, "fast");
   DefaultFixture::init(argc, argv);
   DeathTestFixture::init(argc, argv);
+  NoInitFixture::init(argc, argv);
+  DeathTestNoInitFixture::init(argc, argv);
+  LegateSTLFixture::init(argc, argv);
 
   return RUN_ALL_TESTS();
 }

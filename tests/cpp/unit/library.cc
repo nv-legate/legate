@@ -96,7 +96,9 @@ TEST_F(Library, FindNonExistent)
   EXPECT_EQ(runtime->maybe_find_library(LIBNAME), std::nullopt);
 }
 
-TEST_F(Library, InvalidReductionOPID)
+using LibraryDeathTest = DeathTestFixture;
+
+TEST_F(LibraryDeathTest, InvalidReductionOPID)
 {
   using SumReduction_Int32 = legate::SumReduction<std::int32_t>;
 

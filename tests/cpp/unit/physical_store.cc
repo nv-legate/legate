@@ -681,6 +681,17 @@ void test_invalid_accessor()
   }
 }
 
+// This test file only performs `EXPECT_EXIT` checks when bounds checking is enabled, so no
+// need to turn on the expensive death-test execution mode when that's disabled.
+// TODO(mpapadakis): Given the high overhead of death tests (with death_test_style=fast we fork
+// on every instance of EXPECT_EXIT, with death_test_style=safe we even restart the whole
+// execution from scratch, skipping other checks until we get to this particular EXPECT_EXIT),
+// we should only be doing it sparingly, rather than sprinkling it liberally within larger test
+// runs.
+#if LegateDefined(LEGATE_BOUNDS_CHECKS)
+#define PhysicalStoreUnit PhysicalStoreUnitDeathTest
+#endif
+
 class PhysicalStoreUnit : public DefaultFixture {
  public:
   void SetUp() override

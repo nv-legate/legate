@@ -13,51 +13,71 @@
 #pragma once
 
 #include "core/experimental/stl/detail/registrar.hpp"
-#include "legate.h"
 
 #include <gtest/gtest.h>
+#include <optional>
 
-class DefaultFixture : public ::testing::Test {
+class BaseFixture : public ::testing::Test {
  public:
   static void init(int argc, char** argv)
   {
-    DefaultFixture::argc_ = argc;
-    DefaultFixture::argv_ = argv;
+    BaseFixture::argc_ = argc;
+    BaseFixture::argv_ = argv;
   }
 
-  void SetUp() override { EXPECT_EQ(legate::start(argc_, argv_), 0); }
-  void TearDown() override { EXPECT_EQ(legate::finish(), 0); }
-
- private:
-  inline static int argc_;
-  inline static char** argv_;
+  static inline int argc_{};
+  static inline char** argv_{};
 };
 
-class DeathTestFixture : public ::testing::Test {
+class DefaultFixture : public BaseFixture {
  public:
-  static void init(int argc, char** argv)
+  void SetUp() override
   {
-    argc_ = argc;
-    argv_ = argv;
+    ASSERT_EQ(legate::start(argc_, argv_), 0);
+    BaseFixture::SetUp();
   }
 
-  inline static int argc_;
-  inline static char** argv_;
+  void TearDown() override
+  {
+    ASSERT_EQ(legate::finish(), 0);
+    BaseFixture::TearDown();
+  }
 };
 
-class LegateSTLFixture : public ::testing::Test {
+class DeathTestFixture : public DefaultFixture {
  public:
-  static void init(int argc, char** argv)
+  void SetUp() override
   {
-    LegateSTLFixture::argc_ = argc;
-    LegateSTLFixture::argv_ = argv;
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    DefaultFixture::SetUp();
+  }
+};
+
+using NoInitFixture = BaseFixture;
+
+class DeathTestNoInitFixture : public NoInitFixture {
+ public:
+  void SetUp() override
+  {
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    NoInitFixture::SetUp();
+  }
+};
+
+class LegateSTLFixture : public NoInitFixture {
+ public:
+  void SetUp() override
+  {
+    ASSERT_EQ(init_.emplace(argc_, argv_).result(), 0);
+    NoInitFixture::SetUp();
   }
 
-  void SetUp() override { init_.emplace(argc_, argv_); }
-  void TearDown() override { init_.reset(); }
+  void TearDown() override
+  {
+    init_.reset();
+    NoInitFixture::TearDown();
+  }
 
  private:
-  inline static std::optional<legate::experimental::stl::initialize_library> init_;
-  inline static int argc_;
-  inline static char** argv_;
+  inline static std::optional<legate::experimental::stl::initialize_library> init_{};
 };
