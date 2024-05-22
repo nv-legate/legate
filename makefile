@@ -84,6 +84,21 @@ package: package_private
 tidy:
 	@$(LEGATE_CORE_BUILD_COMMAND) --target tidy $(LEGATE_CORE_CMAKE_ARGS)
 
+## Run clang-tidy only over the files which have been changed by your branch.
+##
+## Beware that this target may not fully work. Turns out asking git "which base branch is
+## my current branch based off of" is more or less impossible to answer reliably... so
+## depending on which branch it selects, this might not do what you want. It may try to
+## check more files than needed (worst case, all of them), or it may not check all
+## files. Buyer beware.
+##
+## Options:
+## - LEGATE_CORE_CMAKE_ARGS='...' - any additional arguments to pass to the cmake command
+##
+.PHONY: tidy-diff
+tidy-diff:
+	@$(LEGATE_CORE_BUILD_COMMAND) --target tidy-diff $(LEGATE_CORE_CMAKE_ARGS)
+
 ## Generate raw doxygen output
 ##
 .PHONY: doxygen
@@ -95,4 +110,3 @@ doxygen:
 .PHONY: docs
 docs: doxygen
 	@$(LEGATE_CORE_BUILD_COMMAND) --target Sphinx $(LEGATE_CORE_CMAKE_ARGS)
-
