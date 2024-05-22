@@ -14,8 +14,10 @@
 
 #include "core/utilities/assert.h"  // LegateLikely()
 
+#include <cerrno>
 #include <charconv>
 #include <cstdlib>
+#include <cstring>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
@@ -122,11 +124,24 @@ template <typename T>
 
 // ==========================================================================================
 
-void EnvironmentVariableBase::set(std::string_view value, bool overwrite) const noexcept
+void EnvironmentVariableBase::set(std::string_view value, bool overwrite) const
 {
-  const auto _ = ENVIRONMENT_LOCK();
+  const auto ret = [&]() {
+    const auto _ = ENVIRONMENT_LOCK();
 
-  setenv(data(), value.data(), overwrite ? 1 : 0);
+    // Reset this here so that we make sure any modification originates from setenv()
+    errno = 0;
+    return setenv(data(), value.data(), overwrite ? 1 : 0);
+  }();
+  if (LegateUnlikely(ret)) {
+    // In case stringstream writes to errno before we have the chance to strerror() it.
+    const auto errno_save = errno;
+    std::stringstream ss;
+
+    ss << "setenv(" << static_cast<std::string_view>(*this) << ", " << value
+       << ") failed with exit code: " << ret << ": " << std::strerror(errno_save);
+    throw std::runtime_error{std::move(ss).str()};
+  }
 }
 
 // ==========================================================================================

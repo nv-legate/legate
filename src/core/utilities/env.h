@@ -40,7 +40,7 @@ class EnvironmentVariableBase {
   // NOLINTNEXTLINE(google-explicit-constructor)
   [[nodiscard]] constexpr operator std::string_view() const noexcept;
   [[nodiscard]] constexpr const char* data() const noexcept;
-  void set(std::string_view value, bool overwrite) const noexcept;
+  void set(std::string_view value, bool overwrite) const;
 
  private:
   std::string_view name_{};
