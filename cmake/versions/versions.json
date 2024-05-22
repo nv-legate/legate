@@ -3,8 +3,8 @@
     "mdspan": {
       "version"     : "0.6",
       "git_url"     : "https://github.com/kokkos/mdspan.git",
-      "git_tag"     : "stable",
-      "git_shallow" : true,
+      "git_tag"     : "a9c54ccd8254cc3d159fdf2adf650dca4e048c97",
+      "git_shallow" : false,
       "patches" : [
         {
           "file" : "${current_json_dir}/../patches/mdspan_cpp_lib_span_dynamic_extent.diff",

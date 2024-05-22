@@ -31,7 +31,7 @@ function(find_or_configure_mdspan)
       GIT_REPOSITORY  https://github.com/kokkos/mdspan.git
       GIT_SHALLOW     TRUE
       SYSTEM          TRUE
-      GIT_TAG         stable
+      GIT_TAG         a9c54ccd8254cc3d159fdf2adf650dca4e048c97
       OPTIONS
         # Gotta set this, otherwise mdspan tries to guess a C++ standard
         "MDSPAN_CXX_STANDARD ${CMAKE_CXX_STANDARD}"
