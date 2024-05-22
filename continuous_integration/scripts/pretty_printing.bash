@@ -50,6 +50,7 @@ function end_group()
 
   if [[ "${build_status}" != '0' ]]; then
     echo -e "::error::\e[${red}m ${name} - Failed (⬆️ click above for full log ⬆️)\e[0m"
+    exit ${build_status}
   fi
 }
 export -f end_group
