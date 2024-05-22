@@ -35,6 +35,8 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> {
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE((context.is_single_task() && context.communicators().empty()) ||

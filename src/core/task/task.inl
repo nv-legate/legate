@@ -29,7 +29,7 @@ template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
   const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  auto task_info = create_task_info(all_options);
+  auto task_info = create_task_info_(all_options);
   T::Registrar::get_registrar().record_task(T::TASK_ID, std::move(task_info));
 }
 
@@ -46,15 +46,15 @@ template <typename T>
   std::int64_t task_id,
   const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  auto task_info = create_task_info(all_options);
+  auto task_info = create_task_info_(all_options);
   library.register_task(task_id, std::move(task_info));
 }
 
 template <typename T>
-/*static*/ std::unique_ptr<TaskInfo> LegateTask<T>::create_task_info(
+/*static*/ std::unique_ptr<TaskInfo> LegateTask<T>::create_task_info_(
   const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  auto task_info = std::make_unique<TaskInfo>(std::string{task_name()});
+  auto task_info = std::make_unique<TaskInfo>(std::string{task_name_()});
   detail::VariantHelper<T, detail::CPUVariant>::record(task_info.get(), all_options);
   detail::VariantHelper<T, detail::OMPVariant>::record(task_info.get(), all_options);
   detail::VariantHelper<T, detail::GPUVariant>::record(task_info.get(), all_options);
@@ -62,7 +62,7 @@ template <typename T>
 }
 
 template <typename T>
-/*static*/ std::string_view LegateTask<T>::task_name()
+/*static*/ std::string_view LegateTask<T>::task_name_()
 {
   static const std::string result = detail::generate_task_name(typeid(T));
   return result;
@@ -77,7 +77,7 @@ template <VariantImpl variant_fn, LegateVariantCode variant_kind>
                                              Legion::Processor p)
 {
   detail::task_wrapper(
-    variant_fn, variant_kind, task_name(), args, arglen, userdata, userlen, std::move(p));
+    variant_fn, variant_kind, task_name_(), args, arglen, userdata, userlen, std::move(p));
 }
 
 }  // namespace legate

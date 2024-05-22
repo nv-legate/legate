@@ -14,36 +14,6 @@
 
 namespace legate {
 
-VariantOptions& VariantOptions::with_leaf(bool _leaf)
-{
-  leaf = _leaf;
-  return *this;
-}
-
-VariantOptions& VariantOptions::with_inner(bool _inner)
-{
-  inner = _inner;
-  return *this;
-}
-
-VariantOptions& VariantOptions::with_idempotent(bool _idempotent)
-{
-  idempotent = _idempotent;
-  return *this;
-}
-
-VariantOptions& VariantOptions::with_concurrent(bool _concurrent)
-{
-  concurrent = _concurrent;
-  return *this;
-}
-
-VariantOptions& VariantOptions::with_return_size(std::size_t _return_size)
-{
-  return_size = _return_size;
-  return *this;
-}
-
 void VariantOptions::populate_registrar(Legion::TaskVariantRegistrar& registrar) const
 {
   registrar.set_leaf(leaf);
@@ -54,16 +24,20 @@ void VariantOptions::populate_registrar(Legion::TaskVariantRegistrar& registrar)
 
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options)
 {
-  std::stringstream ss;
-  ss << "(";
+  os << "(";
   if (options.leaf) {
-    ss << "leaf,";
+    os << "leaf,";
+  }
+  if (options.inner) {
+    os << "inner,";
+  }
+  if (options.idempotent) {
+    os << "idempotent,";
   }
   if (options.concurrent) {
-    ss << "concurrent,";
+    os << "concurrent,";
   }
-  ss << options.return_size << ")";
-  os << std::move(ss).str();
+  os << options.return_size << ")";
   return os;
 }
 

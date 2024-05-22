@@ -132,4 +132,40 @@ template <typename T>
   return static_cast<std::underlying_type_t<T>>(e);
 }
 
+namespace detected_detail {
+
+template <typename Default,
+          typename AlwaysVoid,
+          template <typename...>
+          typename Op,
+          typename... Args>
+struct detector : std::false_type {
+  using type = Default;
+};
+
+template <typename Default, template <typename...> typename Op, typename... Args>
+struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> : std::true_type {
+  using type = Op<Args...>;
+};
+
+struct nonesuch {
+  ~nonesuch()                     = delete;
+  nonesuch(nonesuch const&)       = delete;
+  void operator=(nonesuch const&) = delete;
+};
+
+}  // namespace detected_detail
+
+template <typename Default, template <typename...> typename Op, typename... Args>
+using detected_or = detected_detail::detector<Default, void, Op, Args...>;
+
+template <template <typename...> typename Op, typename... Args>
+using is_detected = detected_or<detected_detail::nonesuch, Op, Args...>;
+
+template <template <typename...> typename Op, typename... Args>
+constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+
+template <template <typename...> class Op, typename... Args>
+using is_detected_t = typename is_detected<Op, Args...>::type;
+
 }  // namespace legate::traits::detail

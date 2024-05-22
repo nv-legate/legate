@@ -14,11 +14,19 @@
 
 #include "core/task/task_info.h"
 #include "core/task/variant_options.h"
+#include "core/utilities/detail/type_traits.h"
 
 #include "legion.h"
 
 #include <optional>
 #include <string_view>
+#include <type_traits>
+
+namespace legate {
+
+class TaskContext;
+
+}  // namespace legate
 
 namespace legate::detail {
 
@@ -41,35 +49,48 @@ inline void task_wrapper_dyn_name(const void* args,
   task_wrapper(variant_fn, variant_kind, {}, args, arglen, userdata, userlen, std::move(p));
 }
 
-template <typename T>
-using void_t = void;
+#define LEGATE_SELECTOR_SPECIALIZATION(NAME, name)                                           \
+  template <typename T, typename = void>                                                     \
+  class NAME##Variant : public std::false_type {};                                           \
+                                                                                             \
+  template <typename T>                                                                      \
+  class NAME##Variant<T, std::void_t<decltype(T::name##_variant)>> : public std::true_type { \
+    /* Do not be fooled, U = T in all cases, but we need this to be a */                     \
+    /* template for traits::is_detected. */                                                  \
+    template <typename U = T>                                                                \
+    using has_default_variant_options = decltype(U::NAME##_VARIANT_OPTIONS);                 \
+                                                                                             \
+    template <typename U = T>                                                                \
+    [[nodiscard]] static constexpr const VariantOptions& get_default_options_() noexcept     \
+    {                                                                                        \
+      if constexpr (traits::detail::is_detected_v<has_default_variant_options, U>) {         \
+        static_assert(                                                                       \
+          std::is_same_v<std::decay_t<decltype(U::NAME##_VARIANT_OPTIONS)>, VariantOptions>, \
+          "Default variant options for " #NAME                                               \
+          " variant has incompatible type. Expected static constexpr VariantOptions " #NAME  \
+          "_VARIANT_OPTIONS = ...");                                                         \
+        return U::NAME##_VARIANT_OPTIONS;                                                    \
+      } else {                                                                               \
+        return VariantOptions::DEFAULT_OPTIONS;                                              \
+      }                                                                                      \
+    }                                                                                        \
+                                                                                             \
+   public:                                                                                   \
+    static constexpr auto variant  = T::name##_variant;                                      \
+    static constexpr auto id       = LEGATE_##NAME##_VARIANT;                                \
+    static constexpr auto& options = get_default_options_();                                 \
+                                                                                             \
+    static_assert(std::is_convertible_v<decltype(variant), void (*)(legate::TaskContext)>,   \
+                  "Malformed " #NAME                                                         \
+                  " variant function. Variant function must have the following signature: "  \
+                  "static void " #name "_variant(legate::TaskContext)");                     \
+  }
 
-template <typename T, typename = void>
-struct CPUVariant : std::false_type {};
+LEGATE_SELECTOR_SPECIALIZATION(CPU, cpu);
+LEGATE_SELECTOR_SPECIALIZATION(OMP, omp);
+LEGATE_SELECTOR_SPECIALIZATION(GPU, gpu);
 
-template <typename T, typename = void>
-struct OMPVariant : std::false_type {};
-
-template <typename T, typename = void>
-struct GPUVariant : std::false_type {};
-
-template <typename T>
-struct CPUVariant<T, void_t<decltype(T::cpu_variant)>> : std::true_type {
-  static constexpr auto variant = T::cpu_variant;
-  static constexpr auto id      = LEGATE_CPU_VARIANT;
-};
-
-template <typename T>
-struct OMPVariant<T, void_t<decltype(T::omp_variant)>> : std::true_type {
-  static constexpr auto variant = T::omp_variant;
-  static constexpr auto id      = LEGATE_OMP_VARIANT;
-};
-
-template <typename T>
-struct GPUVariant<T, void_t<decltype(T::gpu_variant)>> : std::true_type {
-  static constexpr auto variant = T::gpu_variant;
-  static constexpr auto id      = LEGATE_GPU_VARIANT;
-};
+#undef LEGATE_SELECTOR_SPECIALIZATION
 
 template <typename T, template <typename...> typename SELECTOR, bool VALID = SELECTOR<T>::value>
 class VariantHelper {
@@ -90,9 +111,10 @@ class VariantHelper<T, SELECTOR, true> {
     // can register it later when it is ready
     constexpr auto variant_impl = SELECTOR<T>::variant;
     constexpr auto variant_kind = SELECTOR<T>::id;
+    constexpr auto& options     = SELECTOR<T>::options;
     constexpr auto entry        = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
 
-    task_info->add_variant(variant_kind, variant_impl, entry, all_options);
+    task_info->add_variant(variant_kind, variant_impl, entry, options, all_options);
   }
 };
 

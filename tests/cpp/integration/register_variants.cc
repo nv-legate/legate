@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/detail/zip.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
 
@@ -166,6 +168,43 @@ TEST_F(RegisterVariants, All)
   for (auto task_id : task_ids) {
     test_manual_task(context, store, task_id);
     validate_store(store);
+  }
+}
+
+class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
+ public:
+  static constexpr std::int32_t TASK_ID     = 0;
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+  static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_leaf(false);
+  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_return_size(1234);
+
+  static void cpu_variant(legate::TaskContext) {}
+  static void omp_variant(legate::TaskContext) {}
+  static void gpu_variant(legate::TaskContext) {}
+};
+
+TEST_F(RegisterVariants, DefaultVariantOptions)
+{
+  auto library = legate::Runtime::get_runtime()->create_library(library_name);
+
+  DefaultOptionsTask::register_variants(library);
+
+  const auto* task_info = library.find_task(DefaultOptionsTask::TASK_ID);
+  // This test checks that the defaults in <XXX>_VARIANT_OPTIONS override the "normal"
+  // defaults. Obviously, we cannot properly test that if the normal defaults match that of
+  // DefaultOptionsTask::<XXX>_VARIANT_OPTIONS.
+  static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::CPU_VARIANT_OPTIONS);
+  static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::OMP_VARIANT_OPTIONS);
+  static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::GPU_VARIANT_OPTIONS);
+
+  constexpr std::array variant_kinds = {LEGATE_CPU_VARIANT, LEGATE_OMP_VARIANT, LEGATE_GPU_VARIANT};
+  constexpr std::array options       = {DefaultOptionsTask::CPU_VARIANT_OPTIONS,
+                                        DefaultOptionsTask::OMP_VARIANT_OPTIONS,
+                                        DefaultOptionsTask::GPU_VARIANT_OPTIONS};
+
+  for (auto&& [variant_kind, default_options] : legate::detail::zip(variant_kinds, options)) {
+    ASSERT_TRUE(task_info->has_variant(variant_kind));
+    ASSERT_EQ(task_info->find_variant(variant_kind).options, default_options);
   }
 }
 

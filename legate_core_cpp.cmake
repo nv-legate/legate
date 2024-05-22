@@ -617,6 +617,7 @@ install(
         src/core/task/task_info.h
         src/core/task/variant_helper.h
         src/core/task/variant_options.h
+        src/core/task/variant_options.inl
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/task)
 
 install(
