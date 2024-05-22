@@ -104,17 +104,44 @@ run_test_or_analysis() {
               EXTRA_ARGS="-ll:force_kthreads"
               sysctl vm.mmap_rnd_bits=28
             fi
-            python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --timeout 90 ${WORKERS} --cpus 1 "${EXTRA_ARGS}"
+            export EXTRA_ARGS
+            export WORKERS
 
+            function run_legate_tests()
+            {
+              local gtest_file="${1}"
+              local cpus="${2}"
+              python3 "${LEGATE_CORE_DIR}/test.py" \
+                      --gtest-file "${gtest_file}" \
+                      --verbose \
+                      --debug \
+                      --timeout 90 \
+                      --cpus "${cpus}" \
+                      --sysmem 100 \
+                      ${WORKERS} \
+                      ${EXTRA_ARGS}
+            }
+
+            function run_cpp_tests()
+            {
+              run_legate_tests "${CONDA_PREFIX}/bin/cpp_tests" "$@"
+            }
+
+            function run_gpu_tests()
+            {
+              run_legate_tests "${CONDA_PREFIX}/bin/gpu_tests" "$@"
+            }
+
+            run_cpp_tests 1
             # Also do some multi-CPU testing
             if [[ "$(uname)" == "Darwin" ]]; then
-                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --timeout 90 ${WORKERS} --cpus 2 "${EXTRA_ARGS}"
+              run_cpp_tests 2
             else
-                python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/cpp_tests --verbose --debug --timeout 90 ${WORKERS} --cpus 4 "${EXTRA_ARGS}"
+              run_cpp_tests 4
             fi
 
             [[ -f ${CONDA_PREFIX}/bin/gpu_tests ]] && {
-              python3 "${LEGATE_CORE_DIR}"/test.py --gtest-file ${CONDA_PREFIX}/bin/gpu_tests --verbose --debug --timeout 90 ${WORKERS} --cpus 1 "${EXTRA_ARGS}"
+              run_gpu_tests 1
             }
             ;;
 
