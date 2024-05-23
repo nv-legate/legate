@@ -5,9 +5,10 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  schedule:
-    # Runs at 08:00 UTC every day
-    - cron: '0 8 * * *'
+  # Disabled until the CI scripts are in working order again.
+  # schedule:
+  #   # Runs at 08:00 UTC every day
+  #   - cron: '0 8 * * *'
   workflow_dispatch:
 
 jobs:
