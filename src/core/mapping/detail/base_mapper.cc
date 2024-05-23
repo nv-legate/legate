@@ -865,12 +865,12 @@ void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
 #undef MEM_NAMES
   };
 
-  std::string opname;
+  std::string_view opname;
   if (mappable.get_mappable_type() == Legion::Mappable::TASK_MAPPABLE) {
     opname = mappable.as_task()->get_task_name();
   }
 
-  std::string provenance = mappable.get_provenance_string();
+  std::string_view provenance = mappable.get_provenance_string();
   if (provenance.empty()) {
     provenance = "unknown provenance";
   }
