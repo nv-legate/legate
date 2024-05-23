@@ -27,18 +27,16 @@ function(legate_core_create_cython_modules)
   set(options)
   set(one_value_args)
   set(multi_value_keywords SOURCES)
-  cmake_parse_arguments(_LEGATE_CORE_CYTHON "${options}" "${one_value_args}" "${multi_value_keywords}" ${ARGN})
+  cmake_parse_arguments(_LEGATE_CORE_CYTHON "${options}" "${one_value_args}"
+                        "${multi_value_keywords}" ${ARGN})
 
   if(NOT _LEGATE_CORE_CYTHON_SOURCES)
     message(FATAL_ERROR "Must pass SOURCES source1.pyx [source2.pyx ... sourceN.pyx]")
   endif()
 
-  rapids_cython_create_modules(
-    CXX
-    ASSOCIATED_TARGETS legate::core
-    SOURCE_FILES       "${_LEGATE_CORE_CYTHON_SOURCES}"
-    LINKED_LIBRARIES   legate::core Python3::Module
-  )
+  rapids_cython_create_modules(CXX ASSOCIATED_TARGETS legate::core
+                               SOURCE_FILES "${_LEGATE_CORE_CYTHON_SOURCES}"
+                               LINKED_LIBRARIES legate::core Python3::Module)
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
     target_compile_features(${target} PRIVATE cxx_std_${CMAKE_CXX_STANDARD})

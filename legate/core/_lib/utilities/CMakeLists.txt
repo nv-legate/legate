@@ -12,11 +12,6 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "utilities")
 
-set(
-  cython_sources
-  typedefs.pyx
-  utils.pyx
-  unconstructable.pyx
-)
+set(cython_sources typedefs.pyx utils.pyx unconstructable.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

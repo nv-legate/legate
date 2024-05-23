@@ -49,15 +49,14 @@ add_custom_command(OUTPUT "${DOXYGEN_INDEX_FILE}"}
                    MAIN_DEPENDENCY "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
                    COMMENT "Generating doxygen output")
 
-add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}")
+add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}" COMMENT "Running doxygen")
 
 set(SPHINX_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(SPHINX_BUILD "${CMAKE_CURRENT_BINARY_DIR}/sphinx")
 
-
 add_custom_target(Sphinx
                   COMMAND "${SPHINX_EXECUTABLE}" -b html
-                  -Dbreathe_projects.legate_core="${DOXYGEN_OUTPUT_DIR}/xml"
-                  "${SPHINX_SOURCE}" "${SPHINX_BUILD}"
+                          -Dbreathe_projects.legate_core="${DOXYGEN_OUTPUT_DIR}/xml"
+                          "${SPHINX_SOURCE}" "${SPHINX_BUILD}"
                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
                   COMMENT "Generating documentation with Sphinx")

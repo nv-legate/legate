@@ -19,25 +19,20 @@ macro(find_legate_core_cpp_impl legate_core_version build_export_set install_exp
   macro(legate_rapids_find_legate)
     message(STATUS "Searching for Legate.Core")
     rapids_find_package(legate_core
-      GLOBAL_TARGETS     legate::core
-      BUILD_EXPORT_SET   ${build_export_set}
-      INSTALL_EXPORT_SET ${install_export_set}
-      FIND_ARGS
-        ${parsed_ver} EXACT CONFIG REQUIRED
-    )
+                        GLOBAL_TARGETS legate::core
+                        BUILD_EXPORT_SET ${build_export_set}
+                        INSTALL_EXPORT_SET ${install_export_set}
+                        FIND_ARGS ${parsed_ver} EXACT CONFIG
+                        REQUIRED)
     message(STATUS "legate_core_FOUND = ${legate_core_FOUND}")
     message(STATUS "legate_core_ROOT  = ${legate_core_ROOT}")
   endmacro()
 
   # We are required to find legate.core if either the user sets legate_core_ROOT, or we
   # have done this before and found legate.core via some pre-installed version.
-  if(
-      (DEFINED legate_core_ROOT)
-      OR (
-        (DEFINED _legate_core_FOUND_METHOD) # this means we've been here before
-        AND (_legate_core_FOUND_METHOD STREQUAL  "INSTALLED")
-      )
-    )
+  if((DEFINED legate_core_ROOT)
+     OR ((DEFINED _legate_core_FOUND_METHOD) # this means we've been here before
+         AND (_legate_core_FOUND_METHOD STREQUAL "INSTALLED")))
     legate_rapids_find_legate()
     set(_legate_core_FOUND_METHOD "INSTALLED")
   endif()
@@ -53,38 +48,30 @@ macro(find_legate_core_cpp_impl legate_core_version build_export_set install_exp
     # 'legate/core/_lib/legate_c.cpython-311-darwin.so', missing and no known rule to make
     # it
     #
-    # Unfortunately, cmake generates all the "install" files
-    # (e.g. <PackageName>Config.cmake) at configure-time, and does not generate any special
+    # Unfortunately, cmake generates all the "install" files (e.g.
+    # <PackageName>Config.cmake) at configure-time, and does not generate any special
     # markers during build time. So we need to manually search for liblgcore using
     # find_library(). If we find it, we can be reasonably sure that the build directory is
     # usable.
     message(STATUS "Searching ${legate_core_ROOT} for pre-built Legate.core")
     find_library(legate_core_cpp_lib
-      NAMES
-        core
-        lgcore
-        liblgcore
-        "liblgcore${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        "liblgcore${legate_core_version}${CMAKE_SHARED_LIBRARY_SUFFIX}"
-      PATHS
-        "${legate_core_ROOT}"
-        "${legate_core_ROOT}/${lib_dir}"
-        "${legate_core_ROOT}/${CMAKE_INSTALL_LIBDIR}"
-      NO_DEFAULT_PATH
-    )
+                 NAMES core lgcore liblgcore "liblgcore${CMAKE_SHARED_LIBRARY_SUFFIX}"
+                       "liblgcore${legate_core_version}${CMAKE_SHARED_LIBRARY_SUFFIX}"
+                 PATHS "${legate_core_ROOT}" "${legate_core_ROOT}/${lib_dir}"
+                       "${legate_core_ROOT}/${CMAKE_INSTALL_LIBDIR}"
+                 NO_DEFAULT_PATH)
 
     if(EXISTS "${legate_core_cpp_lib}")
       message(STATUS "Legate.core appears to already have been built")
-      # Found via pre-built, let's ensure those libs are up-to-date before we try to find it
-      execute_process(
-        COMMAND ${CMAKE_COMMAND} --build .
-        WORKING_DIRECTORY "${legate_core_ROOT}"
-        COMMAND_ERROR_IS_FATAL ANY
-      )
+      # Found via pre-built, let's ensure those libs are up-to-date before we try to find
+      # it
+      execute_process(COMMAND ${CMAKE_COMMAND} --build .
+                      WORKING_DIRECTORY "${legate_core_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
       legate_rapids_find_legate()
       set(_legate_core_FOUND_METHOD "PRE_BUILT")
     elseif(_legate_core_FOUND_METHOD STREQUAL "PRE_BUILT")
-      message(FATAL_ERROR "Failed to find legate.core C++ build even though we apparently used-it previously")
+      message(FATAL_ERROR "Failed to find legate.core C++ build even though we apparently used-it previously"
+      )
     endif()
     unset(legate_core_ROOT) # undo this
   endif()
@@ -104,12 +91,11 @@ macro(find_legate_core_cpp)
   set(one_value_args VERSION BUILD_EXPORT_SET INSTALL_EXPORT_SET)
   cmake_parse_arguments(_FIND_LEGATE_CORE "" "${one_value_args}" "" ${ARGN})
 
-  find_legate_core_cpp_impl(
-    ${_FIND_LEGATE_CORE_VERSION}
-    ${_FIND_LEGATE_CORE_BUILD_EXPORT_SET}
-    ${_FIND_LEGATE_CORE_INSTALL_EXPORT_SET}
-  )
+  find_legate_core_cpp_impl(${_FIND_LEGATE_CORE_VERSION}
+                            ${_FIND_LEGATE_CORE_BUILD_EXPORT_SET}
+                            ${_FIND_LEGATE_CORE_INSTALL_EXPORT_SET})
 
+  # cmake-lint: disable=C0103
   set(_legate_core_FOUND_METHOD ${_legate_core_FOUND_METHOD} CACHE INTERNAL "" FORCE)
   message(STATUS "legate_core_FOUND_METHOD: '${_legate_core_FOUND_METHOD}'")
 

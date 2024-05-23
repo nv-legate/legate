@@ -12,6 +12,12 @@
 
 include_guard(GLOBAL)
 
+# cmake/Modules/cuda_arch_helpers.cmake:16: [R0912] Too many branches 14/12
+#
+# Many branches are OK for this function, not only is it clear what they are doing, but
+# doing this in a branchless way would be less readable.
+#
+# cmake-lint: disable=R0912
 function(set_cuda_arch_from_names)
   list(APPEND CMAKE_MESSAGE_CONTEXT "set_cuda_arch_from_names")
 
@@ -54,9 +60,9 @@ function(set_cuda_arch_from_names)
   if(cuda_archs)
     list(LENGTH cuda_archs num_archs)
     if(num_archs GREATER 1)
-      # A CMake architecture list entry of "80" means to build both compute and sm.
-      # What we want is for the newest arch only to build that way, while the rest
-      # build only for sm.
+      # A CMake architecture list entry of "80" means to build both compute and sm. What
+      # we want is for the newest arch only to build that way, while the rest build only
+      # for sm.
       list(POP_BACK cuda_archs latest_arch)
       list(TRANSFORM cuda_archs APPEND "-real")
       list(APPEND cuda_archs ${latest_arch})
@@ -70,7 +76,7 @@ endfunction()
 function(add_cuda_architecture_defines)
   list(APPEND CMAKE_MESSAGE_CONTEXT "add_cuda_architecture_defines")
 
-  set(options )
+  set(options)
   set(oneValueArgs DEFS)
   set(multiValueArgs ARCHS)
   cmake_parse_arguments(cuda "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -80,9 +86,8 @@ function(add_cuda_architecture_defines)
   set(_defs ${${cuda_DEFS}})
 
   macro(add_def_if_arch_enabled arch def)
-    if("${arch}" IN_LIST cuda_ARCHS OR
-      ("${arch}-real" IN_LIST cuda_ARCHS) OR
-      ("${arch}-virtual" IN_LIST cuda_ARCHS))
+    if("${arch}" IN_LIST cuda_ARCHS OR ("${arch}-real" IN_LIST cuda_ARCHS)
+       OR ("${arch}-virtual" IN_LIST cuda_ARCHS))
       list(APPEND _defs ${def})
     endif()
   endmacro()

@@ -68,6 +68,28 @@ repos:
             require_serial: false
             stages: [pre-commit]
             exclude: '^(src/core/utilities/abort.h)$'
+        -   id: cmake-format
+            name: cmake-format
+            entry: ./scripts/pre-commit/cmake-format.bash cmake-format
+            language: python
+            types: [cmake]
+            # Note that pre-commit autoupdate does not update the versions
+            # of dependencies, so we'll have to update this manually.
+            additional_dependencies:
+              - cmakelang==0.6.13
+            verbose: true
+            require_serial: true
+        -   id: cmake-lint
+            name: cmake-lint
+            entry: ./scripts/pre-commit/cmake-format.bash cmake-lint
+            language: python
+            types: [cmake]
+            # Note that pre-commit autoupdate does not update the versions
+            # of dependencies, so we'll have to update this manually.
+            additional_dependencies:
+              - cmakelang==0.6.13
+            verbose: true
+            require_serial: true
 
 ci:
     autoupdate_schedule: quarterly

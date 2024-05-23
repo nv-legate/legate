@@ -12,26 +12,12 @@
 
 legate_cpp_library_template(legateio TEMPLATE_SOURCES)
 
-add_library(
-  legateio
-  legateio.cc
-  legateio.h
-  read_file.cc
-  read_even_tiles.cc
-  read_uneven_tiles.cc
-  util.cc
-  write_file.cc
-  write_uneven_tiles.cc
-  write_even_tiles.cc
-  ${TEMPLATE_SOURCES}
-)
+add_library(legateio
+            legateio.cc legateio.h read_file.cc read_even_tiles.cc read_uneven_tiles.cc
+            util.cc write_file.cc write_uneven_tiles.cc write_even_tiles.cc
+            ${TEMPLATE_SOURCES})
 
-target_include_directories(legateio
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  INTERFACE
-    $<INSTALL_INTERFACE:include>
-)
+target_include_directories(legateio PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                           INTERFACE $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(legateio PRIVATE legate::core)
-

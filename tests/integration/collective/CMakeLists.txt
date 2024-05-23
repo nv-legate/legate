@@ -10,9 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-# We abuse find package for testing purposes here to
-# 'find' the current build tree to test package builds
-
+# We abuse find package for testing purposes here to 'find' the current build tree to test
+# package builds
 
 cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
@@ -29,7 +28,7 @@ legate_ensure_legate()
 
 include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
 
-legate_add_cpp_subdirectory(src TARGET collective  EXPORT collective-export)
+legate_add_cpp_subdirectory(src TARGET collective EXPORT collective-export)
 
 legate_add_cffi(${CMAKE_CURRENT_SOURCE_DIR}/src/collective_cffi.h TARGET collective)
 legate_default_python_install(collective EXPORT collective-export)

@@ -12,13 +12,6 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "runtime")
 
-set(
-  cython_sources
-  exception_mode.pyx
-  library.pyx
-  resource.pyx
-  runtime.pyx
-  scope.pyx
-)
+set(cython_sources exception_mode.pyx library.pyx resource.pyx runtime.pyx scope.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

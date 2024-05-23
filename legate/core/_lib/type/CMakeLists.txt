@@ -12,9 +12,6 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "type")
 
-set(
-  cython_sources
-  type_info.pyx
-)
+set(cython_sources type_info.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

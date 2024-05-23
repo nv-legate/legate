@@ -12,10 +12,6 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "mapping")
 
-set(
-  cython_sources
-  machine.pyx
-  mapping.pyx
-)
+set(cython_sources machine.pyx mapping.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

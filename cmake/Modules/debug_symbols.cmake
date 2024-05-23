@@ -19,24 +19,21 @@ function(_legate_core_debug_syms_macos target install_dir)
   # symbols) when creating single executables, but refuse to do so when creating
   # libraries. So we must do this ourselves...
   find_program(LEGATE_CORE_DSYMUTIL dsymutil)
-  if (LEGATE_CORE_DSYMUTIL)
-    add_custom_command(
-      TARGET ${target} POST_BUILD
-      COMMAND "${LEGATE_CORE_DSYMUTIL}" "$<TARGET_FILE_NAME:${target}>"
-      WORKING_DIRECTORY "$<TARGET_FILE_DIR:${target}>"
-      DEPENDS ${target}
-    )
+  if(LEGATE_CORE_DSYMUTIL)
+    add_custom_command(TARGET ${target}
+                       POST_BUILD
+                       COMMAND "${LEGATE_CORE_DSYMUTIL}" "$<TARGET_FILE_NAME:${target}>"
+                       WORKING_DIRECTORY "$<TARGET_FILE_DIR:${target}>"
+                       DEPENDS ${target}
+                       COMMENT "Generating debug info")
 
-    # We want to install the dsymutil stuff directly next to the installed
-    # binary/lib. Unfortunately, there is no way to query where that path is (CMake simply
-    # doesn't keep track). We could write it in ourselves by setting a custom property,
-    # but then people will forget to do that and this breaks.
+    # We want to install the dsymutil stuff directly next to the installed binary/lib.
+    # Unfortunately, there is no way to query where that path is (CMake simply doesn't
+    # keep track). We could write it in ourselves by setting a custom property, but then
+    # people will forget to do that and this breaks.
     #
     # So instead we need them to tell us exactly where to put it...
-    install(
-      DIRECTORY "$<TARGET_FILE:${target}>.dSYM"
-      DESTINATION ${install_dir}
-    )
+    install(DIRECTORY "$<TARGET_FILE:${target}>.dSYM" DESTINATION ${install_dir})
   endif()
 endfunction()
 
@@ -46,13 +43,14 @@ function(legate_core_debug_syms target)
   set(options)
   set(one_value_args INSTALL_DIR)
   set(multi_value_keywords)
-  cmake_parse_arguments(_DEBUG_SYMS "${options}" "${one_value_args}" "${multi_value_keywords}" ${ARGN})
+  cmake_parse_arguments(_DEBUG_SYMS "${options}" "${one_value_args}"
+                        "${multi_value_keywords}" ${ARGN})
 
-  if (NOT _DEBUG_SYMS_INSTALL_DIR)
+  if(NOT _DEBUG_SYMS_INSTALL_DIR)
     message(FATAL_ERROR "Must pass INSTALL_DIR")
   endif()
-  if ((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
-    if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
       _legate_core_debug_syms_macos(${target} ${_DEBUG_SYMS_INSTALL_DIR})
     endif()
     # nothing to do for other OS's for now

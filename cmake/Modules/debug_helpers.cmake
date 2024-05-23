@@ -12,14 +12,14 @@
 include_guard(GLOBAL)
 
 if(NOT _LEGATE_CORE_CMAKE_PROPERTY_LIST)
-  execute_process(
-    COMMAND ${CMAKE_COMMAND} --help-property-list
-    OUTPUT_VARIABLE _LEGATE_CORE_CMAKE_PROPERTY_LIST
-  )
+  execute_process(COMMAND ${CMAKE_COMMAND} --help-property-list
+                  OUTPUT_VARIABLE _LEGATE_CORE_CMAKE_PROPERTY_LIST)
 
   # Convert command output into a CMake list
-  string(REGEX REPLACE ";" "\\\\;" _LEGATE_CORE_CMAKE_PROPERTY_LIST "${_LEGATE_CORE_CMAKE_PROPERTY_LIST}")
-  string(REGEX REPLACE "\n" ";" _LEGATE_CORE_CMAKE_PROPERTY_LIST "${_LEGATE_CORE_CMAKE_PROPERTY_LIST}")
+  string(REGEX REPLACE ";" "\\\\;" _LEGATE_CORE_CMAKE_PROPERTY_LIST
+                       "${_LEGATE_CORE_CMAKE_PROPERTY_LIST}")
+  string(REGEX REPLACE "\n" ";" _LEGATE_CORE_CMAKE_PROPERTY_LIST
+                       "${_LEGATE_CORE_CMAKE_PROPERTY_LIST}")
   list(REMOVE_DUPLICATES _LEGATE_CORE_CMAKE_PROPERTY_LIST)
 endif()
 
@@ -31,7 +31,8 @@ function(print_target_properties)
   set(options SHOW_UNSET)
   set(one_value_args TARGET)
   set(multi_value_keywords)
-  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_keywords}" ${ARGN})
+  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}"
+                        "${multi_value_keywords}" ${ARGN})
 
   if(NOT TARGET ${_LEGATE_TARGET})
     message(FATAL_ERROR "There is no target named '${_LEGATE_TARGET}'")

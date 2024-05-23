@@ -18,9 +18,6 @@ function(find_or_configure_cccl)
 
   include(${rapids-cmake-dir}/cpm/cccl.cmake)
 
-  rapids_cpm_cccl(
-    BUILD_EXPORT_SET   legate-core-exports
-    INSTALL_EXPORT_SET legate-core-exports
-    SYSTEM             TRUE
-  )
+  rapids_cpm_cccl(BUILD_EXPORT_SET legate-core-exports
+                  INSTALL_EXPORT_SET legate-core-exports SYSTEM TRUE)
 endfunction()

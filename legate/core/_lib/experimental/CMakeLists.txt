@@ -10,9 +10,6 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-set(
-  cython_sources
-  trace.pyx
-)
+set(cython_sources trace.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

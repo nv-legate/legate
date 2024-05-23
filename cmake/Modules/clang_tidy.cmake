@@ -16,15 +16,14 @@ function(_legate_core_add_tidy_target_impl)
   set(options)
   set(oneValueArgs TARGET_NAME TARGET_COMMENT)
   set(multiValueArgs COMMANDS)
-  cmake_parse_arguments(_TIDY_TARGET "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(_TIDY_TARGET "${options}" "${oneValueArgs}" "${multiValueArgs}"
+                        ${ARGN})
 
-  add_custom_target(
-    "${_TIDY_TARGET_TARGET_NAME}"
-    COMMAND ${_TIDY_TARGET_COMMANDS}
-    COMMENT "${_TIDY_TARGET_TARGET_COMMENT}"
-    COMMAND_EXPAND_LISTS
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  )
+  add_custom_target("${_TIDY_TARGET_TARGET_NAME}"
+                    COMMAND ${_TIDY_TARGET_COMMANDS}
+                    COMMENT "${_TIDY_TARGET_TARGET_COMMENT}"
+                    COMMAND_EXPAND_LISTS
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
 function(legate_core_add_tidy_target)
@@ -35,17 +34,17 @@ function(legate_core_add_tidy_target)
   set(multiValueArgs SOURCES)
   cmake_parse_arguments(_TIDY "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  if (NOT _TIDY_SOURCES)
+  if(NOT _TIDY_SOURCES)
     message(FATAL_ERROR "Must provide SOURCES option")
   endif()
   list(REMOVE_DUPLICATES _TIDY_SOURCES)
 
   macro(search_for_program VARIABLE_NAME PROGRAM_NAME)
-    if (${VARIABLE_NAME})
+    if(${VARIABLE_NAME})
       message(STATUS "Using ${PROGRAM_NAME}: ${${VARIABLE_NAME}}")
     else()
       find_program(${VARIABLE_NAME} ${PROGRAM_NAME})
-      if (${VARIABLE_NAME})
+      if(${VARIABLE_NAME})
         message(STATUS "Found ${PROGRAM_NAME}: ${${VARIABLE_NAME}}")
       endif()
     endif()
@@ -65,22 +64,27 @@ function(legate_core_add_tidy_target)
     set(TIDY_PARALLEL_FLAGS)
   endif()
 
-  if (LEGATE_CORE_RUN_CLANG_TIDY AND LEGATE_CORE_CLANG_TIDY)
+  if(LEGATE_CORE_RUN_CLANG_TIDY AND LEGATE_CORE_CLANG_TIDY)
     _legate_core_add_tidy_target_impl(
-      TARGET_NAME tidy
-      TARGET_COMMENT "Running clang-tidy"
+      TARGET_NAME
+      tidy
+      TARGET_COMMENT
+      "Running clang-tidy"
       COMMANDS
-        ${LEGATE_CORE_RUN_CLANG_TIDY}
-        -config-file ${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
-        -clang-tidy-binary ${LEGATE_CORE_CLANG_TIDY}
-        -p ${CMAKE_BINARY_DIR}
-        -use-color
-        -quiet
-        -extra-arg=-Wno-error=unused-command-line-argument
-        ${TIDY_PARALLEL_FLAGS}
-        ${_TIDY_SOURCES}
-    )
+      ${LEGATE_CORE_RUN_CLANG_TIDY}
+      -config-file
+      ${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
+      -clang-tidy-binary
+      ${LEGATE_CORE_CLANG_TIDY}
+      -p
+      ${CMAKE_BINARY_DIR}
+      -use-color
+      -quiet
+      -extra-arg=-Wno-error=unused-command-line-argument
+      ${TIDY_PARALLEL_FLAGS}
+      ${_TIDY_SOURCES})
   else()
+    # cmake-format: off
     _legate_core_add_tidy_target_impl(
       TARGET_NAME tidy
       TARGET_COMMENT "Running clang-tidy"
@@ -101,9 +105,12 @@ function(legate_core_add_tidy_target)
       COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
       COMMAND ${CMAKE_COMMAND} -E false # to signal the error
     )
+    # cmake-format: on
   endif()
 
-  if (LEGATE_CORE_CLANG_TIDY_DIFF AND LEGATE_CORE_CLANG_TIDY AND LEGATE_CORE_SED AND Git_FOUND)
+  if(LEGATE_CORE_CLANG_TIDY_DIFF AND LEGATE_CORE_CLANG_TIDY AND LEGATE_CORE_SED
+     AND Git_FOUND)
+    # cmake-format: off
     _legate_core_add_tidy_target_impl(
       TARGET_NAME tidy-diff
       TARGET_COMMENT "Running clang-tidy-diff"
@@ -122,7 +129,9 @@ function(legate_core_add_tidy_target)
         -extra-arg=-Wno-error=unused-command-line-argument
         ${TIDY_PARALLEL_FLAGS}
     )
+    # cmake-format: on
   else()
+    # cmake-format: off
     _legate_core_add_tidy_target_impl(
       TARGET_NAME tidy-diff
       TARGET_COMMENT "Running clang-tidy-diff"
@@ -144,5 +153,6 @@ function(legate_core_add_tidy_target)
       COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
       COMMAND ${CMAKE_COMMAND} -E false # to signal the error
     )
+    # cmake-format: on
   endif()
 endfunction()

@@ -10,17 +10,9 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-add_library(
-  scoping
-  library.cc
-)
+add_library(scoping library.cc)
 
-target_include_directories(scoping
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  INTERFACE
-    $<INSTALL_INTERFACE:include>
-)
+target_include_directories(scoping PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                           INTERFACE $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(scoping PRIVATE legate::core)
-

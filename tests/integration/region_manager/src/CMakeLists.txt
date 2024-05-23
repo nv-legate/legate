@@ -10,18 +10,10 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-add_library(
-  region_manager
-  tester.cc
-  library.cc
-)
+add_library(region_manager tester.cc library.cc)
 
 target_include_directories(region_manager
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  INTERFACE
-    $<INSTALL_INTERFACE:include>
-)
+                           PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                           INTERFACE $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(region_manager PRIVATE legate::core)
-

@@ -16,15 +16,10 @@ function(legate_default_cpp_install target)
   set(options)
   set(one_value_args EXPORT)
   set(multi_value_args)
-  cmake_parse_arguments(
-    LEGATE_OPT
-    "${options}"
-    "${one_value_args}"
-    "${multi_value_args}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(LEGATE_OPT "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
-  if (NOT LEGATE_OPT_EXPORT)
+  if(NOT LEGATE_OPT_EXPORT)
     message(FATAL_ERROR "Need EXPORT name for legate_default_install")
   endif()
 
@@ -34,68 +29,55 @@ function(legate_default_cpp_install target)
 
   rapids_cmake_install_lib_dir(lib_dir)
 
-  install(TARGETS ${target}
-          DESTINATION ${lib_dir}
-	  EXPORT ${LEGATE_OPT_EXPORT})
+  install(TARGETS ${target} DESTINATION ${lib_dir} EXPORT ${LEGATE_OPT_EXPORT})
 
   include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/debug_symbols.cmake")
 
   legate_core_debug_syms(${target} INSTALL_DIR ${lib_dir})
 
-  set(final_code_block
-    "set(${target}_BUILD_LIBDIR ${CMAKE_BINARY_DIR}/legate_${target})"
-  )
+  set(final_code_block "set(${target}_BUILD_LIBDIR ${CMAKE_BINARY_DIR}/legate_${target})")
 
-  rapids_export(
-    INSTALL ${target}
-    EXPORT_SET ${LEGATE_OPT_EXPORT}
-    GLOBAL_TARGETS ${target}
-    NAMESPACE legate::
-    LANGUAGES ${ENABLED_LANGUAGES}
-  )
+  rapids_export(INSTALL ${target}
+                EXPORT_SET ${LEGATE_OPT_EXPORT}
+                GLOBAL_TARGETS ${target}
+                NAMESPACE legate::
+                LANGUAGES ${ENABLED_LANGUAGES})
 
   # build export targets
-  rapids_export(
-    BUILD ${target}
-    EXPORT_SET ${LEGATE_OPT_EXPORT}
-    GLOBAL_TARGETS ${target}
-    NAMESPACE legate::
-    FINAL_CODE_BLOCK final_code_block
-    LANGUAGES ${ENABLED_LANGUAGES}
-  )
+  rapids_export(BUILD ${target}
+                EXPORT_SET ${LEGATE_OPT_EXPORT}
+                GLOBAL_TARGETS ${target}
+                NAMESPACE legate::
+                FINAL_CODE_BLOCK final_code_block
+                LANGUAGES ${ENABLED_LANGUAGES})
 endfunction()
 
 function(legate_add_cffi header)
   list(APPEND CMAKE_MESSAGE_CONTEXT "add_cffi")
 
-  if (NOT DEFINED CMAKE_C_COMPILER)
+  if(NOT DEFINED CMAKE_C_COMPILER)
     message(FATAL_ERROR "Must enable C language to build Legate projects")
   endif()
 
   set(options)
   set(one_value_args TARGET PY_PATH)
   set(multi_value_args)
-  cmake_parse_arguments(
-    LEGATE_OPT
-    "${options}"
-    "${one_value_args}"
-    "${multi_value_args}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(LEGATE_OPT "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
   # determine full Python path
-  if (NOT DEFINED LEGATE_OPT_PY_PATH)
-      set(py_path "${CMAKE_CURRENT_SOURCE_DIR}/${LEGATE_OPT_TARGET}")
+  if(NOT DEFINED LEGATE_OPT_PY_PATH)
+    set(py_path "${CMAKE_CURRENT_SOURCE_DIR}/${LEGATE_OPT_TARGET}")
   elseif(IS_ABSOLUTE LEGATE_OPT_PY_PATH)
     set(py_path "${LEGATE_OPT_PY_PATH}")
   else()
-      set(py_path "${CMAKE_CURRENT_SOURCE_DIR}/${LEGATE_OPT_PY_PATH}")
+    set(py_path "${CMAKE_CURRENT_SOURCE_DIR}/${LEGATE_OPT_PY_PATH}")
   endif()
 
   # abbreviate for the function below
   set(target ${LEGATE_OPT_TARGET})
   set(install_info_in
-[=[
+      [=[
 from pathlib import Path
 
 def get_libpath():
@@ -139,7 +121,7 @@ header: str = """
   file(WRITE ${install_info_py_in} "${install_info_in}")
 
   set(generate_script_content
-  [=[
+      [=[
     execute_process(
       COMMAND ${CMAKE_C_COMPILER}
         -E
@@ -155,13 +137,13 @@ header: str = """
   ]=])
 
   set(generate_script ${CMAKE_CURRENT_BINARY_DIR}/gen_install_info.cmake)
-  file(CONFIGURE
-       OUTPUT ${generate_script}
-       CONTENT "${generate_script_content}"
-       @ONLY
-  )
+  # I think this is a bug? It is complaining "Invalid form descriminator", which I believe
+  # refers to the @ONLY. But that is valid for this function...
+  #
+  # cmake-lint: disable=E1126
+  file(CONFIGURE OUTPUT ${generate_script} CONTENT "${generate_script_content}" @ONLY)
 
-  if (DEFINED ${target}_BUILD_LIBDIR)
+  if(DEFINED ${target}_BUILD_LIBDIR)
     # this must have been imported from an existing editable build
     set(libdir ${${target}_BUILD_LIBDIR})
   else()
@@ -169,16 +151,12 @@ header: str = """
     set(libdir ${CMAKE_BINARY_DIR}/legate_${target})
   endif()
   add_custom_target("${target}_generate_install_info_py" ALL
-    COMMAND ${CMAKE_COMMAND}
-      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-      -Dtarget=${target}
-      -Dlibdir=${libdir}
-      -P ${generate_script}
-    OUTPUT ${install_info_py}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating install_info.py"
-    DEPENDS ${header}
-  )
+                    COMMAND ${CMAKE_COMMAND} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                            -Dtarget=${target} -Dlibdir=${libdir} -P ${generate_script}
+                            OUTPUT ${install_info_py}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    COMMENT "Generating install_info.py"
+                    DEPENDS ${header})
 endfunction()
 
 function(legate_default_python_install target)
@@ -187,36 +165,25 @@ function(legate_default_python_install target)
   set(options)
   set(one_value_args EXPORT)
   set(multi_value_args)
-  cmake_parse_arguments(
-    LEGATE_OPT
-    "${options}"
-    "${one_value_args}"
-    "${multi_value_args}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(LEGATE_OPT "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
-  if (NOT LEGATE_OPT_EXPORT)
+  if(NOT LEGATE_OPT_EXPORT)
     message(FATAL_ERROR "Need EXPORT name for legate_default_python_install")
   endif()
 
-  if (SKBUILD)
+  if(SKBUILD)
     add_library(${target}_python INTERFACE)
     add_library(legate::${target}_python ALIAS ${target}_python)
     target_link_libraries(${target}_python INTERFACE legate::core legate::${target})
 
-    install(TARGETS ${target}_python
-            DESTINATION ${lib_dir}
-            EXPORT ${LEGATE_OPT_EXPORT})
+    install(TARGETS ${target}_python DESTINATION ${lib_dir} EXPORT ${LEGATE_OPT_EXPORT})
 
     include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/include_rapids.cmake")
 
     legate_include_rapids()
-    rapids_export(
-      INSTALL ${target}_python
-      EXPORT_SET ${LEGATE_OPT_EXPORT}
-      GLOBAL_TARGETS ${target}_python
-      NAMESPACE legate::
-    )
+    rapids_export(INSTALL ${target}_python EXPORT_SET ${LEGATE_OPT_EXPORT}
+                  GLOBAL_TARGETS ${target}_python NAMESPACE legate::)
   endif()
 endfunction()
 
@@ -226,30 +193,27 @@ function(legate_add_cpp_subdirectory dir)
   set(options)
   set(one_value_args EXPORT TARGET VERSION)
   set(multi_value_args)
-  cmake_parse_arguments(
-    LEGATE_OPT
-    "${options}"
-    "${one_value_args}"
-    "${multi_value_args}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(LEGATE_OPT "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
-  if (NOT LEGATE_OPT_EXPORT)
+  if(NOT LEGATE_OPT_EXPORT)
     message(FATAL_ERROR "Need EXPORT name for legate_default_install")
   endif()
 
-  if (NOT LEGATE_OPT_TARGET)
+  if(NOT LEGATE_OPT_TARGET)
     message(FATAL_ERROR "Need TARGET name for Legate package")
   endif()
 
   set(legate_core_version)
-  if (LEGATE_OPT_VERSION)
+  if(LEGATE_OPT_VERSION)
     set(legate_core_version ${LEGATE_OPT_VERSION})
   else()
-    if ((PROJECT_NAME STREQUAL "legate_core") OR (PROJECT_NAME STREQUAL "legate_core_python"))
+    if((PROJECT_NAME STREQUAL "legate_core") OR (PROJECT_NAME STREQUAL
+                                                 "legate_core_python"))
       # called directly by our own cmake lists
       set(legate_core_version "${PROJECT_VERSION}")
-    elseif ((CMAKE_PROJECT_NAME STREQUAL "legate_core") OR (CMAKE_PROJECT_NAME STREQUAL "legate_core_python"))
+    elseif((CMAKE_PROJECT_NAME STREQUAL "legate_core") OR (CMAKE_PROJECT_NAME STREQUAL
+                                                           "legate_core_python"))
       # our cmake lists are top-level
       set(legate_core_version "${CMAKE_PROJECT_VERSION}")
     endif()
@@ -262,20 +226,18 @@ function(legate_add_cpp_subdirectory dir)
 
   legate_include_rapids()
 
-  rapids_find_package(legate_core CONFIG
-          GLOBAL_TARGETS legate::core
-          BUILD_EXPORT_SET ${LEGATE_OPT_EXPORT}
-          INSTALL_EXPORT_SET ${LEGATE_OPT_EXPORT})
+  rapids_find_package(legate_core CONFIG GLOBAL_TARGETS legate::core
+                      BUILD_EXPORT_SET ${LEGATE_OPT_EXPORT}
+                      INSTALL_EXPORT_SET ${LEGATE_OPT_EXPORT})
 
-  if (SKBUILD)
-    if (NOT DEFINED ${target}_ROOT)
+  if(SKBUILD)
+    if(NOT DEFINED ${target}_ROOT)
       set(${target}_ROOT ${CMAKE_SOURCE_DIR}/build)
     endif()
-    rapids_find_package(${target} CONFIG
-      GLOBAL_TARGETS legate::${target}
-      BUILD_EXPORT_SET ${LEGATE_OPT_EXPORT}
-      INSTALL_EXPORT_SET ${LEGATE_OPT_EXPORT})
-    if (NOT ${target}_FOUND)
+    rapids_find_package(${target} CONFIG GLOBAL_TARGETS legate::${target}
+                        BUILD_EXPORT_SET ${LEGATE_OPT_EXPORT}
+                        INSTALL_EXPORT_SET ${LEGATE_OPT_EXPORT})
+    if(NOT ${target}_FOUND)
       add_subdirectory(${dir} ${CMAKE_BINARY_DIR}/legate_${target})
       legate_default_cpp_install(${target} EXPORT ${LEGATE_OPT_EXPORT})
     else()
@@ -290,7 +252,7 @@ endfunction()
 
 function(legate_cpp_library_template target output_sources_variable)
   set(file_template
-[=[
+      [=[
 /*
  * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -325,7 +287,7 @@ struct Task : public legate::LegateTask<T> {
   file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/legate_library.h "${file_content}")
 
   set(file_template
-[=[
+      [=[
 /*
  * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -373,32 +335,23 @@ void @target@_perform_registration(void)
   string(CONFIGURE "${file_template}" file_content @ONLY)
   file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/legate_library.cc "${file_content}")
 
-  set(${output_sources_variable}
-    legate_library.h
-    legate_library.cc
-    PARENT_SCOPE
-  )
+  set(${output_sources_variable} legate_library.h legate_library.cc PARENT_SCOPE)
 endfunction()
 
 function(legate_python_library_template py_path)
   set(options)
   set(one_value_args TARGET PY_IMPORT_PATH)
   set(multi_value_args)
-  cmake_parse_arguments(
-    LEGATE_OPT
-    "${options}"
-    "${one_value_args}"
-    "${multi_value_args}"
-    ${ARGN}
-  )
+  cmake_parse_arguments(LEGATE_OPT "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
-  if (DEFINED LEGATE_OPT_TARGET)
+  if(DEFINED LEGATE_OPT_TARGET)
     set(target "${LEGATE_OPT_TARGET}")
   else()
     string(REPLACE "/" "_" target "${py_path}")
   endif()
 
-  if (DEFINED LEGATE_OPT_PY_IMPORT_PATH)
+  if(DEFINED LEGATE_OPT_PY_IMPORT_PATH)
     set(py_import_path "${LEGATE_OPT_PY_IMPORT_PATH}")
   else()
     string(REPLACE "/" "." py_import_path "${py_path}")
@@ -407,7 +360,7 @@ function(legate_python_library_template py_path)
   set(fn_library "${CMAKE_CURRENT_SOURCE_DIR}/${py_path}/library.py")
 
   set(file_template
-    [=[
+      [=[
 # SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #

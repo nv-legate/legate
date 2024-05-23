@@ -19,12 +19,9 @@ function(find_or_configure_nccl)
     return()
   endif()
 
-  rapids_find_generate_module(NCCL
-    HEADER_NAMES  nccl.h
-    LIBRARY_NAMES nccl
-  )
+  rapids_find_generate_module(NCCL HEADER_NAMES nccl.h LIBRARY_NAMES nccl)
 
-  # Currently NCCL has no CMake build-system so we require
-  # it built and installed on the machine already
+  # Currently NCCL has no CMake build-system so we require it built and installed on the
+  # machine already
   rapids_find_package(NCCL REQUIRED)
 endfunction()

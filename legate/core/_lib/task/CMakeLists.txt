@@ -12,10 +12,6 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "task")
 
-set(
-  cython_sources
-  task_context.pyx
-  task_info.pyx
-)
+set(cython_sources task_context.pyx task_info.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

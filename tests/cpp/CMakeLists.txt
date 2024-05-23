@@ -16,7 +16,8 @@ project(legate_core_tests VERSION 0.1 LANGUAGES C CXX)
 
 if(PROJECT_IS_TOP_LEVEL)
   # To catch people trying to build the tests from within tests/cpp instead of top-level
-  message(FATAL_ERROR "Error: Tests can only be built as part of the main library build. Please re-run cmake from top-level directory (\${LEGATE_CORE_DIR}) with -Dlegate_core_BUILD_TESTS=ON")
+  message(FATAL_ERROR "Error: Tests can only be built as part of the main library build. Please re-run cmake from top-level directory (\${LEGATE_CORE_DIR}) with -Dlegate_core_BUILD_TESTS=ON"
+  )
 endif()
 
 if(Legion_USE_CUDA)
@@ -31,14 +32,12 @@ include(${rapids-cmake-dir}/cpm/gtest.cmake)
 
 # BUILD_EXPORT_SET and INSTALL_EXPORT_SET are crucial, otherwise gtest does not get
 # installed
-rapids_cpm_gtest(
-  BUILD_EXPORT_SET   legate-core-exports
-  INSTALL_EXPORT_SET legate-core-exports
-)
+rapids_cpm_gtest(BUILD_EXPORT_SET legate-core-exports
+                 INSTALL_EXPORT_SET legate-core-exports)
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 
-function(ConfigureTest CMAKE_TEST_NAME)
+function(legate_core_configure_test CMAKE_TEST_NAME)
   set(options)
   set(one_value GPUS PERCENT)
   set(multi_value SOURCES)
@@ -53,56 +52,50 @@ function(ConfigureTest CMAKE_TEST_NAME)
   endif()
 
   add_executable(${CMAKE_TEST_NAME} ${_LEGATE_TEST_SOURCES})
-  set_target_properties(
-    ${CMAKE_TEST_NAME}
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
-               BUILD_RPATH_USE_ORIGIN      TRUE
-               # Don't use CMAKE_INSTALL_LIBDIR since we want the rpath to be relative
-               INSTALL_RPATH               "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}/../lib"
-               INSTALL_RPATH_USE_LINK_PATH TRUE
-               CXX_STANDARD                ${CMAKE_CXX_STANDARD}
-               CXX_STANDARD_REQUIRED       ON
-               # For std:: support of __int128_t. Can be removed once using cuda::std
-               CXX_EXTENSIONS              ON
-  )
+  set_target_properties(${CMAKE_TEST_NAME}
+                        PROPERTIES RUNTIME_OUTPUT_DIRECTORY
+                                   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
+                                   BUILD_RPATH_USE_ORIGIN TRUE
+                                   # Don't use CMAKE_INSTALL_LIBDIR since we want the
+                                   # rpath to be relative
+                                   INSTALL_RPATH
+                                   "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}/../lib"
+                                   INSTALL_RPATH_USE_LINK_PATH TRUE
+                                   CXX_STANDARD ${CMAKE_CXX_STANDARD}
+                                   CXX_STANDARD_REQUIRED ON
+                                   # For std:: support of __int128_t. Can be removed once
+                                   # using cuda::std
+                                   CXX_EXTENSIONS ON)
 
-  target_include_directories(
-    ${CMAKE_TEST_NAME}
-    PRIVATE
-    ${PROJECT_SOURCE_DIR})
+  target_include_directories(${CMAKE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
 
-  target_link_libraries(${CMAKE_TEST_NAME}
-    PRIVATE
-      legate::core
-      GTest::gtest
-  )
+  target_link_libraries(${CMAKE_TEST_NAME} PRIVATE legate::core GTest::gtest)
 
   if(Legion_USE_CUDA)
-    set_target_properties(
-      ${CMAKE_TEST_NAME}
-      PROPERTIES
-        CUDA_ARCHITECTURES     ${Legion_CUDA_ARCH}
-        CUDA_STANDARD          ${CMAKE_CUDA_STANDARD}
-        CUDA_STANDARD_REQUIRED ON
-    )
+    set_target_properties(${CMAKE_TEST_NAME}
+                          PROPERTIES CUDA_ARCHITECTURES ${Legion_CUDA_ARCH}
+                                     CUDA_STANDARD ${CMAKE_CUDA_STANDARD}
+                                     CUDA_STANDARD_REQUIRED ON)
     target_link_libraries(${CMAKE_TEST_NAME} PRIVATE NCCL::NCCL)
   endif()
 
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE legate_core_CXX_OPTIONS)
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE legate_core_CUDA_OPTIONS)
+  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE
+                                        legate_core_CXX_OPTIONS)
+  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE
+                                        legate_core_CUDA_OPTIONS)
 
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE legate_core_CXX_FLAGS)
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE legate_core_CUDA_FLAGS)
+  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE
+                                        legate_core_CXX_FLAGS)
+  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE
+                                        legate_core_CUDA_FLAGS)
 
   legate_core_add_target_link_option(${CMAKE_TEST_NAME} PRIVATE legate_core_LINKER_FLAGS)
 
-  rapids_test_add(
-    NAME ${CMAKE_TEST_NAME}
-    COMMAND ${CMAKE_TEST_NAME}
-    GPUS ${_LEGATE_TEST_GPUS}
-    PERCENT ${_LEGATE_TEST_PERCENT}
-    INSTALL_COMPONENT_SET testing
-  )
+  rapids_test_add(NAME ${CMAKE_TEST_NAME}
+                  COMMAND ${CMAKE_TEST_NAME}
+                  GPUS ${_LEGATE_TEST_GPUS}
+                  PERCENT ${_LEGATE_TEST_PERCENT}
+                  INSTALL_COMPONENT_SET testing)
 
   legate_core_debug_syms(${CMAKE_TEST_NAME} INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 
@@ -130,8 +123,10 @@ include(GNUInstallDirs)
 
 # See https://github.com/rapidsai/rapids-cmake/issues/583
 if("${rapids-cmake-version}" VERSION_LESS "24.06.00")
-  string(JOIN "\n" code_string
-    [[
+  string(JOIN
+         "\n"
+         code_string
+         [[
 if(POLICY CMP0159)
   cmake_policy(SET CMP0159 OLD)
   set(CMAKE_POLICY_DEFAULT_CMP0159 OLD)
@@ -140,28 +135,19 @@ endif()
   install(CODE "${code_string}")
 endif()
 
-ConfigureTest(
-  cpp_tests
-  SOURCES ${main_SRC} ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC} ${stl_SRC}
-)
+legate_core_configure_test(cpp_tests SOURCES ${main_SRC} ${bug_SRC} ${tasks_SRC}
+                           ${integration_SRC} ${unit_SRC} ${experimental_SRC} ${stl_SRC})
 
 if(integration_GPU_SRC)
-  ConfigureTest(
-    gpu_tests
-    SOURCES ${main_SRC} ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC}
-    GPUS 1
-    PERCENT 30
-  )
+  legate_core_configure_test(gpu_tests SOURCES ${main_SRC} ${tasks_SRC}
+                             ${integration_SRC} ${integration_GPU_SRC} GPUS 1 PERCENT 30)
 endif()
 
-rapids_test_install_relocatable(
-  INSTALL_COMPONENT_SET testing
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-  INCLUDE_IN_ALL
-)
+rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
+                                DESTINATION ${CMAKE_INSTALL_BINDIR} INCLUDE_IN_ALL)
 
 # Add a dummy target whose only job it is to depend on the tests being built.
-add_custom_target(build_tests)
+add_custom_target(build_tests COMMENT "Building tests")
 add_dependencies(build_tests ${LEGATE_CORE_CONFIGURED_TESTS})
 
 # propagate to main CMakeLists.txt

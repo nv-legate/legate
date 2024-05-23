@@ -18,7 +18,8 @@ function(legate_core_parse_versions_json)
   set(options)
   set(one_value_args PACKAGE VERSION GIT_URL GIT_TAG GIT_SHALLOW)
   set(multi_value_args)
-  cmake_parse_arguments(_LEGATE_CORE_PVJ "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+  cmake_parse_arguments(_LEGATE_CORE_PVJ "${options}" "${one_value_args}"
+                        "${multi_value_args}" ${ARGN})
 
   if(_LEGATE_CORE_PVJ_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unparsed arguments: ${_LEGATE_CORE_PVJ_UNPARSED_ARGUMENTS}")
@@ -78,32 +79,26 @@ macro(legate_core_find_or_configure)
   endif()
   string(TOLOWER "${_LEGATE_CORE_FOC_PACKAGE}" _LEGATE_CORE_FOC_PACKAGE_LOWER)
 
-  include(
-    ${LEGATE_CORE_DIR}/cmake/thirdparty/get_${_LEGATE_CORE_FOC_PACKAGE_LOWER}.cmake
-    OPTIONAL
-    RESULT_VARIABLE _LEGATE_CORE_FOC_FOUND
-  )
+  include(${LEGATE_CORE_DIR}/cmake/thirdparty/get_${_LEGATE_CORE_FOC_PACKAGE_LOWER}.cmake
+          OPTIONAL RESULT_VARIABLE _LEGATE_CORE_FOC_FOUND)
 
   if(NOT _LEGATE_CORE_FOC_FOUND)
     message(FATAL_ERROR "Error getting: ${_LEGATE_CORE_FOC_PACKAGE}, no such package")
   endif()
 
   if(legate_core_IGNORE_INSTALLED_PACKAGES)
-    message(STATUS "Ignoring all installed packages when searching for ${_LEGATE_CORE_FOC_PACKAGE}")
+    message(STATUS "Ignoring all installed packages when searching for ${_LEGATE_CORE_FOC_PACKAGE}"
+    )
     set(CPM_DOWNLOAD_${_LEGATE_CORE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
   endif()
 
   cmake_language(CALL "find_or_configure_${_LEGATE_CORE_FOC_PACKAGE_LOWER}")
 
   if(${_LEGATE_CORE_FOC_PACKAGE}_DIR)
-    message(
-      STATUS
-      "Found external ${_LEGATE_CORE_FOC_PACKAGE}_DIR = ${${_LEGATE_CORE_FOC_PACKAGE}_DIR}"
+    message(STATUS "Found external ${_LEGATE_CORE_FOC_PACKAGE}_DIR = ${${_LEGATE_CORE_FOC_PACKAGE}_DIR}"
     )
   elseif(${_LEGATE_CORE_FOC_PACKAGE}_ROOT)
-    message(
-      STATUS
-      "Found external ${_LEGATE_CORE_FOC_PACKAGE}_ROOT = ${${_LEGATE_CORE_FOC_PACKAGE}_ROOT}"
+    message(STATUS "Found external ${_LEGATE_CORE_FOC_PACKAGE}_ROOT = ${${_LEGATE_CORE_FOC_PACKAGE}_ROOT}"
     )
   else()
     # The following is to head off:
@@ -124,29 +119,21 @@ macro(legate_core_find_or_configure)
     # We do need to be careful about using rapids_find_package(), however, since that
     # still calls find_package(). Each of the packages should therefore do:
     #
-    # if(NOT CPM_DOWNLOAD_Foo AND NOT CPM_Foo_SOURCE)
-    #   rapids_find_package(Foo)
-    # else()
-    #    rapids_cpm_find(Foo)
-    # endif()
-    message(
-      STATUS
-      "${_LEGATE_CORE_FOC_PACKAGE}_DIR and ${_LEGATE_CORE_FOC_PACKAGE}_ROOT undefined, "
-      "forcing CPM to re-use downloaded ${_LEGATE_CORE_FOC_PACKAGE} from now on"
+    # if(NOT CPM_DOWNLOAD_Foo AND NOT CPM_Foo_SOURCE) rapids_find_package(Foo) else()
+    # rapids_cpm_find(Foo) endif()
+    message(STATUS "${_LEGATE_CORE_FOC_PACKAGE}_DIR and ${_LEGATE_CORE_FOC_PACKAGE}_ROOT undefined, "
+                   "forcing CPM to re-use downloaded ${_LEGATE_CORE_FOC_PACKAGE} from now on"
     )
     set(CPM_DOWNLOAD_${_LEGATE_CORE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
     if(CPM_PACKAGE_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE_DIR)
       # If the local package path was supplied by the user, this will be populated to the
       # right place.
-      set(
-        CPM_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE "${CPM_PACKAGE_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE_DIR}"
-        CACHE PATH "" FORCE
-      )
+      set(CPM_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE
+          "${CPM_PACKAGE_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE_DIR}" CACHE PATH "" FORCE)
     else()
-      set(
-        CPM_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE "${FETCHCONTENT_BASE_DIR}/${_LEGATE_CORE_FOC_PACKAGE_LOWER}-src"
-        CACHE PATH "" FORCE
-      )
+      set(CPM_${_LEGATE_CORE_FOC_PACKAGE}_SOURCE
+          "${FETCHCONTENT_BASE_DIR}/${_LEGATE_CORE_FOC_PACKAGE_LOWER}-src" CACHE PATH ""
+                                                                                 FORCE)
     endif()
 
   endif()

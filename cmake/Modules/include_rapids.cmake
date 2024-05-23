@@ -20,9 +20,10 @@ macro(legate_include_rapids)
     set(rapids-cmake-version 24.06)
     set(rapids-cmake-sha "365322aca32fd6ecd7027f5d7ec7be50b7f3cc2a")
   endif()
-  if (NOT _LEGATE_HAS_RAPIDS)
+  if(NOT _LEGATE_HAS_RAPIDS)
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-      file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
+      file(DOWNLOAD
+           https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
            ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
     endif()
     include(${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)

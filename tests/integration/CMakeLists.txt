@@ -10,8 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-# We abuse find package for testing purposes here to
-# 'find' the current build tree to test package builds
+# We abuse find package for testing purposes here to 'find' the current build tree to test
+# package builds
 
 add_subdirectory(collective)
 add_subdirectory(registry)

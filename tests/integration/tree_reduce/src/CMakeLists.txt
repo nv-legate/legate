@@ -10,21 +10,11 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-add_library(
-  tree_reduce
-  produce_normal.cc
-  reduce_normal.cc
-  produce_unbound.cc
-  reduce_unbound.cc
-  library.cc
-)
+add_library(tree_reduce produce_normal.cc reduce_normal.cc produce_unbound.cc
+                        reduce_unbound.cc library.cc)
 
 target_include_directories(tree_reduce
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  INTERFACE
-    $<INSTALL_INTERFACE:include>
-)
+                           PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                           INTERFACE $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(tree_reduce PRIVATE legate::core)
-

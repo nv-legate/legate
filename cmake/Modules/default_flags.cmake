@@ -22,7 +22,8 @@ function(legate_core_set_default_flags_impl)
   set(one_value_args DEST_VAR LANG)
   set(multi_value_args FLAGS)
 
-  cmake_parse_arguments(_FLAGS "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+  cmake_parse_arguments(_FLAGS "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
   if(NOT _FLAGS_DEST_VAR)
     message(FATAL_ERROR "Must pass DEST_VAR")
@@ -73,41 +74,32 @@ endfunction()
 
 function(legate_core_configure_default_compiler_flags)
   set(default_cxx_flags_debug
-    "-Wall"
-    "-Wextra"
-    "-Werror"
-    "-fstack-protector"
-    "-Walloca"
-    "-Wdeprecated"
-    "-Wimplicit-fallthrough"
-    "-fdiagnostics-show-template-tree"
-    "-Wignored-qualifiers"
-    "-Wmissing-field-initializers"
-    "-Wshadow"
-    "-pedantic"
-    "-Wsign-compare"
-    "-Wshadow"
-    "-Wshadow-all"
-    "-Warray-bounds-pointer-arithmetic"
-    "-Wassign-enum"
-    "-Wformat-pedantic"
-    "-D_LIBCPP_ENABLE_ASSERTIONS=1"
-    "-D_LIBCPP_ENABLE_NODISCARD=1"
-  )
+      "-Wall"
+      "-Wextra"
+      "-Werror"
+      "-fstack-protector"
+      "-Walloca"
+      "-Wdeprecated"
+      "-Wimplicit-fallthrough"
+      "-fdiagnostics-show-template-tree"
+      "-Wignored-qualifiers"
+      "-Wmissing-field-initializers"
+      "-Wshadow"
+      "-pedantic"
+      "-Wsign-compare"
+      "-Wshadow"
+      "-Wshadow-all"
+      "-Warray-bounds-pointer-arithmetic"
+      "-Wassign-enum"
+      "-Wformat-pedantic"
+      "-D_LIBCPP_ENABLE_ASSERTIONS=1"
+      "-D_LIBCPP_ENABLE_NODISCARD=1")
   set(default_cxx_flags_sanitizer
-    "-fsanitize=address,undefined,bounds"
-    "-fno-sanitize-recover=undefined"
-    "-fno-omit-frame-pointer"
-    "-g"
-  )
-  set(default_cxx_flags_release
-    "-O3"
-    "-fstack-protector-strong"
-  )
-  set(default_cxx_flags_relwithdebinfo
-    ${default_cxx_flags_debug}
-    ${default_cxx_flags_release}
-  )
+      "-fsanitize=address,undefined,bounds" "-fno-sanitize-recover=undefined"
+      "-fno-omit-frame-pointer" "-g")
+  set(default_cxx_flags_release "-O3" "-fstack-protector-strong")
+  set(default_cxx_flags_relwithdebinfo ${default_cxx_flags_debug}
+                                       ${default_cxx_flags_release})
 
   function(cxx_flags_to_cuda_flags cuda_flags_var cxx_flags)
     set(cuda_flags "${${cxx_flags}}")
@@ -138,26 +130,18 @@ function(legate_core_configure_default_compiler_flags)
     set_flags(default_cxx_flags_relwithdebinfo)
     list(APPEND default_cuda_flags "-g" "-lineinfo")
   else()
-    set(default_cxx_flags )
-    set(default_cuda_flags )
+    set(default_cxx_flags)
+    set(default_cuda_flags)
   endif()
 
   if(NOT legate_core_CXX_FLAGS)
-    legate_core_set_default_flags_impl(
-      SET_CACHE
-      LANG      CXX
-      DEST_VAR  legate_core_CXX_FLAGS
-      FLAGS     ${default_cxx_flags}
-    )
+    legate_core_set_default_flags_impl(SET_CACHE LANG CXX DEST_VAR legate_core_CXX_FLAGS
+                                       FLAGS ${default_cxx_flags})
     set(legate_core_CXX_FLAGS "${legate_core_CXX_FLAGS}" PARENT_SCOPE)
   endif()
   if(NOT legate_core_CUDA_FLAGS)
-    legate_core_set_default_flags_impl(
-      SET_CACHE
-      LANG      CUDA
-      DEST_VAR  legate_core_CUDA_FLAGS
-      FLAGS     ${default_cuda_flags}
-    )
+    legate_core_set_default_flags_impl(SET_CACHE LANG CUDA DEST_VAR
+                                       legate_core_CUDA_FLAGS FLAGS ${default_cuda_flags})
     set(legate_core_CUDA_FLAGS "${legate_core_CUDA_FLAGS}" PARENT_SCOPE)
   endif()
 endfunction()
@@ -166,20 +150,14 @@ function(legate_core_configure_default_linker_flags)
   # There are no default linker flags currently.
   set(default_linker_flags)
   if(legate_core_ENABLE_SANITIZERS)
-    list(APPEND default_linker_flags
-      "-fsanitize=address,undefined,bounds"
-      "-fno-sanitize-recover=undefined"
-    )
+    list(APPEND default_linker_flags "-fsanitize=address,undefined,bounds"
+         "-fno-sanitize-recover=undefined")
   endif()
 
   if(NOT legate_core_LINKER_FLAGS)
     legate_core_set_default_flags_impl(
-      SET_CACHE
-      IS_LINKER
-      LANG      CXX
-      DEST_VAR  legate_core_LINKER_FLAGS
-      FLAGS     ${default_linker_flags}
-    )
+      SET_CACHE IS_LINKER LANG CXX DEST_VAR legate_core_LINKER_FLAGS FLAGS
+      ${default_linker_flags})
     set(legate_core_LINKER_FLAGS "${legate_core_LINKER_FLAGS}" PARENT_SCOPE)
   endif()
 endfunction()

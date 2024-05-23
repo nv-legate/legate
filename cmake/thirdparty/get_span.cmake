@@ -24,21 +24,14 @@ function(find_or_configure_span)
     endif()
   endif()
 
-  legate_core_parse_versions_json(
-    PACKAGE     span
-    VERSION     version
-    GIT_URL     git_url
-    GIT_SHALLOW git_shallow
-    GIT_TAG     git_tag
-  )
+  legate_core_parse_versions_json(PACKAGE span VERSION version GIT_URL git_url
+                                  GIT_SHALLOW git_shallow GIT_TAG git_tag)
 
   rapids_cpm_find(span "${version}"
-    BUILD_EXPORT_SET   legate-core-exports
-    INSTALL_EXPORT_SET legate-core-exports
-    CPM_ARGS
-      GIT_REPOSITORY  "${git_url}"
-      GIT_SHALLOW     "${git_shallow}"
-      SYSTEM          TRUE
-      GIT_TAG         "${git_tag}"
-   )
+                  BUILD_EXPORT_SET legate-core-exports
+                  INSTALL_EXPORT_SET legate-core-exports
+                  CPM_ARGS
+                  GIT_REPOSITORY "${git_url}"
+                  GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
+                  GIT_TAG "${git_tag}")
 endfunction()

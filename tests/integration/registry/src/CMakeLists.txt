@@ -10,20 +10,9 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-add_library(
-  registry
-  hello.cc
-  world.cc
-  no_variant.cc
-  library.cc
-)
+add_library(registry hello.cc world.cc no_variant.cc library.cc)
 
-target_include_directories(registry
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  INTERFACE
-    $<INSTALL_INTERFACE:include>
-)
+target_include_directories(registry PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                           INTERFACE $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(registry PRIVATE legate::core)
-

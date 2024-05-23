@@ -12,17 +12,8 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "data")
 
-set(
-  cython_sources
-  external_allocation.pyx
-  inline_allocation.pyx
-  logical_array.pyx
-  logical_store.pyx
-  physical_array.pyx
-  physical_store.pyx
-  scalar.pyx
-  shape.pyx
-  slice.pyx
-)
+set(cython_sources
+    external_allocation.pyx inline_allocation.pyx logical_array.pyx logical_store.pyx
+    physical_array.pyx physical_store.pyx scalar.pyx shape.pyx slice.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")
