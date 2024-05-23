@@ -24,14 +24,22 @@ function(find_or_configure_mdspan)
     endif()
   endif()
 
-  rapids_cpm_find(mdspan 0.6
+  legate_core_parse_versions_json(
+    PACKAGE     mdspan
+    VERSION     version
+    GIT_URL     git_url
+    GIT_SHALLOW git_shallow
+    GIT_TAG     git_tag
+  )
+
+  rapids_cpm_find(mdspan "${version}"
     BUILD_EXPORT_SET   legate-core-exports
     INSTALL_EXPORT_SET legate-core-exports
     CPM_ARGS
-      GIT_REPOSITORY  https://github.com/kokkos/mdspan.git
-      GIT_SHALLOW     TRUE
+      GIT_REPOSITORY  "${git_url}"
+      GIT_SHALLOW     "${git_shallow}"
       SYSTEM          TRUE
-      GIT_TAG         a9c54ccd8254cc3d159fdf2adf650dca4e048c97
+      GIT_TAG         "${git_tag}"
       OPTIONS
         # Gotta set this, otherwise mdspan tries to guess a C++ standard
         "MDSPAN_CXX_STANDARD ${CMAKE_CXX_STANDARD}"

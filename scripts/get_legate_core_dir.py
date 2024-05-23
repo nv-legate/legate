@@ -19,7 +19,7 @@ def get_legate_core_dir() -> str:
 
 
 def main() -> None:
-    print(get_legate_core_dir())
+    print(get_legate_core_dir(), end="", flush=True)
 
 
 if __name__ == "__main__":

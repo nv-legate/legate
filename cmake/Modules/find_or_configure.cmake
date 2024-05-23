@@ -12,6 +12,60 @@
 
 include_guard(GLOBAL)
 
+function(legate_core_parse_versions_json)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "parse_versions_json")
+
+  set(options)
+  set(one_value_args PACKAGE VERSION GIT_URL GIT_TAG GIT_SHALLOW)
+  set(multi_value_args)
+  cmake_parse_arguments(_LEGATE_CORE_PVJ "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  if(_LEGATE_CORE_PVJ_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unparsed arguments: ${_LEGATE_CORE_PVJ_UNPARSED_ARGUMENTS}")
+  endif()
+
+  if(_LEGATE_CORE_PVJ_KEYWORDS_MISSING_VALUES)
+    message(FATAL_ERROR "${_LEGATE_CORE_PVJ_KEYWORDS_MISSING_VALUES}")
+  endif()
+
+  if(NOT _LEGATE_CORE_PVJ_PACKAGE)
+    message(FATAL_ERROR "Must pass PACKAGE")
+  endif()
+
+  file(READ "${legate_core_VERSIONS_JSON}" versions_json)
+  string(JSON mdspan_json GET "${versions_json}" "packages" "${_LEGATE_CORE_PVJ_PACKAGE}")
+
+  if(_LEGATE_CORE_PVJ_VERSION)
+    string(JSON version GET "${mdspan_json}" "version")
+    set(${_LEGATE_CORE_PVJ_VERSION} "${version}" PARENT_SCOPE)
+  endif()
+
+  if(_LEGATE_CORE_PVJ_GIT_URL)
+    string(JSON git_url GET "${mdspan_json}" "git_url")
+    set(${_LEGATE_CORE_PVJ_GIT_URL} "${git_url}" PARENT_SCOPE)
+  endif()
+
+  if(_LEGATE_CORE_PVJ_GIT_TAG)
+    string(JSON git_tag GET "${mdspan_json}" "git_tag")
+    set(${_LEGATE_CORE_PVJ_GIT_TAG} "${git_tag}" PARENT_SCOPE)
+  endif()
+
+  if(_LEGATE_CORE_PVJ_GIT_SHALLOW)
+    string(JSON git_shallow GET "${mdspan_json}" "git_shallow")
+
+    if(git_shallow STREQUAL "ON")
+      set(git_shallow TRUE)
+    else()
+      if(NOT (git_shallow STREQUAL "OFF"))
+        message(FATAL_ERROR "git_shallow unexpected value: ${git_shallow}")
+      endif()
+      set(git_shallow FALSE)
+    endif()
+
+    set(${_LEGATE_CORE_PVJ_GIT_SHALLOW} "${git_shallow}" PARENT_SCOPE)
+  endif()
+endfunction()
+
 # This guy needs to be a macro in case the find_or_configure_<package> sets variables it
 # expects to be exposed in the caller
 macro(legate_core_find_or_configure)
