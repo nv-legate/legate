@@ -32,6 +32,10 @@ template <typename T>
 class Span {
  public:
   Span() = default;
+
+  template <typename It>
+  Span(It begin, It end);
+
   /**
    * @brief Creates a span with an existing pointer and a size.
    *

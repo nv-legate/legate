@@ -16,6 +16,7 @@
 #include "core/partitioning/detail/constraint.h"
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
+#include "core/utilities/span.h"
 
 #include <memory>
 #include <optional>
@@ -67,7 +68,7 @@ class Strategy {
 
 class Partitioner {
  public:
-  explicit Partitioner(std::vector<Operation*>&& operations);
+  explicit Partitioner(Span<const InternalSharedPtr<Operation>> operations);
 
   [[nodiscard]] std::unique_ptr<Strategy> partition_stores();
 
@@ -79,7 +80,7 @@ class Partitioner {
     const std::vector<const Variable*>& partition_symbols,
     const ConstraintSolver& solver);
 
-  std::vector<Operation*> operations_{};
+  Span<const InternalSharedPtr<Operation>> operations_{};
 };
 
 }  // namespace legate::detail

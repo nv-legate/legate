@@ -213,7 +213,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 {
   ConstraintSolver solver;
 
-  for (auto op : operations_) {
+  for (auto&& op : operations_) {
     op->add_to_solver(solver);
   }
 

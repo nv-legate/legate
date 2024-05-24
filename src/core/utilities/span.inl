@@ -15,7 +15,18 @@
 #include "core/utilities/assert.h"
 #include "core/utilities/span.h"
 
+#include <iterator>
+#include <type_traits>
+
 namespace legate {
+
+template <typename T>
+template <typename It>
+Span<T>::Span(It begin, It end) : Span{&*begin, static_cast<std::size_t>(std::distance(begin, end))}
+{
+  using category = typename std::iterator_traits<It>::iterator_category;
+  static_assert(std::is_convertible_v<category, std::random_access_iterator_tag>);
+}
 
 template <typename T>
 Span<T>::Span(T* data, std::size_t size) : data_{data}, size_{size}

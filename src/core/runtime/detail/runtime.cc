@@ -423,9 +423,7 @@ void Runtime::flush_scheduling_window()
     return;
   }
 
-  std::vector<InternalSharedPtr<Operation>> to_schedule;
-  to_schedule.swap(operations_);
-  schedule(to_schedule);
+  schedule_(std::move(operations_));
 }
 
 void Runtime::submit(InternalSharedPtr<Operation> op)
@@ -437,19 +435,13 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   }
 }
 
-void Runtime::schedule(const std::vector<InternalSharedPtr<Operation>>& operations)
+void Runtime::schedule_(std::vector<InternalSharedPtr<Operation>>&& operations)
 {
-  std::vector<Operation*> op_pointers{};
+  // Move into temporary to "complete" the move from the caller side.
+  const auto ops      = std::move(operations);
+  const auto strategy = Partitioner{{ops.begin(), ops.end()}}.partition_stores();
 
-  op_pointers.reserve(operations.size());
-  for (auto&& op : operations) {
-    op_pointers.push_back(op.get());
-  }
-
-  Partitioner partitioner{std::move(op_pointers)};
-  auto strategy = partitioner.partition_stores();
-
-  for (auto&& op : operations) {
+  for (auto&& op : ops) {
     op->launch(strategy.get());
   }
 }

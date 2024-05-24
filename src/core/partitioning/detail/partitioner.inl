@@ -20,7 +20,7 @@ inline bool Strategy::parallel(const Operation* op) const { return launch_domain
 
 // ==========================================================================================
 
-inline Partitioner::Partitioner(std::vector<Operation*>&& operations)
+inline Partitioner::Partitioner(Span<const InternalSharedPtr<Operation>> operations)
   : operations_{std::move(operations)}
 {
 }

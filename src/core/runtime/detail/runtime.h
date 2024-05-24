@@ -317,7 +317,7 @@ class Runtime {
   [[nodiscard]] Processor get_executing_processor() const;
 
  private:
-  static void schedule(const std::vector<InternalSharedPtr<Operation>>& operations);
+  static void schedule_(std::vector<InternalSharedPtr<Operation>>&& operations);
 
  public:
   [[nodiscard]] static Runtime* get_runtime();
