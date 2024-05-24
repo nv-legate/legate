@@ -19,7 +19,8 @@
 #include "core/mapping/operation.h"
 #include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/shard.h"
-#include "core/utilities/detail/strtoll.h"
+#include "core/utilities/detail/type_traits.h"
+#include "core/utilities/detail/zip.h"
 #include "core/utilities/env.h"
 #include "core/utilities/linearize.h"
 
@@ -598,7 +599,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
 }
 
 void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
-                                        std::vector<std::unique_ptr<StoreMapping>>& mappings)
+                                        const std::vector<std::unique_ptr<StoreMapping>>& mappings)
 {
   for (auto&& mapping : mappings) {
     // If the policy is exact, there's nothing we can tighten
@@ -606,7 +607,7 @@ void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
       continue;
     }
 
-    auto priv = static_cast<std::underlying_type_t<Legion::PrivilegeMode>>(LEGION_NO_ACCESS);
+    auto priv = traits::detail::to_underlying(LEGION_NO_ACCESS);
     for (const auto* req : mapping->requirements()) {
       priv |= req->privilege;
     }
@@ -621,7 +622,7 @@ void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
         reqs_ss << " " << req_idx;
       }
       logger.debug() << log_mappable(mappable)
-                     << ": tightened mapping policy for reqs:" << reqs_ss.str();
+                     << ": tightened mapping policy for reqs:" << std::move(reqs_ss).str();
     }
     mapping->policy.exact = true;
   }
@@ -956,8 +957,8 @@ class AnnotatedSourceInstance {
 };
 
 void find_source_instance_bandwidth(
-  std::vector<AnnotatedSourceInstance>& all_sources,     /* output */
-  std::map<Memory, Bandwidth>& source_memory_bandwidths, /* inout */
+  std::vector<AnnotatedSourceInstance>& all_sources,               /* output */
+  std::unordered_map<Memory, Bandwidth>& source_memory_bandwidths, /* inout */
   const Legion::Mapping::PhysicalInstance& source_instance,
   const Memory& target_memory,
   const Legion::Machine& legion_machine)
@@ -968,6 +969,7 @@ void find_source_instance_bandwidth(
   std::uint32_t bandwidth{0};
   if (source_memory_bandwidths.end() == finder) {
     std::vector<Legion::MemoryMemoryAffinity> affinities;
+
     legion_machine.get_mem_mem_affinity(
       affinities, source_memory, target_memory, false /*not just local affinities*/);
     // affinities being empty means that there's no direct channel between the source
@@ -994,7 +996,7 @@ void BaseMapper::legate_select_sources(
   const std::vector<Legion::Mapping::CollectiveView>& collective_sources,
   std::deque<Legion::Mapping::PhysicalInstance>& ranking)
 {
-  std::map<Memory, Bandwidth> source_memory_bandwidths;
+  std::unordered_map<Memory, Bandwidth> source_memory_bandwidths;
   // For right now we'll rank instances by the bandwidth of the memory
   // they are in to the destination.
   // TODO(wonchanl): consider layouts when ranking source to help out the DMA system
@@ -1002,6 +1004,7 @@ void BaseMapper::legate_select_sources(
   // fill in a vector of the sources with their bandwidths
   std::vector<AnnotatedSourceInstance> all_sources;
 
+  all_sources.reserve(sources.size() + collective_sources.size());
   for (auto&& source : sources) {
     find_source_instance_bandwidth(
       all_sources, source_memory_bandwidths, source, target_memory, legion_machine);
@@ -1021,12 +1024,10 @@ void BaseMapper::legate_select_sources(
                                    legion_machine);
   }
   LegateAssert(!all_sources.empty());
-  if (all_sources.size() > 1) {
-    // Sort source instances by their bandwidths
-    std::sort(all_sources.begin(), all_sources.end(), [](const auto& lhs, const auto& rhs) {
-      return lhs.bandwidth > rhs.bandwidth;
-    });
-  }
+  // Sort source instances by their bandwidths
+  std::sort(all_sources.begin(), all_sources.end(), [](const auto& lhs, const auto& rhs) {
+    return lhs.bandwidth > rhs.bandwidth;
+  });
   // Record all instances from the one of the largest bandwidth to that of the smallest
   for (auto&& source : all_sources) {
     ranking.emplace_back(source.instance);
@@ -1074,10 +1075,12 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
   const Store store{mapper_runtime, ctx, &inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
 
-  mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
+  auto&& reqs = mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false))
+                  ->requirements();
 
   OutputMap output_map;
-  auto&& reqs = mappings.front()->requirements();
+
+  output_map.reserve(reqs.size());
   for (auto* req : reqs) {
     output_map[req] = &output.chosen_instances;
   }
@@ -1155,12 +1158,14 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   auto store_target = default_store_targets(target_proc.kind()).front();
 
   OutputMap output_map;
-  auto add_to_output_map = [&output_map](auto& reqs, auto& instances) {
-    instances.resize(reqs.size());
-    for (std::uint32_t idx = 0; idx < reqs.size(); ++idx) {
-      output_map[&reqs[idx]] = &instances[idx];
-    }
-  };
+  auto add_to_output_map =
+    [&output_map](const std::vector<Legion::RegionRequirement>& reqs,
+                  std::vector<std::vector<Legion::Mapping::PhysicalInstance>>& instances) {
+      instances.resize(reqs.size());
+      for (auto&& [req, inst] : legate::detail::zip(reqs, instances)) {
+        output_map[&req] = &inst;
+      }
+    };
   add_to_output_map(copy.src_requirements, output.src_instances);
   add_to_output_map(copy.dst_requirements, output.dst_instances);
 
@@ -1313,7 +1318,7 @@ void BaseMapper::select_partition_projection(Legion::Mapping::MapperContext /*ct
 {
   // If we have an open complete partition then use it
   if (!input.open_complete_partitions.empty()) {
-    output.chosen_partition = input.open_complete_partitions[0];
+    output.chosen_partition = input.open_complete_partitions.front();
   } else {
     output.chosen_partition = Legion::LogicalPartition::NO_PART;
   }
@@ -1324,12 +1329,12 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
                                const MapPartitionInput&,
                                MapPartitionOutput& output)
 {
-  Processor target_proc{Processor::NO_PROC};
-  if (local_machine.has_omps()) {
-    target_proc = local_machine.omps().front();
-  } else {
-    target_proc = local_machine.cpus().front();
-  }
+  auto target_proc = [&] {
+    if (local_machine.has_omps()) {
+      return local_machine.omps().front();
+    }
+    return local_machine.cpus().front();
+  }();
 
   auto store_target = default_store_targets(target_proc.kind()).front();
 
@@ -1337,15 +1342,18 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
 
   const Store store{mapper_runtime, ctx, &partition.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
-  mappings.push_back(StoreMapping::default_mapping(&store, store_target, false));
+
+  auto&& reqs = mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false))
+                  ->requirements();
 
   OutputMap output_map;
-  auto&& reqs = mappings.front()->requirements();
+
+  output_map.reserve(reqs.size());
   for (auto* req : reqs) {
     output_map[req] = &output.chosen_instances;
   }
 
-  map_legate_stores(ctx, partition, mappings, target_proc, output_map);
+  map_legate_stores(ctx, partition, mappings, std::move(target_proc), output_map);
 }
 
 void BaseMapper::select_partition_sources(Legion::Mapping::MapperContext ctx,
@@ -1393,6 +1401,7 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
                                           FutureMapReductionOutput& output)
 {
   output.serdez_upper_bound = LEGATE_MAX_SIZE_SCALAR_RETURN;
+  auto& dest_memories       = output.destination_memories;
 
   if (local_machine.has_gpus()) {
     // TODO(wonchanl): It's been reported that blindly mapping target instances of future map
@@ -1402,18 +1411,24 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
       // If this was joining exceptions, we should put instances on a host-visible memory
       // because they need serdez
       if (input.tag == LEGATE_CORE_JOIN_EXCEPTION_TAG) {
-        output.destination_memories.push_back(local_machine.zerocopy_memory());
+        dest_memories.push_back(local_machine.zerocopy_memory());
       } else {
-        for (auto&& pair : local_machine.frame_buffers()) {
-          output.destination_memories.push_back(pair.second);
+        auto&& fbufs = local_machine.frame_buffers();
+
+        dest_memories.reserve(fbufs.size());
+        for (auto&& pair : fbufs) {
+          dest_memories.push_back(pair.second);
         }
       }
     } else {
-      output.destination_memories.push_back(local_machine.zerocopy_memory());
+      dest_memories.push_back(local_machine.zerocopy_memory());
     }
   } else if (local_machine.has_socket_memory()) {
-    for (auto&& pair : local_machine.socket_memories()) {
-      output.destination_memories.push_back(pair.second);
+    auto&& smems = local_machine.socket_memories();
+
+    dest_memories.reserve(smems.size());
+    for (auto&& pair : smems) {
+      dest_memories.push_back(pair.second);
     }
   }
 }

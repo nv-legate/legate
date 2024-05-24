@@ -255,7 +255,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                          OutputMap& output_map,
                          bool overdecomposed = false);
   void tighten_write_policies(const Legion::Mappable& mappable,
-                              std::vector<std::unique_ptr<StoreMapping>>& mappings);
+                              const std::vector<std::unique_ptr<StoreMapping>>& mappings);
   bool map_legate_store(Legion::Mapping::MapperContext ctx,
                         const Legion::Mappable& mappable,
                         const StoreMapping& mapping,
