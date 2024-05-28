@@ -18,7 +18,7 @@ supercomputer without any code modifications.
   Overview <overview.rst>
   User Guide <user.rst>
   Frequently Asked Questions <faq.rst>
-  API Reference <api.rst>
+  API Reference <api/index.rst>
 
 .. toctree::
   :maxdepth: 1

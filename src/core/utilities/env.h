@@ -99,23 +99,12 @@ class EnvironmentVariable<std::uint32_t> : public EnvironmentVariableBase {
 
 }  // namespace detail
 
-#define LEGATE_ENV_BOOL_CONSTANT(NAME) \
-  inline constexpr legate::detail::EnvironmentVariable<bool> NAME { LegateStringize(NAME) }
-
-#define LEGATE_ENV_INT64_CONSTANT(NAME) \
-  inline constexpr legate::detail::EnvironmentVariable<std::int64_t> NAME { LegateStringize(NAME) }
-
-#define LEGATE_ENV_UINT32_CONSTANT(NAME) \
-  inline constexpr legate::detail::EnvironmentVariable<std::uint32_t> NAME { LegateStringize(NAME) }
-
-#define LEGATE_ENV_CONSTANT(NAME) inline constexpr std::string_view NAME = LegateStringize(NAME)
-
 /**
  * @var LEGATE_TEST
  *
  * @brief Enables "testing" mode in Legate. Possible values: 0, 1.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_TEST);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_TEST{"LEGATE_TEST"};
 
 /**
  * @var LEGATE_SHOW_USAGE
@@ -123,7 +112,7 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_TEST);
  * @brief Enables verbose resource consumption logging of the base mapper on
  * desctruction. Possible values: 0, 1.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_SHOW_USAGE);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_SHOW_USAGE{"LEGATE_SHOW_USAGE"};
 
 /**
  * @var LEGATE_NEED_CUDA
@@ -134,7 +123,7 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_SHOW_USAGE);
  * CUDA-capable device must be present at startup. If either of these conditions are not met,
  * Legate will abort execution.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_NEED_CUDA);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_CUDA{"LEGATE_NEED_CUDA"};
 
 /**
  * @var LEGATE_NEED_OPENMP
@@ -145,7 +134,7 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_NEED_CUDA);
  * OpenMP-capable device must be present at startup. If either of these conditions are not met,
  * Legate will abort execution.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_NEED_OPENMP);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_OPENMP{"LEGATE_NEED_OPENMP"};
 
 /**
  * @var LEGATE_NEED_NETWORK
@@ -155,7 +144,7 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_NEED_OPENMP);
  * Enabling this, means that Legate must have been configured with networking support. If
  * either of this condition is not met, Legate will abort execution.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_NEED_NETWORK);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_NETWORK{"LEGATE_NEED_NETWORK"};
 
 /**
  * @var LEGATE_SHOW_PROGRESS
@@ -166,7 +155,7 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_NEED_NETWORK);
  * This variable is useful to visually ensure that a particular task is being called. The
  * progress reports are emitted by Legate before entering into the task body itself.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_SHOW_PROGRESS);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_SHOW_PROGRESS{"LEGATE_SHOW_PROGRESS"};
 
 /**
  * @var LEGATE_EMPTY_TASK
@@ -177,7 +166,7 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_SHOW_PROGRESS);
  * replication issues) by executing the entire task graph without needing to execute the task
  * bodies themselves. This is particularly useful if the task bodies are expensive.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_EMPTY_TASK);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_EMPTY_TASK{"LEGATE_EMPTY_TASK"};
 
 /**
  * @var LEGATE_SYNC_STREAM_VIEW
@@ -189,21 +178,23 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_EMPTY_TASK);
  * condition between streams. This is especially useful when combined with
  * CUDA_LAUNCH_BLOCKING.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_SYNC_STREAM_VIEW);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_SYNC_STREAM_VIEW{
+  "LEGATE_SYNC_STREAM_VIEW"};
 
 /**
  * @var LEGATE_LOG_MAPPING
  *
  * @brief Instructs Legate to emit mapping decisions to stdout. Possible values: 0, 1.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_LOG_MAPPING);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_LOG_MAPPING{"LEGATE_LOG_MAPPING"};
 
 /**
  * @var LEGATE_LOG_MAPPING
  *
  * @brief Instructs Legate to emit partitioning decisions to stdout. Possible values: 0, 1.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_LOG_PARTITIONING);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_LOG_PARTITIONING{
+  "LEGATE_LOG_PARTITIONING"};
 
 /**
  * @var LEGATE_WARMUP_NCCL
@@ -214,7 +205,7 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_LOG_PARTITIONING);
  * is performed. This could corrupt performance measurements if that startup is performed in
  * the hot-path.
  */
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_WARMUP_NCCL);
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_WARMUP_NCCL{"LEGATE_WARMUP_NCCL"};
 
 /**
  * @var LEGION_DEFAULT_ARGS
@@ -223,22 +214,24 @@ LEGATE_ENV_BOOL_CONSTANT(LEGATE_WARMUP_NCCL);
  *
  * These arguments are passed verbatim to Legion during runtime startup.
  */
-LEGATE_ENV_CONSTANT(LEGION_DEFAULT_ARGS);
+inline constexpr std::string_view LEGION_DEFAULT_ARGS = "LEGION_DEFAULT_ARGS";
 
-LEGATE_ENV_INT64_CONSTANT(LEGATE_MIN_CPU_CHUNK);
-LEGATE_ENV_INT64_CONSTANT(LEGATE_MIN_GPU_CHUNK);
-LEGATE_ENV_INT64_CONSTANT(LEGATE_MIN_OMP_CHUNK);
-LEGATE_ENV_UINT32_CONSTANT(LEGATE_WINDOW_SIZE);
-LEGATE_ENV_UINT32_CONSTANT(LEGATE_FIELD_REUSE_FRAC);
-LEGATE_ENV_UINT32_CONSTANT(LEGATE_FIELD_REUSE_FREQ);
-LEGATE_ENV_UINT32_CONSTANT(LEGATE_MAX_LRU_LENGTH);
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_CONSENSUS);
-LEGATE_ENV_BOOL_CONSTANT(LEGATE_DISABLE_MPI);
-
-#undef LEGATE_ENV_CONSTANT
-#undef LEGATE_ENV_BOOL_CONSTANT
-#undef LEGATE_ENV_UINT32_CONSTANT
-#undef LEGATE_ENV_INT64_CONSTANT
+inline constexpr detail::EnvironmentVariable<std::int64_t> LEGATE_MIN_CPU_CHUNK{
+  "LEGATE_MIN_CPU_CHUNK"};
+inline constexpr detail::EnvironmentVariable<std::int64_t> LEGATE_MIN_GPU_CHUNK{
+  "LEGATE_MIN_GPU_CHUNK"};
+inline constexpr detail::EnvironmentVariable<std::int64_t> LEGATE_MIN_OMP_CHUNK{
+  "LEGATE_MIN_OMP_CHUNK"};
+inline constexpr detail::EnvironmentVariable<std::uint32_t> LEGATE_WINDOW_SIZE{
+  "LEGATE_WINDOW_SIZE"};
+inline constexpr detail::EnvironmentVariable<std::uint32_t> LEGATE_FIELD_REUSE_FRAC{
+  "LEGATE_FIELD_REUSE_FRAC"};
+inline constexpr detail::EnvironmentVariable<std::uint32_t> LEGATE_FIELD_REUSE_FREQ{
+  "LEGATE_FIELD_REUSE_FREQ"};
+inline constexpr detail::EnvironmentVariable<std::uint32_t> LEGATE_MAX_LRU_LENGTH{
+  "LEGATE_MAX_LRU_LENGTH"};
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_CONSENSUS{"LEGATE_CONSENSUS"};
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_DISABLE_MPI{"LEGATE_DISABLE_MPI"};
 
 }  // namespace legate
 

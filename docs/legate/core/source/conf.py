@@ -70,6 +70,7 @@ html_theme_options = {
 autosummary_generate = True
 
 breathe_default_project = "legate_core"
+breathe_default_members = ("members", "protected-members")
 
 copybutton_prompt_text = ">>> "
 

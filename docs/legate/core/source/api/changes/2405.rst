@@ -1,0 +1,79 @@
+Changes: 24.05
+==============
+..
+   STYLE:
+   * Capitalize sentences.
+   * Use the imperative tense: Add, Improve, Change, etc.
+   * Use a period (.) at the end of entries.
+   * Be concise yet informative.
+   * If possible, provide an executive summary of the new feature, but do not just repeat
+     its doc string. However, if the feature requires changes from the user, then describe
+     those changes in detail, and provide examples of the changes required.
+
+
+.. rubric:: General:
+
+- Legate ``tester`` now also shows the ``stdout`` and ``stderr`` produced by timed-out
+  tests. Previously it silently gobbled these.
+
+.. rubric:: Configuration/Build:
+
+- Enforce minimum CUDA version of 11.8. The build system will now emit a fatal error at
+  configure-time if the CUDA toolkit version is below this threshold.
+- ``configure`` now allows passing through arbitrary CMake arguments to the underlying
+  CMake configuration. Any arguments following a bare ``--`` are forwarded verbatim to
+  CMake:
+
+  .. code-block:: console
+
+     $ ./configure --some --configure --arguments -- -DCMAKE_FOO=OFF -DCMAKE_BAR=ON
+     # -DCMAKE_FOO=OFF and -DCMAKE_BAR=ON are forwarded as-is to CMake. configure
+     # does not process them in any way.
+
+- Add ``--build-type=debug-sanitizer``. This build configuration enables a full debug
+  build as well as `AddressSanitizer <https://github.com/google/sanitizers/wiki/AddressSanitizer>`_,
+  `UndefinedBehaviorSanitizer
+  <https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html>`_, and, if supported,
+  `LeakSanitizer <https://clang.llvm.org/docs/LeakSanitizer.html>`_.
+
+.. rubric:: Data
+
+- Remove default constructor for ``LogicalArray``, ``LogicalStore``, ``PhysicalArray``,
+  ``PhysicalStore``. These were never "valid" methods to construct these objects, and only
+  existed to work around deficiencies in the Cython compiler. Users should use the various
+  ``Runtime`` methods to construct these objects instead.
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+- Remove default constructor for ``Variable``, and ``Constraint``. These were never
+  "valid" methods to construct these objects, and only existed to work around deficiencies
+  in the Cython compiler. Users should use the various ``Task`` and constraint-generating
+  methods (e.g. ``align()``, ``scale()``) to construct these objects instead.
+
+.. rubric:: Tasks
+
+- Remove default constructor for ``AutoTask``, and ``ManualTask``. These were never
+  "valid" methods to construct these objects, and only existed to work around deficiencies
+  in the Cython compiler. Users should use the various ``Runtime`` methods to construct
+  these objects instead.
+- Allow declaring default task ``VariantOption``'s per variant inline within the task
+  declaration. If present, these default options will be used at task registration. See
+  ``LegateTask`` for further discussion.
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+- Remove default constructor for ``Library``, and ``Type``. These were never "valid"
+  methods to construct these objects, and only existed to work around deficiencies in the
+  Cython compiler. Users should use the various ``Runtime`` methods to construct these
+  objects instead.
+- Add ``Runtime::get_executing_processor()``.
+
+.. rubric:: Utilities
+
+- Rename ``<core/cuda_help.h>`` to ``<core/cuda.h>``. While this header is publicly
+  exported, it is only done so out of necessity, and users are encouraged not to rely on
+  it.
