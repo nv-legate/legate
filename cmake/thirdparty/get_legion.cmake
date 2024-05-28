@@ -79,11 +79,6 @@ function(find_or_configure_legion_impl)
       Legion::LegionRuntime BUILD_EXPORT_SET legate-core-exports INSTALL_EXPORT_SET
       legate-core-exports)
 
-  if(NOT DEFINED BUILD_MARCH)
-    set(BUILD_MARCH OFF)
-  endif()
-  set(BUILD_MARCH ${BUILD_MARCH} PARENT_SCOPE)
-
   # This guard is extremely important! See cmake/Modules/find_or_configure.cmake
   if((NOT CPM_Legion_SOURCE) AND (NOT CPM_DOWNLOAD_Legion))
     # First try to find Legion via find_package() so the `Legion_USE_*` variables are
@@ -262,5 +257,4 @@ function(find_or_configure_legion)
   set(Legion_CUDA_ARCH ${Legion_CUDA_ARCH} PARENT_SCOPE)
   set(Legion_BOUNDS_CHECKS ${Legion_BOUNDS_CHECKS} PARENT_SCOPE)
   set(Legion_NETWORKS ${Legion_NETWORKS} PARENT_SCOPE)
-  set(BUILD_MARCH ${BUILD_MARCH} PARENT_SCOPE)
 endfunction()

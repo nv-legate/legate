@@ -104,6 +104,8 @@ set_ifndef(CMAKE_CXX_FLAGS_RELWITHDEBINFO
            "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS_RELEASE} -g")
 set_ifndef(CMAKE_CUDA_FLAGS_RELWITHDEBINFO
            "${CMAKE_CUDA_FLAGS_DEBUG} ${CMAKE_CUDA_FLAGS_RELEASE} -g")
+set_ifndef(BUILD_MARCH OFF)
+set_ifndef(BUILD_MCPU OFF)
 
 set(legate_core_version 24.05.00)
 
