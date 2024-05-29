@@ -257,6 +257,7 @@ list(APPEND
      src/core/utilities/linearize.cc
      src/core/utilities/internal_shared_ptr.cc
      src/core/utilities/env.cc
+     src/core/utilities/compiler.cc
      src/core/utilities/detail/buffer_builder.cc
      src/core/utilities/detail/tuple.cc
      src/timing/timing.cc

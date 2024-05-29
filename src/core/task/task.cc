@@ -23,7 +23,6 @@
 
 #include "realm/faults.h"
 
-#include <cxxabi.h>
 #include <optional>
 #include <string_view>
 
@@ -60,17 +59,6 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
                      task->get_provenance_string().c_str(),
                      point_str.str().c_str(),
                      exec_proc.id);
-}
-
-std::string generate_task_name(const std::type_info& ti)
-{
-  std::string result;
-  int status      = 0;
-  char* demangled = abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status);
-  result          = demangled;
-  std::free(demangled);
-  LegateCheck(!status);
-  return result;
 }
 
 void task_wrapper(VariantImpl variant_impl,

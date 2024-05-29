@@ -14,14 +14,7 @@
 
 // Useful for IDEs
 #include "core/task/task.h"
-
-#include <typeinfo>
-
-namespace legate::detail {
-
-[[nodiscard]] std::string generate_task_name(const std::type_info&);
-
-}  // namespace legate::detail
+#include "core/utilities/compiler.h"
 
 namespace legate {
 
@@ -64,7 +57,7 @@ template <typename T>
 template <typename T>
 /*static*/ std::string_view LegateTask<T>::task_name_()
 {
-  static const std::string result = detail::generate_task_name(typeid(T));
+  static const std::string result = detail::demangle_type(typeid(T));
   return result;
 }
 

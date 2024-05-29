@@ -14,6 +14,9 @@
 
 #include "core/utilities/macros.h"
 
+#include <string>
+#include <typeinfo>
+
 #ifdef DOXYGEN
 #define LEGATE_DOXYGEN 1
 #endif
@@ -104,3 +107,9 @@
 #else
 #define LEGATE_PRAGMA_CLANG_IGNORE(...)
 #endif
+
+namespace legate::detail {
+
+[[nodiscard]] std::string demangle_type(const std::type_info&);
+
+}  // namespace legate::detail
