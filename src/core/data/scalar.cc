@@ -19,38 +19,62 @@
 
 namespace legate {
 
-Scalar::Scalar(const Scalar& other) : impl_{new detail::Scalar{*other.impl_}} {}
+Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_{std::move(impl)} {}
 
-Scalar::Scalar(Scalar&& other) noexcept : impl_{std::exchange(other.impl_, nullptr)} {}
+Scalar::Scalar() : Scalar{create_impl_(null_type(), nullptr, false), private_tag{}} {}
 
-Scalar::Scalar() : impl_{create_impl(null_type(), nullptr, false)} {}
-
-Scalar::~Scalar() { delete impl_; }
-
-Scalar::Scalar(const Type& type, const void* data, bool copy) : impl_{create_impl(type, data, copy)}
+Scalar::Scalar(const Type& type, const void* data, bool copy)
+  : Scalar{create_impl_(type, data, copy), private_tag{}}
 {
 }
 
-Scalar::Scalar(std::string_view string) : impl_{new detail::Scalar{std::move(string)}} {}
-
-Scalar& Scalar::operator=(const Scalar& other)
+Scalar::Scalar(std::string_view string)
+  : impl_{legate::make_shared<detail::Scalar>(std::move(string))}
 {
-  if (this != &other) {
-    *impl_ = *other.impl_;
-  }
-  return *this;
 }
 
 Type Scalar::type() const { return Type{impl_->type()}; }
 
 std::size_t Scalar::size() const { return impl_->size(); }
 
+template <>
+std::string_view Scalar::value() const
+{
+  if (type().code() != Type::Code::STRING) {
+    throw std::invalid_argument{"Type of the scalar is not string"};
+  }
+
+  const void* data  = ptr();
+  auto len          = *static_cast<const std::uint32_t*>(data);
+  const auto* begin = static_cast<const char*>(data) + sizeof(len);
+  return {begin, len};
+}
+
+template <>
+std::string Scalar::value() const
+{
+  return std::string{this->value<std::string_view>()};
+}
+
+template <>
+Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
+{
+  Legion::DomainPoint result;
+  const auto span = values<std::int64_t>();
+
+  result.dim = static_cast<decltype(result.dim)>(span.size());
+  for (auto idx = 0; idx < result.dim; ++idx) {
+    result[idx] = span[idx];
+  }
+  return result;
+}
+
 const void* Scalar::ptr() const { return impl_->data(); }
 
-/*static*/ detail::Scalar* Scalar::checked_create_impl(const Type& type,
-                                                       const void* data,
-                                                       bool copy,
-                                                       std::size_t size)
+/*static*/ detail::Scalar* Scalar::checked_create_impl_(const Type& type,
+                                                        const void* data,
+                                                        bool copy,
+                                                        std::size_t size)
 {
   if (type.code() == Type::Code::NIL) {
     throw std::invalid_argument{"Null type cannot be used"};
@@ -59,12 +83,15 @@ const void* Scalar::ptr() const { return impl_->data(); }
     throw std::invalid_argument{"Size of the value doesn't match with the type"};
   }
 
-  return create_impl(type, data, copy);
+  return create_impl_(type, data, copy);
 }
 
-/*static*/ detail::Scalar* Scalar::create_impl(const Type& type, const void* data, bool copy)
+/*static*/ detail::Scalar* Scalar::create_impl_(const Type& type, const void* data, bool copy)
 {
+  LegateCheck(data || !copy);
   return new detail::Scalar{type.impl(), data, copy};
 }
+
+Scalar::Scalar(detail::Scalar* impl, private_tag) : impl_{impl} {}
 
 }  // namespace legate

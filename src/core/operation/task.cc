@@ -70,7 +70,7 @@ Variable AutoTask::add_reduction(const LogicalArray& array,
   return partition_symbol;
 }
 
-void AutoTask::add_scalar_arg(Scalar scalar) { impl_->add_scalar_arg(std::move(*scalar.impl())); }
+void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(scalar.impl()); }
 
 void AutoTask::add_constraint(const Constraint& constraint)
 {
@@ -146,7 +146,7 @@ void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
   impl_->add_reduction(store_partition.impl(), redop, std::move(projection));
 }
 
-void ManualTask::add_scalar_arg(Scalar scalar) { impl_->add_scalar_arg(std::move(*scalar.impl())); }
+void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(scalar.impl()); }
 
 std::string_view ManualTask::provenance() const { return impl_->provenance(); }
 

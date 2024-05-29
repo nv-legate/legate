@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/type/type_traits.h"
+#include "core/utilities/shared_ptr.h"
 #include "core/utilities/span.h"
 #include "core/utilities/tuple.h"
 #include "core/utilities/typedefs.h"
@@ -50,9 +51,11 @@ class Scalar {
  public:
   explicit Scalar(std::unique_ptr<detail::Scalar> impl);
 
-  Scalar(const Scalar& other);
-  Scalar(Scalar&& other) noexcept;
-  ~Scalar();
+  // Define these so that the template constructor below is not selected for them
+  Scalar(const Scalar&)                = default;
+  Scalar(Scalar&&) noexcept            = default;
+  Scalar& operator=(const Scalar&)     = default;
+  Scalar& operator=(Scalar&&) noexcept = default;
 
   /**
    * @brief Creates a null scalar
@@ -129,8 +132,6 @@ class Scalar {
   template <std::int32_t DIM>
   explicit Scalar(const Rect<DIM>& rect);
 
-  Scalar& operator=(const Scalar& other);
-
   /**
    * @brief Returns the data type of the scalar
    *
@@ -181,17 +182,22 @@ class Scalar {
    */
   [[nodiscard]] const void* ptr() const;
 
-  [[nodiscard]] const detail::Scalar* impl() const;
-  [[nodiscard]] detail::Scalar* impl();
+  [[nodiscard]] const SharedPtr<detail::Scalar>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::Scalar>& impl();
 
  private:
-  [[nodiscard]] static detail::Scalar* checked_create_impl(const Type& type,
-                                                           const void* data,
-                                                           bool copy,
-                                                           std::size_t size);
-  [[nodiscard]] static detail::Scalar* create_impl(const Type& type, const void* data, bool copy);
+  // These *should* return SharedPtr's, but we cannot due to the large number of template
+  // constructors which are required to live in the header (which won't be able to see the
+  // private definitions). So they need to return bare pointers.
+  [[nodiscard]] static detail::Scalar* checked_create_impl_(const Type& type,
+                                                            const void* data,
+                                                            bool copy,
+                                                            std::size_t size);
+  [[nodiscard]] static detail::Scalar* create_impl_(const Type& type, const void* data, bool copy);
 
   struct private_tag {};
+
+  Scalar(detail::Scalar* impl, private_tag);
 
   template <typename T>
   Scalar(T value, private_tag);
@@ -199,7 +205,7 @@ class Scalar {
   friend class AutoTask;
   friend class ManualTask;
   friend class Runtime;
-  detail::Scalar* impl_{};
+  SharedPtr<detail::Scalar> impl_{};
 };
 
 [[nodiscard]] Scalar null();

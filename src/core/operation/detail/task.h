@@ -57,7 +57,7 @@ class Task : public Operation {
        mapping::detail::Machine machine);
 
  public:
-  void add_scalar_arg(Scalar&& scalar);
+  void add_scalar_arg(InternalSharedPtr<Scalar> scalar);
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);
   void throws_exception(bool can_throw_exception);
@@ -86,7 +86,7 @@ class Task : public Operation {
   bool concurrent_{};
   bool has_side_effect_{};
   bool can_throw_exception_{};
-  std::vector<Scalar> scalars_{};
+  std::vector<InternalSharedPtr<Scalar>> scalars_{};
   std::vector<ArrayArg> inputs_{};
   std::vector<ArrayArg> outputs_{};
   std::vector<ArrayArg> reductions_{};

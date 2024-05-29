@@ -54,12 +54,12 @@ inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return std::ui
 
 }  // namespace detail
 
-inline Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_{impl.release()} {}
-
 template <typename T>
 Scalar::Scalar(T value, private_tag)
-  : impl_{
-      create_impl(primitive_type(detail::canonical_type_code_of<T>()), std::addressof(value), true)}
+  : Scalar{create_impl_(
+             primitive_type(detail::canonical_type_code_of<T>()), std::addressof(value), true),
+           private_tag{}}
+
 {
 }
 
@@ -70,17 +70,18 @@ Scalar::Scalar(T value) : Scalar{detail::canonical_value_of(std::move(value)), p
 
 template <typename T>
 Scalar::Scalar(T value, const Type& type)
-  : impl_{checked_create_impl(type, std::addressof(value), true, sizeof(T))}
+  : Scalar{checked_create_impl_(type, std::addressof(value), true, sizeof(T)), private_tag{}}
 {
 }
 
 template <typename T>
 Scalar::Scalar(const std::vector<T>& values)
-  : impl_{checked_create_impl(
-      fixed_array_type(primitive_type(detail::canonical_type_code_of<T>()), values.size()),
-      values.data(),
-      true,
-      values.size() * sizeof(T))}
+  : Scalar{checked_create_impl_(
+             fixed_array_type(primitive_type(detail::canonical_type_code_of<T>()), values.size()),
+             values.data(),
+             true,
+             values.size() * sizeof(T)),
+           private_tag{}}
 {
 }
 
@@ -90,12 +91,14 @@ Scalar::Scalar(const tuple<T>& values) : Scalar{values.data()}
 }
 
 template <std::int32_t DIM>
-Scalar::Scalar(const Point<DIM>& point) : impl_{create_impl(point_type(DIM), &point, true)}
+Scalar::Scalar(const Point<DIM>& point)
+  : Scalar{create_impl_(point_type(DIM), &point, true), private_tag{}}
 {
 }
 
 template <std::int32_t DIM>
-Scalar::Scalar(const Rect<DIM>& rect) : impl_{create_impl(rect_type(DIM), &rect, true)}
+Scalar::Scalar(const Rect<DIM>& rect)
+  : Scalar{create_impl_(rect_type(DIM), &rect, true), private_tag{}}
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
 }
@@ -115,23 +118,15 @@ VAL Scalar::value() const
   return *static_cast<const VAL*>(ptr());
 }
 
+// These are defined in the .cpp
 template <>
-inline std::string_view Scalar::value() const
-{
-  if (type().code() != Type::Code::STRING) {
-    throw std::invalid_argument("Type of the scalar is not string");
-  }
-  const void* data  = ptr();
-  auto len          = *static_cast<const uint32_t*>(data);
-  const auto* begin = static_cast<const char*>(data) + sizeof(len);
-  return {begin, len};
-}
+std::string_view Scalar::value() const;
 
 template <>
-inline std::string Scalar::value() const
-{
-  return std::string{this->value<std::string_view>()};
-}
+std::string Scalar::value() const;
+
+template <>
+Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const;
 
 template <typename VAL>
 Span<const VAL> Scalar::values() const
@@ -170,21 +165,9 @@ Span<const VAL> Scalar::values() const
   return {static_cast<const VAL*>(ptr()), 1};
 }
 
-template <>
-inline Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const
-{
-  Legion::DomainPoint result;
-  const auto span = values<std::int64_t>();
-  result.dim      = static_cast<decltype(result.dim)>(span.size());
-  for (auto idx = 0; idx < result.dim; ++idx) {
-    result[idx] = span[idx];
-  }
-  return result;
-}
+inline const SharedPtr<detail::Scalar>& Scalar::impl() { return impl_; }
 
-inline detail::Scalar* Scalar::impl() { return impl_; }
-
-inline const detail::Scalar* Scalar::impl() const { return impl_; }
+inline const SharedPtr<detail::Scalar>& Scalar::impl() const { return impl_; }
 
 // ==========================================================================================
 

@@ -146,14 +146,16 @@ class AutoTask {
    *
    * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(Scalar scalar);
+  void add_scalar_arg(const Scalar& scalar);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
    * @tparam T The scalar value's type. Scalar must be constructible from a value of T
    * @param value The scalar value to convert to Scalar and add to the task
    */
-  template <typename T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
+  template <typename T,
+            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, Scalar> &&
+                                        std::is_constructible_v<Scalar, T>>>
   void add_scalar_arg(T&& value);
 
   /**
@@ -314,14 +316,16 @@ class ManualTask {
    *
    * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(Scalar scalar);
+  void add_scalar_arg(const Scalar& scalar);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
    * @tparam T The scalar value's type. Scalar must be constructible from a value of T
    * @param value The scalar value to convert to Scalar and add to the task
    */
-  template <typename T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
+  template <typename T,
+            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, Scalar> &&
+                                        std::is_constructible_v<Scalar, T>>>
   void add_scalar_arg(T&& value);
 
   /**

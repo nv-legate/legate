@@ -40,7 +40,10 @@ Task::Task(const Library* library,
 {
 }
 
-void Task::add_scalar_arg(Scalar&& scalar) { scalars_.emplace_back(std::move(scalar)); }
+void Task::add_scalar_arg(InternalSharedPtr<Scalar> scalar)
+{
+  scalars_.emplace_back(std::move(scalar));
+}
 
 void Task::set_concurrent(bool concurrent) { concurrent_ = concurrent; }
 
@@ -100,7 +103,13 @@ void Task::launch_task(Strategy* p_strategy)
 
   // Add by-value scalars
   for (auto&& scalar : scalars_) {
-    launcher.add_scalar(std::move(scalar));
+    // TODO(jfaibussowit)
+    // Copy is deliberate, we do not want to move out of scalar, since that would invalidate
+    // the user-held scalar. Rather, launcher.add_scalar() should accept a InternalSharedPtr
+    // argument instead...
+    auto scal = *scalar;
+
+    launcher.add_scalar(std::move(scal));
   }
 
   // Add communicators
