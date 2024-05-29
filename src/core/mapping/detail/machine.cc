@@ -27,8 +27,7 @@ namespace legate::mapping::detail {
 // legate::mapping::detail::Machine
 //////////////////////////////////////////
 
-Machine::Machine(private_tag, std::map<TaskTarget, ProcessorRange> ranges)
-  : processor_ranges{std::move(ranges)}
+Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges) : processor_ranges{std::move(ranges)}
 {
   for (auto&& [target, processor_range] : processor_ranges) {
     if (!processor_range.empty()) {
@@ -38,28 +37,14 @@ Machine::Machine(private_tag, std::map<TaskTarget, ProcessorRange> ranges)
   }
 }
 
-Machine::Machine(const std::map<TaskTarget, ProcessorRange>& ranges)
-  : Machine{private_tag{}, ranges}
-{
-}
-
-Machine::Machine(std::map<TaskTarget, ProcessorRange>&& ranges)
-  : Machine{private_tag{}, std::move(ranges)}
-{
-}
-
 const ProcessorRange& Machine::processor_range() const { return processor_range(preferred_target); }
-
-namespace {
-
-constexpr ProcessorRange EMPTY_RANGE{};
-// clang-format likes to gobble this space unless we put something here...
-}  // namespace
 
 const ProcessorRange& Machine::processor_range(TaskTarget target) const
 {
   auto finder = processor_ranges.find(target);
   if (finder == processor_ranges.end()) {
+    static constexpr ProcessorRange EMPTY_RANGE{};
+
     return EMPTY_RANGE;
   }
   return finder->second;
@@ -82,6 +67,7 @@ std::vector<TaskTarget> Machine::valid_targets() const
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
   std::vector<TaskTarget> result;
+
   for (auto&& [target, _] : processor_ranges) {
     if (to_exclude.find(target) == to_exclude.end()) {
       result.push_back(target);
@@ -97,18 +83,15 @@ std::uint32_t Machine::count(TaskTarget target) const { return processor_range(t
 std::string Machine::to_string() const
 {
   std::stringstream ss;
-  ss << "Machine(preferred_target: " << preferred_target;
-  for (auto&& [kind, range] : processor_ranges) {
-    ss << ", " << kind << ": " << range.to_string();
-  }
-  ss << ")";
+
+  ss << *this;
   return std::move(ss).str();
 }
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
   buffer.pack(legate::traits::detail::to_underlying(preferred_target));
-  buffer.pack<std::uint32_t>(processor_ranges.size());
+  buffer.pack(static_cast<std::uint32_t>(processor_ranges.size()));
   for (auto&& [target, processor_range] : processor_ranges) {
     buffer.pack(legate::traits::detail::to_underlying(target));
     buffer.pack<std::uint32_t>(processor_range.low);
@@ -186,10 +169,14 @@ bool Machine::empty() const
     processor_ranges.begin(), processor_ranges.end(), [](auto& rng) { return rng.second.empty(); });
 }
 
-std::ostream& operator<<(std::ostream& stream, const Machine& machine)
+std::ostream& operator<<(std::ostream& os, const Machine& machine)
 {
-  stream << machine.to_string();
-  return stream;
+  os << "Machine(preferred_target: " << machine.preferred_target;
+  for (auto&& [kind, range] : machine.processor_ranges) {
+    os << ", " << kind << ": " << range;
+  }
+  os << ")";
+  return os;
 }
 
 ///////////////////////////////////////////
@@ -208,19 +195,20 @@ const Processor& LocalProcessorRange::operator[](std::uint32_t idx) const
 std::string LocalProcessorRange::to_string() const
 {
   std::stringstream ss;
-  ss << "{offset: " << offset_ << ", total processor count: " << total_proc_count_
-     << ", processors: ";
-  for (auto&& proc : procs_) {
-    ss << proc << ",";
-  }
-  ss << "}";
+
+  ss << *this;
   return std::move(ss).str();
 }
 
-std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range)
+std::ostream& operator<<(std::ostream& os, const LocalProcessorRange& range)
 {
-  stream << range.to_string();
-  return stream;
+  os << "{offset: " << range.offset_ << ", total processor count: " << range.total_proc_count_
+     << ", processors: ";
+  for (auto&& proc : range.procs_) {
+    os << proc << ",";
+  }
+  os << "}";
+  return os;
 }
 
 ///////////////////////////////////////////
