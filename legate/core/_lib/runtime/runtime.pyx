@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport int32_t, int64_t, uint32_t
-from libc.stdlib cimport malloc as std_malloc
+from libc.stdlib cimport free as std_free, malloc as std_malloc
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 
@@ -62,9 +62,13 @@ cdef class ShutdownCallbackManager:
         self._shutdown_callbacks.append(callback)
 
     cdef void perform_callbacks(self):
-        for callback in self._shutdown_callbacks:
+        # This while form (instead of the usual for x in list) is
+        # deliberate. We want to iterate in LIFO order, while also allowing
+        # each shutdown callback to potentially register other shutdown
+        # callbacks.
+        while self._shutdown_callbacks:
+            callback = self._shutdown_callbacks.pop()
             callback()
-
 
 cdef ShutdownCallbackManager _shutdown_manager = ShutdownCallbackManager()
 
@@ -535,7 +539,6 @@ cdef class Runtime(Unconstructable):
 
 cdef Runtime initialize():
     cdef int32_t argc = len(sys.argv)
-    # TODO(wonchanl): Allocations we create here are leaked
     cdef char** argv = <char**> std_malloc(argc * cython.sizeof(cython.p_char))
     cdef int i, j
     cdef str val
@@ -545,8 +548,11 @@ cdef Runtime initialize():
         argv[i] = <char*> std_malloc(len(arg) + 1)
         for j, v in enumerate(arg):
             argv[i][j] = <char> v
-        argv[i][len(val)] = 0
+        argv[i][len(arg)] = 0
     start(argc, argv)
+    for i in range(argc):
+        std_free(argv[i])
+    std_free(argv)
     return Runtime.from_handle(_Runtime.get_runtime())
 
 
@@ -579,7 +585,7 @@ cpdef Machine get_machine():
     -------
         Machine object
     """
-    return _runtime.get_machine()
+    return get_legate_runtime().get_machine()
 
 
 cdef str caller_frameinfo():
