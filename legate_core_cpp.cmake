@@ -375,6 +375,26 @@ if(Legion_USE_CUDA)
   set_property(TARGET legate_core PROPERTY CUDA_ARCHITECTURES ${Legion_CUDA_ARCH})
 endif()
 
+target_link_libraries(legate_core
+                      # Order is important here. We want conda includes to go last because
+                      # the conda env might contain other versions of the libraries below
+                      # (for example CCCL). We want the conda includes to go last so that
+                      # we ensure that compiler pick up the right headers.
+                      #
+                      # This is also why CCCL::Thrust comes *before* Legion, because
+                      # Legion may pick up headers from inside the conda environment.
+                      PUBLIC CCCL::Thrust
+                             Legion::Legion
+                             # See
+                             # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
+                             $<TARGET_NAME_IF_EXISTS:$<IF:$<TARGET_EXISTS:CUDA::nvtx3>,CUDA::nvtx3,CUDA::nvToolsExt>>
+                             $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
+                             $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+                             $<TARGET_NAME_IF_EXISTS:std::mdspan>
+                             $<TARGET_NAME_IF_EXISTS:std::span>
+                      PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
+                              $<TARGET_NAME_IF_EXISTS:conda_env>)
+
 if(Legion_USE_CUDA)
   if(legate_core_STATIC_CUDA_RUNTIME)
     set_target_properties(legate_core PROPERTIES CUDA_RUNTIME_LIBRARY Static)
@@ -394,19 +414,6 @@ if(Legion_USE_CUDA AND CAL_DIR)
   target_include_directories(legate_core PRIVATE ${CAL_DIR}/include)
   target_link_libraries(legate_core PRIVATE ${CAL_DIR}/lib/libcal.so)
 endif()
-
-target_link_libraries(legate_core
-                      PUBLIC Legion::Legion
-                             CCCL::Thrust
-                             # See
-                             # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
-                             $<TARGET_NAME_IF_EXISTS:$<IF:$<TARGET_EXISTS:CUDA::nvtx3>,CUDA::nvtx3,CUDA::nvToolsExt>>
-                             $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
-                             $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
-                             $<TARGET_NAME_IF_EXISTS:std::mdspan>
-                             $<TARGET_NAME_IF_EXISTS:std::span>
-                      PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
-                              $<TARGET_NAME_IF_EXISTS:conda_env>)
 
 target_compile_definitions(legate_core
                            PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${legate_core_CXX_DEFS}>"
