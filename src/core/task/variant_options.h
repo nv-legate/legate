@@ -15,11 +15,6 @@
 #include "core/utilities/typedefs.h"
 
 /**
- * @addtogroup task
- * @{
- */
-
-/**
  * @file
  * @brief Class definition of legate::VariantOptions
  */
@@ -31,6 +26,8 @@ inline constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
 
 /**
  * @brief A helper class for specifying variant options
+ *
+ * @ingroup task
  */
 class VariantOptions {
  public:
@@ -100,7 +97,5 @@ inline constexpr VariantOptions VariantOptions::DEFAULT_OPTIONS{};
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options);
 
 }  // namespace legate
-
-/** @} */  // end of group task
 
 #include "core/task/variant_options.inl"

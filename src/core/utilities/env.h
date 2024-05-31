@@ -18,10 +18,6 @@
 #include <optional>
 #include <string_view>
 
-/** @addtogroup util
- *  @{
- */
-
 /**
  * @file
  * @brief Definitions of global environment variables which are understood by Legate.
@@ -103,6 +99,8 @@ class EnvironmentVariable<std::uint32_t> : public EnvironmentVariableBase {
  * @var LEGATE_TEST
  *
  * @brief Enables "testing" mode in Legate. Possible values: 0, 1.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_TEST{"LEGATE_TEST"};
 
@@ -111,6 +109,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_TEST{"LEGATE_TEST"};
  *
  * @brief Enables verbose resource consumption logging of the base mapper on
  * desctruction. Possible values: 0, 1.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_SHOW_USAGE{"LEGATE_SHOW_USAGE"};
 
@@ -122,6 +122,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_SHOW_USAGE{"LEGATE_SHO
  * Enabling this, means that Legate must have been configured with CUDA support, and that a
  * CUDA-capable device must be present at startup. If either of these conditions are not met,
  * Legate will abort execution.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_CUDA{"LEGATE_NEED_CUDA"};
 
@@ -133,6 +135,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_CUDA{"LEGATE_NEED
  * Enabling this, means that Legate must have been configured with OpenMP support, and that a
  * OpenMP-capable device must be present at startup. If either of these conditions are not met,
  * Legate will abort execution.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_OPENMP{"LEGATE_NEED_OPENMP"};
 
@@ -143,6 +147,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_OPENMP{"LEGATE_NE
  *
  * Enabling this, means that Legate must have been configured with networking support. If
  * either of this condition is not met, Legate will abort execution.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_NETWORK{"LEGATE_NEED_NETWORK"};
 
@@ -154,6 +160,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_NEED_NETWORK{"LEGATE_N
  *
  * This variable is useful to visually ensure that a particular task is being called. The
  * progress reports are emitted by Legate before entering into the task body itself.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_SHOW_PROGRESS{"LEGATE_SHOW_PROGRESS"};
 
@@ -165,6 +173,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_SHOW_PROGRESS{"LEGATE_
  * This variable may be enabled to debug logical issues between tasks (for example, control
  * replication issues) by executing the entire task graph without needing to execute the task
  * bodies themselves. This is particularly useful if the task bodies are expensive.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_EMPTY_TASK{"LEGATE_EMPTY_TASK"};
 
@@ -177,6 +187,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_EMPTY_TASK{"LEGATE_EMP
  * produces different results with this variable enabled and disabled very likely has a race
  * condition between streams. This is especially useful when combined with
  * CUDA_LAUNCH_BLOCKING.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_SYNC_STREAM_VIEW{
   "LEGATE_SYNC_STREAM_VIEW"};
@@ -185,6 +197,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_SYNC_STREAM_VIEW{
  * @var LEGATE_LOG_MAPPING
  *
  * @brief Instructs Legate to emit mapping decisions to stdout. Possible values: 0, 1.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_LOG_MAPPING{"LEGATE_LOG_MAPPING"};
 
@@ -192,6 +206,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_LOG_MAPPING{"LEGATE_LO
  * @var LEGATE_LOG_MAPPING
  *
  * @brief Instructs Legate to emit partitioning decisions to stdout. Possible values: 0, 1.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_LOG_PARTITIONING{
   "LEGATE_LOG_PARTITIONING"};
@@ -204,6 +220,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_LOG_PARTITIONING{
  * NCCL usually has a relatively high startup cost the first time any collective communication
  * is performed. This could corrupt performance measurements if that startup is performed in
  * the hot-path.
+ *
+ * @ingroup util
  */
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_WARMUP_NCCL{"LEGATE_WARMUP_NCCL"};
 
@@ -213,6 +231,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_WARMUP_NCCL{"LEGATE_WA
  * @brief Default arguments to pass to Legion initialization. Possible values: a string.
  *
  * These arguments are passed verbatim to Legion during runtime startup.
+ *
+ * @ingroup util
  */
 inline constexpr std::string_view LEGION_DEFAULT_ARGS = "LEGION_DEFAULT_ARGS";
 
@@ -234,5 +254,3 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_CONSENSUS{"LEGATE_CONS
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_DISABLE_MPI{"LEGATE_DISABLE_MPI"};
 
 }  // namespace legate
-
-/** @} */  // end of group util

@@ -12,10 +12,6 @@
 
 #pragma once
 
-/** @addtogroup util
- *  @{
- */
-
 /**
  * @file
  * @brief Definitions of preprocessor utilities.
@@ -41,6 +37,8 @@
  * @endcode
  *
  * @see LegateConcat()
+ *
+ * @ingroup util
  */
 #define LegateConcat_(x, ...) x##__VA_ARGS__
 
@@ -63,6 +61,8 @@
  * @endcode
  *
  * @see LegateConcat_()
+ *
+ * @ingroup util
  */
 #define LegateConcat(x, ...) LegateConcat_(x, __VA_ARGS__)
 
@@ -87,6 +87,8 @@
  * @endcode
  *
  * @see LegateStringize()
+ *
+ * @ingroup util
  */
 #define LegateStringize_(...) #__VA_ARGS__
 
@@ -110,6 +112,8 @@
  * @endcode
  *
  * @see LegateStringize_()
+ *
+ * @ingroup util
  */
 #define LegateStringize(...) LegateStringize_(__VA_ARGS__)
 
@@ -198,8 +202,8 @@
  * @endcode
  *
  * @see LegateConcat()
+ *
+ * @ingroup util
  */
 #define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))
 // NOLINTEND(bugprone-reserved-identifier)
-
-/** @} */  // end of group util

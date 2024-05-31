@@ -17,10 +17,6 @@
 
 #include <type_traits>
 
-/** @addtogroup util
- *  @{
- */
-
 /**
  * @file
  * @brief Definitions of utilities relating to normal and exceptional scope exit.
@@ -33,6 +29,8 @@ namespace legate {
  * exiting the scope.
  *
  * @tparam F The type of the callable to execute.
+ *
+ * @ingroup util
  */
 template <typename F>
 class ScopeGuard {
@@ -155,6 +153,8 @@ class ScopeGuard {
  * @tparam The type of \p fn, usually inferred from the argument itself.
  *
  * @see ScopeGuard
+ *
+ * @ingroup util
  */
 template <typename F>
 [[nodiscard]] ScopeGuard<F> make_scope_guard(F&& fn) noexcept;
@@ -200,6 +200,8 @@ template <typename F>
  *
  * @see ScopeGuard
  * @see LEGATE_SCOPE_FAIL
+ *
+ * @ingroup util
  */
 #define LEGATE_SCOPE_GUARD(...)                                   \
   const auto LegateConcat(__legate_core_scope_guard_, __LINE__) = \
@@ -210,6 +212,8 @@ template <typename F>
  * exited due to an exception.
  *
  * @tparam F The type of the callable to execute.
+ *
+ * @ingroup util
  */
 template <typename F>
 class ScopeFail {
@@ -272,6 +276,8 @@ class ScopeFail {
  * @tparam The type of \p fn, usually inferred from the argument itself.
  *
  * @see ScopeFail
+ *
+ * @ingroup util
  */
 template <typename F>
 [[nodiscard]] ScopeFail<F> make_scope_fail(F&& fn) noexcept;
@@ -288,13 +294,13 @@ template <typename F>
  *
  * @see ScopeFail
  * @see LEGATE_SCOPE_GUARD
+ *
+ * @ingroup util
  */
 #define LEGATE_SCOPE_FAIL(...)                                   \
   const auto LegateConcat(__legate_core_scope_fail_, __LINE__) = \
     ::legate::make_scope_fail([&]() noexcept { __VA_ARGS__; })
 
 }  // namespace legate
-
-/** @} */  // end of group util
 
 #include "core/utilities/scope_guard.inl"
