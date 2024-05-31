@@ -250,9 +250,7 @@ class Runtime {
     std::size_t num_tasks);
   void destroy_barrier(Legion::PhaseBarrier barrier);
 
-  [[nodiscard]] Legion::Future get_tunable(Legion::MapperID mapper_id,
-                                           std::int64_t tunable_id,
-                                           std::size_t size);
+  [[nodiscard]] Legion::Future get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
 
   template <class T>
   [[nodiscard]] T get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);

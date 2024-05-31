@@ -26,7 +26,7 @@ ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 template <typename T>
 T Runtime::get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id)
 {
-  return get_tunable(mapper_id, tunable_id, sizeof(T)).get_result<T>();
+  return get_tunable(mapper_id, tunable_id).get_result<T>();
 }
 
 template <typename T>

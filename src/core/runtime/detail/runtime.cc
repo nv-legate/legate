@@ -1099,12 +1099,9 @@ void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
   legion_runtime_->destroy_phase_barrier(legion_context_, std::move(barrier));
 }
 
-Legion::Future Runtime::get_tunable(Legion::MapperID mapper_id,
-                                    std::int64_t tunable_id,
-                                    std::size_t size)
+Legion::Future Runtime::get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id)
 {
-  const Legion::TunableLauncher launcher{
-    static_cast<Legion::TunableID>(tunable_id), mapper_id, 0, size};
+  const Legion::TunableLauncher launcher{static_cast<Legion::TunableID>(tunable_id), mapper_id, 0};
   return legion_runtime_->select_tunable_value(legion_context_, launcher);
 }
 

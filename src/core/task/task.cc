@@ -53,12 +53,9 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
     point_str << "," << point[dim];
   }
 
-  log_legate().print("%s %s task [%s], pt = (%s), proc = " IDFMT,
-                     task->get_task_name(),
-                     proc_kind_str,
-                     task->get_provenance_string().c_str(),
-                     point_str.str().c_str(),
-                     exec_proc.id);
+  log_legate().print() << task->get_task_name() << " " << proc_kind_str << " task ["
+                       << task->get_provenance_string() << "], pt = (" << point_str.str()
+                       << "), proc = " << exec_proc.id;
 }
 
 void task_wrapper(VariantImpl variant_impl,
@@ -87,7 +84,7 @@ void task_wrapper(VariantImpl variant_impl,
   std::stringstream ss;
   ss << get_task_name();
   if (!task->get_provenance_string().empty()) {
-    ss << " : " + task->get_provenance_string();
+    ss << " : " << task->get_provenance_string();
   }
   const std::string msg = std::move(ss).str();
   const nvtx::Range auto_range{msg.c_str()};
