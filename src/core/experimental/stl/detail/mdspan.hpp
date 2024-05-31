@@ -168,7 +168,7 @@ class mdspan_accessor {
  public:
   static constexpr auto Dim = std::max(ActualDim, std::int32_t{1});
   using value_type          = std::remove_const_t<ElementType>;
-  using element_type        = const_if_t<ActualDim == 0, ElementType>;
+  using element_type        = ElementType;
   using data_handle_type    = std::size_t;
   using accessor_type       = typename Accessor::template type<ElementType, ActualDim>;
   using reference           = decltype(std::declval<const accessor_type&>()[Point<Dim>::ONES()]);
