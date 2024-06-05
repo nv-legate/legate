@@ -19,6 +19,18 @@
 # bash run-cmake-format.sh {cmake-format,cmake-lint} infile [infile ...]
 set -ou pipefail
 
+if [[ $# -eq 0 ]]; then
+  echo "usage: [LEGATE_CORE_DIR=/absolute/path] [LEGATE_CORE_CMAKE_FORMAT_FILE=/absolute/path] $0 cmake-format|cmake-lint file1 [file2 ... fileN]" >&2
+  exit 2
+fi
+
+if [[ "${LEGATE_CORE_DIR:-}" == '' ]]; then
+  set -e
+  script_dir="$(dirname $(readlink -f $0))"
+  export LEGATE_CORE_DIR="$(${script_dir}/../get_legate_core_dir.py)"
+  set +e
+fi
+
 if [[ "${LEGATE_CORE_CMAKE_FORMAT_FILE:-}" == '' ]]; then
   LEGATE_CORE_CMAKE_FORMAT_FILE="${LEGATE_CORE_DIR}/scripts/pre-commit/cmake-format-legate-core.json"
 fi
@@ -65,7 +77,7 @@ case "${1}" in
     fi
     ;;
   *)
-    echo "Unknown command: ${1}"
+    echo "Unknown command: ${1}" >&2
     retcode=1
     ;;
 esac
