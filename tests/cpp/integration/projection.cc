@@ -21,8 +21,9 @@ using ProjectionTest = DefaultFixture;
 
 namespace {
 
-constexpr std::uint64_t BIG_EXTENT   = 100;
-constexpr std::uint64_t SMALL_EXTENT = 2;
+constexpr std::uint64_t BIGGER_EXTENT = 200;
+constexpr std::uint64_t BIG_EXTENT    = 100;
+constexpr std::uint64_t SMALL_EXTENT  = 2;
 
 }  // namespace
 
@@ -131,13 +132,13 @@ TEST_F(ProjectionTest, ExtraProjection3)
 TEST_F(ProjectionTest, Delinearization1)
 {
   test_delinearization(legate::Runtime::get_runtime()->create_array(
-    legate::Shape{BIG_EXTENT, SMALL_EXTENT, BIG_EXTENT}, legate::int64()));
+    legate::Shape{BIG_EXTENT, SMALL_EXTENT, BIGGER_EXTENT}, legate::int64()));
 }
 
 TEST_F(ProjectionTest, Delinearization2)
 {
   test_delinearization(legate::Runtime::get_runtime()
-                         ->create_array(legate::Shape{BIG_EXTENT, BIG_EXTENT}, legate::int64())
+                         ->create_array(legate::Shape{BIG_EXTENT, BIGGER_EXTENT}, legate::int64())
                          .promote(1, SMALL_EXTENT));
 }
 
