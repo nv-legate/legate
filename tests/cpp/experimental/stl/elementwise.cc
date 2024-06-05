@@ -21,7 +21,8 @@ namespace stl = legate::experimental::stl;
 
 namespace {
 
-struct square {
+class Square {
+ public:
   template <class T>
   LEGATE_HOST_DEVICE T operator()(T x) const
   {
@@ -29,7 +30,7 @@ struct square {
   }
 };
 
-void TestElementwiseRowOperation()
+void test_elementwise_row_operation()
 {
   auto input  = stl::create_store<std::int64_t>({3, 4});
   auto result = stl::create_store({3, 4}, std::int64_t{0});
@@ -57,7 +58,7 @@ void TestElementwiseRowOperation()
 
   {
     auto res_row = *res_iter;
-    stl::assign(stl::as_mdspan(res_row), stl::elementwise(square())(stl::as_mdspan(*in_iter)));
+    stl::assign(stl::as_mdspan(res_row), stl::elementwise(Square{})(stl::as_mdspan(*in_iter)));
   }
 
   EXPECT_EQ(result_view(0, 0), 0);
@@ -69,7 +70,7 @@ void TestElementwiseRowOperation()
     ++in_iter;
     ++res_iter;
     auto res_row = *res_iter;
-    stl::assign(stl::as_mdspan(res_row), stl::elementwise(square())(stl::as_mdspan(*in_iter)));
+    stl::assign(stl::as_mdspan(res_row), stl::elementwise(Square{})(stl::as_mdspan(*in_iter)));
   }
 
   EXPECT_EQ(result_view(1, 0), 16);
@@ -81,7 +82,7 @@ void TestElementwiseRowOperation()
     ++in_iter;
     ++res_iter;
     auto res_row = *res_iter;
-    stl::assign(stl::as_mdspan(res_row), stl::elementwise(square())(stl::as_mdspan(*in_iter)));
+    stl::assign(stl::as_mdspan(res_row), stl::elementwise(Square{})(stl::as_mdspan(*in_iter)));
   }
 
   EXPECT_EQ(result_view(2, 0), 64);
@@ -102,4 +103,4 @@ void TestElementwiseRowOperation()
 }
 }  // namespace
 
-TEST_F(STL, TestElementwiseRowOperation) { TestElementwiseRowOperation(); }
+TEST_F(STL, TestElementwiseRowOperation) { test_elementwise_row_operation(); }

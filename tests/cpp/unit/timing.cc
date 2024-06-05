@@ -21,7 +21,7 @@ namespace {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-constexpr const char library_name[] = "test_timing";
+constexpr std::string_view LIBRARY_NAME = "test_timing";
 
 void hello_cpu_variant(legate::TaskContext& context)
 {
@@ -47,7 +47,7 @@ struct Timing : DefaultFixture {
   {
     DefaultFixture::SetUp();
     auto runtime = legate::Runtime::get_runtime();
-    auto library = runtime->create_library(library_name);
+    auto library = runtime->create_library(LIBRARY_NAME);
     HelloTask::register_variants(library);
   }
 };
@@ -55,7 +55,7 @@ struct Timing : DefaultFixture {
 void test_hello_task()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   auto store   = runtime->create_store(legate::Shape{1000, 1000}, legate::int64());
   auto task    = runtime->create_task(library, HelloTask::TASK_ID);
   auto part    = task.declare_partition();

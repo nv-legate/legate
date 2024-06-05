@@ -67,7 +67,7 @@ using begin_result_t = meta::eval<begin_fn<Ty>, Ty>;
 class tag {
  public:
   template <typename Range>
-  static constexpr bool _nothrow_begin() noexcept
+  static constexpr bool nothrow_begin() noexcept
   {
     if constexpr (meta::evaluable_q<member_begin_t, Range>) {
       return noexcept(std::declval<Range>().begin());
@@ -77,7 +77,7 @@ class tag {
   }
 
   template <typename Range>
-  [[nodiscard]] auto operator()(Range&& rng) const noexcept(_nothrow_begin<Range>())
+  [[nodiscard]] auto operator()(Range&& rng) const noexcept(nothrow_begin<Range>())
     -> begin_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_begin_t, Range>) {
@@ -110,7 +110,7 @@ using end_result_t = meta::eval<end_fn<Ty>, Ty>;
 class tag {
  public:
   template <typename Range>
-  static constexpr bool _nothrow_end() noexcept
+  static constexpr bool nothrow_end() noexcept
   {
     if constexpr (meta::evaluable_q<member_end_t, Range>) {
       return noexcept(std::declval<Range>().end());
@@ -120,7 +120,7 @@ class tag {
   }
 
   template <typename Range>
-  [[nodiscard]] auto operator()(Range&& rng) const noexcept(_nothrow_end<Range>())
+  [[nodiscard]] auto operator()(Range&& rng) const noexcept(nothrow_end<Range>())
     -> end_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_end_t, Range>) {
@@ -136,8 +136,10 @@ class tag {
 
 namespace tag {
 
+// NOLINTBEGIN(readability-identifier-naming)
 inline constexpr detail::begin::tag begin{};
 inline constexpr detail::end::tag end{};
+// NOLINTEND(readability-identifier-naming)
 
 }  // namespace tag
 
@@ -162,21 +164,21 @@ using range_value_t = typename std::iterator_traits<iterator_t<Range>>::value_ty
 namespace detail {
 
 template <typename Iter>
-auto is_iterator_like_(Iter iter, Iter other)
+auto is_iterator_like(Iter iter, Iter other)
   -> decltype((void)++iter, (void)*iter, (void)(iter == other));
 
 template <typename Range>
-auto is_range_like_(Range&& rng)
-  -> decltype(detail::is_iterator_like_(stl::begin(rng), stl::begin(rng)),
+auto is_range_like(Range&& rng)
+  -> decltype(detail::is_iterator_like(stl::begin(rng), stl::begin(rng)),
               (void)(stl::begin(rng) == stl::end(rng)));
 
 template <typename Range>
-using is_range_like_t = decltype(detail::is_range_like_(std::declval<Range>()));
+using is_range_like_t = decltype(detail::is_range_like(std::declval<Range>()));
 
 }  // namespace detail
 
 template <typename Range>
-inline constexpr bool range = meta::evaluable_q<detail::is_range_like_t, Range>;
+inline constexpr bool is_range_v = meta::evaluable_q<detail::is_range_like_t, Range>;
 
 }  // namespace legate::experimental::stl
 #endif
@@ -192,18 +194,18 @@ template <typename T>
 using as_range_t = decltype(as_range(std::declval<T>()));
 
 template <typename T>
-inline constexpr bool range_like_ = meta::evaluable_q<as_range_t, T>;
+inline constexpr bool is_range_like_v = meta::evaluable_q<as_range_t, T>;
 
 template <typename T>
 using as_range_result_t =
-  meta::eval<meta::if_c<range<T>, meta::always<T>, meta::quote<as_range_t>>, T>;
+  meta::eval<meta::if_c<is_range_v<T>, meta::always<T>, meta::quote<as_range_t>>, T>;
 
 class tag {
  public:
   template <typename T>
-  static constexpr bool _noexcept_as_range() noexcept
+  static constexpr bool noexcept_as_range() noexcept
   {
-    if constexpr (range<T>) {
+    if constexpr (is_range_v<T>) {
       return noexcept(std::decay_t<T>{std::declval<T>()});
     } else {
       return noexcept(as_range(std::declval<T>()));
@@ -211,9 +213,9 @@ class tag {
   }
 
   template <typename T>
-  [[nodiscard]] as_range_result_t<T> operator()(T&& rng) const noexcept(_noexcept_as_range<T>())
+  [[nodiscard]] as_range_result_t<T> operator()(T&& rng) const noexcept(noexcept_as_range<T>())
   {
-    if constexpr (range<T>) {
+    if constexpr (is_range_v<T>) {
       return std::forward<T>(rng);
     } else {
       return as_range(std::forward<T>(rng));
@@ -225,7 +227,7 @@ class tag {
 
 inline namespace obj {
 
-inline constexpr as_range::tag as_range{};
+inline constexpr as_range::tag as_range{};  // NOLINT(readability-identifier-naming)
 
 }  // namespace obj
 }  // namespace tags

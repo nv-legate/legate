@@ -225,7 +225,7 @@ void InternalSharedPtr<T>::maybe_destroy_() noexcept
   if constexpr (detail::shared_from_this_enabled_v<element_type>) {
     ctrl_->strong_deref();
   }
-  LegateAssert(!use_count());
+  LEGATE_ASSERT(!use_count());
   // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
   // circumstances.
   //
@@ -244,8 +244,8 @@ template <typename T>
 void InternalSharedPtr<T>::strong_reference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
-    LegateAssert(use_count());
+    LEGATE_ASSERT(get());
+    LEGATE_ASSERT(use_count());
     ctrl_->strong_ref();
   }
 }
@@ -254,7 +254,7 @@ template <typename T>
 void InternalSharedPtr<T>::strong_dereference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
+    LEGATE_ASSERT(get());
     ctrl_->strong_deref();
     maybe_destroy_();
   }
@@ -264,8 +264,8 @@ template <typename T>
 void InternalSharedPtr<T>::weak_reference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
-    LegateAssert(use_count());
+    LEGATE_ASSERT(get());
+    LEGATE_ASSERT(use_count());
     ctrl_->weak_ref();
   }
 }
@@ -274,31 +274,35 @@ template <typename T>
 void InternalSharedPtr<T>::weak_dereference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
+    LEGATE_ASSERT(get());
     ctrl_->weak_deref();
     maybe_destroy_();
   }
 }
 
+// NOLINTBEGIN(readability-identifier-naming)
 template <typename T>
 void InternalSharedPtr<T>::user_reference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
-    LegateAssert(use_count());
+    LEGATE_ASSERT(get());
+    LEGATE_ASSERT(use_count());
     ctrl_->user_ref();
   }
 }
+// NOLINTEND(readability-identifier-naming)
 
+// NOLINTBEGIN(readability-identifier-naming)
 template <typename T>
 void InternalSharedPtr<T>::user_dereference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
+    LEGATE_ASSERT(get());
     ctrl_->user_deref();
     maybe_destroy_();
   }
 }
+// NOLINTEND(readability-identifier-naming)
 
 template <typename T>
 template <typename U, typename V>
@@ -364,14 +368,14 @@ catch (...)
 
 template <typename T>
 InternalSharedPtr<T>::InternalSharedPtr(element_type* ptr)
-  : InternalSharedPtr{ptr, detail::shared_ptr_default_delete<T, element_type>{}}
+  : InternalSharedPtr{ptr, detail::SharedPtrDefaultDelete<T, element_type>{}}
 {
 }
 
 template <typename T>
 template <typename U, typename SFINAE>
 InternalSharedPtr<T>::InternalSharedPtr(U* ptr)
-  : InternalSharedPtr{ptr, detail::shared_ptr_default_delete<T, U>{}}
+  : InternalSharedPtr{ptr, detail::SharedPtrDefaultDelete<T, U>{}}
 {
   // NOLINTNEXTLINE(bugprone-sizeof-expression)
   static_assert(sizeof(U) > 0, "incomplete type");

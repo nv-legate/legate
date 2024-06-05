@@ -94,21 +94,17 @@ using namespace ::legate::experimental::stl::tags::obj;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 using extents                              = const std::size_t[];
-inline constexpr std::int32_t dynamic_dims = -1;
+inline constexpr std::int32_t dynamic_dims = -1;  // NOLINT(readability-identifier-naming)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename ElementType, std::int32_t Dim = dynamic_dims>
-class logical_store;
+class logical_store;  // NOLINT(readability-identifier-naming)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
 
-template <typename Store>
-struct value_type_of_;
-
 template <typename ElementType, typename Extents, typename Layout, typename Accessor>
-class value_type_of_<std::mdspan<ElementType, Extents, Layout, Accessor>> {
- public:
+struct ValueTypeOf<std::mdspan<ElementType, Extents, Layout, Accessor>> {
   using type = ElementType;
 };
 
@@ -136,7 +132,7 @@ inline constexpr bool has_dim_v =
  */
 template <typename Storage>
 using value_type_of_t =
-  LEGATE_STL_IMPLEMENTATION_DEFINED(typename detail::value_type_of_<remove_cvref_t<Storage>>::type);
+  LEGATE_STL_IMPLEMENTATION_DEFINED(typename detail::ValueTypeOf<remove_cvref_t<Storage>>::type);
 
 /**
  * @brief An alias for the element type of a `legate::experimental::stl::logical_store_like` type. A
@@ -187,15 +183,15 @@ logical_store<ElementType, Dim> as_typed(const legate::LogicalStore& store);
 namespace detail {
 
 template <typename Function, typename... InputSpans>
-class elementwise_accessor;
+class ElementwiseAccessor;
 
-class default_accessor;
+class DefaultAccessor;
 
 template <typename Op, bool Exclusive>
-class reduction_accessor;
+class ReductionAccessor;
 
 template <typename ElementType, std::int32_t Dim, typename Accessor /*= default_accessor*/>
-class mdspan_accessor;
+class MDSpanAccessor;
 
 }  // namespace detail
 /** @endcond */
@@ -215,7 +211,7 @@ LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
   const legate::LogicalStore& store);
 
 template <typename ElementType, std::int32_t Dim, template <typename, std::int32_t> typename StoreT>
-  requires(same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
+  requires(std::is_same_v<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
 LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
   const StoreT<ElementType, Dim>& store);
 
@@ -226,9 +222,9 @@ LEGATE_HOST_DEVICE [[nodiscard]] mdspan_t<ElementType, Dim> as_mdspan(
 void as_mdspan(const PhysicalStore&&) = delete;
 /** @endcond */
 
-struct iteration_kind {};
+struct iteration_kind {};  // NOLINT(readability-identifier-naming)
 
-struct reduction_kind {};
+struct reduction_kind {};  // NOLINT(readability-identifier-naming)
 
 /** @cond */
 namespace detail {
@@ -298,7 +294,7 @@ static_assert(!std::is_same_v<int, std::int64_t>);
 }  // namespace detail
 /** @endcond */
 
-#if LegateDefined(LEGATE_DOXYGEN)
+#if LEGATE_DEFINED(LEGATE_DOXYGEN)
 // clang-format off
 /**
  * @brief A type `StoreLike` satisfied `logical_store_like` when it exposes a
@@ -362,13 +358,16 @@ concept legate_reduction =
 
 /** @cond */
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// TODO(ericniebler)
+// Make these into is_<question>_v
 template <typename StoreLike>
-inline constexpr bool logical_store_like =
+inline constexpr bool logical_store_like =  // NOLINT(readability-identifier-naming)
   detail::is_logical_store_like<remove_cvref_t<StoreLike>>(0);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Reduction>
-inline constexpr bool legate_reduction = detail::is_legate_reduction<remove_cvref_t<Reduction>>(0);
+inline constexpr bool legate_reduction =  // NOLINT(readability-identifier-naming)
+  detail::is_legate_reduction<remove_cvref_t<Reduction>>(0);
 /** @endcond */
 
 }  // namespace legate::experimental::stl

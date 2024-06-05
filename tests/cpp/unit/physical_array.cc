@@ -23,7 +23,7 @@ using PhysicalArrayUnit = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "legate.physical_array";
+constexpr std::string_view LIBRARY_NAME = "legate.physical_array";
 
 }  // namespace
 
@@ -523,7 +523,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   UnboundArrayTask::register_variants(context);
   ListArrayTask::register_variants(context);
   StringArrayTask::register_variants(context);
@@ -568,7 +568,7 @@ void test_bound_array(bool nullable)
 void test_unbound_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto dim           = 3;
   auto logical_array = runtime->create_array(legate::uint32(), dim, nullable);
   auto task          = runtime->create_task(
@@ -584,7 +584,7 @@ void test_unbound_array(bool nullable)
 void test_bound_list_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto arr_type      = legate::list_type(legate::int64()).as_list_type();
   auto logical_array = runtime->create_array({6}, arr_type, nullable);
   auto task =
@@ -599,7 +599,7 @@ void test_bound_list_array(bool nullable)
 void test_unbound_list_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto arr_type      = legate::list_type(legate::int64()).as_list_type();
   auto dim           = 1;
   auto logical_array = runtime->create_array(arr_type, dim, nullable);
@@ -615,7 +615,7 @@ void test_unbound_list_array(bool nullable)
 void test_bound_string_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto str_type      = legate::string_type();
   auto logical_array = runtime->create_array({5}, str_type, nullable);
   auto task =
@@ -630,7 +630,7 @@ void test_bound_string_array(bool nullable)
 void test_unbound_string_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto str_type      = legate::string_type();
   auto dim           = 1;
   auto logical_array = runtime->create_array(str_type, dim, nullable);
@@ -667,7 +667,7 @@ void test_string_array(bool nullable)
 void test_fill_bound_primitive_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto logical_array = runtime->create_array({1, 4}, legate::int32(), nullable);
 
   // Fill task
@@ -695,7 +695,7 @@ void test_fill_bound_primitive_array(bool nullable)
 void test_fill_unbound_primitive_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto dim           = 2;
   auto logical_array = runtime->create_array(legate::int32(), dim, nullable);
 
@@ -724,7 +724,7 @@ void test_fill_unbound_primitive_array(bool nullable)
 void test_fill_bound_list_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto arr_type      = legate::list_type(legate::int64()).as_list_type();
   auto logical_array = runtime->create_array({3}, arr_type, nullable);
 
@@ -753,7 +753,7 @@ void test_fill_bound_list_array(bool nullable)
 void test_fill_unbound_list_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto arr_type      = legate::list_type(legate::int64()).as_list_type();
   auto dim           = 1;
   auto logical_array = runtime->create_array(arr_type, dim, nullable);
@@ -783,7 +783,7 @@ void test_fill_unbound_list_array(bool nullable)
 void test_fill_bound_string_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto arr_type      = legate::string_type();
   auto logical_array = runtime->create_array({3}, arr_type, nullable);
 
@@ -812,7 +812,7 @@ void test_fill_bound_string_array(bool nullable)
 void test_fill_unbound_string_array(bool nullable)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto arr_type      = legate::string_type();
   auto dim           = 1;
   auto logical_array = runtime->create_array(arr_type, dim, nullable);

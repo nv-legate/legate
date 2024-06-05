@@ -22,7 +22,7 @@ enum TaskOpCode {
   PROVENANCE = 0,
 };
 
-constexpr const char library_name[] = "test_region_manager";
+constexpr std::string_view LIBRARY_NAME = "test_region_manager";
 
 void register_tasks();
 

@@ -24,7 +24,7 @@ namespace fill_test {
 
 namespace {
 
-constexpr const char library_name[] = "test_fill";
+constexpr std::string_view LIBRARY_NAME = "test_fill";
 
 constexpr std::size_t SIZE = 10;
 
@@ -78,7 +78,7 @@ void register_tasks()
   bool created = false;
   auto runtime = legate::Runtime::get_runtime();
   auto library =
-    runtime->find_or_create_library(library_name, legate::ResourceConfig{}, nullptr, &created);
+    runtime->find_or_create_library(LIBRARY_NAME, legate::ResourceConfig{}, nullptr, &created);
   if (created) {
     CheckTask<1>::register_variants(library);
     CheckTask<2>::register_variants(library);
@@ -173,7 +173,7 @@ template <std::int32_t DIM>
 void check_output(const legate::LogicalArray& array, const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto task = runtime->create_task(context, static_cast<std::int64_t>(CHECK_TASK) + array.dim());
   task.add_input(array);
@@ -187,7 +187,7 @@ void check_output_slice(const legate::LogicalArray& array,
                         std::int64_t offset)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto task =
     runtime->create_task(context, static_cast<std::int64_t>(CHECK_SLICE_TASK) + array.dim());
@@ -201,7 +201,7 @@ void check_output_slice(const legate::LogicalArray& array,
 legate::LogicalStore wrap_fill_value(const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto result  = runtime->create_store(legate::Shape{1}, value.type(), true);
 
   auto task = runtime->create_task(context, WRAP_FILL_VAL_TASK);

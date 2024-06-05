@@ -161,7 +161,7 @@ class compressed_pair_impl<T, U, 3> : T, U {
 }  // namespace compressed_pair_detail
 
 template <typename T, typename U>
-class compressed_pair
+class CompressedPair
   : public compressed_pair_detail::compressed_pair_impl<
       T,
       U,
@@ -209,30 +209,30 @@ static_assert(!std::is_empty_v<EmptyMember>);
 static_assert(sizeof(EmptyMember) > 1);
 
 // empty-empty should only be 1 byte since both are compressed out
-static_assert(std::is_empty_v<compressed_pair<Empty, Empty2>>);
-static_assert(sizeof(compressed_pair<Empty, Empty2>) == 1);
+static_assert(std::is_empty_v<CompressedPair<Empty, Empty2>>);
+static_assert(sizeof(CompressedPair<Empty, Empty2>) == 1);
 
 // flipping template param order changes nothing
-static_assert(std::is_empty_v<compressed_pair<Empty2, Empty>>);
-static_assert(sizeof(compressed_pair<Empty2, Empty>) == 1);
+static_assert(std::is_empty_v<CompressedPair<Empty2, Empty>>);
+static_assert(sizeof(CompressedPair<Empty2, Empty>) == 1);
 
 // empty-not_empty should be less than sum of sizes, since empty is compressed out
-static_assert(!std::is_empty_v<compressed_pair<Empty, NotEmpty>>);
-static_assert(sizeof(compressed_pair<Empty, NotEmpty>) < (sizeof(Empty) + sizeof(NotEmpty)));
+static_assert(!std::is_empty_v<CompressedPair<Empty, NotEmpty>>);
+static_assert(sizeof(CompressedPair<Empty, NotEmpty>) < (sizeof(Empty) + sizeof(NotEmpty)));
 
 // flipping template param order changes nothing
-static_assert(!std::is_empty_v<compressed_pair<NotEmpty, Empty>>);
-static_assert(sizeof(compressed_pair<NotEmpty, Empty>) < (sizeof(NotEmpty) + sizeof(Empty)));
+static_assert(!std::is_empty_v<CompressedPair<NotEmpty, Empty>>);
+static_assert(sizeof(CompressedPair<NotEmpty, Empty>) < (sizeof(NotEmpty) + sizeof(Empty)));
 
 // empty_member-not_empty should also be greater than or equal to sum of sizes (g.t. because
 // potential padding) because neither is compressed away
-static_assert(!std::is_empty_v<compressed_pair<EmptyMember, NotEmpty>>);
-static_assert(sizeof(compressed_pair<EmptyMember, NotEmpty>) >=
+static_assert(!std::is_empty_v<CompressedPair<EmptyMember, NotEmpty>>);
+static_assert(sizeof(CompressedPair<EmptyMember, NotEmpty>) >=
               (sizeof(EmptyMember) + sizeof(NotEmpty)));
 
 // flipping template param order changes nothing
-static_assert(!std::is_empty_v<compressed_pair<NotEmpty, EmptyMember>>);
-static_assert(sizeof(compressed_pair<NotEmpty, EmptyMember>) >=
+static_assert(!std::is_empty_v<CompressedPair<NotEmpty, EmptyMember>>);
+static_assert(sizeof(CompressedPair<NotEmpty, EmptyMember>) >=
               (sizeof(NotEmpty) + sizeof(EmptyMember)));
 
 }  // namespace compressed_pair_test

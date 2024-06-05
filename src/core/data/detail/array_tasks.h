@@ -22,10 +22,10 @@ class FixupRanges : public LegateTask<FixupRanges> {
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIXUP_RANGES;
 
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };
@@ -35,10 +35,10 @@ class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_OFFSETS_TO_RANGES;
 
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };
@@ -48,10 +48,10 @@ class RangesToOffsets : public LegateTask<RangesToOffsets> {
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_RANGES_TO_OFFSETS;
 
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };

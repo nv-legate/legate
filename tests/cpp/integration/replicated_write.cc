@@ -14,7 +14,7 @@
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
 
@@ -29,7 +29,7 @@ using ReplicatedWrite = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_replicated_write";
+constexpr std::string_view LIBRARY_NAME = "test_replicated_write";
 
 }  // namespace
 
@@ -47,7 +47,7 @@ struct WriterTask : public legate::LegateTask<WriterTask> {
       }
     }
   }
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
@@ -56,11 +56,11 @@ struct WriterTask : public legate::LegateTask<WriterTask> {
       auto acc    = output.data().write_accessor<int64_t, 2>();
       auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
       auto vals   = std::vector<std::int64_t>(shape.volume(), 42);
-      LegateCheckCUDA(cudaMemcpyAsync(acc.ptr(shape),
-                                      vals.data(),
-                                      sizeof(int64_t) * shape.volume(),
-                                      cudaMemcpyHostToDevice,
-                                      stream));
+      LEGATE_CHECK_CUDA(cudaMemcpyAsync(acc.ptr(shape),
+                                        vals.data(),
+                                        sizeof(int64_t) * shape.volume(),
+                                        cudaMemcpyHostToDevice,
+                                        stream));
     }
   }
 #endif
@@ -74,7 +74,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   WriterTask::register_variants(library);
 }
 
@@ -141,7 +141,7 @@ TEST_F(ReplicatedWrite, AutoNonScalar)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   test_auto_task(library, {2, 2}, 1);
   test_auto_task(library, {3, 3}, 2);
 }
@@ -151,7 +151,7 @@ TEST_F(ReplicatedWrite, ManualNonScalar)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   test_manual_task(library, {2, 2}, 1);
   test_manual_task(library, {3, 3}, 2);
 }
@@ -161,7 +161,7 @@ TEST_F(ReplicatedWrite, AutoScalar)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   test_auto_task(library, {1, 1}, 1);
   test_auto_task(library, {1, 1}, 2);
 }
@@ -171,7 +171,7 @@ TEST_F(ReplicatedWrite, ManualScalar)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   test_manual_task(library, {1, 1}, 1);
   test_manual_task(library, {1, 1}, 2);
 }

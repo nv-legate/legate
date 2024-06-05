@@ -22,7 +22,7 @@ namespace legate::detail {
 namespace {
 
 template <bool RECT>
-struct find_bounding_box_fn {
+struct FindBoundingBoxFn {
   template <std::int32_t POINT_NDIM, std::int32_t STORE_NDIM>
   void operator()(const legate::PhysicalStore& input, const legate::PhysicalStore& output)
   {
@@ -94,10 +94,10 @@ struct find_bounding_box_fn {
 
   if (legate::is_rect_type(type)) {
     legate::double_dispatch(
-      legate::ndim_rect_type(type), input.dim(), find_bounding_box_fn<true>{}, input, output);
+      legate::ndim_rect_type(type), input.dim(), FindBoundingBoxFn<true>{}, input, output);
   } else {
     legate::double_dispatch(
-      legate::ndim_point_type(type), input.dim(), find_bounding_box_fn<false>{}, input, output);
+      legate::ndim_point_type(type), input.dim(), FindBoundingBoxFn<false>{}, input, output);
   }
 }
 

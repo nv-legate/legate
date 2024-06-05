@@ -21,8 +21,8 @@ using TreeReduce = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_tree_reduce";
-constexpr std::size_t TILE_SIZE     = 10;
+constexpr std::string_view LIBRARY_NAME = "test_tree_reduce";
+constexpr std::size_t TILE_SIZE         = 10;
 
 }  // namespace
 
@@ -93,7 +93,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   ProduceNormalTask::register_variants(context);
   ProduceUnboundTask::register_variants(context);
   ReduceNormalTask::register_variants(context);
@@ -105,7 +105,7 @@ TEST_F(TreeReduce, AutoProducer)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   constexpr std::size_t num_tasks = 3;
   constexpr std::size_t tile_size = TILE_SIZE;
@@ -127,7 +127,7 @@ TEST_F(TreeReduce, ManualProducer)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   constexpr std::size_t num_tasks = 3;
   constexpr std::size_t tile_size = TILE_SIZE;
@@ -149,7 +149,7 @@ TEST_F(TreeReduce, ManualProducerMultiLevel)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   constexpr std::size_t num_tasks = 6;
   constexpr std::size_t tile_size = TILE_SIZE;
@@ -171,7 +171,7 @@ TEST_F(TreeReduce, ManualProducerUnbound)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   // unbound store
   auto store                      = runtime->create_store(legate::int64());
@@ -191,7 +191,7 @@ TEST_F(TreeReduce, ManualProducerSingle)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   // unbound store
   auto store = runtime->create_store(legate::int64());
@@ -209,7 +209,7 @@ TEST_F(TreeReduce, AutoProducerSingle)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   // unbound store
   auto store = runtime->create_store(legate::int64());

@@ -23,7 +23,7 @@ using Integration = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_inout";
+constexpr std::string_view LIBRARY_NAME = "test_inout";
 
 }  // namespace
 
@@ -93,14 +93,14 @@ void register_tasks()
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->create_library(
-    library_name, legate::ResourceConfig{}, std::make_unique<TesterMapper>());
+    LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<TesterMapper>());
   InoutTask::register_variants(library);
 }
 
 void test_inout()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   const auto stores = {
     runtime->create_store(legate::Shape{10, 10}, legate::int64()),

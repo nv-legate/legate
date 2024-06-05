@@ -53,7 +53,7 @@ void test_primitive_type(const legate::Type& type,
                          const std::string& type_string,
                          std::uint32_t size)
 {
-  EXPECT_EQ(type.code(), legate::type_code_of<T>);
+  EXPECT_EQ(type.code(), legate::type_code_of_v<T>);
   EXPECT_EQ(type.size(), size);
   // need extra layer of template indirection since alignof(void) (for null_type) is illegal
   EXPECT_EQ(type.alignment(), alignment_of<T>::value);
@@ -526,46 +526,46 @@ TEST_F(TypeUnit, ReductionOperator)
 
 // TEST_F(TypeUnit, TypeCodeOf)
 // {
-static_assert(legate::type_code_of<void> == legate::Type::Code::NIL);
-static_assert(legate::type_code_of<bool> == legate::Type::Code::BOOL);
-static_assert(legate::type_code_of<std::int8_t> == legate::Type::Code::INT8);
-static_assert(legate::type_code_of<std::int16_t> == legate::Type::Code::INT16);
-static_assert(legate::type_code_of<std::int32_t> == legate::Type::Code::INT32);
-static_assert(legate::type_code_of<std::int64_t> == legate::Type::Code::INT64);
-static_assert(legate::type_code_of<std::uint8_t> == legate::Type::Code::UINT8);
-static_assert(legate::type_code_of<std::uint16_t> == legate::Type::Code::UINT16);
-static_assert(legate::type_code_of<std::uint32_t> == legate::Type::Code::UINT32);
-static_assert(legate::type_code_of<std::uint64_t> == legate::Type::Code::UINT64);
-static_assert(legate::type_code_of<__half> == legate::Type::Code::FLOAT16);
-static_assert(legate::type_code_of<float> == legate::Type::Code::FLOAT32);
-static_assert(legate::type_code_of<double> == legate::Type::Code::FLOAT64);
-static_assert(legate::type_code_of<complex<float>> == legate::Type::Code::COMPLEX64);
-static_assert(legate::type_code_of<complex<double>> == legate::Type::Code::COMPLEX128);
-static_assert(legate::type_code_of<std::string> == legate::Type::Code::STRING);
+static_assert(legate::type_code_of_v<void> == legate::Type::Code::NIL);
+static_assert(legate::type_code_of_v<bool> == legate::Type::Code::BOOL);
+static_assert(legate::type_code_of_v<std::int8_t> == legate::Type::Code::INT8);
+static_assert(legate::type_code_of_v<std::int16_t> == legate::Type::Code::INT16);
+static_assert(legate::type_code_of_v<std::int32_t> == legate::Type::Code::INT32);
+static_assert(legate::type_code_of_v<std::int64_t> == legate::Type::Code::INT64);
+static_assert(legate::type_code_of_v<std::uint8_t> == legate::Type::Code::UINT8);
+static_assert(legate::type_code_of_v<std::uint16_t> == legate::Type::Code::UINT16);
+static_assert(legate::type_code_of_v<std::uint32_t> == legate::Type::Code::UINT32);
+static_assert(legate::type_code_of_v<std::uint64_t> == legate::Type::Code::UINT64);
+static_assert(legate::type_code_of_v<__half> == legate::Type::Code::FLOAT16);
+static_assert(legate::type_code_of_v<float> == legate::Type::Code::FLOAT32);
+static_assert(legate::type_code_of_v<double> == legate::Type::Code::FLOAT64);
+static_assert(legate::type_code_of_v<complex<float>> == legate::Type::Code::COMPLEX64);
+static_assert(legate::type_code_of_v<complex<double>> == legate::Type::Code::COMPLEX128);
+static_assert(legate::type_code_of_v<std::string> == legate::Type::Code::STRING);
 // }
 
 // TEST_F(TypeUnit, TypeOf)
 // {
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::BOOL>, bool>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::INT8>, std::int8_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::INT16>, std::int16_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::INT32>, std::int32_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::INT64>, std::int64_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::UINT8>, std::uint8_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::UINT16>, std::uint16_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::UINT32>, std::uint32_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::UINT64>, std::uint64_t>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::FLOAT16>, __half>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::FLOAT32>, float>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::FLOAT64>, double>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::COMPLEX64>, complex<float>>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::COMPLEX128>, complex<double>>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::STRING>, std::string>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::NIL>, void>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::FIXED_ARRAY>, void>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::STRUCT>, void>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::LIST>, void>);
-static_assert(std::is_same_v<legate::type_of<legate::Type::Code::BINARY>, void>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::BOOL>, bool>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::INT8>, std::int8_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::INT16>, std::int16_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::INT32>, std::int32_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::INT64>, std::int64_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::UINT8>, std::uint8_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::UINT16>, std::uint16_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::UINT32>, std::uint32_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::UINT64>, std::uint64_t>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::FLOAT16>, __half>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::FLOAT32>, float>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::FLOAT64>, double>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::COMPLEX64>, complex<float>>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::COMPLEX128>, complex<double>>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::STRING>, std::string>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::NIL>, void>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::FIXED_ARRAY>, void>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::STRUCT>, void>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::LIST>, void>);
+static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::BINARY>, void>);
 // }
 
 // TEST_F(TypeUnit, TypeUtils)

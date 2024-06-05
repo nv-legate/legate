@@ -51,7 +51,7 @@ inline void ManualTask::validate() {}
 
 inline void ManualTask::launch(Strategy* /*strategy*/) { launch(); }
 
-inline void ManualTask::launch() { launch_task(strategy_.get()); }
+inline void ManualTask::launch() { launch_task_(strategy_.get()); }
 
 inline void ManualTask::add_to_solver(ConstraintSolver& /*solver*/) {}
 

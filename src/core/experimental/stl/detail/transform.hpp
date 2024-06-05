@@ -25,7 +25,7 @@ namespace legate::experimental::stl {
 namespace detail {
 
 template <typename UnaryOperation>
-class unary_transform {
+class UnaryTransform {
  public:
   UnaryOperation op{};
 
@@ -37,10 +37,10 @@ class unary_transform {
 };
 
 template <typename UnaryOperation>
-unary_transform(UnaryOperation) -> unary_transform<UnaryOperation>;
+UnaryTransform(UnaryOperation) -> UnaryTransform<UnaryOperation>;
 
 template <typename BinaryOperation>
-class binary_transform {
+class BinaryTransform {
  public:
   BinaryOperation op{};
 
@@ -53,7 +53,7 @@ class binary_transform {
 };
 
 template <typename BinaryOperation>
-binary_transform(BinaryOperation) -> binary_transform<BinaryOperation>;
+BinaryTransform(BinaryOperation) -> BinaryTransform<BinaryOperation>;
 
 }  // namespace detail
 
@@ -65,7 +65,7 @@ template <typename InputRange,
 void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
 {
   detail::check_function_type<UnaryOperation>();
-  stl::launch_task(stl::function(detail::unary_transform{std::move(op)}),
+  stl::launch_task(stl::function(detail::UnaryTransform{std::move(op)}),
                    stl::inputs(std::forward<InputRange>(input)),
                    stl::outputs(std::forward<OutputRange>(output)),
                    stl::constraints(stl::align(stl::inputs[0], stl::outputs[0])));
@@ -84,11 +84,11 @@ void transform(InputRange1&& input1, InputRange2&& input2, OutputRange&& output,
   // Check that the operation is trivially relocatable
   detail::check_function_type<BinaryOperation>();
 
-  LegateAssert(input1.extents() == input2.extents());
-  LegateAssert(input1.extents() == output.extents());
+  LEGATE_ASSERT(input1.extents() == input2.extents());
+  LEGATE_ASSERT(input1.extents() == output.extents());
 
   stl::launch_task(
-    stl::function(detail::binary_transform{std::move(op)}),
+    stl::function(detail::BinaryTransform{std::move(op)}),
     stl::inputs(std::forward<InputRange1>(input1), std::forward<InputRange2>(input2)),
     stl::outputs(std::forward<OutputRange>(output)),
     stl::constraints(stl::align(stl::inputs[0], stl::outputs[0]),  //

@@ -145,7 +145,7 @@ class PhysicalArray {
   PhysicalArray& operator=(PhysicalArray&&) noexcept = default;
 
  private:
-  void check_shape_dimension(std::int32_t dim) const;
+  void check_shape_dimension_(std::int32_t dim) const;
 
  protected:
   SharedPtr<detail::PhysicalArray> impl_{};

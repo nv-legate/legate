@@ -28,7 +28,7 @@ inline bool RegionField::is_reducible() const { return reducible_; }
 
 inline const Legion::PhysicalRegion& RegionField::get_physical_region() const
 {
-  LegateAssert(pr_.has_value());
+  LEGATE_ASSERT(pr_.has_value());
   return *pr_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 

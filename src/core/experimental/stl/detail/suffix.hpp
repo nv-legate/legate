@@ -18,7 +18,7 @@
 
 #include "core/utilities/macros.h"
 
-#if !LegateDefined(LEGATE_STL_DETAIL_PREFIX_INCLUDED)
+#if !LEGATE_DEFINED(LEGATE_STL_DETAIL_PREFIX_INCLUDED)
 #error "Did you forget to add prefix.hpp at the top of the file?"
 #endif
 
@@ -26,7 +26,7 @@
 
 #undef requires
 
-#if LegateDefined(LEGATE_STL_DETAIL_POP_MACRO_REQUIRES)
+#if LEGATE_DEFINED(LEGATE_STL_DETAIL_POP_MACRO_REQUIRES)
 #pragma pop_macro("requires")
 #undef LEGATE_STL_DETAIL_POP_MACRO_REQUIRES
 #endif

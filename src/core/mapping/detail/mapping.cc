@@ -117,14 +117,14 @@ const Store* StoreMapping::store() const { return stores.front(); }
 
 std::uint32_t StoreMapping::requirement_index() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     std::uint32_t result = -1U;
 
-    LegateAssert(!stores.empty());
+    LEGATE_ASSERT(!stores.empty());
     for (auto&& store : stores) {
       auto idx = store->requirement_index();
 
-      LegateAssert(result == -1U || result == idx);
+      LEGATE_ASSERT(result == -1U || result == idx);
       result = idx;
     }
     return result;

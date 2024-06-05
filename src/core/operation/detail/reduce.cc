@@ -47,8 +47,8 @@ Reduce::Reduce(const Library* library,
     input_part_{find_or_declare_partition(input_)},
     output_part_{declare_partition()}
 {
-  record_partition(input_part_, input_);
-  record_partition(output_part_, output_);
+  record_partition_(input_part_, input_);
+  record_partition_(output_part_, output_);
 }
 
 void Reduce::launch(Strategy* p_strategy)
@@ -57,7 +57,7 @@ void Reduce::launch(Strategy* p_strategy)
   auto launch_domain = strategy.launch_domain(this);
   auto n_tasks       = launch_domain.is_valid() ? launch_domain.get_volume() : 1;
 
-  LegateAssert(!launch_domain.is_valid() || launch_domain.dim == 1);
+  LEGATE_ASSERT(!launch_domain.is_valid() || launch_domain.dim == 1);
 
   auto input_part      = strategy[input_part_];
   auto input_partition = create_store_partition(input_, input_part);

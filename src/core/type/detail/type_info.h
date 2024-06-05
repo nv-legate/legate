@@ -133,7 +133,8 @@ class FixedArrayType final : public ExtensionType {
   [[nodiscard]] bool equal(const Type& other) const override;
 
   InternalSharedPtr<Type> element_type_{};
-  std::uint32_t N_{};
+  // clang-tidy wants us to lower-case this, but that would make it less readable.
+  std::uint32_t N_{};  // NOLINT(readability-identifier-naming)
   std::uint32_t size_{};
 };
 
@@ -198,7 +199,7 @@ class ListType final : public ExtensionType {
 
 [[nodiscard]] InternalSharedPtr<Type> list_type(InternalSharedPtr<Type> element_type);
 
-[[nodiscard]] InternalSharedPtr<Type> bool_();
+[[nodiscard]] InternalSharedPtr<Type> bool_();  // NOLINT(readability-identifier-naming)
 [[nodiscard]] InternalSharedPtr<Type> int8();
 [[nodiscard]] InternalSharedPtr<Type> int16();
 [[nodiscard]] InternalSharedPtr<Type> int32();

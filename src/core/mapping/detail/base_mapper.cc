@@ -67,7 +67,7 @@ std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = fa
     {LEGION_PARTITION_MAPPABLE, "Partition "},
   };
   auto finder = prefixes.find(mappable.get_mappable_type());
-  LegateAssert(finder != prefixes.end());
+  LEGATE_ASSERT(finder != prefixes.end());
   if (prefix_only) {
     return finder->second;
   }
@@ -87,13 +87,13 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
     mapper_runtime{_mapper_runtime},
     legion_machine{Legion::Machine::get_machine()},
     library{_library},
-    logger{create_logger_name()},
-    local_instances{InstanceManager::get_instance_manager()},
-    reduction_instances{ReductionInstanceManager::get_instance_manager()}
+    logger{create_logger_name_()},
+    local_instances_{InstanceManager::get_instance_manager()},
+    reduction_instances_{ReductionInstanceManager::get_instance_manager()}
 {
   std::stringstream ss;
-  ss << library->get_library_name() << " on Node " << local_machine.node_id;
-  mapper_name = std::move(ss).str();
+  ss << library->get_library_name() << " on Node " << local_machine_.node_id;
+  mapper_name_ = std::move(ss).str();
 
   legate_mapper_->set_machine(this);
 }
@@ -102,7 +102,7 @@ BaseMapper::~BaseMapper()
 {
   // Compute the size of all our remaining instances in each memory
   if (LEGATE_SHOW_USAGE.get().value_or(false)) {
-    auto mem_sizes             = local_instances->aggregate_instance_sizes();
+    auto mem_sizes             = local_instances_->aggregate_instance_sizes();
     const char* memory_kinds[] = {
 #define MEM_NAMES(name, desc) desc,
       REALM_MEMORY_KINDS(MEM_NAMES)
@@ -124,7 +124,7 @@ BaseMapper::~BaseMapper()
   }
 }
 
-std::string BaseMapper::create_logger_name() const
+std::string BaseMapper::create_logger_name_() const
 {
   std::stringstream ss;
   ss << library->get_library_name() << ".mapper";
@@ -175,7 +175,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
   std::vector<TaskTarget> options;
   options.reserve(all_targets.size());
   for (auto&& target : all_targets) {
-    if (has_variant(ctx, task, target)) {
+    if (has_variant_(ctx, task, target)) {
       options.push_back(target);
     }
   }
@@ -187,7 +187,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
 
   auto target = legate_mapper_->task_target(mapping::Task(&legate_task), options);
   // The initial processor just needs to have the same kind as the eventual target of this task
-  output.initial_proc = local_machine.procs(target).front();
+  output.initial_proc = local_machine_.procs(target).front();
 
   // We never want valid instances
   output.valid_instances = false;
@@ -209,7 +209,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   const Task legate_task{&task, library, runtime, ctx};
 
   auto& machine_desc = legate_task.machine();
-  auto local_range   = local_machine.slice(legate_task.target(), machine_desc);
+  auto local_range   = local_machine_.slice(legate_task.target(), machine_desc);
 
   Legion::ProjectionID projection = 0;
   for (auto&& req : task.regions) {
@@ -247,21 +247,21 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   }
 }
 
-bool BaseMapper::has_variant(Legion::Mapping::MapperContext ctx,
-                             const Legion::Task& task,
-                             TaskTarget target)
+bool BaseMapper::has_variant_(Legion::Mapping::MapperContext ctx,
+                              const Legion::Task& task,
+                              TaskTarget target)
 {
-  return find_variant(ctx, task, to_kind(target)).has_value();
+  return find_variant_(ctx, task, to_kind(target)).has_value();
 }
 
-std::optional<Legion::VariantID> BaseMapper::find_variant(Legion::Mapping::MapperContext ctx,
-                                                          const Legion::Task& task,
-                                                          Processor::Kind kind)
+std::optional<Legion::VariantID> BaseMapper::find_variant_(Legion::Mapping::MapperContext ctx,
+                                                           const Legion::Task& task,
+                                                           Processor::Kind kind)
 {
   const VariantCacheKey key{task.task_id, kind};
 
-  auto finder = variants.find(key);
-  if (finder != variants.end()) {
+  auto finder = variants_.find(key);
+  if (finder != variants_.end()) {
     return finder->second;
   }
 
@@ -270,7 +270,7 @@ std::optional<Legion::VariantID> BaseMapper::find_variant(Legion::Mapping::Mappe
   runtime->find_valid_variants(ctx, key.first, avail_variants, key.second);
   std::optional<Legion::VariantID> result;
   for (auto vid : avail_variants) {
-    LegateAssert(vid > 0);
+    LEGATE_ASSERT(vid > 0);
     switch (vid) {
       case LEGATE_CPU_VARIANT:
       case LEGATE_OMP_VARIANT:
@@ -281,7 +281,7 @@ std::optional<Legion::VariantID> BaseMapper::find_variant(Legion::Mapping::Mappe
       default: LEGATE_ABORT("Unhandled variant kind " << vid);  // unhandled variant kind
     }
   }
-  variants[key] = result;
+  variants_[key] = result;
   return result;
 }
 
@@ -290,17 +290,17 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                           const MapTaskInput& /*input*/,
                           MapTaskOutput& output)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     logger.debug() << "Entering map_task for "
                    << Legion::Mapping::Utilities::to_string(runtime, ctx, task);
   }
 
   // Should never be mapping the top-level task here
-  LegateCheck(task.get_depth() > 0);
+  LEGATE_CHECK(task.get_depth() > 0);
 
   // Let's populate easy outputs first
-  auto variant = find_variant(ctx, task, task.target_proc.kind());
-  LegateCheck(variant.has_value());
+  auto variant = find_variant_(ctx, task, task.target_proc.kind());
+  LEGATE_CHECK(variant.has_value());
   output.chosen_variant = *variant;
 
   Task legate_task(&task, library, runtime, ctx);
@@ -315,8 +315,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   } else {
     // If this is a single task, here is the right place to compute the final target processor
     auto local_range =
-      local_machine.slice(legate_task.target(), legate_task.machine(), task.local_function);
-    LegateAssert(!local_range.empty());
+      local_machine_.slice(legate_task.target(), legate_task.machine(), task.local_function);
+    LEGATE_ASSERT(!local_range.empty());
     output.target_procs.push_back(local_range.first());
   }
 
@@ -324,7 +324,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   auto client_mappings = legate_mapper_->store_mappings(mapping::Task(&legate_task), options);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     const auto validate_colocation = [&](const auto* mapping) {
       auto* first_store = mapping->stores.front();
       for (auto it = mapping->stores.begin() + 1; it != mapping->stores.end(); ++it) {
@@ -333,8 +333,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                                  << " tried to colocate stores that cannot colocate");
         }
       }
-      LegateCheck(!(mapping->for_future() || mapping->for_unbound_store()) ||
-                  mapping->stores.size() == 1);
+      LEGATE_CHECK(!(mapping->for_future() || mapping->for_unbound_store()) ||
+                   mapping->stores.size() == 1);
     };
 
     for (auto&& client_mapping : client_mappings) {
@@ -361,21 +361,21 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
         LEGATE_ABORT("Mapper " << get_mapper_name() << " returned duplicate store mappings");
       } else {
         mapped_futures.insert({fut_idx, mapping});
-        for_futures.emplace_back(client_mapping.release());
+        for_futures.emplace_back(client_mapping.release_());
       }
     } else if (mapping->for_unbound_store()) {
       mapped_regions.insert(mapping->store()->unique_region_field_id());
-      for_unbound_stores.emplace_back(client_mapping.release());
+      for_unbound_stores.emplace_back(client_mapping.release_());
     } else {
       for (const auto* store : mapping->stores) {
         mapped_regions.insert(store->unique_region_field_id());
       }
-      for_stores.emplace_back(client_mapping.release());
+      for_stores.emplace_back(client_mapping.release_());
     }
   }
   client_mappings.clear();
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     std::map<RegionField::Id, InstanceMappingPolicy> policies;
 
     for (const auto& mapping : for_stores) {
@@ -429,13 +429,13 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   generate_default_mappings(legate_task.inputs());
   generate_default_mappings(legate_task.outputs());
   generate_default_mappings(legate_task.reductions());
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
-    LegateCheck(mapped_futures.size() <= task.futures.size());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    LEGATE_CHECK(mapped_futures.size() <= task.futures.size());
     // The launching code should be packing all Store-backing Futures first.
     if (!mapped_futures.empty()) {
       const auto max_mapped_fut = mapped_futures.rbegin()->first;
 
-      LegateCheck(mapped_futures.size() == max_mapped_fut + 1);
+      LEGATE_CHECK(mapped_futures.size() == max_mapped_fut + 1);
     }
   }
 
@@ -444,12 +444,12 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   for (auto&& mapping : for_futures) {
     auto fut_idx       = mapping->store()->future_index();
     StoreTarget target = mapping->policy.target;
-    if (LegateDefined(LEGATE_NO_FUTURES_ON_FB)) {
+    if (LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB)) {
       if (target == StoreTarget::FBMEM) {
         target = StoreTarget::ZCMEM;
       }
     }
-    output.future_locations[fut_idx] = local_machine.get_memory(task.target_proc, target);
+    output.future_locations[fut_idx] = local_machine_.get_memory(task.target_proc, target);
   }
 
   // Map unbound stores
@@ -457,7 +457,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     for (auto&& mapping : mappings) {
       auto req_idx = mapping->requirement_index();
       output.output_targets[req_idx] =
-        local_machine.get_memory(task.target_proc, mapping->policy.target);
+        local_machine_.get_memory(task.target_proc, mapping->policy.target);
       auto ndim = mapping->store()->dim();
       // FIXME: Unbound stores can have more than one dimension later
       std::vector<Legion::DimensionKind> dimension_ordering;
@@ -480,12 +480,12 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     output_map[&task.regions[idx]] = &output.chosen_instances[idx];
   }
 
-  map_legate_stores(ctx,
-                    task,
-                    for_stores,
-                    task.target_proc,
-                    output_map,
-                    legate_task.machine().count() < task.index_domain.get_volume());
+  map_legate_stores_(ctx,
+                     task,
+                     for_stores,
+                     task.target_proc,
+                     output_map,
+                     legate_task.machine().count() < task.index_domain.get_volume());
 }
 
 void BaseMapper::replicate_task(Legion::Mapping::MapperContext /*ctx*/,
@@ -497,16 +497,18 @@ void BaseMapper::replicate_task(Legion::Mapping::MapperContext /*ctx*/,
   LEGATE_ABORT("Should not be called");
 }
 
-void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
-                                   const Legion::Mappable& mappable,
-                                   std::vector<std::unique_ptr<StoreMapping>>& mappings,
-                                   Processor target_proc,
-                                   OutputMap& output_map,
-                                   bool overdecomposed)
+void BaseMapper::map_legate_stores_(Legion::Mapping::MapperContext ctx,
+                                    const Legion::Mappable& mappable,
+                                    std::vector<std::unique_ptr<StoreMapping>>& mappings,
+                                    Processor target_proc,
+                                    OutputMap& output_map,
+                                    bool overdecomposed)
 {
   auto try_mapping = [&](bool can_fail) {
     const Legion::Mapping::PhysicalInstance NO_INST{};
     std::vector<Legion::Mapping::PhysicalInstance> instances;
+
+    instances.reserve(mappings.size());
     for (auto&& mapping : mappings) {
       Legion::Mapping::PhysicalInstance result = NO_INST;
       auto reqs                                = mapping->requirements();
@@ -522,44 +524,44 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
       const auto must_alloc_collective_writes =
         mappable.get_mappable_type() == Legion::Mappable::TASK_MAPPABLE &&
         (overdecomposed || mapping->policy.target != StoreTarget::FBMEM);
-      while (map_legate_store(ctx,
-                              mappable,
-                              *mapping,
-                              reqs,
-                              target_proc,
-                              result,
-                              can_fail,
-                              must_alloc_collective_writes)) {
+      while (map_legate_store_(ctx,
+                               mappable,
+                               *mapping,
+                               reqs,
+                               target_proc,
+                               result,
+                               can_fail,
+                               must_alloc_collective_writes)) {
         if (NO_INST == result) {
-          LegateAssert(can_fail);
+          LEGATE_ASSERT(can_fail);
           for (auto&& instance : instances) {
             runtime->release_instance(ctx, instance);
           }
           return false;
         }
         std::stringstream reqs_ss;
-        if (LegateDefined(LEGATE_USE_DEBUG)) {
+        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
           for (auto req_idx : mapping->requirement_indices()) {
             reqs_ss << " " << req_idx;
           }
         }
         if (runtime->acquire_instance(ctx, result)) {
-          if (LegateDefined(LEGATE_USE_DEBUG)) {
+          if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
             logger.debug() << log_mappable(mappable) << ": acquired instance " << result
                            << " for reqs:" << reqs_ss.str();
           }
           break;
         }
-        if (LegateDefined(LEGATE_USE_DEBUG)) {
+        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
           logger.debug() << log_mappable(mappable) << ": failed to acquire instance " << result
                          << " for reqs:" << reqs_ss.str();
         }
         if ((*reqs.begin())->redop != 0) {
-          const Legion::Mapping::AutoLock lock(ctx, reduction_instances->manager_lock());
-          reduction_instances->erase(result);
+          const Legion::Mapping::AutoLock lock(ctx, reduction_instances_->manager_lock());
+          reduction_instances_->erase(result);
         } else {
-          const Legion::Mapping::AutoLock lock(ctx, local_instances->manager_lock());
-          local_instances->erase(result);
+          const Legion::Mapping::AutoLock lock(ctx, local_instances_->manager_lock());
+          local_instances_->erase(result);
         }
         result = NO_INST;
       }
@@ -585,7 +587,7 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
   }
 
   if (!try_mapping(can_fail)) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       logger.debug() << log_mappable(mappable) << " failed to map all stores, retrying with "
                      << "tighter policies";
     }
@@ -593,13 +595,13 @@ void BaseMapper::map_legate_stores(Legion::Mapping::MapperContext ctx,
     // write requirements. The hope is that these write requirements cover the entire region (i.e.
     // they use a complete partition), so the new tight instances will invalidate any pre-existing
     // "bloated" instances for the same region, freeing up enough memory so that mapping can succeed
-    tighten_write_policies(mappable, mappings);
+    tighten_write_policies_(mappable, mappings);
     try_mapping(false);
   }
 }
 
-void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
-                                        const std::vector<std::unique_ptr<StoreMapping>>& mappings)
+void BaseMapper::tighten_write_policies_(const Legion::Mappable& mappable,
+                                         const std::vector<std::unique_ptr<StoreMapping>>& mappings)
 {
   for (auto&& mapping : mappings) {
     // If the policy is exact, there's nothing we can tighten
@@ -616,7 +618,7 @@ void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
       continue;
     }
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       std::stringstream reqs_ss;
       for (auto req_idx : mapping->requirement_indices()) {
         reqs_ss << " " << req_idx;
@@ -628,14 +630,14 @@ void BaseMapper::tighten_write_policies(const Legion::Mappable& mappable,
   }
 }
 
-bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
-                                  const Legion::Mappable& mappable,
-                                  const StoreMapping& mapping,
-                                  const std::set<const Legion::RegionRequirement*>& reqs,
-                                  Processor target_proc,
-                                  Legion::Mapping::PhysicalInstance& result,
-                                  bool can_fail,
-                                  bool must_alloc_collective_writes)
+bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
+                                   const Legion::Mappable& mappable,
+                                   const StoreMapping& mapping,
+                                   const std::set<const Legion::RegionRequirement*>& reqs,
+                                   Processor target_proc,
+                                   Legion::Mapping::PhysicalInstance& result,
+                                   bool can_fail,
+                                   bool must_alloc_collective_writes)
 {
   if (reqs.empty()) {
     return false;
@@ -653,10 +655,10 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
   }
 
   const auto& policy = mapping.policy;
-  auto target_memory = local_machine.get_memory(target_proc, policy.target);
+  auto target_memory = local_machine_.get_memory(target_proc, policy.target);
 
   auto redop = (*reqs.begin())->redop;
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     for (auto* req : reqs) {
       if (redop != req->redop) {
         LEGATE_ABORT(
@@ -679,7 +681,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
   if (redop != 0) {
     // We need to hold the instance manager lock as we're about to try
     // to find an instance
-    const Legion::Mapping::AutoLock reduction_lock{ctx, reduction_instances->manager_lock()};
+    const Legion::Mapping::AutoLock reduction_lock{ctx, reduction_instances_->manager_lock()};
 
     // This whole process has to appear atomic
     runtime->disable_reentrant(ctx);
@@ -688,9 +690,9 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     if (target_proc.kind() == Processor::TOC_PROC) {
       // See if we already have it in our local instances
       if (fields.size() == 1 && regions.size() == 1 &&
-          reduction_instances->find_instance(
+          reduction_instances_->find_instance(
             redop, regions.front(), fields.front(), target_memory, result, policy)) {
-        if (LegateDefined(LEGATE_USE_DEBUG)) {
+        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
           logger.debug() << "Operation " << mappable.get_unique_id()
                          << ": reused cached reduction instance " << result << " for "
                          << regions.front();
@@ -714,7 +716,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
                                           LEGION_GC_DEFAULT_PRIORITY,
                                           false /*tight bounds*/,
                                           &footprint)) {
-      if (LegateDefined(LEGATE_USE_DEBUG)) {
+      if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
         Realm::LoggerMessage msg = logger.debug();
         msg << "Operation " << mappable.get_unique_id() << ": created reduction instance " << result
             << " for";
@@ -727,7 +729,7 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
         // store reduction instance
         if (fields.size() == 1 && regions.size() == 1) {
           auto fid = fields.front();
-          reduction_instances->record_instance(redop, regions.front(), fid, result, policy);
+          reduction_instances_->record_instance(redop, regions.front(), fid, result, policy);
         }
       }
       runtime->enable_reentrant(ctx);
@@ -736,12 +738,13 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     }
     runtime->enable_reentrant(ctx);
     if (!can_fail) {
-      report_failed_mapping(mappable, mapping.requirement_index(), target_memory, redop, footprint);
+      report_failed_mapping_(
+        mappable, mapping.requirement_index(), target_memory, redop, footprint);
     }
     return true;
   }
 
-  const Legion::Mapping::AutoLock lock{ctx, local_instances->manager_lock()};
+  const Legion::Mapping::AutoLock lock{ctx, local_instances_->manager_lock()};
   runtime->disable_reentrant(ctx);
 
   auto has_collective_write = [](const auto& to_check) {
@@ -756,9 +759,9 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
 
   // See if we already have it in our local instances
   if (fields.size() == 1 && regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC &&
-      local_instances->find_instance(
+      local_instances_->find_instance(
         regions.front(), fields.front(), target_memory, result, policy)) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       logger.debug() << "Operation " << mappable.get_unique_id() << ": reused cached instance "
                      << result << " for " << regions.front();
     }
@@ -780,8 +783,8 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     auto fid            = fields.front();
     auto is             = regions.front().get_index_space();
     const Domain domain = runtime->get_index_space_domain(ctx, is);
-    group =
-      local_instances->find_region_group(regions.front(), domain, fid, target_memory, policy.exact);
+    group               = local_instances_->find_region_group(
+      regions.front(), domain, fid, target_memory, policy.exact);
     regions = group->get_regions();
   }
 
@@ -820,8 +823,8 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
 
   if (success) {
     // We succeeded in making the instance where we want it
-    LegateCheck(result.exists());
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    LEGATE_CHECK(result.exists());
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       if (created) {
         logger.debug() << "Operation " << mappable.get_unique_id() << ": created instance "
                        << result << " for " << *group << " (size: " << footprint
@@ -833,9 +836,9 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
     }
     // Only save the result for future use if it is not an external instance
     if (!result.is_external_instance() && group != nullptr) {
-      LegateCheck(fields.size() == 1);
+      LEGATE_CHECK(fields.size() == 1);
       auto fid = fields.front();
-      local_instances->record_instance(group, fid, result, policy);
+      local_instances_->record_instance(group, fid, result, policy);
     }
     runtime->enable_reentrant(ctx);
     // We made it so no need for an acquire
@@ -848,17 +851,17 @@ bool BaseMapper::map_legate_store(Legion::Mapping::MapperContext ctx,
   if (!can_fail) {
     auto req_indices = mapping.requirement_indices();
     for (auto req_idx : req_indices) {
-      report_failed_mapping(mappable, req_idx, target_memory, redop, footprint);
+      report_failed_mapping_(mappable, req_idx, target_memory, redop, footprint);
     }
   }
   return true;
 }
 
-void BaseMapper::report_failed_mapping(const Legion::Mappable& mappable,
-                                       std::uint32_t index,
-                                       Memory target_memory,
-                                       Legion::ReductionOpID redop,
-                                       std::size_t footprint) const
+void BaseMapper::report_failed_mapping_(const Legion::Mappable& mappable,
+                                        std::uint32_t index,
+                                        Memory target_memory,
+                                        Legion::ReductionOpID redop,
+                                        std::size_t footprint) const
 {
   static constexpr const char* const memory_kinds[] = {
 #define MEM_NAMES(name, desc) desc,
@@ -913,10 +916,10 @@ void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
                                      const SelectVariantInput& input,
                                      SelectVariantOutput& output)
 {
-  auto variant = find_variant(ctx, task, input.processor.kind());
+  auto variant = find_variant_(ctx, task, input.processor.kind());
   // It is checked (just not on optimized builds)
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  LegateAssert(variant.has_value());
+  LEGATE_ASSERT(variant.has_value());
   // It is checked (just not on optimized builds)
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   output.chosen_variant = *variant;
@@ -936,7 +939,7 @@ void BaseMapper::select_task_sources(Legion::Mapping::MapperContext ctx,
                                      const SelectTaskSrcInput& input,
                                      SelectTaskSrcOutput& output)
 {
-  legate_select_sources(
+  legate_select_sources_(
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
@@ -976,7 +979,7 @@ void find_source_instance_bandwidth(
     // and target memories, in which case we assign the smallest bandwidth
     // TODO(wonchanl): Not all multi-hop copies are equal
     if (!affinities.empty()) {
-      LegateAssert(affinities.size() == 1);
+      LEGATE_ASSERT(affinities.size() == 1);
       bandwidth = affinities.front().bandwidth;
     }
     source_memory_bandwidths[source_memory] = bandwidth;
@@ -989,7 +992,7 @@ void find_source_instance_bandwidth(
 
 }  // namespace
 
-void BaseMapper::legate_select_sources(
+void BaseMapper::legate_select_sources_(
   Legion::Mapping::MapperContext /*ctx*/,
   const Legion::Mapping::PhysicalInstance& target,
   const std::vector<Legion::Mapping::PhysicalInstance>& sources,
@@ -1015,7 +1018,7 @@ void BaseMapper::legate_select_sources(
 
     collective_source.find_instances_nearest_memory(target_memory, source_instances);
     // there must exist at least one instance in the collective view
-    LegateAssert(!source_instances.empty());
+    LEGATE_ASSERT(!source_instances.empty());
     // we need only first instance if there are several
     find_source_instance_bandwidth(all_sources,
                                    source_memory_bandwidths,
@@ -1023,7 +1026,7 @@ void BaseMapper::legate_select_sources(
                                    target_memory,
                                    legion_machine);
   }
-  LegateAssert(!all_sources.empty());
+  LEGATE_ASSERT(!all_sources.empty());
   // Sort source instances by their bandwidths
   std::sort(all_sources.begin(), all_sources.end(), [](const auto& lhs, const auto& rhs) {
     return lhs.bandwidth > rhs.bandwidth;
@@ -1041,7 +1044,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext,
   LEGATE_ABORT("Shouldn't get any profiling feedback currently");
 }
 
-Legion::ShardingID BaseMapper::find_mappable_sharding_functor_id(const Legion::Mappable& mappable)
+Legion::ShardingID BaseMapper::find_mappable_sharding_functor_id_(const Legion::Mappable& mappable)
 {
   const Mappable legate_mappable{&mappable};
 
@@ -1053,7 +1056,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext,
                                          const SelectShardingFunctorInput&,
                                          SelectShardingFunctorOutput& output)
 {
-  output.chosen_functor = find_mappable_sharding_functor_id(task);
+  output.chosen_functor = find_mappable_sharding_functor_id_(task);
 }
 
 void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
@@ -1062,15 +1065,15 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
                             MapInlineOutput& output)
 {
   Processor target_proc{Processor::NO_PROC};
-  if (local_machine.has_omps()) {
-    target_proc = local_machine.omps().front();
+  if (local_machine_.has_omps()) {
+    target_proc = local_machine_.omps().front();
   } else {
-    target_proc = local_machine.cpus().front();
+    target_proc = local_machine_.cpus().front();
   }
 
   auto store_target = default_store_targets(target_proc.kind()).front();
 
-  LegateAssert(inline_op.requirement.instance_fields.size() == 1);
+  LEGATE_ASSERT(inline_op.requirement.instance_fields.size() == 1);
 
   const Store store{mapper_runtime, ctx, &inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
@@ -1085,7 +1088,7 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
     output_map[req] = &output.chosen_instances;
   }
 
-  map_legate_stores(ctx, inline_op, mappings, target_proc, output_map);
+  map_legate_stores_(ctx, inline_op, mappings, target_proc, output_map);
 }
 
 void BaseMapper::select_inline_sources(Legion::Mapping::MapperContext ctx,
@@ -1093,7 +1096,7 @@ void BaseMapper::select_inline_sources(Legion::Mapping::MapperContext ctx,
                                        const SelectInlineSrcInput& input,
                                        SelectInlineSrcOutput& output)
 {
-  legate_select_sources(
+  legate_select_sources_(
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
@@ -1124,13 +1127,13 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     // However, if the machine in the scope doesn't have any CPU or OMP as a fallback for
     // indirect copies, we have no choice but using GPUs
     if (valid_targets.empty()) {
-      LegateAssert(indirect);
+      LEGATE_ASSERT(indirect);
       valid_targets = machine_desc.valid_targets();
     }
     return valid_targets.front();
   }();
 
-  auto local_range = local_machine.slice(copy_target, machine_desc, true);
+  auto local_range = local_machine_.slice(copy_target, machine_desc, true);
   Processor target_proc;
   if (copy.is_index_space) {
     Domain sharding_domain = copy.index_domain;
@@ -1169,8 +1172,8 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   add_to_output_map(copy.src_requirements, output.src_instances);
   add_to_output_map(copy.dst_requirements, output.dst_instances);
 
-  LegateAssert(copy.src_indirect_requirements.size() <= 1);
-  LegateAssert(copy.dst_indirect_requirements.size() <= 1);
+  LEGATE_ASSERT(copy.src_indirect_requirements.size() <= 1);
+  LEGATE_ASSERT(copy.dst_indirect_requirements.size() <= 1);
   if (!copy.src_indirect_requirements.empty()) {
     // This is to make the push_back call later add the isntance to the right place
     output.src_indirect_instances.clear();
@@ -1203,7 +1206,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
       mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false));
     }
   }
-  map_legate_stores(ctx, copy, mappings, target_proc, output_map);
+  map_legate_stores_(ctx, copy, mappings, target_proc, output_map);
 }
 
 void BaseMapper::select_copy_sources(Legion::Mapping::MapperContext ctx,
@@ -1211,7 +1214,7 @@ void BaseMapper::select_copy_sources(Legion::Mapping::MapperContext ctx,
                                      const SelectCopySrcInput& input,
                                      SelectCopySrcOutput& output)
 {
-  legate_select_sources(
+  legate_select_sources_(
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
@@ -1228,7 +1231,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          SelectShardingFunctorOutput& output)
 {
   // TODO(wonchanl): Copies can have key stores in the future
-  output.chosen_functor = find_mappable_sharding_functor_id(copy);
+  output.chosen_functor = find_mappable_sharding_functor_id_(copy);
 }
 
 void BaseMapper::select_close_sources(Legion::Mapping::MapperContext ctx,
@@ -1236,7 +1239,7 @@ void BaseMapper::select_close_sources(Legion::Mapping::MapperContext ctx,
                                       const SelectCloseSrcInput& input,
                                       SelectCloseSrcOutput& output)
 {
-  legate_select_sources(
+  legate_select_sources_(
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
@@ -1291,7 +1294,7 @@ void BaseMapper::select_release_sources(Legion::Mapping::MapperContext ctx,
                                         const SelectReleaseSrcInput& input,
                                         SelectReleaseSrcOutput& output)
 {
-  legate_select_sources(
+  legate_select_sources_(
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
@@ -1330,15 +1333,15 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
                                MapPartitionOutput& output)
 {
   auto target_proc = [&] {
-    if (local_machine.has_omps()) {
-      return local_machine.omps().front();
+    if (local_machine_.has_omps()) {
+      return local_machine_.omps().front();
     }
-    return local_machine.cpus().front();
+    return local_machine_.cpus().front();
   }();
 
   auto store_target = default_store_targets(target_proc.kind()).front();
 
-  LegateAssert(partition.requirement.instance_fields.size() == 1);
+  LEGATE_ASSERT(partition.requirement.instance_fields.size() == 1);
 
   const Store store{mapper_runtime, ctx, &partition.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
@@ -1353,7 +1356,7 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
     output_map[req] = &output.chosen_instances;
   }
 
-  map_legate_stores(ctx, partition, mappings, std::move(target_proc), output_map);
+  map_legate_stores_(ctx, partition, mappings, std::move(target_proc), output_map);
 }
 
 void BaseMapper::select_partition_sources(Legion::Mapping::MapperContext ctx,
@@ -1361,7 +1364,7 @@ void BaseMapper::select_partition_sources(Legion::Mapping::MapperContext ctx,
                                           const SelectPartitionSrcInput& input,
                                           SelectPartitionSrcOutput& output)
 {
-  legate_select_sources(
+  legate_select_sources_(
     ctx, input.target, input.source_instances, input.collective_views, output.chosen_ranking);
 }
 
@@ -1378,7 +1381,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& output)
 {
-  output.chosen_functor = find_mappable_sharding_functor_id(partition);
+  output.chosen_functor = find_mappable_sharding_functor_id_(partition);
 }
 
 void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
@@ -1386,7 +1389,7 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
                                          const SelectShardingFunctorInput& /*input*/,
                                          SelectShardingFunctorOutput& output)
 {
-  output.chosen_functor = find_mappable_sharding_functor_id(fill);
+  output.chosen_functor = find_mappable_sharding_functor_id_(fill);
 }
 
 void BaseMapper::configure_context(Legion::Mapping::MapperContext /*ctx*/,
@@ -1403,17 +1406,17 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
   output.serdez_upper_bound = LEGATE_MAX_SIZE_SCALAR_RETURN;
   auto& dest_memories       = output.destination_memories;
 
-  if (local_machine.has_gpus()) {
+  if (local_machine_.has_gpus()) {
     // TODO(wonchanl): It's been reported that blindly mapping target instances of future map
     // reductions to framebuffers hurts performance. Until we find a better mapping policy, we guard
     // the current policy with a macro.
-    if (LegateDefined(LEGATE_MAP_FUTURE_MAP_REDUCTIONS_TO_GPU)) {
+    if (LEGATE_DEFINED(LEGATE_MAP_FUTURE_MAP_REDUCTIONS_TO_GPU)) {
       // If this was joining exceptions, we should put instances on a host-visible memory
       // because they need serdez
       if (input.tag == LEGATE_CORE_JOIN_EXCEPTION_TAG) {
-        dest_memories.push_back(local_machine.zerocopy_memory());
+        dest_memories.push_back(local_machine_.zerocopy_memory());
       } else {
-        auto&& fbufs = local_machine.frame_buffers();
+        auto&& fbufs = local_machine_.frame_buffers();
 
         dest_memories.reserve(fbufs.size());
         for (auto&& pair : fbufs) {
@@ -1421,10 +1424,10 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
         }
       }
     } else {
-      dest_memories.push_back(local_machine.zerocopy_memory());
+      dest_memories.push_back(local_machine_.zerocopy_memory());
     }
-  } else if (local_machine.has_socket_memory()) {
-    auto&& smems = local_machine.socket_memories();
+  } else if (local_machine_.has_socket_memory()) {
+    auto&& smems = local_machine_.socket_memories();
 
     dest_memories.reserve(smems.size());
     for (auto&& pair : smems) {

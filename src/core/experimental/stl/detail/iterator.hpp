@@ -38,14 +38,15 @@ using mixin = meta::eval<meta::quote_or<mixin_, meta::empty>, Map, Iterator>;
 }  // namespace detail
 
 template <typename Map>
-class iterator : public detail::mixin<Map, iterator<Map>> {
+class iterator  // NOLINT(readability-identifier-naming)
+  : public detail::mixin<Map, iterator<Map>> {
  public:
   using difference_type   = std::ptrdiff_t;
   using value_type        = typename Map::value_type;
   using iterator_category = std::random_access_iterator_tag;
   using reference         = detail::reference_t<Map>;
 
-  class pointer {
+  class pointer {  // NOLINT(readability-identifier-naming)
    public:
     value_type value_{};
 
@@ -61,7 +62,7 @@ class iterator : public detail::mixin<Map, iterator<Map>> {
 
   LEGATE_HOST_DEVICE iterator& operator++()
   {
-    cursor() = map().next(cursor());
+    cursor_() = map_().next(cursor_());
     return *this;
   }
 
@@ -72,13 +73,13 @@ class iterator : public detail::mixin<Map, iterator<Map>> {
     return copy;
   }
 
-  LEGATE_HOST_DEVICE [[nodiscard]] reference operator*() const { return map().read(cursor()); }
+  LEGATE_HOST_DEVICE [[nodiscard]] reference operator*() const { return map_().read(cursor_()); }
 
   LEGATE_HOST_DEVICE [[nodiscard]] pointer operator->() const { return pointer{operator*()}; }
 
   LEGATE_HOST_DEVICE friend bool operator==(const iterator& lhs, const iterator& rhs)
   {
-    return lhs.map().equal(lhs.cursor(), rhs.cursor());
+    return lhs.map_().equal(lhs.cursor_(), rhs.cursor_());
   }
 
   LEGATE_HOST_DEVICE friend bool operator!=(const iterator& lhs, const iterator& rhs)
@@ -88,7 +89,7 @@ class iterator : public detail::mixin<Map, iterator<Map>> {
 
   LEGATE_HOST_DEVICE iterator& operator--()
   {
-    cursor() = map().prev(cursor());
+    cursor_() = map_().prev(cursor_());
     return *this;
   }
 
@@ -101,7 +102,7 @@ class iterator : public detail::mixin<Map, iterator<Map>> {
 
   LEGATE_HOST_DEVICE [[nodiscard]] iterator operator+(difference_type n) const
   {
-    return {map(), map().advance(cursor(), n)};
+    return {map_(), map_().advance(cursor_(), n)};
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] friend iterator operator+(difference_type n, const iterator& it)
@@ -111,84 +112,84 @@ class iterator : public detail::mixin<Map, iterator<Map>> {
 
   LEGATE_HOST_DEVICE iterator& operator+=(difference_type n)
   {
-    cursor() = map().advance(cursor(), n);
+    cursor_() = map_().advance(cursor_(), n);
     return *this;
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] iterator operator-(difference_type n) const
   {
-    return {map(), map().advance(cursor(), -n)};
+    return {map_(), map_().advance(cursor_(), -n)};
   }
 
   LEGATE_HOST_DEVICE iterator& operator-=(difference_type n)
   {
-    cursor() = map().advance(cursor(), -n);
+    cursor_() = map_().advance(cursor_(), -n);
     return *this;
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] friend difference_type operator-(const iterator& to,
                                                                     const iterator& from)
   {
-    return to.map().distance(from.cursor(), to.cursor());
+    return to.map_().distance(from.cursor_(), to.cursor_());
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator<(const iterator& left,
                                                          const iterator& right)
   {
-    return left.map().less(left.cursor(), right.cursor());
+    return left.map_().less(left.cursor_(), right.cursor_());
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator>(const iterator& left,
                                                          const iterator& right)
   {
-    return right.map().less(right.cursor(), left.cursor());
+    return right.map_().less(right.cursor_(), left.cursor_());
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator<=(const iterator& left,
                                                           const iterator& right)
   {
-    return !(right.map().less(right.cursor(), left.cursor()));
+    return !(right.map_().less(right.cursor_(), left.cursor_()));
   }
 
   LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator>=(const iterator& left,
                                                           const iterator& right)
   {
-    return !(left.map().less(left.cursor(), right.cursor()));
+    return !(left.map_().less(left.cursor_(), right.cursor_()));
   }
 
  private:
   friend detail::mixin<Map, iterator<Map>>;
 
-  [[nodiscard]] typename Map::cursor& cursor() noexcept { return cursor_map_pair_.first(); }
+  [[nodiscard]] typename Map::cursor& cursor_() noexcept { return cursor_map_pair_.first(); }
 
-  [[nodiscard]] const typename Map::cursor& cursor() const noexcept
+  [[nodiscard]] const typename Map::cursor& cursor_() const noexcept
   {
     return cursor_map_pair_.first();
   }
 
-  [[nodiscard]] Map& map() noexcept { return cursor_map_pair_.second(); }
+  [[nodiscard]] Map& map_() noexcept { return cursor_map_pair_.second(); }
 
-  [[nodiscard]] const Map& map() const noexcept { return cursor_map_pair_.second(); }
+  [[nodiscard]] const Map& map_() const noexcept { return cursor_map_pair_.second(); }
 
-  legate::detail::compressed_pair<typename Map::cursor, Map> cursor_map_pair_{};
+  legate::detail::CompressedPair<typename Map::cursor, Map> cursor_map_pair_{};
 };
 
 template <typename Int>
-class affine_map {
+class affine_map {  // NOLINT(readability-identifier-naming)
  public:
   using cursor = Int;
 
   template <typename Iterator>
-  class mixin {
+  class mixin {  // NOLINT(readability-identifier-naming)
    public:
     [[nodiscard]] auto point() const
     {
       auto cursor        = static_cast<const Iterator&>(*this).cursor();
       auto shape         = static_cast<const Iterator&>(*this).map().shape();
-      constexpr auto Dim = std::tuple_size_v<decltype(shape)>;
-      Point<Dim> result;
+      constexpr auto DIM = std::tuple_size_v<decltype(shape)>;
+      Point<DIM> result;
 
-      for (std::int32_t i = 0; i < Dim; ++i) {
+      for (std::int32_t i = 0; i < DIM; ++i) {
         result[i] = cursor % shape[i];
         cursor /= shape[i];
       }

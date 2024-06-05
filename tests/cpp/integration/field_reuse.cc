@@ -24,14 +24,14 @@ using Integration = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "field_reuse";
+constexpr std::string_view LIBRARY_NAME = "field_reuse";
 
 }  // namespace
 
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   static_cast<void>(context);
 }
 
@@ -50,7 +50,7 @@ TEST_F(Integration, FieldReuse)
 
   auto runtime = legate::Runtime::get_runtime();
   register_tasks();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   static_cast<void>(context);
 
   Legion::Runtime* legion_runtime = Legion::Runtime::get_runtime();

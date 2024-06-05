@@ -14,14 +14,14 @@
 
 #include "legate_defines.h"
 
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include <nvtx3/nvToolsExt.h>
 #else
 using nvtxRangeId_t = char;
-// NOLINTBEGIN(readability-redundant-inline-specifier)
+// NOLINTBEGIN(readability-redundant-inline-specifier,readability-identifier-naming)
 inline constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
 inline constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
-// NOLINTEND(readability-redundant-inline-specifier)
+// NOLINTEND(readability-redundant-inline-specifier,readability-identifier-naming)
 #endif
 
 namespace legate::nvtx {

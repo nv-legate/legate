@@ -252,7 +252,6 @@ list(APPEND
      src/core/type/type_info.cc
      src/core/type/detail/type_info.cc
      src/core/utilities/debug.cc
-     src/core/utilities/deserializer.cc
      src/core/utilities/machine.cc
      src/core/utilities/linearize.cc
      src/core/utilities/internal_shared_ptr.cc
@@ -260,6 +259,7 @@ list(APPEND
      src/core/utilities/compiler.cc
      src/core/utilities/detail/buffer_builder.cc
      src/core/utilities/detail/tuple.cc
+     src/core/utilities/detail/deserializer.cc
      src/timing/timing.cc
      # stl
      src/core/experimental/stl/detail/clang_tidy_dummy.cpp)

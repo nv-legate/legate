@@ -25,8 +25,8 @@ using Integration = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_cpu_communicator";
-constexpr std::size_t SIZE          = 10;
+constexpr std::string_view LIBRARY_NAME = "test_cpu_communicator";
+constexpr std::size_t SIZE              = 10;
 
 }  // namespace
 
@@ -66,14 +66,14 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   CPUCommunicatorTester::register_variants(context, CPU_COMM_TESTER);
 }
 
 void test_cpu_communicator_auto(std::int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto store   = runtime->create_store(
     legate::Shape{
       legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)
@@ -95,7 +95,7 @@ void test_cpu_communicator_manual(std::int32_t ndim)
     return;
   }
 
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto store   = runtime->create_store(
     legate::Shape{
       legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)

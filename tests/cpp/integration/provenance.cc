@@ -25,7 +25,7 @@ using Integration = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_provenance";
+constexpr std::string_view LIBRARY_NAME = "test_provenance";
 
 }  // namespace
 
@@ -38,7 +38,7 @@ struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   ProvenanceTask::register_variants(library);
 }
 
@@ -78,7 +78,7 @@ TEST_F(Integration, Provenance)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   test_provenance(library);
   test_nested_provenance(library);

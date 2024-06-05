@@ -24,7 +24,7 @@ using Copy = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_copy_gather_scatter";
+constexpr std::string_view LIBRARY_NAME = "test_copy_gather_scatter";
 
 constexpr std::int32_t CHECK_GATHER_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
@@ -37,7 +37,7 @@ struct CheckGatherScatterTask
     template <legate::Type::Code CODE>
     void operator()(legate::TaskContext context)
     {
-      using VAL = legate::type_of<CODE>;
+      using VAL = legate::type_of_t<CODE>;
 
       auto src_store     = context.input(0).data();
       auto tgt_store     = context.input(1).data();
@@ -116,7 +116,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   FillTask<1>::register_variants(library);
   FillTask<2>::register_variants(library);
   FillTask<3>::register_variants(library);
@@ -174,10 +174,10 @@ void check_gather_scatter_output(legate::Library library,
 
 void test_gather_scatter(const GatherScatterSpec& spec)
 {
-  LegateAssert(spec.seed.type() == spec.init.type());
+  LEGATE_ASSERT(spec.seed.type() == spec.init.type());
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   auto type = spec.seed.type();
   auto src  = runtime->create_store(legate::Shape{spec.src_shape}, type);

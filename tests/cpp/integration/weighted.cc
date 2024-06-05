@@ -23,8 +23,8 @@ using Integration = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_weighted";
-constexpr std::uint32_t NUM_TASKS   = 4;
+constexpr std::string_view LIBRARY_NAME = "test_weighted";
+constexpr std::uint32_t NUM_TASKS       = 4;
 
 }  // namespace
 
@@ -72,7 +72,7 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Initializer::register_variants(library);
   Tester::register_variants(library);
 }
@@ -109,7 +109,7 @@ void check(legate::Runtime* runtime,
 void test_weighted(std::uint32_t num_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   std::vector<legate::LogicalStore> stores;
   for (std::uint32_t idx = 0; idx < num_stores; ++idx) {

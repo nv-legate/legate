@@ -26,7 +26,7 @@ InternalSharedPtr<Store> Array::data() const
 
 bool BaseArray::unbound() const
 {
-  LegateAssert(!nullable() || data_->unbound() == null_mask_->unbound());
+  LEGATE_ASSERT(!nullable() || data_->unbound() == null_mask_->unbound());
   return data_->unbound();
 }
 
@@ -44,7 +44,7 @@ InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
   return {};
 }
 
-void BaseArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void BaseArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
   result.push_back(data_);
   if (nullable()) {
@@ -71,10 +71,10 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
   return {};
 }
 
-void ListArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void ListArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  descriptor_->_stores(result);
-  vardata_->_stores(result);
+  descriptor_->populate_stores(result);
+  vardata_->populate_stores(result);
 }
 
 Domain ListArray::domain() const { return descriptor_->domain(); }
@@ -96,9 +96,10 @@ InternalSharedPtr<Store> StructArray::null_mask() const
 
 InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const { return fields_.at(index); }
 
-void StructArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void StructArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  std::for_each(fields_.begin(), fields_.end(), [&result](auto& field) { field->_stores(result); });
+  std::for_each(
+    fields_.begin(), fields_.end(), [&result](auto& field) { field->populate_stores(result); });
 }
 
 Domain StructArray::domain() const { return fields_.front()->domain(); }

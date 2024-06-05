@@ -22,7 +22,8 @@
 
 namespace legate::comm::coll {
 
-void collAbort() noexcept;
+// This is part of the public API, so we cannot change it (even though we probably should)
+void collAbort() noexcept;  // NOLINT(readability-identifier-naming)
 
 }  // namespace legate::comm::coll
 
@@ -38,7 +39,7 @@ void collAbort() noexcept;
       NV_IS_HOST,                                                                           \
       (                                                                                     \
         legate::detail::log_legate().error()                                                \
-        << "Legate called abort at "  __FILE__  ":" LegateStringize(__LINE__)  " in "       \
+        << "Legate called abort at "  __FILE__  ":" LEGATE_STRINGIZE(__LINE__)  " in "       \
         << __func__ << "(): " << __VA_ARGS__;                                               \
         /* if the collective library has a bespoke abort function, call that first */       \
         legate::comm::coll::collAbort();                                                    \
@@ -48,8 +49,8 @@ void collAbort() noexcept;
       ),                                                                                    \
       (                                                                                     \
         LEGATE_DEVICE_ASSERT_PRIVATE(                                                       \
-          0 && "Legate called abort at " __FILE__ ":" LegateStringize(__LINE__)             \
-          " in <unknown device function>: " LegateStringize(__VA_ARGS__));                  \
+          0 && "Legate called abort at " __FILE__ ":" LEGATE_STRINGIZE(__LINE__)             \
+          " in <unknown device function>: " LEGATE_STRINGIZE(__VA_ARGS__));                  \
       )                                                                                     \
     ) \
     LEGATE_PRAGMA_POP();                                                                      \

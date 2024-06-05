@@ -37,20 +37,20 @@ namespace {
 [[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& SIZEOF() noexcept
 {
   static const std::unordered_map<Type::Code, std::uint32_t> map = {
-    {Type::Code::BOOL, sizeof(type_of<Type::Code::BOOL>)},
-    {Type::Code::INT8, sizeof(type_of<Type::Code::INT8>)},
-    {Type::Code::INT16, sizeof(type_of<Type::Code::INT16>)},
-    {Type::Code::INT32, sizeof(type_of<Type::Code::INT32>)},
-    {Type::Code::INT64, sizeof(type_of<Type::Code::INT64>)},
-    {Type::Code::UINT8, sizeof(type_of<Type::Code::UINT8>)},
-    {Type::Code::UINT16, sizeof(type_of<Type::Code::UINT16>)},
-    {Type::Code::UINT32, sizeof(type_of<Type::Code::UINT32>)},
-    {Type::Code::UINT64, sizeof(type_of<Type::Code::UINT64>)},
-    {Type::Code::FLOAT16, sizeof(type_of<Type::Code::FLOAT16>)},
-    {Type::Code::FLOAT32, sizeof(type_of<Type::Code::FLOAT32>)},
-    {Type::Code::FLOAT64, sizeof(type_of<Type::Code::FLOAT64>)},
-    {Type::Code::COMPLEX64, sizeof(type_of<Type::Code::COMPLEX64>)},
-    {Type::Code::COMPLEX128, sizeof(type_of<Type::Code::COMPLEX128>)},
+    {Type::Code::BOOL, sizeof(type_of_t<Type::Code::BOOL>)},
+    {Type::Code::INT8, sizeof(type_of_t<Type::Code::INT8>)},
+    {Type::Code::INT16, sizeof(type_of_t<Type::Code::INT16>)},
+    {Type::Code::INT32, sizeof(type_of_t<Type::Code::INT32>)},
+    {Type::Code::INT64, sizeof(type_of_t<Type::Code::INT64>)},
+    {Type::Code::UINT8, sizeof(type_of_t<Type::Code::UINT8>)},
+    {Type::Code::UINT16, sizeof(type_of_t<Type::Code::UINT16>)},
+    {Type::Code::UINT32, sizeof(type_of_t<Type::Code::UINT32>)},
+    {Type::Code::UINT64, sizeof(type_of_t<Type::Code::UINT64>)},
+    {Type::Code::FLOAT16, sizeof(type_of_t<Type::Code::FLOAT16>)},
+    {Type::Code::FLOAT32, sizeof(type_of_t<Type::Code::FLOAT32>)},
+    {Type::Code::FLOAT64, sizeof(type_of_t<Type::Code::FLOAT64>)},
+    {Type::Code::COMPLEX64, sizeof(type_of_t<Type::Code::COMPLEX64>)},
+    {Type::Code::COMPLEX128, sizeof(type_of_t<Type::Code::COMPLEX128>)},
     {Type::Code::NIL, 0},
   };
   return map;
@@ -59,20 +59,20 @@ namespace {
 [[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& ALIGNOF() noexcept
 {
   static const std::unordered_map<Type::Code, std::uint32_t> map = {
-    {Type::Code::BOOL, alignof(type_of<Type::Code::BOOL>)},
-    {Type::Code::INT8, alignof(type_of<Type::Code::INT8>)},
-    {Type::Code::INT16, alignof(type_of<Type::Code::INT16>)},
-    {Type::Code::INT32, alignof(type_of<Type::Code::INT32>)},
-    {Type::Code::INT64, alignof(type_of<Type::Code::INT64>)},
-    {Type::Code::UINT8, alignof(type_of<Type::Code::UINT8>)},
-    {Type::Code::UINT16, alignof(type_of<Type::Code::UINT16>)},
-    {Type::Code::UINT32, alignof(type_of<Type::Code::UINT32>)},
-    {Type::Code::UINT64, alignof(type_of<Type::Code::UINT64>)},
-    {Type::Code::FLOAT16, alignof(type_of<Type::Code::FLOAT16>)},
-    {Type::Code::FLOAT32, alignof(type_of<Type::Code::FLOAT32>)},
-    {Type::Code::FLOAT64, alignof(type_of<Type::Code::FLOAT64>)},
-    {Type::Code::COMPLEX64, alignof(type_of<Type::Code::COMPLEX64>)},
-    {Type::Code::COMPLEX128, alignof(type_of<Type::Code::COMPLEX128>)},
+    {Type::Code::BOOL, alignof(type_of_t<Type::Code::BOOL>)},
+    {Type::Code::INT8, alignof(type_of_t<Type::Code::INT8>)},
+    {Type::Code::INT16, alignof(type_of_t<Type::Code::INT16>)},
+    {Type::Code::INT32, alignof(type_of_t<Type::Code::INT32>)},
+    {Type::Code::INT64, alignof(type_of_t<Type::Code::INT64>)},
+    {Type::Code::UINT8, alignof(type_of_t<Type::Code::UINT8>)},
+    {Type::Code::UINT16, alignof(type_of_t<Type::Code::UINT16>)},
+    {Type::Code::UINT32, alignof(type_of_t<Type::Code::UINT32>)},
+    {Type::Code::UINT64, alignof(type_of_t<Type::Code::UINT64>)},
+    {Type::Code::FLOAT16, alignof(type_of_t<Type::Code::FLOAT16>)},
+    {Type::Code::FLOAT32, alignof(type_of_t<Type::Code::FLOAT32>)},
+    {Type::Code::FLOAT64, alignof(type_of_t<Type::Code::FLOAT64>)},
+    {Type::Code::COMPLEX64, alignof(type_of_t<Type::Code::COMPLEX64>)},
+    {Type::Code::COMPLEX128, alignof(type_of_t<Type::Code::COMPLEX128>)},
     {Type::Code::NIL, 0},
   };
   return map;
@@ -230,7 +230,7 @@ bool FixedArrayType::equal(const Type& other) const
   }
   auto& casted = static_cast<const FixedArrayType&>(other);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
   }
@@ -264,10 +264,10 @@ StructType::StructType(std::uint32_t uid,
       if (field_type->variable_size()) {
         throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
       }
-      const auto _my_align = field_type->alignment();
-      alignment_           = std::max(_my_align, alignment_);
+      const auto my_align = field_type->alignment();
+      alignment_          = std::max(my_align, alignment_);
 
-      const auto offset = align_offset(size_, _my_align);
+      const auto offset = align_offset(size_, my_align);
       offsets_.push_back(offset);
       size_ = offset + field_type->size();
     }
@@ -316,7 +316,7 @@ bool StructType::equal(const Type& other) const
   }
   auto& casted = static_cast<const StructType&>(other);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     if (uid_ != casted.uid_) {
       return false;
@@ -390,7 +390,7 @@ bool ListType::equal(const Type& other) const
   }
   auto& casted = static_cast<const ListType&>(other);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     return uid_ == casted.uid_ && element_type_ == casted.element_type_;
   }

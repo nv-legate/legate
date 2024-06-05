@@ -25,7 +25,7 @@ TEST_F(AutoTask, Invalid)
   task::simple::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(task::simple::library_name);
+  auto library = runtime->find_library(task::simple::LIBRARY_NAME);
 
   auto unbound_array = runtime->create_array(legate::int64(), 1);
 

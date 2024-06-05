@@ -13,7 +13,7 @@
 #include "core/mapping/detail/operation.h"
 
 #include "core/runtime/detail/library.h"
-#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/deserializer.h"
 
 namespace legate::mapping::detail {
 
@@ -72,16 +72,16 @@ Copy::Copy(const Legion::Copy* copy,
   dez.next_requirement_list();
   output_indirections_ = dez.unpack<std::vector<Store>>();
   for (auto&& input : inputs_) {
-    LegateAssert(!input.is_future());
+    LEGATE_ASSERT(!input.is_future());
   }
   for (auto&& output : outputs_) {
-    LegateAssert(!output.is_future());
+    LEGATE_ASSERT(!output.is_future());
   }
   for (auto&& input_indirection : input_indirections_) {
-    LegateAssert(!input_indirection.is_future());
+    LEGATE_ASSERT(!input_indirection.is_future());
   }
   for (auto&& output_indirection : output_indirections_) {
-    LegateAssert(!output_indirection.is_future());
+    LEGATE_ASSERT(!output_indirection.is_future());
   }
 }
 

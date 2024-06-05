@@ -19,7 +19,7 @@ namespace test_find_memory_kind {
 
 using FindMemoryKind = DefaultFixture;
 
-constexpr const char library_name[] = "test_is_running_in_task";
+constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
 
 TEST_F(FindMemoryKind, Toplevel)
 {
@@ -55,7 +55,7 @@ struct Checker : public legate::LegateTask<Checker> {
 TEST_F(FindMemoryKind, InSingleTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Checker::register_variants(library);
 
   runtime->submit(runtime->create_task(library, Checker::TASK_ID));
@@ -64,7 +64,7 @@ TEST_F(FindMemoryKind, InSingleTask)
 TEST_F(FindMemoryKind, InIndexTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Checker::register_variants(library);
 
   runtime->submit(

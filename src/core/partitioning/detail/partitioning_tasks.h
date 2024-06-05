@@ -22,10 +22,10 @@ class Library;
 class FindBoundingBox : public LegateTask<FindBoundingBox> {
  public:
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };
@@ -33,10 +33,10 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
 class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
  public:
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };
@@ -47,7 +47,8 @@ class ElementWiseMax {
   using LHS = Point<NDIM>;
   using RHS = Point<NDIM>;
 
-  static const Point<NDIM> identity;
+  // Realm looks for a member of exactly this name
+  static const Point<NDIM> identity;  // NOLINT(readability-identifier-naming)
 
   template <bool EXCLUSIVE>
   __CUDA_HD__ inline static void apply(LHS& lhs, RHS rhs);
@@ -61,7 +62,8 @@ class ElementWiseMin {
   using LHS = Point<NDIM>;
   using RHS = Point<NDIM>;
 
-  static const Point<NDIM> identity;
+  // Realm looks for a member of exactly this name
+  static const Point<NDIM> identity;  // NOLINT(readability-identifier-naming)
 
   template <bool EXCLUSIVE>
   __CUDA_HD__ inline static void apply(LHS& lhs, RHS rhs);

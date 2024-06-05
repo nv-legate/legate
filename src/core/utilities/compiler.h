@@ -71,19 +71,19 @@
 #define LEGATE_MSVC 0
 #endif
 
-#if LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_NVCC)
 #define LEGATE_PRAGMA_PUSH() _Pragma("nv_diagnostic push")
 #define LEGATE_PRAGMA_POP() _Pragma("nv_diagnostic pop")
-#define LEGATE_PRAGMA_EDG_IGNORE(...) _Pragma(LegateStringize_(nv_diag_suppress __VA_ARGS__))
-#elif LegateDefined(LEGATE_NVHPC) || LegateDefined(LEGATE_EDG)
+#define LEGATE_PRAGMA_EDG_IGNORE(...) _Pragma(LEGATE_STRINGIZE_(nv_diag_suppress __VA_ARGS__))
+#elif LEGATE_DEFINED(LEGATE_NVHPC) || LEGATE_DEFINED(LEGATE_EDG)
 #define LEGATE_PRAGMA_PUSH() \
   _Pragma("diagnostic push") LEGATE_PRAGMA_EDG_IGNORE(invalid_error_number)
 #define LEGATE_PRAGMA_POP() _Pragma("diagnostic pop")
-#define LEGATE_PRAGMA_EDG_IGNORE(...) _Pragma(LegateStringize_(diag_suppress __VA_ARGS__))
-#elif LegateDefined(LEGATE_CLANG) || LegateDefined(LEGATE_GCC)
+#define LEGATE_PRAGMA_EDG_IGNORE(...) _Pragma(LEGATE_STRINGIZE_(diag_suppress __VA_ARGS__))
+#elif LEGATE_DEFINED(LEGATE_CLANG) || LEGATE_DEFINED(LEGATE_GCC)
 #define LEGATE_PRAGMA_PUSH() _Pragma("GCC diagnostic push")
 #define LEGATE_PRAGMA_POP() _Pragma("GCC diagnostic pop")
-#define LEGATE_PRAGMA_GNU_IGNORE(...) _Pragma(LegateStringize_(GCC diagnostic ignored __VA_ARGS__))
+#define LEGATE_PRAGMA_GNU_IGNORE(...) _Pragma(LEGATE_STRINGIZE_(GCC diagnostic ignored __VA_ARGS__))
 #else
 #define LEGATE_PRAGMA_PUSH()
 #define LEGATE_PRAGMA_POP()
@@ -96,16 +96,24 @@
 #define LEGATE_PRAGMA_GNU_IGNORE(...)
 #endif
 
-#if LegateDefined(LEGATE_GCC) && !LegateDefined(LEGATE_CLANG)
+#if LEGATE_DEFINED(LEGATE_GCC) && !LEGATE_DEFINED(LEGATE_CLANG)
 #define LEGATE_PRAGMA_GCC_IGNORE(...) LEGATE_PRAGMA_GNU_IGNORE(__VA_ARGS__)
 #else
 #define LEGATE_PRAGMA_GCC_IGNORE(...)
 #endif
 
-#if LegateDefined(LEGATE_CLANG)
+#if LEGATE_DEFINED(LEGATE_CLANG)
 #define LEGATE_PRAGMA_CLANG_IGNORE(...) LEGATE_PRAGMA_GNU_IGNORE(__VA_ARGS__)
 #else
 #define LEGATE_PRAGMA_CLANG_IGNORE(...)
+#endif
+
+#if LEGATE_DEFINED(LEGATE_CLANG) || LEGATE_DEFINED(LEGATE_GCC)
+#define LEGATE_DEPRECATED_MACRO_(...) _Pragma(LEGATE_STRINGIZE(GCC warning __VA_ARGS__))
+#define LEGATE_DEPRECATED_MACRO(...) \
+  LEGATE_DEPRECATED_MACRO_("This macro is deprecated: " __VA_ARGS__)
+#else
+#define LEGATE_DEPRECATED_MACRO(...)
 #endif
 
 namespace legate::detail {

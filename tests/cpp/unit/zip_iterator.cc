@@ -190,7 +190,8 @@ TEST(ZipIteratorUnit, IterateOneShort)
 
 namespace {
 
-void ModifyTestBase(std::vector<int> base, std::optional<std::size_t> expected_size = std::nullopt)
+void modify_test_base(std::vector<int> base,
+                      std::optional<std::size_t> expected_size = std::nullopt)
 {
   const auto expect_count = base.size();
   auto [x, y, z]          = create_containers_from_reference(base, std::move(expected_size));
@@ -246,9 +247,9 @@ void ModifyTestBase(std::vector<int> base, std::optional<std::size_t> expected_s
 
 }  // namespace
 
-TEST(ZipIteratorUnit, IterateAllSameSizeModify) { ModifyTestBase({1, 2, 3, 4}); }
+TEST(ZipIteratorUnit, IterateAllSameSizeModify) { modify_test_base({1, 2, 3, 4}); }
 
-TEST(ZipIteratorUnit, IterateOneShortModify) { ModifyTestBase({1, 2, 3}, {10}); }
+TEST(ZipIteratorUnit, IterateOneShortModify) { modify_test_base({1, 2, 3}, {10}); }
 
 TEST(ZipIteratorUnit, RandomAccess)
 {

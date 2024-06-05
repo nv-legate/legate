@@ -25,7 +25,7 @@ using ScaleConstraint = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_scale_constraints";
+constexpr std::string_view LIBRARY_NAME = "test_scale_constraints";
 
 }  // namespace
 
@@ -71,7 +71,7 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   ScaleTester<1>::register_variants(context);
   ScaleTester<2>::register_variants(context);
   ScaleTester<3>::register_variants(context);
@@ -86,7 +86,7 @@ struct ScaleTestSpec {
 void test_scale(const ScaleTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto smaller = runtime->create_store(spec.smaller_extents, legate::float16());
   auto bigger  = runtime->create_store(spec.bigger_extents, legate::int64());
@@ -105,7 +105,7 @@ void test_scale(const ScaleTestSpec& spec)
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   {
     auto smaller = runtime->create_store(legate::Shape{1, 2}, legate::float16());

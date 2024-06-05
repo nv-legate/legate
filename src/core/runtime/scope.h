@@ -228,9 +228,9 @@ class Scope {
   class Impl;
 
  private:
-  std::unique_ptr<Impl, default_delete<Impl>> impl_{};
+  std::unique_ptr<Impl, DefaultDelete<Impl>> impl_{};
 };
 
-extern template class default_delete<Scope::Impl>;
+extern template class DefaultDelete<Scope::Impl>;
 
 }  // namespace legate

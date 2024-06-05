@@ -24,11 +24,11 @@ using Copy = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_copy_scatter";
+constexpr std::string_view LIBRARY_NAME = "test_copy_scatter";
 
 [[nodiscard]] legate::Logger& logger()
 {
-  static legate::Logger log{library_name};
+  static legate::Logger log{std::string{LIBRARY_NAME}};
 
   return log;
 }
@@ -45,7 +45,7 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
     template <legate::Type::Code CODE>
     void operator()(legate::TaskContext context)
     {
-      using VAL = legate::type_of<CODE>;
+      using VAL = legate::type_of_t<CODE>;
 
       auto src_store = context.input(0).data();
       auto tgt_store = context.input(1).data();
@@ -101,7 +101,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   FillTask<1>::register_variants(library);
   FillTask<2>::register_variants(library);
   FillTask<3>::register_variants(library);
@@ -176,11 +176,11 @@ void check_scatter_output(legate::Library library,
 
 void test_scatter(const ScatterSpec& spec)
 {
-  LegateAssert(spec.seed.type() == spec.init.type());
+  LEGATE_ASSERT(spec.seed.type() == spec.init.type());
   logger().print() << "Scatter Copy: " << spec.to_string();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   auto type = spec.seed.type();
   auto src  = runtime->create_store(legate::Shape{spec.ind_shape}, type);
@@ -203,28 +203,28 @@ TEST_F(Copy, Scatter1Dto2D)
   register_tasks();
   const std::vector<std::uint64_t> shape1d{5};
   test_scatter(
-    ScatterSpec{shape1d, {7, 11}, legate::Scalar(int64_t{123}), legate::Scalar(int64_t{42})});
+    ScatterSpec{shape1d, {7, 11}, legate::Scalar{int64_t{123}}, legate::Scalar{int64_t{42}}});
 }
 
 TEST_F(Copy, Scatter2Dto3D)
 {
   register_tasks();
   test_scatter(
-    ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar(uint32_t{456}), legate::Scalar(uint32_t{42})});
+    ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar{uint32_t{456}}, legate::Scalar{uint32_t{42}}});
 }
 
 TEST_F(Copy, Scatter2Dto2D)
 {
   register_tasks();
   test_scatter(
-    ScatterSpec{{4, 5}, {10, 11}, legate::Scalar(int64_t{12}), legate::Scalar(int64_t{42})});
+    ScatterSpec{{4, 5}, {10, 11}, legate::Scalar{int64_t{12}}, legate::Scalar{int64_t{42}}});
 }
 
 TEST_F(Copy, Scatter3Dto2D)
 {
   register_tasks();
   test_scatter(
-    ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar(int64_t{1}), legate::Scalar(int64_t{42})});
+    ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar{int64_t{1}}, legate::Scalar{int64_t{42}}});
 }
 
 // NOLINTEND(readability-magic-numbers)

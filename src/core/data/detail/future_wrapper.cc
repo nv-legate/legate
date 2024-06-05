@@ -31,23 +31,23 @@ namespace {
   const Legion::Future& fut, std::size_t field_size)
 {
   const auto mem_kind =
-    find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB));
+    find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB));
 
   if (!fut.valid()) {
     return Legion::UntypedDeferredValue{field_size, mem_kind};
   }
 
-  LegateAssert(fut.get_untyped_size() == field_size);
+  LEGATE_ASSERT(fut.get_untyped_size() == field_size);
 
   const auto* init_value = fut.get_buffer(mem_kind);
 
-  if (LegateDefined(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
     // TODO(wonchanl): This should be done by Legion
     auto ret       = Legion::UntypedDeferredValue{field_size, mem_kind};
     const auto acc = AccessorWO<std::int8_t, 1>{ret, field_size, false};
     auto stream    = cuda::StreamPool::get_stream_pool().get_stream();
 
-    LegateCheckCUDA(
+    LEGATE_CHECK_CUDA(
       cudaMemcpyAsync(acc.ptr(0), init_value, field_size, cudaMemcpyDeviceToDevice, stream));
     return ret;
   }
@@ -138,7 +138,7 @@ mapping::StoreTarget FutureWrapper::target() const
   // for futures, but instead would move the data wherever it's requested. Until Legate gets
   // access to that information, we potentially give inaccurate answers
   return mapping::detail::to_target(
-    find_memory_kind_for_executing_processor(LegateDefined(LEGATE_NO_FUTURES_ON_FB)));
+    find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB)));
 }
 
 // Initializing isn't a const operation, even if all member functions are used const-ly
@@ -150,12 +150,12 @@ void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
   const auto* redop      = Legion::Runtime::get_reduction_op(redop_id);
   const auto* identity   = redop->identity;
 
-  LegateAssert(redop->sizeof_lhs == field_size());
-  if (LegateDefined(LEGATE_USE_CUDA) &&
+  LEGATE_ASSERT(redop->sizeof_lhs == field_size());
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
       (get_buffer().get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM)) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
 
-    LegateCheckCUDA(cudaMemcpyAsync(ptr, identity, field_size(), cudaMemcpyHostToDevice, stream));
+    LEGATE_CHECK_CUDA(cudaMemcpyAsync(ptr, identity, field_size(), cudaMemcpyHostToDevice, stream));
   } else {
     std::memcpy(ptr, identity, field_size());
   }

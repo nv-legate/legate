@@ -17,7 +17,7 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include "core/cuda/cuda.h"
 
 #include <cuda_runtime.h>
@@ -33,18 +33,19 @@ namespace index_attach {
 
 namespace {
 
-constexpr std::size_t TILE_SIZE       = 5;
-constexpr std::uint64_t INIT_VALUE    = 10;
-constexpr const char library_name[]   = "legate.external_allocation";
-constexpr std::int32_t ACCESS_TASK_ID = 0;
+constexpr std::size_t TILE_SIZE         = 5;
+constexpr std::uint64_t INIT_VALUE      = 10;
+constexpr std::string_view LIBRARY_NAME = "legate.external_allocation";
+constexpr std::int32_t ACCESS_TASK_ID   = 0;
 
 }  // namespace
 
-struct access_store_fn {
+class AccessStoreFn {
+ public:
   template <legate::Type::Code CODE>
   void operator()(legate::TaskContext context)
   {
-    using T                    = legate::type_of<CODE>;
+    using T                    = legate::type_of_t<CODE>;
     auto p_store               = context.input(0).data();
     constexpr std::int32_t DIM = 1;
     EXPECT_EQ(p_store.dim(), DIM);
@@ -67,14 +68,14 @@ struct access_store_fn {
 
 class AccessTask : public legate::LegateTask<AccessTask> {
  public:
-  static const std::int32_t TASK_ID = ACCESS_TASK_ID;
+  static constexpr std::int32_t TASK_ID = ACCESS_TASK_ID;
   static void cpu_variant(legate::TaskContext context);
 };
 
 /*static*/ void AccessTask::cpu_variant(legate::TaskContext context)
 {
   auto p_store = context.input(0).data();
-  legate::type_dispatch(p_store.code(), access_store_fn{}, context);
+  legate::type_dispatch(p_store.code(), AccessStoreFn{}, context);
 }
 
 class IndexAttach : public DefaultFixture {
@@ -83,7 +84,7 @@ class IndexAttach : public DefaultFixture {
   {
     DefaultFixture::SetUp();
     auto runtime = legate::Runtime::get_runtime();
-    auto context = runtime->create_library(library_name);
+    auto context = runtime->create_library(LIBRARY_NAME);
 
     AccessTask::register_variants(context);
   }
@@ -93,10 +94,10 @@ template <typename T>
 void test_access_by_task(legate::ExternalAllocation& ext, T value)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
-  auto task          = runtime->create_task(context, ACCESS_TASK_ID);
+  auto context       = runtime->find_library(LIBRARY_NAME);
+  auto task          = runtime->create_task(context, AccessTask::TASK_ID);
   auto logical_store = runtime->create_store(
-    legate::Shape{TILE_SIZE}, legate::primitive_type(legate::type_code_of<T>), ext);
+    legate::Shape{TILE_SIZE}, legate::primitive_type(legate::type_code_of_v<T>), ext);
 
   task.add_input(logical_store);
   task.add_output(logical_store);
@@ -158,7 +159,7 @@ TEST_F(IndexAttach, GPU)
     return;
   }
 
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   constexpr std::int64_t VAL1 = 42;
   constexpr std::int64_t VAL2 = 84;
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::int64_t);
@@ -168,13 +169,13 @@ TEST_F(IndexAttach, GPU)
   void* d_alloc1 = nullptr;
   void* d_alloc2 = nullptr;
 
-  LegateCheckCUDA(cudaMalloc(&d_alloc1, BYTES));
-  LegateCheckCUDA(cudaMalloc(&d_alloc2, BYTES));
+  LEGATE_CHECK_CUDA(cudaMalloc(&d_alloc1, BYTES));
+  LEGATE_CHECK_CUDA(cudaMalloc(&d_alloc2, BYTES));
 
-  LegateCheckCUDA(cudaMemcpy(d_alloc1, h_alloc1.data(), BYTES, cudaMemcpyHostToDevice));
-  LegateCheckCUDA(cudaMemcpy(d_alloc2, h_alloc2.data(), BYTES, cudaMemcpyHostToDevice));
+  LEGATE_CHECK_CUDA(cudaMemcpy(d_alloc1, h_alloc1.data(), BYTES, cudaMemcpyHostToDevice));
+  LEGATE_CHECK_CUDA(cudaMemcpy(d_alloc2, h_alloc2.data(), BYTES, cudaMemcpyHostToDevice));
 
-  auto deleter = [](void* ptr) noexcept { LegateCheckCUDA(cudaFree(ptr)); };
+  auto deleter = [](void* ptr) noexcept { LEGATE_CHECK_CUDA(cudaFree(ptr)); };
   auto alloc1 =
     legate::ExternalAllocation::create_fbmem(0, d_alloc1, BYTES, true /*read_only*/, deleter);
   auto alloc2 =
@@ -293,7 +294,7 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
     return;
   }
 
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::uint64_t);
   std::vector<std::uint64_t> h_alloc(TILE_SIZE, INIT_VALUE);
   void* d_alloc = nullptr;
@@ -301,15 +302,15 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
     void* h_buffer = std::malloc(BYTES);
 
     EXPECT_NE(h_buffer, nullptr);
-    LegateCheckCUDA(cudaMemcpy(h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
+    LEGATE_CHECK_CUDA(cudaMemcpy(h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
     // TODO(issue 464)
     // EXPECT_EQ(*(static_cast<std::uint64_t*>(h_buffer)), INIT_VALUE - 1);
-    LegateCheckCUDA(cudaFree(ptr));
+    LEGATE_CHECK_CUDA(cudaFree(ptr));
     std::free(h_buffer);
   };
 
-  LegateCheckCUDA(cudaMalloc(&d_alloc, BYTES));
-  LegateCheckCUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
+  LEGATE_CHECK_CUDA(cudaMalloc(&d_alloc, BYTES));
+  LEGATE_CHECK_CUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
 
   legate::ExternalAllocation ext_alloc;
   switch (store_target) {
@@ -322,7 +323,7 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
       break;
     }
     default: {
-      LegateCheckCUDA(cudaFree(d_alloc));
+      LEGATE_CHECK_CUDA(cudaFree(d_alloc));
       return;
     }
   }
@@ -370,7 +371,7 @@ TEST_F(IndexAttach, InvalidCreation)
 
   EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_sysmem(ptr, 10)),
                std::invalid_argument);
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   EXPECT_THROW(legate::ExternalAllocation::create_zcmem(ptr, 10), std::invalid_argument);
   if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) > 0) {
     EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),

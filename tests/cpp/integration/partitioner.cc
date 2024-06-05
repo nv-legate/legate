@@ -23,7 +23,7 @@ using PartitionerTest = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_partitioner";
+constexpr std::string_view LIBRARY_NAME = "test_partitioner";
 
 }  // namespace
 
@@ -40,7 +40,7 @@ struct Checker : public legate::LegateTask<Checker> {
 TEST_F(PartitionerTest, FavorPartitionedStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Initializer::register_variants(library);
   Checker::register_variants(library);
 

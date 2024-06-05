@@ -12,12 +12,14 @@
 
 #include "core/utilities/internal_shared_ptr.h"
 
+#include "utilities/utilities.h"
+
 #include <gtest/gtest.h>
 
 using BasicSharedPtrTypeList = ::testing::Types<std::int8_t, std::int32_t, std::uint64_t>;
 
 template <typename>
-struct InternalWeakPtrUnit : ::testing::Test {};
+using InternalWeakPtrUnit = NoInitFixture;
 
 TYPED_TEST_SUITE(InternalWeakPtrUnit, BasicSharedPtrTypeList, );
 

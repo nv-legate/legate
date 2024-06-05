@@ -20,7 +20,7 @@ namespace test_is_running_in_task {
 
 using IsRunningInTask = DefaultFixture;
 
-constexpr const char library_name[] = "test_is_running_in_task";
+constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
 
 TEST_F(IsRunningInTask, Toplevel) { EXPECT_FALSE(legate::is_running_in_task()); }
 
@@ -41,7 +41,7 @@ struct Checker : public legate::LegateTask<Checker> {
 TEST_F(IsRunningInTask, InSingleTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Checker::register_variants(library);
 
   runtime->submit(runtime->create_task(library, Checker::TASK_ID));
@@ -50,7 +50,7 @@ TEST_F(IsRunningInTask, InSingleTask)
 TEST_F(IsRunningInTask, InIndexTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Checker::register_variants(library);
 
   runtime->submit(

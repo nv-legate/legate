@@ -14,9 +14,7 @@
 
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/utilities/detail/hash.h"
 
-#include <unordered_set>
 #include <utility>
 
 namespace legate::detail {
@@ -39,22 +37,22 @@ void RegionManager::destroy(bool unordered)
   entries_.clear();
 }
 
-void RegionManager::push_entry()
+void RegionManager::push_entry_()
 {
   auto runtime = Runtime::get_runtime();
   entries_.emplace_back(runtime->create_region(index_space_, runtime->create_field_space()));
 }
 
-bool RegionManager::has_space() const { return !entries_.empty() && active_entry().has_space(); }
+bool RegionManager::has_space() const { return !entries_.empty() && active_entry_().has_space(); }
 
 std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(
   std::size_t field_size)
 {
   if (!has_space()) {
-    push_entry();
+    push_entry_();
   }
 
-  auto& entry = active_entry();
+  auto& entry = active_entry_();
   auto fid    = Runtime::get_runtime()->allocate_field(
     entry.region.get_field_space(), entry.get_next_field_id(), field_size);
   return {entry.region, fid};

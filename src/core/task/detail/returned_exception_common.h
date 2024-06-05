@@ -13,7 +13,7 @@
 #pragma once
 
 #include "core/utilities/assert.h"
-#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/deserializer.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -50,7 +50,7 @@ template <typename T>
 
   const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
 
-  LegateAssert(value);
+  LEGATE_ASSERT(value);
   std::memcpy(ptr, value, copy_bytes);
   return {static_cast<char*>(ptr) + copy_bytes, remaining_cap - copy_bytes - align_offset};
 }
@@ -83,7 +83,7 @@ template <typename T>
   const auto [ptr, align_offset] =
     legate::detail::align_for_unpack<T>(const_cast<void*>(buf), remaining_cap);
 
-  LegateAssert(val_ptr);
+  LEGATE_ASSERT(val_ptr);
   std::memcpy(val_ptr, ptr, copy_bytes);
   return {static_cast<char*>(val_ptr) + copy_bytes, remaining_cap - copy_bytes - align_offset};
 }

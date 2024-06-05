@@ -20,7 +20,7 @@
 
 #define CHECK_IF_CAN_USE_MEMBER_FUNCTION(op)                 \
   static_assert(!std::is_lvalue_reference_v<decltype(op())>, \
-                "Can use this->" LegateStringize(op) "() instead")
+                "Can use this->" LEGATE_STRINGIZE(op) "() instead")
 
 namespace legate {
 

@@ -28,7 +28,7 @@ std::vector<InternalSharedPtr<PhysicalStore>> PhysicalArray::stores() const
 {
   std::vector<InternalSharedPtr<PhysicalStore>> result;
 
-  _stores(result);
+  populate_stores(result);
   return result;
 }
 
@@ -36,7 +36,7 @@ std::vector<InternalSharedPtr<PhysicalStore>> PhysicalArray::stores() const
 
 bool BasePhysicalArray::unbound() const
 {
-  LegateAssert(!nullable() || data()->is_unbound_store() == null_mask()->is_unbound_store());
+  LEGATE_ASSERT(!nullable() || data()->is_unbound_store() == null_mask()->is_unbound_store());
   return data()->is_unbound_store();
 }
 
@@ -54,7 +54,7 @@ InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(std::uint32_t /*index*
   return {};
 }
 
-void BasePhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void BasePhysicalArray::populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   result.push_back(data());
   if (nullable()) {
@@ -64,12 +64,12 @@ void BasePhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& r
 
 void BasePhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
-  data()->check_shape_dimension(dim);
+  data()->check_shape_dimension_(dim);
 }
 
 bool ListPhysicalArray::valid() const
 {
-  LegateAssert(descriptor()->valid() == vardata()->valid());
+  LEGATE_ASSERT(descriptor()->valid() == vardata()->valid());
   return descriptor()->valid();
 }
 
@@ -86,10 +86,10 @@ InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) c
   return {};
 }
 
-void ListPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void ListPhysicalArray::populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
-  descriptor()->_stores(result);
-  vardata()->_stores(result);
+  descriptor()->populate_stores(result);
+  vardata()->populate_stores(result);
 }
 
 void ListPhysicalArray::check_shape_dimension(std::int32_t dim) const
@@ -106,7 +106,7 @@ bool StructPhysicalArray::valid() const
 {
   auto result =
     std::all_of(fields_.begin(), fields_.end(), [](auto& field) { return field->valid(); });
-  LegateAssert(null_mask()->valid() == result);
+  LEGATE_ASSERT(null_mask()->valid() == result);
   return result;
 }
 
@@ -123,10 +123,11 @@ InternalSharedPtr<PhysicalArray> StructPhysicalArray::child(std::uint32_t index)
   return fields_.at(index);
 }
 
-void StructPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void StructPhysicalArray::populate_stores(
+  std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
   for (auto&& field : fields_) {
-    field->_stores(result);
+    field->populate_stores(result);
   }
   if (nullable()) {
     result.push_back(null_mask());

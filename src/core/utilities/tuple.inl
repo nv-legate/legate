@@ -52,7 +52,7 @@ T& tuple<T>::at(std::uint32_t idx)
 template <typename T>
 const T& tuple<T>::operator[](std::uint32_t idx) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     return at(idx);
   }
   return data()[idx];
@@ -61,7 +61,7 @@ const T& tuple<T>::operator[](std::uint32_t idx) const
 template <typename T>
 T& tuple<T>::operator[](std::uint32_t idx)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     return at(idx);
   }
   return data()[idx];
@@ -404,7 +404,7 @@ tuple<T> from_range(T start, T stop)
 }
 
 template <typename T>
-tuple<T> full(detail::type_identity_t<typename tuple<T>::size_type> size, T init)
+tuple<T> full(traits::detail::type_identity_t<typename tuple<T>::size_type> size, T init)
 {
   // Note the use of smooth brackets for initializer! container_type may be an STL container,
   // in which case it suffers from the same 2-argument size-init ctor silently becoming an

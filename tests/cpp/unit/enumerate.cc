@@ -12,6 +12,8 @@
 
 #include "core/utilities/detail/enumerate.h"
 
+#include "utilities/utilities.h"
+
 #include <cstddef>
 #include <deque>
 #include <gtest/gtest.h>
@@ -22,7 +24,7 @@
 namespace {
 
 template <typename Container, typename T>
-void TestContainer(const std::vector<T>& init_values)
+void test_container(const std::vector<T>& init_values)
 {
   auto container              = Container{init_values.begin(), init_values.end()};
   const auto size             = static_cast<std::ptrdiff_t>(init_values.size());
@@ -49,7 +51,7 @@ using EnumerateTypeList =
   ::testing::Types<std::vector<int>, std::list<float>, std::deque<std::int64_t>>;
 
 template <typename>
-struct EnumerateUnit : ::testing::Test {};
+using EnumerateUnit = NoInitFixture;
 
 TYPED_TEST_SUITE(EnumerateUnit, EnumerateTypeList, );
 
@@ -58,7 +60,7 @@ TYPED_TEST(EnumerateUnit, Basic)
   // NOLINTNEXTLINE(readibility-magic-numbers)
   const std::vector<typename TypeParam::value_type> init_values{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-  TestContainer<TypeParam>(init_values);
+  test_container<TypeParam>(init_values);
 }
 
 TYPED_TEST(EnumerateUnit, Bidirectional)

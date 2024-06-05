@@ -18,11 +18,11 @@
 
 #if __has_include(<span>)
 #if defined(__cpp_lib_span) && __cpp_lib_span >= 202002L
-#define LEGATE_STL_HAS_STD_SPAN
+#define LEGATE_STL_HAS_STD_SPAN 1
 #endif
 #endif
 
-#if LegateDefined(LEGATE_STL_HAS_STD_SPAN)
+#if LEGATE_DEFINED(LEGATE_STL_HAS_STD_SPAN)
 
 #include <span>
 
@@ -31,7 +31,7 @@
 #define TCB_SPAN_NAMESPACE_NAME std
 #include "tcb/span.hpp"
 // We define this on purpose so that downstream libs can pretend we have span
-// NOLINTNEXTLINE(bugprone-reserved-identifier)
+// NOLINTNEXTLINE
 #define __cpp_lib_span 1
 
 #endif  // LEGATE_STL_HAS_STD_SPAN

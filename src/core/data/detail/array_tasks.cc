@@ -49,7 +49,7 @@ namespace legate::detail {
   const auto ranges  = context.output(0).data();
 
   const auto shape = offsets.shape<1>();
-  LegateCheck(shape == ranges.shape<1>());
+  LEGATE_CHECK(shape == ranges.shape<1>());
 
   if (shape.empty()) {
     return;
@@ -74,7 +74,7 @@ namespace legate::detail {
   const auto offsets = context.output(0).data();
 
   const auto shape = ranges.shape<1>();
-  LegateCheck(shape == offsets.shape<1>());
+  LEGATE_CHECK(shape == offsets.shape<1>());
 
   if (shape.empty()) {
     return;

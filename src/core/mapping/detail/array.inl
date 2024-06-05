@@ -19,7 +19,7 @@ namespace legate::mapping::detail {
 inline std::vector<InternalSharedPtr<Store>> Array::stores() const
 {
   std::vector<InternalSharedPtr<Store>> result;
-  _stores(result);
+  populate_stores(result);
   return result;
 }
 

@@ -424,7 +424,7 @@ class StoreMapping {
  private:
   friend class detail::BaseMapper;
 
-  [[nodiscard]] detail::StoreMapping* release() noexcept;
+  [[nodiscard]] detail::StoreMapping* release_() noexcept;
 
   explicit StoreMapping(detail::StoreMapping* impl) noexcept;
 

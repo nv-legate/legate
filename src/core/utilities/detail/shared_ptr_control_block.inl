@@ -37,7 +37,7 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::increment_ref
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(
   std::atomic<ref_count_type>& refcount) noexcept
 {
-  LegateAssert(refcount > 0);
+  LEGATE_ASSERT(refcount > 0);
   return refcount.fetch_sub(1, std::memory_order_acq_rel) - 1;
 }
 
@@ -159,7 +159,7 @@ void SeparateControlBlock<T, D, A>::destroy_object() noexcept
 {
   // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
   static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
-  LegateAssert(ptr_);
+  LEGATE_ASSERT(ptr_);
   deleter_()(ptr_);
 }
 
@@ -205,13 +205,13 @@ const typename InplaceControlBlock<T, A>::allocator_type& InplaceControlBlock<T,
 }
 
 template <typename T, typename A>
-typename InplaceControlBlock<T, A>::aligned_storage& InplaceControlBlock<T, A>::store_() noexcept
+typename InplaceControlBlock<T, A>::AlignedStorage& InplaceControlBlock<T, A>::store_() noexcept
 {
   return pair_.second();
 }
 
 template <typename T, typename A>
-const typename InplaceControlBlock<T, A>::aligned_storage& InplaceControlBlock<T, A>::store_()
+const typename InplaceControlBlock<T, A>::AlignedStorage& InplaceControlBlock<T, A>::store_()
   const noexcept
 {
   return pair_.second();
@@ -271,7 +271,10 @@ auto InplaceControlBlock<T, A>::rebind_alloc() const
 // ==========================================================================================
 
 template <typename U, typename Alloc, typename P, typename... Args>
-U* construct_from_allocator_(Alloc& allocator, P* hint, Args&&... args)
+U* construct_from_allocator_(  // NOLINT(readability-identifier-naming)
+  Alloc& allocator,
+  P* hint,
+  Args&&... args)
 {
   using rebound_type   = typename std::allocator_traits<Alloc>::template rebind_alloc<U>;
   using rebound_traits = std::allocator_traits<rebound_type>;

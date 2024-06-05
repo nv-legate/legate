@@ -19,8 +19,13 @@
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
-#include <map>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
 #include <queue>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace legate::detail {
@@ -61,9 +66,9 @@ class FieldManager {
   virtual void free_field(FreeFieldInfo info, bool unordered);
 
  protected:
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field(
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field_(
     const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field(
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field_(
     InternalSharedPtr<Shape> shape, std::uint32_t field_size);
 
   using OrderedQueueKey = std::pair<Legion::IndexSpace, std::uint32_t>;

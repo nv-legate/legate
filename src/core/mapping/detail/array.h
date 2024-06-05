@@ -37,8 +37,8 @@ class Array {
   [[nodiscard]] virtual InternalSharedPtr<Array> child(std::uint32_t index) const = 0;
   [[nodiscard]] std::vector<InternalSharedPtr<Store>> stores() const;
 
-  virtual void _stores(std::vector<InternalSharedPtr<Store>>& result) const = 0;
-  [[nodiscard]] virtual Domain domain() const                               = 0;
+  virtual void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const = 0;
+  [[nodiscard]] virtual Domain domain() const                                       = 0;
 };
 
 class BaseArray final : public Array {
@@ -55,7 +55,7 @@ class BaseArray final : public Array {
   [[nodiscard]] InternalSharedPtr<Store> data() const override;
   [[nodiscard]] InternalSharedPtr<Store> null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
-  void _stores(std::vector<InternalSharedPtr<Store>>& result) const override;
+  void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
 
@@ -79,7 +79,7 @@ class ListArray final : public Array {
 
   [[nodiscard]] InternalSharedPtr<Store> null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
-  void _stores(std::vector<InternalSharedPtr<Store>>& result) const override;
+  void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
   [[nodiscard]] InternalSharedPtr<Array> descriptor() const;
   [[nodiscard]] InternalSharedPtr<Array> vardata() const;
   [[nodiscard]] Domain domain() const override;
@@ -105,7 +105,7 @@ class StructArray final : public Array {
 
   [[nodiscard]] InternalSharedPtr<Store> null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
-  void _stores(std::vector<InternalSharedPtr<Store>>& result) const override;
+  void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
 

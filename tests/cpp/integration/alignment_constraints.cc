@@ -23,7 +23,7 @@ using Alignment = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_alignment_constraints";
+constexpr std::string_view LIBRARY_NAME = "test_alignment_constraints";
 
 }  // namespace
 
@@ -91,7 +91,7 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   Initializer::register_variants(context);
   AlignmentTester<1>::register_variants(context);
   AlignmentTester<2>::register_variants(context);
@@ -107,7 +107,7 @@ void prepare()
 void test_alignment()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto launch_tester = [&](const std::vector<std::uint64_t>& extents) {
     auto store1 = runtime->create_store(legate::Shape{extents}, legate::int64());
@@ -134,7 +134,7 @@ void test_alignment()
 void test_alignment_and_broadcast()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto launch_tester = [&](const std::vector<std::uint64_t>& extents) {
     auto store1 = runtime->create_store(legate::Shape{extents}, legate::int64());
@@ -161,7 +161,7 @@ void test_alignment_and_broadcast()
 void initialize(const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(context, INIT);
 
   task.add_output(store);
@@ -172,7 +172,7 @@ void initialize(const legate::LogicalStore& store)
 void test_alignment_transformed()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto launch_tester = [&](auto store1, auto store2) {
     auto task =
@@ -211,7 +211,7 @@ void test_alignment_transformed()
 void test_redundant_alignment()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   const std::vector<std::uint64_t> extents = {10};
   auto shapes                              = legate::Shape{extents};
@@ -239,7 +239,7 @@ void test_redundant_alignment()
 void test_invalid_alignment()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto store1 = runtime->create_store(legate::Shape{10}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{9}, legate::int64());

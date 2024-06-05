@@ -38,13 +38,13 @@ INSTANTIATE_TEST_SUITE_P(
 
 namespace {
 
-constexpr const char library_name[] = "test_image_constraints";
+constexpr std::string_view LIBRARY_NAME = "test_image_constraints";
 
 constexpr std::int32_t TEST_MAX_DIM = 3;
 
 [[nodiscard]] legate::Logger& logger()
 {
-  static legate::Logger log{library_name};
+  static legate::Logger log{std::string{LIBRARY_NAME}};
 
   return log;
 }
@@ -147,7 +147,7 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
     }
   }
 
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context) { cpu_variant(context); }
 #endif
 };
@@ -237,7 +237,7 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   InitializeFunction<1, true>::register_variants(context);
   InitializeFunction<2, true>::register_variants(context);
   InitializeFunction<3, true>::register_variants(context);
@@ -257,7 +257,7 @@ void initialize_function(const legate::LogicalStore& func,
                          bool ascending)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
   auto task =
@@ -279,7 +279,7 @@ void check_image(const legate::LogicalStore& func,
                  legate::ImageComputationHint hint)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
   auto task =
@@ -308,7 +308,7 @@ struct ImageTestSpec {
 void test_image(const ImageTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   static_cast<void>(context);
 
   auto tgt_dim    = static_cast<std::int32_t>(spec.range_extents.size());
@@ -326,7 +326,7 @@ void test_image(const ImageTestSpec& spec)
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto create_task = [&](auto func, auto range) {
     auto task = runtime->create_task(context, static_cast<std::int64_t>(IMAGE_TESTER) + func.dim());

@@ -34,9 +34,9 @@ Gather::Gather(InternalSharedPtr<LogicalStore> target,
     constraint_(align(target_.variable, source_indirect_.variable)),
     redop_{redop}
 {
-  record_partition(target_.variable, std::move(target));
-  record_partition(source_.variable, std::move(source));
-  record_partition(source_indirect_.variable, std::move(source_indirect));
+  record_partition_(target_.variable, std::move(target));
+  record_partition_(source_.variable, std::move(source));
+  record_partition_(source_indirect_.variable, std::move(source_indirect));
 }
 
 void Gather::validate()
@@ -68,12 +68,12 @@ void Gather::launch(Strategy* p_strategy)
   auto launcher      = CopyLauncher{machine_, priority()};
   auto launch_domain = strategy.launch_domain(this);
 
-  launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));
+  launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
   launcher.add_source_indirect(source_indirect_.store,
-                               create_store_projection(strategy, launch_domain, source_indirect_));
+                               create_store_projection_(strategy, launch_domain, source_indirect_));
 
   if (!redop_) {
-    launcher.add_output(target_.store, create_store_projection(strategy, launch_domain, target_));
+    launcher.add_output(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);

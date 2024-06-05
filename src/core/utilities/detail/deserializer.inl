@@ -13,7 +13,7 @@
 #pragma once
 
 // Useful for IDEs
-#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/deserializer.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -43,10 +43,6 @@ std::pair<void*, std::size_t> align_for_unpack(void* ptr,
   return {ptr, orig_avail_space - avail_space};
 }
 
-}  // namespace legate::detail
-
-namespace legate {
-
 template <typename Deserializer>
 BaseDeserializer<Deserializer>::BaseDeserializer(const void* args, std::size_t arglen)
   : args_{static_cast<const std::int8_t*>(args), arglen}
@@ -58,16 +54,16 @@ template <typename T>
 inline T BaseDeserializer<Deserializer>::unpack()
 {
   T value;
-  static_cast<Deserializer*>(this)->_unpack(value);
+  static_cast<Deserializer*>(this)->unpack_impl(value);
   return value;
 }
 
 template <typename Deserializer>
-template <typename T, std::enable_if_t<type_code_of<T> != Type::Code::NIL>*>
-void BaseDeserializer<Deserializer>::_unpack(T& value)
+template <typename T, std::enable_if_t<type_code_of_v<T> != Type::Code::NIL>*>
+void BaseDeserializer<Deserializer>::unpack_impl(T& value)
 {
   const auto vptr          = static_cast<void*>(const_cast<std::int8_t*>(args_.ptr()));
-  auto [ptr, align_offset] = detail::align_for_unpack<T>(vptr, args_.size());
+  auto [ptr, align_offset] = align_for_unpack<T>(vptr, args_.size());
 
   // We need to align-up the incoming args_.ptr() since the value was stored according to
   // alignof(T). So we ultimately get 2 pointers:
@@ -90,7 +86,7 @@ void BaseDeserializer<Deserializer>::_unpack(T& value)
 
 template <typename Deserializer>
 template <typename T>
-void BaseDeserializer<Deserializer>::_unpack(std::vector<T>& values)
+void BaseDeserializer<Deserializer>::unpack_impl(std::vector<T>& values)
 {
   auto size = unpack<std::uint32_t>();
   values.reserve(size);
@@ -101,16 +97,16 @@ void BaseDeserializer<Deserializer>::_unpack(std::vector<T>& values)
 
 template <typename Deserializer>
 template <typename T1, typename T2>
-void BaseDeserializer<Deserializer>::_unpack(std::pair<T1, T2>& values)
+void BaseDeserializer<Deserializer>::unpack_impl(std::pair<T1, T2>& values)
 {
   values.first  = unpack<T1>();
   values.second = unpack<T2>();
 }
 
 template <typename Deserializer>
-std::vector<Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
+std::vector<legate::Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
 {
-  std::vector<Scalar> values;
+  std::vector<legate::Scalar> values;
   auto size = unpack<std::uint32_t>();
 
   values.reserve(size);
@@ -121,11 +117,11 @@ std::vector<Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
 }
 
 template <typename Deserializer>
-std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
+std::unique_ptr<Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
 {
   // this unpack_type call must be in a separate line from the following one because they both
   // read and update the buffer location.
-  auto type = unpack_type();
+  auto type = unpack_type_();
 
   const auto unpack_scalar_value = [&](const auto& ty,
                                        const signed char* vptr,
@@ -136,37 +132,36 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
       case Type::Code::NIL:
         return {nullptr, 0};
 
-#define CASE_TYPE_CODE_(CODE)                                   \
-  case Type::Code::CODE:                                        \
-    return detail::align_for_unpack<type_of<Type::Code::CODE>>( \
-      ptr, capacity, ty->size(), ty->alignment())
+#define LEGATE_CORE_CASE_TYPE_CODE(CODE) \
+  case Type::Code::CODE:                 \
+    return align_for_unpack<type_of_t<Type::Code::CODE>>(ptr, capacity, ty->size(), ty->alignment())
 
-        CASE_TYPE_CODE_(BOOL);
-        CASE_TYPE_CODE_(INT8);
-        CASE_TYPE_CODE_(INT16);
-        CASE_TYPE_CODE_(INT32);
-        CASE_TYPE_CODE_(INT64);
-        CASE_TYPE_CODE_(UINT8);
-        CASE_TYPE_CODE_(UINT16);
-        CASE_TYPE_CODE_(UINT32);
-        CASE_TYPE_CODE_(UINT64);
-        CASE_TYPE_CODE_(FLOAT16);
-        CASE_TYPE_CODE_(FLOAT32);
-        CASE_TYPE_CODE_(FLOAT64);
-        CASE_TYPE_CODE_(COMPLEX64);
-        CASE_TYPE_CODE_(COMPLEX128);
+        LEGATE_CORE_CASE_TYPE_CODE(BOOL);
+        LEGATE_CORE_CASE_TYPE_CODE(INT8);
+        LEGATE_CORE_CASE_TYPE_CODE(INT16);
+        LEGATE_CORE_CASE_TYPE_CODE(INT32);
+        LEGATE_CORE_CASE_TYPE_CODE(INT64);
+        LEGATE_CORE_CASE_TYPE_CODE(UINT8);
+        LEGATE_CORE_CASE_TYPE_CODE(UINT16);
+        LEGATE_CORE_CASE_TYPE_CODE(UINT32);
+        LEGATE_CORE_CASE_TYPE_CODE(UINT64);
+        LEGATE_CORE_CASE_TYPE_CODE(FLOAT16);
+        LEGATE_CORE_CASE_TYPE_CODE(FLOAT32);
+        LEGATE_CORE_CASE_TYPE_CODE(FLOAT64);
+        LEGATE_CORE_CASE_TYPE_CODE(COMPLEX64);
+        LEGATE_CORE_CASE_TYPE_CODE(COMPLEX128);
 
-#undef CASE_TYPE_CODE_
+#undef LEGATE_CORE_CASE_TYPE_CODE
 
       case Type::Code::BINARY:       // fall-through
       case Type::Code::FIXED_ARRAY:  // fall-through
       case Type::Code::STRUCT:
-        return detail::align_for_unpack<std::byte>(ptr, capacity, ty->size(), ty->alignment());
+        return align_for_unpack<std::byte>(ptr, capacity, ty->size(), ty->alignment());
       case Type::Code::STRING:
         // The size is an approximation here. We cannot know the true size of the string until
         // we have aligned the pointer, but we cannot align the pointer without knowing the
         // true size of the string... so we give a lower bound
-        return detail::align_for_unpack<std::byte>(
+        return align_for_unpack<std::byte>(
           ptr, capacity, sizeof(std::uint32_t) + sizeof(char), alignof(std::max_align_t));
       case Type::Code::LIST:
         // don't know how to handle these yet
@@ -179,20 +174,20 @@ std::unique_ptr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
   };
 
   auto [ptr, align_offset] = unpack_scalar_value(type, args_.ptr(), args_.size());
-  auto result              = std::make_unique<detail::Scalar>(type, ptr, false /*copy*/);
+  auto result              = std::make_unique<Scalar>(type, ptr, false /*copy*/);
 
   args_ = args_.subspan(align_offset + result->size());
   return result;
 }
 
 template <typename Deserializer>
-void BaseDeserializer<Deserializer>::_unpack(mapping::TaskTarget& value)
+void BaseDeserializer<Deserializer>::unpack_impl(mapping::TaskTarget& value)
 {
   value = static_cast<mapping::TaskTarget>(unpack<std::int32_t>());
 }
 
 template <typename Deserializer>
-void BaseDeserializer<Deserializer>::_unpack(mapping::ProcessorRange& value)
+void BaseDeserializer<Deserializer>::unpack_impl(mapping::ProcessorRange& value)
 {
   value.low            = unpack<std::uint32_t>();
   value.high           = unpack<std::uint32_t>();
@@ -200,7 +195,7 @@ void BaseDeserializer<Deserializer>::_unpack(mapping::ProcessorRange& value)
 }
 
 template <typename Deserializer>
-void BaseDeserializer<Deserializer>::_unpack(mapping::detail::Machine& value)
+void BaseDeserializer<Deserializer>::unpack_impl(mapping::detail::Machine& value)
 {
   value.preferred_target =
     static_cast<mapping::TaskTarget>(unpack<std::underlying_type_t<mapping::TaskTarget>>());
@@ -216,7 +211,7 @@ void BaseDeserializer<Deserializer>::_unpack(mapping::detail::Machine& value)
 }
 
 template <typename Deserializer>
-void BaseDeserializer<Deserializer>::_unpack(Domain& domain)
+void BaseDeserializer<Deserializer>::unpack_impl(Domain& domain)
 {
   domain.dim = unpack<std::uint32_t>();
   for (std::int32_t idx = 0; idx < domain.dim; ++idx) {
@@ -233,46 +228,46 @@ Span<const std::int8_t> BaseDeserializer<Deserializer>::current_args() const
 }
 
 template <typename Deserializer>
-InternalSharedPtr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack_transform()
+InternalSharedPtr<TransformStack> BaseDeserializer<Deserializer>::unpack_transform_()
 {
   auto code = unpack<std::int32_t>();
   switch (code) {
     case -1: {
-      return make_internal_shared<detail::TransformStack>();
+      return make_internal_shared<TransformStack>();
     }
     case LEGATE_CORE_TRANSFORM_SHIFT: {
       auto dim    = unpack<std::int32_t>();
       auto offset = unpack<std::int64_t>();
-      auto parent = unpack_transform();
-      return make_internal_shared<detail::TransformStack>(
-        std::make_unique<detail::Shift>(dim, offset), std::move(parent));
+      auto parent = unpack_transform_();
+      return make_internal_shared<TransformStack>(std::make_unique<Shift>(dim, offset),
+                                                  std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_PROMOTE: {
       auto extra_dim = unpack<std::int32_t>();
       auto dim_size  = unpack<std::int64_t>();
-      auto parent    = unpack_transform();
-      return make_internal_shared<detail::TransformStack>(
-        std::make_unique<detail::Promote>(extra_dim, dim_size), std::move(parent));
+      auto parent    = unpack_transform_();
+      return make_internal_shared<TransformStack>(std::make_unique<Promote>(extra_dim, dim_size),
+                                                  std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_PROJECT: {
       auto dim    = unpack<std::int32_t>();
       auto coord  = unpack<std::int64_t>();
-      auto parent = unpack_transform();
-      return make_internal_shared<detail::TransformStack>(
-        std::make_unique<detail::Project>(dim, coord), std::move(parent));
+      auto parent = unpack_transform_();
+      return make_internal_shared<TransformStack>(std::make_unique<Project>(dim, coord),
+                                                  std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_TRANSPOSE: {
       auto axes   = unpack<std::vector<std::int32_t>>();
-      auto parent = unpack_transform();
-      return make_internal_shared<detail::TransformStack>(
-        std::make_unique<detail::Transpose>(std::move(axes)), std::move(parent));
+      auto parent = unpack_transform_();
+      return make_internal_shared<TransformStack>(std::make_unique<Transpose>(std::move(axes)),
+                                                  std::move(parent));
     }
     case LEGATE_CORE_TRANSFORM_DELINEARIZE: {
       auto dim    = unpack<std::int32_t>();
       auto sizes  = unpack<std::vector<std::uint64_t>>();
-      auto parent = unpack_transform();
-      return make_internal_shared<detail::TransformStack>(
-        std::make_unique<detail::Delinearize>(dim, std::move(sizes)), std::move(parent));
+      auto parent = unpack_transform_();
+      return make_internal_shared<TransformStack>(
+        std::make_unique<Delinearize>(dim, std::move(sizes)), std::move(parent));
     }
   }
   LEGATE_ABORT("Unhandled transform code: " << code);
@@ -280,88 +275,88 @@ InternalSharedPtr<detail::TransformStack> BaseDeserializer<Deserializer>::unpack
 }
 
 template <typename Deserializer>
-InternalSharedPtr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
+InternalSharedPtr<Type> BaseDeserializer<Deserializer>::unpack_type_()
 {
   auto code = static_cast<Type::Code>(unpack<std::underlying_type_t<Type::Code>>());
   switch (code) {
     case Type::Code::FIXED_ARRAY: {
       auto uid  = unpack<std::uint32_t>();
-      auto N    = unpack<std::uint32_t>();
-      auto type = unpack_type();
+      auto n    = unpack<std::uint32_t>();
+      auto type = unpack_type_();
 
-      return make_internal_shared<detail::FixedArrayType>(uid, std::move(type), N);
+      return make_internal_shared<FixedArrayType>(uid, std::move(type), n);
     }
     case Type::Code::STRUCT: {
       auto uid        = unpack<std::uint32_t>();
       auto num_fields = unpack<std::uint32_t>();
 
-      std::vector<InternalSharedPtr<detail::Type>> field_types;
+      std::vector<InternalSharedPtr<Type>> field_types;
 
       field_types.reserve(num_fields);
       for (std::uint32_t idx = 0; idx < num_fields; ++idx) {
-        field_types.emplace_back(unpack_type());
+        field_types.emplace_back(unpack_type_());
       }
 
       auto align = unpack<bool>();
 
-      return make_internal_shared<detail::StructType>(uid, std::move(field_types), align);
+      return make_internal_shared<StructType>(uid, std::move(field_types), align);
     }
     case Type::Code::LIST: {
       auto uid  = unpack<std::uint32_t>();
-      auto type = unpack_type();
-      return make_internal_shared<detail::ListType>(uid, std::move(type));
+      auto type = unpack_type_();
+      return make_internal_shared<ListType>(uid, std::move(type));
     }
     case Type::Code::NIL: {
-      return detail::null_type();
+      return null_type();
     }
     case Type::Code::BOOL: {
-      return detail::bool_();
+      return bool_();
     }
     case Type::Code::INT8: {
-      return detail::int8();
+      return int8();
     }
     case Type::Code::INT16: {
-      return detail::int16();
+      return int16();
     }
     case Type::Code::INT32: {
-      return detail::int32();
+      return int32();
     }
     case Type::Code::INT64: {
-      return detail::int64();
+      return int64();
     }
     case Type::Code::UINT8: {
-      return detail::uint8();
+      return uint8();
     }
     case Type::Code::UINT16: {
-      return detail::uint16();
+      return uint16();
     }
     case Type::Code::UINT32: {
-      return detail::uint32();
+      return uint32();
     }
     case Type::Code::UINT64: {
-      return detail::uint64();
+      return uint64();
     }
     case Type::Code::FLOAT16: {
-      return detail::float16();
+      return float16();
     }
     case Type::Code::FLOAT32: {
-      return detail::float32();
+      return float32();
     }
     case Type::Code::FLOAT64: {
-      return detail::float64();
+      return float64();
     }
     case Type::Code::COMPLEX64: {
-      return detail::complex64();
+      return complex64();
     }
     case Type::Code::COMPLEX128: {
-      return detail::complex128();
+      return complex128();
     }
     case Type::Code::BINARY: {
       auto size = unpack<std::uint32_t>();
-      return detail::binary_type(size);
+      return binary_type(size);
     }
     case Type::Code::STRING: {
-      return make_internal_shared<detail::StringType>();
+      return make_internal_shared<StringType>();
     }
     default: break;
   }
@@ -369,4 +364,4 @@ InternalSharedPtr<detail::Type> BaseDeserializer<Deserializer>::unpack_type()
   return {};
 }
 
-}  // namespace legate
+}  // namespace legate::detail

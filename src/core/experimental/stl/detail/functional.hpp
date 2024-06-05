@@ -42,12 +42,6 @@ template <template <std::size_t> typename Tfx, typename Fun, std::size_t... Is>
   return std::forward<Fun>(fun)(Tfx<Is>()()...);
 }
 
-template <std::size_t N>
-class index_t {
- public:
-  [[nodiscard]] constexpr std::integral_constant<std::size_t, N> operator()() const { return {}; }
-};
-
 }  // namespace detail
 
 template <std::size_t N, typename Fun>
@@ -69,7 +63,7 @@ template <std::size_t N, template <std::size_t> typename Tfx, typename Fun>
 namespace detail {
 
 template <typename Fn, typename... Args>
-class binder_back {
+class BinderBack {
  public:
   Fn fn_{};
   std::tuple<Args...> args_{};
@@ -84,7 +78,7 @@ class binder_back {
 };
 
 template <typename Fn, typename... Args>
-binder_back(Fn, Args...) -> binder_back<Fn, Args...>;
+BinderBack(Fn, Args...) -> BinderBack<Fn, Args...>;
 
 }  // namespace detail
 /// \endcond
@@ -96,16 +90,16 @@ LEGATE_HOST_DEVICE [[nodiscard]] auto bind_back(Fn fn, Args&&... args)
   if constexpr (sizeof...(args) == 0) {
     return fn;
   } else {
-    return detail::binder_back{std::move(fn), std::forward<Args>(args)...};
+    return detail::BinderBack{std::move(fn), std::forward<Args>(args)...};
   }
-  LegateUnreachable();
+  LEGATE_UNREACHABLE();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 namespace detail {
 
 template <typename Function, typename... Ignore>
-class drop_n_args {
+class DropNArgs {
  public:
   Function fun_{};
 
@@ -120,7 +114,7 @@ class drop_n_args {
 
 template <std::size_t Count, typename Function>
 using drop_n_args =
-  meta::fill_n<Count, ignore, meta::bind_front<meta::quote<detail::drop_n_args>, Function>>;
+  meta::fill_n<Count, ignore, meta::bind_front<meta::quote<detail::DropNArgs>, Function>>;
 
 template <std::size_t Count, typename Function>
 [[nodiscard]] drop_n_args<Count, std::decay_t<Function>> drop_n_fn(Function&& fun)

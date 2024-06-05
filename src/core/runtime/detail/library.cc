@@ -137,7 +137,7 @@ void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
 
   auto* library = Runtime::get_runtime()->find_library(std::move(library_name), false /*can_fail*/);
   auto* legion_mapper = library->get_legion_mapper();
-  LegateAssert(legion_mapper != nullptr);
+  LEGATE_ASSERT(legion_mapper != nullptr);
   Legion::Runtime::get_runtime()->add_mapper(library->get_mapper_id(), legion_mapper);
 }
 
@@ -180,7 +180,7 @@ void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo
     throw std::out_of_range{std::move(ss).str()};
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "[" << library_name_ << "] task " << local_task_id
                          << " (global id: " << task_id << "), " << *task_info;
   }

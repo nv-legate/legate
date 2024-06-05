@@ -23,12 +23,16 @@
  */
 namespace legate {
 
+namespace detail {
+
 template <int DIM>
-class inner_type_dispatch_fn {
+class InnerTypeDispatchFn {
  public:
   template <typename Functor, typename... Fnargs>
-  constexpr decltype(auto) operator()(Type::Code code, Functor f, Fnargs&&... args)
+  constexpr decltype(auto) operator()(legate::Type::Code code, Functor f, Fnargs&&... args)
   {
+    using legate::Type;
+
     switch (code) {
       case Type::Code::BOOL: {
         return f.template operator()<Type::Code::BOOL, DIM>(std::forward<Fnargs>(args)...);
@@ -80,7 +84,7 @@ class inner_type_dispatch_fn {
 };
 
 template <int DIM>
-class inner_dim_dispatch_fn {
+class InnerDimDispatchFn {
  public:
   template <typename Functor, typename... Fnargs>
   constexpr decltype(auto) operator()(int dim, Functor f, Fnargs&&... args)
@@ -136,6 +140,8 @@ class inner_dim_dispatch_fn {
   }
 };
 
+}  // namespace detail
+
 /**
  * @ingroup util
  * @brief Converts the runtime dimension and type code into compile time constants and
@@ -156,53 +162,53 @@ constexpr decltype(auto) double_dispatch(int dim, Type::Code code, Functor f, Fn
   switch (dim) {
 #if LEGATE_MAX_DIM >= 1
     case 1: {
-      return inner_type_dispatch_fn<1>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<1>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 2
     case 2: {
-      return inner_type_dispatch_fn<2>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<2>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 3
     case 3: {
-      return inner_type_dispatch_fn<3>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<3>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 4
     case 4: {
-      return inner_type_dispatch_fn<4>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<4>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 5
     case 5: {
-      return inner_type_dispatch_fn<5>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<5>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 6
     case 6: {
-      return inner_type_dispatch_fn<6>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<6>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 7
     case 7: {
-      return inner_type_dispatch_fn<7>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<7>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 8
     case 8: {
-      return inner_type_dispatch_fn<8>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<8>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 9
     case 9: {
-      return inner_type_dispatch_fn<9>{}(code, f, std::forward<Fnargs>(args)...);
+      return detail::InnerTypeDispatchFn<9>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
     default: break;
   }
-  throw std::runtime_error("Unsupported number of dimensions");
-  return inner_type_dispatch_fn<1>{}(code, f, std::forward<Fnargs>(args)...);
+  throw std::runtime_error{"Unsupported number of dimensions"};
+  return detail::InnerTypeDispatchFn<1>{}(code, f, std::forward<Fnargs>(args)...);
 }
 
 /**
@@ -225,53 +231,53 @@ constexpr decltype(auto) double_dispatch(int dim1, int dim2, Functor f, Fnargs&&
   switch (dim1) {
 #if LEGATE_MAX_DIM >= 1
     case 1: {
-      return inner_dim_dispatch_fn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 2
     case 2: {
-      return inner_dim_dispatch_fn<2>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<2>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 3
     case 3: {
-      return inner_dim_dispatch_fn<3>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<3>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 4
     case 4: {
-      return inner_dim_dispatch_fn<4>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<4>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 5
     case 5: {
-      return inner_dim_dispatch_fn<5>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<5>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 6
     case 6: {
-      return inner_dim_dispatch_fn<6>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<6>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 7
     case 7: {
-      return inner_dim_dispatch_fn<7>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<7>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 8
     case 8: {
-      return inner_dim_dispatch_fn<8>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<8>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
 #if LEGATE_MAX_DIM >= 9
     case 9: {
-      return inner_dim_dispatch_fn<9>{}(dim2, f, std::forward<Fnargs>(args)...);
+      return detail::InnerDimDispatchFn<9>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
     default: break;
   }
-  throw std::runtime_error("Unsupported number of dimensions");
-  return inner_dim_dispatch_fn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
+  throw std::runtime_error{"Unsupported number of dimensions"};
+  return detail::InnerDimDispatchFn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
 }
 
 /**
@@ -338,7 +344,7 @@ constexpr decltype(auto) dim_dispatch(int dim, Functor f, Fnargs&&... args)
 #endif
     default: break;
   }
-  throw std::runtime_error("Unsupported number of dimensions");
+  throw std::runtime_error{"Unsupported number of dimensions"};
   return f.template operator()<1>(std::forward<Fnargs>(args)...);
 }
 
@@ -356,7 +362,7 @@ constexpr decltype(auto) dim_dispatch(int dim, Functor f, Fnargs&&... args)
  * @return The functor's return value
  */
 template <typename Functor, typename... Fnargs>
-constexpr decltype(auto) type_dispatch(Type::Code code, Functor f, Fnargs&&... args)
+constexpr decltype(auto) type_dispatch(Type::Code code, Functor&& f, Fnargs&&... args)
 {
   switch (code) {
     case Type::Code::BOOL: {
@@ -403,7 +409,7 @@ constexpr decltype(auto) type_dispatch(Type::Code code, Functor f, Fnargs&&... a
     }
     default: break;
   }
-  throw std::runtime_error("Unsupported type code");
+  throw std::runtime_error{"Unsupported type code"};
   return f.template operator()<Type::Code::BOOL>(std::forward<Fnargs>(args)...);
 }
 

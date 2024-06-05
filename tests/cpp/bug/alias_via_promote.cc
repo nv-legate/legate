@@ -23,7 +23,7 @@ using AliasViaPromote = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_alias_via_promote";
+constexpr std::string_view LIBRARY_NAME = "test_alias_via_promote";
 
 }  // namespace
 
@@ -35,7 +35,7 @@ struct Checker : public legate::LegateTask<Checker> {
 TEST_F(AliasViaPromote, Bug1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Checker::register_variants(library);
 
   auto store = runtime->create_store(legate::Shape{2}, legate::int64());

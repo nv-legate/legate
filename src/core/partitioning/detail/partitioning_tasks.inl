@@ -17,7 +17,7 @@
 
 #include "legion/legion_redop.h"
 
-#if LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_NVCC)
 #include "cuda_runtime.h"
 #endif
 
@@ -25,13 +25,13 @@ namespace legate::detail {
 
 // Copied and modified from Legion
 template <typename OP, typename T>
-#if LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_NVCC)
 __device__
 #endif
   void
   wrap_with_cas(OP op, T& lhs, T rhs)
 {
-#if LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_NVCC)
   T newval = lhs, oldval;
   // atomicCAS has no override for std::uint64_t, so we suppress the clang tidy error
   auto* ptr = reinterpret_cast<unsigned long long int*>(&lhs);  // NOLINT(google-runtime-int)
@@ -42,7 +42,7 @@ __device__
       ptr, Legion::__longlong_as_ulonglong(oldval), Legion::__longlong_as_ulonglong(newval)));
   } while (oldval != newval);
 #else
-#if LegateDefined(__cpp_lib_atomic_ref) && (__cpp_lib_atomic_ref >= 201806L)
+#if LEGATE_DEFINED(__cpp_lib_atomic_ref) && (__cpp_lib_atomic_ref >= 201806L)
   std::atomic_ref<T> atomic{lhs};
   auto oldval = atomic.load();
   auto newval;

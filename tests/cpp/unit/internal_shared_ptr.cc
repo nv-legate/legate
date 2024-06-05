@@ -395,7 +395,7 @@ class InternalSharedPtrUnitFriend : public BasicSharedPtrUnit<> {};
 
 namespace {
 
-constexpr const char exception_text[] = "There is no peace but the Pax Romana";
+constexpr const char EXCEPTION_TEXT[] = "There is no peace but the Pax Romana";
 
 template <typename T>
 class ThrowingAllocator {
@@ -412,7 +412,7 @@ class ThrowingAllocator {
 
   [[nodiscard]] static T* allocate(size_type, const void* = nullptr)
   {
-    throw std::runtime_error{exception_text};
+    throw std::runtime_error{EXCEPTION_TEXT};
   }
 
   static void deallocate(const void* ptr, size_type n = 1)
@@ -441,7 +441,7 @@ TEST_F(InternalSharedPtrUnitFriend, UniqThrow)
 
     static_cast<void>(sh_ptr);
   } catch (const std::runtime_error& exn) {
-    ASSERT_STREQ(exn.what(), exception_text);
+    ASSERT_STREQ(exn.what(), EXCEPTION_TEXT);
     threw = true;
   } catch (...) {
     FAIL() << "Test threw the wrong exception!";

@@ -23,7 +23,7 @@ using Partitioner = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_mixed_dim";
+constexpr std::string_view LIBRARY_NAME = "test_mixed_dim";
 
 }  // namespace
 
@@ -40,7 +40,7 @@ struct Tester : public legate::LegateTask<Tester> {
 TEST_F(Partitioner, MixedDim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Tester::register_variants(library);
 
   auto test = [&runtime, &library](

@@ -81,7 +81,7 @@ TEST_F(Integration, MultiScalarOut)
   task::simple::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(task::simple::library_name);
+  auto library = runtime->find_library(task::simple::LIBRARY_NAME);
 
   auto scalar1 = runtime->create_store(legate::Shape{1, 1}, legate::int32(), true);
   auto scalar2 = runtime->create_store(legate::Shape{1, 1, 1}, legate::int64(), true);

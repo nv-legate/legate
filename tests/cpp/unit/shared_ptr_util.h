@@ -14,16 +14,46 @@
 
 #include "core/utilities/memory.h"
 
+#include "utilities/utilities.h"
+
 #include <array>
 #include <cstdint>
 #include <functional>
 #include <gtest/gtest.h>
 #include <vector>
 
-struct UserType {
-  std::array<char, 256> before_padding{};
+namespace shared_from_this_enabled_test {
+
+struct NotEnabled {};
+
+struct Enabled : legate::EnableSharedFromThis<Enabled> {};
+
+struct PrivateEnabled : private legate::EnableSharedFromThis<PrivateEnabled> {};
+
+struct DerivedEnabled : Enabled {};
+
+struct DerivedPrivateEnabled : private Enabled {};
+
+static_assert(!legate::detail::shared_from_this_enabled_v<NotEnabled>);
+static_assert(legate::detail::shared_from_this_enabled_v<Enabled>);
+static_assert(!legate::detail::shared_from_this_enabled_v<PrivateEnabled>);
+static_assert(legate::detail::shared_from_this_enabled_v<DerivedEnabled>);
+static_assert(!legate::detail::shared_from_this_enabled_v<DerivedPrivateEnabled>);
+
+}  // namespace shared_from_this_enabled_test
+
+namespace shared_ptr_util {
+
+inline constexpr std::int32_t LARGE_PADDING_SIZE = 256;
+inline constexpr std::int32_t SMALL_PADDING_SIZE = 128;
+
+}  // namespace shared_ptr_util
+
+class UserType {
+ public:
+  std::array<char, shared_ptr_util::LARGE_PADDING_SIZE> before_padding{};
   std::int32_t value{};
-  std::array<char, 128> after_padding{};
+  std::array<char, shared_ptr_util::SMALL_PADDING_SIZE> after_padding{};
 
   UserType() = default;
 
@@ -159,11 +189,12 @@ void silence_spurious_clang_tidy_use_after_move(T&)
 {
 }
 
-struct Base {
-  std::array<char, 128> padding{};
+class Base {
+ public:
+  std::array<char, shared_ptr_util::SMALL_PADDING_SIZE> padding{};
   std::int32_t value{};
 
-  Base(std::int32_t v) : value{v} {}
+  Base(std::int32_t v) : value{v} {}  // NOLINT(google-explicit-constructor)
 
   Base()                       = default;
   Base(const Base&)            = default;
@@ -191,8 +222,9 @@ struct Base {
   }
 };
 
-struct BasicDerived : Base {
-  std::array<char, 256> more_padding{};
+class BasicDerived : public Base {
+ public:
+  std::array<char, shared_ptr_util::LARGE_PADDING_SIZE> more_padding{};
 
   using Base::Base;
 
@@ -213,7 +245,8 @@ struct BasicDerived : Base {
   }
 };
 
-struct TogglingDerived final : BasicDerived {
+class TogglingDerived final : public BasicDerived {
+ public:
   bool* toggle{};
 
   TogglingDerived() = delete;
@@ -223,7 +256,6 @@ struct TogglingDerived final : BasicDerived {
 
   bool operator==(const TogglingDerived& other) const
   {
-    check_mem_corruption();
     return BasicDerived::operator==(other) && *toggle == *other.toggle;
   }
 
@@ -237,4 +269,4 @@ struct TogglingDerived final : BasicDerived {
 using BasicSharedPtrTypeList = ::testing::Types<std::int8_t, std::int32_t, std::uint64_t, UserType>;
 
 template <typename = void>
-struct BasicSharedPtrUnit : ::testing::Test {};
+using BasicSharedPtrUnit = NoInitFixture;

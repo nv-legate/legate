@@ -24,7 +24,7 @@ namespace {
 constexpr std::uint64_t UINT64_VALUE          = 1;
 constexpr std::uint32_t BOUND_STORE_EXTENTS   = 0;
 constexpr std::uint32_t UNBOUND_STORE_EXTENTS = 9;
-constexpr const char library_name[]           = "legate.physical_store";
+constexpr std::string_view LIRBARY_NAME       = "legate.physical_store";
 
 }  // namespace
 
@@ -72,21 +72,24 @@ legate::PhysicalStore create_unbound_store_by_task(UnboundStoreOpCode op_code,
                                                    std::uint32_t dim = 1);
 void test_array_store(legate::LogicalArray& logical_array, std::int32_t id);
 legate::Shape get_shape(std::int32_t dim);
+// clang-tidy complains that "RO", "WO", "RW", "RD" are not lower case, but that's OK.
+// NOLINTBEGIN(readability-identifier-naming)
 void test_RO_accessor(legate::LogicalStore& logical_store);
 void test_WO_accessor(legate::LogicalStore& logical_store);
 void test_RW_accessor(legate::LogicalStore& logical_store);
 void test_RD_accessor(legate::LogicalStore& logical_store);
+// NOLINTEND(readability-identifier-naming)
 template <std::int32_t DIM>
 void test_accessors_normal_store(bool transform);
 void test_accessors_normal_store(bool transform, std::vector<std::int32_t> axes = {});
 void test_accessor_future_store(bool transform);
 void test_invalid_accessor();
 
-struct unbound_store_fn {
+struct UnboundStoreFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& store, std::uint32_t op_code)
   {
-    using T         = legate::type_of<CODE>;
+    using T         = legate::type_of_t<CODE>;
     const auto code = static_cast<UnboundStoreOpCode>(op_code);
 
     EXPECT_THROW(static_cast<void>(store.get_inline_allocation()), std::invalid_argument);
@@ -114,7 +117,7 @@ struct unbound_store_fn {
         auto buffer = legate::create_buffer<int8_t, 1>(num_elements * element_size_in_bytes);
         store.bind_untyped_data(buffer, legate::Point<1>{num_elements});
         /// [Bind an untyped buffer to an unbound store]
-        LegateCheck(num_elements == UNBOUND_STORE_EXTENTS);
+        LEGATE_CHECK(num_elements == UNBOUND_STORE_EXTENTS);
         break;
       }
       case UnboundStoreOpCode::INVALID_BINDING: {
@@ -145,11 +148,11 @@ struct unbound_store_fn {
   }
 };
 
-struct read_accessor_fn {
+struct ReadAccessorFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& store, std::int32_t value)
   {
-    using T       = legate::type_of<CODE>;
+    using T       = legate::type_of_t<CODE>;
     auto read_acc = store.read_accessor<T, DIM>();
     auto op_shape = store.shape<DIM>();
     if (!op_shape.empty()) {
@@ -167,7 +170,7 @@ struct read_accessor_fn {
       EXPECT_EQ(read_acc[*it], static_cast<T>(value));
     }
 
-    if (LegateDefined(LEGATE_BOUNDS_CHECKS)) {
+    if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       // access store with exceeded bounds
       auto read_acc_bounds = store.read_accessor<T, DIM>(bounds);
       auto exceeded_bounds = legate::Point<DIM>{10000};
@@ -180,7 +183,7 @@ struct read_accessor_fn {
                   "");
     }
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       // accessors of beyond the privilege
       EXPECT_THROW(static_cast<void>(store.write_accessor<T, DIM>()), std::invalid_argument);
       EXPECT_THROW(static_cast<void>(store.read_write_accessor<T, DIM>()), std::invalid_argument);
@@ -190,7 +193,7 @@ struct read_accessor_fn {
   }
 };
 
-struct write_accessor_fn {
+struct WriteAccessorFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& store)
   {
@@ -198,7 +201,7 @@ struct write_accessor_fn {
     EXPECT_TRUE(store.is_writable());
     EXPECT_TRUE(store.is_reducible());
 
-    using T        = legate::type_of<CODE>;
+    using T        = legate::type_of_t<CODE>;
     auto write_acc = store.write_accessor<T, DIM>();
     auto op_shape  = store.shape<DIM>();
     if (!op_shape.empty()) {
@@ -219,7 +222,7 @@ struct write_accessor_fn {
       EXPECT_EQ(write_acc_bounds[*it], static_cast<T>(4));
     }
 
-    if (LegateDefined(LEGATE_BOUNDS_CHECKS)) {
+    if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       auto exceeded_bounds = legate::Point<DIM>{10000};
       EXPECT_EXIT(write_acc[exceeded_bounds], ::testing::ExitedWithCode(1), "");
       EXPECT_EXIT(
@@ -232,7 +235,7 @@ struct write_accessor_fn {
   }
 };
 
-struct read_write_accessor_fn {
+struct ReadWriteAccessorFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& store)
   {
@@ -240,7 +243,7 @@ struct read_write_accessor_fn {
     EXPECT_TRUE(store.is_writable());
     EXPECT_TRUE(store.is_reducible());
 
-    using T             = legate::type_of<CODE>;
+    using T             = legate::type_of_t<CODE>;
     auto read_write_acc = store.read_write_accessor<T, DIM>();
     auto op_shape       = store.shape<DIM>();
     if (!op_shape.empty()) {
@@ -261,7 +264,7 @@ struct read_write_accessor_fn {
       EXPECT_EQ(read_write_acc_bounds[*it], static_cast<T>(6));
     }
 
-    if (LegateDefined(LEGATE_BOUNDS_CHECKS)) {
+    if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       auto exceeded_bounds = legate::Point<DIM>{10000};
       EXPECT_EXIT(read_write_acc[exceeded_bounds], ::testing::ExitedWithCode(1), "");
       EXPECT_EXIT(read_write_acc[(op_shape.hi + legate::Point<DIM>::ONES())],
@@ -275,7 +278,7 @@ struct read_write_accessor_fn {
   }
 };
 
-struct reduce_accessor_fn {
+struct ReduceAccessorFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalStore& store)
   {
@@ -283,7 +286,7 @@ struct reduce_accessor_fn {
     EXPECT_TRUE(store.is_writable());
     EXPECT_TRUE(store.is_reducible());
 
-    using T         = legate::type_of<CODE>;
+    using T         = legate::type_of_t<CODE>;
     auto reduce_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
     auto op_shape   = store.shape<DIM>();
 
@@ -307,7 +310,7 @@ struct reduce_accessor_fn {
       reduce_acc_bounds.reduce(pos, static_cast<T>(10));
     }
 
-    if (LegateDefined(LEGATE_BOUNDS_CHECKS)) {
+    if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       auto exceeded_bounds = legate::Point<DIM>{10000};
       EXPECT_EXIT(
         reduce_acc.reduce(exceeded_bounds, static_cast<T>(10)), ::testing::ExitedWithCode(1), "");
@@ -334,7 +337,7 @@ struct UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
 {
   auto store   = context.output(0).data();
   auto op_code = context.scalar(0).value<std::uint32_t>();
-  legate::double_dispatch(store.dim(), store.code(), unbound_store_fn{}, store, op_code);
+  legate::double_dispatch(store.dim(), store.code(), UnboundStoreFn{}, store, op_code);
 }
 
 struct AccessorTestTask : public legate::LegateTask<AccessorTestTask> {
@@ -351,22 +354,22 @@ struct AccessorTestTask : public legate::LegateTask<AccessorTestTask> {
     case AccessorCode::READ: {
       auto value = context.scalar(1).value<std::int64_t>();
       auto store = context.input(0).data();
-      legate::double_dispatch(store.dim(), store.type().code(), read_accessor_fn{}, store, value);
+      legate::double_dispatch(store.dim(), store.type().code(), ReadAccessorFn{}, store, value);
       break;
     }
     case AccessorCode::WRITE: {
       auto store = context.output(0).data();
-      legate::double_dispatch(store.dim(), store.type().code(), write_accessor_fn{}, store);
+      legate::double_dispatch(store.dim(), store.type().code(), WriteAccessorFn{}, store);
       break;
     }
     case AccessorCode::READ_WRITE: {
       auto store = context.output(0).data();
-      legate::double_dispatch(store.dim(), store.type().code(), read_write_accessor_fn{}, store);
+      legate::double_dispatch(store.dim(), store.type().code(), ReadWriteAccessorFn{}, store);
       break;
     }
     case AccessorCode::REDUCE: {
       auto store = context.reduction(0).data();
-      legate::double_dispatch(store.dim(), store.type().code(), reduce_accessor_fn{}, store);
+      legate::double_dispatch(store.dim(), store.type().code(), ReduceAccessorFn{}, store);
       break;
     }
   }
@@ -377,11 +380,11 @@ struct PrimitiveArrayStoreTask : public legate::LegateTask<PrimitiveArrayStoreTa
   static void cpu_variant(legate::TaskContext context);
 };
 
-struct array_store_fn {
+struct ArrayStoreFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::PhysicalArray& array)
   {
-    using T    = legate::type_of<CODE>;
+    using T    = legate::type_of_t<CODE>;
     auto store = array.data();
     if (store.is_unbound_store()) {
       static_cast<void>(store.create_output_buffer<T, DIM>(legate::Point<DIM>{10}, true));
@@ -406,7 +409,7 @@ struct array_store_fn {
 /*static*/ void PrimitiveArrayStoreTask::cpu_variant(legate::TaskContext context)
 {
   auto array = context.output(0);
-  legate::double_dispatch(array.dim(), array.type().code(), array_store_fn{}, array);
+  legate::double_dispatch(array.dim(), array.type().code(), ArrayStoreFn{}, array);
 }
 
 struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
@@ -472,17 +475,17 @@ struct FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
   EXPECT_EQ(store.get_inline_allocation().strides.size(), store.dim());
   EXPECT_EQ(store.get_inline_allocation().strides.at(0), 0);
 
-  legate::double_dispatch(
-    store.dim(), store.type().code(), read_accessor_fn{}, store, UINT64_VALUE);
+  legate::double_dispatch(store.dim(), store.type().code(), ReadAccessorFn{}, store, UINT64_VALUE);
 
   EXPECT_EQ(store.scalar<std::uint64_t>(), UINT64_VALUE);
 }
 
+// clang-tidy complains that "RO" is not lower case, but that's OK
 template <typename T>
-void test_RO_accessor(legate::LogicalStore& logical_store)
+void test_RO_accessor(legate::LogicalStore& logical_store)  // NOLINT(readability-identifier-naming)
 {
   auto runtime  = legate::Runtime::get_runtime();
-  auto context  = runtime->find_library(library_name);
+  auto context  = runtime->find_library(LIRBARY_NAME);
   const T value = 0;
   runtime->issue_fill(logical_store, legate::Scalar{value});
   auto task = runtime->create_task(context, AccessorTestTask::TASK_ID);
@@ -495,7 +498,7 @@ void test_RO_accessor(legate::LogicalStore& logical_store)
 void test_WO_accessor(legate::LogicalStore& logical_store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIRBARY_NAME);
   auto task    = runtime->create_task(context, AccessorTestTask::TASK_ID);
   task.add_output(logical_store);
   task.add_scalar_arg(legate::Scalar{static_cast<std::uint32_t>(AccessorCode::WRITE)});
@@ -505,7 +508,7 @@ void test_WO_accessor(legate::LogicalStore& logical_store)
 void test_RW_accessor(legate::LogicalStore& logical_store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIRBARY_NAME);
   auto task    = runtime->create_task(context, AccessorTestTask::TASK_ID);
   task.add_input(logical_store);
   task.add_output(logical_store);
@@ -516,7 +519,7 @@ void test_RW_accessor(legate::LogicalStore& logical_store)
 void test_RD_accessor(legate::LogicalStore& logical_store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIRBARY_NAME);
   auto task    = runtime->create_task(context, AccessorTestTask::TASK_ID);
   task.add_reduction(logical_store, legate::ReductionOpKind::ADD);
   task.add_scalar_arg(legate::Scalar{static_cast<std::uint32_t>(AccessorCode::REDUCE)});
@@ -592,12 +595,12 @@ void test_accessor_future_store(bool transform)
   EXPECT_EQ(read_acc[0], UINT64_VALUE);
   EXPECT_EQ(read_acc[0], store.scalar<std::uint64_t>());
 
-  if (LegateDefined(LEGATE_BOUNDS_CHECKS)) {
+  if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
     // access store with exceeded bounds
     auto exceeded_bounds = legate::Point<1>{1000};
     EXPECT_EXIT(read_acc[exceeded_bounds], ::testing::ExitedWithCode(1), "");
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // accessors of beyond the privilege
     EXPECT_THROW(static_cast<void>(store.write_accessor<uint64_t, 1>()), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(store.read_write_accessor<uint64_t, 1>()),
@@ -688,7 +691,7 @@ void test_invalid_accessor()
 // execution from scratch, skipping other checks until we get to this particular EXPECT_EXIT),
 // we should only be doing it sparingly, rather than sprinkling it liberally within larger test
 // runs.
-#if LegateDefined(LEGATE_BOUNDS_CHECKS)
+#if LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)
 #define PhysicalStoreUnit PhysicalStoreUnitDeathTest
 #endif
 
@@ -698,7 +701,7 @@ class PhysicalStoreUnit : public DefaultFixture {
   {
     DefaultFixture::SetUp();
     auto runtime = legate::Runtime::get_runtime();
-    auto context = runtime->create_library(library_name);
+    auto context = runtime->create_library(LIRBARY_NAME);
 
     UnboundStoreTask::register_variants(context);
     AccessorTestTask::register_variants(context);
@@ -730,8 +733,8 @@ void test_unbound_store(const legate::PhysicalStore& store)
   EXPECT_TRUE(store.is_unbound_store());
   EXPECT_EQ(store.dim(), DIM);
   EXPECT_TRUE(store.valid());
-  EXPECT_EQ(store.type().code(), legate::type_code_of<T>);
-  EXPECT_EQ(store.code(), legate::type_code_of<T>);
+  EXPECT_EQ(store.type().code(), legate::type_code_of_v<T>);
+  EXPECT_EQ(store.code(), legate::type_code_of_v<T>);
   EXPECT_FALSE(store.transformed());
 
   EXPECT_THROW(static_cast<void>(store.shape<DIM>()), std::invalid_argument);
@@ -745,7 +748,7 @@ void test_unbound_store(const legate::PhysicalStore& store)
 void test_future_store_by_task()
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIRBARY_NAME);
   auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
   auto task          = runtime->create_task(context, FutureStoreTask::TASK_ID);
   task.add_output(logical_store);
@@ -757,7 +760,7 @@ legate::PhysicalStore create_unbound_store_by_task(UnboundStoreOpCode op_code,
                                                    std::uint32_t dim)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIRBARY_NAME);
   auto logical_store = runtime->create_store(type, dim);
   auto task          = runtime->create_task(context, UnboundStoreTask::TASK_ID);
   task.add_output(logical_store);
@@ -785,8 +788,8 @@ void test_future_store(const legate::Scalar& scalar)
   EXPECT_FALSE(store.is_unbound_store());
   EXPECT_EQ(store.dim(), DIM);
   EXPECT_TRUE(store.valid());
-  EXPECT_EQ(store.type().code(), legate::type_code_of<T>);
-  EXPECT_EQ(store.code(), legate::type_code_of<T>);
+  EXPECT_EQ(store.type().code(), legate::type_code_of_v<T>);
+  EXPECT_EQ(store.code(), legate::type_code_of_v<T>);
   EXPECT_FALSE(store.transformed());
 
   EXPECT_EQ(store.shape<DIM>(), expect_rect);
@@ -813,8 +816,8 @@ void test_bound_store(legate::PhysicalStore& store, const legate::Rect<DIM>& exp
   EXPECT_FALSE(store.is_unbound_store());
   EXPECT_EQ(store.dim(), DIM);
   EXPECT_TRUE(store.valid());
-  EXPECT_EQ(store.type().code(), legate::type_code_of<T>);
-  EXPECT_EQ(store.code(), legate::type_code_of<T>);
+  EXPECT_EQ(store.type().code(), legate::type_code_of_v<T>);
+  EXPECT_EQ(store.code(), legate::type_code_of_v<T>);
   EXPECT_FALSE(store.transformed());
 
   EXPECT_EQ(store.shape<DIM>(), expect_rect);
@@ -836,7 +839,7 @@ void test_bound_store(legate::PhysicalStore& store, const legate::Rect<DIM>& exp
 void test_array_store(legate::LogicalArray& logical_array, std::int32_t id)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIRBARY_NAME);
   auto task    = runtime->create_task(context, id);
   auto part    = task.declare_partition();
   task.add_output(logical_array, part);

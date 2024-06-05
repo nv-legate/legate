@@ -72,9 +72,9 @@ class Operation {
   [[nodiscard]] std::string_view provenance() const;
 
  protected:
-  void record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store);
+  void record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store);
   // Helper methods
-  [[nodiscard]] static std::unique_ptr<StoreProjection> create_store_projection(
+  [[nodiscard]] static std::unique_ptr<StoreProjection> create_store_projection_(
     const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
 
   std::uint64_t unique_id_{};

@@ -110,22 +110,22 @@ class PhysicalStore {
  private:
   friend class legate::PhysicalStore;
   friend class legate::detail::BasePhysicalArray;
-  void check_accessor_dimension(std::int32_t dim) const;
-  void check_buffer_dimension(std::int32_t dim) const;
-  void check_shape_dimension(std::int32_t dim) const;
-  void check_valid_binding(bool bind_buffer) const;
-  void check_write_access() const;
-  void check_reduction_access() const;
+  void check_accessor_dimension_(std::int32_t dim) const;
+  void check_buffer_dimension_(std::int32_t dim) const;
+  void check_shape_dimension_(std::int32_t dim) const;
+  void check_valid_binding_(bool bind_buffer) const;
+  void check_write_access_() const;
+  void check_reduction_access_() const;
 
-  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
+  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
-  void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] std::int32_t get_redop_id() const;
+  void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
+  [[nodiscard]] std::int32_t get_redop_id_() const;
 
-  [[nodiscard]] bool is_read_only_future() const;
+  [[nodiscard]] bool is_read_only_future_() const;
 
-  void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
-  void update_num_elements(std::size_t num_elements);
+  void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid);
+  void update_num_elements_(std::size_t num_elements);
 
   bool is_future_{};
   bool is_unbound_store_{};

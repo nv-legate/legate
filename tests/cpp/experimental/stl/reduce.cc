@@ -25,7 +25,9 @@ namespace {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-void TestReduce1D()
+// clang-tidy complains that "1D" is not lower case
+// NOLINTNEXTLINE(readability-identifier-naming)
+void test_reduce_1D()
 {
   auto store = stl::create_store({5}, std::int64_t{1});
   auto init  = stl::create_store({}, std::int64_t{1});
@@ -42,7 +44,9 @@ void TestReduce1D()
   EXPECT_EQ(16, value);
 }
 
-void TestReduce2D()
+// clang-tidy complains that "2D" is not lower case
+// NOLINTNEXTLINE(readability-identifier-naming)
+void test_reduce_2D()
 {
   auto store = stl::create_store({3, 4}, std::int64_t{1});
 
@@ -83,6 +87,6 @@ void TestReduce2D()
 
 }  // namespace
 
-TEST_F(STL, TestReduce1D) { TestReduce1D(); }
+TEST_F(STL, TestReduce1D) { test_reduce_1D(); }
 
-TEST_F(STL, TestReduce2D) { TestReduce2D(); }
+TEST_F(STL, TestReduce2D) { test_reduce_2D(); }

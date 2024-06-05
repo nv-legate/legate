@@ -65,17 +65,17 @@ class TaskLauncher {
   [[nodiscard]] std::string_view provenance() const;
 
  private:
-  void pack_mapper_arg(BufferBuilder& buffer);
-  void import_output_regions(Runtime* runtime,
-                             const std::vector<Legion::OutputRequirement>& output_requirements);
-  void post_process_unbound_stores(
+  void pack_mapper_arg_(BufferBuilder& buffer);
+  void import_output_regions_(Runtime* runtime,
+                              const std::vector<Legion::OutputRequirement>& output_requirements);
+  void post_process_unbound_stores_(
     const std::vector<Legion::OutputRequirement>& output_requirements);
-  void post_process_unbound_stores(
+  void post_process_unbound_stores_(
     const Legion::FutureMap& result,
     const Legion::Domain& launch_domain,
     const std::vector<Legion::OutputRequirement>& output_requirements);
 
-  void report_interfering_stores() const;
+  void report_interfering_stores_() const;
 
   const Library* library_{};
   std::int64_t task_id_{};

@@ -24,7 +24,7 @@ inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
                                                  std::int64_t dyn_size)
   : base_{base}, size_{size}, next_{size - dyn_size}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
     std::stringstream ss;
 
     ss << "Number of dynamic resource IDs " << dyn_size << " > total number of IDs "
@@ -46,7 +46,7 @@ inline std::int64_t Library::ResourceIdScope::translate(std::int64_t local_resou
 
 inline std::int64_t Library::ResourceIdScope::invert(std::int64_t resource_id) const
 {
-  LegateCheck(in_scope(resource_id));
+  LEGATE_CHECK(in_scope(resource_id));
   return resource_id - base_;
 }
 

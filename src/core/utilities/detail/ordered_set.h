@@ -22,7 +22,7 @@ namespace legate {
 // This container is not very efficient if used with non-pointer data types
 
 template <typename T>
-class ordered_set {
+class ordered_set {  // NOLINT(readability-identifier-naming)
  public:
   void insert(const T& value);
   void insert(T&& value);

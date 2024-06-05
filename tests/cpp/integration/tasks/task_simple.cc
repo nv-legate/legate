@@ -24,7 +24,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   HelloTask::register_variants(context);
   WriterTask::register_variants(context);
   ReducerTask::register_variants(context);

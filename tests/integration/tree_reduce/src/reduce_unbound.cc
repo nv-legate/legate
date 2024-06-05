@@ -21,7 +21,7 @@ namespace tree_reduce {
   std::uint32_t expected = 1;
   for (auto& input : inputs) {
     auto shape = input.shape<1>();
-    LegateAssert(shape.volume() == expected);
+    LEGATE_ASSERT(shape.volume() == expected);
     ++expected;
   }
   output.data().create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);

@@ -120,9 +120,9 @@ class Task {
   Task& operator=(Task&&)      = delete;
 
  private:
-  [[nodiscard]] detail::Task* impl() const noexcept;
+  [[nodiscard]] detail::Task* impl_() const noexcept;
 
-  detail::Task* impl_{};
+  detail::Task* pimpl_{};
 };
 
 }  // namespace legate::mapping

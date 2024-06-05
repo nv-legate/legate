@@ -23,7 +23,9 @@ namespace {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-void TestRowsOf2DStore()
+// clang-tidy complains that "2D" is not lower case
+// NOLINTNEXTLINE(readability-identifier-naming)
+void test_rows_of_2D_store()
 {
   auto store      = stl::create_store<std::int64_t>({4, 5}, 0);
   auto store_span = stl::as_mdspan(store);
@@ -67,7 +69,9 @@ void TestRowsOf2DStore()
   EXPECT_EQ(store_span(1, 4), 55);
 }
 
-void TestColumnsOf2DStore()
+// clang-tidy complains that "2D" is not lower case
+// NOLINTNEXTLINE(readability-identifier-naming)
+void test_columns_of_2D_store()
 {
   auto store                         = stl::create_store<std::int64_t>({4, 5}, 0);
   auto store_span                    = stl::as_mdspan(store);
@@ -129,6 +133,6 @@ void TestColumnsOf2DStore()
 
 }  // namespace
 
-TEST_F(STL, TestRowsOf2DStore) { TestRowsOf2DStore(); }
+TEST_F(STL, TestRowsOf2DStore) { test_rows_of_2D_store(); }
 
-TEST_F(STL, TestColumnsOf2DStore) { TestColumnsOf2DStore(); }
+TEST_F(STL, TestColumnsOf2DStore) { test_columns_of_2D_store(); }

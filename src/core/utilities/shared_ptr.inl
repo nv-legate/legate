@@ -64,7 +64,7 @@ SharedPtr<T>::SharedPtr(U* ptr, Deleter deleter, Alloc allocator)
 
 template <typename T>
 template <typename U, typename SFINAE>
-SharedPtr<T>::SharedPtr(U* ptr) : SharedPtr{ptr, detail::shared_ptr_default_delete<T, U>{}}
+SharedPtr<T>::SharedPtr(U* ptr) : SharedPtr{ptr, detail::SharedPtrDefaultDelete<T, U>{}}
 {
 }
 

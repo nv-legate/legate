@@ -39,7 +39,8 @@ struct DoubleDispatchData {
   std::int32_t data2;
 };
 
-struct double_dispatch_fn {
+class DoubleDispatchFn {
+ public:
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(DoubleDispatchData& data)
   {
@@ -53,7 +54,8 @@ struct double_dispatch_fn {
   }
 };
 
-struct double_dispatch_with_dim_fn {
+class DoubleDispatchWithDimFn {
+ public:
   template <std::int32_t DIM1, std::int32_t DIM2>
   void operator()(DoubleDispatchData& data)
   {
@@ -67,7 +69,8 @@ struct double_dispatch_with_dim_fn {
   }
 };
 
-struct dim_dispatch_fn {
+class DimDispatchFn {
+ public:
   template <std::int32_t DIM>
   void operator()(legate::Scalar& scalar)
   {
@@ -75,7 +78,8 @@ struct dim_dispatch_fn {
   }
 };
 
-struct type_dispatch_fn {
+class TypeDispatchFn {
+ public:
   template <legate::Type::Code CODE>
   void operator()(legate::Scalar& scalar)
   {
@@ -89,32 +93,32 @@ TEST_F(DispatchTest, DoubleDispatch)
     auto code               = PRIMITIVE_TYPE_CODE.at(idx);
     auto dim                = static_cast<std::int32_t>(idx % LEGATE_MAX_DIM + 1);
     DoubleDispatchData data = {static_cast<std::int32_t>(code), dim};
-    legate::double_dispatch(dim, code, double_dispatch_fn{}, data);
+    legate::double_dispatch(dim, code, DoubleDispatchFn{}, data);
   }
 
   // invalide dim
   DoubleDispatchData data = {1, 1};
-  EXPECT_THROW(legate::double_dispatch(0, legate::Type::Code::BOOL, double_dispatch_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(0, legate::Type::Code::BOOL, DoubleDispatchFn{}, data),
                std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(-1, legate::Type::Code::BOOL, double_dispatch_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(-1, legate::Type::Code::BOOL, DoubleDispatchFn{}, data),
                std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(
-                 LEGATE_MAX_DIM + 1, legate::Type::Code::BOOL, double_dispatch_fn{}, data),
-               std::runtime_error);
+  EXPECT_THROW(
+    legate::double_dispatch(LEGATE_MAX_DIM + 1, legate::Type::Code::BOOL, DoubleDispatchFn{}, data),
+    std::runtime_error);
 
   // invalid type code
   EXPECT_THROW(
-    legate::double_dispatch(1, legate::Type::Code::FIXED_ARRAY, double_dispatch_fn{}, data),
+    legate::double_dispatch(1, legate::Type::Code::FIXED_ARRAY, DoubleDispatchFn{}, data),
     std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::STRUCT, double_dispatch_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::STRUCT, DoubleDispatchFn{}, data),
                std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::STRING, double_dispatch_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::STRING, DoubleDispatchFn{}, data),
                std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::LIST, double_dispatch_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::LIST, DoubleDispatchFn{}, data),
                std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::NIL, double_dispatch_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::NIL, DoubleDispatchFn{}, data),
                std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::BINARY, double_dispatch_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::BINARY, DoubleDispatchFn{}, data),
                std::runtime_error);
 }
 
@@ -122,24 +126,20 @@ TEST_F(DispatchTest, DoubleDispatchWithDims)
 {
   for (std::int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     DoubleDispatchData data = {idx, LEGATE_MAX_DIM - idx + 1};
-    legate::double_dispatch(idx, LEGATE_MAX_DIM - idx + 1, double_dispatch_with_dim_fn{}, data);
+    legate::double_dispatch(idx, LEGATE_MAX_DIM - idx + 1, DoubleDispatchWithDimFn{}, data);
   }
 
   // invalid dim1
   DoubleDispatchData data = {1, 1};
-  EXPECT_THROW(legate::double_dispatch(0, 1, double_dispatch_with_dim_fn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(-1, 1, double_dispatch_with_dim_fn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(LEGATE_MAX_DIM + 1, 1, double_dispatch_with_dim_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(0, 1, DoubleDispatchWithDimFn{}, data), std::runtime_error);
+  EXPECT_THROW(legate::double_dispatch(-1, 1, DoubleDispatchWithDimFn{}, data), std::runtime_error);
+  EXPECT_THROW(legate::double_dispatch(LEGATE_MAX_DIM + 1, 1, DoubleDispatchWithDimFn{}, data),
                std::runtime_error);
 
   // invalid dim2
-  EXPECT_THROW(legate::double_dispatch(1, 0, double_dispatch_with_dim_fn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, -1, double_dispatch_with_dim_fn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, LEGATE_MAX_DIM + 1, double_dispatch_with_dim_fn{}, data),
+  EXPECT_THROW(legate::double_dispatch(1, 0, DoubleDispatchWithDimFn{}, data), std::runtime_error);
+  EXPECT_THROW(legate::double_dispatch(1, -1, DoubleDispatchWithDimFn{}, data), std::runtime_error);
+  EXPECT_THROW(legate::double_dispatch(1, LEGATE_MAX_DIM + 1, DoubleDispatchWithDimFn{}, data),
                std::runtime_error);
 }
 
@@ -148,14 +148,14 @@ TEST_F(DispatchTest, DimDispatch)
   for (std::int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     auto scalar = legate::Scalar{idx};
 
-    legate::dim_dispatch(idx, dim_dispatch_fn{}, scalar);
+    legate::dim_dispatch(idx, DimDispatchFn{}, scalar);
   }
 
   // invalid dim
   auto scalar = legate::Scalar(1);
-  EXPECT_THROW(legate::dim_dispatch(0, dim_dispatch_fn{}, scalar), std::runtime_error);
-  EXPECT_THROW(legate::dim_dispatch(-1, dim_dispatch_fn{}, scalar), std::runtime_error);
-  EXPECT_THROW(legate::dim_dispatch(LEGATE_MAX_DIM + 1, dim_dispatch_fn{}, scalar),
+  EXPECT_THROW(legate::dim_dispatch(0, DimDispatchFn{}, scalar), std::runtime_error);
+  EXPECT_THROW(legate::dim_dispatch(-1, DimDispatchFn{}, scalar), std::runtime_error);
+  EXPECT_THROW(legate::dim_dispatch(LEGATE_MAX_DIM + 1, DimDispatchFn{}, scalar),
                std::runtime_error);
 }
 
@@ -164,22 +164,23 @@ TEST_F(DispatchTest, TypeDispatch)
   for (auto code : PRIMITIVE_TYPE_CODE) {
     auto scalar = legate::Scalar{static_cast<std::uint32_t>(code)};
 
-    legate::type_dispatch(code, type_dispatch_fn{}, scalar);
+    legate::type_dispatch(code, TypeDispatchFn{}, scalar);
   }
 
   // invalid type code
   auto scalar = legate::Scalar(1);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::FIXED_ARRAY, type_dispatch_fn{}, scalar),
+  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::FIXED_ARRAY, TypeDispatchFn{}, scalar),
                std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::STRUCT, type_dispatch_fn{}, scalar),
+  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::STRUCT, TypeDispatchFn{}, scalar),
                std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::STRING, type_dispatch_fn{}, scalar),
+  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::STRING, TypeDispatchFn{}, scalar),
                std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::LIST, type_dispatch_fn{}, scalar),
+  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::LIST, TypeDispatchFn{}, scalar),
                std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::NIL, type_dispatch_fn{}, scalar),
+  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::NIL, TypeDispatchFn{}, scalar),
                std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::BINARY, type_dispatch_fn{}, scalar),
+  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::BINARY, TypeDispatchFn{}, scalar),
                std::runtime_error);
 }
+
 }  // namespace dispatch_test

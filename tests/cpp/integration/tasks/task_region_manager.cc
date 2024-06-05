@@ -28,7 +28,7 @@ namespace task::region_manager {
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   auto options =
     legate::VariantOptions{}.with_return_size(8192);  // NOLINT(readability-magic-numbers)
   TesterTask::register_variants(context, {{LEGATE_CPU_VARIANT, options}});

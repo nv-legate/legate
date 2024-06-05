@@ -60,7 +60,7 @@ class TaskContext {
   [[nodiscard]] ReturnValues pack_return_values_with_exception(const ReturnedException& exn) const;
 
  private:
-  [[nodiscard]] std::vector<ReturnValue> get_return_values() const;
+  [[nodiscard]] std::vector<ReturnValue> get_return_values_() const;
 
   const Legion::Task* task_{};
   LegateVariantCode variant_kind_{};

@@ -30,7 +30,7 @@ PartitionManager::PartitionManager(Runtime* runtime)
   min_shard_volume_ =
     runtime->get_tunable<std::int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
 
-  LegateAssert(min_shard_volume_ > 0);
+  LEGATE_ASSERT(min_shard_volume_ > 0);
 }
 
 const std::vector<std::uint32_t>& PartitionManager::get_factors(
@@ -62,7 +62,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
                                                             const tuple<std::uint64_t>& shape)
 {
   auto curr_num_pieces = machine.count();
-  LegateAssert(curr_num_pieces > 0);
+  LEGATE_ASSERT(curr_num_pieces > 0);
   // Easy case if we only have one piece: no parallel launch space
   if (1 == curr_num_pieces) {
     return {};
@@ -93,7 +93,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
 
   // Figure out how many shards we can make with this array
   std::int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
-  LegateCheck(volume == 0 || max_pieces > 0);
+  LEGATE_CHECK(volume == 0 || max_pieces > 0);
   // If we can only make one piece return that now
   if (max_pieces <= 1) {
     return {};
@@ -104,7 +104,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
 
   // First compute the N-th root of the number of pieces
   const auto ndim = temp_shape.size();
-  LegateCheck(ndim > 0);
+  LEGATE_CHECK(ndim > 0);
   std::vector<std::size_t> temp_result{};
 
   if (1 == ndim) {
@@ -208,7 +208,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
   }
 
   // Project back onto the original number of dimensions
-  LegateCheck(temp_result.size() == ndim);
+  LEGATE_CHECK(temp_result.size() == ndim);
   std::vector<std::uint64_t> result(shape.size(), 1);
   for (std::uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
@@ -220,7 +220,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
 tuple<std::uint64_t> PartitionManager::compute_tile_shape(const tuple<std::uint64_t>& extents,
                                                           const tuple<std::uint64_t>& launch_shape)
 {
-  LegateCheck(extents.size() == launch_shape.size());
+  LEGATE_CHECK(extents.size() == launch_shape.size());
   tuple<std::uint64_t> tile_shape;
   for (std::uint32_t idx = 0; idx < extents.size(); ++idx) {
     auto x = extents[idx];
@@ -246,9 +246,8 @@ bool PartitionManager::use_complete_tiling(const tuple<std::uint64_t>& extents,
 namespace {
 
 template <class Cache, class Partition>
-Legion::IndexPartition _find_index_partition(const Cache& cache,
-                                             const Legion::IndexSpace& index_space,
-                                             const Partition& partition)
+[[nodiscard]] Legion::IndexPartition find_index_partition_impl(
+  const Cache& cache, const Legion::IndexSpace& index_space, const Partition& partition)
 {
   auto finder = cache.find({index_space, partition});
 
@@ -263,13 +262,13 @@ Legion::IndexPartition _find_index_partition(const Cache& cache,
 Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
                                                               const Tiling& tiling) const
 {
-  return _find_index_partition(tiling_cache_, index_space, tiling);
+  return find_index_partition_impl(tiling_cache_, index_space, tiling);
 }
 
 Legion::IndexPartition PartitionManager::find_index_partition(const Legion::IndexSpace& index_space,
                                                               const Weighted& weighted) const
 {
-  return _find_index_partition(weighted_cache_, index_space, weighted);
+  return find_index_partition_impl(weighted_cache_, index_space, weighted);
 }
 
 Legion::IndexPartition PartitionManager::find_image_partition(
@@ -316,7 +315,7 @@ void PartitionManager::invalidate_image_partition(const Legion::IndexSpace& inde
 {
   auto finder = image_cache_.find({index_space, func_partition, field_id, hint});
 
-  LegateAssert(finder != image_cache_.end());
+  LEGATE_ASSERT(finder != image_cache_.end());
   image_cache_.erase(finder);
 }
 

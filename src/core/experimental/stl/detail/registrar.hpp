@@ -48,7 +48,7 @@ constexpr ResourceConfig LEGATE_STL_RESOURCE_CONFIG = {
  * The library instance is automatically destroyed when the initialize_library object
  * goes out of scope.
  */
-class initialize_library {
+class initialize_library {  // NOLINT(readability-identifier-naming)
  public:
   /**
    * @brief Constructs an initialize_library object.

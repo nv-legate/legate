@@ -29,7 +29,7 @@ const tuple<std::uint64_t>& Shape::extents()
 {
   switch (state_) {
     case State::UNBOUND: {
-      ensure_binding();
+      ensure_binding_();
       [[fallthrough]];
     }
     case State::BOUND: {
@@ -48,9 +48,9 @@ const tuple<std::uint64_t>& Shape::extents()
 
 const Legion::IndexSpace& Shape::index_space()
 {
-  ensure_binding();
+  ensure_binding_();
   if (!index_space_.exists()) {
-    LegateCheck(State::READY == state_);
+    LEGATE_CHECK(State::READY == state_);
     index_space_ = Runtime::get_runtime()->find_or_create_index_space(extents_);
   }
   return index_space_;
@@ -58,16 +58,16 @@ const Legion::IndexSpace& Shape::index_space()
 
 void Shape::set_index_space(const Legion::IndexSpace& index_space)
 {
-  LegateCheck(State::UNBOUND == state_);
+  LEGATE_CHECK(State::UNBOUND == state_);
   index_space_ = index_space;
   state_       = State::BOUND;
 }
 
 void Shape::copy_extents_from(const Shape& other)
 {
-  LegateCheck(State::BOUND == state_);
-  LegateAssert(dim_ == other.dim_);
-  LegateAssert(index_space_ == other.index_space_);
+  LEGATE_CHECK(State::BOUND == state_);
+  LEGATE_ASSERT(dim_ == other.dim_);
+  LEGATE_ASSERT(index_space_ == other.index_space_);
   state_   = State::READY;
   extents_ = other.extents_;
 }
@@ -109,7 +109,7 @@ bool Shape::operator==(Shape& other)
   return extents() == other.extents();
 }
 
-void Shape::ensure_binding()
+void Shape::ensure_binding_()
 {
   if (State::UNBOUND != state_) {
     return;

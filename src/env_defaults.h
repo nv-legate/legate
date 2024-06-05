@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "core/utilities/macros.h"
+
 #include "legate_defines.h"
 
 // 1 << 20 (need actual number for python to parse)
@@ -34,7 +36,7 @@
 #define WINDOW_SIZE_DEFAULT 1
 #define WINDOW_SIZE_TEST 1
 
-#if LegateDefined(LEGATE_USE_DEBUG)
+#if LEGATE_DEFINED(LEGATE_USE_DEBUG)
 // In debug mode, the default is always block on tasks that can throw exceptions
 #define MAX_PENDING_EXCEPTIONS_DEFAULT 1
 #else

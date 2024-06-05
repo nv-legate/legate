@@ -24,17 +24,17 @@ namespace legate::experimental::stl {
 namespace detail {
 
 template <typename Function, typename... InputSpans>
-class elementwise_accessor {
+class ElementwiseAccessor {
  public:
   using value_type       = call_result_t<Function, typename InputSpans::reference...>;
   using element_type     = value_type;
   using data_handle_type = std::size_t;
   using reference        = value_type;
-  using offset_policy    = elementwise_accessor;
+  using offset_policy    = ElementwiseAccessor;
 
-  elementwise_accessor() noexcept = default;
+  ElementwiseAccessor() noexcept = default;
 
-  LEGATE_HOST_DEVICE explicit elementwise_accessor(Function fun, InputSpans... spans) noexcept
+  LEGATE_HOST_DEVICE explicit ElementwiseAccessor(Function fun, InputSpans... spans) noexcept
     : fun_{std::move(fun)}, spans_{std::move(spans)...}
   {
   }
@@ -66,15 +66,15 @@ using elementwise_span =
   std::mdspan<call_result_t<Function, typename InputSpans::reference...>,
               std::dextents<coord_t, meta::front<InputSpans...>::extents_type::rank()>,
               std::layout_right,
-              elementwise_accessor<Function, InputSpans...>>;
+              ElementwiseAccessor<Function, InputSpans...>>;
 
 // a binary function that folds its two arguments together using
 // the given binary function, and stores the result in the first
 template <typename Function>
-class elementwise : private Function {
+class Elementwise : private Function {
  public:
-  elementwise() = default;
-  explicit elementwise(Function fn) : Function{std::move(fn)} {}
+  Elementwise() = default;
+  explicit Elementwise(Function fn) : Function{std::move(fn)} {}
 
   [[nodiscard]] const Function& function() const noexcept { return *this; }
 
@@ -86,12 +86,12 @@ class elementwise : private Function {
     // static_assert((as_mdspan_t<InputSpan>::extents_type::rank() ==
     //                  as_mdspan_t<InputSpans>::extents_type::rank() &&
     //                ...));
-    // LegateAssert((stl::as_mdspan(head).extents() == stl::as_mdspan(tail).extents() && ...));
+    // LEGATE_ASSERT((stl::as_mdspan(head).extents() == stl::as_mdspan(tail).extents() && ...));
 
     using Mapping = std::layout_right::mapping<
       std::dextents<legate::coord_t, as_mdspan_t<InputSpan>::extents_type::rank()>>;
     using Accessor = stl::detail::
-      elementwise_accessor<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>;
+      ElementwiseAccessor<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>;
     using ElementwiseSpan =
       elementwise_span<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>;
 
@@ -110,9 +110,9 @@ class elementwise : private Function {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Function>
-[[nodiscard]] detail::elementwise<std::decay_t<Function>> elementwise(Function&& fn)
+[[nodiscard]] detail::Elementwise<std::decay_t<Function>> elementwise(Function&& fn)
 {
-  return detail::elementwise<std::decay_t<Function>>{std::forward<Function>(fn)};
+  return detail::Elementwise<std::decay_t<Function>>{std::forward<Function>(fn)};
 }
 
 }  // namespace legate::experimental::stl

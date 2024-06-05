@@ -125,13 +125,13 @@ class Runtime {
     InternalSharedPtr<LogicalArray> vardata);
 
  private:
-  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
+  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array_(
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
     bool nullable,
     bool optimize_scalar);
 
-  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(
+  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array_(
     InternalSharedPtr<Shape> shape,
     InternalSharedPtr<Type> type,
     bool nullable,
@@ -161,9 +161,9 @@ class Runtime {
     const mapping::detail::DimOrdering* ordering);
 
  private:
-  static void check_dimensionality(std::uint32_t dim);
-  [[nodiscard]] std::uint64_t current_op_id() const;
-  void increment_op_id();
+  static void check_dimensionality_(std::uint32_t dim);
+  [[nodiscard]] std::uint64_t current_op_id_() const;
+  void increment_op_id_();
 
  public:
   void raise_pending_exception();
@@ -359,7 +359,7 @@ class Runtime {
 
   std::vector<InternalSharedPtr<Operation>> operations_;
   std::size_t window_size_{1};
-  std::uint64_t current_op_id_{};
+  std::uint64_t cur_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::uint64_t next_store_id_{1};

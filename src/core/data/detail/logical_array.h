@@ -116,7 +116,7 @@ class BaseLogicalArray final : public LogicalArray {
   [[nodiscard]] InternalSharedPtr<LogicalStore> data() const override;
   [[nodiscard]] InternalSharedPtr<LogicalStore> null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array() const override;
-  [[nodiscard]] InternalSharedPtr<BasePhysicalArray> _get_physical_array() const;
+  [[nodiscard]] InternalSharedPtr<BasePhysicalArray> get_base_physical_array() const;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] InternalSharedPtr<LogicalStore> primary_store() const override;
 

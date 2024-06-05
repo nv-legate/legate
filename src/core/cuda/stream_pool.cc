@@ -20,10 +20,10 @@ namespace legate::cuda {
 StreamView::~StreamView()
 {
   if (valid_ && detail::Config::synchronize_stream_view) {
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
-      LegateCheckCUDAStream(stream_);
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      LEGATE_CHECK_CUDA_STREAM(stream_);
     } else {
-      LegateCheckCUDA(cudaStreamSynchronize(stream_));
+      LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream_));
     }
   }
 }
@@ -31,7 +31,7 @@ StreamView::~StreamView()
 StreamPool::~StreamPool()
 {
   if (cached_stream_) {
-    LegateCheckCUDA(cudaStreamDestroy(*cached_stream_));
+    LEGATE_CHECK_CUDA(cudaStreamDestroy(*cached_stream_));
   }
 }
 
@@ -40,7 +40,7 @@ StreamView StreamPool::get_stream()
   if (!cached_stream_.has_value()) {
     cudaStream_t stream;
 
-    LegateCheckCUDA(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    LEGATE_CHECK_CUDA(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
     cached_stream_.emplace(stream);
   }
   return StreamView{*cached_stream_};

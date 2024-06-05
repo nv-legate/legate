@@ -18,7 +18,7 @@
  */
 
 /**
- * @def LegateConcat_(x, ...)
+ * @def LEGATE_CONCAT_(x, ...)
  *
  * @brief Concatenate a series of tokens without macro expansion.
  *
@@ -26,24 +26,24 @@
  * @param ... The remaining parameters to concatenate.
  *
  * This macro will NOT macro-expand any tokens passed to it. If this behavior is undesirable,
- * and the user wishes to have all tokens expanded before concatenation, use LegateConcat()
+ * and the user wishes to have all tokens expanded before concatenation, use LEGATE_CONCAT()
  * instead. For example:
  *
  * @code
  * #define FOO 1
  * #define BAR 2
  *
- * LegateConcat(FOO, BAR) // expands to FOOBAR
+ * LEGATE_CONCAT(FOO, BAR) // expands to FOOBAR
  * @endcode
  *
- * @see LegateConcat()
+ * @see LEGATE_CONCAT()
  *
  * @ingroup util
  */
-#define LegateConcat_(x, ...) x##__VA_ARGS__
+#define LEGATE_CONCAT_(x, ...) x##__VA_ARGS__
 
 /**
- * @def LegateConcat(x, ...)
+ * @def LEGATE_CONCAT(x, ...)
  *
  * @brief Concatenate a series of tokens.
  *
@@ -51,23 +51,23 @@
  * @param ... The remaining parameters to concatenate.
  *
  * This macro will first macro-expand any tokens passed to it. If this behavior is undesirable,
- * use LegateConcat_() instead. For example:
+ * use LEGATE_CONCAT_() instead. For example:
  *
  * @code
  * #define FOO 1
  * #define BAR 2
  *
- * LegateConcat(FOO, BAR) // expands to 12
+ * LEGATE_CONCAT(FOO, BAR) // expands to 12
  * @endcode
  *
- * @see LegateConcat_()
+ * @see LEGATE_CONCAT_()
  *
  * @ingroup util
  */
-#define LegateConcat(x, ...) LegateConcat_(x, __VA_ARGS__)
+#define LEGATE_CONCAT(x, ...) LEGATE_CONCAT_(x, __VA_ARGS__)
 
 /**
- * @def LegateStringize_(...)
+ * @def LEGATE_STRINGIZE_(...)
  *
  * @brief Stringize a series of tokens.
  *
@@ -77,23 +77,23 @@
  *
  * This macro will NOT macro-expand any tokens passed to it. If this behavior is undesirable,
  * and the user wishes to have all tokens expanded before stringification, use
- * LegateStringize() instead. For example:
+ * LEGATE_STRINGIZE() instead. For example:
  *
  * @code
  * #define FOO 1
  * #define BAR 2
  *
- * LegateStringize_(FOO, BAR) // expands to "FOO, BAR" (note the "")
+ * LEGATE_STRINGIZE_(FOO, BAR) // expands to "FOO, BAR" (note the "")
  * @endcode
  *
- * @see LegateStringize()
+ * @see LEGATE_STRINGIZE()
  *
  * @ingroup util
  */
-#define LegateStringize_(...) #__VA_ARGS__
+#define LEGATE_STRINGIZE_(...) #__VA_ARGS__
 
 /**
- * @def LegateStringize(...)
+ * @def LEGATE_STRINGIZE(...)
  *
  * @brief Stringize a series of tokens.
  *
@@ -102,64 +102,64 @@
  * This macro will turn its arguments into compile-time constant C strings.
  *
  * This macro will first macro-expand any tokens passed to it. If this behavior is undesirable,
- * use LegateStringize_() instead. For example:
+ * use LEGATE_STRINGIZE_() instead. For example:
  *
  * @code
  * #define FOO 1
  * #define BAR 2
  *
- * LegateStringize(FOO, BAR) // expands to "1, 2" (note the "")
+ * LEGATE_STRINGIZE(FOO, BAR) // expands to "1, 2" (note the "")
  * @endcode
  *
- * @see LegateStringize_()
+ * @see LEGATE_STRINGIZE_()
  *
  * @ingroup util
  */
-#define LegateStringize(...) LegateStringize_(__VA_ARGS__)
+#define LEGATE_STRINGIZE(...) LEGATE_STRINGIZE_(__VA_ARGS__)
 
-// Each suffix defines an additional "enabled" state for LegateDefined(LEGATE_), i.e. if you define
+// Each suffix defines an additional "enabled" state for LEGATE_DEFINED(LEGATE_), i.e. if you
+// define
 //
-// #define LegateDefinedEnabledForm_FOO ignored,
+// #define LEGATE_DEFINED_ENABLED_FORM_FOO ignored,
 //                                  ^^^~~~~~~~~~~~ note suffix
 // Results in
 //
 // #define LEGATE_HAVE_BAR FOO
-// LegateDefined(LEGATE_HAVE_BAR) // now evalues to 1
-#define LegateDefinedEnabledForm_1 ignored,
-#define LegateDefinedEnabledForm_ ignored,
+// LEGATE_DEFINED(LEGATE_HAVE_BAR) // now evalues to 1
+#define LEGATE_DEFINED_ENABLED_FORM_1 ignored,
+#define LEGATE_DEFINED_ENABLED_FORM_ ignored,
 
-// NOLINTBEGIN(bugprone-reserved-identifier)
 // arguments are either
 // - (0, 1, 0, dummy)
 // - (1, 0, dummy)
 // this final step cherry-picks the middle
-#define LegateDefinedPrivate___(ignored, val, ...) val
+#define LEGATE_DEFINED_PRIVATE_3_(ignored, val, ...) val
 // the following 2 steps are needed purely for MSVC since it has a nonconforming preprocessor
 // and does not expand __VA_ARGS__ in a single step
-#define LegateDefinedPrivate__(args) LegateDefinedPrivate___ args
-#define LegateDefinedPrivate_(...) LegateDefinedPrivate__((__VA_ARGS__))
+#define LEGATE_DEFINED_PRIVATE_2_(args) LEGATE_DEFINED_PRIVATE_3_ args
+#define LEGATE_DEFINED_PRIVATE_1_(...) LEGATE_DEFINED_PRIVATE_2_((__VA_ARGS__))
 // We do not want parentheses around 'x' since we need it to be expanded as-is to push the 1
 // forward an arg space
 // NOLINTNEXTLINE(bugprone-macro-parentheses)
-#define LegateDefinedPrivate(x) LegateDefinedPrivate_(x 1, 0, dummy)
+#define LEGATE_DEFINED_PRIVATE(x) LEGATE_DEFINED_PRIVATE_1_(x 1, 0, dummy)
 
 /**
- * @def LegateDefined(x)
+ * @def LEGATE_DEFINED(x)
  *
  * @brief Determine if a preprocessor definition is positively defined.
  *
  * @param x The legate preprocessor definition.
  * @return 1 if the argument is defined and true, 0 otherwise.
  *
- * LegateDefined() returns 1 if and only if \a x expands to integer literal 1, or is defined
- * (but empty). In all other cases, LegateDefined() returns the integer literal 0. Therefore
- * this macro should not be used if its argument may expand to a non-empty value other than 1. The
- * only exception is if the argument is defined but expands to 0, in which case `LegateDefined()`
- * will also expand to 0:
+ * LEGATE_DEFINED() returns 1 if and only if \a x expands to integer literal 1, or is defined
+ * (but empty). In all other cases, LEGATE_DEFINED() returns the integer literal 0. Therefore
+ * this macro should not be used if its argument may expand to a non-empty value other than
+ * 1. The only exception is if the argument is defined but expands to 0, in which case
+ * `LEGATE_DEFINED()` will also expand to 0:
  *
- * @snippet unit/macros.cc LegateDefined
+ * @snippet unit/macros.cc LEGATE_DEFINED
  *
- * Conceptually, `LegateDefined()` is equivalent to
+ * Conceptually, `LEGATE_DEFINED()` is equivalent to
  *
  * @code
  * #if defined(x) && (x == 1 || x == *empty*)
@@ -172,7 +172,7 @@
  * As a result this macro works both in preprocessor statements:
  *
  * @code
- * #if LegateDefined(FOO_BAR)
+ * #if LEGATE_DEFINED(FOO_BAR)
  *   foo_bar_is_defined();
  * #else
  *   foo_bar_is_not_defined();
@@ -182,7 +182,7 @@
  * And in regular C++ code:
  *
  * @code
- * if (LegateDefined(FOO_BAR)) {
+ * if (LEGATE_DEFINED(FOO_BAR)) {
  *   foo_bar_is_defined();
  * } else {
  *   foo_bar_is_not_defined();
@@ -190,20 +190,19 @@
  * @endcode
  *
  * Note that in the C++ example above both arms of the if statement must compile. If this is
- * not desired, then -- since `LegateDefined()` produces a compile-time constant expression --
+ * not desired, then -- since `LEGATE_DEFINED()` produces a compile-time constant expression --
  * the user may use C++17's `if constexpr` to block out one of the arms:
  *
  * @code
- * if constexpr (LegateDefined(FOO_BAR)) {
+ * if constexpr (LEGATE_DEFINED(FOO_BAR)) {
  *   foo_bar_is_defined();
  * } else {
  *   foo_bar_is_not_defined();
  * }
  * @endcode
  *
- * @see LegateConcat()
+ * @see LEGATE_CONCAT()
  *
  * @ingroup util
  */
-#define LegateDefined(x) LegateDefinedPrivate(LegateConcat_(LegateDefinedEnabledForm_, x))
-// NOLINTEND(bugprone-reserved-identifier)
+#define LEGATE_DEFINED(x) LEGATE_DEFINED_PRIVATE(LEGATE_CONCAT_(LEGATE_DEFINED_ENABLED_FORM_, x))

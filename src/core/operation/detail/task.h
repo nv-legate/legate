@@ -69,11 +69,11 @@ class Task : public Operation {
                                Legion::ReductionOpID legion_redop_id);
 
  protected:
-  void launch_task(Strategy* strategy);
+  void launch_task_(Strategy* strategy);
 
  private:
-  void demux_scalar_stores(const Legion::Future& result);
-  void demux_scalar_stores(const Legion::FutureMap& result, const Domain& launch_domain);
+  void demux_scalar_stores_(const Legion::Future& result);
+  void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
 
  public:
   [[nodiscard]] std::string to_string() const override;
@@ -129,7 +129,7 @@ class AutoTask final : public Task {
   [[nodiscard]] Kind kind() const override;
 
  private:
-  void fixup_ranges(Strategy& strategy);
+  void fixup_ranges_(Strategy& strategy);
 
   std::vector<InternalSharedPtr<Constraint>> constraints_{};
   std::vector<LogicalArray*> arrays_to_fixup_{};
@@ -156,10 +156,10 @@ class ManualTask final : public Task {
                      std::optional<SymbolicPoint> projection);
 
  private:
-  void add_store(std::vector<ArrayArg>& store_args,
-                 const InternalSharedPtr<LogicalStore>& store,
-                 InternalSharedPtr<Partition> partition,
-                 std::optional<SymbolicPoint> projection = {});
+  void add_store_(std::vector<ArrayArg>& store_args,
+                  const InternalSharedPtr<LogicalStore>& store,
+                  InternalSharedPtr<Partition> partition,
+                  std::optional<SymbolicPoint> projection = {});
 
  public:
   void validate() override;

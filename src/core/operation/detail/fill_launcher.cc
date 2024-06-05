@@ -42,7 +42,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
 {
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
+  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
 
   const auto runtime                      = Runtime::get_runtime();
   const auto& provenance                  = runtime->get_provenance();
@@ -71,7 +71,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
 {
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
+  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
 
   const auto runtime                      = Runtime::get_runtime();
   const auto& provenance                  = runtime->get_provenance();
@@ -98,7 +98,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
 {
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
+  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
 
   const auto runtime                      = Runtime::get_runtime();
   const auto& provenance                  = runtime->get_provenance();
@@ -124,7 +124,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
 {
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg, lhs_proj.proj_id);
+  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
 
   const auto runtime                      = Runtime::get_runtime();
   const auto& provenance                  = runtime->get_provenance();
@@ -143,7 +143,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
   runtime->dispatch(single_fill);
 }
 
-void FillLauncher::pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id)
+void FillLauncher::pack_mapper_arg_(BufferBuilder& buffer, Legion::ProjectionID proj_id)
 {
   machine_.pack(buffer);
   buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, proj_id));

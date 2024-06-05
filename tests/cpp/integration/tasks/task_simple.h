@@ -25,7 +25,7 @@ enum TaskOpCode {
   REDUCER       = 3,
 };
 
-inline constexpr const char library_name[] = "legate.simple";
+inline constexpr std::string_view LIBRARY_NAME = "legate.simple";
 
 extern Legion::Logger logger;
 

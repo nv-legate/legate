@@ -296,7 +296,7 @@ std::optional<Runtime> the_public_runtime{};
 
 /*static*/ Runtime* Runtime::get_runtime()
 {
-  if (LegateUnlikely(!the_public_runtime.has_value())) {
+  if (LEGATE_UNLIKELY(!the_public_runtime.has_value())) {
     auto* impl = detail::Runtime::get_runtime();
 
     if (!impl->initialized()) {

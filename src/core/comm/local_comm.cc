@@ -87,8 +87,8 @@ ThreadComm::~ThreadComm() noexcept
 LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
 {
   detail::log_coll().debug("Enable LocalNetwork");
-  LegateCheck(current_unique_id == 0);
-  LegateCheck(thread_comms.empty());
+  LEGATE_CHECK(current_unique_id == 0);
+  LEGATE_CHECK(thread_comms_.empty());
   BackendNetwork::coll_inited = true;
   BackendNetwork::comm_type   = CollCommType::CollLocal;
 }
@@ -96,9 +96,9 @@ LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
 LocalNetwork::~LocalNetwork()
 {
   detail::log_coll().debug("Finalize LocalNetwork");
-  LegateCheck(BackendNetwork::coll_inited == true);
-  for (auto&& thread_comm : thread_comms) {
-    LegateCheck(!thread_comm->ready());
+  LEGATE_CHECK(BackendNetwork::coll_inited == true);
+  for (auto&& thread_comm : thread_comms_) {
+    LEGATE_CHECK(!thread_comm->ready());
   }
   BackendNetwork::coll_inited = false;
 }
@@ -113,17 +113,17 @@ int LocalNetwork::comm_create(CollComm global_comm,
   global_comm->global_rank      = global_rank;
   global_comm->status           = true;
   global_comm->unique_id        = unique_id;
-  LegateCheck(mapping_table == nullptr);
+  LEGATE_CHECK(mapping_table == nullptr);
   global_comm->mpi_comm_size        = 1;
   global_comm->mpi_comm_size_actual = 1;
   global_comm->mpi_rank             = 0;
   if (global_comm->global_rank == 0) {
-    thread_comms[global_comm->unique_id]->init(global_comm->global_comm_size);
+    thread_comms_[global_comm->unique_id]->init(global_comm->global_comm_size);
   }
-  while (!thread_comms[global_comm->unique_id]->ready()) {}
-  global_comm->local_comm = thread_comms[global_comm->unique_id].get();
+  while (!thread_comms_[global_comm->unique_id]->ready()) {}
+  global_comm->local_comm = thread_comms_[global_comm->unique_id].get();
   barrierLocal(global_comm);
-  LegateCheck(const_cast<const ThreadComm*>(global_comm->local_comm)->ready());
+  LEGATE_CHECK(const_cast<const ThreadComm*>(global_comm->local_comm)->ready());
   global_comm->nb_threads = global_comm->global_comm_size;
   return CollSuccess;
 }
@@ -132,10 +132,10 @@ int LocalNetwork::comm_destroy(CollComm global_comm)
 {
   const auto id = global_comm->unique_id;
 
-  LegateAssert(id >= 0);
+  LEGATE_ASSERT(id >= 0);
   barrierLocal(global_comm);
-  thread_comms[static_cast<std::size_t>(id)]->finalize(global_comm->global_comm_size,
-                                                       global_comm->global_rank == 0);
+  thread_comms_[static_cast<std::size_t>(id)]->finalize(global_comm->global_comm_size,
+                                                        global_comm->global_rank == 0);
   global_comm->status = false;
   return CollSuccess;
 }
@@ -144,10 +144,10 @@ int LocalNetwork::init_comm()
 {
   int id   = 0;
   auto ret = collGetUniqueId(&id);
-  LegateCheck(ret == CollSuccess);
-  LegateCheck(id >= 0 && thread_comms.size() == static_cast<std::size_t>(id));
+  LEGATE_CHECK(ret == CollSuccess);
+  LEGATE_CHECK(id >= 0 && thread_comms_.size() == static_cast<std::size_t>(id));
   // create thread comm
-  thread_comms.emplace_back(std::make_unique<ThreadComm>());
+  thread_comms_.emplace_back(std::make_unique<ThreadComm>());
   detail::log_coll().debug("Init comm id %d", id);
   return id;
 }
@@ -187,7 +187,7 @@ int LocalNetwork::alltoallv(const void* sendbuf,
                                static_cast<std::ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent);
     auto* dst = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
         "AlltoallvLocal i: %d === global_rank %d, dtype %zu, copy rank %d (seg %d, sdispls %d, %p) "
         "to rank %d (seg %d, rdispls %d, %p)",
@@ -240,7 +240,7 @@ int LocalNetwork::alltoall(
                                static_cast<std::ptrdiff_t>(recvfrom_seg_id) * type_extent * count);
     auto* dst = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
         "AlltoallLocal i: %d === global_rank %d, dtype %zu, copy rank %d (seg %d, %p) to rank %d "
         "(seg %d, %p)",
@@ -290,7 +290,7 @@ int LocalNetwork::allgather(
     const void* src = global_comm->local_comm->buffers[recvfrom_global_rank];
     char* dst       = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(recvfrom_global_rank) * type_extent * count;
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       detail::log_coll().debug(
         "AllgatherLocal i: %d === global_rank %d, dtype %zu, copy rank %d (%p) to rank %d (%p)",
         recvfrom_global_rank,
@@ -363,7 +363,7 @@ void LocalNetwork::resetLocalBuffer(CollComm global_comm)
 
 void LocalNetwork::barrierLocal(CollComm global_comm)
 {
-  LegateCheck(BackendNetwork::coll_inited == true);
+  LEGATE_CHECK(BackendNetwork::coll_inited == true);
   const_cast<ThreadComm*>(global_comm->local_comm)->barrier_local();
 }
 

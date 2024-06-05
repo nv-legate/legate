@@ -188,7 +188,7 @@ const Processor& LocalProcessorRange::operator[](std::uint32_t idx) const
   auto local_idx = idx - offset_;
   static_assert(std::is_unsigned_v<decltype(local_idx)>,
                 "if local_idx becomes signed, also check local_idx >= 0 below!");
-  LegateAssert(local_idx < procs_.size());
+  LEGATE_ASSERT(local_idx < procs_.size());
   return procs_[local_idx];
 }
 
@@ -246,14 +246,14 @@ LocalMachine::LocalMachine()
   // Now do queries to find all our local memories
   Legion::Machine::MemoryQuery sysmem{legion_machine};
   sysmem.local_address_space().only_kind(Legion::Memory::SYSTEM_MEM);
-  LegateCheck(sysmem.count() > 0);
+  LEGATE_CHECK(sysmem.count() > 0);
   system_memory_ = sysmem.first();
 
   if (!gpus_.empty()) {
     Legion::Machine::MemoryQuery zcmem{legion_machine};
 
     zcmem.local_address_space().only_kind(Legion::Memory::Z_COPY_MEM);
-    LegateCheck(zcmem.count() > 0);
+    LEGATE_CHECK(zcmem.count() > 0);
     zerocopy_memory_ = zcmem.first();
   }
 
@@ -261,7 +261,7 @@ LocalMachine::LocalMachine()
     Legion::Machine::MemoryQuery framebuffer{legion_machine};
 
     framebuffer.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
-    LegateCheck(framebuffer.count() > 0);
+    LEGATE_CHECK(framebuffer.count() > 0);
     frame_buffers_[gpu] = framebuffer.first();
   }
 

@@ -22,7 +22,7 @@ class Trace::Impl {
   ~Impl() { Trace::end_trace(trace_id_); }
 
  private:
-  const std::uint32_t trace_id_{};
+  std::uint32_t trace_id_{};
 };
 
 Trace::Trace(std::uint32_t trace_id) : impl_{std::make_unique<Trace::Impl>(trace_id)} {}

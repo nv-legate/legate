@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/deserializer.h"
 
 #include "core/data/detail/physical_store.h"
 #include "core/data/physical_store.h"
@@ -19,7 +19,7 @@
 #include "legion/legion_c.h"
 #include "legion/legion_c_util.h"
 
-namespace legate {
+namespace legate::detail {
 
 TaskDeserializer::TaskDeserializer(const Legion::Task* task,
                                    const std::vector<Legion::PhysicalRegion>& regions)
@@ -32,9 +32,9 @@ TaskDeserializer::TaskDeserializer(const Legion::Task* task,
   runtime->get_output_regions(ctx, outputs_);
 }
 
-std::vector<InternalSharedPtr<detail::PhysicalArray>> TaskDeserializer::unpack_arrays()
+std::vector<InternalSharedPtr<PhysicalArray>> TaskDeserializer::unpack_arrays()
 {
-  std::vector<InternalSharedPtr<detail::PhysicalArray>> arrays;
+  std::vector<InternalSharedPtr<PhysicalArray>> arrays;
   auto size = unpack<std::uint32_t>();
 
   arrays.reserve(size);
@@ -44,42 +44,42 @@ std::vector<InternalSharedPtr<detail::PhysicalArray>> TaskDeserializer::unpack_a
   return arrays;
 }
 
-InternalSharedPtr<detail::PhysicalArray> TaskDeserializer::unpack_array()
+InternalSharedPtr<PhysicalArray> TaskDeserializer::unpack_array()
 {
-  auto kind = static_cast<detail::ArrayKind>(unpack<std::underlying_type_t<detail::ArrayKind>>());
+  auto kind = static_cast<ArrayKind>(unpack<std::underlying_type_t<ArrayKind>>());
 
   switch (kind) {
-    case detail::ArrayKind::BASE: return unpack_base_array();
-    case detail::ArrayKind::LIST: return unpack_list_array();
-    case detail::ArrayKind::STRUCT: return unpack_struct_array();
+    case ArrayKind::BASE: return unpack_base_array();
+    case ArrayKind::LIST: return unpack_list_array();
+    case ArrayKind::STRUCT: return unpack_struct_array();
   }
   return {};
 }
 
-InternalSharedPtr<detail::BasePhysicalArray> TaskDeserializer::unpack_base_array()
+InternalSharedPtr<BasePhysicalArray> TaskDeserializer::unpack_base_array()
 {
   auto data      = unpack_store();
   auto nullable  = unpack<bool>();
   auto null_mask = nullable ? unpack_store() : nullptr;
-  return make_internal_shared<detail::BasePhysicalArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BasePhysicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<detail::ListPhysicalArray> TaskDeserializer::unpack_list_array()
+InternalSharedPtr<ListPhysicalArray> TaskDeserializer::unpack_list_array()
 {
-  auto type = unpack_type();
-  static_cast<void>(unpack<std::underlying_type_t<detail::ArrayKind>>());  // Unpack kind
+  auto type = unpack_type_();
+  static_cast<void>(unpack<std::underlying_type_t<ArrayKind>>());  // Unpack kind
   auto descriptor = unpack_base_array();
   auto vardata    = unpack_array();
-  return make_internal_shared<detail::ListPhysicalArray>(
+  return make_internal_shared<ListPhysicalArray>(
     std::move(type), std::move(descriptor), std::move(vardata));
 }
 
-InternalSharedPtr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_array()
+InternalSharedPtr<StructPhysicalArray> TaskDeserializer::unpack_struct_array()
 {
-  auto type = unpack_type();
-  LegateCheck(type->code == Type::Code::STRUCT);
+  auto type = unpack_type_();
+  LEGATE_CHECK(type->code == Type::Code::STRUCT);
 
-  std::vector<InternalSharedPtr<detail::PhysicalArray>> fields;
+  std::vector<InternalSharedPtr<PhysicalArray>> fields;
   const auto& st_type = type->as_struct_type();
   auto nullable       = unpack<bool>();
   auto null_mask      = nullable ? unpack_store() : nullptr;
@@ -88,42 +88,42 @@ InternalSharedPtr<detail::StructPhysicalArray> TaskDeserializer::unpack_struct_a
   for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
     fields.emplace_back(unpack_array());
   }
-  return make_internal_shared<detail::StructPhysicalArray>(
+  return make_internal_shared<StructPhysicalArray>(
     std::move(type), std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<detail::PhysicalStore> TaskDeserializer::unpack_store()
+InternalSharedPtr<PhysicalStore> TaskDeserializer::unpack_store()
 {
   auto is_future = unpack<bool>();
   auto unbound   = unpack<bool>();
   auto dim       = unpack<std::int32_t>();
-  auto type      = unpack_type();
-  auto transform = unpack_transform();
+  auto type      = unpack_type_();
+  auto transform = unpack_transform_();
   auto redop_id  = unpack<std::int32_t>();
 
   if (is_future) {
-    auto fut = unpack<detail::FutureWrapper>();
+    auto fut = unpack<FutureWrapper>();
 
     if (redop_id != -1 && !fut.valid()) {
       fut.initialize_with_identity(redop_id);
     }
-    return make_internal_shared<detail::PhysicalStore>(
+    return make_internal_shared<PhysicalStore>(
       dim, std::move(type), redop_id, std::move(fut), std::move(transform));
   }
   if (!unbound) {
-    auto rf = unpack<detail::RegionField>();
+    auto rf = unpack<RegionField>();
 
-    return make_internal_shared<detail::PhysicalStore>(
+    return make_internal_shared<PhysicalStore>(
       dim, std::move(type), redop_id, std::move(rf), std::move(transform));
   }
-  LegateCheck(redop_id == -1);
-  auto out = unpack<detail::UnboundRegionField>();
+  LEGATE_CHECK(redop_id == -1);
+  auto out = unpack<UnboundRegionField>();
 
-  return make_internal_shared<detail::PhysicalStore>(
+  return make_internal_shared<PhysicalStore>(
     dim, std::move(type), std::move(out), std::move(transform));
 }
 
-void TaskDeserializer::_unpack(detail::FutureWrapper& value)
+void TaskDeserializer::unpack_impl(FutureWrapper& value)
 {
   auto read_only    = unpack<bool>();
   auto future_index = unpack<std::int32_t>();
@@ -132,45 +132,45 @@ void TaskDeserializer::_unpack(detail::FutureWrapper& value)
 
   const auto has_storage = future_index >= 0;
   Legion::Future future  = has_storage ? futures_[future_index] : Legion::Future{};
-  value                  = detail::FutureWrapper{read_only, field_size, domain, std::move(future)};
+  value                  = FutureWrapper{read_only, field_size, domain, std::move(future)};
 }
 
-void TaskDeserializer::_unpack(detail::RegionField& value)
+void TaskDeserializer::unpack_impl(RegionField& value)
 {
   auto dim = unpack<std::int32_t>();
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
 
-  value = detail::RegionField{dim, regions_[idx], static_cast<Legion::FieldID>(fid)};
+  value = RegionField{dim, regions_[idx], static_cast<Legion::FieldID>(fid)};
 }
 
-void TaskDeserializer::_unpack(detail::UnboundRegionField& value)
+void TaskDeserializer::unpack_impl(UnboundRegionField& value)
 {
   static_cast<void>(unpack<std::int32_t>());  // dim
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
 
-  value = detail::UnboundRegionField{outputs_[idx], static_cast<Legion::FieldID>(fid)};
+  value = UnboundRegionField{outputs_[idx], static_cast<Legion::FieldID>(fid)};
 }
 
-void TaskDeserializer::_unpack(comm::Communicator& value)
+void TaskDeserializer::unpack_impl(legate::comm::Communicator& value)
 {
   auto future = futures_[0];
   futures_    = futures_.subspan(1);
-  value       = comm::Communicator{std::move(future)};
+  value       = legate::comm::Communicator{std::move(future)};
 }
 
-void TaskDeserializer::_unpack(Legion::PhaseBarrier& barrier)
+void TaskDeserializer::unpack_impl(Legion::PhaseBarrier& barrier)
 {
-  auto future   = futures_[0];
-  futures_      = futures_.subspan(1);
-  auto barrier_ = future.get_result<legion_phase_barrier_t>();
-  barrier       = Legion::CObjectWrapper::unwrap(barrier_);
+  auto future        = futures_[0];
+  futures_           = futures_.subspan(1);
+  auto phase_barrier = future.get_result<legion_phase_barrier_t>();
+  barrier            = Legion::CObjectWrapper::unwrap(std::move(phase_barrier));
 }
 
-}  // namespace legate
+}  // namespace legate::detail
 
-namespace legate::mapping {
+namespace legate::mapping::detail {
 
 MapperDataDeserializer::MapperDataDeserializer(const Legion::Mappable* mappable)
   : BaseDeserializer{mappable->mapper_data, mappable->mapper_data_size}
@@ -184,9 +184,9 @@ TaskDeserializer::TaskDeserializer(const Legion::Task* task,
 {
 }
 
-std::vector<InternalSharedPtr<detail::Array>> TaskDeserializer::unpack_arrays()
+std::vector<InternalSharedPtr<Array>> TaskDeserializer::unpack_arrays()
 {
-  std::vector<InternalSharedPtr<detail::Array>> arrays;
+  std::vector<InternalSharedPtr<Array>> arrays;
   auto size = unpack<std::uint32_t>();
 
   arrays.reserve(size);
@@ -196,7 +196,7 @@ std::vector<InternalSharedPtr<detail::Array>> TaskDeserializer::unpack_arrays()
   return arrays;
 }
 
-InternalSharedPtr<detail::Array> TaskDeserializer::unpack_array()
+InternalSharedPtr<Array> TaskDeserializer::unpack_array()
 {
   using ArrayKind = legate::detail::ArrayKind;
   auto kind       = static_cast<ArrayKind>(unpack<std::underlying_type_t<ArrayKind>>());
@@ -209,31 +209,31 @@ InternalSharedPtr<detail::Array> TaskDeserializer::unpack_array()
   return {};
 }
 
-InternalSharedPtr<detail::BaseArray> TaskDeserializer::unpack_base_array()
+InternalSharedPtr<BaseArray> TaskDeserializer::unpack_base_array()
 {
   auto data      = unpack_store();
   auto nullable  = unpack<bool>();
   auto null_mask = nullable ? unpack_store() : nullptr;
 
-  return make_internal_shared<detail::BaseArray>(std::move(data), std::move(null_mask));
+  return make_internal_shared<BaseArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<detail::ListArray> TaskDeserializer::unpack_list_array()
+InternalSharedPtr<ListArray> TaskDeserializer::unpack_list_array()
 {
-  auto type = unpack_type();
+  auto type = unpack_type_();
   static_cast<void>(unpack<std::underlying_type_t<legate::detail::ArrayKind>>());  // Unpack kind
   auto descriptor = unpack_base_array();
   auto vardata    = unpack_array();
-  return make_internal_shared<detail::ListArray>(
+  return make_internal_shared<ListArray>(
     std::move(type), std::move(descriptor), std::move(vardata));
 }
 
-InternalSharedPtr<detail::StructArray> TaskDeserializer::unpack_struct_array()
+InternalSharedPtr<StructArray> TaskDeserializer::unpack_struct_array()
 {
-  auto type = unpack_type();
-  LegateCheck(type->code == Type::Code::STRUCT);
+  auto type = unpack_type_();
+  LEGATE_CHECK(type->code == Type::Code::STRUCT);
 
-  std::vector<InternalSharedPtr<detail::Array>> fields;
+  std::vector<InternalSharedPtr<Array>> fields;
   const auto& st_type = type->as_struct_type();
   auto nullable       = unpack<bool>();
   auto null_mask      = nullable ? unpack_store() : nullptr;
@@ -242,52 +242,50 @@ InternalSharedPtr<detail::StructArray> TaskDeserializer::unpack_struct_array()
   for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
     fields.emplace_back(unpack_array());
   }
-  return make_internal_shared<detail::StructArray>(
+  return make_internal_shared<StructArray>(
     std::move(type), std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<detail::Store> TaskDeserializer::unpack_store()
+InternalSharedPtr<Store> TaskDeserializer::unpack_store()
 {
   auto is_future = unpack<bool>();
   auto unbound   = unpack<bool>();
   auto dim       = unpack<std::int32_t>();
-  auto type      = unpack_type();
-
-  auto transform = unpack_transform();
+  auto type      = unpack_type_();
+  auto transform = unpack_transform_();
 
   if (is_future) {
     // We still need to parse the reduction op
     static_cast<void>(unpack<std::int32_t>());
-    auto fut = unpack<detail::FutureWrapper>();
+    auto fut = unpack<FutureWrapper>();
 
-    return make_internal_shared<detail::Store>(
-      dim, std::move(type), std::move(fut), std::move(transform));
+    return make_internal_shared<Store>(dim, std::move(type), std::move(fut), std::move(transform));
   }
   auto redop_id = unpack<std::int32_t>();
-  detail::RegionField rf;
-  _unpack(rf, unbound);
-  return make_internal_shared<detail::Store>(
+  RegionField rf;
+  unpack_impl(rf, unbound);
+  return make_internal_shared<Store>(
     runtime_, context_, dim, std::move(type), redop_id, rf, unbound, std::move(transform));
 }
 
-void TaskDeserializer::_unpack(detail::FutureWrapper& value)
+void TaskDeserializer::unpack_impl(FutureWrapper& value)
 {
   // We still need to deserialize these fields to get to the domain
   static_cast<void>(unpack<bool>());
   auto future_index = unpack<std::int32_t>();
   static_cast<void>(unpack<std::uint32_t>());
   auto domain = unpack<Domain>();
-  value       = detail::FutureWrapper{static_cast<std::uint32_t>(future_index), domain};
+  value       = FutureWrapper{static_cast<std::uint32_t>(future_index), domain};
 }
 
-void TaskDeserializer::_unpack(detail::RegionField& value, bool unbound)
+void TaskDeserializer::unpack_impl(RegionField& value, bool unbound)
 {
   auto dim = unpack<std::int32_t>();
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
-
   auto req = unbound ? &task_->output_regions[idx] : &task_->regions[idx];
-  value    = detail::RegionField{req, dim, idx, static_cast<Legion::FieldID>(fid), unbound};
+
+  value = RegionField{req, dim, idx, static_cast<Legion::FieldID>(fid), unbound};
 }
 
 CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
@@ -304,40 +302,40 @@ CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
 
 void CopyDeserializer::next_requirement_list()
 {
-  LegateCheck(curr_reqs_ != all_reqs_.end());
+  LEGATE_CHECK(curr_reqs_ != all_reqs_.end());
   req_index_offset_ += curr_reqs_->get().size();
   ++curr_reqs_;
 }
 
-void CopyDeserializer::_unpack(detail::Store& store)
+void CopyDeserializer::unpack_impl(Store& store)
 {
   auto is_future = unpack<bool>();
   auto unbound   = unpack<bool>();
   auto dim       = unpack<std::int32_t>();
-  auto type      = unpack_type();
+  auto type      = unpack_type_();
 
-  auto transform = unpack_transform();
+  auto transform = unpack_transform_();
 
-  LegateCheck(!is_future && !unbound);
+  LEGATE_CHECK(!is_future && !unbound);
   static_cast<void>(is_future);
 
   auto redop_id = unpack<std::int32_t>();
-  detail::RegionField rf;
+  RegionField rf;
 
-  _unpack(rf);
-  store = detail::Store{
-    runtime_, context_, dim, std::move(type), redop_id, rf, unbound, std::move(transform)};
+  unpack_impl(rf);
+  store =
+    Store{runtime_, context_, dim, std::move(type), redop_id, rf, unbound, std::move(transform)};
 }
 
-void CopyDeserializer::_unpack(detail::RegionField& value)
+void CopyDeserializer::unpack_impl(RegionField& value)
 {
   auto dim = unpack<std::int32_t>();
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
   auto req = &curr_reqs_->get()[idx];
 
-  value = detail::RegionField{
+  value = RegionField{
     req, dim, idx + req_index_offset_, static_cast<Legion::FieldID>(fid), false /*unbound*/};
 }
 
-}  // namespace legate::mapping
+}  // namespace legate::mapping::detail

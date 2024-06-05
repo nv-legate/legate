@@ -48,7 +48,8 @@ class tag {
 
 inline namespace obj {
 
-inline constexpr get_logical_store::tag get_logical_store{};
+inline constexpr get_logical_store::tag
+  get_logical_store{};  // NOLINT(readability-identifier-naming)
 
 }  // namespace obj
 }  // namespace tags

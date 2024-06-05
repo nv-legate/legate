@@ -67,13 +67,13 @@ void ReturnValues::legion_serialize(void* buffer) const
     auto& ret = return_values_.front();
 
     if (ret.is_device_value()) {
-      LegateAssert(detail::Runtime::get_runtime()->get_executing_processor().kind() ==
-                   Processor::Kind::TOC_PROC);
-      LegateCheckCUDA(cudaMemcpyAsync(buffer,
-                                      ret.ptr(),
-                                      ret.size(),
-                                      cudaMemcpyDeviceToHost,
-                                      cuda::StreamPool::get_stream_pool().get_stream()));
+      LEGATE_ASSERT(detail::Runtime::get_runtime()->get_executing_processor().kind() ==
+                    Processor::Kind::TOC_PROC);
+      LEGATE_CHECK_CUDA(cudaMemcpyAsync(buffer,
+                                        ret.ptr(),
+                                        ret.size(),
+                                        cudaMemcpyDeviceToHost,
+                                        cuda::StreamPool::get_stream_pool().get_stream()));
     } else {
       std::tie(buffer, rem_cap) =
         pack_buffer(buffer, rem_cap, ret.size(), static_cast<const char*>(ret.ptr()));
@@ -99,7 +99,7 @@ void ReturnValues::legion_serialize(void* buffer) const
       const auto size = ret.size();
 
       if (ret.is_device_value()) {
-        LegateCheckCUDA(cudaMemcpyAsync(buffer, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
+        LEGATE_CHECK_CUDA(cudaMemcpyAsync(buffer, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
         buffer = static_cast<char*>(buffer) + size;
         rem_cap -= size;
       } else {
@@ -175,7 +175,7 @@ void ReturnValues::finalize(Legion::Context legion_context) const
   //        potentially launched with different streams, within the task. Until we find
   //        the right approach, we simply synchronize the device before proceeding.
   if (kind == Processor::TOC_PROC) {
-    LegateCheckCUDA(cudaDeviceSynchronize());
+    LEGATE_CHECK_CUDA(cudaDeviceSynchronize());
   }
 
   const std::size_t return_size = legion_buffer_size();

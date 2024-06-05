@@ -23,7 +23,7 @@ using Broadcast = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_broadcast_constraints";
+constexpr std::string_view LIBRARY_NAME = "test_broadcast_constraints";
 
 constexpr std::size_t EXT_SMALL = 10;
 constexpr std::size_t EXT_LARGE = 100;
@@ -55,7 +55,7 @@ struct Initializer : public legate::LegateTask<Initializer> {
 void prepare()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   TesterTask::register_variants(context, TESTER);
   Initializer::register_variants(context, INITIALIZER);
 }
@@ -63,7 +63,7 @@ void prepare()
 void test_normal_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto launch_tester = [&](const std::vector<std::uint32_t>& dims, bool omit_dims_in_broadcast) {
     std::vector<std::uint64_t> extents(3, EXT_SMALL);
@@ -98,7 +98,7 @@ void test_normal_store()
 void test_promoted_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto initialize = [&](auto store) {
     auto task = runtime->create_task(context, INITIALIZER);
@@ -129,7 +129,7 @@ void test_promoted_store()
 void test_invalid_broadcast()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto task  = runtime->create_task(context, INITIALIZER);
   auto store = runtime->create_store(legate::Shape{10}, legate::int64());

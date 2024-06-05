@@ -37,7 +37,7 @@ INSTANTIATE_TEST_SUITE_P(Attach,
 
 namespace {
 
-constexpr const char library_name[] = "test_attach";
+constexpr std::string_view LIBRARY_NAME = "test_attach";
 
 [[nodiscard]] const legate::tuple<std::uint64_t>& SHAPE_1D()
 {
@@ -131,7 +131,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   AdderTask::register_variants(context);
   CheckerTask::register_variants(context);
 }
@@ -184,7 +184,7 @@ void test_body(
   std::int32_t dim, bool fortran, bool unordered, bool read_only, bool use_tasks, bool use_inline)
 {
   auto runtime         = legate::Runtime::get_runtime();
-  auto context         = runtime->find_library(library_name);
+  auto context         = runtime->find_library(LIBRARY_NAME);
   std::int64_t counter = 0;
   auto buffer          = make_buffer(dim, fortran);
   auto l_store         = runtime->create_store(dim == 1 ? SHAPE_1D() : SHAPE_2D(),

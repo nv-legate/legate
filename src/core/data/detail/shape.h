@@ -48,7 +48,7 @@ class Shape {
   bool operator!=(Shape& other);
 
  private:
-  void ensure_binding();
+  void ensure_binding_();
 
   State state_{State::UNBOUND};
   std::uint32_t dim_{};

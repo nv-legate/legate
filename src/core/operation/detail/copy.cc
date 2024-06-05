@@ -33,8 +33,8 @@ Copy::Copy(InternalSharedPtr<LogicalStore> target,
     constraint_{align(target_.variable, source_.variable)},
     redop_{redop}
 {
-  record_partition(target_.variable, std::move(target));
-  record_partition(source_.variable, std::move(source));
+  record_partition_(target_.variable, std::move(target));
+  record_partition_(source_.variable, std::move(source));
 }
 
 void Copy::validate()
@@ -62,7 +62,7 @@ void Copy::validate()
 void Copy::launch(Strategy* p_strategy)
 {
   if (target_.store->has_scalar_storage()) {
-    LegateCheck(source_.store->has_scalar_storage());
+    LEGATE_CHECK(source_.store->has_scalar_storage());
     target_.store->set_future(source_.store->get_future());
     return;
   }
@@ -70,10 +70,10 @@ void Copy::launch(Strategy* p_strategy)
   auto launcher      = CopyLauncher{machine_, priority()};
   auto launch_domain = strategy.launch_domain(this);
 
-  launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));
+  launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
 
   if (!redop_) {
-    launcher.add_output(target_.store, create_store_projection(strategy, launch_domain, target_));
+    launcher.add_output(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);

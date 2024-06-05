@@ -17,7 +17,7 @@
 
 extern "C" {
 
-// NOLINTBEGIN(bugprone-reserved-identifier)
+// NOLINTBEGIN
 const char* __asan_default_options()
 {
   return "check_initialization_order=1:"
@@ -27,7 +27,7 @@ const char* __asan_default_options()
          "color=always:"
          "detect_odr_violation=2:"
          "abort_on_error=1:"
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
          "protect_shadow_gap=0:"
 #endif
          // note trailing ":", this is so that user may write ASAN_OPTIONS+="foo:bar:baz"
@@ -55,8 +55,9 @@ const char* __tsan_default_suppressions()
   return "race:Legion::Internal::MemoryManager::create_eager_instance\n"
          "race:Legion::Internal::Operation::perform_registration\n";
 }
-// NOLINTEND(bugprone-reserved-identifier)
-}
+// NOLINTEND
+
+}  // extern "C"
 
 int main(int argc, char** argv)
 {

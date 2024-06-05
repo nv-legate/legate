@@ -34,8 +34,10 @@
 #define LEGATE_STL_EXPAND(...) __VA_ARGS__
 
 #define LEGATE_STL_CHECK(...) LEGATE_STL_EXPAND(LEGATE_STL_CHECK_(__VA_ARGS__, 0, ))
+// NOLINTNEXTLINE(readability-identifier-naming)
 #define LEGATE_STL_CHECK_(XP, NP, ...) NP
 #define LEGATE_STL_PROBE(...) LEGATE_STL_PROBE_(__VA_ARGS__, 1)
+// NOLINTNEXTLINE(readability-identifier-naming)
 #define LEGATE_STL_PROBE_(XP, NP, ...) XP, NP,
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +48,7 @@
 //     LEGATE_STL_REQUIRES(Fooable<A> && Barable<B>)
 //   void foobar(A a, B b) { ... }
 //
-#if LegateDefined(LEGATE_STL_CONCEPTS())
+#if LEGATE_DEFINED(LEGATE_STL_CONCEPTS())
 #define LEGATE_STL_REQUIRES requires
 #else
 #define LEGATE_STL_REQUIRES LEGATE_STL_EAT
@@ -57,14 +59,14 @@
 // Before clang-16, clang did not like libstdc++'s ranges implementation
 #if __has_include(<ranges>) && \
   (defined(__cpp_lib_ranges) && __cpp_lib_ranges >= 201911L) && \
-  (!LegateDefined(LEGATE_CLANG) || __clang_major__ >= 16 || defined(_LIBCPP_VERSION))
+  (!LEGATE_DEFINED(LEGATE_CLANG) || __clang_major__ >= 16 || defined(_LIBCPP_VERSION))
 #define LEGATE_STL_HAS_STD_RANGES() 1
 #else
 #define LEGATE_STL_HAS_STD_RANGES() 0
 #endif
 
 #ifndef LEGATE_STL_IMPLEMENTATION_DEFINED
-#if LegateDefined(LEGATE_DOXYGEN)
+#if LEGATE_DEFINED(LEGATE_DOXYGEN)
 #define LEGATE_STL_IMPLEMENTATION_DEFINED(...) implementation - defined
 #else
 #define LEGATE_STL_IMPLEMENTATION_DEFINED(...) __VA_ARGS__

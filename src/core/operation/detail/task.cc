@@ -76,7 +76,7 @@ void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
 
-void Task::launch_task(Strategy* p_strategy)
+void Task::launch_task_(Strategy* p_strategy)
 {
   auto& strategy     = *p_strategy;
   auto launcher      = detail::TaskLauncher{library_, machine_, provenance(), task_id_};
@@ -148,18 +148,18 @@ void Task::launch_task(Strategy* p_strategy)
     auto result = launcher.execute(launch_domain);
 
     if (launch_domain.get_volume() > 1) {
-      demux_scalar_stores(result, launch_domain);
+      demux_scalar_stores_(result, launch_domain);
     } else {
-      demux_scalar_stores(result.get_future(launch_domain.lo()));
+      demux_scalar_stores_(result.get_future(launch_domain.lo()));
     }
   } else {
     auto result = launcher.execute_single();
 
-    demux_scalar_stores(result);
+    demux_scalar_stores_(result);
   }
 }
 
-void Task::demux_scalar_stores(const Legion::Future& result)
+void Task::demux_scalar_stores_(const Legion::Future& result)
 {
   auto num_scalar_outs  = scalar_outputs_.size();
   auto num_scalar_reds  = scalar_reductions_.size();
@@ -178,7 +178,7 @@ void Task::demux_scalar_stores(const Legion::Future& result)
     } else if (can_throw_exception_) {
       detail::Runtime::get_runtime()->record_pending_exception(result);
     } else {
-      LegateAssert(1 == num_unbound_outs);
+      LEGATE_ASSERT(1 == num_unbound_outs);
     }
   } else {
     auto* runtime = detail::Runtime::get_runtime();
@@ -196,7 +196,7 @@ void Task::demux_scalar_stores(const Legion::Future& result)
   }
 }
 
-void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& launch_domain)
+void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain)
 {
   auto num_scalar_outs  = scalar_outputs_.size();
   auto num_scalar_reds  = scalar_reductions_.size();
@@ -218,7 +218,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
         // map-backed stores is not meant to be user-facing yet).
         store->set_future(result[launch_domain.lo()]);
       } else {
-        LegateAssert(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
+        LEGATE_ASSERT(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
         store->set_future_map(result);
       }
     } else if (1 == num_scalar_reds) {
@@ -228,7 +228,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
     } else if (can_throw_exception_) {
       runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
     } else {
-      LegateAssert(1 == num_unbound_outs);
+      LEGATE_ASSERT(1 == num_unbound_outs);
     }
   } else {
     auto idx = static_cast<std::uint32_t>(num_unbound_outs);
@@ -241,7 +241,7 @@ void Task::demux_scalar_stores(const Legion::FutureMap& result, const Domain& la
         if (store->get_storage()->kind() == Storage::Kind::FUTURE) {
           store->set_future(runtime->extract_scalar(first_future, idx++));
         } else {
-          LegateAssert(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
+          LEGATE_ASSERT(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
           store->set_future_map(runtime->extract_scalar(result, idx++, launch_domain));
         }
       }
@@ -304,7 +304,7 @@ void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* 
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
-    record_partition(symb, store);
+    record_partition_(symb, store);
   }
 }
 
@@ -319,7 +319,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
-    record_partition(symb, store);
+    record_partition_(symb, store);
   }
 }
 
@@ -343,7 +343,7 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
 
   arg.array->generate_constraints(this, arg.mapping, partition_symbol);
   for (auto&& [store, symb] : arg.mapping) {
-    record_partition(symb, store);
+    record_partition_(symb, store);
   }
 }
 
@@ -391,13 +391,13 @@ void AutoTask::validate()
 
 void AutoTask::launch(Strategy* p_strategy)
 {
-  launch_task(p_strategy);
+  launch_task_(p_strategy);
   if (!arrays_to_fixup_.empty()) {
-    fixup_ranges(*p_strategy);
+    fixup_ranges_(*p_strategy);
   }
 }
 
-void AutoTask::fixup_ranges(Strategy& strategy)
+void AutoTask::fixup_ranges_(Strategy& strategy)
 {
   auto launch_domain = strategy.launch_domain(this);
   if (!launch_domain.is_valid()) {
@@ -439,13 +439,14 @@ void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
     throw std::invalid_argument{"Unbound stores cannot be used as input"};
   }
 
-  add_store(inputs_, store, create_no_partition());
+  add_store_(inputs_, store, create_no_partition());
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                            std::optional<SymbolicPoint> projection)
 {
-  add_store(inputs_, store_partition->store(), store_partition->partition(), std::move(projection));
+  add_store_(
+    inputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
@@ -455,18 +456,18 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStore>& store)
   } else if (store->unbound()) {
     record_unbound_output(store);
   }
-  add_store(outputs_, store, create_no_partition());
+  add_store_(outputs_, store, create_no_partition());
 }
 
 void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                             std::optional<SymbolicPoint> projection)
 {
   // TODO(wonchanl): We need to raise an exception for the user error in this case
-  LegateAssert(!store_partition->store()->unbound());
+  LEGATE_ASSERT(!store_partition->store()->unbound());
   if (store_partition->store()->has_scalar_storage()) {
     record_scalar_output(store_partition->store());
   }
-  add_store(
+  add_store_(
     outputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
@@ -480,7 +481,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store, std
   if (store->has_scalar_storage()) {
     record_scalar_reduction(store, static_cast<Legion::ReductionOpID>(legion_redop_id));
   }
-  add_store(reductions_, store, create_no_partition());
+  add_store_(reductions_, store, create_no_partition());
   reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 }
 
@@ -495,15 +496,15 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
     record_scalar_reduction(store_partition->store(),
                             static_cast<Legion::ReductionOpID>(legion_redop_id));
   }
-  add_store(
+  add_store_(
     reductions_, store_partition->store(), store_partition->partition(), std::move(projection));
   reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
 }
 
-void ManualTask::add_store(std::vector<ArrayArg>& store_args,
-                           const InternalSharedPtr<LogicalStore>& store,
-                           InternalSharedPtr<Partition> partition,
-                           std::optional<SymbolicPoint> projection)
+void ManualTask::add_store_(std::vector<ArrayArg>& store_args,
+                            const InternalSharedPtr<LogicalStore>& store,
+                            InternalSharedPtr<Partition> partition,
+                            std::optional<SymbolicPoint> projection)
 {
   auto partition_symbol = declare_partition();
   auto& arg =

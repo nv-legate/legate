@@ -42,7 +42,7 @@ std::size_t Span<T>::size() const
 template <typename T>
 decltype(auto) Span<T>::operator[](std::size_t pos) const
 {
-  LegateAssert(pos < size_);
+  LEGATE_ASSERT(pos < size_);
   return data_[pos];
 }
 
@@ -61,7 +61,7 @@ const T* Span<T>::end() const
 template <typename T>
 Span<T> Span<T>::subspan(std::size_t off)
 {
-  LegateCheck(off <= size_);
+  LEGATE_CHECK(off <= size_);
   return {data_ + off, size_ - off};
 }
 

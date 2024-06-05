@@ -195,9 +195,9 @@ class LogicalStore {
   friend InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<LogicalStore>& self,
                                                      std::int32_t dim,
                                                      Slice sl);
-  [[nodiscard]] InternalSharedPtr<LogicalStore> slice(const InternalSharedPtr<LogicalStore>& self,
-                                                      std::int32_t dim,
-                                                      Slice sl);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> slice_(const InternalSharedPtr<LogicalStore>& self,
+                                                       std::int32_t dim,
+                                                       Slice sl);
 
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> transpose(std::vector<std::int32_t> axes);
@@ -207,7 +207,7 @@ class LogicalStore {
  private:
   friend InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
     const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape);
-  [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_by_tiling(
+  [[nodiscard]] InternalSharedPtr<LogicalStorePartition> partition_by_tiling_(
     const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape);
 
  public:
@@ -243,7 +243,7 @@ class LogicalStore {
     const InternalSharedPtr<LogicalStore>& self,
     InternalSharedPtr<Partition> partition,
     std::optional<bool> complete);
-  [[nodiscard]] InternalSharedPtr<LogicalStorePartition> create_partition(
+  [[nodiscard]] InternalSharedPtr<LogicalStorePartition> create_partition_(
     const InternalSharedPtr<LogicalStore>& self,
     InternalSharedPtr<Partition> partition,
     std::optional<bool> complete = std::nullopt);
@@ -270,7 +270,7 @@ class LogicalStore {
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege);
 
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_(
     const InternalSharedPtr<LogicalStore>& self,
     const Variable* variable,
     const Strategy& strategy,
@@ -278,7 +278,7 @@ class LogicalStore {
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
     std::int64_t redop);
-  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
+  [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup_(
     const InternalSharedPtr<LogicalStore>& self,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege);

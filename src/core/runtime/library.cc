@@ -105,8 +105,8 @@ const TaskInfo* Library::find_task(std::int64_t local_task_id) const
   return impl()->find_task(local_task_id);
 }
 
-void Library::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                               const Legion::UntypedBuffer& buffer)
+void Library::perform_callback_(Legion::RegistrationWithArgsCallbackFnptr callback,
+                                const Legion::UntypedBuffer& buffer)
 {
   Legion::Runtime::perform_registration_callback(callback, buffer, false /*global*/);
 }

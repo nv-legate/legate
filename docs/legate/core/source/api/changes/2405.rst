@@ -15,6 +15,13 @@ Changes: 24.05
 
 - Legate ``tester`` now also shows the ``stdout`` and ``stderr`` produced by timed-out
   tests. Previously it silently gobbled these.
+- Deprecate ``LegateCheckCUDA()`` and ``LegateCheckCUDAStream()`` in favor of
+  ``LEGATE_CHECK_CUDA()`` and ``LEGATE_CHECK_CUDA_STREAM()``. However, unlike most
+  deprecations, users are **not** encouraged to use the replacements. Rather, users should
+  create their own variants of these macros as both ``LEGATE_CHECK_CUDA()`` and
+  ``LEGATE_CHECK_CUDA_STREAM()`` are temporary and will be removed in a future release. As
+  they are temporary, their removal will be immediate, and will **not** be precipitated by
+  a deprecation period.
 
 .. rubric:: Configuration/Build:
 
@@ -63,6 +70,13 @@ Changes: 24.05
   ``LegateTask`` for further discussion.
 
 .. rubric:: Types
+
+- Deprecate ``type_code_of`` in favor of ``type_code_of_v``, as the latter is more
+  idiomatically named in C++. In the future ``type_code_of`` may be changed to hold a
+  ``value`` member to also be inline with idiomatic C++.
+- Deprecate ``type_of`` in favor of ``type_of_t``, as the latter is more idiomatically
+  named in C++. In the future ``type_of`` will be changed to hold a ``type`` member to
+  also be inline with idiomatic C++.
 
 .. rubric:: Runtime
 

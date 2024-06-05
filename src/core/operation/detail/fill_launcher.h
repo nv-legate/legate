@@ -41,7 +41,7 @@ class FillLauncher {
   void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, const Scalar& value);
 
  private:
-  void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);
+  void pack_mapper_arg_(BufferBuilder& buffer, Legion::ProjectionID proj_id);
 
   const mapping::detail::Machine& machine_;
   std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};

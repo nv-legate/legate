@@ -56,8 +56,8 @@ class Strategy {
   void dump() const;
 
  private:
-  void compute_launch_domains(const ConstraintSolver& solver);
-  void record_key_partition(const Variable* partition_symbol);
+  void compute_launch_domains_(const ConstraintSolver& solver);
+  void record_key_partition_(const Variable* partition_symbol);
 
   std::unordered_map<Variable, InternalSharedPtr<Partition>> assignments_{};
   std::unordered_map<Variable, std::pair<Legion::FieldSpace, Legion::FieldID>>
@@ -75,7 +75,7 @@ class Partitioner {
  private:
   // Populates solutions for unbound stores in the `strategy` and returns remaining partition
   // symbols
-  [[nodiscard]] static std::vector<const Variable*> handle_unbound_stores(
+  [[nodiscard]] static std::vector<const Variable*> handle_unbound_stores_(
     Strategy* strategy,
     const std::vector<const Variable*>& partition_symbols,
     const ConstraintSolver& solver);

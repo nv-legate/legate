@@ -46,7 +46,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
 
  protected:
   // Start-up methods
-  [[nodiscard]] std::string create_logger_name() const;
+  [[nodiscard]] std::string create_logger_name_() const;
 
  public:
   // MachineQueryInterface
@@ -248,62 +248,66 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
  protected:
   using OutputMap = std::unordered_map<const Legion::RegionRequirement*,
                                        std::vector<Legion::Mapping::PhysicalInstance>*>;
-  void map_legate_stores(Legion::Mapping::MapperContext ctx,
+  void map_legate_stores_(Legion::Mapping::MapperContext ctx,
+                          const Legion::Mappable& mappable,
+                          std::vector<std::unique_ptr<StoreMapping>>& mappings,
+                          Processor target_proc,
+                          OutputMap& output_map,
+                          bool overdecomposed = false);
+  void tighten_write_policies_(const Legion::Mappable& mappable,
+                               const std::vector<std::unique_ptr<StoreMapping>>& mappings);
+  bool map_legate_store_(Legion::Mapping::MapperContext ctx,
                          const Legion::Mappable& mappable,
-                         std::vector<std::unique_ptr<StoreMapping>>& mappings,
+                         const StoreMapping& mapping,
+                         const std::set<const Legion::RegionRequirement*>& reqs,
                          Processor target_proc,
-                         OutputMap& output_map,
-                         bool overdecomposed = false);
-  void tighten_write_policies(const Legion::Mappable& mappable,
-                              const std::vector<std::unique_ptr<StoreMapping>>& mappings);
-  bool map_legate_store(Legion::Mapping::MapperContext ctx,
-                        const Legion::Mappable& mappable,
-                        const StoreMapping& mapping,
-                        const std::set<const Legion::RegionRequirement*>& reqs,
-                        Processor target_proc,
-                        Legion::Mapping::PhysicalInstance& result,
-                        bool can_fail,
-                        bool must_alloc_collective_writes);
-  void report_failed_mapping(const Legion::Mappable& mappable,
-                             unsigned index,
-                             Memory target_memory,
-                             Legion::ReductionOpID redop,
-                             std::size_t footprint) const;
-  void legate_select_sources(Legion::Mapping::MapperContext ctx,
-                             const Legion::Mapping::PhysicalInstance& target,
-                             const std::vector<Legion::Mapping::PhysicalInstance>& sources,
-                             const std::vector<Legion::Mapping::CollectiveView>& collective_sources,
-                             std::deque<Legion::Mapping::PhysicalInstance>& ranking);
-  static Legion::ShardingID find_mappable_sharding_functor_id(const Legion::Mappable& mappable);
+                         Legion::Mapping::PhysicalInstance& result,
+                         bool can_fail,
+                         bool must_alloc_collective_writes);
+  void report_failed_mapping_(const Legion::Mappable& mappable,
+                              unsigned index,
+                              Memory target_memory,
+                              Legion::ReductionOpID redop,
+                              std::size_t footprint) const;
+  void legate_select_sources_(
+    Legion::Mapping::MapperContext ctx,
+    const Legion::Mapping::PhysicalInstance& target,
+    const std::vector<Legion::Mapping::PhysicalInstance>& sources,
+    const std::vector<Legion::Mapping::CollectiveView>& collective_sources,
+    std::deque<Legion::Mapping::PhysicalInstance>& ranking);
+  [[nodiscard]] static Legion::ShardingID find_mappable_sharding_functor_id_(
+    const Legion::Mappable& mappable);
 
-  bool has_variant(Legion::Mapping::MapperContext ctx, const Legion::Task& task, TaskTarget target);
-  std::optional<Legion::VariantID> find_variant(Legion::Mapping::MapperContext ctx,
-                                                const Legion::Task& task,
-                                                Processor::Kind kind);
+  [[nodiscard]] bool has_variant_(Legion::Mapping::MapperContext ctx,
+                                  const Legion::Task& task,
+                                  TaskTarget target);
+  [[nodiscard]] std::optional<Legion::VariantID> find_variant_(Legion::Mapping::MapperContext ctx,
+                                                               const Legion::Task& task,
+                                                               Processor::Kind kind);
 
-  Legion::ShardingID find_sharding_functor_by_key_store_projection(
+  [[nodiscard]] Legion::ShardingID find_sharding_functor_by_key_store_projection_(
     const std::vector<Legion::RegionRequirement>& requirements);
 
  private:
   mapping::Mapper* legate_mapper_{};
 
  public:
-  Legion::Mapping::MapperRuntime* const mapper_runtime{};
-  const Legion::Machine legion_machine;
+  Legion::Mapping::MapperRuntime* const mapper_runtime{};  // NOLINT(readability-identifier-naming)
+  const Legion::Machine legion_machine;                    // NOLINT(readability-identifier-naming)
   const legate::detail::Library* library{};
   Legion::Logger logger;
 
  private:
-  std::string mapper_name{};
+  std::string mapper_name_{};
 
  protected:
   using VariantCacheKey = std::pair<Legion::TaskID, Processor::Kind>;
   std::unordered_map<VariantCacheKey, std::optional<Legion::VariantID>, hasher<VariantCacheKey>>
-    variants{};
+    variants_{};
 
-  InstanceManager* local_instances{};
-  ReductionInstanceManager* reduction_instances{};
-  LocalMachine local_machine{};
+  InstanceManager* local_instances_{};
+  ReductionInstanceManager* reduction_instances_{};
+  LocalMachine local_machine_{};
 };
 
 }  // namespace legate::mapping::detail

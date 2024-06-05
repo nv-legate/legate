@@ -57,8 +57,8 @@ Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
                              : std::move(offsets)},
     strides_{tile_shape_}
 {
-  LegateCheck(tile_shape_.size() == color_shape_.size());
-  LegateCheck(tile_shape_.size() == offsets_.size());
+  LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
+  LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
 
 Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
@@ -75,8 +75,8 @@ Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
   if (!overlapped_) {
     throw std::invalid_argument("This constructor must be called only for overlapped tiling");
   }
-  LegateCheck(tile_shape_.size() == color_shape_.size());
-  LegateCheck(tile_shape_.size() == offsets_.size());
+  LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
+  LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
 
 bool Tiling::operator==(const Tiling& other) const
@@ -90,8 +90,8 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   const auto& storage_exts = storage->extents();
   const auto& storage_offs = storage->offsets();
 
-  LegateAssert(storage_exts.size() == storage_offs.size());
-  LegateAssert(storage_offs.size() == offsets_.size());
+  LEGATE_ASSERT(storage_exts.size() == storage_offs.size());
+  LEGATE_ASSERT(storage_offs.size() == offsets_.size());
 
   const auto ndim = static_cast<std::uint32_t>(storage_exts.size());
 
@@ -406,7 +406,7 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
         return runtime->create_approximate_image_partition(func_, func_partition_, target, true);
       }
     }
-    LegateUnreachable();
+    LEGATE_UNREACHABLE();
   };
 
   if (Legion::IndexPartition::NO_PART == index_partition) {

@@ -79,12 +79,12 @@ Domain LaunchDomainResolver::resolve_launch_domain() const
     if (unbound_dim_ != UNSET && unbound_dim_ > 1) {
       return {};
     }
-    LegateAssert(launch_volumes_.size() == 1);
+    LEGATE_ASSERT(launch_volumes_.size() == 1);
     const std::int64_t volume = *launch_volumes_.begin();
     return {0, volume - 1};
   }
 
-  LegateAssert(launch_domains_.size() == 1);
+  LEGATE_ASSERT(launch_domains_.size() == 1);
   auto& launch_domain = *launch_domains_.begin();
   if (unbound_dim_ != UNSET && launch_domain.dim != static_cast<std::int32_t>(unbound_dim_)) {
     return {};
@@ -104,13 +104,13 @@ Domain Strategy::launch_domain(const Operation* op) const
 
 void Strategy::set_launch_domain(const Operation* op, const Domain& domain)
 {
-  LegateAssert(launch_domains_.find(op) == launch_domains_.end());
+  LEGATE_ASSERT(launch_domains_.find(op) == launch_domains_.end());
   launch_domains_.insert({op, domain});
 }
 
 void Strategy::insert(const Variable* partition_symbol, InternalSharedPtr<Partition> partition)
 {
-  LegateAssert(assignments_.find(*partition_symbol) == assignments_.end());
+  LEGATE_ASSERT(assignments_.find(*partition_symbol) == assignments_.end());
   assignments_.insert({*partition_symbol, std::move(partition)});
 }
 
@@ -119,8 +119,8 @@ void Strategy::insert(const Variable* partition_symbol,
                       Legion::FieldSpace field_space,
                       Legion::FieldID field_id)
 {
-  LegateAssert(fields_for_unbound_stores_.find(*partition_symbol) ==
-               fields_for_unbound_stores_.end());
+  LEGATE_ASSERT(fields_for_unbound_stores_.find(*partition_symbol) ==
+                fields_for_unbound_stores_.end());
   fields_for_unbound_stores_.insert({*partition_symbol, {field_space, field_id}});
   insert(partition_symbol, std::move(partition));
 }
@@ -134,7 +134,7 @@ InternalSharedPtr<Partition> Strategy::operator[](const Variable* partition_symb
 {
   auto finder = assignments_.find(*partition_symbol);
 
-  LegateAssert(finder != assignments_.end());
+  LEGATE_ASSERT(finder != assignments_.end());
   return finder->second;
 }
 
@@ -143,7 +143,7 @@ const std::pair<Legion::FieldSpace, Legion::FieldID>& Strategy::find_field_for_u
 {
   auto finder = fields_for_unbound_stores_.find(*partition_symbol);
 
-  LegateAssert(finder != fields_for_unbound_stores_.end());
+  LEGATE_ASSERT(finder != fields_for_unbound_stores_.end());
   return finder->second;
 }
 
@@ -172,7 +172,7 @@ void Strategy::dump() const
   log_legate().debug("====================");
 }
 
-void Strategy::compute_launch_domains(const ConstraintSolver& solver)
+void Strategy::compute_launch_domains_(const ConstraintSolver& solver)
 {
   std::map<const Operation*, LaunchDomainResolver> domain_resolvers;
 
@@ -198,7 +198,7 @@ void Strategy::compute_launch_domains(const ConstraintSolver& solver)
   }
 }
 
-void Strategy::record_key_partition(const Variable* partition_symbol)
+void Strategy::record_key_partition_(const Variable* partition_symbol)
 {
   if (!key_partition_) {
     key_partition_ = partition_symbol;
@@ -228,7 +228,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
   // Copy the list of partition symbols as we will sort them inplace
   auto partition_symbols = solver.partition_symbols();
 
-  auto remaining_symbols = handle_unbound_stores(strategy.get(), partition_symbols, solver);
+  auto remaining_symbols = handle_unbound_stores_(strategy.get(), partition_symbols, solver);
 
   auto comparison_key = [&solver](const auto& part_symb) {
     auto* op   = part_symb->operation();
@@ -236,7 +236,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto has_key_part =
       store->has_key_partition(op->machine(), solver.find_restrictions(part_symb));
 
-    LegateAssert(!store->unbound());
+    LEGATE_ASSERT(!store->unbound());
     return std::make_tuple(
       store->storage_size(), has_key_part, solver.find_access_mode(*part_symb));
   };
@@ -259,8 +259,8 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     auto partition =
       op->find_store(part_symb)->find_or_create_key_partition(op->machine(), restrictions);
 
-    strategy->record_key_partition(part_symb);
-    LegateAssert(partition != nullptr);
+    strategy->record_key_partition_(part_symb);
+    LEGATE_ASSERT(partition != nullptr);
     for (auto symb : equiv_class) {
       strategy->insert(symb, partition);
     }
@@ -268,7 +268,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   solver.solve_dependent_constraints(*strategy);
 
-  strategy->compute_launch_domains(solver);
+  strategy->compute_launch_domains_(solver);
 
   if (Config::log_partitioning_decisions) {
     strategy->dump();
@@ -277,7 +277,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
   return strategy;
 }
 
-std::vector<const Variable*> Partitioner::handle_unbound_stores(
+std::vector<const Variable*> Partitioner::handle_unbound_stores_(
   Strategy* strategy,
   const std::vector<const Variable*>& partition_symbols,
   const ConstraintSolver& solver)

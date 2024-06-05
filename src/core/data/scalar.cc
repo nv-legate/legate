@@ -88,7 +88,7 @@ const void* Scalar::ptr() const { return impl_->data(); }
 
 /*static*/ detail::Scalar* Scalar::create_impl_(const Type& type, const void* data, bool copy)
 {
-  LegateCheck(data || !copy);
+  LEGATE_CHECK(data || !copy);
   return new detail::Scalar{type.impl(), data, copy};
 }
 

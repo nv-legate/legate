@@ -40,10 +40,10 @@ enum class TaskDataMode : std::uint8_t {
 
 namespace {
 
-constexpr const char library_name[] = "test_task_store";
-constexpr std::int32_t INT_VALUE1   = 123;
-constexpr std::int32_t INT_VALUE2   = 20;
-constexpr std::int32_t SIMPLE_TASK  = 0;
+constexpr std::string_view LIBRARY_NAME = "test_task_store";
+constexpr std::int32_t INT_VALUE1       = 123;
+constexpr std::int32_t INT_VALUE2       = 20;
+constexpr std::int32_t SIMPLE_TASK      = 0;
 
 [[nodiscard]] const std::map<TaskDataMode, std::int32_t>& auto_task_method_count()
 {
@@ -86,12 +86,12 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto dataMode  = static_cast<TaskDataMode>(context.scalar(0).value<std::uint32_t>());
-    auto storeType = static_cast<StoreType>(context.scalar(1).value<std::uint32_t>());
-    auto value     = context.scalar(2).value<std::int32_t>();
+    auto data_mode  = static_cast<TaskDataMode>(context.scalar(0).value<std::uint32_t>());
+    auto store_type = static_cast<StoreType>(context.scalar(1).value<std::uint32_t>());
+    auto value      = context.scalar(2).value<std::int32_t>();
 
     const legate::PhysicalStore store = [&] {
-      switch (dataMode) {
+      switch (data_mode) {
         case TaskDataMode::INPUT: return context.input(0).data(); break;
         case TaskDataMode::OUTPUT: return context.output(0).data(); break;
         case TaskDataMode::REDUCTION: return context.reduction(0).data(); break;
@@ -100,9 +100,9 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
       LEGATE_ABORT("Invalid data mode");
     }();
 
-    if (storeType == StoreType::UNBOUND_STORE) {
+    if (store_type == StoreType::UNBOUND_STORE) {
       store.bind_empty_data();
-      if (dataMode == TaskDataMode::OUTPUT && context.output(0).nullable()) {
+      if (data_mode == TaskDataMode::OUTPUT && context.output(0).nullable()) {
         context.output(0).null_mask().bind_empty_data();
       }
       return;
@@ -113,7 +113,7 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
       return;
     }
 
-    switch (dataMode) {
+    switch (data_mode) {
       case TaskDataMode::INPUT: {
         auto acc = store.read_accessor<int32_t, DIM>();
         for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
@@ -234,7 +234,7 @@ legate::LogicalStore create_scalar_store()
 void auto_task_normal_input(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::INPUT);
@@ -257,7 +257,7 @@ void auto_task_normal_input(const legate::LogicalArray& array, std::uint32_t ind
 void auto_task_normal_output(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
@@ -285,7 +285,7 @@ void auto_task_normal_output(const legate::LogicalArray& array, std::uint32_t in
 void auto_task_normal_reduction(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::REDUCTION);
@@ -321,7 +321,7 @@ void auto_task_normal_reduction(const legate::LogicalArray& array, std::uint32_t
 void auto_task_unbound_input(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   switch (index) {
@@ -337,7 +337,7 @@ void auto_task_unbound_input(const legate::LogicalArray& array, std::uint32_t in
 void auto_task_unbound_output(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
@@ -361,7 +361,7 @@ void auto_task_unbound_output(const legate::LogicalArray& array, std::uint32_t i
 void auto_task_unbound_reduction(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto red_op = legate::ReductionOpKind::ADD;
@@ -392,7 +392,7 @@ void manual_task_normal_input(const legate::LogicalStore& store,
                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -422,7 +422,7 @@ void manual_task_normal_output(const legate::LogicalStore& store,
                                const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -455,7 +455,7 @@ void manual_task_normal_reduction(const legate::LogicalStore& store,
                                   const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -499,7 +499,7 @@ void manual_task_unbound_input(const legate::LogicalStore& store,
                                const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -514,7 +514,7 @@ void manual_task_unbound_output(const legate::LogicalStore& store,
                                 const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -541,7 +541,7 @@ void manual_task_unbound_reduction(const legate::LogicalStore& store,
                                    const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -563,7 +563,7 @@ void manual_task_scalar_input(const legate::LogicalStore& store,
                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -592,7 +592,7 @@ void manual_task_scalar_output(const legate::LogicalStore& store,
                                const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -625,7 +625,7 @@ void manual_task_scalar_reduction(const legate::LogicalStore& store,
                                   const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -668,7 +668,7 @@ void prepare()
   prepared = true;
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
 
   SimpleTask<1>::register_variants(context);
   SimpleTask<2>::register_variants(context);
@@ -1003,7 +1003,7 @@ TEST_F(Runtime, CreateTaskInvalid)
   prepare();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   EXPECT_THROW(static_cast<void>(runtime->create_task(context, -100)), std::out_of_range);
   EXPECT_THROW(

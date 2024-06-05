@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/utilities/detail/type_traits.h"
 #include "core/utilities/hash.h"
 
 #include "legate_defines.h"
@@ -121,20 +122,9 @@ template <typename T>
 template <typename T>
 [[nodiscard]] tuple<T> from_range(T start, T stop);
 
-namespace detail {
-
 template <typename T>
-struct type_identity {
-  using type = T;
-};
-
-template <typename T>
-using type_identity_t = typename type_identity<T>::type;
-
-}  // namespace detail
-
-template <typename T>
-[[nodiscard]] tuple<T> full(detail::type_identity_t<typename tuple<T>::size_type> size, T init);
+[[nodiscard]] tuple<T> full(traits::detail::type_identity_t<typename tuple<T>::size_type> size,
+                            T init);
 
 template <typename FUNC, typename T>
 [[nodiscard]] auto apply(FUNC func, const tuple<T>& rhs);

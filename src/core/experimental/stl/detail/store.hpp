@@ -38,8 +38,7 @@ class logical_store;
 namespace detail {
 
 template <typename ElementType, std::int32_t Dim>
-class value_type_of_<logical_store<ElementType, Dim>> {
- public:
+struct ValueTypeOf<logical_store<ElementType, Dim>> {
   using type = ElementType;
 };
 
@@ -74,11 +73,11 @@ template <typename ElementType, std::int32_t Dim>
 class logical_store : private legate::LogicalStore {
  public:
   static_assert(
-    type_code_of<ElementType> != legate::Type::Code::NIL,
+    type_code_of_v<ElementType> != legate::Type::Code::NIL,
     "The type of a logical_store<> must be a type that is valid for legate::LogicalStore.");
   using value_type = ElementType;
   // By default, the algorithms treat stores as element-wise.
-  using policy = detail::element_policy::policy<ElementType, Dim>;
+  using policy = detail::ElementPolicy::Policy<ElementType, Dim>;
 
   logical_store() = delete;
 
@@ -95,7 +94,7 @@ class logical_store : private legate::LogicalStore {
   template <std::size_t Rank>
     requires(Rank == Dim)
   explicit logical_store(const std::size_t (&extents)[Rank])
-    : LogicalStore{logical_store::create(extents)}
+    : LogicalStore{logical_store::create_(extents)}
   {
   }
 
@@ -103,7 +102,7 @@ class logical_store : private legate::LogicalStore {
    * @overload
    */
   explicit logical_store(std::span<const std::size_t, Dim> extents)
-    : LogicalStore{logical_store::create(std::move(extents))}
+    : LogicalStore{logical_store::create_(std::move(extents))}
   {
   }
 
@@ -122,7 +121,7 @@ class logical_store : private legate::LogicalStore {
   template <std::size_t Rank>
     requires(Rank == Dim)
   explicit logical_store(const std::size_t (&extents)[Rank], ElementType value)
-    : LogicalStore{logical_store::create(extents)}
+    : LogicalStore{logical_store::create_(extents)}
   {
     legate::Runtime::get_runtime()->issue_fill(*this, Scalar{std::move(value)});
   }
@@ -131,7 +130,7 @@ class logical_store : private legate::LogicalStore {
    * @overload
    */
   explicit logical_store(std::span<const std::size_t, Dim> extents, ElementType value)
-    : LogicalStore{logical_store::create(std::move(extents))}
+    : LogicalStore{logical_store::create_(std::move(extents))}
   {
     legate::Runtime::get_runtime()->issue_fill(*this, Scalar{std::move(value)});
   }
@@ -159,7 +158,7 @@ class logical_store : private legate::LogicalStore {
     auto&& extents = LogicalStore::extents();
     std::array<std::size_t, Dim> result;
 
-    LegateAssert(extents.size() == Dim);
+    LEGATE_ASSERT(extents.size() == Dim);
     std::copy(&extents[0], &extents[0] + Dim, result.begin());
     return result;
   }
@@ -168,30 +167,30 @@ class logical_store : private legate::LogicalStore {
   template <typename, std::int32_t>
   friend class logical_store;
 
-  [[nodiscard]] static LogicalStore create(std::span<const std::size_t, Dim> exts)
+  [[nodiscard]] static LogicalStore create_(std::span<const std::size_t, Dim> exts)
   {
     Runtime* runtime = legate::Runtime::get_runtime();
     // create_store() takes const-ref for now, but may not always be the case
     // NOLINTNEXTLINE(misc-const-correctness)
     Shape shape({exts.begin(), exts.end()});
-    return runtime->create_store(std::move(shape), primitive_type(type_code_of<ElementType>));
+    return runtime->create_store(std::move(shape), primitive_type(type_code_of_v<ElementType>));
   }
 
-  static void validate(const LogicalStore& store)
+  static void validate_(const LogicalStore& store)
   {
     static_assert(sizeof(logical_store) == sizeof(LogicalStore));
-    LegateAssert(store.type().code() == type_code_of<ElementType>);
-    LegateAssert(store.dim() == Dim || (Dim == 0 && store.dim() == 1));
+    LEGATE_ASSERT(store.type().code() == type_code_of_v<ElementType>);
+    LEGATE_ASSERT(store.dim() == Dim || (Dim == 0 && store.dim() == 1));
   }
 
   logical_store(detail::ctor_tag, LogicalStore&& store) : LogicalStore{std::move(store)}
   {
-    validate(*this);
+    validate_(*this);
   }
 
   logical_store(detail::ctor_tag, const LogicalStore& store) : LogicalStore{store}
   {
-    validate(*this);
+    validate_(*this);
   }
 
   friend logical_store<ElementType, Dim> as_typed<>(const LogicalStore& store);
@@ -210,14 +209,16 @@ class logical_store<ElementType, 0> : private LogicalStore {
  public:
   using value_type = ElementType;
   // By default, the algorithms treat stores as element-wise.
-  using policy = detail::element_policy::policy<ElementType, 0>;
+  using policy = detail::ElementPolicy::Policy<ElementType, 0>;
 
   logical_store() = delete;
 
-  explicit logical_store(std::span<const std::size_t, 0>) : LogicalStore{logical_store::create()} {}
+  explicit logical_store(std::span<const std::size_t, 0>) : LogicalStore{logical_store::create_()}
+  {
+  }
 
   explicit logical_store(std::span<const std::size_t, 0>, ElementType elem)
-    : LogicalStore{logical_store::create(std::move(elem))}
+    : LogicalStore{logical_store::create_(std::move(elem))}
   {
   }
 
@@ -233,7 +234,7 @@ class logical_store<ElementType, 0> : private LogicalStore {
   template <typename, std::int32_t>
   friend class logical_store;
 
-  [[nodiscard]] static LogicalStore create(ElementType elem = {})
+  [[nodiscard]] static LogicalStore create_(ElementType elem = {})
   {
     return legate::Runtime::get_runtime()->create_store(Scalar{std::move(elem)});
   }
@@ -328,7 +329,7 @@ LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
   using Mapping = std::layout_right::mapping<std::dextents<coord_t, Dim>>;
   Mapping mapping{detail::dynamic_extents<Dim>(store)};
 
-  using Accessor = detail::mdspan_accessor<ElementType, Dim>;
+  using Accessor = detail::MDSpanAccessor<ElementType, Dim>;
   Accessor accessor{store};
 
   using Handle = typename Accessor::data_handle_type;
@@ -362,7 +363,7 @@ LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
  * @overload
  */
 template <typename ElementType, std::int32_t Dim, template <typename, std::int32_t> typename StoreT>
-  requires(same_as<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
+  requires(std::is_same_v<logical_store<ElementType, Dim>, StoreT<ElementType, Dim>>)
 LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
   const StoreT<ElementType, Dim>& store)
 {
@@ -403,7 +404,7 @@ class as_mdspan_result<true> {
 /** @endcond */
 
 template <typename T, typename ElementType = void, std::int32_t Dim = -1>
-using as_mdspan_t = meta::eval<detail::as_mdspan_result<same_as<ElementType, void> && Dim == -1>,
+using as_mdspan_t = meta::eval<detail::as_mdspan_result<std::is_void_v<ElementType> && Dim == -1>,
                                T,
                                ElementType,
                                meta::constant<Dim>>;

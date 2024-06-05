@@ -20,7 +20,9 @@ using STL = LegateSTLFixture;
 namespace stl = legate::experimental::stl;
 
 namespace {
-struct square {
+
+class Square {
+ public:
   template <class T>
   LEGATE_HOST_DEVICE T operator()(T x) const
   {
@@ -28,7 +30,7 @@ struct square {
   }
 };
 
-void TestTransformSingleInPlace()
+void test_transform_single_inplace()
 {
   constexpr std::size_t extents[] = {4, 5};
   auto store                      = stl::create_store<std::int64_t>(extents);
@@ -45,7 +47,7 @@ void TestTransformSingleInPlace()
   }
 }
 
-void TestTransformSingleCopy()
+void test_transform_single_copy()
 {
   constexpr std::size_t extents[] = {4, 5};
   auto in_store                   = stl::create_store<std::int64_t>(extents);
@@ -68,7 +70,7 @@ void TestTransformSingleCopy()
   }
 }
 
-void TestTransformDoubleInPlace()
+void test_transform_double_inplace()
 {
   constexpr std::size_t extents[] = {4, 5};
   auto store1                     = stl::create_store<std::int64_t>(extents);
@@ -93,7 +95,7 @@ void TestTransformDoubleInPlace()
   }
 }
 
-void TestTransformDoubleCopy()
+void test_transform_double_copy()
 {
   constexpr std::size_t extents[] = {4, 5};
   auto store1                     = stl::create_store<std::int64_t>(extents);
@@ -123,7 +125,7 @@ void TestTransformDoubleCopy()
   }
 }
 
-void TestTransformRows()
+void test_transform_rows()
 {
   auto input = stl::create_store<std::int64_t>({3, 4});
 
@@ -138,7 +140,7 @@ void TestTransformRows()
   auto result = stl::create_store({3, 4}, std::int64_t{0});
   stl::transform(stl::rows_of(input),  //
                  stl::rows_of(result),
-                 stl::elementwise(square()));
+                 stl::elementwise(Square{}));
 
   auto result_view = stl::as_mdspan(result);
   EXPECT_EQ(result_view.rank(), 2);
@@ -159,12 +161,12 @@ void TestTransformRows()
 }
 }  // namespace
 
-TEST_F(STL, TestTransformSingleInPlace) { TestTransformSingleInPlace(); }
+TEST_F(STL, TestTransformSingleInPlace) { test_transform_single_inplace(); }
 
-TEST_F(STL, TestTransformSingleCopy) { TestTransformSingleCopy(); }
+TEST_F(STL, TestTransformSingleCopy) { test_transform_single_copy(); }
 
-TEST_F(STL, TestTransformDoubleInPlace) { TestTransformDoubleInPlace(); }
+TEST_F(STL, TestTransformDoubleInPlace) { test_transform_double_inplace(); }
 
-TEST_F(STL, TestTransformDoubleCopy) { TestTransformDoubleCopy(); }
+TEST_F(STL, TestTransformDoubleCopy) { test_transform_double_copy(); }
 
-TEST_F(STL, TestTransformRows) { TestTransformRows(); }
+TEST_F(STL, TestTransformRows) { test_transform_rows(); }

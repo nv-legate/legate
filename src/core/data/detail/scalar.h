@@ -41,7 +41,7 @@ class Scalar {
   Scalar& operator=(Scalar&& other) noexcept;
 
  private:
-  [[nodiscard]] static const void* copy_data(const void* data, std::size_t size);
+  [[nodiscard]] static const void* copy_data_(const void* data, std::size_t size);
 
  public:
   [[nodiscard]] const InternalSharedPtr<Type>& type() const;
@@ -51,7 +51,7 @@ class Scalar {
   void pack(BufferBuilder& buffer) const;
 
  private:
-  void clear_data();
+  void clear_data_();
 
   bool own_{};
   InternalSharedPtr<Type> type_{};

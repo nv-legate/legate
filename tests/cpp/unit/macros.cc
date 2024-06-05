@@ -19,25 +19,25 @@ namespace {
 #define FOO 1
 #define BAR 2
 
-static_assert(std::string_view{LegateStringize(FOO, BAR)} == "1, 2");
-static_assert(std::string_view{LegateStringize_(FOO, BAR)} == "FOO, BAR");
+static_assert(std::string_view{LEGATE_STRINGIZE(FOO, BAR)} == "1, 2");
+static_assert(std::string_view{LEGATE_STRINGIZE_(FOO, BAR)} == "FOO, BAR");
 
-static_assert(LegateConcat(FOO, BAR) == 12);  // NOLINT(readability-magic-numbers)
+static_assert(LEGATE_CONCAT(FOO, BAR) == 12);  // NOLINT(readability-magic-numbers)
 
 #define FOOBAR 45
 
-static_assert(LegateConcat_(FOO, BAR) == FOOBAR);
+static_assert(LEGATE_CONCAT_(FOO, BAR) == FOOBAR);
 
-/// [LegateDefined]
+/// [LEGATE_DEFINED]
 #define FOO_EMPTY
 #define FOO_ONE 1
 #define FOO_ZERO 0
 // #define FOO_UNDEFINED
 
-static_assert(LegateDefined(FOO_EMPTY) == 1);
-static_assert(LegateDefined(FOO_ONE) == 1);
-static_assert(LegateDefined(FOO_ZERO) == 0);
-static_assert(LegateDefined(FOO_UNDEFINED) == 0);
-/// [LegateDefined]
+static_assert(LEGATE_DEFINED(FOO_EMPTY) == 1);
+static_assert(LEGATE_DEFINED(FOO_ONE) == 1);
+static_assert(LEGATE_DEFINED(FOO_ZERO) == 0);
+static_assert(LEGATE_DEFINED(FOO_UNDEFINED) == 0);
+/// [LEGATE_DEFINED]
 
 }  // namespace

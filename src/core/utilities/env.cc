@@ -12,7 +12,7 @@
 
 #include "core/utilities/env.h"
 
-#include "core/utilities/assert.h"  // LegateLikely()
+#include "core/utilities/assert.h"  // LEGATE_LIKELY()
 
 #include <cerrno>
 #include <charconv>
@@ -52,7 +52,7 @@ template <>
   auto parsed_val = [&]() -> std::optional<std::int64_t> {
     const auto _      = ENVIRONMENT_LOCK();
     const char* value = [&] {
-      if (LegateLikely(variable.back())) {
+      if (LEGATE_LIKELY(variable.back())) {
         return std::getenv(variable.data());
       }
       // std::string will null-terminate a non-null-terminated string_view for us
@@ -133,7 +133,7 @@ void EnvironmentVariableBase::set(std::string_view value, bool overwrite) const
     errno = 0;
     return setenv(data(), value.data(), overwrite ? 1 : 0);
   }();
-  if (LegateUnlikely(ret)) {
+  if (LEGATE_UNLIKELY(ret)) {
     // In case stringstream writes to errno before we have the chance to strerror() it.
     const auto errno_save = errno;
     std::stringstream ss;

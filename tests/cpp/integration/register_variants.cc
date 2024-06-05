@@ -35,9 +35,9 @@ enum TaskID : std::uint8_t {
   HELLO5 = 5,
 };
 
-constexpr std::array<TaskID, 6> task_ids = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
+constexpr std::array<TaskID, 6> TASK_IDS = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
 
-constexpr const char library_name[] = "test_register_variants";
+constexpr std::string_view LIBRARY_NAME = "test_register_variants";
 
 }  // namespace
 
@@ -143,16 +143,16 @@ void validate_store(const legate::LogicalStore& store)
 TEST_F(RegisterVariants, All)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
 
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     EXPECT_THROW(static_cast<void>(context.get_task_name(task_id)), std::out_of_range);
   }
 
   test_register_tasks(context);
 
   // Sanity test that tasks are registered successfully
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     const std::string task_name =
       task_id >= HELLO4 ? "register_variants::BaseTask2"
                         : "register_variants::BaseTask<" + std::to_string(task_id) + ">";
@@ -160,12 +160,12 @@ TEST_F(RegisterVariants, All)
   }
 
   auto store = runtime->create_store(legate::Shape{5, 5}, legate::int64());
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     test_auto_task(context, store, task_id);
     validate_store(store);
   }
 
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     test_manual_task(context, store, task_id);
     validate_store(store);
   }
@@ -185,7 +185,7 @@ class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
 
 TEST_F(RegisterVariants, DefaultVariantOptions)
 {
-  auto library = legate::Runtime::get_runtime()->create_library(library_name);
+  auto library = legate::Runtime::get_runtime()->create_library(LIBRARY_NAME);
 
   DefaultOptionsTask::register_variants(library);
 

@@ -20,7 +20,7 @@ inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
                                           InternalSharedPtr<LogicalStore> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
-  LegateCheck(data_ != nullptr);
+  LEGATE_CHECK(data_ != nullptr);
 }
 
 inline std::uint32_t BaseLogicalArray::dim() const { return data_->dim(); }

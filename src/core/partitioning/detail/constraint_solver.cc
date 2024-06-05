@@ -134,12 +134,12 @@ void ConstraintSolver::solve_constraints()
     std::vector<const Variable*> part_symbs_to_unify;
 
     alignment->find_partition_symbols(part_symbs_to_unify);
-    LegateAssert(!part_symbs_to_unify.empty());
+    LEGATE_ASSERT(!part_symbs_to_unify.empty());
 
     auto it           = part_symbs_to_unify.begin();
     auto* equiv_class = table[**it++];
 
-    LegateAssert(equiv_class != nullptr);
+    LEGATE_ASSERT(equiv_class != nullptr);
     for (; it != part_symbs_to_unify.end(); ++it) {
       auto* to_unify = table[**it];
       auto* result   = equiv_class->unify(to_unify);
@@ -168,7 +168,7 @@ void ConstraintSolver::solve_constraints()
       // if it is out of bounds
       static_assert(std::is_unsigned_v<decltype(axis)>,
                     "If axis becomes signed, extend check below to include axis >= 0");
-      LegateAssert(axis < equiv_class->restrictions.size());
+      LEGATE_ASSERT(axis < equiv_class->restrictions.size());
       equiv_class->restrictions[axis] = Restriction::FORBID;
     }
   };

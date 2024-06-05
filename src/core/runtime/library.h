@@ -172,8 +172,8 @@ class Library {
   [[nodiscard]] detail::Library* impl();
 
  private:
-  static void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                               const Legion::UntypedBuffer& buffer);
+  static void perform_callback_(Legion::RegistrationWithArgsCallbackFnptr callback,
+                                const Legion::UntypedBuffer& buffer);
 
   detail::Library* impl_{};
 };

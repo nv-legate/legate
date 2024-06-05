@@ -45,7 +45,7 @@
 #define LEGATE_MAX_DIM LEGION_MAX_DIM
 
 // backwards compatibility
-#if defined(DEBUG_LEGATE) && !LegateDefined(LEGATE_USE_DEBUG)
+#if defined(DEBUG_LEGATE) && !LEGATE_DEFINED(LEGATE_USE_DEBUG)
 #define LEGATE_USE_DEBUG 1
 #endif
 

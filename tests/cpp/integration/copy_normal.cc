@@ -33,7 +33,7 @@ using Copy = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[]              = "test_copy_normal";
+constexpr std::string_view LIBRARY_NAME          = "test_copy_normal";
 constexpr std::int32_t TEST_MAX_DIM              = 3;
 constexpr std::int32_t CHECK_COPY_TASK           = FILL_TASK + TEST_MAX_DIM;
 constexpr std::int32_t CHECK_COPY_REDUCTION_TASK = CHECK_COPY_TASK + TEST_MAX_DIM;
@@ -48,7 +48,7 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
                     legate::PhysicalStore& target,
                     legate::Rect<DIM>& shape)
     {
-      using VAL = legate::type_of<CODE>;
+      using VAL = legate::type_of_t<CODE>;
       auto src  = source.read_accessor<VAL, DIM>(shape);
       auto tgt  = target.read_accessor<VAL, DIM>(shape);
       for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
@@ -81,7 +81,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
                     const legate::Scalar& seed,
                     legate::Rect<DIM>& shape)
     {
-      using VAL     = legate::type_of<CODE>;
+      using VAL     = legate::type_of_t<CODE>;
       auto src      = source.read_accessor<VAL, DIM>(shape);
       auto tgt      = target.read_accessor<VAL, DIM>(shape);
       std::size_t i = 1;
@@ -95,7 +95,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
                     const legate::Scalar& /*seed*/,
                     legate::Rect<DIM>& /*shape*/)
     {
-      LegateAssert(false);
+      LEGATE_ASSERT(false);
     }
   };
 
@@ -124,7 +124,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   FillTask<1>::register_variants(library);
   FillTask<2>::register_variants(library);
   FillTask<3>::register_variants(library);
@@ -191,7 +191,7 @@ struct NormalCopyReductionSpec {
 void test_normal_copy(const NormalCopySpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   auto& [shape, type, seed] = spec;
 
@@ -208,7 +208,7 @@ void test_normal_copy(const NormalCopySpec& spec)
 void test_normal_copy_reduction(const NormalCopyReductionSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   auto& [shape, type, seed, redop] = spec;
 

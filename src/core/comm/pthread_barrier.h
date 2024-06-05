@@ -20,31 +20,31 @@
 #include <pthread.h>
 #include <unistd.h>  // _POSIX_BARRIERS
 
-#define CHECK_PTHREAD_CALL(...)                                                      \
-  do {                                                                               \
-    const int cpc_ret_ = __VA_ARGS__;                                                \
-    if (cpc_ret_) {                                                                  \
-      if (!errno) {                                                                  \
-        errno = cpc_ret_;                                                            \
-      }                                                                              \
-      legate::detail::log_legate().error()                                           \
-        << std::strerror(errno) << " at "                                            \
-        << __FILE__ ":" LegateStringize(__LINE__) ": " LegateStringize(__VA_ARGS__); \
-      return cpc_ret_;                                                               \
-    }                                                                                \
+#define CHECK_PTHREAD_CALL(...)                                                        \
+  do {                                                                                 \
+    const int cpc_ret_ = __VA_ARGS__;                                                  \
+    if (cpc_ret_) {                                                                    \
+      if (!errno) {                                                                    \
+        errno = cpc_ret_;                                                              \
+      }                                                                                \
+      legate::detail::log_legate().error()                                             \
+        << std::strerror(errno) << " at "                                              \
+        << __FILE__ ":" LEGATE_STRINGIZE(__LINE__) ": " LEGATE_STRINGIZE(__VA_ARGS__); \
+      return cpc_ret_;                                                                 \
+    }                                                                                  \
   } while (0)
 
-#define CHECK_PTHREAD_CALL_V(...)                                                                \
-  do {                                                                                           \
-    const int cpc_ret_ = __VA_ARGS__;                                                            \
-    if (cpc_ret_) {                                                                              \
-      if (!errno) {                                                                              \
-        errno = cpc_ret_;                                                                        \
-      }                                                                                          \
-      LEGATE_ABORT(std::strerror(errno)                                                          \
-                   << " at "                                                                     \
-                   << __FILE__ ":" LegateStringize(__LINE__) ": " LegateStringize(__VA_ARGS__)); \
-    }                                                                                            \
+#define CHECK_PTHREAD_CALL_V(...)                                                                  \
+  do {                                                                                             \
+    const int cpc_ret_ = __VA_ARGS__;                                                              \
+    if (cpc_ret_) {                                                                                \
+      if (!errno) {                                                                                \
+        errno = cpc_ret_;                                                                          \
+      }                                                                                            \
+      LEGATE_ABORT(std::strerror(errno)                                                            \
+                   << " at "                                                                       \
+                   << __FILE__ ":" LEGATE_STRINGIZE(__LINE__) ": " LEGATE_STRINGIZE(__VA_ARGS__)); \
+    }                                                                                              \
   } while (0)
 
 #if !defined(_POSIX_BARRIERS) || (_POSIX_BARRIERS < 0)
@@ -56,7 +56,7 @@
 // implementation utilizes them when MPI is disabled.
 using pthread_barrierattr_t = char;
 
-struct pthread_barrier_t {
+struct pthread_barrier_t {  // NOLINT(readability-identifier-naming)
   pthread_mutex_t mutex;
   pthread_cond_t cond;
   unsigned int count;

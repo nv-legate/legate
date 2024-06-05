@@ -21,7 +21,7 @@ using Tunable = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_tunable";
+constexpr std::string_view LIBRARY_NAME = "test_tunable";
 
 [[nodiscard]] const std::vector<legate::Scalar>& TUNABLES()
 {
@@ -68,14 +68,15 @@ void prepare()
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
   (void)runtime->create_library(
-    library_name, legate::ResourceConfig{}, std::make_unique<LibraryMapper>());
+    LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<LibraryMapper>());
 }
 
-struct scalar_eq_fn {
+class ScalarEqFn {
+ public:
   template <legate::Type::Code CODE>
   bool operator()(const legate::Scalar& lhs, const legate::Scalar& rhs)
   {
-    using VAL = legate::type_of<CODE>;
+    using VAL = legate::type_of_t<CODE>;
     return lhs.value<VAL>() == rhs.value<VAL>();
   }
 };
@@ -84,13 +85,13 @@ TEST_F(Tunable, Valid)
 {
   prepare();
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   std::int64_t tunable_id = 0;
   for (const auto& to_compare : TUNABLES()) {
     auto dtype = to_compare.type();
     EXPECT_TRUE(legate::type_dispatch(
-      dtype.code(), scalar_eq_fn{}, library.get_tunable(tunable_id++, dtype), to_compare));
+      dtype.code(), ScalarEqFn{}, library.get_tunable(tunable_id++, dtype), to_compare));
   }
 }
 
@@ -98,7 +99,7 @@ TEST_F(Tunable, Invalid)
 {
   prepare();
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   EXPECT_THROW((void)library.get_tunable(0, legate::string_type()), std::invalid_argument);
   EXPECT_THROW((void)library.get_tunable(0, legate::int64()), std::invalid_argument);

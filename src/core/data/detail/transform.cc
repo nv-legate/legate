@@ -148,7 +148,7 @@ void TransformStack::pack(BufferBuilder& buffer) const
 
 Legion::Domain TransformStack::transform(const Legion::Domain& input) const
 {
-  LegateAssert(transform_ != nullptr);
+  LEGATE_ASSERT(transform_ != nullptr);
   return transform_->transform(parent_->identity() ? input : parent_->transform(input));
 }
 
@@ -167,7 +167,7 @@ Legion::DomainAffineTransform combine(const Legion::DomainAffineTransform& lhs,
 
 Legion::DomainAffineTransform TransformStack::inverse_transform(std::int32_t in_dim) const
 {
-  LegateAssert(transform_ != nullptr);
+  LEGATE_ASSERT(transform_ != nullptr);
   auto result  = transform_->inverse_transform(in_dim);
   auto out_dim = transform_->target_ndim(in_dim);
 
@@ -195,7 +195,7 @@ void TransformStack::print(std::ostream& out) const
 
 std::unique_ptr<StoreTransform> TransformStack::pop()
 {
-  LegateAssert(transform_ != nullptr);
+  LEGATE_ASSERT(transform_ != nullptr);
   auto result = std::move(transform_);
   if (parent_) {
     transform_ = std::move(parent_->transform_);
@@ -233,7 +233,7 @@ Domain Shift::transform(const Domain& input) const
 
 Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) const
 {
-  LegateCheck(dim_ < in_dim);
+  LEGATE_CHECK(dim_ < in_dim);
   const auto out_dim = in_dim;
   Legion::DomainAffineTransform result;
 
@@ -331,7 +331,7 @@ Domain Promote::transform(const Domain& input) const
 
 Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) const
 {
-  LegateCheck(extra_dim_ < in_dim);
+  LEGATE_CHECK(extra_dim_ < in_dim);
   const auto out_dim = in_dim - 1;
   Legion::DomainAffineTransform result;
 
@@ -465,7 +465,7 @@ Domain Project::transform(const Domain& input) const
 Legion::DomainAffineTransform Project::inverse_transform(std::int32_t in_dim) const
 {
   auto out_dim = in_dim + 1;
-  LegateCheck(dim_ < out_dim);
+  LEGATE_CHECK(dim_ < out_dim);
   Legion::DomainAffineTransform result;
 
   result.transform.m = out_dim;
@@ -768,7 +768,7 @@ void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
   for (auto&& promoted : dims) {
     auto finder = std::find(axes_.begin(), axes_.end(), promoted);
 
-    LegateCheck(finder != axes_.end());
+    LEGATE_CHECK(finder != axes_.end());
     promoted = static_cast<std::int32_t>(finder - axes_.begin());
   }
 }

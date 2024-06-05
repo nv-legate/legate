@@ -25,7 +25,7 @@ using InlineMap = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_inline_map";
+constexpr std::string_view LIBRARY_NAME = "test_inline_map";
 
 }  // namespace
 
@@ -46,7 +46,7 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   AdderTask::register_variants(context);
 }
 
@@ -76,7 +76,7 @@ void test_inline_map_region_and_slice()
 void test_inline_map_and_task()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto l_store = runtime->create_store(legate::Shape{5}, legate::int64());
   {
     auto p_store = l_store.get_physical_store();

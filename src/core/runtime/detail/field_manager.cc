@@ -36,11 +36,11 @@ FieldManager::~FieldManager()
 InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field(InternalSharedPtr<Shape> shape,
                                                                    std::uint32_t field_size)
 {
-  auto result = try_reuse_field(shape, field_size);
+  auto result = try_reuse_field_(shape, field_size);
   if (result != nullptr) {
     return result;
   }
-  return create_new_field(std::move(shape), field_size);
+  return create_new_field_(std::move(shape), field_size);
 }
 
 InternalSharedPtr<LogicalRegionField> FieldManager::import_field(InternalSharedPtr<Shape> shape,
@@ -72,7 +72,7 @@ void FieldManager::free_field(FreeFieldInfo info, bool /*unordered*/)
   }
 }
 
-InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field(
+InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field_(
   const InternalSharedPtr<Shape>& shape, std::uint32_t field_size)
 {
   if (!shape->ready()) {
@@ -101,8 +101,8 @@ InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field(
   return rf;
 }
 
-InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field(InternalSharedPtr<Shape> shape,
-                                                                     std::uint32_t field_size)
+InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field_(
+  InternalSharedPtr<Shape> shape, std::uint32_t field_size)
 {
   auto* rgn_mgr  = Runtime::get_runtime()->find_or_create_region_manager(shape->index_space());
   auto [lr, fid] = rgn_mgr->allocate_field(field_size);
@@ -136,18 +136,18 @@ InternalSharedPtr<LogicalRegionField> ConsensusMatchingFieldManager::allocate_fi
 {
   maybe_issue_field_match_(shape, field_size);
   // If there's a field that every shard is guaranteed to have, re-use that.
-  if (auto result = try_reuse_field(shape, field_size)) {
+  if (auto result = try_reuse_field_(shape, field_size)) {
     return result;
   }
   // If there's an outstanding consensus match, block on it in case it frees any fields we can use.
   if (outstanding_match_.has_value()) {
     process_outstanding_match_();
-    if (auto result = try_reuse_field(shape, field_size)) {
+    if (auto result = try_reuse_field_(shape, field_size)) {
       return result;
     }
   }
   // Otherwise create a fresh field.
-  return create_new_field(std::move(shape), field_size);
+  return create_new_field_(std::move(shape), field_size);
 }
 
 InternalSharedPtr<LogicalRegionField> ConsensusMatchingFieldManager::import_field(
@@ -187,7 +187,7 @@ std::uint32_t ConsensusMatchingFieldManager::calculate_match_credit_(
   }
   const auto size = shape->volume() * field_size;
   if (size > Config::max_field_reuse_size) {
-    LegateCheck(Config::max_field_reuse_size > 0);
+    LEGATE_CHECK(Config::max_field_reuse_size > 0);
     return (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
   }
   return 1;
@@ -212,8 +212,8 @@ void ConsensusMatchingFieldManager::maybe_issue_field_match_(const InternalShare
 
 void ConsensusMatchingFieldManager::issue_field_match_()
 {
-  LegateAssert(!outstanding_match_.has_value());
-  LegateAssert(info_for_match_items_.empty());
+  LEGATE_ASSERT(!outstanding_match_.has_value());
+  LEGATE_ASSERT(info_for_match_items_.empty());
   // Check if there are any freed fields that are shared across all the shards. We have to test this
   // deterministically no matter what, even if we don't have any fields to offer ourselves, because
   // this is a collective with other shards. We need to separately record the full information for
@@ -226,7 +226,7 @@ void ConsensusMatchingFieldManager::issue_field_match_()
     auto&& item                 = input.emplace_back(info.region.get_tree_id(), info.field_id);
     info_for_match_items_[item] = std::move(info);
   }
-  LegateCheck(info_for_match_items_.size() == unordered_free_fields_.size());
+  LEGATE_CHECK(info_for_match_items_.size() == unordered_free_fields_.size());
   unordered_free_fields_.clear();
   log_legate().debug() << "Consensus match emitted with " << input.size() << " local fields";
   // Dispatch the match and put it on the queue of outstanding matches, but don't block on it yet.
@@ -252,7 +252,7 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
   // which is the same order that all shards will see.
   for (auto&& item : outstanding_match_->output()) {
     auto it = info_for_match_items_.find(item);
-    LegateCheck(it != info_for_match_items_.end());
+    LEGATE_CHECK(it != info_for_match_items_.end());
     FieldManager::free_field(std::move(it->second), false /*unordered*/);
     info_for_match_items_.erase(it);
   }

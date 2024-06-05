@@ -77,10 +77,10 @@ void task_wrapper(VariantImpl variant_impl,
     return task_name.has_value() ? task_name.value() : task->get_task_name();
   };
 
-  // Cannot use if (LegateDefined(...)) here since nvtx::Range is a RAII class which begins and
+  // Cannot use if (LEGATE_DEFINED(...)) here since nvtx::Range is a RAII class which begins and
   // ends a timer on construction and destruction. It must be in the same lexical scope as the
   // task evaluation!
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   std::stringstream ss;
   ss << get_task_name();
   if (!task->get_provenance_string().empty()) {

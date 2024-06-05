@@ -19,7 +19,7 @@ namespace unbound_nullable_array_test {
 
 using UnboundNullableArray = DefaultFixture;
 
-constexpr const char library_name[] = "test_unbound_nullable_array_test";
+constexpr std::string_view LIBRARY_NAME = "test_unbound_nullable_array_test";
 
 struct Initialize : public legate::LegateTask<Initialize> {
   static const std::int32_t TASK_ID = 0;
@@ -44,7 +44,7 @@ struct Initialize : public legate::LegateTask<Initialize> {
 TEST_F(UnboundNullableArray, Bug1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Initialize::register_variants(library);
 
   auto task = runtime->create_task(library, Initialize::TASK_ID);
@@ -58,7 +58,7 @@ TEST_F(UnboundNullableArray, Bug1)
 TEST_F(UnboundNullableArray, Bug2)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Initialize::register_variants(library);
 
   auto task = runtime->create_task(library, Initialize::TASK_ID);

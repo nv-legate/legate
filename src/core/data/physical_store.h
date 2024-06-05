@@ -37,7 +37,7 @@ namespace legate {
 
 class PhysicalArray;
 
-#define LEGATE_CORE_TRUE_WHEN_DEBUG LegateDefined(LEGATE_USE_DEBUG)
+#define LEGATE_CORE_TRUE_WHEN_DEBUG LEGATE_DEFINED(LEGATE_USE_DEBUG)
 
 /**
  * @ingroup data
@@ -377,29 +377,29 @@ class PhysicalStore {
   [[nodiscard]] const SharedPtr<detail::PhysicalStore>& impl() const;
 
  private:
-  void check_accessor_dimension(std::int32_t dim) const;
-  void check_buffer_dimension(std::int32_t dim) const;
-  void check_shape_dimension(std::int32_t dim) const;
-  void check_valid_binding(bool bind_buffer) const;
-  void check_write_access() const;
-  void check_reduction_access() const;
+  void check_accessor_dimension_(std::int32_t dim) const;
+  void check_buffer_dimension_(std::int32_t dim) const;
+  void check_shape_dimension_(std::int32_t dim) const;
+  void check_valid_binding_(bool bind_buffer) const;
+  void check_write_access_() const;
+  void check_reduction_access_() const;
   template <typename T>
-  void check_accessor_type() const;
-  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
+  void check_accessor_type_() const;
+  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
-  void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] std::int32_t get_redop_id() const;
+  void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
+  [[nodiscard]] std::int32_t get_redop_id_() const;
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_field_accessor(const Rect<DIM>& bounds) const;
+  [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds) const;
   template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_reduction_accessor(const Rect<DIM>& bounds) const;
+  [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds) const;
 
-  [[nodiscard]] bool is_read_only_future() const;
-  [[nodiscard]] const Legion::Future& get_future() const;
-  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
+  [[nodiscard]] bool is_read_only_future_() const;
+  [[nodiscard]] const Legion::Future& get_future_() const;
+  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer_() const;
 
-  void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const;
-  void update_num_elements(std::size_t num_elements) const;
+  void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid) const;
+  void update_num_elements_(std::size_t num_elements) const;
 
   SharedPtr<detail::PhysicalStore> impl_{};
 };

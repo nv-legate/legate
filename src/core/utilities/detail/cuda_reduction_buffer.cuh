@@ -28,7 +28,7 @@ class CUDAReductionBuffer {
   {
     VAL identity{REDOP::identity};
     ptr_ = buffer_.ptr(0);
-    LegateCheckCUDA(
+    LEGATE_CHECK_CUDA(
       cudaMemcpyAsync(ptr_, &identity, sizeof(identity), cudaMemcpyHostToDevice, stream));
   }
 
@@ -41,8 +41,9 @@ class CUDAReductionBuffer {
   [[nodiscard]] __host__ VAL read(cudaStream_t stream) const
   {
     VAL result{REDOP::identity};
-    LegateCheckCUDA(cudaMemcpyAsync(&result, ptr_, sizeof(result), cudaMemcpyDeviceToHost, stream));
-    LegateCheckCUDA(cudaStreamSynchronize(stream));
+    LEGATE_CHECK_CUDA(
+      cudaMemcpyAsync(&result, ptr_, sizeof(result), cudaMemcpyDeviceToHost, stream));
+    LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream));
     return result;
   }
 

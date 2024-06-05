@@ -21,10 +21,10 @@ using Exception = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_exception";
-constexpr std::int32_t EXN_IDX      = 42;
-constexpr std::uint32_t NUM_EXN     = 3;
-constexpr std::uint32_t NUM_NORM    = 7;
+constexpr std::string_view LIBRARY_NAME = "test_exception";
+constexpr std::int32_t EXN_IDX          = 42;
+constexpr std::uint32_t NUM_EXN         = 3;
+constexpr std::uint32_t NUM_NORM        = 7;
 
 }  // namespace
 
@@ -54,7 +54,7 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   ExceptionTask::register_variants(library);
   NormalTask::register_variants(library);
 }
@@ -62,7 +62,7 @@ void prepare()
 legate::AutoTask create_auto()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(library, ExceptionTask::TASK_ID);
   task.throws_exception(true);
   task.add_scalar_arg(legate::Scalar{EXN_IDX});
@@ -72,7 +72,7 @@ legate::AutoTask create_auto()
 legate::ManualTask create_manual()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   auto task =
     runtime->create_task(library, ExceptionTask::TASK_ID, legate::tuple<std::uint64_t>{4, 2});
   task.throws_exception(true);
@@ -105,7 +105,7 @@ void test_immediate_index()
 void test_deferred_or_ignored(legate::ExceptionMode exception_mode)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
   auto store   = runtime->create_store(legate::Shape{4, 2}, legate::int64());
 
   {

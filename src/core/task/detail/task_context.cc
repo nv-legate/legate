@@ -14,7 +14,7 @@
 
 #include "core/cuda/cuda.h"
 #include "core/data/detail/physical_store.h"
-#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/deserializer.h"
 
 namespace legate::detail {
 
@@ -24,7 +24,7 @@ TaskContext::TaskContext(const Legion::Task* task,
   : task_{task}, variant_kind_{variant_kind}, regions_{regions}
 {
   {
-    mapping::MapperDataDeserializer dez{task};
+    mapping::detail::MapperDataDeserializer dez{task};
     machine_ = dez.unpack<mapping::detail::Machine>();
   }
 
@@ -90,12 +90,12 @@ TaskContext::TaskContext(const Legion::Task* task,
 
   // If the task is running on a GPU and there is at least one scalar store for reduction,
   // we need to wait for all the host-to-device copies for initialization to finish
-  if (LegateDefined(LEGATE_USE_CUDA) &&
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
       Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
     for (auto&& reduction : reductions_) {
       auto reduction_store = reduction->data();
       if (reduction_store->is_future()) {
-        LegateCheckCUDA(cudaDeviceSynchronize());
+        LEGATE_CHECK_CUDA(cudaDeviceSynchronize());
         break;
       }
     }
@@ -111,7 +111,7 @@ void TaskContext::make_all_unbound_stores_empty()
 
 ReturnValues TaskContext::pack_return_values() const
 {
-  auto return_values = get_return_values();
+  auto return_values = get_return_values_();
   if (can_raise_exception()) {
     const ReturnedCppException exn{};
 
@@ -122,14 +122,14 @@ ReturnValues TaskContext::pack_return_values() const
 
 ReturnValues TaskContext::pack_return_values_with_exception(const ReturnedException& exn) const
 {
-  auto return_values = get_return_values();
+  auto return_values = get_return_values_();
   if (can_raise_exception()) {
     return_values.push_back(exn.pack());
   }
   return ReturnValues{std::move(return_values)};
 }
 
-std::vector<ReturnValue> TaskContext::get_return_values() const
+std::vector<ReturnValue> TaskContext::get_return_values_() const
 {
   std::vector<ReturnValue> return_values;
 

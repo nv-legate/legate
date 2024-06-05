@@ -105,7 +105,7 @@ mapping::StoreTarget RegionField::target() const
   std::set<Memory> memories;
 
   get_physical_region().get_memories(memories);
-  LegateAssert(memories.size() == 1);
+  LEGATE_ASSERT(memories.size() == 1);
   return mapping::detail::to_target(memories.begin()->kind());
 }
 

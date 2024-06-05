@@ -39,18 +39,18 @@ class CoreMapper final : public Mapper {
   [[nodiscard]] legate::Scalar tunable_value(legate::TunableID tunable_id) override;
 
  private:
-  const LocalMachine machine{};
+  const LocalMachine MACHINE{};
   // TODO(wonchanl): Some of these should be moved to legate::detail::Config
-  const std::int64_t min_gpu_chunk{
+  const std::int64_t MIN_GPU_CHUNK{
     LEGATE_MIN_GPU_CHUNK.get(MIN_GPU_CHUNK_DEFAULT, MIN_GPU_CHUNK_TEST)};
-  const std::int64_t min_cpu_chunk{
+  const std::int64_t MIN_CPU_CHUNK{
     LEGATE_MIN_CPU_CHUNK.get(MIN_CPU_CHUNK_DEFAULT, MIN_CPU_CHUNK_TEST)};
-  const std::int64_t min_omp_chunk{
+  const std::int64_t MIN_OMP_CHUNK{
     LEGATE_MIN_OMP_CHUNK.get(MIN_OMP_CHUNK_DEFAULT, MIN_OMP_CHUNK_TEST)};
-  const std::uint32_t window_size{LEGATE_WINDOW_SIZE.get(WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
-  const std::uint32_t field_reuse_frac{
+  const std::uint32_t WINDOW_SIZE{LEGATE_WINDOW_SIZE.get(WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
+  const std::uint32_t FIELD_REUSE_FRAC{
     LEGATE_FIELD_REUSE_FRAC.get(FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
-  const std::uint32_t max_lru_length{
+  const std::uint32_t MAX_LRU_LENGTH{
     LEGATE_MAX_LRU_LENGTH.get(MAX_LRU_LENGTH_DEFAULT, MAX_LRU_LENGTH_TEST)};
 };
 
@@ -72,58 +72,58 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
 {
   switch (tunable_id) {
     case LEGATE_CORE_TUNABLE_TOTAL_CPUS: {
-      return Scalar{static_cast<std::int32_t>(machine.total_cpu_count())};  // assume symmetry
+      return Scalar{static_cast<std::int32_t>(MACHINE.total_cpu_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_TOTAL_GPUS: {
-      return Scalar{static_cast<std::int32_t>(machine.total_gpu_count())};  // assume symmetry
+      return Scalar{static_cast<std::int32_t>(MACHINE.total_gpu_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_TOTAL_OMPS: {
-      return Scalar{static_cast<std::int32_t>(machine.total_omp_count())};  // assume symmetry
+      return Scalar{static_cast<std::int32_t>(MACHINE.total_omp_count())};  // assume symmetry
     }
     case LEGATE_CORE_TUNABLE_NUM_NODES: {
-      return Scalar{static_cast<std::int32_t>(machine.total_nodes)};
+      return Scalar{static_cast<std::int32_t>(MACHINE.total_nodes)};
     }
     case LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME: {
       // TODO(wonchanl): make these profile guided
-      if (machine.has_gpus()) {
+      if (MACHINE.has_gpus()) {
         // Make sure we can get at least 1M elements on each GPU
-        return Scalar{min_gpu_chunk};
+        return Scalar{MIN_GPU_CHUNK};
       }
-      if (machine.has_omps()) {
+      if (MACHINE.has_omps()) {
         // Make sure we get at least 128K elements on each OpenMP
-        return Scalar{min_omp_chunk};
+        return Scalar{MIN_OMP_CHUNK};
       }
       // Make sure we can get at least 8KB elements on each CPU
-      return Scalar{min_cpu_chunk};
+      return Scalar{MIN_CPU_CHUNK};
     }
     case LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM: {
-      return Scalar{machine.has_socket_memory()};
+      return Scalar{MACHINE.has_socket_memory()};
     }
     case LEGATE_CORE_TUNABLE_WINDOW_SIZE: {
-      return Scalar{window_size};
+      return Scalar{WINDOW_SIZE};
     }
     case LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: {
       // Multiply this by the total number of nodes and then scale by the frac
       const auto global_mem_size = [&] {
-        if (machine.has_gpus()) {
-          return machine.total_frame_buffer_size();
+        if (MACHINE.has_gpus()) {
+          return MACHINE.total_frame_buffer_size();
         }
-        if (machine.has_socket_memory()) {
-          return machine.total_socket_memory_size();
+        if (MACHINE.has_socket_memory()) {
+          return MACHINE.total_socket_memory_size();
         }
-        return machine.system_memory().capacity();
+        return MACHINE.system_memory().capacity();
       }();
 
-      return Scalar{global_mem_size / field_reuse_frac};
+      return Scalar{global_mem_size / FIELD_REUSE_FRAC};
     }
     case LEGATE_CORE_TUNABLE_MAX_LRU_LENGTH: {
-      return Scalar{max_lru_length};
+      return Scalar{MAX_LRU_LENGTH};
     }
     default: break;
   }
   // Illegal tunable variable
   LEGATE_ABORT("Illegal tunable variable" << tunable_id);
-  return Scalar(0);
+  return Scalar{0};
 }
 
 std::unique_ptr<Mapper> create_core_mapper() { return std::make_unique<CoreMapper>(); }

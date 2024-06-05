@@ -12,11 +12,13 @@
 
 #include "core/utilities/scope_guard.h"
 
+#include "utilities/utilities.h"
+
 #include <gtest/gtest.h>
 
 namespace legate_scope_guard_test {
 
-struct ScopeGuardUnit : ::testing::Test {};
+using ScopeGuardUnit = NoInitFixture;
 
 TEST_F(ScopeGuardUnit, Construct)
 {

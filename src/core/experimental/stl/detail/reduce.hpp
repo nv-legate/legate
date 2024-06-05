@@ -27,13 +27,13 @@ namespace detail {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <auto Identity, typename Apply, typename Fold = Apply>
-class basic_reduction {
+class BasicReduction {
  public:
-  using reduction_type                 = basic_reduction;
+  using reduction_type                 = BasicReduction;
   using value_type                     = std::remove_cv_t<decltype(Identity)>;
   using RHS                            = value_type;
   using LHS                            = value_type;
-  static constexpr value_type identity = Identity;
+  static constexpr value_type identity = Identity;  // NOLINT(readability-identifier-naming)
 
   template <bool Exclusive>
   LEGATE_HOST_DEVICE static void apply(LHS& lhs, RHS rhs)
@@ -60,7 +60,7 @@ class basic_reduction {
 // function-call operator that knows how to apply the reduction to the range's
 // value-type, e.g., to apply it elementwise to all the elements of an mdspan.
 template <typename Reduction>
-class reduction_wrapper : public Reduction {
+class ReductionWrapper : public Reduction {
  public:
   using reduction_type = Reduction;
 
@@ -80,10 +80,10 @@ class reduction_wrapper : public Reduction {
 };
 
 template <typename Reduction>
-reduction_wrapper(Reduction) -> reduction_wrapper<Reduction>;
+ReductionWrapper(Reduction) -> ReductionWrapper<Reduction>;
 
 template <typename Reduction>
-class elementwise_reduction : public Reduction {
+class ElementwiseReduction : public Reduction {
  public:
   using reduction_type = Reduction;
 
@@ -91,7 +91,7 @@ class elementwise_reduction : public Reduction {
   template <typename State, typename Value>
   void operator()(State state, Value value) const
   {
-    LegateAssert(state.extents() == value.extents());
+    LEGATE_ASSERT(state.extents() == value.extents());
 
     const std::size_t size = state.size();
 
@@ -117,7 +117,7 @@ class elementwise_reduction : public Reduction {
   template <typename State, typename Value>
   LEGATE_HOST_DEVICE void operator()(std::size_t tid, State state, Value value) const
   {
-    LegateAssert(state.extents() == value.extents());
+    LEGATE_ASSERT(state.extents() == value.extents());
 
     const std::size_t size = state.size();
 
@@ -143,18 +143,18 @@ class elementwise_reduction : public Reduction {
 };
 
 template <typename Reduction>
-elementwise_reduction(Reduction) -> elementwise_reduction<Reduction>;
+ElementwiseReduction(Reduction) -> ElementwiseReduction<Reduction>;
 
 template <typename Reduction>
-elementwise_reduction(reduction_wrapper<Reduction>) -> elementwise_reduction<Reduction>;
+ElementwiseReduction(ReductionWrapper<Reduction>) -> ElementwiseReduction<Reduction>;
 
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename ValueType, ValueType Identity, typename Apply, typename Fold = Apply>
-detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
+detail::BasicReduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 {
-  static_assert(legate::type_code_of<ValueType> != legate::Type::Code::NIL,
+  static_assert(legate::type_code_of_v<ValueType> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
   static_assert(std::is_invocable_r_v<ValueType, Apply, ValueType, ValueType>,
                 "The apply function must be callable with two arguments of type ValueType "
@@ -169,7 +169,7 @@ detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <auto Identity, typename Apply, typename Fold = Apply>
-detail::basic_reduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
+detail::BasicReduction<Identity, Apply, Fold> make_reduction(Apply, Fold = {})
 {
   using value_type = std::remove_cv_t<decltype(Identity)>;
   return stl::make_reduction<value_type, Identity>(Apply{}, Fold{});
@@ -184,7 +184,7 @@ template <typename ValueType, typename Reduction>
   if constexpr (callable<Reduction, RHS&, RHS>) {
     return red;
   } else {
-    return detail::reduction_wrapper{std::move(red)};
+    return detail::ReductionWrapper{std::move(red)};
   }
 }
 
@@ -192,36 +192,36 @@ template <typename ValueType, typename T>
 [[nodiscard]] auto as_reduction(std::plus<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
-  static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
+  static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::reduction_wrapper{legate::SumReduction<Type>()};
+  return detail::ReductionWrapper{legate::SumReduction<Type>()};
 }
 
 template <typename ValueType, typename T>
 [[nodiscard]] auto as_reduction(std::minus<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
-  static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
+  static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::reduction_wrapper{legate::DiffReduction<Type>()};
+  return detail::ReductionWrapper{legate::DiffReduction<Type>()};
 }
 
 template <typename ValueType, typename T>
 [[nodiscard]] auto as_reduction(std::multiplies<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
-  static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
+  static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::reduction_wrapper{legate::ProdReduction<Type>()};
+  return detail::ReductionWrapper{legate::ProdReduction<Type>()};
 }
 
 template <typename ValueType, typename T>
 [[nodiscard]] auto as_reduction(std::divides<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
-  static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
+  static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::reduction_wrapper{legate::DivReduction<Type>()};
+  return detail::ReductionWrapper{legate::DivReduction<Type>()};
 }
 
 // TODO(ericniebler): min and max reductions
@@ -230,26 +230,26 @@ template <typename ValueType, typename T>
 [[nodiscard]] auto as_reduction(std::logical_or<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
-  static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
+  static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::reduction_wrapper{legate::OrReduction<Type>()};
+  return detail::ReductionWrapper{legate::OrReduction<Type>()};
 }
 
 template <typename ValueType, typename T>
 [[nodiscard]] auto as_reduction(std::logical_and<T>)
 {
   using Type = std::conditional_t<std::is_void_v<T>, ValueType, T>;
-  static_assert(legate::type_code_of<Type> != legate::Type::Code::NIL,
+  static_assert(legate::type_code_of_v<Type> != legate::Type::Code::NIL,
                 "The value type of the reduction function must be a valid Legate type");
-  return detail::reduction_wrapper{legate::AndReduction<Type>()};
+  return detail::ReductionWrapper{legate::AndReduction<Type>()};
 }
 
 // TODO(ericniebler): logical xor
 
 template <typename ValueType, typename Function>
-[[nodiscard]] auto as_reduction(const detail::elementwise<Function>& fn)
+[[nodiscard]] auto as_reduction(const detail::Elementwise<Function>& fn)
 {
-  return detail::elementwise_reduction{stl::as_reduction<ValueType>(fn.function())};
+  return detail::ElementwiseReduction{stl::as_reduction<ValueType>(fn.function())};
 }
 
 template <typename Fun, typename ValueType>
@@ -275,7 +275,7 @@ template <typename InputRange, typename Init, typename BinaryOperation>  //
 
   LogicalStore out =
     InputPolicy::aligned_promote(get_logical_store(input), get_logical_store(init));
-  LegateAssert(static_cast<std::size_t>(out.dim()) == static_cast<std::size_t>(init.dim() + 1));
+  LEGATE_ASSERT(static_cast<std::size_t>(out.dim()) == static_cast<std::size_t>(init.dim() + 1));
 
   using OutputRange = slice_view<value_type_of_t<Input>, dim_of_v<Input>, InputPolicy>;
   OutputRange output{std::move(out)};  // NOLINT(misc-const-correctness)

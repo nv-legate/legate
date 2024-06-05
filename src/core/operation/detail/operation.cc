@@ -87,7 +87,7 @@ const InternalSharedPtr<LogicalStore>& Operation::find_store(const Variable* var
   return store_mappings_.at(*variable);
 }
 
-void Operation::record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store)
+void Operation::record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store)
 {
   auto finder = store_mappings_.find(*variable);
   if (finder != store_mappings_.end()) {
@@ -103,9 +103,9 @@ void Operation::record_partition(const Variable* variable, InternalSharedPtr<Log
   store_mappings_[*variable] = std::move(store);
 }
 
-std::unique_ptr<StoreProjection> Operation::create_store_projection(const Strategy& strategy,
-                                                                    const Domain& launch_domain,
-                                                                    const StoreArg& arg)
+std::unique_ptr<StoreProjection> Operation::create_store_projection_(const Strategy& strategy,
+                                                                     const Domain& launch_domain,
+                                                                     const StoreArg& arg)
 {
   auto store_partition = create_store_partition(arg.store, strategy[arg.variable]);
   auto store_proj      = store_partition->create_store_projection(launch_domain);

@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#if LegateDefined(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
 #include <mpi.h>
 #endif
 
@@ -37,7 +37,7 @@ namespace detail {
 
 }  // namespace detail
 
-#if LegateDefined(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
 class RankMappingTable {
  public:
   int* mpi_rank{};
@@ -64,6 +64,8 @@ class ThreadComm {
   pthread_barrier_t barrier_{};
 };
 
+// TODO(jfaibussowit)
+// NOLINTBEGIN(readability-identifier-naming)
 enum class CollDataType : std::uint8_t {
   CollInt8   = 0,
   CollChar   = 1,
@@ -88,7 +90,7 @@ enum CollCommType : std::uint8_t {
 
 class Coll_Comm {
  public:
-#if LegateDefined(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
   MPI_Comm mpi_comm{};
   RankMappingTable mapping_table{};
 #endif
@@ -102,6 +104,7 @@ class Coll_Comm {
   int unique_id{};
   bool status{};
 };
+// NOLINTEND(readability-identifier-naming)
 
 using CollComm = Coll_Comm*;
 
@@ -138,19 +141,21 @@ class BackendNetwork {
     const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm) = 0;
 
  protected:
-  [[nodiscard]] int collGetUniqueId(int* id);
+  [[nodiscard]] int collGetUniqueId(int* id);  // NOLINT(readability-identifier-naming)
 
-  [[nodiscard]] static void* allocateInplaceBuffer(const void* recvbuf, std::size_t size);
+  [[nodiscard]] static void* allocateInplaceBuffer(  // NOLINT(readability-identifier-naming)
+    const void* recvbuf,
+    std::size_t size);
 
  public:
   CollCommType comm_type;
 
  protected:
-  bool coll_inited{};
-  int current_unique_id{};
+  bool coll_inited{};       // NOLINT(readability-identifier-naming)
+  int current_unique_id{};  // NOLINT(readability-identifier-naming)
 };
 
-#if LegateDefined(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
 class MPINetwork : public BackendNetwork {
  public:
   MPINetwork(int argc, char* argv[]);
@@ -255,18 +260,21 @@ class LocalNetwork : public BackendNetwork {
                               CollComm global_comm) override;
 
  protected:
-  [[nodiscard]] static std::size_t getDtypeSize(CollDataType dtype);
+  [[nodiscard]] static std::size_t getDtypeSize(  // NOLINT(readability-identifier-naming)
+    CollDataType dtype);
 
-  void resetLocalBuffer(CollComm global_comm);
+  void resetLocalBuffer(CollComm global_comm);  // NOLINT(readability-identifier-naming)
 
-  void barrierLocal(CollComm global_comm);
+  void barrierLocal(CollComm global_comm);  // NOLINT(readability-identifier-naming)
 
  private:
-  std::vector<std::unique_ptr<ThreadComm>> thread_comms{};
+  std::vector<std::unique_ptr<ThreadComm>> thread_comms_{};
 };
 
 extern BackendNetwork* backend_network;
 
+// TODO(jfaibussowit)
+// NOLINTBEGIN(readability-identifier-naming)
 [[nodiscard]] int collCommCreate(CollComm global_comm,
                                  int global_comm_size,
                                  int global_rank,
@@ -299,5 +307,6 @@ extern BackendNetwork* backend_network;
 void collAbort() noexcept;  // NOLINT(readability-redundant-declaration)
 
 [[nodiscard]] int collInitComm();
+// NOLINTEND(readability-identifier-naming)
 
 }  // namespace legate::comm::coll

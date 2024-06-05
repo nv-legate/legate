@@ -23,9 +23,9 @@ using BufferUnit = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[]   = "legate.buffer";
-constexpr std::int64_t BUFFER_TASK_ID = 0;
-constexpr auto MAX_ALIGNMENT          = 16;
+constexpr std::string_view LIBRARY_NAME = "legate.buffer";
+constexpr std::int64_t BUFFER_TASK_ID   = 0;
+constexpr auto MAX_ALIGNMENT            = 16;
 
 }  // namespace
 
@@ -36,7 +36,8 @@ struct BufferParams {
   std::uint64_t alignment;
 };
 
-struct buffer_fn {
+class BufferFn {
+ public:
   template <std::int32_t DIM>
   void operator()(std::uint64_t bytes, std::uint64_t kind, std::uint64_t alignment)
   {
@@ -77,7 +78,7 @@ struct BufferTask : public legate::LegateTask<BufferTask> {
 {
   auto buffer_params = context.scalar(0).value<BufferParams>();
   legate::dim_dispatch(buffer_params.dim,
-                       buffer_fn{},
+                       BufferFn{},
                        buffer_params.bytes,
                        buffer_params.kind,
                        buffer_params.alignment);
@@ -89,7 +90,7 @@ void test_buffer(std::int32_t dim,
                  std::size_t alignment = MAX_ALIGNMENT)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(library_name);
+  auto context       = runtime->find_library(LIBRARY_NAME);
   auto task          = runtime->create_task(context, BUFFER_TASK_ID);
   BufferParams param = {dim, bytes, static_cast<std::uint64_t>(kind), alignment};
   task.add_scalar_arg(
@@ -107,7 +108,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   BufferTask::register_variants(context);
 }
 

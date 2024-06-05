@@ -34,12 +34,6 @@ template <typename T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 #endif
 
-template <typename A, typename B>
-inline constexpr bool same_as = false;
-
-template <typename A>
-inline constexpr bool same_as<A, A> = true;
-
 template <const auto& Value>
 using typeof_t = remove_cvref_t<decltype(Value)>;
 
@@ -49,11 +43,13 @@ using call_result_t = decltype(detail::declval<Fun>()(detail::declval<Args>()...
 template <const auto& Fun, typename... Args>
 using call_result_c_t = call_result_t<typeof_t<Fun>, Args...>;
 
+// NOLINTBEGIN(readability-identifier-naming)
 template <typename Fun, typename... Args>
 inline constexpr bool callable = meta::evaluable_q<call_result_t, Fun, Args...>;
 
 template <const auto& Fun, typename... Args>
 inline constexpr bool callable_c = meta::evaluable_q<call_result_t, typeof_t<Fun>, Args...>;
+// NOLINTEND(readability-identifier-naming)
 
 template <typename Type>
 using observer_ptr = Type*;

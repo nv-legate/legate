@@ -176,11 +176,11 @@ namespace {
   auto rank      = task->index_point[0];
   auto num_ranks = task->index_domain.get_volume();
 
-  LegateCheck(task->futures.size() == 1);
+  LEGATE_CHECK(task->futures.size() == 1);
   auto cpu_comm = task->futures[0].get_result<comm::coll::CollComm>();
 
   int device = -1;
-  LegateCheckCUDA(cudaGetDevice(&device));
+  LEGATE_CHECK_CUDA(cudaGetDevice(&device));
 
   /* Create communicator */
   cal_comm_t cal_comm = nullptr;
@@ -207,7 +207,7 @@ void finalize_cal(const Legion::Task* task,
 
   legate::detail::show_progress(task, context, runtime);
 
-  LegateCheck(task->futures.size() == 1);
+  LEGATE_CHECK(task->futures.size() == 1);
   auto comm = task->futures[0].get_result<cal_comm_t>();
   CHECK_CAL(cal_comm_destroy(comm));
 }

@@ -108,6 +108,6 @@ inline ReturnValue PhysicalStore::pack() const { return future_.pack(); }
 
 inline ReturnValue PhysicalStore::pack_weight() const { return unbound_field_.pack_weight(); }
 
-inline std::int32_t PhysicalStore::get_redop_id() const { return redop_id_; }
+inline std::int32_t PhysicalStore::get_redop_id_() const { return redop_id_; }
 
 }  // namespace legate::detail

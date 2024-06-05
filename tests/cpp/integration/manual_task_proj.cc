@@ -21,7 +21,7 @@ using ManualTask = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[]         = "test_manual_task_proj";
+constexpr std::string_view LIBRARY_NAME     = "test_manual_task_proj";
 constexpr const std::size_t DIM_EXTENT      = 32;
 constexpr const std::size_t N_TILES_PER_DIM = 2;
 
@@ -50,7 +50,7 @@ struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
 TEST_F(ManualTask, Proj)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   ProjTesterTask::register_variants(library);
 
   auto store = runtime->create_store(legate::Shape{DIM_EXTENT, DIM_EXTENT}, legate::int64());

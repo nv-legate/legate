@@ -13,8 +13,8 @@
 #include "core/mapping/detail/machine.h"
 
 #include "core/mapping/machine.h"
-#include "core/utilities/deserializer.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/deserializer.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"
@@ -302,8 +302,8 @@ TEST_F(Machine, MachineDesc)
                                                     {legate::mapping::TaskTarget::GPU, gpu_range}}};
     machine.pack(buf);
     auto legion_buffer = buf.to_legion_buffer();
-    legate::BaseDeserializer<legate::mapping::MapperDataDeserializer> dez{legion_buffer.get_ptr(),
-                                                                          legion_buffer.get_size()};
+    legate::detail::BaseDeserializer<legate::mapping::detail::MapperDataDeserializer> dez{
+      legion_buffer.get_ptr(), legion_buffer.get_size()};
     auto machine_unpack = dez.unpack<legate::mapping::detail::Machine>();
 
     EXPECT_EQ(machine_unpack, machine);

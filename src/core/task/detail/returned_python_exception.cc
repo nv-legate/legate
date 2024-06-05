@@ -42,7 +42,7 @@ void ReturnedPythonException::legion_deserialize(const void* buffer)
   ExceptionKind kind;
 
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &kind);
-  LegateAssert(kind == ExceptionKind::PYTHON);
+  LEGATE_ASSERT(kind == ExceptionKind::PYTHON);
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &size_);
   if (const auto buf_size = size()) {
     // NOLINTNEXTLINE(readability-magic-numbers)

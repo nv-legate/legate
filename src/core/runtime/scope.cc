@@ -81,7 +81,7 @@ class Scope::Impl {
   InternalSharedPtr<mapping::detail::Machine> machine_{};
 };
 
-template class default_delete<Scope::Impl>;
+template class DefaultDelete<Scope::Impl>;
 
 Scope::Scope() : impl_{new Scope::Impl{}} {}
 

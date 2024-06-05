@@ -23,8 +23,8 @@ using BloatConstraint = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_bloat_constraints";
-constexpr std::int64_t BLOAT_TESTER = 0;
+constexpr std::string_view LIBRARY_NAME = "test_bloat_constraints";
+constexpr std::int64_t BLOAT_TESTER     = 0;
 
 }  // namespace
 
@@ -68,7 +68,7 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   BloatTester<1>::register_variants(context);
   BloatTester<2>::register_variants(context);
   BloatTester<3>::register_variants(context);
@@ -83,7 +83,7 @@ struct BloatTestSpec {
 void test_bloat(const BloatTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto source  = runtime->create_store(spec.extents, legate::int64());
   auto bloated = runtime->create_store(spec.extents, legate::int64());
@@ -105,7 +105,7 @@ void test_bloat(const BloatTestSpec& spec)
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   {
     auto source  = runtime->create_store(legate::Shape{1, 2}, legate::float16());

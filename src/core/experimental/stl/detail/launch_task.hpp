@@ -17,7 +17,7 @@
 
 #include "legate.h"
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_DEFINED(LEGATE_NVCC)
 #include "core/cuda/stream_pool.h"
 #endif
 
@@ -46,7 +46,7 @@ namespace detail {
  * It holds a list of logical stores and provides methods to apply the inputs to a task.
  */
 template <typename... Ts>
-class inputs {
+class Inputs {
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data_{};
 
@@ -61,7 +61,7 @@ class inputs {
    * @param index The index of the input.
    */
   template <typename Type, typename Kind>
-  void apply(AutoTask& task, Kind kind, std::size_t index) const
+  void apply_(AutoTask& task, Kind kind, std::size_t index) const
   {
     // Add the stores as inputs to the task
     Variable part = task.find_or_declare_partition(data()[index]);
@@ -73,9 +73,9 @@ class inputs {
   }
 
  public:
-  inputs() = default;
+  Inputs() = default;
 
-  explicit inputs(std::vector<LogicalStore> data) : data_{std::move(data)} {}
+  explicit Inputs(std::vector<LogicalStore> data) : data_{std::move(data)} {}
 
   /**
    * @brief Apply the inputs to a task.
@@ -89,10 +89,10 @@ class inputs {
   template <typename Kind>
   void operator()(AutoTask& task, [[maybe_unused]] Kind kind) const
   {
-    LegateAssert(data().size() == sizeof...(Ts));
+    LEGATE_ASSERT(data().size() == sizeof...(Ts));
 
     std::size_t index = 0;
-    (this->apply<Ts>(task, kind, index++), ...);
+    (this->apply_<Ts>(task, kind, index++), ...);
   }
 
   [[nodiscard]] const std::vector<LogicalStore>& data() const noexcept { return data_; }
@@ -107,7 +107,7 @@ class inputs {
  *
  */
 template <typename... Ts>
-class outputs {
+class Outputs {
   using Types = meta::list<Ts...>;
   std::vector<LogicalStore> data_{};
 
@@ -122,7 +122,7 @@ class outputs {
    * @param index The index of the output.
    */
   template <typename Type, typename Kind>
-  void apply(AutoTask& task, Kind kind, std::size_t index) const
+  void apply_(AutoTask& task, Kind kind, std::size_t index) const
   {
     // Add the stores as outputs to the task
     Variable part = task.find_or_declare_partition(data()[index]);
@@ -134,9 +134,9 @@ class outputs {
   }
 
  public:
-  outputs() = default;
+  Outputs() = default;
 
-  explicit outputs(std::vector<LogicalStore> data) : data_{std::move(data)} {}
+  explicit Outputs(std::vector<LogicalStore> data) : data_{std::move(data)} {}
 
   /**
    * @brief Apply the outputs to a task.
@@ -150,11 +150,11 @@ class outputs {
   template <typename Kind>
   void operator()(AutoTask& task, [[maybe_unused]] Kind kind) const
   {
-    LegateAssert(data().size() == sizeof...(Ts));
+    LEGATE_ASSERT(data().size() == sizeof...(Ts));
 
     // No, clang-tidy, index can *not* be marked as const
     std::size_t index = 0;  // NOLINT(misc-const-correctness)
-    (this->apply<Ts>(task, kind, index++), ...);
+    (this->apply_<Ts>(task, kind, index++), ...);
   }
 
   [[nodiscard]] const std::vector<LogicalStore>& data() const noexcept { return data_; }
@@ -168,7 +168,7 @@ class outputs {
  * output logical stores, and a reduction logical store.
  */
 template <typename... Ts>
-class constraints {
+class Constraints {
  public:
   std::tuple<Ts...> data{};
 
@@ -200,7 +200,7 @@ class constraints {
  *
  */
 template <typename... Ts>
-class scalars {
+class Scalars {
  public:
   std::tuple<Ts...> data{};
 
@@ -225,7 +225,7 @@ class scalars {
 };
 
 template <typename... Fn>
-class function;
+class Function;
 
 /**
  * @cond
@@ -233,7 +233,7 @@ class function;
  * function.
  */
 template <>
-class function<> {};
+class Function<> {};
 /**
  * @endcond
  */
@@ -246,7 +246,7 @@ class function<> {};
  *
  */
 template <typename Fn>
-class function<Fn> {
+class Function<Fn> {
  public:
   Fn fn{};
 
@@ -266,20 +266,20 @@ class function<Fn> {
 /**
  * @cond
  */
-[[nodiscard]] inline std::int32_t _next_reduction_id()
+[[nodiscard]] inline std::int32_t next_reduction_id_()  // NOLINT(readability-identifier-naming)
 {
   static std::atomic<std::int32_t> id{};
   return id.fetch_add(1);
 }
 
 template <typename T>
-[[nodiscard]] std::int32_t _reduction_id_for()
+[[nodiscard]] std::int32_t reduction_id_for_()  // NOLINT(readability-identifier-naming)
 {
-  static const std::int32_t id = _next_reduction_id();
+  static const std::int32_t id = next_reduction_id_();
   return id;
 }
 
-[[nodiscard]] inline std::int32_t _next_reduction_kind()
+[[nodiscard]] inline std::int32_t next_reduction_kind_()  // NOLINT(readability-identifier-naming)
 {
   static std::atomic<std::int32_t> id{legate::traits::detail::to_underlying(ReductionOpKind::XOR) +
                                       1};
@@ -287,44 +287,44 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::int32_t _reduction_kind_for()
+[[nodiscard]] std::int32_t reduction_kind_for_()  // NOLINT(readability-identifier-naming)
 {
-  static const std::int32_t id = _next_reduction_kind();
+  static const std::int32_t id = next_reduction_kind_();
   return id;
 }
 
 template <typename Fun>
-[[nodiscard]] std::int32_t _get_reduction_id()
+[[nodiscard]] std::int32_t get_reduction_id_()  // NOLINT(readability-identifier-naming)
 {
-  static const std::int32_t ID = []() -> std::int32_t {
-    const std::int32_t id               = _reduction_id_for<Fun>();
+  static const std::int32_t id = []() -> std::int32_t {
+    const std::int32_t new_id           = reduction_id_for_<Fun>();
     const observer_ptr<Runtime> runtime = Runtime::get_runtime();
     Library library = runtime->find_or_create_library("legate.stl", LEGATE_STL_RESOURCE_CONFIG);
 
-    return library.register_reduction_operator<Fun>(id);
+    return library.register_reduction_operator<Fun>(new_id);
   }();
-  return ID;
+  return id;
 }
 
 template <typename ElementType, typename Fun>
-[[nodiscard]] std::int32_t _record_reduction_for()
+[[nodiscard]] std::int32_t record_reduction_for_()  // NOLINT(readability-identifier-naming)
 {
-  static const auto KIND = []() -> std::int32_t {
-    const Type type{primitive_type(type_code_of<ElementType>)};
-    const std::int32_t id   = _get_reduction_id<Fun>();
-    const std::int32_t kind = _reduction_kind_for<Fun>();
+  static const auto kind = []() -> std::int32_t {
+    const Type type{primitive_type(type_code_of_v<ElementType>)};
+    const std::int32_t id       = get_reduction_id_<Fun>();
+    const std::int32_t red_kind = reduction_kind_for_<Fun>();
 
-    type.record_reduction_operator(kind, id);
-    return kind;
+    type.record_reduction_operator(red_kind, id);
+    return red_kind;
   }();
-  return KIND;
+  return kind;
 }
 /**
  * @endcond
  */
 
 template <typename...>
-class reduction;
+class Reduction;
 
 /**
  * @cond
@@ -332,7 +332,7 @@ class reduction;
  * function.
  */
 template <>
-class reduction<> {};
+class Reduction<> {};
 /**
  * @endcond
  */
@@ -345,7 +345,7 @@ class reduction<> {};
  * a callable operator to add it as a reduction and a scalar argument to an `AutoTask` object.
  */
 template <typename Store, typename Fun>
-class reduction<Store, Fun> {
+class Reduction<Store, Fun> {
  public:
   LogicalStore data{
     nullptr}; /**< The logical store on which the reduction operation is performed. */
@@ -363,7 +363,7 @@ class reduction<Store, Fun> {
   void operator()(AutoTask& task) const
   {
     auto part       = task.find_or_declare_partition(data);
-    const auto kind = _record_reduction_for<element_type_of_t<Store>, Fun>();
+    const auto kind = record_reduction_for_<element_type_of_t<Store>, Fun>();
 
     task.add_reduction(data, kind, std::move(part));
     task.add_scalar_arg(Scalar{binary_type(sizeof(fn)), std::addressof(fn), true});
@@ -373,77 +373,77 @@ class reduction<Store, Fun> {
 /**
  * @cond
  */
-enum class store_type : std::uint8_t { input, output, reduction };
+enum class StoreType : std::uint8_t { INPUT, OUTPUT, REDUCTION };
 
-class store_placeholder {
+class StorePlaceholder {
  public:
-  store_type which{};
+  StoreType which{};
   int index{};
 
  private:
   template <typename, typename>
-  friend class align;
+  friend class Align;
 
   [[nodiscard]] LogicalStore operator()(const std::vector<LogicalStore>& inputs,
                                         const std::vector<LogicalStore>& outputs,
                                         const LogicalStore& reduction) const
   {
     switch (which) {
-      case store_type::input: return inputs[index];
-      case store_type::output: return outputs[index];
-      case store_type::reduction: return reduction;
+      case StoreType::INPUT: return inputs[index];
+      case StoreType::OUTPUT: return outputs[index];
+      case StoreType::REDUCTION: return reduction;
     }
     // src/core/experimental/stl/detail/launch_task.hpp:238:3: error: control reaches end
     // of non-void function [-Werror=return-type]
     //
     // ... I mean, it doesn't, since that switch above is fully covered...
-    LegateUnreachable();
+    LEGATE_UNREACHABLE();
   }
 };
 
 template <typename Left, typename Right>
-class align {
+class Align {
  public:
-  align(Left left, Right right) : left_{std::move(left)}, right_{std::move(right)} {}
+  Align(Left left, Right right) : left_{std::move(left)}, right_{std::move(right)} {}
 
   void operator()(AutoTask& task,
                   const std::vector<LogicalStore>& inputs,
                   const std::vector<LogicalStore>& outputs,
                   const LogicalStore& reduction) const
   {
-    do_align(task, left_(inputs, outputs, reduction), right_(inputs, outputs, reduction));
+    do_align_(task, left_(inputs, outputs, reduction), right_(inputs, outputs, reduction));
   }
 
  private:
-  static void do_align(AutoTask& task, Variable left, Variable right)
+  static void do_align_(AutoTask& task, Variable left, Variable right)
   {
     if (left.impl() != right.impl()) {
       task.add_constraint(legate::align(left, right));
     }
   }
 
-  static void do_align(AutoTask& task, const LogicalStore& left, const LogicalStore& right)
+  static void do_align_(AutoTask& task, const LogicalStore& left, const LogicalStore& right)
   {
-    do_align(task, task.find_or_declare_partition(left), task.find_or_declare_partition(right));
+    do_align_(task, task.find_or_declare_partition(left), task.find_or_declare_partition(right));
   }
 
-  static void do_align(AutoTask& task,
-                       const LogicalStore& left,
-                       const std::vector<LogicalStore>& right)
+  static void do_align_(AutoTask& task,
+                        const LogicalStore& left,
+                        const std::vector<LogicalStore>& right)
   {
     auto left_part = task.find_or_declare_partition(left);
     for (auto&& store : right) {
-      do_align(task, left_part, task.find_or_declare_partition(store));
+      do_align_(task, left_part, task.find_or_declare_partition(store));
     }
   }
 
-  static void do_align(AutoTask& task,
-                       const std::vector<LogicalStore>& left,
-                       const LogicalStore& right)
+  static void do_align_(AutoTask& task,
+                        const std::vector<LogicalStore>& left,
+                        const LogicalStore& right)
   {
     auto right_part = task.find_or_declare_partition(right);
     for (auto&& store : left) {
-      do_align(task, task.find_or_declare_partition(store), right_part);
+      do_align_(task, task.find_or_declare_partition(store), right_part);
     }
   }
 
@@ -451,21 +451,21 @@ class align {
   Right right_{};
 };
 
-class make_inputs {
+class MakeInputs {
  public:
   template <typename... Ts>                  //
     requires(logical_store_like<Ts> && ...)  //
-  [[nodiscard]] inputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
+  [[nodiscard]] Inputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
   {
-    return inputs<std::remove_reference_t<Ts>...>{
+    return Inputs<std::remove_reference_t<Ts>...>{
       std::vector<LogicalStore>{get_logical_store(std::forward<Ts>(stores))...}};
   }
 
-  [[nodiscard]] store_placeholder operator[](int index) const { return {store_type::input, index}; }
+  [[nodiscard]] StorePlaceholder operator[](int index) const { return {StoreType::INPUT, index}; }
 
  private:
   template <typename, typename>
-  friend class align;
+  friend class Align;
 
   [[nodiscard]] const std::vector<LogicalStore>& operator()(
     const std::vector<LogicalStore>& inputs,
@@ -476,24 +476,21 @@ class make_inputs {
   }
 };
 
-class make_outputs {
+class MakeOutputs {
  public:
   template <typename... Ts>                  //
     requires(logical_store_like<Ts> && ...)  //
-  [[nodiscard]] outputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
+  [[nodiscard]] Outputs<std::remove_reference_t<Ts>...> operator()(Ts&&... stores) const
   {
-    return outputs<std::remove_reference_t<Ts>...>{
+    return Outputs<std::remove_reference_t<Ts>...>{
       std::vector<LogicalStore>{get_logical_store(std::forward<Ts>(stores))...}};
   }
 
-  [[nodiscard]] store_placeholder operator[](int index) const
-  {
-    return {store_type::output, index};
-  }
+  [[nodiscard]] StorePlaceholder operator[](int index) const { return {StoreType::OUTPUT, index}; }
 
  private:
   template <typename, typename>
-  friend class align;
+  friend class Align;
 
   [[nodiscard]] const std::vector<LogicalStore>& operator()(
     const std::vector<LogicalStore>& /*inputs*/,
@@ -504,10 +501,10 @@ class make_outputs {
   }
 };
 
-class make_scalars {
+class MakeScalars {
  public:
   template <typename... Ts>
-  [[nodiscard]] scalars<Ts...> operator()(Ts&&... scalars) const
+  [[nodiscard]] Scalars<Ts...> operator()(Ts&&... scalars) const
   {
     static_assert((std::is_trivially_copyable_v<std::decay_t<Ts>> && ...),
                   "All scalar arguments must be trivially copyable");
@@ -515,29 +512,23 @@ class make_scalars {
   }
 };
 
-class make_function {
+class MakeFunction {
  public:
   template <typename Fn>
-  [[nodiscard]] function<std::decay_t<Fn>> operator()(Fn&& fn) const
+  [[nodiscard]] Function<std::decay_t<Fn>> operator()(Fn&& fn) const
   {
     return {std::forward<Fn>(fn)};
   }
 };
 
 template <typename Store>
-[[nodiscard]] constexpr std::int32_t _dim_of() noexcept
-{
-  return dim_of_v<Store>;
-}
+using dim_of_t = meta::constant<dim_of_v<Store>>;
 
-template <typename Store>
-using dim_of_t = meta::constant<_dim_of<Store>()>;
-
-class make_reduction {
+class MakeReduction {
  public:
   template <typename Store, typename ReductionFn>  //
     requires(logical_store_like<Store>)            // TODO(ericniebler): constrain Fun
-  [[nodiscard]] reduction<std::remove_reference_t<Store>, std::decay_t<ReductionFn>> operator()(
+  [[nodiscard]] Reduction<std::remove_reference_t<Store>, std::decay_t<ReductionFn>> operator()(
     Store&& store, ReductionFn&& reduction) const
   {
     static_assert(legate_reduction<ReductionFn>,
@@ -548,7 +539,7 @@ class make_reduction {
 
  private:
   template <typename, typename>
-  friend class align;
+  friend class Align;
 
   [[nodiscard]] LogicalStore operator()(const std::vector<LogicalStore>& /*inputs*/,
                                         const std::vector<LogicalStore>& /*outputs*/,
@@ -558,7 +549,7 @@ class make_reduction {
   }
 };
 
-class make_constraints {
+class MakeConstraints {
  public:
   template <typename... Ts>  //
     requires((callable<Ts,
@@ -567,13 +558,13 @@ class make_constraints {
                        const std::vector<LogicalStore>&,
                        const LogicalStore&> &&
               ...))
-  [[nodiscard]] constraints<std::decay_t<Ts>...> operator()(Ts&&... constraints) const
+  [[nodiscard]] Constraints<std::decay_t<Ts>...> operator()(Ts&&... constraints) const
   {
     return {{std::forward<Ts>(constraints)...}};
   }
 };
 
-class make_align {
+class MakeAlign {
  public:
   // E.g., `align(inputs[0], inputs[1])`
   //       `align(outputs[0], inputs)`
@@ -586,20 +577,22 @@ class make_align {
                       const std::vector<LogicalStore>&,
                       const std::vector<LogicalStore>&,
                       const LogicalStore&>)  //
-  [[nodiscard]] align<Left, Right> operator()(Left left, Right right) const
+  [[nodiscard]] Align<Left, Right> operator()(Left left, Right right) const
   {
     return {left, right};
   }
 
   // For `align(inputs)`
-  [[nodiscard]] auto operator()(make_inputs inputs) const { return (*this)(inputs[0], inputs); }
+  [[nodiscard]] auto operator()(MakeInputs inputs) const { return (*this)(inputs[0], inputs); }
 
   // For `align(outputs)`
-  [[nodiscard]] auto operator()(make_outputs outputs) const { return (*this)(outputs[0], outputs); }
+  [[nodiscard]] auto operator()(MakeOutputs outputs) const { return (*this)(outputs[0], outputs); }
 };
 
+namespace cpu_detail {
+
 template <typename Fn, typename... Views>
-void _cpu_for_each(Fn fn, Views... views)
+void cpu_for_each(Fn fn, Views... views)
 {
   auto&& input0 = front_of(views...);
   auto&& begin  = input0.begin();
@@ -613,12 +606,14 @@ void _cpu_for_each(Fn fn, Views... views)
   }
 }
 
+}  // namespace cpu_detail
+
 template <typename Function, typename inputs, typename Outputs, typename Scalars>
-class iteration_cpu;
+class IterationCPU;
 
 // This is a CPU implementation of a for_each operation.
 template <typename Fn, typename... Is, typename... Os, typename... Ss>
-class iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+class IterationCPU<Function<Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss...>> {
  public:
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
   static void impl(std::index_sequence<IIs...>,
@@ -628,12 +623,13 @@ class iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
                    std::vector<PhysicalArray>& outputs,
                    const std::vector<Scalar>& scalars)
   {
-    _cpu_for_each(stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
-                                 scalar_cast<const Ss&>(scalars[SIs + 1])...),
-                  Is::policy::physical_view(
-                    as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
-                  Os::policy::physical_view(
-                    as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
+    cpu_detail::cpu_for_each(
+      stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
+                     scalar_cast<const Ss&>(scalars[SIs + 1])...),
+      Is::policy::physical_view(
+        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
+      Os::policy::physical_view(
+        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
   }
 
   template <std::int32_t ActualDim>
@@ -641,10 +637,10 @@ class iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
                   std::vector<PhysicalArray>& outputs,
                   const std::vector<Scalar>& scalars)
   {
-    constexpr std::int32_t Dim = dim_of_v<meta::front<Is...>>;
+    constexpr std::int32_t DIM = dim_of_v<meta::front<Is...>>;
 
-    if constexpr (Dim == ActualDim) {
-      const Legion::Rect<Dim> shape = inputs[0].shape<Dim>();
+    if constexpr (DIM == ActualDim) {
+      const Legion::Rect<DIM> shape = inputs[0].shape<DIM>();
 
       if (!shape.empty()) {
         impl(std::index_sequence_for<Is...>{},
@@ -658,7 +654,7 @@ class iteration_cpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
   }
 };
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_DEFINED(LEGATE_NVCC)
 
 template <typename Fn, typename... Views>
 LEGATE_KERNEL void _gpu_for_each(Fn fn, Views... views)
@@ -736,8 +732,8 @@ template <typename Function,
           typename Outputs,
           typename Scalars,
           typename Constraints>
-struct iteration_operation  //
-  : LegateTask<iteration_operation<Function, Inputs, Outputs, Scalars, Constraints>> {
+struct IterationOperation  //
+  : LegateTask<IterationOperation<Function, Inputs, Outputs, Scalars, Constraints>> {
   static void cpu_variant(TaskContext context)
   {
     auto&& inputs  = context.inputs();
@@ -745,11 +741,10 @@ struct iteration_operation  //
     auto&& scalars = context.scalars();
     const auto dim = inputs.at(0).dim();
 
-    dim_dispatch(
-      dim, iteration_cpu<Function, Inputs, Outputs, Scalars>{}, inputs, outputs, scalars);
+    dim_dispatch(dim, IterationCPU<Function, Inputs, Outputs, Scalars>{}, inputs, outputs, scalars);
   }
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_DEFINED(LEGATE_NVCC)
   // FIXME(wonchanl): In case where this template is instantiated multiple times with the exact same
   // template arguments, the exact class definition changes depending on what compiler is compiling
   // this header, which could lead to inconsistent class definitions across compile units.
@@ -780,8 +775,8 @@ template <typename Op, std::int32_t Dim, bool Exclusive = false>
   using Mapping = std::layout_right::mapping<std::dextents<coord_t, Dim>>;
   Mapping mapping{detail::dynamic_extents<Dim>(working_set)};  // NOLINT(misc-const-correctness)
 
-  using Policy   = reduction_accessor<Op, Exclusive>;
-  using Accessor = detail::mdspan_accessor<typename Op::RHS, Dim, Policy>;
+  using Policy   = ReductionAccessor<Op, Exclusive>;
+  using Accessor = detail::MDSpanAccessor<typename Op::RHS, Dim, Policy>;
   Accessor accessor{std::move(store), std::move(working_set)};  // NOLINT(misc-const-correctness)
 
   using Handle = typename Accessor::data_handle_type;
@@ -790,25 +785,29 @@ template <typename Op, std::int32_t Dim, bool Exclusive = false>
   return {std::move(handle), std::move(mapping), std::move(accessor)};
 }
 
+namespace cpu_detail {
+
 template <typename Function, typename InOut, typename Input>
-void _cpu_reduce(Function fn, InOut inout, Input input)
+void cpu_reduce(Function fn, InOut inout, Input input)
 {
   // These need to be at least multi-pass
   static_assert_iterator_category<std::forward_iterator_tag>(inout.begin());
   static_assert_iterator_category<std::forward_iterator_tag>(input.begin());
   const auto distance = std::distance(inout.begin(), inout.end());
 
-  LegateAssert(distance == std::distance(input.begin(), input.end()));
+  LEGATE_ASSERT(distance == std::distance(input.begin(), input.end()));
   for (std::int64_t idx = 0; idx < distance; ++idx) {
     fn(*(inout.begin() + idx), *(input.begin() + idx));
   }
 }
 
+}  // namespace cpu_detail
+
 template <typename Reduction, typename Inputs, typename Outputs, typename Scalars>
-class reduction_cpu;
+class ReductionCPU;
 
 template <typename Red, typename Fn, typename... Is, typename... Os, typename... Ss>
-class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>> {
+class ReductionCPU<Reduction<Red, Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss...>> {
  public:
   template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
   static void impl(std::index_sequence<IIs...>,
@@ -819,18 +818,19 @@ class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
                    std::vector<PhysicalArray>& outputs,
                    const std::vector<Scalar>& scalars)
   {
-    constexpr std::int32_t Dim = stl::dim_of_v<Red>;
-    Rect<Dim> working_set      = reduction.shape<Dim>();
-    ((working_set = working_set.intersection(inputs[IIs].shape<Dim>())), ...);
+    constexpr std::int32_t DIM = stl::dim_of_v<Red>;
+    Rect<DIM> working_set      = reduction.shape<DIM>();
+    ((working_set = working_set.intersection(inputs[IIs].shape<DIM>())), ...);
 
-    _cpu_reduce(stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
-                               scalar_cast<const Ss&>(scalars[SIs + 1])...),
-                Red::policy::physical_view(  //
-                  as_mdspan_reduction<Fn, Dim>(reduction, std::move(working_set))),
-                Is::policy::physical_view(
-                  as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
-                Os::policy::physical_view(
-                  as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
+    cpu_detail::cpu_reduce(
+      stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
+                     scalar_cast<const Ss&>(scalars[SIs + 1])...),
+      Red::policy::physical_view(  //
+        as_mdspan_reduction<Fn, DIM>(reduction, std::move(working_set))),
+      Is::policy::physical_view(
+        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
+      Os::policy::physical_view(
+        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
   }
 
   template <std::int32_t ActualDim>
@@ -839,10 +839,10 @@ class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
                   std::vector<PhysicalArray>& outputs,
                   const std::vector<Scalar>& scalars)
   {
-    constexpr std::int32_t Dim = dim_of_v<Red>;
+    constexpr std::int32_t DIM = dim_of_v<Red>;
 
-    if constexpr (Dim == ActualDim) {
-      const Legion::Rect<Dim> shape = reductions.at(0).shape<Dim>();
+    if constexpr (DIM == ActualDim) {
+      const Legion::Rect<DIM> shape = reductions.at(0).shape<DIM>();
 
       if (!shape.empty()) {
         impl(std::index_sequence_for<Is...>{},
@@ -857,7 +857,9 @@ class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
   }
 };
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_DEFINED(LEGATE_NVCC)
+
+namespace gpu_detail {
 
 // TODO: this can be parallelized as well with care to avoid data races.
 // If the view types carried metadata about the stride that avoids interference,
@@ -865,16 +867,18 @@ class reduction_cpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
 // multiples of that stride, but starting at different offsets. Then those
 // results can be folded together.
 template <typename Function, typename InOut, typename Input>
-LEGATE_KERNEL void _gpu_reduce(Function fn, InOut inout, Input input)
+LEGATE_KERNEL void gpu_reduce(Function fn, InOut inout, Input input)
 {
   const auto tid      = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
   const auto distance = inout.end() - inout.begin();
 
-  LegateAssert(distance == (input.end() - input.begin()));
+  LEGATE_ASSERT(distance == (input.end() - input.begin()));
   for (std::int64_t idx = 0; idx < distance; ++idx) {
     fn(tid, *(inout.begin() + idx), *(input.begin() + idx));
   }
 }
+
+}  // namespace gpu_detail
 
 template <typename Reduction, typename Inputs, typename Outputs, typename Scalars>
 class reduction_gpu;
@@ -901,7 +905,7 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
     Rect<Dim> working_set      = reduction.shape<Dim>();
     ((working_set = working_set.intersection(inputs[IIs].shape<Dim>())), ...);
 
-    _gpu_reduce<<<num_blocks, THREAD_BLOCK_SIZE, 0, stream>>>(
+    gpu_detail::gpu_reduce<<<num_blocks, THREAD_BLOCK_SIZE, 0, stream>>>(
       stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
                      scalar_cast<const Ss&>(scalars[SIs + 1])...),
       Red::policy::physical_view(  //
@@ -918,10 +922,10 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
                   std::vector<PhysicalArray>& outputs,
                   const std::vector<Scalar>& scalars)
   {
-    constexpr std::int32_t Dim = dim_of_v<Red>;
+    constexpr std::int32_t DIM = dim_of_v<Red>;
 
-    if constexpr (Dim == ActualDim) {
-      const Legion::Rect<Dim> shape = reductions.at(0).shape<Dim>();
+    if constexpr (DIM == ActualDim) {
+      const Legion::Rect<DIM> shape = reductions.at(0).shape<DIM>();
 
       if (!shape.empty()) {
         impl(std::index_sequence_for<Is...>{},
@@ -945,8 +949,8 @@ template <typename Reduction,
           typename Outputs,
           typename Scalars,
           typename Constraints>
-struct reduction_operation
-  : LegateTask<reduction_operation<Reduction, Inputs, Outputs, Scalars, Constraints>> {
+struct ReductionOperation
+  : LegateTask<ReductionOperation<Reduction, Inputs, Outputs, Scalars, Constraints>> {
   static void cpu_variant(TaskContext context)
   {
     auto&& inputs     = context.inputs();
@@ -956,14 +960,14 @@ struct reduction_operation
     const auto dim    = reductions.at(0).dim();
 
     dim_dispatch(dim,
-                 reduction_cpu<Reduction, Inputs, Outputs, Scalars>{},
+                 ReductionCPU<Reduction, Inputs, Outputs, Scalars>{},
                  reductions,
                  inputs,
                  outputs,
                  scalars);
   }
 
-#if LegateDefined(LEGATE_USE_CUDA) && LegateDefined(LEGATE_NVCC)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_DEFINED(LEGATE_NVCC)
   // FIXME(wonchanl): In case where this template is instantiated multiple times with the exact same
   // template arguments, the exact class definition changes depending on what compiler is compiling
   // this header, which could lead to inconsistent class definitions across compile units.
@@ -989,13 +993,17 @@ struct reduction_operation
 #endif
 };
 
+namespace gcc_9_detail {
+
 // _is_which is needed to disambiguate between the two overloads of
 // get_arg below for gcc-9.
 template <template <typename...> typename Which, typename What>
-inline constexpr bool _is_which = false;
+inline constexpr bool is_which_v = false;
 
 template <template <typename...> typename Which, typename... Args>
-inline constexpr bool _is_which<Which, Which<Args...>> = true;
+inline constexpr bool is_which_v<Which, Which<Args...>> = true;
+
+}  // namespace gcc_9_detail
 
 template <template <typename...> typename Which, typename... Ts, typename... Tail>
 [[nodiscard]] inline const Which<Ts...>& get_arg(const Which<Ts...>& head, const Tail&...)
@@ -1005,7 +1013,7 @@ template <template <typename...> typename Which, typename... Ts, typename... Tai
 
 template <template <typename...> typename Which,
           typename Head,
-          std::enable_if_t<!_is_which<Which, Head>, int> Enable = 0,
+          std::enable_if_t<!gcc_9_detail::is_which_v<Which, Head>, int> Enable = 0,
           typename... Tail>
 [[nodiscard]] inline decltype(auto) get_arg(const Head&, const Tail&... tail)
 {
@@ -1023,7 +1031,7 @@ template <template <typename...> typename Which,
  * framework. It supports both iteration tasks and reduction tasks. The tasks are created and
  * submitted to the runtime using the provided inputs, outputs, scalars, and constraints.
  */
-class launch_task {
+class LaunchTask {
   template <typename LegateTask>
   [[nodiscard]] static std::tuple<legate::AutoTask, observer_ptr<Runtime>> make_task_()
   {
@@ -1055,11 +1063,11 @@ class launch_task {
             typename Outputs,
             typename Scalars,
             typename Constraints>
-  static void make_iteration_task(
+  static void make_iteration_task_(
     Function function, Inputs inputs, Outputs outputs, Scalars scalars, Constraints constraints)
   {
     auto&& [task, runtime] =
-      make_task_<iteration_operation<Function, Inputs, Outputs, Scalars, Constraints>>();
+      make_task_<IterationOperation<Function, Inputs, Outputs, Scalars, Constraints>>();
 
     inputs(task, iteration_kind{});
     outputs(task, iteration_kind{});
@@ -1090,11 +1098,11 @@ class launch_task {
             typename Outputs,
             typename Scalars,
             typename Constraints>
-  static void make_reduction_task(
+  static void make_reduction_task_(
     Reduction reduction, Inputs inputs, Outputs outputs, Scalars scalars, Constraints constraints)
   {
     auto&& [task, runtime] =
-      make_task_<reduction_operation<Reduction, Inputs, Outputs, Scalars, Constraints>>();
+      make_task_<ReductionOperation<Reduction, Inputs, Outputs, Scalars, Constraints>>();
 
     inputs(task, reduction_kind{});
     outputs(task, reduction_kind{});
@@ -1121,34 +1129,34 @@ class launch_task {
   {
     // TODO(ericniebler) these could also be made constexpr if we defined the inputs<> template
     // directly.
-    const detail::inputs<> no_inputs;
-    const detail::outputs<> no_outputs;
-    constexpr detail::scalars<> no_scalars;
-    constexpr detail::function<> no_function;
-    constexpr detail::reduction<> no_reduction;
-    constexpr detail::constraints<> no_constraints;
+    const detail::Inputs<> no_inputs;
+    const detail::Outputs<> no_outputs;
+    constexpr detail::Scalars<> no_scalars;
+    constexpr detail::Function<> no_function;
+    constexpr detail::Reduction<> no_reduction;
+    constexpr detail::Constraints<> no_constraints;
 
-    auto function  = detail::get_arg<detail::function>(args..., no_function);
-    auto reduction = detail::get_arg<detail::reduction>(args..., no_reduction);
+    auto function  = detail::get_arg<detail::Function>(args..., no_function);
+    auto reduction = detail::get_arg<detail::Reduction>(args..., no_reduction);
 
-    constexpr bool has_function  = !std::is_same_v<decltype(function), detail::function<>>;
-    constexpr bool has_reduction = !std::is_same_v<decltype(reduction), detail::reduction<>>;
+    constexpr bool has_function  = !std::is_same_v<decltype(function), detail::Function<>>;
+    constexpr bool has_reduction = !std::is_same_v<decltype(reduction), detail::Reduction<>>;
 
     static_assert((has_function + has_reduction) == 1,
                   "You must specify either a function or a reduction");
 
     if constexpr (has_function) {
-      make_iteration_task(std::move(function),
-                          detail::get_arg<detail::inputs>(args..., no_inputs),
-                          detail::get_arg<detail::outputs>(args..., no_outputs),
-                          detail::get_arg<detail::scalars>(args..., no_scalars),
-                          detail::get_arg<detail::constraints>(args..., no_constraints));
+      make_iteration_task_(std::move(function),
+                           detail::get_arg<detail::Inputs>(args..., no_inputs),
+                           detail::get_arg<detail::Outputs>(args..., no_outputs),
+                           detail::get_arg<detail::Scalars>(args..., no_scalars),
+                           detail::get_arg<detail::Constraints>(args..., no_constraints));
     } else if constexpr (has_reduction) {
-      make_reduction_task(std::move(reduction),
-                          detail::get_arg<detail::inputs>(args..., no_inputs),
-                          detail::get_arg<detail::outputs>(args..., no_outputs),
-                          detail::get_arg<detail::scalars>(args..., no_scalars),
-                          detail::get_arg<detail::constraints>(args..., no_constraints));
+      make_reduction_task_(std::move(reduction),
+                           detail::get_arg<detail::Inputs>(args..., no_inputs),
+                           detail::get_arg<detail::Outputs>(args..., no_outputs),
+                           detail::get_arg<detail::Scalars>(args..., no_scalars),
+                           detail::get_arg<detail::Constraints>(args..., no_constraints));
     } else {
       static_assert(has_function || has_reduction,
                     "You must specify either a function or a reduction");
@@ -1158,25 +1166,27 @@ class launch_task {
 
 }  // namespace detail
 
-inline constexpr detail::make_inputs inputs{};
-inline constexpr detail::make_outputs outputs{};
-inline constexpr detail::make_scalars scalars{};
-inline constexpr detail::make_function function{};
-inline constexpr detail::make_constraints constraints{};
-inline constexpr detail::make_reduction reduction{};
+// NOLINTBEGIN(readability-identifier-naming)
+inline constexpr detail::MakeInputs inputs{};
+inline constexpr detail::MakeOutputs outputs{};
+inline constexpr detail::MakeScalars scalars{};
+inline constexpr detail::MakeFunction function{};
+inline constexpr detail::MakeConstraints constraints{};
+inline constexpr detail::MakeReduction reduction{};
 
-inline constexpr detail::make_align align{};
+inline constexpr detail::MakeAlign align{};
+// NOLINTEND(readability-identifier-naming)
 // TODO(ericniebler): broadcasting
 
 /**
  * @cond
  */
-inline constexpr detail::launch_task launch_task{};
+inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identifier-naming)
 /**
  * @endcond
  */
 
-#if LegateDefined(LEGATE_DOXYGEN)
+#if LEGATE_DEFINED(LEGATE_DOXYGEN)
 /**
  * @brief A function that launches a task with the given inputs, outputs,
  * scalars, and constraints.

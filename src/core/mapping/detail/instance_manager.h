@@ -90,7 +90,7 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
   [[nodiscard]] std::size_t get_instance_size() const;
 
  private:
-  void dump_and_sanity_check() const;
+  void dump_and_sanity_check_() const;
 
   std::unordered_map<RegionGroup*, InstanceSpec> instances_{};
   std::unordered_map<Region, RegionGroupP> groups_{};

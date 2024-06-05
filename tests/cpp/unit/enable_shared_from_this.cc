@@ -12,6 +12,8 @@
 
 #include "core/utilities/internal_shared_ptr.h"
 
+#include "utilities/utilities.h"
+
 #include <gtest/gtest.h>
 #include <numeric>
 #include <unordered_set>
@@ -111,8 +113,8 @@ class EnsureDeletedVirtual : public EnsureDeleted {
 using TypeList = ::testing::
   Types<EnsureDeleted, const EnsureDeleted, EnsureDeletedVirtual, const EnsureDeletedVirtual>;
 
-template <typename>
-struct EnableSharedFromThisUnit : ::testing::Test {};
+template <typename T>
+using EnableSharedFromThisUnit = NoInitFixture;
 
 TYPED_TEST_SUITE(EnableSharedFromThisUnit, TypeList, );
 

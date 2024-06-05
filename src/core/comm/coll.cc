@@ -114,9 +114,9 @@ int collAllgather(
 // called from main thread
 int collInit(int argc, char* argv[])
 {
-  if (LegateDefined(LEGATE_USE_NETWORK)) {
+  if (LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
     if (LEGATE_NEED_NETWORK.get().value_or(false)) {
-#if LegateDefined(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
       backend_network = new MPINetwork{argc, argv};
 #endif
     } else {
@@ -158,7 +158,7 @@ int BackendNetwork::collGetUniqueId(int* id)
 void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, std::size_t size)
 {
   void* sendbuf_tmp = std::malloc(size);
-  LegateCheck(sendbuf_tmp != nullptr);
+  LEGATE_CHECK(sendbuf_tmp != nullptr);
   std::memcpy(sendbuf_tmp, recvbuf, size);
   return sendbuf_tmp;
 }
@@ -175,5 +175,5 @@ int legate_cpucoll_finalize(void)
 
 int legate_cpucoll_initcomm(void) { return legate::comm::coll::collInitComm(); }
 
-bool legate_has_cal() { return LegateDefined(LEGATE_USE_CAL); }
+bool legate_has_cal() { return LEGATE_DEFINED(LEGATE_USE_CAL); }
 }

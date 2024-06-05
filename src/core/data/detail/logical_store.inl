@@ -141,13 +141,13 @@ inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<Logic
                                                    std::int32_t dim,
                                                    Slice sl)
 {
-  return self->slice(self, dim, std::move(sl));
+  return self->slice_(self, dim, std::move(sl));
 }
 
 inline InternalSharedPtr<LogicalStorePartition> partition_store_by_tiling(
   const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape)
 {
-  return self->partition_by_tiling(self, std::move(tile_shape));
+  return self->partition_by_tiling_(self, std::move(tile_shape));
 }
 
 inline InternalSharedPtr<LogicalStorePartition> create_store_partition(
@@ -155,7 +155,7 @@ inline InternalSharedPtr<LogicalStorePartition> create_store_partition(
   InternalSharedPtr<Partition> partition,
   std::optional<bool> complete)
 {
-  return self->create_partition(self, std::move(partition), std::move(complete));
+  return self->create_partition_(self, std::move(partition), std::move(complete));
 }
 
 inline std::unique_ptr<Analyzable> store_to_launcher_arg(
@@ -167,7 +167,7 @@ inline std::unique_ptr<Analyzable> store_to_launcher_arg(
   Legion::PrivilegeMode privilege,
   std::int64_t redop)
 {
-  return self->to_launcher_arg(
+  return self->to_launcher_arg_(
     self, variable, strategy, launch_domain, projection, privilege, redop);
 }
 
@@ -176,7 +176,7 @@ inline std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
   const Domain& launch_domain,
   Legion::PrivilegeMode privilege)
 {
-  return self->to_launcher_arg_for_fixup(self, launch_domain, privilege);
+  return self->to_launcher_arg_for_fixup_(self, launch_domain, privilege);
 }
 
 }  // namespace legate::detail

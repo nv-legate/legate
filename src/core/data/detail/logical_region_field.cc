@@ -82,7 +82,7 @@ Domain LogicalRegionField::domain() const
 RegionField LogicalRegionField::map()
 {
   if (parent_ != nullptr) {
-    LegateAssert(!pr_.exists());
+    LEGATE_ASSERT(!pr_.exists());
     return parent_->map();
   }
   if (!pr_.exists()) {
@@ -96,9 +96,9 @@ RegionField LogicalRegionField::map()
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
                                 InternalSharedPtr<ExternalAllocation> allocation)
 {
-  LegateAssert(!parent_);
-  LegateAssert(physical_region.exists());
-  LegateAssert(!attachment_ && !pr_.exists());
+  LEGATE_ASSERT(!parent_);
+  LEGATE_ASSERT(physical_region.exists());
+  LEGATE_ASSERT(!attachment_ && !pr_.exists());
   pr_         = std::move(physical_region);
   attachment_ = std::make_unique<SingleAttachment>(&pr_, std::move(allocation));
 }
@@ -106,9 +106,9 @@ void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
 void LogicalRegionField::attach(const Legion::ExternalResources& external_resources,
                                 std::vector<InternalSharedPtr<ExternalAllocation>> allocations)
 {
-  LegateAssert(!parent_);
-  LegateAssert(external_resources.exists());
-  LegateAssert(!attachment_);
+  LEGATE_ASSERT(!parent_);
+  LEGATE_ASSERT(external_resources.exists());
+  LEGATE_ASSERT(!attachment_);
   attachment_ = std::make_unique<IndexAttachment>(external_resources, std::move(allocations));
 }
 
@@ -125,7 +125,7 @@ void LogicalRegionField::detach()
   if (!attachment_) {
     throw std::invalid_argument{"Store has no attachment to detach"};
   }
-  LegateCheck(pr_.exists());
+  LEGATE_CHECK(pr_.exists());
   if (pr_.is_mapped()) {
     runtime->unmap_physical_region(pr_);
   }
@@ -184,7 +184,7 @@ void LogicalRegionField::perform_invalidation_callbacks() noexcept
 {
   if (parent_) {
     // Callbacks should exist only in the root
-    LegateAssert(callbacks_.empty());
+    LEGATE_ASSERT(callbacks_.empty());
     parent_->perform_invalidation_callbacks();
   } else {
     for (auto&& callback : callbacks_) {

@@ -11,8 +11,8 @@
  */
 
 #include "core/data/detail/scalar.h"
-#include "core/utilities/deserializer.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/deserializer.h"
 
 #include "utilities/utilities.h"
 
@@ -24,11 +24,11 @@ using AlignedUnpack = DefaultFixture;
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-class TestDeserializer : public legate::BaseDeserializer<TestDeserializer> {
+class TestDeserializer : public legate::detail::BaseDeserializer<TestDeserializer> {
  public:
   TestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer(args, arglen) {}
 
-  using BaseDeserializer::_unpack;
+  using BaseDeserializer::unpack_impl;
 };
 
 TEST_F(AlignedUnpack, Bug1)

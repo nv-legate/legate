@@ -25,7 +25,8 @@ namespace {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-struct square {
+class Square {
+ public:
   template <class T>
   LEGATE_HOST_DEVICE T operator()(T x) const
   {
@@ -33,7 +34,9 @@ struct square {
   }
 };
 
-void TestTransformReduce1D()
+// clang-tidy complains that "1D" is not lower case
+// NOLINTNEXTLINE(readability-identifier-naming)
+void test_transform_reduce_1D()
 {
   stl::logical_store<std::int64_t, 1> store{{5}};
 
@@ -45,7 +48,7 @@ void TestTransformReduce1D()
   auto result = stl::transform_reduce(store,  //
                                       stl::scalar(std::int64_t{0}),
                                       std::plus<>{},
-                                      square{});
+                                      Square{});
 
   auto result_span = stl::as_mdspan(result);
   auto&& value     = result_span();
@@ -53,7 +56,9 @@ void TestTransformReduce1D()
   EXPECT_EQ(55, value);
 }
 
-void TestTransformReduce2D()
+// clang-tidy complains that "1D" is not lower case
+// NOLINTNEXTLINE(readability-identifier-naming)
+void test_transform_reduce_2D()
 {
   auto store = stl::create_store<std::int64_t>({3, 4});
 
@@ -70,7 +75,7 @@ void TestTransformReduce2D()
     auto result = stl::transform_reduce(stl::rows_of(store),  //
                                         init,
                                         stl::elementwise(std::plus<>{}),
-                                        stl::elementwise(square{}));
+                                        stl::elementwise(Square{}));
 
     auto result_span = stl::as_mdspan(result);
     EXPECT_EQ(result_span.rank(), 1);
@@ -98,6 +103,6 @@ void TestTransformReduce2D()
 
 }  // namespace
 
-TEST_F(STL, TestTransformReduce1D) { TestTransformReduce1D(); }
+TEST_F(STL, TestTransformReduce1D) { test_transform_reduce_1D(); }
 
-TEST_F(STL, TestTransformReduce2D) { TestTransformReduce2D(); }
+TEST_F(STL, TestTransformReduce2D) { test_transform_reduce_2D(); }

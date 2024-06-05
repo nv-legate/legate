@@ -26,7 +26,9 @@
 
 namespace legate::experimental::stl {
 
-class ignore {
+// TODO(ericniebler)
+// This should be Ignore instead, but I'm not changing it because it's part of the public API.
+class ignore {  // NOLINT(readability-identifier-naming)
  public:
   ignore() = default;
 
@@ -39,22 +41,16 @@ class ignore {
 namespace detail {
 
 template <typename LegateTask>
-class task_id_generator {
- public:
-  [[nodiscard]] std::int64_t operator()(Library& library) const
-  {
-    static const std::int64_t s_task_id = [&] {
-      const std::int64_t task_id = library.get_new_task_id();
+[[nodiscard]] std::int64_t task_id_for(Library& library)
+{
+  static const std::int64_t s_task_id = [&] {
+    const std::int64_t task_id = library.get_new_task_id();
 
-      LegateTask::register_variants(library, task_id);
-      return task_id;
-    }();
-    return s_task_id;
-  }
-};
-
-template <typename LegateTask>
-inline constexpr task_id_generator<LegateTask> task_id_for{};
+    LegateTask::register_variants(library, task_id);
+    return task_id;
+  }();
+  return s_task_id;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // A stateless lambda has a conversion to a function pointer.
@@ -62,7 +58,7 @@ template <typename Lambda>
 using lambda_fun_ptr_t = decltype(+std::declval<Lambda>());
 
 template <typename Lambda>
-inline constexpr bool stateless_lambda = meta::evaluable_q<lambda_fun_ptr_t, Lambda>;
+inline constexpr bool is_stateless_lambda_v = meta::evaluable_q<lambda_fun_ptr_t, Lambda>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Function>
@@ -78,7 +74,7 @@ void check_function_type()
                 "named function object, a __host__ __device__ lambda, or "
                 "cuda::proclaim_return_type instead.");
   static_assert(
-    !__nv_is_extended_host_device_lambda_closure_type(Function) || stateless_lambda<Function>,
+    !__nv_is_extended_host_device_lambda_closure_type(Function) || is_stateless_lambda_v<Function>,
     "__host__ __device__ lambdas that have captures are not yet "
     "yet supported. Use a named function object instead.");
 #endif
@@ -92,8 +88,8 @@ template <typename Reference>
   using value_type = remove_cvref_t<Reference>;
   static_assert(std::is_trivially_copyable_v<value_type>);
   // Check to make sure the Scalar contains what we think it does.
-  LegateAssert(scalar.type().code() == Type::Code::BINARY);
-  LegateAssert(scalar.size() == sizeof(value_type));
+  LEGATE_ASSERT(scalar.type().code() == Type::Code::BINARY);
+  LEGATE_ASSERT(scalar.size() == sizeof(value_type));
   return *static_cast<const value_type*>(scalar.ptr());
 }
 

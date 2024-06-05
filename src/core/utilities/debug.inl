@@ -41,7 +41,7 @@ template <typename T, int DIM>
     }
     buf      = new T[num_elems];
     auto res = cudaMemcpy(buf, base, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
-    LegateCheck(res == cudaSuccess);
+    LEGATE_CHECK(res == cudaSuccess);
     base = buf;
   }
   std::stringstream ss;
@@ -79,7 +79,7 @@ template <typename T, int DIM>
       ss << "]";
     }
   } while (dim >= 0);
-  if (LegateDefined(LEGATE_USE_CUDA)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     delete[] buf;  // LEGATE_USE_CUDA
   }
   return ss.str();

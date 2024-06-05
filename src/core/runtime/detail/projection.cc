@@ -116,28 +116,28 @@ class DelinearizingProjection final : public ProjectionFunction {
   [[nodiscard]] DomainPoint project_point(const DomainPoint& point) const override;
 
  private:
-  std::vector<std::int64_t> strides{};
+  std::vector<std::int64_t> strides_{};
 };
 
 DelinearizingProjection::DelinearizingProjection(const tuple<std::uint64_t>& color_shape)
-  : strides(color_shape.size(), 1)
+  : strides_(color_shape.size(), 1)
 {
   for (std::uint32_t dim = color_shape.size() - 1; dim > 0; --dim) {
-    strides[dim - 1] = strides[dim] * static_cast<std::int64_t>(color_shape[dim]);
+    strides_[dim - 1] = strides_[dim] * static_cast<std::int64_t>(color_shape[dim]);
   }
 }
 
 DomainPoint DelinearizingProjection::project_point(const DomainPoint& point) const
 {
-  LegateAssert(point.dim == 1);
+  LEGATE_ASSERT(point.dim == 1);
 
   DomainPoint result;
   std::int64_t value = point[0];
 
-  result.dim = static_cast<std::int32_t>(strides.size());
+  result.dim = static_cast<std::int32_t>(strides_.size());
   for (std::int32_t dim = 0; dim < result.dim; ++dim) {
-    result[dim] = value / strides[dim];
-    value       = value % strides[dim];
+    result[dim] = value / strides_[dim];
+    value       = value % strides_[dim];
   }
 
   return result;
@@ -240,7 +240,7 @@ void register_legion_functor(Legion::ProjectionID proj_id,
   functor_table.try_emplace(proj_id, std::move(legate_functor));
 }
 
-class register_affine_functor_fn {
+class RegisterAffineFunctorFn {
  public:
   template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
   void operator()(const proj::SymbolicPoint& point, Legion::ProjectionID proj_id)
@@ -249,7 +249,7 @@ class register_affine_functor_fn {
   }
 };
 
-class register_compound_functor_fn {
+class RegisterCompoundFunctorFn {
  public:
   template <std::int32_t SRC_NDIM, std::int32_t TGT_NDIM>
   void operator()(const tuple<std::uint64_t>& color_shape,
@@ -285,7 +285,7 @@ void register_affine_projection_functor(std::uint32_t src_ndim,
 {
   legate::double_dispatch(static_cast<std::int32_t>(src_ndim),
                           static_cast<std::int32_t>(point.size()),
-                          register_affine_functor_fn{},
+                          RegisterAffineFunctorFn{},
                           point,
                           proj_id);
 }
@@ -302,7 +302,7 @@ void register_compound_projection_functor(const tuple<std::uint64_t>& color_shap
 {
   legate::double_dispatch(static_cast<std::int32_t>(color_shape.size()),
                           static_cast<std::int32_t>(point.size()),
-                          register_compound_functor_fn{},
+                          RegisterCompoundFunctorFn{},
                           color_shape,
                           point,
                           proj_id);
@@ -317,7 +317,7 @@ class LinearizingPointTransformFunctor final : public Legion::PointTransformFunc
                               const Domain& domain,
                               const Domain& range) override
   {
-    LegateCheck(range.dim == 1);
+    LEGATE_CHECK(range.dim == 1);
     DomainPoint result;
     result.dim = 1;
 

@@ -23,7 +23,7 @@ using ReqAnalyzer = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_req_analyzer";
+constexpr std::string_view LIBRARY_NAME = "test_req_analyzer";
 
 }  // namespace
 
@@ -52,14 +52,14 @@ void prepare()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   Tester::register_variants(context);
 }
 
 void test_inout_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto store1 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
@@ -77,7 +77,7 @@ void test_inout_store()
 void test_isomorphic_transformed_stores()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
 
   auto store = runtime->create_store(legate::Shape{10}, legate::int64());
   runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});

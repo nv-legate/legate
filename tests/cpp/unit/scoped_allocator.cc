@@ -23,8 +23,8 @@ using ScopedAllocatorUnit = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "legate.scopedallocator";
-constexpr auto MAX_ALIGNMENT        = 16;
+constexpr std::string_view LIBRARY_NAME = "legate.scopedallocator";
+constexpr auto MAX_ALIGNMENT            = 16;
 
 }  // namespace
 
@@ -90,7 +90,7 @@ void test_allocator(BufferOpCode op_code,
                     std::size_t alignment = MAX_ALIGNMENT)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(LIBRARY_NAME);
   auto task    = runtime->create_task(context, ScopedAllocatorTask::TASK_ID);
   auto part    = task.declare_partition();
   static_cast<void>(part);
@@ -117,7 +117,7 @@ void register_tasks()
   }
   prepared     = true;
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library(LIBRARY_NAME);
   ScopedAllocatorTask::register_variants(context);
 }
 

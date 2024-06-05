@@ -23,7 +23,7 @@ using Integration = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "test_scalar_out";
+constexpr std::string_view LIBRARY_NAME = "test_scalar_out";
 
 }  // namespace
 
@@ -47,14 +47,14 @@ struct Copy : public legate::LegateTask<Copy> {
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Copy::register_variants(library);
 }
 
 void test_scalar_out()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   const legate::Shape extents{16};
   auto input  = runtime->create_store(extents, legate::int64(), false /* optimize_scalar */);

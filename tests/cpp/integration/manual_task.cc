@@ -59,7 +59,7 @@ TEST_F(ManualTask, Simple)
   task::simple::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(task::simple::library_name);
+  auto library = runtime->find_library(task::simple::LIBRARY_NAME);
 
   auto store = runtime->create_store(legate::Shape{5, 5}, legate::int64());
   test_auto_task(library, store);
@@ -73,7 +73,7 @@ TEST_F(ManualTask, Invalid)
   task::simple::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(task::simple::library_name);
+  auto library = runtime->find_library(task::simple::LIBRARY_NAME);
 
   auto scalar_store  = runtime->create_store(legate::Scalar{1});
   auto unbound_store = runtime->create_store(legate::int64(), 1);

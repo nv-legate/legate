@@ -23,7 +23,7 @@ using Integration = DefaultFixture;
 
 namespace {
 
-constexpr const char library_name[] = "machine_scope";
+constexpr std::string_view LIBRARY_NAME = "machine_scope";
 
 }  // namespace
 
@@ -44,10 +44,10 @@ struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
   static constexpr std::int32_t TASK_ID = MULTI_VARIANT;
 
   static void cpu_variant(legate::TaskContext context) { validate(context); }
-#if LegateDefined(USE_OPENMP)
+#if LEGATE_DEFINED(USE_OPENMP)
   static void omp_variant(legate::TaskContext context) { validate(context); }
 #endif
-#if LegateDefined(USE_CUDA)
+#if LEGATE_DEFINED(USE_CUDA)
   static void gpu_variant(legate::TaskContext context) { validate(context); }
 #endif
 };
@@ -60,7 +60,7 @@ struct CpuVariantOnlyTask : public legate::LegateTask<CpuVariantOnlyTask> {
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   MultiVariantTask::register_variants(library);
   CpuVariantOnlyTask::register_variants(library);
 }
@@ -148,7 +148,7 @@ TEST_F(Integration, MachineScope)
   register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(LIBRARY_NAME);
 
   test_scoping(library);
   test_cpu_only(library);

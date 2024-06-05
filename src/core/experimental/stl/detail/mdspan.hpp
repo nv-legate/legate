@@ -25,7 +25,7 @@
 #endif
 #endif
 
-#if LegateDefined(LEGATE_STL_HAS_STD_MDSPAN)
+#if LEGATE_DEFINED(LEGATE_STL_HAS_STD_MDSPAN)
 
 #include <mdspan>
 
@@ -43,18 +43,17 @@ LEGATE_PRAGMA_EDG_IGNORE(
 #include "span.hpp"  // this header must come before mdspan.hpp
 
 // Blame Kokkos for these uses of reserved identifiers...
-// NOLINTBEGIN(bugprone-reserved-identifier)
+// NOLINTBEGIN
 #define _MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS 1
 #define _MDSPAN_USE_FAKE_ATTRIBUTE_NO_UNIQUE_ADDRESS
 #define _MDSPAN_NO_UNIQUE_ADDRESS
-// NOLINTEND(bugprone-reserved-identifier)
+// NOLINTEND
 
 #define MDSPAN_IMPL_STANDARD_NAMESPACE std
 #define MDSPAN_IMPL_PROPOSED_NAMESPACE mdspan_experimental
 #include <mdspan/mdspan.hpp>
 // We intentionally define this so that downstream libs do the right thing.
-// NOLINTNEXTLINE(bugprone-reserved-identifier)
-#define __cpp_lib_mdspan 1
+#define __cpp_lib_mdspan 1  // NOLINT
 
 namespace std {
 // DANGER: this actually is potentially quite dangerous...
@@ -89,7 +88,7 @@ namespace legate::experimental::stl {
 namespace detail {
 
 template <typename Function, typename... InputSpans>
-class elementwise_accessor;
+class ElementwiseAccessor;
 
 template <Legion::PrivilegeMode Privilege, typename ElementType, std::int32_t Dim>
 using store_accessor_t =  //
@@ -99,7 +98,7 @@ using store_accessor_t =  //
                         Legion::coord_t,
                         Legion::AffineAccessor<ElementType, Dim>>;
 
-class default_accessor {
+class DefaultAccessor {
  public:
   template <typename ElementType, std::int32_t Dim>
   using type =  //
@@ -118,7 +117,7 @@ class default_accessor {
   {
     if constexpr (Dim == 0) {
       // 0-dimensional legate stores are backed by read-only futures
-      LegateAssert(store.is_future());
+      LEGATE_ASSERT(store.is_future());
       return store.read_accessor<const ElementType, 1>();
     } else if constexpr (std::is_const_v<ElementType>) {
       return store.read_accessor<ElementType, Dim>();
@@ -130,7 +129,7 @@ class default_accessor {
 };
 
 template <typename Op, bool Exclusive = false>
-class reduction_accessor {
+class ReductionAccessor {
  public:
   template <typename ElementType, std::int32_t Dim>
   using type =  //
@@ -151,7 +150,7 @@ class reduction_accessor {
   {
     if constexpr (Dim == 0) {
       // 0-dimensional legate stores are backed by read-only futures
-      LegateAssert(store.is_future());
+      LEGATE_ASSERT(store.is_future());
       return store.read_accessor<const ElementType, 1>();
     } else {
       return store.reduce_accessor<Op, Exclusive, Dim>();
@@ -163,35 +162,35 @@ class reduction_accessor {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // mdspan_accessor:
 //    A custom accessor policy for use with std::mdspan for accessing a Legate store.
-template <typename ElementType, std::int32_t ActualDim, typename Accessor = default_accessor>
-class mdspan_accessor {
+template <typename ElementType, std::int32_t ActualDim, typename Accessor = DefaultAccessor>
+class MDSpanAccessor {
  public:
-  static constexpr auto Dim = std::max(ActualDim, std::int32_t{1});
+  static constexpr auto DIM = std::max(ActualDim, std::int32_t{1});
   using value_type          = std::remove_const_t<ElementType>;
   using element_type        = ElementType;
   using data_handle_type    = std::size_t;
   using accessor_type       = typename Accessor::template type<ElementType, ActualDim>;
-  using reference           = decltype(std::declval<const accessor_type&>()[Point<Dim>::ONES()]);
-  using offset_policy       = mdspan_accessor;
+  using reference           = decltype(std::declval<const accessor_type&>()[Point<DIM>::ONES()]);
+  using offset_policy       = MDSpanAccessor;
 
   template <typename, std::int32_t, typename>
   friend class mdspan_accessor;
 
   // NOLINTNEXTLINE(modernize-use-equals-default):  to work around an nvcc-11 bug
-  LEGATE_HOST_DEVICE mdspan_accessor() noexcept  // = default;
+  LEGATE_HOST_DEVICE MDSpanAccessor() noexcept  // = default;
   {
   }
 
-  LEGATE_HOST_DEVICE explicit mdspan_accessor(PhysicalStore store, const Rect<Dim>& shape) noexcept
+  LEGATE_HOST_DEVICE explicit MDSpanAccessor(PhysicalStore store, const Rect<DIM>& shape) noexcept
     : store_{std::move(store)},
-      shape_{shape.hi - shape.lo + Point<Dim>::ONES()},
+      shape_{shape.hi - shape.lo + Point<DIM>::ONES()},
       origin_{shape.lo},
       accessor_{Accessor::template get<ElementType, ActualDim>(store_)}
   {
   }
 
-  LEGATE_HOST_DEVICE explicit mdspan_accessor(const PhysicalStore& store) noexcept
-    : mdspan_accessor{store, store.shape<Dim>()}
+  LEGATE_HOST_DEVICE explicit MDSpanAccessor(const PhysicalStore& store) noexcept
+    : MDSpanAccessor{store, store.shape<DIM>()}
   {
   }
 
@@ -218,17 +217,17 @@ class mdspan_accessor {
   //       |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
   LEGATE_PRAGMA_PUSH()
   LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized")
-  LEGATE_HOST_DEVICE mdspan_accessor(mdspan_accessor&& other) noexcept = default;
-  LEGATE_HOST_DEVICE mdspan_accessor(const mdspan_accessor& other)     = default;
+  LEGATE_HOST_DEVICE MDSpanAccessor(MDSpanAccessor&& other) noexcept = default;
+  LEGATE_HOST_DEVICE MDSpanAccessor(const MDSpanAccessor& other)     = default;
   LEGATE_PRAGMA_POP()
 
-  LEGATE_HOST_DEVICE mdspan_accessor& operator=(mdspan_accessor&& other) noexcept
+  LEGATE_HOST_DEVICE MDSpanAccessor& operator=(MDSpanAccessor&& other) noexcept
   {
     *this = other;
     return *this;
   }
 
-  LEGATE_HOST_DEVICE mdspan_accessor& operator=(const mdspan_accessor& other) noexcept
+  LEGATE_HOST_DEVICE MDSpanAccessor& operator=(const MDSpanAccessor& other) noexcept
   {
     if (this == &other) {
       return *this;
@@ -243,8 +242,8 @@ class mdspan_accessor {
   // NOLINTBEGIN(google-explicit-constructor)
   template <typename OtherElementType>                                          //
     requires(std::is_convertible_v<OtherElementType (*)[], ElementType (*)[]>)  //
-  LEGATE_HOST_DEVICE mdspan_accessor(
-    const mdspan_accessor<OtherElementType, Dim, Accessor>& other) noexcept
+  LEGATE_HOST_DEVICE MDSpanAccessor(
+    const MDSpanAccessor<OtherElementType, DIM, Accessor>& other) noexcept
     : store_{other.store_},
       shape_{other.shape_},
       origin_{other.origin_},
@@ -256,10 +255,10 @@ class mdspan_accessor {
   LEGATE_HOST_DEVICE [[nodiscard]] reference access(data_handle_type handle,
                                                     std::size_t i) const noexcept
   {
-    Point<Dim> p;
+    Point<DIM> p;
     auto offset = handle + i;
 
-    for (auto dim = Dim - 1; dim >= 0; --dim) {
+    for (auto dim = DIM - 1; dim >= 0; --dim) {
       p[dim] = offset % shape_[dim];
       offset /= shape_[dim];
     }
@@ -274,15 +273,16 @@ class mdspan_accessor {
 
  private:
   PhysicalStore store_{nullptr};
-  Point<Dim> shape_{};
-  Point<Dim> origin_{};
+  Point<DIM> shape_{};
+  Point<DIM> origin_{};
   accessor_type accessor_{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Store>
-struct value_type_of_
-  : meta::if_c<(type_code_of<Store> == Type::Code::NIL), meta::empty, meta::type<Store>> {};
+struct ValueTypeOf : meta::if_c<(type_code_of_v<Store> == Type::Code::NIL),
+                                meta::empty,
+                                traits::detail::type_identity<Store>> {};
 
 }  // namespace detail
 
@@ -298,7 +298,7 @@ using mdspan_t =  //
   std::mdspan<ElementType,
               std::dextents<coord_t, Dim>,
               std::layout_right,
-              detail::mdspan_accessor<ElementType, Dim>>;
+              detail::MDSpanAccessor<ElementType, Dim>>;
 
 template <typename Op, std::int32_t Dim, bool Exclusive = false>
 using mdspan_reduction_t =  //
@@ -306,7 +306,7 @@ using mdspan_reduction_t =  //
     typename Op::RHS,
     std::dextents<coord_t, Dim>,
     std::layout_right,
-    detail::mdspan_accessor<typename Op::RHS, Dim, detail::reduction_accessor<Op, Exclusive>>>;
+    detail::MDSpanAccessor<typename Op::RHS, Dim, detail::ReductionAccessor<Op, Exclusive>>>;
 
 namespace detail {
 template <typename T>
@@ -338,7 +338,7 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
   using data_handle_type = typename mdspan_t::data_handle_type;
   friend class flat_mdspan_view<mdspan_t>;
 
-  struct pointer_type {
+  struct pointer_type {  // NOLINT(readability-identifier-naming)
     std::remove_const_t<Element> elem_;
     LEGATE_HOST_DEVICE [[nodiscard]] Element* operator->() const noexcept { return &elem_; }
   };
@@ -369,7 +369,7 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
 
   LEGATE_HOST_DEVICE flat_mdspan_iterator& operator++() noexcept
   {
-    LegateAssert(idx_ < span_->size());
+    LEGATE_ASSERT(idx_ < span_->size());
     ++idx_;
     return *this;
   }
@@ -383,7 +383,7 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
 
   LEGATE_HOST_DEVICE flat_mdspan_iterator& operator--() noexcept
   {
-    LegateAssert(idx_ > 0);
+    LEGATE_ASSERT(idx_ > 0);
     --idx_;
     return *this;
   }
@@ -398,10 +398,10 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
   LEGATE_HOST_DEVICE flat_mdspan_iterator& operator+=(difference_type n) noexcept
   {
     if (n < 0) {
-      LegateAssert(idx_ >= static_cast<std::size_t>(-n));
+      LEGATE_ASSERT(idx_ >= static_cast<std::size_t>(-n));
       idx_ -= static_cast<std::size_t>(-n);
     } else {
-      LegateAssert(idx_ + static_cast<std::size_t>(n) <= span_->size());
+      LEGATE_ASSERT(idx_ + static_cast<std::size_t>(n) <= span_->size());
       idx_ += static_cast<std::size_t>(n);
     }
     return *this;
@@ -420,7 +420,7 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
   LEGATE_HOST_DEVICE [[nodiscard]] friend difference_type operator-(
     const flat_mdspan_iterator& self, const flat_mdspan_iterator& other) noexcept
   {
-    LegateAssert(self.span_ == other.span_);
+    LEGATE_ASSERT(self.span_ == other.span_);
     return static_cast<difference_type>(self.idx_) - static_cast<difference_type>(other.idx_);
   }
 
@@ -448,7 +448,7 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
   LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator==(const flat_mdspan_iterator& lhs,
                                                           const flat_mdspan_iterator& rhs) noexcept
   {
-    LegateAssert(lhs.span_ == rhs.span_);
+    LEGATE_ASSERT(lhs.span_ == rhs.span_);
     return lhs.idx_ == rhs.idx_;
   }
 
@@ -461,7 +461,7 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
   LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator<(const flat_mdspan_iterator& lhs,
                                                          const flat_mdspan_iterator& rhs) noexcept
   {
-    LegateAssert(lhs.span_ == rhs.span_);
+    LEGATE_ASSERT(lhs.span_ == rhs.span_);
     return lhs.idx_ < rhs.idx_;
   }
 
@@ -549,7 +549,7 @@ LEGATE_HOST_DEVICE void assign(std::mdspan<LeftElement, Extent, Layout, LeftAcce
 {
   static_assert(
     std::is_assignable_v<typename LeftAccessor::reference, typename RightAccessor::reference>);
-  LegateAssert(lhs.extents() == rhs.extents());
+  LEGATE_ASSERT(lhs.extents() == rhs.extents());
 
   const auto lhs_view = detail::flatten(std::move(lhs));
   const auto rhs_view = detail::flatten(std::move(rhs));

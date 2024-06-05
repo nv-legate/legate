@@ -72,17 +72,17 @@ class Factory final : public detail::CommunicatorFactory {
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
  protected:
-  Legion::FutureMap initialize(const mapping::detail::Machine& machine,
-                               std::uint32_t num_tasks) override;
-  void finalize(const mapping::detail::Machine& machine,
-                std::uint32_t num_tasks,
-                const Legion::FutureMap& communicator) override;
+  Legion::FutureMap initialize_(const mapping::detail::Machine& machine,
+                                std::uint32_t num_tasks) override;
+  void finalize_(const mapping::detail::Machine& machine,
+                 std::uint32_t num_tasks,
+                 const Legion::FutureMap& communicator) override;
 
  private:
-  const detail::Library* core_library_;
+  const detail::Library* core_library_{};
 };
 
-Factory::Factory(const detail::Library* core_library) : core_library_(core_library) {}
+Factory::Factory(const detail::Library* core_library) : core_library_{core_library} {}
 
 bool Factory::needs_barrier() const
 {
@@ -97,10 +97,10 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
   return target == mapping::TaskTarget::GPU;
 }
 
-Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine,
-                                      std::uint32_t num_tasks)
+Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
+                                       std::uint32_t num_tasks)
 {
-  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
+  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   // Create a communicator ID
   detail::TaskLauncher init_nccl_id_launcher{
@@ -116,11 +116,11 @@ Legion::FutureMap Factory::initialize(const mapping::detail::Machine& machine,
   return init_nccl_launcher.execute(launch_domain);
 }
 
-void Factory::finalize(const mapping::detail::Machine& machine,
-                       std::uint32_t num_tasks,
-                       const Legion::FutureMap& communicator)
+void Factory::finalize_(const mapping::detail::Machine& machine,
+                        std::uint32_t num_tasks,
+                        const Legion::FutureMap& communicator)
 {
-  Domain launch_domain(Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
+  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   detail::TaskLauncher launcher{
     core_library_, machine, LEGATE_CORE_FINALIZE_NCCL_TASK_ID, LEGATE_GPU_VARIANT};
@@ -155,7 +155,7 @@ ncclComm_t* init_nccl(const Legion::Task* task,
 
   legate::detail::show_progress(task, context, runtime);
 
-  LegateCheck(task->futures.size() == 1);
+  LEGATE_CHECK(task->futures.size() == 1);
 
   auto id   = task->futures[0].get_result<ncclUniqueId>();
   auto comm = std::make_unique<ncclComm_t>();
@@ -188,14 +188,14 @@ ncclComm_t* init_nccl(const Legion::Task* task,
   // Perform a warm-up all-to-all
 
   cudaEvent_t ev_start, ev_end_all_to_all, ev_end_all_gather;
-  LegateCheckCUDA(cudaEventCreate(&ev_start));
-  LegateCheckCUDA(cudaEventCreate(&ev_end_all_to_all));
-  LegateCheckCUDA(cudaEventCreate(&ev_end_all_gather));
+  LEGATE_CHECK_CUDA(cudaEventCreate(&ev_start));
+  LEGATE_CHECK_CUDA(cudaEventCreate(&ev_end_all_to_all));
+  LEGATE_CHECK_CUDA(cudaEventCreate(&ev_end_all_gather));
 
   auto src_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
   auto tgt_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
 
-  LegateCheckCUDA(cudaEventRecord(ev_start, stream));
+  LEGATE_CHECK_CUDA(cudaEventRecord(ev_start, stream));
 
   CHECK_NCCL(ncclGroupStart());
   for (std::size_t idx = 0; idx < num_ranks; ++idx) {
@@ -204,18 +204,18 @@ ncclComm_t* init_nccl(const Legion::Task* task,
   }
   CHECK_NCCL(ncclGroupEnd());
 
-  LegateCheckCUDA(cudaEventRecord(ev_end_all_to_all, stream));
+  LEGATE_CHECK_CUDA(cudaEventRecord(ev_end_all_to_all, stream));
 
   CHECK_NCCL(ncclAllGather(src_buffer.ptr(0), tgt_buffer.ptr(0), 1, ncclUint64, *comm, stream));
 
-  LegateCheckCUDA(cudaEventRecord(ev_end_all_gather, stream));
+  LEGATE_CHECK_CUDA(cudaEventRecord(ev_end_all_gather, stream));
 
-  LegateCheckCUDA(cudaEventSynchronize(ev_end_all_gather));
+  LEGATE_CHECK_CUDA(cudaEventSynchronize(ev_end_all_gather));
 
   float time_all_to_all = 0.;
   float time_all_gather = 0.;
-  LegateCheckCUDA(cudaEventElapsedTime(&time_all_to_all, ev_start, ev_end_all_to_all));
-  LegateCheckCUDA(cudaEventElapsedTime(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
+  LEGATE_CHECK_CUDA(cudaEventElapsedTime(&time_all_to_all, ev_start, ev_end_all_to_all));
+  LEGATE_CHECK_CUDA(cudaEventElapsedTime(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
 
   if (0 == rank_id) {
     legate::detail::log_legate().debug(
@@ -237,7 +237,7 @@ void finalize_nccl(const Legion::Task* task,
 
   legate::detail::show_progress(task, context, runtime);
 
-  LegateCheck(task->futures.size() == 1);
+  LEGATE_CHECK(task->futures.size() == 1);
   auto comm = task->futures[0].get_result<ncclComm_t*>();
   CHECK_NCCL(ncclCommDestroy(*comm));
   delete comm;

@@ -38,7 +38,7 @@ InternalSharedPtr<LogicalStore> LogicalArray::data() const
 
 bool BaseLogicalArray::unbound() const
 {
-  LegateAssert(!nullable() || data_->unbound() == null_mask_->unbound());
+  LEGATE_ASSERT(!nullable() || data_->unbound() == null_mask_->unbound());
   return data_->unbound();
 }
 
@@ -91,10 +91,10 @@ InternalSharedPtr<LogicalStore> BaseLogicalArray::null_mask() const
 
 InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array() const
 {
-  return _get_physical_array();
+  return get_base_physical_array();
 }
 
-InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::_get_physical_array() const
+InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array() const
 {
   auto data_store = data_->get_physical_store();
   InternalSharedPtr<PhysicalStore> null_mask_store{};
@@ -223,7 +223,7 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
 
 InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array() const
 {
-  auto desc_arr    = descriptor_->_get_physical_array();
+  auto desc_arr    = descriptor_->get_base_physical_array();
   auto vardata_arr = vardata_->get_physical_array();
   return make_internal_shared<ListPhysicalArray>(
     type_, std::move(desc_arr), std::move(vardata_arr));

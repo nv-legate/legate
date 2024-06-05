@@ -42,7 +42,7 @@ PhysicalArray PhysicalArray::child(std::uint32_t index) const
 
 Domain PhysicalArray::domain() const { return impl_->domain(); }
 
-void PhysicalArray::check_shape_dimension(std::int32_t dim) const
+void PhysicalArray::check_shape_dimension_(std::int32_t dim) const
 {
   impl_->check_shape_dimension(dim);
 }

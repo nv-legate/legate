@@ -69,7 +69,7 @@ void ReturnedCppException::legion_deserialize(const void* buffer)
   auto rem_cap = std::numeric_limits<std::size_t>::max();
 
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &kind);
-  LegateAssert(kind == ExceptionKind::CPP);
+  LEGATE_ASSERT(kind == ExceptionKind::CPP);
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &raised);
   if (raised) {
     std::uint64_t mess_size;

@@ -23,19 +23,19 @@ namespace legate::detail {
 
 /*static*/ void Config::parse()
 {
-  if (!LegateDefined(LEGATE_USE_CUDA) && LEGATE_NEED_CUDA.get(/* default_value = */ false)) {
+  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_NEED_CUDA.get(/* default_value = */ false)) {
     // ignore fprintf return values here, we are about to exit anyways
     std::cerr << "[legate.core] Legate was run with GPUs but was not built with GPU support. "
                  "Please install Legate again with the \"--with-cuda\" flag.\n";
     std::exit(1);
   }
-  if (!LegateDefined(LEGATE_USE_OPENMP) && LEGATE_NEED_OPENMP.get(/* default_value = */ false)) {
+  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && LEGATE_NEED_OPENMP.get(/* default_value = */ false)) {
     std::cerr
       << "[legate.core] Legate was run with OpenMP enabled, but was not built with OpenMP support. "
          "Please install Legate again with the \"--with-openmp\" flag.\n";
     std::exit(1);
   }
-  if (!LegateDefined(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value = */ false)) {
+  if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value = */ false)) {
     std::cerr
       << "[legate.core] Legate was run on multiple nodes but was not built with networking "
          "support. Please install Legate again with network support (e.g. \"--with-mpi\" or "

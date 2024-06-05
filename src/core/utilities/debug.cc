@@ -19,12 +19,12 @@ namespace legate {
 
 namespace {  // anonymous
 
-class print_dense_array_fn {
+class PrintDenseArrayFn {
  public:
   template <Type::Code CODE, int DIM>
   [[nodiscard]] std::string operator()(const PhysicalStore& store) const
   {
-    using T              = type_of<CODE>;
+    using T              = type_of_t<CODE>;
     const Rect<DIM> rect = store.shape<DIM>();
     return print_dense_array(store.read_accessor<T>(rect), rect);
   }
@@ -36,7 +36,7 @@ class print_dense_array_fn {
 // cuda::std::complex, see legate.core.internal#475
 // std::string print_dense_array(const PhysicalStore& store)
 // {
-//   LegateCheck(store.is_readable());
+//   LEGATE_CHECK(store.is_readable());
 //   return double_dispatch(store.dim(), store.code(), print_dense_array_fn{}, store);
 // }
 

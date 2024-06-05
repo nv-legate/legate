@@ -27,7 +27,7 @@ TEST_F(Integration, RegionManager)
   task::region_manager::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(task::region_manager::library_name);
+  auto context = runtime->find_library(task::region_manager::LIBRARY_NAME);
   auto task    = runtime->create_task(context, 0);
 
   std::vector<legate::LogicalStore> stores;
@@ -46,7 +46,7 @@ TEST_F(Integration, RegionManagerUnbound)
   task::region_manager::register_tasks();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(task::region_manager::library_name);
+  auto context = runtime->find_library(task::region_manager::LIBRARY_NAME);
   auto task    = runtime->create_task(context, 0);
 
   std::vector<legate::LogicalStore> stores;

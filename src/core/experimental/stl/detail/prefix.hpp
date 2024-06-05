@@ -18,11 +18,11 @@
 
 #include "core/utilities/macros.h"
 
-#if !LegateDefined(LEGATE_STL_DETAIL_CONFIG_INCLUDED)
+#if !LEGATE_DEFINED(LEGATE_STL_DETAIL_CONFIG_INCLUDED)
 #error "config.hpp must be included before prefix.hpp"
 #endif
 
-#if LegateDefined(LEGATE_STL_DETAIL_PREFIX_INCLUDED)
+#if LEGATE_DEFINED(LEGATE_STL_DETAIL_PREFIX_INCLUDED)
 #error "prefix.hpp included twice. Did you forget suffix.hpp elsewhere?"
 #endif
 
@@ -35,7 +35,7 @@
 #endif
 
 #if !LEGATE_STL_CONCEPTS()
-#define requires LEGATE_STL_REQUIRES
+#define requires LEGATE_STL_REQUIRES  // NOLINT
 #endif
 
 LEGATE_PRAGMA_PUSH()

@@ -25,10 +25,10 @@ namespace legate::comm {
 
 void register_tasks(const detail::Library* library)
 {
-  if (LegateDefined(LEGATE_USE_CUDA)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     nccl::register_tasks(library);
   }
-  if (LegateDefined(LEGATE_USE_CAL)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
   const bool disable_mpi = LEGATE_DISABLE_MPI.get(DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST);
@@ -39,11 +39,11 @@ void register_tasks(const detail::Library* library)
 
 void register_builtin_communicator_factories(const detail::Library* library)
 {
-  if (LegateDefined(LEGATE_USE_CUDA)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     nccl::register_factory(library);
   }
   cpu::register_factory(library);
-  if (LegateDefined(LEGATE_USE_CAL)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_factory(library);
   }
 }

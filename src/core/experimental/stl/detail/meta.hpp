@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "core/utilities/detail/type_traits.h"
+
 #include "config.hpp"
 
 #include <cstdint>
@@ -24,22 +26,7 @@ namespace legate::experimental::stl::meta {
 
 struct na;
 
-struct empty {};
-
-namespace detail {
-
-template <typename T>
-struct type_ {
-  using type = T;
-};
-
-}  // namespace detail
-
-template <typename T>
-using type = detail::type_<T>;
-
-template <typename T>
-using identity = typename type<T>::type;
+struct empty {};  // NOLINT(readability-identifier-naming)
 
 template <auto Value>
 using constant = std::integral_constant<decltype(Value), Value>;
@@ -47,7 +34,7 @@ using constant = std::integral_constant<decltype(Value), Value>;
 namespace detail {
 
 template <std::size_t>
-struct eval_ {
+struct eval_ {  // NOLINT(readability-identifier-naming)
   template <template <typename...> typename Fun, typename... Args>
   using eval = Fun<Args...>;
 };
@@ -61,59 +48,54 @@ template <typename Fun, typename... Args>
 using eval = eval_q<Fun::template eval, Args...>;
 
 template <typename... Ts>
-struct list {
+struct list {  // NOLINT(readability-identifier-naming)
   template <typename Fn>
   using eval = meta::eval<Fn, Ts...>;
 };
 
 template <template <typename...> typename Fun>
-struct quote {
+struct quote {  // NOLINT(readability-identifier-naming)
   template <typename... Args>
   using eval = eval_q<Fun, Args...>;
 };
 
-template <typename A, typename B>
-using first_t = A;
-
-template <typename A, typename B>
-using second_t = B;
-
-template <typename A>
-using void_t = second_t<A, void>;
-
 namespace detail {
 
-template <template <typename...> typename, typename...>
-struct test_evaluable_with_;
+template <typename Head, typename... Tail>
+using front_ = Head;
 
-struct test_evaluable_with_base_ {
+template <template <typename...> typename, typename...>
+struct test_evaluable_with;  // NOLINT(readability-identifier-naming)
+
+struct test_evaluable_with_base {  // NOLINT(readability-identifier-naming)
   template <template <typename...> typename C, typename... Args>
-  friend constexpr first_t<bool, C<Args...>> test_evaluable_(test_evaluable_with_<C, Args...>*)
+  friend constexpr front_<bool, C<Args...>> test_evaluable(test_evaluable_with<C, Args...>*)
   {
     return true;
   }
 };
 
 template <template <typename...> typename C, typename... Args>
-struct test_evaluable_with_ : test_evaluable_with_base_ {};
+struct test_evaluable_with : test_evaluable_with_base {};
 
-constexpr bool test_evaluable_(...) { return false; }
+constexpr bool test_evaluable(...) { return false; }
 
 template <template <typename...> typename Fun, typename... Args>
-inline constexpr bool evaluable_q =
-  test_evaluable_(static_cast<test_evaluable_with_<Fun, Args...>*>(nullptr));
+inline constexpr bool evaluable_q =  // NOLINT(readability-identifier-naming)
+  test_evaluable(static_cast<test_evaluable_with<Fun, Args...>*>(nullptr));
 
 }  // namespace detail
 
 using detail::evaluable_q;
 
 template <typename Fun, typename... Args>
-inline constexpr bool evaluable = evaluable_q<Fun::template eval, Args...>;
+inline constexpr bool evaluable =  // NOLINT(readability-identifier-naming)
+  evaluable_q<Fun::template eval, Args...>;
 
 namespace detail {
 
 template <bool>
-struct if_ {
+struct if_ {  // NOLINT(readability-identifier-naming)
   template <typename Then, typename... Else>
   using eval = Then;
 };
@@ -130,15 +112,16 @@ template <bool Cond, typename Then = void, typename... Else>
 using if_c = eval<detail::if_<Cond>, Then, Else...>;
 
 template <typename T>
-struct always {
+struct always {  // NOLINT(readability-identifier-naming)
   template <typename...>
   using eval = T;
 };
 
 template <template <typename...> typename Fun, typename Default>
-struct quote_or {
+struct quote_or {  // NOLINT(readability-identifier-naming)
   template <bool Evaluable>
-  struct maybe : if_c<Evaluable, quote<Fun>, always<Default>> {};
+  struct maybe  // NOLINT(readability-identifier-naming)
+    : if_c<Evaluable, quote<Fun>, always<Default>> {};
 
   template <typename... Args>
   using maybe_t = maybe<evaluable_q<Fun, Args...>>;
@@ -148,23 +131,16 @@ struct quote_or {
 };
 
 template <typename Fun, typename... Args>
-struct bind_front {
+struct bind_front {  // NOLINT(readability-identifier-naming)
   template <typename... OtherArgs>
   using eval = eval<Fun, Args..., OtherArgs...>;
 };
 
 template <typename Fun, typename... Args>
-struct bind_back {
+struct bind_back {  // NOLINT(readability-identifier-naming)
   template <typename... OtherArgs>
   using eval = eval<Fun, OtherArgs..., Args...>;
 };
-
-namespace detail {
-
-template <typename Head, typename... Tail>
-using front_ = Head;
-
-}  // namespace detail
 
 template <typename... Ts>
 using front = eval_q<detail::front_, Ts...>;
@@ -177,7 +153,7 @@ struct fill_n_;
 template <std::size_t... Is>
 struct fill_n_<std::index_sequence<Is...>> {
   template <typename Value, typename Continuation>
-  using eval = eval<Continuation, first_t<Value, constant<Is>>...>;
+  using eval = eval<Continuation, front_<Value, constant<Is>>...>;
 };
 
 }  // namespace detail

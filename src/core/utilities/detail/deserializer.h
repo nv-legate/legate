@@ -28,7 +28,10 @@
 #include "core/utilities/span.h"
 #include "core/utilities/typedefs.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -39,9 +42,6 @@ std::pair<void*, std::size_t> align_for_unpack(void* ptr,
                                                std::size_t capacity,
                                                std::size_t bytes = sizeof(T),
                                                std::size_t align = alignof(T));
-}  // namespace legate::detail
-
-namespace legate {
 
 template <typename Deserializer>
 class BaseDeserializer {
@@ -51,27 +51,27 @@ class BaseDeserializer {
   template <typename T>
   [[nodiscard]] T unpack();
 
-  template <typename T, std::enable_if_t<type_code_of<T> != Type::Code::NIL>* = nullptr>
-  void _unpack(T& value);
+  template <typename T, std::enable_if_t<type_code_of_v<T> != Type::Code::NIL>* = nullptr>
+  void unpack_impl(T& value);
 
   template <typename T>
-  void _unpack(std::vector<T>& values);
+  void unpack_impl(std::vector<T>& values);
 
   template <typename T1, typename T2>
-  void _unpack(std::pair<T1, T2>& values);
+  void unpack_impl(std::pair<T1, T2>& values);
 
-  [[nodiscard]] std::vector<Scalar> unpack_scalars();
-  [[nodiscard]] std::unique_ptr<detail::Scalar> unpack_scalar();
-  void _unpack(mapping::TaskTarget& value);
-  void _unpack(mapping::ProcessorRange& value);
-  void _unpack(mapping::detail::Machine& value);
-  void _unpack(Domain& domain);
+  [[nodiscard]] std::vector<legate::Scalar> unpack_scalars();
+  [[nodiscard]] std::unique_ptr<Scalar> unpack_scalar();
+  void unpack_impl(mapping::TaskTarget& value);
+  void unpack_impl(mapping::ProcessorRange& value);
+  void unpack_impl(mapping::detail::Machine& value);
+  void unpack_impl(Domain& domain);
 
   [[nodiscard]] Span<const std::int8_t> current_args() const;
 
  protected:
-  [[nodiscard]] InternalSharedPtr<detail::TransformStack> unpack_transform();
-  [[nodiscard]] InternalSharedPtr<detail::Type> unpack_type();
+  [[nodiscard]] InternalSharedPtr<TransformStack> unpack_transform_();
+  [[nodiscard]] InternalSharedPtr<Type> unpack_type_();
 
   Span<const std::int8_t> args_{};
 };
@@ -80,20 +80,20 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
  public:
   TaskDeserializer(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions);
 
-  using BaseDeserializer::_unpack;
+  using BaseDeserializer::unpack_impl;
 
-  [[nodiscard]] std::vector<InternalSharedPtr<detail::PhysicalArray>> unpack_arrays();
-  [[nodiscard]] InternalSharedPtr<detail::PhysicalArray> unpack_array();
-  [[nodiscard]] InternalSharedPtr<detail::BasePhysicalArray> unpack_base_array();
-  [[nodiscard]] InternalSharedPtr<detail::ListPhysicalArray> unpack_list_array();
-  [[nodiscard]] InternalSharedPtr<detail::StructPhysicalArray> unpack_struct_array();
-  [[nodiscard]] InternalSharedPtr<detail::PhysicalStore> unpack_store();
+  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>> unpack_arrays();
+  [[nodiscard]] InternalSharedPtr<PhysicalArray> unpack_array();
+  [[nodiscard]] InternalSharedPtr<BasePhysicalArray> unpack_base_array();
+  [[nodiscard]] InternalSharedPtr<ListPhysicalArray> unpack_list_array();
+  [[nodiscard]] InternalSharedPtr<StructPhysicalArray> unpack_struct_array();
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> unpack_store();
 
-  void _unpack(detail::FutureWrapper& value);
-  void _unpack(detail::RegionField& value);
-  void _unpack(detail::UnboundRegionField& value);
-  void _unpack(comm::Communicator& value);
-  void _unpack(Legion::PhaseBarrier& barrier);
+  void unpack_impl(FutureWrapper& value);
+  void unpack_impl(RegionField& value);
+  void unpack_impl(UnboundRegionField& value);
+  void unpack_impl(legate::comm::Communicator& value);
+  void unpack_impl(Legion::PhaseBarrier& barrier);
 
  private:
   Span<const Legion::Future> futures_{};
@@ -101,36 +101,36 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   std::vector<Legion::OutputRegion> outputs_{};
 };
 
-}  // namespace legate
+}  // namespace legate::detail
 
-namespace legate::mapping {
+namespace legate::mapping::detail {
 
-class MapperDataDeserializer : public BaseDeserializer<MapperDataDeserializer> {
+class MapperDataDeserializer : public legate::detail::BaseDeserializer<MapperDataDeserializer> {
  public:
   explicit MapperDataDeserializer(const Legion::Mappable* mappable);
 
-  using BaseDeserializer::_unpack;
+  using BaseDeserializer::unpack_impl;
 };
 
-class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
+class TaskDeserializer : public legate::detail::BaseDeserializer<TaskDeserializer> {
  public:
   TaskDeserializer(const Legion::Task* task,
                    Legion::Mapping::MapperRuntime* runtime,
                    Legion::Mapping::MapperContext context);
 
-  using BaseDeserializer::_unpack;
+  using BaseDeserializer::unpack_impl;
 
-  [[nodiscard]] std::vector<InternalSharedPtr<detail::Array>> unpack_arrays();
-  [[nodiscard]] InternalSharedPtr<detail::Array> unpack_array();
-  [[nodiscard]] InternalSharedPtr<detail::BaseArray> unpack_base_array();
-  [[nodiscard]] InternalSharedPtr<detail::ListArray> unpack_list_array();
-  [[nodiscard]] InternalSharedPtr<detail::StructArray> unpack_struct_array();
-  [[nodiscard]] InternalSharedPtr<detail::Store> unpack_store();
+  [[nodiscard]] std::vector<InternalSharedPtr<Array>> unpack_arrays();
+  [[nodiscard]] InternalSharedPtr<Array> unpack_array();
+  [[nodiscard]] InternalSharedPtr<BaseArray> unpack_base_array();
+  [[nodiscard]] InternalSharedPtr<ListArray> unpack_list_array();
+  [[nodiscard]] InternalSharedPtr<StructArray> unpack_struct_array();
+  [[nodiscard]] InternalSharedPtr<Store> unpack_store();
 
-  void _unpack(detail::Array& array);
-  void _unpack(detail::Store& store);
-  void _unpack(detail::FutureWrapper& value);
-  void _unpack(detail::RegionField& value, bool unbound);
+  void unpack_impl(Array& array);
+  void unpack_impl(Store& store);
+  void unpack_impl(FutureWrapper& value);
+  void unpack_impl(RegionField& value, bool unbound);
 
  private:
   const Legion::Task* task_{};
@@ -138,7 +138,7 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   Legion::Mapping::MapperContext context_{};
 };
 
-class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {
+class CopyDeserializer : public legate::detail::BaseDeserializer<CopyDeserializer> {
   using Requirements = std::vector<Legion::RegionRequirement>;
   using ReqsRef      = std::reference_wrapper<const Requirements>;
 
@@ -148,12 +148,12 @@ class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {
                    Legion::Mapping::MapperRuntime* runtime,
                    Legion::Mapping::MapperContext context);
 
-  using BaseDeserializer::_unpack;
+  using BaseDeserializer::unpack_impl;
 
   void next_requirement_list();
 
-  void _unpack(detail::Store& store);
-  void _unpack(detail::RegionField& value);
+  void unpack_impl(Store& store);
+  void unpack_impl(RegionField& value);
 
  private:
   std::vector<ReqsRef> all_reqs_{};
@@ -163,6 +163,6 @@ class CopyDeserializer : public BaseDeserializer<CopyDeserializer> {
   std::uint32_t req_index_offset_{};
 };
 
-}  // namespace legate::mapping
+}  // namespace legate::mapping::detail
 
-#include "core/utilities/deserializer.inl"
+#include "core/utilities/detail/deserializer.inl"

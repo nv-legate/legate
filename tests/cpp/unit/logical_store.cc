@@ -29,14 +29,14 @@ void test_unbound_store(std::int32_t dim)
   auto runtime = legate::Runtime::get_runtime();
   // primitive type
   {
-    const legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
+    const legate::Type type{legate::primitive_type(legate::type_code_of_v<T>)};
     auto store = runtime->create_store(type, dim);
 
     EXPECT_TRUE(store.unbound());
     EXPECT_EQ(store.dim(), dim);
     EXPECT_THROW(static_cast<void>(store.extents()), std::invalid_argument);
     EXPECT_THROW(static_cast<void>(store.volume()), std::invalid_argument);
-    EXPECT_EQ(store.type().code(), legate::type_code_of<T>);
+    EXPECT_EQ(store.type().code(), legate::type_code_of_v<T>);
     EXPECT_FALSE(store.transformed());
     EXPECT_FALSE(store.has_scalar_storage());
   }
@@ -64,14 +64,14 @@ template <typename T>
 void test_bound_store(const legate::Shape& shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  const legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
+  const legate::Type type{legate::primitive_type(legate::type_code_of_v<T>)};
   auto store = runtime->create_store(shape, type);
 
   EXPECT_FALSE(store.unbound());
   EXPECT_EQ(store.dim(), shape.ndim());
   EXPECT_EQ(store.extents(), shape.extents());
   EXPECT_EQ(store.volume(), store.extents().volume());
-  EXPECT_EQ(store.type().code(), legate::type_code_of<T>);
+  EXPECT_EQ(store.type().code(), legate::type_code_of_v<T>);
   EXPECT_FALSE(store.transformed());
   EXPECT_FALSE(store.has_scalar_storage());
 }
@@ -80,7 +80,7 @@ template <typename T>
 void test_scalar_store(T value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  const legate::Type type{legate::primitive_type(legate::type_code_of<T>)};
+  const legate::Type type{legate::primitive_type(legate::type_code_of_v<T>)};
   auto store = runtime->create_store(legate::Scalar{value});
 
   EXPECT_FALSE(store.unbound());
@@ -88,7 +88,7 @@ void test_scalar_store(T value)
   EXPECT_EQ(store.dim(), DIM);
   EXPECT_EQ(store.extents(), legate::tuple<std::uint64_t>{1});
   EXPECT_EQ(store.volume(), 1);
-  EXPECT_EQ(store.type().code(), legate::type_code_of<T>);
+  EXPECT_EQ(store.type().code(), legate::type_code_of_v<T>);
   EXPECT_FALSE(store.transformed());
   EXPECT_TRUE(store.has_scalar_storage());
   for (const auto& extents : {legate::tuple<std::uint64_t>{1},
@@ -99,7 +99,7 @@ void test_scalar_store(T value)
     EXPECT_FALSE(temp_store.unbound());
     EXPECT_EQ(temp_store.dim(), extents.size());
     EXPECT_EQ(temp_store.extents(), extents);
-    EXPECT_EQ(temp_store.type().code(), legate::type_code_of<T>);
+    EXPECT_EQ(temp_store.type().code(), legate::type_code_of_v<T>);
     EXPECT_FALSE(temp_store.transformed());
     EXPECT_TRUE(temp_store.has_scalar_storage());
   }

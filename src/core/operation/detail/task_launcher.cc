@@ -102,7 +102,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
     analyze(analyzer, outputs_);
     analyze(analyzer, reductions_);
   } catch (const InterferingStoreError&) {
-    report_interfering_stores();
+    report_interfering_stores_();
   }
   for (auto&& future : futures_) {
     analyzer.insert(future);
@@ -124,7 +124,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg);
+  pack_mapper_arg_(mapper_arg);
 
   Legion::IndexTaskLauncher index_task{static_cast<Legion::TaskID>(legion_task_id()),
                                        launch_domain,
@@ -163,7 +163,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   auto result = runtime->dispatch(index_task, output_requirements);
 
-  post_process_unbound_stores(result, launch_domain, output_requirements);
+  post_process_unbound_stores_(result, launch_domain, output_requirements);
   for (auto&& arg : outputs_) {
     arg->perform_invalidations();
   }
@@ -201,7 +201,7 @@ Legion::Future TaskLauncher::execute_single()
 
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg);
+  pack_mapper_arg_(mapper_arg);
 
   Legion::TaskLauncher single_task{static_cast<Legion::TaskID>(legion_task_id()),
                                    task_arg.to_legion_buffer(),
@@ -218,14 +218,14 @@ Legion::Future TaskLauncher::execute_single()
   single_task.local_function_task = !has_side_effect_ && analyzer.can_be_local_function_task();
 
   auto result = Runtime::get_runtime()->dispatch(single_task, output_requirements);
-  post_process_unbound_stores(output_requirements);
+  post_process_unbound_stores_(output_requirements);
   for (auto&& arg : outputs_) {
     arg->perform_invalidations();
   }
   return result;
 }
 
-void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
+void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
 {
   machine_.pack(buffer);
 
@@ -253,7 +253,7 @@ void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
   buffer.pack(priority_);
 }
 
-void TaskLauncher::import_output_regions(
+void TaskLauncher::import_output_regions_(
   Runtime* runtime, const std::vector<Legion::OutputRequirement>& output_requirements)
 {
   for (const auto& req : output_requirements) {
@@ -263,7 +263,7 @@ void TaskLauncher::import_output_regions(
   };
 }
 
-void TaskLauncher::post_process_unbound_stores(
+void TaskLauncher::post_process_unbound_stores_(
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
   if (unbound_stores_.empty()) {
@@ -273,10 +273,10 @@ void TaskLauncher::post_process_unbound_stores(
   auto* runtime = Runtime::get_runtime();
   auto no_part  = create_no_partition();
 
-  import_output_regions(runtime, output_requirements);
+  import_output_regions_(runtime, output_requirements);
 
   for (auto&& arg : unbound_stores_) {
-    LegateAssert(arg->requirement_index() != -1U);
+    LEGATE_ASSERT(arg->requirement_index() != -1U);
     auto* store = arg->store();
     auto& shape = store->shape();
     auto& req   = output_requirements[arg->requirement_index()];
@@ -294,7 +294,7 @@ void TaskLauncher::post_process_unbound_stores(
   }
 }
 
-void TaskLauncher::post_process_unbound_stores(
+void TaskLauncher::post_process_unbound_stores_(
   const Legion::FutureMap& result,
   const Legion::Domain& launch_domain,
   const std::vector<Legion::OutputRequirement>& output_requirements)
@@ -306,7 +306,7 @@ void TaskLauncher::post_process_unbound_stores(
   auto* runtime  = Runtime::get_runtime();
   auto* part_mgr = runtime->partition_manager();
 
-  import_output_regions(runtime, output_requirements);
+  import_output_regions_(runtime, output_requirements);
 
   auto post_process_unbound_store =
     [&runtime, &part_mgr, &launch_domain](
@@ -357,7 +357,7 @@ void TaskLauncher::post_process_unbound_stores(
   }
 }
 
-void TaskLauncher::report_interfering_stores() const
+void TaskLauncher::report_interfering_stores_() const
 {
   LEGATE_ABORT(
     "Task "

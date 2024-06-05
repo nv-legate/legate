@@ -397,7 +397,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-[[nodiscard]] Type bool_();
+[[nodiscard]] Type bool_();  // NOLINT(readability-identifier-naming)
 
 /**
  * @ingroup types
