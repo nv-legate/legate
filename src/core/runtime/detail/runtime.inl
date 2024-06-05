@@ -54,6 +54,8 @@ inline std::uint64_t Runtime::get_unique_storage_id() { return next_storage_id_+
 
 inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
 
+inline FieldManager* Runtime::field_manager() { return field_manager_.get(); }
+
 inline PartitionManager* Runtime::partition_manager() const { return partition_manager_.get(); }
 
 inline CommunicatorManager* Runtime::communicator_manager() const

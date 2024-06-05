@@ -61,8 +61,9 @@ LogicalRegionField::~LogicalRegionField()
     }
     auto can_dealloc = attachment_ ? attachment_->detach(destroyed_out_of_order_ /*unordered*/)
                                    : Legion::Future();  // waiting on this is a noop
-    manager_->free_field(FreeFieldInfo{lr_, fid_, std::move(can_dealloc), std::move(attachment_)},
-                         destroyed_out_of_order_);
+    runtime->field_manager()->free_field(
+      FreeFieldInfo{shape_, field_size_, lr_, fid_, std::move(can_dealloc), std::move(attachment_)},
+      destroyed_out_of_order_);
   }
 }
 
@@ -152,7 +153,8 @@ InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(
   auto legion_partition = get_legion_partition(tiling, complete);
   auto color_point      = to_domain_point(color);
   return make_internal_shared<LogicalRegionField>(
-    manager_,
+    shape_,
+    field_size_,
     Runtime::get_runtime()->get_subregion(std::move(legion_partition), color_point),
     fid_,
     shared_from_this());

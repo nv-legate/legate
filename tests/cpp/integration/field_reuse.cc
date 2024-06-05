@@ -91,7 +91,7 @@ TEST_F(Integration, FieldReuse)
     check_field_is_new(fid2);
   }
 
-  // This store is only freed on even shards.
+  // This store is only freed on odd shards.
   Legion::FieldID fid3;
   {
     auto store = make_store();
@@ -103,7 +103,7 @@ TEST_F(Integration, FieldReuse)
     }
   }
 
-  // This store is only freed on odd shards.
+  // This store is only freed on even shards.
   Legion::FieldID fid4;
   {
     auto store = make_store();

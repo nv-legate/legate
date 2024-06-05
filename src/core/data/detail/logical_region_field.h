@@ -36,7 +36,8 @@ namespace legate::detail {
 
 class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
  public:
-  LogicalRegionField(FieldManager* manager,
+  LogicalRegionField(InternalSharedPtr<Shape> shape,
+                     std::uint32_t field_size,
                      Legion::LogicalRegion lr,
                      Legion::FieldID fid,
                      InternalSharedPtr<LogicalRegionField> parent = nullptr);
@@ -76,7 +77,8 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
  private:
   void add_invalidation_callback_(std::function<void()> callback);
 
-  FieldManager* manager_{};
+  InternalSharedPtr<Shape> shape_{};
+  std::uint32_t field_size_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{};
   InternalSharedPtr<LogicalRegionField> parent_{};

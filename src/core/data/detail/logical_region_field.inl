@@ -18,11 +18,16 @@
 
 namespace legate::detail {
 
-inline LogicalRegionField::LogicalRegionField(FieldManager* manager,
+inline LogicalRegionField::LogicalRegionField(InternalSharedPtr<Shape> shape,
+                                              std::uint32_t field_size,
                                               Legion::LogicalRegion lr,
                                               Legion::FieldID fid,
                                               InternalSharedPtr<LogicalRegionField> parent)
-  : manager_{manager}, lr_{std::move(lr)}, fid_{fid}, parent_{std::move(parent)}
+  : shape_{std::move(shape)},
+    field_size_{field_size},
+    lr_{std::move(lr)},
+    fid_{fid},
+    parent_{std::move(parent)}
 {
 }
 

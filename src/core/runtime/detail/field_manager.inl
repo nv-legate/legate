@@ -14,15 +14,17 @@
 
 #include "core/runtime/detail/field_manager.h"
 
-#include <tuple>
-
 namespace legate::detail {
 
-inline FreeFieldInfo::FreeFieldInfo(Legion::LogicalRegion region_,
+inline FreeFieldInfo::FreeFieldInfo(InternalSharedPtr<Shape> shape_,
+                                    std::uint32_t field_size_,
+                                    Legion::LogicalRegion region_,
                                     Legion::FieldID field_id_,
                                     Legion::Future can_dealloc_,
                                     std::unique_ptr<Attachment> attachment_)
-  : region{std::move(region_)},
+  : shape{std::move(shape_)},
+    field_size{field_size_},
+    region{std::move(region_)},
     field_id{std::move(field_id_)},
     can_dealloc{std::move(can_dealloc_)},
     attachment{std::move(attachment_)}
@@ -35,9 +37,11 @@ inline MatchItem::MatchItem(Legion::RegionTreeID tid_, Legion::FieldID fid_) : t
 {
 }
 
-inline bool operator<(const MatchItem& l, const MatchItem& r)
+inline bool MatchItem::operator==(const MatchItem& rhs) const
 {
-  return std::tie(l.tid, l.fid) < std::tie(r.tid, r.fid);
+  return tid == rhs.tid && fid == rhs.fid;
 }
+
+inline std::size_t MatchItem::hash() const noexcept { return hash_all(tid, fid); }
 
 }  // namespace legate::detail

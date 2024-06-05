@@ -37,8 +37,6 @@ const tuple<std::uint64_t>& Shape::extents()
       auto domain        = runtime->get_index_space_domain(index_space_);
       extents_           = from_domain(domain);
       state_             = State::READY;
-      auto rgn_mgr       = runtime->find_or_create_region_manager(index_space_);
-      rgn_mgr->update_field_manager_match_credits(this);
       break;
     }
     case State::READY: {

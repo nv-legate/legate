@@ -174,9 +174,9 @@ class Runtime {
   [[nodiscard]] std::uint64_t get_unique_storage_id();
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_region_field(
-    const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
+    InternalSharedPtr<Shape> shape, std::uint32_t field_size);
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_region_field(
-    const InternalSharedPtr<Shape>& shape,
+    InternalSharedPtr<Shape> shape,
     Legion::LogicalRegion region,
     Legion::FieldID field_id,
     std::uint32_t field_size);
@@ -195,8 +195,7 @@ class Runtime {
   void progress_unordered_operations() const;
 
   [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::IndexSpace& index_space);
-  [[nodiscard]] FieldManager* find_or_create_field_manager(InternalSharedPtr<Shape> shape,
-                                                           std::uint32_t field_size);
+  [[nodiscard]] FieldManager* field_manager();
   [[nodiscard]] CommunicatorManager* communicator_manager() const;
   [[nodiscard]] PartitionManager* partition_manager() const;
   [[nodiscard]] Scope& scope();
@@ -334,9 +333,7 @@ class Runtime {
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
 
-  using FieldManagerKey = std::pair<Legion::IndexSpace, std::uint32_t>;
-  std::unordered_map<FieldManagerKey, std::unique_ptr<FieldManager>, hasher<FieldManagerKey>>
-    field_managers_{};
+  std::unique_ptr<FieldManager> field_manager_{};
   using RegionManagerKey = Legion::IndexSpace;
   std::unordered_map<RegionManagerKey, std::unique_ptr<RegionManager>> region_managers_{};
   std::unique_ptr<CommunicatorManager> communicator_manager_{};

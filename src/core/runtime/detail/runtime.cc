@@ -198,12 +198,15 @@ void Runtime::initialize(Legion::Context legion_context)
     scope_                       = Scope{};
     partition_manager_.reset();
     communicator_manager_.reset();
+    field_manager_.reset();
     core_library_ = nullptr;
     initialized_  = false;);
   initialized_    = true;
   legion_context_ = std::move(legion_context);
   core_library_   = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
 
+  field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
+                                              : std::make_unique<FieldManager>();
   communicator_manager_ = std::make_unique<CommunicatorManager>();
   partition_manager_    = std::make_unique<PartitionManager>(this);
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
@@ -773,20 +776,18 @@ void Runtime::record_pending_exception(Legion::Future pending_exception)
   }
 }
 
-InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(
-  const InternalSharedPtr<Shape>& shape, std::uint32_t field_size)
+InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(InternalSharedPtr<Shape> shape,
+                                                                   std::uint32_t field_size)
 {
-  return find_or_create_field_manager(shape, field_size)->allocate_field();
+  return field_manager()->allocate_field(std::move(shape), field_size);
 }
 
-InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(
-  const InternalSharedPtr<Shape>& shape,
-  Legion::LogicalRegion region,
-  Legion::FieldID field_id,
-  std::uint32_t field_size)
+InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(InternalSharedPtr<Shape> shape,
+                                                                   Legion::LogicalRegion region,
+                                                                   Legion::FieldID field_id,
+                                                                   std::uint32_t field_size)
 {
-  auto field_mgr = find_or_create_field_manager(shape, field_size);
-  return make_internal_shared<LogicalRegionField>(field_mgr, region, field_id);
+  return field_manager()->import_field(std::move(shape), field_size, std::move(region), field_id);
 }
 
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
@@ -857,23 +858,6 @@ RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& 
   auto rgn_mgr                  = std::make_unique<RegionManager>(index_space);
   auto ptr                      = rgn_mgr.get();
   region_managers_[index_space] = std::move(rgn_mgr);
-  return ptr;
-}
-
-FieldManager* Runtime::find_or_create_field_manager(InternalSharedPtr<Shape> shape,
-                                                    std::uint32_t field_size)
-{
-  auto key    = FieldManagerKey(shape->index_space(), field_size);
-  auto finder = field_managers_.find(key);
-  if (finder != field_managers_.end()) {
-    return finder->second.get();
-  }
-
-  auto fld_mgr         = consensus_match_required()
-                           ? std::make_unique<ConsensusMatchingFieldManager>(std::move(shape), field_size)
-                           : std::make_unique<FieldManager>(std::move(shape), field_size);
-  auto ptr             = fld_mgr.get();
-  field_managers_[key] = std::move(fld_mgr);
   return ptr;
 }
 
@@ -1505,10 +1489,7 @@ void Runtime::destroy()
     region_manager.reset();
   }
   region_managers_.clear();
-  for (auto&& [_, field_manager] : field_managers_) {
-    field_manager.reset();
-  }
-  field_managers_.clear();
+  field_manager_.reset();
 
   communicator_manager_.reset();
   partition_manager_.reset();

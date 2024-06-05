@@ -39,19 +39,6 @@ void RegionManager::destroy(bool unordered)
   entries_.clear();
 }
 
-void RegionManager::record_pending_match_credit_update(ConsensusMatchingFieldManager* field_mgr)
-{
-  pending_match_credit_updates_.push_back(field_mgr);
-}
-
-void RegionManager::update_field_manager_match_credits(const Shape* initiator)
-{
-  for (auto* field_mgr : pending_match_credit_updates_) {
-    field_mgr->calculate_match_credit(initiator);
-  }
-  pending_match_credit_updates_.clear();
-}
-
 void RegionManager::push_entry()
 {
   auto runtime = Runtime::get_runtime();
