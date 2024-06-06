@@ -18,8 +18,9 @@ text output (i.e. without ANSI color codes) will be generated.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
-from typing import Any, Iterable, TypeAlias
+from typing import Any, TypeAlias
 
 from .colors import bright, cyan, dim, green, magenta, red, white, yellow
 

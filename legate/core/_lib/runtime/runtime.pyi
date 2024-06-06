@@ -9,7 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from typing import Any, Callable, Iterable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from ...utils import AnyCallable, ShutdownCallback
 from ..data.logical_array import LogicalArray
@@ -31,27 +32,27 @@ class Runtime:
         library: Library,
         task_id: int,
         launch_shape: Iterable[int],
-        lower_bounds: Optional[Iterable[int]] = None,
+        lower_bounds: Iterable[int] | None = None,
     ) -> ManualTask: ...
     def issue_copy(
         self,
         target: LogicalStore,
         source: LogicalStore,
-        redop: Optional[int] = None,
+        redop: int | None = None,
     ) -> None: ...
     def issue_gather(
         self,
         target: LogicalStore,
         source: LogicalStore,
         source_indirect: LogicalStore,
-        redop: Optional[int] = None,
+        redop: int | None = None,
     ) -> None: ...
     def issue_scatter(
         self,
         target: LogicalStore,
         target_indirect: LogicalStore,
         source: LogicalStore,
-        redop: Optional[int] = None,
+        redop: int | None = None,
     ) -> None: ...
     def issue_scatter_gather(
         self,
@@ -59,7 +60,7 @@ class Runtime:
         target_indirect: LogicalStore,
         source: LogicalStore,
         source_indirect: LogicalStore,
-        redop: Optional[int] = None,
+        redop: int | None = None,
     ) -> None: ...
     def issue_fill(self, lhs: LogicalStore, value: Any) -> None: ...
     def tree_reduce(
@@ -69,14 +70,14 @@ class Runtime:
         store: LogicalStore,
         radix: int = 4,
     ) -> LogicalStore: ...
-    def submit(self, task: Union[AutoTask, ManualTask]) -> None: ...
+    def submit(self, task: AutoTask | ManualTask) -> None: ...
     def create_array(
         self,
         dtype: Type,
-        shape: Optional[Union[Shape, Iterable[int]]] = None,
+        shape: Shape | Iterable[int] | None = None,
         nullable: bool = False,
         optimize_scalar: bool = False,
-        ndim: Optional[int] = None,
+        ndim: int | None = None,
     ) -> LogicalArray: ...
     def create_array_like(
         self, array: LogicalArray, dtype: Type
@@ -84,14 +85,14 @@ class Runtime:
     def create_store(
         self,
         dtype: Type,
-        shape: Optional[Union[Shape, Iterable[int]]] = None,
+        shape: Shape | Iterable[int] | None = None,
         optimize_scalar: bool = False,
-        ndim: Optional[int] = None,
+        ndim: int | None = None,
     ) -> LogicalStore: ...
     def create_store_from_scalar(
         self,
         scalar: Scalar,
-        shape: Optional[Union[Shape, Iterable[int]]] = None,
+        shape: Shape | Iterable[int] | None = None,
     ) -> LogicalStore: ...
     def create_store_from_buffer(
         self,

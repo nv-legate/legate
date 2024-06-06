@@ -9,13 +9,13 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from typing import TYPE_CHECKING, Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
-if TYPE_CHECKING:
-    from ...data_interface import Field, LegateDataInterfaceItem
-    from ..type.type_info import Type
-    from .physical_store import PhysicalStore
-    from .shape import Shape
+from ...data_interface import Field, LegateDataInterfaceItem
+from ..type.type_info import Type
+from .physical_store import PhysicalStore
+from .shape import Shape
 
 class LogicalStore:
     @property

@@ -13,19 +13,9 @@ from __future__ import annotations
 
 import sys
 from argparse import SUPPRESS, Action, ArgumentParser, Namespace
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, fields
-from typing import (
-    Any,
-    Generic,
-    Iterable,
-    Iterator,
-    Literal,
-    NoReturn,
-    Sequence,
-    Type,
-    TypeAlias,
-    TypeVar,
-)
+from typing import Any, Generic, Literal, NoReturn, TypeAlias, TypeVar
 
 
 class _UnsetType:
@@ -67,7 +57,7 @@ class ArgSpec:
     nargs: NotRequired[int | NargsType] = Unset
     const: NotRequired[Any] = Unset
     default: NotRequired[Any] = Unset
-    type: NotRequired[Type[Any]] = Unset
+    type: NotRequired[type[Any]] = Unset
     choices: NotRequired[Sequence[Any]] = Unset
     help: NotRequired[str] = Unset
     metavar: NotRequired[str] = Unset

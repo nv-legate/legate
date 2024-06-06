@@ -9,12 +9,11 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    from ..type.type_info import Type
-    from ..utilities.typedefs import Domain
-    from .physical_store import PhysicalStore
+from ..type.type_info import Type
+from ..utilities.typedefs import Domain
+from .physical_store import PhysicalStore
 
 class PhysicalArray:
     @property

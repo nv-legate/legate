@@ -17,10 +17,10 @@ from __future__ import annotations
 
 import multiprocessing
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from subprocess import PIPE, STDOUT, TimeoutExpired, run as stdlib_run
-from typing import Sequence
 
 import psutil
 

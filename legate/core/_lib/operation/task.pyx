@@ -19,7 +19,8 @@ from ..._ext.cython_libcpp.string_view cimport (
     string_view_from_py as std_string_view_from_py,
 )
 
-from typing import Any, Iterable, Union
+from collections.abc import Iterable
+from typing import Any
 
 from ..data.logical_array cimport (
     LogicalArray,
@@ -80,7 +81,7 @@ cdef class AutoTask(Unconstructable):
         self._locked = True
 
     cpdef Variable add_input(
-        self, object array_or_store, partition: Union[Variable, None] = None
+        self, object array_or_store, partition: Variable | None = None
     ):
         """
         Adds a logical array/store as input to the task
@@ -115,7 +116,7 @@ cdef class AutoTask(Unconstructable):
             raise ValueError("Invalid partition symbol")
 
     cpdef Variable add_output(
-        self, object array_or_store, partition: Union[Variable, None] = None
+        self, object array_or_store, partition: Variable | None = None
     ):
         """
         Adds a logical array/store as output to the task
@@ -153,7 +154,7 @@ cdef class AutoTask(Unconstructable):
         self,
         object array_or_store,
         int32_t redop,
-        partition: Union[Variable, None] = None
+        partition: Variable | None = None
     ):
         """
         Adds a logical array/store to the task for reduction
@@ -194,7 +195,7 @@ cdef class AutoTask(Unconstructable):
             raise ValueError("Invalid partition symbol")
 
     cpdef void add_scalar_arg(
-        self, value: Any, dtype: Union[Type, tuple[Type, ...], None] = None
+        self, value: Any, dtype: Type | tuple[Type, ...] | None = None
     ):
         """
         Adds a by-value argument to the task
@@ -303,7 +304,7 @@ cdef class AutoTask(Unconstructable):
     cpdef void add_broadcast(
         self,
         object array_or_store,
-        axes: Union[None, int, Iterable[int]] = None,
+        axes: int | Iterable[int] | None = None,
     ):
         """
         Sets a broadcasting constraint on the logical_array. Equivalent to the
@@ -390,8 +391,8 @@ cdef class ManualTask(Unconstructable):
 
     cpdef void add_input(
         self,
-        arg: Union[LogicalStore, LogicalStorePartition],
-        projection: Optional[tuple[SymbolicExpr, ...]] = None,
+        arg: LogicalStore | LogicalStorePartition,
+        projection: tuple[SymbolicExpr, ...] | None = None,
     ):
         if isinstance(arg, LogicalStore):
             self._handle.add_input((<LogicalStore> arg)._handle)
@@ -408,8 +409,8 @@ cdef class ManualTask(Unconstructable):
 
     cpdef void add_output(
         self,
-        arg: Union[LogicalStore, LogicalStorePartition],
-        projection: Optional[tuple[SymbolicExpr, ...]] = None,
+        arg: LogicalStore | LogicalStorePartition,
+        projection: tuple[SymbolicExpr, ...] | None = None,
     ):
         if isinstance(arg, LogicalStore):
             self._handle.add_output((<LogicalStore> arg)._handle)
@@ -426,9 +427,9 @@ cdef class ManualTask(Unconstructable):
 
     cpdef void add_reduction(
         self,
-        arg: Union[LogicalStore, LogicalStorePartition],
+        arg: LogicalStore | LogicalStorePartition,
         int32_t redop,
-        projection: Optional[tuple[SymbolicExpr, ...]] = None,
+        projection: tuple[SymbolicExpr, ...] | None = None,
     ):
         if isinstance(arg, LogicalStore):
             self._handle.add_reduction((<LogicalStore> arg)._handle, redop)
@@ -445,7 +446,7 @@ cdef class ManualTask(Unconstructable):
             )
 
     cpdef void add_scalar_arg(
-        self, value: Any, dtype: Union[Type, tuple[Type, ...], None] = None
+        self, value: Any, dtype: Type | tuple[Type, ...] | None = None
     ):
         """
         Adds a by-value argument to the task

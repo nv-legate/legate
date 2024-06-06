@@ -16,10 +16,9 @@ from __future__ import annotations
 import re
 from argparse import REMAINDER, ArgumentDefaultsHelpFormatter, ArgumentParser
 from os import getenv
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from typing import Any
     from ..util.types import RunMode
 
 from .. import __version__

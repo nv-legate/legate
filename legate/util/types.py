@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import Field, dataclass
 from pathlib import Path
-from typing import Any, Literal, Protocol, Type, TypeAlias, TypeVar
+from typing import Any, Literal, Protocol, TypeAlias, TypeVar
 
 from .ui import kvtable
 
@@ -97,7 +97,7 @@ class DataclassMixin(DataclassProtocol):
 T = TypeVar("T", bound=DataclassProtocol)
 
 
-def object_to_dataclass(obj: object, typ: Type[T]) -> T:
+def object_to_dataclass(obj: object, typ: type[T]) -> T:
     """Automatically generate a dataclass from an object with appropriate
     attributes.
 
