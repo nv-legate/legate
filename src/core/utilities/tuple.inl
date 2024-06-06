@@ -301,6 +301,26 @@ tuple<T> tuple<T>::map(const std::vector<std::int32_t>& mapping) const
 }
 
 template <typename T>
+void tuple<T>::map_inplace(std::vector<std::int32_t>& mapping)
+{
+  LegateCheck(mapping.size() == size());
+  // https://devblogs.microsoft.com/oldnewthing/20170102-00/?p=95095
+  for (std::size_t i = 0; i < mapping.size(); ++i) {
+    auto current = i;
+
+    while (i != mapping[current]) {
+      auto next = mapping[current];
+      using std::swap;
+
+      swap(data()[current], data()[next]);
+      mapping[current] = static_cast<std::int32_t>(current);
+      current          = static_cast<std::size_t>(next);
+    }
+    mapping[current] = static_cast<std::int32_t>(current);
+  }
+}
+
+template <typename T>
 std::string tuple<T>::to_string() const
 {
   // clang-tidy says we can make this const, but that's wrong?

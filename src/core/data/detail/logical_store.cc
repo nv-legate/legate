@@ -23,6 +23,7 @@
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/tuple.h"
 
 #include "legate_defines.h"
@@ -154,8 +155,8 @@ InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
     return shared_from_this();
   }
 
-  const auto root  = get_root();
-  const auto shape = root->extents();
+  const auto root   = get_root();
+  const auto& shape = root->extents();
   const auto can_tile_completely =
     (shape % tile_shape).sum() == 0 && (offsets % tile_shape).sum() == 0 &&
     Runtime::get_runtime()->partition_manager()->use_complete_tiling(shape, tile_shape);
@@ -455,7 +456,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, st
 
 InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64_t index)
 {
-  auto old_extents = extents();
+  auto&& old_extents = extents();
 
   if (d < 0 || d >= static_cast<std::int32_t>(dim())) {
     throw std::invalid_argument{"Invalid projection on dimension " + std::to_string(d) + " for a " +
@@ -488,7 +489,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
                                 std::to_string(this->dim()) + "-D store"};
   }
 
-  auto sanitize_slice = [](const Slice& san_slice, std::int64_t extent) {
+  constexpr auto sanitize_slice = [](const Slice& san_slice, std::int64_t extent) {
     std::int64_t start = san_slice.start.value_or(0);
     std::int64_t stop  = san_slice.stop.value_or(extent);
 
@@ -552,15 +553,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t
     }
   }
 
-  auto old_extents = extents();
-  auto new_extents = tuple<std::uint64_t>{};
-
-  new_extents.reserve(axes.size());
-  for (auto&& ax_i : axes) {
-    new_extents.append_inplace(old_extents[ax_i]);
-  }
-
-  auto transform = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
+  auto new_extents = extents().map(axes);
+  auto transform   = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
   return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
@@ -572,7 +566,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
                                 " for a " + std::to_string(this->dim()) + "-D store"};
   }
 
-  auto old_extents = extents();
+  auto&& old_extents = extents();
 
   auto delinearizable = [](auto&& to_match, const auto& new_dim_extents) {
     auto begin = new_dim_extents.begin();
@@ -590,7 +584,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
 
   auto new_extents = tuple<std::uint64_t>{};
 
-  new_extents.reserve(dim);
+  new_extents.reserve(old_extents.size() + sizes.size() - 1);
   for (int i = 0; i < dim; i++) {
     new_extents.append_inplace(old_extents[i]);
   }
@@ -716,7 +710,8 @@ Legion::ProjectionID LogicalStore::compute_projection(
       embed_1d_to_nd.append_inplace(ext != 1 ? dimension(0) : constant(0));
     }
 
-    return runtime->get_affine_projection(launch_ndim, transform_->invert(embed_1d_to_nd));
+    return runtime->get_affine_projection(launch_ndim,
+                                          transform_->invert(std::move(embed_1d_to_nd)));
   }
 
   // When the store wasn't transformed, we could simply return the top-level delinearizing functor
@@ -748,7 +743,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 
   std::unique_ptr<Partition> store_part{};
   if (nullptr == storage_part || (!transform_->identity() && !storage_part->is_convertible())) {
-    auto& exts        = extents();
+    auto&& exts       = extents();
     auto part_mgr     = Runtime::get_runtime()->partition_manager();
     auto launch_shape = part_mgr->compute_launch_shape(machine, restrictions, exts);
 
@@ -940,19 +935,20 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
                             color_shape().to_string()};
   }
 
-  auto transform      = store_->transform();
+  auto transform = store_->transform();
+  // TODO(jfaibussowit)
+  // Can move color here
   auto inverted_color = transform->invert_color(color);
   auto child_storage  = storage_partition_->get_child_storage(inverted_color);
 
   auto child_extents = tiling->get_child_extents(store_->extents(), inverted_color);
   auto child_offsets = tiling->get_child_offsets(inverted_color);
 
-  for (std::uint32_t dim = 0; dim < child_offsets.size(); ++dim) {
-    if (child_offsets[dim] == 0) {
-      continue;
+  for (auto&& [dim, coff] : legate::detail::enumerate(child_offsets)) {
+    if (coff != 0) {
+      transform = make_internal_shared<TransformStack>(std::make_unique<Shift>(dim, -coff),
+                                                       std::move(transform));
     }
-    transform = make_internal_shared<TransformStack>(
-      std::make_unique<Shift>(dim, -child_offsets[dim]), std::move(transform));
   }
 
   return make_internal_shared<LogicalStore>(

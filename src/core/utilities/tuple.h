@@ -94,6 +94,7 @@ class tuple {
   template <typename PRED>
   [[nodiscard]] bool any(PRED&& pred) const;
   [[nodiscard]] tuple map(const std::vector<std::int32_t>& mapping) const;
+  void map_inplace(std::vector<std::int32_t>& mapping);
 
   [[nodiscard]] std::string to_string() const;
   template <typename U>
