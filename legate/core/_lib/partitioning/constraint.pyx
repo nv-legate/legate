@@ -103,13 +103,15 @@ cpdef object broadcast(
 
 
 cpdef object image(
-    VariableOrStr var_function, VariableOrStr var_range
+    VariableOrStr var_function,
+    VariableOrStr var_range,
+    ImageComputationHint hint = ImageComputationHint.NO_HINT,
 ):
     if VariableOrStr is Variable:
         return Constraint.from_handle(
-            _image(var_function._handle, var_range._handle)
+            _image(var_function._handle, var_range._handle, hint)
         )
-    return ConstraintProxy(image, var_function, var_range)
+    return ConstraintProxy(image, var_function, var_range, hint)
 
 
 cpdef object scale(

@@ -37,7 +37,14 @@ cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:
         _Variable, _tuple[uint32_t]
     ) except+
 
-    cdef _Constraint _image "image" (_Variable, _Variable)
+    cpdef enum class ImageComputationHint:
+        NO_HINT
+        MIN_MAX
+        FIRST_LAST
+
+    cdef _Constraint _image "image" (
+        _Variable, _Variable, ImageComputationHint
+    )
 
     cdef _Constraint _scale "scale" (
         _tuple[uint64_t], _Variable, _Variable
@@ -74,7 +81,9 @@ ctypedef fused VariableOrStr:
 cpdef object align(VariableOrStr lhs, VariableOrStr rhs)
 cpdef object broadcast(VariableOrStr variable, axes: Iterable[int] =*)
 cpdef object image(
-    VariableOrStr var_function, VariableOrStr var_range
+    VariableOrStr var_function,
+    VariableOrStr var_range,
+    ImageComputationHint hint =*
 )
 cpdef object scale(
     tuple factors,
