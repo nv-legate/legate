@@ -1115,13 +1115,13 @@ void Runtime::dispatch(Legion::IndexCopyLauncher& launcher)
   legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
-void Runtime::dispatch(Legion::FillLauncher& launcher)
+void Runtime::dispatch(const Legion::FillLauncher& launcher)
 {
   LEGATE_CHECK(nullptr != legion_context_);
   legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
-void Runtime::dispatch(Legion::IndexFillLauncher& launcher)
+void Runtime::dispatch(const Legion::IndexFillLauncher& launcher)
 {
   LEGATE_CHECK(nullptr != legion_context_);
   legion_runtime_->fill_fields(legion_context_, launcher);

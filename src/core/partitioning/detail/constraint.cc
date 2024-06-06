@@ -140,7 +140,7 @@ std::string ImageConstraint::to_string() const
 InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
 {
   const auto* src = var_function();
-  auto src_part   = strategy[src];
+  auto&& src_part = strategy[src];
   if (src_part->has_launch_domain()) {
     auto* op = src->operation();
     return create_image(

@@ -16,8 +16,6 @@
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/store_projection.h"
 
-#include <tuple>
-
 namespace legate::detail {
 
 class LogicalStore;

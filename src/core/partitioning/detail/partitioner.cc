@@ -130,7 +130,7 @@ bool Strategy::has_assignment(const Variable* partition_symbol) const
   return assignments_.find(*partition_symbol) != assignments_.end();
 }
 
-InternalSharedPtr<Partition> Strategy::operator[](const Variable* partition_symbol) const
+const InternalSharedPtr<Partition>& Strategy::operator[](const Variable* partition_symbol) const
 {
   auto finder = assignments_.find(*partition_symbol);
 

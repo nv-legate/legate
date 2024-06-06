@@ -264,8 +264,8 @@ class Runtime {
 
   void dispatch(Legion::CopyLauncher& launcher);
   void dispatch(Legion::IndexCopyLauncher& launcher);
-  void dispatch(Legion::FillLauncher& launcher);
-  void dispatch(Legion::IndexFillLauncher& launcher);
+  void dispatch(const Legion::FillLauncher& launcher);
+  void dispatch(const Legion::IndexFillLauncher& launcher);
 
   [[nodiscard]] Legion::Future extract_scalar(const Legion::Future& result,
                                               std::uint32_t idx) const;

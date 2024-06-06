@@ -48,7 +48,8 @@ class Strategy {
               Legion::FieldSpace field_space,
               Legion::FieldID field_id);
   [[nodiscard]] bool has_assignment(const Variable* partition_symbol) const;
-  [[nodiscard]] InternalSharedPtr<Partition> operator[](const Variable* partition_symbol) const;
+  [[nodiscard]] const InternalSharedPtr<Partition>& operator[](
+    const Variable* partition_symbol) const;
   [[nodiscard]] const std::pair<Legion::FieldSpace, Legion::FieldID>& find_field_for_unbound_store(
     const Variable* partition_symbol) const;
   [[nodiscard]] bool is_key_partition(const Variable* partition_symbol) const;

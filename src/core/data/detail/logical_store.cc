@@ -847,7 +847,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(
     return std::make_unique<OutputRegionArg>(this, field_space, field_id);
   }
 
-  auto partition       = strategy[variable];
+  auto&& partition     = strategy[variable];
   auto store_partition = create_partition_(self, partition);
   auto store_proj      = store_partition->create_store_projection(launch_domain, projection);
   store_proj->is_key   = strategy.is_key_partition(variable);

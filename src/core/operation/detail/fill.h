@@ -15,7 +15,6 @@
 #include "core/operation/detail/operation.h"
 #include "core/utilities/internal_shared_ptr.h"
 
-#include <string>
 #include <variant>
 
 namespace legate::detail {
