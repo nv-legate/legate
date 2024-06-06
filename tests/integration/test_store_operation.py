@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -240,7 +240,7 @@ class TestLogicalStoreOperation:
     ) -> None:
         runtime = get_legate_runtime()
         arr = np.random.random(arr_shape)
-        arr_slice = f"arr[{':,'*dim}{start}:{stop}]"
+        arr_slice = f"arr[{':,' * dim}{start}:{stop}]"
 
         store = runtime.create_store_from_buffer(
             ty.float64, arr.shape, arr, False

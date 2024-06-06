@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -40,7 +40,9 @@ cdef class DomainPoint:
         return self._handle == (<DomainPoint> other)._handle
 
     def __str__(self) -> str:
-        return f"<{','.join(str(self[i]) for i in range(self.dim))}>"
+        cdef int i
+        cdef str tmp = ",".join(str(self[i]) for i in range(self.dim))
+        return f"<{tmp}>"
 
 
 cdef class Domain:

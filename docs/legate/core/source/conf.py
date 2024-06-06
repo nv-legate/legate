@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -19,7 +19,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "legate.core"
-copyright = "2021-2023, NVIDIA"
+copyright = "2021-2024, NVIDIA"
 author = "NVIDIA"
 
 
