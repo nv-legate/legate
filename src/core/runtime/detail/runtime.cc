@@ -1103,13 +1103,13 @@ Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher& launcher,
   return legion_runtime_->execute_index_space(legion_context_, launcher, &output_requirements);
 }
 
-void Runtime::dispatch(Legion::CopyLauncher& launcher)
+void Runtime::dispatch(const Legion::CopyLauncher& launcher)
 {
   LEGATE_CHECK(nullptr != legion_context_);
   legion_runtime_->issue_copy_operation(legion_context_, launcher);
 }
 
-void Runtime::dispatch(Legion::IndexCopyLauncher& launcher)
+void Runtime::dispatch(const Legion::IndexCopyLauncher& launcher)
 {
   LEGATE_CHECK(nullptr != legion_context_);
   legion_runtime_->issue_copy_operation(legion_context_, launcher);

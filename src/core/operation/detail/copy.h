@@ -14,7 +14,7 @@
 
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
-#include "core/partitioning/constraint.h"
+#include "core/partitioning/detail/constraint.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <optional>
@@ -42,7 +42,7 @@ class Copy final : public Operation {
  private:
   StoreArg target_{};
   StoreArg source_{};
-  InternalSharedPtr<Constraint> constraint_{};
+  InternalSharedPtr<Alignment> constraint_{};
   std::optional<std::int32_t> redop_{};
 };
 

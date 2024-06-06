@@ -46,7 +46,7 @@ class BaseStoreProjection {
   Legion::ReductionOpID redop{-1};
 };
 
-class StoreProjection : public BaseStoreProjection {
+class StoreProjection final : public BaseStoreProjection {
  public:
   using BaseStoreProjection::BaseStoreProjection;
   using BaseStoreProjection::populate_requirement;

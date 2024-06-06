@@ -262,8 +262,8 @@ class Runtime {
     Legion::IndexTaskLauncher& launcher,
     std::vector<Legion::OutputRequirement>& output_requirements);
 
-  void dispatch(Legion::CopyLauncher& launcher);
-  void dispatch(Legion::IndexCopyLauncher& launcher);
+  void dispatch(const Legion::CopyLauncher& launcher);
+  void dispatch(const Legion::IndexCopyLauncher& launcher);
   void dispatch(const Legion::FillLauncher& launcher);
   void dispatch(const Legion::IndexFillLauncher& launcher);
 

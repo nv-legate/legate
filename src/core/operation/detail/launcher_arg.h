@@ -30,14 +30,24 @@ class StoreAnalyzer;
 
 class Serializable {
  public:
-  virtual ~Serializable() = default;
+  Serializable()                                   = default;
+  virtual ~Serializable()                          = default;
+  Serializable(const Serializable&)                = default;
+  Serializable& operator=(const Serializable&)     = default;
+  Serializable(Serializable&&) noexcept            = default;
+  Serializable& operator=(Serializable&&) noexcept = default;
 
   virtual void pack(BufferBuilder& buffer) const = 0;
 };
 
 class Analyzable {
  public:
-  virtual ~Analyzable() = default;
+  Analyzable()                                      = default;
+  virtual ~Analyzable()                             = default;
+  Analyzable(const Analyzable&)                     = default;
+  Analyzable& operator=(const Analyzable&) noexcept = default;
+  Analyzable(Analyzable&&) noexcept                 = default;
+  Analyzable& operator=(Analyzable&&) noexcept      = default;
 
   virtual void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const = 0;
   virtual void analyze(StoreAnalyzer& analyzer)                                 = 0;
