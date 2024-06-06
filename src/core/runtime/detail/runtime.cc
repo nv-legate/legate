@@ -189,6 +189,12 @@ std::int32_t Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32
 void Runtime::initialize(Legion::Context legion_context)
 {
   if (initialized()) {
+    if (legion_context_ == legion_context) {
+      static_assert(std::is_pointer_v<Legion::Context>);
+      LEGATE_CHECK(legion_context != nullptr);
+      // OK to call initialize twice if it's the same context.
+      return;
+    }
     throw std::runtime_error{"Legate runtime has already been initialized"};
   }
   LEGATE_SCOPE_FAIL(
@@ -1357,24 +1363,41 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
 /*static*/ std::int32_t Runtime::start(std::int32_t argc, char** argv)
 {
-  std::int32_t result = 0;
-
   if (!Legion::Runtime::has_runtime()) {
     Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
+    try {
+      handle_legate_args(argc, argv);
+    } catch (const std::exception& e) {
+      log_legate().error() << e.what();
+      return 1;
+    }
+  }
 
-    Legion::Runtime::perform_registration_callback(initialize_core_library_callback,
-                                                   true /*global*/);
+  // Do these after handle_legate_args()
+  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_NEED_CUDA.get(/* default_value = */ false)) {
+    throw std::runtime_error{
+      "Legate was run with GPUs but was not built with GPU support. "
+      "Please install Legate again with the \"--with-cuda\" flag"};
+  }
+  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && LEGATE_NEED_OPENMP.get(/* default_value = */ false)) {
+    throw std::runtime_error{
+      "Legate was run with OpenMP enabled, but was not built with OpenMP support. "
+      "Please install Legate again with the \"--with-openmp\" flag"};
+  }
+  if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value = */ false)) {
+    throw std::runtime_error{
+      "Legate was run on multiple nodes but was not built with networking "
+      "support. Please install Legate again with network support (e.g. \"--with-mpi\" or "
+      "\"--with-gasnet\")"};
+  }
 
-    handle_legate_args(argc, argv);
+  Legion::Runtime::perform_registration_callback(initialize_core_library_callback, true /*global*/);
 
-    result = Legion::Runtime::start(argc, argv, /*background=*/true);
-    if (result != 0) {
+  if (!Legion::Runtime::has_runtime()) {
+    if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true); result != 0) {
       log_legate().error("Legion Runtime failed to start.");
       return result;
     }
-  } else {
-    Legion::Runtime::perform_registration_callback(initialize_core_library_callback,
-                                                   true /*global*/);
   }
 
   // Get the runtime now that we've started it
@@ -1395,8 +1418,13 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   }
 
   // We can now initialize the Legate runtime with the Legion context
-  Runtime::get_runtime()->initialize(legion_context);
-  return result;
+  try {
+    Runtime::get_runtime()->initialize(legion_context);
+  } catch (const std::exception& e) {
+    log_legate().error() << e.what();
+    return 1;
+  }
+  return 0;
 }
 
 namespace {
@@ -1602,7 +1630,10 @@ void register_builtin_reduction_ops()
 
 extern void register_exception_reduction_op(const Library* context);
 
-void initialize_core_library()
+void initialize_core_library_callback(
+  Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
+  Legion::Runtime*,
+  const std::set<Processor>&)
 {
   Config::parse();
 
@@ -1624,14 +1655,6 @@ void initialize_core_library()
   register_exception_reduction_op(core_lib);
 
   register_legate_core_sharding_functors(core_lib);
-}
-
-void initialize_core_library_callback(
-  Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
-  Legion::Runtime*,
-  const std::set<Processor>&)
-{
-  initialize_core_library();
 }
 
 // Simple wrapper for variables with default values
@@ -1656,7 +1679,7 @@ void try_set_property(Runtime& runtime,
 {
   auto value = var.value();
   if (value < 0) {
-    LEGATE_ABORT(error_msg);
+    throw std::invalid_argument{error_msg.data()};
   }
   auto config = runtime.get_module_config(module_name);
   if (nullptr == config) {
@@ -1664,11 +1687,15 @@ void try_set_property(Runtime& runtime,
     if (!var.has_value()) {
       return;
     }
-    LEGATE_ABORT(error_msg << " (the " << module_name << " module is not available)");
+
+    std::stringstream ss;
+
+    ss << error_msg << " (the " << module_name << " module is not available)";
+    throw std::runtime_error{std::move(ss).str()};
   }
   auto success = config->set_property(property_name, value);
   if (!success) {
-    LEGATE_ABORT(error_msg);
+    throw std::runtime_error{error_msg.data()};
   }
 }
 
@@ -1722,12 +1749,15 @@ void handle_legate_args(std::int32_t argc, char** argv)
 
   // ensure core module
   if (!rt.get_module_config("core")) {
-    LEGATE_ABORT("core module config is missing");
+    throw std::runtime_error{"core module config is missing"};
   }
 
   // ensure sensible utility
   if (const auto nutil = util.value(); nutil < 1) {
-    LEGATE_ABORT("--utility must be at least 1 (have " << nutil << ")");
+    std::stringstream ss;
+
+    ss << "--utility must be at least 1 (have " << nutil << ")";
+    throw std::invalid_argument{std::move(ss).str()};
   }
 
   // Set core configuration properties
@@ -1748,7 +1778,7 @@ void handle_legate_args(std::int32_t argc, char** argv)
   // Set OpenMP configuration properties
   if (omps.value() > 0) {
     if (ompthreads.value() <= 0) {
-      LEGATE_ABORT("--omps configured with zero threads");
+      throw std::invalid_argument{"--omps configured with zero threads"};
     }
     LEGATE_NEED_OPENMP.set(true);
   }

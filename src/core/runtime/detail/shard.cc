@@ -150,11 +150,12 @@ namespace {
 
 void sharding_functor_registration_callback(const Legion::RegistrationCallbackArgs& args)
 {
-  auto p_args  = static_cast<ShardingCallbackArgs*>(args.buffer.get_ptr());
-  auto runtime = Legion::Runtime::get_runtime();
-  auto sharding_functor =
-    new LegateShardingFunctor{find_projection_function(p_args->proj_id), p_args->range};
-  runtime->register_sharding_functor(p_args->shard_id, sharding_functor, true /*silence warnings*/);
+  auto p_args           = static_cast<ShardingCallbackArgs*>(args.buffer.get_ptr());
+  auto runtime          = Legion::Runtime::get_runtime();
+  auto sharding_functor = std::make_unique<LegateShardingFunctor>(
+    find_projection_function(p_args->proj_id), p_args->range);
+  runtime->register_sharding_functor(
+    p_args->shard_id, sharding_functor.release(), true /*silence warnings*/);
 }
 
 }  // namespace

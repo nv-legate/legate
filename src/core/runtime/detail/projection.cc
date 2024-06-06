@@ -263,7 +263,7 @@ class RegisterCompoundFunctorFn {
 
 }  // namespace
 
-ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id) noexcept
+ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id)
 {
   if (0 == proj_id) {
     return identity_projection();
@@ -273,7 +273,10 @@ ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id) noexc
   auto finder = functor_table.find(proj_id);
 
   if (finder == functor_table.end()) {
-    LEGATE_ABORT("Failed to find projection functor of id " << proj_id);
+    std::stringstream ss;
+
+    ss << "Failed to find projection functor of id " << proj_id;
+    throw std::invalid_argument{std::move(ss).str()};
   }
 
   return finder->second.get();

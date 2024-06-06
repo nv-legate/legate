@@ -18,6 +18,8 @@ namespace legate::detail {
 
 class Config {
  public:
+  // Note, if you change any of these values, or add new ones, you must update Config::reset_()
+  // accordingly
   static inline bool show_progress_requested       = false;
   static inline bool use_empty_task                = false;
   static inline bool synchronize_stream_view       = false;
@@ -28,6 +30,9 @@ class Config {
   static inline bool warmup_nccl                   = false;
 
   static void parse();
+
+ private:
+  static void reset_() noexcept;
 };
 
 }  // namespace legate::detail

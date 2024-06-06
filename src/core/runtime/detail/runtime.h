@@ -377,8 +377,6 @@ class Runtime {
   std::vector<Legion::Future> pending_exceptions_{};
 };
 
-void initialize_core_library();
-
 void initialize_core_library_callback(Legion::Machine,
                                       Legion::Runtime*,
                                       const std::set<Processor>&);
