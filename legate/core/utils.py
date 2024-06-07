@@ -14,17 +14,10 @@ from __future__ import annotations
 import traceback
 from ctypes import CDLL, RTLD_GLOBAL
 from types import TracebackType
-from typing import (
-    Any,
-    Hashable,
-    Iterable,
-    Iterator,
-    MutableSet,
-    Protocol,
-    TypeVar,
-)
+from typing import Any, Protocol
 
-T = TypeVar("T", bound="Hashable")
+# imported for backwards compatibility
+from ._ext.utils.ordered_set import OrderedSet  # noqa: F401
 
 
 class AnyCallable(Protocol):
@@ -35,45 +28,6 @@ class AnyCallable(Protocol):
 class ShutdownCallback(Protocol):
     def __call__(self) -> None:
         pass
-
-
-class OrderedSet(MutableSet[T]):
-    """
-    A set() variant whose iterator returns elements in insertion order.
-
-    The implementation of this class piggybacks off of the corresponding
-    iteration order guarantee for dict(), starting with Python 3.7. This is
-    useful for guaranteeing symmetric execution of algorithms on different
-    shards in a replicated context.
-    """
-
-    def __init__(self, copy_from: Iterable[T] | None = None) -> None:
-        self._dict: dict[T, None] = {}
-        if copy_from is not None:
-            for obj in copy_from:
-                self.add(obj)
-
-    def add(self, obj: T) -> None:
-        self._dict[obj] = None
-
-    def update(self, other: Iterable[T]) -> None:
-        for obj in other:
-            self.add(obj)
-
-    def discard(self, obj: T) -> None:
-        self._dict.pop(obj, None)
-
-    def __len__(self) -> int:
-        return len(self._dict)
-
-    def __contains__(self, obj: object) -> bool:
-        return obj in self._dict
-
-    def __iter__(self) -> Iterator[T]:
-        return iter(self._dict)
-
-    def remove_all(self, other: OrderedSet[T]) -> OrderedSet[T]:
-        return OrderedSet(obj for obj in self if obj not in other)
 
 
 def capture_traceback_repr(

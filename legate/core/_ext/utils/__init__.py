@@ -1,5 +1,5 @@
-#=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -8,9 +8,8 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-#=============================================================================
+from __future__ import annotations
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "_ext")
+from .ordered_set import OrderedSet
 
-add_subdirectory(task)
-add_subdirectory(utils)
+__all__ = ("OrderedSet",)

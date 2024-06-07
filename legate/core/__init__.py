@@ -51,9 +51,7 @@ from ._lib.runtime.runtime import (
 from ._lib.runtime.scope import Scope
 
 get_legate_runtime()
-from .utils import (
-    Annotation,
-)
+from .utils import Annotation
 from ._lib.legate_c import LEGATE_MAX_DIM
 from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray

@@ -10,7 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "_ext")
+list(APPEND CMAKE_MESSAGE_CONTEXT "utils")
 
-add_subdirectory(task)
-add_subdirectory(utils)
+set(cython_sources ordered_set.pyx)
+
+legate_core_create_cython_modules(SOURCES "${cython_sources}")
