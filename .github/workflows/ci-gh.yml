@@ -21,6 +21,7 @@ jobs:
           - false
         platform:
           - linux
+          - linux-aarch64
         target-device:
           - gpu
           - cpu
@@ -36,6 +37,8 @@ jobs:
             ucx-enabled: true
           - build-mode: debug-sanitizer
             ucx-enabled: true
+          - platform: linux-aarch64
+            target-device: gpu
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
