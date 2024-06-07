@@ -80,7 +80,7 @@ InternalSharedPtr<StructPhysicalArray> TaskDeserializer::unpack_struct_array()
   LEGATE_CHECK(type->code == Type::Code::STRUCT);
 
   std::vector<InternalSharedPtr<PhysicalArray>> fields;
-  const auto& st_type = type->as_struct_type();
+  const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
   auto nullable       = unpack<bool>();
   auto null_mask      = nullable ? unpack_store() : nullptr;
 
@@ -234,7 +234,7 @@ InternalSharedPtr<StructArray> TaskDeserializer::unpack_struct_array()
   LEGATE_CHECK(type->code == Type::Code::STRUCT);
 
   std::vector<InternalSharedPtr<Array>> fields;
-  const auto& st_type = type->as_struct_type();
+  const auto& st_type = dynamic_cast<const legate::detail::StructType&>(*type);
   auto nullable       = unpack<bool>();
   auto null_mask      = nullable ? unpack_store() : nullptr;
 

@@ -188,26 +188,26 @@ void ConstraintSolver::solve_constraints()
   for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::ALIGNMENT: {
-        auto* alignment = constraint->as_alignment();
-        if (!alignment->is_trivial()) {
+        if (auto* alignment = static_cast<const Alignment*>(constraint.get());
+            !alignment->is_trivial()) {
           handle_alignment(alignment);
         }
         break;
       }
       case Constraint::Kind::BROADCAST: {
-        handle_broadcast(constraint->as_broadcast());
+        handle_broadcast(static_cast<const Broadcast*>(constraint.get()));
         break;
       }
       case Constraint::Kind::IMAGE: {
-        handle_image_constraint(constraint->as_image_constraint());
+        handle_image_constraint(static_cast<const ImageConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::SCALE: {
-        handle_scale_constraint(constraint->as_scale_constraint());
+        handle_scale_constraint(static_cast<const ScaleConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::BLOAT: {
-        handle_bloat_constraint(constraint->as_bloat_constraint());
+        handle_bloat_constraint(static_cast<const BloatConstraint*>(constraint.get()));
         break;
       }
     }
@@ -253,15 +253,15 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
   for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::IMAGE: {
-        solve_image_constraint(constraint->as_image_constraint());
+        solve_image_constraint(static_cast<const ImageConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::SCALE: {
-        solve_scale_constraint(constraint->as_scale_constraint());
+        solve_scale_constraint(static_cast<const ScaleConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::BLOAT: {
-        solve_bloat_constraint(constraint->as_bloat_constraint());
+        solve_bloat_constraint(static_cast<const BloatConstraint*>(constraint.get()));
         break;
       }
       default: {

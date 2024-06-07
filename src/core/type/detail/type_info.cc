@@ -139,24 +139,6 @@ std::uint32_t Type::size() const
   return {};
 }
 
-const FixedArrayType& Type::as_fixed_array_type() const
-{
-  throw std::invalid_argument{"Type is not a fixed array type"};
-  return *reinterpret_cast<const FixedArrayType*>(this);
-}
-
-const StructType& Type::as_struct_type() const
-{
-  throw std::invalid_argument{"Type is not a struct type"};
-  return *reinterpret_cast<const StructType*>(this);
-}
-
-const ListType& Type::as_list_type() const
-{
-  throw std::invalid_argument{"Type is not a list type"};
-  return *reinterpret_cast<const ListType*>(this);
-}
-
 void Type::record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const
 {
   detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);

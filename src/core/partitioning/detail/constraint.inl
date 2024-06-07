@@ -21,10 +21,6 @@ inline bool Literal::closed() const { return true; }
 
 inline Literal::Kind Literal::kind() const { return Kind::LITERAL; }
 
-inline const Literal* Literal::as_literal() const { return this; }
-
-inline const Variable* Literal::as_variable() const { return nullptr; }
-
 inline const InternalSharedPtr<Partition>& Literal::partition() const { return partition_; }
 
 // ==========================================================================================
@@ -40,10 +36,6 @@ inline bool Variable::closed() const { return false; }
 
 inline Variable::Kind Variable::kind() const { return Kind::VARIABLE; }
 
-inline const Literal* Variable::as_literal() const { return nullptr; }
-
-inline const Variable* Variable::as_variable() const { return this; }
-
 inline const Operation* Variable::operation() const { return op_; }
 
 inline std::size_t Variable::hash() const noexcept { return hash_all(id_); }
@@ -53,16 +45,6 @@ inline std::size_t Variable::hash() const noexcept { return hash_all(id_); }
 inline Alignment::Alignment(const Variable* lhs, const Variable* rhs) : lhs_{lhs}, rhs_{rhs} {}
 
 inline Alignment::Kind Alignment::kind() const { return Kind::ALIGNMENT; }
-
-inline const Alignment* Alignment::as_alignment() const { return this; }
-
-inline const Broadcast* Alignment::as_broadcast() const { return nullptr; }
-
-inline const ImageConstraint* Alignment::as_image_constraint() const { return nullptr; }
-
-inline const ScaleConstraint* Alignment::as_scale_constraint() const { return nullptr; }
-
-inline const BloatConstraint* Alignment::as_bloat_constraint() const { return nullptr; }
 
 inline const Variable* Alignment::lhs() const { return lhs_; }
 
@@ -83,16 +65,6 @@ inline Broadcast::Broadcast(const Variable* variable) : Broadcast{variable, tupl
 
 inline Broadcast::Kind Broadcast::kind() const { return Kind::BROADCAST; }
 
-inline const Alignment* Broadcast::as_alignment() const { return nullptr; }
-
-inline const Broadcast* Broadcast::as_broadcast() const { return this; }
-
-inline const ImageConstraint* Broadcast::as_image_constraint() const { return nullptr; }
-
-inline const ScaleConstraint* Broadcast::as_scale_constraint() const { return nullptr; }
-
-inline const BloatConstraint* Broadcast::as_bloat_constraint() const { return nullptr; }
-
 inline const Variable* Broadcast::variable() const { return variable_; }
 
 inline const tuple<std::uint32_t>& Broadcast::axes() const { return axes_; }
@@ -108,16 +80,6 @@ inline ImageConstraint::ImageConstraint(const Variable* var_function,
 
 inline ImageConstraint::Kind ImageConstraint::kind() const { return Kind::IMAGE; }
 
-inline const Alignment* ImageConstraint::as_alignment() const { return nullptr; }
-
-inline const Broadcast* ImageConstraint::as_broadcast() const { return nullptr; }
-
-inline const ImageConstraint* ImageConstraint::as_image_constraint() const { return this; }
-
-inline const ScaleConstraint* ImageConstraint::as_scale_constraint() const { return nullptr; }
-
-inline const BloatConstraint* ImageConstraint::as_bloat_constraint() const { return nullptr; }
-
 inline const Variable* ImageConstraint::var_function() const { return var_function_; }
 
 inline const Variable* ImageConstraint::var_range() const { return var_range_; }
@@ -132,16 +94,6 @@ inline ScaleConstraint::ScaleConstraint(tuple<std::uint64_t> factors,
 }
 
 inline ScaleConstraint::Kind ScaleConstraint::kind() const { return Kind::SCALE; }
-
-inline const Alignment* ScaleConstraint::as_alignment() const { return nullptr; }
-
-inline const Broadcast* ScaleConstraint::as_broadcast() const { return nullptr; }
-
-inline const ImageConstraint* ScaleConstraint::as_image_constraint() const { return nullptr; }
-
-inline const ScaleConstraint* ScaleConstraint::as_scale_constraint() const { return this; }
-
-inline const BloatConstraint* ScaleConstraint::as_bloat_constraint() const { return nullptr; }
 
 inline const Variable* ScaleConstraint::var_smaller() const { return var_smaller_; }
 
@@ -161,16 +113,6 @@ inline BloatConstraint::BloatConstraint(const Variable* var_source,
 }
 
 inline BloatConstraint::Kind BloatConstraint::kind() const { return Kind::BLOAT; }
-
-inline const Alignment* BloatConstraint::as_alignment() const { return nullptr; }
-
-inline const Broadcast* BloatConstraint::as_broadcast() const { return nullptr; }
-
-inline const ImageConstraint* BloatConstraint::as_image_constraint() const { return nullptr; }
-
-inline const ScaleConstraint* BloatConstraint::as_scale_constraint() const { return nullptr; }
-
-inline const BloatConstraint* BloatConstraint::as_bloat_constraint() const { return this; }
 
 inline const Variable* BloatConstraint::var_source() const { return var_source_; }
 

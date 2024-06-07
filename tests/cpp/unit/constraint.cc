@@ -52,8 +52,8 @@ TEST_F(Constraint, Variable)
   auto part_imp = part.impl();
   ASSERT_FALSE(part_imp->closed());
   ASSERT_EQ(part_imp->kind(), legate::detail::Expr::Kind::VARIABLE);
-  ASSERT_EQ(part_imp->as_literal(), nullptr);
-  ASSERT_EQ(part_imp->as_variable(), part_imp);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Literal*>(part_imp), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Variable*>(part_imp), part_imp);
   ASSERT_TRUE(part_imp->operation() != nullptr);
 
   // Test equal
@@ -87,11 +87,11 @@ TEST_F(Constraint, Alignment)
   ASSERT_EQ(aligment->kind(), legate::detail::Constraint::Kind::ALIGNMENT);
   ASSERT_EQ(aligment->lhs(), part1.impl());
   ASSERT_EQ(aligment->rhs(), part2.impl());
-  ASSERT_EQ(aligment->as_alignment(), aligment.get());
-  ASSERT_EQ(aligment->as_broadcast(), nullptr);
-  ASSERT_EQ(aligment->as_image_constraint(), nullptr);
-  ASSERT_EQ(aligment->as_scale_constraint(), nullptr);
-  ASSERT_EQ(aligment->as_bloat_constraint(), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(aligment.get()), aligment.get());
+  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(aligment.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(aligment.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(aligment.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(aligment.get()), nullptr);
   ASSERT_FALSE(aligment->is_trivial());
 
   // Test find_partition_symbols
@@ -114,11 +114,11 @@ TEST_F(Constraint, Broadcast)
   ASSERT_EQ(broadcast->kind(), legate::detail::Constraint::Kind::BROADCAST);
   ASSERT_EQ(broadcast->variable(), part1.impl());
   ASSERT_EQ(broadcast->axes(), dims);
-  ASSERT_EQ(broadcast->as_alignment(), nullptr);
-  ASSERT_EQ(broadcast->as_broadcast(), broadcast.get());
-  ASSERT_EQ(broadcast->as_image_constraint(), nullptr);
-  ASSERT_EQ(broadcast->as_scale_constraint(), nullptr);
-  ASSERT_EQ(broadcast->as_bloat_constraint(), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(broadcast.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(broadcast.get()), broadcast.get());
+  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(broadcast.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(broadcast.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(broadcast.get()), nullptr);
 
   // Test find_partition_symbols
   std::vector<const legate::detail::Variable*> symbols = {};
@@ -140,11 +140,12 @@ TEST_F(Constraint, ImageConstraint)
   ASSERT_EQ(image_constraint->kind(), legate::detail::Constraint::Kind::IMAGE);
   ASSERT_EQ(image_constraint->var_function(), part_func.impl());
   ASSERT_EQ(image_constraint->var_range(), part_range.impl());
-  ASSERT_EQ(image_constraint->as_alignment(), nullptr);
-  ASSERT_EQ(image_constraint->as_broadcast(), nullptr);
-  ASSERT_EQ(image_constraint->as_image_constraint(), image_constraint.get());
-  ASSERT_EQ(image_constraint->as_scale_constraint(), nullptr);
-  ASSERT_EQ(image_constraint->as_bloat_constraint(), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(image_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(image_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(image_constraint.get()),
+            image_constraint.get());
+  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(image_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(image_constraint.get()), nullptr);
 
   // Test find_partition_symbols
   std::vector<const legate::detail::Variable*> symbols = {};
@@ -168,11 +169,12 @@ TEST_F(Constraint, ScaleConstraint)
   ASSERT_EQ(scale_constraint->kind(), legate::detail::Constraint::Kind::SCALE);
   ASSERT_EQ(scale_constraint->var_smaller(), part_smaller.impl());
   ASSERT_EQ(scale_constraint->var_bigger(), part_bigger.impl());
-  ASSERT_EQ(scale_constraint->as_alignment(), nullptr);
-  ASSERT_EQ(scale_constraint->as_broadcast(), nullptr);
-  ASSERT_EQ(scale_constraint->as_image_constraint(), nullptr);
-  ASSERT_EQ(scale_constraint->as_scale_constraint(), scale_constraint.get());
-  ASSERT_EQ(scale_constraint->as_bloat_constraint(), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(scale_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(scale_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(scale_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(scale_constraint.get()),
+            scale_constraint.get());
+  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(scale_constraint.get()), nullptr);
 
   // Test find_partition_symbols
   std::vector<const legate::detail::Variable*> symbols = {};
@@ -198,11 +200,12 @@ TEST_F(Constraint, BloatConstraint)
   ASSERT_EQ(bloat_constraint->kind(), legate::detail::Constraint::Kind::BLOAT);
   ASSERT_EQ(bloat_constraint->var_source(), part_source.impl());
   ASSERT_EQ(bloat_constraint->var_bloat(), part_bloated.impl());
-  ASSERT_EQ(bloat_constraint->as_alignment(), nullptr);
-  ASSERT_EQ(bloat_constraint->as_broadcast(), nullptr);
-  ASSERT_EQ(bloat_constraint->as_image_constraint(), nullptr);
-  ASSERT_EQ(bloat_constraint->as_scale_constraint(), nullptr);
-  ASSERT_EQ(bloat_constraint->as_bloat_constraint(), bloat_constraint.get());
+  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(bloat_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(bloat_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(bloat_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(bloat_constraint.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(bloat_constraint.get()),
+            bloat_constraint.get());
 
   // Test find_partition_symbols
   std::vector<const legate::detail::Variable*> symbols = {};

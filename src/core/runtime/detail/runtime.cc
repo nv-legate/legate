@@ -471,8 +471,9 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
       throw std::invalid_argument{"List/string arrays can only be 1D"};
     }
 
-    auto elem_type =
-      Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
+    auto elem_type  = Type::Code::STRING == type->code
+                        ? int8()
+                        : dynamic_cast<const detail::ListType&>(*type).element_type();
     auto descriptor = create_base_array_(shape, rect_type(1), nullable, optimize_scalar);
     auto vardata    = create_array(make_internal_shared<Shape>(1),
                                 std::move(elem_type),
@@ -526,7 +527,9 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
     throw std::invalid_argument{"Vardata should not be nullable"};
   }
 
-  auto elem_type = Type::Code::STRING == type->code ? int8() : type->as_list_type().element_type();
+  auto elem_type = Type::Code::STRING == type->code
+                     ? int8()
+                     : dynamic_cast<const detail::ListType&>(*type).element_type();
   if (*vardata->type() != *elem_type) {
     throw std::invalid_argument{"Expected a vardata array of type " + elem_type->to_string() +
                                 " but got " + vardata->type()->to_string()};
@@ -543,7 +546,7 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array_(
   bool optimize_scalar)
 {
   std::vector<InternalSharedPtr<LogicalArray>> fields;
-  const auto& st_type = type->as_struct_type();
+  const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
   auto null_mask      = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
 
   fields.reserve(st_type.field_types().size());

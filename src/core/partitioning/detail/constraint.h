@@ -29,14 +29,7 @@ namespace legate::detail {
 class Operation;
 class Strategy;
 
-class Alignment;
-class BloatConstraint;
-class Broadcast;
-class Constraint;
-class ImageConstraint;
-class Literal;
 class LogicalStore;
-class ScaleConstraint;
 class Variable;
 
 class Expr {
@@ -57,8 +50,6 @@ class Expr {
   [[nodiscard]] virtual bool closed() const                                                  = 0;
   [[nodiscard]] virtual std::string to_string() const                                        = 0;
   [[nodiscard]] virtual Kind kind() const                                                    = 0;
-  [[nodiscard]] virtual const Literal* as_literal() const                                    = 0;
-  [[nodiscard]] virtual const Variable* as_variable() const                                  = 0;
 };
 
 class Literal final : public Expr {
@@ -71,8 +62,6 @@ class Literal final : public Expr {
   [[nodiscard]] std::string to_string() const override;
 
   [[nodiscard]] Kind kind() const override;
-  [[nodiscard]] const Literal* as_literal() const override;
-  [[nodiscard]] const Variable* as_variable() const override;
 
   [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
 
@@ -92,8 +81,6 @@ class Variable final : public Expr {
   [[nodiscard]] std::string to_string() const override;
 
   [[nodiscard]] Kind kind() const override;
-  [[nodiscard]] const Literal* as_literal() const override;
-  [[nodiscard]] const Variable* as_variable() const override;
 
   [[nodiscard]] const Operation* operation() const;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
@@ -120,11 +107,6 @@ class Constraint {
   [[nodiscard]] virtual std::string to_string() const                                        = 0;
   [[nodiscard]] virtual Kind kind() const                                                    = 0;
   virtual void validate() const                                                              = 0;
-  [[nodiscard]] virtual const Alignment* as_alignment() const                                = 0;
-  [[nodiscard]] virtual const Broadcast* as_broadcast() const                                = 0;
-  [[nodiscard]] virtual const ImageConstraint* as_image_constraint() const                   = 0;
-  [[nodiscard]] virtual const ScaleConstraint* as_scale_constraint() const                   = 0;
-  [[nodiscard]] virtual const BloatConstraint* as_bloat_constraint() const                   = 0;
 };
 
 class Alignment final : public Constraint {
@@ -138,12 +120,6 @@ class Alignment final : public Constraint {
   void validate() const override;
 
   [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] const Alignment* as_alignment() const override;
-  [[nodiscard]] const Broadcast* as_broadcast() const override;
-  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
-  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
-  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
   [[nodiscard]] const Variable* lhs() const;
   [[nodiscard]] const Variable* rhs() const;
@@ -169,12 +145,6 @@ class Broadcast final : public Constraint {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const Alignment* as_alignment() const override;
-  [[nodiscard]] const Broadcast* as_broadcast() const override;
-  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
-  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
-  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
-
   [[nodiscard]] const Variable* variable() const;
   [[nodiscard]] const tuple<std::uint32_t>& axes() const;
 
@@ -197,12 +167,6 @@ class ImageConstraint final : public Constraint {
   void validate() const override;
 
   [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] const Alignment* as_alignment() const override;
-  [[nodiscard]] const Broadcast* as_broadcast() const override;
-  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
-  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
-  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
   [[nodiscard]] const Variable* var_function() const;
   [[nodiscard]] const Variable* var_range() const;
@@ -229,12 +193,6 @@ class ScaleConstraint final : public Constraint {
 
   [[nodiscard]] std::string to_string() const override;
 
-  [[nodiscard]] const Alignment* as_alignment() const override;
-  [[nodiscard]] const Broadcast* as_broadcast() const override;
-  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
-  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
-  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
-
   [[nodiscard]] const Variable* var_smaller() const;
   [[nodiscard]] const Variable* var_bigger() const;
 
@@ -260,12 +218,6 @@ class BloatConstraint final : public Constraint {
   void validate() const override;
 
   [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] const Alignment* as_alignment() const override;
-  [[nodiscard]] const Broadcast* as_broadcast() const override;
-  [[nodiscard]] const ImageConstraint* as_image_constraint() const override;
-  [[nodiscard]] const ScaleConstraint* as_scale_constraint() const override;
-  [[nodiscard]] const BloatConstraint* as_bloat_constraint() const override;
 
   [[nodiscard]] const Variable* var_source() const;
   [[nodiscard]] const Variable* var_bloat() const;

@@ -23,9 +23,6 @@
 namespace legate::detail {
 
 class BufferBuilder;
-class FixedArrayType;
-class ListType;
-class StructType;
 
 class Type {
  public:
@@ -35,15 +32,12 @@ class Type {
 
   virtual ~Type() = default;
   [[nodiscard]] virtual std::uint32_t size() const;
-  [[nodiscard]] virtual std::uint32_t alignment() const = 0;
-  [[nodiscard]] virtual std::uint32_t uid() const       = 0;
-  [[nodiscard]] virtual bool variable_size() const      = 0;
-  [[nodiscard]] virtual std::string to_string() const   = 0;
-  [[nodiscard]] virtual bool is_primitive() const       = 0;
-  virtual void pack(BufferBuilder& buffer) const        = 0;
-  [[nodiscard]] virtual const FixedArrayType& as_fixed_array_type() const;
-  [[nodiscard]] virtual const StructType& as_struct_type() const;
-  [[nodiscard]] virtual const ListType& as_list_type() const;
+  [[nodiscard]] virtual std::uint32_t alignment() const     = 0;
+  [[nodiscard]] virtual std::uint32_t uid() const           = 0;
+  [[nodiscard]] virtual bool variable_size() const          = 0;
+  [[nodiscard]] virtual std::string to_string() const       = 0;
+  [[nodiscard]] virtual bool is_primitive() const           = 0;
+  virtual void pack(BufferBuilder& buffer) const            = 0;
   [[nodiscard]] virtual bool equal(const Type& other) const = 0;
 
   void record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const;
@@ -124,7 +118,6 @@ class FixedArrayType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
-  [[nodiscard]] const FixedArrayType& as_fixed_array_type() const override;
 
   [[nodiscard]] std::uint32_t num_elements() const;
   [[nodiscard]] const InternalSharedPtr<Type>& element_type() const;
@@ -149,7 +142,6 @@ class StructType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
-  [[nodiscard]] const StructType& as_struct_type() const override;
 
   [[nodiscard]] std::uint32_t num_fields() const;
   [[nodiscard]] InternalSharedPtr<Type> field_type(std::uint32_t field_idx) const;
@@ -175,7 +167,6 @@ class ListType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
-  [[nodiscard]] const ListType& as_list_type() const override;
 
   [[nodiscard]] const InternalSharedPtr<Type>& element_type() const;
 
