@@ -318,7 +318,7 @@ bool StructType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-InternalSharedPtr<Type> StructType::field_type(std::uint32_t field_idx) const
+const InternalSharedPtr<Type>& StructType::field_type(std::uint32_t field_idx) const
 {
   return field_types_.at(field_idx);
 }

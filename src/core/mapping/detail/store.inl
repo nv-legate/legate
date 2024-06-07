@@ -63,7 +63,7 @@ inline bool Store::unbound() const { return is_unbound_store_; }
 
 inline std::int32_t Store::dim() const { return dim_; }
 
-inline InternalSharedPtr<legate::detail::Type> Store::type() const { return type_; }
+inline const InternalSharedPtr<legate::detail::Type>& Store::type() const { return type_; }
 
 inline bool Store::is_reduction() const { return redop() > 0; }
 

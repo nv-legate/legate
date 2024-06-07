@@ -101,7 +101,7 @@ class Store {
   [[nodiscard]] bool is_future() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] std::int32_t dim() const;
-  [[nodiscard]] InternalSharedPtr<legate::detail::Type> type() const;
+  [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const;
 
   [[nodiscard]] bool is_reduction() const;
   [[nodiscard]] std::int32_t redop() const;

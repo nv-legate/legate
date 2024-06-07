@@ -144,7 +144,7 @@ class StructType final : public ExtensionType {
   void pack(BufferBuilder& buffer) const override;
 
   [[nodiscard]] std::uint32_t num_fields() const;
-  [[nodiscard]] InternalSharedPtr<Type> field_type(std::uint32_t field_idx) const;
+  [[nodiscard]] const InternalSharedPtr<Type>& field_type(std::uint32_t field_idx) const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Type>>& field_types() const;
   [[nodiscard]] bool aligned() const;
   [[nodiscard]] const std::vector<std::uint32_t>& offsets() const;

@@ -24,10 +24,12 @@
 
 namespace legate::detail {
 
-InternalSharedPtr<LogicalStore> LogicalArray::data() const
+const InternalSharedPtr<LogicalStore>& LogicalArray::data() const
 {
   throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
-  return {};
+
+  static const InternalSharedPtr<LogicalStore> ptr;
+  return ptr;
 }
 
 /*static*/ InternalSharedPtr<LogicalArray> LogicalArray::from_store(
@@ -81,7 +83,7 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<LogicalStore> BaseLogicalArray::null_mask() const
+const InternalSharedPtr<LogicalStore>& BaseLogicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -394,7 +396,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<LogicalStore> StructLogicalArray::null_mask() const
+const InternalSharedPtr<LogicalStore>& StructLogicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -424,7 +426,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::child(std::uint32_t index) c
   return fields_.at(index);
 }
 
-InternalSharedPtr<LogicalStore> StructLogicalArray::primary_store() const
+const InternalSharedPtr<LogicalStore>& StructLogicalArray::primary_store() const
 {
   return fields_.front()->primary_store();
 }

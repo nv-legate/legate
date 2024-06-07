@@ -18,10 +18,12 @@
 
 namespace legate::mapping::detail {
 
-InternalSharedPtr<Store> Array::data() const
+const InternalSharedPtr<Store>& Array::data() const
 {
-  throw std::invalid_argument("Data store of a nested array cannot be retrieved");
-  return {};
+  throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
+
+  static const InternalSharedPtr<Store> ptr;
+  return ptr;
 }
 
 bool BaseArray::unbound() const
@@ -30,17 +32,17 @@ bool BaseArray::unbound() const
   return data_->unbound();
 }
 
-InternalSharedPtr<Store> BaseArray::null_mask() const
+const InternalSharedPtr<Store>& BaseArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument("Invalid to retrieve the null mask of a non-nullable array");
+    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
 
 InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
 {
-  throw std::invalid_argument("Non-nested array has no child sub-array");
+  throw std::invalid_argument{"Non-nested array has no child sub-array"};
   return {};
 }
 
@@ -64,7 +66,7 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
     case 0: return descriptor_;
     case 1: return vardata_;
     default: {
-      throw std::out_of_range("List array does not have child " + std::to_string(index));
+      throw std::out_of_range{"List array does not have child " + std::to_string(index)};
       break;
     }
   }
@@ -86,10 +88,10 @@ bool StructArray::unbound() const
   return std::any_of(fields_.begin(), fields_.end(), [](auto& field) { return field->unbound(); });
 }
 
-InternalSharedPtr<Store> StructArray::null_mask() const
+const InternalSharedPtr<Store>& StructArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument("Invalid to retrieve the null mask of a non-nullable array");
+    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
