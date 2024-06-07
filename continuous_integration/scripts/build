@@ -124,6 +124,8 @@ build_project() {
     run_command "Init build environment" init_build_env "$@";
     run_command "Setup Legate.Core Env" setup_legate_core_env
 
+    git config --global --add safe.directory "$REPO_DIR/.git"
+
     case "${BUILD_TYPE}" in
         release) build_legate_release;;
         docs) build_docs;;
