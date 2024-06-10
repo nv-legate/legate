@@ -30,6 +30,8 @@ class Square {
   }
 };
 
+// NOLINTBEGIN(readability-magic-numbers, misc-const-correctness)
+
 void test_elementwise_row_operation()
 {
   auto input  = stl::create_store<std::int64_t>({3, 4});
@@ -101,6 +103,52 @@ void test_elementwise_row_operation()
   EXPECT_EQ(result_view(0, 2), 4);
   EXPECT_EQ(result_view(0, 3), 9);
 }
+
+void elementwise_doxy_snippets()
+{
+  /// [elementwise example]
+  // Perform element-wise addition of the rows of two logical stores,
+  // assigning the result element-wise into the rows of the first.
+  stl::logical_store<int, 2> store1 = {
+    {1, 2, 3, 4},  // row 0
+    {2, 3, 4, 5},  // row 1
+    {3, 4, 5, 6}   // row 2
+  };
+  stl::logical_store<int, 2> store2 = {
+    {10, 20, 30, 40},  // row 0
+    {20, 30, 40, 50},  // row 1
+    {30, 40, 50, 60}   // row 2
+  };
+  stl::transform(stl::rows_of(store1),
+                 stl::rows_of(store2),
+                 stl::rows_of(store1),
+                 stl::elementwise(std::plus<>{}));
+
+  // store1 now contains:
+  // [[11 22 33 44]   // row 0
+  //  [22 33 44 55]   // row 1
+  //  [33 44 55 66]]  // row 2
+  /// [elementwise example]
+
+  auto sp = stl::as_mdspan(store1);
+  EXPECT_EQ(sp(0, 0), 11);
+  EXPECT_EQ(sp(0, 1), 22);
+  EXPECT_EQ(sp(0, 2), 33);
+  EXPECT_EQ(sp(0, 3), 44);
+  EXPECT_EQ(sp(1, 0), 22);
+  EXPECT_EQ(sp(1, 1), 33);
+  EXPECT_EQ(sp(1, 2), 44);
+  EXPECT_EQ(sp(1, 3), 55);
+  EXPECT_EQ(sp(2, 0), 33);
+  EXPECT_EQ(sp(2, 1), 44);
+  EXPECT_EQ(sp(2, 2), 55);
+  EXPECT_EQ(sp(2, 3), 66);
+}
+
+// NOLINTEND(readability-magic-numbers, misc-const-correctness)
+
 }  // namespace
 
 TEST_F(STL, TestElementwiseRowOperation) { test_elementwise_row_operation(); }
+
+TEST_F(STL, ElementwiseDoxySnippets) { elementwise_doxy_snippets(); }

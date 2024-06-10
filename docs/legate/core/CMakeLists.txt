@@ -17,7 +17,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "docs")
 find_package(Doxygen REQUIRED)
 find_package(Sphinx REQUIRED)
 
-file(GLOB_RECURSE legate_core_headers "${legate_core_LOCAL_INCLUDE_DIR}/*.h")
+file(GLOB_RECURSE legate_core_headers "${legate_core_LOCAL_INCLUDE_DIR}/*.h*")
 
 set(DOXYGEN_INPUT_DIR "${legate_core_LOCAL_INCLUDE_DIR}")
 set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
@@ -32,9 +32,19 @@ set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
 set(DOXYGEN_USE_MATHJAX YES)
 set(DOXYGEN_MATHJAX_VERSION MathJax_3)
 set(DOXYGEN_STRIP_FROM_INC_PATH "${LEGATE_CORE_DIR}/src")
-set(DOXYGEN_EXAMPLE_PATH "${LEGATE_CORE_DIR}/tests/cpp")
+set(DOXYGEN_EXAMPLE_PATH "\"${LEGATE_CORE_DIR}/tests/cpp\" \"${LEGATE_CORE_DIR}/src\"")
 set(DOXYGEN_QUIET YES)
-set(DOXYGEN_PREDEFINED DOXYGEN)
+set(DOXYGEN_PREDEFINED
+    [=[
+  "DOXYGEN" \
+  "LEGATE_DOXYGEN" \
+  "LEGATE_HOST_DEVICE" \
+  "LEGATE_STL_REQUIRES=requires" \
+  "LegateDefined(X)=defined(X) && X" \
+  "LEGATE_STL_UNSPECIFIED(...)=unspecified"
+  ]=])
+set(DOXYGEN_EXPAND_AS_DEFINED [=[
+  ]=])
 
 set(DOXYFILE_IN "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
 set(DOXYFILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
@@ -46,7 +56,7 @@ file(MAKE_DIRECTORY "${DOXYGEN_OUTPUT_DIR}") # Doxygen won't create this for us
 add_custom_command(OUTPUT "${DOXYGEN_INDEX_FILE}"
                    DEPENDS "${legate_core_headers}"
                    COMMAND "${DOXYGEN_EXECUTABLE}" Doxyfile
-                   MAIN_DEPENDENCY "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+                   MAIN_DEPENDENCY "${DOXYFILE_OUT}"
                    COMMENT "Generating doxygen output")
 
 add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}" COMMENT "Running doxygen")

@@ -22,6 +22,7 @@
 
 #include <array>
 #include <cstddef>
+#include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -42,7 +43,66 @@ struct ValueTypeOf<logical_store<ElementType, Dim>> {
   using type = ElementType;
 };
 
-struct ctor_tag {};
+struct CtorTag {};
+
+/// @c InitListTraits is a helper class that provides a way to extract the shape of a
+/// multi-dimensional initializer list and fill a multi-dimensional store with its values.
+template <class ElementType, std::int32_t Dim>
+struct InitListTraits {
+  using type = std::initializer_list<typename InitListTraits<ElementType, Dim - 1>::type>;
+
+  /// Get the shape described by the initializer_list.
+  template <std::size_t N = Dim>
+  static std::array<std::size_t, N> get_shape(type il, std::array<std::size_t, N> shape = {})
+  {
+    if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG) && Dim > 1) {
+      // Make sure all the inner lists have the same size:
+      const std::size_t size = (*il.begin()).size();
+      for (const auto& inner : il) {
+        LEGATE_ASSERT(inner.size() == size);
+      }
+    }
+
+    shape[N - Dim] = il.size();
+    return InitListTraits<ElementType, Dim - 1>::get_shape(*il.begin(), shape);
+  }
+
+  /// Fill the store with the values from the initializer_list.
+  template <std::size_t... Indices, std::size_t N, std::int32_t N2>
+  static void fill(std::index_sequence<Indices...> indices,
+                   std::array<std::size_t, N>& shape,
+                   type il,
+                   const mdspan_t<ElementType, N2>& span)
+  {
+    static_assert(sizeof...(Indices) == N && (N2 == N));
+    for (const auto& inner : il) {
+      InitListTraits<ElementType, Dim - 1>::fill(indices, shape, inner, span);
+      ++shape[N - Dim];
+    }
+    shape[N - Dim] = 0;
+  }
+};
+
+template <class ElementType>
+struct InitListTraits<ElementType, 0> {
+  using type = ElementType;
+
+  template <std::size_t N = 0>
+  static std::array<std::size_t, N> get_shape(type, std::array<std::size_t, N> shape = {}) noexcept
+  {
+    return shape;
+  }
+
+  template <std::size_t... Indices, std::size_t N, std::int32_t N2>
+  static void fill(std::index_sequence<Indices...>,
+                   std::array<std::size_t, N>& shape,
+                   type value,
+                   const mdspan_t<ElementType, N2>& span) noexcept
+  {
+    static_assert(sizeof...(Indices) == N && (N2 == N));
+    span(shape[Indices]...) = value;
+  }
+};
 
 }  // namespace detail
 /** @endcond */
@@ -66,11 +126,17 @@ struct ctor_tag {};
            @endverbatim
  * @tparam Dim The number of dimensions in the logical store
  *
- * @verbatim embed:rst:leading-asterisk
- * @endverbatim
+ * @ingroup stl-containers
  */
 template <typename ElementType, std::int32_t Dim>
-class logical_store : private legate::LogicalStore {
+class logical_store
+#if !LEGATE_DEFINED(LEGATE_DOXYGEN)
+  : private legate::LogicalStore
+#endif
+{
+  using init_list_traits_t = detail::InitListTraits<ElementType, Dim>;
+  using init_list_t        = typename init_list_traits_t::type;
+
  public:
   static_assert(
     type_code_of_v<ElementType> != legate::Type::Code::NIL,
@@ -136,6 +202,65 @@ class logical_store : private legate::LogicalStore {
   }
 
   /**
+   * @brief Create a logical store from a @c std::initializer_list.
+   *
+   * For stores with two or more dimensions, @c logical_store objects
+   * can be initialized from an @c initializer_list as follows:
+   *
+   * @code {.cpp}
+   * logical_store<int, 2> data = { {1, 2, 3}, {4, 5, 6} };
+   * @endcode
+   *
+   * For 1-dimensional stores, however, this syntax can get confused
+   * with the constructor that takes the shape of the store as a list
+   * of integers. So for 1-D stores, the first argument must be
+   * @c std::in_place as shown below:
+   *
+   * @code {.cpp}
+   * logical_store<int, 1> data{std::in_place, {1, 2, 3, 4, 5, 6}};
+   * @endcode
+   *
+   * @param il The initializer list to create the store from. The type
+   *          of @c il is a nested @c std::initializer_list of the store's
+   *          element type.
+   *
+   * @pre @li The initializer list must have the same dimensionality (as
+   *          determined by list nesting depth) as the store.
+   *
+   * @par Example:
+   * @snippet{trimleft} experimental/stl/store.cc 2D initializer_list
+   */
+  logical_store(std::in_place_t, init_list_t il)
+    : LogicalStore{logical_store::create_(init_list_traits_t::get_shape(il))}
+  {
+    std::array<std::size_t, Dim> shape{};  // default-initialized to zeros
+    const mdspan_t<ElementType, Dim> span = as_mdspan(*this);
+    init_list_traits_t::fill(std::make_index_sequence<Dim>{}, shape, il, span);
+  }
+
+#if LEGATE_DEFINED(LEGATE_DOXYGEN)
+  /**
+   * @overload
+   *
+   * @note This constructor is only available when the dimensionality of the
+   * store is greater than 1.
+   */
+  logical_store(init_list_t il);
+#endif
+
+  // NOLINTBEGIN(google-explicit-constructor)
+  template <std::int32_t Rank = Dim>
+    requires(Rank != 1)
+  logical_store(init_list_t il, std::enable_if_t<Rank != 1, int> = 0)
+    : LogicalStore{logical_store::create_(init_list_traits_t::get_shape(il))}
+  {
+    std::array<std::size_t, Dim> shape{};  // default-initialized to zeros
+    const mdspan_t<ElementType, Dim> span = as_mdspan(*this);
+    init_list_traits_t::fill(std::make_index_sequence<Dim>{}, shape, il, span);
+  }
+  // NOLINTEND(google-explicit-constructor)
+
+  /**
    * @brief `logical_store` is a move-only type.
    */
   logical_store(logical_store&&)            = default;
@@ -176,6 +301,11 @@ class logical_store : private legate::LogicalStore {
     return runtime->create_store(std::move(shape), primitive_type(type_code_of_v<ElementType>));
   }
 
+  [[nodiscard]] static LogicalStore create_(const std::array<std::size_t, Dim> exts)
+  {
+    return create_(std::span{exts});
+  }
+
   static void validate_(const LogicalStore& store)
   {
     static_assert(sizeof(logical_store) == sizeof(LogicalStore));
@@ -183,12 +313,12 @@ class logical_store : private legate::LogicalStore {
     LEGATE_ASSERT(store.dim() == Dim || (Dim == 0 && store.dim() == 1));
   }
 
-  logical_store(detail::ctor_tag, LogicalStore&& store) : LogicalStore{std::move(store)}
+  logical_store(detail::CtorTag, LogicalStore&& store) : LogicalStore{std::move(store)}
   {
     validate_(*this);
   }
 
-  logical_store(detail::ctor_tag, const LogicalStore& store) : LogicalStore{store}
+  logical_store(detail::CtorTag, const LogicalStore& store) : LogicalStore{store}
   {
     validate_(*this);
   }
@@ -222,6 +352,10 @@ class logical_store<ElementType, 0> : private LogicalStore {
   {
   }
 
+  explicit logical_store(ElementType elem) : LogicalStore{logical_store::create_(std::move(elem))}
+  {
+  }
+
   // Make logical_store a move-only type:
   logical_store(logical_store&&)            = default;
   logical_store& operator=(logical_store&&) = default;
@@ -239,9 +373,9 @@ class logical_store<ElementType, 0> : private LogicalStore {
     return legate::Runtime::get_runtime()->create_store(Scalar{std::move(elem)});
   }
 
-  logical_store(detail::ctor_tag, LogicalStore&& store) : LogicalStore{std::move(store)} {}
+  logical_store(detail::CtorTag, LogicalStore&& store) : LogicalStore{std::move(store)} {}
 
-  logical_store(detail::ctor_tag, const LogicalStore& store) : LogicalStore{store} {}
+  logical_store(detail::CtorTag, const LogicalStore& store) : LogicalStore{store} {}
 
   friend logical_store<ElementType, 0> as_typed<>(const LogicalStore& store);
 
@@ -275,11 +409,13 @@ logical_store(std::array<std::size_t, Dim>, ElementType) -> logical_store<Elemen
  * @return `logical_store<ElementType, Dim>`
  * @pre The element type of the `LogicalStore` must be the same as `ElementType`,
  *      and the dimensionality of the `LogicalStore` must be the same as `Dim`.
+ *
+ * @ingroup stl-containers
  */
 template <typename ElementType, std::int32_t Dim>
 [[nodiscard]] logical_store<ElementType, Dim> as_typed(const legate::LogicalStore& store)
 {
-  return {detail::ctor_tag{}, store};
+  return {detail::CtorTag{}, store};
 }
 
 /** @cond */
@@ -319,6 +455,8 @@ template <std::int32_t Dim>
  * @pre The element type of the `PhysicalStore` must be the same as
  *      `ElementType`, and the dimensionality of the `PhysicalStore` must be the
  *      same as `Dim`.
+ *
+ * @ingroup stl-containers
  */
 template <typename ElementType, std::int32_t Dim>
 LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
@@ -387,14 +525,14 @@ LEGATE_HOST_DEVICE [[nodiscard]] inline auto as_mdspan(
 namespace detail {
 
 template <bool>
-class as_mdspan_result {
+class AsMdspanResult {
  public:
   template <typename T, typename ElementType, typename Dim>
   using eval = decltype(stl::as_mdspan<ElementType, Dim::value>(std::declval<T>()));
 };
 
 template <>
-class as_mdspan_result<true> {
+class AsMdspanResult<true> {
  public:
   template <typename T, typename ElementType, typename Dim>
   using eval = decltype(stl::as_mdspan(std::declval<T>()));
@@ -404,37 +542,100 @@ class as_mdspan_result<true> {
 /** @endcond */
 
 template <typename T, typename ElementType = void, std::int32_t Dim = -1>
-using as_mdspan_t = meta::eval<detail::as_mdspan_result<std::is_void_v<ElementType> && Dim == -1>,
+using as_mdspan_t = meta::eval<detail::AsMdspanResult<std::is_void_v<ElementType> && Dim == -1>,
                                T,
                                ElementType,
                                meta::constant<Dim>>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Create an uninitialized zero-dimensional (scalar) logical store of a given type.
+ *
+ * @tparam ElementType The element type of the resulting `logical_store`.
+ * @return `legate::experimental::stl::logical_store<ElementType, 0>`
+ *
+ * @code {.cpp}
+ * auto scalar = stl::create_store<int>({}); // scalar store of type int
+ * @endcode
+ *
+ * @ingroup stl-containers
+ */
 template <typename ElementType>  //
-[[nodiscard]] logical_store<ElementType, 0> create_store(std::span<const std::size_t, 0>)
+[[nodiscard]] logical_store<ElementType, 0> create_store(std::span<const std::size_t, 0UL>)
 {
   return logical_store<ElementType, 0>{{}};
 }
 
+/**
+ * @brief Create and initialize a zero-dimensional (scalar) logical store of a given type.
+ *
+ * @tparam ElementType The element type of the resulting `logical_store`.
+ * @return `legate::experimental::stl::logical_store<ElementType, 0>`
+ *
+ * @code {.cpp}
+ * auto scalar1 = stl::create_store({}, 0);      // scalar store of type int
+ * // or
+ * auto scalar2 = stl::create_store<int>({}, 0); // same thing
+ * @endcode
+ *
+ * @ingroup stl-containers
+ */
 template <typename ElementType>  //
-[[nodiscard]] logical_store<ElementType, 0> create_store(std::span<const std::size_t, 0>,
+[[nodiscard]] logical_store<ElementType, 0> create_store(std::span<const std::size_t, 0UL>,
                                                          ElementType value)
 {
   return logical_store<ElementType, 0>{{}, std::move(value)};
 }
 
-template <typename ElementType, std::int32_t Dim>  //
+/**
+ * @brief Create an uninitialized logical store of a given type and dimensionality.
+ *
+ * @tparam ElementType The element type of the resulting `logical_store`.
+ * @tparam Dim The dimensionality of the resulting `logical_store`.
+ * @return `legate::experimental::stl::logical_store<ElementType, Dim>`
+ *
+ * @code {.cpp}
+ * auto store = stl::create_store<int>({40,50,60}); // A 3-dimensional store of type int
+ * @endcode
+ *
+ * @ingroup stl-containers
+ */
+template <typename ElementType, std::size_t Dim>  //
 [[nodiscard]] logical_store<ElementType, Dim> create_store(const std::size_t (&exts)[Dim])
 {
-  return logical_store<ElementType, Dim>{exts};
+  return logical_store<ElementType, static_cast<std::int32_t>(Dim)>{exts};
 }
 
-template <typename ElementType, std::int32_t Dim>  //
-[[nodiscard]] logical_store<ElementType, Dim> create_store(std::span<const std::size_t, Dim> exts)
+/**
+ * @overload
+ *
+ * @code {.cpp}
+ * stl::legate_store<int, 3> input{...};
+ * auto aligned = stl::create_store<int>(source.extents());
+ * @endcode
+ *
+ * @ingroup stl-containers
+ */
+template <typename ElementType, std::size_t Dim>  //
+[[nodiscard]] logical_store<ElementType, Dim> create_store(const std::array<std::size_t, Dim>& exts)
 {
   return logical_store<ElementType, Dim>{exts};
 }
 
+/**
+ * @brief Create and initialize a logical store of a given type and dimensionality.
+ *
+ * @tparam ElementType The element type of the resulting `logical_store`.
+ * @tparam Dim The dimensionality of the resulting `logical_store`.
+ * @return `legate::experimental::stl::logical_store<ElementType, Dim>`
+ *
+ * @code {.cpp}
+ * auto store = stl::create_store<int>({40,50,60}, 0); // A 3-dimensional store of type int
+ * @endcode
+ *
+ * @ingroup stl-containers
+ */
 template <typename ElementType, std::int32_t Dim>  //
 [[nodiscard]] logical_store<ElementType, Dim> create_store(const std::size_t (&exts)[Dim],
                                                            ElementType value)
@@ -442,14 +643,36 @@ template <typename ElementType, std::int32_t Dim>  //
   return logical_store<ElementType, Dim>{exts, std::move(value)};
 }
 
-template <typename ElementType, std::int32_t Dim>  //
-[[nodiscard]] logical_store<ElementType, Dim> create_store(std::span<const std::size_t, Dim> exts,
+/**
+ * @overload
+ *
+ * @code {.cpp}
+ * stl::legate_store<int, 3> input{...};
+ * auto aligned = stl::create_store<int>(source.extents(), 0);
+ * @endcode
+ *
+ * @ingroup stl-containers
+ */
+template <typename ElementType, std::size_t Dim>  //
+[[nodiscard]] logical_store<ElementType, Dim> create_store(const std::array<std::size_t, Dim>& exts,
                                                            ElementType value)
 {
   return logical_store<ElementType, Dim>{exts, std::move(value)};
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Create an uninitialized zero-dimensional (scalar) logical store of a given type.
+ *
+ * @tparam ElementType The element type of the resulting `logical_store`.
+ * @return `legate::experimental::stl::logical_store<ElementType, 0>`
+ *
+ * @code {.cpp}
+ * auto scalar = stl::scalar(0); // scalar store of type int
+ * @endcode
+ *
+ * @ingroup stl-containers
+ */
 template <typename ElementType>
 [[nodiscard]] logical_store<ElementType, 0> scalar(ElementType value)
 {

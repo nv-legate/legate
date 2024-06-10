@@ -60,4 +60,17 @@ using namespace ::legate::experimental::stl::detail::tags::obj;
 
 }  // namespace legate::experimental::stl::detail
 
+#if LEGATE_DEFINED(LEGATE_DOXYGEN)
+namespace legate::experimental::stl {
+/**
+ * @brief Get the logical store from a logical store-like object.
+ *
+ * @see @c logical_store_like
+ * @ingroup stl-concepts
+ */
+template <typename StoreLike>
+LogicalStore get_logical_store(StoreLike&& store_like);
+}  // namespace legate::experimental::stl
+#endif
+
 #include "suffix.hpp"

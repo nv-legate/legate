@@ -292,6 +292,8 @@ struct ValueTypeOf : meta::if_c<(type_code_of_v<Store> == Type::Code::NIL),
  *
  * @tparam ElementType The element type of the `mdspan`.
  * @tparam Dim The dimensionality of the `mdspan`.
+ *
+ * @ingroup stl-views
  */
 template <typename ElementType, std::int32_t Dim>
 using mdspan_t =  //
@@ -328,6 +330,8 @@ class flat_mdspan_view;
  * @brief An iterator over an `mdspan` that presents a flat view and allows
  * random elementwise access. It is particularly handy for passing to Thrust
  * algorithms to perform elementwise operations in parallel.
+ *
+ * @ingroup stl-views
  */
 template <typename MDSpan>
 class flat_mdspan_iterator;
@@ -496,6 +500,8 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
 /**
  * @brief A flattened view of an `mdspan` that allows efficient random
  * elementwise access.
+ *
+ * @ingroup stl-views
  */
 template <typename Element, typename Extent, typename Layout, typename Accessor>
 class flat_mdspan_view<std::mdspan<Element, Extent, Layout, Accessor>> {
@@ -520,6 +526,8 @@ class flat_mdspan_view<std::mdspan<Element, Extent, Layout, Accessor>> {
 /**
  * @brief Create a flattened view of an `mdspan` that allows efficient random
  * elementwise access.
+ *
+ * @ingroup stl-views
  */
 template <typename Element, typename Extent, typename Layout, typename Accessor>
 LEGATE_HOST_DEVICE [[nodiscard]] flat_mdspan_view<std::mdspan<Element, Extent, Layout, Accessor>>

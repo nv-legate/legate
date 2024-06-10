@@ -47,7 +47,6 @@ class BinaryTransform {
   template <typename Src1, typename Src2, typename Dst>
   LEGATE_HOST_DEVICE void operator()(Src1&& src1, Src2&& src2, Dst&& dst)
   {
-    static_assert(std::is_lvalue_reference_v<Dst>);
     stl::assign(static_cast<Dst&&>(dst), op(static_cast<Src1&&>(src1), static_cast<Src2&&>(src2)));
   }
 };
@@ -58,20 +57,65 @@ BinaryTransform(BinaryOperation) -> BinaryTransform<BinaryOperation>;
 }  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename InputRange,
-          typename OutputRange,
-          typename UnaryOperation>                                             //
+/**
+ * @brief Applies a unary operation to each element in the input range and
+ * stores the result in the output range.
+ *
+ * The input range and the output range may be the same.
+ *
+ * @param input The input range. Must satisfy the @c logical_store_like concept.
+ * @param output The output range. Must satisfy the @c logical_store_like concept.
+ * @param op The unary operation to apply.
+ *
+ * @pre @li The input and output ranges must have the same shape.
+ *      @li The unary operation must be trivially relocatable.
+ *
+ * @return void
+ *
+ * @par Example:
+ * @snippet{trimleft} experimental/stl/transform.cc stl-unary-transform-2d
+ *
+ * @see @c legate::experimental::stl::elementwise
+ *
+ * @ingroup stl-algorithms
+ */
+template <typename InputRange, typename OutputRange, typename UnaryOperation>
   requires(logical_store_like<InputRange> && logical_store_like<OutputRange>)  //
 void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
 {
   detail::check_function_type<UnaryOperation>();
+  /// [stl-launch-task-doxygen-snippet]
   stl::launch_task(stl::function(detail::UnaryTransform{std::move(op)}),
                    stl::inputs(std::forward<InputRange>(input)),
                    stl::outputs(std::forward<OutputRange>(output)),
                    stl::constraints(stl::align(stl::inputs[0], stl::outputs[0])));
+  /// [stl-launch-task-doxygen-snippet]
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// clang-format off
+/**
+ * @brief Applies a binary operation to each element in two input ranges and
+ * stores the result in the output range.
+ *
+ * The output range may be the same as one of the input ranges.
+ *
+ * @param input1 The first input range. Must satisfy the @c logical_store_like concept.
+ * @param input2 The second input range. Must satisfy the @c logical_store_like concept.
+ * @param output The output range. Must satisfy the @c logical_store_like concept.
+ * @param op The binary operation to apply.
+ *
+ * @pre @li The input and output ranges must all have the same shape.
+ *      @li The binary operation must be trivially relocatable.
+ *
+ * @return void
+ *
+ * @par Example:
+ * @snippet{trimleft} experimental/stl/transform.cc stl-binary-transform-2d
+ *
+ * @ingroup stl-algorithms
+ */
+// clang-format on
 template <typename InputRange1,
           typename InputRange2,
           typename OutputRange,
@@ -84,8 +128,8 @@ void transform(InputRange1&& input1, InputRange2&& input2, OutputRange&& output,
   // Check that the operation is trivially relocatable
   detail::check_function_type<BinaryOperation>();
 
-  LEGATE_ASSERT(input1.extents() == input2.extents());
-  LEGATE_ASSERT(input1.extents() == output.extents());
+  LEGATE_ASSERT(get_logical_store(input1).extents() == get_logical_store(input2).extents());
+  LEGATE_ASSERT(get_logical_store(input1).extents() == get_logical_store(output).extents());
 
   stl::launch_task(
     stl::function(detail::BinaryTransform{std::move(op)}),

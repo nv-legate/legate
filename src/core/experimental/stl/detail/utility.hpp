@@ -24,6 +24,9 @@
 // Include this last:
 #include "prefix.hpp"
 
+/**
+ * @cond
+ */
 namespace legate::experimental::stl {
 
 // TODO(ericniebler)
@@ -64,19 +67,21 @@ inline constexpr bool is_stateless_lambda_v = meta::evaluable_q<lambda_fun_ptr_t
 template <typename Function>
 void check_function_type()
 {
-  static_assert(std::is_trivially_copyable_v<Function>,
+  using function_type = std::decay_t<Function>;
+
+  static_assert(std::is_trivially_copyable_v<function_type>,
                 "The function object is not trivially copyable.");
 
 #if defined(__NVCC__) && defined(__CUDACC_EXTENDED_LAMBDA__) && !defined(__CUDA_ARCH__)
-  static_assert(!__nv_is_extended_device_lambda_closure_type(Function),
+  static_assert(!__nv_is_extended_device_lambda_closure_type(function_type),
                 "Attempt to use an extended __device__ lambda in a context "
                 "that requires querying its return type in host code. Use a "
                 "named function object, a __host__ __device__ lambda, or "
                 "cuda::proclaim_return_type instead.");
-  static_assert(
-    !__nv_is_extended_host_device_lambda_closure_type(Function) || is_stateless_lambda_v<Function>,
-    "__host__ __device__ lambdas that have captures are not yet "
-    "yet supported. Use a named function object instead.");
+  static_assert(!__nv_is_extended_host_device_lambda_closure_type(function_type) ||
+                  stateless_lambda<function_type>,
+                "__host__ __device__ lambdas that have captures are not yet "
+                "yet supported. Use a named function object instead.");
 #endif
 }
 
@@ -120,5 +125,9 @@ void static_assert_iterator_category(const It&)
 }
 
 }  // namespace legate::experimental::stl
+
+/**
+ * @endcond
+ */
 
 #include "suffix.hpp"

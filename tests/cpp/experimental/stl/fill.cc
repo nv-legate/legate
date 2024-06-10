@@ -19,7 +19,7 @@ using STL = LegateSTLFixture;
 
 namespace stl = legate::experimental::stl;
 
-// NOLINTBEGIN(readability-magic-numbers)
+// NOLINTBEGIN(readability-magic-numbers, misc-const-correctness)
 
 TEST_F(STL, Test1DFill)
 {
@@ -104,4 +104,18 @@ TEST_F(STL, TestFillSlice)
   EXPECT_EQ(span(1, 1), 1);
 }
 
-// NOLINTEND(readability-magic-numbers)
+TEST_F(STL, FillDoxySnippets)
+{
+  /// [fill example]
+  // Declare a 3-dimensional logical store and fill it with the value 42.
+  stl::logical_store<int, 3> store{{100, 200, 300}};
+  stl::fill(store, 42);
+  // store's elements are now all 42
+  /// [fill example]
+
+  auto sp = stl::as_mdspan(store);
+  EXPECT_EQ(sp(0, 0, 0), 42);
+  EXPECT_EQ(sp(99, 200, 299), 42);
+}
+
+// NOLINTEND(readability-magic-numbers, misc-const-correctness)

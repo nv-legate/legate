@@ -15,6 +15,10 @@
 #include "core/utilities/compiler.h"
 #include "core/utilities/macros.h"
 
+/**
+ * @cond
+ */
+
 #if __has_include(<version>)
 #include <version>
 #else
@@ -65,10 +69,34 @@
 #define LEGATE_STL_HAS_STD_RANGES() 0
 #endif
 
-#ifndef LEGATE_STL_IMPLEMENTATION_DEFINED
+#ifndef LEGATE_STL_UNSPECIFIED
 #if LEGATE_DEFINED(LEGATE_DOXYGEN)
-#define LEGATE_STL_IMPLEMENTATION_DEFINED(...) implementation - defined
+#define LEGATE_STL_UNSPECIFIED(...) implementation - defined
 #else
-#define LEGATE_STL_IMPLEMENTATION_DEFINED(...) __VA_ARGS__
+#define LEGATE_STL_UNSPECIFIED(...) __VA_ARGS__
 #endif
 #endif
+
+/**
+ * @endcond
+ */
+
+/**
+ * @defgroup stl-concepts Concepts
+ */
+
+/**
+ * @defgroup stl-containers Containers
+ */
+
+/**
+ * @defgroup stl-views Views
+ */
+
+/**
+ * @defgroup stl-algorithms Algorithms
+ */
+
+/**
+ * @defgroup stl-utilities Utilities
+ */

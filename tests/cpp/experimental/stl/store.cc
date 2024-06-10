@@ -20,7 +20,7 @@ using STL = LegateSTLFixture;
 
 namespace stl = legate::experimental::stl;
 
-// NOLINTBEGIN(readability-magic-numbers)
+// NOLINTBEGIN(readability-magic-numbers, misc-const-correctness)
 
 TEST_F(STL, Test1DStore)
 {
@@ -157,4 +157,21 @@ TEST_F(STL, Constructors)
   EXPECT_EQ(stl::as_mdspan(store8)(0, 0), 42);
 }
 
-// NOLINTEND(readability-magic-numbers)
+TEST_F(STL, StoreDoxySnippets)
+{
+  /// [2D initializer_list]
+  stl::logical_store<int, 2> store = {{1, 2, 3}, {4, 5, 6}};
+  // store contains:
+  // [[1 2 3]
+  //  [4 5 6]]
+  /// [2D initializer_list]
+  auto sp = stl::as_mdspan(store);
+  EXPECT_EQ(sp(0, 0), 1);
+  EXPECT_EQ(sp(0, 1), 2);
+  EXPECT_EQ(sp(0, 2), 3);
+  EXPECT_EQ(sp(1, 0), 4);
+  EXPECT_EQ(sp(1, 1), 5);
+  EXPECT_EQ(sp(1, 2), 6);
+}
+
+// NOLINTEND(readability-magic-numbers, misc-const-correctness)

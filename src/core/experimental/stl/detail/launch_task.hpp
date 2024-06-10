@@ -44,6 +44,8 @@ namespace detail {
  *
  * This class is used to specify the inputs for a task in the Legate runtime system.
  * It holds a list of logical stores and provides methods to apply the inputs to a task.
+ *
+ * @ingroup stl-utilities
  */
 template <typename... Ts>
 class Inputs {
@@ -59,6 +61,8 @@ class Inputs {
    * @param task The task to apply the inputs to.
    * @param kind The kind of the task (iteration or reduction).
    * @param index The index of the input.
+   *
+   * @ingroup stl-utilities
    */
   template <typename Type, typename Kind>
   void apply_(AutoTask& task, Kind kind, std::size_t index) const
@@ -85,6 +89,8 @@ class Inputs {
    *
    * @param task The task to apply the inputs to.
    * @param kind The kind of the task  (iteration or reduction).
+   *
+   * @ingroup stl-utilities
    */
   template <typename Kind>
   void operator()(AutoTask& task, [[maybe_unused]] Kind kind) const
@@ -105,6 +111,7 @@ class Inputs {
  * It holds a list of logical stores and provides methods to apply the outputs
  * to a task and add partitioning constraints.
  *
+ * @ingroup stl-utilities
  */
 template <typename... Ts>
 class Outputs {
@@ -120,6 +127,8 @@ class Outputs {
    * @param task The task to apply the outputs to.
    * @param kind The kind of the task (iteration or reduction).
    * @param index The index of the output.
+   *
+   * @ingroup stl-utilities
    */
   template <typename Type, typename Kind>
   void apply_(AutoTask& task, Kind kind, std::size_t index) const
@@ -146,6 +155,8 @@ class Outputs {
    *
    * @param task The task to apply the outputs to.
    * @param kind The kind of the task (iteration or reduction).
+   *
+   * @ingroup stl-utilities
    */
   template <typename Kind>
   void operator()(AutoTask& task, [[maybe_unused]] Kind kind) const
@@ -166,6 +177,8 @@ class Outputs {
  * This class holds a tuple of constraints that can be applied to a task.
  * When the constraints are invoked, they are passed the task, input logical stores,
  * output logical stores, and a reduction logical store.
+ *
+ * @ingroup stl-utilities
  */
 template <typename... Ts>
 class Constraints {
@@ -182,6 +195,8 @@ class Constraints {
    * @param inputs The input logical stores as a `std::vector<LogicalStore>`.
    * @param outputs The output logical stores as a `std::vector<LogicalStore>`.
    * @param reduction The reduction logical store.
+   *
+   * @ingroup stl-utilities
    */
   void operator()(AutoTask& task,
                   const std::vector<LogicalStore>& inputs,
@@ -198,6 +213,8 @@ class Constraints {
  * This class template is used to store a tuple of scalar values and provide
  * a callable operator to add them as arguments to an `AutoTask` object.
  *
+ *
+ * @ingroup stl-utilities
  */
 template <typename... Ts>
 class Scalars {
@@ -212,6 +229,8 @@ class Scalars {
    * and invoke the lambda function that adds each scalar value as an argument.
    *
    * @param task The `AutoTask` object to which the scalar values will be added as arguments.
+   *
+   * @ingroup stl-utilities
    */
   void operator()(AutoTask& task) const
   {
@@ -244,6 +263,7 @@ class Function<> {};
  * This class template is used to store a function object and provide
  * a callable operator to add it as a scalar argument to an `AutoTask` object.
  *
+ * @ingroup stl-utilities
  */
 template <typename Fn>
 class Function<Fn> {
@@ -256,6 +276,8 @@ class Function<Fn> {
    * This function is responsible for executing the provided task.
    *
    * @param task The task to be executed.
+   *
+   * @ingroup stl-utilities
    */
   void operator()(AutoTask& task) const
   {
@@ -343,6 +365,8 @@ class Reduction<> {};
  * This class template represents a reduction operation for a Legate task.
  * It stores a logical store and the reduction function and provides
  * a callable operator to add it as a reduction and a scalar argument to an `AutoTask` object.
+ *
+ * @ingroup stl-utilities
  */
 template <typename Store, typename Fun>
 class Reduction<Store, Fun> {
@@ -359,6 +383,8 @@ class Reduction<Store, Fun> {
    * and adds the reduction function as a scalar arguments to the task.
    *
    * @param task The AutoTask on which the reduction operation is invoked.
+   *
+   * @ingroup stl-utilities
    */
   void operator()(AutoTask& task) const
   {
@@ -1030,6 +1056,8 @@ template <template <typename...> typename Which,
  * The `launch_task` class provides a convenient interface for launching tasks in the Legate
  * framework. It supports both iteration tasks and reduction tasks. The tasks are created and
  * submitted to the runtime using the provided inputs, outputs, scalars, and constraints.
+ *
+ * @ingroup stl-utilities
  */
 class LaunchTask {
   template <typename LegateTask>
@@ -1057,6 +1085,8 @@ class LaunchTask {
    * @param outputs The outputs for the task.
    * @param scalars The scalars for the task.
    * @param constraints The constraints for the task.
+   *
+   * @ingroup stl-utilities
    */
   template <typename Function,
             typename Inputs,
@@ -1092,6 +1122,8 @@ class LaunchTask {
    * @param outputs The outputs.
    * @param scalars The scalars.
    * @param constraints The constraints.
+   *
+   * @ingroup stl-utilities
    */
   template <typename Reduction,
             typename Inputs,
@@ -1122,7 +1154,9 @@ class LaunchTask {
    *
    * @param args The arguments for the task.
    *
-   * @requires Either a `function<>` or a `reduction<>` argument must be specified.
+   * @pre Either a `function<>` or a `reduction<>` argument must be specified.
+   *
+   * @ingroup stl-utilities
    */
   template <typename... Ts>
   void operator()(Ts... args) const
@@ -1194,6 +1228,7 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  * Launch parameter arguments can be one of the following in any order:
  *
  * - `legate::experimental::stl::inputs` - specifies the input stores for the task
+ *
  *    - \a Example:
  *
  *      @code
@@ -1201,6 +1236,7 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *      @endcode
  *
  * - `legate::experimental::stl::outputs` - specifies the output stores for the task
+ *
  *    - \a Example:
  *
  *      @code
@@ -1208,6 +1244,7 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *      @endcode
  *
  * - `legate::experimental::stl::scalars` - specifies the scalar arguments for the task
+ *
  *    - \a Example:
  *
  *      @code
@@ -1216,6 +1253,7 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *
  * - `legate::experimental::stl::function` - specifies the function to be applied
  *    iteratively to the inputs.
+ *
  *    - The function will take as arguments the current elements of the
  *      input stores, in order, followed by the current elements of the
  *      output stores. The elements of a `stl::logical_store` are lvalue
@@ -1227,12 +1265,13 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *      to `launch_task`
  *    - \a Example:
  *
- *      @code{cpp}
+ *      @code{.cpp}
  *      function([](const auto& in, auto& out) { out = in * in; })
  *      @endcode
  *
- * - `legate::experimental::stl::reduction` - specifies the reduction store and the
- *    reduction function to be applied to the inputs.
+ * - `legate::experimental::stl::reduction` - specifies the reduction store and
+ *    the reduction function to be applied to the inputs.
+ *
  *    - The function must be bitwise copyable.
  *    - The reduction function must take as `mdspan`s refering to parts
  *      of the input stores.
@@ -1246,24 +1285,28 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *      to `launch_task`
  *    - \a Example:
  *
- *      @code{cpp}
+ *      @code{.cpp}
  *      stl::reduction(stl::rows_of(store), stl::elementwise(std::plus{}))
  *      @endcode
  *
- * - `legate::experimental::stl::constraints` - specifies the constraints for the task
+ * - `legate::experimental::stl::constraints` - specifies the constraints for
+ *    the task.
+ *
  *    - A constraint is a callable that takes an `legate::AutoTask&` and
  *      the input, output, and reduction stores as arguments. Its function
  *      signature must be:
  *
- *      @code{cpp}
+ *      @code{.cpp}
  *      void(legate::AutoTask&,                // the task to add the constraints to
  *           const std::vector<LogicalStore>&, // the input stores
  *           const std::vector<LogicalStore>&, // the output stores
  *           const LogicalStore&)              // the reduction store
  *      @endcode
  *
- *    - Legate provides one constraint generator, `legate::experimental::stl::align`, for specifying
- *      the alignment constraints for the task. It can be used many different ways:
+ *    - Legate.STL provides one constraint generator,
+ *      `legate::experimental::stl::align`, for specifying the alignment
+ *      constraints for the task. It can be used many different ways:
+ *
  *       - `align(inputs[0], inputs[1])` - aligns the first input with the second input
  *       - `align(inputs[0], outputs[0])` - aligns the first input with the first output
  *       - `align(outputs[0], inputs)` - aligns the first output with all the inputs
@@ -1274,24 +1317,11 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *       - `align(outputs)` - aligns all the outputs with each other
  *
  * @par Example
- * @parblock
- * The following example shows how to use `launch_task` to implement a `for_each`
- * algorithm that iterates over two input stores.
+ * The following use of @c launch_task is equivalent to
+ * <tt>stl::transform(input, output op)</tt>:
+ * @snippet{trimleft} core/experimental/stl/detail/transform.hpp stl-launch-task-doxygen-snippet
  *
- * @code{.cpp}
- * template <class Function, class Input1, class Input2>
- * void for_each_zip(Function fn, Input1&& input1, Input2&& input2) {
- *   auto drop_inputs = [fn](const auto&, const auto&, auto& out1, auto& out2) {
- *     fn(out1, out2);
- *   };
- *   legate::experimental::stl::launch_task(
- *     legate::experimental::stl::inputs(input1, input2),
- *     legate::experimental::stl::outputs(input1, input2),
- *     legate::experimental::stl::function(drop_inputs),
- *     legate::experimental::stl::constraints(legate::experimental::stl::align(input1, input2)));
- * }
- * @endcode
- * @endparblock
+ * @ingroup stl-utilities
  */
 template <LaunchParam... Params>
 void launch_task(Params... params);

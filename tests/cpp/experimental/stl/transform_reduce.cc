@@ -99,6 +99,28 @@ void test_transform_reduce_2D()
   }
 }
 
+void transform_reduce_doxy_snippets()
+{
+  /// [1D unary transform_reduce]
+  stl::logical_store<std::int64_t, 1> store{{5}};
+
+  // fill the store with data. The store will contain {1, 2, 3, 4, 5}
+  auto elems = stl::elements_of(store);
+  std::iota(elems.begin(), elems.end(), std::int64_t{1});
+
+  // a host/device lambda to square the elements
+  auto square = [] LEGATE_HOST_DEVICE(std::int64_t x) { return x * x; };
+
+  // sum the squared elements
+  auto result = stl::transform_reduce(store, stl::scalar<std::int64_t>(0), std::plus<>{}, square);
+
+  auto result_span  = stl::as_mdspan(result);
+  auto result_value = result_span();  // index into the 0-D mdspan
+  // result_value is 55
+  /// [1D unary transform_reduce]
+  EXPECT_EQ(55, result_value);
+}
+
 // NOLINTEND(readability-magic-numbers)
 
 }  // namespace
@@ -106,3 +128,5 @@ void test_transform_reduce_2D()
 TEST_F(STL, TestTransformReduce1D) { test_transform_reduce_1D(); }
 
 TEST_F(STL, TestTransformReduce2D) { test_transform_reduce_2D(); }
+
+TEST_F(STL, TransformReduceDoxySnippets) { transform_reduce_doxy_snippets(); }

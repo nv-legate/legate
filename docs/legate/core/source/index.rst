@@ -25,6 +25,11 @@ supercomputer without any code modifications.
 
   Versions <versions.rst>
 
+.. toctree::
+  :maxdepth: 2
+  :caption: Experimental Features:
+
+  Legate.STL <legate.stl/source/legate-stl.rst>
 
 Indices and tables
 ------------------

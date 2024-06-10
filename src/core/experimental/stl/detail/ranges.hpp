@@ -23,6 +23,10 @@
 // Include this last
 #include "prefix.hpp"
 
+/**
+ * @cond
+ */
+
 namespace legate::experimental::stl {
 
 using std::ranges::begin;
@@ -36,12 +40,20 @@ using std::ranges::sentinel_t;
 
 }  // namespace legate::experimental::stl
 
+/**
+ * @endcond
+ */
+
 #else
 
 #include <iterator>
 
 // Include this last
 #include "prefix.hpp"
+
+/**
+ * @cond
+ */
 
 namespace legate::experimental::stl {
 
@@ -181,7 +193,16 @@ template <typename Range>
 inline constexpr bool is_range_v = meta::evaluable_q<detail::is_range_like_t, Range>;
 
 }  // namespace legate::experimental::stl
+
+/**
+ * @endcond
+ */
+
 #endif
+
+/**
+ * @cond
+ */
 
 namespace legate::experimental::stl {
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -240,5 +261,9 @@ template <typename T>
 using as_range_t = call_result_c_t<as_range, T>;
 
 }  // namespace legate::experimental::stl
+
+/**
+ * @endcond
+ */
 
 #include "suffix.hpp"

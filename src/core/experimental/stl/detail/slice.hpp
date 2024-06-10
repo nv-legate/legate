@@ -238,8 +238,8 @@ class ProjectionPolicy {
   using rebind = Policy<ElementType, Dim>;
 };
 
-using row_policy    = ProjectionPolicy<0>;
-using column_policy = ProjectionPolicy<1>;
+using RowPolicy    = ProjectionPolicy<0>;
+using ColumnPolicy = ProjectionPolicy<1>;
 
 class ElementPolicy {
  public:
@@ -340,14 +340,14 @@ class ElementPolicy {
   using rebind = Policy<ElementType, Dim>;
 };
 
-template <typename PolicyT, typename ElementType, std::int32_t Dim>
-using rebind_policy = typename PolicyT::template rebind<ElementType, Dim>;
+template <typename Policy, typename ElementType, std::int32_t Dim>
+using RebindPolicy = typename Policy::template rebind<ElementType, Dim>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
 class SliceView {
  public:
-  using policy = detail::rebind_policy<SlicePolicy, ElementType, Dim>;
+  using policy = detail::RebindPolicy<SlicePolicy, ElementType, Dim>;
 
   explicit SliceView(LogicalStore store) : store_{std::move(store)} {}
 
@@ -374,7 +374,7 @@ class SliceView {
 };
 
 template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
-using slice_view_t = SliceView<ElementType, Dim, rebind_policy<SlicePolicy, ElementType, Dim>>;
+using slice_view_t = SliceView<ElementType, Dim, RebindPolicy<SlicePolicy, ElementType, Dim>>;
 
 template <typename Store, std::int32_t... ProjDim>
 class ProjectionView {
@@ -384,44 +384,93 @@ class ProjectionView {
 
 }  // namespace detail
 
+/**
+ * @brief A policy for use with `legate::experimental::stl::slice_view` that
+ * creates a flat view of all the elements of the store.
+ * @ingroup stl-views
+ */
+using element_policy = detail::ElementPolicy;  // NOLINT(readability-identifier-naming)
+
+/**
+ * @brief A policy for use with `legate::experimental::stl::slice_view` that
+ * slices a logical store along the row (0th) dimension.
+ * @note The elements of the resulting range are logical stores with one fewer
+ * dimension than the original store.
+ * @ingroup stl-views
+ */
+using row_policy = detail::RowPolicy;  // NOLINT(readability-identifier-naming)
+
+/**
+ * @brief A policy for use with `legate::experimental::stl::slice_view` that
+ * slices a logical store along the column (1st) dimension.
+ * @note The elements of the resulting range are logical stores with one fewer
+ * dimension than the original store.
+ * @ingroup stl-views
+ */
+using column_policy = detail::ColumnPolicy;  // NOLINT(readability-identifier-naming)
+
+/**
+ * @brief A policy for use with `legate::experimental::stl::slice_view` that
+ * slices a logical store along `ProjDims...` dimensions.
+ * @note The elements of the resulting range are logical stores with \em N fewer
+ * dimensions than the original store, where \em N is `sizeof...(ProjDims)`.
+ * @ingroup stl-views
+ */
+template <std::int32_t... ProjDims>
+using projection_policy =  // NOLINT(readability-identifier-naming)
+  detail::ProjectionPolicy<ProjDims...>;
+
+/**
+ * @brief A view of a logical store, sliced along some specified dimenstion(s),
+ * resulting in a 1-dimensional range of logical stores.
+ *
+ * @tparam ElementType The element type of the underlying logical store.
+ * @tparam Dim The dimensionality of the underlying logical store.
+ * @tparam SlicePolicy A type that determines how the logical store is sliced
+ * into a range. Choices include `element_policy`, `row_policy`,
+ * `column_policy`, and `projection_policy`.
+ *
+ * @ingroup stl-views
+ */
 template <typename ElementType, std::int32_t Dim, typename SlicePolicy>
-using slice_view = detail::slice_view_t<ElementType, Dim, SlicePolicy>;
+using slice_view =  // NOLINT(readability-identifier-naming)
+  detail::slice_view_t<ElementType, Dim, SlicePolicy>;
 
 template <typename Store>                  //
   requires(logical_store_like<Store>)      //
 [[nodiscard]] auto rows_of(Store&& store)  //
-  -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::row_policy>
+  -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, row_policy>
 {
-  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::row_policy>(
+  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, row_policy>(
     detail::get_logical_store(std::forward<Store>(store)));
 }
 
 template <typename Store>              //
   requires(logical_store_like<Store>)  //
 [[nodiscard]] auto columns_of(Store&& store)
-  -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::column_policy>
+  -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, column_policy>
 {
-  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::column_policy>(
+  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, column_policy>(
     detail::get_logical_store(std::forward<Store>(store)));
 }
 
 template <std::int32_t... ProjDims, typename Store>  //
   requires(logical_store_like<Store>)                //
 [[nodiscard]] auto projections_of(Store&& store)
-  //-> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::projection_policy<ProjDims...>> {
+  //-> slice_view<value_type_of_t<Store>, dim_of_v<Store>, projection_policy<ProjDims...>> {
   -> typename detail::ProjectionView<Store, ProjDims...>::type
 {
   static_assert((((ProjDims >= 0) && (ProjDims < dim_of_v<Store>)) && ...));
-  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::ProjectionPolicy<ProjDims...>>(
+  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, projection_policy<ProjDims...>>(
     detail::get_logical_store(std::forward<Store>(store)));
 }
 
 template <typename Store>              //
   requires(logical_store_like<Store>)  //
 [[nodiscard]] auto elements_of(Store&& store)
-  -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::ElementPolicy>
+  -> slice_view<value_type_of_t<Store>, dim_of_v<Store>, element_policy>
 {
-  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, detail::ElementPolicy>(
+  return slice_view<value_type_of_t<Store>, dim_of_v<Store>, element_policy>(
     detail::get_logical_store(std::forward<Store>(store)));
 }
 

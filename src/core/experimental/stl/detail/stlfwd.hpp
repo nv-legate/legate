@@ -73,8 +73,6 @@ LEGATE_PRAGMA_POP()
 // Include this last:
 #include "prefix.hpp"
 
-/// @defgroup data Data
-
 namespace legate::experimental::stl {
 /**
  * @cond
@@ -91,6 +89,10 @@ inline namespace obj {
 // Fully qualify the namespace to ensure that the compiler doesn't pick some other random one
 // NOLINTNEXTLINE(google-build-using-namespace)
 using namespace ::legate::experimental::stl::tags::obj;
+
+/**
+ * @endcond
+ */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 using extents                              = const std::size_t[];
@@ -117,10 +119,6 @@ inline constexpr bool has_dim_v =
 
 }  // namespace detail
 
-/**
- * @endcond
- */
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -129,10 +127,14 @@ inline constexpr bool has_dim_v =
  *
  * @tparam Storage A type that satisfies the `legate::experimental::stl::logical_store_like`
  * concept.
+ *
+ * @hideinitializer
+ *
+ * @ingroup stl-containers
  */
 template <typename Storage>
 using value_type_of_t =
-  LEGATE_STL_IMPLEMENTATION_DEFINED(typename detail::ValueTypeOf<remove_cvref_t<Storage>>::type);
+  LEGATE_STL_UNSPECIFIED(typename detail::ValueTypeOf<remove_cvref_t<Storage>>::type);
 
 /**
  * @brief An alias for the element type of a `legate::experimental::stl::logical_store_like` type. A
@@ -140,10 +142,13 @@ using value_type_of_t =
  *
  * @tparam Storage A type that satisfies the `legate::experimental::stl::logical_store_like`
  * concept.
+ *
  * @hideinitializer
+ *
+ * @ingroup stl-containers
  */
 template <typename Storage>
-using element_type_of_t = LEGATE_STL_IMPLEMENTATION_DEFINED(
+using element_type_of_t = LEGATE_STL_UNSPECIFIED(
   const_if_t<std::is_const_v<std::remove_reference_t<Storage>>, value_type_of_t<Storage>>);
 
 /**
@@ -152,7 +157,10 @@ using element_type_of_t = LEGATE_STL_IMPLEMENTATION_DEFINED(
  *
  * @tparam Storage A type that satisfies the `legate::experimental::stl::logical_store_like`
  * concept.
+ *
  * @hideinitializer
+ *
+ * @ingroup stl-containers
  */
 template <typename Storage>
   requires(detail::has_dim_v<Storage>)
@@ -179,7 +187,6 @@ template <typename ElementType, std::int32_t Dim = dynamic_dims>
 logical_store<ElementType, Dim> as_typed(const legate::LogicalStore& store);
 /** @endcond */
 
-/** @cond */
 namespace detail {
 
 template <typename Function, typename... InputSpans>
@@ -194,7 +201,6 @@ template <typename ElementType, std::int32_t Dim, typename Accessor /*= default_
 class MDSpanAccessor;
 
 }  // namespace detail
-/** @endcond */
 
 /** @cond */
 template <typename Input>
@@ -226,7 +232,6 @@ struct iteration_kind {};  // NOLINT(readability-identifier-naming)
 
 struct reduction_kind {};  // NOLINT(readability-identifier-naming)
 
-/** @cond */
 namespace detail {
 
 template <typename... Types>
@@ -272,8 +277,8 @@ auto legate_reduction_concept_impl(Reduction,
     Reduction::template apply<false>(lhs, std::move(rhs)),       //
     Reduction::template fold<true>(rhs, std::move(rhs)),         //
     Reduction::template fold<false>(rhs, std::move(rhs)),        //
-    std::integral_constant<typename Reduction::LHS, Reduction::identity>{},
-    std::integral_constant<int, Reduction::REDOP_ID>{})))
+    // std::integral_constant<int, Reduction::REDOP_ID>{},
+    std::integral_constant<typename Reduction::LHS, Reduction::identity>{})))
 {
 }
 
@@ -292,11 +297,12 @@ constexpr bool is_legate_reduction(std::int64_t)
 static_assert(!std::is_same_v<int, std::int64_t>);
 
 }  // namespace detail
-/** @endcond */
 
 #if LEGATE_DEFINED(LEGATE_DOXYGEN)
 // clang-format off
 /**
+ * @concept logical_store_like
+ *
  * @brief A type `StoreLike` satisfied `logical_store_like` when it exposes a
  * `legate::LogicalStore` via the `get_logical_store` customization point.
  *
@@ -313,6 +319,9 @@ static_assert(!std::is_same_v<int, std::int64_t>);
  *     { StoreLike::policy::partition_constraints(reduction_kind{}) } -> tuple-like;
  *   };
  * @endcode
+ *
+ * @see @c get_logical_store
+ * @ingroup stl-concepts
  */
 template <typename StoreLike>
 concept logical_store_like =
@@ -329,8 +338,29 @@ concept logical_store_like =
     };
 
 /**
- * @brief A type `Reduction` satisfies `legate_reduction` if the `requires`
- * clause below is `true`:
+ * @concept legate_reduction
+ *
+ * @brief A concept describing the requirements of a reduction operation that
+ * can be used with the @c reduce and @c transform_reduce algorithms.
+ *
+ * A reduction is characterized by the following three things:
+ * @li An `apply` operation
+ * @li A `fold` operation
+ * @li An identity value
+ *
+ * `apply` is used to apply the reduction operation to a pair of values,
+ * modifying the first value in-place. `fold` is used to combine two values into
+ * an accumulator that can then be passed as the second argument to the `apply`
+ * operation. The `fold` operation must be reflexive, transitive, and symmetric.
+ * `fold`, like `apply`, modifies the first parameter in-place.
+ *
+ * The following relations must hold for the three reduction components:
+ * @li `apply(apply(x, y), z)` is functionally equivalent to `apply(x, fold(y, z))`.
+ * @li `apply(x, identity)` leaves `x` unchanged.
+ * @li `fold(x, identity)` leaves `x` unchanged.
+ *
+ * A type `Reduction` satisfies `legate_reduction` if the `requires` clause
+ * below is `true`:
  *
  * @code{.cpp}
  * requires (Reduction red, typename Reduction::LHS& lhs, typename Reduction::RHS& rhs) {
@@ -342,6 +372,10 @@ concept logical_store_like =
  *   typename std::integral_constant<int, Reduction::REDOP_ID>;
  * }
  * @endcode
+ *
+ * @see @li @c reduce
+ *      @li @c transform_reduce
+ * @ingroup stl-concepts
  */
 template <typename Reduction>
 concept legate_reduction =

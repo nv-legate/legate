@@ -1,6 +1,8 @@
 Installation
 ============
 
+.. _how-do-i-install-legate:
+
 How Do I Install Legate
 -----------------------
 

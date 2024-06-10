@@ -19,6 +19,10 @@
 // Include this last:
 #include "prefix.hpp"
 
+/**
+ * @cond
+ */
+
 namespace legate::experimental::stl {
 namespace detail {
 
@@ -58,5 +62,9 @@ template <bool MakeConst, typename Type>
 using const_if_t = meta::if_c<MakeConst, const Type, Type>;
 
 }  // namespace legate::experimental::stl
+
+/**
+ * @endcond
+ */
 
 #include "suffix.hpp"

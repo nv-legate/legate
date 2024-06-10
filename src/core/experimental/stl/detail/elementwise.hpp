@@ -20,6 +20,9 @@
 #include <functional>
 #include <utility>
 
+// Include this last:
+#include "prefix.hpp"
+
 namespace legate::experimental::stl {
 namespace detail {
 
@@ -108,11 +111,40 @@ class Elementwise : private Function {
 
 }  // namespace detail
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief A functional adaptor that, given a callable object `fn`, returns
+ * another callable object `g` that applies `fn` element-wise to its arguments.
+ *
+ * The arguments to `g` must be `mdspan` objects or models of the
+ * `logical_store_like` concept. The shapes of the input arguments must
+ * all match. The element-wise application of `f` is performed lazily; @em i.e.,
+ * the result is not computed until the elements of the result are accessed.
+ *
+ * @param fn The callable object to apply element-wise.
+ *
+ * @return A callable object @f$\mathtt{g}@f$ such that, given multi-dimensional
+ * arguments @f$A^1,A^2\cdots,A^n@f$, the expression @f$\mathtt{g(}A^1,A^2\cdots,A^n\mathtt{)}@f$
+ * returns a multi-dimensional view @f$\mathtt{V}@f$ where @f$\mathtt{V}_{i,j,\ldots}@f$ is
+ * the result of calling
+ * @f$\mathtt{fn(}{A^1}_{i,j,\ldots}, {A^2}_{i,j,\ldots}, \cdots, {A^n}_{i,j,\ldots}\mathtt{)}@f$.
+ *
+ * @note The Legate.STL algorithms recognize the return type of
+ * @f$\mathtt{elementwise(fn)(}A^1,A^2\cdots,A^n\mathtt{)}@f$ such that assigning its result
+ * to an `mdspan` object will perform an element-wise assignment. The element-wise assignment
+ * is done with `thrust::copy` and will be accelerated if CUDA support is enabled.
+ *
+ * @par Example:
+ * @snippet{trimleft} experimental/stl/elementwise.cc elementwise example
+ *
+ * @ingroup stl-utilities
+ */
 template <typename Function>
-[[nodiscard]] detail::Elementwise<std::decay_t<Function>> elementwise(Function&& fn)
+[[nodiscard]] LEGATE_STL_UNSPECIFIED(detail::Elementwise<std::decay_t<Function>>)
+  elementwise(Function&& fn)
 {
   return detail::Elementwise<std::decay_t<Function>>{std::forward<Function>(fn)};
 }
 
 }  // namespace legate::experimental::stl
+
+#include "suffix.hpp"

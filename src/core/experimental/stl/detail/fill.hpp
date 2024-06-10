@@ -30,6 +30,11 @@ namespace legate::experimental::stl {
  *
  * @param output The range to be filled.
  * @param val The value to fill the range with.
+ *
+ * @par Example:
+ * @snippet{trimleft} experimental/stl/fill.cc fill example
+ *
+ * @ingroup stl-algorithms
  */
 template <typename Range>              //
   requires(logical_store_like<Range>)  //

@@ -22,6 +22,10 @@
 // Include this last:
 #include "prefix.hpp"
 
+/**
+ * @cond
+ */
+
 namespace legate::experimental::stl::meta {
 
 struct na;
@@ -162,5 +166,9 @@ template <std::size_t Count, typename Value, typename Continuation = quote<list>
 using fill_n = eval<detail::fill_n_<std::make_index_sequence<Count>>, Value, Continuation>;
 
 }  // namespace legate::experimental::stl::meta
+
+/**
+ * @endcond
+ */
 
 #include "suffix.hpp"

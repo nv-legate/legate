@@ -24,53 +24,72 @@ namespace legate::experimental::stl {
 /**
  * @brief Configuration for the Legate STL resource.
  *
- * This constant represents the configuration for the Legate STL resource. It specifies the maximum
- * number of tasks, dynamic tasks, reduction operations, projections, and shardings that can be
- * used.
+ * This constant represents the configuration for the Legate STL resource. It specifies (in order):
+ * @li the maximum number of tasks,
+ * @li the maximum number of dynamic tasks,
+ * @li the maximum number of reduction operations,
+ * @li the maximum number of projections, and
+ * @li the maximum number of shardings
+ *
+ * that can be used in a program using Legate.STL.
+ *
+ * @see \c initialize_library
+ * @ingroup stl-utilities
  */
-constexpr ResourceConfig LEGATE_STL_RESOURCE_CONFIG = {
-  1024, /* max_tasks{1024}; */
-  1024, /* max_dyn_tasks{0}; */
-  64,   /* max_reduction_ops{}; */
-  0,    /* max_projections{}; */
-  0     /* max_shardings{}; */
+inline constexpr ResourceConfig LEGATE_STL_RESOURCE_CONFIG = {
+  1024,  //< max_tasks{1024};
+  1024,  //< max_dyn_tasks{0};
+  64,    //< max_reduction_ops{};
+  0,     //< max_projections{};
+  0      //< max_shardings{};
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * @class initialize_library
- * @brief A class that initializes the Legate library and creates a library instance.
+ * @brief A class that initializes the Legate runtime and creates the
+ * `legate.stl` library instance.
  *
- * The initialize_library class is responsible for initializing the Legate library
- * and creating a library instance. It takes the command line arguments and starts
- * the Legate runtime. If the initialization is successful, it creates a library
- * with the name "legate.stl" using the LEGATE_STL_RESOURCE_CONFIG configuration.
- * The library instance is automatically destroyed when the initialize_library object
- * goes out of scope.
+ * The `initialize_library` class is responsible for initializing the Legate
+ * runtime and creating a library instance. It takes the program's command line
+ * arguments and initializes the Legate runtime with them. If the initialization
+ * is successful, it creates a library with the name `legate.stl` using the
+ * `LEGATE_STL_RESOURCE_CONFIG` configuration.
+ *
+ * The library instance is automatically destroyed when the `initialize_library`
+ * object goes out of scope.
+ *
+ * It is harmless to create multiple `initialize_library` objects in the same
+ * program. The Legate runtime is initialized only once and only one instance of
+ * the `legate.stl` library will be created; however, the destruction of any
+ * `initialize_library` object finalizes the Legate runtime.
+ *
+ * @see @c LEGATE_STL_RESOURCE_CONFIG
+ * @ingroup stl-utilities
  */
 class initialize_library {  // NOLINT(readability-identifier-naming)
  public:
   /**
-   * @brief Constructs an initialize_library object.
+   * @brief Constructs an @c initialize_library object.
    *
    * This constructor initializes the Legate library and creates a library instance.
    * It takes the command line arguments and starts the Legate runtime. If the
-   * initialization is successful, it creates a library with the name "legate.stl"
-   * using the LEGATE_STL_RESOURCE_CONFIG configuration.
+   * initialization is successful, it creates a library with the name @c "legate.stl"
+   * using the @c LEGATE_STL_RESOURCE_CONFIG configuration.
    *
    * @param argc The number of command line arguments.
    * @param argv An array of C-style strings representing the command line arguments.
    */
   initialize_library(int argc, char* argv[])
     : result_{legate::start(argc, argv)},
-      library_{result() == 0 ? legate::Runtime::get_runtime()->create_library(
+      library_{result() == 0 ? legate::Runtime::get_runtime()->find_or_create_library(
                                  "legate.stl", LEGATE_STL_RESOURCE_CONFIG)
                              : Library{nullptr}}
   {
   }
 
   /**
-   * @brief Destroys the initialize_library object.
+   * @brief Destroys the @c initialize_library object.
    *
    * This destructor finalizes the Legate library if the initialization was successful.
    */

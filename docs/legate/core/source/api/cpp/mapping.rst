@@ -3,3 +3,4 @@ Mapping
 ~~~~~~~
 
 .. doxygengroup:: mapping
+    :members:

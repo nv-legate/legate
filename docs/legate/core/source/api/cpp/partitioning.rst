@@ -3,3 +3,4 @@ Partitioning
 ~~~~~~~~~~~~
 
 .. doxygengroup:: partitioning
+    :members:
