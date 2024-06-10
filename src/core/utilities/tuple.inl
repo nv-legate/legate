@@ -13,6 +13,7 @@
 #pragma once
 
 // Useful for IDEs
+#include "core/utilities/detail/zip.h"
 #include "core/utilities/tuple.h"
 
 #include <algorithm>
@@ -80,9 +81,27 @@ bool tuple<T>::operator!=(const tuple<T>& other) const
 }
 
 template <typename T>
-bool tuple<T>::operator<(const tuple<T>& other) const
+bool tuple<T>::less(const tuple<T>& other) const
 {
-  return data() < other.data();
+  return apply_reduce_all(std::less<>{}, *this, other);
+}
+
+template <typename T>
+bool tuple<T>::less_equal(const tuple<T>& other) const
+{
+  return apply_reduce_all(std::less_equal<>{}, *this, other);
+}
+
+template <typename T>
+bool tuple<T>::greater(const tuple<T>& other) const
+{
+  return apply_reduce_all(std::greater<>{}, *this, other);
+}
+
+template <typename T>
+bool tuple<T>::greater_equal(const tuple<T>& other) const
+{
+  return apply_reduce_all(std::greater_equal<>{}, *this, other);
 }
 
 template <typename T>
@@ -435,7 +454,7 @@ tuple<T> full(traits::detail::type_identity_t<typename tuple<T>::size_type> size
 }
 
 template <typename FUNC, typename T>
-auto apply(FUNC func, const tuple<T>& rhs)
+auto apply(FUNC&& func, const tuple<T>& rhs)
 {
   using VAL = std::invoke_result_t<FUNC, T>;
   tuple<VAL> result;
@@ -448,7 +467,7 @@ auto apply(FUNC func, const tuple<T>& rhs)
 }
 
 template <typename FUNC, typename T1, typename T2>
-auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
+auto apply(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
 {
   using VAL = std::invoke_result_t<FUNC, T1, T2>;
   tuple<VAL> result;
@@ -457,14 +476,15 @@ auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
     throw std::invalid_argument{"Operands should have the same size"};
   }
   result.reserve(rhs1.size());
-  for (std::uint32_t idx = 0; idx < rhs1.size(); ++idx) {
-    result.append_inplace(func(rhs1[idx], rhs2[idx]));
+
+  for (auto&& [rh1, rh2] : legate::detail::zip(rhs1.data(), rhs2.data())) {
+    result.append_inplace(func(rh1, rh2));
   }
   return result;
 }
 
 template <typename FUNC, typename T1, typename T2>
-auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2)
+auto apply(FUNC&& func, const tuple<T1>& rhs1, const T2& rhs2)
 {
   using VAL = std::invoke_result_t<FUNC, T1, T2>;
   tuple<VAL> result;
@@ -474,6 +494,16 @@ auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2)
     result.append_inplace(func(rhs1_v, rhs2));
   }
   return result;
+}
+
+template <typename FUNC, typename T1, typename T2>
+bool apply_reduce_all(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
+{
+  const auto zipper = legate::detail::zip(rhs1.data(), rhs2.data());
+  return std::all_of(zipper.begin(), zipper.end(), [&func](auto&& pair) {
+    auto&& [rh1, rh2] = pair;
+    return func(rh1, rh2);
+  });
 }
 
 }  // namespace legate

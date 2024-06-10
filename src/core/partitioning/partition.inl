@@ -58,7 +58,7 @@ inline const tuple<std::int64_t>& Tiling::offsets() const { return offsets_; }
 
 inline bool Tiling::has_color(const tuple<std::uint64_t>& color) const
 {
-  return color < color_shape_;
+  return color.less(color_shape_);
 }
 
 // ==========================================================================================

@@ -53,7 +53,11 @@ class tuple {
 
   bool operator==(const tuple& other) const;
   bool operator!=(const tuple& other) const;
-  bool operator<(const tuple& other) const;
+  // These functions do ELEMENTWISE comparisons, not lexicographic ones.
+  [[nodiscard]] bool less(const tuple& other) const;
+  [[nodiscard]] bool less_equal(const tuple& other) const;
+  [[nodiscard]] bool greater(const tuple& other) const;
+  [[nodiscard]] bool greater_equal(const tuple& other) const;
   tuple operator+(const tuple& other) const;
   tuple operator+(const T& other) const;
   tuple operator-(const tuple& other) const;
@@ -128,13 +132,16 @@ template <typename T>
                             T init);
 
 template <typename FUNC, typename T>
-[[nodiscard]] auto apply(FUNC func, const tuple<T>& rhs);
+[[nodiscard]] auto apply(FUNC&& func, const tuple<T>& rhs);
 
 template <typename FUNC, typename T1, typename T2>
-[[nodiscard]] auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
+[[nodiscard]] auto apply(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
 
 template <typename FUNC, typename T1, typename T2>
-[[nodiscard]] auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2);
+[[nodiscard]] auto apply(FUNC&& func, const tuple<T1>& rhs1, const T2& rhs2);
+
+template <typename FUNC, typename T1, typename T2>
+[[nodiscard]] bool apply_reduce_all(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
 
 }  // namespace legate
 
