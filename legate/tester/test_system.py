@@ -148,14 +148,13 @@ class TestSystem(System):
                 env=full_env,
                 stdout=PIPE,
                 stderr=STDOUT,
-                text=True,
                 timeout=timeout,
             )
         except TimeoutExpired as te:
             if te.stdout is None:
                 output = ""
             else:
-                output = te.stdout.decode()
+                output = te.stdout.decode(errors="replace")
             return ProcessResult(
                 invocation, test_display, timeout=True, output=output
             )
@@ -168,5 +167,5 @@ class TestSystem(System):
             start=start,
             end=end,
             returncode=proc.returncode,
-            output=proc.stdout,
+            output=proc.stdout.decode(errors="replace"),
         )

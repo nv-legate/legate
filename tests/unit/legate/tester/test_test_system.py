@@ -71,7 +71,7 @@ class TestSystem:
         s = m.TestSystem()
 
         mock_subprocess_run.return_value = CompletedProcess(
-            CMD, 10, stdout="<output>"
+            CMD, 10, stdout=b"<output>"
         )
 
         result = s.run(CMD.split(), "test/file")
@@ -84,6 +84,27 @@ class TestSystem:
         assert not result.timeout
         assert result.returncode == 10
         assert result.output == "<output>"
+        assert not result.passed
+
+    def test_run_with_stdout_decode_errors(
+        self, mock_subprocess_run: MagicMock
+    ) -> None:
+        s = m.TestSystem()
+
+        mock_subprocess_run.return_value = CompletedProcess(
+            CMD, 10, stdout=b"\xfe\xb1a"
+        )
+
+        result = s.run(CMD.split(), "test/file")
+        mock_subprocess_run.assert_called()
+
+        assert result.invocation == CMD
+        assert result.test_display == "test/file"
+        assert result.time is not None and result.time > timedelta(0)
+        assert not result.skipped
+        assert not result.timeout
+        assert result.returncode == 10
+        assert result.output == "��a"
         assert not result.passed
 
     def test_dry_run(self, mock_subprocess_run: MagicMock) -> None:
