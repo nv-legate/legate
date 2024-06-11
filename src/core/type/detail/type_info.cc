@@ -29,76 +29,112 @@ namespace legate::detail {
 
 namespace {
 
-// To pacify "cert-err58-cpp: initialization of 'SIZEOF'|'ALIGNOF'|'TYPE_NAMES' with static
-// storage duration may throw an exception that cannot be caught" we place them in functions.
-//
-// We mark this function as noexcept because if this map fails to initialize, then we are so
-// well and truly beansed that the program must abort.
-[[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& SIZEOF() noexcept
+class StaticDeterminationError : public std::invalid_argument {
+ public:
+  using std::invalid_argument::invalid_argument;
+};
+
+[[nodiscard]] std::string_view TYPE_NAME(Type::Code code)
 {
-  static const std::unordered_map<Type::Code, std::uint32_t> map = {
-    {Type::Code::BOOL, sizeof(type_of_t<Type::Code::BOOL>)},
-    {Type::Code::INT8, sizeof(type_of_t<Type::Code::INT8>)},
-    {Type::Code::INT16, sizeof(type_of_t<Type::Code::INT16>)},
-    {Type::Code::INT32, sizeof(type_of_t<Type::Code::INT32>)},
-    {Type::Code::INT64, sizeof(type_of_t<Type::Code::INT64>)},
-    {Type::Code::UINT8, sizeof(type_of_t<Type::Code::UINT8>)},
-    {Type::Code::UINT16, sizeof(type_of_t<Type::Code::UINT16>)},
-    {Type::Code::UINT32, sizeof(type_of_t<Type::Code::UINT32>)},
-    {Type::Code::UINT64, sizeof(type_of_t<Type::Code::UINT64>)},
-    {Type::Code::FLOAT16, sizeof(type_of_t<Type::Code::FLOAT16>)},
-    {Type::Code::FLOAT32, sizeof(type_of_t<Type::Code::FLOAT32>)},
-    {Type::Code::FLOAT64, sizeof(type_of_t<Type::Code::FLOAT64>)},
-    {Type::Code::COMPLEX64, sizeof(type_of_t<Type::Code::COMPLEX64>)},
-    {Type::Code::COMPLEX128, sizeof(type_of_t<Type::Code::COMPLEX128>)},
-    {Type::Code::NIL, 0},
-  };
-  return map;
+  switch (code) {
+    case Type::Code::BOOL: return "bool";
+    case Type::Code::INT8: return "int8";
+    case Type::Code::INT16: return "int16";
+    case Type::Code::INT32: return "int32";
+    case Type::Code::INT64: return "int64";
+    case Type::Code::UINT8: return "uint8";
+    case Type::Code::UINT16: return "uint16";
+    case Type::Code::UINT32: return "uint32";
+    case Type::Code::UINT64: return "uint64";
+    case Type::Code::FLOAT16: return "float16";
+    case Type::Code::FLOAT32: return "float32";
+    case Type::Code::FLOAT64: return "float64";
+    case Type::Code::COMPLEX64: return "complex64";
+    case Type::Code::COMPLEX128: return "complex128";
+    case Type::Code::STRING: return "string";
+    case Type::Code::NIL: return "null_type";
+    case Type::Code::BINARY: return "binary";
+    case Type::Code::STRUCT: return "struct";
+    case Type::Code::FIXED_ARRAY: return "fixed_array";
+    case Type::Code::LIST: return "list";
+  }
+  throw std::invalid_argument{"invalid type code"};
 }
 
-[[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& ALIGNOF() noexcept
+[[nodiscard]] std::uint32_t SIZEOF(Type::Code code)
 {
-  static const std::unordered_map<Type::Code, std::uint32_t> map = {
-    {Type::Code::BOOL, alignof(type_of_t<Type::Code::BOOL>)},
-    {Type::Code::INT8, alignof(type_of_t<Type::Code::INT8>)},
-    {Type::Code::INT16, alignof(type_of_t<Type::Code::INT16>)},
-    {Type::Code::INT32, alignof(type_of_t<Type::Code::INT32>)},
-    {Type::Code::INT64, alignof(type_of_t<Type::Code::INT64>)},
-    {Type::Code::UINT8, alignof(type_of_t<Type::Code::UINT8>)},
-    {Type::Code::UINT16, alignof(type_of_t<Type::Code::UINT16>)},
-    {Type::Code::UINT32, alignof(type_of_t<Type::Code::UINT32>)},
-    {Type::Code::UINT64, alignof(type_of_t<Type::Code::UINT64>)},
-    {Type::Code::FLOAT16, alignof(type_of_t<Type::Code::FLOAT16>)},
-    {Type::Code::FLOAT32, alignof(type_of_t<Type::Code::FLOAT32>)},
-    {Type::Code::FLOAT64, alignof(type_of_t<Type::Code::FLOAT64>)},
-    {Type::Code::COMPLEX64, alignof(type_of_t<Type::Code::COMPLEX64>)},
-    {Type::Code::COMPLEX128, alignof(type_of_t<Type::Code::COMPLEX128>)},
-    {Type::Code::NIL, 0},
+  switch (code) {
+#define SIZEOF_TYPE_CODE(x) \
+  case x: return sizeof(type_of_t<x>)
+
+    SIZEOF_TYPE_CODE(Type::Code::BOOL);
+    SIZEOF_TYPE_CODE(Type::Code::INT8);
+    SIZEOF_TYPE_CODE(Type::Code::INT16);
+    SIZEOF_TYPE_CODE(Type::Code::INT32);
+    SIZEOF_TYPE_CODE(Type::Code::INT64);
+    SIZEOF_TYPE_CODE(Type::Code::UINT8);
+    SIZEOF_TYPE_CODE(Type::Code::UINT16);
+    SIZEOF_TYPE_CODE(Type::Code::UINT32);
+    SIZEOF_TYPE_CODE(Type::Code::UINT64);
+    SIZEOF_TYPE_CODE(Type::Code::FLOAT16);
+    SIZEOF_TYPE_CODE(Type::Code::FLOAT32);
+    SIZEOF_TYPE_CODE(Type::Code::FLOAT64);
+    SIZEOF_TYPE_CODE(Type::Code::COMPLEX64);
+    SIZEOF_TYPE_CODE(Type::Code::COMPLEX128);
+
+#undef SIZEOF_TYPE_CODE
+
+    case Type::Code::NIL: return 0;
+    case Type::Code::BINARY: [[fallthrough]];
+    case Type::Code::STRUCT: [[fallthrough]];
+    case Type::Code::FIXED_ARRAY: [[fallthrough]];
+    case Type::Code::LIST: [[fallthrough]];
+    case Type::Code::STRING: {
+      std::stringstream ss;
+
+      ss << "Cannot statically determine size of non-integral type: " << TYPE_NAME(code);
+      throw StaticDeterminationError{std::move(ss).str()};
+    }
   };
-  return map;
+  throw std::invalid_argument{"invalid type code"};
 }
 
-[[nodiscard]] const std::unordered_map<Type::Code, std::string_view>& TYPE_NAMES() noexcept
+[[nodiscard]] std::uint32_t ALIGNOF(Type::Code code)
 {
-  static const std::unordered_map<Type::Code, std::string_view> map = {
-    {Type::Code::BOOL, "bool"},
-    {Type::Code::INT8, "int8"},
-    {Type::Code::INT16, "int16"},
-    {Type::Code::INT32, "int32"},
-    {Type::Code::INT64, "int64"},
-    {Type::Code::UINT8, "uint8"},
-    {Type::Code::UINT16, "uint16"},
-    {Type::Code::UINT32, "uint32"},
-    {Type::Code::UINT64, "uint64"},
-    {Type::Code::FLOAT16, "float16"},
-    {Type::Code::FLOAT32, "float32"},
-    {Type::Code::FLOAT64, "float64"},
-    {Type::Code::COMPLEX64, "complex64"},
-    {Type::Code::COMPLEX128, "complex128"},
-    {Type::Code::STRING, "string"},
-    {Type::Code::NIL, "null_type"},
+  switch (code) {
+#define ALIGNOF_TYPE_CODE(x) \
+  case x: return alignof(type_of_t<x>)
+
+    ALIGNOF_TYPE_CODE(Type::Code::BOOL);
+    ALIGNOF_TYPE_CODE(Type::Code::INT8);
+    ALIGNOF_TYPE_CODE(Type::Code::INT16);
+    ALIGNOF_TYPE_CODE(Type::Code::INT32);
+    ALIGNOF_TYPE_CODE(Type::Code::INT64);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT8);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT16);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT32);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT64);
+    ALIGNOF_TYPE_CODE(Type::Code::FLOAT16);
+    ALIGNOF_TYPE_CODE(Type::Code::FLOAT32);
+    ALIGNOF_TYPE_CODE(Type::Code::FLOAT64);
+    ALIGNOF_TYPE_CODE(Type::Code::COMPLEX64);
+    ALIGNOF_TYPE_CODE(Type::Code::COMPLEX128);
+
+#undef ALIGNOF_TYPE_CODE
+
+    case Type::Code::NIL: return 0;
+    case Type::Code::BINARY: [[fallthrough]];
+    case Type::Code::STRUCT: [[fallthrough]];
+    case Type::Code::FIXED_ARRAY: [[fallthrough]];
+    case Type::Code::LIST: [[fallthrough]];
+    case Type::Code::STRING: {
+      std::stringstream ss;
+
+      ss << "Cannot statically determine alingment of non-integral type: " << TYPE_NAME(code);
+      throw StaticDeterminationError{std::move(ss).str()};
+    }
   };
-  return map;
+  throw std::invalid_argument{"invalid type code"};
 }
 
 constexpr const char* const VARIABLE_SIZE_ERROR_MESSAGE =
@@ -157,11 +193,11 @@ std::int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 bool Type::operator==(const Type& other) const { return equal(other); }
 
 PrimitiveType::PrimitiveType(Code type_code)
-  : Type{type_code}, size_{SIZEOF().at(type_code)}, alignment_{ALIGNOF().at(type_code)}
+  : Type{type_code}, size_{SIZEOF(type_code)}, alignment_{ALIGNOF(type_code)}
 {
 }
 
-std::string PrimitiveType::to_string() const { return std::string{TYPE_NAMES().at(code)}; }
+std::string PrimitiveType::to_string() const { return std::string{TYPE_NAME(code)}; }
 
 void PrimitiveType::pack(BufferBuilder& buffer) const
 {
@@ -331,10 +367,21 @@ void StringType::pack(BufferBuilder& buffer) const
 InternalSharedPtr<Type> primitive_type(Type::Code code)
 {
   static std::unordered_map<Type::Code, InternalSharedPtr<Type>> cache{};
-  if (SIZEOF().find(code) == SIZEOF().end()) {
-    throw std::invalid_argument{std::to_string(traits::detail::to_underlying(code)) +
-                                " is not a valid type code for a primitive type"};
+
+  try {
+    static_cast<void>(SIZEOF(code));
+  } catch (const StaticDeterminationError&) {
+    std::stringstream ss;
+
+    try {
+      ss << TYPE_NAME(code);
+    } catch (const std::invalid_argument&) {
+      ss << "<unknown type code: " << traits::detail::to_underlying(code) << ">";
+    }
+    ss << " is not a valid type code for a primitive type";
+    throw std::invalid_argument{std::move(ss).str()};
   }
+
   auto finder = cache.find(code);
   if (finder != cache.end()) {
     return finder->second;
