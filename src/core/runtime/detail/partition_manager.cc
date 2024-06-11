@@ -17,6 +17,8 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/zip.h"
 
 #include <algorithm>
 #include <cmath>
@@ -36,18 +38,19 @@ PartitionManager::PartitionManager(Runtime* runtime)
 const std::vector<std::uint32_t>& PartitionManager::get_factors(
   const mapping::detail::Machine& machine)
 {
-  auto curr_num_pieces = machine.count();
-  auto finder          = all_factors_.find(curr_num_pieces);
+  const auto curr_num_pieces = machine.count();
+  auto finder                = all_factors_.find(curr_num_pieces);
 
   if (all_factors_.end() == finder) {
     std::vector<std::uint32_t> factors;
-    auto remaining_pieces = curr_num_pieces;
-    auto push_factors     = [&factors, &remaining_pieces](std::uint32_t prime) {
+    auto remaining_pieces   = curr_num_pieces;
+    const auto push_factors = [&](std::uint32_t prime) {
       while (remaining_pieces % prime == 0) {
         factors.push_back(prime);
         remaining_pieces /= prime;
       }
     };
+
     for (auto factor : {11U, 7U, 5U, 3U, 2U}) {
       push_factors(factor);
     }
@@ -57,11 +60,166 @@ const std::vector<std::uint32_t>& PartitionManager::get_factors(
   return finder->second;
 }
 
+namespace {
+
+std::tuple<std::vector<std::size_t>, std::vector<std::uint32_t>, std::int64_t> prune_dimensions(
+  const Restrictions& restrictions, const tuple<std::uint64_t>& shape)
+{
+  // Prune out any dimensions that are 1
+  std::vector<std::size_t> temp_shape{};
+  std::vector<std::uint32_t> temp_dims{};
+  std::int64_t volume = 1;
+
+  temp_dims.reserve(shape.size());
+  temp_shape.reserve(shape.size());
+  for (auto&& [dim, rest] : legate::detail::enumerate(legate::detail::zip(restrictions, shape))) {
+    auto&& [restr, extent] = rest;
+
+    if (1 == extent || restr == Restriction::FORBID) {
+      continue;
+    }
+    temp_shape.push_back(extent);
+    temp_dims.push_back(dim);
+    volume *= static_cast<std::int64_t>(extent);
+  }
+  return {std::move(temp_shape), std::move(temp_dims), volume};
+}
+
+std::vector<std::size_t> compute_shape_1d(std::int64_t max_pieces,
+                                          const std::vector<std::size_t>& shape)
+{
+  std::vector<std::size_t> result;
+
+  result.push_back(std::min(shape.front(), static_cast<std::size_t>(max_pieces)));
+  return result;
+}
+
+std::vector<std::size_t> compute_shape_2d(std::int64_t volume,
+                                          std::int64_t max_pieces,
+                                          std::vector<std::size_t>* shape)
+{
+  std::vector<std::size_t> result;
+
+  if (volume < max_pieces) {
+    // TODO(wonchanl): Once the max_pieces heuristic is fixed, this should never happen
+    result = std::move(*shape);
+    return result;
+  }
+
+  // Two dimensional so we can use square root to try and generate as square a pieces
+  // as possible since most often we will be doing matrix operations with these
+  auto nx         = (*shape)[0];
+  auto ny         = (*shape)[1];
+  const auto swap = nx > ny;
+  if (swap) {
+    std::swap(nx, ny);
+  }
+  const auto n = std::sqrt(static_cast<double>(max_pieces * nx) / static_cast<double>(ny));
+
+  // Need to constraint n to be an integer with numpcs % n == 0
+  // try rounding n both up and down
+  constexpr auto EPSILON = 1e-12;
+
+  auto n1 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n + EPSILON)));
+  while (max_pieces % n1 != 0) {
+    --n1;
+  }
+  auto n2 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n - EPSILON)));
+  while (max_pieces % n2 != 0) {
+    ++n2;
+  }
+
+  // pick whichever of n1 and n2 gives blocks closest to square
+  // i.e. gives the shortest long side
+  const auto side1 = std::max(nx / n1, ny / (max_pieces / n1));
+  const auto side2 = std::max(nx / n2, ny / (max_pieces / n2));
+  const auto px    = static_cast<std::size_t>(side1 <= side2 ? n1 : n2);
+  const auto py    = static_cast<std::size_t>(max_pieces / px);
+
+  // we need to trim launch space if it is larger than the
+  // original shape in one of the dimensions (can happen in
+  // testing)
+  result.reserve(2);
+  if (swap) {
+    // If we swapped, then ny holds previous nx, and nx holds previous ny
+    LEGATE_ASSERT(ny == (*shape)[0]);
+    LEGATE_ASSERT(nx == (*shape)[1]);
+    result.push_back(std::min(py, ny));
+    result.push_back(std::min(px, nx));
+  } else {
+    result.push_back(std::min(px, nx));
+    result.push_back(std::min(py, ny));
+  }
+  return result;
+}
+
+std::vector<std::size_t> compute_shape_nd(const std::vector<std::uint32_t>& factors,
+                                          std::size_t ndim,
+                                          std::int64_t max_pieces,
+                                          const std::vector<std::size_t>& shape)
+{
+  // For higher dimensions we care less about "square"-ness and more about evenly dividing
+  // things, compute the prime factors for our number of pieces and then round-robin them
+  // onto the shape, with the goal being to keep the last dimension >= 32 for good memory
+  // performance on the GPU
+  std::vector<std::size_t> result(ndim, 1);
+  std::size_t factor_prod = 1;
+
+  for (auto&& factor : factors) {
+    // Avoid exceeding the maximum number of pieces
+    if (factor * factor_prod > static_cast<std::size_t>(max_pieces)) {
+      break;
+    }
+
+    factor_prod *= factor;
+
+    std::vector<std::size_t> remaining;
+
+    remaining.reserve(shape.size());
+    for (std::uint32_t idx = 0; idx < shape.size(); ++idx) {
+      remaining.push_back((shape[idx] + result[idx] - 1) / result[idx]);
+    }
+
+    const auto big_dim = static_cast<std::uint32_t>(
+      std::max_element(remaining.begin(), remaining.end()) - remaining.begin());
+
+    if (big_dim < ndim - 1) {
+      // Not the last dimension, so do it
+      result[big_dim] *= factor;
+      continue;
+    }
+
+    // REVIEW: why 32? no idea
+    constexpr auto MAGIC_NUMBER = 32;
+    // Last dim so see if it still bigger than 32
+    if (remaining[big_dim] / factor >= MAGIC_NUMBER) {
+      // go ahead and do it
+      result[big_dim] *= factor;
+      continue;
+    }
+
+    // Won't be see if we can do it with one of the other dimensions
+    const auto next_big_dim = static_cast<std::uint32_t>(
+      std::max_element(remaining.begin(), remaining.end() - 1) - remaining.begin());
+
+    if (remaining[next_big_dim] / factor > 0) {
+      result[next_big_dim] *= factor;
+      continue;
+    }
+
+    // Fine just do it on the last dimension
+    result[big_dim] *= factor;
+  }
+  return result;
+}
+
+}  // namespace
+
 tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
                                                             const Restrictions& restrictions,
                                                             const tuple<std::uint64_t>& shape)
 {
-  auto curr_num_pieces = machine.count();
+  const auto curr_num_pieces = machine.count();
   LEGATE_ASSERT(curr_num_pieces > 0);
   // Easy case if we only have one piece: no parallel launch space
   if (1 == curr_num_pieces) {
@@ -74,22 +232,7 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
   }
 
   // Prune out any dimensions that are 1
-  std::vector<std::size_t> temp_shape{};
-  std::vector<std::uint32_t> temp_dims{};
-  std::int64_t volume = 1;
-
-  temp_dims.reserve(shape.size());
-  temp_shape.reserve(shape.size());
-  for (std::uint32_t dim = 0; dim < shape.size(); ++dim) {
-    auto extent = shape[dim];
-
-    if (1 == extent || restrictions[dim] == Restriction::FORBID) {
-      continue;
-    }
-    temp_shape.push_back(extent);
-    temp_dims.push_back(dim);
-    volume *= static_cast<std::int64_t>(extent);
-  }
+  auto [temp_shape, temp_dims, volume] = prune_dimensions(restrictions, shape);
 
   // Figure out how many shards we can make with this array
   std::int64_t max_pieces = (volume + min_shard_volume_ - 1) / min_shard_volume_;
@@ -105,116 +248,25 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
   // First compute the N-th root of the number of pieces
   const auto ndim = temp_shape.size();
   LEGATE_CHECK(ndim > 0);
-  std::vector<std::size_t> temp_result{};
-
-  if (1 == ndim) {
-    // Easy one dimensional case
-    temp_result.push_back(
-      std::min<std::size_t>(temp_shape.front(), static_cast<std::size_t>(max_pieces)));
-  } else if (2 == ndim) {
-    if (volume < max_pieces) {
-      // TBD: Once the max_pieces heuristic is fixed, this should never happen
-      temp_result.swap(temp_shape);
-    } else {
-      // Two dimensional so we can use square root to try and generate as square a pieces
-      // as possible since most often we will be doing matrix operations with these
-      auto nx   = temp_shape[0];
-      auto ny   = temp_shape[1];
-      auto swap = nx > ny;
-      if (swap) {
-        std::swap(nx, ny);
-      }
-      auto n = std::sqrt(static_cast<double>(max_pieces * nx) / static_cast<double>(ny));
-
-      // Need to constraint n to be an integer with numpcs % n == 0
-      // try rounding n both up and down
-      constexpr auto EPSILON = 1e-12;
-
-      auto n1 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n + EPSILON)));
-      while (max_pieces % n1 != 0) {
-        --n1;
-      }
-      auto n2 = std::max<std::int64_t>(1, static_cast<std::int64_t>(std::floor(n - EPSILON)));
-      while (max_pieces % n2 != 0) {
-        ++n2;
-      }
-
-      // pick whichever of n1 and n2 gives blocks closest to square
-      // i.e. gives the shortest long side
-      auto side1 = std::max(nx / n1, ny / (max_pieces / n1));
-      auto side2 = std::max(nx / n2, ny / (max_pieces / n2));
-      auto px    = static_cast<std::size_t>(side1 <= side2 ? n1 : n2);
-      auto py    = static_cast<std::size_t>(max_pieces / px);
-
-      // we need to trim launch space if it is larger than the
-      // original shape in one of the dimensions (can happen in
-      // testing)
-      if (swap) {
-        temp_result.push_back(std::min(py, temp_shape[0]));
-        temp_result.push_back(std::min(px, temp_shape[1]));
-      } else {
-        temp_result.push_back(std::min(px, temp_shape[0]));
-        temp_result.push_back(std::min(py, temp_shape[1]));
-      }
+  // Apparently captured structured bindings are only since C++20. Why on earth did the
+  // committee not allow this in C++17????
+  static_assert(LEGATE_CPP_MIN_VERSION < 20);  // NOLINT(readability-magic-numbers)
+  auto temp_result = [&](std::vector<std::size_t>* shape_2, std::int64_t volume_2) {
+    switch (ndim) {
+      case 1: return compute_shape_1d(max_pieces, *shape_2);
+      case 2: return compute_shape_2d(volume_2, max_pieces, shape_2);
+      default: return compute_shape_nd(get_factors(machine), ndim, max_pieces, *shape_2);
     }
-  } else {
-    // For higher dimensions we care less about "square"-ness and more about evenly dividing
-    // things, compute the prime factors for our number of pieces and then round-robin them
-    // onto the shape, with the goal being to keep the last dimension >= 32 for good memory
-    // performance on the GPU
-    temp_result.resize(ndim);
-    std::fill(temp_result.begin(), temp_result.end(), 1);
-    std::size_t factor_prod = 1;
-
-    for (auto factor : get_factors(machine)) {
-      // Avoid exceeding the maximum number of pieces
-      if (factor * factor_prod > static_cast<std::size_t>(max_pieces)) {
-        break;
-      }
-
-      factor_prod *= factor;
-
-      std::vector<std::size_t> remaining;
-
-      remaining.reserve(temp_shape.size());
-      for (std::uint32_t idx = 0; idx < temp_shape.size(); ++idx) {
-        remaining.push_back((temp_shape[idx] + temp_result[idx] - 1) / temp_result[idx]);
-      }
-      const std::uint32_t big_dim =
-        std::max_element(remaining.begin(), remaining.end()) - remaining.begin();
-      if (big_dim < ndim - 1) {
-        // Not the last dimension, so do it
-        temp_result[big_dim] *= factor;
-      } else {
-        // REVIEW: why 32? no idea
-        constexpr auto MAGIC_NUMBER = 32;
-        // Last dim so see if it still bigger than 32
-        if (remaining[big_dim] / factor >= MAGIC_NUMBER) {
-          // go ahead and do it
-          temp_result[big_dim] *= factor;
-        } else {
-          // Won't be see if we can do it with one of the other dimensions
-          const std::uint32_t next_big_dim =
-            std::max_element(remaining.begin(), remaining.end() - 1) - remaining.begin();
-          if (remaining[next_big_dim] / factor > 0) {
-            temp_result[next_big_dim] *= factor;
-          } else {
-            // Fine just do it on the last dimension
-            temp_result[big_dim] *= factor;
-          }
-        }
-      }
-    }
-  }
+  }(&temp_shape, volume);
 
   // Project back onto the original number of dimensions
   LEGATE_CHECK(temp_result.size() == ndim);
-  std::vector<std::uint64_t> result(shape.size(), 1);
+
+  auto result = legate::full<std::uint64_t>(shape.size(), 1);
   for (std::uint32_t idx = 0; idx < ndim; ++idx) {
     result[temp_dims[idx]] = temp_result[idx];
   }
-
-  return tuple<std::uint64_t>{std::move(result)};
+  return result;
 }
 
 tuple<std::uint64_t> PartitionManager::compute_tile_shape(const tuple<std::uint64_t>& extents,
@@ -222,9 +274,9 @@ tuple<std::uint64_t> PartitionManager::compute_tile_shape(const tuple<std::uint6
 {
   LEGATE_CHECK(extents.size() == launch_shape.size());
   tuple<std::uint64_t> tile_shape;
-  for (std::uint32_t idx = 0; idx < extents.size(); ++idx) {
-    auto x = extents[idx];
-    auto y = launch_shape[idx];
+
+  tile_shape.reserve(extents.size());
+  for (auto&& [x, y] : legate::detail::zip(extents, launch_shape)) {
     tile_shape.append_inplace((x + y - 1) / y);
   }
   return tile_shape;
@@ -245,11 +297,14 @@ bool PartitionManager::use_complete_tiling(const tuple<std::uint64_t>& extents,
 
 namespace {
 
-template <class Cache, class Partition>
+template <typename Cache, typename Partition, typename... Rest>
 [[nodiscard]] Legion::IndexPartition find_index_partition_impl(
-  const Cache& cache, const Legion::IndexSpace& index_space, const Partition& partition)
+  const Cache& cache,
+  const Legion::IndexSpace& index_space,
+  const Partition& partition,
+  Rest&&... rest)
 {
-  auto finder = cache.find({index_space, partition});
+  const auto finder = cache.find({index_space, partition, std::forward<Rest>(rest)...});
 
   if (finder != cache.end()) {
     return finder->second;
@@ -277,12 +332,7 @@ Legion::IndexPartition PartitionManager::find_image_partition(
   Legion::FieldID field_id,
   ImageComputationHint hint) const
 {
-  auto finder = image_cache_.find({index_space, func_partition, field_id, hint});
-
-  if (finder != image_cache_.end()) {
-    return finder->second;
-  }
-  return Legion::IndexPartition::NO_PART;
+  return find_index_partition_impl(image_cache_, index_space, func_partition, field_id, hint);
 }
 
 void PartitionManager::record_index_partition(const Legion::IndexSpace& index_space,
