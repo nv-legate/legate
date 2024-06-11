@@ -21,7 +21,7 @@ void DefaultDelete<T>::operator()(T* ptr) const noexcept
 {
   // NOLINTNEXTLINE(bugprone-sizeof-expression): comparing with 0 is the whole point here
   static_assert(sizeof(T) > 0, "default_delete cannot be instantiated for incomplete type");
-  delete ptr;
+  std::default_delete<T>{}(ptr);
 }
 
 }  // namespace legate
