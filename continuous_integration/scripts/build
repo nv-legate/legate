@@ -105,6 +105,7 @@ build_docs() {
     cd "${LEGATE_CORE_DIR}"
     set +u
     run_command 'Activate Conda' conda activate legate
+    run_command 'List conda env' conda list
     set -u
     run_command 'Dump configure.py' cat "./config/examples/${LEGATE_CORE_ARCH}.py"
     run_command 'Configure Legate' "./config/examples/${LEGATE_CORE_ARCH}.py"

@@ -275,17 +275,18 @@ class DocsConfig(SectionConfig):
             "doxygen",
             "ipython",
             "jinja2",
-            "markdown<3.4.0",
+            "markdown",
             "pydata-sphinx-theme>=0.13",
             "myst-parser",
             "nbsphinx",
             "sphinx-copybutton",
             "sphinx>=4.4.0",
+            "breathe>=4.35.0",
         )
 
     @property
     def pip(self) -> Reqs:
-        return ("breathe",)
+        return ()
 
 
 @dataclass(frozen=True)
