@@ -640,6 +640,10 @@ install(FILES src/core/utilities/detail/compressed_pair.h
               src/core/utilities/detail/shared_ptr_control_block.h
               src/core/utilities/detail/shared_ptr_control_block.inl
               src/core/utilities/detail/type_traits.h
+              src/core/utilities/detail/zip.h
+              src/core/utilities/detail/zip.inl
+              src/core/utilities/detail/enumerate.h
+              src/core/utilities/detail/enumerate.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities/detail)
 
 # Legate STL headers
