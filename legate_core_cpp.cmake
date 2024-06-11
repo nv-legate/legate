@@ -165,8 +165,10 @@ list(APPEND
      src/core/comm/comm.cc
      src/core/comm/comm_cpu.cc
      src/core/comm/coll.cc
-     src/core/comm/local_comm.cc
      src/core/comm/comm_util.cc
+     src/core/comm/thread_comm.cc
+     src/core/comm/local_network.cc
+     src/core/comm/backend_network.cc
      src/core/cuda/stream_pool.cc
      src/core/data/allocator.cc
      src/core/data/external_allocation.cc
@@ -265,7 +267,7 @@ list(APPEND
      src/core/experimental/stl/detail/clang_tidy_dummy.cpp)
 
 if(Legion_NETWORKS)
-  list(APPEND legate_core_SOURCES src/core/comm/mpi_comm.cc)
+  list(APPEND legate_core_SOURCES src/core/comm/mpi_network.cc)
 endif()
 
 if(Legion_USE_OpenMP)
@@ -520,8 +522,16 @@ install(FILES src/legate.h src/legate_defines.h src/legate_preamble.h
 
 install(FILES src/core/legate_c.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core)
 
-install(FILES src/core/comm/coll.h src/core/comm/communicator.h
-              src/core/comm/communicator.inl src/core/comm/pthread_barrier.h
+install(FILES src/core/comm/coll.h
+              src/core/comm/communicator.h
+              src/core/comm/communicator.inl
+              src/core/comm/pthread_barrier.h
+              src/core/comm/thread_comm.h
+              src/core/comm/thread_comm.inl
+              src/core/comm/backend_network.h
+              src/core/comm/coll_comm.h
+              src/core/comm/local_network.h
+              src/core/comm/mpi_network.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/comm)
 
 install(FILES src/core/cuda/cuda.h src/core/cuda/stream_pool.h

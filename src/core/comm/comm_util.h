@@ -15,14 +15,15 @@
 
 #include "legion.h"
 
+#include <cstdint>
 #include <string_view>
 
 namespace legate::detail {
 
-Legion::TaskVariantRegistrar make_registrar(const detail::Library* library,
-                                            std::int64_t local_task_id,
-                                            std::string_view task_name,
-                                            Processor::Kind proc_kind,
-                                            bool concurrent);
+[[nodiscard]] Legion::TaskVariantRegistrar make_registrar(const detail::Library* library,
+                                                          std::int64_t local_task_id,
+                                                          std::string_view task_name,
+                                                          Processor::Kind proc_kind,
+                                                          bool concurrent);
 
 }  // namespace legate::detail

@@ -10,15 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "coll.h"
+#include "core/comm/coll.h"
 
-#include "core/utilities/detail/strtoll.h"
+#include "core/comm/backend_network.h"
+#include "core/comm/local_network.h"
+#include "core/comm/mpi_network.h"
 #include "core/utilities/env.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <pthread.h>
 
 namespace legate::comm::coll {
 
@@ -33,104 +34,94 @@ Logger& log_coll()
 
 }  // namespace detail
 
-BackendNetwork* backend_network = nullptr;
-
-// functions start here
-int collCommCreate(CollComm global_comm,
-                   int global_comm_size,
-                   int global_rank,
-                   int unique_id,
-                   const int* mapping_table)
+CollStatus collCommCreate(CollComm global_comm,
+                          int global_comm_size,
+                          int global_rank,
+                          int unique_id,
+                          const int* mapping_table)
 {
   return backend_network->comm_create(
     global_comm, global_comm_size, global_rank, unique_id, mapping_table);
 }
 
-int collCommDestroy(CollComm global_comm) { return backend_network->comm_destroy(global_comm); }
+CollStatus collCommDestroy(CollComm global_comm)
+{
+  return backend_network->comm_destroy(global_comm);
+}
 
-int collAlltoallv(const void* sendbuf,
-                  const int sendcounts[],
-                  const int sdispls[],
-                  void* recvbuf,
-                  const int recvcounts[],
-                  const int rdispls[],
-                  CollDataType type,
-                  CollComm global_comm)
+CollStatus collAlltoallv(const void* sendbuf,
+                         const int sendcounts[],
+                         const int sdispls[],
+                         void* recvbuf,
+                         const int recvcounts[],
+                         const int rdispls[],
+                         CollDataType type,
+                         CollComm global_comm)
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
     LEGATE_ABORT("Do not support inplace Alltoallv");
   }
-  detail::log_coll().debug(
-    "Alltoallv: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
-    "mpi_comm_size %d %d, nb_threads %d",
-    global_comm->global_rank,
-    global_comm->mpi_rank,
-    global_comm->unique_id,
-    global_comm->global_comm_size,
-    global_comm->mpi_comm_size,
-    global_comm->mpi_comm_size_actual,
-    global_comm->nb_threads);
-  return backend_network->alltoallv(
+  detail::log_coll().debug() << "Alltoallv: global_rank " << global_comm->global_rank
+                             << ", mpi_rank " << global_comm->mpi_rank << ", unique_id "
+                             << global_comm->unique_id << ", comm_size "
+                             << global_comm->global_comm_size << ", mpi_comm_size "
+                             << global_comm->mpi_comm_size << ' '
+                             << global_comm->mpi_comm_size_actual << ", nb_threads "
+                             << global_comm->nb_threads;
+
+  return backend_network->all_to_all_v(
     sendbuf, sendcounts, sdispls, recvbuf, recvcounts, rdispls, type, global_comm);
 }
 
-int collAlltoall(
+CollStatus collAlltoall(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
     LEGATE_ABORT("Do not support inplace Alltoall");
   }
-  detail::log_coll().debug(
-    "Alltoall: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
-    "mpi_comm_size %d %d, nb_threads %d",
-    global_comm->global_rank,
-    global_comm->mpi_rank,
-    global_comm->unique_id,
-    global_comm->global_comm_size,
-    global_comm->mpi_comm_size,
-    global_comm->mpi_comm_size_actual,
-    global_comm->nb_threads);
-  return backend_network->alltoall(sendbuf, recvbuf, count, type, global_comm);
+  detail::log_coll().debug() << "Alltoall: global_rank " << global_comm->global_rank
+                             << ", mpi_rank " << global_comm->mpi_rank << ", unique_id "
+                             << global_comm->unique_id << ", comm_size "
+                             << global_comm->global_comm_size << ", mpi_comm_size "
+                             << global_comm->mpi_comm_size << ' '
+                             << global_comm->mpi_comm_size_actual << ", nb_threads "
+                             << global_comm->nb_threads;
+
+  return backend_network->all_to_all(sendbuf, recvbuf, count, type, global_comm);
 }
 
-int collAllgather(
+CollStatus collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
-  detail::log_coll().debug(
-    "Allgather: global_rank %d, mpi_rank %d, unique_id %d, comm_size %d, "
-    "mpi_comm_size %d %d, nb_threads %d",
-    global_comm->global_rank,
-    global_comm->mpi_rank,
-    global_comm->unique_id,
-    global_comm->global_comm_size,
-    global_comm->mpi_comm_size,
-    global_comm->mpi_comm_size_actual,
-    global_comm->nb_threads);
-  return backend_network->allgather(sendbuf, recvbuf, count, type, global_comm);
+  detail::log_coll().debug() << "Allgather: global_rank " << global_comm->global_rank
+                             << ", mpi_rank " << global_comm->mpi_rank << ", unique_id "
+                             << global_comm->unique_id << ", comm_size "
+                             << global_comm->global_comm_size << ", mpi_comm_size "
+                             << global_comm->mpi_comm_size << ' '
+                             << global_comm->mpi_comm_size_actual << ", nb_threads "
+                             << global_comm->nb_threads;
+
+  return backend_network->all_gather(sendbuf, recvbuf, count, type, global_comm);
 }
 
 // called from main thread
-int collInit(int argc, char* argv[])
+CollStatus collInit(int argc, char* argv[])
 {
-  if (LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
-    if (LEGATE_NEED_NETWORK.get().value_or(false)) {
+  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get().value_or(false)) {
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
-      backend_network = new MPINetwork{argc, argv};
+    backend_network = std::make_unique<MPINetwork>(argc, argv);
 #endif
-    } else {
-      backend_network = new LocalNetwork{argc, argv};
-    }
   } else {
-    backend_network = new LocalNetwork{argc, argv};
+    backend_network = std::make_unique<LocalNetwork>(argc, argv);
   }
   return CollSuccess;
 }
 
-int collFinalize()
+CollStatus collFinalize()
 {
-  delete backend_network;
+  backend_network.reset();
   return CollSuccess;
 }
 
@@ -148,32 +139,31 @@ void BackendNetwork::abort()
   // does nothing by default
 }
 
-int BackendNetwork::collGetUniqueId(int* id)
+CollStatus BackendNetwork::get_unique_id_(int* id)
 {
-  *id = current_unique_id;
-  current_unique_id++;
+  *id = current_unique_id_++;
   return CollSuccess;
 }
 
-void* BackendNetwork::allocateInplaceBuffer(const void* recvbuf, std::size_t size)
+void* BackendNetwork::allocate_inplace_buffer_(const void* recvbuf, std::size_t size)
 {
+  LEGATE_ASSERT(size);
   void* sendbuf_tmp = std::malloc(size);
   LEGATE_CHECK(sendbuf_tmp != nullptr);
   std::memcpy(sendbuf_tmp, recvbuf, size);
   return sendbuf_tmp;
 }
 
+void BackendNetwork::delete_inplace_buffer_(void* recvbuf, std::size_t) { std::free(recvbuf); }
+
 }  // namespace legate::comm::coll
 
 extern "C" {
 
-int legate_cpucoll_finalize(void)
-{
-  // REVIEW: this should be returned?
-  return legate::comm::coll::collFinalize();
-}
+int legate_cpucoll_finalize() { return legate::comm::coll::collFinalize(); }
 
-int legate_cpucoll_initcomm(void) { return legate::comm::coll::collInitComm(); }
+int legate_cpucoll_initcomm() { return legate::comm::coll::collInitComm(); }
 
 bool legate_has_cal() { return LEGATE_DEFINED(LEGATE_USE_CAL); }
-}
+
+}  //

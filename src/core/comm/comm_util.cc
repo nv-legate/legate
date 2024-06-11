@@ -20,13 +20,12 @@ Legion::TaskVariantRegistrar make_registrar(const detail::Library* library,
                                             Processor::Kind proc_kind,
                                             bool concurrent)
 {
-  auto global_task_id = library->get_task_id(local_task_id);
+  const auto global_task_id = library->get_task_id(local_task_id);
   Legion::Runtime::get_runtime()->attach_name(
     global_task_id, task_name.data(), false /*mutable*/, true /*local only*/);
+  Legion::TaskVariantRegistrar registrar{global_task_id, task_name.data()};
 
-  Legion::TaskVariantRegistrar registrar(global_task_id, task_name.data());
-
-  registrar.add_constraint(Legion::ProcessorConstraint(proc_kind));
+  registrar.add_constraint(Legion::ProcessorConstraint{proc_kind});
   registrar.set_leaf(true);
   registrar.global_registration = false;
   registrar.set_concurrent(concurrent);

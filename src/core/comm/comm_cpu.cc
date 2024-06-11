@@ -12,6 +12,7 @@
 
 #include "core/comm/comm_cpu.h"
 
+#include "core/comm/backend_network.h"
 #include "core/comm/coll.h"
 #include "core/comm/comm_util.h"
 #include "core/operation/detail/task_launcher.h"
@@ -19,10 +20,10 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
-#include "core/utilities/detail/malloc.h"
 #include "core/utilities/detail/zip.h"
 
-#include <utility>
+#include <memory>
+#include <vector>
 
 namespace legate::detail {
 
@@ -31,7 +32,6 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 }  // namespace legate::detail
 
 namespace legate::comm::cpu {
-using Legion::FutureMap;
 
 class Factory final : public detail::CommunicatorFactory {
  public:
@@ -41,7 +41,8 @@ class Factory final : public detail::CommunicatorFactory {
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
  protected:
-  FutureMap initialize_(const mapping::detail::Machine& machine, std::uint32_t num_tasks) override;
+  [[nodiscard]] Legion::FutureMap initialize_(const mapping::detail::Machine& machine,
+                                              std::uint32_t num_tasks) override;
   void finalize_(const mapping::detail::Machine& machine,
                  std::uint32_t num_tasks,
                  const Legion::FutureMap& communicator) override;
@@ -57,8 +58,8 @@ bool Factory::is_supported_target(mapping::TaskTarget /*target*/) const { return
 Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                        std::uint32_t num_tasks)
 {
-  const Domain launch_domain(
-    Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1)));
+  const Domain launch_domain{
+    Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
   auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
 
@@ -91,8 +92,9 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
   const auto tag =
     machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
   const Domain launch_domain{
-    Rect<1>(Point<1>(0), Point<1>(static_cast<std::int64_t>(num_tasks) - 1))};
+    Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
   detail::TaskLauncher launcher{core_library_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag};
+
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);
@@ -124,31 +126,32 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
 {
   legate::detail::show_progress(task, context, runtime);
 
-  const auto point     = static_cast<int>(task->index_point[0]);
-  const auto num_ranks = static_cast<int>(task->index_domain.get_volume());
+  const auto point     = static_cast<std::size_t>(task->index_point[0]);
+  const auto num_ranks = task->index_domain.get_volume();
 
-  LEGATE_CHECK(task->futures.size() == static_cast<std::size_t>(num_ranks + 1));
-  const int unique_id = task->futures[0].get_result<int>();
-
-  auto comm = std::make_unique<coll::Coll_Comm>();
+  LEGATE_CHECK(task->futures.size() == num_ranks + 1);
+  const auto unique_id = task->futures[0].get_result<int>();
+  auto comm            = std::make_unique<coll::Coll_Comm>();
+  auto mapping_table   = std::vector<int>{};
 
   if (LEGATE_DEFINED(LEGATE_USE_NETWORK) &&
       (coll::backend_network->comm_type == coll::CollCommType::CollMPI)) {
-    std::vector<int> mapping_table;
-
     mapping_table.reserve(num_ranks);
-    for (std::size_t i = 0; i < static_cast<std::size_t>(num_ranks); i++) {
+    for (std::size_t i = 0; i < num_ranks; ++i) {
       const auto mapping_table_element = task->futures[i + 1].get_result<int>();
+
       mapping_table.push_back(mapping_table_element);
     }
-    auto ret = coll::collCommCreate(comm.get(), num_ranks, point, unique_id, mapping_table.data());
-    LEGATE_CHECK(ret == coll::CollSuccess);
     LEGATE_CHECK(mapping_table[point] == comm->mpi_rank);
-  } else {
-    auto ret = coll::collCommCreate(comm.get(), num_ranks, point, unique_id, nullptr);
-    LEGATE_CHECK(ret == coll::CollSuccess);
   }
 
+  auto ret = coll::collCommCreate(comm.get(),
+                                  static_cast<int>(num_ranks),
+                                  static_cast<int>(point),
+                                  unique_id,
+                                  mapping_table.data());
+
+  LEGATE_CHECK(ret == coll::CollSuccess);
   return comm.release();
 }
 
