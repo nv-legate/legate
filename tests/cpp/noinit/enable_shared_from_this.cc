@@ -114,7 +114,7 @@ using TypeList = ::testing::
   Types<EnsureDeleted, const EnsureDeleted, EnsureDeletedVirtual, const EnsureDeletedVirtual>;
 
 template <typename T>
-using EnableSharedFromThisUnit = NoInitFixture;
+using EnableSharedFromThisUnit = ::testing::Test;
 
 TYPED_TEST_SUITE(EnableSharedFromThisUnit, TypeList, );
 

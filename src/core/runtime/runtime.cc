@@ -311,6 +311,8 @@ std::optional<Runtime> the_public_runtime{};
 
 std::int32_t start(std::int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
 
+bool has_started() { return detail::Runtime::get_runtime()->initialized(); }
+
 std::int32_t finish()
 {
   const auto ret = Runtime::get_runtime()->impl()->finish();

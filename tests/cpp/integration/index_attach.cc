@@ -33,10 +33,9 @@ namespace index_attach {
 
 namespace {
 
-constexpr std::size_t TILE_SIZE         = 5;
-constexpr std::uint64_t INIT_VALUE      = 10;
-constexpr std::string_view LIBRARY_NAME = "legate.external_allocation";
-constexpr std::int32_t ACCESS_TASK_ID   = 0;
+constexpr std::size_t TILE_SIZE       = 5;
+constexpr std::uint64_t INIT_VALUE    = 10;
+constexpr std::int32_t ACCESS_TASK_ID = 0;
 
 }  // namespace
 
@@ -78,24 +77,23 @@ class AccessTask : public legate::LegateTask<AccessTask> {
   legate::type_dispatch(p_store.code(), AccessStoreFn{}, context);
 }
 
-class IndexAttach : public DefaultFixture {
+class Config {
  public:
-  void SetUp() override
+  static constexpr std::string_view LIBRARY_NAME = "legate.external_allocation";
+  static void registration_callback(legate::Library library)
   {
-    DefaultFixture::SetUp();
-    auto runtime = legate::Runtime::get_runtime();
-    auto context = runtime->create_library(LIBRARY_NAME);
-
-    AccessTask::register_variants(context);
+    AccessTask::register_variants(library);
   }
 };
+
+class IndexAttach : public RegisterOnceFixture<Config> {};
 
 template <typename T>
 void test_access_by_task(legate::ExternalAllocation& ext, T value)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(LIBRARY_NAME);
-  auto task          = runtime->create_task(context, AccessTask::TASK_ID);
+  auto context       = runtime->find_library(Config::LIBRARY_NAME);
+  auto task          = runtime->create_task(context, ACCESS_TASK_ID);
   auto logical_store = runtime->create_store(
     legate::Shape{TILE_SIZE}, legate::primitive_type(legate::type_code_of_v<T>), ext);
 

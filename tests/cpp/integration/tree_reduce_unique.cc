@@ -17,11 +17,7 @@
 
 namespace tree_reduce_unique {
 
-using TreeReduce = DefaultFixture;
-
 namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_tree_reduce_unique";
 
 constexpr std::size_t TILE_SIZE = 10;
 
@@ -113,22 +109,24 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
   }
 };
 
-void register_tasks()
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_tree_reduce_unique";
+  static void registration_callback(legate::Library library)
+  {
+    FillTask::register_variants(library);
+    UniqueTask::register_variants(library);
+    UniqueReduceTask::register_variants(library);
+    CheckTask::register_variants(library);
+  }
+};
+
+class TreeReduceUnique : public RegisterOnceFixture<Config> {};
+
+TEST_F(TreeReduceUnique, All)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  FillTask::register_variants(context);
-  UniqueTask::register_variants(context);
-  UniqueReduceTask::register_variants(context);
-  CheckTask::register_variants(context);
-}
-
-TEST_F(TreeReduce, Unique)
-{
-  register_tasks();
-
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   const std::size_t num_tasks = 6;
   const std::size_t tile_size = TILE_SIZE;

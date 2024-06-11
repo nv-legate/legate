@@ -18,7 +18,7 @@
 
 namespace legate_scope_guard_test {
 
-using ScopeGuardUnit = NoInitFixture;
+using ScopeGuardUnit = ::testing::Test;
 
 TEST_F(ScopeGuardUnit, Construct)
 {

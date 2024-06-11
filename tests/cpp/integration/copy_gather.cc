@@ -20,11 +20,8 @@ namespace copy_gather {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Copy = DefaultFixture;
-
 namespace {
 
-constexpr std::string_view LIBRARY_NAME  = "test_copy_gather";
 constexpr std::int32_t CHECK_GATHER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
 }  // namespace
@@ -67,40 +64,39 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
   }
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_copy_gather";
+  static void registration_callback(legate::Library library)
+  {
+    FillTask<1>::register_variants(library);
+    FillTask<2>::register_variants(library);
+    FillTask<3>::register_variants(library);
+
+    // XXX: Tasks unused by the test cases are commented out
+    // FillIndirectTask<1, 1>::register_variants(library);
+    FillIndirectTask<1, 2>::register_variants(library);
+    // FillIndirectTask<1, 3>::register_variants(library);
+    // FillIndirectTask<2, 1>::register_variants(library);
+    FillIndirectTask<2, 2>::register_variants(library);
+    FillIndirectTask<2, 3>::register_variants(library);
+    FillIndirectTask<3, 1>::register_variants(library);
+    FillIndirectTask<3, 2>::register_variants(library);
+    // FillIndirectTask<3, 3>::register_variants(library);
+
+    // CheckGatherTask<1, 1>::register_variants(library);
+    CheckGatherTask<1, 2>::register_variants(library);
+    // CheckGatherTask<1, 3>::register_variants(library);
+    // CheckGatherTask<2, 1>::register_variants(library);
+    CheckGatherTask<2, 2>::register_variants(library);
+    CheckGatherTask<2, 3>::register_variants(library);
+    CheckGatherTask<3, 1>::register_variants(library);
+    CheckGatherTask<3, 2>::register_variants(library);
+    // CheckGatherTask<3, 3>::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  FillTask<1>::register_variants(context);
-  FillTask<2>::register_variants(context);
-  FillTask<3>::register_variants(context);
+};
 
-  // XXX: Tasks unused by the test cases are commented out
-  // FillIndirectTask<1, 1>::register_variants(context);
-  FillIndirectTask<1, 2>::register_variants(context);
-  // FillIndirectTask<1, 3>::register_variants(context);
-  // FillIndirectTask<2, 1>::register_variants(context);
-  FillIndirectTask<2, 2>::register_variants(context);
-  FillIndirectTask<2, 3>::register_variants(context);
-  FillIndirectTask<3, 1>::register_variants(context);
-  FillIndirectTask<3, 2>::register_variants(context);
-  // FillIndirectTask<3, 3>::register_variants(context);
-
-  // CheckGatherTask<1, 1>::register_variants(context);
-  CheckGatherTask<1, 2>::register_variants(context);
-  // CheckGatherTask<1, 3>::register_variants(context);
-  // CheckGatherTask<2, 1>::register_variants(context);
-  CheckGatherTask<2, 2>::register_variants(context);
-  CheckGatherTask<2, 3>::register_variants(context);
-  CheckGatherTask<3, 1>::register_variants(context);
-  CheckGatherTask<3, 2>::register_variants(context);
-  // CheckGatherTask<3, 3>::register_variants(context);
-}
+class GatherCopy : public RegisterOnceFixture<Config> {};
 
 void check_gather_output(legate::Library library,
                          const legate::LogicalStore& src,
@@ -143,7 +139,7 @@ struct GatherSpec {
 void test_gather(const GatherSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto type = spec.seed.type();
   auto src  = runtime->create_store(legate::Shape{spec.data_shape}, type);
@@ -159,35 +155,30 @@ void test_gather(const GatherSpec& spec)
   check_gather_output(library, src, tgt, ind);
 }
 
-TEST_F(Copy, Gather2Dto1D)
+TEST_F(GatherCopy, 2Dto1D)
 {
-  register_tasks();
   const std::vector<std::uint64_t> shape1d{5};
   test_gather(GatherSpec{shape1d, {7, 11}, legate::Scalar{std::int64_t{123}}});
 }
 
-TEST_F(Copy, Gather3Dto2D)
+TEST_F(GatherCopy, 3Dto2D)
 {
-  register_tasks();
   test_gather(GatherSpec{{3, 7}, {3, 2, 5}, legate::Scalar{std::uint32_t{456}}});
 }
 
-TEST_F(Copy, Gather1Dto3D)
+TEST_F(GatherCopy, 1Dto3D)
 {
-  register_tasks();
   const std::vector<std::uint64_t> shape1d{5};
   test_gather(GatherSpec{{2, 5, 4}, shape1d, legate::Scalar{789.0}});
 }
 
-TEST_F(Copy, Gather2Dto2D)
+TEST_F(GatherCopy, 2Dto2D)
 {
-  register_tasks();
   test_gather(GatherSpec{{4, 5}, {10, 11}, legate::Scalar{std::int64_t{12}}});
 }
 
-TEST_F(Copy, Gather2Dto3D)
+TEST_F(GatherCopy, 2Dto3D)
 {
-  register_tasks();
   test_gather(GatherSpec{{100, 100, 100}, {10, 10}, legate::Scalar{7.0}});
 }
 

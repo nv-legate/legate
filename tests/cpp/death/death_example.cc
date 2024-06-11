@@ -17,11 +17,11 @@
 #include <gtest/gtest.h>
 #include <unistd.h>
 
-namespace unit {
+namespace death_example {
 
-using ExampleDeathTest = DeathTestNoInitFixture;
+using ExampleDeathTest = DefaultFixture;
 
-void kill_process(int /*argc*/, char** /*argv*/)
+void kill_process()
 {
   (void)legate::start(0, nullptr);
   std::abort();
@@ -39,10 +39,10 @@ TEST_F(ExampleDeathTest, Simple)
     // causes it to abort() instead of exit(1), so for now we just don't check the exit code
     // at all.
 
-    EXPECT_DEATH(kill_process(argc_, argv_), "");
+    EXPECT_DEATH(kill_process(), "");
   } else {
-    EXPECT_EXIT(kill_process(argc_, argv_), ::testing::KilledBySignal(SIGABRT), "");
+    EXPECT_EXIT(kill_process(), ::testing::KilledBySignal(SIGABRT), "");
   }
 }
 
-}  // namespace unit
+}  // namespace death_example

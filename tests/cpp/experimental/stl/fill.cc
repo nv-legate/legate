@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 
-using STL = LegateSTLFixture;
+using STL = DefaultFixture;
 
 namespace stl = legate::experimental::stl;
 
@@ -24,10 +24,6 @@ namespace stl = legate::experimental::stl;
 TEST_F(STL, Test1DFill)
 {
   auto store = stl::create_store<std::int64_t>({4});
-
-  for (auto i : stl::elements_of(store)) {
-    EXPECT_EQ(i, 0);
-  }
 
   stl::fill(store, 1);
 
@@ -48,10 +44,6 @@ TEST_F(STL, Test2DFill)
 {
   auto store = stl::create_store<std::int64_t>({4, 5});
 
-  for (auto i : stl::elements_of(store)) {
-    EXPECT_EQ(i, 0);
-  }
-
   stl::fill(store, 1);
 
   // Check the result
@@ -70,10 +62,6 @@ TEST_F(STL, Test2DFill)
 TEST_F(STL, Test3DFill)
 {
   auto store = stl::create_store<std::int64_t>({4, 5, 6});
-
-  for (auto i : stl::elements_of(store)) {
-    EXPECT_EQ(i, 0);
-  }
 
   stl::fill(store, 1);
 

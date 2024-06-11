@@ -269,4 +269,4 @@ class TogglingDerived final : public BasicDerived {
 using BasicSharedPtrTypeList = ::testing::Types<std::int8_t, std::int32_t, std::uint64_t, UserType>;
 
 template <typename = void>
-using BasicSharedPtrUnit = NoInitFixture;
+using BasicSharedPtrUnit = ::testing::Test;

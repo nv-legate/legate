@@ -19,14 +19,6 @@ namespace delinearize {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Integration = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_delinearize";
-
-}  // namespace
-
 enum TaskIDs : std::uint8_t {
   ARANGE = 0,
   COPY   = 1,
@@ -63,18 +55,22 @@ struct Copy : public legate::LegateTask<Copy> {
   }
 };
 
-void register_tasks()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Arange::register_variants(library);
-  Copy::register_variants(library);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_delinearize";
+  static void registration_callback(legate::Library library)
+  {
+    Arange::register_variants(library);
+    Copy::register_variants(library);
+  }
+};
+
+class Delinearize : public RegisterOnceFixture<Config> {};
 
 void test_delinearize()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto input  = runtime->create_array(legate::Shape{16}, legate::int64());
   auto output = runtime->create_array(legate::Shape{1, 8, 2}, legate::int64());
@@ -102,11 +98,7 @@ void test_delinearize()
   }
 }
 
-TEST_F(Integration, Delinearize)
-{
-  register_tasks();
-  test_delinearize();
-}
+TEST_F(Delinearize, All) { test_delinearize(); }
 
 // NOLINTEND(readability-magic-numbers)
 

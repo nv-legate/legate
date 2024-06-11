@@ -19,14 +19,6 @@ namespace machine_scope {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Integration = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "machine_scope";
-
-}  // namespace
-
 enum TaskIDs : std::uint8_t { MULTI_VARIANT, CPU_VARIANT };
 
 void validate(legate::TaskContext context)
@@ -57,13 +49,17 @@ struct CpuVariantOnlyTask : public legate::LegateTask<CpuVariantOnlyTask> {
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 };
 
-void register_tasks()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  MultiVariantTask::register_variants(library);
-  CpuVariantOnlyTask::register_variants(library);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "machine_scope";
+  static void registration_callback(legate::Library library)
+  {
+    MultiVariantTask::register_variants(library);
+    CpuVariantOnlyTask::register_variants(library);
+  }
+};
+
+class MachineScope : public RegisterOnceFixture<Config> {};
 
 void test_scoping(legate::Library library)
 {
@@ -143,12 +139,10 @@ void test_cpu_only(legate::Library library)
   }
 }
 
-TEST_F(Integration, MachineScope)
+TEST_F(MachineScope, All)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   test_scoping(library);
   test_cpu_only(library);

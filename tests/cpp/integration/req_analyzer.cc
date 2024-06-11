@@ -19,14 +19,6 @@ namespace req_analyzer {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using ReqAnalyzer = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_req_analyzer";
-
-}  // namespace
-
 struct Tester : public legate::LegateTask<Tester> {
   static constexpr std::int32_t TASK_ID = 0;
 
@@ -44,22 +36,18 @@ struct Tester : public legate::LegateTask<Tester> {
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  Tester::register_variants(context);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_req_analyzer";
+  static void registration_callback(legate::Library library) { Tester::register_variants(library); }
+};
+
+class ReqAnalyzer : public RegisterOnceFixture<Config> {};
 
 void test_inout_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto store1 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
@@ -77,7 +65,7 @@ void test_inout_store()
 void test_isomorphic_transformed_stores()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto store = runtime->create_store(legate::Shape{10}, legate::int64());
   runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
@@ -91,17 +79,9 @@ void test_isomorphic_transformed_stores()
   runtime->submit(std::move(task));
 }
 
-TEST_F(ReqAnalyzer, InoutStore)
-{
-  prepare();
-  test_inout_store();
-}
+TEST_F(ReqAnalyzer, InoutStore) { test_inout_store(); }
 
-TEST_F(ReqAnalyzer, IsomorphicTransformedStores)
-{
-  prepare();
-  test_isomorphic_transformed_stores();
-}
+TEST_F(ReqAnalyzer, IsomorphicTransformedStores) { test_isomorphic_transformed_stores(); }
 
 // NOLINTEND(readability-magic-numbers)
 

@@ -19,12 +19,9 @@ namespace weighted {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Integration = DefaultFixture;
-
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_weighted";
-constexpr std::uint32_t NUM_TASKS       = 4;
+constexpr std::uint32_t NUM_TASKS = 4;
 
 }  // namespace
 
@@ -64,18 +61,17 @@ struct Tester : public legate::LegateTask<Tester> {
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_weighted";
+  static void registration_callback(legate::Library library)
+  {
+    Initializer::register_variants(library);
+    Tester::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Initializer::register_variants(library);
-  Tester::register_variants(library);
-}
+};
+
+class Weighted : public RegisterOnceFixture<Config> {};
 
 void initialize(legate::Runtime* runtime,
                 legate::Library library,
@@ -109,7 +105,7 @@ void check(legate::Runtime* runtime,
 void test_weighted(std::uint32_t num_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   std::vector<legate::LogicalStore> stores;
   for (std::uint32_t idx = 0; idx < num_stores; ++idx) {
@@ -120,20 +116,10 @@ void test_weighted(std::uint32_t num_stores)
 }
 
 // Test case with single unbound store
-TEST_F(Integration, WeightedSingle)
-{
-  prepare();
-
-  test_weighted(1);
-}
+TEST_F(Weighted, Single) { test_weighted(1); }
 
 // Test case with multiple unbound stores
-TEST_F(Integration, WeightedMultiple)
-{
-  prepare();
-
-  test_weighted(3);
-}
+TEST_F(Weighted, Multiple) { test_weighted(3); }
 
 // NOLINTEND(readability-magic-numbers)
 

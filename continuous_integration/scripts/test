@@ -110,38 +110,46 @@ run_test_or_analysis() {
             function run_legate_tests()
             {
               local gtest_file="${1}"
-              local cpus="${2}"
+              local proc_type="${2}"
+              local proc_count="${3}"
               python3 "${LEGATE_CORE_DIR}/test.py" \
                       --gtest-file "${gtest_file}" \
                       --verbose \
                       --debug \
                       --timeout 90 \
-                      --cpus "${cpus}" \
+                      --"${proc_type}" "${proc_count}" \
                       --sysmem 100 \
                       ${WORKERS} \
                       ${EXTRA_ARGS}
             }
 
+            function run_sequential_tests()
+            {
+              run_legate_tests "${CONDA_PREFIX}/bin/tests_wo_runtime" cpus 1
+              run_legate_tests "${CONDA_PREFIX}/bin/death_tests" cpus 1
+            }
+
             function run_cpp_tests()
             {
-              run_legate_tests "${CONDA_PREFIX}/bin/cpp_tests" "$@"
+              run_legate_tests "${CONDA_PREFIX}/bin/tests_with_runtime" "$@"
             }
 
             function run_gpu_tests()
             {
-              run_legate_tests "${CONDA_PREFIX}/bin/gpu_tests" "$@"
+              run_legate_tests "${CONDA_PREFIX}/bin/tests_with_gpus" "$@"
             }
 
-            run_cpp_tests 1
+            run_sequential_tests
+            run_cpp_tests cpus 1
             # Also do some multi-CPU testing
             if [[ "$(uname)" == "Darwin" ]]; then
-              run_cpp_tests 2
+              run_cpp_tests cpus 2
             else
-              run_cpp_tests 4
+              run_cpp_tests cpus 4
             fi
 
-            [[ -f ${CONDA_PREFIX}/bin/gpu_tests ]] && {
-              run_gpu_tests 1
+            [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]] && {
+              run_gpu_tests gpus 1
             }
             ;;
 

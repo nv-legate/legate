@@ -18,9 +18,24 @@
 
 namespace test_is_running_in_task {
 
-using IsRunningInTask = DefaultFixture;
+struct Checker : public legate::LegateTask<Checker> {
+  static constexpr std::int32_t TASK_ID = 0;
+  static void cpu_variant(legate::TaskContext /*context*/)
+  {
+    EXPECT_TRUE(legate::is_running_in_task());
+  }
+};
 
-constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
+  static void registration_callback(legate::Library library)
+  {
+    Checker::register_variants(library);
+  }
+};
+
+class IsRunningInTask : public RegisterOnceFixture<Config> {};
 
 TEST_F(IsRunningInTask, Toplevel) { EXPECT_FALSE(legate::is_running_in_task()); }
 
@@ -30,19 +45,10 @@ TEST_F(IsRunningInTask, UserThread)
   thd.join();
 }
 
-struct Checker : public legate::LegateTask<Checker> {
-  static constexpr std::int32_t TASK_ID = 0;
-  static void cpu_variant(legate::TaskContext /*context*/)
-  {
-    EXPECT_TRUE(legate::is_running_in_task());
-  }
-};
-
 TEST_F(IsRunningInTask, InSingleTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Checker::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   runtime->submit(runtime->create_task(library, Checker::TASK_ID));
 }
@@ -50,8 +56,7 @@ TEST_F(IsRunningInTask, InSingleTask)
 TEST_F(IsRunningInTask, InIndexTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Checker::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   runtime->submit(
     runtime->create_task(library, Checker::TASK_ID, legate::tuple<std::uint64_t>{2, 2}));

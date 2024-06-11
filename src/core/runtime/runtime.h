@@ -605,6 +605,16 @@ class Runtime {
 /**
  * @ingroup runtime
  *
+ * @brief Checks if the runtime has started.
+ *
+ * @return true If the runtime has started
+ * @return false Either if the runtime has not started yet or after legate::finish is called
+ */
+[[nodiscard]] bool has_started();
+
+/**
+ * @ingroup runtime
+ *
  * @brief Waits for the runtime to finish
  *
  * The client code must call this to make sure all Legate tasks run

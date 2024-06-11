@@ -19,7 +19,7 @@
 
 namespace legate_scope_fail_test {
 
-using ScopeFailUnit = NoInitFixture;
+using ScopeFailUnit = ::testing::Test;
 
 TEST_F(ScopeFailUnit, Construct)
 {

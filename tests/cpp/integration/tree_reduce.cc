@@ -17,12 +17,9 @@
 
 namespace tree_reduce {
 
-using TreeReduce = DefaultFixture;
-
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_tree_reduce";
-constexpr std::size_t TILE_SIZE         = 10;
+constexpr std::size_t TILE_SIZE = 10;
 
 }  // namespace
 
@@ -85,27 +82,24 @@ struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
   }
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_tree_reduce";
+  static void registration_callback(legate::Library library)
+  {
+    ProduceNormalTask::register_variants(library);
+    ProduceUnboundTask::register_variants(library);
+    ReduceNormalTask::register_variants(library);
+    ReduceUnboundTask::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  ProduceNormalTask::register_variants(context);
-  ProduceUnboundTask::register_variants(context);
-  ReduceNormalTask::register_variants(context);
-  ReduceUnboundTask::register_variants(context);
-}
+};
+
+class TreeReduce : public RegisterOnceFixture<Config> {};
 
 TEST_F(TreeReduce, AutoProducer)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   constexpr std::size_t num_tasks = 3;
   constexpr std::size_t tile_size = TILE_SIZE;
@@ -124,10 +118,8 @@ TEST_F(TreeReduce, AutoProducer)
 
 TEST_F(TreeReduce, ManualProducer)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   constexpr std::size_t num_tasks = 3;
   constexpr std::size_t tile_size = TILE_SIZE;
@@ -146,10 +138,8 @@ TEST_F(TreeReduce, ManualProducer)
 
 TEST_F(TreeReduce, ManualProducerMultiLevel)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   constexpr std::size_t num_tasks = 6;
   constexpr std::size_t tile_size = TILE_SIZE;
@@ -168,10 +158,8 @@ TEST_F(TreeReduce, ManualProducerMultiLevel)
 
 TEST_F(TreeReduce, ManualProducerUnbound)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   // unbound store
   auto store                      = runtime->create_store(legate::int64());
@@ -188,10 +176,8 @@ TEST_F(TreeReduce, ManualProducerUnbound)
 
 TEST_F(TreeReduce, ManualProducerSingle)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   // unbound store
   auto store = runtime->create_store(legate::int64());
@@ -206,10 +192,8 @@ TEST_F(TreeReduce, ManualProducerSingle)
 
 TEST_F(TreeReduce, AutoProducerSingle)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   // unbound store
   auto store = runtime->create_store(legate::int64());

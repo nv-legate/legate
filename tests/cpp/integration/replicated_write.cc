@@ -25,14 +25,6 @@ namespace replicated_write_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using ReplicatedWrite = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_replicated_write";
-
-}  // namespace
-
 struct WriterTask : public legate::LegateTask<WriterTask> {
   static constexpr std::int32_t TASK_ID = 0;
 
@@ -66,17 +58,16 @@ struct WriterTask : public legate::LegateTask<WriterTask> {
 #endif
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_replicated_write";
+  static void registration_callback(legate::Library library)
+  {
+    WriterTask::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  WriterTask::register_variants(library);
-}
+};
+
+class ReplicatedWrite : public RegisterOnceFixture<Config> {};
 
 void validate_output(const legate::LogicalStore& store)
 {
@@ -138,40 +129,32 @@ void test_manual_task(legate::Library library,
 
 TEST_F(ReplicatedWrite, AutoNonScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_auto_task(library, {2, 2}, 1);
   test_auto_task(library, {3, 3}, 2);
 }
 
 TEST_F(ReplicatedWrite, ManualNonScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_manual_task(library, {2, 2}, 1);
   test_manual_task(library, {3, 3}, 2);
 }
 
 TEST_F(ReplicatedWrite, AutoScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_auto_task(library, {1, 1}, 1);
   test_auto_task(library, {1, 1}, 2);
 }
 
 TEST_F(ReplicatedWrite, ManualScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_manual_task(library, {1, 1}, 1);
   test_manual_task(library, {1, 1}, 2);
 }

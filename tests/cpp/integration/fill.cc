@@ -24,8 +24,6 @@ namespace fill_test {
 
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_fill";
-
 constexpr std::size_t SIZE = 10;
 
 }  // namespace
@@ -35,26 +33,6 @@ enum TaskIDs : std::uint8_t {
   CHECK_SLICE_TASK   = 3,
   WRAP_FILL_VAL_TASK = 7,
 };
-
-using FillTests = DefaultFixture;
-
-class Whole : public DefaultFixture,
-              public ::testing::WithParamInterface<std::tuple<bool, std::int32_t, std::size_t>> {};
-
-class Slice : public DefaultFixture,
-              public ::testing::WithParamInterface<std::tuple<bool, bool, std::int32_t>> {};
-
-INSTANTIATE_TEST_SUITE_P(FillTests,
-                         Whole,
-                         ::testing::Combine(::testing::Bool(),
-                                            ::testing::Values(1, 2, 3),
-                                            ::testing::Values(1, SIZE)));
-
-INSTANTIATE_TEST_SUITE_P(FillTests,
-                         Slice,
-                         ::testing::Combine(::testing::Bool(),
-                                            ::testing::Bool(),
-                                            ::testing::Values(1, 2, 3)));
 
 template <std::int32_t DIM>
 struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
@@ -73,13 +51,11 @@ struct WrapFillValueTask : public legate::LegateTask<WrapFillValueTask> {
   static void cpu_variant(legate::TaskContext context);
 };
 
-void register_tasks()
-{
-  bool created = false;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library =
-    runtime->find_or_create_library(LIBRARY_NAME, legate::ResourceConfig{}, nullptr, &created);
-  if (created) {
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_fill";
+  static void registration_callback(legate::Library library)
+  {
     CheckTask<1>::register_variants(library);
     CheckTask<2>::register_variants(library);
     CheckTask<3>::register_variants(library);
@@ -88,7 +64,27 @@ void register_tasks()
     CheckSliceTask<3>::register_variants(library);
     WrapFillValueTask::register_variants(library);
   }
-}
+};
+
+class FillTests : public RegisterOnceFixture<Config> {};
+
+class Whole : public RegisterOnceFixture<Config>,
+              public ::testing::WithParamInterface<std::tuple<bool, std::int32_t, std::size_t>> {};
+
+class Slice : public RegisterOnceFixture<Config>,
+              public ::testing::WithParamInterface<std::tuple<bool, bool, std::int32_t>> {};
+
+INSTANTIATE_TEST_SUITE_P(FillTests,
+                         Whole,
+                         ::testing::Combine(::testing::Bool(),
+                                            ::testing::Values(1, 2, 3),
+                                            ::testing::Values(1, SIZE)));
+
+INSTANTIATE_TEST_SUITE_P(FillTests,
+                         Slice,
+                         ::testing::Combine(::testing::Bool(),
+                                            ::testing::Bool(),
+                                            ::testing::Values(1, 2, 3)));
 
 template <std::int32_t DIM>
 /*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
@@ -173,7 +169,7 @@ template <std::int32_t DIM>
 void check_output(const legate::LogicalArray& array, const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto task = runtime->create_task(context, static_cast<std::int64_t>(CHECK_TASK) + array.dim());
   task.add_input(array);
@@ -187,7 +183,7 @@ void check_output_slice(const legate::LogicalArray& array,
                         std::int64_t offset)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto task =
     runtime->create_task(context, static_cast<std::int64_t>(CHECK_SLICE_TASK) + array.dim());
@@ -201,7 +197,7 @@ void check_output_slice(const legate::LogicalArray& array,
 legate::LogicalStore wrap_fill_value(const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto result  = runtime->create_store(legate::Shape{1}, value.type(), true);
 
   auto task = runtime->create_task(context, WRAP_FILL_VAL_TASK);
@@ -276,7 +272,6 @@ void test_invalid()
 
 TEST_P(Whole, Index)
 {
-  register_tasks();
   const auto& [nullable, dim, size] = GetParam();
   test_fill_index(dim, size, nullable);
 }
@@ -287,14 +282,12 @@ TEST_P(Whole, Single)
   auto machine = runtime->get_machine();
   const legate::Scope scope{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
 
-  register_tasks();
   const auto& [nullable, dim, size] = GetParam();
   test_fill_index(dim, size, nullable);
 }
 
 TEST_P(Slice, Index)
 {
-  register_tasks();
   const auto& [null_init, task_init, dim] = GetParam();
   test_fill_slice(dim, SIZE, null_init, task_init);
 }

@@ -17,14 +17,11 @@
 
 namespace exception {
 
-using Exception = DefaultFixture;
-
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_exception";
-constexpr std::int32_t EXN_IDX          = 42;
-constexpr std::uint32_t NUM_EXN         = 3;
-constexpr std::uint32_t NUM_NORM        = 7;
+constexpr std::int32_t EXN_IDX   = 42;
+constexpr std::uint32_t NUM_EXN  = 3;
+constexpr std::uint32_t NUM_NORM = 7;
 
 }  // namespace
 
@@ -46,23 +43,22 @@ struct NormalTask : public legate::LegateTask<NormalTask> {
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_exception";
+  static void registration_callback(legate::Library library)
+  {
+    ExceptionTask::register_variants(library);
+    NormalTask::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  ExceptionTask::register_variants(library);
-  NormalTask::register_variants(library);
-}
+};
+
+class Exception : public RegisterOnceFixture<Config> {};
 
 legate::AutoTask create_auto()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(library, ExceptionTask::TASK_ID);
   task.throws_exception(true);
   task.add_scalar_arg(legate::Scalar{EXN_IDX});
@@ -72,7 +68,7 @@ legate::AutoTask create_auto()
 legate::ManualTask create_manual()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto task =
     runtime->create_task(library, ExceptionTask::TASK_ID, legate::tuple<std::uint64_t>{4, 2});
   task.throws_exception(true);
@@ -105,7 +101,7 @@ void test_immediate_index()
 void test_deferred_or_ignored(legate::ExceptionMode exception_mode)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(legate::Shape{4, 2}, legate::int64());
 
   {
@@ -135,28 +131,12 @@ void test_deferred_or_ignored(legate::ExceptionMode exception_mode)
   }
 }
 
-TEST_F(Exception, ImmediateSingle)
-{
-  prepare();
-  test_immediate_single();
-}
+TEST_F(Exception, ImmediateSingle) { test_immediate_single(); }
 
-TEST_F(Exception, ImmediateIndex)
-{
-  prepare();
-  test_immediate_index();
-}
+TEST_F(Exception, ImmediateIndex) { test_immediate_index(); }
 
-TEST_F(Exception, Deferred)
-{
-  prepare();
-  test_deferred_or_ignored(legate::ExceptionMode::DEFERRED);
-}
+TEST_F(Exception, Deferred) { test_deferred_or_ignored(legate::ExceptionMode::DEFERRED); }
 
-TEST_F(Exception, Ignored)
-{
-  prepare();
-  test_deferred_or_ignored(legate::ExceptionMode::IGNORED);
-}
+TEST_F(Exception, Ignored) { test_deferred_or_ignored(legate::ExceptionMode::IGNORED); }
 
 }  // namespace exception

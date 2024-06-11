@@ -19,7 +19,7 @@ namespace copy_failure {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Copy = DefaultFixture;
+using InvalidCopy = DefaultFixture;
 
 void test_invalid_stores()
 {
@@ -125,15 +125,15 @@ void test_dimension_mismatch_failure()
                std::invalid_argument);
 }
 
-TEST_F(Copy, FailureInvalidStores) { test_invalid_stores(); }
+TEST_F(InvalidCopy, InvalidStores) { test_invalid_stores(); }
 
-TEST_F(Copy, FailureDifferentTypes) { test_type_check_failure(); }
+TEST_F(InvalidCopy, DifferentTypes) { test_type_check_failure(); }
 
-TEST_F(Copy, FailureDifferentShapes) { test_shape_check_failure(); }
+TEST_F(InvalidCopy, DifferentShapes) { test_shape_check_failure(); }
 
-TEST_F(Copy, FailureNonPointTypes) { test_non_point_types_failure(); }
+TEST_F(InvalidCopy, NonPointTypes) { test_non_point_types_failure(); }
 
-TEST_F(Copy, FailureDimensionMismatch) { test_dimension_mismatch_failure(); }
+TEST_F(InvalidCopy, DimensionMismatch) { test_dimension_mismatch_failure(); }
 
 // NOLINTEND(readability-magic-numbers)
 

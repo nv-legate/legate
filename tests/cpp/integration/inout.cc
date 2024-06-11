@@ -19,8 +19,6 @@ namespace inout {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Integration = DefaultFixture;
-
 namespace {
 
 constexpr std::string_view LIBRARY_NAME = "test_inout";
@@ -84,18 +82,19 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
   }
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class InOut : public ::testing::Test {
+ public:
+  void SetUp() override
+  {
+    auto runtime = legate::Runtime::get_runtime();
+    auto created = false;
+    auto library = runtime->find_or_create_library(
+      LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<TesterMapper>(), &created);
+    if (created) {
+      InoutTask::register_variants(library);
+    }
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(
-    LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<TesterMapper>());
-  InoutTask::register_variants(library);
-}
+};
 
 void test_inout()
 {
@@ -126,11 +125,7 @@ void test_inout()
   }
 }
 
-TEST_F(Integration, InOut)
-{
-  register_tasks();
-  test_inout();
-}
+TEST_F(InOut, All) { test_inout(); }
 
 // NOLINTEND(readability-magic-numbers)
 

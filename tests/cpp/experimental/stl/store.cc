@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
-using STL = LegateSTLFixture;
+using STL = DefaultFixture;
 
 namespace stl = legate::experimental::stl;
 

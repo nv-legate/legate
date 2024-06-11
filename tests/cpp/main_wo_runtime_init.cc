@@ -62,13 +62,8 @@ const char* __tsan_default_suppressions()
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
-  // Order is important, as DeathTestFixture may override this
+
   GTEST_FLAG_SET(death_test_style, "fast");
-  DefaultFixture::init(argc, argv);
-  DeathTestFixture::init(argc, argv);
-  NoInitFixture::init(argc, argv);
-  DeathTestNoInitFixture::init(argc, argv);
-  LegateSTLFixture::init(argc, argv);
 
   return RUN_ALL_TESTS();
 }

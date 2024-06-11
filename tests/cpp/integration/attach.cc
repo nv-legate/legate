@@ -19,25 +19,7 @@
 
 namespace attach {
 
-using Attach = DefaultFixture;
-
-class Positive : public DefaultFixture,
-                 public ::testing::WithParamInterface<
-                   std::tuple<std::pair<int32_t, bool>, bool, bool, bool, bool>> {};
-
-INSTANTIATE_TEST_SUITE_P(Attach,
-                         Positive,
-                         ::testing::Combine(::testing::Values(std::make_pair(1, false),
-                                                              std::make_pair(2, false),
-                                                              std::make_pair(2, true)),
-                                            ::testing::Bool(),
-                                            ::testing::Bool(),
-                                            ::testing::Bool(),
-                                            ::testing::Bool()));
-
 namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_attach";
 
 [[nodiscard]] const legate::tuple<std::uint64_t>& SHAPE_1D()
 {
@@ -123,18 +105,31 @@ struct CheckerTask : public legate::LegateTask<CheckerTask> {
   }
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_attach";
+  static void registration_callback(legate::Library library)
+  {
+    AdderTask::register_variants(library);
+    CheckerTask::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  AdderTask::register_variants(context);
-  CheckerTask::register_variants(context);
-}
+};
+
+class Attach : public RegisterOnceFixture<Config> {};
+
+class Positive : public RegisterOnceFixture<Config>,
+                 public ::testing::WithParamInterface<
+                   std::tuple<std::pair<int32_t, bool>, bool, bool, bool, bool>> {};
+
+INSTANTIATE_TEST_SUITE_P(Attach,
+                         Positive,
+                         ::testing::Combine(::testing::Values(std::make_pair(1, false),
+                                                              std::make_pair(2, false),
+                                                              std::make_pair(2, true)),
+                                            ::testing::Bool(),
+                                            ::testing::Bool(),
+                                            ::testing::Bool(),
+                                            ::testing::Bool()));
 
 int64_t* make_buffer(std::int32_t dim, bool fortran)
 {
@@ -184,7 +179,7 @@ void test_body(
   std::int32_t dim, bool fortran, bool unordered, bool read_only, bool use_tasks, bool use_inline)
 {
   auto runtime         = legate::Runtime::get_runtime();
-  auto context         = runtime->find_library(LIBRARY_NAME);
+  auto context         = runtime->find_library(Config::LIBRARY_NAME);
   std::int64_t counter = 0;
   auto buffer          = make_buffer(dim, fortran);
   auto l_store         = runtime->create_store(dim == 1 ? SHAPE_1D() : SHAPE_2D(),
@@ -236,7 +231,6 @@ void test_body(
 
 TEST_P(Positive, Test)
 {
-  register_tasks();
   // It's helpful to combine multiple calls of this function together, with stores collected
   // in-between, in hopes of triggering consensus match.
   // TODO(wonchanl): Also try keeping multiple stores alive at one time.
@@ -247,7 +241,6 @@ TEST_P(Positive, Test)
 
 TEST_F(Attach, Negative)
 {
-  register_tasks();
   auto runtime = legate::Runtime::get_runtime();
 
   // Trying to detach a store without an attachment

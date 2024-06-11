@@ -17,14 +17,11 @@
 
 namespace bloat_constraints {
 
-using BloatConstraint = DefaultFixture;
-
 // NOLINTBEGIN(readability-magic-numbers)
 
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_bloat_constraints";
-constexpr std::int64_t BLOAT_TESTER     = 0;
+constexpr std::int64_t BLOAT_TESTER = 0;
 
 }  // namespace
 
@@ -60,19 +57,18 @@ struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_bloat_constraints";
+  static void registration_callback(legate::Library library)
+  {
+    BloatTester<1>::register_variants(library);
+    BloatTester<2>::register_variants(library);
+    BloatTester<3>::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  BloatTester<1>::register_variants(context);
-  BloatTester<2>::register_variants(context);
-  BloatTester<3>::register_variants(context);
-}
+};
+
+class BloatConstraint : public RegisterOnceFixture<Config> {};
 
 struct BloatTestSpec {
   legate::tuple<std::uint64_t> extents;
@@ -83,7 +79,7 @@ struct BloatTestSpec {
 void test_bloat(const BloatTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto source  = runtime->create_store(spec.extents, legate::int64());
   auto bloated = runtime->create_store(spec.extents, legate::int64());
@@ -105,7 +101,7 @@ void test_bloat(const BloatTestSpec& spec)
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   {
     auto source  = runtime->create_store(legate::Shape{1, 2}, legate::float16());
@@ -155,7 +151,6 @@ void test_invalid()
 
 TEST_F(BloatConstraint, 1D)
 {
-  prepare();
   test_bloat({legate::tuple<std::uint64_t>{10},
               legate::tuple<std::uint64_t>{2},
               legate::tuple<std::uint64_t>{4}});
@@ -163,7 +158,6 @@ TEST_F(BloatConstraint, 1D)
 
 TEST_F(BloatConstraint, 2D)
 {
-  prepare();
   test_bloat({legate::tuple<std::uint64_t>{9, 9},
               legate::tuple<std::uint64_t>{2, 3},
               legate::tuple<std::uint64_t>{3, 4}});
@@ -171,17 +165,12 @@ TEST_F(BloatConstraint, 2D)
 
 TEST_F(BloatConstraint, 3D)
 {
-  prepare();
   test_bloat({legate::tuple<std::uint64_t>{10, 10, 10},
               legate::tuple<std::uint64_t>{2, 3, 4},
               legate::tuple<std::uint64_t>{4, 3, 2}});
 }
 
-TEST_F(BloatConstraint, Invalid)
-{
-  prepare();
-  test_invalid();
-}
+TEST_F(BloatConstraint, Invalid) { test_invalid(); }
 
 // NOLINTEND(readability-magic-numbers)
 

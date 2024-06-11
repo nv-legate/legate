@@ -21,8 +21,6 @@ namespace {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-constexpr std::string_view LIBRARY_NAME = "test_timing";
-
 void hello_cpu_variant(legate::TaskContext& context)
 {
   auto output = context.output(0).data();
@@ -42,20 +40,21 @@ struct HelloTask : legate::LegateTask<HelloTask> {
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); };
 };
 
-struct Timing : DefaultFixture {
-  void SetUp() override
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_timing";
+  static void registration_callback(legate::Library library)
   {
-    DefaultFixture::SetUp();
-    auto runtime = legate::Runtime::get_runtime();
-    auto library = runtime->create_library(LIBRARY_NAME);
     HelloTask::register_variants(library);
   }
 };
 
+class Timing : public RegisterOnceFixture<Config> {};
+
 void test_hello_task()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(legate::Shape{1000, 1000}, legate::int64());
   auto task    = runtime->create_task(library, HelloTask::TASK_ID);
   auto part    = task.declare_partition();

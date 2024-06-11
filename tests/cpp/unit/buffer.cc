@@ -19,13 +19,10 @@
 
 namespace buffer_test {
 
-using BufferUnit = DefaultFixture;
-
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "legate.buffer";
-constexpr std::int64_t BUFFER_TASK_ID   = 0;
-constexpr auto MAX_ALIGNMENT            = 16;
+constexpr std::int64_t BUFFER_TASK_ID = 0;
+constexpr auto MAX_ALIGNMENT          = 16;
 
 }  // namespace
 
@@ -84,13 +81,24 @@ struct BufferTask : public legate::LegateTask<BufferTask> {
                        buffer_params.alignment);
 }
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "legate.buffer";
+  static void registration_callback(legate::Library library)
+  {
+    BufferTask::register_variants(library);
+  }
+};
+
+class BufferUnit : public RegisterOnceFixture<Config> {};
+
 void test_buffer(std::int32_t dim,
                  std::uint64_t bytes,
                  legate::Memory::Kind kind,
                  std::size_t alignment = MAX_ALIGNMENT)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(LIBRARY_NAME);
+  auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto task          = runtime->create_task(context, BUFFER_TASK_ID);
   BufferParams param = {dim, bytes, static_cast<std::uint64_t>(kind), alignment};
   task.add_scalar_arg(
@@ -100,22 +108,8 @@ void test_buffer(std::int32_t dim,
   runtime->submit(std::move(task));
 }
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  BufferTask::register_variants(context);
-}
-
 TEST_F(BufferUnit, CreateBuffer)
 {
-  register_tasks();
-
   // Todo: need to add tests for REGDMA_MEM
   const auto memtypes = {legate::Memory::SYSTEM_MEM,
                          legate::Memory::NO_MEMKIND,
@@ -131,8 +125,6 @@ TEST_F(BufferUnit, CreateBuffer)
 
 TEST_F(BufferUnit, NegativeTest)
 {
-  register_tasks();
-
   test_buffer(1, 0, legate::Memory::SYSTEM_MEM);
   // NOLINTNEXTLINE(readability-magic-numbers)
   test_buffer(2, 10, legate::Memory::SYSTEM_MEM, 0);

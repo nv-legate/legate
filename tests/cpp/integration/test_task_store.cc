@@ -24,8 +24,6 @@ namespace test_task_store {
 //
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Runtime = DefaultFixture;
-
 enum class StoreType : std::uint8_t {
   NORMAL_STORE  = 0,
   UNBOUND_STORE = 1,
@@ -40,10 +38,9 @@ enum class TaskDataMode : std::uint8_t {
 
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_task_store";
-constexpr std::int32_t INT_VALUE1       = 123;
-constexpr std::int32_t INT_VALUE2       = 20;
-constexpr std::int32_t SIMPLE_TASK      = 0;
+constexpr std::int32_t INT_VALUE1  = 123;
+constexpr std::int32_t INT_VALUE2  = 20;
+constexpr std::int32_t SIMPLE_TASK = 0;
 
 [[nodiscard]] const std::map<TaskDataMode, std::int32_t>& auto_task_method_count()
 {
@@ -136,6 +133,19 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
     }
   }
 };
+
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_task_store";
+  static void registration_callback(legate::Library library)
+  {
+    SimpleTask<1>::register_variants(library);
+    SimpleTask<2>::register_variants(library);
+    SimpleTask<3>::register_variants(library);
+  }
+};
+
+class TaskStoreTests : public RegisterOnceFixture<Config> {};
 
 struct VerifyOutputBody {
   template <std::int32_t DIM>
@@ -234,7 +244,7 @@ legate::LogicalStore create_scalar_store()
 void auto_task_normal_input(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::INPUT);
@@ -257,7 +267,7 @@ void auto_task_normal_input(const legate::LogicalArray& array, std::uint32_t ind
 void auto_task_normal_output(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
@@ -285,7 +295,7 @@ void auto_task_normal_output(const legate::LogicalArray& array, std::uint32_t in
 void auto_task_normal_reduction(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::REDUCTION);
@@ -321,7 +331,7 @@ void auto_task_normal_reduction(const legate::LogicalArray& array, std::uint32_t
 void auto_task_unbound_input(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   switch (index) {
@@ -337,7 +347,7 @@ void auto_task_unbound_input(const legate::LogicalArray& array, std::uint32_t in
 void auto_task_unbound_output(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
@@ -361,7 +371,7 @@ void auto_task_unbound_output(const legate::LogicalArray& array, std::uint32_t i
 void auto_task_unbound_reduction(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   constexpr auto red_op = legate::ReductionOpKind::ADD;
@@ -392,7 +402,7 @@ void manual_task_normal_input(const legate::LogicalStore& store,
                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -422,7 +432,7 @@ void manual_task_normal_output(const legate::LogicalStore& store,
                                const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -455,7 +465,7 @@ void manual_task_normal_reduction(const legate::LogicalStore& store,
                                   const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -499,7 +509,7 @@ void manual_task_unbound_input(const legate::LogicalStore& store,
                                const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -514,7 +524,7 @@ void manual_task_unbound_output(const legate::LogicalStore& store,
                                 const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -541,7 +551,7 @@ void manual_task_unbound_reduction(const legate::LogicalStore& store,
                                    const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -563,7 +573,7 @@ void manual_task_scalar_input(const legate::LogicalStore& store,
                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -592,7 +602,7 @@ void manual_task_scalar_output(const legate::LogicalStore& store,
                                const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -625,7 +635,7 @@ void manual_task_scalar_reduction(const legate::LogicalStore& store,
                                   const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
     context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
@@ -659,38 +669,22 @@ void manual_task_scalar_reduction(const legate::LogicalStore& store,
     static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared = true;
-
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-
-  SimpleTask<1>::register_variants(context);
-  SimpleTask<2>::register_variants(context);
-  SimpleTask<3>::register_variants(context);
-}
-
 class AutoTaskNormal
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<std::tuple<std::int32_t, std::int32_t, legate::Shape>> {};
 class AutoTaskNormalInput : public AutoTaskNormal {};
 class AutoTaskNormalOutput : public AutoTaskNormal {};
 class AutoTaskNormalReduction : public AutoTaskNormal {};
 
 class AutoTaskUnbound
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<std::tuple<std::int32_t, std::int32_t, std::uint32_t>> {};
 class AutoTaskUnboundInput : public AutoTaskUnbound {};
 class AutoTaskUnboundOutput : public AutoTaskUnbound {};
 class AutoTaskUnboundReduction : public AutoTaskUnbound {};
 
 class ManualTaskNormal
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<
       std::tuple<std::int32_t,
                  std::int32_t,
@@ -699,7 +693,7 @@ class ManualTaskNormalInput : public ManualTaskNormal {};
 class ManualTaskNormalOutput : public ManualTaskNormal {};
 class ManualTaskNormalReduction : public ManualTaskNormal {};
 
-class ManualTaskUnbound : public DefaultFixture,
+class ManualTaskUnbound : public TaskStoreTests,
                           public ::testing::WithParamInterface<
                             std::tuple<std::int32_t, std::tuple<std::uint32_t, legate::Shape>>> {};
 class ManualTaskUnboundInput : public ManualTaskUnbound {};
@@ -707,7 +701,7 @@ class ManualTaskUnboundOutput : public ManualTaskUnbound {};
 class ManualTaskUnboundReduction : public ManualTaskUnbound {};
 
 class ManualTaskScalar
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<
       std::tuple<std::int32_t, std::tuple<legate::Shape, std::vector<std::uint64_t>>>> {};
 class ManualTaskScalarInput : public ManualTaskScalar {};
@@ -872,48 +866,42 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AutoTaskNormalInput, Basic)
 {
   auto [index1, index2, shape] = GetParam();
-  prepare();
-  auto array = create_normal_array(index1, shape);
+  auto array                   = create_normal_array(index1, shape);
   auto_task_normal_input(array, index2);
 }
 
 TEST_P(AutoTaskNormalOutput, Basic)
 {
   auto [index1, index2, shape] = GetParam();
-  prepare();
-  auto array = create_normal_array(index1, shape);
+  auto array                   = create_normal_array(index1, shape);
   auto_task_normal_output(array, index2);
 }
 
 TEST_P(AutoTaskNormalReduction, Basic)
 {
   auto [index1, index2, shape] = GetParam();
-  prepare();
-  auto array = create_normal_array(index1, shape);
+  auto array                   = create_normal_array(index1, shape);
   auto_task_normal_reduction(array, index2);
 }
 
 TEST_P(AutoTaskUnboundInput, Basic)
 {
   auto [index1, index2, ndim] = GetParam();
-  prepare();
-  auto array = create_unbound_array(index1, ndim);
+  auto array                  = create_unbound_array(index1, ndim);
   auto_task_unbound_input(array, index2);
 }
 
 TEST_P(AutoTaskUnboundOutput, Basic)
 {
   auto [index1, index2, ndim] = GetParam();
-  prepare();
-  auto array = create_unbound_array(index1, ndim);
+  auto array                  = create_unbound_array(index1, ndim);
   auto_task_unbound_output(array, index2);
 }
 
 TEST_P(AutoTaskUnboundReduction, Basic)
 {
   auto [index1, index2, ndim] = GetParam();
-  prepare();
-  auto array = create_unbound_array(index1, ndim);
+  auto array                  = create_unbound_array(index1, ndim);
   auto_task_unbound_reduction(array, index2);
 }
 
@@ -921,8 +909,7 @@ TEST_P(ManualTaskNormalInput, Basic)
 {
   auto [index1, index2, shapes]                = GetParam();
   auto [store_shape, launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_normal_store(index1, store_shape);
+  auto store                                   = create_normal_store(index1, store_shape);
   manual_task_normal_input(store, index2, launch_shape.extents(), tile_shape);
 }
 
@@ -930,8 +917,7 @@ TEST_P(ManualTaskNormalOutput, Basic)
 {
   auto [index1, index2, shapes]                = GetParam();
   auto [store_shape, launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_normal_store(index1, store_shape);
+  auto store                                   = create_normal_store(index1, store_shape);
   manual_task_normal_output(store, index2, launch_shape.extents(), tile_shape);
 }
 
@@ -939,8 +925,7 @@ TEST_P(ManualTaskNormalReduction, Basic)
 {
   auto [index1, index2, shapes]                = GetParam();
   auto [store_shape, launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_normal_store(index1, store_shape);
+  auto store                                   = create_normal_store(index1, store_shape);
   manual_task_normal_reduction(store, index2, launch_shape.extents(), tile_shape);
 }
 
@@ -948,8 +933,7 @@ TEST_P(ManualTaskUnboundInput, Basic)
 {
   auto [index, ndim_lanuch_shape] = GetParam();
   auto [ndim, launch_shape]       = ndim_lanuch_shape;
-  prepare();
-  auto store = create_unbound_store(ndim);
+  auto store                      = create_unbound_store(ndim);
   manual_task_unbound_input(store, index, launch_shape.extents());
 }
 
@@ -957,8 +941,7 @@ TEST_P(ManualTaskUnboundOutput, Basic)
 {
   auto [index, ndim_lanuch_shape] = GetParam();
   auto [ndim, launch_shape]       = ndim_lanuch_shape;
-  prepare();
-  auto store = create_unbound_store(ndim);
+  auto store                      = create_unbound_store(ndim);
   manual_task_unbound_output(store, index, launch_shape.extents());
 }
 
@@ -966,8 +949,7 @@ TEST_P(ManualTaskUnboundReduction, Basic)
 {
   auto [index, ndim_lanuch_shape] = GetParam();
   auto [ndim, launch_shape]       = ndim_lanuch_shape;
-  prepare();
-  auto store = create_unbound_store(ndim);
+  auto store                      = create_unbound_store(ndim);
   manual_task_unbound_reduction(store, index, launch_shape.extents());
 }
 
@@ -975,8 +957,7 @@ TEST_P(ManualTaskScalarInput, Basic)
 {
   auto [index, shapes]            = GetParam();
   auto [launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_scalar_store();
+  auto store                      = create_scalar_store();
   manual_task_scalar_input(store, index, launch_shape.extents(), tile_shape);
 }
 
@@ -984,8 +965,7 @@ TEST_P(ManualTaskScalarOutput, Basic)
 {
   auto [index, shapes]            = GetParam();
   auto [launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_scalar_store();
+  auto store                      = create_scalar_store();
   manual_task_scalar_output(store, index, launch_shape.extents(), tile_shape);
 }
 
@@ -993,17 +973,14 @@ TEST_P(ManualTaskScalarReduction, Basic)
 {
   const auto& [index, shapes]            = GetParam();
   const auto& [launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_scalar_store();
+  auto store                             = create_scalar_store();
   manual_task_scalar_reduction(store, index, launch_shape.extents(), tile_shape);
 }
 
-TEST_F(Runtime, CreateTaskInvalid)
+TEST_F(TaskStoreTests, CreateTaskInvalid)
 {
-  prepare();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   EXPECT_THROW(static_cast<void>(runtime->create_task(context, -100)), std::out_of_range);
   EXPECT_THROW(

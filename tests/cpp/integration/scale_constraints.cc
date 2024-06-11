@@ -21,14 +21,6 @@ namespace scale_constraints {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using ScaleConstraint = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_scale_constraints";
-
-}  // namespace
-
 enum TaskIDs : std::uint8_t {
   SCALE_TESTER = 0,
 };
@@ -63,19 +55,18 @@ struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_scale_constraints";
+  static void registration_callback(legate::Library library)
+  {
+    ScaleTester<1>::register_variants(library);
+    ScaleTester<2>::register_variants(library);
+    ScaleTester<3>::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  ScaleTester<1>::register_variants(context);
-  ScaleTester<2>::register_variants(context);
-  ScaleTester<3>::register_variants(context);
-}
+};
+
+class ScaleConstraint : public RegisterOnceFixture<Config> {};
 
 struct ScaleTestSpec {
   legate::tuple<std::uint64_t> factors;
@@ -86,7 +77,7 @@ struct ScaleTestSpec {
 void test_scale(const ScaleTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto smaller = runtime->create_store(spec.smaller_extents, legate::float16());
   auto bigger  = runtime->create_store(spec.bigger_extents, legate::int64());
@@ -105,7 +96,7 @@ void test_scale(const ScaleTestSpec& spec)
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   {
     auto smaller = runtime->create_store(legate::Shape{1, 2}, legate::float16());
@@ -132,29 +123,13 @@ void test_invalid()
   }
 }
 
-TEST_F(ScaleConstraint, 1D)
-{
-  prepare();
-  test_scale({{3}, {10}, {29}});
-}
+TEST_F(ScaleConstraint, 1D) { test_scale({{3}, {10}, {29}}); }
 
-TEST_F(ScaleConstraint, 2D)
-{
-  prepare();
-  test_scale({{4, 5}, {2, 7}, {10, 30}});
-}
+TEST_F(ScaleConstraint, 2D) { test_scale({{4, 5}, {2, 7}, {10, 30}}); }
 
-TEST_F(ScaleConstraint, 3D)
-{
-  prepare();
-  test_scale({{2, 3, 4}, {5, 5, 5}, {10, 15, 20}});
-}
+TEST_F(ScaleConstraint, 3D) { test_scale({{2, 3, 4}, {5, 5, 5}, {10, 15, 20}}); }
 
-TEST_F(ScaleConstraint, Invalid)
-{
-  prepare();
-  test_invalid();
-}
+TEST_F(ScaleConstraint, Invalid) { test_invalid(); }
 
 // NOLINTEND(readability-magic-numbers)
 

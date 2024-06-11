@@ -17,8 +17,6 @@
 
 namespace projection_test {
 
-using ProjectionTest = DefaultFixture;
-
 namespace {
 
 constexpr std::uint64_t BIGGER_EXTENT = 200;
@@ -80,11 +78,22 @@ struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
   }
 };
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "lib_projection_test";
+  static void registration_callback(legate::Library library)
+  {
+    ExtraProjectionTester::register_variants(library);
+    DelinearizeTester::register_variants(library);
+  }
+};
+
+class ProjectionTest : public RegisterOnceFixture<Config> {};
+
 void test_extra_projection(const legate::LogicalArray& arr1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_or_create_library("lib_projection_test");
-  ExtraProjectionTester::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto arr2 =
     runtime->create_array(legate::Shape{BIG_EXTENT, SMALL_EXTENT, SMALL_EXTENT}, legate::int64());
@@ -97,8 +106,7 @@ void test_extra_projection(const legate::LogicalArray& arr1)
 void test_delinearization(const legate::LogicalArray& arr1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_or_create_library("lib_projection_test");
-  DelinearizeTester::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto arr2 =
     runtime->create_array(legate::Shape{BIG_EXTENT, BIG_EXTENT, SMALL_EXTENT}, legate::int64());

@@ -10,26 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#pragma once
-
-#include "core/mapping/mapping.h"
-
 #include "legate.h"
 
-namespace task::region_manager {
+#include <gtest/gtest.h>
+#include <thread>
 
-enum TaskOpCode {
-  PROVENANCE = 0,
-};
+namespace test_is_running_in_task_noinit {
 
-constexpr std::string_view LIBRARY_NAME = "test_region_manager";
+using IsRunningInTaskNoRuntime = ::testing::Test;
 
-void register_tasks();
+TEST_F(IsRunningInTaskNoRuntime, BeforeInit) { EXPECT_FALSE(legate::is_running_in_task()); }
 
-struct TesterTask : public legate::LegateTask<TesterTask> {
-  static constexpr std::int32_t TASK_ID = 0;
+TEST_F(IsRunningInTaskNoRuntime, UserThread)
+{
+  std::thread thd{[] { EXPECT_FALSE(legate::is_running_in_task()); }};
+  thd.join();
+}
 
-  static void cpu_variant(legate::TaskContext context);
-};
-
-}  // namespace task::region_manager
+}  // namespace test_is_running_in_task_noinit

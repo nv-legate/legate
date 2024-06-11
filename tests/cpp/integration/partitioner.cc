@@ -17,15 +17,7 @@
 
 namespace partitioner_test {
 
-using PartitionerTest = DefaultFixture;
-
 // NOLINTBEGIN(readability-magic-numbers)
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_partitioner";
-
-}  // namespace
 
 struct Initializer : public legate::LegateTask<Initializer> {
   static const std::int32_t TASK_ID = 0;
@@ -37,12 +29,22 @@ struct Checker : public legate::LegateTask<Checker> {
   static void cpu_variant(legate::TaskContext context) { EXPECT_FALSE(context.is_single_task()); }
 };
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_partitioner";
+  static void registration_callback(legate::Library library)
+  {
+    Initializer::register_variants(library);
+    Checker::register_variants(library);
+  }
+};
+
+class PartitionerTest : public RegisterOnceFixture<Config> {};
+
 TEST_F(PartitionerTest, FavorPartitionedStore)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Initializer::register_variants(library);
-  Checker::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto store1 = runtime->create_store(legate::Shape{10, 10}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{10, 10}, legate::int64());

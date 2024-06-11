@@ -17,15 +17,7 @@
 
 namespace scalarout {
 
-using Integration = DefaultFixture;
-
 // NOLINTBEGIN(readability-magic-numbers)
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_scalar_out";
-
-}  // namespace
 
 struct Copy : public legate::LegateTask<Copy> {
   static constexpr std::int32_t TASK_ID = 0;
@@ -44,17 +36,18 @@ struct Copy : public legate::LegateTask<Copy> {
   }
 };
 
-void register_tasks()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Copy::register_variants(library);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_scalar_out";
+  static void registration_callback(legate::Library library) { Copy::register_variants(library); }
+};
+
+class ScalarOut : public RegisterOnceFixture<Config> {};
 
 void test_scalar_out()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   const legate::Shape extents{16};
   auto input  = runtime->create_store(extents, legate::int64(), false /* optimize_scalar */);
@@ -76,11 +69,7 @@ void test_scalar_out()
   EXPECT_EQ(acc[0], 123);
 }
 
-TEST_F(Integration, ScalarOut)
-{
-  register_tasks();
-  test_scalar_out();
-}
+TEST_F(ScalarOut, All) { test_scalar_out(); }
 
 // NOLINTEND(readability-magic-numbers)
 

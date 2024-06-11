@@ -17,21 +17,6 @@
 
 namespace test_find_memory_kind {
 
-using FindMemoryKind = DefaultFixture;
-
-constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
-
-TEST_F(FindMemoryKind, Toplevel)
-{
-  // Control code is running on a CPU
-  // FIXME(wonchanl): This can change once we start doing single-GPU acceleration
-  EXPECT_EQ(legate::find_memory_kind_for_executing_processor(), legate::Memory::Kind::SYSTEM_MEM);
-  EXPECT_EQ(legate::find_memory_kind_for_executing_processor(true),
-            legate::Memory::Kind::SYSTEM_MEM);
-  EXPECT_EQ(legate::find_memory_kind_for_executing_processor(false),
-            legate::Memory::Kind::SYSTEM_MEM);
-}
-
 struct Checker : public legate::LegateTask<Checker> {
   static constexpr std::int32_t TASK_ID = 0;
   static void cpu_variant(legate::TaskContext /*context*/)
@@ -52,11 +37,32 @@ struct Checker : public legate::LegateTask<Checker> {
   }
 };
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_is_running_in_task";
+  static void registration_callback(legate::Library library)
+  {
+    Checker::register_variants(library);
+  }
+};
+
+class FindMemoryKind : public RegisterOnceFixture<Config> {};
+
+TEST_F(FindMemoryKind, Toplevel)
+{
+  // Control code is running on a CPU
+  // FIXME(wonchanl): This can change once we start doing single-GPU acceleration
+  EXPECT_EQ(legate::find_memory_kind_for_executing_processor(), legate::Memory::Kind::SYSTEM_MEM);
+  EXPECT_EQ(legate::find_memory_kind_for_executing_processor(true),
+            legate::Memory::Kind::SYSTEM_MEM);
+  EXPECT_EQ(legate::find_memory_kind_for_executing_processor(false),
+            legate::Memory::Kind::SYSTEM_MEM);
+}
+
 TEST_F(FindMemoryKind, InSingleTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Checker::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   runtime->submit(runtime->create_task(library, Checker::TASK_ID));
 }
@@ -64,19 +70,10 @@ TEST_F(FindMemoryKind, InSingleTask)
 TEST_F(FindMemoryKind, InIndexTask)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Checker::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   runtime->submit(
     runtime->create_task(library, Checker::TASK_ID, legate::tuple<std::uint64_t>{2, 2}));
-}
-
-using FindMemoryKindNoRuntime = ::testing::Test;
-
-TEST_F(FindMemoryKindNoRuntime, BeforeInit)
-{
-  EXPECT_THROW(static_cast<void>(legate::find_memory_kind_for_executing_processor()),
-               std::runtime_error);
 }
 
 }  // namespace test_find_memory_kind

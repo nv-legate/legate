@@ -19,14 +19,6 @@ namespace mixed_dim {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Partitioner = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_mixed_dim";
-
-}  // namespace
-
 struct Tester : public legate::LegateTask<Tester> {
   static constexpr std::int32_t TASK_ID = 0;
 
@@ -37,11 +29,18 @@ struct Tester : public legate::LegateTask<Tester> {
   }
 };
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_mixed_dim";
+  static void registration_callback(legate::Library library) { Tester::register_variants(library); }
+};
+
+class Partitioner : public RegisterOnceFixture<Config> {};
+
 TEST_F(Partitioner, MixedDim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Tester::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto test = [&runtime, &library](
                 std::int32_t unbound_ndim, const auto& extents1, const auto& extents2) {

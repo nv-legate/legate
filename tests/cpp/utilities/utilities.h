@@ -12,72 +12,25 @@
 
 #pragma once
 
-#include "core/experimental/stl/detail/registrar.hpp"
+#include "legate.h"
 
 #include <gtest/gtest.h>
-#include <optional>
 
-class BaseFixture : public ::testing::Test {
- public:
-  static void init(int argc, char** argv)
-  {
-    BaseFixture::argc_ = argc;
-    BaseFixture::argv_ = argv;
-  }
+using DefaultFixture = ::testing::Test;
 
-  static inline int argc_{};
-  static inline char** argv_{};
-};
-
-class DefaultFixture : public BaseFixture {
+template <typename Config>
+class RegisterOnceFixture : public ::testing::Test {
  public:
   void SetUp() override
   {
-    ASSERT_EQ(legate::start(argc_, argv_), 0);
-    BaseFixture::SetUp();
-  }
-
-  void TearDown() override
-  {
-    ASSERT_EQ(legate::finish(), 0);
-    BaseFixture::TearDown();
-  }
-};
-
-class DeathTestFixture : public DefaultFixture {
- public:
-  void SetUp() override
-  {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
     DefaultFixture::SetUp();
+    auto runtime = legate::Runtime::get_runtime();
+    auto created = false;
+    auto library = runtime->find_or_create_library(
+      Config::LIBRARY_NAME, legate::ResourceConfig{}, nullptr, &created);
+    if (!created) {
+      return;
+    }
+    Config::registration_callback(library);
   }
-};
-
-using NoInitFixture = BaseFixture;
-
-class DeathTestNoInitFixture : public NoInitFixture {
- public:
-  void SetUp() override
-  {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
-    NoInitFixture::SetUp();
-  }
-};
-
-class LegateSTLFixture : public NoInitFixture {
- public:
-  void SetUp() override
-  {
-    ASSERT_EQ(init_.emplace(argc_, argv_).result(), 0);
-    NoInitFixture::SetUp();
-  }
-
-  void TearDown() override
-  {
-    init_.reset();
-    NoInitFixture::TearDown();
-  }
-
- private:
-  inline static std::optional<legate::experimental::stl::initialize_library> init_{};
 };

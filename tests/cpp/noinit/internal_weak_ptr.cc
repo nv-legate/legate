@@ -19,7 +19,7 @@
 using BasicSharedPtrTypeList = ::testing::Types<std::int8_t, std::int32_t, std::uint64_t>;
 
 template <typename>
-using InternalWeakPtrUnit = NoInitFixture;
+using InternalWeakPtrUnit = ::testing::Test;
 
 TYPED_TEST_SUITE(InternalWeakPtrUnit, BasicSharedPtrTypeList, );
 

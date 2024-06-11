@@ -18,22 +18,24 @@
 
 namespace copy_scatter {
 
-using Copy = DefaultFixture;
-
 // NOLINTBEGIN(readability-magic-numbers)
+
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_copy_scatter";
+  static void registration_callback(legate::Library library);
+};
 
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_copy_scatter";
+constexpr std::int32_t CHECK_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
 [[nodiscard]] legate::Logger& logger()
 {
-  static legate::Logger log{std::string{LIBRARY_NAME}};
+  static legate::Logger log{std::string{Config::LIBRARY_NAME}};
 
   return log;
 }
-
-constexpr std::int32_t CHECK_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
 }  // namespace
 
@@ -93,15 +95,8 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
   }
 };
 
-void register_tasks()
+/*static*/ void Config::registration_callback(legate::Library library)
 {
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
   FillTask<1>::register_variants(library);
   FillTask<2>::register_variants(library);
   FillTask<3>::register_variants(library);
@@ -127,6 +122,8 @@ void register_tasks()
   CheckScatterTask<3, 2>::register_variants(library);
   // CheckScatterTask<3, 3>::register_variants(library);
 }
+
+class ScatterCopy : public RegisterOnceFixture<Config> {};
 
 struct ScatterSpec {
   std::vector<std::uint64_t> ind_shape;
@@ -180,7 +177,7 @@ void test_scatter(const ScatterSpec& spec)
   logger().print() << "Scatter Copy: " << spec.to_string();
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto type = spec.seed.type();
   auto src  = runtime->create_store(legate::Shape{spec.ind_shape}, type);
@@ -198,31 +195,27 @@ void test_scatter(const ScatterSpec& spec)
 
 // Note that the volume of indirection field should be smaller than that of the target to avoid
 // duplicate updates on the same element, whose semantics is undefined.
-TEST_F(Copy, Scatter1Dto2D)
+TEST_F(ScatterCopy, 1Dto2D)
 {
-  register_tasks();
   const std::vector<std::uint64_t> shape1d{5};
   test_scatter(
     ScatterSpec{shape1d, {7, 11}, legate::Scalar{int64_t{123}}, legate::Scalar{int64_t{42}}});
 }
 
-TEST_F(Copy, Scatter2Dto3D)
+TEST_F(ScatterCopy, 2Dto3D)
 {
-  register_tasks();
   test_scatter(
     ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar{uint32_t{456}}, legate::Scalar{uint32_t{42}}});
 }
 
-TEST_F(Copy, Scatter2Dto2D)
+TEST_F(ScatterCopy, 2Dto2D)
 {
-  register_tasks();
   test_scatter(
     ScatterSpec{{4, 5}, {10, 11}, legate::Scalar{int64_t{12}}, legate::Scalar{int64_t{42}}});
 }
 
-TEST_F(Copy, Scatter3Dto2D)
+TEST_F(ScatterCopy, 3Dto2D)
 {
-  register_tasks();
   test_scatter(
     ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar{int64_t{1}}, legate::Scalar{int64_t{42}}});
 }

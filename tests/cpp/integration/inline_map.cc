@@ -21,14 +21,6 @@ namespace inline_map {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using InlineMap = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_inline_map";
-
-}  // namespace
-
 struct AdderTask : public legate::LegateTask<AdderTask> {
   static constexpr std::int32_t TASK_ID = 0;
 
@@ -43,12 +35,16 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
   }
 };
 
-void register_tasks()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  AdderTask::register_variants(context);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_inline_map";
+  static void registration_callback(legate::Library library)
+  {
+    AdderTask::register_variants(library);
+  }
+};
+
+class InlineMap : public RegisterOnceFixture<Config> {};
 
 void test_inline_map_future()
 {
@@ -76,7 +72,7 @@ void test_inline_map_region_and_slice()
 void test_inline_map_and_task()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto l_store = runtime->create_store(legate::Shape{5}, legate::int64());
   {
     auto p_store = l_store.get_physical_store();
@@ -96,11 +92,7 @@ TEST_F(InlineMap, Future) { test_inline_map_future(); }
 
 TEST_F(InlineMap, RegionAndSlice) { test_inline_map_region_and_slice(); }
 
-TEST_F(InlineMap, WithTask)
-{
-  register_tasks();
-  test_inline_map_and_task();
-}
+TEST_F(InlineMap, WithTask) { test_inline_map_and_task(); }
 
 // NOLINTEND(readability-magic-numbers)
 

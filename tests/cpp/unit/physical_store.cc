@@ -24,7 +24,6 @@ namespace {
 constexpr std::uint64_t UINT64_VALUE          = 1;
 constexpr std::uint32_t BOUND_STORE_EXTENTS   = 0;
 constexpr std::uint32_t UNBOUND_STORE_EXTENTS = 9;
-constexpr std::string_view LIRBARY_NAME       = "legate.physical_store";
 
 }  // namespace
 
@@ -480,12 +479,26 @@ struct FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
   EXPECT_EQ(store.scalar<std::uint64_t>(), UINT64_VALUE);
 }
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "legate.physical_store";
+  static void registration_callback(legate::Library library)
+  {
+    UnboundStoreTask::register_variants(library);
+    AccessorTestTask::register_variants(library);
+    PrimitiveArrayStoreTask::register_variants(library);
+    ListArrayStoreTask::register_variants(library);
+    StringArrayStoreTask::register_variants(library);
+    FutureStoreTask::register_variants(library);
+  }
+};
+
 // clang-tidy complains that "RO" is not lower case, but that's OK
 template <typename T>
 void test_RO_accessor(legate::LogicalStore& logical_store)  // NOLINT(readability-identifier-naming)
 {
   auto runtime  = legate::Runtime::get_runtime();
-  auto context  = runtime->find_library(LIRBARY_NAME);
+  auto context  = runtime->find_library(Config::LIBRARY_NAME);
   const T value = 0;
   runtime->issue_fill(logical_store, legate::Scalar{value});
   auto task = runtime->create_task(context, AccessorTestTask::TASK_ID);
@@ -498,7 +511,7 @@ void test_RO_accessor(legate::LogicalStore& logical_store)  // NOLINT(readabilit
 void test_WO_accessor(legate::LogicalStore& logical_store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIRBARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, AccessorTestTask::TASK_ID);
   task.add_output(logical_store);
   task.add_scalar_arg(legate::Scalar{static_cast<std::uint32_t>(AccessorCode::WRITE)});
@@ -508,7 +521,7 @@ void test_WO_accessor(legate::LogicalStore& logical_store)
 void test_RW_accessor(legate::LogicalStore& logical_store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIRBARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, AccessorTestTask::TASK_ID);
   task.add_input(logical_store);
   task.add_output(logical_store);
@@ -519,7 +532,7 @@ void test_RW_accessor(legate::LogicalStore& logical_store)
 void test_RD_accessor(legate::LogicalStore& logical_store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIRBARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, AccessorTestTask::TASK_ID);
   task.add_reduction(logical_store, legate::ReductionOpKind::ADD);
   task.add_scalar_arg(legate::Scalar{static_cast<std::uint32_t>(AccessorCode::REDUCE)});
@@ -695,22 +708,7 @@ void test_invalid_accessor()
 #define PhysicalStoreUnit PhysicalStoreUnitDeathTest
 #endif
 
-class PhysicalStoreUnit : public DefaultFixture {
- public:
-  void SetUp() override
-  {
-    DefaultFixture::SetUp();
-    auto runtime = legate::Runtime::get_runtime();
-    auto context = runtime->create_library(LIRBARY_NAME);
-
-    UnboundStoreTask::register_variants(context);
-    AccessorTestTask::register_variants(context);
-    PrimitiveArrayStoreTask::register_variants(context);
-    ListArrayStoreTask::register_variants(context);
-    StringArrayStoreTask::register_variants(context);
-    FutureStoreTask::register_variants(context);
-  }
-};
+class PhysicalStoreUnit : public RegisterOnceFixture<Config> {};
 
 legate::Shape get_shape(std::int32_t dim)
 {
@@ -748,7 +746,7 @@ void test_unbound_store(const legate::PhysicalStore& store)
 void test_future_store_by_task()
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(LIRBARY_NAME);
+  auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
   auto task          = runtime->create_task(context, FutureStoreTask::TASK_ID);
   task.add_output(logical_store);
@@ -760,7 +758,7 @@ legate::PhysicalStore create_unbound_store_by_task(UnboundStoreOpCode op_code,
                                                    std::uint32_t dim)
 {
   auto runtime       = legate::Runtime::get_runtime();
-  auto context       = runtime->find_library(LIRBARY_NAME);
+  auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto logical_store = runtime->create_store(type, dim);
   auto task          = runtime->create_task(context, UnboundStoreTask::TASK_ID);
   task.add_output(logical_store);
@@ -839,7 +837,7 @@ void test_bound_store(legate::PhysicalStore& store, const legate::Rect<DIM>& exp
 void test_array_store(legate::LogicalArray& logical_array, std::int32_t id)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIRBARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, id);
   auto part    = task.declare_partition();
   task.add_output(logical_array, part);

@@ -111,13 +111,18 @@ if(Legion_USE_CUDA)
   file(GLOB integration_GPU_SRC ${PROJECT_SOURCE_DIR}/integration/*.cu)
 endif()
 
-file(GLOB main_SRC ${PROJECT_SOURCE_DIR}/main.cc)
+file(GLOB main_with_runtime_init_SRC ${PROJECT_SOURCE_DIR}/main_with_runtime_init.cc)
+file(GLOB main_wo_runtime_init_SRC ${PROJECT_SOURCE_DIR}/main_wo_runtime_init.cc)
+
 file(GLOB bug_SRC ${PROJECT_SOURCE_DIR}/bug/*.cc)
 file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
 file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
 file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
 file(GLOB stl_SRC ${PROJECT_SOURCE_DIR}/experimental/stl/*.cc)
 file(GLOB experimental_SRC ${PROJECT_SOURCE_DIR}/experimental/*.cc)
+
+file(GLOB noinit_SRC ${PROJECT_SOURCE_DIR}/noinit/*.cc)
+file(GLOB death_SRC ${PROJECT_SOURCE_DIR}/death/*.cc)
 
 include(GNUInstallDirs)
 
@@ -135,12 +140,17 @@ endif()
   install(CODE "${code_string}")
 endif()
 
-legate_core_configure_test(cpp_tests SOURCES ${main_SRC} ${bug_SRC} ${tasks_SRC}
-                           ${integration_SRC} ${unit_SRC} ${experimental_SRC} ${stl_SRC})
+legate_core_configure_test(tests_with_runtime SOURCES ${main_with_runtime_init_SRC}
+                           ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC}
+                           ${experimental_SRC} ${stl_SRC})
+legate_core_configure_test(tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC}
+                           ${noinit_SRC})
+legate_core_configure_test(death_tests SOURCES ${main_wo_runtime_init_SRC} ${death_SRC})
 
 if(integration_GPU_SRC)
-  legate_core_configure_test(gpu_tests SOURCES ${main_SRC} ${tasks_SRC}
-                             ${integration_SRC} ${integration_GPU_SRC} GPUS 1 PERCENT 30)
+  legate_core_configure_test(tests_with_gpus SOURCES ${main_with_runtime_init_SRC}
+                             ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC} GPUS
+                             1 PERCENT 30)
 endif()
 
 rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing

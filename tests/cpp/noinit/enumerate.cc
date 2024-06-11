@@ -51,7 +51,7 @@ using EnumerateTypeList =
   ::testing::Types<std::vector<int>, std::list<float>, std::deque<std::int64_t>>;
 
 template <typename>
-using EnumerateUnit = NoInitFixture;
+using EnumerateUnit = ::testing::Test;
 
 TYPED_TEST_SUITE(EnumerateUnit, EnumerateTypeList, );
 

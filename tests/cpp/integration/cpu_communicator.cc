@@ -21,12 +21,9 @@ namespace cpu_communicator {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Integration = DefaultFixture;
-
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "test_cpu_communicator";
-constexpr std::size_t SIZE              = 10;
+constexpr std::size_t SIZE = 10;
 
 }  // namespace
 
@@ -58,22 +55,21 @@ struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> 
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_cpu_communicator";
+  static void registration_callback(legate::Library library)
+  {
+    CPUCommunicatorTester::register_variants(library, CPU_COMM_TESTER);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  CPUCommunicatorTester::register_variants(context, CPU_COMM_TESTER);
-}
+};
+
+class CPUCommunicator : public RegisterOnceFixture<Config> {};
 
 void test_cpu_communicator_auto(std::int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(
     legate::Shape{
       legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)
@@ -95,7 +91,7 @@ void test_cpu_communicator_manual(std::int32_t ndim)
     return;
   }
 
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(
     legate::Shape{
       legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)
@@ -118,10 +114,8 @@ void test_cpu_communicator_manual(std::int32_t ndim)
 // TODO(jfaibussowit)
 // Currently causes unexplained hangs in CI. To be fixed by
 // https://github.com/nv-legate/legate.core.internal/pull/700
-TEST_F(Integration, DISABLED_CPUCommunicator)
+TEST_F(CPUCommunicator, DISABLED_ALL)
 {
-  prepare();
-
   for (auto ndim : {1, 3}) {
     test_cpu_communicator_auto(ndim);
     test_cpu_communicator_manual(ndim);

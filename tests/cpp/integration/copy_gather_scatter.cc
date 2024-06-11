@@ -20,11 +20,7 @@ namespace copy_gather_scatter {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Copy = DefaultFixture;
-
 namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_copy_gather_scatter";
 
 constexpr std::int32_t CHECK_GATHER_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
 
@@ -108,35 +104,34 @@ struct GatherScatterSpec {
   }
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_copy_gather_scatter";
+  static void registration_callback(legate::Library library)
+  {
+    FillTask<1>::register_variants(library);
+    FillTask<2>::register_variants(library);
+    FillTask<3>::register_variants(library);
+
+    FillIndirectTask<1, 1>::register_variants(library);
+    FillIndirectTask<1, 2>::register_variants(library);
+    FillIndirectTask<1, 3>::register_variants(library);
+    FillIndirectTask<2, 1>::register_variants(library);
+    FillIndirectTask<2, 2>::register_variants(library);
+    FillIndirectTask<2, 3>::register_variants(library);
+    FillIndirectTask<3, 1>::register_variants(library);
+    FillIndirectTask<3, 2>::register_variants(library);
+    FillIndirectTask<3, 3>::register_variants(library);
+
+    CheckGatherScatterTask<1, 2, 3>::register_variants(library);
+    CheckGatherScatterTask<2, 3, 1>::register_variants(library);
+    CheckGatherScatterTask<3, 1, 2>::register_variants(library);
+    CheckGatherScatterTask<3, 3, 3>::register_variants(library);
+    CheckGatherScatterTask<2, 2, 3>::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  FillTask<1>::register_variants(library);
-  FillTask<2>::register_variants(library);
-  FillTask<3>::register_variants(library);
+};
 
-  FillIndirectTask<1, 1>::register_variants(library);
-  FillIndirectTask<1, 2>::register_variants(library);
-  FillIndirectTask<1, 3>::register_variants(library);
-  FillIndirectTask<2, 1>::register_variants(library);
-  FillIndirectTask<2, 2>::register_variants(library);
-  FillIndirectTask<2, 3>::register_variants(library);
-  FillIndirectTask<3, 1>::register_variants(library);
-  FillIndirectTask<3, 2>::register_variants(library);
-  FillIndirectTask<3, 3>::register_variants(library);
-
-  CheckGatherScatterTask<1, 2, 3>::register_variants(library);
-  CheckGatherScatterTask<2, 3, 1>::register_variants(library);
-  CheckGatherScatterTask<3, 1, 2>::register_variants(library);
-  CheckGatherScatterTask<3, 3, 3>::register_variants(library);
-  CheckGatherScatterTask<2, 2, 3>::register_variants(library);
-}
+class ScatterGatherCopy : public RegisterOnceFixture<Config> {};
 
 void check_gather_scatter_output(legate::Library library,
                                  const legate::LogicalStore& src,
@@ -177,7 +172,7 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   LEGATE_ASSERT(spec.seed.type() == spec.init.type());
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto type = spec.seed.type();
   auto src  = runtime->create_store(legate::Shape{spec.src_shape}, type);
@@ -196,9 +191,8 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   check_gather_scatter_output(library, src, tgt, src_ind, tgt_ind, spec.init);
 }
 
-TEST_F(Copy, GatherScatter1Dto3Dvia2D)
+TEST_F(ScatterGatherCopy, 1Dto3Dvia2D)
 {
-  register_tasks();
   const std::vector<std::uint64_t> shape1d{5};
   test_gather_scatter(GatherScatterSpec{shape1d,
                                         {7, 11},
@@ -207,9 +201,8 @@ TEST_F(Copy, GatherScatter1Dto3Dvia2D)
                                         legate::Scalar{std::int64_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter2Dto1Dvia3D)
+TEST_F(ScatterGatherCopy, 2Dto1Dvia3D)
 {
-  register_tasks();
   const std::vector<std::uint64_t> shape1d{1000};
   test_gather_scatter(GatherScatterSpec{{3, 7},
                                         {3, 6, 5},
@@ -218,9 +211,8 @@ TEST_F(Copy, GatherScatter2Dto1Dvia3D)
                                         legate::Scalar{std::uint32_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter3Dto2Dvia1D)
+TEST_F(ScatterGatherCopy, 3Dto2Dvia1D)
 {
-  register_tasks();
   const std::vector<std::uint64_t> shape1d{100};
   test_gather_scatter(GatherScatterSpec{{4, 5, 2},
                                         shape1d,
@@ -229,9 +221,8 @@ TEST_F(Copy, GatherScatter3Dto2Dvia1D)
                                         legate::Scalar{std::int64_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter3Dto3Dvia3D)
+TEST_F(ScatterGatherCopy, 3Dto3Dvia3D)
 {
-  register_tasks();
   test_gather_scatter(GatherScatterSpec{{10, 10, 10},
                                         {5, 4, 2},
                                         {10, 10, 10},
@@ -239,9 +230,8 @@ TEST_F(Copy, GatherScatter3Dto3Dvia3D)
                                         legate::Scalar{std::int64_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter2Dto3Dvia2D)
+TEST_F(ScatterGatherCopy, 2Dto3Dvia2D)
 {
-  register_tasks();
   test_gather_scatter(GatherScatterSpec{{27, 33},
                                         {11, 7},
                                         {132, 121, 3},

@@ -19,15 +19,7 @@
 
 namespace provenance {
 
-using Integration = DefaultFixture;
-
 // NOLINTBEGIN(readability-magic-numbers)
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_provenance";
-
-}  // namespace
 
 struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
   static constexpr std::int32_t TASK_ID = 0;
@@ -35,12 +27,16 @@ struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
   static void cpu_variant(legate::TaskContext context);
 };
 
-void register_tasks()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  ProvenanceTask::register_variants(library);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_provenance";
+  static void registration_callback(legate::Library library)
+  {
+    ProvenanceTask::register_variants(library);
+  }
+};
+
+class ProvenanceTest : public RegisterOnceFixture<Config> {};
 
 /*static*/ void ProvenanceTask::cpu_variant(legate::TaskContext context)
 {
@@ -73,12 +69,10 @@ void test_nested_provenance(legate::Library library)
   runtime->submit(std::move(task));
 }
 
-TEST_F(Integration, Provenance)
+TEST_F(ProvenanceTest, All)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(LIBRARY_NAME);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   test_provenance(library);
   test_nested_provenance(library);

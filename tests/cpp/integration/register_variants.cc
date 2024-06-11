@@ -37,8 +37,6 @@ enum TaskID : std::uint8_t {
 
 constexpr std::array<TaskID, 6> TASK_IDS = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
 
-constexpr std::string_view LIBRARY_NAME = "test_register_variants";
-
 }  // namespace
 
 struct Registry {
@@ -143,7 +141,7 @@ void validate_store(const legate::LogicalStore& store)
 TEST_F(RegisterVariants, All)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
+  auto context = runtime->create_library("test_register_variants1");
 
   for (auto task_id : TASK_IDS) {
     EXPECT_THROW(static_cast<void>(context.get_task_name(task_id)), std::out_of_range);
@@ -185,7 +183,7 @@ class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
 
 TEST_F(RegisterVariants, DefaultVariantOptions)
 {
-  auto library = legate::Runtime::get_runtime()->create_library(LIBRARY_NAME);
+  auto library = legate::Runtime::get_runtime()->create_library("test_register_variants2");
 
   DefaultOptionsTask::register_variants(library);
 

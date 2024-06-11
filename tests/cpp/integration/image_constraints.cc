@@ -21,30 +21,19 @@ namespace image_constraints {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-using ImageConstraint = DefaultFixture;
-
-class Valid
-  : public DefaultFixture,
-    public ::testing::WithParamInterface<std::tuple<legate::ImageComputationHint, bool, bool>> {};
-
-INSTANTIATE_TEST_SUITE_P(
-  ImageConstraint,
-  Valid,
-  ::testing::Combine(::testing::Values(legate::ImageComputationHint::NO_HINT,
-                                       legate::ImageComputationHint::MIN_MAX,
-                                       legate::ImageComputationHint::FIRST_LAST),
-                     ::testing::Bool(),
-                     ::testing::Bool()));
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_image_constraints";
+  static void registration_callback(legate::Library library);
+};
 
 namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_image_constraints";
 
 constexpr std::int32_t TEST_MAX_DIM = 3;
 
 [[nodiscard]] legate::Logger& logger()
 {
-  static legate::Logger log{std::string{LIBRARY_NAME}};
+  static legate::Logger log{std::string{Config::LIBRARY_NAME}};
 
   return log;
 }
@@ -229,35 +218,43 @@ struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
   }
 };
 
-void prepare()
+/*static*/ void Config::registration_callback(legate::Library library)
 {
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  InitializeFunction<1, true>::register_variants(context);
-  InitializeFunction<2, true>::register_variants(context);
-  InitializeFunction<3, true>::register_variants(context);
-  InitializeFunction<1, false>::register_variants(context);
-  InitializeFunction<2, false>::register_variants(context);
-  InitializeFunction<3, false>::register_variants(context);
-  ImageTester<1, true>::register_variants(context);
-  ImageTester<2, true>::register_variants(context);
-  ImageTester<3, true>::register_variants(context);
-  ImageTester<1, false>::register_variants(context);
-  ImageTester<2, false>::register_variants(context);
-  ImageTester<3, false>::register_variants(context);
+  InitializeFunction<1, true>::register_variants(library);
+  InitializeFunction<2, true>::register_variants(library);
+  InitializeFunction<3, true>::register_variants(library);
+  InitializeFunction<1, false>::register_variants(library);
+  InitializeFunction<2, false>::register_variants(library);
+  InitializeFunction<3, false>::register_variants(library);
+  ImageTester<1, true>::register_variants(library);
+  ImageTester<2, true>::register_variants(library);
+  ImageTester<3, true>::register_variants(library);
+  ImageTester<1, false>::register_variants(library);
+  ImageTester<2, false>::register_variants(library);
+  ImageTester<3, false>::register_variants(library);
 }
+
+class ImageConstraint : public RegisterOnceFixture<Config> {};
+
+class Valid
+  : public RegisterOnceFixture<Config>,
+    public ::testing::WithParamInterface<std::tuple<legate::ImageComputationHint, bool, bool>> {};
+
+INSTANTIATE_TEST_SUITE_P(
+  ImageConstraint,
+  Valid,
+  ::testing::Combine(::testing::Values(legate::ImageComputationHint::NO_HINT,
+                                       legate::ImageComputationHint::MIN_MAX,
+                                       legate::ImageComputationHint::FIRST_LAST),
+                     ::testing::Bool(),
+                     ::testing::Bool()));
 
 void initialize_function(const legate::LogicalStore& func,
                          const std::vector<std::uint64_t>& range_extents,
                          bool ascending)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
   auto task =
@@ -279,7 +276,7 @@ void check_image(const legate::LogicalStore& func,
                  legate::ImageComputationHint hint)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
   auto task =
@@ -308,7 +305,7 @@ struct ImageTestSpec {
 void test_image(const ImageTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   static_cast<void>(context);
 
   auto tgt_dim    = static_cast<std::int32_t>(spec.range_extents.size());
@@ -326,7 +323,7 @@ void test_image(const ImageTestSpec& spec)
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto create_task = [&](auto func, auto range) {
     auto task = runtime->create_task(context, static_cast<std::int64_t>(IMAGE_TESTER) + func.dim());
@@ -358,29 +355,22 @@ void test_invalid()
 TEST_P(Valid, 1D)
 {
   auto& [hint, is_rect, ascending] = GetParam();
-  prepare();
   test_image({{9}, {100}, hint, is_rect, ascending});
 }
 
 TEST_P(Valid, 2D)
 {
   auto& [hint, is_rect, ascending] = GetParam();
-  prepare();
   test_image({{4, 4}, {10, 10}, hint, is_rect, ascending});
 }
 
 TEST_P(Valid, 3D)
 {
   auto& [hint, is_rect, ascending] = GetParam();
-  prepare();
   test_image({{2, 3, 4}, {5, 5, 5}, hint, is_rect, ascending});
 }
 
-TEST_F(ImageConstraint, Invalid)
-{
-  prepare();
-  test_invalid();
-}
+TEST_F(ImageConstraint, Invalid) { test_invalid(); }
 
 // NOLINTEND(readability-magic-numbers)
 

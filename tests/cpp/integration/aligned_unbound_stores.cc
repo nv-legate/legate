@@ -17,10 +17,6 @@
 
 namespace aligned_unbound_stores_test {
 
-using AlignedUnboundStores = DefaultFixture;
-
-constexpr std::string_view LIBRARY_NAME = "test_unbound_nullable_array";
-
 struct Producer : public legate::LegateTask<Producer> {
   static constexpr std::int32_t TASK_ID = 0;
   static void cpu_variant(legate::TaskContext context)
@@ -35,11 +31,21 @@ struct Producer : public legate::LegateTask<Producer> {
   }
 };
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_unbound_nullable_array";
+  static void registration_callback(legate::Library library)
+  {
+    Producer::register_variants(library);
+  }
+};
+
+class AlignedUnboundStores : public RegisterOnceFixture<Config> {};
+
 TEST_F(AlignedUnboundStores, Standalone)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Producer::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto store1 = runtime->create_store(legate::int32());
   auto store2 = runtime->create_store(legate::int64());
@@ -57,8 +63,7 @@ TEST_F(AlignedUnboundStores, Standalone)
 TEST_F(AlignedUnboundStores, ViaNullableArray)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(LIBRARY_NAME);
-  Producer::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto arr = runtime->create_array(legate::int32(), 1, true /*nullable*/);
 

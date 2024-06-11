@@ -17,14 +17,11 @@
 
 namespace scoped_allocator_test {
 
-using ScopedAllocatorUnit = DefaultFixture;
-
 // NOLINTBEGIN(readability-magic-numbers)
 
 namespace {
 
-constexpr std::string_view LIBRARY_NAME = "legate.scopedallocator";
-constexpr auto MAX_ALIGNMENT            = 16;
+constexpr auto MAX_ALIGNMENT = 16;
 
 }  // namespace
 
@@ -83,6 +80,17 @@ struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
   }
 }
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "legate.scopedallocator";
+  static void registration_callback(legate::Library library)
+  {
+    ScopedAllocatorTask::register_variants(library);
+  }
+};
+
+class ScopedAllocatorUnit : public RegisterOnceFixture<Config> {};
+
 void test_allocator(BufferOpCode op_code,
                     legate::Memory::Kind kind,
                     bool scoped,
@@ -90,7 +98,7 @@ void test_allocator(BufferOpCode op_code,
                     std::size_t alignment = MAX_ALIGNMENT)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, ScopedAllocatorTask::TASK_ID);
   auto part    = task.declare_partition();
   static_cast<void>(part);
@@ -109,18 +117,6 @@ void test_allocator(BufferOpCode op_code,
   runtime->submit(std::move(task));
 }
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  ScopedAllocatorTask::register_variants(context);
-}
-
 TEST_F(ScopedAllocatorUnit, EmptyAllocate)
 {
   auto allocator = legate::ScopedAllocator(legate::Memory::SYSTEM_MEM, true);
@@ -130,7 +126,6 @@ TEST_F(ScopedAllocatorUnit, EmptyAllocate)
 
 TEST_F(ScopedAllocatorUnit, Allocate)
 {
-  register_tasks();
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000, 16);
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::NO_MEMKIND, true, 1000, 16);
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, false, 0, 16);
@@ -144,7 +139,6 @@ TEST_F(ScopedAllocatorUnit, Allocate)
 
 TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 {
-  register_tasks();
   test_allocator(BufferOpCode::DOUBLE_DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000);
 }
 
@@ -155,7 +149,6 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
   EXPECT_THROW(allocator.deallocate(data.data()), std::runtime_error);
 
   // invalid deallocate in task launch
-  register_tasks();
   test_allocator(BufferOpCode::INVALID_DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000);
 }
 
