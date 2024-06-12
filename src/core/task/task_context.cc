@@ -75,13 +75,15 @@ const Scalar& TaskContext::scalar(std::uint32_t index) const
 
 const std::vector<Scalar>& TaskContext::scalars() const { return impl()->scalars(); }
 
-comm::Communicator TaskContext::communicator(std::uint32_t index) const
+const comm::Communicator& TaskContext::communicator(std::uint32_t index) const
 {
-  CHECK_IF_CAN_USE_MEMBER_FUNCTION(communicators);
-  return impl()->communicators().at(index);
+  // Revert back to using impl()->communicators() if communicators() ever returns a non-ref. No
+  // point in creating a whole temporary vector just to check its size :)
+  static_assert(std::is_lvalue_reference_v<decltype(communicators())>);
+  return communicators().at(index);
 }
 
-std::vector<comm::Communicator> TaskContext::communicators() const
+const std::vector<comm::Communicator>& TaskContext::communicators() const
 {
   return impl()->communicators();
 }
@@ -106,17 +108,17 @@ std::size_t TaskContext::num_reductions() const
 
 std::size_t TaskContext::num_communicators() const
 {
-  CHECK_IF_CAN_USE_MEMBER_FUNCTION(communicators);
-  return impl()->communicators().size();
+  static_assert(std::is_lvalue_reference_v<decltype(communicators())>);
+  return communicators().size();
 }
 
 bool TaskContext::is_single_task() const { return impl()->is_single_task(); }
 
 bool TaskContext::can_raise_exception() const { return impl()->can_raise_exception(); }
 
-DomainPoint TaskContext::get_task_index() const { return impl()->get_task_index(); }
+const DomainPoint& TaskContext::get_task_index() const { return impl()->get_task_index(); }
 
-Domain TaskContext::get_launch_domain() const { return impl()->get_launch_domain(); }
+const Domain& TaskContext::get_launch_domain() const { return impl()->get_launch_domain(); }
 
 mapping::TaskTarget TaskContext::target() const
 {
