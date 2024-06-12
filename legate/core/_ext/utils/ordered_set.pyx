@@ -9,13 +9,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, MutableSet
 from typing import TypeVar
 
 
 cdef object T = TypeVar("T")
 
-cdef class OrderedSet:
+
+class OrderedSet(MutableSet[T]):
     """
     A set() variant whose iterator returns elements in insertion order.
 
@@ -31,14 +32,14 @@ cdef class OrderedSet:
             for obj in copy_from:
                 self.add(obj)
 
-    cpdef void add(self, object obj):
+    def add(self, obj: T) -> None:
         self._dict[obj] = None
 
-    cpdef void update(self, object iterable):
+    def update(self, iterable: Iterable[T]) -> None:
         for obj in iterable:
             self.add(obj)
 
-    cpdef void discard(self, object obj):
+    def discard(self, obj: T) -> None:
         self._dict.pop(obj, None)
 
     def __len__(self) -> int:
@@ -50,5 +51,5 @@ cdef class OrderedSet:
     def __iter__(self) -> Iterator[T]:
         return iter(self._dict)
 
-    cpdef OrderedSet remove_all(self, OrderedSet other):
+    def remove_all(self, other: OrderedSet) -> OrderedSet:
         return OrderedSet([obj for obj in self if obj not in other])
