@@ -33,7 +33,7 @@ ScatterGather::ScatterGather(InternalSharedPtr<LogicalStore> target,
     target_indirect_{target_indirect, declare_partition()},
     source_{source, declare_partition()},
     source_indirect_{source_indirect, declare_partition()},
-    constraint_(align(source_indirect_.variable, target_indirect_.variable)),
+    constraint_{align(source_indirect_.variable, target_indirect_.variable)},
     redop_{redop}
 {
   record_partition_(target_.variable, std::move(target));
@@ -45,12 +45,12 @@ ScatterGather::ScatterGather(InternalSharedPtr<LogicalStore> target,
 void ScatterGather::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw std::invalid_argument("Source and targets must have the same type");
+    throw std::invalid_argument{"Source and targets must have the same type"};
   }
-  auto validate_store = [](const auto& store) {
+  constexpr auto validate_store = [](const auto& store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
-      throw std::invalid_argument(
-        "ScatterGather accepts only normal, untransformed, region-backed stores");
+      throw std::invalid_argument{
+        "ScatterGather accepts only normal, untransformed, region-backed stores"};
     }
   };
   validate_store(target_.store);
@@ -59,12 +59,16 @@ void ScatterGather::validate()
   validate_store(source_indirect_.store);
 
   if (!is_point_type(source_indirect_.store->type(), source_.store->dim())) {
-    throw std::invalid_argument("Source indirection store should contain " +
-                                std::to_string(source_.store->dim()) + "-D points");
+    std::stringstream ss;
+
+    ss << "Source indirection store should contain " << source_.store->dim() << "-D points";
+    throw std::invalid_argument{std::move(ss).str()};
   }
   if (!is_point_type(target_indirect_.store->type(), target_.store->dim())) {
-    throw std::invalid_argument("Target indirection store should contain " +
-                                std::to_string(target_.store->dim()) + "-D points");
+    std::stringstream ss;
+
+    ss << "Target indirection store should contain " << target_.store->dim() << "-D points";
+    throw std::invalid_argument{std::move(ss).str()};
   }
 
   constraint_->validate();
@@ -105,7 +109,7 @@ void ScatterGather::launch(Strategy* p_strategy)
 void ScatterGather::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable, !redop_ ? AccessMode::WRITE : AccessMode::REDUCE);
+  solver.add_partition_symbol(target_.variable, redop_ ? AccessMode::REDUCE : AccessMode::WRITE);
   solver.add_partition_symbol(target_indirect_.variable, AccessMode::READ);
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
   solver.add_partition_symbol(source_indirect_.variable, AccessMode::READ);

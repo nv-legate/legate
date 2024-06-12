@@ -52,7 +52,7 @@ class ScatterGather final : public Operation {
   StoreArg target_indirect_{};
   StoreArg source_{};
   StoreArg source_indirect_{};
-  InternalSharedPtr<Constraint> constraint_{};
+  InternalSharedPtr<Alignment> constraint_{};
   std::optional<std::int32_t> redop_{};
 };
 

@@ -31,7 +31,7 @@ Scatter::Scatter(InternalSharedPtr<LogicalStore> target,
     target_{target, declare_partition()},
     target_indirect_{target_indirect, declare_partition()},
     source_{source, declare_partition()},
-    constraint_(align(source_.variable, target_indirect_.variable)),
+    constraint_{align(source_.variable, target_indirect_.variable)},
     redop_{redop}
 {
   record_partition_(target_.variable, std::move(target));
@@ -42,12 +42,12 @@ Scatter::Scatter(InternalSharedPtr<LogicalStore> target,
 void Scatter::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw std::invalid_argument("Source and targets must have the same type");
+    throw std::invalid_argument{"Source and targets must have the same type"};
   }
-  auto validate_store = [](const auto& store) {
+  constexpr auto validate_store = [](const auto& store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
-      throw std::invalid_argument(
-        "Scatter accepts only normal, untransformed, region-backed stores");
+      throw std::invalid_argument{
+        "Scatter accepts only normal, untransformed, region-backed stores"};
     }
   };
   validate_store(target_.store);
@@ -55,8 +55,10 @@ void Scatter::validate()
   validate_store(source_.store);
 
   if (!is_point_type(target_indirect_.store->type(), target_.store->dim())) {
-    throw std::invalid_argument("Indirection store should contain " +
-                                std::to_string(target_.store->dim()) + "-D points");
+    std::stringstream ss;
+
+    ss << "Indirection store should contain " << target_.store->dim() << "-D points";
+    throw std::invalid_argument{std::move(ss).str()};
   }
 
   constraint_->validate();
@@ -95,7 +97,7 @@ void Scatter::launch(Strategy* p_strategy)
 void Scatter::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable, !redop_ ? AccessMode::WRITE : AccessMode::REDUCE);
+  solver.add_partition_symbol(target_.variable, redop_ ? AccessMode::REDUCE : AccessMode::WRITE);
   solver.add_partition_symbol(target_indirect_.variable, AccessMode::READ);
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
 }
