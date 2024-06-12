@@ -86,7 +86,7 @@ macro(legate_core_find_or_configure)
     message(FATAL_ERROR "Error getting: ${_LEGATE_CORE_FOC_PACKAGE}, no such package")
   endif()
 
-  if(legate_core_IGNORE_INSTALLED_PACKAGES)
+  if(legate_core_IGNORE_INSTALLED_PACKAGES AND (NOT ${_LEGATE_CORE_FOC_PACKAGE}_ROOT))
     message(STATUS "Ignoring all installed packages when searching for ${_LEGATE_CORE_FOC_PACKAGE}"
     )
     set(CPM_DOWNLOAD_${_LEGATE_CORE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)

@@ -270,39 +270,72 @@ def get_install_dir() -> Path:
     raise RuntimeError("Could not identify install directory!")
 
 
+def get_legion_py_bindings_path() -> Path | None:
+    def get_py_bindings_path(cache_dir: Path | None = None) -> Path | None:
+        try:
+            # If this variable exists, then legate built Legion, and
+            # therefore the bindings dir will be pointed to by this variable
+            return Path(
+                read_cmake_cache_value(
+                    "LegionBindings_python_BINARY_DIR", cache_dir=cache_dir
+                )
+            )
+        except RuntimeError:
+            verbose_print(
+                f"Did not find LegionBindings_python_BINARY_DIR in {cache_dir}"
+                " (None means skbuild cmake dir)"
+            )
+
+        # not found, maybe the user built Legion themselves
+        root_dir = Path(read_cmake_cache_value("Legion_ROOT"))
+        # If we got here (and read_cmake_cache_value() hasn't thrown) then user
+        # might have passed a pre-built Legion. If that is the case, then the
+        # bindings dir will *NOT* exist.
+        verbose_print(
+            f"Found potentially pre-existing Legion_ROOT: {root_dir}"
+        )
+        bindings_dir = root_dir / "bindings" / "python"
+        if (bindings_dir / "cmake_install.cmake").exists():
+            # Bindings dir exists, so we should install those python bindings
+            verbose_print(f"Bindings appear to exist at: {bindings_dir}")
+            return bindings_dir
+        # pre-built Legion
+        verbose_print(
+            f"Bindings dir {bindings_dir} did not have a cmake_install.cmake "
+            "present, assuming this is a pre-installed Legion"
+        )
+        return None
+
+    verbose_print("Attempting to install Legion python bindings")
+    found_method = read_cmake_cache_value("_legate_core_FOUND_METHOD")
+    verbose_print(f"Found legate core method: {found_method}")
+
+    match found_method:
+        case "PRE_BUILT":
+            # The legate.core bindings were already built by a previous call to
+            # "make" by the user and were imported by cmake. They live in
+            # LEGATE_CORE_ARCH/cmake_build, and legate_core_DIR points
+            # there. They will tell us where to find the Legion python
+            # bindings.
+            orig_build_dir = Path(read_cmake_cache_value("legate_core_DIR"))
+            verbose_print(f"Found original legate build dir: {orig_build_dir}")
+            return get_py_bindings_path(cache_dir=orig_build_dir)
+
+        case "SELF_BUILT":
+            # We built the legate.core bindings ourselves as part of the
+            # bdist_wheel step, so the cache file to use is in the skbuild dir.
+            return get_py_bindings_path()
+
+        case "INSTALLED":
+            return
+
+    raise RuntimeError(
+        "Unhandled find-method for legate.core encountered:" f" {found_method}"
+    )
+
+
 def install_legion_python_bindings() -> None:
     r"""Install the Legion python bindings if needed."""
-
-    def get_legion_py_bindings_path() -> Path | None:
-        verbose_print("Attempting to install Legion python bindings")
-        found_method = read_cmake_cache_value("_legate_core_FOUND_METHOD")
-        verbose_print(f"Found legate core method: {found_method}")
-        match found_method:
-            case "PRE_BUILT":
-                # The legate.core bindings were already built by a previous
-                # call to "make" by the user and were imported by cmake. They
-                # live in LEGATE_CORE_ARCH/cmake_build, and legate_core_DIR
-                # points there.
-                return (
-                    Path(read_cmake_cache_value("legate_core_DIR"))
-                    / "_deps"
-                    / "legion-build"
-                    / "bindings"
-                    / "python"
-                )
-            case "SELF_BUILT":
-                # We built the legate.core bindings ourselves as part of the
-                # bdist_wheel step. Legion
-                return Path(
-                    read_cmake_cache_value("LegionBindings_python_BINARY_DIR")
-                )
-            case "INSTALLED":
-                return
-
-        raise RuntimeError(
-            "Unhandled find-method for legate.core encountered:"
-            f" {found_method}"
-        )
 
     try:
         bdir = get_legion_py_bindings_path()
