@@ -36,12 +36,7 @@
  * LEGATE_CONCAT(FOO, BAR) // expands to FOOBAR
  * @endcode
  *
-<<<<<<< HEAD
- * @ingroup util
- * @see LegateConcat()
-=======
  * @see LEGATE_CONCAT()
->>>>>>> origin/cpp-branch-24.05
  *
  * @ingroup util
  */
@@ -65,12 +60,7 @@
  * LEGATE_CONCAT(FOO, BAR) // expands to 12
  * @endcode
  *
-<<<<<<< HEAD
- * @ingroup util
- * @see LegateConcat_()
-=======
  * @see LEGATE_CONCAT_()
->>>>>>> origin/cpp-branch-24.05
  *
  * @ingroup util
  */
@@ -96,12 +86,7 @@
  * LEGATE_STRINGIZE_(FOO, BAR) // expands to "FOO, BAR" (note the "")
  * @endcode
  *
-<<<<<<< HEAD
- * @ingroup util
- * @see LegateStringize()
-=======
  * @see LEGATE_STRINGIZE()
->>>>>>> origin/cpp-branch-24.05
  *
  * @ingroup util
  */
@@ -126,12 +111,7 @@
  * LEGATE_STRINGIZE(FOO, BAR) // expands to "1, 2" (note the "")
  * @endcode
  *
-<<<<<<< HEAD
- * @ingroup util
- * @see LegateStringize_()
-=======
  * @see LEGATE_STRINGIZE_()
->>>>>>> origin/cpp-branch-24.05
  *
  * @ingroup util
  */
@@ -221,12 +201,7 @@
  * }
  * @endcode
  *
-<<<<<<< HEAD
- * @ingroup util
- * @see LegateConcat()
-=======
  * @see LEGATE_CONCAT()
->>>>>>> origin/cpp-branch-24.05
  *
  * @ingroup util
  */
