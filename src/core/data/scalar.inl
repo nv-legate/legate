@@ -28,13 +28,15 @@ namespace detail {
 template <typename T>
 constexpr legate::Type::Code canonical_type_code_of() noexcept
 {
+  using RawT = std::decay_t<T>;
   using legate::Type;  // to disambiguate from legate::detail::Type;
 
-  if constexpr (std::is_same_v<size_t, T>) {
-    static_assert(sizeof(T) == sizeof(std::uint64_t));
+  static_assert(!std::is_same_v<RawT, Scalar>, "Invalid constructor selected for Scalar");
+  if constexpr (std::is_same_v<std::size_t, RawT>) {
+    static_assert(sizeof(RawT) == sizeof(std::uint64_t));
     return Type::Code::UINT64;
   } else {
-    constexpr auto ret = type_code_of_v<T>;
+    constexpr auto ret = type_code_of_v<RawT>;
 
     static_assert(ret != Type::Code::FIXED_ARRAY);
     static_assert(ret != Type::Code::STRUCT);

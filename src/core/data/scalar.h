@@ -80,7 +80,8 @@ class Scalar {
   template <typename T,
             // Note the SFINAE, we want std::string (or thereto convertible types) to use the
             // string_view ctor.
-            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, std::string>>>
+            typename = std::enable_if_t<!std::is_convertible_v<T, std::string> &&
+                                        !std::is_same_v<std::decay_t<T>, Scalar>>>
   explicit Scalar(T value);
   /**
    * @brief Creates an owned scalar of a specified type from a scalar value
