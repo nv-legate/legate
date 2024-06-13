@@ -101,37 +101,20 @@ function(legate_core_configure_default_compiler_flags)
   set(default_cxx_flags_relwithdebinfo ${default_cxx_flags_debug}
                                        ${default_cxx_flags_release})
 
-  function(cxx_flags_to_cuda_flags cuda_flags_var cxx_flags)
-    set(cuda_flags "${${cxx_flags}}")
-    list(REMOVE_ITEM cuda_flags "-pedantic")
-    list(REMOVE_ITEM cuda_flags "-Wpedantic")
-    list(JOIN cuda_flags " " cuda_flags)
-    set(${cuda_flags_var} --compiler-options="${cuda_flags}" PARENT_SCOPE)
-  endfunction()
-
-  macro(set_flags flags_var)
-    set(default_cxx_flags "${${flags_var}}")
+  macro(set_cxx_flags cxx_flags_var flags_var)
+    list(APPEND ${cxx_flags_var} "${${flags_var}}")
     if(legate_core_ENABLE_SANITIZERS)
-      list(APPEND default_cxx_flags ${default_cxx_flags_sanitizer})
+      list(APPEND ${cxx_flags_var} ${default_cxx_flags_sanitizer})
     endif()
-    cxx_flags_to_cuda_flags(default_cuda_flags default_cxx_flags)
   endmacro()
 
+  set(default_cxx_flags)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set_flags(default_cxx_flags_debug)
-    list(APPEND default_cuda_flags "-g" "-G")
-    # nvcc warning : '--device-debug (-G)' overrides '--generate-line-info (-lineinfo)'
-    # ptxas warning : Conflicting options --device-debug and --generate-line-info
-    # specified, ignoring --generate-line-info option
-    list(REMOVE_ITEM default_cuda_flags "-lineinfo" "--generate-line-info")
+    set_cxx_flags(default_cxx_flags default_cxx_flags_debug)
   elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_flags(default_cxx_flags_release)
+    set_cxx_flags(default_cxx_flags default_cxx_flags_release)
   elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set_flags(default_cxx_flags_relwithdebinfo)
-    list(APPEND default_cuda_flags "-g" "-lineinfo")
-  else()
-    set(default_cxx_flags)
-    set(default_cuda_flags)
+    set_cxx_flags(default_cxx_flags default_cxx_flags_relwithdebinfo)
   endif()
 
   if(NOT legate_core_CXX_FLAGS)
@@ -139,7 +122,27 @@ function(legate_core_configure_default_compiler_flags)
                                        FLAGS ${default_cxx_flags})
     set(legate_core_CXX_FLAGS "${legate_core_CXX_FLAGS}" PARENT_SCOPE)
   endif()
+
   if(NOT legate_core_CUDA_FLAGS)
+    set(cuda_flags "${legate_core_CXX_FLAGS}")
+    list(REMOVE_ITEM cuda_flags "-pedantic")
+    list(REMOVE_ITEM cuda_flags "-Wpedantic")
+
+    foreach(flag IN LISTS cuda_flags)
+      list(APPEND default_cuda_flags --compiler-options="${flag}")
+    endforeach()
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      list(APPEND default_cuda_flags "-g" "-G")
+      # nvcc warning : '--device-debug (-G)' overrides '--generate-line-info (-lineinfo)'
+      # ptxas warning : Conflicting options --device-debug and --generate-line-info
+      # specified, ignoring --generate-line-info option
+      list(REMOVE_ITEM default_cuda_flags "-lineinfo" "--generate-line-info")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+      list(REMOVE_ITEM default_cuda_flags "-G" "--device-debug")
+      list(APPEND default_cuda_flags "-g" "-lineinfo")
+    endif()
+
     legate_core_set_default_flags_impl(SET_CACHE LANG CUDA DEST_VAR
                                        legate_core_CUDA_FLAGS FLAGS ${default_cuda_flags})
     set(legate_core_CUDA_FLAGS "${legate_core_CUDA_FLAGS}" PARENT_SCOPE)
