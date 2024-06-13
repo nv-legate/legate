@@ -329,9 +329,6 @@ class LegateCore(MainPackage):
     def configure_legion(self) -> None:
         r"""Configure Legion for use with Legate.Core."""
         self.set_flag_if_user_set(
-            self.legate_core_LEGION_REPOSITORY, self.cl_args.legion_url
-        )
-        self.set_flag_if_user_set(
             self.legate_core_LEGION_BRANCH, self.cl_args.legion_branch
         )
 

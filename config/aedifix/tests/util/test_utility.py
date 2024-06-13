@@ -16,6 +16,7 @@ import pytest
 
 from ...util.utility import (
     deduplicate_command_line_args,
+    dest_to_flag,
     flag_to_dest,
     partition_argv,
     prune_command_line_args,
@@ -102,6 +103,19 @@ class TestUtility:
     )
     def test_flag_to_dest(self, flag_str: str, expected: str) -> None:
         assert flag_to_dest(flag_str) == expected
+
+    @pytest.mark.parametrize(
+        "dest_str, expected",
+        (
+            ("", "--"),
+            ("foo", "--foo"),
+            ("f", "--f"),
+            ("foo_bar", "--foo-bar"),
+            ("foo-bar", "--foo-bar"),
+        ),
+    )
+    def test_dest_to_flag(self, dest_str: str, expected: str) -> None:
+        assert dest_to_flag(dest_str) == expected
 
     @pytest.mark.parametrize(
         "argv, expected",

@@ -26,6 +26,8 @@ from ...util.argument_parser import (
     ConfigArgument,
     ExclusiveArgumentGroup,
 )
+from ...util.exception import UnsatisfiableConfigurationError
+from ...util.utility import dest_to_flag
 from ..package import Package
 
 if TYPE_CHECKING:
@@ -55,17 +57,12 @@ class Legion(Package):
         CPM_Legion_SOURCE=ConfigArgument(
             name="--with-legion-src-dir",
             spec=ArgSpec(
-                dest="legion_src_dir",
+                dest="with_legion_src_dir",
                 type=Path,
                 help="Path to an existing Legion source directory.",
             ),
             cmake_var=CMAKE_VARIABLE("CPM_Legion_SOURCE", CMakePath),
         ),
-    )
-    CPM_DOWNLOAD_Legion: Final = ConfigArgument(
-        name="--legion-url",
-        spec=ArgSpec(dest="legion_url", help="Legion git URL to build with."),
-        cmake_var=CMAKE_VARIABLE("CPM_DOWNLOAD_Legion", CMakeBool),
     )
     Legion_BRANCH: Final = ConfigArgument(
         name="--legion-branch",
@@ -158,6 +155,9 @@ class Legion(Package):
     Legion_BUILD_BINDINGS: Final = CMAKE_VARIABLE(
         "Legion_BUILD_BINDINGS", CMakeBool
     )
+    CPM_DOWNLOAD_Legion: Final = CMAKE_VARIABLE(
+        "CPM_DOWNLOAD_Legion", CMakeBool
+    )
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a Legion Package.
@@ -197,6 +197,28 @@ class Legion(Package):
         self.ucx: UCX = TYPE_CAST(Any, self.require("ucx"))
         self.zlib: ZLIB = TYPE_CAST(Any, self.require("zlib"))
 
+    def check_conflicting_options(self) -> None:
+        r"""Check for conflicting options that are too complicated to "
+        "describe statically.
+
+        Raises
+        ------
+        UnsatisfiableConfigurationError
+            If both --with-legion-src-dir and --legion-branch are set
+        """
+        with_legion_src_dir = self.cl_args.with_legion_src_dir
+        legion_branch = self.cl_args.legion_branch
+        if with_legion_src_dir.value and legion_branch.value:
+            raise UnsatisfiableConfigurationError(
+                "Cannot specify both "
+                f"{dest_to_flag(with_legion_src_dir.name)} and "
+                f"{dest_to_flag(legion_branch.name)}, their combined meaning "
+                "is ambiguous. If the source dir is given, the contents of "
+                "the directory are used as-is (i.e. using whatever branch or "
+                "commit that dir is currently on), so the chosen Legion "
+                "branch would have no effect."
+            )
+
     def configure_root_dirs(self) -> None:
         r"""Configure the various "root" directories that Legion requires"""
         dir_group = self.DirGroup
@@ -205,7 +227,7 @@ class Legion(Package):
                 dir_group.Legion_ROOT,  # type: ignore[attr-defined]
                 lg_dir.value,
             )
-        elif (lg_src_dir := self.cl_args.legion_src_dir).cl_set:
+        elif (lg_src_dir := self.cl_args.with_legion_src_dir).cl_set:
             self.manager.set_cmake_variable(
                 dir_group.CPM_Legion_SOURCE,  # type: ignore[attr-defined]
                 lg_src_dir.value,
@@ -344,6 +366,7 @@ class Legion(Package):
     def configure(self) -> None:
         r"""Configure Legion."""
         super().configure()
+        self.log_execute_func(self.check_conflicting_options)
         self.log_execute_func(self.configure_root_dirs)
         self.log_execute_func(self.configure_variables)
         self.log_execute_func(self.configure_cuda)

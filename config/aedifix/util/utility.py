@@ -406,6 +406,23 @@ def flag_to_dest(flag: str) -> str:
     return flag.lstrip("-").casefold().replace("-", "_")
 
 
+def dest_to_flag(dest: str) -> str:
+    r"""Convert a 'dest' argument usable in an ArgumentParser to the
+    corresponding command-line flag.
+
+    Parameters
+    ----------
+    dest : str
+        The argument to convert.
+
+    Returns
+    -------
+    flag : str
+        The command-line flag.
+    """
+    return "--" + dest.replace("_", "-")
+
+
 def partition_argv(argv: Iterable[str]) -> tuple[list[str], list[str]]:
     r"""Split a command-line list of arguments into 2.
 
