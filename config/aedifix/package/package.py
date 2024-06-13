@@ -257,6 +257,12 @@ class Package(Configurable):
     def set_flag(self, name: str | ConfigArgument, value: CLArg[_T]) -> None:
         self.manager.set_cmake_variable(name=name, value=value.value)
 
+    def set_flag_if_set(
+        self, name: str | ConfigArgument, value: CLArg[_T]
+    ) -> None:
+        if value.value is not None:
+            self.set_flag(name=name, value=value)
+
     def set_flag_if_user_set(
         self, name: str | ConfigArgument, value: CLArg[_T]
     ) -> None:

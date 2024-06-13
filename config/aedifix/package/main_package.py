@@ -26,6 +26,7 @@ from ..cmake.cmake_flags import (
     CMakeBool,
     CMakeExecutable,
     CMakeList,
+    CMakePath,
     CMakeString,
 )
 from ..util.argument_parser import ArgSpec, ConfigArgument, _str_to_bool
@@ -229,6 +230,18 @@ class MainPackage(Package, ABC):
     CMAKE_COLOR_MAKEFILE: Final = CMAKE_VARIABLE(
         "CMAKE_COLOR_MAKEFILE", CMakeBool
     )
+    CMAKE_INSTALL_PREFIX: Final = ConfigArgument(
+        name="--prefix",
+        spec=ArgSpec(
+            dest="prefix",
+            type=Path,
+            help=(
+                "Default installation prefix. Defaults to /usr/local on Unix."
+            ),
+        ),
+        cmake_var=CMAKE_VARIABLE("CMAKE_INSTALL_PREFIX", CMakePath),
+    )
+
     __package_ignore_attrs__ = (
         "DEBUG_CONFIGURE",
         "ON_ERROR_DEBUGGER",
@@ -243,6 +256,7 @@ class MainPackage(Package, ABC):
         "CMAKE_EXPORT_COMPILE_COMMANDS",
         "CMAKE_COLOR_DIAGNOSTICS",
         "CMAKE_COLOR_MAKEFILE",
+        "CMAKE_INSTALL_PREFIX",
     )
 
     __slots__ = (
@@ -516,6 +530,7 @@ class MainPackage(Package, ABC):
                 self.manager.set_cmake_variable(self.BUILD_SHARED_LIBS, True)
             case LibraryLinkage.STATIC:
                 self.manager.set_cmake_variable(self.BUILD_SHARED_LIBS, False)
+        self.set_flag_if_set(self.CMAKE_INSTALL_PREFIX, self.cl_args.prefix)
 
     def configure_c(self) -> None:
         r"""Configure C compiler variables."""
@@ -574,6 +589,12 @@ class MainPackage(Package, ABC):
                     (
                         "Build type",
                         self.manager.get_cmake_variable(self.CMAKE_BUILD_TYPE),
+                    ),
+                    (
+                        "Install prefix",
+                        self.manager.read_cmake_variable(
+                            self.CMAKE_INSTALL_PREFIX
+                        ),
                     ),
                 ],
                 title="Core Project",
