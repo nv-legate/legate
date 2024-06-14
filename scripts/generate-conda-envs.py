@@ -247,11 +247,8 @@ class TestsConfig(SectionConfig):
             "mypy>=0.961",
             "pre-commit",
             "pytest-cov",
-            "pytest-lazy-fixture",
             "pytest-mock",
-            # https://github.com/TvoroG/pytest-lazy-fixture/issues/65
-            # pytest-lazy-fixture 0.6.0 is incompatible with pytest 8.0.0
-            "pytest<8",
+            "pytest",
             "types-docutils",
             "pynvml",
             "tifffile",
