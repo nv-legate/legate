@@ -66,13 +66,11 @@ build_legate_release() {
     else
       debug_enabled=false
     fi
-
-    pkgVer="$(git -C $REPO_DIR describe --abbrev=0 --tags | $SED 's/[a-zA-Z]//g' | cut -d '.' -f -2).00"
-
+   
     # convert '-' to '_' for meta.yaml to accept.
     build_mode_str=$(echo ${LEGATE_CORE_BUILD_MODE} | sed -r 's/-/_/g')
 
-    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"build_mode_str\": [$build_mode_str], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION], \"package_version\": [$pkgVer]}")
+    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"build_mode_str\": [$build_mode_str], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION]}")
     conda_build_args+=(--variants "$variantOpts")
 
     # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to
