@@ -62,7 +62,7 @@ def _find_latest_cpp_test_dir() -> tuple[Path, Path] | tuple[None, None]:
         return prefix / "tests" / "cpp"
 
     def make_test_bin(prefix: Path) -> Path:
-        return prefix / "bin" / "cpp_tests"
+        return prefix / "bin" / "tests_with_runtime"
 
     def get_cpp_lib_dir() -> tuple[Path, Path] | None:
         cpp_lib = make_test_dir(lg_arch_dir / "cmake_build")
