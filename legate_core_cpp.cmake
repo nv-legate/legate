@@ -245,12 +245,13 @@ list(APPEND
      src/core/task/task_context.cc
      src/core/task/task_info.cc
      src/core/task/variant_options.cc
-     src/core/task/detail/return.cc
      src/core/task/detail/return_value.cc
      src/core/task/detail/returned_exception.cc
      src/core/task/detail/returned_cpp_exception.cc
      src/core/task/detail/returned_python_exception.cc
      src/core/task/detail/task_context.cc
+     src/core/task/detail/task_return.cc
+     src/core/task/detail/task_return_layout.cc
      src/core/type/type_info.cc
      src/core/type/detail/type_info.cc
      src/core/utilities/debug.cc

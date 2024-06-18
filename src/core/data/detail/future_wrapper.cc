@@ -161,6 +161,9 @@ void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
   }
 }
 
-ReturnValue FutureWrapper::pack() const { return {get_buffer(), field_size()}; }
+ReturnValue FutureWrapper::pack(const InternalSharedPtr<Type>& type) const
+{
+  return {get_buffer(), field_size(), type->alignment()};
+}
 
 }  // namespace legate::detail

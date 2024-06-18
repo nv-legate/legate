@@ -348,7 +348,10 @@ void TaskLauncher::post_process_unbound_stores_(
         post_process_unbound_store(
           arg,
           req,
-          runtime->extract_scalar(result, static_cast<std::uint32_t>(idx), launch_domain),
+          runtime->extract_scalar(result,
+                                  static_cast<std::uint32_t>(idx) * sizeof(std::size_t),
+                                  sizeof(std::size_t),
+                                  launch_domain),
           machine_);
       } else {
         post_process_unbound_store(arg, req, result, machine_);

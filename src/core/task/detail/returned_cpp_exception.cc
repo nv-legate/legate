@@ -96,7 +96,8 @@ ReturnValue ReturnedCppException::pack() const
   const auto acc         = AccessorWO<std::int8_t, 1>{buffer, buffer_size, false};
 
   legion_serialize(acc.ptr(0));
-  return {std::move(buffer), buffer_size};
+  // No alignment for returned exceptions, as they are always memcpy-ed
+  return {std::move(buffer), buffer_size, 1 /*alignment*/};
 }
 
 std::string ReturnedCppException::to_string() const

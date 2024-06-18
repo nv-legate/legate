@@ -13,8 +13,8 @@
 #include "core/task/task.h"
 
 #include "core/runtime/detail/config.h"
-#include "core/task/detail/return.h"
 #include "core/task/detail/task_context.h"
+#include "core/task/detail/task_return.h"
 #include "core/task/exception.h"
 #include "core/task/registrar.h"
 #include "core/task/task_context.h"
@@ -23,6 +23,7 @@
 
 #include "realm/faults.h"
 
+#include <ios>
 #include <optional>
 #include <string_view>
 
@@ -54,8 +55,8 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
   }
 
   log_legate().print() << task->get_task_name() << " " << proc_kind_str << " task ["
-                       << task->get_provenance_string() << "], pt = (" << point_str.str()
-                       << "), proc = " << exec_proc.id;
+                       << task->get_provenance_string() << "], pt = (" << std::move(point_str).str()
+                       << "), proc = " << std::hex << exec_proc.id;
 }
 
 void task_wrapper(VariantImpl variant_impl,
@@ -94,7 +95,7 @@ void task_wrapper(VariantImpl variant_impl,
 
   detail::TaskContext context{task, variant_kind, *regions};
 
-  ReturnValues return_values{};
+  TaskReturn return_values{};
 
   try {
     const legate::TaskContext ctx{&context};

@@ -40,7 +40,7 @@ class FutureWrapper {
 
   void initialize_with_identity(std::int32_t redop_id);
 
-  [[nodiscard]] ReturnValue pack() const;
+  [[nodiscard]] ReturnValue pack(const InternalSharedPtr<Type>& type) const;
 
   [[nodiscard]] bool is_read_only() const;
   [[nodiscard]] const Legion::Future& get_future() const;

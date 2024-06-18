@@ -10,90 +10,395 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/zip.h"
+
 #include "legate.h"
-#include "tasks/task_simple.h"
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>
+#include <string_view>
 
 namespace multiscalarout {
 
+namespace {
+
+constexpr std::string_view EXN_MSG = "This must be caught on the caller side";
+
+}  // namespace
+
 // NOLINTBEGIN(readability-magic-numbers)
 
-using Integration = DefaultFixture;
+class WriteFn {
+ public:
+  template <legate::Type::Code CODE, std::int32_t DIM>
+  void operator()(const legate::PhysicalStore& store, const legate::Scalar& scalar) const
+  {
+    using T      = legate::type_of_t<CODE>;
+    auto&& shape = store.shape<DIM>();
+
+    store.write_accessor<T, DIM>()[shape.lo] = scalar.value<T>();
+  }
+};
+
+class ReduceFn {
+ public:
+  template <legate::Type::Code CODE, std::int32_t DIM>
+  void operator()(const legate::PhysicalStore& store,
+                  const legate::Scalar& scalar,
+                  const legate::Rect<1>& in_shape) const
+  {
+    if (in_shape.empty()) {
+      return;
+    }
+
+    using T          = legate::type_of_t<CODE>;
+    auto&& acc       = store.reduce_accessor<legate::SumReduction<T>, true, DIM>();
+    auto&& red_shape = store.shape<DIM>();
+
+    for (legate::PointInRectIterator<1> it{in_shape}; it.valid(); ++it) {
+      acc[red_shape.lo].reduce(scalar.value<T>());
+    }
+  }
+};
+
+class WriterTask : public legate::LegateTask<WriterTask> {
+ public:
+  static constexpr std::int32_t TASK_ID = 0;
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto&& outputs = context.outputs();
+    auto&& scalars = context.scalars();
+
+    for (auto&& [output, scalar] : legate::detail::zip(outputs, scalars)) {
+      double_dispatch(output.dim(), output.type().code(), WriteFn{}, output.data(), scalar);
+    }
+  }
+};
+
+class ReducerTask : public legate::LegateTask<ReducerTask> {
+ public:
+  static constexpr std::int32_t TASK_ID = 1;
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto&& reductions = context.reductions();
+    auto&& scalars    = context.scalars();
+    auto&& in_shape   = context.input(0).shape<1>();
+
+    for (auto&& [reduction, scalar] : legate::detail::zip(reductions, scalars)) {
+      double_dispatch(
+        reduction.dim(), reduction.type().code(), ReduceFn{}, reduction.data(), scalar, in_shape);
+    }
+  }
+};
+
+class MixedTask : public legate::LegateTask<MixedTask> {
+ public:
+  static constexpr std::int32_t TASK_ID = 2;
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto&& outputs    = context.outputs();
+    auto&& reductions = context.reductions();
+    auto&& scalars    = context.scalars();
+
+    auto&& in_shape = context.input(0).shape<1>();
+
+    std::uint32_t out_idx = 0;
+    std::uint32_t red_idx = 0;
+    for (auto&& [idx, scalar] : legate::detail::enumerate(scalars)) {
+      if (idx % 3 == 1) {
+        auto&& reduction = reductions[red_idx++];
+        double_dispatch(
+          reduction.dim(), reduction.type().code(), ReduceFn{}, reduction.data(), scalar, in_shape);
+      } else {
+        auto&& output = outputs[out_idx++];
+        double_dispatch(output.dim(), output.type().code(), WriteFn{}, output.data(), scalar);
+      }
+    }
+  }
+};
+
+class ExnTask : public legate::LegateTask<ExnTask> {
+ public:
+  static constexpr std::int32_t TASK_ID = 3;
+  static void cpu_variant(legate::TaskContext /*context*/)
+  {
+    throw legate::TaskException{std::string{EXN_MSG}};
+  }
+};
+
+class CheckFn {
+ public:
+  template <legate::Type::Code CODE, std::int32_t DIM>
+  void operator()(const legate::PhysicalStore& store, const legate::Scalar& scalar) const
+  {
+    using T      = legate::type_of_t<CODE>;
+    auto&& shape = store.shape<DIM>();
+
+    EXPECT_EQ((store.read_accessor<T, DIM>()[shape.lo]), scalar.value<T>());
+  }
+};
+
+class CheckerTask : public legate::LegateTask<CheckerTask> {
+ public:
+  static constexpr std::int32_t TASK_ID = 4;
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto&& output = context.input(0).data();
+    auto&& scalar = context.scalar(0);
+    double_dispatch(output.dim(), output.type().code(), CheckFn{}, output, scalar);
+  }
+};
+
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_multi_scalar";
+  static void registration_callback(legate::Library library)
+  {
+    WriterTask::register_variants(library);
+    ReducerTask::register_variants(library);
+    MixedTask::register_variants(library);
+    ExnTask::register_variants(library);
+    CheckerTask::register_variants(library);
+  }
+};
+
+class MultiScalarOut : public RegisterOnceFixture<Config> {};
 
 void test_writer_auto(legate::Library library,
-                      const legate::LogicalStore& scalar1,
-                      const legate::LogicalStore& scalar2)
+                      const std::vector<legate::LogicalStore>& stores,
+                      const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, task::simple::WRITER);
-  task.add_output(scalar1);
-  task.add_output(scalar2);
+  auto task    = runtime->create_task(library, WriterTask::TASK_ID);
+  for (auto&& store : stores) {
+    task.add_output(store);
+  }
+  for (auto&& scalar : scalars) {
+    task.add_scalar_arg(scalar);
+  }
   runtime->submit(std::move(task));
 }
 
 void test_reducer_auto(legate::Library library,
-                       const legate::LogicalStore& scalar1,
-                       const legate::LogicalStore& scalar2,
-                       const legate::LogicalStore& store)
+                       const legate::LogicalStore& input,
+                       const std::vector<legate::LogicalStore>& reductions,
+                       const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, task::simple::REDUCER);
-  task.add_reduction(scalar1, legate::ReductionOpKind::ADD);
-  task.add_reduction(scalar2, legate::ReductionOpKind::MUL);
-  task.add_input(store);
+  auto task    = runtime->create_task(library, ReducerTask::TASK_ID);
+  task.add_input(input);
+  for (auto&& reduction : reductions) {
+    task.add_reduction(reduction, legate::ReductionOpKind::ADD);
+  }
+  for (auto&& scalar : scalars) {
+    task.add_scalar_arg(scalar);
+  }
   runtime->submit(std::move(task));
 }
 
 void test_reducer_manual(legate::Library library,
-                         const legate::LogicalStore& scalar1,
-                         const legate::LogicalStore& scalar2,
-                         const legate::LogicalStore& store)
+                         const legate::LogicalStore& input,
+                         const std::vector<legate::LogicalStore>& reductions,
+                         const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, task::simple::REDUCER, {2});
-  task.add_reduction(scalar1, legate::ReductionOpKind::ADD);
-  task.add_reduction(scalar2, legate::ReductionOpKind::MUL);
-  task.add_input(store.partition_by_tiling({3}));
+  auto task    = runtime->create_task(library, ReducerTask::TASK_ID, {2});
+  task.add_input(input.partition_by_tiling({3}));
+  for (auto&& reduction : reductions) {
+    task.add_reduction(reduction, legate::ReductionOpKind::ADD);
+  }
+  for (auto&& scalar : scalars) {
+    task.add_scalar_arg(scalar);
+  }
   runtime->submit(std::move(task));
 }
 
-void validate_stores(const legate::LogicalStore& scalar1,
-                     const legate::LogicalStore& scalar2,
-                     std::int32_t to_match1,
-                     std::int64_t to_match2)
+void test_mixed_auto(legate::Library library,
+                     const legate::LogicalStore& input,
+                     const std::vector<legate::LogicalStore>& out_or_reds,
+                     const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  static_cast<void>(runtime);
-  auto p_scalar1 = scalar1.get_physical_store();
-  auto p_scalar2 = scalar2.get_physical_store();
-  auto acc1      = p_scalar1.read_accessor<std::int32_t, 2>();
-  auto acc2      = p_scalar2.read_accessor<std::int64_t, 3>();
-  auto v1        = acc1[{0, 0}];
-  auto v2        = acc2[{0, 0, 0}];
-  EXPECT_EQ(v1, to_match1);
-  EXPECT_EQ(v2, to_match2);
+  auto task    = runtime->create_task(library, MixedTask::TASK_ID);
+  task.add_input(input);
+  for (auto&& [idx, store] : legate::detail::enumerate(out_or_reds)) {
+    if (idx % 3 == 1) {
+      task.add_reduction(store, legate::ReductionOpKind::ADD);
+    } else {
+      task.add_output(store);
+    }
+  }
+  for (auto&& scalar : scalars) {
+    task.add_scalar_arg(scalar);
+  }
+  runtime->submit(std::move(task));
 }
 
-TEST_F(Integration, MultiScalarOut)
+void test_exn_and_unbound(legate::Library library,
+                          const legate::LogicalStore& input,
+                          const legate::LogicalStore& output1,
+                          const legate::LogicalStore& output2)
 {
-  task::simple::register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(task::simple::LIBRARY_NAME);
+  auto task    = runtime->create_task(library, ExnTask::TASK_ID);
+  task.add_input(input);
+  task.add_output(output1);
+  task.add_output(output2);
+  task.throws_exception(true);
 
-  auto scalar1 = runtime->create_store(legate::Shape{1, 1}, legate::int32(), true);
-  auto scalar2 = runtime->create_store(legate::Shape{1, 1, 1}, legate::int64(), true);
-  auto store   = runtime->create_store(legate::Shape{5}, legate::int64());
-  runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
+  EXPECT_THROW(runtime->submit(std::move(task)), legate::TaskException);
+}
 
-  test_writer_auto(library, scalar1, scalar2);
-  validate_stores(scalar1, scalar2, 10, 20);
-  test_reducer_auto(library, scalar1, scalar2, store);
-  validate_stores(scalar1, scalar2, 60, 640);
-  test_reducer_manual(library, scalar1, scalar2, store);
-  validate_stores(scalar1, scalar2, 110, 20480);
+void validate_store(const legate::Library& library,
+                    const legate::LogicalStore& store,
+                    const legate::Scalar& to_match)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto p_store = store.get_physical_store();
+
+  double_dispatch(p_store.dim(), p_store.type().code(), CheckFn{}, p_store, to_match);
+
+  auto task = runtime->create_task(library, CheckerTask::TASK_ID);
+  task.add_input(store);
+  task.add_scalar_arg(to_match);
+  runtime->submit(std::move(task));
+}
+
+std::vector<legate::Scalar> generate_inputs()
+{
+  return {
+    legate::Scalar{std::int8_t{5}},
+    legate::Scalar{std::uint32_t{7}},
+    legate::Scalar{std::int64_t{3}},
+    legate::Scalar{std::uint16_t{4}},
+    legate::Scalar{std::int64_t{2}},
+  };
+}
+
+std::vector<legate::Scalar> generate_reduction_results()
+{
+  return {
+    legate::Scalar{std::int8_t{25}},
+    legate::Scalar{std::uint32_t{35}},
+    legate::Scalar{std::int64_t{15}},
+    legate::Scalar{std::uint16_t{20}},
+    legate::Scalar{std::int64_t{10}},
+  };
+}
+
+class CreateZeroFn {
+ public:
+  template <legate::Type::Code CODE>
+  legate::Scalar operator()()
+  {
+    return legate::Scalar{legate::type_of_t<CODE>{0}};
+  }
+};
+
+legate::Scalar create_zero(const legate::Type& type)
+{
+  return type_dispatch(type.code(), CreateZeroFn{});
+}
+
+std::vector<legate::LogicalStore> create_stores(const std::vector<legate::Scalar>& scalars)
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  std::vector<legate::LogicalStore> result{};
+  result.reserve(scalars.size());
+
+  for (auto&& [idx, scalar] : legate::detail::enumerate(scalars)) {
+    auto store =
+      runtime->create_store(legate::Shape{legate::full(idx % 3 + 1, uint64_t{1})}, scalar.type());
+    runtime->issue_fill(store, create_zero(scalar.type()));
+    result.push_back(std::move(store));
+  }
+
+  return result;
+}
+
+TEST_F(MultiScalarOut, WriteAuto)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto values_to_write = generate_inputs();
+  auto stores          = create_stores(values_to_write);
+
+  test_writer_auto(library, stores, values_to_write);
+  for (auto&& [store, to_match] : legate::detail::zip(stores, values_to_write)) {
+    validate_store(library, store, to_match);
+  }
+}
+
+TEST_F(MultiScalarOut, ReduceAuto)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto input = runtime->create_store(legate::Shape{5}, legate::int64());
+  runtime->issue_fill(input, create_zero(input.type()));
+
+  auto values_to_write   = generate_inputs();
+  auto reductions        = create_stores(values_to_write);
+  auto reduction_results = generate_reduction_results();
+
+  test_reducer_auto(library, input, reductions, values_to_write);
+  for (auto&& [reduction, to_match] : legate::detail::zip(reductions, reduction_results)) {
+    validate_store(library, reduction, to_match);
+  }
+}
+
+TEST_F(MultiScalarOut, ReduceManual)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto input = runtime->create_store(legate::Shape{5}, legate::int64());
+  runtime->issue_fill(input, create_zero(input.type()));
+
+  auto values_to_write   = generate_inputs();
+  auto reductions        = create_stores(values_to_write);
+  auto reduction_results = generate_reduction_results();
+
+  test_reducer_manual(library, input, reductions, values_to_write);
+  for (auto&& [reduction, to_match] : legate::detail::zip(reductions, reduction_results)) {
+    validate_store(library, reduction, to_match);
+  }
+}
+
+TEST_F(MultiScalarOut, MixedAuto)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto input = runtime->create_store(legate::Shape{5}, legate::int64());
+  runtime->issue_fill(input, create_zero(input.type()));
+
+  auto values_to_write   = generate_inputs();
+  auto out_or_reds       = create_stores(values_to_write);
+  auto reduction_results = generate_reduction_results();
+
+  test_mixed_auto(library, input, out_or_reds, values_to_write);
+
+  for (auto&& [idx, store] : legate::detail::enumerate(out_or_reds)) {
+    validate_store(library, store, (idx % 3 == 1) ? reduction_results[idx] : values_to_write[idx]);
+  }
+}
+
+TEST_F(MultiScalarOut, ExnAndUnbound)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto input = runtime->create_store(legate::Shape{5}, legate::int64());
+  runtime->issue_fill(input, create_zero(input.type()));
+
+  auto out1 = runtime->create_store(legate::int64());
+  auto out2 = runtime->create_store({1, 1, 1}, legate::int8());
+
+  test_exn_and_unbound(library, input, out1, out2);
 }
 
 // NOLINTEND(readability-magic-numbers)

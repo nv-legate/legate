@@ -43,6 +43,7 @@
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/env.h"
+#include "core/utilities/machine.h"
 #include "core/utilities/scope_guard.h"
 
 #include "env_defaults.h"
@@ -1145,7 +1146,9 @@ void Runtime::dispatch(const Legion::IndexFillLauncher& launcher)
   legion_runtime_->fill_fields(legion_context_, launcher);
 }
 
-Legion::Future Runtime::extract_scalar(const Legion::Future& result, std::uint32_t idx) const
+Legion::Future Runtime::extract_scalar(const Legion::Future& result,
+                                       std::size_t offset,
+                                       std::size_t size) const
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
@@ -1154,12 +1157,14 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result, std::uint32
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
   launcher.add_future(result);
-  launcher.add_scalar(Scalar{idx});
+  launcher.add_scalar(Scalar{offset});
+  launcher.add_scalar(Scalar{size});
   return launcher.execute_single();
 }
 
 Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
-                                          std::uint32_t idx,
+                                          std::size_t offset,
+                                          std::size_t size,
                                           const Legion::Domain& launch_domain) const
 {
   const auto& machine = get_machine();
@@ -1169,7 +1174,8 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
   launcher.add_future_map(result);
-  launcher.add_scalar(Scalar{idx});
+  launcher.add_scalar(Scalar{offset});
+  launcher.add_scalar(Scalar{size});
   return launcher.execute(launch_domain);
 }
 
@@ -1557,11 +1563,21 @@ void extract_scalar_task(const void* args,
   legate::detail::show_progress(task, legion_context, runtime);
 
   const detail::TaskContext context{task, variant_kind, *regions};
-  auto idx            = context.scalars()[0].value<std::int32_t>();
-  auto value_and_size = ReturnValues::extract(task->futures[0], idx);
+  auto offset = context.scalars()[0].value<std::size_t>();
+  auto size   = context.scalars()[1].value<std::size_t>();
+
+  const auto& future = task->futures[0];
+  size               = std::min(size, future.get_untyped_size() - offset);
+
+  auto mem_kind   = find_memory_kind_for_executing_processor();
+  const auto* ptr = static_cast<const std::int8_t*>(future.get_buffer(mem_kind)) + offset;
+
+  const Legion::UntypedDeferredValue return_value{size, mem_kind};
+  const AccessorWO<std::int8_t, 1> acc{return_value, size, false};
+  std::memcpy(acc.ptr(0), ptr, size);
 
   // Legion postamble
-  value_and_size.finalize(legion_context);
+  return_value.finalize(legion_context);
 }
 
 template <LegateVariantCode variant_id>

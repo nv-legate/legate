@@ -268,9 +268,11 @@ class Runtime {
   void dispatch(const Legion::IndexFillLauncher& launcher);
 
   [[nodiscard]] Legion::Future extract_scalar(const Legion::Future& result,
-                                              std::uint32_t idx) const;
+                                              std::size_t offset,
+                                              std::size_t size) const;
   [[nodiscard]] Legion::FutureMap extract_scalar(const Legion::FutureMap& result,
-                                                 std::uint32_t idx,
+                                                 std::size_t offset,
+                                                 std::size_t size,
                                                  const Legion::Domain& launch_domain) const;
   [[nodiscard]] Legion::Future reduce_future_map(
     const Legion::FutureMap& future_map,

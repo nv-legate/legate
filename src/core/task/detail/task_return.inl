@@ -12,25 +12,12 @@
 
 #pragma once
 
-#include "core/mapping/mapping.h"
+#include "core/task/detail/task_return.h"
 
-#include "legate.h"
+#include <cstring>
 
-namespace task::simple {
+namespace legate::detail {
 
-enum TaskOpCode {
-  HELLO = 0,
-};
+inline std::size_t TaskReturn::buffer_size() const { return layout_.total_size(); }
 
-inline constexpr std::string_view LIBRARY_NAME = "legate.simple";
-
-extern Legion::Logger logger;
-
-void register_tasks();
-
-struct HelloTask : public legate::LegateTask<HelloTask> {
-  static constexpr std::int32_t TASK_ID = HELLO;
-  static void cpu_variant(legate::TaskContext context);
-};
-
-}  // namespace task::simple
+}  // namespace legate::detail

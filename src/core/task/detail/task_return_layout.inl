@@ -12,17 +12,25 @@
 
 #pragma once
 
-#include "core/task/detail/return.h"
-
-#include <cstring>
+#include "core/task/detail/task_return_layout.h"
 
 namespace legate::detail {
 
-inline std::size_t ReturnValues::legion_buffer_size() const { return buffer_size_; }
-
-inline const ReturnValue& ReturnValues::operator[](std::int32_t idx) const
+inline TaskReturnLayoutForUnpack::TaskReturnLayoutForUnpack(std::size_t starting_offset)
+  : current_offset_{starting_offset}
 {
-  return return_values_[idx];
+}
+
+inline std::size_t TaskReturnLayoutForUnpack::total_size() const { return current_offset_; }
+
+inline TaskReturnLayoutForPack::const_iterator TaskReturnLayoutForPack::begin() const
+{
+  return offsets_.begin();
+}
+
+inline TaskReturnLayoutForPack::const_iterator TaskReturnLayoutForPack::end() const
+{
+  return offsets_.end();
 }
 
 }  // namespace legate::detail

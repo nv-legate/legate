@@ -20,6 +20,7 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/task/detail/task_return_layout.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/zip.h"
 
@@ -181,17 +182,24 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
       LEGATE_ASSERT(1 == num_unbound_outs);
     }
   } else {
-    auto* runtime = detail::Runtime::get_runtime();
-    auto idx      = static_cast<std::uint32_t>(num_unbound_outs);
+    auto* runtime      = detail::Runtime::get_runtime();
+    auto return_layout = TaskReturnLayoutForUnpack{num_unbound_outs * sizeof(std::size_t)};
+
+    auto extract_future = [&](auto&& future, auto&& store) {
+      auto size   = store->type()->size();
+      auto offset = return_layout.next(size, store->type()->alignment());
+      return runtime->extract_scalar(future, offset, size);
+    };
 
     for (auto&& store : scalar_outputs_) {
-      store->set_future(runtime->extract_scalar(result, idx++));
+      store->set_future(extract_future(result, store));
     }
     for (auto&& [store, _] : scalar_reductions_) {
-      store->set_future(runtime->extract_scalar(result, idx++));
+      store->set_future(extract_future(result, store));
     }
     if (can_throw_exception_) {
-      runtime->record_pending_exception(runtime->extract_scalar(result, idx));
+      runtime->record_pending_exception(runtime->extract_scalar(
+        result, return_layout.total_size(), std::numeric_limits<std::uint32_t>::max()));
     }
   }
 }
@@ -231,7 +239,19 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
       LEGATE_ASSERT(1 == num_unbound_outs);
     }
   } else {
-    auto idx = static_cast<std::uint32_t>(num_unbound_outs);
+    auto return_layout = TaskReturnLayoutForUnpack{num_unbound_outs * sizeof(std::size_t)};
+
+    auto extract_future = [&](auto&& future, auto&& store) {
+      auto size   = store->type()->size();
+      auto offset = return_layout.next(size, store->type()->alignment());
+      return runtime->extract_scalar(future, offset, size);
+    };
+
+    auto extract_future_map = [&](auto&& future_map, auto&& store) {
+      auto size   = store->type()->size();
+      auto offset = return_layout.next(size, store->type()->alignment());
+      return runtime->extract_scalar(future_map, offset, size, launch_domain);
+    };
 
     if (!scalar_outputs_.empty()) {
       // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
@@ -239,20 +259,23 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
       auto first_future = result[launch_domain.lo()];
       for (auto&& store : scalar_outputs_) {
         if (store->get_storage()->kind() == Storage::Kind::FUTURE) {
-          store->set_future(runtime->extract_scalar(first_future, idx++));
+          store->set_future(extract_future(first_future, store));
         } else {
           LEGATE_ASSERT(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
-          store->set_future_map(runtime->extract_scalar(result, idx++, launch_domain));
+          store->set_future_map(extract_future_map(result, store));
         }
       }
     }
     for (auto&& [store, redop] : scalar_reductions_) {
-      auto values = runtime->extract_scalar(result, idx++, launch_domain);
+      auto values = extract_future_map(result, store);
 
       store->set_future(runtime->reduce_future_map(values, redop, store->get_future()));
     }
     if (can_throw_exception_) {
-      auto exn_fm = runtime->extract_scalar(result, idx, launch_domain);
+      auto exn_fm = runtime->extract_scalar(result,
+                                            return_layout.total_size(),
+                                            std::numeric_limits<std::uint32_t>::max(),
+                                            launch_domain);
 
       runtime->record_pending_exception(runtime->reduce_exception_future_map(exn_fm));
     }

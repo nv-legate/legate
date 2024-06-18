@@ -20,18 +20,15 @@ namespace legate::detail {
 
 class ReturnValue {
  public:
-  ReturnValue(Legion::UntypedDeferredValue value, std::size_t size);
+  ReturnValue(Legion::UntypedDeferredValue value, std::size_t size, std::size_t alignment);
 
   ReturnValue(const ReturnValue&)            = default;
   ReturnValue& operator=(const ReturnValue&) = default;
 
-  [[nodiscard]] static ReturnValue unpack(const void* ptr,
-                                          std::size_t size,
-                                          Memory::Kind memory_kind);
-
   [[nodiscard]] void* ptr();
   [[nodiscard]] const void* ptr() const;
   [[nodiscard]] std::size_t size() const;
+  [[nodiscard]] std::size_t alignment() const;
   [[nodiscard]] bool is_device_value() const;
 
   // Calls the Legion postamble with an instance
@@ -40,6 +37,7 @@ class ReturnValue {
  private:
   Legion::UntypedDeferredValue value_{};
   std::size_t size_{};
+  std::size_t alignment_{};
   bool is_device_value_{};
 };
 

@@ -109,7 +109,7 @@ void TaskContext::make_all_unbound_stores_empty()
   }
 }
 
-ReturnValues TaskContext::pack_return_values() const
+TaskReturn TaskContext::pack_return_values() const
 {
   auto return_values = get_return_values_();
   if (can_raise_exception()) {
@@ -117,16 +117,16 @@ ReturnValues TaskContext::pack_return_values() const
 
     return_values.push_back(exn.pack());
   }
-  return ReturnValues{std::move(return_values)};
+  return TaskReturn{std::move(return_values)};
 }
 
-ReturnValues TaskContext::pack_return_values_with_exception(const ReturnedException& exn) const
+TaskReturn TaskContext::pack_return_values_with_exception(const ReturnedException& exn) const
 {
   auto return_values = get_return_values_();
   if (can_raise_exception()) {
     return_values.push_back(exn.pack());
   }
-  return ReturnValues{std::move(return_values)};
+  return TaskReturn{std::move(return_values)};
 }
 
 std::vector<ReturnValue> TaskContext::get_return_values_() const

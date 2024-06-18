@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/detail/scalar.h"
+#include "core/data/scalar.h"
 #include "core/type/type_traits.h"
 
 #include <utility>
@@ -27,13 +28,9 @@ inline Scalar::Scalar(InternalSharedPtr<Type> type)
 template <typename T>
 inline Scalar::Scalar(T value)
   : own_{true},
-    type_{detail::primitive_type(type_code_of_v<T>)},
+    type_{detail::primitive_type(canonical_type_code_of<T>())},
     data_{copy_data_(std::addressof(value), sizeof(T))}
 {
-  static_assert(type_code_of_v<T> != Type::Code::FIXED_ARRAY);
-  static_assert(type_code_of_v<T> != Type::Code::STRUCT);
-  static_assert(type_code_of_v<T> != Type::Code::STRING);
-  static_assert(type_code_of_v<T> != Type::Code::NIL);
 }
 
 inline Scalar::~Scalar() { clear_data_(); }

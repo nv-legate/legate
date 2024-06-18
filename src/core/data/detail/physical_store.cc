@@ -57,7 +57,7 @@ ReturnValue UnboundRegionField::pack_weight() const
         "stores in the task");
     }
   }
-  return {num_elements_, sizeof(size_t)};
+  return {num_elements_, sizeof(std::size_t), alignof(std::size_t)};
 }
 
 void UnboundRegionField::update_num_elements(std::size_t num_elements)

@@ -16,9 +16,9 @@
 #include "core/data/detail/physical_array.h"
 #include "core/data/scalar.h"
 #include "core/mapping/detail/machine.h"
-#include "core/task/detail/return.h"
 #include "core/task/detail/return_value.h"
 #include "core/task/detail/returned_exception.h"
+#include "core/task/detail/task_return.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <optional>
@@ -56,8 +56,8 @@ class TaskContext {
    * @brief Makes all of unbound output stores of this task empty
    */
   void make_all_unbound_stores_empty();
-  [[nodiscard]] ReturnValues pack_return_values() const;
-  [[nodiscard]] ReturnValues pack_return_values_with_exception(const ReturnedException& exn) const;
+  [[nodiscard]] TaskReturn pack_return_values() const;
+  [[nodiscard]] TaskReturn pack_return_values_with_exception(const ReturnedException& exn) const;
 
  private:
   [[nodiscard]] std::vector<ReturnValue> get_return_values_() const;

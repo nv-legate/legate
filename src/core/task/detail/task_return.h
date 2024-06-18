@@ -13,33 +13,29 @@
 #pragma once
 
 #include "core/task/detail/return_value.h"
+#include "core/task/detail/task_return_layout.h"
 #include "core/utilities/typedefs.h"
 
 #include <vector>
 
 namespace legate::detail {
 
-class ReturnValues {
+class TaskReturn {
  public:
-  ReturnValues() = default;
-  explicit ReturnValues(std::vector<ReturnValue>&& return_values);
+  TaskReturn() = default;
+  explicit TaskReturn(std::vector<ReturnValue>&& return_values);
 
-  [[nodiscard]] const ReturnValue& operator[](std::int32_t idx) const;
-
-  [[nodiscard]] std::size_t legion_buffer_size() const;
-  void legion_serialize(void* buffer) const;
-  void legion_deserialize(const void* buffer);
-
-  [[nodiscard]] static ReturnValue extract(const Legion::Future& future, std::uint32_t to_extract);
+  [[nodiscard]] std::size_t buffer_size() const;
+  void pack(void* buffer) const;
 
   // Calls the Legion postamble with an instance that packs all return values
   void finalize(Legion::Context legion_context) const;
 
  private:
-  std::size_t buffer_size_{};
   std::vector<ReturnValue> return_values_{};
+  TaskReturnLayoutForPack layout_{};
 };
 
 }  // namespace legate::detail
 
-#include "core/task/detail/return.inl"
+#include "core/task/detail/task_return.inl"

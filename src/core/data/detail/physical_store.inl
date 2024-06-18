@@ -104,7 +104,7 @@ inline bool PhysicalStore::is_future() const { return is_future_; }
 
 inline bool PhysicalStore::is_unbound_store() const { return is_unbound_store_; }
 
-inline ReturnValue PhysicalStore::pack() const { return future_.pack(); }
+inline ReturnValue PhysicalStore::pack() const { return future_.pack(type_); }
 
 inline ReturnValue PhysicalStore::pack_weight() const { return unbound_field_.pack_weight(); }
 
